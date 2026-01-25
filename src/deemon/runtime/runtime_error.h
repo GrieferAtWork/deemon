@@ -29,12 +29,12 @@
 
 DECL_BEGIN
 
-struct kwds_object;
-struct module_object;
-struct code_object;
-struct class_attribute;
-struct class_desc;
-struct function_object;
+struct Dee_kwds_object;
+struct Dee_module_object;
+struct Dee_code_object;
+struct Dee_class_attribute;
+struct Dee_class_desc;
+struct Dee_function_object;
 
 #define err_unimplemented_constructor(tp, argc, argv) err_unimplemented_constructor_kw(tp, argc, argv, NULL)
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc, DeeObject *const *argv, DeeObject *kw);
@@ -54,7 +54,7 @@ INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classproperty_requires_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string(DeeTypeObject *tp_self, char const *__restrict name);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_classmethod_requires_at_least_1_argument_string_len(DeeTypeObject *tp_self, char const *__restrict name, size_t namelen);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_bad_for_argc(struct kwds_object *kwds, size_t argc, DeeObject *const *argv);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_bad_for_argc(struct Dee_kwds_object *kwds, size_t argc, DeeObject *const *argv);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_keywords_shadows_positional(DeeObject *__restrict keyword);
 INTDEF ATTR_COLD int DCALL err_invalid_segment_size(size_t segsz);
 INTDEF ATTR_COLD int DCALL err_invalid_distribution_count(size_t distcnt);
@@ -62,29 +62,29 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_argc_missing_kw(char const *
 INTDEF ATTR_COLD int DCALL err_invalid_argc(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_len(char const *function_name, size_t function_size, size_t argc_cur, size_t argc_min, size_t argc_max);
 INTDEF ATTR_COLD int DCALL err_invalid_argc_va(char const *function_name, size_t argc_cur, size_t argc_min);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_global(struct module_object *__restrict module, uint16_t global_index);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_local(struct code_object *code, void *ip, uint16_t local_index);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_static(struct code_object *code, void *ip, uint16_t static_index);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_arg(struct code_object *code, void *ip, uint16_t arg_index);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_local(struct code_object *code, void *ip, uint16_t local_index);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_illegal_instruction(struct code_object *code, void *ip);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_global(struct Dee_module_object *__restrict module, uint16_t global_index);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_local(struct Dee_code_object *code, void *ip, uint16_t local_index);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_static(struct Dee_code_object *code, void *ip, uint16_t static_index);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_arg(struct Dee_code_object *code, void *ip, uint16_t arg_index);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_local(struct Dee_code_object *code, void *ip, uint16_t local_index);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_illegal_instruction(struct Dee_code_object *code, void *ip);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_requires_class(DeeTypeObject *__restrict tp_self);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_class_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_instance_addr(DeeTypeObject *tp_self, DeeObject *self, uint16_t addr);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_refs_size(struct code_object *__restrict code, size_t num_refs);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_refs_size(struct Dee_code_object *__restrict code, size_t num_refs);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_changed_sequence(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_no_super_class(DeeTypeObject *__restrict type);
 
 /* Safe-exec error handling. */
-struct code_frame;
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_sp(struct code_frame *__restrict frame, size_t access_sp);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_static(struct code_frame *__restrict frame, uint16_t sid);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_const(struct code_frame *__restrict frame, uint16_t cid);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_locale(struct code_frame *__restrict frame, uint16_t lid);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_ref(struct code_frame *__restrict frame, uint16_t rid);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_module(struct code_frame *__restrict frame, uint16_t mid);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_global(struct code_frame *__restrict frame, uint16_t gid);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_extern(struct code_frame *__restrict frame, uint16_t mid, uint16_t gid);
+struct Dee_code_frame;
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_sp(struct Dee_code_frame *__restrict frame, size_t access_sp);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_static(struct Dee_code_frame *__restrict frame, uint16_t sid);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_const(struct Dee_code_frame *__restrict frame, uint16_t cid);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_locale(struct Dee_code_frame *__restrict frame, uint16_t lid);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_ref(struct Dee_code_frame *__restrict frame, uint16_t rid);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_module(struct Dee_code_frame *__restrict frame, uint16_t mid);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_global(struct Dee_code_frame *__restrict frame, uint16_t gid);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_extern(struct Dee_code_frame *__restrict frame, uint16_t mid, uint16_t gid);
 
 
 /* @param: operator_name: One of `OPERATOR_*' */
@@ -99,17 +99,17 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_string_for_attribute(DeeObj
 
 /* @param: access: One of `ATTR_ACCESS_*' */
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string(struct module_object *__restrict self, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string(struct Dee_module_object *__restrict self, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_not_loaded_attr_string_len(struct Dee_module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* TODO: Get rid of `err_module_*' -- must use DeeRT_Err* functions! */
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global(struct module_object *self, DeeObject *name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string(struct module_object *__restrict self, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string_len(struct module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_readonly_global_string(struct module_object *__restrict self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_read_property_string(struct module_object *__restrict self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_delete_property_string(struct module_object *__restrict self, char const *__restrict name);
-INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_write_property_string(struct module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global(struct Dee_module_object *self, DeeObject *name, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string(struct Dee_module_object *__restrict self, char const *__restrict name, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_no_such_global_string_len(struct Dee_module_object *__restrict self, char const *__restrict name, size_t namelen, int access);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_readonly_global_string(struct Dee_module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_read_property_string(struct Dee_module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_delete_property_string(struct Dee_module_object *__restrict self, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_write_property_string(struct Dee_module_object *__restrict self, char const *__restrict name);
 
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found_string(char const *__restrict filename);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict filename);

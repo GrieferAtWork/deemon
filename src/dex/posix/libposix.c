@@ -288,15 +288,15 @@ print("/" "**" "/");
 print("#if POSIX_STUBS_TOTLEN != 0");
 print("PRIVATE struct {");
 print("	OBJECT_HEAD");
-print("	struct string_utf *s_data;");
-print("	Dee_hash_t         s_hash;");
-print("	size_t             s_len;");
-print("	char               s_str[POSIX_STUBS_TOTLEN];");
-print("	struct string_utf  s_utf;");
+print("	struct Dee_string_utf *s_data;");
+print("	Dee_hash_t             s_hash;");
+print("	size_t                 s_len;");
+print("	char                   s_str[POSIX_STUBS_TOTLEN];");
+print("	struct Dee_string_utf  s_utf;");
 print("} posix_missing_features = {");
 print("	OBJECT_HEAD_INIT(&DeeString_Type),");
 print("	&posix_missing_features.s_utf,");
-print("	DEE_STRING_HASH_UNSET,");
+print("	Dee_STRING_HASH_UNSET,");
 print("	POSIX_STUBS_TOTLEN - 1, {");
 for (local test, none: ALL_STUBS)
 	print("\t\tstr_", test);
@@ -1364,15 +1364,15 @@ print("#endif /" "* POSIX_STUBS_TOTLEN == 0 *" "/");
 #if POSIX_STUBS_TOTLEN != 0
 PRIVATE struct {
 	OBJECT_HEAD
-	struct string_utf *s_data;
-	Dee_hash_t         s_hash;
-	size_t             s_len;
-	char               s_str[POSIX_STUBS_TOTLEN];
-	struct string_utf  s_utf;
+	struct Dee_string_utf *s_data;
+	Dee_hash_t             s_hash;
+	size_t                 s_len;
+	char                   s_str[POSIX_STUBS_TOTLEN];
+	struct Dee_string_utf  s_utf;
 } posix_missing_features = {
 	OBJECT_HEAD_INIT(&DeeString_Type),
 	&posix_missing_features.s_utf,
-	DEE_STRING_HASH_UNSET,
+	Dee_STRING_HASH_UNSET,
 	POSIX_STUBS_TOTLEN - 1, {
 		str_diriter_get_d_atime_IS_STUB
 		str_diriter_get_d_birthtime_IS_STUB

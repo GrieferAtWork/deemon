@@ -446,9 +446,9 @@ type_obmeth_vcallf(DeeTypeObject *cls_type,
 	}
 
 	/* Use the first argument as the this-argument. */
-	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	thisarg = Dee_VPPackf((char const **)&format, (struct Dee_va_list_struct *)VALIST_ADDR(args));
 	if unlikely(!thisarg) {
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
@@ -644,7 +644,7 @@ ret_none:
 	CASE(STRUCT_WOBJECT):
 	CASE(STRUCT_WOBJECT_OPT): {
 		DeeObject *ob;
-		ob = Dee_weakref_lock(&FIELD(struct weakref));
+		ob = Dee_weakref_lock(&FIELD(struct Dee_weakref));
 		if unlikely(!ob)
 			goto handle_null_ob;
 		return ob;
@@ -787,7 +787,7 @@ Dee_type_member_tryget(struct type_member const *desc,
 
 	CASE(STRUCT_WOBJECT): {
 		DeeObject *ob;
-		ob = Dee_weakref_lock(&FIELD(struct weakref));
+		ob = Dee_weakref_lock(&FIELD(struct Dee_weakref));
 		if unlikely(!ob)
 			goto handle_null_ob;
 		return ob;
@@ -907,7 +907,7 @@ Dee_type_member_bound(struct type_member const *desc,
 		return Dee_variant_isbound(&FIELD(struct Dee_variant));
 
 	CASE(STRUCT_WOBJECT):
-		return Dee_weakref_bound(&FIELD(struct weakref));
+		return Dee_weakref_bound(&FIELD(struct Dee_weakref));
 
 	CASE(STRUCT_OBJECT):
 	CASE(STRUCT_CSTR):
@@ -927,12 +927,12 @@ Dee_type_member_set_impl(struct type_member const *desc,
 
 	case STRUCT_WOBJECT_OPT:
 		if (DeeNone_Check(value)) {
-			Dee_weakref_clear(&FIELD(struct weakref));
+			Dee_weakref_clear(&FIELD(struct Dee_weakref));
 			return 0;
 		}
 		ATTR_FALLTHROUGH
 	case STRUCT_WOBJECT:
-		if unlikely(!Dee_weakref_set(&FIELD(struct weakref), value))
+		if unlikely(!Dee_weakref_set(&FIELD(struct Dee_weakref), value))
 			return err_cannot_weak_reference(value);
 		return 0;
 

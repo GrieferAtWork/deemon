@@ -146,7 +146,7 @@ query_cache_list_indexof(struct query_cache_list const *__restrict self,
 
 struct db_string_fini_hook {
 	struct Dee_string_fini_hook dsfh_hook; /* Underlying hook */
-	WEAKREF(DB)                 dsfh_db;   /* [0..1] Weak reference to DB */
+	Dee_WEAKREF(DB)             dsfh_db;   /* [0..1] Weak reference to DB */
 };
 #define db_string_fini_hook_alloc()    DeeObject_MALLOC(struct db_string_fini_hook)
 #define db_string_fini_hook_free(self) DeeObject_FREE(Dee_REQUIRES_TYPE(struct db_string_fini_hook *, self))
@@ -158,7 +158,7 @@ struct db_string_fini_hook {
 
 struct db_thread_interrupt_hook {
 	struct Dee_thread_interrupt_hook dtih_hook; /* Underlying hook */
-	WEAKREF(DB)                      dtih_db;   /* [0..1] Weak reference to DB */
+	Dee_WEAKREF(DB)                  dtih_db;   /* [0..1] Weak reference to DB */
 };
 #define db_thread_interrupt_hook_alloc()    DeeObject_MALLOC(struct db_thread_interrupt_hook)
 #define db_thread_interrupt_hook_free(self) DeeObject_FREE(Dee_REQUIRES_TYPE(struct db_thread_interrupt_hook *, self))
@@ -186,7 +186,7 @@ struct db_object {
 #endif /* !CONFIG_NO_THREADS */
 	DREF struct db_string_fini_hook      *db_sf_hook;    /* [1..1][const] DeeStringObject finalization hook */
 	DREF struct db_thread_interrupt_hook *db_ti_hook;    /* [1..1][const] Thread interrupt hook */
-	WEAKREF_SUPPORT                                      /* Weak referencing support */
+	Dee_WEAKREF_SUPPORT                                      /* Weak referencing support */
 };
 
 /* Use these to serialize all sqlite3 calls that may access the DB (`sqlite3 *') */
@@ -289,10 +289,10 @@ DB_NewQuery(DB *__restrict self, DeeStringObject *__restrict sql,
 /************************************************************************/
 struct query_object {
 	OBJECT_HEAD                         /* [@ob_type: ref_if(true)] */
-	WEAKREF_SUPPORT                     /* [valid_if(Query_InUse(self))] Weak references */
+	Dee_WEAKREF_SUPPORT                     /* [valid_if(Query_InUse(self))] Weak references */
 	DREF DB                  *q_db;     /* [ref_if(Query_InUse(self))][1..1][const] Associated database */
 	DREF DeeStringObject     *q_sql;    /* [ref_if(Query_InUse(self))][1..1][const] DeeStringObject that was used to compile this query */
-	WEAKREF(Row)              q_row;    /* [0..1][lock(READ(API), WRITE(q_db->q_db && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()', if this weakref is still valid, this row is updated with copies of data from all columns) */
+	Dee_WEAKREF(Row)          q_row;    /* [0..1][lock(READ(API), WRITE(q_db->q_db && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()', if this weakref is still valid, this row is updated with copies of data from all columns) */
 	DREF RowFmt              *q_rowfmt; /* [valid_if(!WAS_DESTROYED(q_sql))][owned][0..1][lock(READ(ATOMIC), WRITE(q_db->q_db && WRITE_ONCE))] Descriptor for how rows are formatted */
 	sqlite3_stmt             *q_stmt;   /* [valid_if(!WAS_DESTROYED(q_sql))][owned][?..1][const]
 	                                     * Statement context. This only gets finalized when `q_sql' is destroyed */
@@ -309,13 +309,13 @@ struct query_object {
 	(Dee_Incref((self)->q_db),              \
 	 Dee_Incref((self)->q_sql),             \
 	 Dee_weakref_initempty(&(self)->q_row), \
-	 weakref_support_init(self),            \
+	 Dee_weakref_support_init(self),            \
 	 TAILQ_ENTRY_UNBOUND_INIT(&result->q_unused))
 
 /* Common finalization for when "ob_refcnt == 0" */
 #define Query_FiniCommon(self)         \
 	(Dee_weakref_fini(&(self)->q_row), \
-	 weakref_support_fini(self))
+	 Dee_weakref_support_fini(self))
 
 /* Allocate new query */
 #define Query_Alloc() DeeObject_MALLOC(Query)
@@ -449,7 +449,7 @@ struct rowfmt_object { /* Item type is "CellFmt" */
 
 struct row_object {
 	OBJECT_HEAD
-	WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t r_lock;   /* Lock for this row (needed to replace effective data
 	                               * with copy if still alive during `sqlite3_step()') */

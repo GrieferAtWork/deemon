@@ -17,8 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export -CONFIG_HAVE_**/
+/*!export DeeNTSystem_**/
+/*!export DeeSystem_**/
+/*!export DeeUnixSystem_**/
 #ifndef GUARD_DEEMON_SYSTEM_H
-#define GUARD_DEEMON_SYSTEM_H 1
+#define GUARD_DEEMON_SYSTEM_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -44,6 +49,8 @@
 
 DECL_BEGIN
 
+struct Dee_unicode_printer;
+
 #ifdef CONFIG_HOST_WINDOWS
 /* Recognize `STDIN$', `STDOUT$' and `STDERR$' special file names, to
  * go alongside filenames such as `CON', `NUL', `CONIN$', `CONOUT$' */
@@ -52,13 +59,6 @@ DECL_BEGIN
 #define CONFIG_WANT_WINDOWS_STD_FILES
 #endif /* !CONFIG_NO_WANT_WINDOWS_STD_FILES */
 #endif /* CONFIG_HOST_WINDOWS */
-
-#ifdef DEE_SOURCE
-#define Dee_unicode_printer unicode_printer
-#endif /* DEE_SOURCE */
-
-struct Dee_unicode_printer;
-
 
 #ifdef CONFIG_HOST_WINDOWS
 #define DeeSystem_HAVE_FS_ICASE

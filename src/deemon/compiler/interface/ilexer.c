@@ -3074,30 +3074,30 @@ err:
 PRIVATE ptrdiff_t
 (TPPCALL unicode_printer_tppappend)(void *arg, char const *__restrict buf, size_t bufsize) {
 	Dee_ssize_t result;
-	result = unicode_printer_print((struct unicode_printer *)arg, buf, bufsize);
+	result = Dee_unicode_printer_print((struct Dee_unicode_printer *)arg, buf, bufsize);
 	return unlikely(result < 0) ? -1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_text(DeeCompilerWrapperObject *__restrict self) {
 	ptrdiff_t error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err_printer;
 	error = TPP_PrintToken(&unicode_printer_tppappend, &printer);
 	COMPILER_END();
 	if unlikely(error)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
 PRIVATE ptrdiff_t
 (TPPCALL unicode_printer_tppappend_escape)(void *arg, char const *__restrict buf, size_t bufsize) {
 	Dee_ssize_t result;
-	result = DeeFormat_Quote(&unicode_printer_print, arg, buf, bufsize);
+	result = DeeFormat_Quote(&Dee_unicode_printer_print, arg, buf, bufsize);
 	return unlikely(result < 0) ? -1 : 0;
 }
 
@@ -3119,20 +3119,20 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_repr(DeeCompilerWrapperObject *__restrict self) {
 	ptrdiff_t error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err_printer;
-	if unlikely(unicode_printer_putc(&printer, '\"'))
+	if unlikely(Dee_unicode_printer_putc(&printer, '\"'))
 		goto err_printer;
 	error = TPP_PrintToken(&unicode_printer_tppappend_escape, &printer);
 	COMPILER_END();
 	if unlikely(error)
 		goto err_printer;
-	if unlikely(unicode_printer_putc(&printer, '\"'))
+	if unlikely(Dee_unicode_printer_putc(&printer, '\"'))
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -3313,7 +3313,7 @@ PRIVATE struct type_getset tpconst lexer_token_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_token_decodestring(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	DeeArg_Unpack0(err_printer, argc, argv, "decodestring");
 	if (COMPILER_BEGIN(self->cw_compiler))
 		goto err_printer;
@@ -3327,9 +3327,9 @@ lexer_token_decodestring(DeeCompilerWrapperObject *self, size_t argc, DeeObject 
 	COMPILER_END();
 	if unlikely(error)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -3343,7 +3343,7 @@ lexer_token_decodeinteger(DeeCompilerWrapperObject *self, size_t argc, DeeObject
 		goto done;
 	if (TPPLexer_Current->l_token.t_id == TOK_INT) {
 		result = DeeInt_FromString(token.t_begin, (size_t)(token.t_end - token.t_begin),
-		                           DEEINT_STRING(0, DEEINT_STRING_FESCAPED));
+		                           Dee_INT_STRING(0, Dee_INT_STRING_FESCAPED));
 	} else if (TPPLexer_Current->l_token.t_id == TOK_CHAR) {
 		tint_t value;
 		if unlikely(TPP_Atoi(&value) == TPP_ATOI_ERR)

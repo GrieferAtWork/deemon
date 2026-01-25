@@ -34,7 +34,7 @@
 #include <deemon/system-features.h>
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
-#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist_*, _Dee_objectlist_setalloc, objectlist_fini, objectlist_init */
+#include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist_*, _Dee_objectlist_setalloc, Dee_objectlist_fini, Dee_objectlist_init */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
@@ -56,7 +56,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_ctor(CachedSeq_WithIter *__restrict self) {
 	self->cswi_iter = NULL;
 	Dee_atomic_lock_init(&self->cswi_lock);
-	objectlist_init(&self->cswi_cache);
+	Dee_objectlist_init(&self->cswi_cache);
 	return 0;
 }
 
@@ -106,7 +106,7 @@ cswi_copy(CachedSeq_WithIter *__restrict self,
 	}
 	return 0;
 err_cache:
-	objectlist_fini(&self->cswi_cache);
+	Dee_objectlist_fini(&self->cswi_cache);
 err:
 	return -1;
 }
@@ -161,7 +161,7 @@ cswi_init(CachedSeq_WithIter *__restrict self,
 	DeeArg_Unpack1(err, argc, argv, "_CachedSeqWithIter", &self->cswi_iter);
 	Dee_Incref(self->cswi_iter);
 	Dee_atomic_lock_init(&self->cswi_lock);
-	objectlist_init(&self->cswi_cache);
+	Dee_objectlist_init(&self->cswi_cache);
 	return 0;
 err:
 	return -1;
@@ -228,7 +228,7 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 cswi_fini(CachedSeq_WithIter *__restrict self) {
-	objectlist_fini(&self->cswi_cache);
+	Dee_objectlist_fini(&self->cswi_cache);
 	Dee_XDecref(self->cswi_iter);
 }
 
@@ -857,30 +857,30 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 PRIVATE struct {
 	Dee_OBJECT_HEAD
 	Dee_ssize_t ob_size;
-	Dee_digit_t ob_digit[CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS)];
+	Dee_digit_t ob_digit[CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS)];
 } int_SIZE_MAX_plus_1 = {
 	OBJECT_HEAD_INIT(&DeeInt_Type),
-	CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS),
+	CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS),
 	{
-#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 2
-#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 3
-#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 4
-#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 5
-#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 6
-#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 7
-#error "Unsupported __SIZEOF_SIZE_T__/DIGIT_BITS combination"
-#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 7 */
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 2
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 3
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 4
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 5
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 6
+#if CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 7
+#error "Unsupported __SIZEOF_SIZE_T__/Dee_DIGIT_BITS combination"
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 7 */
 		0,
-#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 6 */
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 6 */
 		0,
-#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 5 */
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 5 */
 		0,
-#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 4 */
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 4 */
 		0,
-#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 3 */
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 3 */
 		0,
-#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, DIGIT_BITS) >= 2 */
-		((Dee_digit_t)1 << ((__SIZEOF_SIZE_T__ * __CHAR_BIT__) % DIGIT_BITS))
+#endif /* CEILDIV(__SIZEOF_SIZE_T__ * __CHAR_BIT__, Dee_DIGIT_BITS) >= 2 */
+		((Dee_digit_t)1 << ((__SIZEOF_SIZE_T__ * __CHAR_BIT__) % Dee_DIGIT_BITS))
 	}
 };
 
@@ -934,7 +934,7 @@ cswgi_ctor(CachedSeq_WithGetItem *__restrict self) {
 	self->cswgi_maxsize.csi_index   = 0;
 	self->cswgi_loaded.csi_indexob  = NULL;
 	self->cswgi_loaded.csi_index    = 0;
-	objectlist_init(&self->cswgi_vector);
+	Dee_objectlist_init(&self->cswgi_vector);
 	indexbtab_init(&self->cswgi_btab);
 	return 0;
 }
@@ -955,7 +955,7 @@ cswgi_init(CachedSeq_WithGetItem *__restrict self,
 	self->cswgi_loaded.csi_indexob  = NULL;
 	self->cswgi_loaded.csi_index    = 0;
 	Dee_atomic_lock_init(&self->cswgi_lock);
-	objectlist_init(&self->cswgi_vector);
+	Dee_objectlist_init(&self->cswgi_vector);
 	indexbtab_init(&self->cswgi_btab);
 	return 0;
 }
@@ -1079,7 +1079,7 @@ again_copy_indexbtab_locked:
 	self->cswgi_seq = other->cswgi_seq;
 	Dee_XIncref(self->cswgi_seq);
 	CachedSeq_WithGetItem_LockRelease(other);
-	objectlist_init(&self->cswgi_vector);
+	Dee_objectlist_init(&self->cswgi_vector);
 	indexbtab_init(&self->cswgi_btab);
 	Dee_atomic_lock_init(&self->cswgi_lock);
 	return 0;

@@ -220,35 +220,35 @@ END(_impl_assert_failed)
 #define Dee_BOUND_NO       0
 #endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
-#define DEE_STDIN  0
-#define DEE_STDOUT 1
-#define DEE_STDERR 2
+#define Dee_STDIN  0
+#define Dee_STDOUT 1
+#define Dee_STDERR 2
 
 #define ITER_DONE                 -1
-#define CODE_FRAME_NOT_EXECUTING  -1
+#define Dee_CODE_FRAME_NOT_EXECUTING  -1
 
 #define Dee_MODULE_FNORMAL        0x0000      /* Normal module flags. */
 #define Dee_MODULE_FDIDINIT       0x8000      /* The module has been initialized. */
 
-#define EXCEPTION_HANDLER_FNORMAL  0x0000
-#define EXCEPTION_HANDLER_FFINALLY 0x0001
-#define EXCEPTION_HANDLER_FINTERPT 0x0002
-#define EXCEPTION_HANDLER_FHANDLED 0x0004
+#define Dee_EXCEPTION_HANDLER_FNORMAL  0x0000
+#define Dee_EXCEPTION_HANDLER_FFINALLY 0x0001
+#define Dee_EXCEPTION_HANDLER_FINTERPT 0x0002
+#define Dee_EXCEPTION_HANDLER_FHANDLED 0x0004
 
-#define CODE_FNORMAL      0x0000
-#define CODE_FYIELDING    0x0001
-#define CODE_FCOPYABLE    0x0002
-#define CODE_FASSEMBLY    0x0004
-#define CODE_FLENIENT     0x0008
-#define CODE_FVARARGS     0x0010
-#define CODE_FVARKWDS     0x0020
-#define CODE_FTHISCALL    0x0040
-#define CODE_FHEAPFRAME   0x0080
-#define CODE_FFINALLY     0x0100
-#define CODE_FCONSTRUCTOR 0x0200
+#define Dee_CODE_FNORMAL      0x0000
+#define Dee_CODE_FYIELDING    0x0001
+#define Dee_CODE_FCOPYABLE    0x0002
+#define Dee_CODE_FASSEMBLY    0x0004
+#define Dee_CODE_FLENIENT     0x0008
+#define Dee_CODE_FVARARGS     0x0010
+#define Dee_CODE_FVARKWDS     0x0020
+#define Dee_CODE_FTHISCALL    0x0040
+#define Dee_CODE_FHEAPFRAME   0x0080
+#define Dee_CODE_FFINALLY     0x0100
+#define Dee_CODE_FCONSTRUCTOR 0x0200
 
 #define CONFIG_HAVE_EXEC_ALTSTACK
-#define DEE_EXEC_ALTSTACK_PERIOD  1024
+#define Dee_EXEC_ALTSTACK_PERIOD  1024
 
 #define ERROR_HANDLED_NORMAL    0x0000
 #define ERROR_HANDLED_RESTORE   0x0001
@@ -267,15 +267,15 @@ END(_impl_assert_failed)
 #define TP_FDOCOBJECT    0x4000
 #define TP_FHEAP         0x8000
 
-#define TRIGGER_BREAKPOINT_MIN (-2)
-#define TRIGGER_BREAKPOINT_MAX   4
-#define TRIGGER_BREAKPOINT_EXCEPT_EXIT (-2)
-#define TRIGGER_BREAKPOINT_EXCEPT   (-1)
-#define TRIGGER_BREAKPOINT_CONTINUE   0
-#define TRIGGER_BREAKPOINT_CONTSAFE   1
-#define TRIGGER_BREAKPOINT_RETURN     2
-#define TRIGGER_BREAKPOINT_EXIT       3
-#define TRIGGER_BREAKPOINT_EXIT_NOFIN 4
+#define Dee_TRIGGER_BREAKPOINT_MIN (-2)
+#define Dee_TRIGGER_BREAKPOINT_MAX   4
+#define Dee_TRIGGER_BREAKPOINT_EXCEPT_EXIT (-2)
+#define Dee_TRIGGER_BREAKPOINT_EXCEPT   (-1)
+#define Dee_TRIGGER_BREAKPOINT_CONTINUE   0
+#define Dee_TRIGGER_BREAKPOINT_CONTSAFE   1
+#define Dee_TRIGGER_BREAKPOINT_RETURN     2
+#define Dee_TRIGGER_BREAKPOINT_EXIT       3
+#define Dee_TRIGGER_BREAKPOINT_EXIT_NOFIN 4
 
 
 #ifdef CONFIG_TRACE_REFCHANGES
@@ -285,9 +285,9 @@ END(_impl_assert_failed)
 
 
 /* Define member offsets. */
-#define DEE_OBJECT_OFFSETOF_REFCNT  0
-#define DEE_OBJECT_OFFSETOF_TYPE    4
-#define DEE_OBJECT_OFFSETOF_DATA    8
+#define Dee_OBJECT_OFFSETOF_REFCNT  0
+#define Dee_OBJECT_OFFSETOF_TYPE    4
+#define Dee_OBJECT_OFFSETOF_DATA    8
 
 
 /* struct type_math { */
@@ -311,7 +311,7 @@ END(_impl_assert_failed)
 #define tp_pow    68
 /* }; */
 
-/* struct type_object { */
+/* struct Dee_type_object { */
 #define tp_name                8 /* char *tp_name; */
 #define tp_doc                12 /* char *tp_doc; */
 #define tp_flags              16 /* uint16_t tp_flags; */
@@ -342,80 +342,80 @@ END(_impl_assert_failed)
 /* ... */
 /* }; */
 
-/* struct tuple_object { */
-#define t_size          DEE_OBJECT_OFFSETOF_DATA    /* size_t t_size; */
-#define t_elem         (DEE_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject *t_elem[]; */
+/* struct Dee_tuple_object { */
+#define t_size          Dee_OBJECT_OFFSETOF_DATA    /* size_t t_size; */
+#define t_elem         (Dee_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject *t_elem[]; */
 /* }; */
 
-/* struct super_object { */
-#define s_type          DEE_OBJECT_OFFSETOF_DATA    /* DREF DeeTypeObject *s_type; */
-#define s_self         (DEE_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject *s_self; */
+/* struct Dee_super_object { */
+#define s_type          Dee_OBJECT_OFFSETOF_DATA    /* DREF DeeTypeObject *s_type; */
+#define s_self         (Dee_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject *s_self; */
 /* }; */
 
 
-/* struct module_object { */
+/* struct Dee_module_object { */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#define mo_absname    DEE_OBJECT_OFFSETOF_DATA     /* char                          *mo_absname; */
-#define mo_absnode   (DEE_OBJECT_OFFSETOF_DATA+4)  /* struct Dee_module_treenode     mo_absnode; */
-#define mo_libname   (DEE_OBJECT_OFFSETOF_DATA+16) /* struct Dee_module_libentry     mo_libname; */
-#define mo_dir       (DEE_OBJECT_OFFSETOF_DATA+40) /* DREF struct Dee_tuple_object  *mo_dir; */
-#define mo_moddata   (DEE_OBJECT_OFFSETOF_DATA+44) /* union Dee_module_moddata       mo_moddata; */
-#define mo_init      (DEE_OBJECT_OFFSETOF_DATA+48) /* struct Dee_thread_object      *mo_init; */
-#define mo_flags     (DEE_OBJECT_OFFSETOF_DATA+52) /* uint16_t                       mo_flags; */
-#define mo_importc   (DEE_OBJECT_OFFSETOF_DATA+54) /* uint16_t                       mo_importc; */
-#define mo_globalc   (DEE_OBJECT_OFFSETOF_DATA+56) /* uint16_t                       mo_globalc; */
-#define mo_bucketm   (DEE_OBJECT_OFFSETOF_DATA+58) /* uint16_t                       mo_bucketm; */
-#define mo_bucketv   (DEE_OBJECT_OFFSETOF_DATA+60) /* struct Dee_module_symbol      *mo_bucketv; */
-#define mo_importv   (DEE_OBJECT_OFFSETOF_DATA+64) /* DREF DeeModuleObject   *const *mo_importv; */
+#define mo_absname    Dee_OBJECT_OFFSETOF_DATA     /* char                          *mo_absname; */
+#define mo_absnode   (Dee_OBJECT_OFFSETOF_DATA+4)  /* struct Dee_module_treenode     mo_absnode; */
+#define mo_libname   (Dee_OBJECT_OFFSETOF_DATA+16) /* struct Dee_module_libentry     mo_libname; */
+#define mo_dir       (Dee_OBJECT_OFFSETOF_DATA+40) /* DREF struct Dee_tuple_object  *mo_dir; */
+#define mo_moddata   (Dee_OBJECT_OFFSETOF_DATA+44) /* union Dee_module_moddata       mo_moddata; */
+#define mo_init      (Dee_OBJECT_OFFSETOF_DATA+48) /* struct Dee_thread_object      *mo_init; */
+#define mo_flags     (Dee_OBJECT_OFFSETOF_DATA+52) /* uint16_t                       mo_flags; */
+#define mo_importc   (Dee_OBJECT_OFFSETOF_DATA+54) /* uint16_t                       mo_importc; */
+#define mo_globalc   (Dee_OBJECT_OFFSETOF_DATA+56) /* uint16_t                       mo_globalc; */
+#define mo_bucketm   (Dee_OBJECT_OFFSETOF_DATA+58) /* uint16_t                       mo_bucketm; */
+#define mo_bucketv   (Dee_OBJECT_OFFSETOF_DATA+60) /* struct Dee_module_symbol      *mo_bucketv; */
+#define mo_importv   (Dee_OBJECT_OFFSETOF_DATA+64) /* DREF DeeModuleObject   *const *mo_importv; */
 #ifndef CONFIG_NO_THREADS
-#define mo_lock      (DEE_OBJECT_OFFSETOF_DATA+68) /* Dee_atomic_rwlock_t            mo_lock; */
-#define _AFTER_mo_lock (DEE_OBJECT_OFFSETOF_DATA+72)
+#define mo_lock      (Dee_OBJECT_OFFSETOF_DATA+68) /* Dee_atomic_rwlock_t            mo_lock; */
+#define _AFTER_mo_lock (Dee_OBJECT_OFFSETOF_DATA+72)
 #else /* !CONFIG_NO_THREADS */
-#define _AFTER_mo_lock (DEE_OBJECT_OFFSETOF_DATA+68)
+#define _AFTER_mo_lock (Dee_OBJECT_OFFSETOF_DATA+68)
 #endif /* CONFIG_NO_THREADS */
 #define _MODULE_ob_weakrefs _AFTER_mo_lock
 #define mo_globalv   (_MODULE_ob_weakrefs+4)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#define mo_name         DEE_OBJECT_OFFSETOF_DATA     /* DREF struct string_object *mo_name; */
-#define mo_pself       (DEE_OBJECT_OFFSETOF_DATA+4)  /* DeeModuleObject **mo_pself; */
-#define mo_next        (DEE_OBJECT_OFFSETOF_DATA+8)  /* DeeModuleObject *mo_next; */
-#define mo_path        (DEE_OBJECT_OFFSETOF_DATA+12) /* DREF struct string_object *mo_path; */
+#define mo_name         Dee_OBJECT_OFFSETOF_DATA     /* DREF struct Dee_string_object *mo_name; */
+#define mo_pself       (Dee_OBJECT_OFFSETOF_DATA+4)  /* DeeModuleObject **mo_pself; */
+#define mo_next        (Dee_OBJECT_OFFSETOF_DATA+8)  /* DeeModuleObject *mo_next; */
+#define mo_path        (Dee_OBJECT_OFFSETOF_DATA+12) /* DREF struct Dee_string_object *mo_path; */
 #ifdef CONFIG_HOST_WINDOWS /* DeeSystem_HAVE_FS_ICASE */
-#define mo_pathihash   (DEE_OBJECT_OFFSETOF_DATA+16) /* Dee_hash_t mo_pathihash; */
-#define mo_globpself   (DEE_OBJECT_OFFSETOF_DATA+20) /* DeeModuleObject **mo_globpself; */
+#define mo_pathihash   (Dee_OBJECT_OFFSETOF_DATA+16) /* Dee_hash_t mo_pathihash; */
+#define mo_globpself   (Dee_OBJECT_OFFSETOF_DATA+20) /* DeeModuleObject **mo_globpself; */
 #else /* CONFIG_HOST_WINDOWS */
-#define mo_globpself   (DEE_OBJECT_OFFSETOF_DATA+16) /* DeeModuleObject **mo_globpself; */
+#define mo_globpself   (Dee_OBJECT_OFFSETOF_DATA+16) /* DeeModuleObject **mo_globpself; */
 #endif /* !CONFIG_HOST_WINDOWS */
 #define mo_globnext    (mo_globpself+4) /* DeeModuleObject *mo_globnext; */
 #define mo_importc     (mo_globpself+8) /* uint16_t mo_importc; */
 #define mo_globalc     (mo_globpself+10) /* uint16_t mo_globalc; */
 #define mo_flags       (mo_globpself+12) /* uint16_t mo_flags; */
 #define mo_bucketm     (mo_globpself+14) /* uint16_t mo_bucketm; */
-#define mo_bucketv     (mo_globpself+16) /* struct module_symbol *const *mo_bucketv; */
+#define mo_bucketv     (mo_globpself+16) /* struct Dee_module_symbol *const *mo_bucketv; */
 #define mo_importv     (mo_globpself+20) /* DREF DeeModuleObject *const *mo_importv; */
 #define mo_globalv     (mo_globpself+24) /* DREF DeeObject **mo_globalv; */
 #define mo_root        (mo_globpself+28) /* DREF DeeCodeObject *mo_root; */
 #ifndef CONFIG_NO_THREADS
 #define mo_lock        (mo_globpself+32) /* Dee_atomic_rwlock_t mo_lock; */
-#define mo_loader      (mo_globpself+36) /* struct thread_object *mo_loader; */
+#define mo_loader      (mo_globpself+36) /* struct Dee_thread_object *mo_loader; */
 #endif /* !CONFIG_NO_THREADS */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 /* }; */
 
-/* struct except_frame { */
+/* struct Dee_except_frame { */
 #define sizeof_except_frame 12
-#define ef_prev         0 /* struct except_frame *ef_prev; */
+#define ef_prev         0 /* struct Dee_except_frame *ef_prev; */
 #define ef_error        4 /* DREF DeeObject *ef_error; */
-#define ef_trace        8 /* DREF struct traceback_object *ef_trace; */
+#define ef_trace        8 /* DREF struct Dee_traceback_object *ef_trace; */
 /* }; */
 
-/* struct thread_object { */
-#define t_inthookon     DEE_OBJECT_OFFSETOF_DATA    /* Dee_refcnt_t t_inthookon */
+/* struct Dee_thread_object { */
+#define t_inthookon     Dee_OBJECT_OFFSETOF_DATA    /* Dee_refcnt_t t_inthookon */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#define t_import_curr  (DEE_OBJECT_OFFSETOF_DATA+4) /* struct Dee_import_frame *t_import_curr; */
-#define t_str_curr     (DEE_OBJECT_OFFSETOF_DATA+8) /* struct Dee_repr_frame *t_str_curr; */
+#define t_import_curr  (Dee_OBJECT_OFFSETOF_DATA+4) /* struct Dee_import_frame *t_import_curr; */
+#define t_str_curr     (Dee_OBJECT_OFFSETOF_DATA+8) /* struct Dee_repr_frame *t_str_curr; */
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-#define t_str_curr     (DEE_OBJECT_OFFSETOF_DATA+4) /* struct Dee_repr_frame *t_str_curr; */
+#define t_str_curr     (Dee_OBJECT_OFFSETOF_DATA+4) /* struct Dee_repr_frame *t_str_curr; */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define t_repr_curr    (t_str_curr+4)               /* struct Dee_repr_frame *t_repr_curr; */
 #define t_hash_curr    (t_str_curr+8)               /* struct Dee_repr_frame *t_hash_curr; */
@@ -426,7 +426,7 @@ END(_impl_assert_failed)
 #define t_exceptsz     (t_str_curr+38)              /* uint16_t t_exceptsz; */
 /* }; */
 
-/* struct except_handler { */
+/* struct Dee_except_handler { */
 #define sizeof_except_handler 20
 #define eh_mask         0 /* DREF DeeTypeObject *eh_mask;  */
 #define eh_start        4 /* code_addr_t eh_start; */
@@ -436,25 +436,25 @@ END(_impl_assert_failed)
 #define eh_flags       18 /* uint16_t eh_flags; */
 /* }; */
 
-/* struct code_object { */
+/* struct Dee_code_object { */
 #define ob_refcnt       0                            /* Dee_refcnt_t ob_refcnt; */
-#define ob_type         DEE_OBJECT_OFFSETOF_TYPE     /* DeeTypeObject *ob_type; */
-#define co_flags        DEE_OBJECT_OFFSETOF_DATA     /* uint16_t co_flags; */
-#define co_localc      (DEE_OBJECT_OFFSETOF_DATA+2)  /* uint16_t co_localc; */
-#define co_constc      (DEE_OBJECT_OFFSETOF_DATA+4)  /* uint16_t co_constc; */
-#define co_refc        (DEE_OBJECT_OFFSETOF_DATA+6)  /* uint16_t co_refc; */
-#define co_refstaticc  (DEE_OBJECT_OFFSETOF_DATA+8)  /* uint16_t co_refstaticc; */
-#define co_exceptc     (DEE_OBJECT_OFFSETOF_DATA+10) /* uint16_t co_exceptc; */
-#define co_argc_min    (DEE_OBJECT_OFFSETOF_DATA+12) /* uint16_t co_argc_min; */
-#define co_argc_max    (DEE_OBJECT_OFFSETOF_DATA+14) /* uint16_t co_argc_max; */
-#define co_framesize   (DEE_OBJECT_OFFSETOF_DATA+16) /* uint32_t co_framesize; */
-#define co_codebytes   (DEE_OBJECT_OFFSETOF_DATA+20) /* code_size_t co_codebytes; */
-#define co_module      (DEE_OBJECT_OFFSETOF_DATA+24) /* DREF DeeModuleObject *co_module; */
+#define ob_type         Dee_OBJECT_OFFSETOF_TYPE     /* DeeTypeObject *ob_type; */
+#define co_flags        Dee_OBJECT_OFFSETOF_DATA     /* uint16_t co_flags; */
+#define co_localc      (Dee_OBJECT_OFFSETOF_DATA+2)  /* uint16_t co_localc; */
+#define co_constc      (Dee_OBJECT_OFFSETOF_DATA+4)  /* uint16_t co_constc; */
+#define co_refc        (Dee_OBJECT_OFFSETOF_DATA+6)  /* uint16_t co_refc; */
+#define co_refstaticc  (Dee_OBJECT_OFFSETOF_DATA+8)  /* uint16_t co_refstaticc; */
+#define co_exceptc     (Dee_OBJECT_OFFSETOF_DATA+10) /* uint16_t co_exceptc; */
+#define co_argc_min    (Dee_OBJECT_OFFSETOF_DATA+12) /* uint16_t co_argc_min; */
+#define co_argc_max    (Dee_OBJECT_OFFSETOF_DATA+14) /* uint16_t co_argc_max; */
+#define co_framesize   (Dee_OBJECT_OFFSETOF_DATA+16) /* uint32_t co_framesize; */
+#define co_codebytes   (Dee_OBJECT_OFFSETOF_DATA+20) /* code_size_t co_codebytes; */
+#define co_module      (Dee_OBJECT_OFFSETOF_DATA+24) /* DREF DeeModuleObject *co_module; */
 #define co_next        co_module      /* DREF DeeCodeObject *co_next; */
-#define co_keywords    (co_module+4)  /* DREF struct kwds_object *co_keywords; */
+#define co_keywords    (co_module+4)  /* DREF struct Dee_kwds_object *co_keywords; */
 #define co_defaultv    (co_module+8)  /* DREF DeeObject *const *co_defaultv; */
 #define co_constv     (co_module+12) /* DREF DeeObject **co_constv; */
-#define co_exceptv     (co_module+16) /* struct except_handler *co_exceptv; */
+#define co_exceptv     (co_module+16) /* struct Dee_except_handler *co_exceptv; */
 #define co_ddi         (co_module+20) /* DREF DeeDDIObject *co_ddi; */
 #ifdef CONFIG_HAVE_CODE_METRICS
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
@@ -481,41 +481,41 @@ END(_impl_assert_failed)
 #define co_code        _AFTER_co_hostasm /* instruction_t co_code[1]; */
 /* }; */
 
-/* struct code_frame_kwds { */
+/* struct Dee_code_frame_kwds { */
 #define fk_varkwds   0  /* DREF DeeObject *fk_varkwds; */
 #define fk_kw        4  /* DREF DeeObject *fk_kw; */
 #define fk_kargv     8  /* DREF DeeObject *fk_kargv[]; */
 /* }; */
 
-/* struct code_frame { */
-#define cf_prev      0  /* struct code_frame *cf_prev; */
+/* struct Dee_code_frame { */
+#define cf_prev      0  /* struct Dee_code_frame *cf_prev; */
 #define cf_func      4  /* DeeFunctionObject *cf_func; */
 #define cf_argc      8  /* size_t cf_argc; */
 #define cf_argv      12 /* DREF DeeObject **cf_argv; */
-#define cf_kw        16 /* struct code_frame_kwds *cf_kw; */
+#define cf_kw        16 /* struct Dee_code_frame_kwds *cf_kw; */
 #define cf_frame     20 /* DREF DeeObject **cf_frame; */
 #define cf_stack     24 /* DREF DeeObject **cf_stack; */
 #define cf_sp        28 /* DeeObject **cf_sp; */
 #define cf_ip        32 /* instruction_t *cf_ip; */
-#define cf_vargs     36 /* DREF struct tuple_object *cf_vargs; */
+#define cf_vargs     36 /* DREF struct Dee_tuple_object *cf_vargs; */
 #define cf_this      40 /* DeeObject *cf_this; */
 #define cf_result    44 /* DeeObject *cf_result; */
 #define cf_stacksz   46 /* uint16_t cf_stacksz; */
 #define cf_flags     50 /* uint16_t cf_flags; */
 /* }; */
 
-/* struct function_object { */
-#define fo_code      DEE_OBJECT_OFFSETOF_DATA    /* DREF DeeCodeObject *fo_code; */
+/* struct Dee_function_object { */
+#define fo_code      Dee_OBJECT_OFFSETOF_DATA    /* DREF DeeCodeObject *fo_code; */
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define SIZEOF_Dee_hostasm_function 20
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #define SIZEOF_Dee_hostasm_function 12
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
-#define fo_hostasm  (DEE_OBJECT_OFFSETOF_DATA+4) /* struct Dee_hostasm_function fo_hostasm; */
-#define _AFTER_fo_hostasm  (DEE_OBJECT_OFFSETOF_DATA+4+SIZEOF_Dee_hostasm_function)
+#define fo_hostasm  (Dee_OBJECT_OFFSETOF_DATA+4) /* struct Dee_hostasm_function fo_hostasm; */
+#define _AFTER_fo_hostasm  (Dee_OBJECT_OFFSETOF_DATA+4+SIZEOF_Dee_hostasm_function)
 #else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#define _AFTER_fo_hostasm (DEE_OBJECT_OFFSETOF_DATA+4)
+#define _AFTER_fo_hostasm (Dee_OBJECT_OFFSETOF_DATA+4)
 #endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 #ifndef CONFIG_NO_THREADS
 #define fo_reflock  _AFTER_fo_hostasm /* Dee_atomic_rwlock_t fo_reflock; */
@@ -540,16 +540,16 @@ END(_impl_assert_failed)
 #define FOURTH -16(SP)
 
 
-#define FRAME_PREV     cf_prev(FRAME)    /* struct code_frame   *cf_prev; */
+#define FRAME_PREV     cf_prev(FRAME)    /* struct Dee_code_frame   *cf_prev; */
 #define FRAME_FUNC     cf_func(FRAME)    /* DeeFunctionObject   *cf_func; */
 #define FRAME_ARGC     cf_argc(FRAME)    /* size_t               cf_argc; */
 #define FRAME_ARGV     cf_argv(FRAME)    /* DREF DeeObject     **cf_argv; */
-#define FRAME_KW       cf_kw(FRAME)      /* struct code_frame_kwds *cf_kw; */
+#define FRAME_KW       cf_kw(FRAME)      /* struct Dee_code_frame_kwds *cf_kw; */
 #define FRAME_FRAME    cf_frame(FRAME)   /* DREF DeeObject     **cf_frame; */
 #define FRAME_STACK    cf_stack(FRAME)   /* DREF DeeObject     **cf_stack; */
 #define FRAME_SP       cf_sp(FRAME)      /* DeeObject          **cf_sp; */
 #define FRAME_PC       cf_ip(FRAME)      /* instruction_t       *cf_ip; */
-#define FRAME_VARARGS  cf_vargs(FRAME)   /* DREF struct tuple_object *cf_vargs; */
+#define FRAME_VARARGS  cf_vargs(FRAME)   /* DREF struct Dee_tuple_object *cf_vargs; */
 #define FRAME_THIS     cf_this(FRAME)    /* DeeObject           *cf_this; */
 #define FRAME_RESULT   cf_result(FRAME)  /* DeeObject           *cf_result; */
 #define FRAME_STACKSZ  cf_stacksz(FRAME) /* uint16_t             cf_stacksz; */
@@ -574,7 +574,7 @@ END(_impl_assert_failed)
 	testw flag, co_flags(scratch);
 #endif
 
-#define _SYM_DeeInt_STRIDE (DEE_OBJECT_OFFSETOF_DATA + 8)
+#define _SYM_DeeInt_STRIDE (Dee_OBJECT_OFFSETOF_DATA + 8)
 #define SYM_DeeInt_MinusOne (SYM(DeeInt_MinusOne_Zero_One))
 #define SYM_DeeInt_Zero     (SYM(DeeInt_MinusOne_Zero_One) + _SYM_DeeInt_STRIDE * 1)
 #define SYM_DeeInt_One      (SYM(DeeInt_MinusOne_Zero_One) + _SYM_DeeInt_STRIDE * 2)
@@ -698,11 +698,11 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 	jae    stack_overflow
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
-#if (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD-1)) != 0
-#error "`DEE_EXEC_ALTSTACK_PERIOD' must be a power-of-2"
-#endif /* (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD-1)) != 0 */
-	andw   $(DEE_EXEC_ALTSTACK_PERIOD-1), %cx
-	cmpw   $(DEE_EXEC_ALTSTACK_PERIOD-1), %cx
+#if (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD-1)) != 0
+#error "`Dee_EXEC_ALTSTACK_PERIOD' must be a power-of-2"
+#endif /* (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD-1)) != 0 */
+	andw   $(Dee_EXEC_ALTSTACK_PERIOD-1), %cx
+	cmpw   $(Dee_EXEC_ALTSTACK_PERIOD-1), %cx
 	/* if (IS_ALTSTACK_PERIOD(this_thread->t_execsz)) goto exec_on_altstack; */
 	je     exec_on_altstack
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
@@ -741,7 +741,7 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 
 	LOAD_CODE(%edx)
 	movl   co_ddi(CODE_OR_EDX), %ecx
-	movzwl 44(%ecx), %ecx /* struct ddi_object::d_start.dr_name */
+	movzwl 44(%ecx), %ecx /* struct Dee_ddi_object::d_start.dr_name */
 	pushl  %ecx
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_EDX
@@ -786,7 +786,7 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 
 	/* Invoke finally-handlers. */
 .end_return:
-	TEST_CODE_FLAG($(CODE_FFINALLY),%eax)
+	TEST_CODE_FLAG($(Dee_CODE_FFINALLY),%eax)
 	jnz    run_finally_after_return
 
 	/* Save execution state. */
@@ -799,7 +799,7 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 	decw   t_execsz(%eax) /* --this_thread->t_execsz */
 	movl   cf_prev(FRAME), %ecx
 	movl   %ecx, t_exec(%eax) /* this_thread->t_exec = frame->cf_prev; */
-	movl   $(CODE_FRAME_NOT_EXECUTING), cf_prev(FRAME) /* frame->cf_prev = CODE_FRAME_NOT_EXECUTING */
+	movl   $(Dee_CODE_FRAME_NOT_EXECUTING), cf_prev(FRAME) /* frame->cf_prev = Dee_CODE_FRAME_NOT_EXECUTING */
 
 .end_nounhook:
 	/* Make sure that no more than a single new exception was raised. */
@@ -1026,7 +1026,7 @@ IF_USE_CFI(.cfi_restore_state)
 
 #define ASSERT_YIELDING  \
 	ASSERT(LOAD_CODE(%eax); \
-	       testw $(CODE_FYIELDING), co_flags(CODE_OR_EAX))
+	       testw $(Dee_CODE_FYIELDING), co_flags(CODE_OR_EAX))
 
 
 
@@ -1087,8 +1087,8 @@ run_finally_after_return:
 #error FIXME
 #endif /* sizeof_except_handler != 20 */
 1:	subl   $(sizeof_except_handler), %edx
-	testw  $(EXCEPTION_HANDLER_FFINALLY), eh_flags(%edx)
-	jz     2f /* if (!EXCEPTION_HANDLER_FFINALLY) continue; */
+	testw  $(Dee_EXCEPTION_HANDLER_FFINALLY), eh_flags(%edx)
+	jz     2f /* if (!Dee_EXCEPTION_HANDLER_FFINALLY) continue; */
 	cmpl   eh_start(%edx), %eax
 	jb     2f /* if (ip_addr < eh_start) continue; */
 	cmpl   eh_end(%edx), %eax
@@ -1212,7 +1212,7 @@ run_finally_after_return:
 	testw  $(TP_FINTERRUPT), tp_flags(%ecx)
 	jz     3f /* Not an interrupt type. */
 	/* Ensure that this is an interrupt handler. */
-	testw  $(EXCEPTION_HANDLER_FINTERPT), eh_flags(%edx)
+	testw  $(Dee_EXCEPTION_HANDLER_FINTERPT), eh_flags(%edx)
 	jz     9f /* pop ECX; pop EAX; continue; */
 3:	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
@@ -1256,7 +1256,7 @@ run_except_handler_in_pop_handled_x8:
 	addl   $8, %esp
 run_except_handler_in_edx_handled:
 	/* If the exception handler requests it, pre-handle the error. */
-	testw  $(EXCEPTION_HANDLER_FHANDLED), eh_flags(%edx)
+	testw  $(Dee_EXCEPTION_HANDLER_FHANDLED), eh_flags(%edx)
 	jz     run_except_handler_in_edx
 	/* Pre-handle the exception. */
 	pushl  %edx
@@ -1270,7 +1270,7 @@ run_except_handler_in_edx_handled:
 run_except_handler_in_edx:
 	/* Entry point: Setup and start executing an exception
 	 *              handler whose descriptor is stored in EDX. */
-	/* EDX: `struct except_handler *' */
+	/* EDX: `struct Dee_except_handler *' */
 #ifdef CODE_IS_REGISTER
 	leal   co_code(CODE),    PC
 	addl   eh_addr(%edx),    PC /* ip = code->co_code + eh_addr; */
@@ -1313,11 +1313,11 @@ run_except_handler_in_edx:
 .text
 stack_overflow:
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
-#if (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) != 0
-#error "`DEE_EXEC_ALTSTACK_PERIOD' must be a power-of-2"
-#endif /* (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) != 0 */
-	andw   $(DEE_EXEC_ALTSTACK_PERIOD-1), %cx
-	cmpw   $(DEE_EXEC_ALTSTACK_PERIOD-1), %cx
+#if (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD - 1)) != 0
+#error "`Dee_EXEC_ALTSTACK_PERIOD' must be a power-of-2"
+#endif /* (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD - 1)) != 0 */
+	andw   $(Dee_EXEC_ALTSTACK_PERIOD-1), %cx
+	cmpw   $(Dee_EXEC_ALTSTACK_PERIOD-1), %cx
 	jne    1f /* if (!IS_ALTSTACK_PERIOD(this_thread->t_execsz)) goto 1f; */
 	cmpl   t_exec(%eax), FRAME
 	jne    1f /* if (this_thread->t_exec != frame) goto 1f; */
@@ -1411,7 +1411,7 @@ target_extended1:
 
 target_ret_none:
 	unset_result %eax
-	TEST_CODE_FLAG($(CODE_FYIELDING),%eax)
+	TEST_CODE_FLAG($(Dee_CODE_FYIELDING),%eax)
 	jz     1f
 	repeat_instruction
 	movl   $(ITER_DONE), FRAME_RESULT
@@ -1427,7 +1427,7 @@ target_ret:
 	unset_result %eax
 	sp_pop %eax
 	movl   %eax, FRAME_RESULT
-	TEST_CODE_FLAG($(CODE_FYIELDING),%ecx)
+	TEST_CODE_FLAG($(Dee_CODE_FYIELDING),%ecx)
 	jz     .end_return /* Execute finally handlers before returning. */
 	jmp    .end_without_finally
 
@@ -1546,9 +1546,9 @@ target_endcatch_n:
 	decref %eax, 0, 0, 1       /* Preserve EDX */
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	/* except_frame_free() */
+	/* Dee_except_frame_free() */
 #ifndef CONFIG_NO_OBJECT_SLABS
-	/* WARNING: This assumes that sizeof(struct except_frame) >= 12 */
+	/* WARNING: This assumes that sizeof(struct Dee_except_frame) >= 12 */
 #if DeeSlab_HasSize(3)
 	call   fSYM(DeeSlab_Free3,4) /* Free the frame */
 #elif DeeSlab_HasSize(4)
@@ -3132,7 +3132,7 @@ target_push_varargs:
 	sp_push %eax, 1
 	jmp    .disp
 1:	LOAD_CODE(%ecx)
-	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FVARARGS),co_flags(CODE_OR_ECX))
 	movzwl co_argc_max(CODE_OR_ECX), %eax
 	movl   FRAME_ARGC, %edx
 	/* if (frame->cf_argc <= code->co_argc_max) */
@@ -3478,7 +3478,7 @@ prefix_target_unpack:
 target_varargs_unpack:
 	LOAD_CODE(%edx)
 #ifndef NDEBUG
-	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_EDX))
+	ASSERT_BIT(w,$(Dee_CODE_FVARARGS),co_flags(CODE_OR_EDX))
 #endif /* !NDEBUG */
 	lodsb
 	movl   FRAME_ARGC, %ecx
@@ -3525,7 +3525,7 @@ target_varargs_unpack:
 target_push_varkwds_ne:
 #ifndef NDEBUG
 	LOAD_CODE(%eax)
-	ASSERT_BIT(w,$(CODE_FVARKWDS),co_flags(CODE_OR_EAX))
+	ASSERT_BIT(w,$(Dee_CODE_FVARKWDS),co_flags(CODE_OR_EAX))
 #endif /* !NDEBUG */
 	movl   FRAME_KW, %edx
 	testl  %edx, %edx
@@ -3600,7 +3600,7 @@ target_push_varkwds_ne:
 
 target_varargs_getsize:
 	LOAD_CODE(%ecx)
-	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FVARARGS),co_flags(CODE_OR_ECX))
 	movl   FRAME_ARGC, %eax
 	ASSERT_ABOVE_EQUAL(%ax,co_argc_min(CODE_OR_ECX))
 	movzwl co_argc_max(CODE_OR_ECX), %ecx
@@ -3625,7 +3625,7 @@ target_varargs_getsize:
 
 target_varargs_cmp_eq_sz:
 	LOAD_CODE(%ecx)
-	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FVARARGS),co_flags(CODE_OR_ECX))
 	movl   FRAME_ARGC, %edx
 	ASSERT_ABOVE_EQUAL(%dx,co_argc_min(CODE_OR_ECX))
 	movzwl co_argc_max(%ecx), %ecx
@@ -3644,7 +3644,7 @@ target_varargs_cmp_eq_sz:
 
 target_varargs_cmp_gr_sz:
 	LOAD_CODE(%ecx)
-	ASSERT_BIT(w,$(CODE_FVARARGS),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FVARARGS),co_flags(CODE_OR_ECX))
 	movl   FRAME_ARGC, %edx
 	ASSERT_ABOVE_EQUAL(%dx,co_argc_min(CODE_OR_ECX))
 	movzwl co_argc_max(%ecx), %ecx
@@ -3915,7 +3915,7 @@ target_push_except:
 target_push_this:
 #ifndef NDEBUG
 	LOAD_CODE(%ecx)
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 #endif /* !NDEBUG */
 	movl   FRAME_THIS, %eax
 	sp_push %eax, 1 /* Push a new reference to the this-argument. */
@@ -4091,7 +4091,7 @@ repr_target_shl:
 
 .macro define_repr_target_print target, function
 \target:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5031,7 +5031,7 @@ prefix_target16_nop   = .disp
 
 /* I/O Print instructions. */
 target_print:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5053,7 +5053,7 @@ target_print:
 	decref %eax /* DeeFile_Stdout */
 	jmp    .disp
 target_print_sp:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5075,7 +5075,7 @@ target_print_sp:
 	decref %eax
 	jmp    .disp
 target_print_nl:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5097,7 +5097,7 @@ target_print_nl:
 	decref %eax
 	jmp    .disp
 target_printall:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5119,7 +5119,7 @@ target_printall:
 	decref %eax
 	jmp    .disp
 target_printall_sp:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5141,7 +5141,7 @@ target_printall_sp:
 	decref %eax
 	jmp    .disp
 target_printall_nl:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5163,7 +5163,7 @@ target_printall_nl:
 	decref %eax
 	jmp    .disp
 target_printnl:
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5270,7 +5270,7 @@ target_print_c:
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
 	ADJUST_CFA_OFFSET(4)
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5299,7 +5299,7 @@ target_print_c_sp:
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
 	ADJUST_CFA_OFFSET(4)
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -5328,7 +5328,7 @@ target_print_c_nl:
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
 	ADJUST_CFA_OFFSET(4)
-	pushl  $(DEE_STDOUT)
+	pushl  $(Dee_STDOUT)
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeFile_GetStd,4)
 	ADJUST_CFA_OFFSET(-4)
@@ -6183,7 +6183,7 @@ target_callattr_this_c:
 1:	/* At this point, the attribute constant id is stored in EAX */
 	LOAD_CODE(%ecx)
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%eax,4), %edx /* Attribute name object is now stored in EDX */
 	ASSERT_NONZERO(%edx)
@@ -6227,7 +6227,7 @@ target16_callattr_this_c_tuple:
 target_callattr_this_c_tuple:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%eax,4), %eax
@@ -6810,7 +6810,7 @@ target_getattr_this_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	movl   co_constv(CODE_OR_ECX), %edx
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
@@ -6831,7 +6831,7 @@ target_delattr_this_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	movl   co_constv(CODE_OR_ECX), %edx
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
@@ -6851,7 +6851,7 @@ target_setattr_this_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	movl   co_constv(CODE_OR_ECX), %edx
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
@@ -6883,7 +6883,7 @@ target_supergetattr_this_rc:
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_EDX))
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_EDX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_EDX))
 	movl   co_constv(CODE_OR_EDX), %edx
 	pushl (%edx,%eax,4)  /* DeeObject_TGetAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
@@ -6925,7 +6925,7 @@ target_supercallattr_this_rc:
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_EDX))
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_EDX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_EDX))
 	movl   co_constv(CODE_OR_EDX), %edx
 	pushl (%edx,%eax,4)    /* DeeObject_TCallAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
@@ -7039,11 +7039,11 @@ target_breakpoint:
 	movl   FRAME_PC, PC
 	movl   FRAME_SP, SP
 	/* Check how we're to continue execution. */
-	cmpl   $(TRIGGER_BREAKPOINT_MIN), %eax
-	jl     do_breakpoint_except /* if (eax < TRIGGER_BREAKPOINT_MIN) ... */
-	cmpl   $(TRIGGER_BREAKPOINT_MAX), %eax
-	jg     do_breakpoint_continue /* if (eax > TRIGGER_BREAKPOINT_MAX) ... */
-	jmp    *debug_break_jmptab-(TRIGGER_BREAKPOINT_MIN*4)(,%eax,4)
+	cmpl   $(Dee_TRIGGER_BREAKPOINT_MIN), %eax
+	jl     do_breakpoint_except /* if (eax < Dee_TRIGGER_BREAKPOINT_MIN) ... */
+	cmpl   $(Dee_TRIGGER_BREAKPOINT_MAX), %eax
+	jg     do_breakpoint_continue /* if (eax > Dee_TRIGGER_BREAKPOINT_MAX) ... */
+	jmp    *debug_break_jmptab-(Dee_TRIGGER_BREAKPOINT_MIN*4)(,%eax,4)
 .data
 debug_break_jmptab:
 	.long  do_breakpoint_except_exit
@@ -7070,7 +7070,7 @@ do_breakpoint_contsafe:
 	decw   t_execsz(%eax) /* --this_thread->t_execsz */
 	movl   cf_prev(FRAME), %ecx
 	movl   %ecx, t_exec(%eax) /* this_thread->t_exec = frame->cf_prev; */
-	movl   $(CODE_FRAME_NOT_EXECUTING), cf_prev(FRAME) /* frame->cf_prev = CODE_FRAME_NOT_EXECUTING */
+	movl   $(Dee_CODE_FRAME_NOT_EXECUTING), cf_prev(FRAME) /* frame->cf_prev = Dee_CODE_FRAME_NOT_EXECUTING */
 	/* Continue execution in safe-mode. */
 	movl   FRAME, %ecx
 	/* Indicate that the stack hasn't been allocated dynamically. */
@@ -7083,7 +7083,7 @@ do_breakpoint_contsafe:
 	jmp    .end_nounhook
 do_breakpoint_return:
 	LOAD_CODE(%ecx)
-	testl  $(CODE_FYIELDING), co_flags(CODE_OR_ECX)
+	testl  $(Dee_CODE_FYIELDING), co_flags(CODE_OR_ECX)
 	jz     1f
 	cmpl   $0, FRAME_RESULT
 	jne    .end_without_finally
@@ -7099,7 +7099,7 @@ do_breakpoint_return:
 do_breakpoint_exit:
 do_breakpoint_exit_nofin:
 	LOAD_CODE(%ecx)
-	testl  $(CODE_FYIELDING), co_flags(CODE_OR_ECX)
+	testl  $(Dee_CODE_FYIELDING), co_flags(CODE_OR_ECX)
 	jz     1f
 	/* Force-return ITER_DONE */
 	movl   FRAME_RESULT, %ecx
@@ -7116,7 +7116,7 @@ do_breakpoint_exit_nofin:
 	/* Return `none' when no return value has been set. */
 	movl   $(SYM(DeeNone_Singleton)), FRAME_RESULT
 	incref_addr SYM(DeeNone_Singleton)
-2:	cmpl   $(TRIGGER_BREAKPOINT_EXIT_NOFIN), %eax
+2:	cmpl   $(Dee_TRIGGER_BREAKPOINT_EXIT_NOFIN), %eax
 	je     .end_without_finally
 	jmp    .end_return
 
@@ -7934,7 +7934,7 @@ prefix_target_push_module:
 prefix_target_push_this:
 #ifndef NDEBUG
 	LOAD_CODE(%ecx)
-	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
+	ASSERT_BIT(w,$(Dee_CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 #endif /* !NDEBUG */
 	movl   FRAME_THIS, %edx
 	jmp    set_prefix_object_incref
@@ -8295,7 +8295,7 @@ prefix_target_ret:
 	unset_result %eax, 0, 0, 1
 	movl   %edx, %eax
 	movl   %eax, FRAME_RESULT
-	TEST_CODE_FLAG($(CODE_FYIELDING),%ecx)
+	TEST_CODE_FLAG($(Dee_CODE_FYIELDING),%ecx)
 	jz     .end_return /* Execute finally handlers before returning. */
 	jmp    .end_without_finally
 

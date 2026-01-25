@@ -545,17 +545,17 @@ struct attributeflag {
 };
 
 PRIVATE struct attributeflag const attributeflags[] = {
-	{ "private", CLASS_ATTRIBUTE_FPRIVATE },
-	{ "final", CLASS_ATTRIBUTE_FFINAL },
-	{ "readonly", CLASS_ATTRIBUTE_FREADONLY },
-	{ "method", CLASS_ATTRIBUTE_FMETHOD },
-	{ "getset", CLASS_ATTRIBUTE_FGETSET },
-	{ "classmem", CLASS_ATTRIBUTE_FCLASSMEM },
+	{ "private", Dee_CLASS_ATTRIBUTE_FPRIVATE },
+	{ "final", Dee_CLASS_ATTRIBUTE_FFINAL },
+	{ "readonly", Dee_CLASS_ATTRIBUTE_FREADONLY },
+	{ "method", Dee_CLASS_ATTRIBUTE_FMETHOD },
+	{ "getset", Dee_CLASS_ATTRIBUTE_FGETSET },
+	{ "classmem", Dee_CLASS_ATTRIBUTE_FCLASSMEM },
 };
 
 PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 libdisasm_printclassattribute(Dee_formatprinter_t printer, void *arg,
-                              struct class_attribute *__restrict self,
+                              struct Dee_class_attribute *__restrict self,
                               char const *line_prefix, uint16_t addr_size) {
 	Dee_ssize_t temp, result;
 	unsigned int i;
@@ -572,7 +572,7 @@ libdisasm_printclassattribute(Dee_formatprinter_t printer, void *arg,
 	}
 	if (self->ca_addr >= addr_size)
 		INVOKE(DeeFormat_PRINT(printer, arg, " /* Invalid address */"));
-	if (self->ca_flag & ~CLASS_ATTRIBUTE_FMASK)
+	if (self->ca_flag & ~Dee_CLASS_ATTRIBUTE_FMASK)
 		INVOKE(DeeFormat_Printf(printer, arg, " /* Invalid flags %#" PRFx16 " */", self->ca_flag));
 	INVOKE((*printer)(arg, "\n", 1));
 done:
@@ -586,20 +586,20 @@ err:
 INTERN WUNUSED char const *DCALL
 libdisasm_get_operator_sname(Dee_operator_t operator_id) {
 	char const *result;
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_id);
 	if (info) {
 		result = info->oi_sname;
 	} else {
 		result = NULL;
 		switch (operator_id) {
-		case CLASS_OPERATOR_SUPERARGS:
+		case Dee_CLASS_OPERATOR_SUPERARGS:
 			result = "superargs";
 			break;
-		case CLASS_OPERATOR_PRINT:
+		case Dee_CLASS_OPERATOR_PRINT:
 			result = "print";
 			break;
-		case CLASS_OPERATOR_PRINTREPR:
+		case Dee_CLASS_OPERATOR_PRINTREPR:
 			result = "printrepr";
 			break;
 		default: break;
@@ -659,7 +659,7 @@ libdisasm_printclass(Dee_formatprinter_t printer, void *arg,
 	{
 		bool has_class_attributes = false;
 		for (i = 0; i <= self->cd_cattr_mask; ++i) {
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 			attr = &self->cd_cattr_list[i];
 			if (!attr->ca_name)
 				continue;
@@ -675,7 +675,7 @@ libdisasm_printclass(Dee_formatprinter_t printer, void *arg,
 	{
 		bool has_instance_attributes = false;
 		for (i = 0; i <= self->cd_iattr_mask; ++i) {
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 			attr = &self->cd_iattr_list[i];
 			if (!attr->ca_name)
 				continue;
@@ -684,7 +684,7 @@ libdisasm_printclass(Dee_formatprinter_t printer, void *arg,
 				has_instance_attributes = true;
 			}
 			INVOKE(libdisasm_printclassattribute(printer, arg, attr, line_prefix,
-			                                     attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM
+			                                     attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM
 			                                     ? self->cd_cmemb_size
 			                                     : self->cd_imemb_size));
 		}
@@ -704,22 +704,22 @@ struct codeflag {
 };
 
 PRIVATE struct codeflag const codeflag_names[] = {
-	{ CODE_FYIELDING,    "yielding" },
-	{ CODE_FCOPYABLE,    "copyable" },
-	{ CODE_FASSEMBLY,    "assembly" },
-	{ CODE_FLENIENT,     "lenient" },
-	{ CODE_FVARARGS,     "varargs" },
-	{ CODE_FVARKWDS,     "varkwds" },
-	{ CODE_FTHISCALL,    "thiscall" },
-	{ CODE_FHEAPFRAME,   "heapframe" },
-	{ CODE_FFINALLY,     "finally" },
-	{ CODE_FCONSTRUCTOR, "constructor" }
+	{ Dee_CODE_FYIELDING,    "yielding" },
+	{ Dee_CODE_FCOPYABLE,    "copyable" },
+	{ Dee_CODE_FASSEMBLY,    "assembly" },
+	{ Dee_CODE_FLENIENT,     "lenient" },
+	{ Dee_CODE_FVARARGS,     "varargs" },
+	{ Dee_CODE_FVARKWDS,     "varkwds" },
+	{ Dee_CODE_FTHISCALL,    "thiscall" },
+	{ Dee_CODE_FHEAPFRAME,   "heapframe" },
+	{ Dee_CODE_FFINALLY,     "finally" },
+	{ Dee_CODE_FCONSTRUCTOR, "constructor" }
 };
 #define CODEFLAG_NAMEDMASK                              \
-	(CODE_FYIELDING | CODE_FCOPYABLE | CODE_FASSEMBLY | \
-	 CODE_FLENIENT | CODE_FVARARGS | CODE_FVARKWDS |    \
-	 CODE_FTHISCALL | CODE_FHEAPFRAME | CODE_FFINALLY | \
-	 CODE_FCONSTRUCTOR)
+	(Dee_CODE_FYIELDING | Dee_CODE_FCOPYABLE | Dee_CODE_FASSEMBLY | \
+	 Dee_CODE_FLENIENT | Dee_CODE_FVARARGS | Dee_CODE_FVARKWDS |    \
+	 Dee_CODE_FTHISCALL | Dee_CODE_FHEAPFRAME | Dee_CODE_FFINALLY | \
+	 Dee_CODE_FCONSTRUCTOR)
 
 
 INTERN WUNUSED NONNULL((1, 3, 4)) Dee_ssize_t DCALL
@@ -736,9 +736,9 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 	instruction_t *start_addr = code ? code->co_code : instr_start;
 	size_t prefix_len = line_prefix ? strlen(line_prefix) : 0;
 	uint16_t code_flags = code ? code->co_flags : 0;
-	struct ddi_state ddi;
-	uint8_t *ddi_ip = DDI_NEXT_DONE;
-	struct ddi_regs last_print_ddi;
+	struct Dee_ddi_state ddi;
+	uint8_t *ddi_ip = Dee_DDI_NEXT_DONE;
+	struct Dee_ddi_regs last_print_ddi;
 	unsigned int sp_width = 1;
 	if ((flags & (PCODE_FNOJUMPARROW | PCODE_FNOLABELS)) !=
 	    (PCODE_FNOJUMPARROW | PCODE_FNOLABELS) &&
@@ -747,7 +747,7 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 	memset(&last_print_ddi, 0xff, sizeof(last_print_ddi));
 	if (code) {
 		uint16_t stack_max;
-		if ((ddi_ip = Dee_ddi_state_init(&ddi, Dee_AsObject(code), DDI_STATE_FNORMAL)) == DDI_NEXT_ERR)
+		if ((ddi_ip = Dee_ddi_state_init(&ddi, Dee_AsObject(code), Dee_DDI_STATE_FNORMAL)) == Dee_DDI_NEXT_ERR)
 			goto err_n1;
 		stack_max = (uint16_t)DeeCode_StackDepth(code);
 		if (stack_max >= 10000) {
@@ -805,9 +805,9 @@ libdisasm_printcode(Dee_formatprinter_t printer, void *arg,
 	     iter < instr_end;
 	     iter = next, stacksz = new_stacksz) {
 		code_addr_t code_ip = (code_addr_t)(iter - start_addr);
-		while ((ddi_ip != DDI_NEXT_DONE) && ddi.rs_regs.dr_uip < code_ip) {
-			ddi_ip = Dee_ddi_next_state(ddi_ip, &ddi, DDI_STATE_FNORMAL);
-			if unlikely(ddi_ip == DDI_NEXT_ERR)
+		while ((ddi_ip != Dee_DDI_NEXT_DONE) && ddi.rs_regs.dr_uip < code_ip) {
+			ddi_ip = Dee_ddi_next_state(ddi_ip, &ddi, Dee_DDI_STATE_FNORMAL);
+			if unlikely(ddi_ip == Dee_DDI_NEXT_ERR)
 				goto err_n1;
 		}
 		if (ddi_ip && ddi.rs_regs.dr_uip == code_ip) {
@@ -936,16 +936,16 @@ get_next_instruction_without_stack:
 			for (i = 0; i < code->co_exceptc; ++i) {
 				size_t j;
 				for (j = 0; j < 3; ++j) {
-					struct except_handler *hand = &code->co_exceptv[i];
+					struct Dee_except_handler *hand = &code->co_exceptv[i];
 					code_addr_t hip             = (&hand->eh_start)[j];
 					if (hip < instr_max && hip >= instr_min) {
 						PRIVATE char const except_type[3][6] = { "start", "end", "entry" };
 						PRIVATE char const except_name[2][8] = { "except", "finally" };
-#if EXCEPTION_HANDLER_FFINALLY == 1
-						char const *name = except_name[hand->eh_flags & EXCEPTION_HANDLER_FFINALLY];
-#else /* EXCEPTION_HANDLER_FFINALLY == 1 */
-						char const *name = except_name[hand->eh_flags & EXCEPTION_HANDLER_FFINALLY ? 1 : 0];
-#endif /* EXCEPTION_HANDLER_FFINALLY != 1 */
+#if Dee_EXCEPTION_HANDLER_FFINALLY == 1
+						char const *name = except_name[hand->eh_flags & Dee_EXCEPTION_HANDLER_FFINALLY];
+#else /* Dee_EXCEPTION_HANDLER_FFINALLY == 1 */
+						char const *name = except_name[hand->eh_flags & Dee_EXCEPTION_HANDLER_FFINALLY ? 1 : 0];
+#endif /* Dee_EXCEPTION_HANDLER_FFINALLY != 1 */
 						char const *type = except_type[j];
 						/* Found an overlap! */
 prefix_except_prefix:
@@ -971,11 +971,11 @@ prefix_except_prefix:
 								DeeAsm_NextInstrSp(iter, &new_stacksz);
 							}
 							printf(".except .L%s_%" PRFu16 "_start, .L%s_%" PRFu16 "_end, .L%s_%" PRFu16 "_entry", name, i, name, i, name, i);
-							if (hand->eh_flags & EXCEPTION_HANDLER_FFINALLY)
+							if (hand->eh_flags & Dee_EXCEPTION_HANDLER_FFINALLY)
 								PRINT(", @finally");
-							if (hand->eh_flags & EXCEPTION_HANDLER_FINTERPT)
+							if (hand->eh_flags & Dee_EXCEPTION_HANDLER_FINTERPT)
 								PRINT(", @interrupt");
-							if (hand->eh_flags & EXCEPTION_HANDLER_FHANDLED)
+							if (hand->eh_flags & Dee_EXCEPTION_HANDLER_FHANDLED)
 								PRINT(", @handled");
 							if (hand->eh_mask)
 								printf(", @mask(%k)", hand->eh_mask);

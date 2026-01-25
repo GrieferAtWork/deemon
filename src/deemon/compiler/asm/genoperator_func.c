@@ -51,12 +51,12 @@ bind_module_symbol(DeeModuleObject *__restrict module,
                    uint16_t *__restrict p_modid,
                    uint16_t *__restrict p_symid,
                    char const *__restrict symbol_name) {
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	int32_t temp;
 	symbol = DeeModule_GetSymbolString(module, symbol_name);
 	if unlikely(!symbol)
 		return 1; /* Doesn't exists */
-	if (symbol->ss_flags & MODSYM_FEXTERN) {
+	if (symbol->ss_flags & Dee_MODSYM_FEXTERN) {
 		/* Follow external module symbols. */
 		ASSERT(symbol->ss_impid < module->mo_importc);
 		module = module->mo_importv[symbol->ss_impid];
@@ -77,7 +77,7 @@ INTERN WUNUSED NONNULL((2)) int DCALL
 ast_gen_operator_func(struct ast *binding,
                       struct ast *ddi_ast,
                       Dee_operator_t operator_name) {
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	int temp;
 	char const *symbol_name = NULL;
 	DREF DeeModuleObject *operators_module;

@@ -872,7 +872,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
 	if (tok == '@' && mod) {
 		struct TPPKeyword *symbol_name;
-		struct module_symbol *modsym;
+		struct Dee_module_symbol *modsym;
 		if unlikely(yield() < 0)
 			goto err_mod;
 		symbol_name = uasm_parse_symnam();

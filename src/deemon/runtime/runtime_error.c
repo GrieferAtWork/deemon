@@ -106,20 +106,20 @@ INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_constructor_kw)(DeeTypeObject *tp, size_t argc,
                                          DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *error_args[1], *error_ob;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	char const *name = DeeType_GetName(tp);
-	if unlikely(unicode_printer_printf(&printer, "Constructor `%s(", name) < 0)
+	if unlikely(Dee_unicode_printer_printf(&printer, "Constructor `%s(", name) < 0)
 		goto err_printer;
-	if unlikely(DeeFormat_PrintArgumentTypesKw(&unicode_printer_print,
+	if unlikely(DeeFormat_PrintArgumentTypesKw(&Dee_unicode_printer_print,
 	                                           &printer,
 	                                           argc,
 	                                           argv,
 	                                           kw) < 0)
 		goto err_printer;
-	if unlikely(UNICODE_PRINTER_PRINT(&printer, ")' is not implemented") < 0)
+	if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, ")' is not implemented") < 0)
 		goto err_printer;
 	/* Create the message string. */
-	error_args[0] = unicode_printer_pack(&printer);
+	error_args[0] = Dee_unicode_printer_pack(&printer);
 	if unlikely(!error_args[0])
 		goto err;
 	/* Pack the constructor argument tuple. */
@@ -130,7 +130,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 	/* Throw the new error object. */
 	return DeeError_ThrowInherited(error_ob);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return -1;
 }
@@ -164,7 +164,7 @@ INTERN ATTR_COLD NONNULL((1)) int
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp,
                                    Dee_operator_t operator_name) {
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
 	return DeeError_Throwf(&DeeError_NotImplemented,
@@ -303,7 +303,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_keywords_bad_for_argc)(struct kwds_object *kwds,
+(DCALL err_keywords_bad_for_argc)(struct Dee_kwds_object *kwds,
                                   size_t argc, DeeObject *const *argv) {
 	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
 	(void)argv;
@@ -421,18 +421,18 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_local)(struct code_object *code, void *ip, uint16_t local_index) {
+(DCALL err_unbound_local)(struct Dee_code_object *code, void *ip, uint16_t local_index) {
 	char const *code_name = NULL;
 	uint8_t *error;
-	struct ddi_state state;
+	struct Dee_ddi_state state;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(local_index < code->co_localc);
 	error = DeeCode_FindDDI(Dee_AsObject(code), &state, NULL,
 	                        (code_addr_t)((instruction_t *)ip - code->co_code),
-	                        DDI_STATE_FNOTHROW);
-	if (DDI_ISOK(error)) {
-		struct ddi_xregs *iter;
-		DDI_STATE_DO(iter, &state) {
+	                        Dee_DDI_STATE_FNOTHROW);
+	if (Dee_DDI_ISOK(error)) {
+		struct Dee_ddi_xregs *iter;
+		Dee_DDI_STATE_DO(iter, &state) {
 			if (local_index < iter->dx_lcnamc) {
 				char const *local_name;
 				if (!code_name)
@@ -450,7 +450,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 				}
 			}
 		}
-		DDI_STATE_WHILE(iter, &state);
+		Dee_DDI_STATE_WHILE(iter, &state);
 		Dee_ddi_state_fini(&state);
 	}
 	if (!code_name)
@@ -463,7 +463,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_static)(struct code_object *code, void *ip, uint16_t static_index) {
+(DCALL err_unbound_static)(struct Dee_code_object *code, void *ip, uint16_t static_index) {
 	char const *code_name;
 	char const *symbol_name;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
@@ -486,14 +486,14 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_unbound_arg)(struct code_object *code, void *ip, uint16_t arg_index) {
+(DCALL err_unbound_arg)(struct Dee_code_object *code, void *ip, uint16_t arg_index) {
 	char const *code_name;
 	(void)ip;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(arg_index < code->co_argc_max);
 	code_name = DeeCode_NAME(code);
 	if (code->co_keywords) {
-		struct string_object *kwname;
+		DeeStringObject *kwname;
 		kwname = code->co_keywords[arg_index];
 		if (!DeeString_IsEmpty(kwname)) {
 			return DeeError_Throwf(&DeeError_UnboundLocal,
@@ -511,19 +511,19 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_readonly_local)(struct code_object *code,
+(DCALL err_readonly_local)(struct Dee_code_object *code,
                            void *ip, uint16_t local_index) {
 	char const *code_name = NULL;
 	uint8_t *error;
-	struct ddi_state state;
+	struct Dee_ddi_state state;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(local_index < code->co_localc);
 	error = DeeCode_FindDDI(Dee_AsObject(code), &state, NULL,
 	                        (code_addr_t)((instruction_t *)ip - code->co_code),
-	                        DDI_STATE_FNOTHROW);
-	if (DDI_ISOK(error)) {
-		struct ddi_xregs *iter;
-		DDI_STATE_DO(iter, &state) {
+	                        Dee_DDI_STATE_FNOTHROW);
+	if (Dee_DDI_ISOK(error)) {
+		struct Dee_ddi_xregs *iter;
+		Dee_DDI_STATE_DO(iter, &state) {
 			if (local_index < iter->dx_lcnamc) {
 				char const *local_name;
 				if (!code_name)
@@ -541,7 +541,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 				}
 			}
 		}
-		DDI_STATE_WHILE(iter, &state);
+		Dee_DDI_STATE_WHILE(iter, &state);
 		Dee_ddi_state_fini(&state);
 	}
 	if (!code_name)
@@ -554,7 +554,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_illegal_instruction)(struct code_object *code, void *ip) {
+(DCALL err_illegal_instruction)(struct Dee_code_object *code, void *ip) {
 	uint32_t offset;
 	char const *code_name = DeeCode_NAME(code);
 	if (!code_name)
@@ -591,7 +591,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_invalid_refs_size)(struct code_object *__restrict code, size_t num_refs) {
+(DCALL err_invalid_refs_size)(struct Dee_code_object *__restrict code, size_t num_refs) {
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Code object expects %" PRFu16 " references when %" PRFuSIZ " were given",
@@ -629,7 +629,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL err_module_no_such_global)(struct module_object *self,
+(DCALL err_module_no_such_global)(struct Dee_module_object *self,
                                   DeeObject *name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
 	                       "Cannot %s unknown global variable: %r.%k",
@@ -720,14 +720,14 @@ INTERN ATTR_COLD NONNULL((1)) int
 
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_sp)(struct code_frame *__restrict frame, size_t access_sp) {
+(DCALL err_srt_invalid_sp)(struct Dee_code_frame *__restrict frame, size_t access_sp) {
 	return DeeError_Throwf(&DeeError_SegFault,
 	                       "Unbound stack variable %" PRFuSIZ " lies above active end %" PRFuSIZ,
 	                       access_sp, frame->cf_stacksz);
 }
 
 PRIVATE ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_symid)(struct code_frame *__restrict UNUSED(frame),
+(DCALL err_srt_invalid_symid)(struct Dee_code_frame *__restrict UNUSED(frame),
                               char category, uint16_t id) {
 	return DeeError_Throwf(&DeeError_IllegalInstruction,
 	                       "Attempted to access invalid %cID %" PRFu16,
@@ -735,37 +735,37 @@ PRIVATE ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_static)(struct code_frame *__restrict frame, uint16_t sid) {
+(DCALL err_srt_invalid_static)(struct Dee_code_frame *__restrict frame, uint16_t sid) {
 	return err_srt_invalid_symid(frame, 'S', sid);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_const)(struct code_frame *__restrict frame, uint16_t cid) {
+(DCALL err_srt_invalid_const)(struct Dee_code_frame *__restrict frame, uint16_t cid) {
 	return err_srt_invalid_symid(frame, 'C', cid);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_locale)(struct code_frame *__restrict frame, uint16_t lid) {
+(DCALL err_srt_invalid_locale)(struct Dee_code_frame *__restrict frame, uint16_t lid) {
 	return err_srt_invalid_symid(frame, 'L', lid);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_ref)(struct code_frame *__restrict frame, uint16_t rid) {
+(DCALL err_srt_invalid_ref)(struct Dee_code_frame *__restrict frame, uint16_t rid) {
 	return err_srt_invalid_symid(frame, 'R', rid);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_module)(struct code_frame *__restrict frame, uint16_t mid) {
+(DCALL err_srt_invalid_module)(struct Dee_code_frame *__restrict frame, uint16_t mid) {
 	return err_srt_invalid_symid(frame, 'M', mid);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_global)(struct code_frame *__restrict frame, uint16_t gid) {
+(DCALL err_srt_invalid_global)(struct Dee_code_frame *__restrict frame, uint16_t gid) {
 	return err_srt_invalid_symid(frame, 'G', gid);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_srt_invalid_extern)(struct code_frame *__restrict frame, uint16_t mid, uint16_t gid) {
+(DCALL err_srt_invalid_extern)(struct Dee_code_frame *__restrict frame, uint16_t mid, uint16_t gid) {
 	if (mid >= frame->cf_func->fo_code->co_module->mo_importc)
 		return err_srt_invalid_module(frame, mid);
 	return err_srt_invalid_global(frame, gid);

@@ -1743,12 +1743,12 @@ time_int32(DeeTimeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 time_doformat_string(DeeTimeObject *__restrict self,
                      char const *__restrict format) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if (time_format(&unicode_printer_print, &printer, format, self) < 0)
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	if (time_format(&Dee_unicode_printer_print, &printer, format, self) < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -3716,23 +3716,23 @@ INTERN DeeTypeObject DeeTime_Type = {
 
 DEX_BEGIN
 
-DEX_MEMBER_F_NODOC("Time", &DeeTime_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F("gmtime", &libtime_gmtime, MODSYM_FREADONLY,
+DEX_MEMBER_F_NODOC("Time", &DeeTime_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F("gmtime", &libtime_gmtime, Dee_DEXSYM_READONLY,
              "->?GTime\n"
              "Returns the current time in UTC (s.a. ?Glocaltime)"),
-DEX_MEMBER_F("localtime", &libtime_localtime, MODSYM_FREADONLY,
+DEX_MEMBER_F("localtime", &libtime_localtime, Dee_DEXSYM_READONLY,
              "->?GTime\n"
              "Returns the current time in the host's local timezone (s.a. ?Ggmtime)"),
 /* TODO: timezone()->?GTime
 	* Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime
 	* XXX: That's not how that works -- the delta of a timezone isn't constant and can only be
 	*      calculated when given a specific point in (UTC) time. */
-DEX_MEMBER_F("tick", &libtime_tick, MODSYM_FREADONLY,
+DEX_MEMBER_F("tick", &libtime_tick, Dee_DEXSYM_READONLY,
              "->?GTime\n"
              "Returns the current tick suitable for high-precision timings.\n"
              "The tick itself is offset from some undefined point in time, meaning that the only "
              /**/ "meaningful use, is to subtract the return values of two calls to this function."),
-DEX_MEMBER_F("maketime", &libtime_maketime, MODSYM_FREADONLY,
+DEX_MEMBER_F("maketime", &libtime_maketime, Dee_DEXSYM_READONLY,
              "(" libtime_maketime_params ")->?GTime\n"
              "Construct a new ?GTime object using the given arguments for the "
              /**/ "sub-day portion, while filling in the remainder as all zeroes:\n"
@@ -3740,7 +3740,7 @@ DEX_MEMBER_F("maketime", &libtime_maketime, MODSYM_FREADONLY,
              /**/ "import Time from time;\n"
              /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
              "}"),
-DEX_MEMBER_F("makedate", &libtime_makedate, MODSYM_FREADONLY,
+DEX_MEMBER_F("makedate", &libtime_makedate, Dee_DEXSYM_READONLY,
              "(" libtime_makedate_params ")->?GTime\n"
              "Construct a new ?GTime object using the given arguments for the "
              /**/ "post-day portion, while filling in the remainder as all zeroes:\n"
@@ -3763,9 +3763,9 @@ DEX_MEMBER_F("makedate", &libtime_makedate, MODSYM_FREADONLY,
 	* >> Thread.sleep(seconds(2));
 	* >> print "Done waiting";
 	*/
-#define DEFINE_DELTA_CALLBACK(name)                        \
-	DEX_MEMBER_F(#name, &libtime_##name, MODSYM_FREADONLY, \
-	             "(value:?Dint)->?GTime\n"                 \
+#define DEFINE_DELTA_CALLBACK(name)                           \
+	DEX_MEMBER_F(#name, &libtime_##name, Dee_DEXSYM_READONLY, \
+	             "(value:?Dint)->?GTime\n"                    \
 	             "#r{A time delta of @value " #name "}")
 DEFINE_DELTA_CALLBACK(nanoseconds),
 DEFINE_DELTA_CALLBACK(microseconds),
@@ -3782,9 +3782,9 @@ DEFINE_DELTA_CALLBACK(centuries),
 DEFINE_DELTA_CALLBACK(millennia),
 #undef DEFINE_DELTA_CALLBACK
 
-#define DEFINE_DEPRECATED_DELTA_ALIAS(name, alias_for)         \
-	DEX_MEMBER_F(name, &libtime_##alias_for, MODSYM_FREADONLY, \
-	             "(value:?Dint)->?GTime\n"                     \
+#define DEFINE_DEPRECATED_DELTA_ALIAS(name, alias_for)            \
+	DEX_MEMBER_F(name, &libtime_##alias_for, Dee_DEXSYM_READONLY, \
+	             "(value:?Dint)->?GTime\n"                        \
 	             "Deprecated alias for ?G" #alias_for)
 DEFINE_DEPRECATED_DELTA_ALIAS("mics", microseconds),
 DEFINE_DEPRECATED_DELTA_ALIAS("mils", milliseconds),
@@ -3799,16 +3799,16 @@ DEFINE_DEPRECATED_DELTA_ALIAS("cens", centuries),
 DEFINE_DEPRECATED_DELTA_ALIAS("mlls", millennia),
 #undef DEFINE_DEPRECATED_DELTA_ALIAS
 
-DEX_MEMBER_F("now", &libtime_localtime, MODSYM_FREADONLY,
+DEX_MEMBER_F("now", &libtime_localtime, Dee_DEXSYM_READONLY,
              "->?GTime\n"
              "Deprecated alias for ?Glocaltime"),
 
-DEX_MEMBER_F("_mkunix", &libtime__mkunix, MODSYM_FREADONLY,
+DEX_MEMBER_F("_mkunix", &libtime__mkunix, Dee_DEXSYM_READONLY,
              "(" libtime__mkunix_params ")->?GTime\n"
              "Construct a new anonymous timestamp object, from @time_t as seconds-"
              /**/ "since-#C{01-01-1970}, and the accompanying extra @nanosecond addend."),
 #ifdef CONFIG_HOST_WINDOWS
-DEX_MEMBER_F("_mkFILETIME", &libtime__mkFILETIME, MODSYM_FREADONLY,
+DEX_MEMBER_F("_mkFILETIME", &libtime__mkFILETIME, Dee_DEXSYM_READONLY,
              "(" libtime__mkFILETIME_params ")->?GTime\n"
              "Construct a new anonymous timestamp object, from 1/100th nanoseconds since #C{01-01-1601}"),
 #endif /* CONFIG_HOST_WINDOWS */

@@ -294,7 +294,7 @@ struct type_expression_name {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_expression_name_unescape(struct type_expression_name *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	char const *iter, *end, *flush_start;
 
 	/* Parse the string and unescape special symbols. */
@@ -304,8 +304,8 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 	while (iter < end) {
 		char ch = *iter++;
 		if (ch == '\\') { /* Remove every first '\'-character */
-			if unlikely(unicode_printer_print(&printer, flush_start,
-			                                  (size_t)((iter - 1) - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(&printer, flush_start,
+			                                      (size_t)((iter - 1) - flush_start)) < 0)
 				goto err_printer;
 			flush_start = iter;
 			if (iter < end)
@@ -313,13 +313,13 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 		}
 	}
 	if (flush_start < end) {
-		if unlikely(unicode_printer_print(&printer, flush_start,
-		                                  (size_t)(end - flush_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer, flush_start,
+		                                      (size_t)(end - flush_start)) < 0)
 			goto err_printer;
 	}
 
 	/* Pack the unicode string */
-	self->ten_str = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	self->ten_str = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 	if unlikely(!self->ten_str)
 		goto err;
 	self->ten_start = DeeString_AsUtf8(Dee_AsObject(self->ten_str));
@@ -331,7 +331,7 @@ err_ten_str:
 	Dee_Decref(self->ten_str);
 	goto err;
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return -1;
 }
@@ -1253,7 +1253,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fg_vophash_n(struct fungen *__restrict self, vstackaddr_t argc) {
 	if (argc == 0) {
-		STATIC_ASSERT(DEE_HASHOF_EMPTY_SEQUENCE == 0);
+		STATIC_ASSERT(Dee_HASHOF_EMPTY_SEQUENCE == 0);
 		return fg_vpush_const(self, DeeInt_Zero);
 	}
 	if (argc == 1)
@@ -1503,7 +1503,7 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                   /* instance, ATOMIC_RWLOCK_INIT */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_lock)));   /* instance */
 #endif /* !CONFIG_NO_THREADS */
-		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                    /* instance, WEAKREF_SUPPORT_INIT */
+		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                    /* instance, Dee_WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, ob_weakrefs))); /* instance */
 		return 1;
 	} else if (tp_ctor == DeeHashSet_Type.tp_init.tp_alloc.tp_ctor) {
@@ -1519,7 +1519,7 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                     /* instance, ATOMIC_RWLOCK_INIT */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, hs_lock))); /* instance */
 #endif /* !CONFIG_NO_THREADS */
-		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                       /* instance, WEAKREF_SUPPORT_INIT */
+		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                       /* instance, Dee_WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeHashSetObject, ob_weakrefs))); /* instance */
 		return 1;
 	} else if (tp_ctor == DeeList_Type.tp_init.tp_alloc.tp_ctor) {
@@ -1535,11 +1535,11 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpush_ATOMIC_RWLOCK_INIT(self));                          /* instance, ATOMIC_RWLOCK_INIT */
 		DO(fg_vpopind(self, offsetof(DeeListObject, l_lock)));          /* instance */
 #endif /* !CONFIG_NO_THREADS */
-		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                        /* instance, WEAKREF_SUPPORT_INIT */
+		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                        /* instance, Dee_WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeListObject, ob_weakrefs)));     /* instance */
 		return 1;
 	} else if (tp_ctor == DeeWeakRefAble_Type.tp_init.tp_alloc.tp_ctor) {
-		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                           /* instance, WEAKREF_SUPPORT_INIT */
+		DO(fg_vpush_WEAKREF_SUPPORT_INIT(self));                           /* instance, Dee_WEAKREF_SUPPORT_INIT */
 		DO(fg_vpopind(self, offsetof(DeeWeakRefAbleObject, ob_weakrefs))); /* instance */
 		return 1;
 	}
@@ -1763,7 +1763,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 	ASSERT_OBJECT_TYPE_A(func_obj, func_type);
 	bzero(&doc, sizeof(doc));
 	if (func_type == &DeeObjMethod_Type) {
-		struct objmethod_origin origin;
+		struct Dee_objmethod_origin origin;
 		DeeObjMethodObject *func = (DeeObjMethodObject *)func_obj;
 		uintptr_t method_flags = METHOD_FNORMAL;
 		char const *method_name = NULL;
@@ -1781,7 +1781,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		                       &doc, method_name, method_flags);
 	} else if (func_type == &DeeKwObjMethod_Type) {
 		DeeObjMethodObject *func = (DeeObjMethodObject *)func_obj;
-		struct objmethod_origin origin;
+		struct Dee_objmethod_origin origin;
 		uintptr_t method_flags = METHOD_FNORMAL;
 		char const *method_name = NULL;
 		if (DeeKwObjMethod_GetOrigin((DeeObject *)func, &origin)) {
@@ -1800,7 +1800,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 	} else if (func_type == &DeeClsMethod_Type) {
 		DeeClsMethodObject *func = (DeeClsMethodObject *)func_obj;
 		if (true_argc >= 1) {
-			struct objmethod_origin origin;
+			struct Dee_objmethod_origin origin;
 			uintptr_t method_flags = METHOD_FNORMAL;
 			char const *method_name = NULL;
 			vstackaddr_t argc = true_argc - 1; /* Account for "this" argument */
@@ -1824,7 +1824,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			vstackaddr_t argc = true_argc - 1; /* Account for "this" argument */
 			uintptr_t method_flags = METHOD_FNORMAL;
 			char const *method_name = NULL;
-			struct objmethod_origin origin;
+			struct Dee_objmethod_origin origin;
 			doc.di_typ = func->clm_type;
 			if (DeeKwClsMethod_GetOrigin((DeeObject *)func, &origin)) {
 				doc.di_doc   = origin.omo_decl->m_doc;
@@ -1843,7 +1843,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 	} else if (func_type == &DeeClsProperty_Type) {
 		DeeClsPropertyObject *func = (DeeClsPropertyObject *)func_obj;
 		if (func->cp_get && true_argc == 1) {
-			struct clsproperty_origin origin;
+			struct Dee_clsproperty_origin origin;
 			uintptr_t method_flags = METHOD_FNORMAL;
 			char const *method_name = NULL;
 			DO(vpop_empty_kwds(self));                                          /* func, this */
@@ -1868,7 +1868,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		}
 	} else if (func_type == &DeeCMethod_Type) {
 		int result;
-		struct cmethod_origin origin;
+		struct Dee_cmethod_origin origin;
 		DeeCMethodObject *func = (DeeCMethodObject *)func_obj;
 		DO(vpop_empty_kwds(self));           /* func, [args...] */
 		DO(fg_vpop_at(self, true_argc + 1)); /* [args...] */
@@ -1885,7 +1885,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		return result;
 	} else if (func_type == &DeeCMethod0_Type && true_argc == 0) {
 		int result;
-		struct cmethod_origin origin;
+		struct Dee_cmethod_origin origin;
 		DeeCMethodObject *func = (DeeCMethodObject *)func_obj;
 		DO(vpop_empty_kwds(self)); /* func */
 		DO(fg_vpop(self));         /* - */
@@ -1902,7 +1902,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		return result;
 	} else if (func_type == &DeeCMethod1_Type && true_argc == 1) {
 		int result;
-		struct cmethod_origin origin;
+		struct Dee_cmethod_origin origin;
 		DeeCMethodObject *func = (DeeCMethodObject *)func_obj;
 		DO(vpop_empty_kwds(self)); /* func, arg0 */
 		DO(fg_vpop_at(self, 1));   /* arg0 */
@@ -1925,7 +1925,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			result = vcall_kwcmethod(self, func->cm_func.cmf_kwmeth, true_argc,
 			                         &doc, func->cm_flags);
 		} else {
-			struct cmethod_origin origin;
+			struct Dee_cmethod_origin origin;
 			if (DeeCMethod_GetOrigin(func, &origin)) {
 				doc.di_doc = origin.cmo_doc;
 				doc.di_mod = origin.cmo_module;
@@ -2748,11 +2748,11 @@ vopgetattr_constattr(struct fungen *__restrict self,
 
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
 		DREF DeeObject *value;
-		struct class_attribute const *item;
+		struct Dee_class_attribute const *item;
 		item = attr->ai_value.v_instance_attr; /* this, attr */
 		if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 			DeeTypeObject *type = (DeeTypeObject *)attr->ai_decl;
-			struct class_desc *desc = DeeClass_DESC(type);
+			struct Dee_class_desc *desc = DeeClass_DESC(type);
 			/* Wrapper for producing `DeeProperty_Type' */
 			DO(fg_vpop(self));     /* this */
 			DO(fg_vdirect1(self)); /* this */
@@ -3153,7 +3153,7 @@ vopcallattrkw_constattr(struct fungen *__restrict self,
 		--argc; /* type, attr, this, [args...], kw */
 		item = attr->ai_value.v_instance_attr;
 		/* Behavior here mirrors `DeeClass_CallInstanceAttributeKw()' */
-		if (!(item->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
+		if (!(item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
 			if (argc != 0)
 				break;
 			/* XXX: "kw" here doesn't need to be empty. It is also allowed to be "thisarg: foo" */
@@ -3171,10 +3171,10 @@ vopcallattrkw_constattr(struct fungen *__restrict self,
 		DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, (DeeTypeObject *)attr->ai_decl)); /* [args...], kw, this */
 		DO(fg_vpush_const(self, attr->ai_decl)); /* [args...], kw, this, decl_type */
 		callback_addr = item->ca_addr;
-#if CLASS_GETSET_GET != 0
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
-			callback_addr += CLASS_GETSET_GET;
-#endif /* CLASS_GETSET_GET != 0 */
+#if Dee_CLASS_GETSET_GET != 0
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
+			callback_addr += Dee_CLASS_GETSET_GET;
+#endif /* Dee_CLASS_GETSET_GET != 0 */
 		DO(fg_vpush_imember(self, callback_addr, FG_CIMEMBER_F_REF)); /* [args...], kw, func */
 		DO(fg_vlrot(self, argc + 2));    /* func, [args...], kw */
 		return fg_vopcallkw(self, argc); /* result */
@@ -5600,7 +5600,7 @@ vtype_get_operator_api_function(struct fungen *__restrict self,
                                 struct host_operator_specs *__restrict result, bool inplace) {
 	void const *api_function;
 	byte_t const *field_base;
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	unsigned int optype;
 	(void)self;
 
@@ -7427,32 +7427,32 @@ fg_vpush_instance_attr(struct fungen *__restrict self, DeeTypeObject *type,
 	uint16_t field_addr;
 	/* Behavior here mirrors `DeeInstance_GetAttribute()' */
 	field_addr = attr->ca_addr;
-#if CLASS_GETSET_GET != 0
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
-		field_addr += CLASS_GETSET_GET;
-#endif /* CLASS_GETSET_GET != 0 */
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+#if Dee_CLASS_GETSET_GET != 0
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
+		field_addr += Dee_CLASS_GETSET_GET;
+#endif /* Dee_CLASS_GETSET_GET != 0 */
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 		/* Member lies in class memory. */ /* this */
-		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD))
+		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD))
 			DO(fg_vpop(self));                                  /* N/A */
 		DO(fg_vpush_const(self, type));                         /* [this], type */
 		DO(fg_vpush_cmember(self, field_addr, icmember_flags)); /* [this], member */
 	} else {
 		/* Member lies in instance memory. */ /* this */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 			DO(fg_vdup(self));                                  /* this, this */
 		DO(fg_vpush_const(self, type));                         /* [this], this, type */
 		DO(fg_vpush_imember(self, field_addr, icmember_flags)); /* [this], member */
 	}
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {     /* [this], getter */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) { /* this, getter */
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {     /* [this], getter */
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) { /* this, getter */
 			return fg_vopthiscall(self, 0);            /* result */
 		} else {                                       /* getter */
 			return fg_vopcall(self, 0);                /* result */
 		}
 		__builtin_unreachable();
 	}
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) { /* this, func */
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) { /* this, func */
 		DO(fg_vswap(self));                        /* func, this */
 		return vnew_InstanceMethod(self);          /* result */
 	}
@@ -7465,11 +7465,11 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vbound_instance_attr(struct fungen *__restrict self, DeeTypeObject *type,
                         struct Dee_class_attribute const *attr) {
-	struct class_desc *desc;
+	struct Dee_class_desc *desc;
 	/* Behavior here mirrors `DeeInstance_BoundAttribute()' */
-	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
+	if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)) {
 		/* When it isn't a get-set, then we can just check if the class/instance member is bound. */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 			/* Member lies in class memory. */                  /* this */
 			DO(fg_vpop(self));              /* N/A */
 			DO(fg_vpush_const(self, type)); /* type */
@@ -7507,40 +7507,40 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vdel_instance_attr(struct fungen *__restrict self, DeeTypeObject *type,
                       struct Dee_class_attribute const *attr) {
 	/* Behavior here mirrors `DeeInstance_DelAttribute()' */
-	struct class_desc *desc = DeeClass_DESC(type);
-	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+	struct Dee_class_desc *desc = DeeClass_DESC(type);
+	if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					DO(fg_vpush_const(self, type));                                                  /* this, type */
-					DO(fg_vpush_cmember(self, attr->ca_addr + CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* this, delete */
+					DO(fg_vpush_cmember(self, attr->ca_addr + Dee_CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* this, delete */
 					DO(fg_vswap(self));                                                              /* delete, this */
 					DO(fg_vopthiscall(self, 0));                                                     /* result */
 				} else {
 					DO(fg_vpop(self));                                                               /* N/A */
 					DO(fg_vpush_const(self, type));                                                  /* type */
-					DO(fg_vpush_cmember(self, attr->ca_addr + CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* delete */
+					DO(fg_vpush_cmember(self, attr->ca_addr + Dee_CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* delete */
 					DO(fg_vopcall(self, 0));                                                         /* result */
 				}
 				return fg_vpop(self);
-			} else if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+			} else if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 				/* XXX: fg_vdel_cmember() */
 			}
 		} else {
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					DO(fg_vdup(self));                                                               /* this, this */
 					DO(fg_vpush_const(self, type));                                                  /* this, this, type */
-					DO(fg_vpush_imember(self, attr->ca_addr + CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* this, delete */
+					DO(fg_vpush_imember(self, attr->ca_addr + Dee_CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* this, delete */
 					DO(fg_vswap(self));                                                              /* delete, this */
 					DO(fg_vopthiscall(self, 0));                                                     /* result */
 				} else {
 					DO(fg_vpush_const(self, type));                                                  /* this, type */
-					DO(fg_vpush_imember(self, attr->ca_addr + CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* delete */
+					DO(fg_vpush_imember(self, attr->ca_addr + Dee_CLASS_GETSET_DEL, FG_CIMEMBER_F_REF)); /* delete */
 					DO(fg_vopcall(self, 0));                                                         /* result */
 				}
 				return fg_vpop(self);
-			} else if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+			} else if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 				DO(fg_vpush_const(self, type)); /* this, type */
 				return fg_vdel_imember(self, attr->ca_addr, FG_CIMEMBER_F_NORMAL);
 			}
@@ -7563,45 +7563,45 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fg_vpop_instance_attr(struct fungen *__restrict self,
                                           DeeTypeObject *type, struct Dee_class_attribute const *attr) {
 	/* Behavior here mirrors `DeeInstance_SetAttribute()' */
-	struct class_desc *desc = DeeClass_DESC(type);
-	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+	struct Dee_class_desc *desc = DeeClass_DESC(type);
+	if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					DO(fg_vpush_const(self, type));                                                  /* this, value, type */
-					DO(fg_vpush_cmember(self, attr->ca_addr + CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* this, value, setter */
+					DO(fg_vpush_cmember(self, attr->ca_addr + Dee_CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* this, value, setter */
 					DO(fg_vrrot(self, 3));                                                           /* setter, this, value */
 					DO(fg_vopthiscall(self, 1));                                                     /* result */
 				} else {
 					DO(fg_vpop_at(self, 2));                                                         /* value */
 					DO(fg_vpush_const(self, type));                                                  /* value, type */
-					DO(fg_vpush_cmember(self, attr->ca_addr + CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* value, setter */
+					DO(fg_vpush_cmember(self, attr->ca_addr + Dee_CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* value, setter */
 					DO(fg_vswap(self));                                                              /* setter, value */
 					DO(fg_vopcall(self, 1));                                                         /* result */
 				}
 				return fg_vpop(self);
-			} else if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+			} else if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 				/* XXX: fg_vpop_cmember() */
 			}
 		} else {
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					DO(fg_vswap(self));                                                              /* value, this */
 					DO(fg_vdup(self));                                                               /* value, this, this */
 					DO(fg_vpush_const(self, type));                                                  /* value, this, this, type */
-					DO(fg_vpush_imember(self, attr->ca_addr + CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* value, this, setter */
+					DO(fg_vpush_imember(self, attr->ca_addr + Dee_CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* value, this, setter */
 					DO(fg_vswap(self));                                                              /* value, setter, this */
 					DO(fg_vlrot(self, 3));                                                           /* setter, this, value */
 					DO(fg_vopthiscall(self, 1));                                                     /* result */
 				} else {
 					DO(fg_vswap(self));                                                              /* value, this */
 					DO(fg_vpush_const(self, type));                                                  /* value, this, type */
-					DO(fg_vpush_imember(self, attr->ca_addr + CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* value, setter */
+					DO(fg_vpush_imember(self, attr->ca_addr + Dee_CLASS_GETSET_SET, FG_CIMEMBER_F_REF)); /* value, setter */
 					DO(fg_vswap(self));                                                              /* setter, value */
 					DO(fg_vopcall(self, 1));                                                         /* result */
 				}
 				return fg_vpop(self);
-			} else if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+			} else if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 				DO(fg_vpush_const(self, type)); /* this, value, type */
 				DO(fg_vswap(self));             /* this, type, value */
 				return fg_vpop_imember(self, attr->ca_addr, FG_CIMEMBER_F_NORMAL);
@@ -7630,11 +7630,11 @@ fg_vcall_instance_attrkw(struct fungen *__restrict self, DeeTypeObject *type,
 	/* Behavior here mirrors `DeeInstance_CallAttributeKw()' */
 	DO(fg_vlrot(self, argc + 2)); /* [args...], kw, this */
 	field_addr = attr->ca_addr;
-#if CLASS_GETSET_GET != 0
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
-		field_addr += CLASS_GETSET_GET;
-#endif /* CLASS_GETSET_GET != 0 */
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+#if Dee_CLASS_GETSET_GET != 0
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
+		field_addr += Dee_CLASS_GETSET_GET;
+#endif /* Dee_CLASS_GETSET_GET != 0 */
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 		/* Member lies in class memory. */                         /* [args...], kw, this */
 		DO(fg_vpush_const(self, type));                            /* [args...], kw, this, type */
 		DO(fg_vpush_cmember(self, field_addr, FG_CIMEMBER_F_REF)); /* [args...], kw, this, member */
@@ -7644,9 +7644,9 @@ fg_vcall_instance_attrkw(struct fungen *__restrict self, DeeTypeObject *type,
 		DO(fg_vpush_const(self, type));                            /* [args...], kw, this, this, type */
 		DO(fg_vpush_imember(self, field_addr, FG_CIMEMBER_F_REF)); /* [args...], kw, this, member */
 	}
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) { /* [args...], kw, this, getter */
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) { /* [args...], kw, this, getter */
 		DO(fg_vswap(self));                        /* [args...], kw, getter, this */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 			DO(fg_vopthiscall(self, 0)); /* [args...], kw, func */
 		} else {
 			DO(fg_vpop(self));       /* [args...], kw, getter */
@@ -7655,7 +7655,7 @@ fg_vcall_instance_attrkw(struct fungen *__restrict self, DeeTypeObject *type,
 		DO(fg_vrrot(self, argc + 2)); /* func, [args...], kw */
 		return fg_vopcallkw(self, argc);
 	} else {
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) { /* [args...], kw, this, func */
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) { /* [args...], kw, this, func */
 			DO(fg_vrrot(self, argc + 3));              /* func, [args...], kw, this */
 			DO(fg_vrrot(self, argc + 2));              /* func, this, [args...], kw */
 			return fg_vopthiscallkw(self, argc);

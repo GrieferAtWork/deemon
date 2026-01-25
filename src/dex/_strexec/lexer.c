@@ -36,7 +36,7 @@ DECL_BEGIN
 
 INTERN NONNULL((1)) void DFCALL
 JITLexer_Yield(JITLexer *__restrict self) {
-	uniflag_t flags;
+	Dee_uniflag_t flags;
 	uint32_t ch32;
 	unsigned char ch;
 	unsigned char const *iter;
@@ -70,9 +70,9 @@ raw_again:
 				/* UTF-8 sequence. */
 				--iter;
 				start = iter;
-				ch32 = unicode_readutf8_n(&iter, self->jl_end);
+				ch32 = Dee_unicode_readutf8_n(&iter, self->jl_end);
 handle_int_or_float_ch32:
-				if (!(DeeUni_Flags(ch32) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
+				if (!(DeeUni_Flags(ch32) & (Dee_UNICODE_ISSYMCONT | Dee_UNICODE_ISDIGIT))) {
 #ifdef CONFIG_HAVE_FPU
 					if (ch32 == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
@@ -89,7 +89,7 @@ handle_int_or_float_ch32:
 #endif /* CONFIG_HAVE_FPU */
 				}
 			} else {
-				if (!(DeeUni_Flags(ch) & (UNICODE_ISSYMCONT | UNICODE_ISDIGIT))) {
+				if (!(DeeUni_Flags(ch) & (Dee_UNICODE_ISSYMCONT | Dee_UNICODE_ISDIGIT))) {
 #ifdef CONFIG_HAVE_FPU
 					if (ch == '.' && self->jl_tok == TOK_INT) {
 						self->jl_tok = TOK_FLOAT;
@@ -109,7 +109,7 @@ handle_decimal_power_suffix:
 							++iter;
 						} else if (ch > 0x7f) {
 							start = iter;
-							ch32 = unicode_readutf8_n(&iter, self->jl_end);
+							ch32 = Dee_unicode_readutf8_n(&iter, self->jl_end);
 							if (ch32 == '+' || ch32 == '-') {
 								/* Accept '+' or '-' after decimal power suffix. */
 							} else {
@@ -250,7 +250,7 @@ handle_decimal_power_suffix:
 					}
 					if (ch > 0x7f) {
 						--iter;
-						ch32 = unicode_readutf8_n(&iter, self->jl_end);
+						ch32 = Dee_unicode_readutf8_n(&iter, self->jl_end);
 						if (DeeUni_IsLF(ch32))
 							break;
 					}
@@ -430,14 +430,14 @@ handle_decimal_power_suffix:
 		if unlikely(ch > 0x7f) {
 			/* UTF-8 sequence. */
 			--iter;
-			ch32 = unicode_readutf8_n(&iter, self->jl_end);
+			ch32 = Dee_unicode_readutf8_n(&iter, self->jl_end);
 			flags = DeeUni_Flags(ch32);
-			if (flags & UNICODE_ISSPACE)
+			if (flags & Dee_UNICODE_ISSPACE)
 				goto again;
 		}
 		flags = DeeUni_Flags(ch);
 		/* Skip whitespace. */
-		if (flags & UNICODE_ISSPACE) {
+		if (flags & Dee_UNICODE_ISSPACE) {
 	case ' ':
 	case '\t':
 	case '\r':
@@ -446,7 +446,7 @@ again:
 			self->jl_tokend = iter;
 			goto raw_again;
 		}
-		if (flags & UNICODE_ISSYMSTRT) {
+		if (flags & Dee_UNICODE_ISSYMSTRT) {
 scan_keyword:
 	case '_':
 	case '$':
@@ -509,13 +509,13 @@ scan_keyword:
 					unsigned char const *start;
 					--iter;
 					start = iter;
-					ch32 = unicode_readutf8_n(&iter, self->jl_end);
-					if (!(DeeUni_Flags(ch32) & UNICODE_ISSYMCONT)) {
+					ch32 = Dee_unicode_readutf8_n(&iter, self->jl_end);
+					if (!(DeeUni_Flags(ch32) & Dee_UNICODE_ISSYMCONT)) {
 						iter = start;
 						break;
 					}
 				} else {
-					if (!(DeeUni_Flags(ch) & UNICODE_ISSYMCONT)) {
+					if (!(DeeUni_Flags(ch) & Dee_UNICODE_ISSYMCONT)) {
 						--iter;
 						break;
 					}

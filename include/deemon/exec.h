@@ -17,8 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_RUNATEXIT_**/
+/*!export DeeExec_**/
+/*!export DeeExec_RUNMODE_**/
+/*!export DeeModule_**/
+/*!export DeeModule_*LibPath**/
+/*!export Dee_SHUTDOWN_F_**/
 #ifndef GUARD_DEEMON_EXEC_H
-#define GUARD_DEEMON_EXEC_H 1
+#define GUARD_DEEMON_EXEC_H 1 /**/
 
 #include "api.h"
 
@@ -29,13 +36,6 @@
 #include <stdint.h>  /* uint16_t, uint64_t */
 
 DECL_BEGIN
-
-#ifdef DEE_SOURCE
-#define Dee_compiler_options compiler_options
-#define Dee_list_object      list_object
-#define Dee_module_object    module_object
-#endif /* DEE_SOURCE */
-
 
 /* Get/Set deemon's home path.
  * The home path is used to locate builtin libraries, as well as extensions.
@@ -151,14 +151,14 @@ Dee_AtExit(DeeObject *callback, DeeObject *args);
 
 /* Run callbacks that have been registered using `Dee_AtExit()'
  * @return:  0: Successfully executed all callbacks.
- * @return: -1: An error occurred (never returned when `DEE_RUNATEXIT_FRUNALL' is passed)
+ * @return: -1: An error occurred (never returned when `Dee_RUNATEXIT_FRUNALL' is passed)
  * NOTE: This function is automatically called when `exit()'
  *       from stdlib is used to stop execution of the program. */
 DFUNDEF int DCALL Dee_RunAtExit(uint16_t flags);
-#define DEE_RUNATEXIT_FNORMAL  0x0000 /* Normal flags. */
-#define DEE_RUNATEXIT_FRUNALL  0x0001 /* Always run all callbacks and display all errors
+#define Dee_RUNATEXIT_FNORMAL  0x0000 /* Normal flags. */
+#define Dee_RUNATEXIT_FRUNALL  0x0001 /* Always run all callbacks and display all errors
                                        * that may occur during their execution. */
-#define DEE_RUNATEXIT_FDONTRUN 0x0002 /* Do not execute callbacks, but discard all of them.
+#define Dee_RUNATEXIT_FDONTRUN 0x0002 /* Do not execute callbacks, but discard all of them.
                                        * However, still disallow further calls to `Dee_AtExit()' */
 
 /* Terminate the application the same way `deemon.Error.AppExit.exit()' would,
@@ -365,10 +365,10 @@ DFUNDEF void DCALL Dee_Initialize(void);
  * After this function was called, `Dee_Initialize()' must
  * be called before deemon APIs are once again safe to use.
  *
- * @param: Set of `Dee_Shutdown_F_*' */
+ * @param: Set of `Dee_SHUTDOWN_F_*' */
 DFUNDEF void DCALL Dee_Shutdown(unsigned int flags);
-#define Dee_Shutdown_F_NORMAL 0x0000 /* Normal (full) shutdown */
-#define Dee_Shutdown_F_FAST   0x0001 /* Perform a "fast" shutdown that only guaranties that objects whose
+#define Dee_SHUTDOWN_F_NORMAL 0x0000 /* Normal (full) shutdown */
+#define Dee_SHUTDOWN_F_FAST   0x0001 /* Perform a "fast" shutdown that only guaranties that objects whose
                                       * destructors may have side-effects (including nested side-effects
                                       * such as destroying a tuple containing an object whose destructor
                                       * has a side-effect) are destroyed.

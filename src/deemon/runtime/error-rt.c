@@ -392,7 +392,7 @@ error_display_impl(DeeObject *error, DeeObject *reason,
 			goto err;
 	}
 	if (DeeNone_Check(fp)) {
-		fp = DeeFile_GetStd(DEE_STDERR);
+		fp = DeeFile_GetStd(Dee_STDERR);
 	} else {
 		Dee_Incref(fp);
 	}
@@ -814,7 +814,7 @@ INIT_LIKE_ERROR("TypeError", "(" Error_init_params ")",
 /* Error.ValueError                                                     */
 /************************************************************************/
 typedef struct {
-	ERROR_OBJECT_HEAD
+	Dee_ERROR_OBJECT_HEAD
 	struct Dee_variant ve_value; /* [const] Value that caused the error (exact meaning is specific to sub-class) */
 } ValueError;
 
@@ -1795,7 +1795,7 @@ INIT_CUSTOM_ERROR("RegexNotFound", "(" RegexNotFound_init_params ")",
 
 /* Throws an `DeeError_RegexNotFound' indicating that
  * the given "regex" could not be found within "data"
- * @param: eflags: Set of `DEE_RE_EXEC_*' */
+ * @param: eflags: Set of `Dee_RE_EXEC_*' */
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
                                size_t start, size_t end, size_t range,
@@ -2443,7 +2443,7 @@ PUBLIC ATTR_COLD int
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrIndexOverflow)(DeeObject *seq) {
 	DREF DeeThreadObject *me = DeeThread_Self();
-	struct except_frame *error = me->t_except;
+	struct Dee_except_frame *error = me->t_except;
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
@@ -2451,7 +2451,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
 		DREF IndexError *result = DeeObject_MALLOC(IndexError);
 		if unlikely(!result) {
-			struct except_frame *oom = me->t_except;
+			struct Dee_except_frame *oom = me->t_except;
 			if likely(oom != error) {
 				ASSERT(me->t_exceptsz >= 2);
 				ASSERT(oom->ef_prev == error);
@@ -2491,7 +2491,7 @@ done:
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrNegativeShiftOverflow)(DeeObject *lhs, bool is_left_shift) {
 	DREF DeeThreadObject *me = DeeThread_Self();
-	struct except_frame *error = me->t_except;
+	struct Dee_except_frame *error = me->t_except;
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
@@ -2499,7 +2499,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
 		DREF NegativeShift *result = DeeObject_MALLOC(NegativeShift);
 		if unlikely(!result) {
-			struct except_frame *oom = me->t_except;
+			struct Dee_except_frame *oom = me->t_except;
 			if likely(oom != error) {
 				ASSERT(me->t_exceptsz >= 2);
 				ASSERT(oom->ef_prev == error);
@@ -2571,7 +2571,7 @@ is_sequence_error(DeeTypeObject *error_type) {
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrNestSequenceError)(DeeObject *from, DeeObject *to) {
 	DREF DeeThreadObject *me = DeeThread_Self();
-	struct except_frame *error = me->t_except;
+	struct Dee_except_frame *error = me->t_except;
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (is_sequence_error(Dee_TYPE(error->ef_error)) &&
@@ -2587,7 +2587,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 			DREF SequenceError *nested;
 			nested = (DREF SequenceError *)DeeObject_Copy((DeeObject *)current);
 			if unlikely(!nested) {
-				struct except_frame *oom = me->t_except;
+				struct Dee_except_frame *oom = me->t_except;
 				if likely(oom != error) {
 					ASSERT(me->t_exceptsz >= 2);
 					ASSERT(oom->ef_prev == error);
@@ -2626,7 +2626,7 @@ PRIVATE ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrNestedOverflow_impl)(struct Dee_variant *__restrict minval,
                                      struct Dee_variant *__restrict maxval) {
 	DREF DeeThreadObject *me = DeeThread_Self();
-	struct except_frame *error = me->t_except;
+	struct Dee_except_frame *error = me->t_except;
 	ASSERT(error != NULL);
 	ASSERT(me->t_exceptsz > 0);
 	if (DeeObject_InstanceOf(error->ef_error, &DeeError_IntegerOverflow) &&
@@ -2634,7 +2634,7 @@ PRIVATE ATTR_COLD NONNULL((1, 2)) int
 		IntegerOverflow *overflow = (IntegerOverflow *)error->ef_error;
 		DREF IntegerOverflow *result = DeeObject_MALLOC(IntegerOverflow);
 		if unlikely(!result) {
-			struct except_frame *oom = me->t_except;
+			struct Dee_except_frame *oom = me->t_except;
 			if likely(oom != error) {
 				ASSERT(me->t_exceptsz >= 2);
 				ASSERT(oom->ef_prev == error);

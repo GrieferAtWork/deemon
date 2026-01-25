@@ -261,7 +261,7 @@ USet_InitEmpty(USet *__restrict self) {
 	self->us_used = 0;
 	self->us_elem = empty_set_items;
 	Dee_atomic_rwlock_init(&self->us_lock);
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 }
 
@@ -288,7 +288,7 @@ USet_InitWithHint(USet *__restrict self, size_t size_hint) {
 	self->us_used = 0;
 	self->us_size = 0;
 	Dee_atomic_rwlock_init(&self->us_lock);
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 }
 
@@ -608,7 +608,7 @@ again_hashset:
 			}
 		}
 		DeeHashSet_LockEndRead(src);
-		weakref_support_init(self);
+		Dee_weakref_support_init(self);
 	} else if (type == &URoSet_Type) {
 		URoSet *src = (URoSet *)sequence;
 		Dee_atomic_rwlock_init(&self->us_lock);
@@ -626,7 +626,7 @@ again_hashset:
 			             (DeeObject **)src->urs_elem,
 			             src->urs_mask + 1);
 		}
-		weakref_support_init(self);
+		Dee_weakref_support_init(self);
 	} else if (type == &DeeRoSet_Type) {
 		size_t i;
 		DeeRoSetObject *src;
@@ -650,7 +650,7 @@ again_hashset:
 				USet_DoInsertTrackedUnlocked(self, key);
 			}
 		}
-		weakref_support_init(self);
+		Dee_weakref_support_init(self);
 	} else {
 		size_t sizehint = DeeObject_SizeFast(sequence);
 		if (sizehint != (size_t)-1) {
@@ -758,7 +758,7 @@ again:
 		}
 	}
 	USet_LockEndRead(other);
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 }
 
@@ -853,7 +853,7 @@ err_items:
 }
 
 PRIVATE NONNULL((1)) void DCALL USet_Fini(USet *__restrict self) {
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	ASSERT((self->us_elem == empty_set_items) == (self->us_mask == 0));
 	ASSERT((self->us_elem == empty_set_items) == (self->us_size == 0));
 	ASSERT(self->us_used <= self->us_size);
@@ -939,15 +939,15 @@ uset_contains(USet *self, DeeObject *search_item) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uset_repr(USet *__restrict self) {
-	struct unicode_printer p;
+	struct Dee_unicode_printer p;
 	Dee_ssize_t error;
 	struct uset_item *iter, *end;
 	bool is_first;
 	struct uset_item *vector;
 	size_t mask;
 again:
-	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "collections.UniqueSet({ ") < 0)
+	Dee_unicode_printer_init(&p);
+	if (Dee_UNICODE_PRINTER_PRINT(&p, "collections.UniqueSet({ ") < 0)
 		goto err;
 	USet_LockRead(self);
 	is_first = true;
@@ -963,7 +963,7 @@ again:
 		Dee_Incref(key);
 		USet_LockEndRead(self);
 		/* Print this item. */
-		error = unicode_printer_printf(&p, "%s%r", is_first ? "" : ", ", key);
+		error = Dee_unicode_printer_printf(&p, "%s%r", is_first ? "" : ", ", key);
 		Dee_Decref(key);
 		if unlikely(error < 0)
 			goto err;
@@ -974,16 +974,16 @@ again:
 			goto restart;
 	}
 	USet_LockEndRead(self);
-	if ((is_first ? UNICODE_PRINTER_PRINT(&p, "})")
-	              : UNICODE_PRINTER_PRINT(&p, " })")) < 0)
+	if ((is_first ? Dee_UNICODE_PRINTER_PRINT(&p, "})")
+	              : Dee_UNICODE_PRINTER_PRINT(&p, " })")) < 0)
 		goto err;
-	return unicode_printer_pack(&p);
+	return Dee_unicode_printer_pack(&p);
 restart:
 	USet_LockEndRead(self);
-	unicode_printer_fini(&p);
+	Dee_unicode_printer_fini(&p);
 	goto again;
 err:
-	unicode_printer_fini(&p);
+	Dee_unicode_printer_fini(&p);
 	return NULL;
 }
 
@@ -1274,7 +1274,7 @@ INTERN DeeTypeObject USet_Type = {
 	                         "Returns an iterator for enumerating all items "
 	                         /**/ "in @this set, following an undefined order"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(USet),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(USet),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {

@@ -317,7 +317,7 @@ deepcopy_gcobject_malloc_impl(DeeDeepCopyContext *__restrict self,
 	struct Dee_gc_head *result_head, *next;
 	ASSERT_OBJECT(ref);
 	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use deepcopy_object_malloc_impl()");
-	num_bytes += DEE_GC_HEAD_SIZE;
+	num_bytes += Dee_GC_HEAD_SIZE;
 	result_head = (struct Dee_gc_head *)deepcopy_heap_malloc(&self->dcc_gcheap, num_bytes, do_try, do_bzero);
 	if unlikely(!result_head)
 		goto err;

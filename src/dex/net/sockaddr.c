@@ -152,15 +152,15 @@ next_part:
 
 INTERN WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags) {
 	struct msg_desc const *desc;
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
 	int match_mask               = 0;
 	for (desc = sock_msg_names;
 	     desc < COMPILER_ENDOF(sock_msg_names); ++desc) {
 		if (flags & desc->md_flag) {
 			/* Print the string representation of this flag. */
-			if (ascii_printer_printf(&printer, "%sMSG_%s",
-			                         ASCII_PRINTER_LEN(&printer) ? "|" : "",
-			                         desc->md_name) < 0)
+			if (Dee_ascii_printer_printf(&printer, "%sMSG_%s",
+			                             Dee_ASCII_PRINTER_LEN(&printer) ? "|" : "",
+			                             desc->md_name) < 0)
 				goto err;
 
 			match_mask |= desc->md_flag;
@@ -169,12 +169,12 @@ INTERN WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags) {
 	/* If there are flags that we didn't recognize, return them as an integer. */
 	if (flags & ~match_mask)
 		goto fallback;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 fallback:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return DeeInt_NewInt(flags);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 

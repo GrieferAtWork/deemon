@@ -839,7 +839,7 @@ do_basic_optimize_after_prefix:
 				goto do_jmpf_foreach;
 
 			case ASM_RET:
-				if (!(current_basescope->bs_flags & CODE_FYIELDING))
+				if (!(current_basescope->bs_flags & Dee_CODE_FYIELDING))
 					goto do_noreturn_optimization;
 				break;
 			case ASM_THROW:
@@ -1024,7 +1024,7 @@ do_jmpf:
 				 *    that are at most 2 bytes wide. */
 				if (!is_conditional &&
 				    (*(jmp_target + 0) == ASM_RET_NONE ||
-				     (*(jmp_target + 0) == ASM_RET && !(current_basescope->bs_flags & CODE_FYIELDING)) ||
+				     (*(jmp_target + 0) == ASM_RET && !(current_basescope->bs_flags & Dee_CODE_FYIELDING)) ||
 				     *(jmp_target + 0) == ASM_JMP_POP ||
 				     (*(jmp_target + 0) == (ASM_JMP_POP_POP & 0xff00) >> 8 &&
 				      *(jmp_target + 1) == (ASM_JMP_POP_POP & 0xff)) ||
@@ -1053,7 +1053,7 @@ do_jmpf:
 		}	/*ATTR_FALLTHROUGH*/
 		__IF0 {
 		case ASM_RET:
-			if (current_basescope->bs_flags & CODE_FYIELDING)
+			if (current_basescope->bs_flags & Dee_CODE_FYIELDING)
 				break; /* In yielding code, this instruction behaves differently. */
 		}	ATTR_FALLTHROUGH
 		case ASM_JMP_POP:
@@ -1970,7 +1970,7 @@ do_unused_operand_optimization_ex:
 					if (opcode == ASM_RET_NONE || opcode == ASM_THROW ||
 					    opcode == ASM_UD || opcode == ASM_RETHROW ||
 					    (opcode == ASM_RET &&
-					     !(current_basescope->bs_flags & CODE_FYIELDING)))
+					     !(current_basescope->bs_flags & Dee_CODE_FYIELDING)))
 						break;
 					if (opcode == ASM_EXTENDED1) {
 						opcode = iter[1];
@@ -2225,7 +2225,7 @@ do_pop_merge_optimization:
 				SET_RESULTF(effect_start, "Flatten neighboring stack-effect instructions");
 			}
 			iter = effect_start;
-			if (*iter == ASM_PUSH_NONE && !(current_basescope->bs_flags & CODE_FYIELDING)) {
+			if (*iter == ASM_PUSH_NONE && !(current_basescope->bs_flags & Dee_CODE_FYIELDING)) {
 				instruction_t *next;
 				/* Minor optimization: In non-yielding functions, we can
 				 *                     optimize `push none; ret pop' to `ret none'

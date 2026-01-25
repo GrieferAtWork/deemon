@@ -222,7 +222,7 @@ asm_allowconst(DeeObject *__restrict self) {
 	}
 	if (type == &DeeRoSet_Type) {
 		/* Special case: Only allow read-only sets of constant expressions. */
-		struct roset_item *iter, *end;
+		struct Dee_roset_item *iter, *end;
 		iter = ((DeeRoSetObject *)self)->rs_elem;
 		end  = iter + ((DeeRoSetObject *)self)->rs_mask + 1;
 		for (; iter < end; ++iter) {

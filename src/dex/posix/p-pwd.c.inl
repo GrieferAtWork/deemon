@@ -180,12 +180,12 @@ PRIVATE DEFINE_CMETHOD0(posix_getcwd, &posix_getcwd_f_impl, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void)
 /*[[[end]]]*/
 {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if (DeeSystem_PrintPwd(&printer, false))
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -248,11 +248,11 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void)
 #undef HOST_NAME_MAX
 #define HOST_NAME_MAX 16
 #endif /* !HOST_NAME_MAX */
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	size_t buflen = HOST_NAME_MAX;
 	char *newbuf, *buf;
 	int error;
-	buf = unicode_printer_alloc_utf8(&printer, buflen);
+	buf = Dee_unicode_printer_alloc_utf8(&printer, buflen);
 	if unlikely(!buf)
 		goto err_printer;
 	DBG_ALIGNMENT_DISABLE();
@@ -274,22 +274,22 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void)
 				goto err_generic;
 		}
 		buflen *= 2;
-		newbuf = unicode_printer_resize_utf8(&printer, buf, buflen);
+		newbuf = Dee_unicode_printer_resize_utf8(&printer, buf, buflen);
 		if unlikely(!newbuf)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(unicode_printer_commit_utf8(&printer, buf, strnlen(buf, buflen)) < 0)
+	if unlikely(Dee_unicode_printer_commit_utf8(&printer, buf, strnlen(buf, buflen)) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_generic:
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 	                          "Failed to determine host name");
 err:
-	unicode_printer_free_utf8(&printer, buf);
+	Dee_unicode_printer_free_utf8(&printer, buf);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* posix_gethostname_USE_gethostname */
 

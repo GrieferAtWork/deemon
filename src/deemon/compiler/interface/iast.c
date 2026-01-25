@@ -796,14 +796,14 @@ ast_gettryhandlers(Ast *__restrict self) {
 			if unlikely(!triple)
 				goto err_compiler_end_r_i;
 			switch (me->a_try.t_catchv[i].ce_flags &
-			        (EXCEPTION_HANDLER_FFINALLY | EXCEPTION_HANDLER_FINTERPT)) {
-			case EXCEPTION_HANDLER_FFINALLY | EXCEPTION_HANDLER_FINTERPT:
+			        (Dee_EXCEPTION_HANDLER_FFINALLY | Dee_EXCEPTION_HANDLER_FINTERPT)) {
+			case Dee_EXCEPTION_HANDLER_FFINALLY | Dee_EXCEPTION_HANDLER_FINTERPT:
 				temp = DeeString_New("finally, interrupt");
 				break;
-			case EXCEPTION_HANDLER_FFINALLY:
+			case Dee_EXCEPTION_HANDLER_FFINALLY:
 				temp = DeeString_New("finally");
 				break;
-			case EXCEPTION_HANDLER_FINTERPT:
+			case Dee_EXCEPTION_HANDLER_FINTERPT:
 				temp = DeeString_New("interrupt");
 				break;
 			default:
@@ -1037,31 +1037,31 @@ ast_getloopflags(Ast *__restrict self) {
 		result = NULL;
 	} else {
 		bool is_first                  = true;
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
+		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		if (me->a_flag & AST_FLOOP_FOREACH) {
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "foreach") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "foreach") < 0)
 				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FLOOP_POSTCOND) {
 			if (!is_first &&
-			    unlikely(unicode_printer_put8(&printer, ',')))
+			    unlikely(Dee_unicode_printer_put8(&printer, ',')))
 				goto err_compiler_end_printer;
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "postcond") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "postcond") < 0)
 				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FLOOP_UNLIKELY) {
 			if (!is_first &&
-			    unlikely(unicode_printer_put8(&printer, ',')))
+			    unlikely(Dee_unicode_printer_put8(&printer, ',')))
 				goto err_compiler_end_printer;
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "unlikely") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "unlikely") < 0)
 				goto err_compiler_end_printer;
 		}
-		result = unicode_printer_pack(&printer);
+		result = Dee_unicode_printer_pack(&printer);
 		goto done_compiler_end;
 err_compiler_end_printer:
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		result = NULL;
 	}
 done_compiler_end:
@@ -1868,31 +1868,31 @@ ast_getconditionalflags(Ast *__restrict self) {
 		result = NULL;
 	} else {
 		bool is_first                  = true;
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
+		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		if (me->a_flag & AST_FCOND_BOOL) {
-			if unlikely(unicode_printer_print(&printer, STR_bool, 4) < 0)
+			if unlikely(Dee_unicode_printer_print(&printer, STR_bool, 4) < 0)
 				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FCOND_LIKELY) {
 			if (!is_first &&
-			    unlikely(unicode_printer_put8(&printer, ',')))
+			    unlikely(Dee_unicode_printer_put8(&printer, ',')))
 				goto err_compiler_end_printer;
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "likely") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "likely") < 0)
 				goto err_compiler_end_printer;
 			is_first = false;
 		}
 		if (me->a_flag & AST_FCOND_UNLIKELY) {
 			if (!is_first &&
-			    unlikely(unicode_printer_put8(&printer, ',')))
+			    unlikely(Dee_unicode_printer_put8(&printer, ',')))
 				goto err_compiler_end_printer;
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "unlikely") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "unlikely") < 0)
 				goto err_compiler_end_printer;
 		}
-		result = unicode_printer_pack(&printer);
+		result = Dee_unicode_printer_pack(&printer);
 		goto done_compiler_end;
 err_compiler_end_printer:
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		result = NULL;
 	}
 done_compiler_end:
@@ -2261,7 +2261,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_operator_name(Dee_operator_t opid) {
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	switch (opid) {
 	case AST_OPERATOR_POS_OR_ADD:
 		return DeeString_Chr((uint8_t)'+');
@@ -2714,38 +2714,38 @@ ast_getoperatorflags(Ast *__restrict self) {
 		result = NULL;
 	} else {
 		bool is_first                  = true;
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
+		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		if (me->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "post") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "post") < 0)
 				goto err_printer;
 			is_first = false;
 		}
 		if (me->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
 			if (!is_first &&
-			    unlikely(unicode_printer_put8(&printer, ',')))
+			    unlikely(Dee_unicode_printer_put8(&printer, ',')))
 				goto err_printer;
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "varargs") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "varargs") < 0)
 				goto err_printer;
 			is_first = false;
 		}
 		if (me->a_operator.o_exflag & AST_OPERATOR_FMAYBEPFX) {
 			if (!is_first &&
-			    unlikely(unicode_printer_put8(&printer, ',')))
+			    unlikely(Dee_unicode_printer_put8(&printer, ',')))
 				goto err_printer;
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "maybeprefix") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "maybeprefix") < 0)
 				goto err_printer;
 		}
 		if (me->a_operator.o_exflag & AST_OPERATOR_FDONTOPT) {
 			if (!is_first &&
-			    unlikely(unicode_printer_put8(&printer, ',')))
+			    unlikely(Dee_unicode_printer_put8(&printer, ',')))
 				goto err_printer;
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, "dontoptimize") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "dontoptimize") < 0)
 				goto err_printer;
 		}
-		result = unicode_printer_pack(&printer);
+		result = Dee_unicode_printer_pack(&printer);
 		goto done;
 err_printer:
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		result = NULL;
 	}
 done:
@@ -3228,9 +3228,9 @@ print_enter_scope(DeeScopeObject *caller_scope,
 					continue;
 				switch (sym->s_type) {
 				case SYMBOL_TYPE_EXTERN:
-					if (MODULE_SYMBOL_EQUALS(sym->s_extern.e_symbol,
-					                         sym->s_name->k_name,
-					                         sym->s_name->k_size)) {
+					if (Dee_MODULE_SYMBOL_EQUALS(sym->s_extern.e_symbol,
+					                             sym->s_name->k_name,
+					                             sym->s_name->k_size)) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 						printf("import %s from %q",
 						       sym->s_extern.e_symbol->ss_name,
@@ -3400,11 +3400,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 print_code_tags(DeeBaseScopeObject *__restrict function_scope,
                 Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result = 0;
-	if (function_scope->bs_flags & CODE_FCOPYABLE)
+	if (function_scope->bs_flags & Dee_CODE_FCOPYABLE)
 		PRINT("@copyable ");
-	if (function_scope->bs_flags & CODE_FTHISCALL)
+	if (function_scope->bs_flags & Dee_CODE_FTHISCALL)
 		PRINT("@thiscall ");
-	if (function_scope->bs_flags & CODE_FASSEMBLY)
+	if (function_scope->bs_flags & Dee_CODE_FASSEMBLY)
 		PRINT("@assembly ");
 	return result;
 err:
@@ -3413,7 +3413,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_instance_method(DeeBaseScopeObject *__restrict self) {
-	if (!(self->bs_flags & CODE_FTHISCALL))
+	if (!(self->bs_flags & Dee_CODE_FTHISCALL))
 		return false;
 	/* TODO: Use the this-symbol to check for instance methods. */
 	return true;
@@ -3665,7 +3665,7 @@ force_scope:
 		for (i = 0; i < self->a_try.t_catchc; ++i) {
 			struct catch_expr *handler;
 			handler = &self->a_try.t_catchv[i];
-			if (handler->ce_flags & EXCEPTION_HANDLER_FFINALLY) {
+			if (handler->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY) {
 				PRINT(" finally ");
 				if (handler->ce_mask) {
 					PRINT("{\n");
@@ -3700,7 +3700,7 @@ force_scope:
 					except_symbol = NULL;
 				}
 got_except_symbol:
-				if (handler->ce_flags & EXCEPTION_HANDLER_FINTERPT)
+				if (handler->ce_flags & Dee_EXCEPTION_HANDLER_FINTERPT)
 					PRINT("@[interrupt] ");
 				PRINT(" catch (");
 				if (handler->ce_mask) {
@@ -3915,7 +3915,7 @@ got_except_symbol:
 		break;
 
 	case AST_OPERATOR_FUNC: {
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		info = DeeTypeType_GetOperatorById(&DeeType_Type, self->a_flag);
 		if (!info)
 			PRINT("(");
@@ -3933,7 +3933,7 @@ got_except_symbol:
 	}	break;
 
 	case AST_OPERATOR: {
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		char const *name;
 		if (self->a_operator.o_exflag & AST_OPERATOR_FVARARGS)
 			goto operator_fallback;
@@ -4548,7 +4548,7 @@ operator_fallback:
 		++indent;
 		/* Print the contents of the instance member table. */
 		for (i = 0; i <= desc->cd_iattr_mask; ++i) {
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 			attr = &desc->cd_iattr_list[i];
 			if (!attr->ca_name)
 				continue;
@@ -4559,23 +4559,23 @@ operator_fallback:
 				PRINT("\n");
 			}
 			DO(DeeFormat_Repeat(printer, arg, '\t', indent));
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FPRIVATE)
 				PRINT("private ");
-			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+			if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 					PRINT("@readonly ");
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 					PRINT("@method ");
 				printf("member %k;\n", attr->ca_name);
-			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				struct class_member *functions[3];
 				size_t j;
 				/* Instance-property (with its callbacks saved as part of the class) */
 				functions[1] = functions[2] = NULL;
-				functions[0]                = find_class_member(self, attr->ca_addr + CLASS_GETSET_GET);
-				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-					functions[1] = find_class_member(self, attr->ca_addr + CLASS_GETSET_DEL);
-					functions[2] = find_class_member(self, attr->ca_addr + CLASS_GETSET_SET);
+				functions[0]                = find_class_member(self, attr->ca_addr + Dee_CLASS_GETSET_GET);
+				if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
+					functions[1] = find_class_member(self, attr->ca_addr + Dee_CLASS_GETSET_DEL);
+					functions[2] = find_class_member(self, attr->ca_addr + Dee_CLASS_GETSET_SET);
 				}
 				printf("property %k = {\n", attr->ca_name);
 				++indent;
@@ -4597,7 +4597,7 @@ operator_fallback:
 				--indent;
 				DO(DeeFormat_Repeat(printer, arg, '\t', indent));
 				PRINT("}\n");
-			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				struct class_member *method;
 				/* Instance-method (that is saved within the class) */
 				method = find_class_member(self, attr->ca_addr);
@@ -4614,9 +4614,9 @@ operator_fallback:
 				struct class_member *member;
 				/* An instance-member that is saved within the class??? */
 instance_member_in_class:
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 					PRINT("@method ");
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 					PRINT("@readonly ");
 				printf("<instance-memory-in-class-table %k", attr->ca_name);
 				member = find_class_member(self, attr->ca_addr);
@@ -4629,7 +4629,7 @@ instance_member_in_class:
 		}
 		/* Print the contents of the class member table. */
 		for (i = 0; i <= desc->cd_cattr_mask; ++i) {
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 			attr = &desc->cd_cattr_list[i];
 			if (!attr->ca_name)
 				continue;
@@ -4640,17 +4640,17 @@ instance_member_in_class:
 				PRINT("\n");
 			}
 			DO(DeeFormat_Repeat(printer, arg, '\t', indent));
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FPRIVATE)
 				PRINT("private ");
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				struct class_member *functions[3];
 				size_t j;
 				/* Instance-property (with its callbacks saved as part of the class) */
 				functions[1] = functions[2] = NULL;
-				functions[0]                = find_class_member(self, attr->ca_addr + CLASS_GETSET_GET);
-				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-					functions[1] = find_class_member(self, attr->ca_addr + CLASS_GETSET_DEL);
-					functions[2] = find_class_member(self, attr->ca_addr + CLASS_GETSET_SET);
+				functions[0]                = find_class_member(self, attr->ca_addr + Dee_CLASS_GETSET_GET);
+				if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
+					functions[1] = find_class_member(self, attr->ca_addr + Dee_CLASS_GETSET_DEL);
+					functions[2] = find_class_member(self, attr->ca_addr + Dee_CLASS_GETSET_SET);
 				}
 				printf("class property %k = {\n", attr->ca_name);
 				++indent;
@@ -4671,7 +4671,7 @@ instance_member_in_class:
 				--indent;
 				DO(DeeFormat_Repeat(printer, arg, '\t', indent));
 				PRINT("}\n");
-			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				struct class_member *method;
 				/* Instance-method (that is saved within the class) */
 				method = find_class_member(self, attr->ca_addr);
@@ -4686,9 +4686,9 @@ instance_member_in_class:
 				struct class_member *member;
 				/* An instance-member that is saved within the class??? */
 class_member_in_class:
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 					PRINT("@method ");
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 					PRINT("@readonly ");
 				printf("class member %k", attr->ca_name);
 				member = find_class_member(self, attr->ca_addr);
@@ -4703,8 +4703,8 @@ class_member_in_class:
 		/* Print class operators. */
 		for (i = 0; i <= desc->cd_clsop_mask; ++i) {
 			struct class_member *member;
-			struct opinfo const *info;
-			struct class_operator *op = &desc->cd_clsop_list[i];
+			struct Dee_opinfo const *info;
+			struct Dee_class_operator *op = &desc->cd_clsop_list[i];
 			if (op->co_name == (Dee_operator_t)-1)
 				continue;
 			member = find_class_member(self, op->co_addr);
@@ -4890,7 +4890,7 @@ err:
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 print_operator_name(Dee_operator_t opid,
                     Dee_formatprinter_t printer, void *arg) {
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	switch (opid) {
 
 	case AST_OPERATOR_POS_OR_ADD:
@@ -5036,11 +5036,11 @@ print_single_expr:
 			if (i != 0)
 				PRINT(", ");
 			PRINT("(\"");
-			if (handler->ce_flags & EXCEPTION_HANDLER_FFINALLY) {
+			if (handler->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY) {
 				PRINT("finally");
 				first_flag = false;
 			}
-			if (handler->ce_flags & EXCEPTION_HANDLER_FINTERPT) {
+			if (handler->ce_flags & Dee_EXCEPTION_HANDLER_FINTERPT) {
 				if (!first_flag)
 					PRINT(",");
 				PRINT("interrupt");

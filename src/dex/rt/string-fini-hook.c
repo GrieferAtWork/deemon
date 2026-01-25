@@ -43,7 +43,7 @@ typedef struct string_fini_hook_object StringFiniHook;
 
 struct user_string_fini_hook {
 	struct Dee_string_fini_hook usfh_hook; /* Underlying hook interface */
-	WEAKREF(StringFiniHook)     usfh_user; /* Weak reference to user-visible hook callback container */
+	Dee_WEAKREF(StringFiniHook) usfh_user; /* Weak reference to user-visible hook callback container */
 };
 #define user_string_fini_hook_fromhook(self) \
 	COMPILER_CONTAINER_OF(self, struct user_string_fini_hook, usfh_hook)
@@ -52,7 +52,7 @@ struct user_string_fini_hook {
 
 struct string_fini_hook_object {
 	OBJECT_HEAD
-	WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 	DREF DeeObject                    *sfh_cb;   /* [1..1][const] User-defined callable that gets invoked. */
 	DREF struct user_string_fini_hook *sfh_hook; /* [1..1][const] Finalization hook descriptor. */
 };
@@ -113,7 +113,7 @@ sfh_init(StringFiniHook *__restrict self, size_t argc, DeeObject *const *argv) {
 	hook = user_string_fini_hook_alloc();
 	if unlikely(!hook)
 		goto err;
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	Dee_weakref_init(&hook->usfh_user, Dee_AsObject(self), NULL);
 	hook->usfh_hook.sfh_refcnt  = 1;
 	hook->usfh_hook.sfh_destroy = &user_string_fini_hook_destroy;
@@ -126,7 +126,7 @@ sfh_init(StringFiniHook *__restrict self, size_t argc, DeeObject *const *argv) {
 err_self_hook:
 	Dee_DecrefNokill(self->sfh_cb);
 	Dee_weakref_fini(&hook->usfh_user);
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	user_string_fini_hook_free(hook);
 err:
 	return -1;
@@ -136,7 +136,7 @@ PRIVATE NONNULL((1)) void DCALL
 sfh_fini(StringFiniHook *__restrict self) {
 	DeeString_RemoveFiniHook(&self->sfh_hook->usfh_hook);
 	Dee_string_fini_hook_decref(&self->sfh_hook->usfh_hook);
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	Dee_Decref(self->sfh_cb);
 }
 
@@ -214,7 +214,7 @@ INTERN DeeTypeObject StringFiniHook_Type = {
 
 	                         "(cb:?DCallable)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(StringFiniHook),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(StringFiniHook),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {

@@ -793,7 +793,7 @@ DEX_BEGIN
  * Other comments I wrote myself. */
 
 #define MATH_MEMBER(name, doc) \
-	DEX_MEMBER_F(#name, &math_##name, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, doc)
+	DEX_MEMBER_F(#name, &math_##name, Dee_DEXSYM_READONLY | Dee_DEXSYM_CONSTEXPR, doc)
 
 #ifdef MATH_HAVE_acos
 #define HAVE_EXPORTS

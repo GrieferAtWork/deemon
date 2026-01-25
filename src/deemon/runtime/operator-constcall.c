@@ -363,7 +363,7 @@ ob_is_func_constcall(DeeObject *ob, size_t argc,
 		       DeeMethodFlags_VerifyConstCallCondition(flags, me->im_this, argc, argv, kw);
 	} else if (tp == &DeeObjMethod_Type ||
 	           tp == &DeeKwObjMethod_Type) {
-		struct objmethod_origin origin;
+		struct Dee_objmethod_origin origin;
 		DeeObjMethodObject *me = (DeeObjMethodObject *)ob;
 		if (!DeeObjMethod_GetOrigin((DeeObject *)me, &origin))
 			goto nope;
@@ -372,7 +372,7 @@ ob_is_func_constcall(DeeObject *ob, size_t argc,
 		                                               me->om_this, argc, argv, kw);
 	} else if (tp == &DeeClsMethod_Type ||
 	           tp == &DeeKwClsMethod_Type) {
-		struct objmethod_origin origin;
+		struct Dee_objmethod_origin origin;
 		DeeClsMethodObject *me = (DeeClsMethodObject *)ob;
 		if (argc == 0)
 			goto nope;
@@ -382,7 +382,7 @@ ob_is_func_constcall(DeeObject *ob, size_t argc,
 		       DeeMethodFlags_VerifyConstCallCondition(origin.omo_decl->m_flag,
 		                                               argv[0], argc + 1, argv - 1, kw);
 	} else if (tp == &DeeClsProperty_Type) {
-		struct clsproperty_origin origin;
+		struct Dee_clsproperty_origin origin;
 		DeeClsPropertyObject *me = (DeeClsPropertyObject *)ob;
 		if (argc == 0)
 			goto nope;

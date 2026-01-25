@@ -40,13 +40,6 @@
 
 DECL_BEGIN
 
-struct ascii_printer;
-
-#ifdef DEE_SOURCE
-#define Dee_module_object module_object
-#endif /* DEE_SOURCE */
-struct Dee_module_object;
-
 #define R_DMN_NONE      0 /* `// Nothing' */
 #define R_DMN_STATIC16  1 /* `u16 = u16 + a_refc;' */
 #define R_DMN_ABS8      2 /* `u8  = u8 + ar_sym->as_addr;' */
@@ -105,8 +98,7 @@ struct asm_rel;
 struct asm_sec;
 struct asm_exc;
 
-struct string_object;
-struct module_object;
+struct Dee_module_object;
 SLIST_HEAD(asm_sym_slist, asm_sym);
 
 struct asm_sym {
@@ -136,14 +128,14 @@ struct asm_sym {
 #endif /* __SIZEOF_POINTER__ == 4 */
 
 struct asm_exc {
-	DREF DeeTypeObject *ex_mask;  /* [0..1] s.a.: `struct except_handler::eh_mask'. */
-	struct asm_sym     *ex_start; /* [1..1] s.a.: `struct except_handler::eh_start' (NOTE: Holds a reference to `as_used'). */
-	struct asm_sym     *ex_end;   /* [1..1] s.a.: `struct except_handler::eh_end' (NOTE: Holds a reference to `as_used'). */
-	struct asm_sym     *ex_addr;  /* [1..1] s.a.: `struct except_handler::eh_addr' (NOTE: Holds a reference to `as_used'). */
+	DREF DeeTypeObject *ex_mask;  /* [0..1] s.a.: `struct Dee_except_handler::eh_mask'. */
+	struct asm_sym     *ex_start; /* [1..1] s.a.: `struct Dee_except_handler::eh_start' (NOTE: Holds a reference to `as_used'). */
+	struct asm_sym     *ex_end;   /* [1..1] s.a.: `struct Dee_except_handler::eh_end' (NOTE: Holds a reference to `as_used'). */
+	struct asm_sym     *ex_addr;  /* [1..1] s.a.: `struct Dee_except_handler::eh_addr' (NOTE: Holds a reference to `as_used'). */
 #ifdef CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER
 	uint16_t            ex_pad;   /* ... */
 #endif /* CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
-	uint16_t            ex_flags; /* s.a.: `struct except_handler::eh_flags'. (Set of `EXCEPTION_HANDLER_F*') */
+	uint16_t            ex_flags; /* s.a.: `struct Dee_except_handler::eh_flags'. (Set of `EXCEPTION_HANDLER_F*') */
 #if __SIZEOF_POINTER__ > 4
 	uint32_t            ex_pad2;
 #endif /* __SIZEOF_POINTER__ > 4 */
@@ -404,10 +396,12 @@ struct asm_invoke_operand {
 	;
 };
 
+struct Dee_ascii_printer;
+
 /* Print a human-readable representation of `self' to `printer' */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
-                         struct ascii_printer *__restrict printer);
+                         struct Dee_ascii_printer *__restrict printer);
 
 #define OPERAND_CLASS_POP_DOTS       (OPERAND_CLASS_FDOTSFLAG | OPERAND_CLASS_POP) /* `pop...' */
 #define OPERAND_CLASS_SPPOP          (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_POP) /* `#pop' */
@@ -475,7 +469,7 @@ struct asm_mnemonic;
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 asm_invocation_print(struct asm_invocation const *__restrict self,
                      struct asm_mnemonic const *__restrict instr,
-                     struct ascii_printer *__restrict printer);
+                     struct Dee_ascii_printer *__restrict printer);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 asm_invocation_tostring(struct asm_invocation const *__restrict self,
                         struct asm_mnemonic const *__restrict instr);
@@ -592,7 +586,7 @@ INTDEF WUNUSED NONNULL((1)) int DFCALL uasm_parse_intexpr(struct asm_intexpr *re
 INTDEF WUNUSED int32_t DFCALL uasm_parse_imm16(uint16_t features);
 
 /* Invoke a given `instr' using data from `invoc'.
- * NOTE: This function also sets the `CODE_FASSEMBLY' flag in the current base scope. */
+ * NOTE: This function also sets the `Dee_CODE_FASSEMBLY' flag in the current base scope. */
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
 uasm_invoke(struct asm_mnemonic const *__restrict instr,
             struct asm_invocation *__restrict invoc);
@@ -940,7 +934,7 @@ INTDEF NONNULL((1)) void (DCALL asm_defsym)(struct asm_sym *__restrict self);
  * NOTE: The caller is required to ensure that the assembler is ready
  *       for this, as well as that `asm_mergetext()' has been called! */
 INTDEF WUNUSED DREF DeeCodeObject *(DCALL asm_gencode)(void);
-INTDEF WUNUSED struct except_handler *(DCALL asm_pack_exceptv)(void);
+INTDEF WUNUSED struct Dee_except_handler *(DCALL asm_pack_exceptv)(void);
 
 
 /* Set the current text section.
@@ -1055,7 +1049,7 @@ INTDEF void DCALL asm_dellocal(uint16_t index);
 
 /* Make sure that `mod' is being imported by the current
  * root-scope, if necessary adding it as a new dependency. */
-INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newmodule(struct module_object *__restrict mod);
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newmodule(struct Dee_module_object *__restrict mod);
 
 /* Ensure that a given symbol has been allocated and return its index.
  * NOTE: These function automatically save the symbol index within the symbol itself,
@@ -1961,7 +1955,7 @@ INTDEF WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 module_compile(/*inherit(always)*/ DREF DeeCodeObject *__restrict root_code);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-module_compile(DREF struct module_object *__restrict module,
+module_compile(DREF struct Dee_module_object *__restrict module,
                DeeCodeObject *__restrict root_code,
                uint16_t flags);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

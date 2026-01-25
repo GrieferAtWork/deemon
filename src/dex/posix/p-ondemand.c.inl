@@ -5134,7 +5134,7 @@ err:
  * @param: path: Must be a `string' */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
 	if unlikely(atflags & ~POSIX_DFD_MAKEPATH_ATFLAGS_MASK) {
@@ -5155,9 +5155,9 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Must combine `dfd' with `path' */
-	unicode_printer_init(&printer);
+	Dee_unicode_printer_init(&printer);
 	if (DeeString_Check(dfd)) {
-		if unlikely(unicode_printer_printstring(&printer, dfd) < 0)
+		if unlikely(Dee_unicode_printer_printstring(&printer, dfd) < 0)
 			goto err_printer;
 	} else {
 		/* Special handling for `deemon.File' */
@@ -5167,7 +5167,7 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 			if unlikely(!dfd_filename)
 				goto err_printer;
 			if (DeeString_IsAbsPath(dfd_filename)) {
-				if unlikely(unicode_printer_printstring(&printer, dfd_filename) < 0)
+				if unlikely(Dee_unicode_printer_printstring(&printer, dfd_filename) < 0)
 					goto err_printer;
 				Dee_Decref(dfd_filename);
 				goto got_dfd_path;
@@ -5182,7 +5182,7 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 			if (DeeInt_TryAsInt(dfd, &dfd_intval)) {
 				if (dfd_intval == AT_FDCWD) {
 					/* Caller made an explicit request for the path to be relative! */
-					unicode_printer_fini(&printer);
+					Dee_unicode_printer_fini(&printer);
 					return_reference_(path);
 				}
 			}
@@ -5215,7 +5215,7 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 			if unlikely(os_dfd == -1)
 				goto err_printer;
 #ifdef CONFIG_HAVE_PROCFS
-			if unlikely(unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
+			if unlikely(Dee_unicode_printer_printf(&printer, "/proc/self/fd/%d/", os_dfd) < 0)
 				goto err_printer;
 #else /* CONFIG_HAVE_PROCFS */
 			{
@@ -5231,18 +5231,18 @@ posix_dfd_makepath(DeeObject *dfd, DeeObject *path, unsigned int atflags) {
 
 	/* Trim trailing slashes. */
 got_dfd_path:
-	if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
-		size_t newlen = UNICODE_PRINTER_LENGTH(&printer);
-		while (newlen && DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(&printer, newlen - 1)))
+	if (!Dee_UNICODE_PRINTER_ISEMPTY(&printer)) {
+		size_t newlen = Dee_UNICODE_PRINTER_LENGTH(&printer);
+		while (newlen && DeeSystem_IsSep(Dee_UNICODE_PRINTER_GETCHAR(&printer, newlen - 1)))
 			--newlen;
-		if (newlen >= UNICODE_PRINTER_LENGTH(&printer)) {
+		if (newlen >= Dee_UNICODE_PRINTER_LENGTH(&printer)) {
 			/* Append trailing slash */
-			if unlikely(unicode_printer_putascii(&printer, DeeSystem_SEP))
+			if unlikely(Dee_unicode_printer_putascii(&printer, DeeSystem_SEP))
 				goto err_printer;
 		} else {
 			/* Trailing slash is already present (but make sure that there's only 1 of them) */
 			++newlen;
-			unicode_printer_truncate(&printer, newlen);
+			Dee_unicode_printer_truncate(&printer, newlen);
 		}
 	}
 
@@ -5254,19 +5254,19 @@ got_dfd_path:
 			goto err_printer;
 		while (DeeSystem_IsSep(*utf8_path))
 			++utf8_path;
-		if unlikely(unicode_printer_printutf8(&printer, utf8_path, strlen(utf8_path)) < 0)
+		if unlikely(Dee_unicode_printer_printutf8(&printer, utf8_path, strlen(utf8_path)) < 0)
 			goto err_printer;
 	} else
 #endif /* !DeeSystem_HAVE_FS_ISABS_CHECKS_LEADING_SLASHES */
 	{
-		if unlikely(unicode_printer_printstring(&printer, path) < 0)
+		if unlikely(Dee_unicode_printer_printstring(&printer, path) < 0)
 			goto err_printer;
 	}
 
 	/* Pack the resulting string together */
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return NULL;
 }

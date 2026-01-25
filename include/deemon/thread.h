@@ -17,8 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export -CONFIG_HAVE_**/
+/*!export DeeThread*/
+/*!export Dee_THREAD_STATE_*/
+/*!export Dee_except_frame*/
+/*!export Dee_pid_t_IS_**/
+/*!export Dee_thread_interrupt**/
+/*!export _DeeThread_**/
 #ifndef GUARD_DEEMON_THREAD_H
-#define GUARD_DEEMON_THREAD_H 1
+#define GUARD_DEEMON_THREAD_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -69,29 +77,6 @@
 #endif /* !CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
-
-#ifdef DEE_SOURCE
-#define Dee_thread_object     thread_object
-#define Dee_code_frame        code_frame
-#define Dee_tuple_object      tuple_object
-#define Dee_traceback_object  traceback_object
-#define Dee_except_frame      except_frame
-#define except_frame_tryalloc Dee_except_frame_tryalloc
-#define except_frame_alloc    Dee_except_frame_alloc
-#define except_frame_free     Dee_except_frame_free
-#define except_frame_xfree    Dee_except_frame_xfree
-#define Dee_repr_frame        repr_frame
-#define Dee_trepr_frame       trepr_frame
-#define Dee_deep_assoc_entry  deep_assoc_entry
-#define Dee_deep_assoc        deep_assoc
-#define DEEPASSOC_HASHST      Dee_DEEPASSOC_HASHST
-#define DEEPASSOC_HASHNX      Dee_DEEPASSOC_HASHNX
-#define DEEPASSOC_HASHIT      Dee_DEEPASSOC_HASHIT
-#define Dee_thread_interrupt  thread_interrupt
-#define Dee_string_object     string_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_thread_object DeeThreadObject;
 
 struct Dee_code_frame;
 struct Dee_tuple_object;
@@ -230,16 +215,18 @@ Dee_DeepCopyAddAssoc(DeeObject *new_object,
 
 
 #ifdef CONFIG_BUILDING_DEEMON
+struct Dee_thread_object;
+
 /* Lookup a GC association of `old_object', who's
  * new object is an exact instance of `new_type' */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
-deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
+deepcopy_lookup(struct Dee_thread_object *thread_self, DeeObject *old_object,
                 DeeTypeObject *new_type);
 
 /* Begin/end a deepcopy operation after a lookup fails. */
 #define deepcopy_begin(thread_self) (++(thread_self)->t_deepassoc.da_recursion)
 #define deepcopy_end(thread_self)   (--(thread_self)->t_deepassoc.da_recursion || (deepcopy_clear(thread_self), 0))
-INTDEF NONNULL((1)) void DCALL deepcopy_clear(DeeThreadObject *__restrict thread_self);
+INTDEF NONNULL((1)) void DCALL deepcopy_clear(struct Dee_thread_object *__restrict thread_self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
@@ -343,7 +330,8 @@ struct Dee_thread_interrupt {
 /*#undef Dee_THREAD_STATE_STARTED*/ /* Always set */
 #endif /* !CONFIG_NO_THREADS */
 
-struct Dee_thread_object {
+struct Dee_thread_object;
+typedef struct Dee_thread_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC object. */
 	Dee_refcnt_t                   t_inthookon;  /* [lock(ATOMIC)] Are interrupt hooks enabled? */
@@ -424,7 +412,7 @@ struct Dee_thread_object {
 #endif /* !CONFIG_NO_THREADS */
 
 	/* OS-specific thread data goes here. */
-};
+} DeeThreadObject;
 
 #ifdef CONFIG_NO_THREADS
 #define _DeeThread__AcquireStateLock(self, flag) (void)0
@@ -669,10 +657,6 @@ INTDEF bool DCALL DeeThread_ClearTls(void);
 
 
 #if defined(CONFIG_BUILDING_LIBTHREADING) || defined(CONFIG_BUILDING_DEEMON)
-#ifdef DEE_SOURCE
-#define Dee_tls_callback_hooks tls_callback_hooks
-#endif /* DEE_SOURCE */
-
 /* TLS implementation library hooks.
  * NOTE: These are exported publicly because there'd be no point in hiding them.
  *       However the only module that's meant to use these is `libthreading'.
@@ -750,9 +734,9 @@ DeeThread_RemoveInterruptHook(struct Dee_thread_interrupt_hook *__restrict hook)
 /* The max stack-depth during execution before a stack-overflow is raised. */
 DDATDEF uint16_t DeeExec_StackLimit;
 
-#ifndef DEE_CONFIG_DEFAULT_STACK_LIMIT
-#define DEE_CONFIG_DEFAULT_STACK_LIMIT 1024
-#endif /* !DEE_CONFIG_DEFAULT_STACK_LIMIT */
+#ifndef Dee_EXEC_DEFAULT_STACK_LIMIT
+#define Dee_EXEC_DEFAULT_STACK_LIMIT 1024
+#endif /* !Dee_EXEC_DEFAULT_STACK_LIMIT */
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

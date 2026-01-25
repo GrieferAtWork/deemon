@@ -369,17 +369,17 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 			                ENCODE_INT32('\\', '\\', '.', '\\'));
 			return result;
 		} else {
-			struct unicode_printer printer = UNICODE_PRINTER_INIT;
+			struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 			/* Prepend "\\.\". */
-			if unlikely(unicode_printer_print8(&printer, (uint8_t *)"\\\\.\\", 4) < 0)
+			if unlikely(Dee_unicode_printer_print8(&printer, (uint8_t *)"\\\\.\\", 4) < 0)
 				goto err_printer;
-			if unlikely(unicode_printer_printstring(&printer, filename) < 0)
+			if unlikely(Dee_unicode_printer_printstring(&printer, filename) < 0)
 				goto err_printer;
-			result = unicode_printer_pack(&printer);
+			result = Dee_unicode_printer_pack(&printer);
 			Dee_Decref(filename);
 			return result;
 err_printer:
-			unicode_printer_fini(&printer);
+			Dee_unicode_printer_fini(&printer);
 			Dee_Decref(filename);
 			return NULL;
 		}
@@ -2275,7 +2275,7 @@ err:
 PUBLIC WUNUSED /*String*/ DREF DeeObject *DCALL
 DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile) {
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeNTSystem_PrintFilenameOfHandle(&printer, hFile);
 	if unlikely(error != 0) {
 		if (error > 0) {
@@ -2285,9 +2285,9 @@ DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile) {
 		}
 		goto err;
 	}
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -2296,18 +2296,18 @@ err:
 PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_TryGetFilenameOfHandle(/*HANDLE*/ void *hFile) {
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeNTSystem_PrintFilenameOfHandle(&printer, hFile);
 	if unlikely(error != 0) {
 		if (error > 0) {
-			unicode_printer_fini(&printer);
+			Dee_unicode_printer_fini(&printer);
 			return ITER_DONE;
 		}
 		goto err;
 	}
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -2336,7 +2336,7 @@ PRIVATE WUNUSED HMODULE DCALL GetKernel32Handle(void) {
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printer,
+DeeNTSystem_PrintFinalPathNameByHandle(struct Dee_unicode_printer *__restrict printer,
                                        /*HANDLE*/ void *hFile,
                                        /*DWORD*/ DeeNT_DWORD dwFlags) {
 	LPWSTR lpNewBuffer, lpBuffer;
@@ -2362,7 +2362,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 
 	/* Make use of `GetFinalPathNameByHandleW()' */
 	dwBufSize = PATH_MAX;
-	lpBuffer = unicode_printer_alloc_wchar(printer, dwBufSize);
+	lpBuffer = Dee_unicode_printer_alloc_wchar(printer, dwBufSize);
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
@@ -2384,7 +2384,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 				dwNewBufSize = dwBufSize * 2;
 				goto do_resize_buffer;
 			}
-			unicode_printer_free_wchar(printer, lpBuffer);
+			Dee_unicode_printer_free_wchar(printer, lpBuffer);
 			DBG_ALIGNMENT_DISABLE();
 			(void)SetLastError(dwError);
 			DBG_ALIGNMENT_ENABLE();
@@ -2399,15 +2399,15 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 			break;
 		--dwNewBufSize; /* This would include the trailing NUL-character */
 do_resize_buffer:
-		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, dwNewBufSize);
+		lpNewBuffer = Dee_unicode_printer_resize_wchar(printer, lpBuffer, dwNewBufSize);
 		if unlikely(!lpNewBuffer) {
 err_lpBuffer:
-			unicode_printer_free_wchar(printer, lpBuffer);
+			Dee_unicode_printer_free_wchar(printer, lpBuffer);
 			goto err;
 		}
 		dwBufSize = dwNewBufSize;
 	}
-	if unlikely(unicode_printer_commit_wchar(printer, lpBuffer, dwNewBufSize) < 0)
+	if unlikely(Dee_unicode_printer_commit_wchar(printer, lpBuffer, dwNewBufSize) < 0)
 		goto err;
 	return 0;
 err:
@@ -2449,7 +2449,7 @@ typedef struct {
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__restrict printer,
+DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct Dee_unicode_printer *__restrict printer,
                                                      HANDLE hFile) {
 	LPWSTR lpNewBuffer, lpBuffer;
 	DWORD dwBufSize, dwBufSizeBytes;
@@ -2479,7 +2479,7 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 
 	/* Make use of `NtQueryObject()' */
 	dwBufSize = PATH_MAX;
-	lpBuffer  = unicode_printer_alloc_wchar(printer, LOCAL_ALLOC_BUFSIZE_FOR(dwBufSize));
+	lpBuffer  = Dee_unicode_printer_alloc_wchar(printer, LOCAL_ALLOC_BUFSIZE_FOR(dwBufSize));
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
@@ -2504,7 +2504,7 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 				ulRetBufSize = dwBufSize * 2;
 			goto do_resize_buffer;
 		}
-		unicode_printer_free_wchar(printer, lpBuffer);
+		Dee_unicode_printer_free_wchar(printer, lpBuffer);
 		if (ntResult == ERROR_INVALID_FUNCTION ||
 		    ntResult == ERROR_INVALID_PARAMETER)
 			return 2;
@@ -2513,10 +2513,10 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct unicode_printer *__r
 		DBG_ALIGNMENT_ENABLE();
 		return 1;
 do_resize_buffer:
-		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, LOCAL_ALLOC_BUFSIZE_FOR(ulRetBufSize));
+		lpNewBuffer = Dee_unicode_printer_resize_wchar(printer, lpBuffer, LOCAL_ALLOC_BUFSIZE_FOR(ulRetBufSize));
 		if unlikely(!lpNewBuffer) {
 err_lpBuffer:
-			unicode_printer_free_wchar(printer, lpBuffer);
+			Dee_unicode_printer_free_wchar(printer, lpBuffer);
 			goto err;
 		}
 	}
@@ -2536,11 +2536,11 @@ err_lpBuffer:
 	/* Move the actual NT name to where we need it. */
 	dwBufSize = ntInfo->Name.Length / sizeof(WCHAR);
 	memmovedownw((void *)ntInfo, (void *)ntInfo->Name.Buffer, dwBufSize);
-	if unlikely(unicode_printer_commit_wchar(printer, lpBuffer, dwBufSize) < 0)
+	if unlikely(Dee_unicode_printer_commit_wchar(printer, lpBuffer, dwBufSize) < 0)
 		goto err;
 	return 0;
 err_unsupported:
-	unicode_printer_free_wchar(printer, lpBuffer);
+	Dee_unicode_printer_free_wchar(printer, lpBuffer);
 	return 2;
 err:
 	return -1;
@@ -2552,7 +2552,7 @@ err:
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PRIVATE WUNUSED int DCALL
-DeeNTSystem_PrintMappedFileNameWrapper(struct unicode_printer *__restrict printer,
+DeeNTSystem_PrintMappedFileNameWrapper(struct Dee_unicode_printer *__restrict printer,
                                        HANDLE hFile) {
 	/* GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile))); */
 	int result;
@@ -2651,11 +2651,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 unicode_printer_memcasecmp8(struct Dee_unicode_printer const *__restrict self,
                             uint8_t const *rhs, size_t lhs_start, size_t num_chars) {
-	union dcharptr str;
+	union Dee_charptr str;
 	str.ptr = self->up_buffer;
 	ASSERT(lhs_start + num_chars >= lhs_start);
 	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
-	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+	SWITCH_SIZEOF_WIDTH(self->up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
 		return memcasecmp(str.cp8 + lhs_start, rhs, num_chars);
@@ -2697,11 +2697,11 @@ unicode_printer_memcasecmp8(struct Dee_unicode_printer const *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 unicode_printer_memcasecmp16(struct Dee_unicode_printer const *__restrict self,
                              uint16_t const *rhs, size_t lhs_start, size_t num_chars) {
-	union dcharptr str;
+	union Dee_charptr str;
 	str.ptr = self->up_buffer;
 	ASSERT(lhs_start + num_chars >= lhs_start);
 	ASSERT(lhs_start + num_chars <= (str.ptr ? WSTR_LENGTH(str.ptr) : 0) || !num_chars);
-	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
+	SWITCH_SIZEOF_WIDTH(self->up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE: {
 		size_t i;
@@ -2753,33 +2753,33 @@ unicode_printer_memcasecmp16(struct Dee_unicode_printer const *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-unicode_printer_replace_substring16(struct unicode_printer *__restrict printer,
+unicode_printer_replace_substring16(struct Dee_unicode_printer *__restrict printer,
                                     size_t replace_off, size_t replace_len,
                                     uint16_t const *newstr, size_t newstr_len) {
 	if unlikely(newstr_len > replace_len) {
 		size_t copy_src = replace_off + replace_len;
 		size_t copy_dst = replace_off + newstr_len;
 		size_t missing  = newstr_len - replace_len;
-		size_t copy_siz = UNICODE_PRINTER_LENGTH(printer) - copy_src;
+		size_t copy_siz = Dee_UNICODE_PRINTER_LENGTH(printer) - copy_src;
 		/* Just need to do something to the necessary extra space! */
-		if unlikely(unicode_printer_print16(printer, newstr, missing) < 0)
+		if unlikely(Dee_unicode_printer_print16(printer, newstr, missing) < 0)
 			goto err;
-		unicode_printer_memmove(printer, copy_dst, copy_src, copy_siz);
+		Dee_unicode_printer_memmove(printer, copy_dst, copy_src, copy_siz);
 	} else if likely(newstr_len < replace_len) {
 		size_t copy_src = replace_off + replace_len;
-		size_t copy_siz = UNICODE_PRINTER_LENGTH(printer) - copy_src;
+		size_t copy_siz = Dee_UNICODE_PRINTER_LENGTH(printer) - copy_src;
 		size_t copy_dst = replace_off + newstr_len;
-		unicode_printer_memmove(printer, copy_dst, copy_src, copy_siz);
-		unicode_printer_truncate(printer, copy_dst + copy_siz);
+		Dee_unicode_printer_memmove(printer, copy_dst, copy_src, copy_siz);
+		Dee_unicode_printer_truncate(printer, copy_dst + copy_siz);
 	}
-	unicode_printer_memcpy16(printer, newstr, replace_off, newstr_len);
+	Dee_unicode_printer_memcpy16(printer, newstr, replace_off, newstr_len);
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeNTSystem_ConvertNtDrivePathToDosPath(struct unicode_printer *__restrict printer,
+DeeNTSystem_ConvertNtDrivePathToDosPath(struct Dee_unicode_printer *__restrict printer,
                                         size_t start_offset) {
 	/* Handle r"\Device\HarddiskVolume{N}\"-like prefixes.
 	 *
@@ -2805,7 +2805,7 @@ DeeNTSystem_ConvertNtDrivePathToDosPath(struct unicode_printer *__restrict print
 	wDriveStrings = DeeNTSystem_GetLogicalDriveStrings();
 	if unlikely(!wDriveStrings)
 		goto err;
-	dwDeviceBufLen = (DWORD)(UNICODE_PRINTER_LENGTH(printer) - start_offset) + 1;
+	dwDeviceBufLen = (DWORD)(Dee_UNICODE_PRINTER_LENGTH(printer) - start_offset) + 1;
 	wDeviceBuffer  = (LPWSTR)Dee_Mallocac(dwDeviceBufLen, sizeof(WCHAR));
 	if unlikely(!wDeviceBuffer)
 		goto err_wDriveStrings;
@@ -2933,9 +2933,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeNTSystem_ConvertNtComPathToDosPath(struct unicode_printer *__restrict printer,
+DeeNTSystem_ConvertNtComPathToDosPath(struct Dee_unicode_printer *__restrict printer,
                                       size_t start_offset) {
-	union dcharptr str;
+	union Dee_charptr str;
 	static WCHAR const wstr_Hardware_DeviceMap_SerialComm[] = {
 		'H', 'a', 'r', 'd', 'w', 'a', 'r', 'e', '\\',
 		'D', 'e', 'v', 'i', 'c', 'e', 'M', 'a', 'p', '\\',
@@ -2953,7 +2953,7 @@ DeeNTSystem_ConvertNtComPathToDosPath(struct unicode_printer *__restrict printer
 	if (lStatus != 0)
 		goto done;
 	str.ptr = printer->up_buffer;
-	SWITCH_SIZEOF_WIDTH(printer->up_flags & UNICODE_PRINTER_FWIDTH) {
+	SWITCH_SIZEOF_WIDTH(printer->up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_2BYTE:
 		wKeyValue = DeeNTSystem_RegQueryValueExW(hKey, (LPCWSTR)(str.cp16 + start_offset));
@@ -2963,12 +2963,12 @@ DeeNTSystem_ConvertNtComPathToDosPath(struct unicode_printer *__restrict printer
 	CASE_WIDTH_4BYTE: {
 		LPWSTR wStr;
 		size_t i, wStrLen;
-		wStrLen = UNICODE_PRINTER_LENGTH(printer) - start_offset;
+		wStrLen = Dee_UNICODE_PRINTER_LENGTH(printer) - start_offset;
 		wStr    = (LPWSTR)Dee_Mallocac(wStrLen + 1, sizeof(WCHAR));
 		if unlikely(!wStr)
 			goto err;
 		for (i = 0; i < wStrLen; ++i) {
-			wStr[i] = (WCHAR)UNICODE_PRINTER_GETCHAR(printer, start_offset + i);
+			wStr[i] = (WCHAR)Dee_UNICODE_PRINTER_GETCHAR(printer, start_offset + i);
 		}
 		wStr[wStrLen] = (WCHAR)'\0';
 		wKeyValue = DeeNTSystem_RegQueryValueExW(hKey, wStr);
@@ -2985,7 +2985,7 @@ DeeNTSystem_ConvertNtComPathToDosPath(struct unicode_printer *__restrict printer
 	/* Replace the filename with the COM name. */
 	wKeyValueLen = wcslen(wKeyValue);
 	error = unicode_printer_replace_substring16(printer, start_offset,
-	                                            UNICODE_PRINTER_LENGTH(printer) - start_offset,
+	                                            Dee_UNICODE_PRINTER_LENGTH(printer) - start_offset,
 	                                            (uint16_t const *)wKeyValue, wKeyValueLen);
 	Dee_Free(wKeyValue);
 	if unlikely(error)
@@ -3001,9 +3001,9 @@ err:
  * @return: 0:  Success.
  * @return: -1: An error was thrown. */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeNTSystem_ConvertNtPathToDosPath(struct unicode_printer *__restrict printer,
+DeeNTSystem_ConvertNtPathToDosPath(struct Dee_unicode_printer *__restrict printer,
                                    size_t start_offset) {
-	size_t end_offset = UNICODE_PRINTER_LENGTH(printer);
+	size_t end_offset = Dee_UNICODE_PRINTER_LENGTH(printer);
 	/* NOTE: Most of the special handling here is derived from:
 	 *       https://stackoverflow.com/a/18792477/3296587 */
 
@@ -3014,9 +3014,9 @@ DeeNTSystem_ConvertNtPathToDosPath(struct unicode_printer *__restrict printer,
 		if (end_offset >= start_offset + 12 &&
 		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"Mup\\", start_offset + 8, 4) == 0) {
 			++start_offset; /* Keep the first r'\' */
-			unicode_printer_memmove(printer, start_offset, start_offset + 10,
+			Dee_unicode_printer_memmove(printer, start_offset, start_offset + 10,
 			                        (end_offset - start_offset) - 10);
-			unicode_printer_truncate(printer, end_offset - 10);
+			Dee_unicode_printer_truncate(printer, end_offset - 10);
 			return 0;
 		}
 
@@ -3024,29 +3024,29 @@ DeeNTSystem_ConvertNtPathToDosPath(struct unicode_printer *__restrict printer,
 		if (end_offset >= start_offset + 26 &&
 		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"LanmanRedirector\\", start_offset + 8, 16) == 0) {
 			++start_offset; /* Keep the first r'\' */
-			unicode_printer_memmove(printer, start_offset, start_offset + 24,
+			Dee_unicode_printer_memmove(printer, start_offset, start_offset + 24,
 			                        (end_offset - start_offset) - 24);
-			unicode_printer_truncate(printer, end_offset - 24);
+			Dee_unicode_printer_truncate(printer, end_offset - 24);
 			return 0;
 		}
 
 		/* Check for r"\Device\Null" */
 		if (end_offset == start_offset + 12 &&
 		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"Null", start_offset + 8, 4) == 0) {
-			UNICODE_PRINTER_SETCHAR(printer, start_offset + 0, 'N');
-			UNICODE_PRINTER_SETCHAR(printer, start_offset + 1, 'U');
-			UNICODE_PRINTER_SETCHAR(printer, start_offset + 2, 'L');
-			unicode_printer_truncate(printer, start_offset + 3);
+			Dee_UNICODE_PRINTER_SETCHAR(printer, start_offset + 0, 'N');
+			Dee_UNICODE_PRINTER_SETCHAR(printer, start_offset + 1, 'U');
+			Dee_UNICODE_PRINTER_SETCHAR(printer, start_offset + 2, 'L');
+			Dee_unicode_printer_truncate(printer, start_offset + 3);
 			return 0;
 		}
 
 		/* Check for r"\Device\ConDrv" */
 		if (end_offset == start_offset + 14 &&
 		    unicode_printer_memcasecmp8(printer, (uint8_t const *)"ConDrv", start_offset + 8, 6) == 0) {
-			UNICODE_PRINTER_SETCHAR(printer, start_offset + 0, 'C');
-			UNICODE_PRINTER_SETCHAR(printer, start_offset + 1, 'O');
-			UNICODE_PRINTER_SETCHAR(printer, start_offset + 2, 'N');
-			unicode_printer_truncate(printer, start_offset + 3);
+			Dee_UNICODE_PRINTER_SETCHAR(printer, start_offset + 0, 'C');
+			Dee_UNICODE_PRINTER_SETCHAR(printer, start_offset + 1, 'O');
+			Dee_UNICODE_PRINTER_SETCHAR(printer, start_offset + 2, 'N');
+			Dee_unicode_printer_truncate(printer, start_offset + 3);
 			return 0;
 		}
 
@@ -3064,11 +3064,11 @@ DeeNTSystem_ConvertNtPathToDosPath(struct unicode_printer *__restrict printer,
  * @return: 0:  Success.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
+DeeNTSystem_PrintFilenameOfHandle(struct Dee_unicode_printer *__restrict printer,
                                   /*HANDLE*/ void *hFile) {
 	int error;
 	size_t length;
-	length = UNICODE_PRINTER_LENGTH(printer);
+	length = Dee_UNICODE_PRINTER_LENGTH(printer);
 #if 1
 	error  = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);
 #else
@@ -3077,17 +3077,17 @@ DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
 	if (error == 0) {
 		size_t new_length;
 		/* Try to get rid of the \\?\ prefix */
-		new_length = UNICODE_PRINTER_LENGTH(printer);
+		new_length = Dee_UNICODE_PRINTER_LENGTH(printer);
 		if (new_length >= length + 6 &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 0) == '\\' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 1) == '\\' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 2) == '?' &&
-		    UNICODE_PRINTER_GETCHAR(printer, length + 3) == '\\') {
-			if (DeeUni_IsAlpha(UNICODE_PRINTER_GETCHAR(printer, length + 4))) {
+		    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 0) == '\\' &&
+		    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 1) == '\\' &&
+		    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 2) == '?' &&
+		    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 3) == '\\') {
+			if (DeeUni_IsAlpha(Dee_UNICODE_PRINTER_GETCHAR(printer, length + 4))) {
 				size_t drive_end = length + 5;
 				for (;;) {
 					uint32_t ch;
-					ch = UNICODE_PRINTER_GETCHAR(printer, drive_end);
+					ch = Dee_UNICODE_PRINTER_GETCHAR(printer, drive_end);
 					if (ch == ':')
 						break;
 					if (!DeeUni_IsAlpha(ch))
@@ -3095,22 +3095,22 @@ DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
 					++drive_end;
 				}
 				/* This is a r"\\?\<DRIVE_LETTER(S)>:"-like prefix */
-				unicode_printer_memmove(printer, length, length + 4,
+				Dee_unicode_printer_memmove(printer, length, length + 4,
 				                        (new_length - length) - 4);
-				unicode_printer_truncate(printer, new_length - 4);
+				Dee_unicode_printer_truncate(printer, new_length - 4);
 				return 0;
 			}
 not_a_drive_prefix:
 			/* Check for r"\\?\UNC\<SERVER>\<SHARE>"-like prefixes.
 			 * These then have to be converted into r"\\<SERVER>\<SHARE>",
 			 * so we can simply delete the r"?\UNC\" portion. */
-			if (UNICODE_PRINTER_GETCHAR(printer, length + 4) == 'U' &&
-			    UNICODE_PRINTER_GETCHAR(printer, length + 5) == 'N' &&
-			    UNICODE_PRINTER_GETCHAR(printer, length + 6) == 'C' &&
-			    UNICODE_PRINTER_GETCHAR(printer, length + 7) == '\\') {
-				unicode_printer_memmove(printer, length + 2, length + 8,
+			if (Dee_UNICODE_PRINTER_GETCHAR(printer, length + 4) == 'U' &&
+			    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 5) == 'N' &&
+			    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 6) == 'C' &&
+			    Dee_UNICODE_PRINTER_GETCHAR(printer, length + 7) == '\\') {
+				Dee_unicode_printer_memmove(printer, length + 2, length + 8,
 				                        (new_length - length) - 6);
-				unicode_printer_truncate(printer, new_length - 6);
+				Dee_unicode_printer_truncate(printer, new_length - 6);
 				return 0;
 			}
 		}
@@ -3191,7 +3191,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 		return 2; /* Unsupported. */
 	/* Make use of `GetMappedFileNameW()' */
 	dwBufSize = PATH_MAX;
-	lpBuffer = unicode_printer_alloc_wchar(printer, dwBufSize);
+	lpBuffer = Dee_unicode_printer_alloc_wchar(printer, dwBufSize);
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
@@ -3213,7 +3213,7 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 				dwNewBufSize = dwBufSize * 2;
 				goto do_resize_buffer;
 			}
-			unicode_printer_free_wchar(printer, lpBuffer);
+			Dee_unicode_printer_free_wchar(printer, lpBuffer);
 			(void)SetLastError(dwError);
 			return 1;
 		}
@@ -3221,15 +3221,15 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 		if (dwNewBufSize <= dwBufSize)
 			break;
 do_resize_buffer:
-		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, dwNewBufSize);
+		lpNewBuffer = Dee_unicode_printer_resize_wchar(printer, lpBuffer, dwNewBufSize);
 		if unlikely(!lpNewBuffer) {
 err_lpBuffer:
-			unicode_printer_free_wchar(printer, lpBuffer);
+			Dee_unicode_printer_free_wchar(printer, lpBuffer);
 			goto err;
 		}
 		dwBufSize = dwNewBufSize;
 	}
-	if unlikely(unicode_printer_commit_wchar(printer, lpBuffer, dwNewBufSize) < 0)
+	if unlikely(Dee_unicode_printer_commit_wchar(printer, lpBuffer, dwNewBufSize) < 0)
 		goto err;
 	return 0;
 err:
@@ -3250,16 +3250,16 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
                           /* va_list * */ void *Arguments) {
 	int error;
 	DWORD dwLastError;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeNTSystem_UPrintFormatMessage(&printer, dwFlags, lpSource,
 	                                        dwMessageId, dwLanguageId, Arguments);
 	if (error == 0)
-		return unicode_printer_pack(&printer);
-	/* Preserve LastError during `unicode_printer_fini()' */
+		return Dee_unicode_printer_pack(&printer);
+	/* Preserve LastError during `Dee_unicode_printer_fini()' */
 	DBG_ALIGNMENT_DISABLE();
 	dwLastError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	DBG_ALIGNMENT_DISABLE();
 	(void)SetLastError(dwLastError);
 	DBG_ALIGNMENT_ENABLE();
@@ -3274,13 +3274,13 @@ err:
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeNTSystem_UPrintFormatMessage(struct unicode_printer *__restrict printer,
+DeeNTSystem_UPrintFormatMessage(struct Dee_unicode_printer *__restrict printer,
                                 DeeNT_DWORD dwFlags, void const *lpSource,
                                 DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                                 /* va_list * */ void *Arguments) {
 	LPWSTR buffer, newBuffer;
 	DWORD dwNewBufsize, dwBufSize = 128;
-	buffer = unicode_printer_alloc_wchar(printer, dwBufSize);
+	buffer = Dee_unicode_printer_alloc_wchar(printer, dwBufSize);
 	if unlikely(!buffer)
 		goto err;
 again:
@@ -3303,11 +3303,11 @@ again:
 			/* MSDN says that this string cannot exceed 32*1024
 			 * >> So if it does, treat it as a failure of translating the message... */
 			if (dwBufSize > 32 * 1024) {
-				unicode_printer_free_wchar(printer, buffer);
+				Dee_unicode_printer_free_wchar(printer, buffer);
 				return 1;
 			}
 			dwBufSize *= 2;
-			newBuffer = unicode_printer_resize_wchar(printer, buffer, dwBufSize);
+			newBuffer = Dee_unicode_printer_resize_wchar(printer, buffer, dwBufSize);
 			if unlikely(!newBuffer)
 				goto err_release;
 			buffer = newBuffer;
@@ -3319,7 +3319,7 @@ again:
 	if (dwNewBufsize > dwBufSize) {
 		LPWSTR new_buffer;
 		/* Increase the buffer and try again. */
-		new_buffer = unicode_printer_resize_wchar(printer, buffer, dwNewBufsize);
+		new_buffer = Dee_unicode_printer_resize_wchar(printer, buffer, dwNewBufsize);
 		if unlikely(!new_buffer)
 			goto err_release;
 		dwBufSize = dwNewBufsize;
@@ -3331,11 +3331,11 @@ again:
 			break;
 		--dwNewBufsize;
 	}
-	if unlikely(unicode_printer_commit_wchar(printer, buffer, dwNewBufsize) < 0)
+	if unlikely(Dee_unicode_printer_commit_wchar(printer, buffer, dwNewBufsize) < 0)
 		goto err;
 	return 0;
 err_release:
-	unicode_printer_free_wchar(printer, buffer);
+	Dee_unicode_printer_free_wchar(printer, buffer);
 err:
 	return -1;
 }
@@ -3349,21 +3349,21 @@ DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
                                DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                                /* va_list * */ void *Arguments,
                                bool *__restrict p_success) {
-	if (printer == &unicode_printer_print) {
+	if (printer == &Dee_unicode_printer_print) {
 		/* Special case: fast-forward to the underlying unicode printer. */
-		struct unicode_printer *upn = (struct unicode_printer *)arg;
+		struct Dee_unicode_printer *upn = (struct Dee_unicode_printer *)arg;
 		size_t oldlen;
 		int error;
-		oldlen = UNICODE_PRINTER_LENGTH(upn);
+		oldlen = Dee_UNICODE_PRINTER_LENGTH(upn);
 		error  = DeeNTSystem_UPrintFormatMessage(upn, dwFlags, lpSource,
 		                                         dwMessageId, dwLanguageId, Arguments);
 		if unlikely(error < 0)
 			return -1;
 		*p_success = error == 0;
-		return (Dee_ssize_t)(UNICODE_PRINTER_LENGTH(upn) - oldlen);
+		return (Dee_ssize_t)(Dee_UNICODE_PRINTER_LENGTH(upn) - oldlen);
 	} else {
 		Dee_ssize_t result;
-		struct unicode_printer uprinter = UNICODE_PRINTER_INIT;
+		struct Dee_unicode_printer uprinter = Dee_UNICODE_PRINTER_INIT;
 		int error;
 		error = DeeNTSystem_UPrintFormatMessage(&uprinter, dwFlags, lpSource,
 		                                        dwMessageId, dwLanguageId, Arguments);
@@ -3371,9 +3371,9 @@ DeeNTSystem_PrintFormatMessage(Dee_formatprinter_t printer, void *arg,
 			result = -1;
 		} else {
 			*p_success = error == 0;
-			result = unicode_printer_printinto(&uprinter, printer, arg);
+			result = Dee_unicode_printer_printinto(&uprinter, printer, arg);
 		}
-		unicode_printer_fini(&uprinter);
+		Dee_unicode_printer_fini(&uprinter);
 		return result;
 	}
 }

@@ -100,7 +100,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 PRIVATE int DCALL dee_atoi(char const *s) {
 	int result;
 	if (Dee_TAtoi(int, s, strlen(s),
-	              DEEINT_STRING(10, DEEINT_STRING_FTRY),
+	              Dee_INT_STRING(10, Dee_INT_STRING_FTRY),
 	              &result) != 0)
 		result = 0;
 	return result;
@@ -261,8 +261,8 @@ PRIVATE DREF DeeObject *emitpp_dpout = NULL; /* Output stream for source depende
 PRIVATE char const *emitasm_flags    = NULL; /* Additional flags to-be used when printing assembly. */
 
 
-INTDEF struct compiler_options import_options; /* Options used to compile imported libraries. */
-INTDEF struct compiler_options script_options; /* Options used to compile the user-script. */
+INTDEF struct Dee_compiler_options import_options; /* Options used to compile imported libraries. */
+INTDEF struct Dee_compiler_options script_options; /* Options used to compile the user-script. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE DREF DeeObject *script_output_stream = NULL;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -272,7 +272,7 @@ PRIVATE DREF DeeObject *script_output_stream = NULL;
 
 
 PRIVATE WUNUSED int DCALL compiler_setup(void *arg);
-PRIVATE WUNUSED NONNULL((1)) int DCALL error_handler(struct compiler_error_object *__restrict error, int fatality_mode, void *arg);
+PRIVATE WUNUSED NONNULL((1)) int DCALL error_handler(struct Dee_compiler_error_object *__restrict error, int fatality_mode, void *arg);
 PRIVATE WUNUSED int DCALL cmd_version(char *arg);
 PRIVATE WUNUSED int DCALL cmd_help(char *arg);
 
@@ -280,7 +280,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_o(char *arg) {
 	Dee_XDecref(script_output_stream);
 	if (strcmp(arg, "-") == 0) {
 		/* Special case: output to stdout */
-		script_output_stream = DeeFile_GetStd(DEE_STDOUT);
+		script_output_stream = DeeFile_GetStd(Dee_STDOUT);
 	} else {
 		script_output_stream = DeeFile_OpenString(arg, OPEN_FWRONLY | OPEN_FCREAT | OPEN_FCLOEXEC, 644);
 	}
@@ -638,11 +638,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL cmd_name(char *arg) {
 struct compiler_flag {
 	char const name[15]; /* The name of this flag. */
 	uint8_t    inv;      /* Meaning of this flag is revered. */
-	uint16_t   addr;     /* Offset into a `struct compiler_options' where this flag is located at. */
+	uint16_t   addr;     /* Offset into a `struct Dee_compiler_options' where this flag is located at. */
 	uint16_t   flag;     /* The bit associated with this flag. */
 };
 
-#define FIELD(x) offsetof(struct compiler_options, x)
+#define FIELD(x) offsetof(struct Dee_compiler_options, x)
 PRIVATE struct compiler_flag const compiler_flags[] = {
 	{ "lfstmt",        0, FIELD(co_parser),    PARSE_FLFSTMT },
 	{ "ast-optimize",  0, FIELD(co_optimizer), OPTIMIZE_FENABLED },
@@ -845,7 +845,7 @@ PRIVATE int DCALL exit_ok(void) {
 
 PRIVATE WUNUSED int DCALL cmd_version(char *UNUSED(arg)) {
 	DREF DeeObject *fp;
-	fp = DeeFile_GetStd(DEE_STDOUT);
+	fp = DeeFile_GetStd(Dee_STDOUT);
 	if unlikely(!fp)
 		goto err_nofp;
 	if (DeeFile_WriteAll(fp, str_version, COMPILER_STRLEN(str_version)) == (size_t)-1)
@@ -1078,7 +1078,7 @@ err:
 
 PRIVATE WUNUSED int DCALL cmd_help(char *arg) {
 	DREF DeeObject *fp;
-	fp = DeeFile_GetStd(DEE_STDOUT);
+	fp = DeeFile_GetStd(Dee_STDOUT);
 	if unlikely(!fp)
 		goto err;
 	if (!arg) {
@@ -1131,7 +1131,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-error_handler(struct compiler_error_object *__restrict error,
+error_handler(struct Dee_compiler_error_object *__restrict error,
               int UNUSED(fatality_mode), void *UNUSED(arg)) {
 	return DeeFile_PrintObjectNl(DeeFile_DefaultStddbg, (DeeObject *)error);
 }
@@ -1213,7 +1213,7 @@ int main(int argc, char *argv[]) {
 		DREF DeeObject *fp;
 		size_t temp;
 		/* When no arguments were passed, print a short help-message and exit. */
-		fp = DeeFile_GetStd(DEE_STDERR);
+		fp = DeeFile_GetStd(Dee_STDERR);
 		if unlikely(!fp)
 			goto err;
 		temp = DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage));
@@ -1274,7 +1274,7 @@ int main(int argc, char *argv[]) {
 			DREF DeeObject *interactive_iterator;
 			DREF DeeObject *interactive_output;
 			DREF DeeObject *value;
-			interactive_input = DeeFile_GetStd(DEE_STDIN);
+			interactive_input = DeeFile_GetStd(Dee_STDIN);
 			if unlikely(!interactive_input)
 				goto err;
 			interactive_output = script_output_stream;
@@ -1282,7 +1282,7 @@ int main(int argc, char *argv[]) {
 
 			/* Default to using `stderr' as output for interactive modules. */
 			if (!interactive_output &&
-			    (interactive_output = DeeFile_GetStd(DEE_STDERR)) == NULL)
+			    (interactive_output = DeeFile_GetStd(Dee_STDERR)) == NULL)
 				goto err;
 			interactive_module = DeeModule_OpenInteractiveString(interactive_input,
 			                                                     Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE |
@@ -1361,7 +1361,7 @@ int main(int argc, char *argv[]) {
 			/* Print a full disassembly of the user-module. */
 			int error = -1;
 			if (!script_output_stream &&
-			    (script_output_stream = DeeFile_GetStd(DEE_STDOUT)) == NULL) {
+			    (script_output_stream = DeeFile_GetStd(Dee_STDOUT)) == NULL) {
 				/* ... */
 			} else {
 				DREF DeeModuleObject *disassembler_module;
@@ -1462,7 +1462,7 @@ done:
 	Dee_XDecref(import_options.co_rootname);
 
 	/* Run functions registered for atexit(). */
-	Dee_RunAtExit(DEE_RUNATEXIT_FRUNALL);
+	Dee_RunAtExit(Dee_RUNATEXIT_FRUNALL);
 
 	/* Reset the argument vector tuple. */
 	Dee_SetArgv(Dee_EmptyTuple);
@@ -1480,9 +1480,9 @@ done:
 	 *  - ...
 	 */
 #if !defined(NDEBUG) || !defined(CONFIG_ALWAYS_LOG_LEAKS) || defined(CONFIG_TRACE_REFCHANGES)
-	Dee_Shutdown(Dee_Shutdown_F_NORMAL);
+	Dee_Shutdown(Dee_SHUTDOWN_F_NORMAL);
 #else /* !NDEBUG || !CONFIG_ALWAYS_LOG_LEAKS || CONFIG_TRACE_REFCHANGES */
-	Dee_Shutdown(Dee_Shutdown_F_FAST);
+	Dee_Shutdown(Dee_SHUTDOWN_F_FAST);
 #endif /* NDEBUG && CONFIG_ALWAYS_LOG_LEAKS && !CONFIG_TRACE_REFCHANGES */
 
 #ifndef NDEBUG
@@ -1571,7 +1571,7 @@ handle_errors:
 
 
 
-INTERN struct compiler_options import_options = {
+INTERN struct Dee_compiler_options import_options = {
 	/* .co_inner         = */ &import_options,
 	/* .co_pathname      = */ NULL,
 	/* .co_filename      = */ NULL,
@@ -1597,7 +1597,7 @@ INTERN struct compiler_options import_options = {
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 };
 
-INTERN struct compiler_options script_options = {
+INTERN struct Dee_compiler_options script_options = {
 	/* .co_inner         = */ &import_options,
 	/* .co_pathname      = */ NULL,
 	/* .co_filename      = */ NULL,
@@ -1868,7 +1868,7 @@ operation_mode_printpp(int argc, char **argv) {
 	                              TPPLEXER_FLAG_TERMINATE_STRING_LF);
 
 	if (!script_output_stream &&
-	    (script_output_stream = DeeFile_GetStd(DEE_STDOUT)) == NULL)
+	    (script_output_stream = DeeFile_GetStd(Dee_STDOUT)) == NULL)
 		goto err;
 
 	/* Setup the #include-stack. */
@@ -2065,7 +2065,7 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
 	new_stdout = DeeFile_OpenWriter();
 	if unlikely(!new_stdout)
 		goto err_root;
-	old_stdout = DeeFile_SetStd(DEE_STDOUT, new_stdout);
+	old_stdout = DeeFile_SetStd(Dee_STDOUT, new_stdout);
 
 	/* Execute the module root. */
 	/* XXX: Maybe pass something more interesting through arguments? */
@@ -2077,7 +2077,7 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
 	}
 	Dee_Decref(new_stdout);
 	/* Restore the old STD streams. */
-	new_stdout = DeeFile_SetStd(DEE_STDOUT, old_stdout);
+	new_stdout = DeeFile_SetStd(Dee_STDOUT, old_stdout);
 	if (ITER_ISOK(old_stdout))
 		Dee_Decref(old_stdout);
 	if (ITER_ISOK(new_stdout))
@@ -2236,7 +2236,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	 *    can safely continue parsing the source file for more format-blocks.
 	 *    NOTE: With the way that I ended up implementing it, this is a given... */
 	{
-		struct compiler_options opt;
+		struct Dee_compiler_options opt;
 		DREF DeeModuleObject *script_module;
 		struct TPPToken old_token;
 		struct TPPIfdefStack old_ifdef;
@@ -2248,13 +2248,13 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		struct TPPFile *old_l_eof_file;
 
 		/* Setup compiler options for the inner script. */
-		memcpy(&opt, &script_options, sizeof(struct compiler_options));
+		memcpy(&opt, &script_options, sizeof(struct Dee_compiler_options));
 		opt.co_compiler |= (COMPILER_FKEEPLEXER | COMPILER_FKEEPERROR); /* Keep using the same lexer and errors! */
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		opt.co_assembler |= ASM_FNODEC; /* Disable DEC file creation */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if (ddi_filename && ddi_filename != filename) {
-			opt.co_filename = (struct string_object *)DeeString_NewUtf8(ddi_filename,
+			opt.co_filename = (DREF DeeStringObject *)DeeString_NewUtf8(ddi_filename,
 			                                                            strlen(ddi_filename),
 			                                                            STRING_ERROR_FIGNORE);
 			if unlikely(!opt.co_filename)
@@ -2819,7 +2819,7 @@ operation_mode_format(int argc, char **argv) {
 		if (argc > 1) {
 			DREF DeeObject *fp;
 			Dee_ssize_t temp;
-			fp = DeeFile_GetStd(DEE_STDOUT);
+			fp = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!fp)
 				goto err;
 			temp = DeeFile_Printf(fp, "%s:\n", filename);

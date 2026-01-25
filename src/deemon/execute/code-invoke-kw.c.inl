@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "code-invoke.c.inl"
-#define CODE_FLAGS   (CODE_FYIELDING)
+#define CODE_FLAGS   (Dee_CODE_FYIELDING)
 //#define KW_IS_MAPPING 1
 #endif /* __INTELLISENSE__ */
 
@@ -33,19 +33,19 @@
 #include <stdint.h> /* UINT32_C, UINT64_C, uintptr_t */
 
 
-#if (CODE_FLAGS & ~(CODE_FVARKWDS | CODE_FYIELDING)) != 0
-#error "Unsupported code flags for keyword invocation (must be a set of `CODE_FVARKWDS | CODE_FYIELDING')"
-#endif /* (CODE_FLAGS & ~(CODE_FVARKWDS | CODE_FYIELDING)) != 0 */
+#if (CODE_FLAGS & ~(Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)) != 0
+#error "Unsupported code flags for keyword invocation (must be a set of `Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING')"
+#endif /* (CODE_FLAGS & ~(Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)) != 0 */
 
 
 #ifdef KW_IS_MAPPING
 #if CODE_FLAGS == 0
 #define UNIQUE(x) x##KW0
-#elif CODE_FLAGS == CODE_FVARKWDS
+#elif CODE_FLAGS == Dee_CODE_FVARKWDS
 #define UNIQUE(x) x##KWV
-#elif CODE_FLAGS == CODE_FYIELDING
+#elif CODE_FLAGS == Dee_CODE_FYIELDING
 #define UNIQUE(x) x##KWY
-#elif CODE_FLAGS == (CODE_FVARKWDS | CODE_FYIELDING)
+#elif CODE_FLAGS == (Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)
 #define UNIQUE(x) x##KWVY
 #else
 #error "Unsupported combination of flags"
@@ -53,11 +53,11 @@
 #else /* KW_IS_MAPPING */
 #if CODE_FLAGS == 0
 #define UNIQUE(x) x##0
-#elif CODE_FLAGS == CODE_FVARKWDS
+#elif CODE_FLAGS == Dee_CODE_FVARKWDS
 #define UNIQUE(x) x##V
-#elif CODE_FLAGS == CODE_FYIELDING
+#elif CODE_FLAGS == Dee_CODE_FYIELDING
 #define UNIQUE(x) x##Y
-#elif CODE_FLAGS == (CODE_FVARKWDS | CODE_FYIELDING)
+#elif CODE_FLAGS == (Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)
 #define UNIQUE(x) x##VY
 #else
 #error "Unsupported combination of flags"
@@ -94,20 +94,20 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	DREF DeeYieldFunctionObject *yf;
 	DREF DeeObject *result;
 	DeeCodeObject *code;
-	struct code_frame frame;
+	struct Dee_code_frame frame;
 	size_t i;
 	size_t kw_argc;      /* # of keyword arguments passed (DeeKwds_SIZE(kw)). */
 	size_t ex_argc;      /* # of objects in the keyword-overlay vector (code->co_argc_max - frame.cf_argc) */
 	size_t kw_used;      /* # of keyword arguments that have been loaded from `kw'.
 	                      * NOTE: Once all provided arguments have been loaded, this is used
 	                      *       to check if _all_ keywords have actually been used, which
-	                      *       is a requirement when `CODE_FVARKWDS' isn't set. */
+	                      *       is a requirement when `Dee_CODE_FVARKWDS' isn't set. */
 #define err_ex_frame  err
 #endif /* __INTELLISENSE__ */
-#if CODE_FLAGS & CODE_FYIELDING
+#if CODE_FLAGS & Dee_CODE_FYIELDING
 #undef err_ex_frame
 #define err_ex_frame      err_ex_frame_full
-#elif (CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)) == CODE_FVARKWDS
+#elif (CODE_FLAGS & (Dee_CODE_FYIELDING | Dee_CODE_FVARKWDS)) == Dee_CODE_FVARKWDS
 #undef err_ex_frame
 #ifdef Dee_Alloca
 #define err_ex_frame      err
@@ -128,7 +128,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #endif /* !KW_IS_MAPPING */
 
 	if unlikely(frame.cf_argc > code->co_argc_max) {
-		if (!(code->co_flags & CODE_FVARARGS)) {
+		if (!(code->co_flags & Dee_CODE_FVARARGS)) {
 			/* ERROR: Too many positional arguments. */
 			err_invalid_argc(DeeCode_NAME(code),
 			                 frame.cf_argc,
@@ -145,32 +145,32 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	 * This needs to be done before we check if all required arguments
 	 * have been given, since keyword arguments are allowed to substitute
 	 * ones that are positional. */
-#if CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)
-#if defined(Dee_Alloca) && !(CODE_FLAGS & CODE_FYIELDING)
-	frame.cf_kw = (struct code_frame_kwds *)Dee_Allocaoc(offsetof(struct code_frame_kwds, fk_kargv),
+#if CODE_FLAGS & (Dee_CODE_FYIELDING | Dee_CODE_FVARKWDS)
+#if defined(Dee_Alloca) && !(CODE_FLAGS & Dee_CODE_FYIELDING)
+	frame.cf_kw = (struct Dee_code_frame_kwds *)Dee_Allocaoc(offsetof(struct Dee_code_frame_kwds, fk_kargv),
 	                                                     ex_argc, sizeof(DeeObject *));
-#else /* Dee_Alloca && !(CODE_FLAGS & CODE_FYIELDING) */
-	frame.cf_kw = (struct code_frame_kwds *)Dee_Mallococ(offsetof(struct code_frame_kwds, fk_kargv),
+#else /* Dee_Alloca && !(CODE_FLAGS & Dee_CODE_FYIELDING) */
+	frame.cf_kw = (struct Dee_code_frame_kwds *)Dee_Mallococ(offsetof(struct Dee_code_frame_kwds, fk_kargv),
 	                                                     ex_argc, sizeof(DeeObject *));
 	if unlikely(!frame.cf_kw)
 		goto err;
-#endif /* !Dee_Alloca || (CODE_FLAGS & CODE_FYIELDING) != 0 */
-#else /* CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS) */
+#endif /* !Dee_Alloca || (CODE_FLAGS & Dee_CODE_FYIELDING) != 0 */
+#else /* CODE_FLAGS & (Dee_CODE_FYIELDING | Dee_CODE_FVARKWDS) */
 #ifdef Dee_Allocac
-	frame.cf_kw = (struct code_frame_kwds *)((uintptr_t)Dee_Allocac(ex_argc, sizeof(DeeObject *)) -
-	                                         offsetof(struct code_frame_kwds, fk_kargv));
+	frame.cf_kw = (struct Dee_code_frame_kwds *)((uintptr_t)Dee_Allocac(ex_argc, sizeof(DeeObject *)) -
+	                                         offsetof(struct Dee_code_frame_kwds, fk_kargv));
 #else /* Dee_Allocac */
-	frame.cf_kw = (struct code_frame_kwds *)Dee_Mallocc(ex_argc, sizeof(DeeObject *));
+	frame.cf_kw = (struct Dee_code_frame_kwds *)Dee_Mallocc(ex_argc, sizeof(DeeObject *));
 	if unlikely(!frame.cf_kw)
 		goto err;
-	frame.cf_kw = (struct code_frame_kwds *)((uintptr_t)frame.cf_kw - offsetof(struct code_frame_kwds, fk_kargv));
+	frame.cf_kw = (struct Dee_code_frame_kwds *)((uintptr_t)frame.cf_kw - offsetof(struct Dee_code_frame_kwds, fk_kargv));
 #endif /* !Dee_Allocac */
-#endif /* !(CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)) */
+#endif /* !(CODE_FLAGS & (Dee_CODE_FYIELDING | Dee_CODE_FVARKWDS)) */
 
 	i = 0;
-#if !(CODE_FLAGS & CODE_FVARKWDS)
+#if !(CODE_FLAGS & Dee_CODE_FVARKWDS)
 	kw_used = 0;
-#endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
+#endif /* !(CODE_FLAGS & Dee_CODE_FVARKWDS) */
 	if (frame.cf_argc < code->co_argc_min) {
 		/* Mandatory arguments must be loaded from kwargs. */
 		size_t mand_kwds = code->co_argc_min - frame.cf_argc;
@@ -211,9 +211,9 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			ASSERT_OBJECT(val);
 #endif /* !KW_IS_MAPPING */
 			frame.cf_kw->fk_kargv[i] = val;
-#if !(CODE_FLAGS & CODE_FVARKWDS)
+#if !(CODE_FLAGS & Dee_CODE_FVARKWDS)
 			++kw_used;
-#endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
+#endif /* !(CODE_FLAGS & Dee_CODE_FVARKWDS) */
 		}
 	}
 	for (; i < ex_argc; ++i) {
@@ -244,15 +244,15 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		ASSERT_OBJECT(val);
 #endif /* !KW_IS_MAPPING */
 		frame.cf_kw->fk_kargv[i] = val;
-#if !(CODE_FLAGS & CODE_FVARKWDS)
+#if !(CODE_FLAGS & Dee_CODE_FVARKWDS)
 		++kw_used;
-#endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
+#endif /* !(CODE_FLAGS & Dee_CODE_FVARKWDS) */
 	}
-#if CODE_FLAGS & CODE_FVARKWDS
+#if CODE_FLAGS & Dee_CODE_FVARKWDS
 	/* Lazily initialized. */
 	frame.cf_kw->fk_varkwds = NULL;
 	frame.cf_kw->fk_kw      = kw;
-#else /* CODE_FLAGS & CODE_FVARKWDS */
+#else /* CODE_FLAGS & Dee_CODE_FVARKWDS */
 	/* Check to make sure that all arguments have been used. */
 #ifdef KW_IS_MAPPING
 	kw_argc = DeeObject_Size(kw);
@@ -268,8 +268,8 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		                 code->co_argc_max);
 		goto err_ex_frame;
 	}
-#endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
-#if CODE_FLAGS & CODE_FYIELDING
+#endif /* !(CODE_FLAGS & Dee_CODE_FVARKWDS) */
+#if CODE_FLAGS & Dee_CODE_FYIELDING
 	/* Yield-function invocation. */
 	yf = (DREF DeeYieldFunctionObject *)DeeObject_Malloc(DeeYieldFunction_Sizeof(GET_ARGC()));
 	if unlikely(!yf) {
@@ -291,7 +291,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #endif /* !CALL_THIS */
 
 	/* Initialize references stored within the keyword argument extension. */
-#if CODE_FLAGS & CODE_FVARKWDS
+#if CODE_FLAGS & Dee_CODE_FVARKWDS
 	/* ... */
 #elif defined(NDEBUG)
 	/* ... */
@@ -302,29 +302,29 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #else /* __SIZEOF_POINTER__... */
 	DBG_memset(&frame.cf_kw->fk_varkwds, 0xcc, sizeof(void *));
 #endif /* !__SIZEOF_POINTER__... */
-#if CODE_FLAGS & CODE_FYIELDING
+#if CODE_FLAGS & Dee_CODE_FYIELDING
 	frame.cf_kw->fk_kw = kw;
 	Dee_Incref(kw); /* Always a reference when yielding */
-#elif CODE_FLAGS & CODE_FVARKWDS
+#elif CODE_FLAGS & Dee_CODE_FVARKWDS
 	ASSERT(frame.cf_kw->fk_kw == kw);
-	Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' (Only valid when `CODE_FVARKWDS') */
-#endif /* CODE_FLAGS & CODE_FVARKWDS ) */
+	Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' (Only valid when `Dee_CODE_FVARKWDS') */
+#endif /* CODE_FLAGS & Dee_CODE_FVARKWDS ) */
 	yf->yf_kw = frame.cf_kw; /* Inherit data. */
 	DeeObject_Init(yf, &DeeYieldFunction_Type);
 	return Dee_AsObject(yf);
-#else /* CODE_FLAGS & CODE_FYIELDING */
+#else /* CODE_FLAGS & Dee_CODE_FYIELDING */
 	/* Direct function invocation */
 #ifdef Dee_Alloca
-	if (!(code->co_flags & CODE_FHEAPFRAME)) {
+	if (!(code->co_flags & Dee_CODE_FHEAPFRAME)) {
 		frame.cf_frame = (DeeObject **)Dee_Alloca(code->co_framesize);
 	} else
 #endif /* Dee_Alloca */
 	{
 		frame.cf_frame = (DeeObject **)Dee_Malloc(code->co_framesize);
 		if unlikely(!frame.cf_frame) {
-#if CODE_FLAGS & CODE_FVARKWDS
+#if CODE_FLAGS & Dee_CODE_FVARKWDS
 			/*Dee_XDecref(frame.cf_kw->fk_varkwds);*/
-#endif /* CODE_FLAGS & CODE_FVARKWDS */
+#endif /* CODE_FLAGS & Dee_CODE_FVARKWDS */
 			goto err_ex_frame;
 		}
 	}
@@ -333,7 +333,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	       code->co_localc,
 	       sizeof(DREF DeeObject *));
 #ifndef NDEBUG
-	frame.cf_prev  = CODE_FRAME_NOT_EXECUTING;
+	frame.cf_prev  = Dee_CODE_FRAME_NOT_EXECUTING;
 #endif /* !NDEBUG */
 	frame.cf_stack = frame.cf_frame + code->co_localc;
 	frame.cf_sp    = frame.cf_stack;
@@ -347,7 +347,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #endif /* !KW_IS_MAPPING */
 	{
 		/* Can directly forward varargs passed by the caller! */
-		frame.cf_vargs = (DREF struct tuple_object *)args;
+		frame.cf_vargs = (DREF struct Dee_tuple_object *)args;
 	}
 #endif /* CALL_TUPLE */
 	frame.cf_result = NULL;
@@ -356,7 +356,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	INIT_THIS(frame);
 
 	/* With the frame now set up, actually invoke the code. */
-	if unlikely(code->co_flags & CODE_FASSEMBLY) {
+	if unlikely(code->co_flags & Dee_CODE_FASSEMBLY) {
 		frame.cf_stacksz = 0;
 		result = DeeCode_ExecFrameSafe(&frame);
 		/* Delete remaining stack objects. */
@@ -384,20 +384,20 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		Dee_XDecref(*frame.cf_sp);
 	}
 
-#if CODE_FLAGS & CODE_FVARKWDS
+#if CODE_FLAGS & Dee_CODE_FVARKWDS
 	if (frame.cf_kw->fk_varkwds)
 		DeeKwBlackList_Decref(frame.cf_kw->fk_varkwds);
-#endif /* CODE_FLAGS & CODE_FVARKWDS */
+#endif /* CODE_FLAGS & Dee_CODE_FVARKWDS */
 
 #ifdef Dee_Alloca
-	if (code->co_flags & CODE_FHEAPFRAME)
+	if (code->co_flags & Dee_CODE_FHEAPFRAME)
 #endif /* Dee_Alloca */
 	{
 		Dee_Free(frame.cf_frame);
 	}
 
 #ifdef CALL_TUPLE
-	if (frame.cf_vargs != (DREF struct tuple_object *)args)
+	if (frame.cf_vargs != (DREF struct Dee_tuple_object *)args)
 #endif /* CALL_TUPLE */
 	{
 		Dee_XDecref(frame.cf_vargs);
@@ -405,26 +405,26 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 
 	/* Cleanup keyword extension data. */
 #ifndef Dee_Alloca
-#if CODE_FLAGS & CODE_FVARKWDS
+#if CODE_FLAGS & Dee_CODE_FVARKWDS
 	Dee_Free(frame.cf_kw);
-#else /* CODE_FLAGS & CODE_FVARKWDS */
-	Dee_Free((void *)((uintptr_t)frame.cf_kw + offsetof(struct code_frame_kwds, fk_kargv)));
-#endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
+#else /* CODE_FLAGS & Dee_CODE_FVARKWDS */
+	Dee_Free((void *)((uintptr_t)frame.cf_kw + offsetof(struct Dee_code_frame_kwds, fk_kargv)));
+#endif /* !(CODE_FLAGS & Dee_CODE_FVARKWDS) */
 #endif /* !Dee_Alloca */
-#endif /* !(CODE_FLAGS & CODE_FYIELDING) */
-#if (CODE_FLAGS & CODE_FYIELDING) || (CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)) == CODE_FVARKWDS
+#endif /* !(CODE_FLAGS & Dee_CODE_FYIELDING) */
+#if (CODE_FLAGS & Dee_CODE_FYIELDING) || (CODE_FLAGS & (Dee_CODE_FYIELDING | Dee_CODE_FVARKWDS)) == Dee_CODE_FVARKWDS
 #undef err_ex_frame
 #ifdef Dee_Alloca
 #define err_ex_frame err
 #endif /* Dee_Alloca */
-#endif /* (CODE_FLAGS & CODE_FYIELDING) || (CODE_FLAGS & (CODE_FYIELDING | CODE_FVARKWDS)) == CODE_FVARKWDS */
+#endif /* (CODE_FLAGS & Dee_CODE_FYIELDING) || (CODE_FLAGS & (Dee_CODE_FYIELDING | Dee_CODE_FVARKWDS)) == Dee_CODE_FVARKWDS */
 #ifdef __INTELLISENSE__
 	return result;
 err_ex_frame_full:
 	Dee_Free(frame.cf_kw);
 #ifndef Dee_Alloca
 err_ex_frame:
-	Dee_Free((void *)((uintptr_t)frame.cf_kw + offsetof(struct code_frame_kwds, fk_kargv)));
+	Dee_Free((void *)((uintptr_t)frame.cf_kw + offsetof(struct Dee_code_frame_kwds, fk_kargv)));
 #endif /* !Dee_Alloca */
 err:
 	DeeObject_FREE(yf);

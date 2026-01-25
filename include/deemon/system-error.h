@@ -17,8 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeSystemError**/
+/*!export _DeeSystemError_**/
 #ifndef GUARD_DEEMON_SYSTEM_ERROR_H
-#define GUARD_DEEMON_SYSTEM_ERROR_H 1
+#define GUARD_DEEMON_SYSTEM_ERROR_H 1 /*!export-*/
 
 #include "api.h"
 

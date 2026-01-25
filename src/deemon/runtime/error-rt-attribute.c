@@ -105,14 +105,14 @@ print define_Dee_HashStr("isset");
 /************************************************************************/
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 ClassDescriptor_IsInstanceAttr(DeeClassDescriptorObject *__restrict self,
-                               struct class_attribute const *__restrict attr) {
+                               struct Dee_class_attribute const *__restrict attr) {
 	return attr >= self->cd_iattr_list &&
 	       attr <= (self->cd_iattr_list + self->cd_iattr_mask);
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 ClassDescriptor_IsClassAttr(DeeClassDescriptorObject *__restrict self,
-                            struct class_attribute const *__restrict attr) {
+                            struct Dee_class_attribute const *__restrict attr) {
 	return attr >= self->cd_cattr_list &&
 	       attr <= (self->cd_cattr_list + self->cd_cattr_mask);
 }
@@ -230,7 +230,7 @@ type_members_findbuffer(struct type_member const *chain,
 }
 
 typedef struct {
-	ERROR_OBJECT_HEAD
+	Dee_ERROR_OBJECT_HEAD
 	DREF DeeObject     *ae_obj;   /* [0..1][const] Object whose attributes were accessed */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT    (Dee_ATTRINFO_COUNT + 0) /* Special type for "AttributeError_F_LAZYDECL": "v_any" is a "uint16_t" and an instance object address ("ai_decl" is unused; "ae_obj" is the relevant class-"DeeTypeObject") */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT (Dee_ATTRINFO_COUNT + 1) /* Special type for "AttributeError_F_LAZYDECL": "v_any" is a "uint16_t" and an instance object address ("ai_decl" is the relevant class-"DeeTypeObject"; "ae_obj" is the instance with the unbound member) */
@@ -288,7 +288,7 @@ typedef struct {
 	 * - Dee_ATTRINFO_MODSYM:
 	 *   - DREF DeeModuleObject       *ae_obj = <Accessed Module>;
 	 *   - uintptr_t                   ae_desc.ad_info.ai_type = Dee_ATTRINFO_MODSYM;
-	 *   - struct module_symbol const *ae_desc.ad_info.ai_value.v_modsym = <accessed symbol>;
+	 *   - struct Dee_module_symbol const *ae_desc.ad_info.ai_value.v_modsym = <accessed symbol>;
 	 *
 	 * - Dee_ATTRINFO_METHOD:
 	 *   Dee_ATTRINFO_INSTANCE_METHOD:
@@ -326,14 +326,14 @@ typedef struct {
 	 *   Dee_ATTRINFO_INSTANCE_ATTR:
 	 *   - DREF DeeObject               *ae_obj = <Accessed Object or Type>;
 	 *   - uintptr_t                     ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR;
-	 *   - struct class_attribute const *ae_desc.ad_info.ai_value.v_attr = <accessed attribute>;
+	 *   - struct Dee_class_attribute const *ae_desc.ad_info.ai_value.v_attr = <accessed attribute>;
 	 *   "Dee_ATTRINFO_ATTR" is changed to "Dee_ATTRINFO_INSTANCE_ATTR" if "ae_obj"
 	 *   is a type, and "v_attr" is one of its "tp_class->cd_desc->cd_iattr_list".
 	 *
 	 * - Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT:
 	 *   - DREF DeeTypeObject *ae_obj = <Accessed Type (which must be DeeType_IsClass)>;
 	 *   - uintptr_t           ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT;
-	 *   - uint16_t            ae_desc.ad_info.ai_value.v_any = <Index into `struct class_desc::cd_members'>;
+	 *   - uint16_t            ae_desc.ad_info.ai_value.v_any = <Index into `struct Dee_class_desc::cd_members'>;
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT" is changed to "Dee_ATTRINFO_ATTR"
 	 *   or "Dee_ATTRINFO_INSTANCE_ATTR" as appropriate.
 	 *
@@ -341,7 +341,7 @@ typedef struct {
 	 *   - DREF DeeObject *ae_obj = <Accessed instance object (or a class type)>;
 	 *   - DeeTypeObject  *ae_desc.ad_info.ai_decl = <Accessed Type (which must be DeeType_IsClass)>; // -- !!NOT!! initialized as a reference!
 	 *   - uintptr_t       ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT;
-	 *   - uint16_t        ae_desc.ad_info.ai_value.v_any = <Index into `struct instance_desc::id_vtab'>;
+	 *   - uint16_t        ae_desc.ad_info.ai_value.v_any = <Index into `struct Dee_instance_desc::id_vtab'>;
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT" is changed to "Dee_ATTRINFO_ATTR".
 	 *
 	 * - Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_MEMBER:
@@ -385,45 +385,45 @@ typedef struct {
 #define AttributeError_LazyMethod_SetMethod(self, v) ((self)->ae_desc.ad_info.ai_value.v_any = (void *)(Dee_objmethod_t)(v))
 } AttributeError;
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct class_attribute const *DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct Dee_class_attribute const *DCALL
 ClassDescriptor_InstanceAttrAt(DeeClassDescriptorObject const *__restrict self, uint16_t addr) {
 	size_t i;
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
-		struct class_attribute const *attr;
+		struct Dee_class_attribute const *attr;
 		attr = &self->cd_iattr_list[i];
 		if (!attr->ca_name)
 			continue;
 		if (addr < attr->ca_addr)
 			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
 			continue;
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 			continue;
 		return attr;
 	}
 	return NULL;
 }
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct class_attribute const *DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct Dee_class_attribute const *DCALL
 ClassDescriptor_ClassAttrAt(DeeClassDescriptorObject const *__restrict self, uint16_t addr) {
 	size_t i;
-	struct class_attribute const *attr;
+	struct Dee_class_attribute const *attr;
 	for (i = 0; i <= self->cd_cattr_mask; ++i) {
 		attr = &self->cd_cattr_list[i];
 		if (!attr->ca_name)
 			continue;
 		if (addr >= attr->ca_addr &&
-		    addr < (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+		    addr < (attr->ca_addr + ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
 			return attr;
 	}
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
 		attr = &self->cd_iattr_list[i];
 		if (!attr->ca_name)
 			continue;
-		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM))
 			continue;
 		if (addr >= attr->ca_addr &&
-		    addr < (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+		    addr < (attr->ca_addr + ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
 			return attr;
 	}
 	return NULL;
@@ -456,7 +456,7 @@ AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 	}	break;
 
 	case Dee_ATTRINFO_MODSYM: {
-		struct module_symbol const *sym = self->ae_desc.ad_info.ai_value.v_modsym;
+		struct Dee_module_symbol const *sym = self->ae_desc.ad_info.ai_value.v_modsym;
 		self->ae_desc.ad_name = sym->ss_name;
 		self->ae_desc.ad_perm = 0;
 		if (sym->ss_flags & Dee_MODSYM_FNAMEOBJ) {
@@ -477,7 +477,7 @@ AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 	case Dee_ATTRINFO_ATTR:
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
 		DeeTypeMRO mro;
-		struct class_attribute const *attr;
+		struct Dee_class_attribute const *attr;
 		attr = self->ae_desc.ad_info.ai_value.v_attr;
 		self->ae_desc.ad_name = DeeString_STR(attr->ca_name);
 		Dee_Incref(Dee_attrdesc_nameobj(&self->ae_desc));
@@ -594,7 +594,7 @@ got_member_from_buffer:
 	case Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT: {
 		uint16_t addr = (uint16_t)(uintptr_t)self->ae_desc.ad_info.ai_value.v_any;
 		DeeTypeObject *class_type = (DeeTypeObject *)self->ae_obj;
-		struct class_attribute const *attr;
+		struct Dee_class_attribute const *attr;
 		DeeClassDescriptorObject *desc;
 		ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 		ASSERT(DeeType_IsClass(class_type));
@@ -617,7 +617,7 @@ got_member_from_buffer:
 	case Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT: {
 		uint16_t addr = (uint16_t)(uintptr_t)self->ae_desc.ad_info.ai_value.v_any;
 		DeeTypeObject *class_type = (DeeTypeObject *)self->ae_desc.ad_info.ai_decl;
-		struct class_attribute const *attr;
+		struct Dee_class_attribute const *attr;
 		ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 		ASSERT(DeeType_IsClass(class_type));
 		attr = ClassDescriptor_InstanceAttrAt(DeeClass_DESC(class_type)->cd_desc, addr);
@@ -883,15 +883,15 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 	/* Load attribute properties based on implementation */
 	switch (self->ae_desc.ad_info.ai_type) {
 	case Dee_ATTRINFO_MODSYM: {
-		struct module_symbol const *sym;
+		struct Dee_module_symbol const *sym;
 		DeeModuleObject *mod;
 		self->ae_desc.ad_perm |= Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_CANGET;
 		sym = self->ae_desc.ad_info.ai_value.v_modsym;
-		if (!(sym->ss_flags & MODSYM_FREADONLY))
+		if (!(sym->ss_flags & Dee_MODSYM_FREADONLY))
 			self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
-		if (sym->ss_flags & MODSYM_FPROPERTY) {
+		if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 			self->ae_desc.ad_perm &= ~(Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
-			if (!(sym->ss_flags & MODSYM_FCONSTEXPR))
+			if (!(sym->ss_flags & Dee_MODSYM_FCONSTEXPR))
 				self->ae_desc.ad_perm |= Dee_ATTRPERM_F_PROPERTY;
 		}
 		if (sym->ss_doc) {
@@ -904,16 +904,16 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 		mod = (DeeModuleObject *)self->ae_desc.ad_info.ai_decl;
 		ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		if (sym->ss_flags & MODSYM_FPROPERTY) {
+		if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 			DeeModule_LockRead(mod);
 			/* Check which property operations have been bound. */
-			if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_GET])
+			if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_GET])
 				self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
-			if (!(sym->ss_flags & MODSYM_FREADONLY)) {
+			if (!(sym->ss_flags & Dee_MODSYM_FREADONLY)) {
 				/* These callbacks are only allocated if the READONLY flag isn't set. */
-				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_DEL])
+				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_DEL])
 					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
-				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_SET])
+				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_SET])
 					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
 			}
 			DeeModule_LockEndRead(mod);
@@ -921,15 +921,15 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		if (mod->mo_flags & Dee_MODULE_FDIDINIT) {
 			DeeModule_LockRead(mod);
-			if (sym->ss_flags & MODSYM_FPROPERTY) {
+			if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 				/* Check which property operations have been bound. */
-				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_GET])
+				if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_GET])
 					self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANGET;
-				if (!(sym->ss_flags & MODSYM_FREADONLY)) {
+				if (!(sym->ss_flags & Dee_MODSYM_FREADONLY)) {
 					/* These callbacks are only allocated if the READONLY flag isn't set. */
-					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_DEL])
+					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_DEL])
 						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANDEL;
-					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + MODULE_PROPERTY_SET])
+					if (mod->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_SET])
 						self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANSET;
 				}
 			}
@@ -1006,8 +1006,8 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 		break;
 
 	case Dee_ATTRINFO_ATTR: {
-		struct class_attribute const *attr;
-		struct instance_desc *inst;
+		struct Dee_class_attribute const *attr;
+		struct Dee_instance_desc *inst;
 		DeeTypeObject *decl_type;
 		decl_type = (DeeTypeObject *)self->ae_desc.ad_info.ai_decl;
 		ASSERT_OBJECT_TYPE(decl_type, &DeeType_Type);
@@ -1030,37 +1030,37 @@ AttributeError_LoadDesc(AttributeError *__restrict self) {
 			Dee_Incref(Dee_attrdesc_docobj(&self->ae_desc));
 			self->ae_desc.ad_perm |= Dee_ATTRPERM_F_DOCOBJ;
 		}
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FPRIVATE)
 			self->ae_desc.ad_perm |= Dee_ATTRPERM_F_PRIVATE;
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 			self->ae_desc.ad_perm |= Dee_ATTRPERM_F_PROPERTY;
-		} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 			self->ae_desc.ad_perm |= Dee_ATTRPERM_F_CANCALL;
 		}
 		inst = NULL;
 		decl_type = (DeeTypeObject *)self->ae_desc.ad_info.ai_decl;
 		ASSERT_OBJECT_TYPE(decl_type, &DeeType_Type);
 		ASSERT(DeeType_IsClass(decl_type));
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
-			inst = class_desc_as_instance(DeeClass_DESC(decl_type));
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
+			inst = Dee_class_desc_as_instance(DeeClass_DESC(decl_type));
 		} else if (DeeObject_InstanceOf(self->ae_obj, decl_type)) {
 			inst = DeeInstance_DESC(DeeClass_DESC(decl_type), self->ae_obj);
 		}
 		if (inst != NULL) {
 			Dee_instance_desc_lock_read(inst);
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_GET])
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+				if (!inst->id_vtab[attr->ca_addr + Dee_CLASS_GETSET_GET])
 					self->ae_desc.ad_perm &= ~Dee_ATTRPERM_F_CANGET;
-				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-					if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_DEL])
+				if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
+					if (!inst->id_vtab[attr->ca_addr + Dee_CLASS_GETSET_DEL])
 						self->ae_desc.ad_perm &= ~Dee_ATTRPERM_F_CANDEL;
-					if (!inst->id_vtab[attr->ca_addr + CLASS_GETSET_SET])
+					if (!inst->id_vtab[attr->ca_addr + Dee_CLASS_GETSET_SET])
 						self->ae_desc.ad_perm &= ~Dee_ATTRPERM_F_CANSET;
 				}
 			}
 			Dee_instance_desc_lock_endread(inst);
 		}
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 			self->ae_desc.ad_perm &= ~(Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 	}	break;
 
@@ -2011,7 +2011,7 @@ err:
 
 PRIVATE ATTR_COLD NONNULL((1, 2, 3)) int DCALL
 DeeRT_ErrAttributeErrorCA_impl(DeeTypeObject *error_type, DeeObject *ob,
-                               struct class_attribute const *attr, unsigned int flags) {
+                               struct Dee_class_attribute const *attr, unsigned int flags) {
 	DREF AttributeError *result = DeeObject_MALLOC(AttributeError);
 	if unlikely(!result)
 		goto err;
@@ -2190,7 +2190,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) DeeObject *
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
-(DCALL DeeRT_ErrCUnboundAttrCA)(DeeObject *ob, struct class_attribute const *attr) {
+(DCALL DeeRT_ErrCUnboundAttrCA)(DeeObject *ob, struct Dee_class_attribute const *attr) {
 	DeeRT_ErrAttributeErrorCA_impl(&DeeError_UnboundAttribute, ob, attr, AttributeError_F_GET);
 	return NULL;
 }
@@ -2447,7 +2447,7 @@ PUBLIC ATTR_COLD NONNULL((2, 3)) int
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
-(DCALL DeeRT_ErrCRestrictedAttrCA)(DeeObject *ob, struct class_attribute const *attr, unsigned int access) {
+(DCALL DeeRT_ErrCRestrictedAttrCA)(DeeObject *ob, struct Dee_class_attribute const *attr, unsigned int access) {
 	return DeeRT_ErrAttributeErrorCA_impl(&DeeError_RestrictedAttribute, ob, attr, access);
 }
 PUBLIC ATTR_COLD NONNULL((1, 2)) int

@@ -364,9 +364,9 @@ function detectConstantReturnValue(body: string): string | int | none {
 			}
 			switch (returnExpr) {
 			case "NULL":
-			case "DEE_HASHOF_EMPTY_SEQUENCE":
-			case "DEE_HASHOF_UNBOUND_ITEM":
-			case "DEE_HASHOF_RECURSIVE_ITEM":
+			case "Dee_HASHOF_EMPTY_SEQUENCE":
+			case "Dee_HASHOF_UNBOUND_ITEM":
+			case "Dee_HASHOF_RECURSIVE_ITEM":
 				return 0;
 			case "ITER_DONE":
 				return -1;
@@ -1194,7 +1194,7 @@ final class MethodHint: WeakRefAble {
 function simplifyNativeOperatorNamePart(part: string): string {
 	return part.rpartition(".").last
 			.lsstrip("tp_")
-			.lsstrip("CLASS_")
+			.lsstrip("Dee_CLASS_")
 			.lsstrip("OPERATOR_")
 			.replace(".", "_");
 }

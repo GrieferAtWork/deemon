@@ -242,7 +242,7 @@ property_canset(Property *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_info(Property *__restrict self,
-              struct function_info *__restrict info) {
+              struct Dee_function_info *__restrict info) {
 	int result;
 	if (self->p_get && DeeFunction_Check(self->p_get)) {
 		result = DeeFunction_GetInfo(self->p_get, info);
@@ -305,7 +305,7 @@ property_callback_boundattr(Property *self, DeeStringObject *name) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_get_name(Property *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	int error;
 	DREF DeeObject *result;
 	error = property_info(self, &info);
@@ -326,7 +326,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_bound_name(Property *__restrict self) {
 	int error;
-	struct function_info info;
+	struct Dee_function_info info;
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err;
@@ -342,7 +342,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_get_doc(Property *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	int error;
 	DREF DeeObject *result;
 	error = property_info(self, &info);
@@ -362,7 +362,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_bound_doc(Property *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	int error;
 	error = property_info(self, &info);
 	if unlikely(error < 0)
@@ -379,7 +379,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 property_get_type(Property *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	int error;
 	DREF DeeTypeObject *result;
 	error = property_info(self, &info);
@@ -399,7 +399,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_bound_type(Property *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	int error;
 	error = property_info(self, &info);
 	if unlikely(error < 0)
@@ -513,7 +513,7 @@ property_printrepr(Property *__restrict self,
 	 *       custom properties (w/ an attribute `iscustom: bool',
 	 *       and us making the repr dependent on that) */
 	Dee_ssize_t temp, result;
-	struct function_info info;
+	struct Dee_function_info info;
 	int error;
 	error = property_info(self, &info);
 	if unlikely(error < 0)
@@ -544,10 +544,10 @@ property_printrepr(Property *__restrict self,
 				result = temp;
 			}
 		}
-		function_info_fini(&info);
+		Dee_function_info_fini(&info);
 		return result;
 	}
-	function_info_fini(&info);
+	Dee_function_info_fini(&info);
 
 	result = DeeFormat_PRINT(printer, arg, "Property(");
 	if unlikely(result < 0)

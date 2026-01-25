@@ -235,7 +235,7 @@ find_string_template_insert_area(/*utf-8*/ char const *__restrict template_str,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-unicode_printer_print_brace_escaped(struct unicode_printer *__restrict self,
+unicode_printer_print_brace_escaped(struct Dee_unicode_printer *__restrict self,
                                     /*utf-8*/ char const *__restrict text,
                                     size_t textlen) {
 	char const *flush_start = text;
@@ -243,14 +243,14 @@ unicode_printer_print_brace_escaped(struct unicode_printer *__restrict self,
 	while (text < text_end) {
 		char ch = *text++;
 		if (ch == '{' || ch == '}') {
-			if unlikely(unicode_printer_print(self, text,
-			                                  (size_t)(text_end - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(self, text,
+			                                      (size_t)(text_end - flush_start)) < 0)
 				goto err;
 			flush_start = text - 1; /* Repeat the character to escape it. */
 		}
 	}
-	if unlikely(unicode_printer_print(self, flush_start,
-	                                  (size_t)(text_end - flush_start)) < 0)
+	if unlikely(Dee_unicode_printer_print(self, flush_start,
+	                                      (size_t)(text_end - flush_start)) < 0)
 		goto err;
 	return 0;
 err:
@@ -258,7 +258,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-unicode_printer_print_brace_escaped_strob(struct unicode_printer *__restrict self,
+unicode_printer_print_brace_escaped_strob(struct Dee_unicode_printer *__restrict self,
                                           DeeObject *__restrict strob) {
 	char const *utf8 = DeeString_AsUtf8(strob);
 	if unlikely(!utf8)
@@ -335,7 +335,7 @@ again_optimize_arg_at_index_i:
 			if (find_string_template_insert_area(format_utf8, i,
 			                                     &insert_start,
 			                                     &insert_end)) {
-				struct unicode_printer printer;
+				struct Dee_unicode_printer printer;
 				DREF DeeObject *new_template_str;
 				DREF DeeObject *insert_obj_str;
 				size_t len_before;
@@ -356,20 +356,20 @@ again_optimize_arg_at_index_i:
 				                         : DeeObject_Str(arg->a_constexpr);
 				if unlikely(!insert_obj_str)
 					goto err;
-				unicode_printer_init(&printer);
-				if unlikely(unicode_printer_print(&printer, format_utf8, len_before) < 0) {
+				Dee_unicode_printer_init(&printer);
+				if unlikely(Dee_unicode_printer_print(&printer, format_utf8, len_before) < 0) {
 err_inline_constexpr_printer_insert_obj_str:
 					Dee_Decref(insert_obj_str);
 err_inline_constexpr_printer:
-					unicode_printer_fini(&printer);
+					Dee_unicode_printer_fini(&printer);
 					goto err;
 				}
 				if unlikely(unicode_printer_print_brace_escaped_strob(&printer, insert_obj_str))
 					goto err_inline_constexpr_printer_insert_obj_str;
 				Dee_Decref(insert_obj_str);
-				if unlikely(unicode_printer_print(&printer, insert_end, len_after) < 0)
+				if unlikely(Dee_unicode_printer_print(&printer, insert_end, len_after) < 0)
 					goto err_inline_constexpr_printer;
-				new_template_str = unicode_printer_pack(&printer);
+				new_template_str = Dee_unicode_printer_pack(&printer);
 				if unlikely(!new_template_str)
 					goto err;
 				Dee_Decref(*p_template_str);
@@ -805,7 +805,7 @@ not_allowed:
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
 		if (operator_result &&
 		    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
-			struct opinfo const *info;
+			struct Dee_opinfo const *info;
 			info = DeeTypeType_GetOperatorById(Dee_TYPE(Dee_TYPE(argv[0])), self->a_flag);
 			OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r'\n",
 			                 argv[0], info ? info->oi_uname : "?",

@@ -606,7 +606,7 @@ deq_ctor(Deque *__restrict self) {
 	self->d_tail_sz   = 0;
 	self->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
 	self->d_version   = 0;
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 }
 
@@ -675,7 +675,7 @@ again:
 		self->d_tail = NULL;
 	}
 	Deque_LockEndRead(other);
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 err_restart_collect:
 	COMPILER_READ_BARRIER();
@@ -757,7 +757,7 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 deq_fini(Deque *__restrict self) {
 	DequeBucket *iter, *next;
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	if (!self->d_size)
 		return;
 	iter = self->d_head;
@@ -854,7 +854,7 @@ again:
 	Deque_LockEndRead(self);
 	out = DeeSerial_Addr2Mem(writer, addr, Deque);
 	Dee_atomic_rwlock_init(&out->d_lock);
-	weakref_support_init(out);
+	Dee_weakref_support_init(out);
 	out->d_version   = self__d_version;
 	out->d_bucket_sz = self__d_bucket_sz;
 	out->d_size      = self__d_size;
@@ -988,7 +988,7 @@ deq_init(Deque *__restrict self, size_t argc, DeeObject *const *argv) {
 	self->d_head_use = 0;
 	self->d_tail_sz  = 0;
 	self->d_version  = 0;
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 #if __SIZEOF_INT__ == __SIZEOF_SIZE_T__
 	if (DeeObject_Foreach(init, (Dee_foreach_t)&Deque_PushBack, self) < 0)
 #else /* __SIZEOF_INT__ == __SIZEOF_SIZE_T__ */
@@ -1013,7 +1013,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deq_assign(Deque *self, DeeObject *seq) {
 	Deque bTemp, bOld;
-	weakref_support_init(&bTemp);
+	Dee_weakref_support_init(&bTemp);
 	if (DeeObject_InstanceOfExact(seq, &Deque_Type)) {
 		if (deq_copy(&bTemp, (Deque *)seq))
 			goto err;
@@ -1042,7 +1042,7 @@ deq_assign(Deque *self, DeeObject *seq) {
 	memcpy(DEQUE_BUFFER_OF(self), DEQUE_BUFFER_OF(&bTemp), DEQUE_BUFFER_SIZE);
 	++self->d_version;
 	Deque_LockEndWrite(self);
-	weakref_support_init(&bOld);
+	Dee_weakref_support_init(&bOld);
 
 	/* Free the old deque state. */
 	deq_fini(&bOld);
@@ -1069,7 +1069,7 @@ deq_moveassign(Deque *__restrict self,
 	memcpy(DEQUE_BUFFER_OF(self), DEQUE_BUFFER_OF(&bNew), DEQUE_BUFFER_SIZE);
 	++self->d_version;
 	Deque_LockEndWrite(self);
-	weakref_support_init(&bOld);
+	Dee_weakref_support_init(&bOld);
 	/* Free the old state of our own deque. */
 	deq_fini(&bOld);
 	return 0;
@@ -1108,7 +1108,7 @@ deq_clear(Deque *__restrict self) {
 	bzero(DEQUE_BUFFER_OF(self), DEQUE_BUFFER_SIZE);
 	++self->d_version;
 	Deque_LockEndWrite(self);
-	weakref_support_init(&bData);
+	Dee_weakref_support_init(&bData);
 	/* Destroy the cloned buffer. */
 	deq_fini(&bData);
 }
@@ -1644,7 +1644,7 @@ INTERN DeeTypeObject Deque_Type = {
 	                         "contains->\n"
 	                         "Returns ?t if @item is apart of this Deque, ?f otherwise"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Deque),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(Deque),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {

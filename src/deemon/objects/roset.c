@@ -57,7 +57,7 @@ typedef DeeRoSetObject RoSet;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(RoSet, rosi_set)  /* [1..1][const] The set being iterated. */
-	struct roset_item          *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
+	struct Dee_roset_item          *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
 	                                        * The first candidate for the next item. */
 } RoSetIterator;
 #define READ_ITEM(x) atomic_read(&(x)->rosi_next)
@@ -116,7 +116,7 @@ STATIC_ASSERT(offsetof(RoSetIterator, rosi_set) == offsetof(ProxyObject, po_obj)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_bool(RoSetIterator *__restrict self) {
-	struct roset_item *item = READ_ITEM(self);
+	struct Dee_roset_item *item = READ_ITEM(self);
 	RoSet *set                = self->rosi_set;
 	for (;; ++item) {
 		/* Check if the iterator is in-bounds. */
@@ -130,10 +130,10 @@ rosetiterator_bool(RoSetIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rosetiterator_next(RoSetIterator *__restrict self) {
-	struct roset_item *item, *end;
+	struct Dee_roset_item *item, *end;
 	end = self->rosi_set->rs_elem + self->rosi_set->rs_mask + 1;
 	for (;;) {
-		struct roset_item *old_item;
+		struct Dee_roset_item *old_item;
 		item     = atomic_read(&self->rosi_next);
 		old_item = item;
 		if (item >= end)
@@ -164,7 +164,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rosetiterator_compare(RoSetIterator *self, RoSetIterator *other) {
 	if (DeeObject_AssertType(other, &RoSetIterator_Type))
 		goto err;
-	Dee_return_compareT(struct roset_item *, READ_ITEM(self),
+	Dee_return_compareT(struct Dee_roset_item *, READ_ITEM(self),
 	                    /*                */ READ_ITEM(other));
 err:
 	return Dee_COMPARE_ERR;
@@ -245,7 +245,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 
 
 #define ROSET_ALLOC(mask)  ((DREF RoSet *)DeeObject_Calloc(SIZEOF_ROSET(mask)))
-#define SIZEOF_ROSET(mask) _Dee_MallococBufsize(offsetof(RoSet, rs_elem), (mask) + 1, sizeof(struct roset_item))
+#define SIZEOF_ROSET(mask) _Dee_MallococBufsize(offsetof(RoSet, rs_elem), (mask) + 1, sizeof(struct Dee_roset_item))
 #define ROSET_INITIAL_MASK 0x03
 
 PRIVATE WUNUSED NONNULL((1)) DREF RoSet *DCALL
@@ -263,17 +263,17 @@ DeeRoSet_Rehash(/*inherit(on_success)*/ DREF RoSet *__restrict self, size_t new_
 	result->rs_mask = new_mask;
 	for (i = 0; i <= self->rs_mask; ++i) {
 		size_t j, perturb;
-		struct roset_item *item;
+		struct Dee_roset_item *item;
 		if (!self->rs_elem[i].rsi_key)
 			continue;
 		perturb = j = self->rs_elem[i].rsi_hash & new_mask;
-		for (;; ROSET_HASHNX(j, perturb)) {
+		for (;; DeeRoSet_HashNx(j, perturb)) {
 			item = &result->rs_elem[j & new_mask];
 			if (!item->rsi_key)
 				break;
 		}
 		/* Copy the old item into the new slot. */
-		memcpy(item, &self->rs_elem[i], sizeof(struct roset_item));
+		memcpy(item, &self->rs_elem[i], sizeof(struct Dee_roset_item));
 	}
 	DeeObject_Free(self);
 done:
@@ -284,7 +284,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
                 DeeObject *__restrict key) {
 	size_t i, perturb, hash;
-	struct roset_item *item;
+	struct Dee_roset_item *item;
 	DREF RoSet *me = *p_self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
 	ASSERT(!DeeObject_IsShared(me));
@@ -300,7 +300,7 @@ DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
 	/* Insert the new key/value-pair into the RoSet. */
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & me->rs_mask;
-	for (;; ROSET_HASHNX(i, perturb)) {
+	for (;; DeeRoSet_HashNx(i, perturb)) {
 		int error;
 		item = &me->rs_elem[i & me->rs_mask];
 		if (!item->rsi_key)
@@ -432,12 +432,12 @@ roset_size(RoSet *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 roset_contains(RoSet *self, DeeObject *key) {
 	size_t i, perturb, hash;
-	struct roset_item *item;
+	struct Dee_roset_item *item;
 	hash    = DeeObject_Hash(key);
-	perturb = i = ROSET_HASHST(self, hash);
-	for (;; ROSET_HASHNX(i, perturb)) {
+	perturb = i = DeeRoSet_HashSt(self, hash);
+	for (;; DeeRoSet_HashNx(i, perturb)) {
 		int error;
-		item = ROSET_HASHIT(self, i);
+		item = DeeRoSet_HashIt(self, i);
 		if (!item->rsi_key)
 			break;
 		if (item->rsi_hash != hash)
@@ -527,7 +527,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 roset_asvector_nothrow(RoSet *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	if likely(dst_length >= self->rs_size) {
-		struct roset_item *iter, *end;
+		struct Dee_roset_item *iter, *end;
 		end = (iter = self->rs_elem) + (self->rs_mask + 1);
 		for (; iter < end; ++iter) {
 			DeeObject *key = iter->rsi_key;
@@ -591,7 +591,7 @@ roset_sizeof(RoSet *self) {
 	size_t result;
 	result = _Dee_MallococBufsize(offsetof(RoSet, rs_elem),
 	                              self->rs_mask + 1,
-	                              sizeof(struct roset_item));
+	                              sizeof(struct Dee_roset_item));
 	return DeeInt_NewSize(result);
 }
 
@@ -684,7 +684,7 @@ roset_serialize(RoSet *__restrict self, DeeSerial *__restrict writer) {
 	RoSet *out;
 	Dee_seraddr_t addr;
 	size_t i, sizeof_set;
-	sizeof_set = offsetof(RoSet, rs_elem) + (self->rs_mask + 1) * sizeof(struct roset_item);
+	sizeof_set = offsetof(RoSet, rs_elem) + (self->rs_mask + 1) * sizeof(struct Dee_roset_item);
 	addr = DeeSerial_ObjectMalloc(writer, sizeof_set, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
@@ -692,16 +692,16 @@ roset_serialize(RoSet *__restrict self, DeeSerial *__restrict writer) {
 	out->rs_mask = self->rs_mask;
 	out->rs_size = self->rs_size;
 	for (i = 0; i <= self->rs_mask; ++i) {
-		struct roset_item *in_item;
-		struct roset_item *out_item;
+		struct Dee_roset_item *in_item;
+		struct Dee_roset_item *out_item;
 		Dee_seraddr_t addrof_item;
 		in_item  = &self->rs_elem[i];
-		addrof_item = addr + offsetof(RoSet, rs_elem) + i * sizeof(struct roset_item);
-		out_item    = DeeSerial_Addr2Mem(writer, addrof_item, struct roset_item);
+		addrof_item = addr + offsetof(RoSet, rs_elem) + i * sizeof(struct Dee_roset_item);
+		out_item    = DeeSerial_Addr2Mem(writer, addrof_item, struct Dee_roset_item);
 		if (in_item->rsi_key) {
 			out_item->rsi_hash = in_item->rsi_hash;
 			if (DeeSerial_PutObject(writer,
-			                        addrof_item + offsetof(struct roset_item, rsi_key),
+			                        addrof_item + offsetof(struct Dee_roset_item, rsi_key),
 			                        in_item->rsi_key))
 				goto err;
 		} else {

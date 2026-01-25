@@ -126,13 +126,13 @@ file_shl(DeeObject *self, DeeObject *some_object);
 #ifdef EXEC_FAST
 #define get_prefix_object_ptr() get_prefix_object_ptr_fast(frame, code, sp)
 PRIVATE WUNUSED DREF DeeObject **ATTR_FASTCALL
-get_prefix_object_ptr_fast(struct code_frame *__restrict frame,
+get_prefix_object_ptr_fast(struct Dee_code_frame *__restrict frame,
                            DeeCodeObject *__restrict code,
                            DeeObject **__restrict sp)
 #else /* EXEC_FAST */
 #define get_prefix_object_ptr() get_prefix_object_ptr_safe(frame, code, sp)
 PRIVATE WUNUSED DREF DeeObject **ATTR_FASTCALL
-get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
+get_prefix_object_ptr_safe(struct Dee_code_frame *__restrict frame,
                            DeeCodeObject *__restrict code,
                            DeeObject **__restrict sp)
 #endif /* !EXEC_FAST */
@@ -200,13 +200,13 @@ do_get_local:
 #ifdef EXEC_FAST
 #define get_prefix_object() get_prefix_object_fast(frame, code, sp)
 PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
-get_prefix_object_fast(struct code_frame *__restrict frame,
+get_prefix_object_fast(struct Dee_code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp)
 #else /* EXEC_SAFE */
 #define get_prefix_object() get_prefix_object_safe(frame, code, sp)
 PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
-get_prefix_object_safe(struct code_frame *__restrict frame,
+get_prefix_object_safe(struct Dee_code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp)
 #endif /* !EXEC_SAFE */
@@ -386,14 +386,14 @@ ill_instr:
 #ifdef EXEC_FAST
 #define set_prefix_object(v) unlikely(set_prefix_object_fast(frame, code, sp, v))
 PRIVATE int ATTR_FASTCALL
-set_prefix_object_fast(struct code_frame *__restrict frame,
+set_prefix_object_fast(struct Dee_code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
                        /*inherit(always)*/ DREF DeeObject *__restrict value)
 #else /* EXEC_FAST */
 #define set_prefix_object(v) unlikely(set_prefix_object_safe(frame, code, sp, v))
 PRIVATE int ATTR_FASTCALL
-set_prefix_object_safe(struct code_frame *__restrict frame,
+set_prefix_object_safe(struct Dee_code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
                        /*inherit(always)*/ DREF DeeObject *__restrict value)
@@ -579,14 +579,14 @@ ill_instr:
 #ifdef EXEC_FAST
 #define xch_prefix_object(v) xch_prefix_object_fast(frame, code, sp, v)
 PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
-xch_prefix_object_fast(struct code_frame *__restrict frame,
+xch_prefix_object_fast(struct Dee_code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
                        DREF DeeObject *__restrict value)
 #else /* EXEC_FAST */
 #define xch_prefix_object(v) xch_prefix_object_safe(frame, code, sp, v)
 PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
-xch_prefix_object_safe(struct code_frame *__restrict frame,
+xch_prefix_object_safe(struct Dee_code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
                        DREF DeeObject *__restrict value)
@@ -778,14 +778,14 @@ ill_instr:
 #ifdef EXEC_FAST
 #define cmpxch_prefix_object(oldvalue, newvalue) cmpxch_prefix_object_fast(frame, code, sp, oldvalue, newvalue)
 PRIVATE WUNUSED bool ATTR_FASTCALL
-cmpxch_prefix_object_fast(struct code_frame *__restrict frame,
+cmpxch_prefix_object_fast(struct Dee_code_frame *__restrict frame,
                           DeeCodeObject *__restrict code,
                           DeeObject **__restrict sp,
                           DeeObject *oldvalue, DREF DeeObject *newvalue)
 #else /* EXEC_FAST */
 #define cmpxch_prefix_object(oldvalue, newvalue) cmpxch_prefix_object_safe(frame, code, sp, oldvalue, newvalue)
 PRIVATE WUNUSED int ATTR_FASTCALL
-cmpxch_prefix_object_safe(struct code_frame *__restrict frame,
+cmpxch_prefix_object_safe(struct Dee_code_frame *__restrict frame,
                           DeeCodeObject *__restrict code,
                           DeeObject **__restrict sp,
                           DeeObject *oldvalue, DREF DeeObject *newvalue)
@@ -967,10 +967,10 @@ nope:
 
 #ifdef EXEC_FAST
 PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
-DeeCode_ExecFrameFast(struct code_frame *__restrict frame)
+DeeCode_ExecFrameFast(struct Dee_code_frame *__restrict frame)
 #else /* EXEC_FAST */
 PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
-DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
+DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 #endif /* !EXEC_FAST */
 {
 #ifdef exec_dispatch_USE_goto
@@ -1064,11 +1064,11 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 	       (this_thread->t_exec != NULL));
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
-#if (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) == 0
-#define IS_ALTSTACK_PERIOD(x) (((x) & (DEE_EXEC_ALTSTACK_PERIOD - 1)) == (DEE_EXEC_ALTSTACK_PERIOD - 1))
-#else /* (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) == 0 */
-#define IS_ALTSTACK_PERIOD(x) (((x) % DEE_EXEC_ALTSTACK_PERIOD) == (DEE_EXEC_ALTSTACK_PERIOD - 1))
-#endif /* (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) != 0 */
+#if (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD - 1)) == 0
+#define IS_ALTSTACK_PERIOD(x) (((x) & (Dee_EXEC_ALTSTACK_PERIOD - 1)) == (Dee_EXEC_ALTSTACK_PERIOD - 1))
+#else /* (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD - 1)) == 0 */
+#define IS_ALTSTACK_PERIOD(x) (((x) % Dee_EXEC_ALTSTACK_PERIOD) == (Dee_EXEC_ALTSTACK_PERIOD - 1))
+#endif /* (Dee_EXEC_ALTSTACK_PERIOD & (Dee_EXEC_ALTSTACK_PERIOD - 1)) != 0 */
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 
 	/* Limit `this_thread->t_execsz' and throw an
@@ -1099,7 +1099,7 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 	{
 #ifndef NDEBUG
-		ASSERTF(frame->cf_prev == CODE_FRAME_NOT_EXECUTING,
+		ASSERTF(frame->cf_prev == Dee_CODE_FRAME_NOT_EXECUTING,
 		        "Frame is already being executed");
 #endif /* !NDEBUG */
 		ASSERT(this_thread->t_exec != frame);
@@ -1160,7 +1160,7 @@ inc_execsz_start:
 #ifdef EXEC_SAFE
 #define ASSERT_TUPLE(ob)     do{ if unlikely(!DeeTuple_CheckExact(ob)) { EXCEPTION_CLEANUP goto err_requires_tuple;} }__WHILE0
 #define ASSERT_STRING(ob)    do{ if unlikely(!DeeString_CheckExact(ob)) { EXCEPTION_CLEANUP goto err_requires_string;} }__WHILE0
-#define ASSERT_THISCALL()    do{ if unlikely(!(code->co_flags & CODE_FTHISCALL)) { EXCEPTION_CLEANUP goto err_requires_thiscall_code; } }__WHILE0
+#define ASSERT_THISCALL()    do{ if unlikely(!(code->co_flags & Dee_CODE_FTHISCALL)) { EXCEPTION_CLEANUP goto err_requires_thiscall_code; } }__WHILE0
 #define ASSERT_ARGimm()      do{ if unlikely(imm_val >= code->co_argc_max) { EXCEPTION_CLEANUP goto err_invalid_argument_index; } }__WHILE0
 #define ASSERT_REFimm()      do{ if unlikely(imm_val >= code->co_refc) { EXCEPTION_CLEANUP goto err_invalid_ref; } }__WHILE0
 #define ASSERT_EXTERNimm()   do{ if unlikely(imm_val >= code->co_module->mo_importc || imm_val2 >= code->co_module->mo_importv[imm_val]->mo_globalc) { EXCEPTION_CLEANUP goto err_invalid_extern; } }__WHILE0
@@ -1169,7 +1169,7 @@ inc_execsz_start:
 #define ASSERT_STATICimm()   do{ if unlikely(imm_val >= code->co_refstaticc || imm_val < code->co_refc) { EXCEPTION_CLEANUP goto err_invalid_static; } }__WHILE0
 #define ASSERT_CONSTimm()    do{ if unlikely(imm_val >= code->co_constc) { EXCEPTION_CLEANUP goto err_invalid_const; } }__WHILE0
 #define ASSERT_CONSTimm2()   do{ if unlikely(imm_val2 >= code->co_constc) { EXCEPTION_CLEANUP imm_val2 = imm_val; goto err_invalid_const; } }__WHILE0
-#define ASSERT_YIELDING()    do{ if unlikely(!(code->co_flags & CODE_FYIELDING)) { EXCEPTION_CLEANUP goto err_requires_yield_code; } }__WHILE0
+#define ASSERT_YIELDING()    do{ if unlikely(!(code->co_flags & Dee_CODE_FYIELDING)) { EXCEPTION_CLEANUP goto err_requires_yield_code; } }__WHILE0
 #define STACKFREE            ((frame->cf_stack+(frame->cf_stacksz ? frame->cf_stacksz : STACKPREALLOC))-sp)
 #define STACKSIZE            (frame->cf_stacksz ? frame->cf_stacksz : STACKPREALLOC)
 #define ASSERT_USAGE(sp_sub, sp_add)                                                 \
@@ -1184,7 +1184,7 @@ inc_execsz_start:
 #else /* EXEC_SAFE */
 #define ASSERT_TUPLE(ob)     ASSERT_OBJECT_TYPE_EXACT(ob, &DeeTuple_Type)
 #define ASSERT_STRING(ob)    ASSERT_OBJECT_TYPE_EXACT(ob, &DeeString_Type)
-#define ASSERT_THISCALL()    ASSERT(code->co_flags & CODE_FTHISCALL)
+#define ASSERT_THISCALL()    ASSERT(code->co_flags & Dee_CODE_FTHISCALL)
 #define ASSERT_ARGimm()      ASSERT(imm_val < code->co_argc_max)
 #define ASSERT_REFimm()      ASSERT(imm_val < code->co_refc)
 #define ASSERT_EXTERNimm()   ASSERT(imm_val < code->co_module->mo_importc && imm_val2 < code->co_module->mo_importv[imm_val]->mo_globalc)
@@ -1193,7 +1193,7 @@ inc_execsz_start:
 #define ASSERT_STATICimm()   (ASSERT(imm_val < code->co_refstaticc), ASSERT(imm_val >= code->co_refc))
 #define ASSERT_CONSTimm()    ASSERT(imm_val < code->co_constc)
 #define ASSERT_CONSTimm2()   ASSERT(imm_val2 < code->co_constc)
-#define ASSERT_YIELDING()    ASSERT(code->co_flags & CODE_FYIELDING)
+#define ASSERT_YIELDING()    ASSERT(code->co_flags & Dee_CODE_FYIELDING)
 #define STACKFREE            ((frame->cf_stack+STACKPREALLOC)-sp)
 #define STACKSIZE            (STACKPREALLOC)
 #define ASSERT_USAGE(sp_sub, sp_add)               \
@@ -1210,8 +1210,8 @@ inc_execsz_start:
 #define REPEAT_INSTRUCTION() (ip.ptr = frame->cf_ip)
 #define HANDLE_EXCEPT()      goto handle_except
 #define DISPATCH()           goto next_instr
-#define YIELD_RESULT()       do{ ASSERT(code->co_flags & CODE_FYIELDING); goto end_without_finally; }__WHILE0
-#define RETURN_RESULT()      do{ ASSERT(!(code->co_flags & CODE_FYIELDING)); goto end_return; }__WHILE0
+#define YIELD_RESULT()       do{ ASSERT(code->co_flags & Dee_CODE_FYIELDING); goto end_without_finally; }__WHILE0
+#define RETURN_RESULT()      do{ ASSERT(!(code->co_flags & Dee_CODE_FYIELDING)); goto end_return; }__WHILE0
 #define YIELD(val)           do{ frame->cf_result = (val); YIELD_RESULT(); }__WHILE0
 #define RETURN(val)          do{ frame->cf_result = (val); RETURN_RESULT(); }__WHILE0
 #ifndef __OPTIMIZE_SIZE__
@@ -1235,15 +1235,15 @@ inc_execsz_start:
 next_instr:
 #if 0
 	if (_Dee_dprint_enabled) {
-		struct ddi_state state;
+		struct Dee_ddi_state state;
 		code_addr_t ip_addr = (code_addr_t)(ip.ptr - code->co_code);
-		if (!DeeCode_FindDDI(Dee_AsObject(code), &state, NULL, ip_addr, DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
+		if (!DeeCode_FindDDI(Dee_AsObject(code), &state, NULL, ip_addr, Dee_DDI_STATE_FNOTHROW | Dee_DDI_STATE_FNONAMES)) {
 			Dee_DPRINTF("%s+%.4I32X [trace]\n", DeeCode_NAME(code), ip_addr);
 		} else {
-			struct ddi_xregs *iter;
+			struct Dee_ddi_xregs *iter;
 			char const *path, *file, *name;
 			char const *base_name = DeeCode_NAME(code);
-			DDI_STATE_DO(iter, &state) {
+			Dee_DDI_STATE_DO(iter, &state) {
 				file = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_file);
 				name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_name);
 				if (!state.rs_regs.dr_path--) {
@@ -1258,7 +1258,7 @@ next_instr:
 				            iter->dx_base.dr_lno + 1,
 				            iter->dx_base.dr_col + 1,
 				            name ? name
-				                 : (code->co_flags & CODE_FCONSTRUCTOR
+				                 : (code->co_flags & Dee_CODE_FCONSTRUCTOR
 				                    ? "<anonymous_ctor>"
 				                    : "<anonymous>"),
 				            ip_addr);
@@ -1268,7 +1268,7 @@ next_instr:
 				}
 				Dee_DPRINTF(" [sp=%" PRFu16 "]\n", (uint16_t)STACKUSED);
 			}
-			DDI_STATE_WHILE(iter, &state);
+			Dee_DDI_STATE_WHILE(iter, &state);
 			Dee_ddi_state_fini(&state);
 		}
 	}
@@ -1306,7 +1306,7 @@ next_instr:
 		TARGET(ASM_RET_NONE, -0, +0) {
 			if (ITER_ISOK(frame->cf_result))
 				Dee_Decref(frame->cf_result);
-			if (code->co_flags & CODE_FYIELDING) {
+			if (code->co_flags & Dee_CODE_FYIELDING) {
 				/* Rewind the instruction pointer to potentially re-execute
 				 * `ASM_RET_NONE' and return `ITER_DONE' once again, should
 				 * the caller attempt to invoke us again. */
@@ -1325,7 +1325,7 @@ next_instr:
 			if (ITER_ISOK(frame->cf_result))
 				Dee_Decref(frame->cf_result);
 			frame->cf_result = POP();
-			if (code->co_flags & CODE_FYIELDING)
+			if (code->co_flags & Dee_CODE_FYIELDING)
 				goto end_without_finally;
 			goto end_return;
 		}
@@ -1893,10 +1893,10 @@ do_push_arg:
 
 		TARGET(ASM_PUSH_VARARGS, -0, +1) {
 #ifdef EXEC_SAFE
-			if (!(code->co_flags & CODE_FVARARGS))
+			if (!(code->co_flags & Dee_CODE_FVARARGS))
 				goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-			ASSERT(code->co_flags & CODE_FVARARGS);
+			ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 			if (!frame->cf_vargs) {
 				if (frame->cf_argc <= code->co_argc_max) {
@@ -1915,10 +1915,10 @@ do_push_arg:
 		TARGET(ASM_PUSH_VARKWDS, -0, +1) {
 			DeeObject *varkwds;
 #ifdef EXEC_SAFE
-			if (!(code->co_flags & CODE_FVARKWDS))
+			if (!(code->co_flags & Dee_CODE_FVARKWDS))
 				goto err_requires_varkwds_code;
 #else /* EXEC_SAFE */
-			ASSERT(code->co_flags & CODE_FVARKWDS);
+			ASSERT(code->co_flags & Dee_CODE_FVARKWDS);
 #endif /* !EXEC_SAFE */
 			if (frame->cf_kw) {
 				varkwds = frame->cf_kw->fk_varkwds;
@@ -2256,7 +2256,7 @@ do_push_module:
 			case ASM_PRINT_NL: {
 				DREF DeeObject *stream;
 				int error;
-				stream = DeeFile_GetStd(DEE_STDOUT);
+				stream = DeeFile_GetStd(Dee_STDOUT);
 				if unlikely(!stream)
 					HANDLE_EXCEPT();
 				switch (*ip.u8++) {
@@ -2742,7 +2742,7 @@ do_function_c:
 		TARGET(ASM_PRINT, -1, +0) {
 			DREF DeeObject *stream;
 			int error;
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintObject(stream, TOP);
@@ -2756,7 +2756,7 @@ do_function_c:
 		TARGET(ASM_PRINT_SP, -1, +0) {
 			DREF DeeObject *stream;
 			int error;
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintObjectSp(stream, TOP);
@@ -2770,7 +2770,7 @@ do_function_c:
 		TARGET(ASM_PRINT_NL, -1, +0) {
 			DREF DeeObject *stream;
 			int error;
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintObjectNl(stream, TOP);
@@ -2784,7 +2784,7 @@ do_function_c:
 		TARGET(ASM_PRINTALL, -1, +0) {
 			DREF DeeObject *stream;
 			int error;
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintAll(stream, TOP);
@@ -2798,7 +2798,7 @@ do_function_c:
 		TARGET(ASM_PRINTALL_SP, -1, +0) {
 			DREF DeeObject *stream;
 			int error;
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintAllSp(stream, TOP);
@@ -2812,7 +2812,7 @@ do_function_c:
 		TARGET(ASM_PRINTALL_NL, -1, +0) {
 			DREF DeeObject *stream;
 			int error;
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintAllNl(stream, TOP);
@@ -2826,7 +2826,7 @@ do_function_c:
 		TARGET(ASM_PRINTNL, -0, +0) {
 			DREF DeeObject *stream;
 			int error;
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintNl(stream);
@@ -2890,7 +2890,7 @@ do_function_c:
 			imm_val = READ_imm8();
 do_print_c:
 			ASSERT_CONSTimm();
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintObject(stream, CONSTimm);
@@ -2906,7 +2906,7 @@ do_print_c:
 			imm_val = READ_imm8();
 do_print_c_sp:
 			ASSERT_CONSTimm();
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintObjectSp(stream, CONSTimm);
@@ -2922,7 +2922,7 @@ do_print_c_sp:
 			imm_val = READ_imm8();
 do_print_c_nl:
 			ASSERT_CONSTimm();
-			stream = DeeFile_GetStd(DEE_STDOUT);
+			stream = DeeFile_GetStd(Dee_STDOUT);
 			if unlikely(!stream)
 				HANDLE_EXCEPT();
 			error = DeeFile_PrintObjectNl(stream, CONSTimm);
@@ -3364,15 +3364,15 @@ do_setitem_c:
 			/* Check if we're supposed to handle an exception now. */
 			switch (error) {
 
-			case TRIGGER_BREAKPOINT_EXCEPT_EXIT:
+			case Dee_TRIGGER_BREAKPOINT_EXCEPT_EXIT:
 				if (ITER_ISOK(frame->cf_result))
 					Dee_Decref(frame->cf_result);
 				frame->cf_result = NULL;
 				goto end_without_finally;
 
-			case TRIGGER_BREAKPOINT_EXIT:
-			case TRIGGER_BREAKPOINT_EXIT_NOFIN:
-				if (code->co_flags & CODE_FYIELDING) {
+			case Dee_TRIGGER_BREAKPOINT_EXIT:
+			case Dee_TRIGGER_BREAKPOINT_EXIT_NOFIN:
+				if (code->co_flags & Dee_CODE_FYIELDING) {
 					if (ITER_ISOK(frame->cf_result))
 						Dee_Decref(frame->cf_result);
 					frame->cf_result = ITER_DONE;
@@ -3382,12 +3382,12 @@ do_setitem_c:
 					if (!frame->cf_result)
 						frame->cf_result = DeeNone_NewRef();
 				}
-				if (error == TRIGGER_BREAKPOINT_EXIT_NOFIN)
+				if (error == Dee_TRIGGER_BREAKPOINT_EXIT_NOFIN)
 					goto end_without_finally;
 				goto end_return;
 
-			case TRIGGER_BREAKPOINT_RETURN:
-				if (code->co_flags & CODE_FYIELDING) {
+			case Dee_TRIGGER_BREAKPOINT_RETURN:
+				if (code->co_flags & Dee_CODE_FYIELDING) {
 					if (frame->cf_result == NULL)
 						frame->cf_result = ITER_DONE;
 					goto end_without_finally;
@@ -3397,7 +3397,7 @@ do_setitem_c:
 				goto end_return;
 
 #ifdef EXEC_FAST
-			case TRIGGER_BREAKPOINT_CONTSAFE:
+			case Dee_TRIGGER_BREAKPOINT_CONTSAFE:
 				/* Unhook frame from the thread-local execution stack.
 				 *  - As we're about to re-enter the same frame, we've got no
 				 *    way of skipping the frame setup, meaning that this switch
@@ -3405,10 +3405,10 @@ do_setitem_c:
 				 * >> But that should be ok... */
 				ASSERT(this_thread->t_execsz != 0);
 				ASSERT(this_thread->t_exec == frame);
-				ASSERT(frame->cf_prev != CODE_FRAME_NOT_EXECUTING);
+				ASSERT(frame->cf_prev != Dee_CODE_FRAME_NOT_EXECUTING);
 				--this_thread->t_execsz;
 				this_thread->t_exec = frame->cf_prev;
-				frame->cf_prev      = CODE_FRAME_NOT_EXECUTING;
+				frame->cf_prev      = Dee_CODE_FRAME_NOT_EXECUTING;
 
 				/* Indicate that the stack hasn't been allocated dynamically. */
 				frame->cf_stacksz = 0;
@@ -4105,29 +4105,29 @@ do_setattr_this_c:
 				TARGET(ASM_ENDCATCH_N, -0, +0) {
 					uint8_t nth_except = READ_imm8();
 					if (this_thread->t_exceptsz > except_recursion + nth_except + 1) {
-						struct except_frame **p_except_frame, *except_frame;
+						struct Dee_except_frame **p_except_frame, *Dee_except_frame;
 
 						/* We're allowed to handle the `nth_except' exception. */
 						p_except_frame = &this_thread->t_except;
 						do {
-							except_frame = *p_except_frame;
-							ASSERT(except_frame != NULL);
-							p_except_frame = &except_frame->ef_prev;
+							Dee_except_frame = *p_except_frame;
+							ASSERT(Dee_except_frame != NULL);
+							p_except_frame = &Dee_except_frame->ef_prev;
 						} while (nth_except--);
 
-						/* Load the except_frame that we're supposed to get rid of. */
-						except_frame = *p_except_frame;
-						ASSERT(except_frame != NULL);
+						/* Load the Dee_except_frame that we're supposed to get rid of. */
+						Dee_except_frame = *p_except_frame;
+						ASSERT(Dee_except_frame != NULL);
 
 						/* Remove the exception frame from its chain. */
-						*p_except_frame = except_frame->ef_prev;
+						*p_except_frame = Dee_except_frame->ef_prev;
 						--this_thread->t_exceptsz;
 
-						/* Destroy the except_frame in question. */
-						if (ITER_ISOK(except_frame->ef_trace))
-							Dee_Decref(except_frame->ef_trace);
-						Dee_Decref(except_frame->ef_error);
-						except_frame_free(except_frame);
+						/* Destroy the Dee_except_frame in question. */
+						if (ITER_ISOK(Dee_except_frame->ef_trace))
+							Dee_Decref(Dee_except_frame->ef_trace);
+						Dee_Decref(Dee_except_frame->ef_error);
+						Dee_except_frame_free(Dee_except_frame);
 					}
 					DISPATCH();
 				}
@@ -5305,10 +5305,10 @@ do_pack_dict:
 				RAW_TARGET(ASM_VARARGS_UNPACK) {
 					size_t va_size;
 #ifdef EXEC_SAFE
-					if unlikely(!(code->co_flags & CODE_FVARARGS))
+					if unlikely(!(code->co_flags & Dee_CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
+					ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					imm_val = READ_imm8();
 					ASSERT_USAGE(-0, +imm_val);
@@ -5327,10 +5327,10 @@ do_pack_dict:
 				TARGET(ASM_PUSH_VARKWDS_NE, -0, +1) {
 					DeeObject *value = Dee_False;
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARKWDS))
+					if (!(code->co_flags & Dee_CODE_FVARKWDS))
 						goto err_requires_varkwds_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARKWDS);
+					ASSERT(code->co_flags & Dee_CODE_FVARKWDS);
 #endif /*  !EXEC_SAFE */
 					if (frame->cf_kw) {
 						int temp;
@@ -5364,10 +5364,10 @@ do_pack_dict:
 				TARGET(ASM_VARARGS_GETSIZE, -0, +1) {
 					DREF DeeObject *varsize;
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARARGS))
+					if (!(code->co_flags & Dee_CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
+					ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					if (frame->cf_argc <= code->co_argc_max) {
 						varsize = DeeInt_NewZero();
@@ -5383,10 +5383,10 @@ do_pack_dict:
 				TARGET(ASM_VARARGS_CMP_EQ_SZ, -0, +1) {
 					size_t va_size;
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARARGS))
+					if (!(code->co_flags & Dee_CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
+					ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					if (frame->cf_argc <= code->co_argc_max) {
 						va_size = 0;
@@ -5400,10 +5400,10 @@ do_pack_dict:
 				TARGET(ASM_VARARGS_CMP_GR_SZ, -0, +1) {
 					size_t va_size;
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARARGS))
+					if (!(code->co_flags & Dee_CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
+					ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					if (frame->cf_argc <= code->co_argc_max) {
 						va_size = 0;
@@ -5418,10 +5418,10 @@ do_pack_dict:
 				TARGET(ASM_VARARGS_GETITEM, -1, +1) {
 					size_t index;
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARARGS))
+					if (!(code->co_flags & Dee_CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
+					ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					if (DeeObject_AsSize(TOP, &index))
 						HANDLE_EXCEPT();
@@ -5442,10 +5442,10 @@ do_pack_dict:
 					DeeObject *argobj;
 					index = READ_imm8();
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARARGS))
+					if (!(code->co_flags & Dee_CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
+					ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					index += code->co_argc_max;
 					if (index >= frame->cf_argc) {
@@ -6402,10 +6402,10 @@ do_prefix_push_arg:
 				PREFIX_RAW_TARGET(ASM_PUSH_VARARGS) {
 					/* Special case: Varargs. */
 #ifdef EXEC_SAFE
-					if unlikely(!(code->co_flags & CODE_FVARARGS))
+					if unlikely(!(code->co_flags & Dee_CODE_FVARARGS))
 						goto err_requires_varargs_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
+					ASSERT(code->co_flags & Dee_CODE_FVARARGS);
 #endif /* !EXEC_SAFE */
 					if (!frame->cf_vargs) {
 						if (frame->cf_argc <= code->co_argc_max) {
@@ -6427,10 +6427,10 @@ do_prefix_push_arg:
 					DREF DeeObject *varkwds;
 					/* Special case: Varargs. */
 #ifdef EXEC_SAFE
-					if unlikely(!(code->co_flags & CODE_FVARKWDS))
+					if unlikely(!(code->co_flags & Dee_CODE_FVARKWDS))
 						goto err_requires_varkwds_code;
 #else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARKWDS);
+					ASSERT(code->co_flags & Dee_CODE_FVARKWDS);
 #endif /* !EXEC_SAFE */
 					if (frame->cf_kw) {
 						varkwds = frame->cf_kw->fk_varkwds;
@@ -6593,7 +6593,7 @@ do_prefix_push_local:
 					if (ITER_ISOK(frame->cf_result))
 						Dee_Decref(frame->cf_result);
 					frame->cf_result = value;
-					if (code->co_flags & CODE_FYIELDING)
+					if (code->co_flags & Dee_CODE_FYIELDING)
 						goto end_without_finally;
 					goto end_return;
 				}
@@ -7231,16 +7231,16 @@ unknown_instruction:
 	__builtin_unreachable();
 
 	{
-		struct except_handler *current_except;
+		struct Dee_except_handler *current_except;
 end_return:
-		if (code->co_flags & CODE_FFINALLY) {
+		if (code->co_flags & Dee_CODE_FFINALLY) {
 			code_addr_t ip_addr = (code_addr_t)(frame->cf_ip - code->co_code);
 			ASSERT(code->co_exceptc != 0);
 			/* Execute finally handlers. */
 			current_except = code->co_exceptv + code->co_exceptc;
 			while (current_except > code->co_exceptv) {
 				--current_except;
-				if (current_except->eh_flags & EXCEPTION_HANDLER_FFINALLY &&
+				if (current_except->eh_flags & Dee_EXCEPTION_HANDLER_FFINALLY &&
 				    ip_addr >= current_except->eh_start &&
 				    ip_addr < current_except->eh_end) {
 					/* Found a handler that must be executed. */
@@ -7257,10 +7257,10 @@ end_without_finally:
 		/* Unhook frame from the thread-local execution stack. */
 		ASSERT(this_thread->t_execsz != 0);
 		ASSERT(this_thread->t_exec == frame);
-		ASSERT(frame->cf_prev != CODE_FRAME_NOT_EXECUTING);
+		ASSERT(frame->cf_prev != Dee_CODE_FRAME_NOT_EXECUTING);
 		--this_thread->t_execsz;
 		this_thread->t_exec = frame->cf_prev;
-		frame->cf_prev      = CODE_FRAME_NOT_EXECUTING;
+		frame->cf_prev      = Dee_CODE_FRAME_NOT_EXECUTING;
 #ifdef EXEC_FAST
 end_nounhook:
 #endif /* EXEC_FAST */
@@ -7331,7 +7331,7 @@ handle_except:
 					continue;
 				/* Special case: interrupt objects can only be caught by interrupt-handlers. */
 				if (DeeObject_IsInterrupt(current_exception) &&
-				    !(current_except->eh_flags & EXCEPTION_HANDLER_FINTERPT))
+				    !(current_except->eh_flags & Dee_EXCEPTION_HANDLER_FINTERPT))
 					continue;
 				/* Check the exception mask. */
 				if (current_except->eh_mask) {
@@ -7353,7 +7353,7 @@ handle_except:
 exec_except_maybe_handle:
 		/* If the exception handler requests it,
 		 * already handle the error beforehand. */
-		if (current_except->eh_flags & EXCEPTION_HANDLER_FHANDLED)
+		if (current_except->eh_flags & Dee_EXCEPTION_HANDLER_FHANDLED)
 			DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 exec_except:
 		ASSERTF(current_except->eh_addr < current_except->eh_start ||
@@ -7362,7 +7362,7 @@ exec_except:
 		        "Such constructs would lead to infinite recursion.");
 		frame->cf_sp = sp;
 		{
-			struct except_frame *iter;
+			struct Dee_except_frame *iter;
 			/* Use this point to extend upon tracebacks!
 			 * Considering the lazy updating of code-frame PC/SP, any code
 			 * that causes an exception can no longer rely upon the validity
@@ -7425,7 +7425,7 @@ exec_except:
 increase_stacksize:
 	ip.ptr = frame->cf_ip;
 	/* If lenient mode isn't enabled, then we can't dynamically grow the stack. */
-	if (!(code->co_flags & CODE_FLENIENT))
+	if (!(code->co_flags & Dee_CODE_FLENIENT))
 		goto stack_fault;
 	{
 		DeeObject **new_stack;

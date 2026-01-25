@@ -52,7 +52,7 @@ typedef DeeInstanceMethodObject InstanceMethod;
  * `im_func', using `this_arg' as the this-argument when called normally.
  *
  * In user-code, it is used to implement the temporary/split type when an
- * instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
+ * instance attribute with the `Dee_CLASS_ATTRIBUTE_FMETHOD' flag is loaded
  * as an object, rather than being called directly. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func,
@@ -166,18 +166,18 @@ im_call_tuple_kw(InstanceMethod *self,  DeeObject *args, DeeObject *kw) {
 }
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
-PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct Dee_class_attribute *DCALL
 instancemethod_getattr(InstanceMethod *__restrict self,
                        uint16_t *p_getset_index,
                        DeeTypeObject **p_decl_type) {
-	struct class_attribute *result;
+	struct Dee_class_attribute *result;
 	DeeTypeObject *tp_iter;
 	DeeTypeMRO mro;
 	tp_iter = Dee_TYPE(self->im_this);
 	DeeTypeMRO_Init(&mro, tp_iter);
 	do {
 		DeeClassDescriptorObject *desc;
-		struct class_desc *my_class;
+		struct Dee_class_desc *my_class;
 		uint16_t addr;
 		size_t i;
 		if (!DeeType_IsClass(tp_iter))
@@ -196,11 +196,11 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 					continue;
 				if (addr < result->ca_addr)
 					continue;
-				if ((result->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FMETHOD)) !=
-				    (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FMETHOD))
+				if ((result->ca_flag & (Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FMETHOD)) !=
+				    (Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FMETHOD))
 					continue;
-				if (result->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					if (addr >= result->ca_addr + CLASS_GETSET_COUNT)
+				if (result->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+					if (addr >= result->ca_addr + Dee_CLASS_GETSET_COUNT)
 						continue;
 					if (p_getset_index)
 						*p_getset_index = (uint16_t)(addr - result->ca_addr);
@@ -223,7 +223,7 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_name(InstanceMethod *__restrict self) {
-	struct class_attribute *attr;
+	struct Dee_class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
 	if (attr)
 		return_reference_(Dee_AsObject(attr->ca_name));
@@ -232,7 +232,7 @@ instancemethod_get_name(InstanceMethod *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 instancemethod_bound_name(InstanceMethod *__restrict self) {
-	struct class_attribute *attr;
+	struct Dee_class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
 	if (attr)
 		return Dee_BOUND_YES;
@@ -241,7 +241,7 @@ instancemethod_bound_name(InstanceMethod *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_doc(InstanceMethod *__restrict self) {
-	struct class_attribute *attr;
+	struct Dee_class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
 	if (!attr)
 		goto return_attr;
@@ -282,7 +282,7 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 instancemethod_bound_type(InstanceMethod *__restrict self) {
-	struct class_attribute *attr;
+	struct Dee_class_attribute *attr;
 	DeeTypeObject *result;
 	attr = instancemethod_getattr(self, NULL, &result);
 	return Dee_BOUND_FROMBOOL(attr);

@@ -49,7 +49,7 @@ JITLexer_SkipTemplateString(JITLexer *__restrict self)
 	unsigned char quote;
 	unsigned char const *text_iter;
 	IF_EVAL(unsigned char const *flush_start);
-	IF_EVAL(struct unicode_printer printer = UNICODE_PRINTER_INIT);
+	IF_EVAL(struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT);
 parse_current_token_as_template_string:
 	ASSERT(self->jl_tok == JIT_KEYWORD);
 	ASSERT(self->jl_tokstart[0] == 'f' || self->jl_tokstart[0] == 'F');
@@ -87,8 +87,8 @@ parse_current_token_as_template_string:
 
 			/* Flush template text until before the '{' */
 #ifdef JIT_EVAL
-			if unlikely(unicode_printer_print(&printer, (char const *)flush_start,
-			                                  (size_t)((text_iter - 1) - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(&printer, (char const *)flush_start,
+			                                      (size_t)((text_iter - 1) - flush_start)) < 0)
 				goto err;
 #endif /* JIT_EVAL */
 
@@ -114,10 +114,10 @@ parse_current_token_as_template_string:
 					unsigned char mode;
 					mode = *++spec;
 					if (mode == 'a' || mode == 's') {
-						if unlikely(unicode_printer_printobject(&printer, expr) < 0)
+						if unlikely(Dee_unicode_printer_printobject(&printer, expr) < 0)
 							goto err_expr;
 					} else if (mode == 'r') {
-						if unlikely(unicode_printer_printobjectrepr(&printer, expr) < 0)
+						if unlikely(Dee_unicode_printer_printobjectrepr(&printer, expr) < 0)
 							goto err_expr;
 					} else {
 						DeeError_Throwf(&DeeError_ValueError,
@@ -137,7 +137,7 @@ err_expr:
 					spec = (unsigned char const *)memchr(spec, '}', (size_t)(self->jl_end - spec));
 					if unlikely(!spec)
 						goto err_expr_unmatched_lbrace;
-					if (DeeObject_PrintFormatString(expr, &unicode_printer_print, &printer,
+					if (DeeObject_PrintFormatString(expr, &Dee_unicode_printer_print, &printer,
 					                                (char const *)args_start,
 					                                (size_t)(spec - args_start)) < 0)
 						goto err_expr;
@@ -164,7 +164,7 @@ err_expr_unmatched_lbrace:
 			} else if (self->jl_tok == '}') {
 #ifdef JIT_EVAL
 				/* Simple case: no format pattern addend, so can simply print as-is */
-				if unlikely(unicode_printer_printobject(&printer, expr) < 0)
+				if unlikely(Dee_unicode_printer_printobject(&printer, expr) < 0)
 					goto err_expr;
 #endif /* JIT_EVAL */
 				DECREF(expr);
@@ -182,8 +182,8 @@ err_expr_unmatched_lbrace:
 			if (*text_iter == '}') {
 				/* Escaped '}' */
 #ifdef JIT_EVAL
-				if unlikely(unicode_printer_print(&printer, (char const *)flush_start,
-				                                  (size_t)(text_iter - flush_start)) < 0)
+				if unlikely(Dee_unicode_printer_print(&printer, (char const *)flush_start,
+				                                      (size_t)(text_iter - flush_start)) < 0)
 					goto err;
 #endif /* JIT_EVAL */
 				++text_iter;
@@ -197,8 +197,8 @@ err_expr_unmatched_lbrace:
 
 		case '\\': {
 #ifdef JIT_EVAL
-			if unlikely(unicode_printer_print(&printer, (char const *)flush_start,
-			                                  (size_t)((text_iter - 1) - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(&printer, (char const *)flush_start,
+			                                      (size_t)((text_iter - 1) - flush_start)) < 0)
 				goto err;
 #endif /* JIT_EVAL */
 
@@ -250,7 +250,7 @@ parse_hex_integer:
 					uint8_t val;
 					unsigned char const *old_iter;
 					old_iter = text_iter;
-					ch32     = unicode_readutf8_n(&text_iter, self->jl_end);
+					ch32     = Dee_unicode_readutf8_n(&text_iter, self->jl_end);
 					if (!DeeUni_AsDigit(ch32, 16, &val)) {
 						text_iter = old_iter;
 						break;
@@ -267,7 +267,7 @@ parse_hex_integer:
 					goto err;
 				}
 #ifdef JIT_EVAL
-				if (unicode_printer_putc(&printer, digit_value))
+				if (Dee_unicode_printer_putc(&printer, digit_value))
 					goto err;
 #endif /* JIT_EVAL */
 				goto after_escaped_putc;
@@ -286,7 +286,7 @@ parse_oct_integer:
 						uint8_t digit;
 						unsigned char const *old_iter;
 						old_iter = text_iter;
-						ch32     = unicode_readutf8_n(&text_iter, self->jl_end);
+						ch32     = Dee_unicode_readutf8_n(&text_iter, self->jl_end);
 						if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 							text_iter = old_iter;
 							break;
@@ -296,19 +296,19 @@ parse_oct_integer:
 						++count;
 					}
 #ifdef JIT_EVAL
-					if (unicode_printer_putc(&printer, digit_value))
+					if (Dee_unicode_printer_putc(&printer, digit_value))
 						goto err;
 #endif /* JIT_EVAL */
 					goto after_escaped_putc;
 				}
 				if ((unsigned char)ch >= 0xc0) {
 					uint32_t ch32;
-					struct unitraits const *desc;
+					struct Dee_unitraits const *desc;
 					uint8_t digit;
 					--text_iter;
-					ch32 = unicode_readutf8_n(&text_iter, self->jl_end);
+					ch32 = Dee_unicode_readutf8_n(&text_iter, self->jl_end);
 					desc = DeeUni_Descriptor(ch32);
-					if (desc->ut_flags & UNICODE_ISLF)
+					if (desc->ut_flags & Dee_UNICODE_ISLF)
 						goto after_escaped_putc; /* Escaped line-feed */
 					if (DeeUniTrait_AsDigit(desc, 8, &digit)) {
 						/* Unicode digit character. */
@@ -325,7 +325,7 @@ parse_oct_integer:
 
 			}
 #ifdef JIT_EVAL
-			if unlikely(unicode_printer_put8(&printer, ch))
+			if unlikely(Dee_unicode_printer_put8(&printer, ch))
 				goto err;
 #endif /* JIT_EVAL */
 after_escaped_putc:
@@ -340,8 +340,8 @@ after_escaped_putc:
 	/* Flush the remainder. */
 done_string:
 #ifdef JIT_EVAL
-	if unlikely(unicode_printer_print(&printer, (char const *)flush_start,
-	                                  (size_t)((text_iter - 1) - flush_start)) < 0)
+	if unlikely(Dee_unicode_printer_print(&printer, (char const *)flush_start,
+	                                      (size_t)((text_iter - 1) - flush_start)) < 0)
 		goto err;
 #endif /* JIT_EVAL */
 
@@ -354,9 +354,9 @@ done_string:
 		goto parse_current_token_as_template_string; /* Join adjacent template strings */
 
 	/* Pack everything together on success. */
-	return IFELSE(unicode_printer_pack(&printer), 0);
+	return IFELSE(Dee_unicode_printer_pack(&printer), 0);
 err:
-	IF_EVAL(unicode_printer_fini(&printer));
+	IF_EVAL(Dee_unicode_printer_fini(&printer));
 	return ERROR;
 }
 

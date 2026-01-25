@@ -86,20 +86,20 @@ INTDEF DeeTypeObject ReBytesSplitIterator_Type;
 	       (result)->rx_pmatch   = (pmatch))
 
 
-#define _DEE_REGEX_COMPILE_MASK \
-	(DEE_REGEX_COMPILE_NORMAL | DEE_REGEX_COMPILE_ICASE | DEE_REGEX_COMPILE_NOUTF8)
-STATIC_ASSERT_MSG(_DEE_REGEX_COMPILE_MASK <= 0xf,
+#define _Dee_RE_COMPILE_MASK \
+	(Dee_RE_COMPILE_NORMAL | Dee_RE_COMPILE_ICASE | Dee_RE_COMPILE_NOUTF8)
+STATIC_ASSERT_MSG(_Dee_RE_COMPILE_MASK <= 0xf,
                   "Keep this low, since no valid pointer must overlap with this range");
 
 /* Return the `struct DeeRegexCode *' of `self'
  * @return: * :   The regex code of `self'
  * @return: NULL: An error was thrown */
 #define DeeRegexBaseExec_GetCode(self) \
-	(likely((uintptr_t)(self)->rx_code > _DEE_REGEX_COMPILE_MASK) ? (self)->rx_code : _DeeRegexBaseExec_LoadCode(self))
+	(likely((uintptr_t)(self)->rx_code > _Dee_RE_COMPILE_MASK) ? (self)->rx_code : _DeeRegexBaseExec_LoadCode(self))
 PRIVATE ATTR_COLD ATTR_NOINLINE WUNUSED NONNULL((1)) struct DeeRegexCode const *DCALL
 _DeeRegexBaseExec_LoadCode(struct DeeRegexBaseExec *__restrict self) {
 	struct DeeRegexCode const *result = atomic_read(&self->rx_code);
-	if unlikely((uintptr_t)result > _DEE_REGEX_COMPILE_MASK)
+	if unlikely((uintptr_t)result > _Dee_RE_COMPILE_MASK)
 		return result; /* Already loaded */
 	/* Lazily re-load after serialization */
 	result = DeeString_GetRegex((DeeObject *)self->rx_pattern,
@@ -175,7 +175,7 @@ STATIC_ASSERT(offsetof(ReSequence, rs_exec) == offsetof(ReSequenceIterator, rsi_
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_ctor(ReSequenceIterator *__restrict self) {
 	bzero(&self->rsi_exec, sizeof(self->rsi_exec));
-	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
+	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, Dee_RE_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rsi_exec.rx_code)
 		return -1;
 	self->rsi_data = Dee_EmptyString;
@@ -188,7 +188,7 @@ refaiter_ctor(ReSequenceIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rebfaiter_ctor(ReSequenceIterator *__restrict self) {
 	bzero(&self->rsi_exec, sizeof(self->rsi_exec));
-	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
+	self->rsi_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, Dee_RE_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rsi_exec.rx_code)
 		return -1;
 	self->rsi_data = DeeBytes_NewEmpty();
@@ -230,7 +230,7 @@ DeeRegexBaseExec_Serialize(struct DeeRegexBaseExec *__restrict self,
 	struct DeeRegexBaseExec *out;
 	if (DeeSerial_PutObject(writer, ADDROF(rx_pattern), self->rx_pattern))
 		goto err;
-	if ((uintptr_t)self->rx_code <= _DEE_REGEX_COMPILE_MASK) {
+	if ((uintptr_t)self->rx_code <= _Dee_RE_COMPILE_MASK) {
 		compile_flags = (unsigned int)(uintptr_t)self->rx_code;
 	} else {
 		compile_flags = DeeString_GetRegexFlags((DeeObject *)self->rx_pattern, self->rx_code);
@@ -348,9 +348,9 @@ refaiter_bool(ReSequenceIterator *__restrict self) {
 	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	return result != DEE_RE_STATUS_NOMATCH &&
+	return result != Dee_RE_STATUS_NOMATCH &&
 	       match_size != 0; /* Prevent infinite loop on epsilon-match */
 err:
 	return -1;
@@ -370,9 +370,9 @@ again:
 	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		return 1;
 	if (match_size == 0)
 		return 1; /* Prevent infinite loop on epsilon-match */
@@ -420,9 +420,9 @@ again:
 	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		return 1;
 	if (match_size == 0)
 		return 1; /* Prevent infinite loop on epsilon-match */
@@ -521,8 +521,8 @@ PRIVATE struct type_member tpconst refaiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequenceIterator, rsi_exec.rx_pattern), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_startoff)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequenceIterator, rsi_exec.rx_endoff)),
-	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, DEE_RE_EXEC_NOTBOL),
-	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, DEE_RE_EXEC_NOTEOL),
+	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, Dee_RE_EXEC_NOTBOL),
+	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequenceIterator, rsi_exec.rx_eflags, Dee_RE_EXEC_NOTEOL),
 	TYPE_MEMBER_END
 };
 
@@ -673,9 +673,9 @@ again:
 	                      code->rc_ngrps, groups->rg_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		goto return_ITER_DONE;
 	if (match_size == 0)
 		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
@@ -723,9 +723,9 @@ again:
 	                      code->rc_ngrps, groups->rg_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		goto return_ITER_DONE;
 	if (match_size == 0)
 		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
@@ -926,9 +926,9 @@ again:
 	                      code->rc_ngrps, substrings->rss_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		goto return_ITER_DONE;
 	if (match_size == 0)
 		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
@@ -972,9 +972,9 @@ again:
 	                      code->rc_ngrps, subbytes->rss_groups + 1);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		goto return_ITER_DONE;
 	if (match_size == 0)
 		goto return_ITER_DONE; /* Prevent infinite loop on epsilon-match */
@@ -1199,9 +1199,9 @@ again:
 	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		return ITER_DONE;
 	if (match_size == 0)
 		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
@@ -1232,9 +1232,9 @@ again:
 	DeeRegexBaseExec_Load(&self->rsi_exec, code, &exec, 0, NULL);
 	ReSequenceIterator_LockEndRead(self);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		return ITER_DONE;
 	if (match_size == 0)
 		return ITER_DONE; /* Prevent infinite loop on epsilon-match */
@@ -1430,14 +1430,14 @@ again:
 	if (!exec.rx_inbase)
 		return ITER_DONE;
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
 	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
 		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
-	if (result == DEE_RE_STATUS_NOMATCH ||
+	if (result == Dee_RE_STATUS_NOMATCH ||
 	    match_size == 0) { /* Prevent infinite loop on epsilon-match */
 		self->rsi_exec.rx_startoff = (size_t)-1;
 		self->rsi_exec.rx_inbase   = NULL;
@@ -1469,14 +1469,14 @@ again:
 	if (!exec.rx_inbase)
 		return ITER_DONE;
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
 	ReSequenceIterator_LockWrite(self);
 	if unlikely(self->rsi_exec.rx_startoff != exec.rx_startoff) {
 		ReSequenceIterator_LockEndWrite(self);
 		goto again;
 	}
-	if (result == DEE_RE_STATUS_NOMATCH ||
+	if (result == Dee_RE_STATUS_NOMATCH ||
 	    match_size == 0) { /* Prevent infinite loop on epsilon-match */
 		self->rsi_exec.rx_startoff = (size_t)-1;
 		self->rsi_exec.rx_inbase   = NULL;
@@ -1607,7 +1607,7 @@ INTERN DeeTypeObject ReBytesSplitIterator_Type = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_ctor(ReSequence *__restrict self) {
 	bzero(&self->rs_exec, sizeof(self->rs_exec));
-	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
+	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, Dee_RE_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rs_exec.rx_code)
 		return -1;
 	self->rs_data = Dee_EmptyString;
@@ -1626,7 +1626,7 @@ refa_ctor(ReSequence *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rebfa_ctor(ReSequence *__restrict self) {
 	bzero(&self->rs_exec, sizeof(self->rs_exec));
-	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, DEE_REGEX_COMPILE_NORMAL, NULL);
+	self->rs_exec.rx_code = DeeString_GetRegex(Dee_EmptyString, Dee_RE_COMPILE_NORMAL, NULL);
 	if unlikely(!self->rs_exec.rx_code)
 		return -1;
 	self->rs_data = DeeBytes_NewEmpty();
@@ -1653,9 +1653,9 @@ refa_bool(ReSequence *__restrict self) {
 		goto err;
 	DeeRegexBaseExec_Load(&self->rs_exec, code, &exec, 0, NULL);
 	result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	return result != DEE_RE_STATUS_NOMATCH &&
+	return result != Dee_RE_STATUS_NOMATCH &&
 	       match_size != 0; /* Prevent infinite loop on epsilon-match */
 err:
 	return -1;
@@ -1708,9 +1708,9 @@ refa_size(ReSequence *__restrict self) {
 	/* Count the # of matches */
 	while (exec.rx_startoff < exec.rx_endoff) {
 		result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-		if unlikely(result == DEE_RE_STATUS_ERROR)
+		if unlikely(result == Dee_RE_STATUS_ERROR)
 			goto err;
-		if (result == DEE_RE_STATUS_NOMATCH)
+		if (result == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (match_size == 0)
 			break; /* Prevent infinite loop on epsilon-match */
@@ -1816,8 +1816,8 @@ PRIVATE struct type_member tpconst refa_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__pattern__", STRUCT_OBJECT, offsetof(ReSequence, rs_exec.rx_pattern), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_startoff)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(ReSequence, rs_exec.rx_endoff)),
-	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, DEE_RE_EXEC_NOTBOL),
-	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, DEE_RE_EXEC_NOTEOL),
+	TYPE_MEMBER_BITFIELD("__notbol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, Dee_RE_EXEC_NOTBOL),
+	TYPE_MEMBER_BITFIELD("__noteol__", STRUCT_CONST, ReSequence, rs_exec.rx_eflags, Dee_RE_EXEC_NOTEOL),
 	TYPE_MEMBER_END
 };
 

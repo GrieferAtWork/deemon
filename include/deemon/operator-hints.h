@@ -17,8 +17,24 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeNO_*_t*/
+/*!export Dee_TNO_**/
+/*!export DeeType_GetNativeOperator**/
+/*!export DeeType_Inherit**/
+/*!export -_Dee_TNO_**/
+/* Don't export "default__*" because of "computed-operators.h": if DEFIMPL() references
+ * operators here, then it'd also need to //!always include this header, which it doesn't
+ * when building with "CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS" */
+/*!export -default__**/
+/*!export isdefault__**/
+/*!export isusrtype__**/
+/*!export maketyped__**/
+/*!export tdefault__**/
+/*!export tusrtype__**/
+/*!export usrtype__**/
 #ifndef GUARD_DEEMON_OPERATOR_HINTS_H
-#define GUARD_DEEMON_OPERATOR_HINTS_H 1
+#define GUARD_DEEMON_OPERATOR_HINTS_H 1 /*!export-*/
 
 #include "api.h"
 

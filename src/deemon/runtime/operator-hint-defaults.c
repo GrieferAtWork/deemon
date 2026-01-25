@@ -252,7 +252,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__str__with__PRINT(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINT);
+	func = DeeClass_GetOperator(tp_self, Dee_CLASS_OPERATOR_PRINT);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_writer(self, func);
@@ -265,13 +265,13 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__str__with__print(DeeTypeObject *tp_self, DeeObject *self) {
 	Dee_ssize_t status;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	status = (*(tp_self->tp_cast.tp_print == &usrtype__print__with__STR ? &tusrtype__print__with__STR : tp_self->tp_cast.tp_print == &usrtype__print__with__PRINT ? &tusrtype__print__with__PRINT : &tdefault__print))(tp_self, self, &unicode_printer_print, &printer);
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	status = (*(tp_self->tp_cast.tp_print == &usrtype__print__with__STR ? &tusrtype__print__with__STR : tp_self->tp_cast.tp_print == &usrtype__print__with__PRINT ? &tusrtype__print__with__PRINT : &tdefault__print))(tp_self, self, &Dee_unicode_printer_print, &printer);
 	if unlikely(status < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -303,7 +303,7 @@ usrtype__str__with__PRINT(DeeObject *__restrict self) {
 	return tusrtype__str__with__PRINT(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(Dee_TYPE(self), CLASS_OPERATOR_PRINT);
+	func = DeeClass_GetOperator(Dee_TYPE(self), Dee_CLASS_OPERATOR_PRINT);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_writer(self, func);
@@ -320,13 +320,13 @@ default__str__with__print(DeeObject *__restrict self) {
 	return tdefault__str__with__print(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	Dee_ssize_t status;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	status = (*Dee_TYPE(self)->tp_cast.tp_print)(self, &unicode_printer_print, &printer);
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	status = (*Dee_TYPE(self)->tp_cast.tp_print)(self, &Dee_unicode_printer_print, &printer);
 	if unlikely(status < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
 }
@@ -390,7 +390,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 tusrtype__print__with__PRINT(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result;
-	DREF DeeObject *func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINT);
+	DREF DeeObject *func = DeeClass_GetOperator(tp_self, Dee_CLASS_OPERATOR_PRINT);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_printer(self, func, printer, arg);
@@ -441,7 +441,7 @@ usrtype__print__with__PRINT(DeeObject *__restrict self, Dee_formatprinter_t prin
 	return tusrtype__print__with__PRINT(Dee_TYPE(self), self, printer, arg);
 #else /* __OPTIMIZE_SIZE__ */
 	Dee_ssize_t result;
-	DREF DeeObject *func = DeeClass_GetOperator(Dee_TYPE(self), CLASS_OPERATOR_PRINT);
+	DREF DeeObject *func = DeeClass_GetOperator(Dee_TYPE(self), Dee_CLASS_OPERATOR_PRINT);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_printer(self, func, printer, arg);
@@ -486,7 +486,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tusrtype__repr__with__PRINTREPR(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINTREPR);
+	func = DeeClass_GetOperator(tp_self, Dee_CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_writer(self, func);
@@ -499,13 +499,13 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__repr__with__printrepr(DeeTypeObject *tp_self, DeeObject *self) {
 	Dee_ssize_t status;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	status = (*(tp_self->tp_cast.tp_printrepr == &usrtype__printrepr__with__REPR ? &tusrtype__printrepr__with__REPR : tp_self->tp_cast.tp_printrepr == &usrtype__printrepr__with__PRINTREPR ? &tusrtype__printrepr__with__PRINTREPR : &tdefault__printrepr))(tp_self, self, &unicode_printer_print, &printer);
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	status = (*(tp_self->tp_cast.tp_printrepr == &usrtype__printrepr__with__REPR ? &tusrtype__printrepr__with__REPR : tp_self->tp_cast.tp_printrepr == &usrtype__printrepr__with__PRINTREPR ? &tusrtype__printrepr__with__PRINTREPR : &tdefault__printrepr))(tp_self, self, &Dee_unicode_printer_print, &printer);
 	if unlikely(status < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -537,7 +537,7 @@ usrtype__repr__with__PRINTREPR(DeeObject *__restrict self) {
 	return tusrtype__repr__with__PRINTREPR(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(Dee_TYPE(self), CLASS_OPERATOR_PRINTREPR);
+	func = DeeClass_GetOperator(Dee_TYPE(self), Dee_CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_writer(self, func);
@@ -554,13 +554,13 @@ default__repr__with__printrepr(DeeObject *__restrict self) {
 	return tdefault__repr__with__printrepr(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	Dee_ssize_t status;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	status = (*Dee_TYPE(self)->tp_cast.tp_printrepr)(self, &unicode_printer_print, &printer);
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	status = (*Dee_TYPE(self)->tp_cast.tp_printrepr)(self, &Dee_unicode_printer_print, &printer);
 	if unlikely(status < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* __OPTIMIZE_SIZE__ */
 }
@@ -582,7 +582,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 tusrtype__printrepr__with__PRINTREPR(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t result;
-	DREF DeeObject *func = DeeClass_GetOperator(tp_self, CLASS_OPERATOR_PRINTREPR);
+	DREF DeeObject *func = DeeClass_GetOperator(tp_self, Dee_CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_printer(self, func, printer, arg);
@@ -633,7 +633,7 @@ usrtype__printrepr__with__PRINTREPR(DeeObject *__restrict self, Dee_formatprinte
 	return tusrtype__printrepr__with__PRINTREPR(Dee_TYPE(self), self, printer, arg);
 #else /* __OPTIMIZE_SIZE__ */
 	Dee_ssize_t result;
-	DREF DeeObject *func = DeeClass_GetOperator(Dee_TYPE(self), CLASS_OPERATOR_PRINTREPR);
+	DREF DeeObject *func = DeeClass_GetOperator(Dee_TYPE(self), Dee_CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_printer(self, func, printer, arg);
@@ -2055,9 +2055,9 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL
 tusrtype__hash__with__(DeeTypeObject *tp_self, DeeObject *self) {
 	uint16_t i;
 	DREF DeeObject *member;
-	struct class_desc *desc = DeeClass_DESC(tp_self);
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 		member = instance->id_vtab[i];
@@ -2111,9 +2111,9 @@ usrtype__hash__with__(DeeObject *__restrict self) {
 #else /* __OPTIMIZE_SIZE__ */
 	uint16_t i;
 	DREF DeeObject *member;
-	struct class_desc *desc = DeeClass_DESC(Dee_TYPE(self));
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(Dee_TYPE(self));
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 		member = instance->id_vtab[i];
@@ -2140,8 +2140,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 impl_instance_builtin_compare_eq(DeeTypeObject *tp_self,
                                  DeeObject *self,
                                  DeeObject *other) {
-	struct instance_desc *instance, *other_instance;
-	struct class_desc *desc;
+	struct Dee_instance_desc *instance, *other_instance;
+	struct Dee_class_desc *desc;
 	uint16_t i, size;
 	int temp;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
@@ -2408,8 +2408,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 impl_instance_builtin_compare(DeeTypeObject *tp_self,
                               DeeObject *self,
                               DeeObject *other) {
-	struct instance_desc *instance, *other_instance;
-	struct class_desc *desc;
+	struct Dee_instance_desc *instance, *other_instance;
+	struct Dee_class_desc *desc;
 	uint16_t i, size;
 	int temp;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));

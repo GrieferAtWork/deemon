@@ -98,22 +98,22 @@ DECL_BEGIN
 	Dee_Decref_unlikely(x) /* *_unlikely because it's probably `Dee_None' */
 
 STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by `detectConstantReturnValue()'");
-STATIC_ASSERT_MSG(DEE_HASHOF_EMPTY_SEQUENCE == 0, "Assumed by `detectConstantReturnValue()'");
-STATIC_ASSERT_MSG(DEE_HASHOF_UNBOUND_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
-STATIC_ASSERT_MSG(DEE_HASHOF_RECURSIVE_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
+STATIC_ASSERT_MSG(Dee_HASHOF_EMPTY_SEQUENCE == 0, "Assumed by `detectConstantReturnValue()'");
+STATIC_ASSERT_MSG(Dee_HASHOF_UNBOUND_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
+STATIC_ASSERT_MSG(Dee_HASHOF_RECURSIVE_ITEM == 0, "Assumed by `detectConstantReturnValue()'");
 
 /* Mutable sequence functions */
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_api_vunsupportedf(char const *api, DeeObject *self, char const *method_format, va_list args) {
 	int result;
 	DREF DeeObject *message, *error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(unicode_printer_printf(&printer, "type %k does not support: %s.",
-	                                   DeeObject_Class(self), api) < 0)
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	if unlikely(Dee_unicode_printer_printf(&printer, "type %k does not support: %s.",
+	                                       DeeObject_Class(self), api) < 0)
 		goto err_printer;
-	if unlikely(unicode_printer_vprintf(&printer, method_format, args) < 0)
+	if unlikely(Dee_unicode_printer_vprintf(&printer, method_format, args) < 0)
 		goto err_printer;
-	message = unicode_printer_pack(&printer);
+	message = Dee_unicode_printer_pack(&printer);
 	if unlikely(!message)
 		goto err;
 	error = DeeObject_New(&DeeError_NotImplemented, 1, &message);
@@ -123,7 +123,7 @@ err_api_vunsupportedf(char const *api, DeeObject *self, char const *method_forma
 	result = DeeError_ThrowInherited(error);
 	return result;
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return -1;
 }
@@ -3146,7 +3146,7 @@ default__seq_operator_hash__unsupported(DeeObject *__restrict self) {
 #ifndef DEFINED_default_seq_hash_with_foreach_cb
 #define DEFINED_default_seq_hash_with_foreach_cb
 struct default_seq_hash_with_foreach_data {
-	Dee_hash_t sqhwf_result;   /* Hash result (or DEE_HASHOF_EMPTY_SEQUENCE when sqhwf_nonempty=false) */
+	Dee_hash_t sqhwf_result;   /* Hash result (or Dee_HASHOF_EMPTY_SEQUENCE when sqhwf_nonempty=false) */
 	bool       sqhwf_nonempty; /* True after the first element */
 };
 
@@ -3168,7 +3168,7 @@ default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem) {
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__seq_operator_hash__with__seq_operator_foreach(DeeObject *__restrict self) {
 	struct default_seq_hash_with_foreach_data data;
-	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
+	data.sqhwf_result   = Dee_HASHOF_EMPTY_SEQUENCE;
 	data.sqhwf_nonempty = false;
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &default_seq_hash_with_foreach_cb, &data))
 		goto err;
@@ -3180,7 +3180,7 @@ err:
 #ifndef DEFINED_default_seq_hash_with_foreach_pair_cb
 #define DEFINED_default_seq_hash_with_foreach_pair_cb
 struct default_seq_hash_with_foreach_pair_data {
-	Dee_hash_t sqhwfp_result;   /* Hash result (or DEE_HASHOF_EMPTY_SEQUENCE when sqhwfp_nonempty=false) */
+	Dee_hash_t sqhwfp_result;   /* Hash result (or Dee_HASHOF_EMPTY_SEQUENCE when sqhwfp_nonempty=false) */
 	bool       sqhwfp_nonempty; /* True after the first element */
 };
 
@@ -3202,7 +3202,7 @@ default_seq_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__seq_operator_hash__with__seq_operator_foreach_pair(DeeObject *__restrict self) {
 	struct default_seq_hash_with_foreach_pair_data data;
-	data.sqhwfp_result   = DEE_HASHOF_EMPTY_SEQUENCE;
+	data.sqhwfp_result   = Dee_HASHOF_EMPTY_SEQUENCE;
 	data.sqhwfp_nonempty = false;
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach_pair))(self, &default_seq_hash_with_foreach_pair_cb, &data))
 		goto err;
@@ -3220,11 +3220,11 @@ default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size == 0)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	tp_getitem_index_fast = Dee_TYPE(self)->tp_seq->tp_getitem_index_fast;
 	elem = (*tp_getitem_index_fast)(self, 0);
 	if unlikely(!elem) {
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -3232,7 +3232,7 @@ default__seq_operator_hash__with__seq_operator_size__and__operator_getitem_index
 		Dee_hash_t elem_hash;
 		elem = (*tp_getitem_index_fast)(self, i);
 		if unlikely(!elem) {
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}
@@ -3252,12 +3252,12 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetite
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size == 0)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	elem = (*cached_seq_operator_trygetitem_index)(self, 0);
 	if unlikely(!elem)
 		goto err;
 	if unlikely(elem == ITER_DONE) {
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -3267,7 +3267,7 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_trygetite
 		if unlikely(!elem)
 			goto err;
 		if unlikely(elem == ITER_DONE) {
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}
@@ -3289,12 +3289,12 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_i
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size == 0)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	elem = (*cached_seq_operator_getitem_index)(self, 0);
 	if unlikely(!elem) {
 		if (!DeeError_Catch(&DeeError_UnboundItem))
 			goto err;
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -3304,7 +3304,7 @@ default__seq_operator_hash__with__seq_operator_size__and__seq_operator_getitem_i
 		if unlikely(!elem) {
 			if (!DeeError_Catch(&DeeError_UnboundItem))
 				goto err;
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}
@@ -3335,13 +3335,13 @@ default__seq_operator_hash__with__seq_operator_sizeob__and__seq_operator_getitem
 			goto err_sizeob_indexob;
 		Dee_Decref(indexob);
 		Dee_Decref(sizeob);
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	}
 	elem = (*cached_seq_operator_getitem)(self, indexob);
 	if unlikely(!elem) {
 		if (!DeeError_Catch(&DeeError_UnboundItem))
 			goto err_sizeob_indexob;
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -3359,7 +3359,7 @@ default__seq_operator_hash__with__seq_operator_sizeob__and__seq_operator_getitem
 		if unlikely(!elem) {
 			if (!DeeError_Catch(&DeeError_UnboundItem))
 				goto err_sizeob_indexob;
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}
@@ -15495,7 +15495,7 @@ default_set_hash_with_foreach_cb(void *arg, DeeObject *elem) {
 #endif /* !DEFINED_default_set_hash_with_foreach_cb */
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__set_operator_hash__with__set_operator_foreach(DeeObject *__restrict self) {
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), set_operator_foreach))(self, &default_set_hash_with_foreach_cb, &result))
 		goto err;
 	return result;
@@ -18123,7 +18123,7 @@ default_map_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 #endif /* !DEFINED_default_map_hash_with_foreach_pair_cb */
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 default__map_operator_hash__with__map_operator_foreach_pair(DeeObject *__restrict self) {
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
 	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_map_hash_with_foreach_pair_cb, &result))
 		goto err;
 	return result;

@@ -40,12 +40,12 @@ DECL_BEGIN
 INTDEF DeeCMethodObject libthreading_lockunion_all;
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE struct tls_callback_hooks orig_hooks;
+PRIVATE struct Dee_tls_callback_hooks orig_hooks;
 
 #define PTR_libthreading_init &libthreading_init
 PRIVATE WUNUSED int DCALL libthreading_init(void) {
 	/* Install our custom TLS callback hooks. */
-	memcpy(&orig_hooks, &_DeeThread_TlsCallbacks, sizeof(struct tls_callback_hooks));
+	memcpy(&orig_hooks, &_DeeThread_TlsCallbacks, sizeof(struct Dee_tls_callback_hooks));
 	_DeeThread_TlsCallbacks.tc_fini = (void(DCALL *)(void *__restrict))&thread_tls_fini;
 	return 0;
 }
@@ -53,31 +53,31 @@ PRIVATE WUNUSED int DCALL libthreading_init(void) {
 #define PTR_libthreading_fini &libthreading_fini
 PRIVATE void DCALL libthreading_fini(void) {
 	/* Restore the original TLS callback hooks. */
-	memcpy(&_DeeThread_TlsCallbacks, &orig_hooks, sizeof(struct tls_callback_hooks));
+	memcpy(&_DeeThread_TlsCallbacks, &orig_hooks, sizeof(struct Dee_tls_callback_hooks));
 }
 #endif /* !CONFIG_NO_THREADS */
 
 DEX_BEGIN
 
 /* Normal locks */
-DEX_MEMBER_F_NODOC("Lock", &DeeLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("AtomicLock", &DeeAtomicLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("SharedLock", &DeeSharedLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RAtomicLock", &DeeRAtomicLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RSharedLock", &DeeRSharedLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Lock", &DeeLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("AtomicLock", &DeeAtomicLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("SharedLock", &DeeSharedLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RAtomicLock", &DeeRAtomicLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RSharedLock", &DeeRSharedLock_Type, Dee_DEXSYM_READONLY),
 
 /* Read/write locks */
-DEX_MEMBER_F_NODOC("RWLock", &DeeRWLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RWLockReadLock", &DeeRWLockReadLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RWLockWriteLock", &DeeRWLockWriteLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("AtomicRWLock", &DeeAtomicRWLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("SharedRWLock", &DeeSharedRWLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RAtomicRWLock", &DeeRAtomicRWLock_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RSharedRWLock", &DeeRSharedRWLock_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("RWLock", &DeeRWLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RWLockReadLock", &DeeRWLockReadLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RWLockWriteLock", &DeeRWLockWriteLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("AtomicRWLock", &DeeAtomicRWLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("SharedRWLock", &DeeSharedRWLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RAtomicRWLock", &DeeRAtomicRWLock_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RSharedRWLock", &DeeRSharedRWLock_Type, Dee_DEXSYM_READONLY),
 
 /* LockUnion */
-DEX_MEMBER_F_NODOC("LockUnion", &DeeLockUnion_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F("all", &libthreading_lockunion_all, MODSYM_FREADONLY,
+DEX_MEMBER_F_NODOC("LockUnion", &DeeLockUnion_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F("all", &libthreading_lockunion_all, Dee_DEXSYM_READONLY,
              "(locks!:?GLock)->?GLock\n"
              "#tValueError{No @locks specified (a lock union must contain at least 1 lock)}"
              "Return a ?GLockUnion for all of the given @locks, or re-returns ${locks.first} "
@@ -88,16 +88,16 @@ DEX_MEMBER_F("all", &libthreading_lockunion_all, MODSYM_FREADONLY,
              /**/ "order). For more details on how this is done, see ?GLockUnion"),
 
 /* Semaphore */
-DEX_MEMBER_F_NODOC("Semaphore", &DeeSemaphore_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Semaphore", &DeeSemaphore_Type, Dee_DEXSYM_READONLY),
 
 /* Event */
-DEX_MEMBER_F_NODOC("Event", &DeeEvent_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Event", &DeeEvent_Type, Dee_DEXSYM_READONLY),
 
 /* Once */
-DEX_MEMBER_F_NODOC("Once", &DeeOnce_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Once", &DeeOnce_Type, Dee_DEXSYM_READONLY),
 
 /* ThreadLocalStorage */
-DEX_MEMBER_F_NODOC("TLS", &DeeTLS_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("TLS", &DeeTLS_Type, Dee_DEXSYM_READONLY),
 
 #ifndef PTR_libthreading_init
 #define PTR_libthreading_init NULL

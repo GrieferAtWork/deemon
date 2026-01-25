@@ -17,8 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeError_**/
+/*!export DeeAppExit_**/
+/*!export DeeThreadExit_**/
+/*!export Dee_ERROR_HANDLED_**/
+/*!export Dee_ERROR_PRINT_**/
+/*!export ERROR_HANDLED_**/
+/*!export ERROR_PRINT_**/
 #ifndef GUARD_DEEMON_ERROR_H
-#define GUARD_DEEMON_ERROR_H 1
+#define GUARD_DEEMON_ERROR_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -30,11 +38,6 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_error_object        error_object
-#define Dee_appexit_object      appexit_object
-#define Dee_threadexit_object   threadexit_object
-#define Dee_string_object       string_object
-#define ERROR_OBJECT_HEAD       Dee_ERROR_OBJECT_HEAD
 #define ERROR_PRINT_DONTHANDLE  Dee_ERROR_PRINT_DONTHANDLE
 #define ERROR_PRINT_DOHANDLE    Dee_ERROR_PRINT_DOHANDLE
 #define ERROR_PRINT_HANDLEINTR  Dee_ERROR_PRINT_HANDLEINTR
@@ -43,15 +46,13 @@ DECL_BEGIN
 #define ERROR_HANDLED_INTERRUPT Dee_ERROR_HANDLED_INTERRUPT
 #endif /* DEE_SOURCE */
 
-typedef struct Dee_error_object DeeErrorObject;
-
 /* Builtin error classes. */
 DDATDEF DeeTypeObject DeeError_Signal;
 
 /* Interrupt signal (cannot be caught using a normal catch-guard)
  * NOTE: In order for an exception handler to be able to process this
- *       signal, it must have the `EXCEPTION_HANDLER_FINTERPT' flag set
- *      (which can be added using the `@[interrupt]' tag):
+ *       signal, it must have the `Dee_EXCEPTION_HANDLER_FINTERPT' flag
+ *       set (which can be added using the `@[interrupt]' tag):
  * >> import Signal from deemon;
  * >> try {
  * >>    try {
@@ -199,8 +200,6 @@ struct Dee_threadexit_object {
 #define DeeThreadExit_Check(ob)  DeeObject_InstanceOfExact(ob, &DeeError_ThreadExit)
 #define DeeThreadExit_Result(ob) Dee_REQUIRES_OBJECT(struct Dee_threadexit_object, ob)->te_result
 
-struct Dee_string_object;
-
 /* Object header for types derived from `DeeError_Error'
  * Note that types derived from `DeeError_Signal' don't have any special header.
  * Special object heads for other error types can be found in `error_types.h' */
@@ -208,9 +207,9 @@ struct Dee_string_object;
 	Dee_OBJECT_HEAD                                                    \
 	DREF DeeObject *e_msg;   /* [0..1][const] Error message string. */ \
 	DREF DeeObject *e_cause; /* [0..1][const] Causal error object. */
-struct Dee_error_object {
+typedef struct Dee_error_object {
 	Dee_ERROR_OBJECT_HEAD
-};
+} DeeErrorObject;
 
 
 

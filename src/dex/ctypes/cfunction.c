@@ -286,40 +286,40 @@ generate_function_name(DeeSTypeObject *__restrict return_type,
                        DeeSTypeObject **__restrict argv) {
 	size_t i;
 	char const *cc_name;
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
 	if (DeeObject_Print(DeeSType_AsObject(return_type),
-	                    &ascii_printer_print,
+	                    &Dee_ascii_printer_print,
 	                    &printer) < 0)
 		goto err;
 	if (calling_convention != CC_DEFAULT) {
-		if (ASCII_PRINTER_PRINT(&printer, " ") < 0)
+		if (Dee_ASCII_PRINTER_PRINT(&printer, " ") < 0)
 			goto err;
 		cc_name = cc_getname(calling_convention);
 		if (!cc_name)
 			cc_name = "?";
-		if (ascii_printer_print(&printer, cc_name, strlen(cc_name)) < 0)
+		if (Dee_ascii_printer_print(&printer, cc_name, strlen(cc_name)) < 0)
 			goto err;
 	}
-	if (ASCII_PRINTER_PRINT(&printer, "(") < 0)
+	if (Dee_ASCII_PRINTER_PRINT(&printer, "(") < 0)
 		goto err;
 	if (!argc) {
-		if (ASCII_PRINTER_PRINT(&printer, "void") < 0)
+		if (Dee_ASCII_PRINTER_PRINT(&printer, "void") < 0)
 			goto err;
 	} else {
 		for (i = 0; i < argc; ++i) {
-			if (i != 0 && ASCII_PRINTER_PRINT(&printer, ", ") < 0)
+			if (i != 0 && Dee_ASCII_PRINTER_PRINT(&printer, ", ") < 0)
 				goto err;
 			if (DeeObject_Print(DeeSType_AsObject(argv[i]),
-			                    &ascii_printer_print,
+			                    &Dee_ascii_printer_print,
 			                    &printer) < 0)
 				goto err;
 		}
 	}
-	if (ASCII_PRINTER_PRINT(&printer, ")") < 0)
+	if (Dee_ASCII_PRINTER_PRINT(&printer, ")") < 0)
 		goto err;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 

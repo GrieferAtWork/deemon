@@ -77,16 +77,16 @@ public:
 		return inherit(DeeFile_GetStd(id));
 	}
 	static Ref<File> stdin_() {
-		return inherit(DeeFile_GetStd(DEE_STDIN));
+		return inherit(DeeFile_GetStd(Dee_STDIN));
 	}
 	static Ref<File> stdout_() {
-		return inherit(DeeFile_GetStd(DEE_STDOUT));
+		return inherit(DeeFile_GetStd(Dee_STDOUT));
 	}
 	static Ref<File> stderr_() {
-		return inherit(DeeFile_GetStd(DEE_STDERR));
+		return inherit(DeeFile_GetStd(Dee_STDERR));
 	}
 	static Ref<File> stddbg_() {
-		return inherit(DeeFile_GetStd(DEE_STDDBG));
+		return inherit(DeeFile_GetStd(Dee_STDDBG));
 	}
 
 public:

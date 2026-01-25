@@ -18,6 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export **/
+/*!export DeeMD5_**/
 #ifndef GUARD_DEEMON_UTIL_MD5_H
 #define GUARD_DEEMON_UTIL_MD5_H 1 /*!export-*/
 

@@ -544,7 +544,7 @@ continue_at_iter:
 			retval = DeeClass_IterClassInstanceAttributes(iter, Dee_attriterchain_builder_getiterbuf(&builder), Dee_attriterchain_builder_getbufsize(&builder));
 			LOCAL_process_retval(retval, done);
 #else /* ... */
-			struct class_attribute *cattr;
+			struct Dee_class_attribute *cattr;
 			cattr = LOCAL_DeeType_QueryClassAttribute(self, iter);
 			if (cattr != NULL) {
 #ifdef LOCAL_IS_HAS

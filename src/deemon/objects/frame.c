@@ -73,10 +73,10 @@ err_readonly_frame(Frame *__restrict UNUSED(self)) {
 
 /* Construct a frame object owned by `owner'
  * The intended use of this is for tracebacks and yield_function-iterators.
- * @param: flags: Set of `DEEFRAME_F*' */
+ * @param: flags: Set of `Dee_FRAME_F*' */
 PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(/*[0..1]*/ DeeObject *owner,
-                                      struct code_frame *__restrict frame,
+                                      struct Dee_code_frame *__restrict frame,
                                       uint16_t flags, void *lock) {
 	DREF Frame *result;
 	ASSERT_OBJECT_OPT(owner);
@@ -196,7 +196,7 @@ again:
 	return result;
 }
 
-/* Same as `DeeFrame_LockWrite()', but also set the "CODE_FASSEMBLY"
+/* Same as `DeeFrame_LockWrite()', but also set the "Dee_CODE_FASSEMBLY"
  * flag for the underlying code object (if not set already). */
 PUBLIC WUNUSED NONNULL((1)) struct Dee_code_frame *DCALL
 DeeFrame_LockWriteAssembly(DeeObject *__restrict self) {
@@ -207,13 +207,13 @@ again:
 	if unlikely(!result)
 		goto err;
 	code = result->cf_func->fo_code;
-	if (!(code->co_flags & CODE_FASSEMBLY)) {
+	if (!(code->co_flags & Dee_CODE_FASSEMBLY)) {
 		int temp;
 		result->cf_stacksz = 0; /* Zero means that the stack isn't heap-allocated */
 		Dee_Incref(code);
 		DeeFrame_LockEndWrite(self);
 		temp = DeeCode_SetAssembly(Dee_AsObject(code));
-		ASSERT(temp != 0 || (atomic_read(&code->co_flags) & CODE_FASSEMBLY));
+		ASSERT(temp != 0 || (atomic_read(&code->co_flags) & Dee_CODE_FASSEMBLY));
 		Dee_Decref_unlikely(code);
 		if unlikely(temp)
 			goto err;
@@ -380,17 +380,17 @@ INTERN WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 print_ddi(Dee_formatprinter_t printer, void *arg,
           DeeCodeObject *__restrict code, code_addr_t ip) {
 	Dee_ssize_t temp, result;
-	struct ddi_state state;
+	struct Dee_ddi_state state;
 	if (!DeeCode_FindDDI(Dee_AsObject(code), &state, NULL, ip,
-	                     DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
+	                     Dee_DDI_STATE_FNOTHROW | Dee_DDI_STATE_FNONAMES)) {
 		result = DeeFormat_Printf(printer, arg, "%s+%.4I32X\n",
 		                          DeeCode_NAME(code), ip);
 	} else {
-		struct ddi_xregs *iter;
+		struct Dee_ddi_xregs *iter;
 		char const *path, *file, *name;
 		char const *base_name = DeeCode_NAME(code);
 		result = 0;
-		DDI_STATE_DO(iter, &state) {
+		Dee_DDI_STATE_DO(iter, &state) {
 			file = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_file);
 			name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_base.dr_name);
 			if (!state.rs_regs.dr_path--) {
@@ -406,7 +406,7 @@ print_ddi(Dee_formatprinter_t printer, void *arg,
 			                        iter->dx_base.dr_lno + 1,
 			                        iter->dx_base.dr_col + 1,
 			                        name ? name
-			                             : (code->co_flags & CODE_FCONSTRUCTOR
+			                             : (code->co_flags & Dee_CODE_FCONSTRUCTOR
 			                                ? "<anonymous_ctor>"
 			                                : "<anonymous>"),
 			                        ip);
@@ -431,7 +431,7 @@ print_ddi(Dee_formatprinter_t printer, void *arg,
 			}
 			result += temp;
 		}
-		DDI_STATE_WHILE(iter, &state);
+		Dee_DDI_STATE_WHILE(iter, &state);
 		Dee_ddi_state_fini(&state);
 	}
 	return result;
@@ -453,7 +453,7 @@ frame_print(Frame *__restrict self,
 	Dee_ssize_t result;
 	DREF DeeCodeObject *code;
 	code_addr_t ip;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockReadIfNotDead(Dee_AsObject(self));
 	if (!ITER_ISOK(frame)) {
 		if (frame == Dee_CODE_FRAME_DEAD)
@@ -479,13 +479,13 @@ frame_printrepr(Frame *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
 frame_getddi(Frame *__restrict self,
-             struct ddi_state *__restrict state,
+             struct Dee_ddi_state *__restrict state,
              code_addr_t *p_start_ip,
              code_addr_t *p_end_ip,
              unsigned int flags) {
 	uint8_t *result;
 	code_addr_t start_ip;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF DeeCodeObject *code;
 	frame = DeeFrame_LockReadIfNotDead(Dee_AsObject(self));
 	if (!ITER_ISOK(frame)) {
@@ -501,10 +501,10 @@ frame_getddi(Frame *__restrict self,
 		*p_start_ip = start_ip;
 	result = DeeCode_FindDDI(Dee_AsObject(code), state,
 	                         p_end_ip, start_ip, flags);
-	if (DDI_ISOK(result))
+	if (Dee_DDI_ISOK(result))
 		return code;
 	Dee_Decref(code);
-	if unlikely(result != DDI_NEXT_DONE)
+	if unlikely(result != Dee_DDI_NEXT_DONE)
 		goto err;
 	return (DREF DeeCodeObject *)ITER_DONE;
 err:
@@ -516,24 +516,24 @@ frame_getlocation(Frame *__restrict self) {
 	DREF DeeTupleObject *result;
 	DREF DeeObject *entry, *fileob, *nameob;
 	DREF DeeCodeObject *code;
-	struct ddi_xregs *iter;
-	struct ddi_state state;
+	struct Dee_ddi_xregs *iter;
+	struct Dee_ddi_state state;
 	size_t i, count;
-	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
+	code = frame_getddi(self, &state, NULL, NULL, Dee_DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;
 	if unlikely(code == (DREF DeeCodeObject *)ITER_DONE)
 		return (DREF DeeTupleObject *)DeeTuple_Newf("(nnnn)");
 	count = 0;
-	DDI_STATE_DO(iter, &state) {
+	Dee_DDI_STATE_DO(iter, &state) {
 		++count;
 	}
-	DDI_STATE_WHILE(iter, &state);
+	Dee_DDI_STATE_WHILE(iter, &state);
 	result = DeeTuple_NewUninitialized(count);
 	if unlikely(!result)
 		goto err_state;
 	i = 0;
-	DDI_STATE_DO(iter, &state) {
+	Dee_DDI_STATE_DO(iter, &state) {
 		char const *path, *file;
 		file = DeeCode_GetDDIString(Dee_AsObject(code), state.rs_regs.dr_file);
 		if unlikely(!file) {
@@ -570,7 +570,7 @@ frame_getlocation(Frame *__restrict self) {
 		DeeTuple_SET(result, i, entry); /* Inherit reference. */
 		++i;
 	}
-	DDI_STATE_WHILE(iter, &state);
+	Dee_DDI_STATE_WHILE(iter, &state);
 	ASSERT(i == count);
 	Dee_ddi_state_fini(&state);
 	Dee_Decref(code);
@@ -591,9 +591,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getfile(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
-	struct ddi_state state;
+	struct Dee_ddi_state state;
 	char const *path, *file;
-	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
+	code = frame_getddi(self, &state, NULL, NULL, Dee_DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;
 	file = DeeCode_GetDDIString(Dee_AsObject(code), state.rs_regs.dr_file);
@@ -622,8 +622,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getline(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
-	struct ddi_state state;
-	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
+	struct Dee_ddi_state state;
+	code = frame_getddi(self, &state, NULL, NULL, Dee_DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;
 	if (code == (DREF DeeCodeObject *)ITER_DONE)
@@ -640,8 +640,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getcol(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
-	struct ddi_state state;
-	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
+	struct Dee_ddi_state state;
+	code = frame_getddi(self, &state, NULL, NULL, Dee_DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;
 	if (code == (DREF DeeCodeObject *)ITER_DONE)
@@ -658,9 +658,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getname(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
-	struct ddi_state state;
+	struct Dee_ddi_state state;
 	char const *name;
-	code = frame_getddi(self, &state, NULL, NULL, DDI_STATE_FNONAMES);
+	code = frame_getddi(self, &state, NULL, NULL, Dee_DDI_STATE_FNONAMES);
 	if unlikely(!code)
 		goto err;
 	if (code == (DREF DeeCodeObject *)ITER_DONE ||
@@ -677,7 +677,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getfunc(Frame *__restrict self) {
 	DREF DeeFunctionObject *result;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -692,7 +692,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getcode(Frame *__restrict self) {
 	DREF DeeCodeObject *result;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -707,7 +707,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getpc(Frame *__restrict self) {
 	code_addr_t pc;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -722,7 +722,7 @@ err:
  * @return: * : The actual depth of the stack.
  * @return: -1: Information could not be determined (no error was thrown) */
 PRIVATE NONNULL((1)) int32_t DCALL
-code_frame_revengsp(struct code_frame const *frame) {
+code_frame_revengsp(struct Dee_code_frame const *frame) {
 	(void)frame;
 	/* TODO */
 	return -1;
@@ -730,8 +730,8 @@ code_frame_revengsp(struct code_frame const *frame) {
 
 /* Similar to `frame_revengsp()', but instead of always trying to reverse
  * the stack depth, check if the depth was already know upon entry, returning
- * the stored depth when `DEEFRAME_FUNDEFSP' isn't set, or always returning
- * `-1' when `DEEFRAME_FUNDEFSP2' is set.
+ * the stored depth when `Dee_FRAME_FUNDEFSP' isn't set, or always returning
+ * `-1' when `Dee_FRAME_FUNDEFSP2' is set.
  * @return: * : The actual depth of the stack.
  * @return: -1: Information could not be determined. (no error was thrown)
  * @return: -2: An error was thrown */
@@ -739,30 +739,30 @@ PRIVATE WUNUSED NONNULL((1)) int32_t DCALL
 frame_getsp(Frame *__restrict self) {
 	int32_t result;
 	uint16_t flags;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
 	flags = atomic_read(&self->f_flags);
-	if (flags & DEEFRAME_FREGENGSP) {
-		ASSERT(!(flags & DEEFRAME_FWRITABLE));
+	if (flags & Dee_FRAME_FREGENGSP) {
+		ASSERT(!(flags & Dee_FRAME_FWRITABLE));
 		result = self->f_revsp;
-	} else if (flags & DEEFRAME_FUNDEFSP2) {
-		ASSERT(!(flags & DEEFRAME_FWRITABLE));
+	} else if (flags & Dee_FRAME_FUNDEFSP2) {
+		ASSERT(!(flags & Dee_FRAME_FWRITABLE));
 		result = -1; /* Indeterminate */
-	} else if (!(flags & DEEFRAME_FUNDEFSP)) {
+	} else if (!(flags & Dee_FRAME_FUNDEFSP)) {
 		result = Dee_code_frame_getspaddr(frame);
 	} else {
-		ASSERT(!(flags & DEEFRAME_FWRITABLE));
+		ASSERT(!(flags & Dee_FRAME_FWRITABLE));
 		/* Try to reverse-engineer the SP-value */
 		result = code_frame_revengsp(frame);
 		if (result != -1) {
 			ASSERT(result >= 0);
 			ASSERT(result <= UINT16_MAX);
 			self->f_revsp = (uint16_t)result;
-			atomic_or(&self->f_flags, DEEFRAME_FREGENGSP);
+			atomic_or(&self->f_flags, Dee_FRAME_FREGENGSP);
 		} else {
-			atomic_or(&self->f_flags, DEEFRAME_FUNDEFSP2);
+			atomic_or(&self->f_flags, Dee_FRAME_FUNDEFSP2);
 			/*result = -1;*/ /* Already the case. */
 		}
 	}
@@ -775,11 +775,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 frame_setpc(Frame *self, DeeObject *value) {
 	code_addr_t pc;
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	if unlikely(DeeObject_AsUInt32(value, &pc))
 		goto err;
 	/* To set the PC-pointer to arbitrary values, the code object
-	 * needs to have the "CODE_FASSEMBLY" flag set. This must be
+	 * needs to have the "Dee_CODE_FASSEMBLY" flag set. This must be
 	 * done in *ALL* cases, since even when sp/pc match as per DDI
 	 * info, the pc may be altered to point at a `jmp pop' instruction,
 	 * when it didn't do so before. */
@@ -821,11 +821,11 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_thisarg(Frame *__restrict self) {
 	DREF DeeObject *result;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
-	if unlikely(!(frame->cf_func->fo_code->co_flags & CODE_FTHISCALL))
+	if unlikely(!(frame->cf_func->fo_code->co_flags & Dee_CODE_FTHISCALL))
 		goto err_unlock_unbound;
 	result = frame->cf_this;
 	if unlikely(!result)
@@ -843,14 +843,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_bound_thisarg(Frame *__restrict self) {
 	bool is_bound;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockReadIfNotDead(Dee_AsObject(self));
 	if unlikely(!ITER_ISOK(frame)) {
 		if (frame == Dee_CODE_FRAME_DEAD)
 			return Dee_BOUND_NO;
 		goto err;
 	}
-	is_bound = (frame->cf_func->fo_code->co_flags & CODE_FTHISCALL) != 0 &&
+	is_bound = (frame->cf_func->fo_code->co_flags & Dee_CODE_FTHISCALL) != 0 &&
 	           (frame->cf_this != NULL);
 	DeeFrame_LockEndRead(Dee_AsObject(self));
 	return Dee_BOUND_FROMBOOL(is_bound);
@@ -861,8 +861,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_return(Frame *__restrict self) {
 	DREF DeeObject *result;
-	struct code_frame const *frame;
-	if unlikely(self->f_flags & DEEFRAME_FNORESULT)
+	struct Dee_code_frame const *frame;
+	if unlikely(self->f_flags & Dee_FRAME_FNORESULT)
 		goto err_unbound;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
@@ -884,8 +884,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_bound_return(Frame *__restrict self) {
 	bool is_bound;
-	struct code_frame const *frame;
-	if unlikely(self->f_flags & DEEFRAME_FNORESULT)
+	struct Dee_code_frame const *frame;
+	if unlikely(self->f_flags & Dee_FRAME_FNORESULT)
 		return Dee_BOUND_NO;
 	frame = DeeFrame_LockReadIfNotDead(Dee_AsObject(self));
 	if unlikely(!ITER_ISOK(frame)) {
@@ -903,8 +903,8 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_del_return(Frame *__restrict self) {
 	DREF DeeObject *old_result;
-	struct code_frame *frame;
-	if unlikely(self->f_flags & DEEFRAME_FNORESULT)
+	struct Dee_code_frame *frame;
+	if unlikely(self->f_flags & Dee_FRAME_FNORESULT)
 		return 0;
 	frame = DeeFrame_LockWrite(Dee_AsObject(self));
 	if unlikely(!frame)
@@ -922,8 +922,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 frame_set_return(Frame *__restrict self, DeeObject *value) {
 	DREF DeeObject *old_result;
-	struct code_frame *frame;
-	if unlikely(self->f_flags & DEEFRAME_FNORESULT) {
+	struct Dee_code_frame *frame;
+	if unlikely(self->f_flags & Dee_FRAME_FNORESULT) {
 		return DeeError_Throwf(&DeeError_ValueError,
 		                       "No return value can be assigned to this frame");
 	}
@@ -943,7 +943,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_bound_frame(Frame *__restrict self) {
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	frame = Dee_atomic_read_with_atomic_rwlock(&self->f_frame,
 	                                           &self->f_lock);
 	return Dee_BOUND_FROMBOOL(frame != NULL);
@@ -954,7 +954,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_function_statics(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeFunctionObject *func;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -973,7 +973,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_function_refs(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeFunctionObject *func;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -994,7 +994,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_function_kwds(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -1020,7 +1020,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_function_refsbyname(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeFunctionObject *func;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -1039,7 +1039,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_function_staticsbyname(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeFunctionObject *func;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -1061,7 +1061,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_code_defaults(DeeFrameObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -1080,7 +1080,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_code_constants(DeeFrameObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self));
 	if unlikely(!frame)
 		goto err;
@@ -1228,7 +1228,7 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 
 PRIVATE struct type_member tpconst frame_members[] = {
 	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(Frame, f_owner)),
-	TYPE_MEMBER_BITFIELD_DOC("__iswritable__", STRUCT_CONST, Frame, f_flags, DEEFRAME_FWRITABLE,
+	TYPE_MEMBER_BITFIELD_DOC("__iswritable__", STRUCT_CONST, Frame, f_flags, Dee_FRAME_FWRITABLE,
 	                         "Evaluates to ?t if @this Frame is writable"),
 	TYPE_MEMBER_END
 };

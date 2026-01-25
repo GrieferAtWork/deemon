@@ -38,7 +38,7 @@
 #include <deemon/seq.h>
 #include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/atomic.h>     /* atomic_read */
-#include <deemon/util/objectlist.h> /* objectlist, objectlist_alloc */
+#include <deemon/util/objectlist.h> /* objectlist, Dee_objectlist_alloc */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
@@ -148,8 +148,8 @@ err_unloaded:
 	return false;
 }
 
-PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2)) struct class_desc *DCALL
-class_desc_from_instance(struct instance_desc *__restrict self,
+PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2)) struct Dee_class_desc *DCALL
+class_desc_from_instance(struct Dee_instance_desc *__restrict self,
                          DeeObject *__restrict this_arg) {
 	DeeTypeObject *tp;
 	if (DeeType_Check(this_arg)) {
@@ -160,42 +160,42 @@ class_desc_from_instance(struct instance_desc *__restrict self,
 	}
 	tp = Dee_TYPE(this_arg);
 	for (;;) {
-		struct class_desc *result = tp->tp_class;
+		struct Dee_class_desc *result = tp->tp_class;
 		if (DeeInstance_DESC(result, this_arg) == self)
 			return result;
 		tp = DeeType_Base(tp);
 	}
 }
 
-PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2)) struct instance_desc *DCALL
-class_desc_as_instance_from_instance(struct instance_desc *__restrict self,
+PRIVATE WUNUSED ATTR_RETNONNULL NONNULL((1, 2)) struct Dee_instance_desc *DCALL
+class_desc_as_instance_from_instance(struct Dee_instance_desc *__restrict self,
                                      DeeObject *__restrict this_arg) {
-	struct class_desc *cls;
+	struct Dee_class_desc *cls;
 	cls = class_desc_from_instance(self, this_arg);
-	return class_desc_as_instance(cls);
+	return Dee_class_desc_as_instance(cls);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-fast_DeeInstance_GetAttribute(struct instance_desc *__restrict self,
+fast_DeeInstance_GetAttribute(struct Dee_instance_desc *__restrict self,
                               DeeObject *__restrict this_arg,
-                              struct class_attribute *__restrict attr) {
+                              struct Dee_class_attribute *__restrict attr) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(this_arg);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
 		Dee_instance_desc_lock_read(self);
-		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+		getter = self->id_vtab[attr->ca_addr + Dee_CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto illegal;
 		/* Invoke the getter. */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 			return DeeObject_ThisCallInherited(getter, this_arg, 0, NULL);
 		return DeeObject_CallInherited(getter, 0, NULL);
-	} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+	} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 		/* Construct a thiscall function. */
 		DREF DeeObject *callback;
 		Dee_instance_desc_lock_read(self);
@@ -224,24 +224,24 @@ illegal:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-fast_DeeInstance_BoundAttribute_asbool(struct instance_desc *__restrict self,
-                                DeeObject *__restrict this_arg,
-                                struct class_attribute *__restrict attr) {
+fast_DeeInstance_BoundAttribute_asbool(struct Dee_instance_desc *__restrict self,
+                                       DeeObject *__restrict this_arg,
+                                       struct Dee_class_attribute *__restrict attr) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(this_arg);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *getter;
 		Dee_instance_desc_lock_read(self);
-		getter = self->id_vtab[attr->ca_addr + CLASS_GETSET_GET];
+		getter = self->id_vtab[attr->ca_addr + Dee_CLASS_GETSET_GET];
 		Dee_XIncref(getter);
 		Dee_instance_desc_lock_endread(self);
 		if unlikely(!getter)
 			goto unbound;
 
 		/* Invoke the getter. */
-		result = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		result = (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 		         ? DeeObject_ThisCallInherited(getter, this_arg, 0, NULL)
 		         : DeeObject_CallInherited(getter, 0, NULL);
 		if likely(result) {
@@ -261,26 +261,26 @@ unbound:
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
+fast_DeeInstance_DelAttribute(struct Dee_instance_desc *__restrict self,
                               DeeObject *__restrict this_arg,
-                              struct class_attribute *__restrict attr) {
+                              struct Dee_class_attribute *__restrict attr) {
 	ASSERT_OBJECT(this_arg);
 	/* Make sure that the access is allowed. */
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 		goto illegal;
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *delfun, *temp;
 		Dee_instance_desc_lock_read(self);
-		delfun = self->id_vtab[attr->ca_addr + CLASS_GETSET_DEL];
+		delfun = self->id_vtab[attr->ca_addr + Dee_CLASS_GETSET_DEL];
 		Dee_XIncref(delfun);
 		Dee_instance_desc_lock_endread(self);
 		if unlikely(!delfun)
 			goto illegal;
 
 		/* Invoke the getter. */
-		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		temp = (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 		       ? DeeObject_ThisCallInherited(delfun, this_arg, 0, NULL)
 		       : DeeObject_CallInherited(delfun, 0, NULL);
 		if unlikely(!temp)
@@ -304,26 +304,26 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-fast_DeeInstance_SetAttribute(struct instance_desc *__restrict self,
+fast_DeeInstance_SetAttribute(struct Dee_instance_desc *__restrict self,
                               DeeObject *this_arg,
-                              struct class_attribute *__restrict attr,
+                              struct Dee_class_attribute *__restrict attr,
                               DeeObject *value) {
 	ASSERT_OBJECT(this_arg);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance_from_instance(self, this_arg);
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 		DREF DeeObject *setter, *temp;
 		/* Make sure that the access is allowed. */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 			goto illegal;
 		Dee_instance_desc_lock_read(self);
-		setter = self->id_vtab[attr->ca_addr + CLASS_GETSET_SET];
+		setter = self->id_vtab[attr->ca_addr + Dee_CLASS_GETSET_SET];
 		Dee_XIncref(setter);
 		Dee_instance_desc_lock_endread(self);
 		if unlikely(!setter)
 			goto illegal;
 		/* Invoke the getter. */
-		temp = (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)
+		temp = (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)
 		       ? DeeObject_ThisCallInherited(setter, this_arg, 1, (DeeObject **)&value)
 		       : DeeObject_CallInherited(setter, 1, (DeeObject **)&value);
 		if unlikely(!temp)
@@ -334,7 +334,7 @@ fast_DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 		/* Simply override the field in the attr table. */
 		Dee_instance_desc_lock_write(self);
 		old_value = self->id_vtab[attr->ca_addr];
-		if (old_value && (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
+		if (old_value && (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
 			Dee_instance_desc_lock_endwrite(self);
 			goto illegal; /* readonly fields can only be set once. */
 		} else {
@@ -873,13 +873,13 @@ err:
 /* Pack `self' and append all of the referenced objects to the given object list. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 JITLValueList_CopyObjects(JITLValueList *__restrict self,
-                          struct objectlist *__restrict dst,
+                          struct Dee_objectlist *__restrict dst,
                           JITContext *__restrict context) {
 	size_t i;
 	DREF DeeObject **buf;
 	if (!self->ll_size)
 		goto done;
-	buf = objectlist_alloc(dst, self->ll_size);
+	buf = Dee_objectlist_alloc(dst, self->ll_size);
 	if unlikely(!buf)
 		goto err;
 	for (i = 0; i < self->ll_size; ++i) {

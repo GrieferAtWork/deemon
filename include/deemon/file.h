@@ -17,8 +17,24 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export -CONFIG_HAVE_**/
+/*!export Dee_STD**/
+/*!export DeeFileType_**/
+/*!export DeeFile_**/
+/*!export DeeSystemFile_**/
+/*!export DeeSystem_FILE_USE_**/
+/*!export Dee_FILEIO_F**/
+/*!export Dee_GETC_**/
+/*!export Dee_OPEN_F**/
+/*!export Dee_SEEK_**/
+/*!export Dee_fd_**/
+/*!export FILE_OPERATOR_**/
+/*!export GETC_**/
+/*!export OPEN_F**/
+/*!export OPERATOR_FILE_**/
 #ifndef GUARD_DEEMON_FILE_H
-#define GUARD_DEEMON_FILE_H 1
+#define GUARD_DEEMON_FILE_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -92,30 +108,16 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_file_object       file_object
-#define Dee_filetype_object   filetype_object
-#define FILE_OBJECT_HEAD      Dee_FILE_OBJECT_HEAD
-#define FILE_OBJECT_HEAD_INIT Dee_FILE_OBJECT_HEAD_INIT
-#endif /* DEE_SOURCE */
-
-
-typedef struct Dee_file_object DeeFileObject;
-typedef struct Dee_filetype_object DeeFileTypeObject;
-
 #define Dee_FILEIO_FNORMAL      0x0000 /* Normal I/O flags. */
 #define Dee_FILEIO_FNONBLOCKING 0x0001 /* Do not block when reading/writing data. */
 typedef unsigned int Dee_ioflag_t; /* Set of `Dee_FILEIO_F*' */
-#ifdef DEE_SOURCE
-typedef Dee_ioflag_t dioflag_t;
-#endif /* DEE_SOURCE */
 
-
-struct Dee_file_object {
+typedef struct Dee_filetype_object DeeFileTypeObject;
+typedef struct Dee_file_object {
 #define Dee_FILE_OBJECT_HEAD            Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
 #define Dee_FILE_OBJECT_HEAD_INIT(type) Dee_OBJECT_HEAD_INIT(type)
 	Dee_OBJECT_HEAD_EX(DeeFileTypeObject)
-};
+} DeeFileObject;
 
 /* Initialize the standard objects fields of a freshly allocated object.
  * @param: DeeObject      *self: The object to initialize
@@ -520,12 +522,12 @@ DeeFile_OpenString(/*utf-8*/ char const *__restrict filename, int oflags, int mo
 
 
 
-#define DEE_STDIN  0 /* Standard input */
-#define DEE_STDOUT 1 /* Standard output */
-#define DEE_STDERR 2 /* Standard error */
+#define Dee_STDIN  0 /* Standard input */
+#define Dee_STDOUT 1 /* Standard output */
+#define Dee_STDERR 2 /* Standard error */
 
 /* Return a file stream for a standard file number `id'.
- * @param: id:   One of `DEE_STD*' (Except `DEE_STDDBG')
+ * @param: id:   One of `DEE_STD*' (Except `Dee_STDDBG')
  * @param: file: The file to use, or `NULL' to unbind that stream.
  * `DeeFile_GetStd()' will throw an `UnboundAttribute' error if the stream isn't assigned. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFile_GetStd(unsigned int id);
@@ -544,16 +546,16 @@ DFUNDEF bool DCALL DeeFile_ResetStd(void);
 DFUNDEF WUNUSED ATTR_RETNONNULL DeeObject *DCALL DeeFile_DefaultStd(unsigned int id);
 
 
-/* DEE_STDDBG -- Same as `DEE_STDERR', but on windows, also print to `OutputDebugString()'
+/* Dee_STDDBG -- Same as `Dee_STDERR', but on windows, also print to `OutputDebugString()'
  * On other platforms, similar system APIs intended for printing debug strings may
  * be linked as well, but in all cases, text will always be printed to stderr, the
  * same way a non-redirected `DeeFile_DefaultStderr' would do. */
 #ifdef CONFIG_HOST_WINDOWS
-#define DEE_STDDBG_IS_UNIQUE 1
-#define DEE_STDDBG 3
+#define Dee_STDDBG_IS_UNIQUE
+#define Dee_STDDBG 3
 #else /* CONFIG_HOST_WINDOWS */
-#define DEE_STDDBG_IS_STDERR 1
-#define DEE_STDDBG DEE_STDERR
+#define Dee_STDDBG_IS_STDERR
+#define Dee_STDDBG Dee_STDERR
 #endif /* !CONFIG_HOST_WINDOWS */
 
 #ifdef __INTELLISENSE__
@@ -562,10 +564,10 @@ extern DeeObject *const DeeFile_DefaultStdout;
 extern DeeObject *const DeeFile_DefaultStderr;
 extern DeeObject *const DeeFile_DefaultStddbg;
 #else /* __INTELLISENSE__ */
-#define DeeFile_DefaultStdin  DeeFile_DefaultStd(DEE_STDIN)
-#define DeeFile_DefaultStdout DeeFile_DefaultStd(DEE_STDOUT)
-#define DeeFile_DefaultStderr DeeFile_DefaultStd(DEE_STDERR)
-#define DeeFile_DefaultStddbg DeeFile_DefaultStd(DEE_STDDBG)
+#define DeeFile_DefaultStdin  DeeFile_DefaultStd(Dee_STDIN)
+#define DeeFile_DefaultStdout DeeFile_DefaultStd(Dee_STDOUT)
+#define DeeFile_DefaultStderr DeeFile_DefaultStd(Dee_STDERR)
+#define DeeFile_DefaultStddbg DeeFile_DefaultStd(Dee_STDDBG)
 #endif /* !__INTELLISENSE__ */
 
 

@@ -79,7 +79,7 @@ INTDEF DeeTypeObject DeeListIterator_Type;
 
 PRIVATE NONNULL((1)) void DCALL
 list_fini(List *__restrict me) {
-	weakref_support_fini(me);
+	Dee_weakref_support_fini(me);
 	Dee_objectlist_fini(&me->l_list);
 }
 
@@ -154,7 +154,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_ctor(List *__restrict self) {
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	Dee_objectlist_init(&self->l_list);
 	Dee_atomic_rwlock_init(&self->l_lock);
 	return 0;
@@ -166,7 +166,7 @@ list_copy(List *__restrict me,
 	DREF DeeObject **new_elemv;
 	size_t count;
 	ASSERT(me != other);
-	weakref_support_init(me);
+	Dee_weakref_support_init(me);
 	Dee_atomic_rwlock_init(&me->l_lock);
 again:
 	DeeList_LockRead(other);
@@ -193,7 +193,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_deepload(List *__restrict me) {
 	DREF DeeObject *new_item, *old_item;
 	size_t i = 0;
-	weakref_support_init(me);
+	Dee_weakref_support_init(me);
 	DeeList_LockRead(me);
 	for (; i < me->l_list.ol_elemc; ++i) {
 		old_item = me->l_list.ol_elemv[i];
@@ -240,7 +240,7 @@ DeeList_NewWithHint(size_t n_prealloc) {
 	DeeObject_Init(result, &DeeList_Type);
 	_DeeList_SetAlloc(result, n_prealloc);
 	result->l_list.ol_elemc  = 0;
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	if likely(n_prealloc) {
 		result->l_list.ol_elemv = Dee_objectlist_elemv_trymalloc_safe(n_prealloc);
@@ -266,7 +266,7 @@ DeeList_NewUninitialized(size_t n_elem) {
 	DeeObject_Init(result, &DeeList_Type);
 	_DeeList_SetAlloc(result, n_elem);
 	result->l_list.ol_elemc  = n_elem;
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	/*DeeGC_Track((DeeObject *)result);*/ /* The caller must do this */
 done:
@@ -294,7 +294,7 @@ DeeList_FromSequence(DeeObject *__restrict self) {
 		goto err;
 	if (Dee_objectlist_init_fromseq(&result->l_list, self) != 0)
 		goto err_r;
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
 	return DeeGC_Track((DeeObject *)result);
@@ -336,7 +336,7 @@ DeeList_FromTuple(DeeObject *__restrict self) {
 	result->l_list.ol_elemc = elemc;
 	_DeeList_SetAlloc(result, elemc);
 	DeeObject_Init(result, &DeeList_Type);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	return DeeGC_Track((DeeObject *)result);
 err_r:
@@ -409,7 +409,7 @@ DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
 	_DeeList_SetAlloc(result, objc);
 #endif /* !... */
 	DeeObject_Init(result, &DeeList_Type);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	return DeeGC_Track((DeeObject *)result);
 err:
@@ -441,7 +441,7 @@ DeeList_Copy(List *__restrict self) {
 	if unlikely(list_copy(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeList_Type);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	return DeeGC_TRACK(List, result);
 err_r:
@@ -551,7 +551,7 @@ allocate_new_vector:
 		result->l_list.ol_elemv = new_elemv;
 		result->l_list.ol_elemc = list_size + argc;
 		_DeeList_SetAlloc(result, list_size + argc);
-		weakref_support_init(result);
+		Dee_weakref_support_init(result);
 		Dee_atomic_rwlock_init(&result->l_lock);
 		result = DeeGC_TRACK(List, result);
 	}
@@ -1007,7 +1007,7 @@ list_init(List *__restrict self, size_t argc, DeeObject *const *argv) {
 	args.filler = NULL;
 	DeeArg_UnpackStruct1Or2(err, argc, argv, "List", &args, &args.sequence_or_length, &args.filler);
 /*[[[end]]]*/
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	Dee_atomic_rwlock_init(&self->l_lock);
 	if (args.filler || DeeInt_Check(args.sequence_or_length)) {
 		size_t list_size;
@@ -1046,7 +1046,7 @@ list_serialize(List *__restrict self,
 	DREF DeeObject **out__l_list_ol_elemv;
 again:
 	out = DeeSerial_Addr2Mem(writer, addr, List);
-	weakref_support_init(out);
+	Dee_weakref_support_init(out);
 	DeeList_LockRead(self);
 	out->l_list.ol_elemc = self->l_list.ol_elemc;
 #ifdef Dee_OBJECTLIST_HAVE_ELEMA
@@ -1255,7 +1255,7 @@ again:
 	DeeObject_Init(result, &DeeList_Type);
 	result->l_list.ol_elemc = range_size;
 	_DeeList_SetAlloc(result, range_size);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	result->l_list.ol_elemv = new_elemv;
 
@@ -1308,7 +1308,7 @@ again:
 	DeeObject_Init(result, &DeeList_Type);
 	result->l_list.ol_elemc = range_size;
 	_DeeList_SetAlloc(result, range_size);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	result->l_list.ol_elemv = new_elemv;
 
@@ -3989,7 +3989,7 @@ again:
 	result->l_list.ol_elemv = res_elemv;
 	result->l_list.ol_elemc = res_elemc;
 	_DeeList_SetAlloc(result, res_elemc);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
 	return DeeGC_TRACK(List, result);
@@ -4188,7 +4188,7 @@ list_hash(List *__restrict me) {
 	DeeList_LockRead(me);
 	if unlikely(!me->l_list.ol_elemc) {
 		DeeList_LockEndRead(me);
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	}
 	elem = me->l_list.ol_elemv[0];
 	Dee_Incref(elem);
@@ -4369,7 +4369,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "#tNotImplemented{The given @other cannot be iterated}"
 	                         "Perform a lexicographical comparison between @this List and the given @other sequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(List),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(List),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
@@ -4622,8 +4622,8 @@ list_iterator_nii_peek(ListIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst list_iterator_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&list_iterator_nii_getseq,

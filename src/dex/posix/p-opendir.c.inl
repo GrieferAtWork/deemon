@@ -1256,42 +1256,42 @@ diriter_get_d_fullname(DeeDirIteratorObject *__restrict self) {
 		DREF DeeStringObject *path;
 		path = diriter_getpathstr(self);
 		if likely(path) {
-			struct unicode_printer printer = UNICODE_PRINTER_INIT;
-			if unlikely(unicode_printer_printstring(&printer, Dee_AsObject(path)) < 0) {
+			struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+			if unlikely(Dee_unicode_printer_printstring(&printer, Dee_AsObject(path)) < 0) {
 				Dee_Decref(path);
 err_printer:
-				unicode_printer_fini(&printer);
+				Dee_unicode_printer_fini(&printer);
 				return NULL;
 			}
 			Dee_Decref(path);
-			if (UNICODE_PRINTER_LENGTH(&printer)) {
+			if (Dee_UNICODE_PRINTER_LENGTH(&printer)) {
 				uint32_t lastch;
-				lastch = UNICODE_PRINTER_GETCHAR(&printer, UNICODE_PRINTER_LENGTH(&printer) - 1);
+				lastch = Dee_UNICODE_PRINTER_GETCHAR(&printer, Dee_UNICODE_PRINTER_LENGTH(&printer) - 1);
 #ifdef posix_opendir_USE_FindFirstFileExW
 				if (lastch != '/' && lastch != '\\') {
-					if (unicode_printer_putc(&printer, '\\'))
+					if (Dee_unicode_printer_putc(&printer, '\\'))
 						goto err_printer;
 				}
 #else /* posix_opendir_USE_FindFirstFileExW */
 				if (lastch != DeeSystem_SEP) {
-					if (unicode_printer_putc(&printer, DeeSystem_SEP))
+					if (Dee_unicode_printer_putc(&printer, DeeSystem_SEP))
 						goto err_printer;
 				}
 #endif /* !posix_opendir_USE_FindFirstFileExW */
 			}
 #ifdef posix_opendir_USE_FindFirstFileExW
-			if unlikely(unicode_printer_printwide(&printer, self->odi_data.cFileName,
-			                                      wcslen(self->odi_data.cFileName)) < 0)
+			if unlikely(Dee_unicode_printer_printwide(&printer, self->odi_data.cFileName,
+			                                          wcslen(self->odi_data.cFileName)) < 0)
 				goto err_printer;
 #elif defined(posix_opendir_USE_opendir)
-			if unlikely(unicode_printer_printutf8(&printer, self->odi_ent->d_name,
-			                                      dirent_namelen(self->odi_ent)) < 0)
+			if unlikely(Dee_unicode_printer_printutf8(&printer, self->odi_ent->d_name,
+			                                          dirent_namelen(self->odi_ent)) < 0)
 				goto err_printer;
 #else /* ... */
 			diriter_unbound_attr("d_fullname");
 			goto err_printer;
 #endif /* !... */
-			path = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+			path = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		}
 		return path;
 	}

@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeRoSet**/
 #ifndef GUARD_DEEMON_ROSET_H
-#define GUARD_DEEMON_ROSET_H 1
+#define GUARD_DEEMON_ROSET_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -27,15 +29,6 @@
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN
-
-
-#ifdef DEE_SOURCE
-#define Dee_roset_item   roset_item
-#define Dee_roset_object roset_object
-#define ROSET_HASHST     DeeRoSet_HashSt
-#define ROSET_HASHNX     DeeRoSet_HashNx
-#define ROSET_HASHIT     DeeRoSet_HashIt
-#endif /* DEE_SOURCE */
 
 /* A read-only variant of a set object, who's main purpose is to be used
  * by compiler optimizations in order to optimize generic set expressions
@@ -60,20 +53,18 @@ DECL_BEGIN
  * sort of lock.
  *
  * NOTE: `_RoSet' is exported as `deemon.HashSet.Frozen'. */
-typedef struct Dee_roset_object DeeRoSetObject;
 
 struct Dee_roset_item {
 	DREF DeeObject *rsi_key;  /* [0..1][const] Set item key. */
-	Dee_hash_t      rsi_hash; /* [valis_if(rsi_key)][const]
-	                           * Hash of `rsi_key' (with a starting value of `0'). */
+	Dee_hash_t      rsi_hash; /* [valis_if(rsi_key)][const] Hash of `rsi_key'. */
 };
 
-struct Dee_roset_object {
+typedef struct Dee_roset_object {
 	Dee_OBJECT_HEAD
 	size_t                                         rs_mask;  /* [>= rs_size] Allocated set size. */
 	size_t                                         rs_size;  /* [<= rs_mask] Amount of non-NULL keys. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_roset_item, rs_elem); /* [1..rs_mask+1] Set key hash-vector. */
-};
+} DeeRoSetObject;
 
 /* The main `_RoSet' container class. */
 DDATDEF DeeTypeObject DeeRoSet_Type;

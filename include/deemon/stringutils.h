@@ -17,8 +17,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeString_**/
+/*!export DeeUni_**/
+/*!export Dee_UNICODE_UTF8_*LEN*/
+/*!export Dee_unicode_**/
+/*!export -_DeeUni_FoldedLength_**/
 #ifndef GUARD_DEEMON_STRINGUTILS_H
-#define GUARD_DEEMON_STRINGUTILS_H 1
+#define GUARD_DEEMON_STRINGUTILS_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -31,97 +37,7 @@
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
-#ifdef DEE_SOURCE
-#ifdef CONFIG_NO_UNICODE_H
-#undef CONFIG_HAVE_UNICODE_H
-#elif !defined(CONFIG_HAVE_UNICODE_H) && \
-      (__has_include(<unicode.h>) || (defined(__NO_has_include) && \
-      (defined(__KOS__) && __KOS_VERSION__ >= 400)))
-#define CONFIG_HAVE_UNICODE_H
-#endif
-
-/* Must include KOS's `<unicode.h>' first since we kind-of
- * re-define some of its symbols when `DEE_SOURCE' is enabled. */
-#ifdef CONFIG_HAVE_UNICODE_H
-#include <unicode.h>
-#endif /* CONFIG_HAVE_UNICODE_H */
-#endif /* DEE_SOURCE */
-
-
 DECL_BEGIN
-
-#ifdef DEE_SOURCE
-#define Dee_string_object string_object
-#endif /* DEE_SOURCE */
-struct Dee_string_object;
-
-
-#ifdef DEE_SOURCE
-#undef unicode_utf8seqlen
-#undef unicode_utf8seqlen_safe
-#undef unicode_readutf8_n
-#undef unicode_readutf8
-#undef unicode_readutf8_rev
-#undef unicode_readutf8_rev_n
-#undef unicode_skiputf8
-#undef unicode_skiputf8_c
-#undef unicode_writeutf8
-#undef unicode_skipspaceutf8
-#undef unicode_skipspaceutf8_n
-#undef unicode_skipspaceutf8_rev
-#undef unicode_skipspaceutf8_rev_n
-#undef unicode_readutf16_n
-#undef unicode_readutf32_n
-#undef unicode_readutf16_swap_n
-#undef unicode_readutf32_swap_n
-#undef unicode_readutf16_rev_n
-#undef unicode_readutf32_rev_n
-#undef unicode_readutf16_swap_rev_n
-#undef unicode_readutf32_swap_rev_n
-#undef unicode_readutf16le_n
-#undef unicode_readutf32le_n
-#undef unicode_readutf16be_n
-#undef unicode_readutf32be_n
-#undef unicode_readutf16le_rev_n
-#undef unicode_readutf32le_rev_n
-#undef unicode_readutf16be_rev_n
-#undef unicode_readutf32be_rev_n
-#undef UNICODE_UTF8_MAXLEN
-#undef UNICODE_UTF8_CURLEN
-#undef UNICODE_UTF8_DEFLEN
-#define unicode_utf8seqlen           Dee_unicode_utf8seqlen
-#define unicode_utf8seqlen_safe      Dee_unicode_utf8seqlen_safe
-#define unicode_readutf8_n           Dee_unicode_readutf8_n
-#define unicode_readutf8             Dee_unicode_readutf8
-#define unicode_readutf8_rev         Dee_unicode_readutf8_rev
-#define unicode_readutf8_rev_n       Dee_unicode_readutf8_rev_n
-#define unicode_skiputf8             Dee_unicode_skiputf8
-#define unicode_skiputf8_c           Dee_unicode_skiputf8_c
-#define unicode_writeutf8            Dee_unicode_writeutf8
-#define unicode_skipspaceutf8        Dee_unicode_skipspaceutf8
-#define unicode_skipspaceutf8_n      Dee_unicode_skipspaceutf8_n
-#define unicode_skipspaceutf8_rev    Dee_unicode_skipspaceutf8_rev
-#define unicode_skipspaceutf8_rev_n  Dee_unicode_skipspaceutf8_rev_n
-#define unicode_readutf16_n          Dee_unicode_readutf16_n
-#define unicode_readutf32_n          Dee_unicode_readutf32_n
-#define unicode_readutf16_swap_n     Dee_unicode_readutf16_swap_n
-#define unicode_readutf32_swap_n     Dee_unicode_readutf32_swap_n
-#define unicode_readutf16_rev_n      Dee_unicode_readutf16_rev_n
-#define unicode_readutf32_rev_n      Dee_unicode_readutf32_rev_n
-#define unicode_readutf16_swap_rev_n Dee_unicode_readutf16_swap_rev_n
-#define unicode_readutf32_swap_rev_n Dee_unicode_readutf32_swap_rev_n
-#define unicode_readutf16le_n        Dee_unicode_readutf16le_n
-#define unicode_readutf32le_n        Dee_unicode_readutf32le_n
-#define unicode_readutf16be_n        Dee_unicode_readutf16be_n
-#define unicode_readutf32be_n        Dee_unicode_readutf32be_n
-#define unicode_readutf16le_rev_n    Dee_unicode_readutf16le_rev_n
-#define unicode_readutf32le_rev_n    Dee_unicode_readutf32le_rev_n
-#define unicode_readutf16be_rev_n    Dee_unicode_readutf16be_rev_n
-#define unicode_readutf32be_rev_n    Dee_unicode_readutf32be_rev_n
-#define UNICODE_UTF8_MAXLEN          Dee_UNICODE_UTF8_MAXLEN
-#define UNICODE_UTF8_CURLEN          Dee_UNICODE_UTF8_CURLEN
-#define UNICODE_UTF8_DEFLEN          Dee_UNICODE_UTF8_DEFLEN
-#endif /* DEE_SOURCE */
 
 #define Dee_UNICODE_UTF8_MAXLEN 8 /* The max length of a UTF-8 multi-byte sequence (100% future-proof, as this is the theoretical limit) */
 #define Dee_UNICODE_UTF8_CURLEN 7 /* Enough for any 32-bit unicode character ordinal */
@@ -429,13 +345,11 @@ NOTHROW_NCX(DCALL Dee_unicode_readutf32_swap_rev_n)(/*utf-32*/ uint32_t const **
 
 
 
+struct Dee_string_object;
 
-
-
-
-
-
-/* Get/Set a character, given its index within the string. */
+/* Get/Set a character, given its index within the string.
+ * Do NOT expose this setter to user-code, or modify strings that are
+ * already shared with user-code -- strings are supposed to be immutable! */
 #define DeeString_GetChar(self, index)        DeeString_GetChar(Dee_REQUIRES_OBJECT(struct Dee_string_object, self), index)
 #define DeeString_SetChar(self, index, value) DeeString_SetChar(Dee_REQUIRES_OBJECT(struct Dee_string_object, self), index, value)
 DFUNDEF WUNUSED NONNULL((1)) uint32_t (DCALL DeeString_GetChar)(struct Dee_string_object *__restrict self, size_t index);
@@ -486,8 +400,6 @@ DFUNDEF NONNULL((1)) void
 			}                                                 \
 		}                                                     \
 	}	__WHILE0
-
-
 
 DECL_END
 

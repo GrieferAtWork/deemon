@@ -1456,12 +1456,12 @@ import MODULE_NAME, getDefaultLibnameOfSourceFile from rt.gen.dexutils;
 @@>	return_none;
 @@>}
 @@>	...
-@@>PRIVATE struct dex_symbol symbols[] = {
+@@>PRIVATE struct Dee_dex_symbol symbols[] = {
 @@>	LIBFOO_BAR_DEF("Human-readable function documentation text goes here"),
 @@>	{ NULL }
 @@>};
 @@>
-@@>PUBLIC struct dex DEX = {
+@@>PUBLIC struct Dee_dex DEX = {
 @@>	/* .d_symbols = */symbols
 @@>};
 function print_libMethod(name: string,

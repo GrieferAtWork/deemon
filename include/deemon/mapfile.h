@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeMapFile**/
 #ifndef GUARD_DEEMON_MAPFILE_H
-#define GUARD_DEEMON_MAPFILE_H 1
+#define GUARD_DEEMON_MAPFILE_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -31,11 +33,6 @@
 #include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
-
-#ifdef DEE_SOURCE
-#define Dee_map_file_object map_file_object
-#endif /* DEE_SOURCE */
-
 
 /************************************************************************/
 /* MMAP API                                                             */
@@ -180,12 +177,11 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self,
 /* High-level wrapper for `DeeMapFile'
  * NOTE: This type of object implements the buffer interfaces, meaning that
  *       deemon code can access the mapped  */
-typedef struct Dee_map_file_object DeeMapFileObject;
-struct Dee_map_file_object {
+typedef struct Dee_map_file_object {
 	Dee_OBJECT_HEAD
 	struct DeeMapFile mf_map;   /* The file map owned by this object. */
 	size_t            mf_rsize; /* Real file map size (including trailing NUL bytes) */
-};
+} DeeMapFileObject;
 
 DDATDEF DeeTypeObject DeeMapFile_Type;
 #define DeeMapFile_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeMapFile_Type) /* `_MapFile' is final! */

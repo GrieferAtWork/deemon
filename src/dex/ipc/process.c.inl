@@ -385,14 +385,14 @@ PRIVATE DEFINE_STRING_EX(str_DEFAULT_SHELL_C, "-c", 0x609d4fb4, 0xfea31f2416d3d4
  *       in `crt/src/stdargv.c' of Visual Studio
  */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ipc_nt_cmdline_add_arg(struct unicode_printer *__restrict printer,
+ipc_nt_cmdline_add_arg(struct Dee_unicode_printer *__restrict printer,
                        DeeStringObject *__restrict arg) {
 	char const *begin, *iter, *end, *flush_start;
 	bool must_quote = false;
 	size_t start_length;
-	if (!UNICODE_PRINTER_ISEMPTY(printer) && unicode_printer_putc(printer, ' '))
+	if (!Dee_UNICODE_PRINTER_ISEMPTY(printer) && Dee_unicode_printer_putc(printer, ' '))
 		goto err;
-	start_length = UNICODE_PRINTER_LENGTH(printer);
+	start_length = Dee_UNICODE_PRINTER_LENGTH(printer);
 	begin        = DeeString_AsUtf8((DeeObject *)arg);
 	if unlikely(!begin)
 		goto err;
@@ -404,18 +404,18 @@ ipc_nt_cmdline_add_arg(struct unicode_printer *__restrict printer,
 			char const *quote_start = iter;
 			while (iter > begin && iter[-1] == '\\')
 				--iter;
-			if (unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+			if (Dee_unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
 				goto err;
 
 			/* Escape by writing double the number of slashes. */
 			if (quote_start != iter) {
-				if (unicode_printer_print(printer, iter, (size_t)(quote_start - iter)) < 0 ||
-				    unicode_printer_print(printer, iter, (size_t)(quote_start - iter)) < 0)
+				if (Dee_unicode_printer_print(printer, iter, (size_t)(quote_start - iter)) < 0 ||
+				    Dee_unicode_printer_print(printer, iter, (size_t)(quote_start - iter)) < 0)
 					goto err;
 			}
 
 			/* Following this, write the escaped quote. */
-			if (unicode_printer_printascii(printer, "\\\"", 2) < 0)
+			if (Dee_unicode_printer_printascii(printer, "\\\"", 2) < 0)
 				goto err;
 			flush_start = iter + 1;
 			/* Needed for cygwin:
@@ -434,23 +434,23 @@ ipc_nt_cmdline_add_arg(struct unicode_printer *__restrict printer,
 	}
 
 	/* Flush the remainder of the argument. */
-	if (unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+	if (Dee_unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
 		goto err;
 
 	/* Surround the argument with quotation marks. */
 	if (must_quote) {
-		size_t length = UNICODE_PRINTER_LENGTH(printer) - start_length;
-		if unlikely(unicode_printer_printascii(printer, "\"\"", 2) < 0)
+		size_t length = Dee_UNICODE_PRINTER_LENGTH(printer) - start_length;
+		if unlikely(Dee_unicode_printer_printascii(printer, "\"\"", 2) < 0)
 			goto err;
 
 		/* Shift the argument text. */
-		unicode_printer_memmove(printer,
-		                        start_length + 1,
-		                        start_length,
-		                        length);
+		Dee_unicode_printer_memmove(printer,
+		                            start_length + 1,
+		                            start_length,
+		                            length);
 
 		/* Fill in leading quote. */
-		UNICODE_PRINTER_SETCHAR(printer, start_length, '\"');
+		Dee_UNICODE_PRINTER_SETCHAR(printer, start_length, '\"');
 	}
 	return 0;
 err:
@@ -462,7 +462,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ipc_nt_cmdline_add_args_foreach_cb(void *__restrict arg,
                                    DeeObject *__restrict item) {
-	struct unicode_printer *printer = (struct unicode_printer *)arg;
+	struct Dee_unicode_printer *printer = (struct Dee_unicode_printer *)arg;
 	if (DeeObject_AssertTypeExact(item, &DeeString_Type))
 		goto err;
 	return ipc_nt_cmdline_add_arg(printer, (DeeStringObject *)item);
@@ -472,43 +472,43 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeStringObject *DCALL
 ipc_argv2cmdline(DeeObject *__restrict args) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(ipc_nt_cmdline_add_args(&printer, args))
 		goto err;
-	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	return (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeStringObject *DCALL
 ipc_argv2cmdline_cmd_c(DeeStringObject *__restrict cmd_exe,
                        DeeStringObject *__restrict command) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 #ifdef ipc_Process_USE_CreateProcessW
 	if (cmd_exe == (DeeStringObject *)&str_DEFAULT_SHELL) {
-		if unlikely(unicode_printer_printascii(&printer, "CMD.EXE /C", 10) < 0)
+		if unlikely(Dee_unicode_printer_printascii(&printer, "CMD.EXE /C", 10) < 0)
 			goto err;
 	} else
 #endif /* ipc_Process_USE_CreateProcessW */
 	{
 		if unlikely(ipc_nt_cmdline_add_arg(&printer, cmd_exe))
 			goto err;
-		if unlikely(unicode_printer_printascii(&printer, " /C", 3) < 0)
+		if unlikely(Dee_unicode_printer_printascii(&printer, " /C", 3) < 0)
 			goto err;
 	}
 	if unlikely(ipc_nt_cmdline_add_arg(&printer, command))
 		goto err;
-	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	return (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 	char const *iter, *end;
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 	DREF DeeObject *arg;
 	DREF DeeTupleObject *result;
 	size_t result_alloc, result_size;
@@ -540,7 +540,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 			++iter;
 		if (iter >= end)
 			break; /* End of argument list. */
-		unicode_printer_init(&printer);
+		Dee_unicode_printer_init(&printer);
 		flush_start = iter;
 		while (iter < end &&
 		       (is_quoting || (*iter != ' ' && *iter != '\t'))) {
@@ -552,7 +552,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 				/* Special handling for escaped quotation marks. */
 				/* Print one backslash for every second leading backslash. */
 				part_start += num_slashes / 2;
-				if (unicode_printer_print(&printer, flush_start, (size_t)(part_start - flush_start)) < 0)
+				if (Dee_unicode_printer_print(&printer, flush_start, (size_t)(part_start - flush_start)) < 0)
 					goto err_r_printer;
 
 				/* Continue flushing after the quotation character. */
@@ -572,7 +572,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 		}
 
 		/* Flush the remainder of the argument. */
-		if (unicode_printer_print(&printer, flush_start, (size_t)(iter - flush_start)) < 0)
+		if (Dee_unicode_printer_print(&printer, flush_start, (size_t)(iter - flush_start)) < 0)
 			goto err_r_printer;
 
 		/* Make space for the new argument in the to-be returned tuple. */
@@ -592,7 +592,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 		}
 
 		/* Pack together the argument and append it. */
-		arg = unicode_printer_pack(&printer);
+		arg = Dee_unicode_printer_pack(&printer);
 		if unlikely(!arg)
 			goto err_r;
 		DeeTuple_SET(result, result_size, arg); /* Inherit reference */
@@ -601,7 +601,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 	result = DeeTuple_TruncateUninitialized(result, result_size);
 	return result;
 err_r_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -1238,12 +1238,12 @@ process_printrepr(Process *__restrict self,
 	/* TODO: allow direct specification of all of the following arguments within the constructor */
 	if (proc_pwd)
 		DO(err, DeeFormat_Printf(printer, arg, ", pwd: %r", proc_pwd));
-	if (proc_stdfd[DEE_STDIN])
-		DO(err, DeeFormat_Printf(printer, arg, ", stdin: %r", proc_stdfd[DEE_STDIN]));
-	if (proc_stdfd[DEE_STDOUT])
-		DO(err, DeeFormat_Printf(printer, arg, ", stdout: %r", proc_stdfd[DEE_STDOUT]));
-	if (proc_stdfd[DEE_STDERR])
-		DO(err, DeeFormat_Printf(printer, arg, ", stderr: %r", proc_stdfd[DEE_STDERR]));
+	if (proc_stdfd[Dee_STDIN])
+		DO(err, DeeFormat_Printf(printer, arg, ", stdin: %r", proc_stdfd[Dee_STDIN]));
+	if (proc_stdfd[Dee_STDOUT])
+		DO(err, DeeFormat_Printf(printer, arg, ", stdout: %r", proc_stdfd[Dee_STDOUT]));
+	if (proc_stdfd[Dee_STDERR])
+		DO(err, DeeFormat_Printf(printer, arg, ", stderr: %r", proc_stdfd[Dee_STDERR]));
 	DO(err, DeeFormat_PRINT(printer, arg, ")"));
 
 	/* Still (somewhat) include the process's status in its representation */
@@ -1653,18 +1653,18 @@ err:
 #ifdef ipc_Process_USE_CreateProcessW
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 ipc_nt_print_environ_item(void *arg, DeeObject *key, DeeObject *value) {
-	struct unicode_printer *printer = (struct unicode_printer *)arg;
+	struct Dee_unicode_printer *printer = (struct Dee_unicode_printer *)arg;
 	if unlikely(DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
 	if unlikely(DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
-	if unlikely(unicode_printer_printstring(printer, key) < 0)
+	if unlikely(Dee_unicode_printer_printstring(printer, key) < 0)
 		goto err;
-	if unlikely(unicode_printer_putascii(printer, '='))
+	if unlikely(Dee_unicode_printer_putascii(printer, '='))
 		goto err;
-	if unlikely(unicode_printer_printstring(printer, value) < 0)
+	if unlikely(Dee_unicode_printer_printstring(printer, value) < 0)
 		goto err;
-	if unlikely(unicode_printer_putascii(printer, '\0'))
+	if unlikely(Dee_unicode_printer_putascii(printer, '\0'))
 		goto err;
 	return 0;
 err:
@@ -1672,23 +1672,23 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ipc_nt_print_environ(struct unicode_printer *__restrict printer,
+ipc_nt_print_environ(struct Dee_unicode_printer *__restrict printer,
                      DeeObject *__restrict envp) {
 	int result;
 	result = (int)DeeObject_ForeachPair(envp, &ipc_nt_print_environ_item, printer);
 	if likely(result == 0)
-		result = unicode_printer_putascii(printer, '\0');
+		result = Dee_unicode_printer_putascii(printer, '\0');
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 ipc_nt_pack_environ(DeeObject *__restrict envp) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(ipc_nt_print_environ(&printer, envp))
 		goto err;
-	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	return (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -2171,7 +2171,7 @@ err:
 #define PRFMAXdSTDFD "-170141183460469231731687303715884105728"
 #endif
 #undef IS_SINGLE_DECIMAL_DIGIT
-#if STDIN_FILENO == DEE_STDIN && STDOUT_FILENO == DEE_STDOUT && STDERR_FILENO == DEE_STDERR
+#if STDIN_FILENO == Dee_STDIN && STDOUT_FILENO == Dee_STDOUT && STDERR_FILENO == Dee_STDERR
 #define DEE_STDID_TO_FILENO(id) ((int)(id))
 #else /* ... */
 #define DEE_STDID_TO_FILENO(id) _DEE_STDID_TO_FILENO[id]
@@ -2309,18 +2309,18 @@ unix_spawn_args_init_posix_spawn(struct unix_spawn_args *__restrict self) {
 	if unlikely(error != 0)
 		goto err_spawn_file_actions;
 
-	if (self->usa_stdfds[DEE_STDIN] != STDIN_FILENO) {
-		error = posix_spawn_file_actions_adddup2(&self->usa_spawn_file_actions, self->usa_stdfds[DEE_STDIN], STDIN_FILENO);
+	if (self->usa_stdfds[Dee_STDIN] != STDIN_FILENO) {
+		error = posix_spawn_file_actions_adddup2(&self->usa_spawn_file_actions, self->usa_stdfds[Dee_STDIN], STDIN_FILENO);
 		if unlikely(error != 0)
 			goto err_spawn_file_actions_spawn_attr;
 	}
-	if (self->usa_stdfds[DEE_STDOUT] != STDOUT_FILENO) {
-		error = posix_spawn_file_actions_adddup2(&self->usa_spawn_file_actions, self->usa_stdfds[DEE_STDOUT], STDOUT_FILENO);
+	if (self->usa_stdfds[Dee_STDOUT] != STDOUT_FILENO) {
+		error = posix_spawn_file_actions_adddup2(&self->usa_spawn_file_actions, self->usa_stdfds[Dee_STDOUT], STDOUT_FILENO);
 		if unlikely(error != 0)
 			goto err_spawn_file_actions_spawn_attr;
 	}
-	if (self->usa_stdfds[DEE_STDERR] != STDERR_FILENO) {
-		error = posix_spawn_file_actions_adddup2(&self->usa_spawn_file_actions, self->usa_stdfds[DEE_STDERR], STDERR_FILENO);
+	if (self->usa_stdfds[Dee_STDERR] != STDERR_FILENO) {
+		error = posix_spawn_file_actions_adddup2(&self->usa_spawn_file_actions, self->usa_stdfds[Dee_STDERR], STDERR_FILENO);
 		if unlikely(error != 0)
 			goto err_spawn_file_actions_spawn_attr;
 	}
@@ -2360,19 +2360,19 @@ ipc_unix_spawn_in_child(struct unix_spawn_args const *__restrict self) {
 #endif
 
 	/* Load std file descriptor overrides */
-	if (self->usa_stdfds[DEE_STDIN] != STDIN_FILENO) {
-		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[DEE_STDIN], STDIN_FILENO);
-		if unlikely(dup2(self->usa_stdfds[DEE_STDIN], STDIN_FILENO) < 0)
+	if (self->usa_stdfds[Dee_STDIN] != STDIN_FILENO) {
+		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[Dee_STDIN], STDIN_FILENO);
+		if unlikely(dup2(self->usa_stdfds[Dee_STDIN], STDIN_FILENO) < 0)
 			return;
 	}
-	if (self->usa_stdfds[DEE_STDOUT] != STDOUT_FILENO) {
-		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[DEE_STDOUT], STDOUT_FILENO);
-		if unlikely(dup2(self->usa_stdfds[DEE_STDOUT], STDOUT_FILENO) < 0)
+	if (self->usa_stdfds[Dee_STDOUT] != STDOUT_FILENO) {
+		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[Dee_STDOUT], STDOUT_FILENO);
+		if unlikely(dup2(self->usa_stdfds[Dee_STDOUT], STDOUT_FILENO) < 0)
 			return;
 	}
-	if (self->usa_stdfds[DEE_STDERR] != STDERR_FILENO) {
-		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[DEE_STDERR], STDERR_FILENO);
-		if unlikely(dup2(self->usa_stdfds[DEE_STDERR], STDERR_FILENO) < 0)
+	if (self->usa_stdfds[Dee_STDERR] != STDERR_FILENO) {
+		DBG_ipc_unix_spawn_in_child_ACTION("dup2(%d, %d)\n", self->usa_stdfds[Dee_STDERR], STDERR_FILENO);
+		if unlikely(dup2(self->usa_stdfds[Dee_STDERR], STDERR_FILENO) < 0)
 			return;
 	}
 
@@ -2940,9 +2940,9 @@ again:
 					goto err_exe_str_lpwCmdLineCopy_pwd_str_env_str;
 				}
 			}
-			siStartupInfo.hStdInput  = hStdHandles[DEE_STDIN];
-			siStartupInfo.hStdOutput = hStdHandles[DEE_STDOUT];
-			siStartupInfo.hStdError  = hStdHandles[DEE_STDERR];
+			siStartupInfo.hStdInput  = hStdHandles[Dee_STDIN];
+			siStartupInfo.hStdOutput = hStdHandles[Dee_STDOUT];
+			siStartupInfo.hStdError  = hStdHandles[Dee_STDERR];
 		}
 
 		/* Finally, we get to the actual mean to process creation!
@@ -4947,13 +4947,13 @@ process_del_pwd(Process *__restrict self) {
 }
 
 
-STATIC_ASSERT(DEE_STDIN == 0);
-STATIC_ASSERT(DEE_STDOUT == 1);
-STATIC_ASSERT(DEE_STDERR == 2);
+STATIC_ASSERT(Dee_STDIN == 0);
+STATIC_ASSERT(Dee_STDOUT == 1);
+STATIC_ASSERT(Dee_STDERR == 2);
 PRIVATE char const std_handle_names[3][8] = {
-	/*[DEE_STDIN]  =*/ "stdin",
-	/*[DEE_STDOUT] =*/ "stdout",
-	/*[DEE_STDERR] =*/ "stderr",
+	/*[Dee_STDIN]  =*/ "stdin",
+	/*[Dee_STDOUT] =*/ "stdout",
+	/*[Dee_STDERR] =*/ "stderr",
 };
 
 
@@ -5099,47 +5099,47 @@ process_del_stdfd(Process *__restrict self, unsigned int std_handle_id) {
 /* Process std handle accessor wrappers. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_stdin(Process *__restrict self) {
-	return process_get_stdfd(self, DEE_STDIN);
+	return process_get_stdfd(self, Dee_STDIN);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_del_stdin(Process *__restrict self) {
-	return process_del_stdfd(self, DEE_STDIN);
+	return process_del_stdfd(self, Dee_STDIN);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 process_set_stdin(Process *self, DeeObject *value) {
-	return process_set_stdfd(self, DEE_STDIN, value);
+	return process_set_stdfd(self, Dee_STDIN, value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_stdout(Process *__restrict self) {
-	return process_get_stdfd(self, DEE_STDOUT);
+	return process_get_stdfd(self, Dee_STDOUT);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_del_stdout(Process *__restrict self) {
-	return process_del_stdfd(self, DEE_STDOUT);
+	return process_del_stdfd(self, Dee_STDOUT);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 process_set_stdout(Process *self, DeeObject *value) {
-	return process_set_stdfd(self, DEE_STDOUT, value);
+	return process_set_stdfd(self, Dee_STDOUT, value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_stderr(Process *__restrict self) {
-	return process_get_stdfd(self, DEE_STDERR);
+	return process_get_stdfd(self, Dee_STDERR);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_del_stderr(Process *__restrict self) {
-	return process_del_stdfd(self, DEE_STDERR);
+	return process_del_stdfd(self, Dee_STDERR);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 process_set_stderr(Process *self, DeeObject *value) {
-	return process_set_stdfd(self, DEE_STDERR, value);
+	return process_set_stdfd(self, Dee_STDERR, value);
 }
 
 

@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeInstanceMethod_**/
 #ifndef GUARD_DEEMON_INSTANCEMETHOD_H
-#define GUARD_DEEMON_INSTANCEMETHOD_H 1
+#define GUARD_DEEMON_INSTANCEMETHOD_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -26,18 +28,12 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_instance_method   instance_method
-#define DEFINE_INSTANCEMETHOD Dee_DEFINE_INSTANCEMETHOD
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_instance_method DeeInstanceMethodObject;
-
-struct Dee_instance_method {
+typedef struct Dee_instance_method {
 	Dee_OBJECT_HEAD
 	DREF DeeObject *im_func; /* [1..1] The function to-be called. */
 	DREF DeeObject *im_this; /* [1..1] The this argument. */
-};
+} DeeInstanceMethodObject;
+
 #define DeeInstanceMethod_FUNC(x) Dee_REQUIRES_OBJECT(DeeInstanceMethodObject, x)->im_func
 #define DeeInstanceMethod_THIS(x) Dee_REQUIRES_OBJECT(DeeInstanceMethodObject, x)->im_this
 
@@ -58,7 +54,7 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
  * `im_func', using `this_arg' as the this-argument when called normally.
  *
  * In user-code, it is used to implement the temporary/split type when an
- * instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
+ * instance attribute with the `Dee_CLASS_ATTRIBUTE_FMETHOD' flag is loaded
  * as an object, rather than being called directly. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func, DeeObject *this_arg);

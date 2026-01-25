@@ -17,8 +17,19 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeDbgGCObject_*alloc**/
+/*!export DeeDbgGCObject_Try*alloc**/
+/*!export DeeGCObject_*alloc**/
+/*!export DeeGCObject_*ALLOC**/
+/*!export DeeGCObject_Try*alloc**/
+/*!export DeeGCObject_TRY*ALLOC**/
+/*!export Dee_GC_**/
+/*!export DeeGC_**/
+/*!export _Dee_GC_HEAD_UNTRACKED_**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_GC_H
-#define GUARD_DEEMON_GC_H 1
+#define GUARD_DEEMON_GC_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -26,41 +37,35 @@
 
 #include "types.h"
 
-#ifndef __INTELLISENSE__
-#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeSlab_ENUMERATE, DeeSlab_Invoke, _Dee_Malloc*Bufsize* */
-#else /* !__INTELLISENSE__ */
-DECL_BEGIN
-#define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))
-#define _Dee_MallococBufsize(base_offset, elem_count, elem_size)                ((base_offset) + ((elem_count) * (elem_size)))
-#define _Dee_MalloccBufsizeDbg(elem_count, elem_size, file, line)               _Dee_MalloccBufsize(elem_count, elem_size)
-#define _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line) _Dee_MallococBufsize(base_offset, elem_count, elem_size)
-LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MalloccBufsizeSafe(size_t elem_count, size_t elem_size);
-LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MallococBufsizeSafe(size_t base_offset, size_t elem_count, size_t elem_size);
-DECL_END
-#endif /* __INTELLISENSE__ */
-/**/
-
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
 
+#ifndef __INTELLISENSE__
+#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeSlab_ENUMERATE, DeeSlab_Invoke, _Dee_Malloc*Bufsize* */
+#else /* !__INTELLISENSE__ */
+DECL_BEGIN
+#define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))                             /*!export-*/
+#define _Dee_MallococBufsize(base_offset, elem_count, elem_size)                ((base_offset) + ((elem_count) * (elem_size)))           /*!export-*/
+#define _Dee_MalloccBufsizeDbg(elem_count, elem_size, file, line)               _Dee_MalloccBufsize(elem_count, elem_size)               /*!export-*/
+#define _Dee_MallococBufsizeDbg(base_offset, elem_count, elem_size, file, line) _Dee_MallococBufsize(base_offset, elem_count, elem_size) /*!export-*/
+LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MalloccBufsizeSafe(size_t elem_count, size_t elem_size);                                      /*!export-*/
+LOCAL ATTR_CONST WUNUSED size_t DCALL _Dee_MallococBufsizeSafe(size_t base_offset, size_t elem_count, size_t elem_size);                 /*!export-*/
+DECL_END
+#endif /* __INTELLISENSE__ */
+
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_gc_head_link gc_head_link
-#define Dee_gc_head      gc_head
-#endif /* DEE_SOURCE */
-
 #if defined(DEE_SOURCE) && defined(__INTELLISENSE__)
-struct gc_head;
-struct gc_head_link {
+struct Dee_gc_head;
+struct Dee_gc_head_link {
 	/* The structure that is prefixed before every GC-allocated object. */
-	struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
-	struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
+	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 };
-struct gc_head {
-	struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
-	struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
+struct Dee_gc_head {
+	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 	DeeObject        gc_object; /* The object that is being controlled by the GC. */
 };
 #else /* DEE_SOURCE && __INTELLISENSE__ */
@@ -79,9 +84,9 @@ struct Dee_gc_head {
 
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4
-#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct gc_head **)UINT32_C(0xcccccccc))
+#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct Dee_gc_head **)UINT32_C(0xcccccccc))
 #elif __SIZEOF_POINTER__ == 8
-#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct gc_head **)UINT64_C(0xcccccccccccccccc))
+#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct Dee_gc_head **)UINT64_C(0xcccccccccccccccc))
 #endif /* __SIZEOF_POINTER__ == ... */
 #endif /* !NDEBUG */
 
@@ -93,9 +98,9 @@ struct Dee_gc_head {
 
 
 
-#define DEE_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
-#define DEE_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
-#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_AsObject(ob) - DEE_GC_OBJECT_OFFSET))
+#define Dee_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
+#define Dee_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
+#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_AsObject(ob) - Dee_GC_OBJECT_OFFSET))
 #define DeeGC_Object(ob)     (&(ob)->gc_object)
 #define DeeGC_Check(ob)      ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (Dee_REQUIRES_OBJECT(DeeTypeObject, ob)->tp_flags & TP_FHEAP)))
 
@@ -110,7 +115,7 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Track(DeeObject *__r
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
 
 /* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct gc_head_link' */
+ * already been linked together using their `struct Dee_gc_head_link' */
 DFUNDEF WUNUSED bool DCALL DeeGC_TrackMany_TryLock(void);
 DFUNDEF void DCALL DeeGC_TrackMany_Lock(void);
 DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackMany_Exec(DeeObject *first, DeeObject *last);
@@ -138,7 +143,7 @@ INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
  * Don't you think these functions allocate some magical memory
  * that can somehow track what objects it references. - No!
  * All these do is allocate a block of memory of `n_bytes' that
- * includes some storage at negative offsets to hold a `struct gc_head',
+ * includes some storage at negative offsets to hold a `struct Dee_gc_head',
  * as is required for objects that should later be tracked by the GC. */
 DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Malloc)(size_t n_bytes);
 DFUNDEF ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Calloc)(size_t n_bytes);

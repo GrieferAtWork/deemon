@@ -17,12 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export Dee_accu*/
+/*!export **/
 /*!export Dee_accu_**/
 /*!export Dee_ACCU_**/
 /*!export HAVE_Dee_ACCU_**/
 #ifndef GUARD_DEEMON_ACCU_H
-#define GUARD_DEEMON_ACCU_H 1
+#define GUARD_DEEMON_ACCU_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -37,10 +37,6 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_list_object  list_object
-#endif /* DEE_SOURCE */
-
 struct Dee_list_object;
 
 /* Accumulator modes. */
@@ -54,11 +50,11 @@ enum {
 	Dee_ACCU_INT,     /* First object was "int" */
 #if __SIZEOF_SIZE_T__ < 8
 	Dee_ACCU_INT64,   /* First object was "int" (and didn't fit into a Dee_ssize_t) */
-#define HAVE_Dee_ACCU_INT64
+#define Dee_ACCU_INT64_DEFINED
 #endif /* __SIZEOF_SIZE_T__ < 8 */
 #ifndef CONFIG_NO_FPU
 	Dee_ACCU_FLOAT,   /* First object was "float" */
-#define HAVE_Dee_ACCU_FLOAT
+#define Dee_ACCU_FLOAT_DEFINED
 #endif /* !CONFIG_NO_FPU */
 	Dee_ACCU_TUPLE,   /* First object was "Tuple" */
 	Dee_ACCU_LIST,    /* First object was "List" (!DeeObject_IsShared) */

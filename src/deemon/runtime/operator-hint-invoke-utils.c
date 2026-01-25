@@ -1030,7 +1030,7 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
 	Dee_hash_t result;
 	/* Check for special case: no objects, i.e.: an empty sequence */
 	if unlikely(!object_count)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 
 	/* Important: when only a single object is given, our
 	 * return value must be equal to `DeeObject_Hash()'.
@@ -1055,7 +1055,7 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
 	Dee_hash_t result;
 	/* Check for special case: no objects, i.e.: an empty sequence */
 	if unlikely(!object_count)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 
 	/* Important: when only a single object is given, our
 	 * return value must be equal to `DeeObject_Hash()'.
@@ -1066,12 +1066,12 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t
 	 * >> assert hash(42) == (42); */
 	{
 		DeeObject *item = object_vector[0];
-		result = item ? DeeObject_Hash(item) : DEE_HASHOF_UNBOUND_ITEM;
+		result = item ? DeeObject_Hash(item) : Dee_HASHOF_UNBOUND_ITEM;
 	}
 	for (i = 1; i < object_count; ++i) {
 		Dee_hash_t hsitem;
 		DeeObject *item = object_vector[i];
-		hsitem = item ? DeeObject_Hash(item) : DEE_HASHOF_UNBOUND_ITEM;
+		hsitem = item ? DeeObject_Hash(item) : Dee_HASHOF_UNBOUND_ITEM;
 		result = Dee_HashCombine(result, hsitem);
 	}
 	return result;

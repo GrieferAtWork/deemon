@@ -171,14 +171,14 @@ DECL_BEGIN
 
 
 
-#define Dee_code_object     code_object
-#define Dee_module_object   module_object
-#define Dee_module_symbol   module_symbol
-#define Dee_class_attribute class_attribute
-struct code_object;
-struct module_object;
-struct module_symbol;
-struct class_attribute;
+#define Dee_code_object     Dee_code_object
+#define Dee_module_object   Dee_module_object
+#define Dee_module_symbol   Dee_module_symbol
+#define Dee_class_attribute Dee_class_attribute
+struct Dee_code_object;
+struct Dee_module_object;
+struct Dee_module_symbol;
+struct Dee_class_attribute;
 
 /* Debug helpers/config */
 #undef NO_HOSTASM_DEBUG_PRINT
@@ -765,10 +765,10 @@ memequivs_movevalue_reg2regind(struct memequivs *__restrict self,
 
 
 /* Extra information that may exist for a mem-object. */
-#define Dee_class_descriptor_object class_descriptor_object
-struct class_descriptor_object;
+#define Dee_class_descriptor_object Dee_class_descriptor_object
+struct Dee_class_descriptor_object;
 struct memobj_xinfo_cdesc {
-	struct class_descriptor_object *moxc_desc;  /* [1..1] Known value for `DeeType_Class(:mo_loc)' */
+	struct Dee_class_descriptor_object *moxc_desc;  /* [1..1] Known value for `DeeType_Class(:mo_loc)' */
 	COMPILER_FLEXIBLE_ARRAY(byte_t, moxc_init); /* [CEILDIV(moxc_desc->cd_cmemb_size, CHAR_BIT)] Bitset of cd_members items already initialized. */
 };
 
@@ -2180,7 +2180,7 @@ struct function_assembler {
 	struct host_symbol       *fa_symbols;      /* [0..1][owned] Chain of allocated symbols. */
 #define FUNCTION_ASSEMBLER_F_NORMAL     0x0000 /* Normal flags */
 #define FUNCTION_ASSEMBLER_F_OSIZE      0x0001 /* Optimize for size (generally means: try not to use cold sections or inlines) */
-#define FUNCTION_ASSEMBLER_F_SAFE       0x0002 /* Generate "safe" code (for `CODE_FASSEMBLY' code) */
+#define FUNCTION_ASSEMBLER_F_SAFE       0x0002 /* Generate "safe" code (for `Dee_CODE_FASSEMBLY' code) */
 #define FUNCTION_ASSEMBLER_F_NOROINLINE 0x0004 /* Don't inline references to already-bound class members/globals, even if the location is `Dee_CLASS_ATTRIBUTE_FREADONLY' / `Dee_MODSYM_FREADONLY' */
 #define FUNCTION_ASSEMBLER_F_NOEARLYDEL 0x0008 /* Don't delete local variables as early as possible (when set, code behaves more closely to original byte-code, but at a significant overhead) */
 #define FUNCTION_ASSEMBLER_F_NORTTITYPE 0x0010 /* Don't use RTTI from dex modules and the deemon core for the purpose of figuring out object types (set to work around buggy RTTI) */

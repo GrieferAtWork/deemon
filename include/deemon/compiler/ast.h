@@ -53,7 +53,7 @@ struct catch_expr {
 	                                *        catch-masks instead. */
 	DREF struct ast   *ce_code;    /* [1..1] The expression evaluated to handle the exception.
 	                                *        When and how this block is evaluated depends on
-	                                *        the `EXCEPTION_HANDLER_FFINALLY' flag in `ce_flags':
+	                                *        the `Dee_EXCEPTION_HANDLER_FFINALLY' flag in `ce_flags':
 	                                * When set this expression is evaluated:
 	                                *    - during regular code-flow when `:t_guard' returns normally
 	                                *    - when `:t_guard' invoked a `return' statement, or
@@ -105,7 +105,6 @@ struct class_member {
 
 struct TPPFile;
 struct TPPKeyword;
-struct string_object;
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 struct TPPString;

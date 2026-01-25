@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeNone**/
 #ifndef GUARD_DEEMON_NONE_H
-#define GUARD_DEEMON_NONE_H 1
+#define GUARD_DEEMON_NONE_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -30,15 +32,13 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_none_object none_object
-#define return_none     Dee_return_none
+#define return_none Dee_return_none
 #endif /* DEE_SOURCE */
 
-typedef struct Dee_none_object DeeNoneObject;
-struct Dee_none_object {
+typedef struct Dee_none_object {
 	Dee_OBJECT_HEAD
 	Dee_WEAKREF_SUPPORT
-};
+} DeeNoneObject;
 
 DDATDEF DeeTypeObject DeeNone_Type;
 #ifdef GUARD_DEEMON_OBJECTS_NONE_C

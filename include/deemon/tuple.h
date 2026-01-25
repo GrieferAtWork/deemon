@@ -17,8 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeTuple**/
+/*!export DeeNullableTuple**/
+/*!export Dee_nullable_tuple_builder**/
+/*!export Dee_nullable_tuple_**/
+/*!export Dee_tuple_builder**/
+/*!export Dee_tuple_**/
 #ifndef GUARD_DEEMON_TUPLE_H
-#define GUARD_DEEMON_TUPLE_H 1
+#define GUARD_DEEMON_TUPLE_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -36,18 +43,15 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_tuple_object tuple_object
-#define DEFINE_TUPLE     Dee_DEFINE_TUPLE
+#define DEFINE_TUPLE Dee_DEFINE_TUPLE
 #endif /* DEE_SOURCE */
 
-typedef struct Dee_tuple_object DeeTupleObject;
-
-struct Dee_tuple_object {
+typedef struct Dee_tuple_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD
 	size_t                                    t_size;  /* [const] Tuple size. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, t_elem); /* [1..1][const][t_size] Tuple elements. */
-};
+} DeeTupleObject;
 
 #ifdef __INTELLISENSE__
 #define DeeTuple_SIZEOF(n_items) \

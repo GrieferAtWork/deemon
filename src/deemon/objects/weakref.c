@@ -103,7 +103,7 @@ ob_weakref_serialize(WeakRef *__restrict self,
 }
 
 PRIVATE NONNULL((1)) void DCALL
-ob_weakref_invoke_callback(struct weakref *__restrict self) {
+ob_weakref_invoke_callback(struct Dee_weakref *__restrict self) {
 	DREF WeakRef *me;
 	me = COMPILER_CONTAINER_OF(self, WeakRef, wr_ref);
 	if (!Dee_IncrefIfNotZero(me)) {
@@ -482,14 +482,14 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 weakrefable_init(WeakRefAble *__restrict self) {
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 weakrefable_copy(WeakRefAble *__restrict self,
                  WeakRefAble *__restrict UNUSED(other)) {
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 }
 
@@ -500,13 +500,13 @@ weakrefable_serialize(WeakRefAble *__restrict UNUSED(self),
 	/* Weak reference lists can't be serialized,
 	 * so just set-up as empty in the copy */
 	WeakRefAble *out = DeeSerial_Addr2Mem(writer, addr, WeakRefAble);
-	weakref_support_init(out);
+	Dee_weakref_support_init(out);
 	return 0;
 }
 
 PRIVATE NONNULL((1)) void DCALL
 weakrefable_fini(WeakRefAble *__restrict self) {
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -531,7 +531,7 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 	/* .tp_doc      = */ DOC("An base class that user-defined classes can be "
 	                         /**/ "derived from to become weakly referenceable"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(WeakRefAble),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(WeakRefAble),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {

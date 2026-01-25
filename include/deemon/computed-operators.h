@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!fixincludes no_include_comments*/
+/*!export **/
 #ifndef GUARD_DEEMON_COMPUTED_OPERATORS_H
-#define GUARD_DEEMON_COMPUTED_OPERATORS_H 1
+#define GUARD_DEEMON_COMPUTED_OPERATORS_H 1 /*!export-*/
 
 #include "api.h"
 

@@ -52,9 +52,9 @@ fallback:
 %{class using []: {
 	uint16_t i;
 	DREF DeeObject *member;
-	struct class_desc *desc = DeeClass_DESC(THIS_TYPE);
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(THIS_TYPE);
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 		member = instance->id_vtab[i];

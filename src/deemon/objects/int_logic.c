@@ -39,6 +39,15 @@
 
 DECL_BEGIN
 
+/* Give shorter names to frequently used symbols */
+#define DIGIT_BITS Dee_DIGIT_BITS
+#define DIGIT_BASE Dee_DIGIT_BASE
+#define DIGIT_MASK Dee_DIGIT_MASK
+typedef Dee_digit_t digit;
+typedef Dee_sdigit_t sdigit;
+typedef Dee_twodigits_t twodigits;
+typedef Dee_stwodigits_t stwodigits;
+
 #define KARATSUBA_CUTOFF         70
 #define KARATSUBA_SQUARE_CUTOFF (2 * KARATSUBA_CUTOFF)
 #define FIVEARY_CUTOFF           8
@@ -820,7 +829,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
-DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b) {
+DeeInt_AddSDigit(DeeIntObject *__restrict a, Dee_sdigit_t b) {
 	DREF DeeIntObject *z;
 	if (!b)
 		return_reference_(a);
@@ -882,7 +891,7 @@ DeeInt_AddUInt32(DeeIntObject *__restrict a, uint32_t b) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
-DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b) {
+DeeInt_SubSDigit(DeeIntObject *__restrict a, Dee_sdigit_t b) {
 	DREF DeeIntObject *z;
 	if (ABS(a->ob_size) <= 1)
 		return (DREF DeeIntObject *)DeeInt_NewMedian(MEDIUM_VALUE(a) - b);

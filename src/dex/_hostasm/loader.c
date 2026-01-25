@@ -251,7 +251,7 @@ function_assembler_loadblocks(struct function_assembler *__restrict self) {
 	struct basic_block *block;
 	ASSERT(self->fa_blockc == 0);
 
-	if (self->fa_code->co_flags & CODE_FYIELDING)
+	if (self->fa_code->co_flags & Dee_CODE_FYIELDING)
 		return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot re-compile yield function");
 	if (self->fa_code->co_exceptc > 0)
 		return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot re-compile function with exception handlers");

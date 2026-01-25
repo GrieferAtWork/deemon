@@ -34,8 +34,8 @@ function main() {
 			f"{ROOTDIR}/include/deemon/cxx",
 		})
 		.finishSetup()
-#if 0
-		.dumpExports()
+#if 1
+//		.dumpExports()
 		.dumpHeaders()
 #else
 		.fixPaths(include: {

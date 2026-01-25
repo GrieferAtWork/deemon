@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
 /*!export Dee_RATOMIC_LOCK_**/
 /*!export Dee_ratomic_lock_**/
 /*!export _Dee_ratomic_lock_**/
@@ -30,7 +31,7 @@
 /*!export Dee_rshared_rwlock_**/
 /*!export _Dee_rshared_rwlock_**/
 #ifndef GUARD_DEEMON_UTIL_RLOCK_H
-#define GUARD_DEEMON_UTIL_RLOCK_H 1
+#define GUARD_DEEMON_UTIL_RLOCK_H 1 /*!export-*/
 
 #include "../api.h"
 

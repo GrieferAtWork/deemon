@@ -115,25 +115,25 @@ INTERN Dee_rshared_lock_t gc_lock = Dee_RSHARED_LOCK_INIT;
 
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4
-#define GCHEAD_ISTRACKED(h) ((h)->gc_pself != (struct gc_head **)UINT32_C(0xcccccccc))
+#define GCHEAD_ISTRACKED(h) ((h)->gc_pself != (struct Dee_gc_head **)UINT32_C(0xcccccccc))
 #elif __SIZEOF_POINTER__ == 8
-#define GCHEAD_ISTRACKED(h) ((h)->gc_pself != (struct gc_head **)UINT32_C(0xcccccccccccccccc))
+#define GCHEAD_ISTRACKED(h) ((h)->gc_pself != (struct Dee_gc_head **)UINT32_C(0xcccccccccccccccc))
 #endif /* __SIZEOF_POINTER__ == ... */
 #endif /* !NDEBUG */
 
 
 /* [lock(gc_lock)][0..1] The list root of all GC objects. */
-INTERN struct gc_head *gc_root = NULL;
+INTERN struct Dee_gc_head *gc_root = NULL;
 PRIVATE bool did_untrack = false;
 
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-PRIVATE struct gc_head *gc_pending = NULL; /* [0..1] Pending object for GC tracking. */
+PRIVATE struct Dee_gc_head *gc_pending = NULL; /* [0..1] Pending object for GC tracking. */
 #define GC_PENDING_MUSTSERVICE() (atomic_read(&gc_pending) != NULL)
 PRIVATE void DCALL gc_pending_service(void) {
-	struct gc_head *chain;
+	struct Dee_gc_head *chain;
 	chain = atomic_xch(&gc_pending, NULL);
 	if (chain) {
-		struct gc_head *next, **p_self;
+		struct Dee_gc_head *next, **p_self;
 		p_self = &gc_root;
 		for (next = chain;;) {
 			next->gc_pself = p_self;
@@ -142,7 +142,7 @@ PRIVATE void DCALL gc_pending_service(void) {
 			if (!next)
 				break;
 		}
-		next = COMPILER_CONTAINER_OF(p_self, struct gc_head, gc_next); /* last */
+		next = COMPILER_CONTAINER_OF(p_self, struct Dee_gc_head, gc_next); /* last */
 		ASSERT(next->gc_next == NULL);
 		ASSERT(chain->gc_pself == &gc_root);
 		/* Append the old GC chain */
@@ -182,7 +182,7 @@ again:
  * @return: * : == ob */
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Track(DeeObject *__restrict ob) {
-	struct gc_head *head;
+	struct Dee_gc_head *head;
 	ASSERT_OBJECT_TYPE(ob->ob_type, &DeeType_Type);
 	ASSERT(DeeGC_Check(ob));
 	head = DeeGC_Head(ob);
@@ -192,9 +192,9 @@ DeeGC_Track(DeeObject *__restrict ob) {
 #endif /* GCHEAD_ISTRACKED */
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 	if (!GCLOCK_TRYACQUIRE()) {
-		struct gc_head *next;
+		struct Dee_gc_head *next;
 #ifdef GCHEAD_ISTRACKED
-		head->gc_pself = (struct gc_head **)1;
+		head->gc_pself = (struct Dee_gc_head **)1;
 		ASSERT(GCHEAD_ISTRACKED(head));
 #endif /* GCHEAD_ISTRACKED */
 		do {
@@ -225,7 +225,7 @@ DeeGC_Track(DeeObject *__restrict ob) {
 
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Untrack(DeeObject *__restrict ob) {
-	struct gc_head *head;
+	struct Dee_gc_head *head;
 	ASSERT_OBJECT_TYPE(ob->ob_type, &DeeType_Type);
 	ASSERT(DeeGC_Check(ob));
 	head = DeeGC_Head(ob);
@@ -246,14 +246,14 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 		head->gc_next->gc_pself = head->gc_pself;
 	did_untrack = true;
 	GCLOCK_RELEASE_S();
-	DBG_memset(head, 0xcc, DEE_GC_HEAD_SIZE);
+	DBG_memset(head, 0xcc, Dee_GC_HEAD_SIZE);
 	return ob;
 }
 
 /* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct gc_head_link' */
+ * already been linked together using their `struct Dee_gc_head_link' */
 /* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct gc_head_link' */
+ * already been linked together using their `struct Dee_gc_head_link' */
 PUBLIC WUNUSED bool DCALL DeeGC_TrackMany_TryLock(void) {
 	bool result = GCLOCK_TRYACQUIRE();
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
@@ -268,8 +268,8 @@ PUBLIC void DCALL DeeGC_TrackMany_Lock(void) {
 }
 
 PUBLIC NONNULL((1, 2)) void DCALL DeeGC_TrackMany_Exec(DeeObject *first, DeeObject *last) {
-	struct gc_head *first_head = DeeGC_Head(first);
-	struct gc_head *last_head  = DeeGC_Head(last);
+	struct Dee_gc_head *first_head = DeeGC_Head(first);
+	struct Dee_gc_head *last_head  = DeeGC_Head(last);
 	if ((last_head->gc_next = gc_root) != NULL)
 		gc_root->gc_pself = &last_head->gc_next;
 	first_head->gc_pself = &gc_root;
@@ -857,7 +857,7 @@ found_chain_link:
 #define INITIAL_DYNAMIC_VISIT_BUFFER_MASK 31
 
 PRIVATE size_t DCALL
-gc_trydestroy(struct gc_head *__restrict head,
+gc_trydestroy(struct Dee_gc_head *__restrict head,
               struct gc_dep **__restrict p_dep_buffer,
               size_t *__restrict p_dep_mask
 #ifdef CONFIG_GC_TRACK_LEAFS
@@ -1058,7 +1058,7 @@ done:
 /* Try to collect at most `max_objects' GC-objects,
  * returning the actual amount collected. */
 PUBLIC size_t DCALL DeeGC_Collect(size_t max_objects) {
-	struct gc_head *iter;
+	struct Dee_gc_head *iter;
 	size_t temp, result;
 	struct gc_dep *dep_buffer;
 	size_t dep_mask;
@@ -1162,7 +1162,7 @@ done_nolock:
  *       when this function is called to determine if the GC must
  *       continue to run) */
 INTERN bool DCALL DeeGC_IsEmptyWithoutDex(void) {
-	struct gc_head *iter;
+	struct Dee_gc_head *iter;
 	GCLOCK_ACQUIRE_S();
 	/* Also search the regular GC chain. */
 	iter = gc_root;
@@ -1258,7 +1258,7 @@ is_nonempty:
  *     least hope to be able to trust) not to cause something like this.
  * @return: * : The amount of code objects that were affected. */
 INTERN size_t DCALL DeeExec_KillUserCode(void) {
-	struct gc_head *iter;
+	struct Dee_gc_head *iter;
 	size_t result = 0;
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 collect_restart_with_pending_hint:
@@ -1290,8 +1290,8 @@ collect_restart_with_pending_hint:
 		 *              -- Delete that flag! We can't have the code
 		 *                 re-acquiring control, simply by pre-defining
 		 *                 a finally handler to guard the first text byte. */
-		old_flags = atomic_fetchand(&iter_code->co_flags, ~CODE_FFINALLY);
-		if (old_instr != ASM_RET_NONE || (old_flags & CODE_FFINALLY))
+		old_flags = atomic_fetchand(&iter_code->co_flags, ~Dee_CODE_FFINALLY);
+		if (old_instr != ASM_RET_NONE || (old_flags & Dee_CODE_FFINALLY))
 			++result;
 	}
 	GCLOCK_RELEASE();
@@ -1310,8 +1310,8 @@ LOCAL void *gc_initob(void *ptr) {
 		/* NOTE: This `DBG_memset()' is important for `GCHEAD_ISTRACKED()' to work properly!
 		 * The 0xcc pattern set here is checked for by `GCHEAD_ISTRACKED()', and if found:
 		 * treated as meaning that the associated object isn't being tracked. */
-		DBG_memset(ptr, 0xcc, DEE_GC_HEAD_SIZE);
-		ptr = DeeGC_Object((struct gc_head *)ptr);
+		DBG_memset(ptr, 0xcc, Dee_GC_HEAD_SIZE);
+		ptr = DeeGC_Object((struct Dee_gc_head *)ptr);
 	}
 	return ptr;
 }
@@ -1320,25 +1320,25 @@ LOCAL void *gc_initob(void *ptr) {
  * Don't you think these functions allocate some magical memory
  * that can somehow track what objects it references. - No!
  * All these do is allocate a block of memory of `n_bytes' that
- * includes some storage at negative offsets to hold a `struct gc_head',
+ * includes some storage at negative offsets to hold a `struct Dee_gc_head',
  * as is required for objects that should later be tracked by the GC. */
 PUBLIC ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Malloc)(size_t n_bytes) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeObject_Malloc)(whole_size));
 }
 
 PUBLIC ATTR_MALLOC WUNUSED void *(DCALL DeeGCObject_Calloc)(size_t n_bytes) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeObject_Calloc)(whole_size));
 }
 
 PUBLIC WUNUSED void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	if (p) {
 #ifdef GCHEAD_ISTRACKED
@@ -1355,7 +1355,7 @@ PUBLIC WUNUSED void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
 PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeGCObject_TryMalloc)(size_t n_bytes) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeObject_TryMalloc)(whole_size));
 }
@@ -1363,7 +1363,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeGCObject_TryCalloc)(size_t n_bytes) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeObject_TryCalloc)(whole_size));
 }
@@ -1371,7 +1371,7 @@ PUBLIC ATTR_MALLOC WUNUSED void *
 PUBLIC WUNUSED void *
 (DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	if (p) {
 #ifdef GCHEAD_ISTRACKED
@@ -1404,7 +1404,7 @@ PUBLIC void
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_Malloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeDbgObject_Malloc)(whole_size, file, line));
 }
@@ -1412,7 +1412,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_Calloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeDbgObject_Calloc)(whole_size, file, line));
 }
@@ -1420,7 +1420,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 DFUNDEF WUNUSED void *
 (DCALL DeeDbgGCObject_Realloc)(void *p, size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	if (p) {
 #if defined(GCHEAD_ISTRACKED) && !defined(NDEBUG)
@@ -1439,7 +1439,7 @@ DFUNDEF WUNUSED void *
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_TryMalloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeDbgObject_TryMalloc)(whole_size, file, line));
 }
@@ -1447,7 +1447,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 DFUNDEF ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_TryCalloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	return gc_initob((DeeDbgObject_TryCalloc)(whole_size, file, line));
 }
@@ -1455,7 +1455,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 DFUNDEF WUNUSED void *
 (DCALL DeeDbgGCObject_TryRealloc)(void *p, size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
-	if unlikely(OVERFLOW_UADD(DEE_GC_HEAD_SIZE, n_bytes, &whole_size))
+	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
 		whole_size = (size_t)-1;
 	if (p) {
 #if defined(GCHEAD_ISTRACKED) && !defined(NDEBUG)
@@ -1484,28 +1484,28 @@ DFUNDEF void
 #define DEFINE_GC_SLAB_FUNCTIONS(index, size)                                                                               \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeGCObject_SlabMalloc##size(void) {                                                                                    \
-		return gc_initob(DeeSlab_Invoke(DeeObject_SlabMalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (),                 \
-		                                (DeeObject_Malloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *))));                     \
+		return gc_initob(DeeSlab_Invoke(DeeObject_SlabMalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (),                 \
+		                                (DeeObject_Malloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *))));                     \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeGCObject_SlabCalloc##size(void) {                                                                                    \
-		return gc_initob(DeeSlab_Invoke(DeeObject_SlabCalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (),                 \
-		                                (DeeObject_Calloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *))));                     \
+		return gc_initob(DeeSlab_Invoke(DeeObject_SlabCalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (),                 \
+		                                (DeeObject_Calloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *))));                     \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeGCObject_SlabTryMalloc##size(void) {                                                                                 \
-		return gc_initob(DeeSlab_Invoke(DeeObject_SlabTryMalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (),              \
-		                                (DeeObject_TryMalloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *))));                  \
+		return gc_initob(DeeSlab_Invoke(DeeObject_SlabTryMalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (),              \
+		                                (DeeObject_TryMalloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *))));                  \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeGCObject_SlabTryCalloc##size(void) {                                                                                 \
-		return gc_initob(DeeSlab_Invoke(DeeObject_SlabTryCalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (),              \
-		                                (DeeObject_TryCalloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *))));                  \
+		return gc_initob(DeeSlab_Invoke(DeeObject_SlabTryCalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (),              \
+		                                (DeeObject_TryCalloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *))));                  \
 	}                                                                                                                       \
 	PUBLIC NONNULL((1)) void DCALL                                                                                          \
 	DeeGCObject_SlabFree##size(void *__restrict ptr) {                                                                      \
 		ASSERT_UNTRACKED(ptr);                                                                                              \
-		DeeSlab_Invoke(DeeObject_SlabFree, DEE_GC_HEAD_SIZE + size * sizeof(void *),                                        \
+		DeeSlab_Invoke(DeeObject_SlabFree, Dee_GC_HEAD_SIZE + size * sizeof(void *),                                        \
 		               (DeeGC_Head((DeeObject *)ptr)),                                                                      \
 		               (DeeObject_Free)(DeeGC_Head((DeeObject *)ptr)));                                                     \
 	}                                                                                                                       \
@@ -1513,36 +1513,36 @@ DFUNDEF void
 	DeeDbgGCObject_SlabMalloc##size(char const *file, int line) {                                                           \
 		(void)file;                                                                                                         \
 		(void)line;                                                                                                         \
-		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabMalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line),    \
-		                                (DeeDbgObject_Malloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));      \
+		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabMalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (file, line),    \
+		                                (DeeDbgObject_Malloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *), file, line)));      \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeDbgGCObject_SlabCalloc##size(char const *file, int line) {                                                           \
 		(void)file;                                                                                                         \
 		(void)line;                                                                                                         \
-		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabCalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line),    \
-		                                (DeeDbgObject_Calloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));      \
+		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabCalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (file, line),    \
+		                                (DeeDbgObject_Calloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *), file, line)));      \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeDbgGCObject_SlabTryMalloc##size(char const *file, int line) {                                                        \
 		(void)file;                                                                                                         \
 		(void)line;                                                                                                         \
-		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabTryMalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line), \
-		                                (DeeDbgObject_TryMalloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));   \
+		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabTryMalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (file, line), \
+		                                (DeeDbgObject_TryMalloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *), file, line)));   \
 	}                                                                                                                       \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
 	DeeDbgGCObject_SlabTryCalloc##size(char const *file, int line) {                                                        \
 		(void)file;                                                                                                         \
 		(void)line;                                                                                                         \
-		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabTryCalloc, DEE_GC_HEAD_SIZE + size * sizeof(void *), (file, line), \
-		                                (DeeDbgObject_TryCalloc)(DEE_GC_HEAD_SIZE + size * sizeof(void *), file, line)));   \
+		return gc_initob(DeeSlab_Invoke(DeeDbgObject_SlabTryCalloc, Dee_GC_HEAD_SIZE + size * sizeof(void *), (file, line), \
+		                                (DeeDbgObject_TryCalloc)(Dee_GC_HEAD_SIZE + size * sizeof(void *), file, line)));   \
 	}                                                                                                                       \
 	PUBLIC NONNULL((1)) void DCALL                                                                                          \
 	DeeDbgGCObject_SlabFree##size(void *__restrict ptr, char const *file, int line) {                                       \
 		ASSERT_UNTRACKED(ptr);                                                                                              \
 		(void)file;                                                                                                         \
 		(void)line;                                                                                                         \
-		DeeSlab_Invoke(DeeDbgObject_SlabFree, DEE_GC_HEAD_SIZE + size * sizeof(void *),                                     \
+		DeeSlab_Invoke(DeeDbgObject_SlabFree, Dee_GC_HEAD_SIZE + size * sizeof(void *),                                     \
 		               (DeeGC_Head((DeeObject *)ptr), file, line),                                                          \
 		               (DeeDbgObject_Free)(DeeGC_Head((DeeObject *)ptr), file, line));                                      \
 	}
@@ -1558,7 +1558,7 @@ dump_reference_history(DeeObject *__restrict obj);
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 INTERN void DCALL gc_dump_all(void) {
-	struct gc_head *iter;
+	struct Dee_gc_head *iter;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
 		DeeObject *ob = &iter->gc_object;
 		DeeTypeObject *ob_type;
@@ -1650,7 +1650,7 @@ gciter_bool(GCIter *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gciter_next(GCIter *__restrict self) {
 	DREF DeeObject *result;
-	struct gc_head *next;
+	struct Dee_gc_head *next;
 	GCIter_LockAcquire(self);
 	result = self->gi_next; /* Inherit reference. */
 	if unlikely(!result) {
@@ -1742,7 +1742,7 @@ PRIVATE DeeTypeObject GCIter_Type = {
 PRIVATE WUNUSED NONNULL((1)) DREF GCIter *DCALL
 gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 	DREF GCIter *result;
-	struct gc_head *first;
+	struct Dee_gc_head *first;
 	result = DeeObject_MALLOC(GCIter);
 	if unlikely(!result)
 		goto done;
@@ -1770,7 +1770,7 @@ err_r:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_size(DeeObject *__restrict UNUSED(self)) {
 	size_t result = 0;
-	struct gc_head *iter;
+	struct Dee_gc_head *iter;
 	if unlikely(GCLOCK_ACQUIRE_READ())
 		goto err;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
@@ -1792,7 +1792,7 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 	return_bool(GCHEAD_ISTRACKED(DeeGC_Head(ob)));
 #else /* GCHEAD_ISTRACKED */
 	{
-		struct gc_head *iter;
+		struct Dee_gc_head *iter;
 		if unlikely(GCLOCK_ACQUIRE_READ())
 			goto err;
 		for (iter = gc_root; iter; iter = iter->gc_next) {
@@ -2078,7 +2078,7 @@ PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeGC_CollectGCReferred(GCSetMaker *__restrict self,
                         DeeObject *__restrict target) {
-	struct gc_head *iter;
+	struct Dee_gc_head *iter;
 again:
 	if unlikely(GCLOCK_ACQUIRE_READ())
 		goto err;

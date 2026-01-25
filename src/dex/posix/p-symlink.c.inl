@@ -410,7 +410,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix__symlinkat_f_i
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 posix_nt_symlink_normalize_text(DeeObject *__restrict text) {
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 	char const *utf8_text, *iter, *end, *flush_start;
 	if (DeeObject_AssertTypeExact(text, &DeeString_Type))
 		goto err;
@@ -421,15 +421,15 @@ posix_nt_symlink_normalize_text(DeeObject *__restrict text) {
 	utf8_text = DeeString_AsUtf8(text);
 	if unlikely(!utf8_text)
 		goto err;
-	unicode_printer_init(&printer);
+	Dee_unicode_printer_init(&printer);
 	iter = flush_start = utf8_text;
 	end  = utf8_text + WSTR_LENGTH(utf8_text);
 	while (iter < end) {
 		char ch = *iter;
 		if (ch == '/') {
-			if unlikely(unicode_printer_print(&printer, flush_start, (size_t)(iter - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(&printer, flush_start, (size_t)(iter - flush_start)) < 0)
 				goto err_printer;
-			if unlikely(unicode_printer_putascii(&printer, '\\'))
+			if unlikely(Dee_unicode_printer_putascii(&printer, '\\'))
 				goto err_printer;
 			++iter;
 			flush_start = iter;
@@ -437,11 +437,11 @@ posix_nt_symlink_normalize_text(DeeObject *__restrict text) {
 			++iter;
 		}
 	}
-	if unlikely(unicode_printer_print(&printer, flush_start, (size_t)(end - flush_start)) < 0)
+	if unlikely(Dee_unicode_printer_print(&printer, flush_start, (size_t)(end - flush_start)) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return NULL;
 }

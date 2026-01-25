@@ -82,8 +82,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 lookup_code_info_in_class(DeeTypeObject *type,
                           DeeCodeObject *code,
                           Function *function,
-                          struct function_info *__restrict info) {
-	struct class_desc *my_class;
+                          struct Dee_function_info *__restrict info) {
+	struct Dee_class_desc *my_class;
 	DeeClassDescriptorObject *desc;
 	uint16_t addr;
 	size_t i;
@@ -97,17 +97,17 @@ lookup_code_info_in_class(DeeTypeObject *type,
 		     DeeFunction_CODE(my_class->cd_members[addr]) == code)) {
 			Dee_class_desc_lock_endread(my_class);
 			for (i = 0; i <= desc->cd_iattr_mask; ++i) {
-				struct class_attribute *attr;
+				struct Dee_class_attribute *attr;
 				attr = &desc->cd_iattr_list[i];
 				if (!attr->ca_name)
 					continue;
 				if (addr < attr->ca_addr)
 					continue;
-				if ((attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FMETHOD)) !=
-				    (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FMETHOD))
+				if ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FMETHOD)) !=
+				    (Dee_CLASS_ATTRIBUTE_FCLASSMEM | Dee_CLASS_ATTRIBUTE_FMETHOD))
 					continue;
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					if (addr > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) ? attr->ca_addr : attr->ca_addr + 2))
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+					if (addr > ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) ? attr->ca_addr : attr->ca_addr + 2))
 						continue;
 					info->fi_getset = (uint16_t)(addr - attr->ca_addr);
 				} else {
@@ -124,14 +124,14 @@ lookup_code_info_in_class(DeeTypeObject *type,
 				return 0;
 			}
 			for (i = 0; i <= desc->cd_cattr_mask; ++i) {
-				struct class_attribute *attr;
+				struct Dee_class_attribute *attr;
 				attr = &desc->cd_cattr_list[i];
 				if (!attr->ca_name)
 					continue;
 				if (addr < attr->ca_addr)
 					continue;
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					if (addr > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) ? attr->ca_addr : attr->ca_addr + 2))
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+					if (addr > ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) ? attr->ca_addr : attr->ca_addr + 2))
 						continue;
 					info->fi_getset = (uint16_t)(addr - attr->ca_addr);
 				} else {
@@ -149,7 +149,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 			}
 			/* Check if we can find the address as an operator binding. */
 			for (i = 0; i <= desc->cd_clsop_mask; ++i) {
-				struct class_operator *op;
+				struct Dee_class_operator *op;
 				op = &desc->cd_clsop_list[i];
 				if (op->co_name == (Dee_operator_t)-1)
 					continue;
@@ -171,7 +171,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 lookup_code_info(/*[in]*/ DeeCodeObject *code,
                  /*[in]*/ Function *function,
-                 /*[out]*/ struct function_info *__restrict info) {
+                 /*[out]*/ struct Dee_function_info *__restrict info) {
 	DeeModuleObject *mod;
 	uint16_t addr;
 	int result;
@@ -196,16 +196,16 @@ lookup_code_info(/*[in]*/ DeeCodeObject *code,
 		if (mod->mo_globalv[addr] == Dee_AsObject(function) ||
 		    (DeeFunction_Check(mod->mo_globalv[addr]) &&
 		     DeeFunction_CODE(mod->mo_globalv[addr]) == code)) {
-			struct module_symbol *function_symbol;
+			struct Dee_module_symbol *function_symbol;
 			DeeModule_LockEndRead(mod);
 			function_symbol = DeeModule_GetSymbolID(mod, addr);
 			if (function_symbol) {
 				/* Found it! (it's a global) */
-				info->fi_name = module_symbol_getnameobj(function_symbol);
+				info->fi_name = Dee_module_symbol_getnameobj(function_symbol);
 				if unlikely(!info->fi_name)
 					goto err;
 				if (function_symbol->ss_doc) {
-					info->fi_doc = module_symbol_getdocobj(function_symbol);
+					info->fi_doc = Dee_module_symbol_getdocobj(function_symbol);
 					if unlikely(!info->fi_doc)
 						goto err_name;
 				}
@@ -280,14 +280,14 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
-                /*[out]*/ struct function_info *__restrict info) {
+                /*[out]*/ struct Dee_function_info *__restrict info) {
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
 	return lookup_code_info((DeeCodeObject *)self, NULL, info);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeFunction_GetInfo(/*Function*/ DeeObject *__restrict self,
-                    /*[out]*/ struct function_info *__restrict info) {
+                    /*[out]*/ struct Dee_function_info *__restrict info) {
 	Function *me = (Function *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFunction_Type);
 	return lookup_code_info(me->fo_code, me, info);
@@ -474,7 +474,7 @@ function_bound_kwds(Function *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_name(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -488,7 +488,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_name(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -501,7 +501,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_doc(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -515,7 +515,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 function_get_type(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -529,7 +529,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_type(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -555,7 +555,7 @@ function_bound_module(Function *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_operator(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -570,7 +570,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_operator(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -583,8 +583,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_operatorname(Function *__restrict self) {
-	struct function_info info;
-	struct opinfo const *op;
+	struct Dee_function_info info;
+	struct Dee_opinfo const *op;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -605,7 +605,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_property(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -620,7 +620,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_property(Function *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeFunction_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -656,52 +656,52 @@ function_get_code_argc_max(Function *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_hasvarargs(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FVARARGS);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FVARARGS);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_hasvarkwds(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FVARKWDS);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FVARKWDS);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_isyielding(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FYIELDING);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FYIELDING);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_iscopyable(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FCOPYABLE);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FCOPYABLE);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_isthiscall(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FTHISCALL);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FTHISCALL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_hasassembly(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FASSEMBLY);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FASSEMBLY);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_islenient(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FLENIENT);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FLENIENT);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_hasheapframe(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FHEAPFRAME);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FHEAPFRAME);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_hasfinally(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FFINALLY);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FFINALLY);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_code_isconstructor(Function *__restrict self) {
-	return_bool(self->fo_code->co_flags & CODE_FCONSTRUCTOR);
+	return_bool(self->fo_code->co_flags & Dee_CODE_FCONSTRUCTOR);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -794,9 +794,9 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	                    /**/ "or throw :UnboundAttribute if the function's property could not be found, or if the "
 	                    /**/ "function isn't declared as a property callback\n"
 	                    "#T{Id|Callback|Compatible prototype~"
-	                    /**/ "$" PP_STR(CLASS_GETSET_GET) "|Getter callback|${get(): Object}&"
-	                    /**/ "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${del(): none}&"
-	                    /**/ "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${set(value: Object): none}"
+	                    /**/ "$" PP_STR(Dee_CLASS_GETSET_GET) "|Getter callback|${get(): Object}&"
+	                    /**/ "$" PP_STR(Dee_CLASS_GETSET_DEL) "|Delete callback|${del(): none}&"
+	                    /**/ "$" PP_STR(Dee_CLASS_GETSET_SET) "|Setter callback|${set(value: Object): none}"
 	                    "}"),
 	TYPE_GETTER_AB_F("__refs__", &function_get_refs, METHOD_FCONSTCALL,
 	                 "->?S?O\n"
@@ -1177,7 +1177,7 @@ function_hash(Function *__restrict self) {
 			ob = self->fo_refv[i];
 			if (!ITER_ISOK(ob)) {
 				DeeFunction_RefLockEndRead(self);
-				result = Dee_HashCombine(result, DEE_HASHOF_UNBOUND_ITEM);
+				result = Dee_HashCombine(result, Dee_HASHOF_UNBOUND_ITEM);
 			} else {
 				Dee_Incref(ob);
 				DeeFunction_RefLockEndRead(self);
@@ -1323,7 +1323,7 @@ PRIVATE NONNULL((1)) void DCALL
 yf_fini(YFunction *__restrict self) {
 	if (self->yf_kw) {
 		Dee_Decref(self->yf_kw->fk_kw);
-		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
+		if (self->yf_func->fo_code->co_flags & Dee_CODE_FVARKWDS) {
 			if (self->yf_kw->fk_varkwds)
 				DeeKwBlackList_Decref(self->yf_kw->fk_varkwds);
 		}
@@ -1338,7 +1338,7 @@ PRIVATE NONNULL((1, 2)) void DCALL
 yf_visit(YFunction *__restrict self, Dee_visit_t proc, void *arg) {
 	if (self->yf_kw) {
 		Dee_Visit(self->yf_kw->fk_kw);
-		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
+		if (self->yf_func->fo_code->co_flags & Dee_CODE_FVARKWDS)
 			Dee_XVisit(self->yf_kw->fk_varkwds);
 	}
 	Dee_Visit(self->yf_func);
@@ -1370,7 +1370,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yf_copy(YFunction *__restrict self) {
 	DREF YFunction *result;
-	struct code_frame_kwds *kw;
+	struct Dee_code_frame_kwds *kw;
 	result = (DREF YFunction *)DeeObject_Malloc(DeeYieldFunction_Sizeof(self->yf_argc));
 	if unlikely(!result)
 		goto err;
@@ -1379,7 +1379,7 @@ yf_copy(YFunction *__restrict self) {
 		size_t count;
 		ASSERT(self->yf_func->fo_code->co_argc_max >= self->yf_pargc);
 		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
-		kw = (struct code_frame_kwds *)Dee_Mallococ(offsetof(struct code_frame_kwds, fk_kargv),
+		kw = (struct Dee_code_frame_kwds *)Dee_Mallococ(offsetof(struct Dee_code_frame_kwds, fk_kargv),
 		                                            count, sizeof(DeeObject *));
 		if unlikely(!kw)
 			goto err_r;
@@ -1387,7 +1387,7 @@ yf_copy(YFunction *__restrict self) {
 		memcpyc(kw->fk_kargv, self->yf_kw->fk_kargv, count, sizeof(DeeObject *));
 		kw->fk_kw = self->yf_kw->fk_kw;
 		Dee_Incref(kw->fk_kw);
-		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
+		if (self->yf_func->fo_code->co_flags & Dee_CODE_FVARKWDS)
 			kw->fk_varkwds = NULL; /* Don't copy this one... */
 	}
 	result->yf_func  = self->yf_func;
@@ -1407,7 +1407,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yf_deepcopy(YFunction *__restrict self) {
-	struct code_frame_kwds *kw;
+	struct Dee_code_frame_kwds *kw;
 	DREF YFunction *result;
 	result = (DREF YFunction *)DeeObject_Malloc(DeeYieldFunction_Sizeof(self->yf_argc));
 	if unlikely(!result)
@@ -1430,7 +1430,7 @@ yf_deepcopy(YFunction *__restrict self) {
 		DeeCodeObject *code;
 		DeeObject *const *kw_argv;
 		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
-		kw = (struct code_frame_kwds *)Dee_Mallococ(offsetof(struct code_frame_kwds, fk_kargv),
+		kw = (struct Dee_code_frame_kwds *)Dee_Mallococ(offsetof(struct Dee_code_frame_kwds, fk_kargv),
 		                                            count, sizeof(DeeObject *));
 		if unlikely(!kw)
 			goto err_this_args_r;
@@ -1439,7 +1439,7 @@ yf_deepcopy(YFunction *__restrict self) {
 		if unlikely(!kwcopy)
 			goto err_kw_this_args_r;
 		kw->fk_kw = kwcopy; /* Inherit reference. */
-		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
+		if (self->yf_func->fo_code->co_flags & Dee_CODE_FVARKWDS)
 			kw->fk_varkwds = NULL; /* Don't copy this one... */
 		code    = self->yf_func->fo_code;
 		kw_argv = result->yf_argv + result->yf_pargc;
@@ -1496,7 +1496,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfi_init(YFIterator *__restrict self,
          YFunction *__restrict yield_function) {
 	DeeCodeObject *code;
-	DBG_memset(&self->yi_frame, 0xcc, sizeof(struct code_frame));
+	DBG_memset(&self->yi_frame, 0xcc, sizeof(struct Dee_code_frame));
 	/* Setup the frame for the iterator. */
 	self->yi_func          = yield_function;
 	self->yi_frame.cf_func = yield_function->yf_func;
@@ -1504,7 +1504,7 @@ yfi_init(YFIterator *__restrict self,
 	Dee_Incref(self->yi_frame.cf_func); /* Reference stored in here. */
 	code = self->yi_frame.cf_func->fo_code;
 	/* Allocate memory for frame data. */
-	self->yi_frame.cf_prev  = CODE_FRAME_NOT_EXECUTING;
+	self->yi_frame.cf_prev  = Dee_CODE_FRAME_NOT_EXECUTING;
 	self->yi_frame.cf_frame = (DREF DeeObject **)Dee_Calloc(code->co_framesize);
 	if unlikely(!self->yi_frame.cf_frame)
 		goto err_r_base;
@@ -1561,7 +1561,7 @@ yf_serialize(YFunction *__restrict self, DeeSerial *__restrict writer) {
 	if (self->yf_kw) {
 		Dee_seraddr_t addrof_kw;
 		size_t kw_count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
-		size_t sizeof_kw = _Dee_MallococBufsize(offsetof(struct code_frame_kwds, fk_kargv),
+		size_t sizeof_kw = _Dee_MallococBufsize(offsetof(struct Dee_code_frame_kwds, fk_kargv),
 		                                        kw_count, sizeof(DeeObject *));
 		ASSERT(self->yf_func->fo_code->co_argc_max >= self->yf_pargc);
 		addrof_kw = DeeSerial_Malloc(writer, sizeof_kw);
@@ -1900,7 +1900,7 @@ PRIVATE NONNULL((1)) void DCALL
 yfi_run_finally(YFIterator *__restrict self) {
 	DeeCodeObject *code;
 	code_addr_t ip_addr;
-	struct except_handler *iter, *begin;
+	struct Dee_except_handler *iter, *begin;
 	if unlikely(!self->yi_func)
 		return;
 
@@ -1912,7 +1912,7 @@ yfi_run_finally(YFIterator *__restrict self) {
 	ASSERT_OBJECT_TYPE(code, &DeeCode_Type);
 
 	/* Simple case: without any finally handlers, we've got nothing to do. */
-	if (!(code->co_flags & CODE_FFINALLY))
+	if (!(code->co_flags & Dee_CODE_FFINALLY))
 		return;
 exec_finally:
 	begin = code->co_exceptv;
@@ -1928,7 +1928,7 @@ exec_finally:
 	while (iter > begin) {
 		DREF DeeObject *result, **req_sp;
 		--iter;
-		if (!(iter->eh_flags & EXCEPTION_HANDLER_FFINALLY))
+		if (!(iter->eh_flags & Dee_EXCEPTION_HANDLER_FFINALLY))
 			continue;
 		if (!(ip_addr > iter->eh_start && ip_addr <= iter->eh_end))
 			continue;
@@ -1955,7 +1955,7 @@ exec_finally:
 		 * Normally, this is done when the return value has been
 		 * assigned, so we simply fake that by pre-assigning `none'. */
 		self->yi_frame.cf_result = DeeNone_NewRef();
-		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY) {
+		if unlikely(self->yi_frame.cf_flags & Dee_CODE_FASSEMBLY) {
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
@@ -1979,7 +1979,7 @@ yfi_dtor(YFIterator *__restrict self) {
 
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
-	ASSERT(self->yi_frame.cf_prev == CODE_FRAME_NOT_EXECUTING);
+	ASSERT(self->yi_frame.cf_prev == Dee_CODE_FRAME_NOT_EXECUTING);
 	ASSERT_OBJECT_TYPE_OPT(self->yi_func, &DeeYieldFunction_Type);
 	ASSERT_OBJECT_TYPE_OPT(self->yi_frame.cf_func, &DeeFunction_Type);
 	ASSERT_OBJECT_TYPE_OPT(self->yi_frame.cf_vargs, &DeeTuple_Type);
@@ -2007,7 +2007,7 @@ yfi_dtor(YFIterator *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 yfi_visit(YFIterator *__restrict self,
           Dee_visit_t proc, void *arg) {
-	if (self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING)
+	if (self->yi_frame.cf_prev != Dee_CODE_FRAME_NOT_EXECUTING)
 		return; /* Can't visit a frame that is current executing. */
 
 	/* NOTE: This won't dead-lock if the caller is inside
@@ -2015,7 +2015,7 @@ yfi_visit(YFIterator *__restrict self,
 	DeeYieldFunctionIterator_LockReadNoInt(self);
 #ifndef CONFIG_NO_THREADS
 	COMPILER_READ_BARRIER();
-	if (self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
+	if (self->yi_frame.cf_prev != Dee_CODE_FRAME_NOT_EXECUTING) {
 		DeeYieldFunctionIterator_LockEndRead(self);
 		return; /* See above... */
 	}
@@ -2052,7 +2052,7 @@ yfi_clear(YFIterator *__restrict self) {
 
 	/* Execute established finally handlers. */
 	yfi_run_finally(self);
-	if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
+	if unlikely(self->yi_frame.cf_prev != Dee_CODE_FRAME_NOT_EXECUTING) {
 		/* Can't clear a frame currently being executed. */
 		DeeYieldFunctionIterator_LockEndWrite(self);
 		return;
@@ -2112,7 +2112,7 @@ yfi_iter_next(YFIterator *__restrict self) {
 		ASSERT_OBJECT_TYPE(self->yi_func, &DeeYieldFunction_Type);
 		ASSERT_OBJECT_TYPE(self->yi_frame.cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(self->yi_frame.cf_func->fo_code, &DeeCode_Type);
-		ASSERTF(self->yi_frame.cf_func->fo_code->co_flags & CODE_FYIELDING,
+		ASSERTF(self->yi_frame.cf_func->fo_code->co_flags & Dee_CODE_FYIELDING,
 		        "Code is not assembled as a yield-function");
 		ASSERTF(self->yi_frame.cf_ip >= self->yi_frame.cf_func->fo_code->co_code &&
 		        self->yi_frame.cf_ip <= self->yi_frame.cf_func->fo_code->co_code +
@@ -2122,13 +2122,13 @@ yfi_iter_next(YFIterator *__restrict self) {
 		        self->yi_frame.cf_func->fo_code->co_code,
 		        self->yi_frame.cf_func->fo_code->co_code +
 		        self->yi_frame.cf_func->fo_code->co_codebytes);
-		if unlikely(self->yi_frame.cf_prev != CODE_FRAME_NOT_EXECUTING) {
+		if unlikely(self->yi_frame.cf_prev != Dee_CODE_FRAME_NOT_EXECUTING) {
 			DeeError_Throwf(&DeeError_SegFault, "Stack frame is already being executed");
 			result = NULL;
 			goto done;
 		}
 		self->yi_frame.cf_result = NULL;
-		if unlikely(self->yi_frame.cf_flags & CODE_FASSEMBLY) {
+		if unlikely(self->yi_frame.cf_flags & Dee_CODE_FASSEMBLY) {
 			/* Special case: Execute the code using the safe runtime, rather than the fast. */
 			result = DeeCode_ExecFrameSafe(&self->yi_frame);
 		} else {
@@ -2229,7 +2229,7 @@ again:
 	code = NULL;
 	if (other->yi_frame.cf_func) {
 		code = other->yi_frame.cf_func->fo_code;
-		if (!(code->co_flags & CODE_FCOPYABLE)) {
+		if (!(code->co_flags & Dee_CODE_FCOPYABLE)) {
 			char const *function_name;
 			Dee_Incref(code);
 			function_name = DeeCode_NAME(code);
@@ -2244,10 +2244,10 @@ again:
 	self->yi_func = other->yi_func;
 
 	/* Copy over frame data. */
-	memcpy(&self->yi_frame, &other->yi_frame, sizeof(struct code_frame));
+	memcpy(&self->yi_frame, &other->yi_frame, sizeof(struct Dee_code_frame));
 
 	/* In case the other frame is currently executing, mark ours as not. */
-	self->yi_frame.cf_prev = CODE_FRAME_NOT_EXECUTING;
+	self->yi_frame.cf_prev = Dee_CODE_FRAME_NOT_EXECUTING;
 	if (code) {
 		PTR_isub(DeeObject *, self->yi_frame.cf_sp, (uintptr_t)self->yi_frame.cf_stack);
 		if (self->yi_frame.cf_stacksz) {
@@ -2392,7 +2392,7 @@ yfi_get_this(YFIterator *__restrict self) {
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
 	thisarg = self->yi_frame.cf_this;
-	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
+	if (!(self->yi_frame.cf_flags & Dee_CODE_FTHISCALL))
 		thisarg = NULL;
 	Dee_XIncref(thisarg);
 	DeeYieldFunctionIterator_LockEndRead(self);
@@ -2409,7 +2409,7 @@ yfi_bound_this(YFIterator *__restrict self) {
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
 	thisarg = self->yi_frame.cf_this;
-	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
+	if (!(self->yi_frame.cf_flags & Dee_CODE_FTHISCALL))
 		thisarg = NULL;
 	DeeYieldFunctionIterator_LockEndRead(self);
 	return Dee_BOUND_FROMBOOL(thisarg);
@@ -2427,16 +2427,16 @@ yfi_get_frame(YFIterator *__restrict self) {
 		         * held while the frame is executing, it becomes impossible for the frame to
 		         * be read while executing.
 		         * FIXME: This doesn't work under `#define CONFIG_NO_THREADS' */
-		        DEEFRAME_FWRITABLE |
+		        Dee_FRAME_FWRITABLE |
 		
 		        /* Yield-function-iterator use recursive, shared locks */
-		        DEEFRAME_FSHRLOCK | DEEFRAME_FRECLOCK |
+		        Dee_FRAME_FSHRLOCK | Dee_FRAME_FRECLOCK |
 
 		        /* The "cf_result" field is undefined here (see `yfi_iter_next()' which
 		         * only assigns a proper value *before* yielding the next value). As such,
 		         * the frame needs some sort of flag to tell it that the frame's result
 		         * field should not be touched and be considered as unbound. */
-		        DEEFRAME_FNORESULT
+		        Dee_FRAME_FNORESULT
 	};
 	return (DREF DeeFrameObject *)DeeFrame_NewReferenceWithLock(Dee_AsObject(self), &self->yi_frame,
 	                                                            FLAGS, &self->yi_lock);

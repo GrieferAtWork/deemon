@@ -106,7 +106,7 @@ DeeType_HasExplicitTrait_uncached(DeeTypeObject *__restrict self,
 
 	case Dee_ATTRINFO_ATTR: {
 		uint16_t addr;
-		struct class_desc *desc;
+		struct Dee_class_desc *desc;
 		/* Verify that the attribute is "public static final" */
 		if ((attr.ai_value.v_attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FFINAL | Dee_CLASS_ATTRIBUTE_FREADONLY |
 		                                      Dee_CLASS_ATTRIBUTE_FMETHOD | Dee_CLASS_ATTRIBUTE_FGETSET |

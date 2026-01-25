@@ -17,43 +17,42 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DEFINE_*CMETHOD**/
+/*!export Dee_DEFINE_*CMETHOD**/
+/*!export DeeCMethod*_**/
+/*!export DeeClsMember**/
+/*!export DeeClsMethod**/
+/*!export DeeClsProperty**/
+/*!export DeeKwCMethod**/
+/*!export DeeKwClsMethod**/
+/*!export DeeObjMethod**/
+/*!export Dee_REQUIRES_**/
+/*!export Dee_cmethod**/
+/*!export Dee_objmethod_**/
 #ifndef GUARD_DEEMON_OBJMETHOD_H
-#define GUARD_DEEMON_OBJMETHOD_H 1
+#define GUARD_DEEMON_OBJMETHOD_H 1 /*!export-*/
 
 #include "api.h"
 
 #include "types.h"
-#ifndef __INTELLISENSE__
-#include "object.h"
-#endif /* !__INTELLISENSE__ */
-/**/
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uintptr_t */
 
+#ifndef __INTELLISENSE__
+#include "object.h"
+#endif /* !__INTELLISENSE__ */
+
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_objmethod_origin   objmethod_origin
-#define Dee_objmethod_object   objmethod_object
-#define Dee_clsmethod_object   clsmethod_object
-#define Dee_clsproperty_origin clsproperty_origin
-#define Dee_clsproperty_object clsproperty_object
-#define Dee_clsmember_object   clsmember_object
-#define Dee_cmethod_origin     cmethod_origin
-#define Dee_cmethod_object     cmethod_object
-#define Dee_module_object      module_object
-#define DEFINE_OBJMETHOD       Dee_DEFINE_OBJMETHOD
-#define DEFINE_KWOBJMETHOD     Dee_DEFINE_KWOBJMETHOD
-#define DEFINE_CLSMETHOD       Dee_DEFINE_CLSMETHOD
-#define DEFINE_KWCLSMETHOD     Dee_DEFINE_KWCLSMETHOD
-#define DEFINE_CLSPROPERTY     Dee_DEFINE_CLSPROPERTY
-#define DEFINE_CMETHOD         Dee_DEFINE_CMETHOD
-#define DEFINE_CMETHOD0        Dee_DEFINE_CMETHOD0
-#define DEFINE_CMETHOD1        Dee_DEFINE_CMETHOD1
-#define DEFINE_KWCMETHOD       Dee_DEFINE_KWCMETHOD
+#define DEFINE_CMETHOD   Dee_DEFINE_CMETHOD
+#define DEFINE_CMETHOD0  Dee_DEFINE_CMETHOD0
+#define DEFINE_CMETHOD1  Dee_DEFINE_CMETHOD1
+#define DEFINE_KWCMETHOD Dee_DEFINE_KWCMETHOD
 #endif /* DEE_SOURCE */
 
 
@@ -251,7 +250,7 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
 struct Dee_module_object;
 struct Dee_cmethod_origin {
 	DREF struct Dee_module_object *cmo_module; /* [0..1] Module containing the C-method. */
-	struct module_symbol          *cmo_modsym; /* [0..1] Module symbol that exposes `func'. */
+	struct Dee_module_symbol          *cmo_modsym; /* [0..1] Module symbol that exposes `func'. */
 	DREF DeeTypeObject            *cmo_type;   /* [0..1] Type containing the C-method. */
 	struct type_member const      *cmo_member; /* [0..1] Member of `cmo_type' that exposes the C-method. */
 	char const                    *cmo_name;   /* [1..1] Function name. */

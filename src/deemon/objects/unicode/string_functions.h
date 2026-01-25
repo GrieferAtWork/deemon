@@ -252,11 +252,11 @@ DeeSystem_DEFINE_memcasecnt(dee_memcasecnt)
 
 
 struct unicode_foldreader {
-	union dcharptr_const ufr_dataptr; /* [0..ufr_datalen] Input data pointer */
-	size_t               ufr_datalen; /* # of remaining words in `ufr_dataptr' (relevant word-type depends on API usage) */
-	uint32_t             ufr_buf[UNICODE_FOLDED_MAX]; /* Buffer for unread casefold characters */
-	uint8_t              ufr_len;     /* [<= UNICODE_FOLDED_MAX] # of characters stored in `ufr_buf' */
-	uint8_t              ufr_idx;     /* [<= ufr_len] Index of next unread casefold character in `ufr_buf' */
+	union Dee_charptr_const ufr_dataptr; /* [0..ufr_datalen] Input data pointer */
+	size_t                  ufr_datalen; /* # of remaining words in `ufr_dataptr' (relevant word-type depends on API usage) */
+	uint32_t                ufr_buf[Dee_UNICODE_FOLDED_MAX]; /* Buffer for unread casefold characters */
+	uint8_t                 ufr_len;     /* [<= Dee_UNICODE_FOLDED_MAX] # of characters stored in `ufr_buf' */
+	uint8_t                 ufr_idx;     /* [<= ufr_len] Index of next unread casefold character in `ufr_buf' */
 };
 
 #define _unicode_foldreader_init(self, cpX, data, len) \
@@ -273,9 +273,9 @@ struct unicode_foldreader {
 PRIVATE ATTR_OUTS(1, 2) ATTR_INS(3, 4) uint8_t *DCALL dee_mempfilb(uint8_t *__restrict dst, size_t num_bytes, uint8_t const *__restrict src, size_t src_bytes);
 PRIVATE ATTR_OUTS(1, 2) ATTR_INS(3, 4) uint16_t *DCALL dee_mempfilw(uint16_t *__restrict dst, size_t num_bytes, uint16_t const *__restrict src, size_t src_bytes);
 PRIVATE ATTR_OUTS(1, 2) ATTR_INS(3, 4) uint32_t *DCALL dee_mempfill(uint32_t *__restrict dst, size_t num_bytes, uint32_t const *__restrict src, size_t src_bytes);
-PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL dee_foldcmpb(uint8_t const *__restrict data, size_t datalen, uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len);
-PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL dee_foldcmpw(uint16_t const *__restrict data, size_t datalen, uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len);
-PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL dee_foldcmpl(uint32_t const *__restrict data, size_t datalen, uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len);
+PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL dee_foldcmpb(uint8_t const *__restrict data, size_t datalen, uint32_t fold[Dee_UNICODE_FOLDED_MAX], size_t fold_len);
+PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL dee_foldcmpw(uint16_t const *__restrict data, size_t datalen, uint32_t fold[Dee_UNICODE_FOLDED_MAX], size_t fold_len);
+PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL dee_foldcmpl(uint32_t const *__restrict data, size_t datalen, uint32_t fold[Dee_UNICODE_FOLDED_MAX], size_t fold_len);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 3) uint8_t *DCALL dee_memcasechrb(uint8_t const *__restrict haystack, uint8_t needle, size_t haystack_length);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 3) uint16_t *DCALL dee_memcasechrw(uint16_t const *__restrict haystack, uint16_t needle, size_t haystack_length);
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 3) uint32_t *DCALL dee_memcasechrl(uint32_t const *__restrict haystack, uint32_t needle, size_t haystack_length);

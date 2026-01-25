@@ -17,8 +17,44 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeObject_Find*Attr**/
+/*!export DeeObject_TFind*Attr**/
+/*!export DeeObject_GenericFind*Attr**/
+/*!export DeeObject_TGenericFind*Attr**/
+/*!export DeeTypeMRO_Patch**/
+/*!export DeeType_Bound*Attr**/
+/*!export DeeType_Cache**/
+/*!export DeeType_Call*Attr**/
+/*!export DeeType_Del*Attr**/
+/*!export DeeType_Find*Attr**/
+/*!export DeeType_Get*Attr**/
+/*!export DeeType_Has*Attr**/
+/*!export DeeType_Locate*Attr**/
+/*!export DeeType_Query*Attribute**/
+/*!export DeeType_Set*Attr**/
+/*!export DeeType_VCall*Attr*f*/
+/*!export Dee_ATTRINFO_**/
+/*!export Dee_ATTRPERM_F_**/
+/*!export Dee_attrdesc_**/
+/*!export Dee_attrhint_**/
+/*!export Dee_attrinfo_**/
+/*!export Dee_attriter_**/
+/*!export Dee_attriterchain_builder_**/
+/*!export Dee_attriterchain_item_**/
+/*!export Dee_attrspec_**/
+/*!export Dee_membercache_**/
+/*!export Dee_type_member_**/
+/*!export Dee_MEMBERCACHE_**/
+/*!export _DeeRT_MaybeErrRestricted**/
+/*!export type_getset_**/
+/*!export type_member_**/
+/*!export type_method_**/
+/*!export type_obmemb_**/
+/*!export type_obmeth_**/
+/*!export type_obprop_**/
 #ifndef GUARD_DEEMON_MRO_H
-#define GUARD_DEEMON_MRO_H 1
+#define GUARD_DEEMON_MRO_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -56,23 +92,18 @@ DECL_BEGIN
  * user-defined. */
 
 #ifdef DEE_SOURCE
-#define Dee_type_attr       type_attr
-#define Dee_class_attribute class_attribute
-#define Dee_type_method     type_method
-#define Dee_type_getset     type_getset
-#define Dee_type_member     type_member
-#define Dee_class_desc      class_desc
-#define Dee_module_symbol   module_symbol
-#define Dee_type_member     type_member
+#define Dee_type_attr   type_attr   /*!export-*/
+#define Dee_type_method type_method /*!export-*/
+#define Dee_type_getset type_getset /*!export-*/
+#define Dee_type_member type_member /*!export-*/
 #endif /* DEE_SOURCE */
 
-struct Dee_type_attr;
-struct Dee_class_attribute;
-struct Dee_type_method;
-struct Dee_type_getset;
-struct Dee_type_member;
-struct Dee_module_symbol;
-struct Dee_type_member;
+struct Dee_type_attr;       /*!export-*/
+struct Dee_type_method;     /*!export-*/
+struct Dee_type_getset;     /*!export-*/
+struct Dee_type_member;     /*!export-*/
+struct Dee_class_attribute; /*!export-*/
+struct Dee_module_symbol;   /*!export-*/
 
 /* Possible values for `struct Dee_attrinfo::ai_type' */
 #define Dee_ATTRINFO_CUSTOM          0 /* Custom attribute operators are present. (ai_decl is a `DeeTypeObject') */
@@ -307,9 +338,9 @@ struct Dee_attrspec {
 		}
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
 		_dee_astruct
-#define as_decl       _dee_astruct.as_decl
-#define as_perm_mask  _dee_astruct.as_perm_mask
-#define as_perm_value _dee_astruct.as_perm_value
+#define as_decl       _dee_astruct.as_decl       /*!export-*/
+#define as_perm_mask  _dee_astruct.as_perm_mask  /*!export-*/
+#define as_perm_value _dee_astruct.as_perm_value /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 		;
 		struct Dee_attrhint as_hint;      /* Attribute hint */
@@ -320,15 +351,15 @@ struct Dee_attrspec {
 #undef as_decl
 #undef as_perm_mask
 #undef as_perm_value
-#define as_decl       _dee_aunion._dee_astruct.as_decl
-#define as_perm_mask  _dee_aunion._dee_astruct.as_perm_mask
-#define as_perm_value _dee_aunion._dee_astruct.as_perm_value
+#define as_decl       _dee_aunion._dee_astruct.as_decl       /*!export-*/
+#define as_perm_mask  _dee_aunion._dee_astruct.as_perm_mask  /*!export-*/
+#define as_perm_value _dee_aunion._dee_astruct.as_perm_value /*!export-*/
 #else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
-#define as_decl       _dee_aunion.as_decl
-#define as_perm_mask  _dee_aunion.as_perm_mask
-#define as_perm_value _dee_aunion.as_perm_value
+#define as_decl       _dee_aunion.as_decl       /*!export-*/
+#define as_perm_mask  _dee_aunion.as_perm_mask  /*!export-*/
+#define as_perm_value _dee_aunion.as_perm_value /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
-#define as_hint       _dee_aunion.as_hint
+#define as_hint       _dee_aunion.as_hint /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -372,6 +403,7 @@ struct Dee_attriter_type {
 };
 
 #if 0
+/*!export -myob_attriter_**/
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myob_attriter_next(struct myob_attriter *__restrict self,
                    /*out*/ struct Dee_attrdesc *__restrict desc) {
@@ -553,47 +585,47 @@ DFUNDEF NONNULL((1, 2, 4)) int DCALL DeeTypeMRO_PatchClassGetSet(DeeTypeObject *
 #ifdef CONFIG_BUILDING_DEEMON
 
 /* Type codes for `struct Dee_membercache_slot::mcs_type' */
-#define MEMBERCACHE_UNUSED          0  /* Unused slot. */
-#define MEMBERCACHE_UNINITIALIZED   1  /* Uninitialized slot (when encountered, keep searching)
-                                        * Used as a marker for a slot that is currently being
-                                        * entered into the cache. */
-#define MEMBERCACHE_METHOD          2  /* Method slot. */
-#define MEMBERCACHE_GETSET          3  /* Getset slot. */
-#define MEMBERCACHE_MEMBER          4  /* Member slot. */
-#define MEMBERCACHE_ATTRIB          5  /* Class attribute. */
-#define MEMBERCACHE_INSTANCE_METHOD 6  /* Same as `MEMBERCACHE_METHOD', but only found in `tp_class_cache', referring to an instance-method */
-#define MEMBERCACHE_INSTANCE_GETSET 7  /* Same as `MEMBERCACHE_GETSET', but only found in `tp_class_cache', referring to an instance-getset */
-#define MEMBERCACHE_INSTANCE_MEMBER 8  /* Same as `MEMBERCACHE_MEMBER', but only found in `tp_class_cache', referring to an instance-member */
-#define MEMBERCACHE_INSTANCE_ATTRIB 9  /* Same as `MEMBERCACHE_ATTRIB', but only found in `tp_class_cache', referring to an instance-attribute */
-#define MEMBERCACHE_COUNT           10 /* Amount of different cache types. */
+#define Dee_MEMBERCACHE_UNUSED          0  /* Unused slot. */
+#define Dee_MEMBERCACHE_UNINITIALIZED   1  /* Uninitialized slot (when encountered, keep searching)
+                                            * Used as a marker for a slot that is currently being
+                                            * entered into the cache. */
+#define Dee_MEMBERCACHE_METHOD          2  /* Method slot. */
+#define Dee_MEMBERCACHE_GETSET          3  /* Getset slot. */
+#define Dee_MEMBERCACHE_MEMBER          4  /* Member slot. */
+#define Dee_MEMBERCACHE_ATTRIB          5  /* Class attribute. */
+#define Dee_MEMBERCACHE_INSTANCE_METHOD 6  /* Same as `Dee_MEMBERCACHE_METHOD', but only found in `tp_class_cache', referring to an instance-method */
+#define Dee_MEMBERCACHE_INSTANCE_GETSET 7  /* Same as `Dee_MEMBERCACHE_GETSET', but only found in `tp_class_cache', referring to an instance-getset */
+#define Dee_MEMBERCACHE_INSTANCE_MEMBER 8  /* Same as `Dee_MEMBERCACHE_MEMBER', but only found in `tp_class_cache', referring to an instance-member */
+#define Dee_MEMBERCACHE_INSTANCE_ATTRIB 9  /* Same as `Dee_MEMBERCACHE_ATTRIB', but only found in `tp_class_cache', referring to an instance-attribute */
+#define Dee_MEMBERCACHE_COUNT           10 /* Amount of different cache types. */
 
 struct Dee_class_desc;
 struct Dee_membercache_slot {
 	/* A slot inside of a `struct Dee_membercache' table. */
 	uint16_t               mcs_type;   /* The type of this slot (One of `MEMBERCACHE_*') */
 	uint16_t              _mcs_pad[(sizeof(void *) - 2) / 2];
-	Dee_hash_t             mcs_hash;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)][== Dee_HashStr(mcs_name)] */
-	DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)][1..1][const]
+	Dee_hash_t             mcs_hash;   /* [valid_if(mcs_type != Dee_MEMBERCACHE_UNUSED && mcs_type != Dee_MEMBERCACHE_UNINITIALIZED)][== Dee_HashStr(mcs_name)] */
+	DeeTypeObject         *mcs_decl;   /* [valid_if(mcs_type != Dee_MEMBERCACHE_UNUSED && mcs_type != Dee_MEMBERCACHE_UNINITIALIZED)][1..1][const]
 	                                    * The type that is providing this attribute, which must be
 	                                    * the associated type itself, or one of its base-classes. */
 	union {
-		char const            *mcs_name;   /* [valid_if(mcs_type != MEMBERCACHE_UNUSED && mcs_type != MEMBERCACHE_UNINITIALIZED)] */
-		struct Dee_type_method mcs_method; /* [valid_if(mcs_type == MEMBERCACHE_METHOD || mcs_type == MEMBERCACHE_INSTANCE_METHOD)] */
-		struct Dee_type_getset mcs_getset; /* [valid_if(mcs_type == MEMBERCACHE_GETSET || mcs_type == MEMBERCACHE_INSTANCE_GETSET)] */
-		struct Dee_type_member mcs_member; /* [valid_if(mcs_type == MEMBERCACHE_MEMBER || mcs_type == MEMBERCACHE_INSTANCE_MEMBER)] */
+		char const            *mcs_name;   /* [valid_if(mcs_type != Dee_MEMBERCACHE_UNUSED && mcs_type != Dee_MEMBERCACHE_UNINITIALIZED)] */
+		struct Dee_type_method mcs_method; /* [valid_if(mcs_type == Dee_MEMBERCACHE_METHOD || mcs_type == Dee_MEMBERCACHE_INSTANCE_METHOD)] */
+		struct Dee_type_getset mcs_getset; /* [valid_if(mcs_type == Dee_MEMBERCACHE_GETSET || mcs_type == Dee_MEMBERCACHE_INSTANCE_GETSET)] */
+		struct Dee_type_member mcs_member; /* [valid_if(mcs_type == Dee_MEMBERCACHE_MEMBER || mcs_type == Dee_MEMBERCACHE_INSTANCE_MEMBER)] */
 		struct {
 			char const                 *a_name; /* [1..1][const][== DeeString_STR(a_attr->ca_name)] The attribute attr. */
 			struct Dee_class_attribute *a_attr; /* [1..1][const] The class attribute. */
 			struct Dee_class_desc      *a_desc; /* [1..1][const][== DeeClass_DESC(mcs_decl)] The class implementing the attribute. */
-		} mcs_attrib; /* [valid_if(mcs_type == MEMBERCACHE_ATTRIB || mcs_type == MEMBERCACHE_INSTANCE_ATTRIB)] */
+		} mcs_attrib; /* [valid_if(mcs_type == Dee_MEMBERCACHE_ATTRIB || mcs_type == Dee_MEMBERCACHE_INSTANCE_ATTRIB)] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define mcs_name   _dee_aunion.mcs_name
-#define mcs_method _dee_aunion.mcs_method
-#define mcs_getset _dee_aunion.mcs_getset
-#define mcs_member _dee_aunion.mcs_member
-#define mcs_attrib _dee_aunion.mcs_attrib
+#define mcs_name   _dee_aunion.mcs_name   /*!export-*/
+#define mcs_method _dee_aunion.mcs_method /*!export-*/
+#define mcs_getset _dee_aunion.mcs_getset /*!export-*/
+#define mcs_member _dee_aunion.mcs_member /*!export-*/
+#define mcs_attrib _dee_aunion.mcs_attrib /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -965,10 +997,10 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) bool (DCALL DeeType_FindCachedClassAttrInfoStr
 
 
 /* NOTES:
- *  - GetMethodAttr                  --   instance -> instance  ("foo".lower)                     (cache in `tp_cache' as `MEMBERCACHE_METHOD')
- *  - GetClassMethodAttr             --   class -> class        (string.chr)                      (cache in `tp_class_cache' as `MEMBERCACHE_METHOD')
- *  - DeeType_GetInstanceMethodAttrStringHash  --   class -> instance     (string.lower)                    (cache in `tp_class_cache' as `MEMBERCACHE_INSTANCE_METHOD')
- *  - DeeType_GetIInstanceMethodAttrStringHash --   class -> instance     (string.getinstanceattr("lower")) (cache in `tp_class' as `MEMBERCACHE_METHOD')
+ *  - GetMethodAttr                  --   instance -> instance  ("foo".lower)                     (cache in `tp_cache' as `Dee_MEMBERCACHE_METHOD')
+ *  - GetClassMethodAttr             --   class -> class        (string.chr)                      (cache in `tp_class_cache' as `Dee_MEMBERCACHE_METHOD')
+ *  - DeeType_GetInstanceMethodAttrStringHash  --   class -> instance     (string.lower)                    (cache in `tp_class_cache' as `Dee_MEMBERCACHE_INSTANCE_METHOD')
+ *  - DeeType_GetIInstanceMethodAttrStringHash --   class -> instance     (string.getinstanceattr("lower")) (cache in `tp_class' as `Dee_MEMBERCACHE_METHOD')
  */
 
 /* Query user-class attributes, and cache them if some were found!

@@ -150,8 +150,8 @@ again:
 		switch (typesym->s_type) {
 
 		case SYMBOL_TYPE_EXTERN:
-			if ((typesym->s_extern.e_symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FPROPERTY)) ==
-			    /*                                   */ (MODSYM_FREADONLY | MODSYM_FCONSTEXPR)) {
+			if ((typesym->s_extern.e_symbol->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR | Dee_MODSYM_FPROPERTY)) ==
+			    /*                                   */ (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)) {
 				DREF DeeObject *typval;
 				typval = DeeModule_GetAttrSymbol(typesym->s_extern.e_module,
 				                                 typesym->s_extern.e_symbol);
@@ -953,7 +953,7 @@ ast_doesnt_return(struct ast *__restrict self,
 				is_returning_handler = false;
 			if (is_returning_handler)
 				has_returning_handler = true;
-			if (!(vec[i].ce_flags & EXCEPTION_HANDLER_FFINALLY)) {
+			if (!(vec[i].ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY)) {
 				flags |= AST_DOESNT_RETURN_FINCATCH;
 				if (!vec[i].ce_mask)
 					flags |= AST_DOESNT_RETURN_FINCATCHALL;

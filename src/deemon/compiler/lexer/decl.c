@@ -338,14 +338,14 @@ nope:
  * >> } */
 PRIVATE int DCALL
 decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
-                    struct unicode_printer *__restrict printer) {
+                    struct Dee_unicode_printer *__restrict printer) {
 	char const *iter, *end, *flush_start = name;
 	bool must_escape = !name_len || !DeeUni_IsSymStrt(name[0]);
 	end              = (iter = name) + name_len;
 	for (; iter < end; ++iter) {
 		char ch = *iter;
 		if (!must_escape && !DeeUni_IsSymCont(ch)) {
-			if unlikely(unicode_printer_putascii(printer, '{'))
+			if unlikely(Dee_unicode_printer_putascii(printer, '{'))
 				goto err;
 			must_escape = true;
 		}
@@ -357,11 +357,11 @@ decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
 		    ch == '\r') {
 			/* Must escape this character. */
 			if (!must_escape &&
-			    unlikely(unicode_printer_putascii(printer, '{')))
+			    unlikely(Dee_unicode_printer_putascii(printer, '{')))
 				goto err;
-			if unlikely(unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
 				goto err;
-			if unlikely(unicode_printer_putascii(printer, '\\'))
+			if unlikely(Dee_unicode_printer_putascii(printer, '\\'))
 				goto err;
 			must_escape = true;
 			flush_start = iter;
@@ -373,22 +373,22 @@ decl_ast_escapename(/*utf-8*/ char const *__restrict name, size_t name_len,
 		if (ch == '-' && iter + 1 < end && iter[1] == '>') {
 			++iter;
 			if (!must_escape &&
-			    unlikely(unicode_printer_putascii(printer, '{')))
+			    unlikely(Dee_unicode_printer_putascii(printer, '{')))
 				goto err;
-			if unlikely(unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(printer, flush_start, (size_t)(iter - flush_start)) < 0)
 				goto err;
-			if unlikely(unicode_printer_putascii(printer, '\\'))
+			if unlikely(Dee_unicode_printer_putascii(printer, '\\'))
 				goto err;
 			must_escape = true;
 			flush_start = iter;
 			continue;
 		}
 	}
-	if unlikely(unicode_printer_print(printer, flush_start, (size_t)(end - flush_start)) < 0)
+	if unlikely(Dee_unicode_printer_print(printer, flush_start, (size_t)(end - flush_start)) < 0)
 		goto err;
 	/* Print the trailing right-brace required when the name was escaped. */
 	if (must_escape &&
-	    unlikely(unicode_printer_putascii(printer, '}')))
+	    unlikely(Dee_unicode_printer_putascii(printer, '}')))
 		goto err;
 	return 0;
 err:
@@ -397,11 +397,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_const_type(DeeObject const *__restrict ob,
-                          struct unicode_printer *__restrict printer) {
+                          struct Dee_unicode_printer *__restrict printer) {
 	uint16_t i;
 	DeeModuleObject *deemon;
 	if (DeeNone_Check(ob) || ob == Dee_AsObject(&DeeNone_Type)) {
-		if (UNICODE_PRINTER_PRINT(printer, "?N") < 0)
+		if (Dee_UNICODE_PRINTER_PRINT(printer, "?N") < 0)
 			goto err;
 		return 0;
 	}
@@ -410,46 +410,46 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
 	deemon = DeeModule_GetDeemon();
 	/* Search the builtin `deemon' module for this export. */
 	for (i = 0; i < deemon->mo_globalc; ++i) {
-		struct module_symbol *sym;
+		struct Dee_module_symbol *sym;
 		if (deemon->mo_globalv[i] != ob)
 			continue;
 			/* Special encodings for specific objects. */
 #if 0
 		if (i == id_Sequence) {
-			if (UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
+			if (Dee_UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
 				goto err;
 		} else if (i == id_Mapping) {
-			if (UNICODE_PRINTER_PRINT(printer, "?M?O?O") < 0) /* {Object: Object} */
+			if (Dee_UNICODE_PRINTER_PRINT(printer, "?M?O?O") < 0) /* {Object: Object} */
 				goto err;
 		} else
 #endif
 		if (i == id_none) {
-			if (UNICODE_PRINTER_PRINT(printer, "?N") < 0)
+			if (Dee_UNICODE_PRINTER_PRINT(printer, "?N") < 0)
 				goto err;
 		} else if (i == id_Object) {
-			if (UNICODE_PRINTER_PRINT(printer, "?O") < 0)
+			if (Dee_UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 				goto err;
 		} else {
 			/* Found it! */
 			sym = DeeModule_GetSymbolID(deemon, i);
 			ASSERT(sym != NULL);
-			if (UNICODE_PRINTER_PRINT(printer, "?D") < 0)
+			if (Dee_UNICODE_PRINTER_PRINT(printer, "?D") < 0)
 				goto err;
 			/* NOTE: No need to use `decl_ast_escapename()' here. - We can assume that
 			 *       the builtin deemon module doesn't export anything that would require
 			 *       its name to be escaped (deemon only exposes symbols with pure names) */
-			if (sym->ss_flags & MODSYM_FNAMEOBJ) {
-				if (unicode_printer_printstring(printer, Dee_AsObject(COMPILER_CONTAINER_OF(sym->ss_name, DeeStringObject, s_str))) < 0)
+			if (sym->ss_flags & Dee_MODSYM_FNAMEOBJ) {
+				if (Dee_unicode_printer_printstring(printer, Dee_AsObject(COMPILER_CONTAINER_OF(sym->ss_name, DeeStringObject, s_str))) < 0)
 					goto err;
 			} else {
-				if (unicode_printer_print(printer, sym->ss_name, strlen(sym->ss_name)) < 0)
+				if (Dee_unicode_printer_print(printer, sym->ss_name, strlen(sym->ss_name)) < 0)
 					goto err;
 			}
 		}
 		return 0;
 	}
 print_object:
-	if (UNICODE_PRINTER_PRINT(printer, "?O") < 0)
+	if (Dee_UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 		goto err;
 	return 0;
 err:
@@ -459,7 +459,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_type(struct decl_ast const *__restrict self,
-                    struct unicode_printer *__restrict printer) {
+                    struct Dee_unicode_printer *__restrict printer) {
 	switch (self->da_type) {
 
 	case DAST_SYMBOL: {
@@ -470,7 +470,7 @@ switch_symbol_type:
 
 		case SYMBOL_TYPE_GLOBAL:
 			/* Global symbol reference. */
-			if (UNICODE_PRINTER_PRINT(printer, "?G") < 0)
+			if (Dee_UNICODE_PRINTER_PRINT(printer, "?G") < 0)
 				goto err;
 			if (decl_ast_escapename(sym->s_name->k_name,
 			                        sym->s_name->k_size,
@@ -479,7 +479,7 @@ switch_symbol_type:
 			break;
 
 		case SYMBOL_TYPE_EXTERN: {
-			struct module_symbol *msym;
+			struct Dee_module_symbol *msym;
 			msym = sym->s_extern.e_symbol;
 			if (sym->s_extern.e_module != &DeeModule_Deemon) {
 				char const *module_name;
@@ -495,7 +495,7 @@ switch_symbol_type:
 				if unlikely(!module_name)
 					goto err;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				if (UNICODE_PRINTER_PRINT(printer, "?E") < 0)
+				if (Dee_UNICODE_PRINTER_PRINT(printer, "?E") < 0)
 					goto err;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 				if (decl_ast_escapename(module_name,
@@ -508,33 +508,33 @@ switch_symbol_type:
 				                        printer) < 0)
 					goto err;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				if unlikely(unicode_printer_putc(printer, ':'))
+				if unlikely(Dee_unicode_printer_putc(printer, ':'))
 					goto err;
-				if (decl_ast_escapename(MODULE_SYMBOL_GETNAMESTR(msym),
-				                        MODULE_SYMBOL_GETNAMELEN(msym),
+				if (decl_ast_escapename(Dee_MODULE_SYMBOL_GETNAMESTR(msym),
+				                        Dee_MODULE_SYMBOL_GETNAMELEN(msym),
 				                        printer) < 0)
 					goto err;
 			} else {
 				/* Reference into deemon. */
 				if (Dee_module_symbol_getindex(msym) == id_Object) {
-					if (UNICODE_PRINTER_PRINT(printer, "?O") < 0)
+					if (Dee_UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 						goto err;
 				} else if (Dee_module_symbol_getindex(msym) == id_none) {
-					if (UNICODE_PRINTER_PRINT(printer, "?N") < 0)
+					if (Dee_UNICODE_PRINTER_PRINT(printer, "?N") < 0)
 						goto err;
 #if 0
 				} else if (Dee_module_symbol_getindex(msym) == id_Sequence) {
-					if (UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
+					if (Dee_UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
 						goto err;
 				} else if (Dee_module_symbol_getindex(msym) == id_Mapping) {
-					if (UNICODE_PRINTER_PRINT(printer, "?M?O?O") < 0)
+					if (Dee_UNICODE_PRINTER_PRINT(printer, "?M?O?O") < 0)
 						goto err;
 #endif
 				} else {
-					if (UNICODE_PRINTER_PRINT(printer, "?D") < 0)
+					if (Dee_UNICODE_PRINTER_PRINT(printer, "?D") < 0)
 						goto err;
-					if (decl_ast_escapename(MODULE_SYMBOL_GETNAMESTR(msym),
-					                        MODULE_SYMBOL_GETNAMELEN(msym),
+					if (decl_ast_escapename(Dee_MODULE_SYMBOL_GETNAMESTR(msym),
+					                        Dee_MODULE_SYMBOL_GETNAMELEN(msym),
 					                        printer) < 0)
 						goto err;
 				}
@@ -578,7 +578,7 @@ switch_symbol_type:
 		default:
 			/* Fallback: emit the name of the symbol as private/undefined */
 print_undefined_symbol_name:
-			if (UNICODE_PRINTER_PRINT(printer, "?U") < 0)
+			if (Dee_UNICODE_PRINTER_PRINT(printer, "?U") < 0)
 				goto err;
 			if (decl_ast_escapename(sym->s_name->k_name,
 			                        sym->s_name->k_size,
@@ -593,7 +593,7 @@ print_undefined_symbol_name:
 
 	case DAST_ALT: {
 		size_t i;
-		if (unicode_printer_printf(printer, "?X%" PRFuSIZ, self->da_alt.a_altc) < 0)
+		if (Dee_unicode_printer_printf(printer, "?X%" PRFuSIZ, self->da_alt.a_altc) < 0)
 			goto err;
 		for (i = 0; i < self->da_alt.a_altc; ++i) {
 			if unlikely(decl_ast_print_type(&self->da_alt.a_altv[i], printer))
@@ -603,7 +603,7 @@ print_undefined_symbol_name:
 
 	case DAST_TUPLE: {
 		size_t i;
-		if (unicode_printer_printf(printer, "?T%" PRFuSIZ, self->da_tuple.t_itemc) < 0)
+		if (Dee_unicode_printer_printf(printer, "?T%" PRFuSIZ, self->da_tuple.t_itemc) < 0)
 			goto err;
 		for (i = 0; i < self->da_tuple.t_itemc; ++i) {
 			if unlikely(decl_ast_print_type(&self->da_tuple.t_itemv[i], printer))
@@ -612,7 +612,7 @@ print_undefined_symbol_name:
 	}	break;
 
 	case DAST_SEQ:
-		if (UNICODE_PRINTER_PRINT(printer, "?S") < 0)
+		if (Dee_UNICODE_PRINTER_PRINT(printer, "?S") < 0)
 			goto err;
 		if unlikely(decl_ast_print_type(self->da_seq, printer))
 			goto err;
@@ -623,7 +623,7 @@ print_undefined_symbol_name:
 		attrname = DeeString_AsUtf8(Dee_AsObject(self->da_attr.a_name));
 		if unlikely(!attrname)
 			goto err;
-		if unlikely(UNICODE_PRINTER_PRINT(printer, "?A") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(printer, "?A") < 0)
 			goto err;
 		if unlikely(decl_ast_escapename(attrname, WSTR_LENGTH(attrname), printer) < 0)
 			goto err;
@@ -632,7 +632,7 @@ print_undefined_symbol_name:
 	}	break;
 
 	case DAST_WITH:
-		if unlikely(UNICODE_PRINTER_PRINT(printer, "?C") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(printer, "?C") < 0)
 			goto err;
 		if unlikely(decl_ast_print_type(&self->da_with.w_cell[0], printer))
 			goto err;
@@ -641,7 +641,7 @@ print_undefined_symbol_name:
 		break;
 
 	case DAST_MAP:
-		if unlikely(UNICODE_PRINTER_PRINT(printer, "?M") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(printer, "?M") < 0)
 			goto err;
 		if unlikely(decl_ast_print_type(&self->da_map.m_key_value[0], printer))
 			goto err;
@@ -650,7 +650,7 @@ print_undefined_symbol_name:
 		break;
 
 	case DAST_STRING:
-		if unlikely(unicode_printer_printstring(printer, Dee_AsObject(self->da_string)) < 0)
+		if unlikely(Dee_unicode_printer_printstring(printer, Dee_AsObject(self->da_string)) < 0)
 			goto err;
 		break;
 
@@ -658,7 +658,7 @@ print_undefined_symbol_name:
 		goto print_object;
 print_object:
 		/* Fallback: emit a reference to `object' */
-		if (UNICODE_PRINTER_PRINT(printer, "?O") < 0)
+		if (Dee_UNICODE_PRINTER_PRINT(printer, "?O") < 0)
 			goto err;
 		break;
 	}
@@ -670,22 +670,22 @@ err:
 #if 0
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_const_expr(DeeObject *__restrict self,
-                          struct unicode_printer *__restrict printer) {
-	if (unicode_printer_putascii(printer, '!'))
+                          struct Dee_unicode_printer *__restrict printer) {
+	if (Dee_unicode_printer_putascii(printer, '!'))
 		goto err;
 	if (DeeNone_Check(self))
 		goto eval_none;
 	if (DeeInt_Check(self)) {
-		if (DeeInt_Print(self, DEEINT_PRINT_DEC, 0,
-		                 &unicode_printer_print,
+		if (DeeInt_Print(self, Dee_INT_PRINT_DEC, 0,
+		                 &Dee_unicode_printer_print,
 		                 printer) < 0)
 			goto err;
 		return 0;
 	}
 	if (DeeFloat_Check(self)) {
 		if (DeeFloat_Print(DeeFloat_VALUE(self),
-		                   &unicode_printer_print,
-		                   printer, 0, 0, DEEFLOAT_PRINT_FNORMAL) < 0)
+		                   &Dee_unicode_printer_print,
+		                   printer, 0, 0, Dee_FLOAT_PRINT_FNORMAL) < 0)
 			goto err;
 		return 0;
 	}
@@ -694,7 +694,7 @@ decl_ast_print_const_expr(DeeObject *__restrict self,
 		utf8_repr = DeeString_AsUtf8(self);
 		if unlikely(!utf8_repr)
 			goto err;
-		if unlikely(unicode_printer_putascii(printer, 'P'))
+		if unlikely(Dee_unicode_printer_putascii(printer, 'P'))
 			goto err;
 		return decl_ast_escapename(utf8_repr, WSTR_LENGTH(utf8_repr), printer);
 	}
@@ -712,7 +712,7 @@ decl_ast_print_const_expr(DeeObject *__restrict self,
 	}
 	/* Fallback: just print `none' */
 eval_none:
-	return unicode_printer_putascii(printer, 'n');
+	return Dee_unicode_printer_putascii(printer, 'n');
 err:
 	return -1;
 }
@@ -721,7 +721,7 @@ err:
 /* Print declaration information from `self', encoded as described above, into `printer' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
-               struct unicode_printer *__restrict printer) {
+               struct Dee_unicode_printer *__restrict printer) {
 	size_t i;
 	struct symbol **argv;
 	DREF DeeBaseScopeObject *scope;
@@ -730,24 +730,24 @@ decl_ast_print(struct decl_ast const *__restrict self,
 			/* Simply print the declaration string prefix. */
 			return decl_ast_print_type(self, printer);
 		}
-		if (UNICODE_PRINTER_PRINT(printer, "->") < 0)
+		if (Dee_UNICODE_PRINTER_PRINT(printer, "->") < 0)
 			goto err_noscope;
 		return decl_ast_print_type(self, printer);
 	}
 	scope = decl_ast_func_getscope(self);
 	if (scope->bs_argc) {
 		/* Special case: function */
-		if (unicode_printer_putascii(printer, '('))
+		if (Dee_unicode_printer_putascii(printer, '('))
 			goto err;
 		argv = scope->bs_argv;
 		for (i = 0; i < scope->bs_argc; ++i) {
 			struct symbol *arg;
-			if (i != 0 && unicode_printer_putascii(printer, ','))
+			if (i != 0 && Dee_unicode_printer_putascii(printer, ','))
 				goto err;
 			arg = argv[i];
 			if (arg == scope->bs_varargs ||
 			    arg == scope->bs_varkwds) {
-				if (unicode_printer_print(printer,
+				if (Dee_unicode_printer_print(printer,
 				                          arg->s_name->k_name,
 				                          arg->s_name->k_size) < 0)
 					goto err;
@@ -758,15 +758,15 @@ decl_ast_print(struct decl_ast const *__restrict self,
 			if (i >= scope->bs_argc_min && i < scope->bs_argc_max &&
 			    !scope->bs_default[i - scope->bs_argc_min]) {
 				/* Optional argument */
-				if (unicode_printer_putascii(printer, '?'))
+				if (Dee_unicode_printer_putascii(printer, '?'))
 					goto err;
 			} else if (arg == scope->bs_varargs) {
 				/* Varargs argument */
-				if (unicode_printer_putascii(printer, '!'))
+				if (Dee_unicode_printer_putascii(printer, '!'))
 					goto err;
 			} else if (arg == scope->bs_varkwds) {
 				/* Varkwds argument */
-				if (UNICODE_PRINTER_PRINT(printer, "!!") < 0)
+				if (Dee_UNICODE_PRINTER_PRINT(printer, "!!") < 0)
 					goto err;
 			}
 			if (!decl_ast_isempty(&arg->s_decltype) &&
@@ -778,7 +778,7 @@ decl_ast_print(struct decl_ast const *__restrict self,
 			     !decl_ast_istype(&arg->s_decltype, /* Don't encode a type if it can be deduced from the default argument */
 			                      Dee_TYPE(scope->bs_default[i - scope->bs_argc_min])))) {
 				/* Encode the argument type. */
-				if (unicode_printer_putascii(printer, ':'))
+				if (Dee_unicode_printer_putascii(printer, ':'))
 					goto err;
 				if (decl_ast_print_type(&arg->s_decltype, printer))
 					goto err;
@@ -786,7 +786,7 @@ decl_ast_print(struct decl_ast const *__restrict self,
 			if (i >= scope->bs_argc_min && i < scope->bs_argc_max &&
 			    scope->bs_default[i - scope->bs_argc_min]) {
 				/* Argument has a default parameter. */
-				if (unicode_printer_putascii(printer, '='))
+				if (Dee_unicode_printer_putascii(printer, '='))
 					goto err;
 #if 0
 				if (decl_ast_print_const_expr(scope->bs_default[i - scope->bs_argc_min], printer))
@@ -794,7 +794,7 @@ decl_ast_print(struct decl_ast const *__restrict self,
 #endif
 			}
 		}
-		if (unicode_printer_putascii(printer, ')'))
+		if (Dee_unicode_printer_putascii(printer, ')'))
 			goto err;
 	}
 	if (self->da_func.f_ret) {
@@ -806,7 +806,7 @@ decl_ast_print(struct decl_ast const *__restrict self,
 			goto encode_empty_paren;
 
 		/* Explicit return type information. */
-		if (UNICODE_PRINTER_PRINT(printer, "->") < 0)
+		if (Dee_UNICODE_PRINTER_PRINT(printer, "->") < 0)
 			goto err;
 
 		/* The return type can be omitted when it is `object from deemon' */
@@ -816,12 +816,12 @@ decl_ast_print(struct decl_ast const *__restrict self,
 		}
 	} else if (scope->bs_cflags & BASESCOPE_FRETURN) {
 		/* Function can return anything --- encode as `(args...)->' */
-		if (UNICODE_PRINTER_PRINT(printer, "->") < 0)
+		if (Dee_UNICODE_PRINTER_PRINT(printer, "->") < 0)
 			goto err;
 	} else if (!scope->bs_argc) {
 		/* Function only returns `none' --- encode as `()' */
 encode_empty_paren:
-		if (UNICODE_PRINTER_PRINT(printer, "()") < 0)
+		if (Dee_UNICODE_PRINTER_PRINT(printer, "()") < 0)
 			goto err;
 	}
 	Dee_Decref_unlikely(&scope->bs_scope);
@@ -840,16 +840,16 @@ err_noscope:
 #ifdef __INTELLISENSE__
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 decl_ast_escapetext8(uint8_t const *__restrict text, size_t text_len,
-                     struct unicode_printer *__restrict printer,
-                     struct unicode_printer *__restrict source_printer);
+                     struct Dee_unicode_printer *__restrict printer,
+                     struct Dee_unicode_printer *__restrict source_printer);
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 decl_ast_escapetext16(uint16_t const *__restrict text, size_t text_len,
-                      struct unicode_printer *__restrict printer,
-                      struct unicode_printer *__restrict source_printer);
+                      struct Dee_unicode_printer *__restrict printer,
+                      struct Dee_unicode_printer *__restrict source_printer);
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 decl_ast_escapetext32(uint32_t const *__restrict text, size_t text_len,
-                      struct unicode_printer *__restrict printer,
-                      struct unicode_printer *__restrict source_printer);
+                      struct Dee_unicode_printer *__restrict printer,
+                      struct Dee_unicode_printer *__restrict source_printer);
 #else /* __INTELLISENSE__ */
 #define N 8
 #include "decl-escape-text-impl.c.inl"
@@ -862,10 +862,10 @@ decl_ast_escapetext32(uint32_t const *__restrict text, size_t text_len,
 /* Escape documentation text from "Encoded Documentation Text"
  * into "Fully Encoded Documentation Text" */
 INTERN WUNUSED NONNULL((1)) int DCALL
-doctext_escape(struct unicode_printer *__restrict doctext) {
-	if (!UNICODE_PRINTER_ISEMPTY(doctext)) {
-		struct unicode_printer result = UNICODE_PRINTER_INIT;
-		switch (doctext->up_flags & UNICODE_PRINTER_FWIDTH) {
+doctext_escape(struct Dee_unicode_printer *__restrict doctext) {
+	if (!Dee_UNICODE_PRINTER_ISEMPTY(doctext)) {
+		struct Dee_unicode_printer result = Dee_UNICODE_PRINTER_INIT;
+		switch (doctext->up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 		CASE_WIDTH_1BYTE:
 			if unlikely(decl_ast_escapetext8((uint8_t *)doctext->up_buffer,
@@ -890,12 +890,12 @@ doctext_escape(struct unicode_printer *__restrict doctext) {
 		}
 		__IF0 {
 err_r:
-			unicode_printer_fini(&result);
+			Dee_unicode_printer_fini(&result);
 			goto err;
 		}
 		/* Have the printer re-inherit itself. */
-		unicode_printer_fini(doctext);
-		memcpy(doctext, &result, sizeof(struct unicode_printer));
+		Dee_unicode_printer_fini(doctext);
+		memcpy(doctext, &result, sizeof(struct Dee_unicode_printer));
 	}
 	return 0;
 err:
@@ -911,21 +911,21 @@ ast_tags_doc(struct decl_ast const *__restrict decl) {
 	return DeeString_NewEmpty();
 #else
 	bool decl_is_empty;
-	if unlikely(!UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl)) {
+	if unlikely(!Dee_UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl)) {
 		/* Return the user-defined declaration prefix. */
 		DREF DeeObject *result;
-		while (UNICODE_PRINTER_LENGTH(&current_tags.at_decl)) {
+		while (Dee_UNICODE_PRINTER_LENGTH(&current_tags.at_decl)) {
 			uint32_t ch;
-			ch = UNICODE_PRINTER_GETCHAR(&current_tags.at_decl,
-			                             UNICODE_PRINTER_LENGTH(&current_tags.at_decl) - 1);
+			ch = Dee_UNICODE_PRINTER_GETCHAR(&current_tags.at_decl,
+			                             Dee_UNICODE_PRINTER_LENGTH(&current_tags.at_decl) - 1);
 			if (!DeeUni_IsSpace(ch))
 				break;
-			--UNICODE_PRINTER_LENGTH(&current_tags.at_decl);
+			--Dee_UNICODE_PRINTER_LENGTH(&current_tags.at_decl);
 		}
-		if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
-			if unlikely(unicode_printer_putascii(&current_tags.at_decl, '\n'))
+		if (!Dee_UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
+			if unlikely(Dee_unicode_printer_putascii(&current_tags.at_decl, '\n'))
 				goto err2;
-			switch (current_tags.at_doc.up_flags & UNICODE_PRINTER_FWIDTH) {
+			switch (current_tags.at_doc.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 			CASE_WIDTH_1BYTE:
 				if unlikely(decl_ast_escapetext8((uint8_t *)current_tags.at_doc.up_buffer,
@@ -949,26 +949,26 @@ ast_tags_doc(struct decl_ast const *__restrict decl) {
 				break;
 			}
 		}
-		result = unicode_printer_pack(&current_tags.at_decl);
-		unicode_printer_init(&current_tags.at_decl);
+		result = Dee_unicode_printer_pack(&current_tags.at_decl);
+		Dee_unicode_printer_init(&current_tags.at_decl);
 		return result;
 	}
 
 	/* Check if we have any ~real~ information to add to do strings. */
 	decl_is_empty = decl_ast_isempty(decl);
 	if (decl_is_empty &&
-	    UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc))
+	    Dee_UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc))
 		return DeeString_NewEmpty();
 	{
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
+		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		/* Print the prefix containing declaration information. */
 		if (!decl_is_empty && unlikely(decl_ast_print(decl, &printer)))
 			goto err;
-		if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
+		if (!Dee_UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
 			/* Add a line-feed between the declaration prefix, and the user-defined doc text */
-			if (!decl_is_empty && unicode_printer_putascii(&printer, '\n'))
+			if (!decl_is_empty && Dee_unicode_printer_putascii(&printer, '\n'))
 				goto err;
-			switch (current_tags.at_doc.up_flags & UNICODE_PRINTER_FWIDTH) {
+			switch (current_tags.at_doc.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 			CASE_WIDTH_1BYTE:
 				if unlikely(decl_ast_escapetext8((uint8_t *)current_tags.at_doc.up_buffer,
@@ -992,9 +992,9 @@ ast_tags_doc(struct decl_ast const *__restrict decl) {
 				break;
 			}
 		}
-		return unicode_printer_pack(&printer);
+		return Dee_unicode_printer_pack(&printer);
 err:
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 	}
 err2:
 	return NULL;
@@ -1369,7 +1369,7 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 			}
 		} else if (self->da_type == DAST_SYMBOL &&
 		           self->da_symbol->s_type == SYMBOL_TYPE_MODULE) {
-			struct module_symbol *modsym;
+			struct Dee_module_symbol *modsym;
 			modsym = DeeModule_GetSymbolString(self->da_symbol->s_module,
 			                                   token.t_kwd->k_name);
 			if likely(modsym) {
@@ -1391,10 +1391,10 @@ decl_ast_parse_unary(struct decl_ast *__restrict self) {
 			}
 		} else {
 			struct decl_ast *inner_ast;
-			DREF struct string_object *attr_name;
-			attr_name = (DREF struct string_object *)DeeString_NewUtf8(token.t_kwd->k_name,
-			                                                           token.t_kwd->k_size,
-			                                                           STRING_ERROR_FIGNORE);
+			DREF DeeStringObject *attr_name;
+			attr_name = (DREF DeeStringObject *)DeeString_NewUtf8(token.t_kwd->k_name,
+			                                                      token.t_kwd->k_size,
+			                                                      STRING_ERROR_FIGNORE);
 			if unlikely(!attr_name)
 				goto err_r;
 			inner_ast = (struct decl_ast *)Dee_Malloc(sizeof(struct decl_ast));

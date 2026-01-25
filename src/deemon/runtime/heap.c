@@ -6879,24 +6879,24 @@ PRIVATE void DFCALL gcscan__range(void const *base, size_t num_bytes) {
 
 
 /* SKEW: gc_root */
-INTDEF struct gc_head *gc_root;
+INTDEF struct Dee_gc_head *gc_root;
 PRIVATE void DCALL gcscan__skew__gc_root(void) {
-	struct gc_head *next, *iter = gc_root;
+	struct Dee_gc_head *next, *iter = gc_root;
 	while (iter) {
 		next = iter->gc_next;
-		inplace_skew(struct gc_head *, iter->gc_next);
-		inplace_skew(struct gc_head **, iter->gc_pself);
+		inplace_skew(struct Dee_gc_head *, iter->gc_next);
+		inplace_skew(struct Dee_gc_head **, iter->gc_pself);
 		iter = next;
 	}
-	inplace_skew(struct gc_head *, gc_root);
+	inplace_skew(struct Dee_gc_head *, gc_root);
 }
 PRIVATE void DCALL gcscan__unskew__gc_root(void) {
-	struct gc_head *iter;
-	inplace_unskew(struct gc_head *, gc_root);
+	struct Dee_gc_head *iter;
+	inplace_unskew(struct Dee_gc_head *, gc_root);
 	iter = gc_root;
 	while (iter) {
-		inplace_unskew(struct gc_head *, iter->gc_next);
-		inplace_unskew(struct gc_head **, iter->gc_pself);
+		inplace_unskew(struct Dee_gc_head *, iter->gc_next);
+		inplace_unskew(struct Dee_gc_head **, iter->gc_pself);
 		iter = iter->gc_next;
 	}
 }
@@ -7067,7 +7067,7 @@ PRIVATE void DCALL gcscan__skew(void) {
 	 *   native dex modules are explicitly scanned anyways, so nothing is
 	 *   gained if these objects were reachable.
 	 *
-	 * - gc_root, and "struct gc_head" of every tracked GC object */
+	 * - gc_root, and "struct Dee_gc_head" of every tracked GC object */
 	gcscan__skew__gc_root();
 	gcscan__skew__module_abstree_root();
 	gcscan__skew__module_libtree_root();

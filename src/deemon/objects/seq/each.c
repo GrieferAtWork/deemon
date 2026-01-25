@@ -2230,7 +2230,7 @@ seo_init(SeqEachOperator *__restrict self,
 		goto err;
 	}
 	if (DeeString_Check(args.op)) {
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		char const *name = DeeString_STR(args.op);
 		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name, (size_t)-1);
 		if unlikely(info == NULL) {
@@ -4057,8 +4057,8 @@ sewi_nii_peek(SeqEachIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst sewi_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&sewi_nii_getseq,

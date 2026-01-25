@@ -137,19 +137,19 @@ public:
 #endif /* __FIFTHINT_TYPE__ */
 
 	static WUNUSED Ref<int_> ofutf8(/*ascii*/ char const *__restrict str, size_t len,
-	                                 uint32_t radix_and_flags = DEEINT_STRING(0, DEEINT_STRING_FNORMAL)) {
+	                                 uint32_t radix_and_flags = Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL)) {
 		return inherit(DeeInt_FromString(str, len, radix_and_flags));
 	}
 	static WUNUSED Ref<int_> ofutf8(/*ascii*/ char const *__restrict str) {
-		return inherit(DeeInt_FromString(str, strlen(str), DEEINT_STRING(0, DEEINT_STRING_FNORMAL)));
+		return inherit(DeeInt_FromString(str, strlen(str), Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL)));
 	}
 
 	static WUNUSED Ref<int_> ofascii(/*ascii*/ char const *__restrict str, size_t len,
-	                                 uint32_t radix_and_flags = DEEINT_STRING(0, DEEINT_STRING_FNORMAL)) {
+	                                 uint32_t radix_and_flags = Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL)) {
 		return inherit(DeeInt_FromAscii(str, len, radix_and_flags));
 	}
 	static WUNUSED Ref<int_> ofascii(/*ascii*/ char const *__restrict str) {
-		return inherit(DeeInt_FromAscii(str, strlen(str), DEEINT_STRING(0, DEEINT_STRING_FNORMAL)));
+		return inherit(DeeInt_FromAscii(str, strlen(str), Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL)));
 	}
 public:
 	/* Integer conversion */

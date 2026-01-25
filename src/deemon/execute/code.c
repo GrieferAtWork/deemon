@@ -234,7 +234,7 @@ DECL_BEGIN
 LOCAL void *DCALL tryalloc_altstack(void) {
 #ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
 	return VirtualAlloc(NULL,
-	                    DEE_EXEC_ALTSTACK_SIZE,
+	                    Dee_EXEC_ALTSTACK_SIZE,
 	                    MEM_COMMIT | MEM_RESERVE,
 	                    PAGE_READWRITE);
 #endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
@@ -242,7 +242,7 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 #ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
 #ifdef MAP_ANONYMOUS
 	return mmap(NULL,
-	            DEE_EXEC_ALTSTACK_SIZE,
+	            Dee_EXEC_ALTSTACK_SIZE,
 	            PROT_READ | PROT_WRITE,
 	            MAP_ANONYMOUS | MAP_PRIVATE |
 	            MMAP_STACK_FLAGS | MAP_STACK |
@@ -254,7 +254,7 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 	if unlikely(fd < 0)
 		return ALTSTACK_ALLOC_FAILED;
 	result = mmap(NULL,
-	              DEE_EXEC_ALTSTACK_SIZE,
+	              Dee_EXEC_ALTSTACK_SIZE,
 	              PROT_READ | PROT_WRITE,
 	              MAP_FILE | MAP_PRIVATE |
 	              MMAP_STACK_FLAGS | MAP_STACK,
@@ -267,7 +267,7 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 #endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
 
 #ifdef EXEC_ALTSTACK_ALLOC_USE_malloc
-	return Dee_TryMalloc(DEE_EXEC_ALTSTACK_SIZE);
+	return Dee_TryMalloc(Dee_EXEC_ALTSTACK_SIZE);
 #endif /* EXEC_ALTSTACK_ALLOC_USE_malloc */
 
 #ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
@@ -277,12 +277,12 @@ LOCAL void *DCALL tryalloc_altstack(void) {
 
 STACK_ALLOCATOR_DECL void DCALL free_altstack(void *stack) {
 #ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
-	(void)VirtualFree(stack, /*DEE_EXEC_ALTSTACK_SIZE*/ 0, MEM_RELEASE);
+	(void)VirtualFree(stack, /*Dee_EXEC_ALTSTACK_SIZE*/ 0, MEM_RELEASE);
 #endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
 
 #ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
 #ifdef CONFIG_HAVE_munmap
-	(void)munmap(stack, DEE_EXEC_ALTSTACK_SIZE);
+	(void)munmap(stack, Dee_EXEC_ALTSTACK_SIZE);
 #else /* CONFIG_HAVE_munmap */
 	(void)stack;
 #endif /* !CONFIG_HAVE_munmap */
@@ -304,7 +304,7 @@ again:
 	if unlikely(result == ALTSTACK_ALLOC_FAILED) {
 		if (DeeMem_ClearCaches((size_t)-1))
 			goto again;
-		Dee_BadAlloc(DEE_EXEC_ALTSTACK_SIZE);
+		Dee_BadAlloc(Dee_EXEC_ALTSTACK_SIZE);
 	}
 	return result;
 }
@@ -327,8 +327,8 @@ again:
 #define CALL_WITH_STACK(result, func, frame, new_stack)                     \
 	__asm__("push{q} {%%rbp|rbp}\n\t"                                       \
 	        "mov{q}  {%%rsp, %%rbp|rbp, rsp}\n\t"                           \
-	        "lea{q}  {" PP_STR(DEE_EXEC_ALTSTACK_SIZE) "(%2), %%rsp|"       \
-	                  "rsp, [%2 + " PP_STR(DEE_EXEC_ALTSTACK_SIZE) "]}\n\t" \
+	        "lea{q}  {" PP_STR(Dee_EXEC_ALTSTACK_SIZE) "(%2), %%rsp|"       \
+	                  "rsp, [%2 + " PP_STR(Dee_EXEC_ALTSTACK_SIZE) "]}\n\t" \
 	        "call    " WRAP_SYMBOL(func) "\n\t"                             \
 	        "mov{q}  {%%rbp, %%rsp|rsp, rbp}\n\t"                           \
 	        "pop{q}  {%%rbp|rbp}\n\t"                                       \
@@ -345,8 +345,8 @@ again:
 #define CALL_WITH_STACK(result, func, frame, new_stack)                     \
 	__asm__("push{l} {%%ebp|ebp}\n\t"                                       \
 	        "mov{l}  {%%esp, %%ebp|ebp, esp}\n\t"                           \
-	        "lea{l}  {" PP_STR(DEE_EXEC_ALTSTACK_SIZE) "(%2), %%esp|"       \
-	                  "esp, [%2 + " PP_STR(DEE_EXEC_ALTSTACK_SIZE) "]}\n\t" \
+	        "lea{l}  {" PP_STR(Dee_EXEC_ALTSTACK_SIZE) "(%2), %%esp|"       \
+	                  "esp, [%2 + " PP_STR(Dee_EXEC_ALTSTACK_SIZE) "]}\n\t" \
 	        "call    " WRAP_SYMBOL(func) "\n\t"                             \
 	        "mov{l}  {%%ebp, %%esp|esp, ebp}\n\t"                           \
 	        "pop{l}  {%%ebp|ebp}\n\t"                                       \
@@ -368,7 +368,7 @@ again:
 		__asm MOV  RAX, new_stack                       \
 		__asm MOV  RCX, frame                           \
 		__asm MOV  RBX, RSP                             \
-		__asm LEA  RSP, [RAX + DEE_EXEC_ALTSTACK_SIZE]  \
+		__asm LEA  RSP, [RAX + Dee_EXEC_ALTSTACK_SIZE]  \
 		__asm CALL func                                 \
 		__asm MOV  RSP, RBX                             \
 		__asm POP  RBX                                  \
@@ -381,7 +381,7 @@ again:
 		__asm MOV  EAX, new_stack                       \
 		__asm MOV  ECX, frame                           \
 		__asm MOV  EBX, ESP                             \
-		__asm LEA  ESP, [EAX + DEE_EXEC_ALTSTACK_SIZE]  \
+		__asm LEA  ESP, [EAX + Dee_EXEC_ALTSTACK_SIZE]  \
 		__asm CALL func                                 \
 		__asm MOV  ESP, EBX                             \
 		__asm POP  EBX                                  \
@@ -398,7 +398,7 @@ again:
 
 /* Implement the actual altstack call functions. */
 PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
-DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
+DeeCode_ExecFrameFastAltStack(struct Dee_code_frame *__restrict frame) {
 #ifdef EXEC_ALTSTACK_ASM_USE_STUB
 	return DeeCode_ExecFrameFast(frame);
 #else /* EXEC_ALTSTACK_ASM_USE_STUB */
@@ -415,7 +415,7 @@ err:
 }
 
 PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
-DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
+DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame) {
 #ifdef EXEC_ALTSTACK_ASM_USE_STUB
 	return DeeCode_ExecFrameSafe(frame);
 #else /* EXEC_ALTSTACK_ASM_USE_STUB */
@@ -635,7 +635,7 @@ again_read_hfunc:
 			 * it is unable to handle (yet). */
 			if (DeeError_Catch(&DeeError_IllegalInstruction)) {
 				/* Remember that this code object can't be optimized. */
-				atomic_or(&code->co_flags, CODE_FNOOPTIMIZE);
+				atomic_or(&code->co_flags, Dee_CODE_FNOOPTIMIZE);
 				return 1;
 			}
 			goto err;
@@ -770,7 +770,7 @@ function_optimize(DeeFunctionObject *__restrict self, size_t argc,
 	{
 		int status;
 		host_cc_t cc = 0;
-		if (self->fo_code->co_flags & CODE_FTHISCALL)
+		if (self->fo_code->co_flags & Dee_CODE_FTHISCALL)
 			cc |= HOST_CC_F_THIS;
 		if (args.kwds)
 			cc |= HOST_CC_F_KW;
@@ -821,7 +821,7 @@ code_optimize(DeeCodeObject *__restrict self, size_t argc,
 	{
 		int status;
 		host_cc_t cc = HOST_CC_F_FUNC;
-		if (self->co_flags & CODE_FTHISCALL)
+		if (self->co_flags & Dee_CODE_FTHISCALL)
 			cc |= HOST_CC_F_THIS;
 		if (args.kwds)
 			cc |= HOST_CC_F_KW;
@@ -961,13 +961,13 @@ DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
  *                   adjustment is required if all that's supposed to
  *                   happen is execution continuing normally.
  *                 - The valid stack size is always stored in `cf_stacksz'
- * @return: * :   One of `TRIGGER_BREAKPOINT_*' describing how execution
+ * @return: * :   One of `Dee_TRIGGER_BREAKPOINT_*' describing how execution
  *                should continue once the breakpoint has been dealt with. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeCode_HandleBreakpoint(struct code_frame *__restrict frame) {
+DeeCode_HandleBreakpoint(struct Dee_code_frame *__restrict frame) {
 	/* TODO: Add some sort of hook that allows for debugging. */
 	(void)frame;
-	return TRIGGER_BREAKPOINT_CONTINUE;
+	return Dee_TRIGGER_BREAKPOINT_CONTINUE;
 }
 
 
@@ -996,10 +996,10 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 			uint8_t op = *reader++;
 			switch (op) {
 
-			case DDI_EXDAT_O_END:
+			case Dee_DDI_EXDAT_O_END:
 				goto done_exdat;
 
-			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP8:
+			case Dee_DDI_EXDAT_O_RNAM | Dee_DDI_EXDAT_OP8:
 				if (UNALIGNED_GETLE8(reader + 0) == rid) {
 					offset = UNALIGNED_GETLE8(reader + 1);
 					goto return_strtab_offset;
@@ -1007,7 +1007,7 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 				reader += 1 + 1;
 				break;
 
-			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP16:
+			case Dee_DDI_EXDAT_O_RNAM | Dee_DDI_EXDAT_OP16:
 				if (UNALIGNED_GETLE16(reader + 0) == rid) {
 					offset = UNALIGNED_GETLE16(reader + 2);
 					goto return_strtab_offset;
@@ -1015,7 +1015,7 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 				reader += 2 + 2;
 				break;
 
-			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP32:
+			case Dee_DDI_EXDAT_O_RNAM | Dee_DDI_EXDAT_OP32:
 				if (UNALIGNED_GETLE16(reader + 0) == rid) {
 					offset = UNALIGNED_GETLE32(reader + 2);
 					goto return_strtab_offset;
@@ -1024,17 +1024,17 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid) {
 				break;
 
 			default:
-				switch (op & DDI_EXDAT_OPMASK) {
+				switch (op & Dee_DDI_EXDAT_OPMASK) {
 
-				case DDI_EXDAT_OP8:
+				case Dee_DDI_EXDAT_OP8:
 					reader += 1 + 1;
 					break;
 
-				case DDI_EXDAT_OP16:
+				case Dee_DDI_EXDAT_OP16:
 					reader += 2 + 2;
 					break;
 
-				case DDI_EXDAT_OP32:
+				case Dee_DDI_EXDAT_OP32:
 					reader += 2 + 4;
 					break;
 
@@ -1066,24 +1066,24 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 
 
 /* Define the special `DeeCode_Empty' object. */
-INTERN DEFINE_CODE(DeeCode_Empty,
-                   /* co_flags:      */ CODE_FCOPYABLE,
-                   /* co_localc:     */ 0,
-                   /* co_constc:     */ 0,
-                   /* co_refc:       */ 0,
-                   /* co_refstaticc: */ 0,
-                   /* co_exceptc:    */ 0,
-                   /* co_argc_min:   */ 0,
-                   /* co_argc_max:   */ 0,
-                   /* co_framesize:  */ 0,
-                   /* co_codebytes:  */ sizeof(instruction_t),
-                   /* co_module:     */ &DeeModule_Empty,
-                   /* co_keywords:   */ NULL,
-                   /* co_defaultv:   */ NULL,
-                   /* co_constv:     */ NULL,
-                   /* co_exceptv:    */ NULL,
-                   /* co_ddi:        */ &DeeDDI_Empty,
-                   /* co_code:       */ { ASM_RET_NONE });
+INTERN Dee_DEFINE_CODE(DeeCode_Empty,
+                       /* co_flags:      */ Dee_CODE_FCOPYABLE,
+                       /* co_localc:     */ 0,
+                       /* co_constc:     */ 0,
+                       /* co_refc:       */ 0,
+                       /* co_refstaticc: */ 0,
+                       /* co_exceptc:    */ 0,
+                       /* co_argc_min:   */ 0,
+                       /* co_argc_max:   */ 0,
+                       /* co_framesize:  */ 0,
+                       /* co_codebytes:  */ sizeof(instruction_t),
+                       /* co_module:     */ &DeeModule_Empty,
+                       /* co_keywords:   */ NULL,
+                       /* co_defaultv:   */ NULL,
+                       /* co_constv:     */ NULL,
+                       /* co_exceptv:    */ NULL,
+                       /* co_ddi:        */ &DeeDDI_Empty,
+                       /* co_code:       */ { ASM_RET_NONE });
 
 
 
@@ -1092,10 +1092,10 @@ INTERN DEFINE_CODE(DeeCode_Empty,
  * @return: 1: The code is contained.
  * @return: 2: The frame chain is incomplete, but code wasn't found thus far. */
 PRIVATE WUNUSED NONNULL((3)) int DCALL
-frame_chain_contains_code(struct code_frame *iter, uint16_t count,
+frame_chain_contains_code(struct Dee_code_frame *iter, uint16_t count,
                           DeeCodeObject *__restrict code) {
 	while (count--) {
-		if (!iter || iter == CODE_FRAME_NOT_EXECUTING)
+		if (!iter || iter == Dee_CODE_FRAME_NOT_EXECUTING)
 			return 2;
 		if (iter->cf_func->fo_code == code)
 			return 1;
@@ -1115,7 +1115,7 @@ frame_chain_contains_code(struct code_frame *iter, uint16_t count,
  * What the caller should be concerned about however is the error-return case:
  *     In the event that the given code object is actively being executed, either by
  *     the calling, or by any other thread, a ValueError is thrown and -1 is returned.
- *     Otherwise when 0 is returned, the caller may assume that `CODE_FASSEMBLY' has
+ *     Otherwise when 0 is returned, the caller may assume that `Dee_CODE_FASSEMBLY' has
  *     been set, and that modifying `co_code' to their liking, while still subject
  *     to potential code-tearing, as well as the resulting inconsistencies that may
  *     cause running code to throw errors, but not cause the interpreter to crash.
@@ -1129,7 +1129,7 @@ DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, &DeeCode_Type);
 
 	/* Simple case: the assembly flag is already set. */
-	if (me->co_flags & CODE_FASSEMBLY)
+	if (me->co_flags & Dee_CODE_FASSEMBLY)
 		return 0;
 	caller = DeeThread_Self();
 
@@ -1182,7 +1182,7 @@ check_other_threads:
 		/* Having confirmed that the code object isn't running, set the assembly
 		 * flag before resuming all the other threads so we can still ensure that
 		 * it will become visible as soon as the other threads start running again. */
-		me->co_flags |= CODE_FASSEMBLY;
+		me->co_flags |= Dee_CODE_FASSEMBLY;
 		COMPILER_WRITE_BARRIER(); /* Don't move the flag modification before this point. */
 		DeeThread_ResumeAll();
 	}
@@ -1190,7 +1190,7 @@ check_other_threads:
 	/* Simple case: Without any other threads to worry about, as well as the
 	 *              fact that the caller isn't using the code object, we can
 	 *              simply set the assembly flag and indicate success. */
-	me->co_flags |= CODE_FASSEMBLY;
+	me->co_flags |= Dee_CODE_FASSEMBLY;
 	COMPILER_WRITE_BARRIER();
 #endif /* CONFIG_NO_THREADS */
 	return 0;
@@ -1346,7 +1346,7 @@ code_get_nstatic(DeeCodeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_name(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -1360,7 +1360,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_name(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -1373,7 +1373,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_doc(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -1387,7 +1387,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 code_get_type(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -1401,7 +1401,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_type(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -1414,7 +1414,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operator(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -1429,7 +1429,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_operator(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_type);
@@ -1442,8 +1442,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operatorname(DeeCodeObject *__restrict self) {
-	struct function_info info;
-	struct opinfo const *op;
+	struct Dee_function_info info;
+	struct Dee_opinfo const *op;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -1465,7 +1465,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_property(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -1480,7 +1480,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_property(DeeCodeObject *__restrict self) {
-	struct function_info info;
+	struct Dee_function_info info;
 	if (DeeCode_GetInfo(Dee_AsObject(self), &info) < 0)
 		goto err;
 	Dee_XDecref(info.fi_name);
@@ -1501,27 +1501,27 @@ PRIVATE struct type_member tpconst code_members[] = {
 	                      "Min amount of arguments required to execute @this ?."),
 	TYPE_MEMBER_FIELD_DOC("__argc_max__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_argc_max),
 	                      "Max amount of arguments accepted by @this ?. (excluding a varargs or varkwds argument)"),
-	TYPE_MEMBER_BITFIELD_DOC("isyielding", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FYIELDING,
+	TYPE_MEMBER_BITFIELD_DOC("isyielding", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FYIELDING,
 	                         "Check if @this ?. is for a yield-function"),
-	TYPE_MEMBER_BITFIELD_DOC("iscopyable", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FCOPYABLE,
+	TYPE_MEMBER_BITFIELD_DOC("iscopyable", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FCOPYABLE,
 	                         "Check if execution frames of @this ?. can be copied"),
-	TYPE_MEMBER_BITFIELD_DOC("hasvarargs", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FVARARGS,
+	TYPE_MEMBER_BITFIELD_DOC("hasvarargs", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FVARARGS,
 	                         "Check if @this ?. accepts variable arguments as overflow"),
-	TYPE_MEMBER_BITFIELD_DOC("hasvarkwds", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FVARKWDS,
+	TYPE_MEMBER_BITFIELD_DOC("hasvarkwds", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FVARKWDS,
 	                         "Check if @this ?. accepts variable keyword arguments as overflow"),
-	TYPE_MEMBER_BITFIELD_DOC("__isthiscall__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FTHISCALL,
+	TYPE_MEMBER_BITFIELD_DOC("__isthiscall__", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FTHISCALL,
 	                         "Check if @this ?. takes an extra leading $this-argument"),
-	TYPE_MEMBER_BITFIELD_DOC("__hasassembly__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FASSEMBLY,
+	TYPE_MEMBER_BITFIELD_DOC("__hasassembly__", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FASSEMBLY,
 	                         "Check if assembly of @this ?. is executed in safe-mode"),
-	TYPE_MEMBER_BITFIELD_DOC("__islenient__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FLENIENT,
+	TYPE_MEMBER_BITFIELD_DOC("__islenient__", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FLENIENT,
 	                         "Check if the runtime stack allocation allows for leniency"),
-	TYPE_MEMBER_BITFIELD_DOC("__hasheapframe__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FHEAPFRAME,
+	TYPE_MEMBER_BITFIELD_DOC("__hasheapframe__", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FHEAPFRAME,
 	                         "Check if the runtime stack-frame must be allocated on the heap"),
-	TYPE_MEMBER_BITFIELD_DOC("__hasfinally__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FFINALLY,
+	TYPE_MEMBER_BITFIELD_DOC("__hasfinally__", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FFINALLY,
 	                         "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
 	                         "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in the "
 	                         /**/ "user's source code, as the compiler may try to optimize this flag away to speed up runtime execution"),
-	TYPE_MEMBER_BITFIELD_DOC("__isconstructor__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FCONSTRUCTOR,
+	TYPE_MEMBER_BITFIELD_DOC("__isconstructor__", STRUCT_CONST, DeeCodeObject, co_flags, Dee_CODE_FCONSTRUCTOR,
 	                         "True for class constructor ?. objects. - When set, don't include the this-argument in "
 	                         /**/ "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
 	                         /**/ "causes some sort of exception to be thrown"),
@@ -1691,8 +1691,8 @@ code_hash(DeeCodeObject *__restrict self) {
 		for (i = 0; i < self->co_exceptc; ++i) {
 			Dee_hash_t spec;
 			DeeTypeObject *mask;
-			spec = Dee_HashPtr((byte_t *)&self->co_exceptv[i] + offsetof(struct except_handler, eh_start),
-			                   sizeof(struct except_handler) - offsetof(struct except_handler, eh_start));
+			spec = Dee_HashPtr((byte_t *)&self->co_exceptv[i] + offsetof(struct Dee_except_handler, eh_start),
+			                   sizeof(struct Dee_except_handler) - offsetof(struct Dee_except_handler, eh_start));
 			result = Dee_HashCombine(result, spec);
 			mask   = self->co_exceptv[i].eh_mask;
 			if (mask != NULL)
@@ -1867,14 +1867,14 @@ code_copy(DeeCodeObject *__restrict self) {
 		result->co_exceptv = NULL;
 	} else {
 		uint16_t i;
-		result->co_exceptv = (struct except_handler *)Dee_Mallocc(result->co_exceptc,
-		                                                          sizeof(struct except_handler));
+		result->co_exceptv = (struct Dee_except_handler *)Dee_Mallocc(result->co_exceptc,
+		                                                          sizeof(struct Dee_except_handler));
 		if unlikely(!result->co_exceptv)
 			goto err_r_static;
 		memcpyc(result->co_exceptv,
 		        self->co_exceptv,
 		        result->co_exceptc,
-		        sizeof(struct except_handler));
+		        sizeof(struct Dee_except_handler));
 		for (i = 0; i < result->co_exceptc; ++i)
 			Dee_XIncref(result->co_exceptv[i].eh_mask);
 	}
@@ -1959,35 +1959,35 @@ struct code_flag {
 };
 
 PRIVATE struct except_flag const except_flags_db[] = {
-	{ "finally", EXCEPTION_HANDLER_FFINALLY },
-	{ "interrupt", EXCEPTION_HANDLER_FINTERPT },
-	{ "handled", EXCEPTION_HANDLER_FHANDLED },
+	{ "finally", Dee_EXCEPTION_HANDLER_FFINALLY },
+	{ "interrupt", Dee_EXCEPTION_HANDLER_FINTERPT },
+	{ "handled", Dee_EXCEPTION_HANDLER_FHANDLED },
 };
 
 PRIVATE struct code_flag const code_flags_db[] = {
-	{ "yielding", CODE_FYIELDING },
-	{ "copyable", CODE_FCOPYABLE },
-	{ "assembly", CODE_FASSEMBLY },
-	{ "lenient", CODE_FLENIENT },
-	{ "varargs", CODE_FVARARGS },
-	{ "varkwds", CODE_FVARKWDS },
-	{ "thiscall", CODE_FTHISCALL },
-	{ "heapframe", CODE_FHEAPFRAME },
-	{ "finally", CODE_FFINALLY },
-	{ "constructor", CODE_FCONSTRUCTOR },
+	{ "yielding", Dee_CODE_FYIELDING },
+	{ "copyable", Dee_CODE_FCOPYABLE },
+	{ "assembly", Dee_CODE_FASSEMBLY },
+	{ "lenient", Dee_CODE_FLENIENT },
+	{ "varargs", Dee_CODE_FVARARGS },
+	{ "varkwds", Dee_CODE_FVARKWDS },
+	{ "thiscall", Dee_CODE_FTHISCALL },
+	{ "heapframe", Dee_CODE_FHEAPFRAME },
+	{ "finally", Dee_CODE_FFINALLY },
+	{ "constructor", Dee_CODE_FCONSTRUCTOR },
 };
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-unpack_exception_descriptor(struct except_handler *__restrict self,
+unpack_exception_descriptor(struct Dee_except_handler *__restrict self,
                             DeeObject *__restrict desc) {
 	DeeObject *flags = Dee_None;
 	self->eh_mask    = NULL;
 	if (Dee_Unpackf(desc,
 	                "("
-	                UNPuN(DEE_SIZEOF_CODE_ADDR_T)
-	                UNPuN(DEE_SIZEOF_CODE_ADDR_T)
-	                UNPuN(DEE_SIZEOF_CODE_ADDR_T)
+	                UNPuN(Dee_SIZEOF_CODE_ADDR_T)
+	                UNPuN(Dee_SIZEOF_CODE_ADDR_T)
+	                UNPuN(Dee_SIZEOF_CODE_ADDR_T)
 	                UNPu16
 	                "|oo)",
 	                &self->eh_start,
@@ -2001,7 +2001,7 @@ unpack_exception_descriptor(struct except_handler *__restrict self,
 		self->eh_mask = NULL;
 	if (self->eh_mask && DeeObject_AssertType(self->eh_mask, &DeeType_Type))
 		goto err;
-	self->eh_flags = EXCEPTION_HANDLER_FNORMAL;
+	self->eh_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 	if (!DeeNone_Check(flags)) {
 		if (DeeString_Check(flags)) {
 			char const *s = DeeString_STR(flags);
@@ -2031,14 +2031,14 @@ got_flag:
 		} else {
 			if (DeeObject_AsUInt16(flags, &self->eh_flags))
 				goto err;
-#if EXCEPTION_HANDLER_FMASK != 0xffff
-			if (self->eh_flags & ~EXCEPTION_HANDLER_FMASK) {
+#if Dee_EXCEPTION_HANDLER_FMASK != 0xffff
+			if (self->eh_flags & ~Dee_EXCEPTION_HANDLER_FMASK) {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Invalid bits enabled in exception handler flags %#I16x",
 				                self->eh_flags);
 				goto err;
 			}
-#endif /* EXCEPTION_HANDLER_FMASK != 0xffff */
+#endif /* Dee_EXCEPTION_HANDLER_FMASK != 0xffff */
 		}
 	}
 	Dee_XIncref(self->eh_mask);
@@ -2048,7 +2048,7 @@ err:
 }
 
 struct except_handler_specs {
-	struct except_handler *exsp_v; /* [0..exsp_c|ALLOC(exsp_a)] Except handler vector */
+	struct Dee_except_handler *exsp_v; /* [0..exsp_c|ALLOC(exsp_a)] Except handler vector */
 	uint16_t               exsp_c; /* # of initialized fields in `exsp_v' */
 	uint16_t               exsp_a; /* Allocated size of `exsp_v' */
 };
@@ -2056,13 +2056,13 @@ struct except_handler_specs {
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 except_handler_specs_init_foreach_cb(void *arg, DeeObject *item) {
 	struct except_handler_specs *data;
-	struct except_handler *slot;
+	struct Dee_except_handler *slot;
 	data = (struct except_handler_specs *)arg;
 	ASSERT(data->exsp_c <= data->exsp_a);
 
 	/* Ensure sufficient buffer space */
 	if (data->exsp_c >= data->exsp_a) {
-		struct except_handler *new_exspv;
+		struct Dee_except_handler *new_exspv;
 		uint16_t new_alloc = data->exsp_a * 2;
 		if (!data->exsp_a) {
 			new_alloc = 2;
@@ -2073,12 +2073,12 @@ except_handler_specs_init_foreach_cb(void *arg, DeeObject *item) {
 			}
 			new_alloc = (uint16_t)-1;
 		}
-		new_exspv = (struct except_handler *)Dee_TryReallocc(data->exsp_v, new_alloc,
-		                                                     sizeof(struct except_handler));
+		new_exspv = (struct Dee_except_handler *)Dee_TryReallocc(data->exsp_v, new_alloc,
+		                                                     sizeof(struct Dee_except_handler));
 		if unlikely(!new_exspv) {
 			new_alloc = data->exsp_c + 1;
-			new_exspv = (struct except_handler *)Dee_Reallocc(data->exsp_v, new_alloc,
-			                                                  sizeof(struct except_handler));
+			new_exspv = (struct Dee_except_handler *)Dee_Reallocc(data->exsp_v, new_alloc,
+			                                                  sizeof(struct Dee_except_handler));
 			if unlikely(!new_exspv)
 				goto err;
 		}
@@ -2105,8 +2105,8 @@ except_handler_specs_init(struct except_handler_specs *__restrict self,
 	{
 		size_t hint = DeeObject_SizeFast(except_specs);
 		if (hint != (size_t)-1 && hint <= 0xffff) {
-			struct except_handler *buffer;
-			buffer = (struct except_handler *)Dee_TryMallocc(hint, sizeof(struct except_handler));
+			struct Dee_except_handler *buffer;
+			buffer = (struct Dee_except_handler *)Dee_TryMallocc(hint, sizeof(struct Dee_except_handler));
 			if likely(buffer) {
 				self->exsp_v = buffer;
 				self->exsp_a = (uint16_t)hint;
@@ -2118,9 +2118,9 @@ except_handler_specs_init(struct except_handler_specs *__restrict self,
 	if unlikely(status)
 		goto err;
 	if (self->exsp_a > self->exsp_c) {
-		struct except_handler *new_except_v;
-		new_except_v = (struct except_handler *)Dee_TryReallocc(self->exsp_v, self->exsp_c,
-		                                                        sizeof(struct except_handler));
+		struct Dee_except_handler *new_except_v;
+		new_except_v = (struct Dee_except_handler *)Dee_TryReallocc(self->exsp_v, self->exsp_c,
+		                                                        sizeof(struct Dee_except_handler));
 		if likely(new_except_v)
 			self->exsp_v = new_except_v;
 	}
@@ -2332,7 +2332,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	}
 
 	/* Load custom code flags */
-	result->co_flags = CODE_FASSEMBLY;
+	result->co_flags = Dee_CODE_FASSEMBLY;
 	if (!DeeNone_Check(args.flags)) {
 		if (DeeString_Check(args.flags)) {
 			char const *s = DeeString_STR(args.flags);
@@ -2362,15 +2362,15 @@ got_flag:
 		} else {
 			if (DeeObject_AsUInt16(args.flags, &result->co_flags))
 				goto err_r_except;
-#if CODE_FMASK != 0xffff
-			if (result->co_flags & ~CODE_FMASK) {
+#if Dee_CODE_FMASK != 0xffff
+			if (result->co_flags & ~Dee_CODE_FMASK) {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Invalid bits enabled in code flags %#I16x",
 				                result->co_flags);
 				goto err_r_except;
 			}
-#endif /* CODE_FMASK != 0xffff */
-			result->co_flags |= CODE_FASSEMBLY;
+#endif /* Dee_CODE_FMASK != 0xffff */
+			result->co_flags |= Dee_CODE_FASSEMBLY;
 		}
 	}
 	if (DeeNone_Check(args.ddi)) {
@@ -2392,8 +2392,8 @@ got_flag:
 		goto err_r_ddi;
 	}
 	result->co_framesize  = (args.nlocal + args.nstack) * sizeof(DREF DeeObject *);
-	if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
-		result->co_flags |= CODE_FHEAPFRAME;
+	if (result->co_framesize > Dee_CODE_LARGEFRAME_THRESHOLD)
+		result->co_flags |= Dee_CODE_FHEAPFRAME;
 #ifdef CONFIG_HAVE_CODE_METRICS
 	Dee_code_metrics_init(&result->co_metrics);
 #endif /* CONFIG_HAVE_CODE_METRICS */
@@ -2501,15 +2501,15 @@ code_printrepr(DeeCodeObject *__restrict self,
 		uint16_t i;
 		DO(DeeFormat_PRINT(printer, arg, ", except: { "));
 		for (i = 0; i < self->co_exceptc; ++i) {
-			struct except_handler const *hand;
+			struct Dee_except_handler const *hand;
 			if (i != 0)
 				DO(DeeFormat_PRINT(printer, arg, ", "));
 			hand = &self->co_exceptv[i];
 			DO(DeeFormat_Printf(printer, arg,
 			                    "("
-			                    "%#" PRFxN(DEE_SIZEOF_CODE_ADDR_T) ", "
-			                    "%#" PRFxN(DEE_SIZEOF_CODE_ADDR_T) ", "
-			                    "%#" PRFxN(DEE_SIZEOF_CODE_ADDR_T) ", "
+			                    "%#" PRFxN(Dee_SIZEOF_CODE_ADDR_T) ", "
+			                    "%#" PRFxN(Dee_SIZEOF_CODE_ADDR_T) ", "
+			                    "%#" PRFxN(Dee_SIZEOF_CODE_ADDR_T) ", "
 			                    "%" PRFu16,
 			                    hand->eh_start,
 			                    hand->eh_end,
@@ -2517,9 +2517,9 @@ code_printrepr(DeeCodeObject *__restrict self,
 			                    hand->eh_stack));
 			if (hand->eh_mask || hand->eh_flags) {
 				DO(DeeFormat_PRINT(printer, arg, ", "));
-				if (hand->eh_flags & ~(EXCEPTION_HANDLER_FFINALLY |
-				                       EXCEPTION_HANDLER_FINTERPT |
-				                       EXCEPTION_HANDLER_FHANDLED)) {
+				if (hand->eh_flags & ~(Dee_EXCEPTION_HANDLER_FFINALLY |
+				                       Dee_EXCEPTION_HANDLER_FINTERPT |
+				                       Dee_EXCEPTION_HANDLER_FHANDLED)) {
 					DO(DeeFormat_Printf(printer, arg, "%#" PRFx16, hand->eh_flags));
 				} else {
 					unsigned int flag_i;
@@ -2580,11 +2580,11 @@ code_printrepr(DeeCodeObject *__restrict self,
 		}
 		DO(DeeFormat_PRINT(printer, arg, " }"));
 	}
-	if (self->co_flags != CODE_FASSEMBLY) {
+	if (self->co_flags != Dee_CODE_FASSEMBLY) {
 		DO(DeeFormat_PRINT(printer, arg, ", flags: "));
-		if (self->co_flags & ~(CODE_FYIELDING | CODE_FCOPYABLE | CODE_FASSEMBLY |
-		                       CODE_FVARARGS | CODE_FVARKWDS | CODE_FTHISCALL |
-		                       CODE_FHEAPFRAME | CODE_FCONSTRUCTOR)) {
+		if (self->co_flags & ~(Dee_CODE_FYIELDING | Dee_CODE_FCOPYABLE | Dee_CODE_FASSEMBLY |
+		                       Dee_CODE_FVARARGS | Dee_CODE_FVARKWDS | Dee_CODE_FTHISCALL |
+		                       Dee_CODE_FHEAPFRAME | Dee_CODE_FCONSTRUCTOR)) {
 			DO(DeeFormat_Printf(printer, arg, "%#" PRFx16, self->co_flags));
 		} else {
 			unsigned int flag_i;
@@ -2684,23 +2684,23 @@ code_serialize(DeeCodeObject *__restrict self, DeeSerial *__restrict writer) {
 			goto err;
 	}
 	if (self->co_exceptv) {
-		struct except_handler *out_exceptv, *in_exceptv = self->co_exceptv;
+		struct Dee_except_handler *out_exceptv, *in_exceptv = self->co_exceptv;
 		uint16_t i, exceptc = self->co_exceptc;
-		size_t sizeof_exceptv = exceptc * sizeof(struct except_handler);
+		size_t sizeof_exceptv = exceptc * sizeof(struct Dee_except_handler);
 		Dee_seraddr_t addrof_out_exceptv = DeeSerial_Malloc(writer, sizeof_exceptv, in_exceptv);
 		if (!Dee_SERADDR_ISOK(addrof_out_exceptv))
 			goto err;
-		out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct except_handler);
+		out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct Dee_except_handler);
 		for (i = 0; i < exceptc; ++i) {
 			out_exceptv[i] = in_exceptv[i];
 			if (in_exceptv[i].eh_mask) {
 				Dee_seraddr_t addrof_out_exceptv_item_mask;
 				addrof_out_exceptv_item_mask = addrof_out_exceptv +
-				                               i * sizeof(struct except_handler) +
-				                               offsetof(struct except_handler, eh_mask);
+				                               i * sizeof(struct Dee_except_handler) +
+				                               offsetof(struct Dee_except_handler, eh_mask);
 				if (DeeSerial_PutObject(writer, addrof_out_exceptv_item_mask, in_exceptv[i].eh_mask))
 					goto err;
-				out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct except_handler);
+				out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct Dee_except_handler);
 			}
 		}
 		if (DeeSerial_PutAddr(writer, addr + offsetof(DeeCodeObject, co_exceptv), addrof_out_exceptv))

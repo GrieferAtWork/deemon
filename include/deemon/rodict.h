@@ -17,8 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeRoDict**/
+/*!export Dee_rodict_builder**/
+/*!export _DeeRoDict_**/
 #ifndef GUARD_DEEMON_RODICT_H
-#define GUARD_DEEMON_RODICT_H 1
+#define GUARD_DEEMON_RODICT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -35,10 +39,6 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_rodict_object rodict_object
-#endif /* DEE_SOURCE */
-
 /* A read-only variant of a Dict object, who's main purpose is to be used by
  * compiler optimizations in order to optimize generic mapping expressions
  * in various locations, when mapping arguments are constant.
@@ -53,13 +53,8 @@ DECL_BEGIN
  * use of any sort of lock.
  *
  * NOTE: `_RoDict' is exported as `deemon.Dict.Frozen' */
-typedef struct Dee_rodict_object DeeRoDictObject;
 
-#ifdef DEE_SOURCE
-#define Dee_rodict_builder rodict_builder
-#endif /* DEE_SOURCE */
-
-struct Dee_rodict_object {
+typedef struct Dee_rodict_object {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
 	/*real*/Dee_dict_vidx_t                       rd_vsize;      /* # of key-value pairs in the dict. */
 	Dee_hash_t                                    rd_hmask;      /* [>= rd_vsize] Hash-mask */
@@ -67,7 +62,7 @@ struct Dee_rodict_object {
 	void                                         *rd_htab;       /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_dict_item, rd_vtab);      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
 //	COMPILER_FLEXIBLE_ARRAY(byte_t,               rd_htab_data); /* Dict hash-table. */
-};
+} DeeRoDictObject;
 
 /* The main `_RoDict' container class. */
 DDATDEF DeeTypeObject DeeRoDict_Type;
@@ -110,7 +105,7 @@ struct Dee_rodict_builder {
 	 * - rdb_dict->ob_type:    [UNDEFINED]
 	 * - rdb_dict->rd_vtab:    [0..rdb_dict->rd_vsize|ALLOC(rdb_valloc)] (out-of-bound keys are undefined)
 	 * - rdb_dict->rd_htab:    [== _DeeRoDict_GetRealVTab(rdb_dict) + rdb_valloc]
-	 * - rdb_dict->rd_hidxget: [== Dee_dict_hidxio[DEE_DICT_HIDXIO_FROMALLOC(rdb_valloc)].dhxio_get] */
+	 * - rdb_dict->rd_hidxget: [== Dee_dict_hidxio[Dee_DICT_HIDXIO_FROMALLOC(rdb_valloc)].dhxio_get] */
 	DeeRoDictObject   *rdb_dict;    /* [0..1][owned] The dict being built. */
 	size_t             rdb_valloc;  /* Allocated size of `rdb_dict' (or 0 when `rdb_dict' is `NULL') */
 	Dee_dict_sethidx_t rdb_hidxset; /* [?..1][valid_if(rdb_dict)] Setter for `rdb_dict->rd_htab' */

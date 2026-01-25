@@ -159,6 +159,11 @@
 #endif /* !CONFIG_HAVE_MATH_H */
 #endif /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 
+/* Give shorter names to frequently used symbols */
+#define DIGIT_BITS Dee_DIGIT_BITS
+#define DIGIT_BASE Dee_DIGIT_BASE
+#define DIGIT_MASK Dee_DIGIT_MASK
+
 /* Figure out the most efficient way to shift a 128-bit integer by `DIGIT_BITS', both left and right */
 #if DIGIT_BITS < 8 && defined(__hybrid_uint128_shr8)
 #define __hybrid_uint128_shr_DIGIT_BITS(var)           __hybrid_uint128_shr8(var, DIGIT_BITS)
@@ -192,6 +197,12 @@
 #define shift_t __SHIFT_TYPE__
 
 DECL_BEGIN
+
+/* Give shorter names to frequently used symbols */
+typedef Dee_digit_t digit;
+typedef Dee_sdigit_t sdigit;
+typedef Dee_twodigits_t twodigits;
+typedef Dee_stwodigits_t stwodigits;
 
 /* Make sure that comparison helper macros work. */
 STATIC_ASSERT(Dee_CompareNe(10, 20) == Dee_COMPARE_LO);
@@ -1672,16 +1683,16 @@ parse_ch:
 			} else if ((unsigned char)ch >= 0x80) {
 				/* Unicode character? */
 				uint32_t uni;
-				struct unitraits const *traits;
-				uni    = unicode_readutf8_n(&start, end);
+				struct Dee_unitraits const *traits;
+				uni    = Dee_unicode_readutf8_n(&start, end);
 				traits = DeeUni_Descriptor(uni);
-				if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
+				if (traits->ut_flags & (Dee_UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 					dig = traits->ut_digit_idx;
 					if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
 						dig = DeeUni_GetNumericIdx8((uint8_t)dig);
 				} else {
 					if (uni != '\\') {
-						if (ch == '_' && !(flags & DEEINT_STRING_FNOSEPS))
+						if (ch == '_' && !(flags & Dee_INT_STRING_FNOSEPS))
 							goto do_skip_char;
 						goto invalid_r;
 					}
@@ -1689,7 +1700,7 @@ parse_ch:
 				}
 				--start; /* Account for the additional `++start' inside of for-advance */
 			} else if (ch != '\\') {
-				if (ch == '_' && !(flags & DEEINT_STRING_FNOSEPS)) {
+				if (ch == '_' && !(flags & Dee_INT_STRING_FNOSEPS)) {
 do_skip_char:
 					++start;
 					goto parse_ch;
@@ -1697,7 +1708,7 @@ do_skip_char:
 				goto invalid_r;
 			} else {
 handle_backslash_in_text:
-				if (!(flags & DEEINT_STRING_FESCAPED))
+				if (!(flags & Dee_INT_STRING_FESCAPED))
 					goto invalid_r;
 				if (start >= end - 2)
 					goto invalid_r;
@@ -1767,7 +1778,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
 DeeInt_FromString(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags) {
-	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
+	unsigned int radix = radix_and_flags >> Dee_INT_STRING_RSHIFT;
 	bool negative      = false;
 	DREF DeeIntObject *result;
 	char const *iter;
@@ -1788,10 +1799,10 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			negative = !negative;
 			continue;
 		}
-		if (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+		if (*start == '\\' && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
 			char const *new_begin = start + 1;
-			begin_plus_one = unicode_readutf8_n(&new_begin, end);
+			begin_plus_one = Dee_unicode_readutf8_n(&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
 				start = new_begin;
 				if (begin_plus_one == '\r' &&
@@ -1806,14 +1817,14 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		/* Automatically determine the radix. */
 		char const *old_begin = start;
 		uint32_t leading_zero;
-		leading_zero = unicode_readutf8_n(&start, end);
+		leading_zero = Dee_unicode_readutf8_n(&start, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			if (start >= end) /* Special case: int(0) */
 				return DeeInt_NewZero();
-			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			while (*start == '\\' && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
 				char const *new_begin = start + 1;
-				begin_plus_one = unicode_readutf8_n(&new_begin, end);
+				begin_plus_one = Dee_unicode_readutf8_n(&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
 					start = new_begin;
 					if (begin_plus_one == '\r' &&
@@ -1870,14 +1881,14 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 		while (iter > start) {
 			uint32_t ch;
 			digit dig;
-			struct unitraits const *traits;
-			ch     = unicode_readutf8_rev_n(&iter, start);
+			struct Dee_unitraits const *traits;
+			ch     = Dee_unicode_readutf8_rev_n(&iter, start);
 			traits = DeeUni_Descriptor(ch);
-			if (traits->ut_flags & (UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
+			if (traits->ut_flags & (Dee_UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 				dig = traits->ut_digit_idx;
 				if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
 					dig = DeeUni_GetNumericIdx8((uint8_t)dig);
-			} else if (DeeUni_IsLF(ch) && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			} else if (DeeUni_IsLF(ch) && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 				if (iter == start)
 					goto invalid_r;
 				if (iter[-1] == '\\') {
@@ -1890,7 +1901,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 					continue;
 				}
 				goto invalid_r;
-			} else if (ch == '_' && !(radix_and_flags & DEEINT_STRING_FNOSEPS)) {
+			} else if (ch == '_' && !(radix_and_flags & Dee_INT_STRING_FNOSEPS)) {
 				continue;
 			} else {
 				goto invalid_r;
@@ -1928,7 +1939,7 @@ done:
 invalid_r:
 	Dee_DecrefDokill(result);
 invalid:
-	if (radix_and_flags & DEEINT_STRING_FTRY)
+	if (radix_and_flags & Dee_INT_STRING_FTRY)
 		return ITER_DONE;
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Invalid integer %$q",
@@ -1939,7 +1950,7 @@ invalid:
 PUBLIC WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
 DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
                  size_t len, uint32_t radix_and_flags) {
-	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
+	unsigned int radix = radix_and_flags >> Dee_INT_STRING_RSHIFT;
 	bool negative      = false;
 	DREF DeeIntObject *result;
 	char const *iter;
@@ -1959,7 +1970,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			negative = !negative;
 			continue;
 		}
-		if (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+		if (*start == '\\' && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 			char begin_plus_one = start[1];
 			if (DeeUni_IsLF(begin_plus_one)) {
 				start += 2;
@@ -1977,7 +1988,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			++start;
 			if (start >= end) /* Special case: int(0) */
 				return DeeInt_NewZero();
-			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			while (*start == '\\' && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 				char begin_plus_one = start[1];
 				if (DeeUni_IsLF(begin_plus_one)) {
 					start += 2;
@@ -2037,16 +2048,16 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			} else if ((unsigned char)ch >= 0x80) {
 				/* Unicode character? */
 				uint32_t uni;
-				struct unitraits const *traits;
+				struct Dee_unitraits const *traits;
 				++iter;
-				uni    = unicode_readutf8_rev_n(&iter, end);
+				uni    = Dee_unicode_readutf8_rev_n(&iter, end);
 				traits = DeeUni_Descriptor(uni);
 				/* All any kind of digit/decimal character. - If the caller doesn't
 				 * want to support any kind of digit, have `int("²")' evaluate to 2,
 				 * then they have to verify that the string only contains ~conventional~
 				 * decimals by using `string.isdigit()'. As far as this check is
 				 * concerned, we accept anything that applies to `string.isnumeric()' */
-				if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
+				if (traits->ut_flags & (Dee_UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 					dig = traits->ut_digit_idx;
 					if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
 						dig = DeeUni_GetNumericIdx8((uint8_t)dig);
@@ -2059,7 +2070,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				if (!DeeUni_IsLF(ch))
 					goto invalid_r;
 handle_linefeed_in_text:
-				if (!(radix_and_flags & DEEINT_STRING_FESCAPED))
+				if (!(radix_and_flags & Dee_INT_STRING_FESCAPED))
 					goto invalid_r;
 				if (iter == start)
 					goto invalid_r;
@@ -2103,7 +2114,7 @@ done:
 invalid_r:
 	Dee_DecrefDokill(result);
 invalid:
-	if (radix_and_flags & DEEINT_STRING_FTRY)
+	if (radix_and_flags & Dee_INT_STRING_FTRY)
 		return ITER_DONE;
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Invalid integer %$q",
@@ -2116,7 +2127,7 @@ PRIVATE WUNUSED NONNULL((1, 4)) int
                         size_t len, uint32_t radix_and_flags,
                         int64_t *__restrict value,
                         size_t cutoff_bits_for_overflow_errors) {
-	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
+	unsigned int radix = radix_and_flags >> Dee_INT_STRING_RSHIFT;
 	char const *iter;
 	char const *start = str;
 	char const *end   = str + len;
@@ -2133,10 +2144,10 @@ PRIVATE WUNUSED NONNULL((1, 4)) int
 			negative = !negative;
 			continue;
 		}
-		if (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+		if (*start == '\\' && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
 			char const *new_begin = start + 1;
-			begin_plus_one = unicode_readutf8_n(&new_begin, end);
+			begin_plus_one = Dee_unicode_readutf8_n(&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
 				start = new_begin;
 				if (begin_plus_one == '\r' &&
@@ -2147,23 +2158,23 @@ PRIVATE WUNUSED NONNULL((1, 4)) int
 		}
 		break;
 	}
-	if unlikely(negative && !(radix_and_flags & DEEATOI_STRING_FSIGNED))
+	if unlikely(negative && !(radix_and_flags & Dee_ATOI_STRING_FSIGNED))
 		goto err_overflow; /* Negative value when unsigned was required. */
 	if (!radix) {
 		/* Automatically determine the radix. */
 		uint32_t leading_zero;
 		char const *old_begin = start;
-		leading_zero = unicode_readutf8_n(&start, end);
+		leading_zero = Dee_unicode_readutf8_n(&start, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
 			if (start >= end) {
 				/* Special case: int(0) */
 				*value = 0;
 				return 0;
 			}
-			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			while (*start == '\\' && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
 				char const *new_begin = start + 1;
-				begin_plus_one = unicode_readutf8_n(&new_begin, end);
+				begin_plus_one = Dee_unicode_readutf8_n(&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
 					start = new_begin;
 					if (begin_plus_one == '\r' &&
@@ -2197,14 +2208,14 @@ PRIVATE WUNUSED NONNULL((1, 4)) int
 	while (iter < end) {
 		uint32_t ch;
 		uint8_t dig;
-		struct unitraits const *traits;
-		ch  = unicode_readutf8_n(&iter, end);
+		struct Dee_unitraits const *traits;
+		ch  = Dee_unicode_readutf8_n(&iter, end);
 		traits = DeeUni_Descriptor(ch);
-		if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
+		if (traits->ut_flags & (Dee_UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 			dig = traits->ut_digit_idx;
 			if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
 				dig = DeeUni_GetNumericIdx8(dig);
-		} else if (DeeUni_IsLF(ch) && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+		} else if (DeeUni_IsLF(ch) && (radix_and_flags & Dee_INT_STRING_FESCAPED)) {
 			if (iter == start)
 				goto err_invalid;
 			if (iter[-1] == '\\') {
@@ -2241,7 +2252,7 @@ PRIVATE WUNUSED NONNULL((1, 4)) int
 	*value = result;
 	return 0;
 err_overflow:
-	if (radix_and_flags & DEEINT_STRING_FTRY)
+	if (radix_and_flags & Dee_INT_STRING_FTRY)
 		return 1;
 	{
 		DREF DeeIntObject *intob;
@@ -2250,7 +2261,7 @@ err_overflow:
 			unsigned int flags;
 			flags = DeeInt_IsNeg(intob) ? DeeRT_ErrIntegerOverflowEx_F_NEGATIVE
 			                            : DeeRT_ErrIntegerOverflowEx_F_POSITIVE;
-			flags |= (radix_and_flags & DEEATOI_STRING_FSIGNED)
+			flags |= (radix_and_flags & Dee_ATOI_STRING_FSIGNED)
 			         ? DeeRT_ErrIntegerOverflowEx_F_SIGNED
 			         : DeeRT_ErrIntegerOverflowEx_F_UNSIGNED;
 			DeeRT_ErrIntegerOverflowEx((DeeObject *)intob,
@@ -2261,7 +2272,7 @@ err_overflow:
 		return -1;
 	}
 err_invalid:
-	if (radix_and_flags & DEEINT_STRING_FTRY)
+	if (radix_and_flags & Dee_INT_STRING_FTRY)
 		return 1;
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Invalid integer %$q",
@@ -2282,7 +2293,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	int64_t val64;
 	int result = Dee_Atoi64_impl(str, len, radix_and_flags, &val64, 32);
 	if (result == 0) {
-		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
+		if (radix_and_flags & Dee_ATOI_STRING_FSIGNED) {
 			if unlikely(val64 < INT32_MIN || val64 > INT32_MAX) {
 				DeeRT_ErrIntegerOverflowS64(val64, INT32_MIN, INT32_MAX);
 				goto err;
@@ -2307,7 +2318,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	int64_t val64;
 	int result = Dee_Atoi64_impl(str, len, radix_and_flags, &val64, 16);
 	if (result == 0) {
-		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
+		if (radix_and_flags & Dee_ATOI_STRING_FSIGNED) {
 			if unlikely(val64 < INT16_MIN || val64 > INT16_MAX) {
 				DeeRT_ErrIntegerOverflowS64(val64, INT16_MIN, INT16_MAX);
 				goto err;
@@ -2326,8 +2337,8 @@ err:
 }
 
 /* @return:  0: Successfully parsed an integer.
- * @return: -1: An error occurred. (never returned when `DEEINT_STRING_FTRY' is set)
- * @return:  1: Failed to parse an integer. (returned when `DEEINT_STRING_FTRY' is set) */
+ * @return: -1: An error occurred. (never returned when `Dee_INT_STRING_FTRY' is set)
+ * @return:  1: Failed to parse an integer. (returned when `Dee_INT_STRING_FTRY' is set) */
 PUBLIC WUNUSED NONNULL((1, 4)) int
 (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags,
@@ -2335,7 +2346,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	int64_t val64;
 	int result = Dee_Atoi64_impl(str, len, radix_and_flags, &val64, 8);
 	if (result == 0) {
-		if (radix_and_flags & DEEATOI_STRING_FSIGNED) {
+		if (radix_and_flags & Dee_ATOI_STRING_FSIGNED) {
 			if unlikely(val64 < INT8_MIN || val64 > INT8_MAX) {
 				DeeRT_ErrIntegerOverflowS64(val64, INT8_MIN, INT8_MAX);
 				goto err;
@@ -2404,7 +2415,7 @@ err:
 		tenpow *= 10;
 		++bufsize;
 	}
-	if (flags & DEEINT_PRINT_FSEPS) {
+	if (flags & Dee_INT_PRINT_FSEPS) {
 		/* Allocate a string target buffer. */
 		bufsize += bufsize / DECIMAL_THOUSANDS_GROUPINGS;
 		buf = (char *)Dee_Mallocac(bufsize, sizeof(char));
@@ -2453,14 +2464,14 @@ err:
 	if (precision > intlen) {
 		size_t num_leading_zeroes;
 		result = 0;
-		if (negative || (flags & DEEINT_PRINT_FSIGN)) {
+		if (negative || (flags & Dee_INT_PRINT_FSIGN)) {
 			temp = (*printer)(arg, negative ? "-" : "+", 1);
 			if unlikely(temp < 0)
 				goto err_temp;
 			result = temp;
 		}
 		num_leading_zeroes = precision - intlen;
-		if (flags & DEEINT_PRINT_FSEPS) {
+		if (flags & Dee_INT_PRINT_FSEPS) {
 			size_t first_sep_in_int, first_sep_in_pad;
 			first_sep_in_int = (size_t)((char const *)memend(iter, '_', (size_t)((buf + bufsize) - iter)) - iter);
 			ASSERT(first_sep_in_int >= 1 && first_sep_in_int <= DECIMAL_THOUSANDS_GROUPINGS);
@@ -2511,7 +2522,7 @@ do_normal_pad:
 	} else {
 		if (negative) {
 			*--iter = '-';
-		} else if (flags & DEEINT_PRINT_FSIGN) {
+		} else if (flags & Dee_INT_PRINT_FSIGN) {
 			*--iter = '+';
 		}
 		intlen = (size_t)((buf + bufsize) - iter);
@@ -2544,7 +2555,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
              size_t precision, Dee_formatprinter_t printer, void *arg) {
 	ASSERT_OBJECT_TYPE(self, &DeeInt_Type);
-	switch (radix_and_flags >> DEEINT_PRINT_RSHIFT) {
+	switch (radix_and_flags >> Dee_INT_PRINT_RSHIFT) {
 
 	case 10:
 		return DeeInt_PrintDecimal((DeeIntObject *)self, radix_and_flags,
@@ -2582,7 +2593,7 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 do_print:
 		me         = (DeeIntObject *)self;
 		num_digits = (size_t)me->ob_size;
-		digit_chars = DeeAscii_ItoaDigits(radix_and_flags & DEEINT_PRINT_FUPPER);
+		digit_chars = DeeAscii_ItoaDigits(radix_and_flags & Dee_INT_PRINT_FUPPER);
 		if ((Dee_ssize_t)num_digits <= 0) {
 			if (!num_digits) {
 				bufsize = 4;
@@ -2597,7 +2608,7 @@ do_print:
 			num_digits = (size_t)(-(Dee_ssize_t)num_digits);
 		}
 		bufsize = (num_digits * DIGIT_BITS) / dig_bits;
-		if (radix_and_flags & DEEINT_PRINT_FSEPS)
+		if (radix_and_flags & Dee_INT_PRINT_FSEPS)
 			bufsize += bufsize / NON_DECIMAL_THOUSANDS_GROUPINGS;
 		bufsize += 4;
 		buf = (char *)Dee_Mallocac(bufsize, sizeof(char));
@@ -2627,7 +2638,7 @@ do_print:
 				number >>= dig_bits;
 				*--iter = digit_chars[dig];
 				++intlen;
-				if (radix_and_flags & DEEINT_PRINT_FSEPS) {
+				if (radix_and_flags & Dee_INT_PRINT_FSEPS) {
 					if ((intlen % NON_DECIMAL_THOUSANDS_GROUPINGS) == 0 && (num_digits || num_bits))
 						*--iter = '_';
 				}
@@ -2650,10 +2661,10 @@ do_print_prefix:
 			size_t num_leading_zeroes;
 			if (me->ob_size < 0) {
 				prefix[prefix_len++] = '-';
-			} else if (radix_and_flags & DEEINT_PRINT_FSIGN) {
+			} else if (radix_and_flags & Dee_INT_PRINT_FSIGN) {
 				prefix[prefix_len++] = '+';
 			}
-			if (radix_and_flags & DEEINT_PRINT_FNUMSYS) {
+			if (radix_and_flags & Dee_INT_PRINT_FNUMSYS) {
 				prefix[prefix_len++] = '0';
 				if (dig_bits == 4)
 					prefix[prefix_len++] = digit_chars[33]; /* x */
@@ -2669,7 +2680,7 @@ do_print_prefix:
 					goto done_buf;
 			}
 			num_leading_zeroes = precision - intlen;
-			if (radix_and_flags & DEEINT_PRINT_FSEPS) {
+			if (radix_and_flags & Dee_INT_PRINT_FSEPS) {
 				size_t first_sep_in_int, first_sep_in_pad;
 				first_sep_in_int = (size_t)((char *)memend(iter, '_', (size_t)((buf + bufsize) - iter)) - iter);
 				ASSERT(first_sep_in_int >= 1 && first_sep_in_int <= NON_DECIMAL_THOUSANDS_GROUPINGS);
@@ -2724,7 +2735,7 @@ err_temp:
 		}
 
 		/* Print the radix prefix. */
-		if (radix_and_flags & DEEINT_PRINT_FNUMSYS) {
+		if (radix_and_flags & Dee_INT_PRINT_FNUMSYS) {
 			if (dig_bits == 4)
 				*--iter = digit_chars[33]; /* x */
 			if (dig_bits == 2)
@@ -2737,7 +2748,7 @@ err_temp:
 		/* Print the sign prefix. */
 		if (me->ob_size < 0) {
 			*--iter = '-';
-		} else if (radix_and_flags & DEEINT_PRINT_FSIGN) {
+		} else if (radix_and_flags & Dee_INT_PRINT_FSIGN) {
 			*--iter = '+';
 		}
 		intlen = (size_t)((buf + bufsize) - iter);
@@ -2755,7 +2766,7 @@ done_buf:
 	 *       After all: the fromstring() function also supports arbitrary values... */
 	DeeError_Throwf(&DeeError_NotImplemented,
 	                "Unsupported integer radix %u",
-	                (unsigned)(radix_and_flags >> DEEINT_PRINT_RSHIFT));
+	                (unsigned)(radix_and_flags >> Dee_INT_PRINT_RSHIFT));
 err:
 	return -1;
 }
@@ -4009,16 +4020,16 @@ int_new(size_t argc, DeeObject *const *argv) {
 			goto err_bad_radix;
 		return DeeInt_FromString(utf8,
 		                         WSTR_LENGTH(utf8),
-		                         DEEINT_STRING(args.radix,
-		                                       DEEINT_STRING_FNORMAL));
+		                         Dee_INT_STRING(args.radix,
+		                                       Dee_INT_STRING_FNORMAL));
 	}
 	if (DeeBytes_Check(args.ob)) {
 		if unlikely(args.radix == 1)
 			goto err_bad_radix;
 		return DeeInt_FromAscii((char const *)DeeBytes_DATA(args.ob),
 		                        DeeBytes_SIZE(args.ob),
-		                        DEEINT_STRING(args.radix,
-		                                      DEEINT_STRING_FNORMAL));
+		                        Dee_INT_STRING(args.radix,
+		                                      Dee_INT_STRING_FNORMAL));
 	}
 	return DeeObject_Int(args.ob);
 err_bad_radix:
@@ -4486,43 +4497,43 @@ PRIVATE struct type_cmp int_cmp = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr_impl(DeeIntObject *__restrict self, uint32_t flags, size_t precision) {
 #ifdef DeeInt_Print_USES_UNICODE
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(DeeInt_Print(Dee_AsObject(self), flags, precision,
-	                         &unicode_printer_print,
+	                         &Dee_unicode_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #else /* DeeInt_Print_USES_UNICODE */
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
 	if unlikely(DeeInt_Print(Dee_AsObject(self), flags, precision,
-	                         &ascii_printer_print,
+	                         &Dee_ascii_printer_print,
 	                         &printer) < 0)
 		goto err_printer;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err_printer:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 #endif /* !DeeInt_Print_USES_UNICODE */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_str(DeeIntObject *__restrict self) {
-	return int_tostr_impl(self, DEEINT_PRINT_DEC, 0);
+	return int_tostr_impl(self, Dee_INT_PRINT_DEC, 0);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 int_print(DeeIntObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	return DeeInt_Print(Dee_AsObject(self), DEEINT_PRINT_DEC, 0, printer, arg);
+	return DeeInt_Print(Dee_AsObject(self), Dee_INT_PRINT_DEC, 0, printer, arg);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeIntObject *self, size_t argc,
           DeeObject *const *argv, DeeObject *kw) {
 	size_t precision = 0;
-	uint32_t flags_and_radix = 10 << DEEINT_PRINT_RSHIFT;
+	uint32_t flags_and_radix = 10 << Dee_INT_PRINT_RSHIFT;
 	char const *flags_str = NULL;
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist__radix_precision_mode, "|" UNPu16 UNPuSIZ "s:tostr",
@@ -4540,13 +4551,13 @@ int_tostr(DeeIntObject *self, size_t argc,
 			if (!ch)
 				break;
 			if (ch == 'u' || ch == 'X') {
-				flags_and_radix |= DEEINT_PRINT_FUPPER;
+				flags_and_radix |= Dee_INT_PRINT_FUPPER;
 			} else if (ch == 'n' || ch == '#') {
-				flags_and_radix |= DEEINT_PRINT_FNUMSYS;
+				flags_and_radix |= Dee_INT_PRINT_FNUMSYS;
 			} else if (ch == 's' || ch == '+') {
-				flags_and_radix |= DEEINT_PRINT_FSIGN;
+				flags_and_radix |= Dee_INT_PRINT_FSIGN;
 			} else if (ch == '_') {
-				flags_and_radix |= DEEINT_PRINT_FSEPS;
+				flags_and_radix |= Dee_INT_PRINT_FSEPS;
 			} else {
 				DeeError_Throwf(&DeeError_ValueError,
 				                "Invalid integer tostr flags:?Dstring %q",
@@ -4573,7 +4584,7 @@ int_hex(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|" UNPuSIZ ":hex", &args))
 		goto err;
 /*[[[end]]]*/
-	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS), args.precision);
+	return int_tostr_impl(self, Dee_INT_PRINT(16, Dee_INT_PRINT_FNUMSYS), args.precision);
 err:
 	return NULL;
 }
@@ -4591,7 +4602,7 @@ int_bin(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|" UNPuSIZ ":bin", &args))
 		goto err;
 /*[[[end]]]*/
-	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS), args.precision);
+	return int_tostr_impl(self, Dee_INT_PRINT(2, Dee_INT_PRINT_FNUMSYS), args.precision);
 err:
 	return NULL;
 }
@@ -4609,7 +4620,7 @@ int_oct(DeeIntObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__precision, "|" UNPuSIZ ":oct", &args))
 		goto err;
 /*[[[end]]]*/
-	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS), args.precision);
+	return int_tostr_impl(self, Dee_INT_PRINT(8, Dee_INT_PRINT_FNUMSYS), args.precision);
 err:
 	return NULL;
 }
@@ -5344,35 +5355,35 @@ int_get_nth(DeeIntObject *__restrict self) {
 	};
 #ifdef DeeInt_Print_USES_UNICODE
 	uint32_t lastchar;
-	struct unicode_printer printer;
-	unicode_printer_init(&printer);
-	if unlikely(DeeInt_Print(Dee_AsObject(self), DEEINT_PRINT_DEC,
-	                         0, &unicode_printer_print, &printer) < 0)
+	struct Dee_unicode_printer printer;
+	Dee_unicode_printer_init(&printer);
+	if unlikely(DeeInt_Print(Dee_AsObject(self), Dee_INT_PRINT_DEC,
+	                         0, &Dee_unicode_printer_print, &printer) < 0)
 		goto err_printer;
-	ASSERT(UNICODE_PRINTER_LENGTH(&printer) >= 1);
-	lastchar = UNICODE_PRINTER_GETCHAR(&printer, UNICODE_PRINTER_LENGTH(&printer) - 1);
+	ASSERT(Dee_UNICODE_PRINTER_LENGTH(&printer) >= 1);
+	lastchar = Dee_UNICODE_PRINTER_GETCHAR(&printer, Dee_UNICODE_PRINTER_LENGTH(&printer) - 1);
 	ASSERT(lastchar >= (uint32_t)'0' && lastchar <= (uint32_t)'9');
-	if unlikely(unicode_printer_print(&printer, suffix_map[lastchar - '0'], 2) < 0)
+	if unlikely(Dee_unicode_printer_print(&printer, suffix_map[lastchar - '0'], 2) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #else /* DeeInt_Print_USES_UNICODE */
 	unsigned char lastchar;
-	struct ascii_printer printer;
-	ascii_printer_init(&printer);
-	if unlikely(DeeInt_Print(Dee_AsObject(self), DEEINT_PRINT_DEC,
-	                         0, &ascii_printer_print, &printer) < 0)
+	struct Dee_ascii_printer printer;
+	Dee_ascii_printer_init(&printer);
+	if unlikely(DeeInt_Print(Dee_AsObject(self), Dee_INT_PRINT_DEC,
+	                         0, &Dee_ascii_printer_print, &printer) < 0)
 		goto err_printer;
-	ASSERT(ASCII_PRINTER_LEN(&printer) >= 1);
-	lastchar = ASCII_PRINTER_STR(&printer)[ASCII_PRINTER_LEN(&printer) - 1];
+	ASSERT(Dee_ASCII_PRINTER_LEN(&printer) >= 1);
+	lastchar = Dee_ASCII_PRINTER_STR(&printer)[Dee_ASCII_PRINTER_LEN(&printer) - 1];
 	ASSERT(lastchar >= '0' && lastchar <= '9');
-	if unlikely(ascii_printer_print(&printer, suffix_map[lastchar - '0'], 2) < 0)
+	if unlikely(Dee_ascii_printer_print(&printer, suffix_map[lastchar - '0'], 2) < 0)
 		goto err_printer;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err_printer:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 #endif /* !DeeInt_Print_USES_UNICODE */
 }

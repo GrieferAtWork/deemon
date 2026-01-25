@@ -1119,7 +1119,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
-	struct bytes_printer printer;
+	struct Dee_bytes_printer printer;
 	Dee_ssize_t status;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("format", params: "
 	args:?S?O
@@ -1130,17 +1130,17 @@ bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "format", &args.args);
 /*[[[end]]]*/
-	bytes_printer_init(&printer);
+	Dee_bytes_printer_init(&printer);
 	DeeBytes_IncUse(self);
 	status = DeeString_FormatPrinter((char const *)DeeBytes_DATA(self), DeeBytes_SIZE(self), args.args,
-	                                 (Dee_formatprinter_t)&bytes_printer_append, &bytes_printer_print,
+	                                 (Dee_formatprinter_t)&Dee_bytes_printer_append, &Dee_bytes_printer_print,
 	                                 &printer);
 	DeeBytes_DecUse(self);
 	if unlikely(status < 0)
 		goto err_printer;
-	return bytes_printer_pack(&printer);
+	return Dee_bytes_printer_pack(&printer);
 err_printer:
-	bytes_printer_fini(&printer);
+	Dee_bytes_printer_fini(&printer);
 err:
 	return NULL;
 }
@@ -1445,53 +1445,53 @@ err:
 }
 
 
-#define DeeBytes_IsCntrl(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISCNTRL)
-#define DeeBytes_IsTab(self, start, end)     DeeBytes_TestTrait(self, start, end, UNICODE_ISTAB)
-#define DeeBytes_IsCempty(self, start, end)  DeeBytes_TestTrait(self, start, end, UNICODE_ISEMPTY)
-#define DeeBytes_IsWhite(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISWHITE)
-#define DeeBytes_IsLF(self, start, end)      DeeBytes_TestTrait(self, start, end, UNICODE_ISLF)
-#define DeeBytes_IsSpace(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISSPACE)
-#define DeeBytes_IsLower(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISLOWER)
-#define DeeBytes_IsUpper(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISUPPER)
-#define DeeBytes_IsAlpha(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISALPHA)
-#define DeeBytes_IsDigit(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISDIGIT)
-#define DeeBytes_IsHex(self, start, end)     DeeBytes_TestTrait(self, start, end, UNICODE_ISHEX)
-#define DeeBytes_IsXdigit(self, start, end)  DeeBytes_TestTrait(self, start, end, UNICODE_ISXDIGIT)
-#define DeeBytes_IsAlnum(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISALNUM)
-#define DeeBytes_IsPunct(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISPUNCT)
-#define DeeBytes_IsGraph(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISGRAPH)
-#define DeeBytes_IsPrint(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISPRINT)
-#define DeeBytes_IsBlank(self, start, end)   DeeBytes_TestTrait(self, start, end, UNICODE_ISBLANK)
-#define DeeBytes_IsNumeric(self, start, end) DeeBytes_TestTrait(self, start, end, UNICODE_ISNUMERIC)
-#define DeeBytes_IsSymStrt(self, start, end) DeeBytes_TestTrait(self, start, end, UNICODE_ISSYMSTRT)
-#define DeeBytes_IsSymCont(self, start, end) DeeBytes_TestTrait(self, start, end, UNICODE_ISSYMCONT)
+#define DeeBytes_IsCntrl(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISCNTRL)
+#define DeeBytes_IsTab(self, start, end)     DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISTAB)
+#define DeeBytes_IsCempty(self, start, end)  DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISEMPTY)
+#define DeeBytes_IsWhite(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISWHITE)
+#define DeeBytes_IsLF(self, start, end)      DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISLF)
+#define DeeBytes_IsSpace(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSPACE)
+#define DeeBytes_IsLower(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISLOWER)
+#define DeeBytes_IsUpper(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISUPPER)
+#define DeeBytes_IsAlpha(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISALPHA)
+#define DeeBytes_IsDigit(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISDIGIT)
+#define DeeBytes_IsHex(self, start, end)     DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISHEX)
+#define DeeBytes_IsXdigit(self, start, end)  DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISXDIGIT)
+#define DeeBytes_IsAlnum(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISALNUM)
+#define DeeBytes_IsPunct(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISPUNCT)
+#define DeeBytes_IsGraph(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISGRAPH)
+#define DeeBytes_IsPrint(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISPRINT)
+#define DeeBytes_IsBlank(self, start, end)   DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISBLANK)
+#define DeeBytes_IsNumeric(self, start, end) DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
+#define DeeBytes_IsSymStrt(self, start, end) DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
+#define DeeBytes_IsSymCont(self, start, end) DeeBytes_TestTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
 
-#define DeeBytes_IsAnyCntrl(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISCNTRL)
-#define DeeBytes_IsAnyTab(self, start, end)     DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISTAB)
-#define DeeBytes_IsAnyCempty(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISEMPTY)
-#define DeeBytes_IsAnyWhite(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISWHITE)
-#define DeeBytes_IsAnyLF(self, start, end)      DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISLF)
-#define DeeBytes_IsAnySpace(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISSPACE)
-#define DeeBytes_IsAnyLower(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISLOWER)
-#define DeeBytes_IsAnyUpper(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISUPPER)
-#define DeeBytes_IsAnyAlpha(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISALPHA)
-#define DeeBytes_IsAnyDigit(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISDIGIT)
-#define DeeBytes_IsAnyHex(self, start, end)     DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISHEX)
-#define DeeBytes_IsAnyXdigit(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISXDIGIT)
-#define DeeBytes_IsAnyAlnum(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISALNUM)
-#define DeeBytes_IsAnyPunct(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISPUNCT)
-#define DeeBytes_IsAnyGraph(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISGRAPH)
-#define DeeBytes_IsAnyPrint(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISPRINT)
-#define DeeBytes_IsAnyBlank(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISBLANK)
-#define DeeBytes_IsAnyTitle(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISTITLE)
-#define DeeBytes_IsAnyNumeric(self, start, end) DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISNUMERIC)
-#define DeeBytes_IsAnySymStrt(self, start, end) DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISSYMSTRT)
-#define DeeBytes_IsAnySymCont(self, start, end) DeeBytes_TestAnyTrait(self, start, end, UNICODE_ISSYMCONT)
+#define DeeBytes_IsAnyCntrl(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISCNTRL)
+#define DeeBytes_IsAnyTab(self, start, end)     DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISTAB)
+#define DeeBytes_IsAnyCempty(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISEMPTY)
+#define DeeBytes_IsAnyWhite(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISWHITE)
+#define DeeBytes_IsAnyLF(self, start, end)      DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISLF)
+#define DeeBytes_IsAnySpace(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSPACE)
+#define DeeBytes_IsAnyLower(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISLOWER)
+#define DeeBytes_IsAnyUpper(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISUPPER)
+#define DeeBytes_IsAnyAlpha(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISALPHA)
+#define DeeBytes_IsAnyDigit(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISDIGIT)
+#define DeeBytes_IsAnyHex(self, start, end)     DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISHEX)
+#define DeeBytes_IsAnyXdigit(self, start, end)  DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISXDIGIT)
+#define DeeBytes_IsAnyAlnum(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISALNUM)
+#define DeeBytes_IsAnyPunct(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISPUNCT)
+#define DeeBytes_IsAnyGraph(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISGRAPH)
+#define DeeBytes_IsAnyPrint(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISPRINT)
+#define DeeBytes_IsAnyBlank(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISBLANK)
+#define DeeBytes_IsAnyTitle(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISTITLE)
+#define DeeBytes_IsAnyNumeric(self, start, end) DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISNUMERIC)
+#define DeeBytes_IsAnySymStrt(self, start, end) DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMSTRT)
+#define DeeBytes_IsAnySymCont(self, start, end) DeeBytes_TestAnyTrait(self, start, end, Dee_UNICODE_ISSYMCONT)
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_TestTrait(Bytes *__restrict self,
                    size_t start, size_t end,
-                   uniflag_t flags) {
+                   Dee_uniflag_t flags) {
 	byte_t *data;
 	size_t size;
 	bool result = true;
@@ -1536,7 +1536,7 @@ empty:
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_TestAnyTrait(Bytes *__restrict self,
                       size_t start, size_t end,
-                      uniflag_t flags) {
+                      Dee_uniflag_t flags) {
 	byte_t *data;
 	size_t size;
 	bool result = false;
@@ -1585,20 +1585,20 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 	byte_t *data;
 	size_t size;
 	bool result = true;
-	uniflag_t flags = (UNICODE_ISTITLE | UNICODE_ISUPPER | UNICODE_ISSPACE);
+	Dee_uniflag_t flags = (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISSPACE);
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
 	do {
 		byte_t byte = *data++;
-		uniflag_t f = DeeUni_Flags(byte);
+		Dee_uniflag_t f = DeeUni_Flags(byte);
 		if (!(f & flags)) {
 			result = false;
 			break;
 		}
-		flags = (f & UNICODE_ISSPACE) ? (UNICODE_ISTITLE | UNICODE_ISUPPER | UNICODE_ISSPACE)
-		                              : (UNICODE_ISLOWER | UNICODE_ISSPACE);
+		flags = (f & Dee_UNICODE_ISSPACE) ? (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISSPACE)
+		                              : (Dee_UNICODE_ISLOWER | Dee_UNICODE_ISSPACE);
 	} while (--size);
 empty:
 	DeeBytes_DecUse(self);
@@ -1611,7 +1611,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 	byte_t *data;
 	size_t size;
 	bool result = true;
-	uniflag_t flags = UNICODE_ISSYMSTRT;
+	Dee_uniflag_t flags = Dee_UNICODE_ISSYMSTRT;
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
@@ -1622,7 +1622,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 			result = false;
 			break;
 		}
-		flags = UNICODE_ISSYMCONT;
+		flags = Dee_UNICODE_ISSYMCONT;
 	} while (--size);
 empty:
 	DeeBytes_DecUse(self);
@@ -1895,7 +1895,7 @@ bytes_title(Bytes *self, size_t argc,
 	DREF Bytes *result;
 	byte_t *dst;
 	byte_t const *src;
-	uintptr_t kind = UNICODE_CONVERT_TITLE;
+	uintptr_t kind = Dee_UNICODE_CONVERT_TITLE;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("title", params: "
 	size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "bytes");]]]*/
@@ -1919,10 +1919,10 @@ bytes_title(Bytes *self, size_t argc,
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
-		*dst++ = kind == UNICODE_CONVERT_TITLE
+		*dst++ = kind == Dee_UNICODE_CONVERT_TITLE
 		         ? (byte_t)DeeUni_ToTitle(byte)
 		         : (byte_t)DeeUni_ToLower(byte);
-		kind = DeeUni_IsSpace(byte) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+		kind = DeeUni_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 	} while (--size);
 	DeeBytes_DecUse(self);
 	return result;
@@ -2112,7 +2112,7 @@ bytes_totitle(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	size_t size;
 	byte_t *iter;
-	uintptr_t kind = UNICODE_CONVERT_TITLE;
+	uintptr_t kind = Dee_UNICODE_CONVERT_TITLE;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("totitle", params: "
 	size_t start = 0, size_t end = (size_t)-1
 ", docStringPrefix: "bytes");]]]*/
@@ -2136,10 +2136,10 @@ bytes_totitle(Bytes *self, size_t argc,
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
 		byte_t byte = *iter;
-		*iter = kind == UNICODE_CONVERT_TITLE
+		*iter = kind == Dee_UNICODE_CONVERT_TITLE
 		        ? (byte_t)DeeUni_ToTitle(byte)
 		        : (byte_t)DeeUni_ToLower(byte);
-		kind = DeeUni_IsSpace(byte) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+		kind = DeeUni_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 		++iter;
 	} while (--size);
 	DeeBytes_DecUse(self);
@@ -2242,7 +2242,7 @@ bytes_replace(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	byte_t *begin, *end, *block_begin;
 	Needle find_needle, replace_needle;
-	struct bytes_printer printer;
+	struct Dee_bytes_printer printer;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("replace", params: "
 	find: ?X3?DBytes?Dstring?Dint;
 	replace: ?X3?DBytes?Dstring?Dint;
@@ -2276,7 +2276,7 @@ bytes_replace(Bytes *self, size_t argc,
 		release_needle(&replace_needle);
 		return result;
 	}
-	bytes_printer_init(&printer);
+	Dee_bytes_printer_init(&printer);
 	begin       = DeeBytes_DATA(self);
 	end         = begin + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
@@ -2284,9 +2284,9 @@ bytes_replace(Bytes *self, size_t argc,
 		while (begin < end) {
 			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
-				if unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
+				if unlikely(Dee_bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
 					goto err_find_replace_use_printer;
-				if unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
+				if unlikely(Dee_bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
 					goto err_find_replace_use_printer;
 				begin += find_needle.n_size;
 				block_begin = begin;
@@ -2303,20 +2303,20 @@ bytes_replace(Bytes *self, size_t argc,
 	ASSERT(block_begin <= end);
 #ifndef __OPTIMIZE_SIZE__
 	if unlikely(block_begin == DeeBytes_DATA(self)) {
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 		goto return_self_use;
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(bytes_printer_append(&printer, block_begin,
+	if unlikely(Dee_bytes_printer_append(&printer, block_begin,
 	                                 (size_t)(end - block_begin)) < 0)
 		goto err_find_replace_use_printer;
 	/* Pack together a Bytes object. */
 	DeeBytes_DecUse(self);
 	release_needle(&replace_needle);
 	release_needle(&find_needle);
-	return (DREF Bytes *)bytes_printer_pack(&printer);
+	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
 err_find_replace_use_printer:
-	bytes_printer_fini(&printer);
+	Dee_bytes_printer_fini(&printer);
 /*err_find_replace_use:*/
 	DeeBytes_DecUse(self);
 /*err_find_replace:*/
@@ -2337,7 +2337,7 @@ bytes_casereplace(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
 	byte_t *begin, *end, *block_begin;
 	Needle find_needle, replace_needle;
-	struct bytes_printer printer;
+	struct Dee_bytes_printer printer;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("casereplace", params: "
 	find: ?X3?DBytes?Dstring?Dint;
 	replace: ?X3?DBytes?Dstring?Dint;
@@ -2371,7 +2371,7 @@ bytes_casereplace(Bytes *self, size_t argc,
 		release_needle(&replace_needle);
 		return result;
 	}
-	bytes_printer_init(&printer);
+	Dee_bytes_printer_init(&printer);
 	begin       = DeeBytes_DATA(self);
 	end         = begin + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
@@ -2379,9 +2379,9 @@ bytes_casereplace(Bytes *self, size_t argc,
 		while (begin < end) {
 			if (memcasecmp(begin, find_needle.n_data, find_needle.n_size) == 0) {
 				/* Found one */
-				if unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
+				if unlikely(Dee_bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
 					goto err_find_replace_use_printer;
-				if unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
+				if unlikely(Dee_bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
 					goto err_find_replace_use_printer;
 				begin += find_needle.n_size;
 				block_begin = begin;
@@ -2398,20 +2398,20 @@ bytes_casereplace(Bytes *self, size_t argc,
 	ASSERT(block_begin <= end);
 #ifndef __OPTIMIZE_SIZE__
 	if unlikely(block_begin == DeeBytes_DATA(self)) {
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 		goto return_self_use;
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(bytes_printer_append(&printer, block_begin,
+	if unlikely(Dee_bytes_printer_append(&printer, block_begin,
 	                                 (size_t)(end - block_begin)) < 0)
 		goto err_find_replace_use_printer;
 	/* Pack together a Bytes object. */
 	DeeBytes_DecUse(self);
 	release_needle(&replace_needle);
 	release_needle(&find_needle);
-	return (DREF Bytes *)bytes_printer_pack(&printer);
+	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
 err_find_replace_use_printer:
-	bytes_printer_fini(&printer);
+	Dee_bytes_printer_fini(&printer);
 /*err_find_replace_use:*/
 	DeeBytes_DecUse(self);
 /*err_find_replace:*/
@@ -2647,9 +2647,9 @@ err:
 }
 
 struct bytes_join_data {
-	struct bytes_printer bjd_out;   /* Output printer */
-	Bytes               *bjd_sep;   /* [1..1] Separator */
-	bool                 bjd_first; /* True if this is the first element. */
+	struct Dee_bytes_printer bjd_out;   /* Output printer */
+	Bytes                   *bjd_sep;   /* [1..1] Separator */
+	bool                     bjd_first; /* True if this is the first element. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -2657,12 +2657,12 @@ bytes_join_cb(void *arg, DeeObject *elem) {
 	struct bytes_join_data *data = (struct bytes_join_data *)arg;
 	/* Print `self' prior to every object, starting with the 2nd one. */
 	if (!data->bjd_first) {
-		if unlikely(bytes_printer_append(&data->bjd_out,
+		if unlikely(Dee_bytes_printer_append(&data->bjd_out,
 		                                 DeeBytes_DATA(data->bjd_sep),
 		                                 DeeBytes_SIZE(data->bjd_sep)) < 0)
 			goto err;
 	}
-	if unlikely(bytes_printer_printobject(&data->bjd_out, elem) < 0)
+	if unlikely(Dee_bytes_printer_printobject(&data->bjd_out, elem) < 0)
 		goto err;
 	data->bjd_first = false;
 	return 0;
@@ -2683,7 +2683,7 @@ bytes_join(Bytes *self, size_t argc, DeeObject *const *argv) {
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "join", &args.seq);
 /*[[[end]]]*/
-	bytes_printer_init(&data.bjd_out);
+	Dee_bytes_printer_init(&data.bjd_out);
 	data.bjd_sep   = self;
 	data.bjd_first = true;
 	DeeBytes_IncUse(self);
@@ -2691,9 +2691,9 @@ bytes_join(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeBytes_DecUse(self);
 	if unlikely(status < 0)
 		goto err_printer;
-	return bytes_printer_pack(&data.bjd_out);
+	return Dee_bytes_printer_pack(&data.bjd_out);
 err_printer:
-	bytes_printer_fini(&data.bjd_out);
+	Dee_bytes_printer_fini(&data.bjd_out);
 err:
 	return NULL;
 }
@@ -3996,7 +3996,7 @@ bytes_expandtabs(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0Or1X(err, argc, argv, "expandtabs", &args.tabwidth, UNPuSIZ, DeeObject_AsSize);
 /*[[[end]]]*/
 	{
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *iter, *end, *flush_start;
 		size_t line_inset;
 		DeeBytes_IncUse(self);
@@ -4012,32 +4012,32 @@ bytes_expandtabs(Bytes *self, size_t argc, DeeObject *const *argv) {
 					line_inset = 0; /* Reset insets at line starts. */
 				continue;
 			}
-			if (bytes_printer_append(&printer, flush_start,
+			if (Dee_bytes_printer_append(&printer, flush_start,
 			                         (size_t)(iter - flush_start)) < 0)
 				goto err_use_printer;
 			/* Replace with white-space. */
 			if likely(args.tabwidth) {
 				line_inset = args.tabwidth - (line_inset % args.tabwidth);
-				if (bytes_printer_repeat(&printer, ASCII_SPACE, line_inset) < 0)
+				if (Dee_bytes_printer_repeat(&printer, ASCII_SPACE, line_inset) < 0)
 					goto err_use_printer;
 				line_inset = 0;
 			}
 			flush_start = iter + 1;
 		}
-		if (!BYTES_PRINTER_SIZE(&printer))
+		if (!Dee_BYTES_PRINTER_SIZE(&printer))
 			goto retself_use;
-		if (bytes_printer_append(&printer, flush_start,
+		if (Dee_bytes_printer_append(&printer, flush_start,
 		                         (size_t)(iter - flush_start)) < 0)
 			goto err_use_printer;
 		DeeBytes_DecUse(self);
-		return bytes_printer_pack(&printer);
+		return Dee_bytes_printer_pack(&printer);
 retself_use:
 		DeeBytes_DecUse(self);
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 		return_reference_(Dee_AsObject(self));
 err_use_printer:
 		DeeBytes_DecUse(self);
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 	}
 err:
 	return NULL;
@@ -4068,7 +4068,7 @@ bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 #endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
 	{
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *iter, *end, *flush_start;
 		DeeBytes_IncUse(self);
 		iter        = DeeBytes_DATA(self);
@@ -4086,10 +4086,10 @@ bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 				if (iter[1] != ASCII_LF)
 					continue; /* Isn't CRLF */
 			}
-			if (bytes_printer_append(&printer, flush_start,
+			if (Dee_bytes_printer_append(&printer, flush_start,
 			                         (size_t)(iter - flush_start)) < 0)
 				goto err_use_printer;
-			if (bytes_printer_append(&printer,
+			if (Dee_bytes_printer_append(&printer,
 			                         replace.n_data,
 			                         replace.n_size) < 0)
 				goto err_use_printer;
@@ -4097,23 +4097,23 @@ bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 				++iter;
 			flush_start = iter + 1;
 		}
-		if (!BYTES_PRINTER_SIZE(&printer))
+		if (!Dee_BYTES_PRINTER_SIZE(&printer))
 			goto retself_use;
-		if (bytes_printer_append(&printer, flush_start,
+		if (Dee_bytes_printer_append(&printer, flush_start,
 		                         (size_t)(iter - flush_start)) < 0)
 			goto err_use_printer;
 		DeeBytes_DecUse(self);
 		release_needle(&replace);
-		return bytes_printer_pack(&printer);
+		return Dee_bytes_printer_pack(&printer);
 retself_use:
 		DeeBytes_DecUse(self);
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 		release_needle(&replace);
 		return_reference_(Dee_AsObject(self));
 err_use_printer:
 		DeeBytes_DecUse(self);
 		release_needle(&replace);
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 	}
 err:
 	return NULL;
@@ -4149,10 +4149,10 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(DeeBytes_IsEmpty(self))
 		goto retself_use;
 	{
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *flush_start, *iter, *end;
 		/* Start by inserting the initial, unconditional indentation at the start. */
-		if (bytes_printer_append(&printer, filler.n_data, filler.n_size) < 0)
+		if (Dee_bytes_printer_append(&printer, filler.n_data, filler.n_size) < 0)
 			goto err_use_printer;
 		iter        = DeeBytes_DATA(self);
 		end         = iter + DeeBytes_SIZE(self);
@@ -4165,12 +4165,12 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 				if (ch == ASCII_CR && *iter == ASCII_LF)
 					++iter;
 				/* Flush all unwritten data up to this point. */
-				if (bytes_printer_append(&printer, flush_start,
+				if (Dee_bytes_printer_append(&printer, flush_start,
 				                         (size_t)(iter - flush_start)) < 0)
 					goto err_use_printer;
 				flush_start = iter;
 				/* Insert the filler just before the linefeed. */
-				if (bytes_printer_append(&printer, filler.n_data, filler.n_size) < 0)
+				if (Dee_bytes_printer_append(&printer, filler.n_data, filler.n_size) < 0)
 					goto err_use_printer;
 				continue;
 			}
@@ -4181,21 +4181,21 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 			 * In either case, we must remove `filler' from its end,
 			 * because we're not supposed to have the resulting
 			 * string include it as trailing memory. */
-			ASSERT(BYTES_PRINTER_SIZE(&printer) >= filler.n_size);
-			bytes_printer_release(&printer, filler.n_size);
+			ASSERT(Dee_BYTES_PRINTER_SIZE(&printer) >= filler.n_size);
+			Dee_bytes_printer_release(&printer, filler.n_size);
 		} else {
 			/* Flush the remainder. */
-			if (bytes_printer_append(&printer, flush_start,
+			if (Dee_bytes_printer_append(&printer, flush_start,
 			                         (size_t)(iter - flush_start)) < 0)
 				goto err_use_printer;
 		}
 		DeeBytes_DecUse(self);
 		release_needle(&filler);
-		return bytes_printer_pack(&printer);
+		return Dee_bytes_printer_pack(&printer);
 err_use_printer:
 		DeeBytes_DecUse(self);
 		release_needle(&filler);
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 	}
 err:
 	return NULL;
@@ -4224,7 +4224,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!args.max_)
 		goto retself;
 	{
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *flush_start, *iter, *end;
 		size_t i;
 		DeeBytes_IncUse(self);
@@ -4247,7 +4247,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 						++iter;
 
 					/* Flush all unwritten data up to this point. */
-					if (bytes_printer_append(&printer, flush_start,
+					if (Dee_bytes_printer_append(&printer, flush_start,
 					                         (size_t)(iter - flush_start)) < 0) {
 err_printer_mask:
 						release_needle(&mask);
@@ -4264,7 +4264,7 @@ err_printer_mask:
 			}
 
 			/* Flush the remainder. */
-			if (bytes_printer_append(&printer, flush_start,
+			if (Dee_bytes_printer_append(&printer, flush_start,
 			                         (size_t)(iter - flush_start)) < 0)
 				goto err_printer_mask;
 		} else {
@@ -4280,7 +4280,7 @@ err_printer_mask:
 						++iter;
 
 					/* Flush all unwritten data up to this point. */
-					if (bytes_printer_append(&printer, flush_start,
+					if (Dee_bytes_printer_append(&printer, flush_start,
 					                         (size_t)(iter - flush_start)) < 0)
 						goto err_use_printer;
 
@@ -4294,15 +4294,15 @@ err_printer_mask:
 			}
 
 			/* Flush the remainder. */
-			if (bytes_printer_append(&printer, flush_start,
+			if (Dee_bytes_printer_append(&printer, flush_start,
 			                         (size_t)(iter - flush_start)) < 0)
 				goto err_use_printer;
 		}
 		DeeBytes_DecUse(self);
-		return bytes_printer_pack(&printer);
+		return Dee_bytes_printer_pack(&printer);
 err_use_printer:
 		DeeBytes_DecUse(self);
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 	}
 err:
 	return NULL;
@@ -5249,13 +5249,13 @@ struct DeeRegexBaseExec {
 	DREF String               *rx_pattern;  /* [1..1] Pattern string (only a reference within objects in "./reproxy.c.inl") */
 	struct DeeRegexCode const *rx_code;     /* [1..1] Regex code */
 	void const                *rx_inbase;   /* [0..rx_insize][valid_if(rx_startoff < rx_endoff)] Input data to scan
-	                                         * When `rx_code' was compiled with `DEE_REGEX_COMPILE_NOUTF8', this data
+	                                         * When `rx_code' was compiled with `Dee_RE_COMPILE_NOUTF8', this data
 	                                         * is treated as raw bytes; otherwise, it is treated as a utf-8 string.
 	                                         * In either case, `rx_insize' is the # of bytes within this buffer. */
 	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase' */
 	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase' of data to match. */
 	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase' of data to match. */
-	unsigned int               rx_eflags;   /* Execution-flags (set of `DEE_RE_EXEC_*') */
+	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*') */
 };
 
 /* Functions from "./reproxy.c.inl" */
@@ -5295,7 +5295,7 @@ bytes_generic_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 		goto err;
 	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
 		goto err;
-	result->rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NOUTF8, rules);
+	result->rx_code = DeeString_GetRegex(pattern, Dee_RE_COMPILE_NOUTF8, rules);
 	if unlikely(!result->rx_code)
 		goto err;
 	result->rx_nmatch = 0;
@@ -5330,7 +5330,7 @@ bytes_search_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 	if (DeeObject_AssertTypeExact(result->rewr_pattern, &DeeString_Type))
 		goto err;
 	result->rewr_exec.rx_code = DeeString_GetRegex((DeeObject *)result->rewr_pattern,
-	                                               DEE_REGEX_COMPILE_NOUTF8,
+	                                               Dee_RE_COMPILE_NOUTF8,
 	                                               (DeeObject *)result->rewr_rules);
 	if unlikely(!result->rewr_exec.rx_code)
 		goto err;
@@ -5357,9 +5357,9 @@ bytes_rematch(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err;
 	result = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (result == DEE_RE_STATUS_NOMATCH)
+	if (result == Dee_RE_STATUS_NOMATCH)
 		return_none;
 	return DeeInt_NewSize((size_t)result);
 err:
@@ -5384,9 +5384,9 @@ bytes_regmatch(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
@@ -5410,9 +5410,9 @@ bytes_rematches(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		goto err;
 	status = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (status == DEE_RE_STATUS_NOMATCH)
+	if (status == Dee_RE_STATUS_NOMATCH)
 		return_false;
 	ASSERT((size_t)status <= exec.rx_endoff);
 	return_bool((size_t)status >= exec.rx_endoff);
@@ -5432,9 +5432,9 @@ bytes_refind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (status == DEE_RE_STATUS_NOMATCH)
+	if (status == Dee_RE_STATUS_NOMATCH)
 		return_none;
 	match_size += (size_t)status;
 	return DeeTuple_NewII((size_t)status, (size_t)match_size);
@@ -5453,9 +5453,9 @@ bytes_rerfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (status == DEE_RE_STATUS_NOMATCH)
+	if (status == Dee_RE_STATUS_NOMATCH)
 		return_none;
 	match_size += (size_t)status;
 	return DeeTuple_NewII((size_t)status, (size_t)match_size);
@@ -5481,9 +5481,9 @@ bytes_rescanf(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	exec.rx_pmatch = result->rss_groups;
 	status = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReSubBytes_Free(result);
 		return DeeSeq_NewEmpty();
 	}
@@ -5516,9 +5516,9 @@ bytes_regfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
@@ -5552,9 +5552,9 @@ bytes_regrfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
@@ -5588,9 +5588,9 @@ bytes_reglocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	exec.rewr_exec.rx_pmatch = result->rss_groups + 1;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
@@ -5626,9 +5626,9 @@ bytes_regrlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	exec.rewr_exec.rx_pmatch = result->rss_groups + 1;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
 	}
@@ -5667,9 +5667,9 @@ bytes_reindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (status == DEE_RE_STATUS_NOMATCH)
+	if (status == Dee_RE_STATUS_NOMATCH)
 		goto not_found;
 	match_size += (size_t)status;
 	return DeeTuple_NewII((size_t)status, (size_t)match_size);
@@ -5690,9 +5690,9 @@ bytes_rerindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (status == DEE_RE_STATUS_NOMATCH)
+	if (status == Dee_RE_STATUS_NOMATCH)
 		goto not_found;
 	match_size += (size_t)status;
 	return DeeTuple_NewII((size_t)status, (size_t)match_size);
@@ -5721,9 +5721,9 @@ bytes_regindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH)
+	if (status == Dee_RE_STATUS_NOMATCH)
 		goto not_found;
 	match_size += (size_t)status;
 	result->rg_groups[0].rm_so = (size_t)status;
@@ -5757,9 +5757,9 @@ bytes_regrindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	bytes_search_regex_putargs(self);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_g;
-	if (status == DEE_RE_STATUS_NOMATCH)
+	if (status == Dee_RE_STATUS_NOMATCH)
 		goto not_found;
 	match_size += (size_t)status;
 	result->rg_groups[0].rm_so = (size_t)status;
@@ -5785,9 +5785,9 @@ bytes_relocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                                       &exec))
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		result = DeeNone_NewRef();
 	} else {
 		result = DeeBytes_NewSubView(self,
@@ -5812,9 +5812,9 @@ bytes_rerlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	                                       &exec))
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		result = DeeNone_NewRef();
 	} else {
 		result = DeeBytes_NewSubView(self,
@@ -5909,9 +5909,9 @@ bytes_repartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *k
 	                                       &exec))
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_args;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		result = bytes_pack_partition_not_found(self,
 		                                        (char const *)exec.rewr_exec.rx_inbase,
 		                                        exec.rewr_exec.rx_startoff,
@@ -5946,9 +5946,9 @@ bytes_rerpartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *
 	                                       &exec))
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
-	if unlikely(status == DEE_RE_STATUS_ERROR)
+	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err_args;
-	if (status == DEE_RE_STATUS_NOMATCH) {
+	if (status == Dee_RE_STATUS_NOMATCH) {
 		result = bytes_pack_partition_not_found(self,
 		                                        (char const *)exec.rewr_exec.rx_inbase,
 		                                        exec.rewr_exec.rx_startoff,
@@ -5982,7 +5982,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	struct bytes_printer printer = BYTES_PRINTER_INIT;
+	struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 	DeeObject *pattern, *replace, *rules = NULL;
 	struct DeeRegexMatch groups[9];
 	size_t maxreplace = (size_t)-1;
@@ -6001,7 +6001,7 @@ bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		goto err_printer;
 	replace_end = replace_start + WSTR_LENGTH(replace_start);
 	exec.rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
-	exec.rx_code = DeeString_GetRegex(pattern, DEE_REGEX_COMPILE_NOUTF8, rules);
+	exec.rx_code = DeeString_GetRegex(pattern, Dee_RE_COMPILE_NOUTF8, rules);
 	if unlikely(!exec.rx_code)
 		goto err_printer;
 	DeeBytes_IncUse(self);
@@ -6017,13 +6017,13 @@ bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		size_t match_size;
 		memsetp(groups, (void *)(uintptr_t)(size_t)-1, 2 * 9);
 		match_offset = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-		if unlikely(match_offset == DEE_RE_STATUS_ERROR)
+		if unlikely(match_offset == Dee_RE_STATUS_ERROR)
 			goto err_printer_use;
-		if (match_offset == DEE_RE_STATUS_NOMATCH)
+		if (match_offset == Dee_RE_STATUS_NOMATCH)
 			break;
 
 		/* Flush until start-of-match. */
-		if unlikely(bytes_printer_append(&printer,
+		if unlikely(Dee_bytes_printer_append(&printer,
 		                                 (byte_t const *)exec.rx_inbase + exec.rx_startoff,
 		                                 (size_t)match_offset - exec.rx_startoff) < 0)
 			goto err_printer_use;
@@ -6040,10 +6040,10 @@ bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 				match.rm_so = (size_t)match_offset;
 				match.rm_eo = (size_t)match_offset + match_size;
 do_insert_match:
-				if unlikely(bytes_printer_print(&printer, replace_flush,
+				if unlikely(Dee_bytes_printer_print(&printer, replace_flush,
 				                                (size_t)(replace_iter - replace_flush)) < 0)
 					goto err_printer_use;
-				if unlikely(bytes_printer_append(&printer,
+				if unlikely(Dee_bytes_printer_append(&printer,
 				                                 (byte_t const *)exec.rx_inbase + match.rm_so,
 				                                 (size_t)(match.rm_eo - match.rm_so)) < 0)
 					goto err_printer_use;
@@ -6057,7 +6057,7 @@ do_insert_match:
 				ch = replace_iter[1];
 				if (ch == '&' || ch == '\\') {
 					/* Insert literal '&' or '\' */
-					if unlikely(bytes_printer_print(&printer, replace_flush,
+					if unlikely(Dee_bytes_printer_print(&printer, replace_flush,
 					                                (size_t)(replace_iter - replace_flush)) < 0)
 						goto err_printer_use;
 					++replace_iter;
@@ -6082,7 +6082,7 @@ do_insert_match:
 
 		/* Flush remainder of replacement bytes. */
 		if (replace_flush < replace_end) {
-			if unlikely(bytes_printer_print(&printer, replace_flush,
+			if unlikely(Dee_bytes_printer_print(&printer, replace_flush,
 			                                (size_t)(replace_end - replace_flush)) < 0)
 				goto err_printer_use;
 		}
@@ -6096,20 +6096,20 @@ do_insert_match:
 #ifndef __OPTIMIZE_SIZE__
 	if unlikely(exec.rx_startoff == 0) {
 		DeeBytes_DecUse(self);
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 		return_reference_(self);
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
-	if unlikely(bytes_printer_append(&printer,
+	if unlikely(Dee_bytes_printer_append(&printer,
 	                                 (byte_t const *)exec.rx_inbase + exec.rx_startoff,
 	                                 exec.rx_endoff - exec.rx_startoff) < 0)
 		goto err_printer_use;
 	DeeBytes_DecUse(self);
-	return (DREF Bytes *)bytes_printer_pack(&printer);
+	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
 err_printer_use:
 	DeeBytes_DecUse(self);
 err_printer:
-	bytes_printer_fini(&printer);
+	Dee_bytes_printer_fini(&printer);
 /*err:*/
 	return NULL;
 }
@@ -6132,7 +6132,7 @@ bytes_base_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 	if (DeeObject_AssertTypeExact(result->rx_pattern, &DeeString_Type))
 		goto err;
 	result->rx_code = DeeString_GetRegex((DeeObject *)result->rx_pattern,
-	                                     DEE_REGEX_COMPILE_NOUTF8, rules);
+	                                     Dee_RE_COMPILE_NOUTF8, rules);
 	if unlikely(!result->rx_code)
 		goto err;
 	result->rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
@@ -6215,9 +6215,9 @@ bytes_restartswith(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *
 		goto err;
 	result = DeeRegex_Match(&exec);
 	bytes_generic_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	return_bool(result != DEE_RE_STATUS_NOMATCH);
+	return_bool(result != Dee_RE_STATUS_NOMATCH);
 err:
 	return NULL;
 }
@@ -6233,9 +6233,9 @@ bytes_reendswith(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err;
 	result = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
 	bytes_generic_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	if unlikely(result == DEE_RE_STATUS_NOMATCH)
+	if unlikely(result == Dee_RE_STATUS_NOMATCH)
 		return_false;
 	ASSERT((size_t)result + match_size <= exec.rx_endoff || !match_size);
 	return_bool((size_t)result + match_size >= exec.rx_endoff);
@@ -6253,9 +6253,9 @@ bytes_relstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		goto err;
 	for (;;) {
 		Dee_ssize_t status = DeeRegex_Match(&exec);
-		if unlikely(status == DEE_RE_STATUS_ERROR)
+		if unlikely(status == Dee_RE_STATUS_ERROR)
 			goto err_args;
-		if (status == DEE_RE_STATUS_NOMATCH)
+		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (status == 0)
 			break; /* Prevent infinite loop when epsilon is matched. */
@@ -6292,9 +6292,9 @@ bytes_rerstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	for (;;) {
 		size_t match_size;
 		Dee_ssize_t status = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
-		if unlikely(status == DEE_RE_STATUS_ERROR)
+		if unlikely(status == Dee_RE_STATUS_ERROR)
 			goto err_args;
-		if (status == DEE_RE_STATUS_NOMATCH)
+		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (match_size == 0)
 			break; /* Prevent infinite loop when epsilon is matched. */
@@ -6334,9 +6334,9 @@ bytes_restrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	/* lstrip */
 	for (;;) {
 		Dee_ssize_t status = DeeRegex_Match(&exec);
-		if unlikely(status == DEE_RE_STATUS_ERROR)
+		if unlikely(status == Dee_RE_STATUS_ERROR)
 			goto err_args;
-		if (status == DEE_RE_STATUS_NOMATCH)
+		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (status == 0)
 			break; /* Prevent infinite loop when epsilon is matched. */
@@ -6349,9 +6349,9 @@ bytes_restrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	for (;;) {
 		size_t match_size;
 		Dee_ssize_t status = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
-		if unlikely(status == DEE_RE_STATUS_ERROR)
+		if unlikely(status == Dee_RE_STATUS_ERROR)
 			goto err_args;
-		if (status == DEE_RE_STATUS_NOMATCH)
+		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (match_size == 0)
 			break; /* Prevent infinite loop when epsilon is matched. */
@@ -6390,9 +6390,9 @@ bytes_recontains(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err;
 	result = DeeRegex_Search(&exec, (size_t)-1, NULL);
 	bytes_generic_regex_putargs(self);
-	if unlikely(result == DEE_RE_STATUS_ERROR)
+	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
-	return_bool(result != DEE_RE_STATUS_NOMATCH);
+	return_bool(result != Dee_RE_STATUS_NOMATCH);
 err:
 	return NULL;
 }
@@ -6410,9 +6410,9 @@ bytes_recount(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		Dee_ssize_t result;
 		size_t match_size;
 		result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
-		if unlikely(result == DEE_RE_STATUS_ERROR)
+		if unlikely(result == Dee_RE_STATUS_ERROR)
 			goto err_args;
-		if (result == DEE_RE_STATUS_NOMATCH)
+		if (result == Dee_RE_STATUS_NOMATCH)
 			break;
 		++count;
 		exec.rx_startoff = (size_t)result + match_size;

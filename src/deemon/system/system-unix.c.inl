@@ -154,7 +154,7 @@ PUBLIC ATTR_COLD NONNULL((3)) int
  * @return: -1 / NULL:     Error.
  * @return: 1 / ITER_DONE: The specified file isn't a symbolic link. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeUnixSystem_PrintLink(struct unicode_printer *__restrict printer,
+DeeUnixSystem_PrintLink(struct Dee_unicode_printer *__restrict printer,
                         /*String*/ DeeObject *__restrict filename) {
 #ifdef DeeUnixSystem_ReadLink_USE_WINDOWS
 	/* TODO */
@@ -184,7 +184,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeUnixSystem_PrintLinkString(struct unicode_printer *__restrict printer,
+DeeUnixSystem_PrintLinkString(struct Dee_unicode_printer *__restrict printer,
                               /*utf-8*/ char const *filename) {
 #ifdef DeeUnixSystem_ReadLink_USE_WINDOWS
 	/* TODO */
@@ -206,7 +206,7 @@ DeeUnixSystem_PrintLinkString(struct unicode_printer *__restrict printer,
 	size_t bufsize, new_size;
 	size_t req_size;
 	bufsize = PATH_MAX;
-	buffer  = unicode_printer_alloc_utf8(printer, bufsize);
+	buffer  = Dee_unicode_printer_alloc_utf8(printer, bufsize);
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
@@ -233,24 +233,24 @@ handle_error:
 		DBG_ALIGNMENT_ENABLE();
 		/* Ensure that this is still a symbolic link. */
 		if (!S_ISLNK(st.st_mode)) {
-			unicode_printer_free_utf8(printer, buffer);
+			Dee_unicode_printer_free_utf8(printer, buffer);
 			return 1;
 		}
 		new_size = (size_t)st.st_size;
 		if (new_size <= bufsize)
 			break; /* Shouldn't happen, but might due to race conditions? */
-		new_buffer = unicode_printer_resize_utf8(printer, buffer, new_size);
+		new_buffer = Dee_unicode_printer_resize_utf8(printer, buffer, new_size);
 		if unlikely(!new_buffer)
 			goto err_buf;
 		buffer  = new_buffer;
 		bufsize = new_size;
 	}
 	/* Commit buffer data at the end of the printer. */
-	if unlikely(unicode_printer_commit_utf8(printer, buffer, req_size) < 0)
+	if unlikely(Dee_unicode_printer_commit_utf8(printer, buffer, req_size) < 0)
 		goto err_buf;
 	return 0;
 err_buf:
-	unicode_printer_free_utf8(printer, buffer);
+	Dee_unicode_printer_free_utf8(printer, buffer);
 err:
 	return -1;
 #endif /* DeeUnixSystem_ReadLink_USE_readlink */
@@ -265,11 +265,11 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeUnixSystem_ReadLink(/*String*/ DeeObject *__restrict filename) {
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeUnixSystem_PrintLink(&printer, filename);
 	if (error == 0)
-		return unicode_printer_pack(&printer);
-	unicode_printer_fini(&printer);
+		return Dee_unicode_printer_pack(&printer);
+	Dee_unicode_printer_fini(&printer);
 	if (error > 0)
 		return ITER_DONE;
 	return NULL;
@@ -278,11 +278,11 @@ DeeUnixSystem_ReadLink(/*String*/ DeeObject *__restrict filename) {
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename) {
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeUnixSystem_PrintLinkString(&printer, filename);
 	if (error == 0)
-		return unicode_printer_pack(&printer);
-	unicode_printer_fini(&printer);
+		return Dee_unicode_printer_pack(&printer);
+	Dee_unicode_printer_fini(&printer);
 	if (error > 0)
 		return ITER_DONE;
 	return NULL;
@@ -314,12 +314,12 @@ DeeUnixSystem_ReadLinkString(/*utf-8*/ char const *filename) {
  * If the host doesn't support FD-based file descriptors, throw an error. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSystem_GetFilenameOfFD(int fd) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if (DeeSystem_PrintFilenameOfFD(&printer, fd))
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -344,7 +344,7 @@ DeeSystem_DEFINE_strnlen(strnlen)
 /* @return: 0:  Success.
  * @return: -1: Error. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeSystem_PrintFilenameOfFD(struct unicode_printer *__restrict printer, int fd) {
+DeeSystem_PrintFilenameOfFD(struct Dee_unicode_printer *__restrict printer, int fd) {
 #ifdef DeeSystem_PrintFilenameOfFD_USE_get_osfhandle__AND__PrintFilenameOfHandle
 	int result;
 	HANDLE h;
@@ -361,7 +361,7 @@ DeeSystem_PrintFilenameOfFD(struct unicode_printer *__restrict printer, int fd) 
 #ifdef DeeSystem_PrintFilenameOfFD_USE_frealpath
 	char *buf;
 	size_t buflen = PATH_MAX;
-	buf = unicode_printer_alloc_utf8(printer, PATH_MAX);
+	buf = Dee_unicode_printer_alloc_utf8(printer, PATH_MAX);
 	if unlikely(!buf) {
 err:
 		return -1;
@@ -380,12 +380,12 @@ again:
 increase_buffer_size:
 #endif /* ERANGE */
 			new_buflen = buflen * 2;
-			newbuf     = unicode_printer_tryresize_utf8(printer, buf, new_buflen);
+			newbuf     = Dee_unicode_printer_tryresize_utf8(printer, buf, new_buflen);
 			if unlikely(!newbuf) {
 				new_buflen = buflen + 1;
-				newbuf     = unicode_printer_resize_utf8(printer, buf, new_buflen);
+				newbuf     = Dee_unicode_printer_resize_utf8(printer, buf, new_buflen);
 				if unlikely(!newbuf) {
-					unicode_printer_free_utf8(printer, buf);
+					Dee_unicode_printer_free_utf8(printer, buf);
 					goto err;
 				}
 			}
@@ -393,7 +393,7 @@ increase_buffer_size:
 			buflen = new_buflen;
 			goto again;
 		}
-		if unlikely(unicode_printer_commit_utf8(printer, buf, final_len) < 0)
+		if unlikely(Dee_unicode_printer_commit_utf8(printer, buf, final_len) < 0)
 			goto err;
 		return 0;
 	} else {

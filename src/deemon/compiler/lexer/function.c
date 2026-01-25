@@ -184,7 +184,7 @@ INTERN WUNUSED int DCALL parse_arglist(void) {
 
 			/* Special case: unnamed varargs. */
 			if (tok == TOK_DOTS) {
-				if unlikely(current_basescope->bs_flags & CODE_FVARARGS) {
+				if unlikely(current_basescope->bs_flags & Dee_CODE_FVARARGS) {
 					arg = current_basescope->bs_varargs;
 					if likely(arg) {
 						if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
@@ -212,7 +212,7 @@ set_arg_as_varargs_argument:
 				arg->s_symid = current_basescope->bs_argc;
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
 				current_basescope->bs_varargs = arg;
-				current_basescope->bs_flags |= CODE_FVARARGS;
+				current_basescope->bs_flags |= Dee_CODE_FVARARGS;
 parse_varargs_suffix:
 				if unlikely(tok == '?') {
 					if (WARN(W_UNEXPECTED_OPTIONAL_AFTER_VARARGS_OR_VARKWDS, arg))
@@ -265,7 +265,7 @@ parse_varargs_suffix:
 
 			/* Check for keyword arguments parameter. */
 			if (tok == TOK_POW) {
-				if unlikely(current_basescope->bs_flags & CODE_FVARKWDS) {
+				if unlikely(current_basescope->bs_flags & Dee_CODE_FVARKWDS) {
 					arg = current_basescope->bs_varkwds;
 					if likely(arg) {
 						if (WARN(W_KEYWORD_ARGUMENT_ALREADY_DEFINED, arg))
@@ -291,7 +291,7 @@ parse_varargs_suffix:
 				arg->s_symid = current_basescope->bs_argc;
 				current_basescope->bs_argv[current_basescope->bs_argc++] = arg;
 				current_basescope->bs_varkwds = arg;
-				current_basescope->bs_flags |= CODE_FVARKWDS;
+				current_basescope->bs_flags |= Dee_CODE_FVARKWDS;
 				goto parse_varargs_suffix;
 			}
 
@@ -307,7 +307,7 @@ parse_varargs_suffix:
 					arg->s_flag = SYMBOL_FALLOC | symbol_flags;
 					goto set_arg_as_varargs_argument;
 				}
-				ASSERT(current_basescope->bs_flags & CODE_FVARARGS);
+				ASSERT(current_basescope->bs_flags & Dee_CODE_FVARARGS);
 				if (WARN(W_VARIABLE_ARGUMENT_ALREADY_DEFINED, arg))
 					goto err;
 				arg->s_type = SYMBOL_TYPE_LOCAL;
@@ -466,8 +466,8 @@ next_argument:
 		}
 	}
 	ASSERT(current_basescope->bs_argc_max >= current_basescope->bs_argc_min);
-	ASSERT((current_basescope->bs_varargs == NULL) || (current_basescope->bs_flags & CODE_FVARARGS));
-	ASSERT((current_basescope->bs_varkwds == NULL) || (current_basescope->bs_flags & CODE_FVARKWDS));
+	ASSERT((current_basescope->bs_varargs == NULL) || (current_basescope->bs_flags & Dee_CODE_FVARARGS));
+	ASSERT((current_basescope->bs_varkwds == NULL) || (current_basescope->bs_flags & Dee_CODE_FVARKWDS));
 	ASSERT((current_basescope->bs_default != NULL) == (current_basescope->bs_argc_max > current_basescope->bs_argc_min));
 	ASSERT(current_basescope->bs_argc ==
 	       current_basescope->bs_argc_max +
@@ -592,7 +592,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		if unlikely(!code)
 			goto err_decl;
 		result = code->a_type == AST_EXPAND
-		         ? (current_basescope->bs_flags |= CODE_FYIELDING, ast_yield(code))
+		         ? (current_basescope->bs_flags |= Dee_CODE_FYIELDING, ast_yield(code))
 		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
 		ast_decref(code);
 		code = ast_setddi(result, &arrow_loc);
@@ -709,7 +709,7 @@ ast_parse_function_noscope_noargs(bool *p_need_semi) {
 		if unlikely(!code)
 			goto err;
 		result = code->a_type == AST_EXPAND
-		         ? (current_basescope->bs_flags |= CODE_FYIELDING, ast_yield(code))
+		         ? (current_basescope->bs_flags |= Dee_CODE_FYIELDING, ast_yield(code))
 		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
 		ast_decref(code);
 		code = ast_setddi(result, &arrow_loc);
@@ -856,7 +856,7 @@ wrap_code_with_return:
 		if unlikely(!code)
 			goto err_scope;
 		result = code->a_type == AST_EXPAND
-		         ? (current_basescope->bs_flags |= CODE_FYIELDING, ast_yield(code))
+		         ? (current_basescope->bs_flags |= Dee_CODE_FYIELDING, ast_yield(code))
 		         : (current_basescope->bs_cflags |= BASESCOPE_FRETURN, ast_return(code));
 		ast_decref(code);
 		code = ast_setddi(result, &arrow_loc);

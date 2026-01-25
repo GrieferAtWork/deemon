@@ -34,7 +34,6 @@
 
 DECL_BEGIN
 
-#define Dee_compiler_error_object compiler_error_object
 struct Dee_compiler_error_object;
 struct parser_errors {
 	size_t                                  pe_errora; /* Allocated vector size. */

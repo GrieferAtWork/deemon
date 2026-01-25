@@ -281,8 +281,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_globals(DeeModuleObject *__restrict self) {
-	struct module_symbol *symbegin, *symend;
-	struct module_symbol *symiter;
+	struct Dee_module_symbol *symbegin, *symend;
+	struct Dee_module_symbol *symiter;
 	uint16_t globalc, symcount, normali;
 	struct dec_section *symtab; /* Vector of regular symbols (`Dec_GlbSym' in `Dec_Glbmap.g_map') */
 	struct dec_section *exttab; /* Vector of extended symbols (`Dec_GlbExt' in `Dec_Glbmap.g_ext') */
@@ -300,18 +300,18 @@ decgen_globals(DeeModuleObject *__restrict self) {
 		/* Find the original symbol for this variable. */
 		uint8_t *ptr;
 		uint32_t addr;
-		struct module_symbol *first_alias = NULL;
+		struct Dee_module_symbol *first_alias = NULL;
 		for (symiter = symbegin; symiter < symend; ++symiter) {
 			if (!symiter->ss_name)
 				continue; /* Skip empty entries. */
-			if (symiter->ss_flags & MODSYM_FEXTERN) {
+			if (symiter->ss_flags & Dee_MODSYM_FEXTERN) {
 				has_special_symbols = true;
 				continue;
 			}
 			if (Dee_module_symbol_getindex(symiter) == normali) {
 				if (!first_alias)
 					first_alias = symiter;
-				if (!(symiter->ss_flags & MODSYM_FALIAS))
+				if (!(symiter->ss_flags & Dee_MODSYM_FALIAS))
 					break;
 			}
 		}
@@ -332,11 +332,11 @@ decgen_globals(DeeModuleObject *__restrict self) {
 		} else {
 			size_t name_len;
 			/* Write information for this symbol. */
-			if (dec_putw(symiter->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)))
+			if (dec_putw(symiter->ss_flags & ~(Dee_MODSYM_FNAMEOBJ | Dee_MODSYM_FDOCOBJ)))
 				goto err; /* Dec_GlbSym.s_flg */
 			dec_curr = SC_STRING;
-			name_len = MODULE_SYMBOL_GETNAMELEN(symiter);
-			ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(symiter),
+			name_len = Dee_MODULE_SYMBOL_GETNAMELEN(symiter);
+			ptr = dec_allocstr(Dee_MODULE_SYMBOL_GETNAMESTR(symiter),
 			                   (name_len + 1) * sizeof(char));
 			if unlikely(!ptr)
 				goto err;
@@ -351,8 +351,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 					doc_str = NULL;
 					doc_len = 0;
 				} else {
-					doc_str = MODULE_SYMBOL_GETDOCSTR(symiter);
-					doc_len = MODULE_SYMBOL_GETDOCLEN(symiter);
+					doc_str = Dee_MODULE_SYMBOL_GETDOCSTR(symiter);
+					doc_len = Dee_MODULE_SYMBOL_GETDOCLEN(symiter);
 				}
 				if (dec_putptr((uint32_t)doc_len))
 					goto err; /* Dec_GlbSym.s_doclen */
@@ -378,7 +378,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			for (++first_alias; first_alias < symend; ++first_alias) {
 				if (!first_alias->ss_name)
 					continue;
-				if (first_alias->ss_flags & MODSYM_FEXTERN)
+				if (first_alias->ss_flags & Dee_MODSYM_FEXTERN)
 					continue;
 				if (Dee_module_symbol_getindex(first_alias) != normali)
 					continue;
@@ -387,13 +387,13 @@ decgen_globals(DeeModuleObject *__restrict self) {
 				 * Add it to the extended symbol table. */
 				dec_curr = exttab;
 				++symcount; /* Track the total number of symbols. */
-				if (dec_putw(first_alias->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)))
+				if (dec_putw(first_alias->ss_flags & ~(Dee_MODSYM_FNAMEOBJ | Dee_MODSYM_FDOCOBJ)))
 					goto err; /* Dec_GlbExt.s_flg */
 				if (dec_putw(normali))
 					goto err; /* Dec_GlbExt.s_addr */
 				dec_curr = SC_STRING;
-				name_len = MODULE_SYMBOL_GETNAMELEN(first_alias);
-				ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(first_alias),
+				name_len = Dee_MODULE_SYMBOL_GETNAMELEN(first_alias);
+				ptr = dec_allocstr(Dee_MODULE_SYMBOL_GETNAMESTR(first_alias),
 				                   (name_len + 1) * sizeof(char));
 				if unlikely(!ptr)
 					goto err;
@@ -409,8 +409,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 						doc_str = NULL;
 						doc_len = 0;
 					} else {
-						doc_str = MODULE_SYMBOL_GETDOCSTR(first_alias);
-						doc_len = MODULE_SYMBOL_GETDOCLEN(first_alias);
+						doc_str = Dee_MODULE_SYMBOL_GETDOCSTR(first_alias);
+						doc_len = Dee_MODULE_SYMBOL_GETDOCLEN(first_alias);
 					}
 					if (dec_putptr((uint32_t)doc_len))
 						goto err; /* Dec_GlbSym.s_doclen */
@@ -438,18 +438,18 @@ decgen_globals(DeeModuleObject *__restrict self) {
 			size_t name_len;
 			if (!symiter->ss_name)
 				continue; /* Skip empty entries. */
-			if (!(symiter->ss_flags & MODSYM_FEXTERN))
+			if (!(symiter->ss_flags & Dee_MODSYM_FEXTERN))
 				continue;
 			++symcount; /* Track the total number of symbols. */
-			if (dec_putw(symiter->ss_flags & ~(MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)))
+			if (dec_putw(symiter->ss_flags & ~(Dee_MODSYM_FNAMEOBJ | Dee_MODSYM_FDOCOBJ)))
 				goto err; /* Dec_GlbExt.s_flg */
 			if (dec_putw(Dee_module_symbol_getindex(symiter)))
 				goto err; /* Dec_GlbExt.s_addr */
 			if (dec_putw(symiter->ss_impid))
 				goto err; /* Dec_GlbExt.s_addr2 */
 			dec_curr = SC_STRING;
-			name_len = MODULE_SYMBOL_GETNAMELEN(symiter);
-			ptr = dec_allocstr(MODULE_SYMBOL_GETNAMESTR(symiter),
+			name_len = Dee_MODULE_SYMBOL_GETNAMELEN(symiter);
+			ptr = dec_allocstr(Dee_MODULE_SYMBOL_GETNAMESTR(symiter),
 			                   (name_len + 1) * sizeof(char));
 			if unlikely(!ptr)
 				goto err;
@@ -465,8 +465,8 @@ decgen_globals(DeeModuleObject *__restrict self) {
 					doc_str = NULL;
 					doc_len = 0;
 				} else {
-					doc_str = MODULE_SYMBOL_GETDOCSTR(symiter);
-					doc_len = MODULE_SYMBOL_GETDOCLEN(symiter);
+					doc_str = Dee_MODULE_SYMBOL_GETDOCSTR(symiter);
+					doc_len = Dee_MODULE_SYMBOL_GETDOCLEN(symiter);
 				}
 				if (dec_putptr((uint32_t)doc_len))
 					goto err; /* Dec_GlbSym.s_doclen */
@@ -524,25 +524,25 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 		if (self->cd_cattr_list[i].ca_name == NULL)
 			continue;
 		ASSERT(self->cd_cattr_list[i].ca_addr < self->cd_cmemb_size);
-		ASSERT(!(self->cd_cattr_list[i].ca_flag & ~CLASS_ATTRIBUTE_FMASK));
-#if CLASS_ATTRIBUTE_FMASK > UINT8_MAX
+		ASSERT(!(self->cd_cattr_list[i].ca_flag & ~Dee_CLASS_ATTRIBUTE_FMASK));
+#if Dee_CLASS_ATTRIBUTE_FMASK > UINT8_MAX
 		if (self->cd_cattr_list[i].ca_flag > UINT8_MAX)
 			use_8bit = false;
-#endif /* CLASS_ATTRIBUTE_FMASK > UINT8_MAX */
+#endif /* Dee_CLASS_ATTRIBUTE_FMASK > UINT8_MAX */
 		++cattr_count;
 	}
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
 		if (self->cd_iattr_list[i].ca_name == NULL)
 			continue;
 		ASSERT((self->cd_iattr_list[i].ca_addr) <
-		       ((self->cd_iattr_list[i].ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		       ((self->cd_iattr_list[i].ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 		        ? self->cd_cmemb_size
 		        : self->cd_imemb_size));
-		ASSERT(!(self->cd_iattr_list[i].ca_flag & ~CLASS_ATTRIBUTE_FMASK));
-#if CLASS_ATTRIBUTE_FMASK > UINT8_MAX
+		ASSERT(!(self->cd_iattr_list[i].ca_flag & ~Dee_CLASS_ATTRIBUTE_FMASK));
+#if Dee_CLASS_ATTRIBUTE_FMASK > UINT8_MAX
 		if (self->cd_iattr_list[i].ca_flag > UINT8_MAX)
 			use_8bit = false;
-#endif /* CLASS_ATTRIBUTE_FMASK > UINT8_MAX */
+#endif /* Dee_CLASS_ATTRIBUTE_FMASK > UINT8_MAX */
 		++iattr_count;
 	}
 
@@ -640,12 +640,12 @@ empty_doc:
 
 	/* Emit data for class attributes. */
 	for (i = 0; i <= self->cd_cattr_mask; ++i) {
-		struct class_attribute *attr;
+		struct Dee_class_attribute *attr;
 		attr = &self->cd_cattr_list[i];
 		if (attr->ca_name == NULL)
 			continue;
 		ASSERT(attr->ca_addr < self->cd_cmemb_size);
-		ASSERT(!(attr->ca_flag & ~CLASS_ATTRIBUTE_FMASK));
+		ASSERT(!(attr->ca_flag & ~Dee_CLASS_ATTRIBUTE_FMASK));
 		if (use_8bit) {
 			if (dec_putb((uint8_t)attr->ca_addr))
 				goto err; /* Dec_8BitClassAttribute::ca_addr */
@@ -693,15 +693,15 @@ empty_cattr_doc:
 
 	/* Emit data for instance attributes. */
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
-		struct class_attribute *attr;
+		struct Dee_class_attribute *attr;
 		attr = &self->cd_iattr_list[i];
 		if (attr->ca_name == NULL)
 			continue;
 		ASSERT((attr->ca_addr) <
-		       ((attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		       ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 		        ? self->cd_cmemb_size
 		        : self->cd_imemb_size));
-		ASSERT(!(attr->ca_flag & ~CLASS_ATTRIBUTE_FMASK));
+		ASSERT(!(attr->ca_flag & ~Dee_CLASS_ATTRIBUTE_FMASK));
 		if (use_8bit) {
 			if (dec_putb((uint8_t)attr->ca_addr))
 				goto err; /* Dec_8BitClassAttribute::ca_addr */
@@ -1412,7 +1412,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
-                    struct ddi_exdat const *self,
+                    struct Dee_ddi_exdat const *self,
                     bool use_16bit) {
 	if (self && self->dx_size != 0) {
 		uint8_t *buf, *iter, *end;
@@ -1431,17 +1431,17 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 		while (iter < end) {
 			uint8_t op = *iter++;
 			size_t opsize;
-			switch (op & DDI_EXDAT_OPMASK) {
+			switch (op & Dee_DDI_EXDAT_OPMASK) {
 
-			case DDI_EXDAT_OP8:
+			case Dee_DDI_EXDAT_OP8:
 				opsize = 1 + 1;
 				break;
 
-			case DDI_EXDAT_OP16:
+			case Dee_DDI_EXDAT_OP16:
 				opsize = 2 + 2;
 				break;
 
-			case DDI_EXDAT_OP32:
+			case Dee_DDI_EXDAT_OP32:
 				opsize = 2 + 4;
 				break;
 
@@ -1449,9 +1449,9 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 				opsize = 0;
 				break;
 			}
-			switch (op & ~DDI_EXDAT_OPMASK) {
+			switch (op & ~Dee_DDI_EXDAT_OPMASK) {
 
-			case DDI_EXDAT_O_RNAM: {
+			case Dee_DDI_EXDAT_O_RNAM: {
 				uint32_t string_offset;
 				uint16_t symbol_id;
 				char const *string;
@@ -1482,21 +1482,21 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 				string_offset = dec_ptr2addr((uint8_t *)string);
 				dec_curr      = xsect;
 				if (string_offset <= UINT8_MAX && symbol_id <= UINT8_MAX) {
-					if (dec_putb((op & ~DDI_EXDAT_OPMASK) | DDI_EXDAT_OP8))
+					if (dec_putb((op & ~Dee_DDI_EXDAT_OPMASK) | Dee_DDI_EXDAT_OP8))
 						goto err;
 					if (dec_putb((uint8_t)symbol_id))
 						goto err;
 					if (dec_putb((uint8_t)string_offset))
 						goto err;
 				} else if (string_offset <= UINT16_MAX) {
-					if (dec_putb((op & ~DDI_EXDAT_OPMASK) | DDI_EXDAT_OP16))
+					if (dec_putb((op & ~Dee_DDI_EXDAT_OPMASK) | Dee_DDI_EXDAT_OP16))
 						goto err;
 					if (dec_putw(symbol_id))
 						goto err;
 					if (dec_putw((uint16_t)string_offset))
 						goto err;
 				} else {
-					if (dec_putb((op & ~DDI_EXDAT_OPMASK) | DDI_EXDAT_OP32))
+					if (dec_putb((op & ~Dee_DDI_EXDAT_OPMASK) | Dee_DDI_EXDAT_OP32))
 						goto err;
 					if (dec_putw(symbol_id))
 						goto err;
@@ -1558,7 +1558,7 @@ INTERN WUNUSED NONNULL((1)) int
 	struct dec_section *code_sec = dec_curr;
 
 	/* Fill in a code object descriptor. */
-	descr.co_flags      = self->co_flags & CODE_FMASK;
+	descr.co_flags      = self->co_flags & Dee_CODE_FMASK;
 	descr.co_localc     = self->co_localc;
 	descr.co_refc       = self->co_refc;
 	ASSERT(self->co_refstaticc >= self->co_refc);
@@ -1579,7 +1579,7 @@ INTERN WUNUSED NONNULL((1)) int
 	/* Set the 8-bit code flag is we're allowed
 	 * to encode the code object as 8 bits. */
 	if (use_8bit)
-		descr.co_flags |= DEC_CODE_F8BIT;
+		descr.co_flags |= Dee_CODE_FDEC_8BIT;
 
 	/* First of all: Allocate the code's text segment. */
 	dec_curr = SC_TEXT;
@@ -1608,7 +1608,7 @@ INTERN WUNUSED NONNULL((1)) int
 
 	if (self->co_exceptc) {
 		struct dec_section *except_sec;
-		struct except_handler *iter, *end;
+		struct Dee_except_handler *iter, *end;
 		except_sec = dec_newsection_after(SC_ROOT);
 		if unlikely(!except_sec)
 			goto err;

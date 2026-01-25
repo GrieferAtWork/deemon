@@ -126,73 +126,73 @@ function splitTables(tab: {int: int}, errorValue: int): ({int...}, {int...}, int
 
 /* Unicode flags defined for compatibility with <ctype.h> in "C"  locale
  * Note that unicode characters also use these flags, but only the ASCII
- * ranges are documented here. e.g. `U+200B' has `UNICODE_ISWHITE' set!
+ * ranges are documented here. e.g. `U+200B' has `Dee_UNICODE_ISWHITE' set!
  *
  * Meaning:
- *   - UNICODE_ISCNTRL:    Control characters (UnicodeData.txt: fields[2] == "Cc")
- *   - UNICODE_ISCTAB:     Only the character U+0009
- *   - UNICODE_ISXTAB:     Only the characters U+000B and U+000C
- *   - UNICODE_ISWHITE:    Whitespace (excluding line-feeds)
- *   - UNICODE_ISLF:       Line-feeds
- *   - UNICODE_ISLOWER:    Lower-case
- *   - UNICODE_ISUPPER:    Upper-case
- *   - UNICODE_ISTITLE:    Title-case
- *   - UNICODE_ISXALPHA:   Alphabetic (excluding lower-, upper- and title-case, as well as digits and numerics)
- *   - UNICODE_ISDIGIT:    Digits which may appear in numbers        1 (NOTE: implements the `digit` TRAIT proper becomes valid)
- *   - UNICODE_ISXNUMERIC: Characters with numeric meaning           ² (NOTE: implements the `digit` TRAIT proper becomes valid)
- *   - UNICODE_ISHEX:      Only U+0041-U+0046 and U+0061-U+0066      A (NOTE: implements the `digit` TRAIT proper becomes valid)
- *   - UNICODE_ISPUNCT:    Punctuation
+ *   - Dee_UNICODE_ISCNTRL:    Control characters (UnicodeData.txt: fields[2] == "Cc")
+ *   - Dee_UNICODE_ISCTAB:     Only the character U+0009
+ *   - Dee_UNICODE_ISXTAB:     Only the characters U+000B and U+000C
+ *   - Dee_UNICODE_ISWHITE:    Whitespace (excluding line-feeds)
+ *   - Dee_UNICODE_ISLF:       Line-feeds
+ *   - Dee_UNICODE_ISLOWER:    Lower-case
+ *   - Dee_UNICODE_ISUPPER:    Upper-case
+ *   - Dee_UNICODE_ISTITLE:    Title-case
+ *   - Dee_UNICODE_ISXALPHA:   Alphabetic (excluding lower-, upper- and title-case, as well as digits and numerics)
+ *   - Dee_UNICODE_ISDIGIT:    Digits which may appear in numbers        1 (NOTE: implements the `digit` TRAIT proper becomes valid)
+ *   - Dee_UNICODE_ISXNUMERIC: Characters with numeric meaning           ² (NOTE: implements the `digit` TRAIT proper becomes valid)
+ *   - Dee_UNICODE_ISHEX:      Only U+0041-U+0046 and U+0061-U+0066      A (NOTE: implements the `digit` TRAIT proper becomes valid)
+ *   - Dee_UNICODE_ISPUNCT:    Punctuation
  *
  * Invariants:
  *   - No overlap exists between:
- *        - UNICODE_ISLOWER, UNICODE_ISUPPER, UNICODE_ISTITLE, UNICODE_ISXALPHA, UNICODE_ISPUNCT, UNICODE_ISDIGIT, UNICODE_ISXNUMERIC
+ *        - Dee_UNICODE_ISLOWER, Dee_UNICODE_ISUPPER, Dee_UNICODE_ISTITLE, Dee_UNICODE_ISXALPHA, Dee_UNICODE_ISPUNCT, Dee_UNICODE_ISDIGIT, Dee_UNICODE_ISXNUMERIC
  *   - The union of the following forms all printable characters:
- *        - UNICODE_ISLOWER, UNICODE_ISUPPER, UNICODE_ISTITLE, UNICODE_ISXALPHA, UNICODE_ISPUNCT, UNICODE_ISDIGIT, UNICODE_ISXNUMERIC
+ *        - Dee_UNICODE_ISLOWER, Dee_UNICODE_ISUPPER, Dee_UNICODE_ISTITLE, Dee_UNICODE_ISXALPHA, Dee_UNICODE_ISPUNCT, Dee_UNICODE_ISDIGIT, Dee_UNICODE_ISXNUMERIC
  *
  */
-#define UNICODE_ISCNTRL   0x0001                              /* iscntrl: 00-1F, 7F */
-#define UNICODE_ISCTAB    0x0002                              /*          09 */
-#define UNICODE_ISXTAB    0x0004                              /*          0B-0C */
-#define UNICODE_ISTAB     (UNICODE_ISCTAB | UNICODE_ISXTAB)   /*          09, 0B-0C */
-#define UNICODE_ISWHITE   0x0008                              /*          20 */
-#define UNICODE_ISEMPTY   (UNICODE_ISTAB | UNICODE_ISWHITE)   /*          09, 0B-0C, 20 */
-#define UNICODE_ISLF      0x0010                              /*          0A, 0D */
-#define UNICODE_ISSPACE   (UNICODE_ISEMPTY | UNICODE_ISLF)    /* isspace: 09-0D, 20 */
-#define UNICODE_ISLOWER   0x0020                              /* islower: 61-7A */
-#define UNICODE_ISUPPER   0x0040                              /* isupper: 41-5A */
-#define UNICODE_ISXALPHA  0x0080                              /* <Misc alpha characters> (doesn't appear in ASCII) */
-#define UNICODE_ISALPHA   (UNICODE_ISLOWER | UNICODE_ISUPPER | UNICODE_ISTITLE | UNICODE_ISXALPHA) /* isalpha: 41-5A, 61-7A */
-#define UNICODE_ISDIGIT   0x0100                              /*          30-39 */
-#define UNICODE_ISHEX     0x0200                              /*          41-46, 61-66 */
-#define UNICODE_ISXDIGIT  (UNICODE_ISDIGIT | UNICODE_ISHEX)   /* isxdigit: 30-39, 41-46, 61-66 */
-#define UNICODE_ISALNUM   (UNICODE_ISALPHA | UNICODE_ISDIGIT) /* isalnum: 30-39, 41-5A, 61-7A */
-#define UNICODE_ISPUNCT   0x0400                              /* ispunct: 21-2F, 3A-40, 5B-60, 7B-7E */
-#define UNICODE_ISGRAPH   (UNICODE_ISPUNCT | UNICODE_ISALNUM | UNICODE_ISXNUMERIC) /* isgraph: 21-7E */
-#define UNICODE_ISPRINT   (UNICODE_ISWHITE | UNICODE_ISGRAPH) /* isprint: 20-7E */
-#define UNICODE_ISBLANK   (UNICODE_ISCTAB | UNICODE_ISWHITE)  /* isblank: 09, 20 */
+#define Dee_UNICODE_ISCNTRL   0x0001                              /* iscntrl: 00-1F, 7F */
+#define Dee_UNICODE_ISCTAB    0x0002                              /*          09 */
+#define Dee_UNICODE_ISXTAB    0x0004                              /*          0B-0C */
+#define Dee_UNICODE_ISTAB     (Dee_UNICODE_ISCTAB | Dee_UNICODE_ISXTAB)   /*          09, 0B-0C */
+#define Dee_UNICODE_ISWHITE   0x0008                              /*          20 */
+#define Dee_UNICODE_ISEMPTY   (Dee_UNICODE_ISTAB | Dee_UNICODE_ISWHITE)   /*          09, 0B-0C, 20 */
+#define Dee_UNICODE_ISLF      0x0010                              /*          0A, 0D */
+#define Dee_UNICODE_ISSPACE   (Dee_UNICODE_ISEMPTY | Dee_UNICODE_ISLF)    /* isspace: 09-0D, 20 */
+#define Dee_UNICODE_ISLOWER   0x0020                              /* islower: 61-7A */
+#define Dee_UNICODE_ISUPPER   0x0040                              /* isupper: 41-5A */
+#define Dee_UNICODE_ISXALPHA  0x0080                              /* <Misc alpha characters> (doesn't appear in ASCII) */
+#define Dee_UNICODE_ISALPHA   (Dee_UNICODE_ISLOWER | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISTITLE | Dee_UNICODE_ISXALPHA) /* isalpha: 41-5A, 61-7A */
+#define Dee_UNICODE_ISDIGIT   0x0100                              /*          30-39 */
+#define Dee_UNICODE_ISHEX     0x0200                              /*          41-46, 61-66 */
+#define Dee_UNICODE_ISXDIGIT  (Dee_UNICODE_ISDIGIT | Dee_UNICODE_ISHEX)   /* isxdigit: 30-39, 41-46, 61-66 */
+#define Dee_UNICODE_ISALNUM   (Dee_UNICODE_ISALPHA | Dee_UNICODE_ISDIGIT) /* isalnum: 30-39, 41-5A, 61-7A */
+#define Dee_UNICODE_ISPUNCT   0x0400                              /* ispunct: 21-2F, 3A-40, 5B-60, 7B-7E */
+#define Dee_UNICODE_ISGRAPH   (Dee_UNICODE_ISPUNCT | Dee_UNICODE_ISALNUM | Dee_UNICODE_ISXNUMERIC) /* isgraph: 21-7E */
+#define Dee_UNICODE_ISPRINT   (Dee_UNICODE_ISWHITE | Dee_UNICODE_ISGRAPH) /* isprint: 20-7E */
+#define Dee_UNICODE_ISBLANK   (Dee_UNICODE_ISCTAB | Dee_UNICODE_ISWHITE)  /* isblank: 09, 20 */
 /* Extended unicode flags. */
-#define UNICODE_ISTITLE    0x0800 /* Is title cased */
-#define UNICODE_ISXNUMERIC 0x1000 /* + all other characters that contain numbers, such as ² */
-#define UNICODE_ISNUMERIC  (UNICODE_ISDIGIT | UNICODE_ISXNUMERIC) /* All numeric characters */
-#define UNICODE_ISSYMSTRT  0x2000 /* Symbol start character */
-#define UNICODE_ISSYMCONT  0x4000 /* Symbol continue character */
+#define Dee_UNICODE_ISTITLE    0x0800 /* Is title cased */
+#define Dee_UNICODE_ISXNUMERIC 0x1000 /* + all other characters that contain numbers, such as ² */
+#define Dee_UNICODE_ISNUMERIC  (Dee_UNICODE_ISDIGIT | Dee_UNICODE_ISXNUMERIC) /* All numeric characters */
+#define Dee_UNICODE_ISSYMSTRT  0x2000 /* Symbol start character */
+#define Dee_UNICODE_ISSYMCONT  0x4000 /* Symbol continue character */
 
 global final FLAG_NAMES = {
-	(UNICODE_ISCNTRL,    "TCNTRL"),
-	(UNICODE_ISCTAB,     "TCTAB"),
-	(UNICODE_ISXTAB,     "TXTAB"),
-	(UNICODE_ISWHITE,    "TWHITE"),
-	(UNICODE_ISLF,       "TLF"),
-	(UNICODE_ISLOWER,    "TLOWER"),
-	(UNICODE_ISUPPER,    "TUPPER"),
-	(UNICODE_ISXALPHA,   "TXALPHA"),
-	(UNICODE_ISDIGIT,    "TDIGIT"),
-	(UNICODE_ISHEX,      "THEX"),
-	(UNICODE_ISPUNCT,    "TPUNCT"),
-	(UNICODE_ISTITLE,    "TTITLE"),
-	(UNICODE_ISXNUMERIC, "TXNUMERIC"),
-	(UNICODE_ISSYMSTRT,  "TSYMSTRT"),
-	(UNICODE_ISSYMCONT,  "TSYMCONT"),
+	(Dee_UNICODE_ISCNTRL,    "TCNTRL"),
+	(Dee_UNICODE_ISCTAB,     "TCTAB"),
+	(Dee_UNICODE_ISXTAB,     "TXTAB"),
+	(Dee_UNICODE_ISWHITE,    "TWHITE"),
+	(Dee_UNICODE_ISLF,       "TLF"),
+	(Dee_UNICODE_ISLOWER,    "TLOWER"),
+	(Dee_UNICODE_ISUPPER,    "TUPPER"),
+	(Dee_UNICODE_ISXALPHA,   "TXALPHA"),
+	(Dee_UNICODE_ISDIGIT,    "TDIGIT"),
+	(Dee_UNICODE_ISHEX,      "THEX"),
+	(Dee_UNICODE_ISPUNCT,    "TPUNCT"),
+	(Dee_UNICODE_ISTITLE,    "TTITLE"),
+	(Dee_UNICODE_ISXNUMERIC, "TXNUMERIC"),
+	(Dee_UNICODE_ISSYMSTRT,  "TSYMSTRT"),
+	(Dee_UNICODE_ISSYMCONT,  "TSYMCONT"),
 };
 
 
@@ -233,42 +233,42 @@ for (local line: readLines("UnicodeData.txt")) {
 	local biDiCategory    = fields[4];
 
 	if (generalCategory in ["Cc", "Cf", "Cs", /*"Co",*/ "Cn"])
-		flags |= UNICODE_ISCNTRL;
+		flags |= Dee_UNICODE_ISCNTRL;
 	if (biDiCategory == "B" || generalCategory in ["Zl", "Zp"]) {
-		flags |= UNICODE_ISLF;
+		flags |= Dee_UNICODE_ISLF;
 	} else if (biDiCategory in ["WS", "S"] || generalCategory == "Zs") {
-		flags |= UNICODE_ISWHITE;
+		flags |= Dee_UNICODE_ISWHITE;
 	}
 
 	if (generalCategory == "Ll") {
-		flags |= UNICODE_ISLOWER;
+		flags |= Dee_UNICODE_ISLOWER;
 	} else if (generalCategory == "Lu") {
-		flags |= UNICODE_ISUPPER;
+		flags |= Dee_UNICODE_ISUPPER;
 	} else if (generalCategory == "Lt") {
-		flags |= UNICODE_ISTITLE;
+		flags |= Dee_UNICODE_ISTITLE;
 	} else if (generalCategory == "Lo") {
-		flags |= UNICODE_ISXALPHA;
+		flags |= Dee_UNICODE_ISXALPHA;
 	} else if (generalCategory == "Lm") {
-		flags |= UNICODE_ISXALPHA | UNICODE_ISCNTRL; /* Modifier characters are considered control */
+		flags |= Dee_UNICODE_ISXALPHA | Dee_UNICODE_ISCNTRL; /* Modifier characters are considered control */
 	} else if (generalCategory in ["Mn", "Mc", "Me"]) {
-		flags |= UNICODE_ISPUNCT; /* Mark characters? */
+		flags |= Dee_UNICODE_ISPUNCT; /* Mark characters? */
 	} else if (generalCategory in ["Pc", "Pd", "Ps", "Pe", "Pi", "Pf", "Po"]) {
-		flags |= UNICODE_ISPUNCT;
+		flags |= Dee_UNICODE_ISPUNCT;
 	} else if (generalCategory in ["Sm"]) {
-		flags |= UNICODE_ISPUNCT; /* Math symbols */
+		flags |= Dee_UNICODE_ISPUNCT; /* Math symbols */
 	} else if (generalCategory in ["Sc"]) {
 		/* Currency symbols  are  technically  punctuation (because  the  "C"  locale
 		 * defines "$" as ispunct), but we also allow them to appear in symbol names. */
-		flags |= UNICODE_ISPUNCT | UNICODE_ISSYMSTRT | UNICODE_ISSYMCONT;
+		flags |= Dee_UNICODE_ISPUNCT | Dee_UNICODE_ISSYMSTRT | Dee_UNICODE_ISSYMCONT;
 	} else if (generalCategory in ["Sk", "So"]) {
-		flags |= UNICODE_ISPUNCT;
+		flags |= Dee_UNICODE_ISPUNCT;
 	}
 
 	if (fields[6]) {
-		flags |= UNICODE_ISDIGIT;
+		flags |= Dee_UNICODE_ISDIGIT;
 		digit = int(fields[6]);
 	} else if (fields[7]) {
-		flags |= UNICODE_ISXNUMERIC;
+		flags |= Dee_UNICODE_ISXNUMERIC;
 		digit = int(fields[7]);
 	} else if (fields[8]) {
 		local intval = fields[8];
@@ -278,16 +278,16 @@ for (local line: readLines("UnicodeData.txt")) {
 		} else {
 			digit = int(intval);
 		}
-		flags |= UNICODE_ISXNUMERIC;
+		flags |= Dee_UNICODE_ISXNUMERIC;
 	} else {
 		assert generalCategory !in ["Nd", "Nl", "No"], "Shouldn't be a number category!";
 	}
 
 	/* By default, symstrt/symcont are defined like this: */
-	if (flags & UNICODE_ISALPHA)
-		flags |= UNICODE_ISSYMSTRT;
-	if (flags & UNICODE_ISALNUM)
-		flags |= UNICODE_ISSYMCONT;
+	if (flags & Dee_UNICODE_ISALPHA)
+		flags |= Dee_UNICODE_ISSYMSTRT;
+	if (flags & Dee_UNICODE_ISALNUM)
+		flags |= Dee_UNICODE_ISSYMCONT;
 
 	if (fields[12])
 		upper = int(fields[12], 16);
@@ -332,16 +332,16 @@ for (local ord, prop: DerivedCoreProperties) {
 	local oldFlags = TRAITS.get(ord, (0,)).first;
 	local newFlags = oldFlags;
 	if ("Lowercase" in prop) {
-		newFlags |= UNICODE_ISLOWER | UNICODE_ISSYMCONT | UNICODE_ISSYMSTRT;
+		newFlags |= Dee_UNICODE_ISLOWER | Dee_UNICODE_ISSYMCONT | Dee_UNICODE_ISSYMSTRT;
 	} else if ("Uppercase" in prop) {
-		newFlags |= UNICODE_ISUPPER | UNICODE_ISSYMCONT | UNICODE_ISSYMSTRT;
+		newFlags |= Dee_UNICODE_ISUPPER | Dee_UNICODE_ISSYMCONT | Dee_UNICODE_ISSYMSTRT;
 	} else if ("Alphabetic" in prop) {
-		newFlags |= UNICODE_ISXALPHA | UNICODE_ISSYMCONT | UNICODE_ISSYMSTRT;
+		newFlags |= Dee_UNICODE_ISXALPHA | Dee_UNICODE_ISSYMCONT | Dee_UNICODE_ISSYMSTRT;
 	} else {
 		if ("XID_Start" in prop)
-			newFlags |= UNICODE_ISSYMSTRT;
+			newFlags |= Dee_UNICODE_ISSYMSTRT;
 		if ("XID_Continue" in prop)
-			newFlags |= UNICODE_ISSYMCONT;
+			newFlags |= Dee_UNICODE_ISSYMCONT;
 	}
 	if (newFlags != oldFlags) {
 		local oldTraits = TRAITS.get(ord, (0, none, none, ord, ord, ord));
@@ -393,37 +393,37 @@ for (local ord: [:0x80]) {
 	local lower  = ascii_tolower(ord);
 	local upper  = ascii_toupper(ord);
 	if (ascii_iscntrl(ord))
-		flags |= UNICODE_ISCNTRL;
+		flags |= Dee_UNICODE_ISCNTRL;
 	if (ord == 0x09)
-		flags |= UNICODE_ISCTAB;
+		flags |= Dee_UNICODE_ISCTAB;
 	if (ord == 0x0B || ord == 0x0C)
-		flags |= UNICODE_ISXTAB;
+		flags |= Dee_UNICODE_ISXTAB;
 	if (ord == 0x20)
-		flags |= UNICODE_ISWHITE;
+		flags |= Dee_UNICODE_ISWHITE;
 	if (ord == 0x0A || ord == 0x0D)
-		flags |= UNICODE_ISLF;
+		flags |= Dee_UNICODE_ISLF;
 	if (ascii_islower(ord))
-		flags |= UNICODE_ISLOWER;
+		flags |= Dee_UNICODE_ISLOWER;
 	if (ascii_isupper(ord))
-		flags |= UNICODE_ISUPPER;
+		flags |= Dee_UNICODE_ISUPPER;
 	if (ascii_isdigit(ord)) {
-		flags |= UNICODE_ISDIGIT;
+		flags |= Dee_UNICODE_ISDIGIT;
 		digit = ord - 0x30;
 	} else if (ord >= 0x41 && ord <= 0x46) {
-		flags |= UNICODE_ISHEX;
+		flags |= Dee_UNICODE_ISHEX;
 		digit = 10 + ord - 0x41;
 	} else if (ord >= 0x61 && ord <= 0x66) {
-		flags |= UNICODE_ISHEX;
+		flags |= Dee_UNICODE_ISHEX;
 		digit = 10 + ord - 0x61;
 	}
 	if (ascii_ispunct(ord))
-		flags |= UNICODE_ISPUNCT;
+		flags |= Dee_UNICODE_ISPUNCT;
 	if (ord in [0x24, 0x5F]) /* string.chr(ord) in "$_" */
-		flags |= UNICODE_ISSYMCONT | UNICODE_ISSYMSTRT;
-	if (flags & UNICODE_ISALPHA)
-		flags |= UNICODE_ISSYMSTRT;
-	if (flags & UNICODE_ISALNUM)
-		flags |= UNICODE_ISSYMCONT;
+		flags |= Dee_UNICODE_ISSYMCONT | Dee_UNICODE_ISSYMSTRT;
+	if (flags & Dee_UNICODE_ISALPHA)
+		flags |= Dee_UNICODE_ISSYMSTRT;
+	if (flags & Dee_UNICODE_ISALNUM)
+		flags |= Dee_UNICODE_ISSYMCONT;
 	if (flags || lower != ord || upper != ord) {
 		TRAITS[ord] = (flags, digit, none, lower, upper, upper);
 	} else {
@@ -436,24 +436,24 @@ for (local ord: [:0x80]) {
 	local flags = TRAITS.get(ord, (0,)).first;
 #define assert_trait(ascii_isfoo, UNICODE_ISFOO) \
 	assert !!ascii_isfoo(ord) == !!(flags & UNICODE_ISFOO), ord.hex()
-	assert_trait(ascii_iscntrl, UNICODE_ISCNTRL);
-	assert_trait(ascii_isspace, UNICODE_ISSPACE);
-	assert_trait(ascii_isupper, UNICODE_ISUPPER);
-	assert_trait(ascii_islower, UNICODE_ISLOWER);
-	assert_trait(ascii_isalpha, UNICODE_ISALPHA);
-	assert_trait(ascii_isdigit, UNICODE_ISDIGIT);
-	assert_trait(ascii_isxdigit, UNICODE_ISXDIGIT);
-	assert_trait(ascii_isalnum, UNICODE_ISALNUM);
-	assert_trait(ascii_ispunct, UNICODE_ISPUNCT);
-	assert_trait(ascii_isgraph, UNICODE_ISGRAPH);
-	assert_trait(ascii_isprint, UNICODE_ISPRINT);
-	assert_trait(ascii_isblank, UNICODE_ISBLANK);
+	assert_trait(ascii_iscntrl, Dee_UNICODE_ISCNTRL);
+	assert_trait(ascii_isspace, Dee_UNICODE_ISSPACE);
+	assert_trait(ascii_isupper, Dee_UNICODE_ISUPPER);
+	assert_trait(ascii_islower, Dee_UNICODE_ISLOWER);
+	assert_trait(ascii_isalpha, Dee_UNICODE_ISALPHA);
+	assert_trait(ascii_isdigit, Dee_UNICODE_ISDIGIT);
+	assert_trait(ascii_isxdigit, Dee_UNICODE_ISXDIGIT);
+	assert_trait(ascii_isalnum, Dee_UNICODE_ISALNUM);
+	assert_trait(ascii_ispunct, Dee_UNICODE_ISPUNCT);
+	assert_trait(ascii_isgraph, Dee_UNICODE_ISGRAPH);
+	assert_trait(ascii_isprint, Dee_UNICODE_ISPRINT);
+	assert_trait(ascii_isblank, Dee_UNICODE_ISBLANK);
 #undef assert_trait
 }
 
 /* Traits overrides */
-TRAITS[0x200B] = (UNICODE_ISWHITE | UNICODE_ISCNTRL, none, none, 0x200B, 0x200B, 0x200B); /* ZERO WIDTH SPACE */
-TRAITS[0xFEFF] = (UNICODE_ISWHITE | UNICODE_ISCNTRL, none, none, 0xFEFF, 0xFEFF, 0xFEFF); /* ZERO WIDTH NO-BREAK SPACE */
+TRAITS[0x200B] = (Dee_UNICODE_ISWHITE | Dee_UNICODE_ISCNTRL, none, none, 0x200B, 0x200B, 0x200B); /* ZERO WIDTH SPACE */
+TRAITS[0xFEFF] = (Dee_UNICODE_ISWHITE | Dee_UNICODE_ISCNTRL, none, none, 0xFEFF, 0xFEFF, 0xFEFF); /* ZERO WIDTH NO-BREAK SPACE */
 
 
 
@@ -610,7 +610,7 @@ function generateUnicodeDatabase() {
 	}
 
 	/* For testing, assert that '1' behaves as expected. */
-	assert lookup('1'.ord())[0] & UNICODE_ISDIGIT;
+	assert lookup('1'.ord())[0] & Dee_UNICODE_ISDIGIT;
 	assert lookup('1'.ord())[1] != 0xff;
 	assert index2Digit[lookup('1'.ord())[1]] == 1;
 }

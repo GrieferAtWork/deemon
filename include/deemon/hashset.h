@@ -17,35 +17,37 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_HASHSET_HIDXIO_**/
+/*!export DeeHashSet_**/
+/*!export Dee_HASHSET_**/
+/*!export Dee_hashset_**/
+/*!export _DeeHashSet_**/
+/*!export _Dee_HASHSET_**/
+/*!export __DeeHashSet_HashIdx**/
 #ifndef GUARD_DEEMON_HASHSET_H
-#define GUARD_DEEMON_HASHSET_H 1
+#define GUARD_DEEMON_HASHSET_H 1 /*!export-*/
 
 #include "api.h"
+
+#include "types.h"
+#include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
+
+#include <stddef.h> /* size_t */
 
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #include "dict.h" /* Dee_dict_vidx_t, Dee_dict_gethidx_t, Dee_dict_sethidx_t */
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
-#include "types.h"
-#include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
+
 #ifndef __INTELLISENSE__
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 #include "method-hints.h"
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 #endif /* !__INTELLISENSE__ */
-/**/
-
-#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 
-
-#ifdef DEE_SOURCE
-#define Dee_hashset_item   hashset_item
-#define Dee_hashset_object hashset_object
-#endif /* DEE_SOURCE */
-
 typedef struct Dee_hashset_object DeeHashSetObject;
-
 
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 struct Dee_hashset_item {
@@ -106,12 +108,12 @@ struct Dee_hashset_object {
 #define Dee_hashset_vidx_virt_lt_real Dee_dict_vidx_virt_lt_real
 
 /* NOTE: HIDXIO indices can also used as <<shifts to multiply some value by the size of an index:
- * >> size_t htab_size = (hs_hmask + 1) << DEE_HASHSET_HIDXIO_FROMALLOC(...); */
-#define DEE_HASHSET_HIDXIO_COUNT     DEE_DICT_HIDXIO_COUNT
-#define DEE_HASHSET_HIDXIO_IS8       DEE_DICT_HIDXIO_IS8
-#define DEE_HASHSET_HIDXIO_IS16      DEE_DICT_HIDXIO_IS16
-#define DEE_HASHSET_HIDXIO_IS32      DEE_DICT_HIDXIO_IS32
-#define DEE_HASHSET_HIDXIO_FROMALLOC DEE_DICT_HIDXIO_FROMALLOC
+ * >> size_t htab_size = (hs_hmask + 1) << Dee_HASHSET_HIDXIO_FROMALLOC(...); */
+#define Dee_HASHSET_HIDXIO_COUNT     Dee_DICT_HIDXIO_COUNT
+#define Dee_HASHSET_HIDXIO_IS8       Dee_DICT_HIDXIO_IS8
+#define Dee_HASHSET_HIDXIO_IS16      Dee_DICT_HIDXIO_IS16
+#define Dee_HASHSET_HIDXIO_IS32      Dee_DICT_HIDXIO_IS32
+#define Dee_HASHSET_HIDXIO_FROMALLOC Dee_DICT_HIDXIO_FROMALLOC
 #define Dee_hashset_hidxio           Dee_dict_hidxio
 
 /* Index value found in "hs_htab" when end-of-chain is encountered. */
@@ -171,7 +173,7 @@ struct Dee_hashset_object {
  * >>     Dee_hash_t hash = DeeObject_Hash(key);
  * >>     perturb = i = DeeHashSet_HashSt(self, hash);
  * >>     for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
- * >>          struct hashset_item *item = DeeHashSet_HashIt(self, i);
+ * >>          struct Dee_hashset_item *item = DeeHashSet_HashIt(self, i);
  * >>          if (!item->hsi_key)
  * >>              break; // Not found
  * >>          if (item->hsi_hash != hash)

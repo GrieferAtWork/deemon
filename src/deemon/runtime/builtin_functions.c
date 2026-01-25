@@ -558,22 +558,22 @@ err:
 
 
 /* These CMETHOD objects are exported from `deemon' with the `rt_' prefix replaced with `__'
- * HINT: These are exported using the `MODSYM_FHIDDEN' flag, so you won't see them in listings. */
+ * HINT: These are exported using the `Dee_MODSYM_FHIDDEN' flag, so you won't see them in listings. */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_expression_repr(Dee_operator_t operator_name,
                     size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	error = DeeFormat_PrintOperatorRepr(&unicode_printer_print, &printer,
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	error = DeeFormat_PrintOperatorRepr(&Dee_unicode_printer_print, &printer,
 	                                    argv[0], operator_name,
 	                                    argc - 1, argv + 1,
 	                                    NULL, 0, NULL, 0);
 	if unlikely(error < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -775,7 +775,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL builtin_functions___badcall_f_impl(size
 	size_t argc_cur = argc_max, argc_min = 0;
 	DeeThreadObject *ts = DeeThread_Self();
 	if likely(ts->t_execsz) {
-		struct code_frame *frame = ts->t_exec;
+		struct Dee_code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
 		argc_cur      = frame->cf_argc;
 		argc_min      = code->co_argc_min;
@@ -806,7 +806,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL builtin_functions___roloc_f_impl(uint16
 {
 	DeeThreadObject *ts = DeeThread_Self();
 	if likely(ts->t_execsz) {
-		struct code_frame *frame = ts->t_exec;
+		struct Dee_code_frame *frame = ts->t_exec;
 		DeeCodeObject *code      = frame->cf_func->fo_code;
 		err_readonly_local(code, frame->cf_ip, lid);
 	} else {

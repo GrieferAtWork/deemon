@@ -17,8 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_DICT_HIDXIO_**/
+/*!export DeeDict_**/
+/*!export Dee_DICT_**/
+/*!export Dee_dict_**/
+/*!export _DeeDict_**/
+/*!export __DeeDict_HashIdx**/
 #ifndef GUARD_DEEMON_DICT_H
-#define GUARD_DEEMON_DICT_H 1
+#define GUARD_DEEMON_DICT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -30,14 +37,6 @@
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN
-
-#ifdef DEE_SOURCE
-#define Dee_dict_item   dict_item
-#define Dee_dict_object dict_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_dict_object DeeDictObject;
-
 
 /* Dict can remember insertion order:
  *
@@ -90,21 +89,21 @@ struct Dee_dict_item {
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
 		_di_skv
 #ifdef __COMPILER_HAVE_TRANSPARENT_UNION
-#define di_key   _di_skv.di_key
-#define di_value _di_skv.di_value
+#define di_key   _di_skv.di_key   /*!export-*/
+#define di_value _di_skv.di_value /*!export-*/
 #endif /* __COMPILER_HAVE_TRANSPARENT_UNION */
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 		;
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_di_ukv
-#define di_key_and_value _di_ukv.di_key_and_value
+#define di_key_and_value _di_ukv.di_key_and_value /*!export-*/
 #ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
-#define di_key   _di_ukv.di_key
-#define di_value _di_ukv.di_value
+#define di_key   _di_ukv.di_key   /*!export-*/
+#define di_value _di_ukv.di_value /*!export-*/
 #else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
-#define di_key   _di_ukv._di_skv.di_key
-#define di_value _di_ukv._di_skv.di_value
+#define di_key   _di_ukv._di_skv.di_key   /*!export-*/
+#define di_value _di_ukv._di_skv.di_value /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
@@ -123,7 +122,7 @@ typedef NONNULL_T((1)) void (DCALL *Dee_dict_sethidx_t)(void *__restrict htab, s
 DFUNDEF WUNUSED NONNULL((1)) Dee_dict_vidx_t DCALL Dee_dict_gethidx8(void const *__restrict htab, size_t index);
 DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t index, Dee_dict_vidx_t value);
 
-struct Dee_dict_object {
+typedef struct Dee_dict_object {
 	Dee_OBJECT_HEAD /* GC Object */
 	/*real*/Dee_dict_vidx_t d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
 	/*real*/Dee_dict_vidx_t d_vsize;   /* [lock(d_lock)][<= d_valloc] 1+ the greatest index in "d_vtab" that was ever initialized (and also the index of the next item in "d_vtab" to-be populated). */
@@ -138,7 +137,7 @@ struct Dee_dict_object {
 	Dee_atomic_rwlock_t     d_lock;    /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
-};
+} DeeDictObject;
 
 DDATDEF __BYTE_TYPE__ const _DeeDict_EmptyTab[];
 #define DeeDict_EmptyVTab /*virt*/ ((struct Dee_dict_item *)_DeeDict_EmptyTab - 1)
@@ -183,44 +182,44 @@ struct Dee_dict_hidxio_struct {
 	Dee_dict_gethidx_t dhxio_get; /* Getter */
 	Dee_dict_sethidx_t dhxio_set; /* Setter */
 	Dee_dict_movhidx_t dhxio_mov; /* memmove */
-#define dhxio_movup    dhxio_mov  /* memmoveup */
-#define dhxio_movdown  dhxio_mov  /* memmovedown */
+#define dhxio_movup    dhxio_mov  /* memmoveup */   /*!export-*/
+#define dhxio_movdown  dhxio_mov  /* memmovedown */ /*!export-*/
 	Dee_dict_uprhidx_t dhxio_upr; /* Upsize ("dst" is DEE_DICT_HIDXIO+1; assume that "dst >= src") */
 	Dee_dict_dwnhidx_t dhxio_dwn; /* Downsize ("dst" is DEE_DICT_HIDXIO-1; assume that "dst <= src") */
 };
 
 /* NOTE: HIDXIO indices can also used as <<shifts to multiply some value by the size of an index:
- * >> size_t htab_size = (d_hmask + 1) << DEE_DICT_HIDXIO_FROMALLOC(...); */
+ * >> size_t htab_size = (d_hmask + 1) << Dee_DICT_HIDXIO_FROMALLOC(...); */
 #if __SIZEOF_SIZE_T__ >= 8
-#define DEE_DICT_HIDXIO_COUNT 4
-#define DEE_DICT_HIDXIO_IS8(valloc)  likely((valloc) <= __UINT8_C(0xff))
-#define DEE_DICT_HIDXIO_IS16(valloc) likely((valloc) <= __UINT16_C(0xffff))
-#define DEE_DICT_HIDXIO_IS32(valloc) likely((valloc) <= __UINT32_C(0xffffffff))
-#define DEE_DICT_HIDXIO_IS64(valloc) 1
-#define DEE_DICT_HIDXIO_FROMALLOC(valloc) \
-	(DEE_DICT_HIDXIO_IS8(valloc) ? 0 : DEE_DICT_HIDXIO_IS16(valloc) ? 1 : DEE_DICT_HIDXIO_IS32(valloc) ? 2 : 3)
+#define Dee_DICT_HIDXIO_COUNT 4
+#define Dee_DICT_HIDXIO_IS8(valloc)  likely((valloc) <= __UINT8_C(0xff))
+#define Dee_DICT_HIDXIO_IS16(valloc) likely((valloc) <= __UINT16_C(0xffff))
+#define Dee_DICT_HIDXIO_IS32(valloc) likely((valloc) <= __UINT32_C(0xffffffff))
+#define Dee_DICT_HIDXIO_IS64(valloc) 1
+#define Dee_DICT_HIDXIO_FROMALLOC(valloc) \
+	(Dee_DICT_HIDXIO_IS8(valloc) ? 0 : Dee_DICT_HIDXIO_IS16(valloc) ? 1 : Dee_DICT_HIDXIO_IS32(valloc) ? 2 : 3)
 #elif __SIZEOF_SIZE_T__ >= 4
-#define DEE_DICT_HIDXIO_COUNT 3
-#define DEE_DICT_HIDXIO_IS8(valloc)  likely((valloc) <= __UINT8_C(0xff))
-#define DEE_DICT_HIDXIO_IS16(valloc) likely((valloc) <= __UINT16_C(0xffff))
-#define DEE_DICT_HIDXIO_IS32(valloc) 1
-#define DEE_DICT_HIDXIO_FROMALLOC(valloc) \
-	(DEE_DICT_HIDXIO_IS8(valloc) ? 0 : DEE_DICT_HIDXIO_IS16(valloc) ? 1 : 2)
+#define Dee_DICT_HIDXIO_COUNT 3
+#define Dee_DICT_HIDXIO_IS8(valloc)  likely((valloc) <= __UINT8_C(0xff))
+#define Dee_DICT_HIDXIO_IS16(valloc) likely((valloc) <= __UINT16_C(0xffff))
+#define Dee_DICT_HIDXIO_IS32(valloc) 1
+#define Dee_DICT_HIDXIO_FROMALLOC(valloc) \
+	(Dee_DICT_HIDXIO_IS8(valloc) ? 0 : Dee_DICT_HIDXIO_IS16(valloc) ? 1 : 2)
 #elif __SIZEOF_SIZE_T__ >= 2
-#define DEE_DICT_HIDXIO_COUNT 2
-#define DEE_DICT_HIDXIO_IS8(valloc)  likely((valloc) <= __UINT8_C(0xff))
-#define DEE_DICT_HIDXIO_IS16(valloc) 1
-#define DEE_DICT_HIDXIO_FROMALLOC(valloc) \
-	(DEE_DICT_HIDXIO_IS8(valloc) ? 0 : 1)
+#define Dee_DICT_HIDXIO_COUNT 2
+#define Dee_DICT_HIDXIO_IS8(valloc)  likely((valloc) <= __UINT8_C(0xff))
+#define Dee_DICT_HIDXIO_IS16(valloc) 1
+#define Dee_DICT_HIDXIO_FROMALLOC(valloc) \
+	(Dee_DICT_HIDXIO_IS8(valloc) ? 0 : 1)
 #else /* __SIZEOF_SIZE_T__ >= 1 */
-#define DEE_DICT_HIDXIO_COUNT 1
-#define DEE_DICT_HIDXIO_IS8(valloc) 1
-#define DEE_DICT_HIDXIO_FROMALLOC(valloc) 0
+#define Dee_DICT_HIDXIO_COUNT 1
+#define Dee_DICT_HIDXIO_IS8(valloc) 1
+#define Dee_DICT_HIDXIO_FROMALLOC(valloc) 0
 #endif /* __SIZEOF_SIZE_T__ < 1 */
 
 /* Dynamic dict I/O functions:
- * >> vtab = &Dee_dict_hidxio[DEE_DICT_HIDXIO_FROMALLOC(dict->d_valloc)];  */
-DDATDEF struct Dee_dict_hidxio_struct Dee_tpconst Dee_dict_hidxio[DEE_DICT_HIDXIO_COUNT];
+ * >> vtab = &Dee_dict_hidxio[Dee_DICT_HIDXIO_FROMALLOC(dict->d_valloc)];  */
+DDATDEF struct Dee_dict_hidxio_struct Dee_tpconst Dee_dict_hidxio[Dee_DICT_HIDXIO_COUNT];
 
 /* Index value found in "d_htab" when end-of-chain is encountered. */
 #define Dee_DICT_HTAB_EOF 0

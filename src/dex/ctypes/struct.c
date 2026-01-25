@@ -631,9 +631,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_repr(DeeStructTypeObject *tp_self, void *self) {
 	Dee_hash_t i;
-	bool is_first                = true;
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if (ascii_printer_printf(&printer, "%s { ", tp_self->st_base.st_base.tp_name) < 0)
+	bool is_first = true;
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
+	if (Dee_ascii_printer_printf(&printer, "%s { ", tp_self->st_base.st_base.tp_name) < 0)
 		goto err;
 	/* TODO: Print fields in order of offset ascending */
 	for (i = 0; i <= tp_self->st_fmsk; ++i) {
@@ -643,22 +643,22 @@ struct_repr(DeeStructTypeObject *tp_self, void *self) {
 		field_name = tp_self->st_fvec[i].sf_name;
 		if (!field_name)
 			continue;
-		if (!is_first && ASCII_PRINTER_PRINT(&printer, ", ") < 0)
+		if (!is_first && Dee_ASCII_PRINTER_PRINT(&printer, ", ") < 0)
 			goto err;
 		is_first = false;
 		field_addr = (byte_t *)self + tp_self->st_fvec[i].sf_offset;
 		field_type = tp_self->st_fvec[i].sf_type->lt_orig;
-		if (ascii_printer_printf(&printer, ".%k = %k(%K)",
-		                         field_name, field_type,
-		                         DeeStruct_Repr(field_type, field_addr)) < 0)
+		if (Dee_ascii_printer_printf(&printer, ".%k = %k(%K)",
+		                             field_name, field_type,
+		                             DeeStruct_Repr(field_type, field_addr)) < 0)
 			goto err;
 	}
-	if ((is_first ? ascii_printer_putc(&printer, '}')
-	              : ASCII_PRINTER_PRINT(&printer, " }")) < 0)
+	if ((is_first ? Dee_ascii_printer_putc(&printer, '}')
+	              : Dee_ASCII_PRINTER_PRINT(&printer, " }")) < 0)
 		goto err;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 

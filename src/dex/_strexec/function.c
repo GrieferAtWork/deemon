@@ -724,93 +724,93 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_repr(JITFunction *__restrict self) {
 	size_t i;
 	struct jit_object_entry *ent;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if (self->jf_selfarg == (size_t)-1) {
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "[]") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "[]") < 0)
 			goto err;
 		if (!self->jf_argc_max)
 			goto do_print_code;
 	} else {
 		ent = &self->jf_args.ot_list[self->jf_selfarg];
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "function ") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "function ") < 0)
 			goto err;
-		if unlikely(unicode_printer_print(&printer, ent->oe_namestr, ent->oe_namelen) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer, ent->oe_namestr, ent->oe_namelen) < 0)
 			goto err;
 	}
-	if unlikely(unicode_printer_putc(&printer, '(') < 0)
+	if unlikely(Dee_unicode_printer_putc(&printer, '(') < 0)
 		goto err;
 	for (i = 0; i < self->jf_argc_max; ++i) {
-		if (i != 0 && unicode_printer_putascii(&printer, ','))
+		if (i != 0 && Dee_unicode_printer_putascii(&printer, ','))
 			goto err;
 		ent = &self->jf_args.ot_list[self->jf_argv[i]];
-		if unlikely(unicode_printer_print(&printer,
-		                                  (char const *)ent->oe_namestr,
-		                                  ent->oe_namelen) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer,
+		                                      (char const *)ent->oe_namestr,
+		                                      ent->oe_namelen) < 0)
 			goto err;
 		if (i >= self->jf_argc_min) {
 			if (!ent->oe_value) {
-				if (unicode_printer_putascii(&printer, '?')) /* Optional argument */
+				if (Dee_unicode_printer_putascii(&printer, '?')) /* Optional argument */
 					goto err;
 			} else {
-				if unlikely(unicode_printer_printf(&printer, " = %r", ent->oe_value) < 0)
+				if unlikely(Dee_unicode_printer_printf(&printer, " = %r", ent->oe_value) < 0)
 					goto err;
 			}
 		}
 	}
 	if (self->jf_varargs != (size_t)-1) {
-		if (self->jf_argc_max != 0 && unicode_printer_putascii(&printer, ','))
+		if (self->jf_argc_max != 0 && Dee_unicode_printer_putascii(&printer, ','))
 			goto err;
 		ent = &self->jf_args.ot_list[self->jf_varargs];
-		if unlikely(unicode_printer_print(&printer,
-		                                  (char const *)ent->oe_namestr,
-		                                  ent->oe_namelen) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer,
+		                                      (char const *)ent->oe_namestr,
+		                                      ent->oe_namelen) < 0)
 			goto err;
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "...") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "...") < 0)
 			goto err;
 	}
 	if (self->jf_varkwds != (size_t)-1) {
 		if ((self->jf_argc_max != 0 || self->jf_varargs != (size_t)-1) &&
-		    unicode_printer_putascii(&printer, ','))
+		    Dee_unicode_printer_putascii(&printer, ','))
 			goto err;
 		ent = &self->jf_args.ot_list[self->jf_varkwds];
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "**") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "**") < 0)
 			goto err;
-		if unlikely(unicode_printer_print(&printer,
-		                                  (char const *)ent->oe_namestr,
-		                                  ent->oe_namelen) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer,
+		                                      (char const *)ent->oe_namestr,
+		                                      ent->oe_namelen) < 0)
 			goto err;
 	}
-	if unlikely(unicode_printer_putc(&printer, ')') < 0)
+	if unlikely(Dee_unicode_printer_putc(&printer, ')') < 0)
 		goto err;
 do_print_code:
 	if (self->jf_flags & JIT_FUNCTION_FRETEXPR) {
 #if 1 /* Always use a uniform representation for function bodies. */
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, " {\n\treturn ") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, " {\n\treturn ") < 0)
 			goto err;
-		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
-		                                  (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer, self->jf_source_start,
+		                                      (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
 			goto err;
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, ";\n}") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, ";\n}") < 0)
 			goto err;
 #else
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, " -> ") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, " -> ") < 0)
 			goto err;
-		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
-		                                  (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer, self->jf_source_start,
+		                                      (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
 			goto err;
 #endif
 	} else {
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, " {\n\t") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, " {\n\t") < 0)
 			goto err;
-		if unlikely(unicode_printer_print(&printer, self->jf_source_start,
-		                                  (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer, self->jf_source_start,
+		                                      (size_t)(self->jf_source_end - self->jf_source_start)) < 0)
 			goto err;
-		if unlikely(UNICODE_PRINTER_PRINT(&printer, "\n}") < 0)
+		if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, "\n}") < 0)
 			goto err;
 	}
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 

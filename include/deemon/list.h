@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeList_**/
 #ifndef GUARD_DEEMON_LIST_H
-#define GUARD_DEEMON_LIST_H 1
+#define GUARD_DEEMON_LIST_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -32,17 +34,11 @@
 
 #ifndef __INTELLISENSE__
 #include "gc.h" /* DeeGC_Track */
-#endif          /* !__INTELLISENSE__ */
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_list_object list_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_list_object DeeListObject;
-
-struct Dee_list_object {
+typedef struct Dee_list_object {
 	Dee_OBJECT_HEAD /* GC Object */
 	struct Dee_objectlist l_list; /* [owned][lock(l_lock)] Object list. */
 #define DeeList_GetAlloc(self)     Dee_objectlist_getalloc(&(self)->l_list)
@@ -54,7 +50,7 @@ struct Dee_list_object {
 	Dee_atomic_rwlock_t l_lock;  /* Lock used for accessing this list. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
-};
+} DeeListObject;
 
 #define DeeList_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->l_lock)
 #define DeeList_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->l_lock)
@@ -77,8 +73,8 @@ struct Dee_list_object {
 #define DeeList_GET(ob, i)      (ob)->l_list.ol_elemv[i]
 #define DeeList_SET(ob, i, v)   (void)((ob)->l_list.ol_elemv[i] = (v))
 
-#define DeeList_Check(x)       DeeObject_InstanceOf(x, &DeeList_Type)
-#define DeeList_CheckExact(x)  DeeObject_InstanceOfExact(x, &DeeList_Type)
+#define DeeList_Check(x)      DeeObject_InstanceOf(x, &DeeList_Type)
+#define DeeList_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeList_Type)
 
 DDATDEF DeeTypeObject DeeList_Type;
 #define DeeList_Destroy(self) Dee_DecrefDokill(self)

@@ -17,8 +17,19 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DECMAG**/
+/*!export DI_MAG**/
+/*!export Dec_**/
+/*!export Dec_XREL_R_**/
+/*!export DeeDecWriter_**/
+/*!export DeeDec_**/
+/*!export DeeDec_Ehdr_**/
+/*!export Dee_ALIGNOF_DEC_**/
+/*!export Dee_dec_**/
+/*!export -ATTR_PACKED*/
 #ifndef GUARD_DEEMON_DEC_H
-#define GUARD_DEEMON_DEC_H 1
+#define GUARD_DEEMON_DEC_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -99,12 +110,6 @@
 
 DECL_BEGIN
 
-
-#ifdef DEE_SOURCE
-#define Dee_module_object    module_object
-#define Dee_string_object    string_object
-#define Dee_compiler_options compiler_options
-#endif /* DEE_SOURCE */
 struct Dee_module_object;
 struct Dee_string_object;
 struct Dee_compiler_options;
@@ -174,11 +179,11 @@ typedef int32_t Dee_dec_off32_t;
 #define Dee_DEC_TYPE_RELOC 0 /* File contains serializable relocations (that are free'd once `DeeDec_Track()' is called) */
 #define Dee_DEC_TYPE_IMAGE 1 /* File contains non-serializable relocations (that are free'd once `DeeDec_Track()' is called) */
 
-typedef struct dec_rel Dec_Rel;
-typedef struct dec_rrel Dec_RRel;
-typedef struct dec_rrela Dec_RRela;
+typedef struct Dee_dec_rel Dec_Rel;
+typedef struct Dee_dec_rrel Dec_RRel;
+typedef struct Dee_dec_rrela Dec_RRela;
 #if 0 /* TODO */
-typedef struct dec_xrel Dec_XRel;
+typedef struct Dee_dec_xrel Dec_XRel;
 #endif
 
 
@@ -242,8 +247,8 @@ typedef struct {
 			Dee_dec_addr32_t  er_offsetof_eof;       /* [1..1] Offset to EOF of file mapping (should also equal the dec file's size) */
 			uint64_t          er_deemon_build_id[2]; /* Deemon build ID (128-bit unsigned integer) */
 			uint64_t          er_build_timestamp;    /* Microseconds since `01-01-1970', when this dec file was created. */
-			Dee_dec_addr32_t  er_offsetof_gchead;    /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-			Dee_dec_addr32_t  er_offsetof_gctail;    /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
+			Dee_dec_addr32_t  er_offsetof_gchead;    /* [0..1] Offset to first `struct Dee_gc_head_link' (tracking for these objects must begin after relocations were done) */
+			Dee_dec_addr32_t  er_offsetof_gctail;    /* [0..1] Offset to last `struct Dee_gc_head_link' (links between these objects were already established via `e_offsetof_srel') */
 			Dee_dec_addr32_t  er_offsetof_srel;      /* [1..1] Offset to array of `Dec_Rel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)ehdr" */
 			Dee_dec_addr32_t  er_offsetof_drel;      /* [1..1] Offset to array of `Dec_Rel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
 			Dee_dec_addr32_t  er_offsetof_drrel;     /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
@@ -266,8 +271,8 @@ typedef struct {
 #if __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4
 			size_t                _ei_pad[2];   /* So "ei_offsetof_gchead" has the same offset as "er_offsetof_gchead" */
 #endif /* __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4 */
-			Dee_seraddr_t          ei_offsetof_gchead; /* [1..1] Offset to first `struct gc_head_link' */
-			Dee_seraddr_t          ei_offsetof_gctail; /* [1..1] Offset to last `struct gc_head_link' */
+			Dee_seraddr_t          ei_offsetof_gchead; /* [1..1] Offset to first `struct Dee_gc_head_link' */
+			Dee_seraddr_t          ei_offsetof_gctail; /* [1..1] Offset to last `struct Dee_gc_head_link' */
 		}                 td_image;             /* [valid_if(e_type == Dee_DEC_TYPE_IMAGE)] */
 
 	}                     e_typedata;         /* Data dependent on `e_type' */
@@ -280,7 +285,7 @@ typedef struct {
 } Dec_Ehdr;
 
 #define Dee_ALIGNOF_DEC_REL 4
-struct dec_rel {
+struct Dee_dec_rel {
 	/* Non-reference-counted relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
 	 * >> *p_ptr += REL_BASE; */
@@ -288,7 +293,7 @@ struct dec_rel {
 };
 
 #define Dee_ALIGNOF_DEC_RREL 4
-struct dec_rrel {
+struct Dee_dec_rrel {
 	/* Reference-counted relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
 	 * >> DeeObject *obj = (DeeObject *)(*p_ptr += REL_BASE);
@@ -298,7 +303,7 @@ struct dec_rrel {
 };
 
 #define Dee_ALIGNOF_DEC_RRELA 4
-struct dec_rrela {
+struct Dee_dec_rrela {
 	/* Reference-counted+addend relocation:
 	 * >> byte_t **p_ptr = (byte_t **)((byte_t *)EHDR + r_addr);
 	 * >> byte_t *pointer = (*p_ptr += REL_BASE);
@@ -338,7 +343,7 @@ struct dec_rrela {
 
 
 #define Dee_ALIGNOF_DEC_XREL 4
-struct dec_xrel {
+struct Dee_dec_xrel {
 	Dee_dec_addr32_t xr_type; /* Extended relocation type (one of `Dec_XREL_R_*') */
 	Dee_dec_addr32_t xr_addr; /* Address of relocation or payload (what's at that address depends on `xr_type') */
 };
@@ -493,8 +498,8 @@ typedef struct Dee_dec_writer {
 	struct Dee_dec_rrelatab dw_drrela; /* Table of incref-relocations against deemon-core objects (increfs already happened here) */
 	struct Dee_dec_deptab   dw_deps;   /* Table of dependent modules */
 	struct Dee_dec_fdeptab  dw_fdeps;  /* Table of dependent files */
-	Dee_seraddr_t           dw_gchead; /* [0..1] Offset to first `struct gc_head_link' (tracking for these objects must begin after relocations were done) */
-	Dee_seraddr_t           dw_gctail; /* [0..1] Offset to last `struct gc_head_link' (links between these objects were already established via `dw_srel') */
+	Dee_seraddr_t           dw_gchead; /* [0..1] Offset to first `struct Dee_gc_head_link' (tracking for these objects must begin after relocations were done) */
+	Dee_seraddr_t           dw_gctail; /* [0..1] Offset to last `struct Dee_gc_head_link' (links between these objects were already established via `dw_srel') */
 	struct Dee_dec_ptrtab   dw_known;  /* Table of known, already-encoded pointers */
 	unsigned int            dw_flags;  /* Dec writer flags (set of `DeeDecWriter_F_*') */
 } DeeDecWriter;
@@ -718,7 +723,7 @@ typedef struct ATTR_PACKED {
 } Dec_Strmap;
 
 typedef struct ATTR_PACKED {
-	uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
+	uint16_t   s_flg;       /* Symbol flags (Set of `Dee_MODSYM_F*') */
 	uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').
 	                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
 	                         * NOTE: If this value points to an empty string, then this
@@ -731,10 +736,10 @@ typedef struct ATTR_PACKED {
 } Dec_GlbSym;
 
 typedef struct ATTR_PACKED {
-	uint16_t   s_flg;       /* Symbol flags (Set of `MODSYM_F*') */
+	uint16_t   s_flg;       /* Symbol flags (Set of `Dee_MODSYM_F*') */
 #undef s_addr
 	uint16_t   s_addr;      /* Symbol address, or module import index, or getter symbol index. */
-	uint16_t   s_addr2;     /* [exists_if(s_flg & MODSYM_FEXTERN)] External module symbol index. */
+	uint16_t   s_addr2;     /* [exists_if(s_flg & Dee_MODSYM_FEXTERN)] External module symbol index. */
 	uint8_t    s_nam[1];    /* Name of the symbol. - offsets into the string table (`e_stroff').
 	                         * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
 	                         * NOTE: If this value points to an empty string, then this
@@ -852,7 +857,7 @@ typedef struct ATTR_PACKED {
 } Dec_8BitCodeKwds;
 
 typedef struct ATTR_PACKED {
-	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
+	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `Dee_CODE_FDEC_8BIT'.
 	                           * NOTE: When set, this data structure must be
 	                           *       interpreted as an `Dec_8BitCode' object */
 	uint16_t   co_localc;     /* Amount of local variables used by code. */
@@ -876,9 +881,9 @@ typedef struct ATTR_PACKED {
 } Dec_Code;
 
 typedef struct ATTR_PACKED {
-	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `DEC_CODE_F8BIT'.
+	uint16_t   co_flags;      /* Set of `CODE_F*' optionally or'd with `Dee_CODE_FDEC_8BIT'.
 	                           * NOTE: This data structure must only (and always) be used
-	                           *       when the `DEC_CODE_F8BIT' flag is set. */
+	                           *       when the `Dee_CODE_FDEC_8BIT' flag is set. */
 	uint8_t    co_localc;     /* Amount of local variables used by code. */
 	uint8_t    co_refc;       /* Amount of reference variables used by this code. */
 	uint8_t    co_argc_min;   /* Min amount of arguments required to execute this code. */
@@ -1056,7 +1061,7 @@ typedef struct ATTR_PACKED {
 typedef struct ATTR_PACKED {
 	uint8_t       kw_siz;        /* The amount of keyword entries. */
 	Dec_KwdsEntry kw_members[1]; /* [kw_siz] One entry for each member.
-	                              * NOTE: The keyword index (`struct kwds_entry::ke_index')
+	                              * NOTE: The keyword index (`struct Dee_kwds_entry::ke_index')
 	                              *       is the index into this vector. */
 } Dec_Kwds;
 
@@ -1190,10 +1195,6 @@ INTDEF WUNUSED NONNULL((1)) uint16_t DCALL Dec_BuiltinID(DeeObject *__restrict o
 #define DEC_BUILTINID_SETOF(x)           (((x) & 0xff00) >> 8)
 #define DEC_BUILTINID_IDOF(x)            ((x) & 0xff)
 
-#ifdef DEE_SOURCE
-#define Dee_module_object    module_object
-#define Dee_compiler_options compiler_options
-#endif /* DEE_SOURCE */
 struct Dee_module_object;
 struct Dee_compiler_options;
 

@@ -43,7 +43,7 @@
 #endif /* CONFIG_HAVE_MATH_H */
 
 /* Print a string representation of the given floating point value.
- * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
+ * @param: flags: Set of `Dee_FLOAT_PRINT_F*' */
 #ifdef DEFINE_DeeFloat_LPrint
 #define LOCAL_float_t __LONGDOUBLE
 PUBLIC WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -99,7 +99,7 @@ DeeFloat_Print(LOCAL_float_t value, Dee_formatprinter_t printer, void *arg,
 	/* Determine the intended precision. */
 	use_nfrac = (unsigned int)precision;
 	min_nfrac = (unsigned int)precision;
-	if (!(flags & DEEFLOAT_PRINT_FPRECISION)) {
+	if (!(flags & Dee_FLOAT_PRINT_FPRECISION)) {
 		use_nfrac = 6; /* Print at most 1 fractional digit by default. */
 		min_nfrac = 1; /* Print at least 1 fractional digit by default. */
 	} else if (use_nfrac > 9) {
@@ -149,10 +149,10 @@ DeeFloat_Print(LOCAL_float_t value, Dee_formatprinter_t printer, void *arg,
 		--use_nfrac;
 	}
 	total_len = COMPILER_LENOF(buf) - len;
-	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-	    /*    */ (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) {
+	if ((flags & (Dee_FLOAT_PRINT_FWIDTH | Dee_FLOAT_PRINT_FLJUST)) ==
+	    /*    */ (Dee_FLOAT_PRINT_FWIDTH | Dee_FLOAT_PRINT_FLJUST)) {
 		/* Pad with with leading zeroes. */
-		if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE)))
+		if (is_negative || (flags & (Dee_FLOAT_PRINT_FSIGN | Dee_FLOAT_PRINT_FSPACE)))
 			++total_len;
 		if (use_nfrac) {
 			++total_len; /* . */
@@ -160,16 +160,16 @@ DeeFloat_Print(LOCAL_float_t value, Dee_formatprinter_t printer, void *arg,
 		}
 		if (width <= total_len)
 			goto do_float_normal_width;
-		if (!(flags & DEEFLOAT_PRINT_FPADZERO)) {
+		if (!(flags & Dee_FLOAT_PRINT_FPADZERO)) {
 			temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
 			if unlikely(temp < 0)
 				goto err;
 			result += temp;
 			goto do_float_normal_width;
 		}
-		if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE))) {
+		if (is_negative || (flags & (Dee_FLOAT_PRINT_FSIGN | Dee_FLOAT_PRINT_FSPACE))) {
 			/* print the sign */
-			buf[0] = is_negative ? '-' : (flags & DEEFLOAT_PRINT_FSIGN) ? '+' : ' ';
+			buf[0] = is_negative ? '-' : (flags & Dee_FLOAT_PRINT_FSIGN) ? '+' : ' ';
 			temp   = (*printer)(arg, buf, 1);
 			if unlikely(temp < 0)
 				goto err;
@@ -185,9 +185,9 @@ DeeFloat_Print(LOCAL_float_t value, Dee_formatprinter_t printer, void *arg,
 do_float_normal_width:
 		if (is_negative) {
 			buf[--len] = '-';
-		} else if (flags & DEEFLOAT_PRINT_FSIGN) {
+		} else if (flags & Dee_FLOAT_PRINT_FSIGN) {
 			buf[--len] = '+';
-		} else if (flags & DEEFLOAT_PRINT_FSPACE) {
+		} else if (flags & Dee_FLOAT_PRINT_FSPACE) {
 			buf[--len] = ' ';
 		}
 	}
@@ -212,12 +212,12 @@ do_float_normal_width:
 		result += temp;
 		total_len += COMPILER_LENOF(buf) - len;
 	}
-	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-	    /*    */ (DEEFLOAT_PRINT_FWIDTH) &&
+	if ((flags & (Dee_FLOAT_PRINT_FWIDTH | Dee_FLOAT_PRINT_FLJUST)) ==
+	    /*    */ (Dee_FLOAT_PRINT_FWIDTH) &&
 	    (width > total_len)) {
 
 		/* Insert a missing decimal separator. */
-		if ((flags & DEEFLOAT_PRINT_FPADZERO) && use_nfrac == 0) {
+		if ((flags & Dee_FLOAT_PRINT_FPADZERO) && use_nfrac == 0) {
 			buf[0] = '.';
 			temp   = (*printer)(arg, buf, 1);
 			if unlikely(temp < 0)
@@ -228,7 +228,7 @@ do_float_normal_width:
 
 		/* Add trailing zeroes to pad out our length the requested width. */
 		temp = DeeFormat_Repeat(printer, arg,
-		                        flags & DEEFLOAT_PRINT_FPADZERO ? '0' : ' ',
+		                        flags & Dee_FLOAT_PRINT_FPADZERO ? '0' : ' ',
 		                        width - total_len);
 		if unlikely(temp < 0)
 			goto err;
@@ -244,10 +244,10 @@ do_special_float:
 	is_negative = false;
 	if (value < 0)
 		is_negative = true;
-	if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE)))
+	if (is_negative || (flags & (Dee_FLOAT_PRINT_FSIGN | Dee_FLOAT_PRINT_FSPACE)))
 		++total_len;
-	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-	    (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST) &&
+	if ((flags & (Dee_FLOAT_PRINT_FWIDTH | Dee_FLOAT_PRINT_FLJUST)) ==
+	    (Dee_FLOAT_PRINT_FWIDTH | Dee_FLOAT_PRINT_FLJUST) &&
 	    (width > total_len)) {
 		temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
 		if unlikely(temp < 0)
@@ -257,7 +257,7 @@ do_special_float:
 	if (total_len == 4) {
 		if (is_negative) {
 			buf[0] = '-';
-		} else if (flags & DEEFLOAT_PRINT_FSIGN) {
+		} else if (flags & Dee_FLOAT_PRINT_FSIGN) {
 			buf[0] = '+';
 		} else {
 			buf[0] = ' ';
@@ -269,8 +269,8 @@ do_special_float:
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
-	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
-	    (DEEFLOAT_PRINT_FWIDTH) &&
+	if ((flags & (Dee_FLOAT_PRINT_FWIDTH | Dee_FLOAT_PRINT_FLJUST)) ==
+	    (Dee_FLOAT_PRINT_FWIDTH) &&
 	    (width > total_len)) {
 		temp = DeeFormat_Repeat(printer, arg, ' ', width - total_len);
 		if unlikely(temp < 0)

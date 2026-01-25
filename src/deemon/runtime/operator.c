@@ -884,10 +884,10 @@ err_object_type:
 
 #ifdef DEFINE_TYPED_OPERATORS
 LOCAL WUNUSED bool DCALL
-repr_contains(struct trepr_frame *chain, DeeTypeObject *tp, DeeObject *ob)
+repr_contains(struct Dee_trepr_frame *chain, DeeTypeObject *tp, DeeObject *ob)
 #else /* DEFINE_TYPED_OPERATORS */
 LOCAL WUNUSED bool DCALL
-repr_contains(struct repr_frame *chain, DeeObject *__restrict ob)
+repr_contains(struct Dee_repr_frame *chain, DeeObject *__restrict ob)
 #endif /* !DEFINE_TYPED_OPERATORS */
 {
 	for (; chain; chain = chain->rf_prev) {
@@ -904,15 +904,15 @@ repr_contains(struct repr_frame *chain, DeeObject *__restrict ob)
 }
 
 /* Make sure the repr-frame offsets match. */
-STATIC_ASSERT(offsetof(struct trepr_frame, rf_prev) ==
-              offsetof(struct repr_frame, rf_prev));
-STATIC_ASSERT(offsetof(struct trepr_frame, rf_obj) ==
-              offsetof(struct repr_frame, rf_obj));
+STATIC_ASSERT(offsetof(struct Dee_trepr_frame, rf_prev) ==
+              offsetof(struct Dee_repr_frame, rf_prev));
+STATIC_ASSERT(offsetof(struct Dee_trepr_frame, rf_obj) ==
+              offsetof(struct Dee_repr_frame, rf_obj));
 
 #ifdef DEFINE_TYPED_OPERATORS
-#define Xrepr_frame trepr_frame
+#define Xrepr_frame Dee_trepr_frame
 #else /* DEFINE_TYPED_OPERATORS */
-#define Xrepr_frame repr_frame
+#define Xrepr_frame Dee_repr_frame
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
@@ -933,7 +933,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 			goto recursion;
 		opframe.rf_obj          = self;
 		opframe.rf_type         = tp_self;
-		this_thread->t_str_curr = (struct repr_frame *)&opframe;
+		this_thread->t_str_curr = (struct Dee_repr_frame *)&opframe;
 #else /* DEFINE_TYPED_OPERATORS */
 		if unlikely(repr_contains(opframe.rf_prev, self))
 			goto recursion;
@@ -941,7 +941,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 		this_thread->t_str_curr = &opframe;
 #endif /* !DEFINE_TYPED_OPERATORS */
 		result = DeeType_INVOKE_STR(tp_self, self);
-		this_thread->t_str_curr = (struct repr_frame *)opframe.rf_prev;
+		this_thread->t_str_curr = (struct Dee_repr_frame *)opframe.rf_prev;
 		ASSERT_OBJECT_TYPE_EXACT_OPT(result, &DeeString_Type);
 		return result;
 	}
@@ -973,7 +973,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 			goto recursion;
 		opframe.rf_obj           = self;
 		opframe.rf_type          = tp_self;
-		this_thread->t_repr_curr = (struct repr_frame *)&opframe;
+		this_thread->t_repr_curr = (struct Dee_repr_frame *)&opframe;
 #else /* DEFINE_TYPED_OPERATORS */
 		if unlikely(repr_contains(opframe.rf_prev, self))
 			goto recursion;
@@ -981,7 +981,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 		this_thread->t_repr_curr = &opframe;
 #endif /* !DEFINE_TYPED_OPERATORS */
 		result = DeeType_INVOKE_REPR(tp_self, self);
-		this_thread->t_repr_curr = (struct repr_frame *)opframe.rf_prev;
+		this_thread->t_repr_curr = (struct Dee_repr_frame *)opframe.rf_prev;
 		ASSERT_OBJECT_TYPE_EXACT_OPT(result, &DeeString_Type);
 		return result;
 	}
@@ -1014,7 +1014,7 @@ DEFINE_OPERATOR(Dee_ssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,
 			goto recursion;
 		opframe.rf_obj          = self;
 		opframe.rf_type         = tp_self;
-		this_thread->t_str_curr = (struct repr_frame *)&opframe;
+		this_thread->t_str_curr = (struct Dee_repr_frame *)&opframe;
 #else /* DEFINE_TYPED_OPERATORS */
 		if unlikely(repr_contains(opframe.rf_prev, self))
 			goto recursion;
@@ -1022,7 +1022,7 @@ DEFINE_OPERATOR(Dee_ssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,
 		this_thread->t_str_curr = &opframe;
 #endif /* !DEFINE_TYPED_OPERATORS */
 		result = DeeType_INVOKE_PRINT(tp_self, self, printer, arg);
-		this_thread->t_str_curr = (struct repr_frame *)opframe.rf_prev;
+		this_thread->t_str_curr = (struct Dee_repr_frame *)opframe.rf_prev;
 		return result;
 	}
 
@@ -1053,7 +1053,7 @@ DEFINE_OPERATOR(Dee_ssize_t, PrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
 			goto recursion;
 		opframe.rf_obj           = self;
 		opframe.rf_type          = tp_self;
-		this_thread->t_repr_curr = (struct repr_frame *)&opframe;
+		this_thread->t_repr_curr = (struct Dee_repr_frame *)&opframe;
 #else /* DEFINE_TYPED_OPERATORS */
 		if unlikely(repr_contains(opframe.rf_prev, self))
 			goto recursion;
@@ -1061,7 +1061,7 @@ DEFINE_OPERATOR(Dee_ssize_t, PrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
 		this_thread->t_repr_curr = &opframe;
 #endif /* !DEFINE_TYPED_OPERATORS */
 		result = DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg);
-		this_thread->t_repr_curr = (struct repr_frame *)opframe.rf_prev;
+		this_thread->t_repr_curr = (struct Dee_repr_frame *)opframe.rf_prev;
 		return result;
 	}
 
@@ -1077,9 +1077,9 @@ recursion:
 
 
 #ifdef DEFINE_TYPED_OPERATORS
-#define Xrepr_frame trepr_frame
+#define Xrepr_frame Dee_trepr_frame
 #else /* DEFINE_TYPED_OPERATORS */
-#define Xrepr_frame repr_frame
+#define Xrepr_frame Dee_repr_frame
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 WUNUSED /*ATTR_PURE*/
@@ -1102,7 +1102,7 @@ DEFINE_OPERATOR(Dee_hash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 				goto recursion;
 			opframe.rf_obj           = self;
 			opframe.rf_type          = tp_self;
-			this_thread->t_hash_curr = (struct repr_frame *)&opframe;
+			this_thread->t_hash_curr = (struct Dee_repr_frame *)&opframe;
 #else /* DEFINE_TYPED_OPERATORS */
 			if unlikely(repr_contains(opframe.rf_prev, self))
 				goto recursion;
@@ -1110,13 +1110,13 @@ DEFINE_OPERATOR(Dee_hash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 			this_thread->t_hash_curr = &opframe;
 #endif /* !DEFINE_TYPED_OPERATORS */
 			result = DeeType_INVOKE_HASH(tp_self, self);
-			this_thread->t_hash_curr = (struct repr_frame *)opframe.rf_prev;
+			this_thread->t_hash_curr = (struct Dee_repr_frame *)opframe.rf_prev;
 			return result;
 		}
 	}
 	return DeeObject_HashGeneric(self);
 recursion:
-	return DEE_HASHOF_RECURSIVE_ITEM;
+	return Dee_HASHOF_RECURSIVE_ITEM;
 }
 
 #undef Xrepr_frame

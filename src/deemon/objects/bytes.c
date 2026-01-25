@@ -845,15 +845,15 @@ bytes_str(Bytes *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
-	/* Optimization: can use an ascii_printer, instead of the default unicode_printer */
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
+	/* Optimization: can use a Dee_ascii_printer, instead of the default Dee_unicode_printer */
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
 	if unlikely(DeeBytes_PrintRepr(Dee_AsObject(self),
-	                               &ascii_printer_print,
+	                               &Dee_ascii_printer_print,
 	                               &printer) < 0)
 		goto err;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 
@@ -1150,7 +1150,7 @@ DeeString_CFormat(Dee_formatprinter_t printer,
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_mod(Bytes *self, DeeObject *args) {
-	struct bytes_printer printer = BYTES_PRINTER_INIT;
+	struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 	DeeObject *const *argv;
 	size_t argc;
 	/* C-style string formating */
@@ -1163,17 +1163,17 @@ bytes_mod(Bytes *self, DeeObject *args) {
 	}
 	/* Use a different printer for format-copy-characters, thus allowing
 	 * us to not need to both encoding the bytes from `self' as UTF-8. */
-	if unlikely(DeeString_CFormat(&bytes_printer_print,
-	                              (Dee_formatprinter_t)&bytes_printer_append,
+	if unlikely(DeeString_CFormat(&Dee_bytes_printer_print,
+	                              (Dee_formatprinter_t)&Dee_bytes_printer_append,
 	                              &printer,
 	                              (char const *)DeeBytes_DATA(self),
 	                              DeeBytes_SIZE(self),
 	                              argc,
 	                              argv) < 0)
 		goto err;
-	return (DREF Bytes *)bytes_printer_pack(&printer);
+	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
 err:
-	bytes_printer_fini(&printer);
+	Dee_bytes_printer_fini(&printer);
 	return NULL;
 }
 
@@ -1682,7 +1682,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 	DeeObject *hex_str;
 	DREF Bytes *result;
 	byte_t *dst;
-	union dcharptr_const iter, end;
+	union Dee_charptr_const iter, end;
 	size_t length;
 	DeeArg_Unpack1(err, argc, argv, "fromhex", &hex_str);
 	if (DeeObject_AssertTypeExact(hex_str, &DeeString_Type))
@@ -1848,7 +1848,7 @@ PRIVATE struct type_member tpconst bytes_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PUBLIC struct Dee_empty_bytes_struct DeeBytes_Empty = {
+PUBLIC struct _Dee_empty_bytes_struct DeeBytes_Empty = {
 	OBJECT_HEAD_INIT(&DeeBytes_Type),
 	/* .b_base   = */ NULL,
 	/* .b_size   = */ 0,
@@ -2126,11 +2126,11 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
  *      ---> Regardless of return value, `self' is finalized and left
  *           in an undefined state, the same way it would have been
- *           after a call to `bytes_printer_fini()'
+ *           after a call to `Dee_bytes_printer_fini()'
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self) {
+Dee_bytes_printer_pack(/*inherit(always)*/ struct Dee_bytes_printer *__restrict self) {
 	DREF Bytes *result = self->bp_bytes;
 	if unlikely(!result)
 		return DeeBytes_NewEmpty();
@@ -2160,9 +2160,9 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
  * -> A far as unicode support goes, this function has _nothing_ to
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
- * -> The equivalent unicode_printer function is `unicode_printer_print8' */
+ * -> The equivalent Dee_unicode_printer function is `Dee_unicode_printer_print8' */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DPRINTER_CC
-Dee_bytes_printer_append(struct bytes_printer *__restrict self,
+Dee_bytes_printer_append(struct Dee_bytes_printer *__restrict self,
                          byte_t const *__restrict data, size_t datalen) {
 	Bytes *bytes;
 	size_t alloc_size;
@@ -2226,7 +2226,7 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_bytes_printer_putb)(struct bytes_printer *__restrict self, byte_t ch) {
+(DCALL Dee_bytes_printer_putb)(struct Dee_bytes_printer *__restrict self, byte_t ch) {
 	/* Quick check: Can we print to an existing buffer. */
 	if (self->bp_bytes &&
 	    self->bp_length < self->bp_bytes->b_size) {
@@ -2235,7 +2235,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	}
 
 	/* Fallback: go the long route. */
-	if (bytes_printer_append(self, &ch, 1) < 0)
+	if (Dee_bytes_printer_append(self, &ch, 1) < 0)
 		goto err;
 done:
 	return 0;
@@ -2244,10 +2244,10 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
-(DCALL Dee_bytes_printer_repeat)(struct bytes_printer *__restrict self,
+(DCALL Dee_bytes_printer_repeat)(struct Dee_bytes_printer *__restrict self,
                                  byte_t ch, size_t count) {
 	byte_t *buffer;
-	buffer = bytes_printer_alloc(self, count);
+	buffer = Dee_bytes_printer_alloc(self, count);
 	if unlikely(!buffer)
 		goto err;
 
@@ -2259,7 +2259,7 @@ err:
 }
 
 PUBLIC NONNULL((1)) void
-(DCALL Dee_bytes_printer_release)(struct bytes_printer *__restrict self,
+(DCALL Dee_bytes_printer_release)(struct Dee_bytes_printer *__restrict self,
                                   size_t datalen) {
 	ASSERT(self->bp_length >= datalen);
 
@@ -2269,7 +2269,7 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC WUNUSED NONNULL((1)) byte_t *
-(DCALL Dee_bytes_printer_alloc)(struct bytes_printer *__restrict self, size_t datalen) {
+(DCALL Dee_bytes_printer_alloc)(struct Dee_bytes_printer *__restrict self, size_t datalen) {
 	Bytes *bytes;
 	size_t alloc_size;
 	byte_t *result;

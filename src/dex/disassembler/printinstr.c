@@ -112,7 +112,7 @@ libdisasm_printconst(Dee_formatprinter_t printer, void *arg,
 			    (DeeInt_TryAsUInt32(constval, &value) && value <= UINT16_MAX))
 				numsys = 10;
 			temp = DeeInt_Print(constval,
-			                    DEEINT_PRINT(numsys, DEEINT_PRINT_FNUMSYS),
+			                    Dee_INT_PRINT(numsys, Dee_INT_PRINT_FNUMSYS),
 			                    0, printer, arg);
 			if unlikely(temp < 0)
 				return temp;
@@ -158,20 +158,20 @@ print_generic:
 
 PRIVATE Dee_ssize_t DCALL
 libdisasm_printlocal(Dee_formatprinter_t printer, void *arg,
-                     uint16_t lid, struct ddi_state *ddi,
+                     uint16_t lid, struct Dee_ddi_state *ddi,
                      DeeCodeObject *code, unsigned int flags) {
 	if (code) {
 		/* Use DDI information to lookup the name of the variable. */
 		if (ddi) {
-			struct ddi_xregs *iter;
-			DDI_STATE_DO(iter, ddi) {
+			struct Dee_ddi_xregs *iter;
+			Dee_DDI_STATE_DO(iter, ddi) {
 				if (lid < iter->dx_lcnamc) {
 					char const *name;
 					if ((name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_lcnamv[lid])) != NULL)
 						return DeeFormat_Printf(printer, arg, "local " PREFIX_VARNAME "%s", name);
 				}
 			}
-			DDI_STATE_WHILE(iter, ddi);
+			Dee_DDI_STATE_WHILE(iter, ddi);
 		}
 		if (lid >= code->co_localc) {
 			if (flags & PCODE_FNOBADCOMMENT)
@@ -185,20 +185,20 @@ print_generic:
 
 PRIVATE Dee_ssize_t DCALL
 libdisasm_printstack(Dee_formatprinter_t printer, void *arg,
-                     uint16_t soff, bool is_prefix, struct ddi_state *ddi,
+                     uint16_t soff, bool is_prefix, struct Dee_ddi_state *ddi,
                      DeeCodeObject *code, unsigned int flags) {
 	if (code) {
 		if (ddi) {
 			/* Use DDI information to lookup the name of the variable. */
-			struct ddi_xregs *iter;
-			DDI_STATE_DO(iter, ddi) {
+			struct Dee_ddi_xregs *iter;
+			Dee_DDI_STATE_DO(iter, ddi) {
 				if (soff < MIN(iter->dx_base.dr_usp, iter->dx_spnama)) {
 					char const *name;
 					if ((name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_spnamv[soff])) != NULL)
 						return DeeFormat_Printf(printer, arg, "stack " PREFIX_VARNAME "%s", name);
 				}
 			}
-			DDI_STATE_WHILE(iter, ddi);
+			Dee_DDI_STATE_WHILE(iter, ddi);
 		}
 		if (soff >= DeeCode_StackDepth(code)) {
 			if (flags & PCODE_FNOBADCOMMENT)
@@ -215,7 +215,7 @@ print_generic:
 PRIVATE Dee_ssize_t DCALL
 libdisasm_printrelstack(Dee_formatprinter_t printer, void *arg,
                         uint16_t stacksz, uint32_t sp_sub,
-                        struct ddi_state *ddi, DeeCodeObject *code,
+                        struct Dee_ddi_state *ddi, DeeCodeObject *code,
                         unsigned int flags) {
 	uint16_t soff;
 	if (!sp_sub)
@@ -232,8 +232,8 @@ print_generic:
 			goto invalid_offset;
 		/* Use DDI information to lookup the name of the variable. */
 		if (ddi) {
-			struct ddi_xregs *iter;
-			DDI_STATE_DO(iter, ddi) {
+			struct Dee_ddi_xregs *iter;
+			Dee_DDI_STATE_DO(iter, ddi) {
 				if (soff < MIN(iter->dx_base.dr_usp, iter->dx_spnama)) {
 					char const *name;
 					if ((name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_spnamv[soff])) != NULL) {
@@ -246,7 +246,7 @@ print_generic:
 					}
 				}
 			}
-			DDI_STATE_WHILE(iter, ddi);
+			Dee_DDI_STATE_WHILE(iter, ddi);
 		}
 	}
 	if (!(flags & PCODE_FALTCOMMENT))
@@ -330,7 +330,7 @@ print_generic:
 
 PRIVATE Dee_ssize_t DCALL
 print_extern_symbol(Dee_formatprinter_t printer, void *arg,
-                    DeeModuleObject *mod, struct module_symbol *symbol,
+                    DeeModuleObject *mod, struct Dee_module_symbol *symbol,
                     char const *suffix) {
 	Dee_ssize_t result, temp;
 	result = DeeFormat_PRINT(printer, arg, "extern " PREFIX_VARNAME);
@@ -356,7 +356,7 @@ libdisasm_printextern(Dee_formatprinter_t printer, void *arg,
                       uint16_t mid, uint16_t gid,
                       DeeCodeObject *code, unsigned int flags) {
 	if (code) {
-		struct module_symbol *symbol;
+		struct Dee_module_symbol *symbol;
 		DeeModuleObject *module;
 		if (mid >= code->co_module->mo_importc) {
 			if (flags & PCODE_FNOBADCOMMENT)
@@ -383,16 +383,16 @@ libdisasm_printextern(Dee_formatprinter_t printer, void *arg,
 		}
 		symbol = DeeModule_GetSymbolID(module, gid);
 		if (symbol) {
-			char const *suffix = (symbol->ss_flags & MODSYM_FPROPERTY) ? "getter" : NULL;
+			char const *suffix = (symbol->ss_flags & Dee_MODSYM_FPROPERTY) ? "getter" : NULL;
 			return print_extern_symbol(printer, arg, module, symbol, suffix);
 		}
-		if (gid >= MODULE_PROPERTY_DEL) {
-			symbol = DeeModule_GetSymbolID(module, gid - MODULE_PROPERTY_DEL);
-			if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY)
+		if (gid >= Dee_MODULE_PROPERTY_DEL) {
+			symbol = DeeModule_GetSymbolID(module, gid - Dee_MODULE_PROPERTY_DEL);
+			if (symbol && (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY)
 				return print_extern_symbol(printer, arg, module, symbol, "delete");
-			if (gid >= MODULE_PROPERTY_SET) {
-				symbol = DeeModule_GetSymbolID(module, gid - MODULE_PROPERTY_SET);
-				if (symbol && (symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY)
+			if (gid >= Dee_MODULE_PROPERTY_SET) {
+				symbol = DeeModule_GetSymbolID(module, gid - Dee_MODULE_PROPERTY_SET);
+				if (symbol && (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY)
 					return print_extern_symbol(printer, arg, module, symbol, "setter");
 			}
 		}
@@ -487,12 +487,12 @@ libdisasm_printmembername(Dee_formatprinter_t printer, void *arg,
 			if (!DeeInteractiveModule_Check(code->co_module))
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			{
-				struct module_symbol *class_sym;
+				struct Dee_module_symbol *class_sym;
 				class_sym = DeeModule_GetSymbolString(code->co_module, class_name);
 				if (!class_sym)
 					goto search_module_root_constants;
 				if (Dee_module_symbol_getindex(class_sym) < mod->mo_globalc &&
-				    !(class_sym->ss_flags & (MODSYM_FPROPERTY | MODSYM_FEXTERN))) {
+				    !(class_sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FEXTERN))) {
 					DREF DeeObject *class_type;
 					DeeClassDescriptorObject *desc;
 					DeeModule_LockRead(mod);
@@ -523,7 +523,7 @@ search_module_root_constants:
 					} else {
 						if (DeeType_Check(class_type) &&
 						    DeeType_IsClass(class_type)) {
-							struct class_attribute *attr;
+							struct Dee_class_attribute *attr;
 							desc = DeeClass_DESC(class_type)->cd_desc;
 do_search_desc:
 							if (mid < (is_cmember ? desc->cd_cmemb_size : desc->cd_imemb_size)) {
@@ -542,8 +542,8 @@ do_search_desc:
 											continue;
 										if (mid < attr->ca_addr)
 											continue;
-										if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-											if (mid > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+										if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+											if (mid > ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 											           ? attr->ca_addr
 											           : attr->ca_addr + 2))
 												continue;
@@ -561,13 +561,13 @@ do_search_desc:
 									if (!attr->ca_name)
 										continue;
 									if (is_cmember
-									    ? (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) == 0
-									    : (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) != 0)
+									    ? (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) == 0
+									    : (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) != 0)
 										continue;
 									if (mid < attr->ca_addr)
 										continue;
-									if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-										if (mid > ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+									if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+										if (mid > ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 										           ? attr->ca_addr
 										           : attr->ca_addr + 2))
 											continue;
@@ -575,7 +575,7 @@ do_search_desc:
 found_it_property:
 										result = DeeFormat_Printf(printer, arg, "%s.%k.%s",
 										                          class_name, attr->ca_name,
-										                          mid == attr->ca_addr + CLASS_GETSET_GET ? "getter" : mid == attr->ca_addr + CLASS_GETSET_DEL ? "delete" : "setter");
+										                          mid == attr->ca_addr + Dee_CLASS_GETSET_GET ? "getter" : mid == attr->ca_addr + Dee_CLASS_GETSET_DEL ? "delete" : "setter");
 									} else {
 										if (mid > attr->ca_addr)
 											continue;
@@ -614,7 +614,7 @@ libdisasm_printarg(Dee_formatprinter_t printer, void *arg,
 PRIVATE WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 libdisasm_printprefix(Dee_formatprinter_t printer, void *arg,
                       instruction_t *__restrict instr_start,
-                      struct ddi_state *ddi, DeeCodeObject *code,
+                      struct Dee_ddi_state *ddi, DeeCodeObject *code,
                       unsigned int flags) {
 	uint16_t opcode;
 	instruction_t *iter = instr_start;
@@ -855,7 +855,7 @@ libdisasm_printinstr_f(Dee_formatprinter_t printer, void *arg,
                        /*[1..1]*/ instruction_t *operands_start,
                        /*[0..1]*/ instruction_t *prefix_start,
                        /*[1..1]*/ char const *format,
-                       uint16_t stacksz, struct ddi_state *ddi,
+                       uint16_t stacksz, struct Dee_ddi_state *ddi,
                        DeeCodeObject *code, unsigned int flags) {
 	ip_t ip;
 	Dee_ssize_t temp, result;
@@ -1184,7 +1184,7 @@ __pragma_GCC_diagnostic_pop_ignored(Wswitch_unreachable)
 INTERN WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 libdisasm_printinstr(Dee_formatprinter_t printer, void *arg,
                      instruction_t *__restrict instr_start, uint16_t stacksz,
-                     struct ddi_state *ddi, DeeCodeObject *code,
+                     struct Dee_ddi_state *ddi, DeeCodeObject *code,
                      unsigned int flags) {
 	ip_t ip;
 	Dee_ssize_t temp, result;
@@ -1196,7 +1196,7 @@ libdisasm_printinstr(Dee_formatprinter_t printer, void *arg,
 	if (*format) {
 		switch (opcode) {
 		case ASM_YIELD:
-			if (code->co_flags & CODE_FYIELDING)
+			if (code->co_flags & Dee_CODE_FYIELDING)
 				format = "yield" F_PAD "pop";
 			break;
 		default: break;
@@ -1233,7 +1233,7 @@ do_handle_prefix:
 		if (*format) {
 			switch (opcode) {
 			case ASM_YIELD:
-				if (code->co_flags & CODE_FYIELDING)
+				if (code->co_flags & Dee_CODE_FYIELDING)
 					format = "yield" F_PAD F_PREFIX;
 				break;
 			default: break;

@@ -785,7 +785,7 @@ sci_getview(SeqCombinationsIterator *__restrict self) {
 		result->scv_iter = self;
 		result->scv_com  = self->sci_com;
 		result->scv_idx  = self->sci_idx;
-		weakref_support_init(result);
+		Dee_weakref_support_init(result);
 		DeeObject_Init(result, &SeqCombinationsView_Type);
 		COMPILER_WRITE_BARRIER();
 
@@ -1562,7 +1562,7 @@ INTERN DeeTypeObject SeqCombinationsView_Type = {
 	                         /*    */ "?Ert:SeqRepeatCombinationsIterator"
 	                         /*    */ "?Ert:SeqPermutationsIterator)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(SeqCombinationsView),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(SeqCombinationsView),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {

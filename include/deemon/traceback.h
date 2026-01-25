@@ -17,8 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_FRAME_F**/
+/*!export DeeFrame**/
+/*!export DeeTraceback**/
+/*!export _DeeFrame_**/
 #ifndef GUARD_DEEMON_TRACEBACK_H
-#define GUARD_DEEMON_TRACEBACK_H 1
+#define GUARD_DEEMON_TRACEBACK_H 1 /**/
 
 #include "api.h"
 
@@ -32,15 +37,8 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_traceback_object traceback_object
-#define Dee_thread_object    thread_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_traceback_object DeeTracebackObject;
 struct Dee_thread_object;
-
-struct Dee_traceback_object {
+typedef struct Dee_traceback_object {
 	Dee_OBJECT_HEAD /* GC object. */
 	DREF struct Dee_thread_object                 *tb_thread;     /* [1..1][const] The thread for which this is a traceback. */
 #ifndef CONFIG_NO_THREADS
@@ -62,7 +60,7 @@ struct Dee_traceback_object {
 	                                                               * [OVERRIDE([*].cf_stacksz, [(!= 0) == (cf_sp != NULL)])] Vector of copied frames.
 	                                                               * NOTE: The stack vectors of frames are duplicated as the stack is unwound.
 	                                                               *       Frames whose stack has yet to be duplicated have `cf_sp = cf_stack = NULL', `cf_stacksz = 0'. */
-};
+} DeeTracebackObject;
 
 #define DeeTraceback_LockAvailable(self)  Dee_atomic_lock_available(&(self)->tb_lock)
 #define DeeTraceback_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->tb_lock)
@@ -120,40 +118,40 @@ struct Dee_frame_object {
 	struct Dee_code_frame *f_frame; /* [lock(*f_palock)][0..1][lock(f_lock)] The actual frame that is being referenced. */
 #ifndef CONFIG_NO_THREADS
 	union { /* Lock that must be acquired when accessing the frame. */
-		Dee_atomic_rwlock_t  *f_palock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK && !DEEFRAME_FSHRLOCK)][const] */
-		Dee_ratomic_rwlock_t *f_pralock; /* [0..1][valid_if(DEEFRAME_FRECLOCK && !DEEFRAME_FSHRLOCK)][const] */
-		Dee_shared_rwlock_t  *f_pslock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK && DEEFRAME_FSHRLOCK)][const] */
-		Dee_rshared_rwlock_t *f_prslock; /* [0..1][valid_if(DEEFRAME_FRECLOCK && DEEFRAME_FSHRLOCK)][const] */
+		Dee_atomic_rwlock_t  *f_palock;  /* [0..1][valid_if(!Dee_FRAME_FRECLOCK && !Dee_FRAME_FSHRLOCK)][const] */
+		Dee_ratomic_rwlock_t *f_pralock; /* [0..1][valid_if(Dee_FRAME_FRECLOCK && !Dee_FRAME_FSHRLOCK)][const] */
+		Dee_shared_rwlock_t  *f_pslock;  /* [0..1][valid_if(!Dee_FRAME_FRECLOCK && Dee_FRAME_FSHRLOCK)][const] */
+		Dee_rshared_rwlock_t *f_prslock; /* [0..1][valid_if(Dee_FRAME_FRECLOCK && Dee_FRAME_FSHRLOCK)][const] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define f_palock   _dee_aunion.f_palock
-#define f_pralock  _dee_aunion.f_pralock
-#define f_pslock   _dee_aunion.f_pslock
-#define f_prslock  _dee_aunion.f_prslock
+#define f_palock   _dee_aunion.f_palock  /*!export-*/
+#define f_pralock  _dee_aunion.f_pralock /*!export-*/
+#define f_pslock   _dee_aunion.f_pslock  /*!export-*/
+#define f_prslock  _dee_aunion.f_prslock /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 	Dee_atomic_rwlock_t f_lock;  /* Lock for accessing fields of this frame object. */
 #endif /* !CONFIG_NO_THREADS */
-#define DEEFRAME_FNORMAL   0x0000 /* Normal frame flags. */
-#define DEEFRAME_FREADONLY 0x0000 /* [const] Contents of the frame may not be modified. */
-#define DEEFRAME_FNORESULT 0x0010 /* [const] Ignore the value of `cf_result' -- the frame has no return value. */
-#define DEEFRAME_FWRITABLE 0x1000 /* [lock(READ(f_lock) && CLEAR_ONCE)] Contents of the frame may be modified. */
-#define DEEFRAME_FUNDEFSP  0x2000 /* [lock(READ(f_lock) && ATOMIC && CLEAR_ONCE)] The stack-pointer of the frame is undefined.
-                                   * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack pointer may be
-                                   * obtainable from DDI information and the current PC.
-                                   * This flag may NOT be set when `DEEFRAME_FWRITABLE' is set. */
-#define DEEFRAME_FUNDEFSP2 0x4000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The stack-pointer of the frame could not be determined. */
-#define DEEFRAME_FREGENGSP 0x8000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The SP pointer was reverse engineered and stored in `f_revsp' */
+#define Dee_FRAME_FNORMAL   0x0000 /* Normal frame flags. */
+#define Dee_FRAME_FREADONLY 0x0000 /* [const] Contents of the frame may not be modified. */
+#define Dee_FRAME_FNORESULT 0x0010 /* [const] Ignore the value of `cf_result' -- the frame has no return value. */
+#define Dee_FRAME_FWRITABLE 0x1000 /* [lock(READ(f_lock) && CLEAR_ONCE)] Contents of the frame may be modified. */
+#define Dee_FRAME_FUNDEFSP  0x2000 /* [lock(READ(f_lock) && ATOMIC && CLEAR_ONCE)] The stack-pointer of the frame is undefined.
+                                    * When `Dee_FRAME_FUNDEFSP2' isn't set, the correct stack pointer may be
+                                    * obtainable from DDI information and the current PC.
+                                    * This flag may NOT be set when `Dee_FRAME_FWRITABLE' is set. */
+#define Dee_FRAME_FUNDEFSP2 0x4000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The stack-pointer of the frame could not be determined. */
+#define Dee_FRAME_FREGENGSP 0x8000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The SP pointer was reverse engineered and stored in `f_revsp' */
 #ifndef CONFIG_NO_THREADS
-#define DEEFRAME_FSHRLOCK  0x0001 /* The frame uses a shared lock. */
-#define DEEFRAME_FRECLOCK  0x0002 /* The frame uses a recursive lock. */
+#define Dee_FRAME_FSHRLOCK  0x0001 /* The frame uses a shared lock. */
+#define Dee_FRAME_FRECLOCK  0x0002 /* The frame uses a recursive lock. */
 #else /* !CONFIG_NO_THREADS */
-#define DEEFRAME_FSHRLOCK  0x0000 /* Ignored. */
-#define DEEFRAME_FRECLOCK  0x0000 /* Ignored. */
+#define Dee_FRAME_FSHRLOCK  0x0000 /* Ignored. */
+#define Dee_FRAME_FRECLOCK  0x0000 /* Ignored. */
 #endif /* CONFIG_NO_THREADS */
 	uint16_t           f_flags; /* [const] Contents of the frame may be modified. */
-	uint16_t           f_revsp; /* [lock(f_lock)][valid_if(DEEFRAME_FREGENGSP)] Reverse engineered SP. */
+	uint16_t           f_revsp; /* [lock(f_lock)][valid_if(Dee_FRAME_FREGENGSP)] Reverse engineered SP. */
 };
 
 #ifdef CONFIG_NO_THREADS
@@ -169,27 +167,27 @@ struct Dee_frame_object {
 #define _DeeFrame_PLockOp(self,                                        \
                           Dee_atomic_rwlock_op, Dee_ratomic_rwlock_op, \
                           Dee_shared_rwlock_op, Dee_rshared_rwlock_op) \
-	((self)->f_flags & DEEFRAME_FSHRLOCK                               \
-	 ? ((self)->f_flags & DEEFRAME_FRECLOCK                            \
+	((self)->f_flags & Dee_FRAME_FSHRLOCK                              \
+	 ? ((self)->f_flags & Dee_FRAME_FRECLOCK                           \
 	    ? Dee_rshared_rwlock_op((self)->f_prslock)                     \
 	    : Dee_shared_rwlock_op((self)->f_pslock))                      \
-	 : ((self)->f_flags & DEEFRAME_FRECLOCK                            \
+	 : ((self)->f_flags & Dee_FRAME_FRECLOCK                           \
 	    ? Dee_ratomic_rwlock_op((self)->f_pralock)                     \
 	    : Dee_atomic_rwlock_op((self)->f_palock)))
 #define _DeeFrame_PLockOp2(self, atomic_retval,                         \
                            Dee_atomic_rwlock_op, Dee_ratomic_rwlock_op, \
                            Dee_shared_rwlock_op, Dee_rshared_rwlock_op) \
-	((self)->f_flags & DEEFRAME_FSHRLOCK                                \
-	 ? ((self)->f_flags & DEEFRAME_FRECLOCK                             \
+	((self)->f_flags & Dee_FRAME_FSHRLOCK                               \
+	 ? ((self)->f_flags & Dee_FRAME_FRECLOCK                            \
 	    ? Dee_rshared_rwlock_op((self)->f_prslock)                      \
 	    : Dee_shared_rwlock_op((self)->f_pslock))                       \
-	 : ((self)->f_flags & DEEFRAME_FRECLOCK                             \
+	 : ((self)->f_flags & Dee_FRAME_FRECLOCK                            \
 	    ? Dee_ratomic_rwlock_op((self)->f_pralock)                      \
 	    : Dee_atomic_rwlock_op((self)->f_palock),                       \
 	    atomic_retval))
 #endif /* !CONFIG_NO_THREADS */
 
-#define DeeFrame_CanWrite(self) ((self)->f_flags & DEEFRAME_FWRITABLE)
+#define DeeFrame_CanWrite(self) ((self)->f_flags & Dee_FRAME_FWRITABLE)
 
 #define _DeeFrame_PLockPresent(self)        ((self)->f_palock != NULL)
 #define _DeeFrame_PLockReading(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_reading, Dee_ratomic_rwlock_reading, Dee_shared_rwlock_reading, Dee_rshared_rwlock_reading)
@@ -235,7 +233,7 @@ DDATDEF DeeTypeObject DeeFrame_Type;
 
 /* Construct a frame object owned by `owner'
  * The intended use of this is for tracebacks and yield_function-iterators.
- * @param: flags: Set of `DEEFRAME_F*' */
+ * @param: flags: Set of `Dee_FRAME_F*' */
 DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(/*[0..1]*/ DeeObject *owner,
                                       struct Dee_code_frame *__restrict frame,
@@ -250,7 +248,7 @@ DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 /* Construct a shared frame object, which can be manually
  * invalidated once the caller calls `DeeFrame_DecrefShared()'.
  * The intended use of this is for user-code handling of breakpoints.
- * @param: flags: Set of `DEEFRAME_F*' */
+ * @param: flags: Set of `Dee_FRAME_F*' */
 #define DeeFrame_NewSharedWithLock(frame, flags, lock) \
 	DeeFrame_NewReferenceWithLock(NULL, frame, flags, lock)
 #define DeeFrame_NewShared(frame, flags) \
@@ -275,7 +273,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeFrame_LockEndRead(DeeObject *__restrict self)
 DFUNDEF NONNULL((1)) void DCALL DeeFrame_LockEndWrite(DeeObject *__restrict self);
 #endif /* !CONFIG_NO_THREADS */
 
-/* Same as `DeeFrame_LockWrite()', but also set the "CODE_FASSEMBLY"
+/* Same as `DeeFrame_LockWrite()', but also set the "Dee_CODE_FASSEMBLY"
  * flag for the underlying code object (if not set already). */
 DFUNDEF WUNUSED NONNULL((1)) struct Dee_code_frame *DCALL
 DeeFrame_LockWriteAssembly(DeeObject *__restrict self);

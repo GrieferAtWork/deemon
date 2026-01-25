@@ -74,7 +74,7 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
-INTDEF struct module_symbol empty_module_buckets[];
+INTDEF struct Dee_module_symbol empty_module_buckets[];
 
 /* Assert opcode relations assumed by the optimizer. */
 STATIC_ASSERT((ASM16_CALL_KW & 0xff) == ASM_CALL_KW);
@@ -152,9 +152,9 @@ STATIC_ASSERT((ASM16_CALLATTR_C_MAP & 0xff) == ASM_CALLATTR_C_MAP);
 STATIC_ASSERT(__SIZEOF_POINTER__ == sizeof(void *));
 
 #ifdef CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER
-STATIC_ASSERT(sizeof(struct asm_exc) == sizeof(struct except_handler));
+STATIC_ASSERT(sizeof(struct asm_exc) == sizeof(struct Dee_except_handler));
 #else /* CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
-STATIC_ASSERT(sizeof(struct asm_exc) != sizeof(struct except_handler));
+STATIC_ASSERT(sizeof(struct asm_exc) != sizeof(struct Dee_except_handler));
 #endif /* !CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
 
 #define sc_text   current_assembler.a_sect[SECTION_TEXT]
@@ -1442,25 +1442,25 @@ trunc:
 }
 
 
-INTERN WUNUSED struct except_handler *DCALL asm_pack_exceptv(void) {
-	struct except_handler *exceptv;
+INTERN WUNUSED struct Dee_except_handler *DCALL asm_pack_exceptv(void) {
+	struct Dee_except_handler *exceptv;
 	struct asm_exc *begin, *iter;
-	struct except_handler *dst;
+	struct Dee_except_handler *dst;
 #ifndef CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER
-	exceptv = (struct except_handler *)Dee_Mallocc(current_assembler.a_exceptc,
-	                                               sizeof(struct except_handler));
+	exceptv = (struct Dee_except_handler *)Dee_Mallocc(current_assembler.a_exceptc,
+	                                               sizeof(struct Dee_except_handler));
 	if unlikely(!exceptv)
 		return NULL; /* Well... $h1t. */
 #else /* !CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
-	exceptv = (struct except_handler *)current_assembler.a_exceptv;
+	exceptv = (struct Dee_except_handler *)current_assembler.a_exceptv;
 	if (current_assembler.a_exceptc != current_assembler.a_excepta) {
-		exceptv = (struct except_handler *)Dee_TryReallocc(exceptv,
+		exceptv = (struct Dee_except_handler *)Dee_TryReallocc(exceptv,
 		                                                   current_assembler.a_exceptc,
-		                                                   sizeof(struct except_handler));
+		                                                   sizeof(struct Dee_except_handler));
 		if (exceptv) {
 			current_assembler.a_exceptv = (struct asm_exc *)exceptv;
 		} else {
-			exceptv = (struct except_handler *)current_assembler.a_exceptv;
+			exceptv = (struct Dee_except_handler *)current_assembler.a_exceptv;
 		}
 	}
 #endif /* CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER */
@@ -1500,7 +1500,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	DREF DeeCodeObject *result;
 	DREF DeeStringObject **kwds = NULL;
 	code_size_t total_codesize;
-	struct except_handler *exceptv;
+	struct Dee_except_handler *exceptv;
 	ASSERT(sc_main.sec_code);
 	ddi = ddi_compile();
 	if unlikely(!ddi)
@@ -1526,7 +1526,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	}
 
 	/* Make the exception handler vector become
-	 * compatible with `struct except_handler'. */
+	 * compatible with `struct Dee_except_handler'. */
 	if (current_assembler.a_exceptc) {
 		exceptv = asm_pack_exceptv();
 		if unlikely(!exceptv)
@@ -1594,8 +1594,8 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	Dee_Incref(result); /* The reference that is stored in the root-scope. */
 
 	/* Set the heapframe flag when the code's frame size is extremely large. */
-	if unlikely(result->co_framesize >= CODE_LARGEFRAME_THRESHOLD)
-		result->co_flags |= CODE_FHEAPFRAME;
+	if unlikely(result->co_framesize >= Dee_CODE_LARGEFRAME_THRESHOLD)
+		result->co_flags |= Dee_CODE_FHEAPFRAME;
 
 
 	/* Yes, we steal all of this stuff! */
@@ -2368,7 +2368,7 @@ INTERN WUNUSED NONNULL((1)) int
 		--depth;
 		/* Generate exception handler cleanup code.
 		 * This is literally the same as `asm_gunwind()' */
-		if (iter->hf_flags & EXCEPTION_HANDLER_FFINALLY) {
+		if (iter->hf_flags & Dee_EXCEPTION_HANDLER_FFINALLY) {
 			/* Due to the way that the `end finally' instruction is implemented,
 			 * we are allowed to merge adjacent finally handlers and only emit
 			 * an instruction for the lowest-order one:
@@ -2376,7 +2376,7 @@ INTERN WUNUSED NONNULL((1)) int
 			 *    code documented for the `ASM_ENDFINALLY' instruction. */
 			if (current_assembler.a_flag & ASM_FOPTIMIZE) {
 				while (iter->hf_prev &&
-				       (iter->hf_prev->hf_flags & EXCEPTION_HANDLER_FFINALLY)) {
+				       (iter->hf_prev->hf_flags & Dee_EXCEPTION_HANDLER_FFINALLY)) {
 					iter = iter->hf_prev;
 					ASSERT(depth != 0);
 					--depth;
@@ -2407,7 +2407,7 @@ INTERN WUNUSED int (DCALL asm_gunwind)(void) {
 		ASSERT(depth);
 		--depth;
 		/* Generate exception handler cleanup code. */
-		if (iter->hf_flags & EXCEPTION_HANDLER_FFINALLY) {
+		if (iter->hf_flags & Dee_EXCEPTION_HANDLER_FFINALLY) {
 			if (asm_gendfinally_n(depth))
 				goto err;
 		} else {
@@ -2812,11 +2812,11 @@ INTERN void DCALL asm_dellocal(uint16_t index) {
 
 PRIVATE bool DCALL rehash_globals(void) {
 	uint16_t new_mask;
-	struct module_symbol *new_vector;
-	struct module_symbol *iter, *end;
+	struct Dee_module_symbol *new_vector;
+	struct Dee_module_symbol *iter, *end;
 	/* Try to rehash the global variable table. */
 	new_mask   = (current_rootscope->rs_bucketm << 1) | 1;
-	new_vector = (struct module_symbol *)Dee_TryCallocc(new_mask + 1, sizeof(struct module_symbol));
+	new_vector = (struct Dee_module_symbol *)Dee_TryCallocc(new_mask + 1, sizeof(struct Dee_module_symbol));
 	if unlikely(!new_vector)
 		return false;
 	if (current_rootscope->rs_bucketv != empty_module_buckets) {
@@ -2826,7 +2826,7 @@ PRIVATE bool DCALL rehash_globals(void) {
 			Dee_hash_t i, perturb;
 			i = perturb = (iter->ss_hash & new_mask);
 			for (;; Dee_MODULE_HASHNX(i, perturb)) {
-				struct module_symbol *dst = &new_vector[i & new_mask];
+				struct Dee_module_symbol *dst = &new_vector[i & new_mask];
 				if (dst->ss_name)
 					continue;
 				*dst = *iter; /* Transfer this entry. */
@@ -2846,7 +2846,7 @@ asm_gsymid(struct symbol *__restrict sym) {
 	uint16_t result;
 	Dee_hash_t name_hash;
 	struct TPPKeyword *name;
-	struct module_symbol *iter;
+	struct Dee_module_symbol *iter;
 	Dee_hash_t perturb, i;
 	ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
 	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
@@ -2873,10 +2873,10 @@ asm_gsymid(struct symbol *__restrict sym) {
 	perturb = i = name_hash & current_rootscope->rs_bucketm;
 	for (;; Dee_MODULE_HASHNX(i, perturb)) {
 		iter = &current_rootscope->rs_bucketv[i & current_rootscope->rs_bucketm];
-		if (!MODULE_SYMBOL_GETNAMESTR(iter))
+		if (!Dee_MODULE_SYMBOL_GETNAMESTR(iter))
 			break;
 		if (iter->ss_hash == name_hash &&
-		    MODULE_SYMBOL_EQUALS(iter, name->k_name, name->k_size)) {
+		    Dee_MODULE_SYMBOL_EQUALS(iter, name->k_name, name->k_size)) {
 			/* Found a match! - This global variable had already been defined. */
 			result       = Dee_module_symbol_getindex(iter);
 			sym->s_symid = result;
@@ -2885,15 +2885,15 @@ asm_gsymid(struct symbol *__restrict sym) {
 			/* Better late than never... */
 			if (!iter->ss_doc && sym->s_global.g_doc) {
 				iter->ss_doc = DeeString_STR(sym->s_global.g_doc);
-				iter->ss_flags |= MODSYM_FDOCOBJ;
+				iter->ss_flags |= Dee_MODSYM_FDOCOBJ;
 				Dee_Incref(sym->s_global.g_doc);
 			}
-			iter->ss_flags &= ~(MODSYM_FCONSTEXPR);
+			iter->ss_flags &= ~(Dee_MODSYM_FCONSTEXPR);
 			return result;
 		}
 	}
 	/* All right! This is a new one, so we have to do all the
-	 * work of creating and adding a new `module_symbol'... */
+	 * work of creating and adding a new `Dee_module_symbol'... */
 	result = current_rootscope->rs_globalc;
 	if unlikely(result == UINT16_MAX) {
 		/* Make sure not to exceed what can actually be done. */
@@ -2914,26 +2914,26 @@ asm_gsymid(struct symbol *__restrict sym) {
 	for (;; Dee_MODULE_HASHNX(i, perturb)) {
 		DREF DeeObject *name_obj;
 		iter = &current_rootscope->rs_bucketv[i & current_rootscope->rs_bucketm];
-		if (MODULE_SYMBOL_GETNAMESTR(iter))
+		if (Dee_MODULE_SYMBOL_GETNAMESTR(iter))
 			continue;
 		name_obj = DeeString_NewSized(name->k_name, name->k_size);
 		if unlikely(!name_obj)
 			goto err;
-		MODULE_SYMBOL_GETNAMESTR(iter)        = DeeString_STR(name_obj);
+		Dee_MODULE_SYMBOL_GETNAMESTR(iter)        = DeeString_STR(name_obj);
 		((DeeStringObject *)name_obj)->s_hash = name_hash;
-		iter->ss_flags                        = MODSYM_FNAMEOBJ;
+		iter->ss_flags                        = Dee_MODSYM_FNAMEOBJ;
 		if (sym->s_global.g_doc) {
 			/* Assign a documentation string. */
 			iter->ss_doc = DeeString_STR(sym->s_global.g_doc);
 			Dee_Incref(sym->s_global.g_doc);
-			iter->ss_flags |= MODSYM_FDOCOBJ;
+			iter->ss_flags |= Dee_MODSYM_FDOCOBJ;
 		}
 		iter->ss_hash  = name_hash;
 		iter->ss_index = result;
 		if (sym->s_flag & SYMBOL_FFINAL) {
-			iter->ss_flags |= MODSYM_FREADONLY;
+			iter->ss_flags |= Dee_MODSYM_FREADONLY;
 			if (!(sym->s_flag & SYMBOL_FVARYING))
-				iter->ss_flags |= MODSYM_FCONSTEXPR;
+				iter->ss_flags |= Dee_MODSYM_FCONSTEXPR;
 		}
 		break;
 	}
@@ -3215,7 +3215,7 @@ asm_esymid(struct symbol *__restrict sym) {
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 	module = sym->s_extern.e_module;
-	if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FEXTERN) {
+	if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FEXTERN) {
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym)->ss_impid < module->mo_importc);
 		module = module->mo_importv[SYMBOL_EXTERN_SYMBOL(sym)->ss_impid];
 	}
@@ -3582,7 +3582,7 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 
 	/* Check if the function even qualifies for argrefs. */
 	if unlikely(current_basescope->bs_argc_min < current_basescope->bs_argc_max ||
-	            (current_basescope->bs_flags & CODE_FVARARGS)) {
+	            (current_basescope->bs_flags & Dee_CODE_FVARARGS)) {
 		*p_argc = 0;
 		*p_argv = NULL;
 		return code_compile(code_ast, flags, false, p_refc, p_refv);

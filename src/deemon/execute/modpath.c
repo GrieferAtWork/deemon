@@ -704,7 +704,7 @@ DeeModule_InitDexBounds_with_dexataddr(DeeModuleObject *__restrict self,
 DECL_END
 
 #define RBTREE(name)            module_abstree_##name
-#define RBTREE_T                struct module_object
+#define RBTREE_T                struct Dee_module_object
 #define RBTREE_Tkey             char const *
 #define RBTREE_NODEFIELD        mo_absnode
 #define RBTREE_GETKEY(self)     (self)->mo_absname
@@ -1384,7 +1384,7 @@ dex_add_symbol(struct Dee_module_symbol *bucketv, uint16_t bucketm,
 		target->ss_index = index;
 		target->ss_hash  = hash;
 		target->ss_flags = symbol->ds_flags;
-		ASSERT(!(symbol->ds_flags & (MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)));
+		ASSERT(!(symbol->ds_flags & (Dee_MODSYM_FNAMEOBJ | Dee_MODSYM_FDOCOBJ)));
 		break;
 	}
 }
@@ -2189,7 +2189,7 @@ enum{ DeeModule_OpenFile_impl_EXTRA_CHARS_ = DeeModule_OpenFile_impl_EXTRA_CHARS
 #define DeeModule_OpenFile_impl_EXTRA_CHARS DeeModule_OpenFile_impl_EXTRA_CHARS_
 
 
-INTDEF struct module_symbol empty_module_buckets[];
+INTDEF struct Dee_module_symbol empty_module_buckets[];
 
 PRIVATE NONNULL((1)) void DCALL
 module_destroy_untracked(DREF /*untracked*/ DeeModuleObject *self) {
@@ -2280,17 +2280,17 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 #endif /* __SIZEOF_SIZE_T__ == 4 */
 	DeeGC_TrackMany_Lock();
 	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
-		struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
-		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
+		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
+		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
-		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Exec(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
 	} else {
-		struct gc_head *gc_head = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
-		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
+		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
+		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Exec(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
 	}
 	DeeGC_TrackMany_Unlock();
 #undef IMAGE_GC_HEADTAIL_MATCH_RELOC
@@ -2330,7 +2330,7 @@ DeeModule_CreateAnonymousDirectory(void) {
 	result->mo_bucketm = 0;
 	result->mo_bucketv = empty_module_buckets;
 	Dee_atomic_rwlock_init(&result->mo_lock);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 done:
 	return result;
 }
@@ -2967,7 +2967,7 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 		*dst++ = DeeSystem_SEP;
 	filename_end = filename + filename_size;
 	/* Skip leading whitespace */
-	filename = unicode_skipspaceutf8_n(filename, filename_end);
+	filename = Dee_unicode_skipspaceutf8_n(filename, filename_end);
 #ifdef DeeSystem_HAVE_FS_DRIVES
 	/* Check if "filename" indicates that it is relative to the current drive's root */
 	if (filename < filename_end && DeeSystem_IsSep(*filename)) {
@@ -2983,14 +2983,14 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 			if (dst[-1] == DeeSystem_SEP) {
 				/* Deal with "." and ".." path references */
 				char const *filename_after_space;
-				filename_after_space = unicode_skipspaceutf8_n(filename, filename_end);
+				filename_after_space = Dee_unicode_skipspaceutf8_n(filename, filename_end);
 				if ((filename_after_space >= filename_end) || DeeSystem_IsSep(*filename_after_space)) {
 					/* current-directory-reference */
 					--dst;
 					filename = filename_after_space;
 					continue;
 				} else if ((size_t)(filename_end - filename) >= 1 && *filename == '.') {
-					filename_after_space = unicode_skipspaceutf8_n(filename + 1, filename_end);
+					filename_after_space = Dee_unicode_skipspaceutf8_n(filename + 1, filename_end);
 					if (filename_after_space >= filename_end || DeeSystem_IsSep(*filename_after_space)) {
 						/* parent-directory-reference */
 #ifdef DeeSystem_HAVE_FS_DRIVES
@@ -3009,7 +3009,7 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 
 						/* Position "filename" **after** the associated "/" */
 						filename = filename_after_space + 1;
-						filename = unicode_skipspaceutf8_n(filename, filename_end);
+						filename = Dee_unicode_skipspaceutf8_n(filename, filename_end);
 						continue;
 					}
 				}
@@ -3023,15 +3023,15 @@ cat_and_normalize_paths(/*utf-8*/ char const *__restrict pathname, size_t pathna
 #endif /* DeeSystem_ALTSEP */
 		case DeeSystem_SEP:
 			/* Trim already-written whitespace */
-			dst = unicode_skipspaceutf8_rev_n(dst, result);
+			dst = Dee_unicode_skipspaceutf8_rev_n(dst, result);
 			if (dst > result && dst[-1] == DeeSystem_SEP) {
-				dst = unicode_skipspaceutf8_rev_n(dst - 1, result);
+				dst = Dee_unicode_skipspaceutf8_rev_n(dst - 1, result);
 				ASSERT(!(dst > result && dst[-1] == DeeSystem_SEP));
 			}
 
 			/* Skip upcoming whitespace */
 			for (;;) {
-				filename = unicode_skipspaceutf8_n(filename, filename_end);
+				filename = Dee_unicode_skipspaceutf8_n(filename, filename_end);
 				if (filename >= filename_end)
 					break;
 				if (!DeeSystem_IsSep(*filename))
@@ -4396,12 +4396,12 @@ do_handle_parent_directory:
 					++num_dots;
 				return DeeFormat_Repeat(printer, arg, '.', num_dots);
 			}
-			ctx_char = unicode_readutf8_n(&context_absname, context_absname_end);
+			ctx_char = Dee_unicode_readutf8_n(&context_absname, context_absname_end);
 			if (ctx_char == DeeSystem_SEP)
 				goto do_handle_parent_directory;
 		} else {
-			mod_char = unicode_readutf8(&module_absname);
-			ctx_char = unicode_readutf8_n(&context_absname, context_absname_end);
+			mod_char = Dee_unicode_readutf8(&module_absname);
+			ctx_char = Dee_unicode_readutf8_n(&context_absname, context_absname_end);
 		}
 		if (mod_char != ctx_char) {
 #ifdef DeeSystem_HAVE_FS_ICASE
@@ -4590,7 +4590,7 @@ do_DeeModule_GetRelNameEx(DeeModuleObject *__restrict self,
                           DeeStringObject *context_absname_ob,
                           unsigned int flags) {
 	Dee_ssize_t status;
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 	if (flags & DeeModule_RELNAME_F_LIBNAM) {
 		DREF /*String*/ DeeObject *result;
 		result = DeeModule_GetLibName(self, 0);
@@ -4599,19 +4599,19 @@ do_DeeModule_GetRelNameEx(DeeModuleObject *__restrict self,
 	}
 	if (!DeeModule_CanHaveRelName(self))
 		return ITER_DONE;
-	unicode_printer_init(&printer);
-	status = do_DeeModule_PrintRelNameEx_impl(self, &unicode_printer_print, &printer,
+	Dee_unicode_printer_init(&printer);
+	status = do_DeeModule_PrintRelNameEx_impl(self, &Dee_unicode_printer_print, &printer,
 	                                          context_absname, context_absname_size,
 	                                          context_absname_ob, flags);
 	if unlikely(status < 0)
 		goto err_printer;
 	if unlikely(status == 0) {
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		return ITER_DONE;
 	}
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -5086,7 +5086,7 @@ print("#endif");
 #endif
 /*[[[end]]]*/
 
-INTDEF struct module_symbol empty_module_buckets[];
+INTDEF struct Dee_module_symbol empty_module_buckets[];
 
 #define SEP   DeeSystem_SEP
 #define SEP_S DeeSystem_SEP_S
@@ -5222,8 +5222,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
                              DeeObject *__restrict input_file,
                              int start_line, int start_col,
-                             struct compiler_options *options,
-                             struct string_object *input_pathname) {
+                             struct Dee_compiler_options *options,
+                             struct Dee_string_object *input_pathname) {
 	DREF DeeCompilerObject *compiler;
 	struct TPPFile *base_file;
 	DREF struct ast *code;
@@ -5339,7 +5339,7 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 		current_basescope->bs_argc    = 1;
 		current_basescope->bs_argv[0] = dots;
 		current_basescope->bs_varargs = dots;
-		current_basescope->bs_flags |= CODE_FVARARGS;
+		current_basescope->bs_flags |= Dee_CODE_FVARARGS;
 	}
 
 	/* Save the current exception context. */
@@ -5439,7 +5439,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_LoadSourceStream(DeeModuleObject *__restrict self,
                            /*File*/ DeeObject *__restrict input_file,
                            int start_line, int start_col,
-                           struct compiler_options *options) {
+                           struct Dee_compiler_options *options) {
 	int result;
 	ASSERT(self != (DeeModuleObject *)input_file);
 	result = DeeModule_BeginLoading(self);
@@ -5465,7 +5465,7 @@ DeeModule_LoadSourceStream(DeeModuleObject *__restrict self,
 
 
 
-LIST_HEAD(module_object_list, module_object);
+LIST_HEAD(module_object_list, Dee_module_object);
 
 /* Filesystem-based module hash table. */
 PRIVATE size_t /*               */ modules_c = 0;    /* [lock(modules_lock)] Amount of modules in-cache. */
@@ -5747,7 +5747,7 @@ module_unbind(DeeModuleObject *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenSourceFile(/*String*/ DeeObject *__restrict source_pathname,
                          /*String*/ DeeObject *module_global_name,
-                         struct compiler_options *options,
+                         struct Dee_compiler_options *options,
                          bool throw_error) {
 	DREF DeeModuleObject *existing_module;
 	DREF DeeModuleObject *result;
@@ -5945,7 +5945,7 @@ DeeModule_OpenSourceFileString(/*utf-8*/ char const *__restrict source_pathname,
                                size_t source_pathsize,
                                /*utf-8*/ char const *module_name,
                                size_t module_namesize,
-                               struct compiler_options *options,
+                               struct Dee_compiler_options *options,
                                bool throw_error) {
 	DREF DeeModuleObject *result;
 	DREF DeeObject *module_name_ob = NULL;
@@ -5982,7 +5982,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenSourceStream(/*File*/ DeeObject *source_stream,
                            int start_line, int start_col,
-                           struct compiler_options *options,
+                           struct Dee_compiler_options *options,
                            /*String*/ DeeObject *source_pathname,
                            /*String*/ DeeObject *module_name) {
 	DREF DeeModuleObject *result;
@@ -6077,7 +6077,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenSourceStreamString(/*File*/ DeeObject *source_stream,
                                  int start_line, int start_col,
-                                 struct compiler_options *options,
+                                 struct Dee_compiler_options *options,
                                  /*utf-8*/ char const *source_pathname,
                                  size_t source_pathsize,
                                  /*utf-8*/ char const *module_name,
@@ -6136,7 +6136,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                            int start_line, int start_col,
-                           struct compiler_options *options,
+                           struct Dee_compiler_options *options,
                            /*String*/ DeeObject *source_pathname,
                            /*String*/ DeeObject *module_name) {
 	DREF DeeObject *source_stream;
@@ -6158,7 +6158,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenSourceMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                                 int start_line, int start_col, struct compiler_options *options,
+                                 int start_line, int start_col, struct Dee_compiler_options *options,
                                  /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                  /*utf-8*/ char const *module_name, size_t module_namesize) {
 	DREF DeeModuleObject *result;
@@ -6225,7 +6225,7 @@ DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	result->mo_bucketv = empty_module_buckets;
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	Dee_Incref(name);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	return DeeGC_TRACK(DeeModuleObject, result);
 err:
 	return NULL;
@@ -6256,8 +6256,8 @@ err_module_not_found(DeeObject *__restrict module_name) {
 #else
 #define IS_VALID_MODULE_CHARACTER(ch)                                      \
 	((DeeUni_Flags(ch) &                                                   \
-	  (UNICODE_ISALPHA | UNICODE_ISLOWER | UNICODE_ISUPPER | UNICODE_ISTITLE | \
-	   UNICODE_ISDIGIT | UNICODE_ISSYMSTRT | UNICODE_ISSYMCONT)) ||         \
+	  (Dee_UNICODE_ISALPHA | Dee_UNICODE_ISLOWER | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISTITLE | \
+	   Dee_UNICODE_ISDIGIT | Dee_UNICODE_ISSYMSTRT | Dee_UNICODE_ISSYMCONT)) ||         \
 	 ((ch) == '-' || (ch) == '=' || (ch) == ',' || (ch) == '(' ||          \
 	  (ch) == ')' || (ch) == '[' || (ch) == ']' || (ch) == '{' ||          \
 	  (ch) == '}' || (ch) == '<' || (ch) == '>' || (ch) == '+'))
@@ -6276,7 +6276,7 @@ PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
                         /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                         DeeObject *module_global_name,
-                        struct compiler_options *options,
+                        struct Dee_compiler_options *options,
                         unsigned int mode) {
 	DREF DeeStringObject *module_name_ob;
 	DREF DeeStringObject *module_path_ob;
@@ -6924,7 +6924,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeModuleObject *DCALL
 DeeModule_SubOpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
                            /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                            DeeObject *module_global_name,
-                           struct compiler_options *options,
+                           struct Dee_compiler_options *options,
                            unsigned int mode) {
 	size_t additional_count;
 	/* Walk up the directory path for upwards references in the relative path. */
@@ -7012,19 +7012,19 @@ PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeModuleObject *DCALL
 DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
                      /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                      /*String*/ DeeObject *module_global_name,
-                     struct compiler_options *options,
+                     struct Dee_compiler_options *options,
                      unsigned int mode) {
 	if unlikely(!DeeSystem_IsAbsN(module_path, module_pathsize)) {
 		/* Must make the given module path absolute. */
 		DREF DeeStringObject *abs_path; /*utf-8*/
 		char const *abs_utf8;
 		DREF DeeModuleObject *result;
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
+		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		if (DeeSystem_PrintPwd(&printer, true) < 0)
 			goto err_printer;
-		if (unicode_printer_print(&printer, module_path, module_pathsize) < 0)
+		if (Dee_unicode_printer_print(&printer, module_path, module_pathsize) < 0)
 			goto err_printer;
-		abs_path = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		abs_path = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!abs_path)
 			goto err;
 		abs_utf8 = DeeString_AsUtf8((DeeObject *)abs_path);
@@ -7042,7 +7042,7 @@ err_abs_path:
 		Dee_Decref(abs_path);
 		goto err;
 err_printer:
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		goto err;
 	}
 	return DeeModule_SubOpenInPathAbs(module_path, module_pathsize,
@@ -7081,7 +7081,7 @@ err:
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenGlobal(/*String*/ DeeObject *__restrict module_name,
-                     struct compiler_options *options, bool throw_error) {
+                     struct Dee_compiler_options *options, bool throw_error) {
 	DREF DeeObject *path;
 	DREF DeeModuleObject *result;
 	DeeListObject *paths;
@@ -7160,7 +7160,7 @@ done:
 PUBLIC WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
                            size_t module_namesize,
-                           struct compiler_options *options,
+                           struct Dee_compiler_options *options,
                            bool throw_error) {
 	DREF DeeObject *module_name_ob;
 	DREF DeeObject *path;
@@ -7457,7 +7457,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeModuleObject *DCALL
 DeeModule_OpenRelative(/*String*/ DeeObject *__restrict module_name,
                        /*utf-8*/ char const *__restrict module_pathname,
                        size_t module_pathsize,
-                       struct compiler_options *options,
+                       struct Dee_compiler_options *options,
                        bool throw_error) {
 	/*utf-8*/ char const *module_name_str;
 	module_name_str = DeeString_AsUtf8(module_name);
@@ -7480,7 +7480,7 @@ err:
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeModuleObject *DCALL
 DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                              /*utf-8*/ char const *__restrict module_pathname, size_t module_pathsize,
-                             struct compiler_options *options, bool throw_error) {
+                             struct Dee_compiler_options *options, bool throw_error) {
 	/* Shouldn't happen: Not actually a relative module name. */
 	if (!module_namesize || *module_name != '.')
 		return DeeModule_OpenGlobalString(module_name, module_namesize, options, throw_error);
@@ -7578,26 +7578,26 @@ err:
 
 PRIVATE WUNUSED int DCALL module_rehash_globals(void) {
 	size_t i, new_mask = (current_rootscope->rs_bucketm << 1) | 1;
-	struct module_symbol *new_vec;
+	struct Dee_module_symbol *new_vec;
 	ASSERT(!(new_mask & (new_mask + 1)));
-	new_vec = (struct module_symbol *)Dee_Callocc(new_mask + 1,
-	                                              sizeof(struct module_symbol));
+	new_vec = (struct Dee_module_symbol *)Dee_Callocc(new_mask + 1,
+	                                              sizeof(struct Dee_module_symbol));
 	if unlikely(!new_vec)
 		goto err;
 	for (i = 0; i <= current_rootscope->rs_bucketm; ++i) {
 		size_t j, perturb;
-		struct module_symbol *item;
+		struct Dee_module_symbol *item;
 		item = &current_rootscope->rs_bucketv[i];
 		if (!item->ss_name)
 			continue;
 		perturb = j = item->ss_hash & new_mask;
 		for (;; Dee_MODULE_HASHNX(j, perturb)) {
-			struct module_symbol *new_item = &new_vec[j & new_mask];
+			struct Dee_module_symbol *new_item = &new_vec[j & new_mask];
 			if (new_item->ss_name)
 				continue;
 
 			/* Copy the old item into this new slot. */
-			memcpy(new_item, item, sizeof(struct module_symbol));
+			memcpy(new_item, item, sizeof(struct Dee_module_symbol));
 			break;
 		}
 	}
@@ -7687,13 +7687,13 @@ module_import_symbol(void *arg, DeeObject *name, DeeObject *value) {
 		hash    = DeeString_Hash(name);
 		perturb = i = Dee_MODULE_HASHST(self, hash);
 		for (;; Dee_MODULE_HASHNX(i, perturb)) {
-			struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
+			struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
 			if (item->ss_name)
 				continue;
 
 			/* Use this item. */
 			item->ss_name  = DeeString_STR(name);
-			item->ss_flags = MODSYM_FNAMEOBJ;
+			item->ss_flags = Dee_MODSYM_FNAMEOBJ;
 			item->ss_doc   = NULL;
 			item->ss_hash  = hash;
 			item->ss_index = addr;
@@ -7734,7 +7734,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             unsigned int mode,
                             int start_line, int start_col,
-                            struct compiler_options *options,
+                            struct Dee_compiler_options *options,
                             DeeObject *default_symbols,
                             DeeObject *source_pathname,
                             DeeObject *module_name) {
@@ -7780,7 +7780,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	result->mo_bucketv = empty_module_buckets;
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	DeeObject_Init(result, &DeeModule_Type);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	result = DeeGC_TRACK(DeeModuleObject, result);
 	result->mo_flags = Dee_MODULE_FLOADING;
 #ifndef CONFIG_NO_THREADS
@@ -7879,7 +7879,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 		current_basescope->bs_argc    = 1;
 		current_basescope->bs_argv[0] = dots;
 		current_basescope->bs_varargs = dots;
-		current_basescope->bs_flags |= CODE_FVARARGS;
+		current_basescope->bs_flags |= Dee_CODE_FVARARGS;
 	}
 
 	result_globala = 0;
@@ -8215,29 +8215,29 @@ do_increase_buffer:
 #ifdef get_default_home_USE_readlink_proc_self_exe
 	size_t length;
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeUnixSystem_PrintLinkString(&printer, "/proc/self/exe");
 	if unlikely(error != 0) {
 		if (error < 0)
 			goto err_printer;
 		/* Fallback... */
 bad_path:
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		goto fallback;
 	}
-	length = UNICODE_PRINTER_LENGTH(&printer);
+	length = Dee_UNICODE_PRINTER_LENGTH(&printer);
 	if unlikely(!length)
 		goto bad_path;
-	while (length && UNICODE_PRINTER_GETCHAR(&printer, length - 1) != '/')
+	while (length && Dee_UNICODE_PRINTER_GETCHAR(&printer, length - 1) != '/')
 		--length;
 	if unlikely(!length)
 		goto fallback;
-	while (length && UNICODE_PRINTER_GETCHAR(&printer, length - 1) == '/')
+	while (length && Dee_UNICODE_PRINTER_GETCHAR(&printer, length - 1) == '/')
 		--length;
-	unicode_printer_truncate(&printer, length + 1);
-	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	Dee_unicode_printer_truncate(&printer, length + 1);
+	return (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* get_default_home_USE_readlink_proc_self_exe */
 

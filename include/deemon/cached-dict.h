@@ -17,8 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_cached_dict_**/
+/*!export DeeCachedDict**/
 #ifndef GUARD_DEEMON_CACHED_DICT_H
-#define GUARD_DEEMON_CACHED_DICT_H 1
+#define GUARD_DEEMON_CACHED_DICT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -29,20 +32,13 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_cached_dict_item   cached_dict_item
-#define Dee_cached_dict_object cached_dict_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_cached_dict_object DeeCachedDictObject;
-
 struct Dee_cached_dict_item {
 	DREF DeeObject *cdi_key;   /* [0..1][lock(:cd_lock)] Dictionary item key. */
 	DREF DeeObject *cdi_value; /* [1..1][valid_if(cdi_key)][lock(:cd_lock)] Dictionary item value. */
 	Dee_hash_t      cdi_hash;  /* [valid_if(cdi_key)][lock(:cd_lock)] Hash of `cdi_key' */
 };
 
-struct Dee_cached_dict_object {
+typedef struct Dee_cached_dict_object {
 	Dee_OBJECT_HEAD
 	size_t                       cd_mask; /* [lock(cd_lock)][> cd_size || cd_mask == 0] Allocated dictionary size. */
 	size_t                       cd_size; /* [lock(cd_lock)][< cd_mask || cd_mask == 0] Amount of non-NULL key-item pairs. */
@@ -52,7 +48,7 @@ struct Dee_cached_dict_object {
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t          cd_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
-};
+} DeeCachedDictObject;
 
 /* Locking helpers for `DeeDictObject' */
 #define DeeCachedDict_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->cd_lock)

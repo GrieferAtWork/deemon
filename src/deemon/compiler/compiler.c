@@ -60,7 +60,7 @@ DECL_BEGIN
 PUBLIC Dee_rshared_rwlock_t DeeCompiler_Lock = Dee_RSHARED_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
-PUBLIC struct weakref DeeCompiler_Active   = WEAKREF_INIT;
+PUBLIC Dee_WEAKREF(DeeCompilerObject) DeeCompiler_Active = Dee_WEAKREF_INIT;
 PRIVATE DeeCompilerObject *compiler_loaded = NULL; /* == DeeCompiler_Active */
 
 PRIVATE void *DCALL
@@ -257,7 +257,7 @@ DeeCompiler_New(DeeObject *__restrict module, uint16_t flags)
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!result->cp_scope)
 		goto err_r;
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	bzero(&result->cp_tags, sizeof(result->cp_tags));
 	bzero(&result->cp_items, sizeof(result->cp_items));
 	result->cp_flags           = flags;
@@ -294,7 +294,7 @@ err_r:
 
 PRIVATE NONNULL((1)) void DCALL
 compiler_fini(DeeCompilerObject *__restrict self) {
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 
 	/* Make sure that the compiler is fully unloaded. */
 	DeeCompiler_Unload(self);
@@ -310,8 +310,8 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 		self->cp_tags.at_anno.an_annoa = 0;
 		self->cp_tags.at_anno.an_annov = NULL;
 	}
-	unicode_printer_fini(&self->cp_tags.at_decl);
-	unicode_printer_fini(&self->cp_tags.at_doc);
+	Dee_unicode_printer_fini(&self->cp_tags.at_decl);
+	Dee_unicode_printer_fini(&self->cp_tags.at_doc);
 
 	/* Always set the error-flag to prevent TPP from attempting
 	 * to warn about stuff like unclosed if-blocks, because now
@@ -359,7 +359,7 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 	 * >> local sym = com.rootscope.newlocal("foo", loc: none);
 	 * >> sym.setconst(com); // Reference loop */
 	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeCompilerObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeCompilerObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
@@ -557,7 +557,7 @@ DeeExec_CompileModuleStream_impl(DeeObject *source_stream,
 		current_basescope->bs_argc    = 1;
 		current_basescope->bs_argv[0] = dots;
 		current_basescope->bs_varargs = dots;
-		current_basescope->bs_flags |= CODE_FVARARGS;
+		current_basescope->bs_flags |= Dee_CODE_FVARARGS;
 	}
 
 	(void)default_symbols; /* TODO */

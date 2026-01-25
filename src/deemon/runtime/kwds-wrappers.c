@@ -59,8 +59,8 @@ DECL_BEGIN
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeBlackListKwdsObject, blki_map); /* [1..1][const] The associated keywords mapping. */
-	struct kwds_entry                           *blki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
-	struct kwds_entry                           *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	struct Dee_kwds_entry                           *blki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
+	struct Dee_kwds_entry                           *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } DeeBlackListKwdsIterator;
 
 INTDEF DeeTypeObject DeeBlackListKwdsIterator_Type;
@@ -114,10 +114,10 @@ STATIC_ASSERT(offsetof(DeeBlackListKwdsIterator, blki_map) == offsetof(ProxyObje
 #define blvi_fini  generic_proxy__fini
 #define blvi_visit generic_proxy__visit
 
-PRIVATE WUNUSED NONNULL((1)) struct kwds_entry *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct Dee_kwds_entry *DCALL
 blvi_nextiter(DeeBlackListKwdsIterator *__restrict self) {
-	struct kwds_entry *iter;
-	struct kwds_entry *old_iter;
+	struct Dee_kwds_entry *iter;
+	struct Dee_kwds_entry *old_iter;
 again:
 	iter     = BLVI_GETITER(self);
 	old_iter = iter;
@@ -142,7 +142,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_nextpair(DeeBlackListKwdsIterator *__restrict self,
               DREF DeeObject *key_and_value[2]) {
 	DREF DeeObject *value;
-	struct kwds_entry *ent;
+	struct Dee_kwds_entry *ent;
 	ent = blvi_nextiter(self);
 	if (!ent)
 		return 1;
@@ -162,7 +162,7 @@ blvi_nextpair(DeeBlackListKwdsIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 blvi_nextkey(DeeBlackListKwdsIterator *__restrict self) {
-	struct kwds_entry *ent;
+	struct Dee_kwds_entry *ent;
 	ent = blvi_nextiter(self);
 	if (!ent)
 		return (DREF DeeStringObject *)ITER_DONE;
@@ -172,7 +172,7 @@ blvi_nextkey(DeeBlackListKwdsIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blvi_nextvalue(DeeBlackListKwdsIterator *__restrict self) {
 	DREF DeeObject *result;
-	struct kwds_entry *ent;
+	struct Dee_kwds_entry *ent;
 	ent = blvi_nextiter(self);
 	if (!ent)
 		return ITER_DONE;
@@ -204,7 +204,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_compare(DeeBlackListKwdsIterator *self, DeeBlackListKwdsIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeBlackListKwdsIterator_Type))
 		goto err;
-	Dee_return_compareT(struct kwds_entry *, BLVI_GETITER(self),
+	Dee_return_compareT(struct Dee_kwds_entry *, BLVI_GETITER(self),
 	                    /*                */ BLVI_GETITER(other));
 err:
 	return Dee_COMPARE_ERR;
@@ -736,7 +736,7 @@ blv_foreach_pair(DeeBlackListKwdsObject *self, Dee_foreach_pair_t proc, void *ar
 	DeeKwdsObject *kwds = self->blkd_kwds;
 	for (i = 0; i <= kwds->kw_mask; ++i) {
 		DeeObject *value;
-		struct kwds_entry *entry = &kwds->kw_map[i];
+		struct Dee_kwds_entry *entry = &kwds->kw_map[i];
 		if (!entry->ke_name)
 			continue;
 		if (DeeBlackListKwds_IsBlackListed(self, (DeeObject *)entry->ke_name))
@@ -1099,7 +1099,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
  *    >> // Prints `_BlackListKwds { "something_else" : "foobar" }'
  *    >> foo(x: 10, something_else: "foobar"); */
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeBlackListKwds_New(struct code_object *__restrict code,
+DeeBlackListKwds_New(struct Dee_code_object *__restrict code,
                      size_t positional_argc, DeeObject *const *kw_argv,
                      DeeKwdsObject *__restrict kwds) {
 	DREF DeeBlackListKwdsObject *result;
@@ -2046,7 +2046,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
  *    >> // Prints `_BlackListKw { "something_else" : "foobar" }'
  *    >> foo(**{ "x" : 10, "something_else" : "foobar" }); */
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeBlackListKw_New(struct code_object *__restrict code,
+DeeBlackListKw_New(struct Dee_code_object *__restrict code,
                    size_t positional_argc,
                    DeeObject *__restrict kw) {
 	DREF DeeBlackListKwObject *result;

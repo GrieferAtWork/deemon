@@ -55,11 +55,11 @@ default_map_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 __map_hash__.map_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias("default__seq_operator_hash__unsupported")}
 %{$none = 0}
-%{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
+%{$empty = Dee_HASHOF_EMPTY_SEQUENCE}
 %{$with__map_operator_foreach_pair =
 [[prefix(DEFINE_default_map_hash_with_foreach_pair_cb)]]
 [[prefix(DEFINE_map_handle_hash_error)]] {
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
 	if unlikely(CALL_DEPENDENCY(map_operator_foreach_pair, self,
 	                            &default_map_hash_with_foreach_pair_cb,
 	                            &result))

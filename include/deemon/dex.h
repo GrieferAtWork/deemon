@@ -17,8 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DEX_**/
+/*!export DEXSYM_**/
+/*!export Dee_DEX_**/
+/*!export Dee_DEXSYM_**/
+/*!export _Dee_MODULE_DEXDATA_**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_DEX_H
-#define GUARD_DEEMON_DEX_H 1
+#define GUARD_DEEMON_DEX_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -58,11 +65,6 @@ DECL_BEGIN
 #define DEX_GETTER_NODOC   Dee_DEX_GETTER_NODOC
 #define DEX_END            Dee_DEX_END
 #endif /* !CONFIG_BUILDING_DEEMON */
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#define Dee_dex_object     dex_object
-#define Dee_dex_symbol     dex_symbol
-#define Dee_dex            dex
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #endif /* DEE_SOURCE */
 
 
@@ -108,28 +110,28 @@ struct Dee_module_dexdata {
 
 #if defined(CONFIG_BUILDING_DEEMON) || defined(CONFIG_BUILDING_DEX)
 #ifdef CONFIG_HAVE___dex_start____AND___end
-INTDEF __BYTE_TYPE__ __dex_start__[];
-INTDEF __BYTE_TYPE__ _end[];
+INTDEF __BYTE_TYPE__ __dex_start__[]; /*!export-*/
+INTDEF __BYTE_TYPE__ _end[];          /*!export-*/
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS __dex_start__, _end - 1, { NULL, NULL, NULL }
 #else /* CONFIG_HAVE___dex_start____AND___end */
 #define _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS NULL, NULL, { NULL, NULL, NULL }
 #endif /* !CONFIG_HAVE___dex_start____AND___end */
 
 #ifndef __ATTR_WEAK_IS_ATTR_SELECTANY
-#define _DEE_ELF_ATTR_WEAK __ATTR_WEAK
+#define _Dee_PRIVATE_ELF_ATTR_WEAK __ATTR_WEAK
 #else /* !__ATTR_WEAK_IS_ATTR_SELECTANY */
-#define _DEE_ELF_ATTR_WEAK /* nothing */
+#define _Dee_PRIVATE_ELF_ATTR_WEAK /* nothing */
 #endif /* __ATTR_WEAK_IS_ATTR_SELECTANY */
 
 #ifdef CONFIG_HAVE___dex_buildid__
-INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_buildid__[];
+INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_buildid__[]; /*!export-*/
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID (union Dee_module_buildid const *)(__dex_buildid__ + 16)
 #elif defined(CONFIG_HAVE___dex_builduuid64__)
 DECL_END
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 DECL_BEGIN
-INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_0__[];
-INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_1__[];
+INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_0__[]; /*!export-*/
+INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_1__[]; /*!export-*/
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
 	PRIVATE __UINT64_TYPE__ const _dex_buildid[2] = { \
@@ -148,10 +150,10 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid64_1__[];
 DECL_END
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 DECL_BEGIN
-INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_0__[];
-INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_1__[];
-INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_2__[];
-INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[];
+INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_0__[]; /*!export-*/
+INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_1__[]; /*!export-*/
+INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_2__[]; /*!export-*/
+INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[]; /*!export-*/
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define _Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK      \
 	PRIVATE __UINT32_TYPE__ const _dex_buildid[4] = { \
@@ -178,7 +180,7 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[];
 #define _Dee_MODULE_DEXDATA_INIT_BUILDTS __DATE__ "|" __TIME__
 #endif /* __DATE__ && __TIME__ */
 #endif /* !... */
-#undef _DEE_ELF_ATTR_WEAK
+#undef _Dee_PRIVATE_ELF_ATTR_WEAK
 
 #ifndef _Dee_MODULE_DEXDATA_INIT_BUILDTS
 #define _Dee_MODULE_DEXDATA_INIT_BUILDTS NULL
@@ -191,9 +193,9 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[];
 /* Helpers for defining DEX exports from C */
 #ifdef CONFIG_BUILDING_DEX
 #ifdef CONFIG_TRACE_REFCHANGES
-#define __Dee_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type, DEE_REFTRACKER_UNTRACKED
+#define _Dee_PRIVATE_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type, DEE_REFTRACKER_UNTRACKED
 #else /* CONFIG_TRACE_REFCHANGES */
-#define __Dee_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type
+#define _Dee_PRIVATE_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 #define Dee_DEX_BEGIN \
@@ -202,12 +204,12 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[];
 #define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, DOC(doc), Dee_AsObject(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), 0, 0 }
 #define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
 #define Dee_DEX_MEMBER_F_NODOC(name, obj, flags) Dee_DEX_MEMBER_F(name, obj, flags, NULL)
-#define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                                    \
-	{ name, DOC(doc), Dee_AsObject(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), 0, 0 }, \
-	{ NULL, NULL, Dee_AsObject(del), MODSYM_FNORMAL, 0, 0 },                                       \
-	{ NULL, NULL, Dee_AsObject(set), MODSYM_FNORMAL, 0, 0 }
+#define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                                \
+	{ name, DOC(doc), Dee_AsObject(get), Dee_DEXSYM_PROPERTY | ((flags) & ~Dee_DEXSYM_READONLY), 0, 0 }, \
+	{ NULL, NULL, Dee_AsObject(del), Dee_DEXSYM_NORMAL, 0, 0 },                                          \
+	{ NULL, NULL, Dee_AsObject(set), Dee_DEXSYM_NORMAL, 0, 0 }
 #define Dee_DEX_GETTER_F(name, get, flags, doc) \
-	{ name, DOC(doc), Dee_AsObject(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), 0, 0 }
+	{ name, DOC(doc), Dee_AsObject(get), Dee_DEXSYM_READONLY | Dee_DEXSYM_PROPERTY | (flags), 0, 0 }
 #define Dee_DEX_GETSET(name, get, del, set, doc)           Dee_DEX_GETSET_F(name, get, del, set, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETTER(name, get, doc)                     Dee_DEX_GETTER_F(name, get, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETSET_F_NODOC(name, get, del, set, flags) Dee_DEX_GETSET_F(name, get, del, set, flags, NULL)
@@ -215,15 +217,15 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[];
 #define Dee_DEX_GETSET_NODOC(name, get, del, set)          Dee_DEX_GETSET(name, get, del, set, NULL)
 #define Dee_DEX_GETTER_NODOC(name, get)                    Dee_DEX_GETTER(name, get, NULL)
 
-#define __Dee_NEXT_POWER_OF_2_IMPL_8(x)  (x | (x >> 1) | (x >> 2) | (x >> 3) | (x >> 4) | (x >> 5) | (x >> 6) | (x >> 7))
-#define __Dee_NEXT_POWER_OF_2_IMPL_16(x) (__Dee_NEXT_POWER_OF_2_IMPL_8(x) | __Dee_NEXT_POWER_OF_2_IMPL_8((x >> 8)))
-#define __Dee_NEXT_POWER_OF_2_16(x) ((__Dee_NEXT_POWER_OF_2_IMPL_16((x - 1))) + 1)
+#define _Dee_PRIVATE_NEXT_POWER_OF_2_IMPL_8(x)  (x | (x >> 1) | (x >> 2) | (x >> 3) | (x >> 4) | (x >> 5) | (x >> 6) | (x >> 7))
+#define _Dee_PRIVATE_NEXT_POWER_OF_2_IMPL_16(x) (_Dee_PRIVATE_NEXT_POWER_OF_2_IMPL_8(x) | _Dee_PRIVATE_NEXT_POWER_OF_2_IMPL_8((x >> 8)))
+#define _Dee_PRIVATE_NEXT_POWER_OF_2_16(x) ((_Dee_PRIVATE_NEXT_POWER_OF_2_IMPL_16((x - 1))) + 1)
 
 #define Dee_DEX_END(init, fini, clear)                                      \
 	};                                                                      \
 	STATIC_ASSERT_MSG(COMPILER_LENOF(_dex_symbols) > 0,                     \
 	                  "A DEX module must have at least 1 export");          \
-	enum { _DEX_BUCKETM = __Dee_NEXT_POWER_OF_2_16(COMPILER_LENOF(_dex_symbols) + 1) - 1 }; \
+	enum { _DEX_BUCKETM = _Dee_PRIVATE_NEXT_POWER_OF_2_16(COMPILER_LENOF(_dex_symbols) + 1) - 1 }; \
 	PRIVATE struct Dee_module_symbol _dex_bucketv[_DEX_BUCKETM + 1] = {};   \
 	Dee_MODULE_STRUCT(_dex_object_raw, COMPILER_LENOF(_dex_symbols));       \
 	struct _dex_object {                                                    \
@@ -246,7 +248,7 @@ INTDEF _DEE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[];
 		/* ._mdx_pad2   = */ { NULL, NULL, NULL }                           \
 	};                                                                      \
 	PUBLIC struct _dex_object DEX = {{ _Dee_GC_HEAD_UNTRACKED_INIT }, {     \
-		__Dee_DEX_OBJECT_HEAD_INIT,                                         \
+		_Dee_PRIVATE_DEX_OBJECT_HEAD_INIT,                                  \
 		/* .mo_absname = */ NULL, /* Filled at runtime... */                \
 		/* .mo_absnode = */ { NULL, NULL, NULL },                           \
 		/* .mo_libname = */ { NULL, { NULL }, { NULL, NULL, NULL }, NULL }, \
@@ -316,12 +318,12 @@ struct Dee_dex_symbol {
 #define Dee_DEX_MEMBER_F(name, obj, flags, doc)  { name, Dee_AsObject(obj), (flags) & ~(Dee_DEXSYM_PROPERTY), DOC(doc) }
 #define Dee_DEX_MEMBER_NODOC(name, obj)          Dee_DEX_MEMBER(name, obj, NULL)
 #define Dee_DEX_MEMBER_F_NODOC(name, obj, flags) Dee_DEX_MEMBER_F(name, obj, flags, NULL)
-#define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                              \
-	{ name, Dee_AsObject(get), MODSYM_FPROPERTY | ((flags) & ~MODSYM_FREADONLY), DOC(doc) }, \
-	{ NULL, Dee_AsObject(del), MODSYM_FNORMAL, NULL },                                       \
-	{ NULL, Dee_AsObject(set), MODSYM_FNORMAL, NULL }
+#define Dee_DEX_GETSET_F(name, get, del, set, flags, doc)                                          \
+	{ name, Dee_AsObject(get), Dee_DEXSYM_PROPERTY | ((flags) & ~Dee_DEXSYM_READONLY), DOC(doc) }, \
+	{ NULL, Dee_AsObject(del), Dee_DEXSYM_NORMAL, NULL },                                          \
+	{ NULL, Dee_AsObject(set), Dee_DEXSYM_NORMAL, NULL }
 #define Dee_DEX_GETTER_F(name, get, flags, doc) \
-	{ name, Dee_AsObject(get), MODSYM_FREADONLY | MODSYM_FPROPERTY | (flags), DOC(doc) }
+	{ name, Dee_AsObject(get), Dee_DEXSYM_READONLY | Dee_DEXSYM_PROPERTY | (flags), DOC(doc) }
 #define Dee_DEX_GETSET(name, get, del, set, doc)           Dee_DEX_GETSET_F(name, get, del, set, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETTER(name, get, doc)                     Dee_DEX_GETTER_F(name, get, Dee_DEXSYM_NORMAL, doc)
 #define Dee_DEX_GETSET_F_NODOC(name, get, del, set, flags) Dee_DEX_GETSET_F(name, get, del, set, flags, NULL)

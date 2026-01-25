@@ -303,7 +303,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #ifdef LOCAL_IS_SSTRIP
 	byte_t *end;
 #endif /* LOCAL_IS_SSTRIP */
-	struct bytes_printer printer;
+	struct Dee_bytes_printer printer;
 	byte_t *flush_start;
 #endif /* LOCAL_IS_LINES */
 	DeeObject *mask;
@@ -398,7 +398,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 	end = begin + size;
 #endif /* LOCAL_IS_SSTRIP */
 	flush_start = begin;
-	bytes_printer_init(&printer);
+	Dee_bytes_printer_init(&printer);
 	if (mask) {
 		/* Deal with a custom strip-character/sequence mask. */
 		while (begin < end) {
@@ -421,7 +421,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 					--flush_end;
 #endif /* !LOCAL_IS_SSTRIP */
 				if (flush_end < begin) {
-					if unlikely(bytes_printer_append(&printer, flush_start,
+					if unlikely(Dee_bytes_printer_append(&printer, flush_start,
 					                                 (size_t)(flush_end - flush_start)) < 0)
 						goto err_printer;
 					flush_start = begin; /* Skip over whitespace */
@@ -447,7 +447,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 					++new_flush_start;
 #endif /* !LOCAL_IS_SSTRIP */
 				if (new_flush_start > begin) {
-					if unlikely(bytes_printer_append(&printer, flush_start,
+					if unlikely(Dee_bytes_printer_append(&printer, flush_start,
 					                                 (size_t)(begin - flush_start)) < 0)
 						goto err_printer;
 					flush_start = new_flush_start; /* Skip over whitespace */
@@ -471,7 +471,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 				while (flush_end > flush_start && LOCAL_isspace(flush_end[-1]))
 					--flush_end;
 				if (flush_end < begin) {
-					if unlikely(bytes_printer_append(&printer, flush_start,
+					if unlikely(Dee_bytes_printer_append(&printer, flush_start,
 					                                 (size_t)(flush_end - flush_start)) < 0)
 						goto err_printer;
 					flush_start = begin; /* Skip over whitespace */
@@ -491,7 +491,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 				while (new_flush_start < end && LOCAL_isspace(*new_flush_start))
 					++new_flush_start;
 				if (new_flush_start > begin) {
-					if unlikely(bytes_printer_append(&printer, flush_start,
+					if unlikely(Dee_bytes_printer_append(&printer, flush_start,
 					                                 (size_t)(begin - flush_start)) < 0)
 						goto err_printer;
 					flush_start = new_flush_start; /* Skip over whitespace */
@@ -505,7 +505,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 
 	/* Check if the begin/end bounds remain unchanged. */
 #ifdef LOCAL_IS_LINES
-	if (!BYTES_PRINTER_SIZE(&printer))
+	if (!Dee_BYTES_PRINTER_SIZE(&printer))
 #endif /* LOCAL_IS_LINES */
 	{
 #if defined(LOCAL_IS_LSTRIP) && defined(LOCAL_IS_RSTRIP) && defined(LOCAL_IS_SSTRIP)
@@ -521,7 +521,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #endif /* ... */
 		{
 #ifdef LOCAL_IS_LINES
-			bytes_printer_fini(&printer);
+			Dee_bytes_printer_fini(&printer);
 #endif /* LOCAL_IS_LINES */
 #ifdef NEED_retself_noprinter
 #undef NEED_retself_noprinter
@@ -539,12 +539,12 @@ retself_noprinter:
 
 #ifdef LOCAL_IS_LINES
 	ASSERT(begin == end);
-	if unlikely(bytes_printer_append(&printer, flush_start,
+	if unlikely(Dee_bytes_printer_append(&printer, flush_start,
 	                                 (size_t)(begin - flush_start)) < 0)
 		goto err_printer;
-	return (DREF Bytes *)bytes_printer_pack(&printer);
+	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
 err_printer:
-	bytes_printer_fini(&printer);
+	Dee_bytes_printer_fini(&printer);
 #endif /* LOCAL_IS_LINES */
 err:
 	return NULL;

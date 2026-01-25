@@ -78,9 +78,7 @@ DECL_BEGIN
 #ifndef CONFIG_INT_CACHE_BITCOUNT
 #define CONFIG_INT_CACHE_BITCOUNT    64
 #endif /* !CONFIG_INT_CACHE_BITCOUNT */
-#ifdef DIGIT_BITS
-#define CONFIG_INT_CACHE_MAXCOUNT  ((CONFIG_INT_CACHE_BITCOUNT + (DIGIT_BITS-1)) / DIGIT_BITS)
-#endif /* DIGIT_BITS */
+#define CONFIG_INT_CACHE_MAXCOUNT  ((CONFIG_INT_CACHE_BITCOUNT + (Dee_DIGIT_BITS-1)) / Dee_DIGIT_BITS)
 #endif /* !CONFIG_INT_CACHE_MAXCOUNT */
 
 #if !CONFIG_INT_CACHE_MAXSIZE
@@ -131,8 +129,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL int_pow(DeeIntObject *a,
 INTDEF WUNUSED NONNULL((1)) int DCALL int_inc(DREF DeeIntObject **__restrict p_self);
 INTDEF WUNUSED NONNULL((1)) int DCALL int_dec(DREF DeeIntObject **__restrict p_self);
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b);
-INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_AddSDigit(DeeIntObject *__restrict a, Dee_sdigit_t b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, Dee_sdigit_t b);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_AddUInt32(DeeIntObject *__restrict a, uint32_t b);
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL DeeInt_SubUInt32(DeeIntObject *__restrict a, uint32_t b);
 

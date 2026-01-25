@@ -34,7 +34,7 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/tuple.h>
-#include <deemon/util/objectlist.h> /* OBJECTLIST_INIT, objectlist, objectlist_* */
+#include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_INIT, objectlist, objectlist_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
@@ -74,8 +74,8 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 #ifdef JIT_EVAL
 	JITSymbol var_symbol;
 	size_t expand_count;
-	struct objectlist expr_batch = OBJECTLIST_INIT;    /* Expressions that have already been written to. */
-	JITLValueList expr_comma     = JITLVALUELIST_INIT; /* Expressions that are pending getting assigned. */
+	struct Dee_objectlist expr_batch = Dee_OBJECTLIST_INIT;    /* Expressions that have already been written to. */
+	JITLValueList expr_comma         = JITLVALUELIST_INIT; /* Expressions that are pending getting assigned. */
 #endif /* JIT_EVAL */
 #if AST_COMMA_ALLOWVARDECLS == LOOKUP_SYM_ALLOWDECL
 	lookup_mode = mode & AST_COMMA_ALLOWVARDECLS;
@@ -200,7 +200,7 @@ err_var_symbol:
 				uint32_t ch;
 				char const *next;
 				next = (char const *)source_end;
-				ch   = unicode_readutf8_rev_n(&next, source_start);
+				ch   = Dee_unicode_readutf8_rev_n(&next, source_start);
 				if (!DeeUni_IsSpace(ch))
 					break;
 				source_end = (unsigned char const *)next;
@@ -436,7 +436,7 @@ err_currrent_var_symbol:
 			if unlikely(error)
 				goto err_current;
 		}
-		expand_count = objectlist_extendseq(&expr_batch, current);
+		expand_count = Dee_objectlist_extendseq(&expr_batch, current);
 		if unlikely(expand_count == (size_t)-1)
 			goto err_current;
 		Dee_Decref(current);
@@ -489,7 +489,7 @@ continue_at_comma:
 				                             self->jl_context);
 				if unlikely(!current)
 					goto err;
-				objectlist_fini(&expr_batch);
+				Dee_objectlist_fini(&expr_batch);
 				JITLValueList_Fini(&expr_comma);
 			} else {
 				error = JITLValueList_CopyObjects(&expr_comma,
@@ -500,8 +500,8 @@ continue_at_comma:
 				JITLValueList_Fini(&expr_comma);
 				/* Pack the branch together to form a multi-branch AST. */
 				current = seq_type == &DeeTuple_Type
-				          ? objectlist_packtuple(&expr_batch)
-				          : objectlist_packlist(&expr_batch);
+				          ? Dee_objectlist_packtuple(&expr_batch)
+				          : Dee_objectlist_packlist(&expr_batch);
 				if unlikely(!current)
 					goto err_nocomma;
 			}
@@ -590,7 +590,7 @@ err_store_source_current_lvalue:
 				DREF DeeObject **buf;
 				size_t i;
 				expand_count = expr_comma.ll_size;
-				buf          = objectlist_alloc(&expr_batch, expand_count);
+				buf          = Dee_objectlist_alloc(&expr_batch, expand_count);
 				if unlikely(!buf) {
 err_store_source:
 					Dee_Decref(store_source);
@@ -639,13 +639,13 @@ continue_expression_after_dots:
 					if unlikely(!current)
 						goto err_nocomma;
 					expr_batch.ol_elemc -= expand_count;
-					objectlist_fini(&expr_batch);
+					Dee_objectlist_fini(&expr_batch);
 				} else if (seq_type == &DeeTuple_Type) {
-					current = objectlist_packtuple(&expr_batch);
+					current = Dee_objectlist_packtuple(&expr_batch);
 					if unlikely(!current)
 						goto err_nocomma;
 				} else {
-					current = objectlist_packlist(&expr_batch);
+					current = Dee_objectlist_packlist(&expr_batch);
 					if unlikely(!current)
 						goto err_nocomma;
 				}
@@ -690,7 +690,7 @@ continue_expression_after_dots:
 			if (!(mode & AST_COMMA_STRICTCOMMA)) {
 				/* Append the generated expression to the batch. */
 #ifdef JIT_EVAL
-				error = objectlist_append(&expr_batch, current);
+				error = Dee_objectlist_append(&expr_batch, current);
 				if unlikely(error)
 					goto err_current;
 				Dee_Decref(current);
@@ -704,7 +704,7 @@ set_multiple_and_continue_at_comma:
 				JITLexer_Yield((JITLexer *)&smlex);
 				if (JITLexer_MaybeExpressionBegin((JITLexer *)&smlex)) {
 #ifdef JIT_EVAL
-					error = objectlist_append(&expr_batch, current);
+					error = Dee_objectlist_append(&expr_batch, current);
 					if unlikely(error)
 						goto err_current;
 					Dee_Decref(current);
@@ -725,7 +725,7 @@ done_expression:
 		/* Flush any remaining entries from the comma-list. */
 		if (!seq_type) {
 			JITLValueList_Fini(&expr_comma);
-			objectlist_fini(&expr_batch);
+			Dee_objectlist_fini(&expr_batch);
 		} else {
 			if (expr_comma.ll_size) {
 				error = JITLValueList_CopyObjects(&expr_comma,
@@ -737,16 +737,16 @@ done_expression:
 
 			/* Append the remaining expression to the batch. */
 			LOAD_LVALUE(current, err);
-			error = objectlist_append(&expr_batch, current);
+			error = Dee_objectlist_append(&expr_batch, current);
 			if unlikely(error)
 				goto err_current;
 			Dee_Decref(current);
 
 			/* Pack the branch together to form a multi-branch AST. */
 			if (seq_type == &DeeTuple_Type) {
-				current = objectlist_packtuple(&expr_batch);
+				current = Dee_objectlist_packtuple(&expr_batch);
 			} else {
-				current = objectlist_packlist(&expr_batch);
+				current = Dee_objectlist_packlist(&expr_batch);
 			}
 			if unlikely(!current)
 				goto err;
@@ -815,7 +815,7 @@ done_expression_nocurrent:
 				current = expr_batch.ol_elemv[expr_batch.ol_elemc]; /* Inherit */
 			}
 			JITLValueList_Fini(&expr_comma);
-			objectlist_fini(&expr_batch);
+			Dee_objectlist_fini(&expr_batch);
 		} else {
 			/* Flush any remaining entries from the comma-list. */
 			if (expr_comma.ll_size) {
@@ -829,9 +829,9 @@ done_expression_nocurrent:
 
 			/* Pack the branch together to form a multi-branch AST. */
 			if (seq_type == &DeeTuple_Type) {
-				current = objectlist_packtuple(&expr_batch);
+				current = Dee_objectlist_packtuple(&expr_batch);
 			} else {
-				current = objectlist_packlist(&expr_batch);
+				current = Dee_objectlist_packlist(&expr_batch);
 			}
 			if unlikely(!current)
 				goto err_nocomma;
@@ -866,7 +866,7 @@ err:
 #ifdef JIT_EVAL
 	JITLValueList_Fini(&expr_comma);
 err_nocomma:
-	objectlist_fini(&expr_batch);
+	Dee_objectlist_fini(&expr_batch);
 err_noexpr:
 #endif /* JIT_EVAL */
 	return ERROR;

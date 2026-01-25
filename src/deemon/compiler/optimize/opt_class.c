@@ -39,13 +39,13 @@
 DECL_BEGIN
 
 /* Returns the address of a given operator `name' */
-PRIVATE WUNUSED NONNULL((1)) struct class_operator *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct Dee_class_operator *DCALL
 DeeClassDescriptorObject_GetOperatorAddr(DeeClassDescriptorObject *__restrict self,
                                          Dee_operator_t name) {
 	Dee_operator_t i, perturb;
 	i = perturb = name & self->cd_clsop_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
-		struct class_operator *entry;
+		struct Dee_class_operator *entry;
 		entry = &self->cd_clsop_list[i & self->cd_clsop_mask];
 		if (entry->co_name != name) {
 			if (entry->co_name == (Dee_operator_t)-1)
@@ -60,20 +60,20 @@ DeeClassDescriptorObject_GetOperatorAddr(DeeClassDescriptorObject *__restrict se
 	return NULL;
 }
 
-INTDEF struct class_operator empty_class_operators[];
+INTDEF struct Dee_class_operator empty_class_operators[];
 
 /* Rename the name of `slot' to `new_name' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
-                                 struct class_operator *slot,
+                                 struct Dee_class_operator *slot,
                                  Dee_operator_t new_name) {
 	Dee_operator_t mask, i, j, perturb;
-	struct class_operator *new_table;
+	struct Dee_class_operator *new_table;
 	ASSERT(slot >= self->cd_clsop_list &&
 	       slot <= self->cd_clsop_list + self->cd_clsop_mask);
 	ASSERT(slot->co_name != new_name);
 	mask      = self->cd_clsop_mask;
-	new_table = (struct class_operator *)Dee_Mallocac(mask + 1, sizeof(struct class_operator));
+	new_table = (struct Dee_class_operator *)Dee_Mallocac(mask + 1, sizeof(struct Dee_class_operator));
 	if unlikely(!new_table)
 		goto err;
 
@@ -81,11 +81,11 @@ class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
 	slot->co_name = new_name;
 
 	/* Fill the new table with all unused entries. */
-	memset(new_table, 0xff, (mask + 1) * sizeof(struct class_operator));
+	memset(new_table, 0xff, (mask + 1) * sizeof(struct Dee_class_operator));
 
 	/* Rehash all pre-existing bindings. */
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
-		struct class_operator *op, *new_op;
+		struct Dee_class_operator *op, *new_op;
 		op = &self->cd_clsop_list[i];
 		if (op->co_name == (Dee_operator_t)-1)
 			continue; /* Unused entry. */
@@ -97,13 +97,13 @@ class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
 			if (new_op->co_name == (Dee_operator_t)-1)
 				break;
 		}
-		memcpy(new_op, op, sizeof(struct class_operator));
+		memcpy(new_op, op, sizeof(struct Dee_class_operator));
 	}
 
 	/* Install the new table and mask. */
 	ASSERT(self->cd_clsop_list != empty_class_operators);
 	memcpyc(self->cd_clsop_list, new_table,
-	        mask + 1, sizeof(struct class_operator));
+	        mask + 1, sizeof(struct Dee_class_operator));
 	Dee_Freea(new_table);
 	return 0;
 err:
@@ -153,7 +153,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int
 (DCALL ast_try_optimize_class_operator_str2print)(struct ast *__restrict self,
-                                                  struct class_operator *operator_str,
+                                                  struct Dee_class_operator *operator_str,
                                                   Dee_operator_t new_operator) {
 	size_t i;
 	struct class_member *str_member;
@@ -171,8 +171,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	       operator_str <= desc->cd_clsop_list + desc->cd_clsop_mask);
 	ASSERT(operator_str->co_name == OPERATOR_STR ||
 	       operator_str->co_name == OPERATOR_REPR);
-	ASSERT(new_operator == CLASS_OPERATOR_PRINT ||
-	       new_operator == CLASS_OPERATOR_PRINTREPR);
+	ASSERT(new_operator == Dee_CLASS_OPERATOR_PRINT ||
+	       new_operator == Dee_CLASS_OPERATOR_PRINTREPR);
 
 	/* Find the class member used to initialize `str_addr' */
 	for (i = 0;; ++i) {
@@ -196,9 +196,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	str_scope = str_func->a_function.f_scope;
 	if (!(str_scope->bs_cflags & BASESCOPE_FRETURN))
 		goto done;
-	if (str_scope->bs_flags & CODE_FYIELDING)
+	if (str_scope->bs_flags & Dee_CODE_FYIELDING)
 		goto done;
-	if (!(str_scope->bs_flags & CODE_FTHISCALL))
+	if (!(str_scope->bs_flags & Dee_CODE_FTHISCALL))
 		goto done;
 	if (str_scope->bs_argc != 0)
 		goto done;
@@ -206,7 +206,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 	ASSERTF(str_scope->bs_argc_max == 0, "Then why is `str_scope->bs_argc == 0'?");
 	ASSERTF(!str_scope->bs_varargs, "Then why is `str_scope->bs_argc == 0'?");
 	ASSERTF(!str_scope->bs_varkwds, "Then why is `str_scope->bs_argc == 0'?");
-	ASSERTF(str_scope->bs_this, "Then why is `str_scope->bs_flags & CODE_FTHISCALL'?");
+	ASSERTF(str_scope->bs_this, "Then why is `str_scope->bs_flags & Dee_CODE_FTHISCALL'?");
 
 	/* TODO: Don't require there to be a single return statement.
 	 * Just replace all return statements with prints:
@@ -285,7 +285,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 #ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
 	{
 		char const *cname = desc->cd_name ? DeeString_STR(desc->cd_name) : "<anonymous>";
-		char const *oname = new_operator == CLASS_OPERATOR_PRINT ? "str" : "repr";
+		char const *oname = new_operator == Dee_CLASS_OPERATOR_PRINT ? "str" : "repr";
 		OPTIMIZE_VERBOSEAT(str_func,
 		                   "Optimize `%s.operator %s() { [...] return EXPR; }' "
 		                   /* */ "-> `%s.operator %s(<fp>) { [...] print <fp>: (EXPR,)...,; }'\n",
@@ -340,17 +340,17 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	 * >> } */
 	if (self->a_class.c_desc->a_type == AST_CONSTEXPR &&
 	    DeeClassDescriptor_Check(self->a_class.c_desc->a_constexpr)) {
-		struct class_operator *operator_str;
+		struct Dee_class_operator *operator_str;
 		DeeClassDescriptorObject *desc;
 		desc = (DeeClassDescriptorObject *)self->a_class.c_desc->a_constexpr;
 		if ((operator_str = DeeClassDescriptorObject_GetOperatorAddr(desc, OPERATOR_STR)) != NULL &&
-		    (DeeClassDescriptorObject_GetOperatorAddr(desc, CLASS_OPERATOR_PRINT) == NULL)) {
-			if (ast_try_optimize_class_operator_str2print(self, operator_str, CLASS_OPERATOR_PRINT))
+		    (DeeClassDescriptorObject_GetOperatorAddr(desc, Dee_CLASS_OPERATOR_PRINT) == NULL)) {
+			if (ast_try_optimize_class_operator_str2print(self, operator_str, Dee_CLASS_OPERATOR_PRINT))
 				goto err;
 		}
 		if ((operator_str = DeeClassDescriptorObject_GetOperatorAddr(desc, OPERATOR_REPR)) != NULL &&
-		    (DeeClassDescriptorObject_GetOperatorAddr(desc, CLASS_OPERATOR_PRINTREPR) == NULL)) {
-			if (ast_try_optimize_class_operator_str2print(self, operator_str, CLASS_OPERATOR_PRINTREPR))
+		    (DeeClassDescriptorObject_GetOperatorAddr(desc, Dee_CLASS_OPERATOR_PRINTREPR) == NULL)) {
+			if (ast_try_optimize_class_operator_str2print(self, operator_str, Dee_CLASS_OPERATOR_PRINTREPR))
 				goto err;
 		}
 	}

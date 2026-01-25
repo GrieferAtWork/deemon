@@ -2362,7 +2362,7 @@ err:
 }
 
 DEX_BEGIN
-DEX_MEMBER_F("hash", &libhash_hash, MODSYM_FREADONLY,
+DEX_MEMBER_F("hash", &libhash_hash, Dee_DEXSYM_READONLY,
              "(name:?Dstring,data:?X2?Dstring?DBytes,start?:?Dint)->?Dint\n"
              "Calculate the hash of @data using the given hash function @name"),
 DEX_END(NULL, NULL, NULL);

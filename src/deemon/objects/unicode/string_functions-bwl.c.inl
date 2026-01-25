@@ -205,8 +205,8 @@ LOCAL_mempfil(LOCAL_uchar_t *__restrict dst, size_t num_words,
 #ifdef LOCAL_foldcmp
 PRIVATE WUNUSED ATTR_INS(1, 2) ATTR_OUTS(3, 4) size_t DCALL
 LOCAL_foldcmp(LOCAL_uchar_t const *__restrict data, size_t datalen,
-              uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len) {
-	uint32_t buf[UNICODE_FOLDED_MAX];
+              uint32_t fold[Dee_UNICODE_FOLDED_MAX], size_t fold_len) {
+	uint32_t buf[Dee_UNICODE_FOLDED_MAX];
 	size_t buflen;
 	ASSERT(datalen >= 1);
 	buflen = DeeUni_ToFolded(data[0], buf);
@@ -346,7 +346,7 @@ ok_3:
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 3) LOCAL_uchar_t *DCALL
 LOCAL_memcasechr(LOCAL_uchar_t const *__restrict haystack,
                  LOCAL_uchar_t needle, size_t haystack_length) {
-	uint32_t fold[UNICODE_FOLDED_MAX];
+	uint32_t fold[Dee_UNICODE_FOLDED_MAX];
 	size_t len = DeeUni_ToFolded(needle, fold);
 	for (; haystack_length; ++haystack, --haystack_length) {
 		if (LOCAL_foldcmp(haystack, haystack_length, fold, len))
@@ -362,7 +362,7 @@ PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 3) LOCAL_uchar_t *DCALL
 LOCAL_memcaserchr(LOCAL_uchar_t const *__restrict haystack,
                   LOCAL_uchar_t needle, size_t haystack_length) {
 	LOCAL_uchar_t const *iter = haystack + haystack_length;
-	uint32_t fold[UNICODE_FOLDED_MAX];
+	uint32_t fold[Dee_UNICODE_FOLDED_MAX];
 	size_t len     = DeeUni_ToFolded(needle, fold);
 	size_t datalen = 0;
 	while (iter > haystack) {
@@ -681,8 +681,8 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 		    && ((clhs = LOCAL_TRANSFORM(clhs)) != (crhs = LOCAL_TRANSFORM(crhs)))
 #endif /* !LOCAL_TRANSFORM_IS_NOOP */
 		    ) {
-			struct unitraits const *arec;
-			struct unitraits const *brec;
+			struct Dee_unitraits const *arec;
+			struct Dee_unitraits const *brec;
 			uintptr_t vala, valb; /* Unwind common digits. */
 			while (lhs > lhs_start) {
 				if (!DeeUni_IsDigit(lhs[-1]))
@@ -696,12 +696,12 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			/* Check if both strings have digit sequences in the same places. */
 			arec = DeeUni_Descriptor(clhs);
 			brec = DeeUni_Descriptor(crhs);
-			if (!(arec->ut_flags & UNICODE_ISDIGIT) &&
-			    !(brec->ut_flags & UNICODE_ISDIGIT))
+			if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT) &&
+			    !(brec->ut_flags & Dee_UNICODE_ISDIGIT))
 				return Dee_Compare(clhs, crhs); /* Deal with leading zeros. */
-			if ((arec->ut_flags & UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
+			if ((arec->ut_flags & Dee_UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
 				return Dee_COMPARE_LO;
-			if ((brec->ut_flags & UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
+			if ((brec->ut_flags & Dee_UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
 				return Dee_COMPARE_GR;
 
 			/* Compare digits. */
@@ -710,7 +710,7 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			while (--lhs_size) {
 				clhs   = *++lhs;
 				arec = DeeUni_Descriptor(clhs);
-				if (!(arec->ut_flags & UNICODE_ISDIGIT))
+				if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT))
 					break;
 				vala *= 10;
 				vala += arec->ut_digit_idx;
@@ -718,7 +718,7 @@ LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			while (--rhs_size) {
 				crhs   = *++rhs;
 				brec = DeeUni_Descriptor(crhs);
-				if (!(brec->ut_flags & UNICODE_ISDIGIT))
+				if (!(brec->ut_flags & Dee_UNICODE_ISDIGIT))
 					break;
 				valb *= 10;
 				valb += brec->ut_digit_idx;
@@ -751,8 +751,8 @@ LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 		if ((clhs = *lhs) != (crhs = *rhs) /* TODO: case-fold */
 		    && ((clhs = (LOCAL_uchar_t)DeeUni_ToLower(clhs)) !=
 		        (crhs = (LOCAL_uchar_t)DeeUni_ToLower(crhs)))) {
-			struct unitraits const *arec;
-			struct unitraits const *brec;
+			struct Dee_unitraits const *arec;
+			struct Dee_unitraits const *brec;
 			uintptr_t vala, valb; /* Unwind common digits. */
 			while (lhs > lhs_start) {
 				if (!DeeUni_IsDigit(lhs[-1]))
@@ -766,19 +766,19 @@ LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			/* Check if both strings have digit sequences in the same places. */
 			arec = DeeUni_Descriptor(clhs);
 			brec = DeeUni_Descriptor(crhs);
-			if (!(arec->ut_flags & UNICODE_ISDIGIT) &&
-			    !(brec->ut_flags & UNICODE_ISDIGIT))
+			if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT) &&
+			    !(brec->ut_flags & Dee_UNICODE_ISDIGIT))
 				return Dee_Compare(clhs, crhs); /* Deal with leading zeros. */
-			if ((arec->ut_flags & UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
+			if ((arec->ut_flags & Dee_UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
 				return Dee_COMPARE_LO;
-			if ((brec->ut_flags & UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
+			if ((brec->ut_flags & Dee_UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
 				return Dee_COMPARE_GR; /* Compare digits. */
 			vala = arec->ut_digit_idx;
 			valb = brec->ut_digit_idx;
 			while (--lhs_size) {
 				clhs   = *++lhs;
 				arec = DeeUni_Descriptor(clhs);
-				if (!(arec->ut_flags & UNICODE_ISDIGIT))
+				if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT))
 					break;
 				vala *= 10;
 				vala += arec->ut_digit_idx;
@@ -786,7 +786,7 @@ LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
 			while (--rhs_size) {
 				crhs   = *++rhs;
 				brec = DeeUni_Descriptor(crhs);
-				if (!(brec->ut_flags & UNICODE_ISDIGIT))
+				if (!(brec->ut_flags & Dee_UNICODE_ISDIGIT))
 					break;
 				valb *= 10;
 				valb += brec->ut_digit_idx;

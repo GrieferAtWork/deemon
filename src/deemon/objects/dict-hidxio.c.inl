@@ -90,7 +90,7 @@ F(Dee_dict_movhidx)(void *dst, void const *src, size_t n_words) {
 	LOCAL_memmove(dst, src, n_words);
 }
 
-#if LOCAL_HIDXIO_NBITS < ((1 << (DEE_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__)
+#if LOCAL_HIDXIO_NBITS < ((1 << (Dee_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__)
 INTERN NONNULL((1)) void DCALL
 F(Dee_dict_uprhidx)(void *dst, void const *src, size_t n_words) {
 	Tupr *tdst = (Tupr *)dst;
@@ -101,7 +101,7 @@ F(Dee_dict_uprhidx)(void *dst, void const *src, size_t n_words) {
 		tdst[n_words] = (Tupr)tsrc[n_words];
 	}
 }
-#endif /* LOCAL_HIDXIO_NBITS < ((1 << (DEE_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__) */
+#endif /* LOCAL_HIDXIO_NBITS < ((1 << (Dee_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__) */
 
 #if LOCAL_HIDXIO_NBITS > (1 * __CHAR_BIT__)
 INTERN NONNULL((1)) void DCALL

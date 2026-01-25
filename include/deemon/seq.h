@@ -17,8 +17,18 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeIterator_**/
+/*!export DeeRange_**/
+/*!export DeeRefVector_**/
+/*!export DeeSeqOne**/
+/*!export DeeSeqRange**/
+/*!export DeeSeqSome**/
+/*!export DeeSeq_**/
+/*!export DeeSharedVector_**/
+/*!export Dee_SEQCLASS_**/
 #ifndef GUARD_DEEMON_SEQ_H
-#define GUARD_DEEMON_SEQ_H 1
+#define GUARD_DEEMON_SEQ_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -115,10 +125,8 @@ DDATDEF DeeObject DeeIterator_EmptyInstance;
 /*******************************************************************************************/
 
 #ifdef DEE_SOURCE
-#define Dee_type_nii                    type_nii
-#define TYPE_ITERX_CLASS_UNIDIRECTIONAL Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL
-#define TYPE_ITERX_CLASS_BIDIRECTIONAL  Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL
-#define TYPE_ITERX_FNORMAL              Dee_TYPE_ITERX_FNORMAL
+#define Dee_type_nii type_nii
+/*!export type_nii*/
 #endif /* DEE_SOURCE */
 
 /* ==== NATIVE ITERATOR INTERFACE EXTENSIONS FOR TYPES ==== */
@@ -216,7 +224,7 @@ struct Dee_type_nii {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define nii_common _dee_aunion.nii_common
+#define nii_common _dee_aunion.nii_common /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -238,8 +246,8 @@ struct Dee_seq_range {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion_s
-#define sr_start  _dee_aunion_s.sr_start
-#define sr_istart _dee_aunion_s.sr_istart
+#define sr_start  _dee_aunion_s.sr_start  /*!export-*/
+#define sr_istart _dee_aunion_s.sr_istart /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 	union {
@@ -250,8 +258,8 @@ struct Dee_seq_range {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion_e
-#define sr_end  _dee_aunion_e.sr_end
-#define sr_iend _dee_aunion_e.sr_iend
+#define sr_end  _dee_aunion_e.sr_end  /*!export-*/
+#define sr_iend _dee_aunion_e.sr_iend /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };

@@ -463,7 +463,7 @@ struct_fini_cb(void *arg, DeeTypeObject *declaring_type,
 		break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT:
-		Dee_weakref_fini((struct weakref *)dst);
+		Dee_weakref_fini((struct Dee_weakref *)dst);
 		break;
 	case STRUCT_VARIANT:
 		Dee_variant_fini((struct Dee_variant *)dst);
@@ -501,7 +501,7 @@ struct_copy_cb(void *arg, DeeTypeObject *declaring_type,
 	}	break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT:
-		Dee_weakref_copy((struct weakref *)dst, (struct weakref *)src);
+		Dee_weakref_copy((struct Dee_weakref *)dst, (struct Dee_weakref *)src);
 		break;
 	case STRUCT_VARIANT:
 		Dee_variant_init_copy((struct Dee_variant *)dst, (struct Dee_variant *)src);
@@ -645,12 +645,12 @@ Dee_type_member_init(struct type_member const *desc,
 		break;
 	case STRUCT_WOBJECT_OPT:
 		if (DeeNone_Check(value)) {
-			Dee_weakref_initempty((struct weakref *)dst);
+			Dee_weakref_initempty((struct Dee_weakref *)dst);
 			return 0;
 		}
 		ATTR_FALLTHROUGH
 	case STRUCT_WOBJECT:
-		if unlikely(!Dee_weakref_init((struct weakref *)dst, value, NULL))
+		if unlikely(!Dee_weakref_init((struct Dee_weakref *)dst, value, NULL))
 			return err_cannot_weak_reference(value);
 		break;
 	case STRUCT_VARIANT:
@@ -671,7 +671,7 @@ Dee_type_member_init_unbound(struct type_member const *desc, DeeObject *self) {
 		*(DeeObject **)dst = NULL;
 		break;
 	case STRUCT_WOBJECT_OPT:
-		Dee_weakref_initempty((struct weakref *)dst);
+		Dee_weakref_initempty((struct Dee_weakref *)dst);
 		break;
 	case STRUCT_VARIANT:
 		Dee_variant_init_unbound((struct Dee_variant *)dst);
@@ -982,7 +982,7 @@ struct_printrepr_cb(void *arg, DeeTypeObject *declaring_type,
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT: {
 		DREF DeeObject *value;
-		value = Dee_weakref_lock((struct weakref *)src);
+		value = Dee_weakref_lock((struct Dee_weakref *)src);
 		if (!value)
 			return 0; /* Unbound */
 		result = struct_printrepr_prefix(data, field);
@@ -1245,14 +1245,14 @@ struct_hashof_field(DeeObject *self, struct type_member const *field) {
 	case STRUCT_OBJECT & ~STRUCT_CONST: {
 		DeeObject *obj = *(DeeObject *const *)src;
 		if (obj == NULL)
-			return DEE_HASHOF_UNBOUND_ITEM;
+			return Dee_HASHOF_UNBOUND_ITEM;
 		return DeeObject_Hash(obj);
 	}	break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT: {
-		DREF DeeObject *obj = Dee_weakref_lock((struct weakref *)src);
+		DREF DeeObject *obj = Dee_weakref_lock((struct Dee_weakref *)src);
 		if (obj == NULL)
-			return DEE_HASHOF_UNBOUND_ITEM;
+			return Dee_HASHOF_UNBOUND_ITEM;
 		return DeeObject_HashInherited(obj);
 	}	break;
 
@@ -1361,7 +1361,7 @@ struct_hashof_field(DeeObject *self, struct type_member const *field) {
 
 	default: break;
 	}
-	return DEE_HASHOF_UNBOUND_ITEM;
+	return Dee_HASHOF_UNBOUND_ITEM;
 }
 
 PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL

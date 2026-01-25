@@ -57,7 +57,7 @@ typedef struct {
 INTDEF Dee_ssize_t DCALL
 libdisasm_printinstr(Dee_formatprinter_t printer, void *arg,
                      instruction_t *__restrict instr_start,
-                     uint16_t stacksz, struct ddi_state *ddi_info,
+                     uint16_t stacksz, struct Dee_ddi_state *ddi_info,
                      DeeCodeObject *code, unsigned int flags);
 
 INTDEF Dee_ssize_t DCALL

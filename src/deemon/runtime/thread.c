@@ -330,7 +330,7 @@ try_utf8_to_wide(char const *__restrict name) {
 	if unlikely(!result)
 		return NULL;
 	dst = result;
-	while ((ch = unicode_readutf8(&name)) != 0) {
+	while ((ch = Dee_unicode_readutf8(&name)) != 0) {
 		if likely(ch <= 0xffff && (ch < 0xd800 || ch > 0xdfff)) {
 			*dst++ = (uint16_t)ch;
 		} else {
@@ -851,31 +851,31 @@ PRIVATE void DCALL
 stub_tc_fini(void *__restrict UNUSED(data)) {
 }
 
-PUBLIC struct tls_callback_hooks _DeeThread_TlsCallbacks = {
+PUBLIC struct Dee_tls_callback_hooks _DeeThread_TlsCallbacks = {
 	/* .tc_fini  = */ &stub_tc_fini,
 };
 
 
 
 PRIVATE DEFINE_STRING(main_thread_name, "MainThread");
-PUBLIC uint16_t DeeExec_StackLimit = DEE_CONFIG_DEFAULT_STACK_LIMIT;
+PUBLIC uint16_t DeeExec_StackLimit = Dee_EXEC_DEFAULT_STACK_LIMIT;
 
 
-PRIVATE struct deep_assoc_entry empty_deep_assoc[] = {
+PRIVATE struct Dee_deep_assoc_entry empty_deep_assoc[] = {
 	{ NULL, NULL }
 };
 
 
 PRIVATE NONNULL((1)) bool DCALL
 deepassoc_rehash(DeeThreadObject *__restrict self) {
-	struct deep_assoc_entry *new_vector, *iter, *end;
+	struct Dee_deep_assoc_entry *new_vector, *iter, *end;
 	size_t new_mask;
 	new_mask = self->t_deepassoc.da_mask;
 	new_mask = (new_mask << 1) | 1;
 	if unlikely(new_mask == 1)
 		new_mask = 64 - 1; /* Start out bigger than 2. */
 	ASSERT(self->t_deepassoc.da_used < new_mask);
-	new_vector = (struct deep_assoc_entry *)Dee_TryCallocc(new_mask + 1, sizeof(struct deep_assoc_entry));
+	new_vector = (struct Dee_deep_assoc_entry *)Dee_TryCallocc(new_mask + 1, sizeof(struct Dee_deep_assoc_entry));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->t_deepassoc.da_list == empty_deep_assoc) == (self->t_deepassoc.da_used == 0));
@@ -885,7 +885,7 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 		/* Re-insert all existing items into the new table vector. */
 		end = (iter = self->t_deepassoc.da_list) + (self->t_deepassoc.da_mask + 1);
 		for (; iter < end; ++iter) {
-			struct deep_assoc_entry *item;
+			struct Dee_deep_assoc_entry *item;
 			Dee_hash_t i, perturb;
 
 			/* Skip NULL entries. */
@@ -894,14 +894,14 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 			perturb = i = (Dee_HashPointer(iter->de_old) ^
 			               Dee_HashPointer(Dee_TYPE(iter->de_new))) &
 			              new_mask;
-			for (;; DEEPASSOC_HASHNX(i, perturb)) {
+			for (;; Dee_DEEPASSOC_HASHNX(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (!item->de_old)
 					break; /* Empty slot found. */
 			}
 
 			/* Transfer this object. */
-			memcpy(item, iter, sizeof(struct deep_assoc_entry));
+			memcpy(item, iter, sizeof(struct Dee_deep_assoc_entry));
 		}
 		Dee_Free(self->t_deepassoc.da_list);
 	}
@@ -942,8 +942,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *
 again:
 	mask    = self->t_deepassoc.da_mask;
 	perturb = i = hash & mask;
-	for (;; DEEPASSOC_HASHNX(i, perturb)) {
-		struct deep_assoc_entry *item = &self->t_deepassoc.da_list[i & mask];
+	for (;; Dee_DEEPASSOC_HASHNX(i, perturb)) {
+		struct Dee_deep_assoc_entry *item = &self->t_deepassoc.da_list[i & mask];
 		if (!item->de_old) {
 			if (self->t_deepassoc.da_used + 1 >= self->t_deepassoc.da_mask)
 				break; /* Rehash the table and try again. */
@@ -985,15 +985,15 @@ again:
 /* Lookup a GC association of `old_object', who's
  * new object is an exact instance of `new_type' */
 INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
-deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
+deepcopy_lookup(struct Dee_thread_object *thread_self, DeeObject *old_object,
                 DeeTypeObject *new_type) {
 	uintptr_t i, perturb;
 	uintptr_t hash = (Dee_HashPointer(old_object) ^
 	                  Dee_HashPointer(new_type));
-	perturb = i = DEEPASSOC_HASHST(&thread_self->t_deepassoc, hash);
-	for (;; DEEPASSOC_HASHNX(i, perturb)) {
-		struct deep_assoc_entry *item;
-		item = DEEPASSOC_HASHIT(&thread_self->t_deepassoc, i);
+	perturb = i = Dee_DEEPASSOC_HASHST(&thread_self->t_deepassoc, hash);
+	for (;; Dee_DEEPASSOC_HASHNX(i, perturb)) {
+		struct Dee_deep_assoc_entry *item;
+		item = Dee_DEEPASSOC_HASHIT(&thread_self->t_deepassoc, i);
 		if (item->de_old != old_object) {
 			if (!item->de_old)
 				break;
@@ -1007,11 +1007,11 @@ deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
 }
 
 INTERN NONNULL((1)) void DCALL
-deepcopy_clear(DeeThreadObject *__restrict thread_self) {
+deepcopy_clear(struct Dee_thread_object *__restrict thread_self) {
 	/* NOTE: Everything here is synchronized by lock(PRIVATE(DeeThread_Self())) */
-	struct deep_assoc_entry *begin;
+	struct Dee_deep_assoc_entry *begin;
 	size_t mask;
-	struct deep_assoc_entry *iter, *end;
+	struct Dee_deep_assoc_entry *iter, *end;
 	begin = thread_self->t_deepassoc.da_list;
 	mask  = thread_self->t_deepassoc.da_mask;
 	thread_self->t_deepassoc.da_list = empty_deep_assoc;
@@ -1063,7 +1063,7 @@ struct os_thread_object {
 };
 
 typedef struct os_thread_object DeeOSThreadObject;
-LIST_HEAD(thread_object_list, thread_object);
+LIST_HEAD(thread_object_list, Dee_thread_object);
 #define DeeThread_AsOSThread(self) COMPILER_CONTAINER_OF(self, DeeOSThreadObject, ot_thread)
 #ifndef DeeThread_USE_SINGLE_THREADED
 #define DeeThread_GetHThread(self) DeeThread_AsOSThread(self)->ot_hThread
@@ -1410,10 +1410,10 @@ DeeThread_DiscardAllInterrupts(DeeThreadObject *__restrict self) {
 		intr = self->t_interrupt.ti_intr;
 		args = self->t_interrupt.ti_args;
 		if (self->t_interrupt.ti_next) {
-			struct thread_interrupt *interrupt;
+			struct Dee_thread_interrupt *interrupt;
 			interrupt = self->t_interrupt.ti_next;
 			memcpy(&self->t_interrupt, interrupt,
-			       sizeof(struct thread_interrupt));
+			       sizeof(struct Dee_thread_interrupt));
 			Dee_thread_interrupt_free(interrupt);
 		} else {
 			self->t_interrupt.ti_intr = NULL;
@@ -2297,13 +2297,13 @@ again_check_for_interrupts:
 	if (atomic_read(&self->t_interrupt.ti_intr) != NULL) {
 		DREF DeeObject *intr;
 		DREF DeeTupleObject *args;
-		struct thread_interrupt *next;
+		struct Dee_thread_interrupt *next;
 		_DeeThread_AcquireInterrupt(self);
 		intr = self->t_interrupt.ti_intr;
 		args = self->t_interrupt.ti_args;
 		next = self->t_interrupt.ti_next;
 		if (next) {
-			memcpy(&self->t_interrupt, next, sizeof(struct thread_interrupt));
+			memcpy(&self->t_interrupt, next, sizeof(struct Dee_thread_interrupt));
 			/* Set the INTERRUPTED flag because there are more interrupts */
 			atomic_or(&self->t_state, Dee_THREAD_STATE_INTERRUPTED);
 		} else {
@@ -2366,7 +2366,7 @@ PUBLIC WUNUSED int (DCALL DeeThread_CheckInterrupt)(void) {
 
 /* Forward an appexit interrupt to the main thread. */
 PRIVATE NONNULL((1)) void DCALL
-forward_appexit_to_main_thread(/*inherit(always)*/ struct thread_interrupt *__restrict interrupt) {
+forward_appexit_to_main_thread(/*inherit(always)*/ struct Dee_thread_interrupt *__restrict interrupt) {
 	uint32_t state;
 	uintptr_t version;
 	for (;;) {
@@ -2392,7 +2392,7 @@ forward_appexit_to_main_thread(/*inherit(always)*/ struct thread_interrupt *__re
 		DeeThread_Main.ot_thread.t_interrupt.ti_args = interrupt->ti_args;
 	} else {
 		/* Complicated case: secondary interrupt */
-		struct thread_interrupt *prev;
+		struct Dee_thread_interrupt *prev;
 		prev = &DeeThread_Main.ot_thread.t_interrupt;
 		while (prev->ti_next)
 			prev = prev->ti_next;
@@ -2649,10 +2649,10 @@ handle_thread_error:
 		/* Special case: App-exit exception. */
 		if (DeeAppExit_Check(current)) {
 			/* Send an RPC to the main thread and have *it* propagate the exit request. */
-			struct except_frame *frame;
-			struct thread_interrupt *interrupt;
-			STATIC_ASSERT(sizeof(struct thread_interrupt) <=
-			              sizeof(struct except_frame));
+			struct Dee_except_frame *frame;
+			struct Dee_thread_interrupt *interrupt;
+			STATIC_ASSERT(sizeof(struct Dee_thread_interrupt) <=
+			              sizeof(struct Dee_except_frame));
 			frame = self->ot_thread.t_except;
 			self->ot_thread.t_except = frame->ef_prev;
 			--self->ot_thread.t_exceptsz;
@@ -2660,7 +2660,7 @@ handle_thread_error:
 			/* Convert the except frame into an interrupt frame. */
 			if (ITER_ISOK(frame->ef_trace))
 				Dee_Decref(frame->ef_trace);
-			interrupt = (struct thread_interrupt *)frame;
+			interrupt = (struct Dee_thread_interrupt *)frame;
 			interrupt->ti_intr = current; /* Inherited from the except frame. */
 			interrupt->ti_args = NULL;    /* Its an exception interrupt, so no callback args. */
 			forward_appexit_to_main_thread(interrupt);
@@ -3016,7 +3016,7 @@ DeeThread_Interrupt(/*Thread*/ DeeObject *self,
 	uintptr_t version;
 	DeeThreadObject *caller = DeeThread_Self();
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-	struct thread_interrupt *interrupt = NULL;
+	struct Dee_thread_interrupt *interrupt = NULL;
 	DeeThreadObject *me = (DeeThreadObject *)self;
 	ASSERT_OBJECT_TYPE(me, &DeeThread_Type);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(interrupt_args, &DeeTuple_Type);
@@ -3060,7 +3060,7 @@ again:
 		me->t_interrupt.ti_args = (DREF DeeTupleObject *)interrupt_args;
 	} else {
 		/* Complicated case: secondary interrupt */
-		struct thread_interrupt *prev;
+		struct Dee_thread_interrupt *prev;
 		if (interrupt == NULL) {
 			/* Must allocate a new descriptor. */
 			atomic_and(&me->t_state, ~Dee_THREAD_STATE_INTERRUPTING);
@@ -3258,24 +3258,24 @@ err:
 
 
 #ifndef DeeThread_USE_SINGLE_THREADED
-PRIVATE WUNUSED NONNULL((1)) struct except_frame *DCALL
-except_frame_copy_for_rethrow_or_unlock(struct except_frame *__restrict self,
+PRIVATE WUNUSED NONNULL((1)) struct Dee_except_frame *DCALL
+except_frame_copy_for_rethrow_or_unlock(struct Dee_except_frame *__restrict self,
                                         DeeThreadObject *__restrict thread) {
-	struct except_frame *result;
+	struct Dee_except_frame *result;
 	DeeErrorObject *thread_crash;
 	result = Dee_except_frame_tryalloc();
 	if unlikely(!result) {
 		_DeeThread_ReleaseSetup(thread);
 		if (Dee_CollectMemory(sizeof(struct Dee_except_frame)))
-			return (struct except_frame *)ITER_DONE;
+			return (struct Dee_except_frame *)ITER_DONE;
 		goto err;
 	}
 	thread_crash = DeeObject_TRYMALLOC(DeeErrorObject);
 	if unlikely(!thread_crash) {
 		_DeeThread_ReleaseSetup(thread);
 		if (Dee_CollectMemory(sizeof(DeeErrorObject))) {
-			except_frame_free(result);
-			return (struct except_frame *)ITER_DONE;
+			Dee_except_frame_free(result);
+			return (struct Dee_except_frame *)ITER_DONE;
 		}
 		goto err_result;
 	}
@@ -3291,31 +3291,31 @@ except_frame_copy_for_rethrow_or_unlock(struct except_frame *__restrict self,
 		Dee_Incref(self->ef_trace);
 	return result;
 err_result:
-	except_frame_free(result);
+	Dee_except_frame_free(result);
 err:
 	return NULL;
 }
 
 PRIVATE NONNULL((1)) void DCALL
-except_frame_free_for_rethrow(struct except_frame *__restrict self) {
+except_frame_free_for_rethrow(struct Dee_except_frame *__restrict self) {
 	DeeObject_FREE((DeeErrorObject *)self->ef_error);
 	Dee_DecrefNokill(&DeeError_ThreadCrash);
-	except_frame_free(self);
+	Dee_except_frame_free(self);
 }
 
 PRIVATE NONNULL((1)) bool DCALL
 DeeThread_RethrowExceptionsOrUnlock(DeeThreadObject *__restrict self) {
 	DeeThreadObject *caller;
-	struct except_frame *frames, *dst, *src;
+	struct Dee_except_frame *frames, *dst, *src;
 	ASSERT(self->t_except != NULL);
 	ASSERT(self->t_exceptsz != 0);
 	src    = self->t_except;
 	frames = except_frame_copy_for_rethrow_or_unlock(src, self);
 	if unlikely(!ITER_ISOK(frames))
-		return frames != (struct except_frame *)ITER_DONE;
+		return frames != (struct Dee_except_frame *)ITER_DONE;
 	dst = frames;
 	while ((src = src->ef_prev) != NULL) {
-		struct except_frame *next_copy;
+		struct Dee_except_frame *next_copy;
 		next_copy = except_frame_copy_for_rethrow_or_unlock(src, self);
 		if unlikely(!ITER_ISOK(next_copy)) {
 			for (;;) {
@@ -3324,7 +3324,7 @@ DeeThread_RethrowExceptionsOrUnlock(DeeThreadObject *__restrict self) {
 					break;
 				frames = frames->ef_prev;
 			}
-			return next_copy != (struct except_frame *)ITER_DONE;
+			return next_copy != (struct Dee_except_frame *)ITER_DONE;
 		}
 		dst->ef_prev = next_copy;
 		dst = dst->ef_prev;
@@ -3443,13 +3443,13 @@ thread_clear(DeeThreadObject *__restrict self) {
 	 *       though we're not allowed to assume that it won't start
 	 *       running in a moment (i.e. it may not have started yet) */
 	uint32_t state;
-	struct thread_interrupt old_intr;
-	struct except_frame *old_except;
+	struct Dee_thread_interrupt old_intr;
+	struct Dee_except_frame *old_except;
 	DREF DeeObject *old_objects[2];
 
 	/* Capture interrupts. */
 	_DeeThread_AcquireInterrupt(self);
-	memcpy(&old_intr, &self->t_interrupt, sizeof(struct thread_interrupt));
+	memcpy(&old_intr, &self->t_interrupt, sizeof(struct Dee_thread_interrupt));
 	self->t_interrupt.ti_next = NULL;
 	self->t_interrupt.ti_intr = NULL;
 	self->t_interrupt.ti_args = NULL;
@@ -3458,7 +3458,7 @@ thread_clear(DeeThreadObject *__restrict self) {
 	/* Decref() all pending interrupts. */
 	if (old_intr.ti_intr) {
 		for (;;) {
-			struct thread_interrupt *next;
+			struct Dee_thread_interrupt *next;
 			ASSERT(old_intr.ti_intr);
 			next = old_intr.ti_next;
 			if (ITER_ISOK(old_intr.ti_args))
@@ -3466,7 +3466,7 @@ thread_clear(DeeThreadObject *__restrict self) {
 			Dee_Decref(old_intr.ti_intr);
 			if (!next)
 				break;
-			memcpy(&old_intr, next, sizeof(struct thread_interrupt));
+			memcpy(&old_intr, next, sizeof(struct Dee_thread_interrupt));
 			Dee_thread_interrupt_free(next);
 		}
 	}
@@ -3506,12 +3506,12 @@ thread_clear(DeeThreadObject *__restrict self) {
 	Dee_XDecref(old_objects[0]);
 	Dee_XDecref(old_objects[1]);
 	while (old_except) {
-		struct except_frame *prev;
+		struct Dee_except_frame *prev;
 		prev = old_except->ef_prev;
 		Dee_Decref(old_except->ef_error);
 		if (ITER_ISOK(old_except->ef_trace))
 			Dee_Decref(old_except->ef_trace);
-		except_frame_free(old_except);
+		Dee_except_frame_free(old_except);
 		old_except = prev;
 	}
 }
@@ -3520,7 +3520,7 @@ thread_clear(DeeThreadObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 thread_visit(DeeThreadObject *__restrict self, Dee_visit_t proc, void *arg) {
 	uint32_t state;
-	struct thread_interrupt *iter;
+	struct Dee_thread_interrupt *iter;
 
 	/* Visit pending interrupts. */
 	_DeeThread_AcquireInterrupt(self);
@@ -3544,7 +3544,7 @@ thread_visit(DeeThreadObject *__restrict self, Dee_visit_t proc, void *arg) {
 	if (state & Dee_THREAD_STATE_STARTED) {
 		if (state & Dee_THREAD_STATE_TERMINATED) {
 			if (self->t_exceptsz) {
-				struct except_frame *except_iter;
+				struct Dee_except_frame *except_iter;
 				for (except_iter = self->t_except; except_iter;
 				     except_iter = except_iter->ef_prev) {
 					Dee_Visit(except_iter->ef_error);
@@ -3614,13 +3614,13 @@ thread_fini(DeeThreadObject *__restrict self) {
 		if (self->t_state & Dee_THREAD_STATE_TERMINATED) {
 			if (self->t_exceptsz) {
 				while (self->t_except) {
-					struct except_frame *frame;
+					struct Dee_except_frame *frame;
 					frame          = self->t_except;
 					self->t_except = frame->ef_prev;
 					Dee_Decref(frame->ef_error);
 					if (ITER_ISOK(frame->ef_trace))
 						Dee_Decref(frame->ef_trace);
-					except_frame_free(frame);
+					Dee_except_frame_free(frame);
 				}
 			} else {
 				Dee_Decref(self->t_inout.io_result);
@@ -4392,9 +4392,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_exit(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
 	DeeObject *result = Dee_None;
-	DREF struct threadexit_object *error;
+	DREF struct Dee_threadexit_object *error;
 	DeeArg_Unpack0Or1(err, argc, argv, "exit", &result);
-	error = DeeObject_MALLOC(struct threadexit_object);
+	error = DeeObject_MALLOC(struct Dee_threadexit_object);
 	if unlikely(!error)
 		goto err;
 	error->te_result = result;
@@ -4629,7 +4629,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
 thread_crashinfo(DeeThreadObject *__restrict self) {
 	uint16_t i, count;
 	DeeThreadObject *caller = DeeThread_Self();
-	struct except_frame *frame_iter;
+	struct Dee_except_frame *frame_iter;
 	DREF DeeTupleObject *result;
 again:
 	if (self != caller) {
@@ -5053,12 +5053,12 @@ localheap_malloc(struct localheap *__restrict self,
  * @return: true:  Fully captured the thread's stack. Check `heap' to see if memory was sufficient. */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
 thread_collect_traceback(DeeThreadObject *__restrict self,
-                         struct code_frame *__restrict dst,
+                         struct Dee_code_frame *__restrict dst,
                          struct localheap *__restrict heap) {
-	struct code_frame *iter = self->t_exec;
+	struct Dee_code_frame *iter = self->t_exec;
 	uint16_t count          = self->t_execsz;
 	size_t i;
-	for (; count && iter && iter != CODE_FRAME_NOT_EXECUTING;
+	for (; count && iter && iter != Dee_CODE_FRAME_NOT_EXECUTING;
 	     iter = iter->cf_prev, --count, ++dst) {
 		DeeCodeObject *code = iter->cf_func->fo_code;
 		ASSERT(!dst->cf_prev);
@@ -5074,7 +5074,7 @@ thread_collect_traceback(DeeThreadObject *__restrict self,
 		dst->cf_vargs = iter->cf_vargs;
 		XINCREF_IF_NONZERO(iter->cf_vargs);
 		dst->cf_this = iter->cf_this;
-		if (!(code->co_flags & CODE_FTHISCALL))
+		if (!(code->co_flags & Dee_CODE_FTHISCALL))
 			dst->cf_this = NULL;
 		Dee_XIncref(dst->cf_this);
 		dst->cf_result = iter->cf_result;
@@ -5103,7 +5103,7 @@ thread_collect_traceback(DeeThreadObject *__restrict self,
  *       in order to perform cleanup on any object that we attempted
  *       to acquire a reference to. */
 PRIVATE void DCALL
-clear_frames(size_t length, struct code_frame *__restrict vector) {
+clear_frames(size_t length, struct Dee_code_frame *__restrict vector) {
 	for (; length; --length, ++vector) {
 		DeeCodeObject *code;
 		ASSERT(vector->cf_func);
@@ -5134,7 +5134,7 @@ clear_frames(size_t length, struct code_frame *__restrict vector) {
  * frames with some that are allocated on the real heap.
  * Return false if allocation failed. */
 PRIVATE bool DCALL
-copy_dynmem(size_t length, struct code_frame *__restrict vector) {
+copy_dynmem(size_t length, struct Dee_code_frame *__restrict vector) {
 	for (; length; --length, ++vector) {
 		/* Must replace the frame (locals) and argument. */
 		DREF DeeObject **new_vector;
@@ -5202,7 +5202,7 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 			struct localheap heap;
 			traceback_size = atomic_read(&me->t_execsz);
 			result = (DeeTracebackObject *)DeeGCObject_Mallocc(offsetof(DeeTracebackObject, tb_frames),
-			                                                   traceback_size, sizeof(struct code_frame));
+			                                                   traceback_size, sizeof(struct Dee_code_frame));
 			if unlikely(!result)
 				goto err;
 
@@ -5219,7 +5219,7 @@ suspend_me:
 			/* zero-initialize all the frames to make our job easier below. */
 			bzeroc(result->tb_frames,
 			       traceback_size,
-			       sizeof(struct code_frame));
+			       sizeof(struct Dee_code_frame));
 
 			/* This is where it gets dangerous: Suspend the thread and collect information! */
 			COMPILER_BARRIER();
@@ -5244,7 +5244,7 @@ suspend_me:
 
 				traceback_size = traceback_used;
 				new_result = (DeeTracebackObject *)DeeGCObject_Reallocc(result, offsetof(DeeTracebackObject, tb_frames),
-				                                                        traceback_size, sizeof(struct code_frame));
+				                                                        traceback_size, sizeof(struct Dee_code_frame));
 				if unlikely(!new_result)
 					goto err_free_result;
 				result = new_result;
@@ -5292,7 +5292,7 @@ done_traceback_with_heap:
 			if (traceback_size != traceback_used) {
 				DeeTracebackObject *new_result;
 				new_result = (DeeTracebackObject *)DeeGCObject_TryReallocc(result, offsetof(DeeTracebackObject, tb_frames),
-				                                                           traceback_used, sizeof(struct code_frame));
+				                                                           traceback_used, sizeof(struct Dee_code_frame));
 				if likely(new_result)
 					result = new_result;
 			}
@@ -5331,8 +5331,8 @@ err:
 
 /* Returns the traceback of a given exception-frame, or
  * `NULL' if no traceback exists for the exception. */
-INTERN WUNUSED NONNULL((1)) struct traceback_object *DCALL
-except_frame_gettb(struct except_frame *__restrict self) {
+INTERN WUNUSED NONNULL((1)) struct Dee_traceback_object *DCALL
+except_frame_gettb(struct Dee_except_frame *__restrict self) {
 	if (self->ef_trace == (DREF DeeTracebackObject *)ITER_DONE)
 		self->ef_trace = DeeTraceback_New(DeeThread_Self());
 	return self->ef_trace;

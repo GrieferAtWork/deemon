@@ -148,12 +148,12 @@ JITLexer_SkipClass(JITLexer *__restrict self)
 	 *      in which case it is expected to hold the surrounding class's base-type.
 	 */
 
-	/* TODO: If present, do custom processing for `CLASS_OPERATOR_SUPERARGS' */
+	/* TODO: If present, do custom processing for `Dee_CLASS_OPERATOR_SUPERARGS' */
 	/* TODO: If present, do custom processing for `OPERATOR_CONSTRUCTOR'
 	 *       Note that in this case, it may be necessary to generate additional
 	 *       code in order to initialize class member prior to the normal construct
 	 *       being invoked. - This should be quite easy to do, as we can simply
-	 *       use a unicode_printer to build the auto-generated portion of the ctor.
+	 *       use a Dee_unicode_printer to build the auto-generated portion of the ctor.
 	 *       This would also solve the custom handling that's required for custom
 	 *       member initialization at the start of a constructor, as in:
 	 *       >> this(): foo(42), bar(17), baz = "hello" { ... }

@@ -223,13 +223,13 @@ INTERN WUNUSED int (DCALL ast_tags_clear)(void) {
 		ast_decref(anno->aa_func);
 		--current_tags.at_anno.an_annoc;
 	}
-	if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl)) {
-		unicode_printer_fini(&current_tags.at_decl);
-		unicode_printer_init(&current_tags.at_decl);
+	if (!Dee_UNICODE_PRINTER_ISEMPTY(&current_tags.at_decl)) {
+		Dee_unicode_printer_fini(&current_tags.at_decl);
+		Dee_unicode_printer_init(&current_tags.at_decl);
 	}
-	if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
-		unicode_printer_fini(&current_tags.at_doc);
-		unicode_printer_init(&current_tags.at_doc);
+	if (!Dee_UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
+		Dee_unicode_printer_fini(&current_tags.at_doc);
+		Dee_unicode_printer_init(&current_tags.at_doc);
 	}
 	current_tags.at_expect      = 0;
 	current_tags.at_class_flags = 0;
@@ -252,7 +252,7 @@ PRIVATE WUNUSED int DCALL append_decl_string(void) {
 	         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
 
 	/* Append a line-feed at the end. */
-	return unicode_printer_putascii(&current_tags.at_decl, '\n');
+	return Dee_unicode_printer_putascii(&current_tags.at_decl, '\n');
 err:
 	return -1;
 }
@@ -302,10 +302,10 @@ INTERN WUNUSED int (DCALL parse_tags)(void) {
 			}
 		}
 		token.t_file->f_pos = doc_end;
-		if unlikely(unicode_printer_print(&current_tags.at_doc, doc_start,
-		                                  (size_t)(doc_end - doc_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(&current_tags.at_doc, doc_start,
+		                                      (size_t)(doc_end - doc_start)) < 0)
 			goto err;
-		if unlikely(unicode_printer_putascii(&current_tags.at_doc, '\n'))
+		if unlikely(Dee_unicode_printer_putascii(&current_tags.at_doc, '\n'))
 			goto err;
 		if (yield() < 0)
 			goto err;
@@ -344,7 +344,7 @@ again_compiler_subtag:
 			} else if (IS_TAG("unlikely")) {
 				current_tags.at_expect |= AST_FCOND_UNLIKELY;
 			} else if (IS_TAG("copyable")) {
-				current_tags.at_code_flags |= CODE_FCOPYABLE;
+				current_tags.at_code_flags |= Dee_CODE_FCOPYABLE;
 			} else if (IS_TAG("inline")) {
 				/* Optional tag to try to inline an annotated function.
 				 * The tag is ignored if inlining could alter the behavior
@@ -396,19 +396,19 @@ again_compiler_subtag:
 				} else if (IS_TAG("unlikely")) {
 					current_tags.at_expect |= AST_FCOND_UNLIKELY;
 				} else if (IS_TAG("copyable")) {
-					current_tags.at_code_flags |= CODE_FCOPYABLE;
+					current_tags.at_code_flags |= Dee_CODE_FCOPYABLE;
 				} else if (IS_TAG("assembly")) {
-					current_tags.at_code_flags |= CODE_FASSEMBLY;
+					current_tags.at_code_flags |= Dee_CODE_FASSEMBLY;
 				} else if (IS_TAG("lenient")) {
-					current_tags.at_code_flags |= CODE_FLENIENT;
+					current_tags.at_code_flags |= Dee_CODE_FLENIENT;
 				} else if (IS_TAG("thiscall")) {
-					current_tags.at_code_flags |= CODE_FTHISCALL;
+					current_tags.at_code_flags |= Dee_CODE_FTHISCALL;
 				} else if (IS_TAG("heapframe")) {
-					current_tags.at_code_flags |= CODE_FHEAPFRAME;
+					current_tags.at_code_flags |= Dee_CODE_FHEAPFRAME;
 				} else if (IS_TAG("finally")) {
-					current_tags.at_code_flags |= CODE_FFINALLY;
+					current_tags.at_code_flags |= Dee_CODE_FFINALLY;
 				} else if (IS_TAG("constructor")) {
-					current_tags.at_code_flags |= CODE_FCONSTRUCTOR;
+					current_tags.at_code_flags |= Dee_CODE_FCONSTRUCTOR;
 				} else if (IS_TAG("doc")) {
 					if unlikely(yield() < 0)
 						goto err;

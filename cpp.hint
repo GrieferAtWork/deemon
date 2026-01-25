@@ -1018,15 +1018,11 @@
 #define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt;Ttype*ob_type;
 #define Dee_OBJECT_HEAD_EX(Ttype) Dee_refcnt_t ob_refcnt;Ttype*ob_type;
-#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;DeeObject*e_msg,*e_cause;
 #define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;DeeObject*e_msg,*e_cause;
-#define FILE_OBJECT_HEAD          Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 #define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 
 #define _Dee_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define WEAKREF_SUPPORT           struct Dee_weakref_list ob_weakrefs;
 #define Dee_WEAKREF_SUPPORT       struct Dee_weakref_list ob_weakrefs;
-#define WEAKREF(T)                struct Dee_weakref
 #define Dee_WEAKREF(T)            struct Dee_weakref
 
 #define Dee_SERIAL_HEAD struct Dee_serial_type *ser_type;
@@ -1048,40 +1044,25 @@
 
 #define DeeThread_FOREACH(t) for(;;)
 
-#define DDI_STATE_DO(ddi_xregs_iter,self) do
 #define Dee_DDI_STATE_DO(ddi_xregs_iter,self) do
-#define DDI_STATE_WHILE(ddi_xregs_iter,self) while(0)
 #define Dee_DDI_STATE_WHILE(ddi_xregs_iter,self) while(0)
 
 
-#define DEFINE_KWDS(n,...)                      DeeKwdsObject n={}
 #define Dee_DEFINE_KWDS(n,...)                  DeeKwdsObject n={}
 #define DEFINE_KWLIST(n,...)                    struct Dee_keyword n[]=__VA_ARGS__
 #define Dee_DEFINE_KWLIST(n,...)                struct Dee_keyword n[]=__VA_ARGS__
 #define DECLARE_KWLIST(n,...)                   struct Dee_keyword n[]=__VA_ARGS__
-#define DEFINE_BYTES(n,...)                     DeeBytesObject n={}
 #define Dee_DEFINE_BYTES(n,...)                 DeeBytesObject n={}
-#define DEFINE_BYTES_EX(n,...)                  DeeBytesObject n={}
 #define Dee_DEFINE_BYTES_EX(n,...)              DeeBytesObject n={}
-#define DEFINE_CODE(n,...)                      DeeCodeObject n={}
 #define Dee_DEFINE_CODE(n,...)                  DeeCodeObject n={}
-#define DEFINE_FUNCTION(n,...)                  DeeFunctionObject n={}
 #define Dee_DEFINE_FUNCTION(n,...)              DeeFunctionObject n={}
-#define DEFINE_FUNCTION_NOREFS(n,...)           DeeFunctionObject n={}
 #define Dee_DEFINE_FUNCTION_NOREFS(n,...)       DeeFunctionObject n={}
-#define DEFINE_YIELD_FUNCTION(n,...)            DeeYieldFunctionObject n={}
 #define Dee_DEFINE_YIELD_FUNCTION(n,...)        DeeYieldFunctionObject n={}
-#define DEFINE_YIELD_FUNCTION_NOARGS(n,...)     DeeYieldFunctionObject n={}
 #define Dee_DEFINE_YIELD_FUNCTION_NOARGS(n,...) DeeYieldFunctionObject n={}
-#define DEFINE_OBJMETHOD(n,...)                 DeeObjMethodObject n={}
 #define Dee_DEFINE_OBJMETHOD(n,...)             DeeObjMethodObject n={}
-#define DEFINE_KWOBJMETHOD(n,...)               DeeObjMethodObject n={}
 #define Dee_DEFINE_KWOBJMETHOD(n,...)           DeeObjMethodObject n={}
-#define DEFINE_CLSMETHOD(n,...)                 DeeClsMethodObject n={}
 #define Dee_DEFINE_CLSMETHOD(n,...)             DeeClsMethodObject n={}
-#define DEFINE_KWCLSMETHOD(n,...)               DeeClsMethodObject n={}
 #define Dee_DEFINE_KWCLSMETHOD(n,...)           DeeClsMethodObject n={}
-#define DEFINE_CLSPROPERTY(n,...)               DeeClsPropertyObject n={}
 #define Dee_DEFINE_CLSPROPERTY(n,...)           DeeClsPropertyObject n={}
 #define DEFINE_CMETHOD(n,...)                   DeeCMethodObject n={}
 #define Dee_DEFINE_CMETHOD(n,...)               DeeCMethodObject n={}
@@ -1332,124 +1313,19 @@
 #define DEX_END(...) };struct Dee_module_object DEX={}
 #define Dee_DEX_END(...) };struct Dee_module_object DEX={}
 
-#define appexit_object                 Dee_appexit_object
-#define ascii_printer                  Dee_ascii_printer
-#define attribute_object               Dee_attribute_object
-#define bool_object                    Dee_bool_object
-#define bytes_object                   Dee_bytes_object
-#define bytes_printer                  Dee_bytes_printer
-#define cell_object                    Dee_cell_object
-#define charptr                        Dee_dcharptr
-#define class_attribute                Dee_class_attribute
-#define class_desc                     Dee_class_desc
-#define class_descriptor_object        Dee_class_descriptor_object
-#define class_operator                 Dee_class_operator
-#define class_optable                  Dee_class_optable
-#define clsmember_object               Dee_clsmember_object
-#define clsmethod_object               Dee_clsmethod_object
-#define clsproperty_object             Dee_clsproperty_object
-#define clsproperty_origin             Dee_clsproperty_origin
-#define cmethod_object                 Dee_cmethod_object
-#define cmethod_origin                 Dee_cmethod_origin
-#define code_frame                     Dee_code_frame
-#define code_object                    Dee_code_object
-#define signal_object                  Dee_signal_object
-#define compiler_error_loc             Dee_compiler_error_loc
-#define compiler_error_object          Dee_compiler_error_object
-#define compiler_items                 Dee_compiler_items
-#define compiler_object                Dee_compiler_object
-#define compiler_options               Dee_compiler_options
-#define ddi_exdat                      Dee_ddi_exdat
-#define ddi_object                     Dee_ddi_object
-#define ddi_regs                       Dee_ddi_regs
-#define ddi_saved                      Dee_ddi_saved
-#define ddi_state                      Dee_ddi_state
-#define ddi_xregs                      Dee_ddi_xregs
-#define deep_assoc                     Dee_deep_assoc
-#define deep_assoc_entry               Dee_deep_assoc_entry
-#define dex                            Dee_dex
-#define dex_object                     Dee_dex_object
-#define dex_symbol                     Dee_dex_symbol
-#define dict_item                      Dee_dict_item
-#define dict_object                    Dee_dict_object
-#define enumattr_iterator_object       Dee_enumattr_iterator_object
-#define enumattr_object                Dee_enumattr_object
-#define error_object                   Dee_error_object
-#define except_frame                   Dee_except_frame
-#define except_handler                 Dee_except_handler
-#define file_buffer_link               Dee_file_buffer_link
-#define file_buffer_object             Dee_file_buffer_object
-#define file_object                    Dee_file_object
-#define file_reader_object             Dee_file_reader_object
-#define file_writer_object             Dee_file_writer_object
-#define filetype_object                Dee_filetype_object
-#define float_object                   Dee_float_object
-#define function_object                Dee_function_object
-#define gc_head                        Dee_gc_head
-#define gc_head_link                   Dee_gc_head_link
-#define hashset_item                   Dee_hashset_item
-#define hashset_object                 Dee_hashset_object
-#define instance_desc                  Dee_instance_desc
-#define instance_method                Dee_instance_method
-#define instancemember_object          Dee_instancemember_object
-#define int_object                     Dee_int_object
-#define list_object                    Dee_list_object
-#define memory_file_object             Dee_memory_file_object
-#define module_object                  Dee_module_object
-#define module_symbol                  Dee_module_symbol
-#define nomemory_error_object          Dee_nomemory_error_object
-#define none_object                    Dee_none_object
-#define object                         Dee_object_
-#define objmethod_object               Dee_objmethod_object
-#define objmethod_origin               Dee_objmethod_origin
-#define opinfo                         Dee_opinfo
-#define property_object                Dee_property_object
-#define regex_range                    Dee_regex_range
-#define regex_range_ex                 Dee_regex_range_ex
-#define regex_range_ptr                Dee_regex_range_ptr
-#define repr_frame                     Dee_repr_frame
-#define rodict_item                    Dee_rodict_item
-#define rodict_object                  Dee_rodict_object
-#define roset_item                     Dee_roset_item
-#define roset_object                   Dee_roset_object
-#define string_object                  Dee_string_object
-#define string_utf                     Dee_string_utf
-#define super_object                   Dee_super_object
-#define system_error_object            Dee_system_error_object
-#define system_file_object             Dee_system_file_object
-#define thread_interrupt               Dee_thread_interrupt
-#define thread_object                  Dee_thread_object
-#define threadexit_object              Dee_threadexit_object
-#define tls_callback_hooks             Dee_tls_callback_hooks
-#define traceback_object               Dee_traceback_object
-#define trepr_frame                    Dee_trepr_frame
-#define tuple_object                   Dee_tuple_object
-#define type_attr                      Dee_type_attr
-#define type_buffer                    Dee_type_buffer
-#define type_cast                      Dee_type_cast
-#define type_cmp                       Dee_type_cmp
-#define type_constructor               Dee_type_constructor
-#define type_gc                        Dee_type_gc
-#define type_getset                    Dee_type_getset
-#define type_math                      Dee_type_math
-#define type_member                    Dee_type_member
-#define type_method                    Dee_type_method
-#define type_nii                       Dee_type_nii
-#define type_object                    Dee_type_object
-#define type_operator                  Dee_type_operator
-#define type_seq                       Dee_type_seq
-#define type_with                      Dee_type_with
-#define type_callable                  Dee_type_callable
-#define unicode_printer                Dee_unicode_printer
-#define unitraits                      Dee_unitraits
-#define weakref                        Dee_weakref
-#define weakref_list                   Dee_weakref_list
-#define yield_function_iterator_object Dee_yield_function_iterator_object
-#define yield_function_object          Dee_yield_function_object
-#define keyword                        Dee_keyword
-#define kwds_entry                     Dee_kwds_entry
-#define kwds_mapping_object            dee_kwds_mapping_object
-#define kwds_object                    Dee_kwds_object
+#define type_attr        Dee_type_attr
+#define type_buffer      Dee_type_buffer
+#define type_cmp         Dee_type_cmp
+#define type_gc          Dee_type_gc
+#define type_getset      Dee_type_getset
+#define type_math        Dee_type_math
+#define type_member      Dee_type_member
+#define type_method      Dee_type_method
+#define type_nii         Dee_type_nii
+#define type_operator    Dee_type_operator
+#define type_seq         Dee_type_seq
+#define type_with        Dee_type_with
+#define type_callable    Dee_type_callable
 
 
 
@@ -1577,8 +1453,8 @@
 #define DEFINE_BYTES_COMPARE(n,...) DeeObject*n(Bytes*self,DeeObject*other){}
 #define DEFINE_SEQITERATOR_COMPARE(n,...) DeeObject*n(SeqIterator*self,SeqIterator*other){}
 #define DEFINE_COMPARE_ASBOOL_OPERATOR(n,...) int n(DeeObject*self,DeeObject*some_object){}
-#define DEE_DEFINE_BYTEWRITER_PUTX(n,T,x) int n(struct Dee_bytewriter*self,T x){}
-#define DEE_DEFINE_ATOMIC_HELPERS(n,T) \
+#define _Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(n,T,x) int n(struct Dee_bytewriter*self,T x){}
+#define _Dee_PRIVATE_DEFINE_ATOMIC_HELPERS(n,T) \
 	T _Dee_atomic_xch_no_threads_##n(T*p,T value){}\
 	T _Dee_atomic_fetchand_no_threads_##n(T*p,T value){}\
 	T _Dee_atomic_fetchor_no_threads_##n(T*p,T value){}\

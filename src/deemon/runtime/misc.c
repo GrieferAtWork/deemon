@@ -449,16 +449,16 @@ Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 	for (;;) {
 		if unlikely(ptr >= end)
 			goto done;
-		block[0] = unicode_readutf8_n(&ptr, end);
+		block[0] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_1;
-		block[1] = unicode_readutf8_n(&ptr, end);
+		block[1] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_2;
-		block[2] = unicode_readutf8_n(&ptr, end);
+		block[2] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_3;
-		block[3] = unicode_readutf8_n(&ptr, end);
+		block[3] = Dee_unicode_readutf8_n(&ptr, end);
 		n_chars += 4;
 		k = packl(block[0]) << ESEL(0, 24);
 		k |= packl(block[1]) << ESEL(8, 16);
@@ -505,19 +505,19 @@ Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 	for (;;) {
 		if unlikely(ptr >= end)
 			goto done;
-		block[0] = unicode_readutf8_n(&ptr, end);
+		block[0] = Dee_unicode_readutf8_n(&ptr, end);
 		block[0] = DeeUni_ToLower(block[0]);
 		if unlikely(ptr >= end)
 			goto do_tail_1;
-		block[1] = unicode_readutf8_n(&ptr, end);
+		block[1] = Dee_unicode_readutf8_n(&ptr, end);
 		block[1] = DeeUni_ToLower(block[1]);
 		if unlikely(ptr >= end)
 			goto do_tail_2;
-		block[2] = unicode_readutf8_n(&ptr, end);
+		block[2] = Dee_unicode_readutf8_n(&ptr, end);
 		block[2] = DeeUni_ToLower(block[2]);
 		if unlikely(ptr >= end)
 			goto do_tail_3;
-		block[3] = unicode_readutf8_n(&ptr, end);
+		block[3] = Dee_unicode_readutf8_n(&ptr, end);
 		block[3] = DeeUni_ToLower(block[3]);
 		n_chars += 4;
 		k = packl(block[0]) << ESEL(0, 24);
@@ -945,28 +945,28 @@ Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 		Dee_hash_t k;
 		if unlikely(ptr >= end)
 			goto done;
-		block[0] = unicode_readutf8_n(&ptr, end);
+		block[0] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_1;
-		block[1] = unicode_readutf8_n(&ptr, end);
+		block[1] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_2;
-		block[2] = unicode_readutf8_n(&ptr, end);
+		block[2] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_3;
-		block[3] = unicode_readutf8_n(&ptr, end);
+		block[3] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_4;
-		block[4] = unicode_readutf8_n(&ptr, end);
+		block[4] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_5;
-		block[5] = unicode_readutf8_n(&ptr, end);
+		block[5] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_6;
-		block[6] = unicode_readutf8_n(&ptr, end);
+		block[6] = Dee_unicode_readutf8_n(&ptr, end);
 		if unlikely(ptr >= end)
 			goto do_tail_7;
-		block[7] = unicode_readutf8_n(&ptr, end);
+		block[7] = Dee_unicode_readutf8_n(&ptr, end);
 		k        = (Dee_hash_t)packl(block[0]) << ESEL(0, 56);
 		k |= (Dee_hash_t)packl(block[1]) << ESEL(8, 48);
 		k |= (Dee_hash_t)packl(block[2]) << ESEL(16, 40);
@@ -1017,35 +1017,35 @@ Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 		Dee_hash_t k;
 		if unlikely(ptr >= end)
 			goto done;
-		block[0] = unicode_readutf8_n(&ptr, end);
+		block[0] = Dee_unicode_readutf8_n(&ptr, end);
 		block[0] = DeeUni_ToLower(block[0]);
 		if unlikely(ptr >= end)
 			goto do_tail_1;
-		block[1] = unicode_readutf8_n(&ptr, end);
+		block[1] = Dee_unicode_readutf8_n(&ptr, end);
 		block[1] = DeeUni_ToLower(block[1]);
 		if unlikely(ptr >= end)
 			goto do_tail_2;
-		block[2] = unicode_readutf8_n(&ptr, end);
+		block[2] = Dee_unicode_readutf8_n(&ptr, end);
 		block[2] = DeeUni_ToLower(block[2]);
 		if unlikely(ptr >= end)
 			goto do_tail_3;
-		block[3] = unicode_readutf8_n(&ptr, end);
+		block[3] = Dee_unicode_readutf8_n(&ptr, end);
 		block[3] = DeeUni_ToLower(block[3]);
 		if unlikely(ptr >= end)
 			goto do_tail_4;
-		block[4] = unicode_readutf8_n(&ptr, end);
+		block[4] = Dee_unicode_readutf8_n(&ptr, end);
 		block[4] = DeeUni_ToLower(block[4]);
 		if unlikely(ptr >= end)
 			goto do_tail_5;
-		block[5] = unicode_readutf8_n(&ptr, end);
+		block[5] = Dee_unicode_readutf8_n(&ptr, end);
 		block[5] = DeeUni_ToLower(block[5]);
 		if unlikely(ptr >= end)
 			goto do_tail_6;
-		block[6] = unicode_readutf8_n(&ptr, end);
+		block[6] = Dee_unicode_readutf8_n(&ptr, end);
 		block[6] = DeeUni_ToLower(block[6]);
 		if unlikely(ptr >= end)
 			goto do_tail_7;
-		block[7] = unicode_readutf8_n(&ptr, end);
+		block[7] = Dee_unicode_readutf8_n(&ptr, end);
 		block[7] = DeeUni_ToLower(block[7]);
 		k = (Dee_hash_t)packl(block[0]) << ESEL(0, 56);
 		k |= (Dee_hash_t)packl(block[1]) << ESEL(8, 48);

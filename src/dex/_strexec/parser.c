@@ -229,7 +229,7 @@ JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opnam
 		symbol_name = rt_operator_names[opname - AST_OPERATOR_MIN];
 	} else {
 		/* Default case: determine the operator symbol using generic-operator info. */
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		info = DeeTypeType_GetOperatorById(typetype, opname);
 		if (info)
 			symbol_name = info->oi_sname;
@@ -270,7 +270,7 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
 		uint16_t val;
 		if (Dee_Atou16((char const *)self->jl_tokstart,
 		               JITLexer_TokLen(self),
-		               DEEINT_STRING(0, DEEINT_STRING_FNORMAL),
+		               Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL),
 		               &val))
 			goto err_trace;
 		result = (int32_t)(uint16_t)val;
@@ -584,7 +584,7 @@ err_rbrck_after_lbrck:
 				goto done_y1;
 			}
 			if (name == ENCODE_INT32('s', 'u', 'p', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r' && (features & P_OPERATOR_FCLASS)) {
-				result = CLASS_OPERATOR_SUPERARGS;
+				result = Dee_CLASS_OPERATOR_SUPERARGS;
 				goto done_y1;
 			}
 			break;
@@ -652,7 +652,7 @@ err_rbrck_after_lbrck:
 		 * NOTE: This is also where a lot of backwards-compatibility lies, as
 		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
 		{
-			struct opinfo const *info;
+			struct Dee_opinfo const *info;
 			info = DeeTypeType_GetOperatorByNameLen(typetype, name_begin, name_size, (size_t)-1);
 			if (info) {
 				result = info->oi_id;
@@ -682,7 +682,7 @@ err_rbrck_after_lbrck:
 			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'u', 'p', 'e') &&
 			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'a', 'r', 'g') &&
 			    UNALIGNED_GET8(name_begin + 8) == 's' && (features & P_OPERATOR_FCLASS)) {
-				result = CLASS_OPERATOR_SUPERARGS;
+				result = Dee_CLASS_OPERATOR_SUPERARGS;
 				goto done_y1;
 			}
 			if (name_size == 6 &&
@@ -873,12 +873,12 @@ err:
  * @return: -1: Error */
 PRIVATE int DCALL
 print_module_name(JITLexer *__restrict self,
-                  struct unicode_printer *printer) {
+                  struct Dee_unicode_printer *printer) {
 	int result = 0;
 	for (;;) {
 		if (self->jl_tok == '.' || self->jl_tok == TOK_DOTS) {
 			if (printer &&
-			    unicode_printer_printascii(printer, "...", self->jl_tok == '.' ? 1 : 3) < 0)
+			    Dee_unicode_printer_printascii(printer, "...", self->jl_tok == '.' ? 1 : 3) < 0)
 				goto err_trace;
 			result = 1;
 			JITLexer_Yield(self);
@@ -890,9 +890,9 @@ print_module_name(JITLexer *__restrict self,
 				break; /* Special case: `.' is a valid name for the current module. */
 		} else if (self->jl_tok == JIT_KEYWORD) {
 			if (printer &&
-			    unicode_printer_print(printer,
-			                          JITLexer_TokPtr(self),
-			                          JITLexer_TokLen(self)) < 0)
+			    Dee_unicode_printer_print(printer,
+			                              JITLexer_TokPtr(self),
+			                              JITLexer_TokLen(self)) < 0)
 				goto err_trace;
 			JITLexer_Yield(self);
 			if (self->jl_tok != '.' && self->jl_tok != TOK_DOTS)
@@ -901,9 +901,9 @@ print_module_name(JITLexer *__restrict self,
 		           self->jl_tok == JIT_RAWSTRING) {
 			if (printer) {
 				if (self->jl_tok == JIT_RAWSTRING) {
-					if (unicode_printer_print(printer,
-					                          JITLexer_TokPtr(self) + 2,
-					                          JITLexer_TokLen(self) - 3) < 0)
+					if (Dee_unicode_printer_print(printer,
+					                              JITLexer_TokPtr(self) + 2,
+					                              JITLexer_TokLen(self) - 3) < 0)
 						goto err_trace;
 				} else {
 					if (DeeString_DecodeBackslashEscaped(printer,
@@ -940,7 +940,7 @@ err_trace:
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int DFCALL
 JITLexer_EvalModuleName(JITLexer *__restrict self,
-                        struct unicode_printer *printer,
+                        struct Dee_unicode_printer *printer,
                         /*utf-8*/ unsigned char const **p_name_start,
                         /*utf-8*/ unsigned char const **p_name_end) {
 	int error;
@@ -959,7 +959,7 @@ JITLexer_EvalModuleName(JITLexer *__restrict self,
 				unsigned char const *temp;
 				--end;
 				temp = end;
-				ch32 = unicode_readutf8_n(&end, self->jl_end);
+				ch32 = Dee_unicode_readutf8_n(&end, self->jl_end);
 				if (!DeeUni_IsSymCont(ch32)) {
 					end = temp;
 					break;
@@ -999,15 +999,15 @@ use_printer:
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2)) int DFCALL
 JITLexer_EvalModuleNameIntoPrinter(JITLexer *__restrict self,
-                                   struct unicode_printer *__restrict printer) {
+                                   struct Dee_unicode_printer *__restrict printer) {
 	int result;
 	unsigned char const *name_start, *name_end;
 	result = JITLexer_EvalModuleName(self, printer, &name_start, &name_end);
 	if (result > 0) {
 		result = 0;
 	} else if (result == 0) {
-		if unlikely(unicode_printer_print(printer, (char const *)name_start,
-		                                  (size_t)(name_end - name_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(printer, (char const *)name_start,
+		                                      (size_t)(name_end - name_start)) < 0)
 			result = -1;
 	}
 	return result;
@@ -1021,10 +1021,10 @@ INTERN WUNUSED DREF DeeObject *DFCALL
 JITLexer_EvalModule(JITLexer *__restrict self) {
 	int error;
 	DREF DeeObject *result;
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 	unsigned char const *name_start, *name_end;
 	DeeObject *import_function;
-	unicode_printer_init(&printer);
+	Dee_unicode_printer_init(&printer);
 	error = JITLexer_EvalModuleName(self, &printer, &name_start, &name_end);
 	if unlikely(error < 0)
 		goto err;
@@ -1032,7 +1032,7 @@ JITLexer_EvalModule(JITLexer *__restrict self) {
 	if (error > 0) {
 		/* The printer was used. */
 		DREF DeeStringObject *str;
-		str = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		str = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!str)
 			goto err_trace;
 		if (DeeString_STR(str)[0] != '.') {

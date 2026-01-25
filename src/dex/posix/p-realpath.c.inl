@@ -327,16 +327,16 @@ err:
  * @return: ITER_DONE: Not a symlink
  * @return: posix_try_readlink_ENOENT: Failed to access file */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_try_readlink_unicode_printer(struct unicode_printer *__restrict printer) {
+posix_try_readlink_unicode_printer(struct Dee_unicode_printer *__restrict printer) {
 	DREF DeeObject *path, *result;
-	path = unicode_printer_pack(printer);
+	path = Dee_unicode_printer_pack(printer);
 	if unlikely(!path)
 		goto err;
 	result = posix_try_readlink(path);
-	unicode_printer_init_string(printer, path);
+	Dee_unicode_printer_init_string(printer, path);
 	return result;
 err:
-	unicode_printer_init(printer);
+	Dee_unicode_printer_init(printer);
 	return NULL;
 }
 
@@ -347,7 +347,7 @@ err:
 /* @return: 0 : Success
 /* @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-posix_print_resolved_path(struct unicode_printer *__restrict printer,
+posix_print_resolved_path(struct Dee_unicode_printer *__restrict printer,
                           DeeObject *__restrict path, uint32_t max_link,
                           bool do_AT_SYMLINK_NOFOLLOW
 #if defined(posix_realpath_USE_posix_readlink) || defined(posix_realpath_USE_posix_readlink)
@@ -370,7 +370,7 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 		return 0; /* End-of-path */
 	if (DeeSystem_IsAbs(path_utf8)) {
 		/* Reset path resolver and print everything from `path' until we reach the relative part. */
-		unicode_printer_clear(printer);
+		Dee_unicode_printer_clear(printer);
 #ifdef DeeSystem_HAVE_FS_DRIVES
 		{
 			char const *drive_end = path_utf8;
@@ -382,14 +382,14 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 				/* Must be a '\\'-prefix */
 				drive_end += 2;
 			}
-			if unlikely(unicode_printer_print(printer, path_utf8, (size_t)(drive_end - path_utf8)) < 0)
+			if unlikely(Dee_unicode_printer_print(printer, path_utf8, (size_t)(drive_end - path_utf8)) < 0)
 				goto err;
 			path_utf8 = drive_end;
 			while (DeeSystem_IsSep(*path_utf8))
 				++path_utf8;
 		}
 #else /* DeeSystem_HAVE_FS_DRIVES */
-		if unlikely(unicode_printer_putascii(printer, DeeSystem_SEP))
+		if unlikely(Dee_unicode_printer_putascii(printer, DeeSystem_SEP))
 			goto err;
 		do {
 			++path_utf8;
@@ -405,8 +405,8 @@ posix_print_resolved_path(struct unicode_printer *__restrict printer,
 		do {
 			++leading_seps_end;
 		} while (DeeSystem_IsSep(*leading_seps_end));
-		unicode_printer_clear(printer);
-		if unlikely(unicode_printer_print(printer, path_utf8, (size_t)(leading_seps_end - path_utf8)) < 0)
+		Dee_unicode_printer_clear(printer);
+		if unlikely(Dee_unicode_printer_print(printer, path_utf8, (size_t)(leading_seps_end - path_utf8)) < 0)
 			goto err;
 		path_utf8 = leading_seps_end;
 	}
@@ -445,26 +445,26 @@ skip_segment:
 				 * If the printer is empty, print the ".." to the printer. */
 				size_t printer_length, prev_segment_end;
 				uint32_t lastch;
-				printer_length = UNICODE_PRINTER_LENGTH(printer);
+				printer_length = Dee_UNICODE_PRINTER_LENGTH(printer);
 				if (!printer_length) {
 print_dot_dot_segment:
-					if unlikely(unicode_printer_print(printer, "..", 2) < 0)
+					if unlikely(Dee_unicode_printer_print(printer, "..", 2) < 0)
 						goto err;
 					goto skip_segment;
 				}
 
 				/* Check if the preceding segment is ".." */
 				prev_segment_end = printer_length;
-				lastch = UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 1);
+				lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 1);
 				if (DeeSystem_IsSep(lastch)) {
 					--prev_segment_end;
-					lastch = UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 1);
+					lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 1);
 				}
-				if (prev_segment_end >= 2 && lastch == '.' && UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 2) == '.' &&
-				    (prev_segment_end == 2 || DeeSystem_IsSep(UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 3)))) {
-					lastch = UNICODE_PRINTER_GETCHAR(printer, printer_length - 1);
+				if (prev_segment_end >= 2 && lastch == '.' && Dee_UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 2) == '.' &&
+				    (prev_segment_end == 2 || DeeSystem_IsSep(Dee_UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 3)))) {
+					lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, printer_length - 1);
 					if (!DeeSystem_IsSep(lastch)) {
-						if unlikely(unicode_printer_putascii(printer, DeeSystem_SEP))
+						if unlikely(Dee_unicode_printer_putascii(printer, DeeSystem_SEP))
 							goto err;
 					}
 					goto print_dot_dot_segment;
@@ -472,7 +472,7 @@ print_dot_dot_segment:
 
 				/* Find the start of the preceding segment. */
 				while (prev_segment_end) {
-					lastch = UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 1);
+					lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, prev_segment_end - 1);
 					if (DeeSystem_IsSep(lastch))
 						break;
 					--prev_segment_end;
@@ -481,8 +481,8 @@ print_dot_dot_segment:
 #ifdef DeeSystem_HAVE_FS_DRIVES
 				/* Check for special case: don't delete a leading "C:" or "\\" prefix */
 				if (prev_segment_end == 0 && printer_length >= 2) {
-					uint32_t ch0 = UNICODE_PRINTER_GETCHAR(printer, 0);
-					uint32_t ch1 = UNICODE_PRINTER_GETCHAR(printer, 1);
+					uint32_t ch0 = Dee_UNICODE_PRINTER_GETCHAR(printer, 0);
+					uint32_t ch1 = Dee_UNICODE_PRINTER_GETCHAR(printer, 1);
 					if (ch1 == ':')
 						goto skip_segment;
 					if (ch0 == '\\' && ch1 == '\\')
@@ -491,7 +491,7 @@ print_dot_dot_segment:
 #endif /* DeeSystem_HAVE_FS_DRIVES */
 
 				/* Kill the preceding segment. */
-				unicode_printer_truncate(printer, prev_segment_end);
+				Dee_unicode_printer_truncate(printer, prev_segment_end);
 				goto skip_segment;
 			}
 			break;
@@ -500,16 +500,16 @@ print_dot_dot_segment:
 		}
 	
 		/* Print this path segment to `printer' */
-		if (!UNICODE_PRINTER_ISEMPTY(printer)) {
+		if (!Dee_UNICODE_PRINTER_ISEMPTY(printer)) {
 			uint32_t lastch;
-			lastch = UNICODE_PRINTER_GETCHAR(printer, UNICODE_PRINTER_LENGTH(printer) - 1);
+			lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, Dee_UNICODE_PRINTER_LENGTH(printer) - 1);
 			if (!DeeSystem_IsSep(lastch)) {
-				if unlikely(unicode_printer_putascii(printer, DeeSystem_SEP))
+				if unlikely(Dee_unicode_printer_putascii(printer, DeeSystem_SEP))
 					goto err;
 			}
 		}
-		segment_start_offset = UNICODE_PRINTER_LENGTH(printer);
-		if unlikely(unicode_printer_printutf8(printer, path_utf8, segment_len) < 0)
+		segment_start_offset = Dee_UNICODE_PRINTER_LENGTH(printer);
+		if unlikely(Dee_unicode_printer_printutf8(printer, path_utf8, segment_len) < 0)
 			goto err;
 
 		/* Skip trailing slashes. */
@@ -535,13 +535,13 @@ print_dot_dot_segment:
 				/* Just dump the remainder of the path to the printer. */
 				if (*path_utf8) {
 					ASSERT(DeeSystem_IsSep(path_utf8[-1]));
-					if (!UNICODE_PRINTER_ISEMPTY(printer)) {
+					if (!Dee_UNICODE_PRINTER_ISEMPTY(printer)) {
 						uint32_t lastch;
-						lastch = UNICODE_PRINTER_GETCHAR(printer, UNICODE_PRINTER_LENGTH(printer) - 1);
+						lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, Dee_UNICODE_PRINTER_LENGTH(printer) - 1);
 						if (!DeeSystem_IsSep(lastch))
 							--path_utf8; /* Include the path separator. */
 					}
-					if unlikely(unicode_printer_printutf8(printer, path_utf8, strlen(path_utf8)) < 0)
+					if unlikely(Dee_unicode_printer_printutf8(printer, path_utf8, strlen(path_utf8)) < 0)
 						goto err;
 				}
 				return 1;
@@ -553,8 +553,8 @@ print_dot_dot_segment:
 			os_err = DeeSystem_GetErrno();
 #endif /* !CONFIG_HOST_WINDOWS */
 			DBG_ALIGNMENT_ENABLE();
-			printed_filename = unicode_printer_pack(printer);
-			unicode_printer_init(printer);
+			printed_filename = Dee_unicode_printer_pack(printer);
+			Dee_unicode_printer_init(printer);
 			if unlikely(!printed_filename)
 				goto err;
 
@@ -603,7 +603,7 @@ print_dot_dot_segment:
 		}
 
 		/* Actually got a symbolic link! -> Must expand recursively */
-		unicode_printer_truncate(printer, segment_start_offset);
+		Dee_unicode_printer_truncate(printer, segment_start_offset);
 		inner_error = posix_print_resolved_path(printer, segment_link, max_link - 1,
 		                                        false, LOCAL_ignore_ENOENT);
 		Dee_Decref_likely(segment_link);
@@ -612,15 +612,15 @@ print_dot_dot_segment:
 				goto err;
 
 			/* Encountered a file-not-found problem -> dump the remainder of the path. */
-			if (!UNICODE_PRINTER_ISEMPTY(printer)) {
+			if (!Dee_UNICODE_PRINTER_ISEMPTY(printer)) {
 				uint32_t lastch;
-				lastch = UNICODE_PRINTER_GETCHAR(printer, UNICODE_PRINTER_LENGTH(printer) - 1);
+				lastch = Dee_UNICODE_PRINTER_GETCHAR(printer, Dee_UNICODE_PRINTER_LENGTH(printer) - 1);
 				if (!DeeSystem_IsSep(lastch)) {
-					if unlikely(unicode_printer_putascii(printer, DeeSystem_SEP))
+					if unlikely(Dee_unicode_printer_putascii(printer, DeeSystem_SEP))
 						goto err;
 				}
 			}
-			if unlikely(unicode_printer_printutf8(printer, path_utf8, strlen(path_utf8)) < 0)
+			if unlikely(Dee_unicode_printer_printutf8(printer, path_utf8, strlen(path_utf8)) < 0)
 				goto err;
 			return 1;
 		}
@@ -789,7 +789,7 @@ err:
 #endif /* posix_lrealpath_USE_DeeNTSystem_CreateFileNoATime__AND__DeeNTSystem_GetFilenameOfHandle */
 
 #ifdef posix_lrealpath_USE_posix_readlink
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err_printer;
 	if (!DeeString_IsAbsPath(path)) {
@@ -799,15 +799,15 @@ err:
 #ifdef CONFIG_HOST_WINDOWS
 	if (posix_path_is_nt_special(DeeString_STR(path),
 	                             DeeString_SIZE(path))) {
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		return_reference_(path);
 	}
 #endif /* CONFIG_HOST_WINDOWS */
 	if unlikely(posix_print_resolved_path(&printer, path, POSIX_PRINT_RESOLVED_PATH_MAX_LINK, true, false) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* posix_lrealpath_USE_posix_readlink */
 
@@ -1137,7 +1137,7 @@ err:
 #endif /* posix_realpath_USE_DeeNTSystem_CreateFileNoATime__AND__DeeNTSystem_GetFilenameOfHandle */
 
 #ifdef posix_realpath_USE_posix_readlink
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err_printer;
 	if (!DeeString_IsAbsPath(path)) {
@@ -1147,15 +1147,15 @@ err:
 #ifdef CONFIG_HOST_WINDOWS
 	if (posix_path_is_nt_special(DeeString_STR(path),
 	                             DeeString_SIZE(path))) {
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		return_reference_(path);
 	}
 #endif /* CONFIG_HOST_WINDOWS */
 	if unlikely(posix_print_resolved_path(&printer, path, POSIX_PRINT_RESOLVED_PATH_MAX_LINK, false, false) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* posix_realpath_USE_posix_readlink */
 
@@ -1346,14 +1346,14 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lresolvepath_f_impl(
 /*[[[end]]]*/
 {
 #ifdef posix_lresolvepath_USE_posix_print_resolved_path
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err_printer;
 	if unlikely(posix_print_resolved_path(&printer, path, POSIX_PRINT_RESOLVED_PATH_MAX_LINK, true, true) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* posix_lresolvepath_USE_posix_print_resolved_path */
 
@@ -1390,14 +1390,14 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_resolvepath_f_impl(D
 /*[[[end]]]*/
 {
 #ifdef posix_resolvepath_USE_posix_print_resolved_path
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err_printer;
 	if unlikely(posix_print_resolved_path(&printer, path, POSIX_PRINT_RESOLVED_PATH_MAX_LINK, false, true) < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #endif /* posix_resolvepath_USE_posix_print_resolved_path */
 
@@ -1436,7 +1436,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_resolvepathat_f_i
 /*[[[end]]]*/
 {
 #ifdef posix_resolvepathat_USE_posix_print_resolved_path
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	bool do_AT_SYMLINK_NOFOLLOW = (atflags & AT_SYMLINK_NOFOLLOW) != 0;
 	if unlikely(atflags & ~AT_SYMLINK_NOFOLLOW) {
 		err_bad_atflags(atflags);
@@ -1449,26 +1449,26 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_resolvepathat_f_i
 do_print_resolve_path_as_is:
 		if unlikely(posix_print_resolved_path(&printer, path, POSIX_PRINT_RESOLVED_PATH_MAX_LINK, do_AT_SYMLINK_NOFOLLOW, true) < 0)
 			goto err_printer;
-		return unicode_printer_pack(&printer);
+		return Dee_unicode_printer_pack(&printer);
 	}
 #ifdef CONFIG_HOST_WINDOWS
 	if (posix_path_is_nt_special(DeeString_STR(path),
 	                             DeeString_SIZE(path))) {
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		return_reference_(path);
 	}
 #endif /* CONFIG_HOST_WINDOWS */
 
 	if (DeeString_Check(dfd)) {
 		uint32_t lastch;
-		if unlikely(unicode_printer_printstring(&printer, dfd) < 0)
+		if unlikely(Dee_unicode_printer_printstring(&printer, dfd) < 0)
 			goto err_printer;
 got_dfd_path:
-		if (!UNICODE_PRINTER_LENGTH(&printer))
+		if (!Dee_UNICODE_PRINTER_LENGTH(&printer))
 			goto do_print_resolve_path_as_is;
-		lastch = UNICODE_PRINTER_GETCHAR(&printer, UNICODE_PRINTER_LENGTH(&printer) - 1);
+		lastch = Dee_UNICODE_PRINTER_GETCHAR(&printer, Dee_UNICODE_PRINTER_LENGTH(&printer) - 1);
 		if (!DeeSystem_IsSep(lastch)) {
-			if unlikely(unicode_printer_putascii(&printer, DeeSystem_SEP))
+			if unlikely(Dee_unicode_printer_putascii(&printer, DeeSystem_SEP))
 				goto err_printer;
 		}
 		goto do_print_path_abs;
@@ -1479,7 +1479,7 @@ got_dfd_path:
 		if unlikely(!dfd_filename)
 			goto err_printer;
 		if (DeeString_IsAbsPath(dfd_filename)) {
-			if unlikely(unicode_printer_printstring(&printer, dfd_filename) < 0)
+			if unlikely(Dee_unicode_printer_printstring(&printer, dfd_filename) < 0)
 				goto err_printer;
 			Dee_Decref(dfd_filename);
 			goto got_dfd_path;
@@ -1534,15 +1534,15 @@ got_dfd_path:
 do_print_path_abs:
 	{
 		DREF DeeObject *basedir, *abspath, *result;
-		basedir = unicode_printer_pack(&printer);
+		basedir = Dee_unicode_printer_pack(&printer);
 		if unlikely(!basedir)
 			goto err;
-		unicode_printer_init(&printer);
-		if unlikely(unicode_printer_printstring(&printer, basedir) < 0)
+		Dee_unicode_printer_init(&printer);
+		if unlikely(Dee_unicode_printer_printstring(&printer, basedir) < 0)
 			goto err_printer_basedir;
 		if unlikely(posix_print_resolved_path(&printer, path, POSIX_PRINT_RESOLVED_PATH_MAX_LINK, do_AT_SYMLINK_NOFOLLOW, true) < 0)
 			goto err_printer_basedir;
-		abspath = unicode_printer_pack(&printer);
+		abspath = Dee_unicode_printer_pack(&printer);
 		if unlikely(!abspath) {
 			Dee_Decref_likely(basedir);
 			goto err;
@@ -1558,7 +1558,7 @@ err_printer_basedir:
 		Dee_Decref_likely(basedir);
 	}
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return NULL;
 #endif /* posix_resolvepathat_USE_posix_print_resolved_path */

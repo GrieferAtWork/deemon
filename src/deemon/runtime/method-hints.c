@@ -2399,7 +2399,7 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 			     specs->mis_attr_kind == MH_KIND_GETSET_SET) &&
 			    (info->ai_value.v_attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY))
 				break;
-			/*struct class_desc *desc;
+			/*struct Dee_class_desc *desc;
 			desc = DeeClass_DESC(info->ai_decl);*/
 			addr = info->ai_value.v_attr->ca_addr;
 			switch (specs->mis_attr_kind) {

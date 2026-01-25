@@ -178,14 +178,14 @@ do_realloc_catchv:
 		}
 		handler += catchc;
 		handler->ce_mask  = NULL;
-		handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
+		handler->ce_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 		handler->ce_mode  = CATCH_EXPR_FNORMAL;
 
 		/* Set the interrupt-flag when an @[interrupt] tag was used. */
 		if (current_tags.at_class_flags & TP_FINTERRUPT)
-			handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
+			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FINTERPT;
 		if (mode == KWD_finally) {
-			handler->ce_flags |= EXCEPTION_HANDLER_FFINALLY;
+			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
 			handler->ce_code = is_statement
 			                   ? ast_parse_statement(false)
 			                   : ast_parse_expr(LOOKUP_SYM_NORMAL);
@@ -382,14 +382,14 @@ do_realloc_catchv:
 		}
 		handler += catchc;
 		handler->ce_mask  = NULL;
-		handler->ce_flags = EXCEPTION_HANDLER_FNORMAL;
+		handler->ce_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 		handler->ce_mode  = CATCH_EXPR_FNORMAL;
 
 		/* Set the interrupt-flag when an @[interrupt] tag was used. */
 		if (current_tags.at_class_flags & TP_FINTERRUPT)
-			handler->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
+			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FINTERPT;
 		if (mode == KWD_finally) {
-			handler->ce_flags |= EXCEPTION_HANDLER_FFINALLY;
+			handler->ce_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
 			handler->ce_code = ast_parse_hybrid_secondary(&was_expression);
 			if unlikely(!handler->ce_code)
 				goto err_try;

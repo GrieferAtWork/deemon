@@ -605,7 +605,7 @@ again_eval_asm_rawstring:
 					/* Make sure that the string only contains space characters! */
 					while (str_start < str_end) {
 						uint32_t ch;
-						ch = unicode_readutf8_n(&str_start, str_end);
+						ch = Dee_unicode_readutf8_n(&str_start, str_end);
 						if unlikely(!DeeUni_IsSpace(ch))
 							goto err_unsupported_assembly;
 					}
@@ -772,11 +772,11 @@ get_module_symbol_name(JITLexer *__restrict self,
 			goto bad_symbol_name;
 		for (; iter < end; ++iter) {
 			uint32_t ch;
-			uniflag_t flags;
-			ch    = unicode_readutf8_n(&iter, end);
+			Dee_uniflag_t flags;
+			ch    = Dee_unicode_readutf8_n(&iter, end);
 			flags = DeeUni_Flags(ch);
-			if (iter == symbol_start ? !(flags & UNICODE_ISSYMSTRT)
-			                         : !(flags & UNICODE_ISSYMCONT)) {
+			if (iter == symbol_start ? !(flags & Dee_UNICODE_ISSYMSTRT)
+			                         : !(flags & Dee_UNICODE_ISSYMCONT)) {
 bad_symbol_name:
 				if (is_module) {
 					syn_import_invalid_name_for_module_symbol(self, result);
@@ -803,12 +803,12 @@ err:
  * @return: -1: An error occurred. */
 INTERN WUNUSED IFELSE(NONNULL((1, 2)), NONNULL((1))) int DFCALL
 FUNC(SymbolNameIntoPrinter)(JITLexer *__restrict self
-                            IF_EVAL(, struct unicode_printer *__restrict printer)) {
+                            IF_EVAL(, struct Dee_unicode_printer *__restrict printer)) {
 	if (self->jl_tok == JIT_KEYWORD) {
 #ifdef JIT_EVAL
-		if (unicode_printer_print(printer,
-		                          JITLexer_TokPtr(self),
-		                          JITLexer_TokLen(self)) < 0)
+		if (Dee_unicode_printer_print(printer,
+		                              JITLexer_TokPtr(self),
+		                              JITLexer_TokLen(self)) < 0)
 			goto err;
 #endif /* JIT_EVAL */
 		JITLexer_Yield(self);
@@ -839,7 +839,7 @@ FUNC(ImportItem)(JITLexer *__restrict self,
                  IF_EVAL(struct jit_import_item *__restrict result, )
                  bool allow_module_name) {
 #ifdef JIT_EVAL
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 #endif /* JIT_EVAL */
 	int return_value = 0;
 	if (self->jl_tok == JIT_KEYWORD) {
@@ -861,13 +861,13 @@ FUNC(ImportItem)(JITLexer *__restrict self,
 			 * - `foo = "bar"' */
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
-			unicode_printer_init(&printer);
+			Dee_unicode_printer_init(&printer);
 			return_value = allow_module_name
 			               ? JITLexer_EvalModuleNameIntoPrinter(self, &printer)
 			               : JITLexer_EvalSymbolNameIntoPrinter(self, &printer);
 			if unlikely(return_value < 0)
 				goto err_printer;
-			result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+			result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 			if unlikely(!result->ii_import_name)
 				goto err;
 #else /* JIT_EVAL */
@@ -899,10 +899,10 @@ FUNC(ImportItem)(JITLexer *__restrict self,
 			/* - `foo.bar'
 			 * - `foo.bar as foobar' */
 #ifdef JIT_EVAL
-			unicode_printer_init(&printer);
-			if unlikely(unicode_printer_print(&printer,
-			                                  result->ii_symbol_name,
-			                                  result->ii_symbol_size) < 0)
+			Dee_unicode_printer_init(&printer);
+			if unlikely(Dee_unicode_printer_print(&printer,
+			                                      result->ii_symbol_name,
+			                                      result->ii_symbol_size) < 0)
 				goto err_printer;
 #endif /* JIT_EVAL */
 			goto complete_module_name;
@@ -915,12 +915,12 @@ FUNC(ImportItem)(JITLexer *__restrict self,
 		/* - `.foo.bar'
 		 * - `.foo.bar as foobar' */
 #ifdef JIT_EVAL
-		unicode_printer_init(&printer);
+		Dee_unicode_printer_init(&printer);
 #endif /* JIT_EVAL */
 complete_module_name:
 		return_value = 1;
 #ifdef JIT_EVAL
-		if unlikely(unicode_printer_printascii(&printer, "...", TOKEN_IS_DOT_count(self)) < 0)
+		if unlikely(Dee_unicode_printer_printascii(&printer, "...", TOKEN_IS_DOT_count(self)) < 0)
 			goto err_printer;
 #endif /* JIT_EVAL */
 		JITLexer_Yield(self);
@@ -937,7 +937,7 @@ complete_module_name:
 #endif /* !JIT_EVAL */
 		}
 #ifdef JIT_EVAL
-		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!result->ii_import_name)
 			goto err;
 #endif /* JIT_EVAL */
@@ -969,7 +969,7 @@ autogenerate_symbol_name:;
 		 * - `"foo.bar"'
 		 * - `"foo.bar" as foobar' */
 #ifdef JIT_EVAL
-		unicode_printer_init(&printer);
+		Dee_unicode_printer_init(&printer);
 		return_value = allow_module_name
 		               ? JITLexer_EvalModuleNameIntoPrinter(self, &printer)
 		               : JITLexer_EvalSymbolNameIntoPrinter(self, &printer);
@@ -981,7 +981,7 @@ autogenerate_symbol_name:;
 		if unlikely(return_value < 0)
 			goto err_printer;
 #ifdef JIT_EVAL
-		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!result->ii_import_name)
 			goto err;
 #endif /* JIT_EVAL */
@@ -1006,7 +1006,7 @@ autogenerate_symbol_name:;
 	return return_value;
 err_printer:
 #ifdef JIT_EVAL
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	goto err;
 #endif /* JIT_EVAL */
 err_name:

@@ -17,12 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export Dee_ONCE*/
+/*!export **/
 /*!export Dee_ONCE_**/
 /*!export _Dee_ONCE_**/
 /*!export Dee_once_**/
 #ifndef GUARD_DEEMON_UTIL_ONCE_H
-#define GUARD_DEEMON_UTIL_ONCE_H 1
+#define GUARD_DEEMON_UTIL_ONCE_H 1 /*!export-*/
 
 #include "../api.h"
 

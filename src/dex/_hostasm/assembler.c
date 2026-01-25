@@ -284,7 +284,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >> if (kw != NULL) {
 		 * >>     if likely(kw->ob_type == &DeeKwds_Type) {
 		 * >>         DeeObject **kwds_argv;
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>         size_t kw_used = 0;
 		 * >> #endif
 		 * >>         size_t effective_argc;
@@ -293,7 +293,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>             HANDLE_EXCEPT();
 		 * >>         }
 		 * >>         argc = effective_argc;
-		 * >> #if !(co_flags & CODE_FVARARGS)
+		 * >> #if !(co_flags & Dee_CODE_FVARARGS)
 		 * >>         if (argc > <co_argc_max>))
 		 * >>             err_invalid_argc(...); // ERROR: Too many positional arguments
 		 * >> #endif
@@ -308,7 +308,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>                     HANDLE_EXCEPT();
 		 * >>                 }
 		 * >>                 kw_argv[i] = kwds_argv[index];
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>                 ++kw_used;
 		 * >> #endif
 		 * >>                 ++i;
@@ -321,25 +321,25 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>         DeeObject *temp = {co_defaultv[i]};
 		 * >>         if (index != (size_t)-1) {
 		 * >>             temp = kwds_argv[index];
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>             ++kw_used;
 		 * >> #endif
 		 * >>         }
 		 * >>         kw_argv[{i}] = temp;
 		 * >> #endfor
 		 * >> #endif
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>         if (kw_used < kw->kw_size) {
 		 * >>             err_invalid_argc(...); // ERROR: Unused keyword arguments
 		 * >>             HANDLE_EXCEPT();
 		 * >>         }
 		 * >> #endif
 		 * >>     } else {
-		 * >> #if !(co_flags & CODE_FVARARGS)
+		 * >> #if !(co_flags & Dee_CODE_FVARARGS)
 		 * >>         if (argc > <co_argc_max>))
 		 * >>             err_invalid_argc(...); // ERROR: Too many positional arguments
 		 * >> #endif
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>         size_t kw_used = {co_argc_max - co_argc_min};
 		 * >> #endif
 		 * >> #if {co_argc_min} > 0
@@ -352,7 +352,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>                 if (arg == ITER_DONE)
 		 * >>                     err_invalid_argc(...); // ERROR: Too few positional arguments / missing keyword argument
 		 * >>                 kw_argv[i] = arg;
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>                 ++kw_used;
 		 * >> #endif
 		 * >>                 ++i;
@@ -365,7 +365,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>         if (!temp)
 		 * >>             HANDLE_EXCEPT();
 		 * >>         if (temp == ITER_DONE) {
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>             --kw_used;
 		 * >> #endif
 		 * >> #if co_defaultv[i]
@@ -375,7 +375,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>         kw_argv[{i}] = temp;
 		 * >> #endfor
 		 * >> #endif
-		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >> #if !(co_flags & Dee_CODE_FVARKWDS)
 		 * >>         size_t kw_argc = DeeObject_Size(kw);
 		 * >>         if (kw_argc > kw_used) {
 		 * >>             if (kw_argc == (size_t)-1)
@@ -390,7 +390,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		return 0;
 	}
 
-	if (co_argc_min == 0 && (code->co_flags & CODE_FVARARGS)) {
+	if (co_argc_min == 0 && (code->co_flags & Dee_CODE_FVARARGS)) {
 		/* Special case: *any* number of arguments is accepted */
 	} else {
 		struct host_symbol *Lerr_invalid_argc;
@@ -401,7 +401,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 		memloc_init_const(&l_argc_min, (void const *)(uintptr_t)co_argc_min);
 		DO(fg_vpush_argc(self)); /* argc */
 		DO(fg_vdirect1(self));   /* argc */
-		if (code->co_flags & CODE_FVARARGS) {
+		if (code->co_flags & Dee_CODE_FVARARGS) {
 			/* if (argc < co_argc_min) err_invalid_argc(...); */
 			DO(fg_gjcc(self, fg_vtopdloc(self), &l_argc_min, false, Lerr_invalid_argc, NULL, NULL));
 		} else if (co_argc_min == co_argc_max) {
@@ -1630,7 +1630,7 @@ hostfunc_assemble(DeeFunctionObject *function,
 	/* Special case: deemon code that contains user-written deemon assembly
 	 *               requires special care to include some extra checks in
 	 *               generated host assembly. */
-	if unlikely(assembler.fa_code->co_flags & CODE_FASSEMBLY)
+	if unlikely(assembler.fa_code->co_flags & Dee_CODE_FASSEMBLY)
 		assembler.fa_flags |= FUNCTION_ASSEMBLER_F_SAFE;
 
 #ifdef FUNCTION_ASSEMBLER_F_MCLARGE

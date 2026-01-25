@@ -17,8 +17,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export ASM_**/
+/*!export ASM16_**/
+/*!export DeeAsm_**/
+/*!export DDI_**/
+/*!export DDI_X_**/
 #ifndef GUARD_DEEMON_ASM_H
-#define GUARD_DEEMON_ASM_H 1
+#define GUARD_DEEMON_ASM_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -44,9 +50,9 @@
  *       a single instruction always happen right-to-left.
  * NOTE: Unless otherwise documented, immediate operands
  *       are encoded left-to-right.
- * Additional checks performed when `CODE_FASSEMBLY' is set:
+ * Additional checks performed when `Dee_CODE_FASSEMBLY' is set:
  *  >> Push when the stack is already full:
- *       If `CODE_FLENIENT' is set, extend the stack.
+ *       If `Dee_CODE_FLENIENT' is set, extend the stack.
  *       If the stack has grown too large, throw an `Error.RuntimeError.SegFault'
  *       NOTE: We do not throw an `Error.RuntimeError.StackOverflow' to prevent
  *             confusion with recursing functions.
@@ -62,7 +68,7 @@
  *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to yield from a non-yielding function:
  *       throw an `Error.RuntimeError.IllegalInstruction'
- *  >> Attempting to execute `ASM_PUSH_THIS' without `CODE_FTHISCALL' being set:
+ *  >> Attempting to execute `ASM_PUSH_THIS' without `Dee_CODE_FTHISCALL' being set:
  *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to use `ASM_CALL_TUPLE' (& related instruction) without a Tuple:
  *       throw an `Error.TypeError'
@@ -95,7 +101,7 @@
  *   - pointer MIN_VALID_STACK_POINTER;     // Lowest valid stack pointer (GET_SP_BASE() + 0)
  *   - pointer MAX_VALID_STACK_POINTER;     // Greatest valid stack pointer (GET_SP_BASE() + (STACK_SIZE - 1) * STACK_ENTRY_SIZE)
  *   - Integer CODE_FLAGS;                  // Code flags (set of `CODE_F*')
- *   - bool    IS_CODE_YIELDING = CODE_FLAGS & CODE_FYIELDING;
+ *   - bool    IS_CODE_YIELDING = CODE_FLAGS & Dee_CODE_FYIELDING;
  *
  * Frame setup:
  * >>     IF GET_THREADLOCAL_FRAME_COUNT() >= MAX_FRAME_COUNT THEN
@@ -166,7 +172,7 @@
  * >> // Access to stack items.
  * >> void PUSH(Object obj) BEGIN
  * >>     IF REG_SP >= MAX_VALID_STACK_POINTER THEN
- * >>         IF CODE_FLAGS & CODE_FLENIENT THEN
+ * >>         IF CODE_FLAGS & Dee_CODE_FLENIENT THEN
  * >>             EXTEND_STACK();
  * >>         ELSE
  * >>             THROW_OR_UNDEFINED_BEHAVIOR(SegFault());
@@ -323,7 +329,7 @@
 #define ASM_YIELD             0x01 /* [1][-1,+0]   `yield pop'                          - Pop one Object and yield it to the caller.
                                     * [1][-0,+0]   `yield PREFIX'                       - `PREFIX: yield'
                                     *                                                     This instruction may not return, but when it does, it doesn't immediately.
-                                    *                                                     NOTE: Same opcode as `ASM_RET_POP'. - Behavior is selected by `CODE_FYIELDING' */
+                                    *                                                     NOTE: Same opcode as `ASM_RET_POP'. - Behavior is selected by `Dee_CODE_FYIELDING' */
 #define ASM_YIELDALL          0x02 /* [1][-1,+0]   `yield foreach, pop'                 - Pop one Object and iterate it, yielding all contained objects, one at a time.
                                     * [1][-0,+0]   `yield foreach, PREFIX'              - `PREFIX: yield foreach'
                                     *                                                     NOTE: Only available in code of yield functions.
@@ -576,7 +582,7 @@
 
 /* TODO: Add an option to the assembler to automatically unwind finally-blocks
  *       when a return statement is encountered inside of one.
- *       Related to this, change the `CODE_FFINALLY' flag to not be mandatory
+ *       Related to this, change the `Dee_CODE_FFINALLY' flag to not be mandatory
  *       when there are finally-blocks defined, but _ONLY_ enable the automatic
  *       unwinding of them as part of returning from a function.
  *       That way we can get rid of the slow O(N) cleanup of finally-handlers,
@@ -590,10 +596,10 @@
 #define ASM_PUSH_NONE         0x33 /* [1][-0,+1]   `push none'                          - Push `none' onto the stack.
                                     * [1][-0,+0]   `mov  PREFIX, none'                  - `PREFIX: push none'
                                     * >> DESTINATION = none; */
-#define ASM_PUSH_VARARGS      0x34 /* [1][-0,+1]   `push varargs'                       - Push variable arguments. (Illegal instruction if the code doesn't have the `CODE_FVARARGS' flag set)
+#define ASM_PUSH_VARARGS      0x34 /* [1][-0,+1]   `push varargs'                       - Push variable arguments. (Illegal instruction if the code doesn't have the `Dee_CODE_FVARARGS' flag set)
                                     * [1][-0,+0]   `mov  PREFIX, varargs'               - `PREFIX: push varargs'
                                     * >> DESTINATION = VARARGS; */
-#define ASM_PUSH_VARKWDS      0x35 /* [1][-0,+1]   `push varkwds'                       - Push variable keyword arguments. (Illegal instruction if the code doesn't have the `CODE_FVARKWDS' flag set)
+#define ASM_PUSH_VARKWDS      0x35 /* [1][-0,+1]   `push varkwds'                       - Push variable keyword arguments. (Illegal instruction if the code doesn't have the `Dee_CODE_FVARKWDS' flag set)
                                     * [1][-0,+0]   `mov  PREFIX, varkwds'               - `PREFIX: push varkwds'
                                     * >> DESTINATION = VARKWDS; */
 #define ASM_PUSH_MODULE       0x36 /* [2][-0,+1]   `push module <imm8>'                 - Push an imported module indexed by <imm8> from the current module.
@@ -706,11 +712,11 @@
                                     * >> POP().operator del. (CONST(IMM8)); */
 #define ASM_SETATTR_C         0x5c /* [2][-2,+0]   `setattr pop, const <imm8>, pop'     - Pop a value and set an attribute of (then) stack-top named by a string in constant slot `<imm8>'.
                                     * >> POP().operator .= (CONST(IMM8), POP()); */
-#define ASM_GETATTR_THIS_C    0x5d /* [2][-0,+1]   `push getattr this, const <imm8>'    - Lookup and push an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+#define ASM_GETATTR_THIS_C    0x5d /* [2][-0,+1]   `push getattr this, const <imm8>'    - Lookup and push an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set)
                                     * >> PUSH(THIS.operator . (CONST(IMM8))); */
-#define ASM_DELATTR_THIS_C    0x5e /* [2][-0,+0]   `delattr this, const <imm8>'         - Delete an attribute of `this', named by a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+#define ASM_DELATTR_THIS_C    0x5e /* [2][-0,+0]   `delattr this, const <imm8>'         - Delete an attribute of `this', named by a string in constant slot `<imm8>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set)
                                     * >> THIS.operator del. (CONST(IMM8)); */
-#define ASM_SETATTR_THIS_C    0x5f /* [2][-1,+0]   `setattr this, const <imm8>, pop'    - Pop a value and set an attribute of `this', named by a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+#define ASM_SETATTR_THIS_C    0x5f /* [2][-1,+0]   `setattr this, const <imm8>, pop'    - Pop a value and set an attribute of `this', named by a string in constant slot `<imm8>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set)
                                     * >> THIS.operator .= (CONST(IMM8), POP()); */
 
 /* Compare instructions. */
@@ -951,8 +957,8 @@
 #define ASM_CALLATTR_TUPLE    0xd1 /* [1][-3,  +1] `callattr top, pop, pop...'          - Pop a Tuple and a string, then use them to call an attribute in stack-top. @throws: Error.TypeError: The attribute Object isn't a string. */
 #define ASM_CALLATTR_C        0xd2 /* [3][-1-n,+1] `callattr top, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
 #define ASM_CALLATTR_C_TUPLE  0xd3 /* [2][-2,  +1] `callattr top, const <imm8>, pop...' - Pop a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm8>'. */
-#define ASM_CALLATTR_THIS_C   0xd4 /* [3][-n,  +1] `push callattr this, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM_CALLATTR_THIS_C_TUPLE 0xd5 /* [2][-1,+1] `push callattr this, const <imm8>, pop...' - Pop a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM_CALLATTR_THIS_C   0xd4 /* [3][-n,  +1] `push callattr this, const <imm8>, #<imm8>' - Pop #<imm8> arguments into a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set) */
+#define ASM_CALLATTR_THIS_C_TUPLE 0xd5 /* [2][-1,+1] `push callattr this, const <imm8>, pop...' - Pop a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm8>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set) */
 #define ASM_CALLATTR_C_SEQ    0xd6 /* [3][-1-n,+1] `callattr top, const <imm8>, [#<imm8>]' - Call an attribute <imm8> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM_CALLATTR_C_MAP    0xd7 /* [3][-1-n*2,+1] `callattr top, const <imm8>, {#<imm8>*2}' - Call an attribute <imm8> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 #define ASM_GETMEMBER_THIS_R  0xd8 /* [3][-0,+1]   `push getmember this, ref <imm8>, $<imm8>' - Same as `ASM_GETMEMBER_THIS', but use a referenced variable `<imm8>' as class type. */
@@ -1046,8 +1052,8 @@
                                     * ASM_OPERATOR:   `local <imm8>: op $<imm8>, #<imm8>+1'
                                     * @throws: Error.RuntimeError.IllegalInstruction:
                                     *          The following instruction doesn't support this prefix, and
-                                    *          the associated code object is marked as `CODE_FASSEMBLY'.
-                                    *          WARNING: If the code object isn't marked as `CODE_FASSEMBLY',
+                                    *          the associated code object is marked as `Dee_CODE_FASSEMBLY'.
+                                    *          WARNING: If the code object isn't marked as `Dee_CODE_FASSEMBLY',
                                     *                   an unsupported instruction causes undefined behavior.
                                     * @throws: Error.RuntimeError.UnboundLocal:
                                     *          The specified local variable is not assigned, and
@@ -1211,7 +1217,7 @@
 /*      ASM_                  0xf031  *               --------                            - ------------------ */
 #define ASM_PUSH_EXCEPT       0xf032 /* [2][-0,+1]   `push except'                        - Push the current exception onto the stack. (Used by `catch' statements to access throw's error Object)
                                       * [2][-0,+0]   `mov  PREFIX, except'                - `PREFIX: push except' */
-#define ASM_PUSH_THIS         0xf033 /* [2][-0,+1]   `push this'                          - Push the `this' argument onto the stack (Only valid for code with the `CODE_FTHISCALL' flag set)
+#define ASM_PUSH_THIS         0xf033 /* [2][-0,+1]   `push this'                          - Push the `this' argument onto the stack (Only valid for code with the `Dee_CODE_FTHISCALL' flag set)
                                       * [2][-0,+0]   `mov  PREFIX, this'                  - `PREFIX: push this' */
 #define ASM_PUSH_THIS_MODULE  0xf034 /* [2][-0,+1]   `push this_module'                   - Push the current module.
                                       * [2][-0,+0]   `mov  PREFIX, this_module'           - `PREFIX: push this_module' */
@@ -1281,11 +1287,11 @@
                                       * >> POP().operator del. (CONST(IMM16)); */
 #define ASM16_SETATTR_C       0xf05c /* [4][-2,+0]   `setattr pop, const <imm16>, pop'    - Pop a value and set an attribute of (then) stack-top named by a string in constant slot `<imm16>' (little-endian).
                                       * >> POP().operator .= (CONST(IMM16), POP()); */
-#define ASM16_GETATTR_THIS_C  0xf05d /* [4][-0,+1]   `push getattr this, const <imm16>'   - Lookup and push an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+#define ASM16_GETATTR_THIS_C  0xf05d /* [4][-0,+1]   `push getattr this, const <imm16>'   - Lookup and push an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set)
                                       * >> PUSH(THIS.operator . (CONST(IMM16))); */
-#define ASM16_DELATTR_THIS_C  0xf05e /* [4][-0,+0]   `delattr this, const <imm16>'        - Delete an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+#define ASM16_DELATTR_THIS_C  0xf05e /* [4][-0,+0]   `delattr this, const <imm16>'        - Delete an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set)
                                       * >> THIS.operator del. (CONST(IMM16)); */
-#define ASM16_SETATTR_THIS_C  0xf05f /* [4][-1,+0]   `setattr this, const <imm16>, pop'   - Pop a value and set an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set)
+#define ASM16_SETATTR_THIS_C  0xf05f /* [4][-1,+0]   `setattr this, const <imm16>, pop'   - Pop a value and set an attribute of `this', named by a string in constant slot `<imm16>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set)
                                       * >> THIS.operator .= (CONST(IMM16), POP()); */
 #define ASM_CMP_SO            0xf060 /* [2][-2,+1]   `cmp so, top, pop'                   - Compare for SameObject and push the result (`Object.id(a) == Object.id(b)' / `a === b').
                                       * >> PUSH(POP() === POP()); */
@@ -1396,7 +1402,7 @@
 #define ASM_RANGE_0_I32       0xf0a4 /* [6][-0,+1]   `push range $0, $<imm32>'            - Create a new range from using `int(0)' as `begin' and `int(<imm32>)' as `end'. */
 /*      ASM_                  0xf0a5  *               --------                            - ------------------ */
 #define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs Tuple doesn't need to be created. */
-#define ASM_PUSH_VARKWDS_NE   0xf0a7 /* [2][-0,+1]   `push bool varkwds'                  - Push true/false indicative of variable keyword arguments being present. (Illegal instruction if the code doesn't have the `CODE_FVARKWDS' flag set) */
+#define ASM_PUSH_VARKWDS_NE   0xf0a7 /* [2][-0,+1]   `push bool varkwds'                  - Push true/false indicative of variable keyword arguments being present. (Illegal instruction if the code doesn't have the `Dee_CODE_FVARKWDS' flag set) */
 /*      ASM_                  0xf0a7  *               --------                            - ------------------ */
 /*      ASM_                  0xf0a8  *               --------                            - ------------------ */
 #define ASM16_FPRINT_C        0xf0a9 /* [4][-1,+1]   `print top, const <imm16>'           - Print a constant from `<imm16>' to a file in stack-top. */
@@ -1408,10 +1414,10 @@
 /*      ASM_                  0xf0af  *               --------                            - ------------------ */
 /*      ASM_                  0xf0b0  *               --------                            - ------------------ */
 #define ASM16_CONTAINS_C      0xf0b1 /* [3][-1,+1]   `push contains const <imm16>, pop'   - Pop an Object and check if it is contained within a sequence found int the given constant (which is usually a read-only HashSet). */
-#define ASM_VARARGS_GETITEM   0xf0b2 /* [2][-1,+1]   `getitem varargs, top'               - Pop an index `i', and use it to look up the i'th variable argument. If the index is negative, throw IntegerOverflow, If it is too large, throw IndexError. (Illegal instruction if the code doesn't have the `CODE_FVARARGS' flag set) */
-#define ASM_VARARGS_GETITEM_I 0xf0b3 /* [3][-0,+1]   `push getitem varargs, $<imm8>'      - Same as `getitem varargs, top', however the index is encoded as an 8-bit, unsigned immediate operand. (Illegal instruction if the code doesn't have the `CODE_FVARARGS' flag set) */
+#define ASM_VARARGS_GETITEM   0xf0b2 /* [2][-1,+1]   `getitem varargs, top'               - Pop an index `i', and use it to look up the i'th variable argument. If the index is negative, throw IntegerOverflow, If it is too large, throw IndexError. (Illegal instruction if the code doesn't have the `Dee_CODE_FVARARGS' flag set) */
+#define ASM_VARARGS_GETITEM_I 0xf0b3 /* [3][-0,+1]   `push getitem varargs, $<imm8>'      - Same as `getitem varargs, top', however the index is encoded as an 8-bit, unsigned immediate operand. (Illegal instruction if the code doesn't have the `Dee_CODE_FVARARGS' flag set) */
 #define ASM16_GETITEM_C       0xf0b4 /* [4][-1,+1]   `getitem top, const <imm16>'         - Invoke the __getitem__ operator on stack-top, using constant slot `<imm16>' (little-endian) as key. */
-#define ASM_VARARGS_GETSIZE   0xf0b5 /* [2][-0,+1]   `push getsize varargs', `push #varargs' - Push the number of variable arguments onto the stack. (Illegal instruction if the code doesn't have the `CODE_FVARARGS' flag set) */
+#define ASM_VARARGS_GETSIZE   0xf0b5 /* [2][-0,+1]   `push getsize varargs', `push #varargs' - Push the number of variable arguments onto the stack. (Illegal instruction if the code doesn't have the `Dee_CODE_FVARARGS' flag set) */
 /*      ASM_                  0xf0b6  *               --------                            - ------------------ */
 /*      ASM_                  0xf0b7  *               --------                            - ------------------ */
 #define ASM16_SETITEM_C       0xf0b8 /* [4][-2,+0]   `setitem pop, const <imm16>, pop'    - Pop a value and invoke the __setitem__ operator on stack-top, using constant slot `<imm16>' (little-endian) as key. */
@@ -1450,8 +1456,8 @@
 #define ASM_CALLATTR_TUPLE_KWDS 0xf0d1 /*[2][-4,+1]  `callattr top, pop, pop..., pop'     - The universal call-attribute-with-keywords instruction that also takes keywords from the stack. */
 #define ASM16_CALLATTR_C      0xf0d2 /* [5][-1-n,+1] `callattr top, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
 #define ASM16_CALLATTR_C_TUPLE 0xf0d3 /*[4][-2,+1]   `callattr top, const <imm16>, pop'   - Pop a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
-#define ASM16_CALLATTR_THIS_C 0xf0d4 /* [5][-n,+1]   `callattr this, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM16_CALLATTR_THIS_C_TUPLE 0xf0d5 /* [4][-1,+1] `callattr this, const <imm16>, pop' - Pop a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
+#define ASM16_CALLATTR_THIS_C 0xf0d4 /* [5][-n,+1]   `callattr this, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set) */
+#define ASM16_CALLATTR_THIS_C_TUPLE 0xf0d5 /* [4][-1,+1] `callattr this, const <imm16>, pop' - Pop a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `Dee_CODE_FTHISCALL' flag set) */
 #define ASM16_CALLATTR_C_SEQ  0xf0d6 /* [5][-1-n,+1] `callattr top, const <imm16>, [#<imm8>]' - Call an attribute <imm16> with a single sequence-like argument packed from the top #<imm8> stack-items. */
 #define ASM16_CALLATTR_C_MAP  0xf0d7 /* [5][-1-n*2,+1] `callattr top, const <imm16>, {#<imm8>*2}' - Call an attribute <imm16> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 #define ASM16_GETMEMBER_THIS_R 0xf0d8/* [6][-0,+1]   `push getmember this, ref <imm16>, $<imm16>' - Same as `ASM16_GETMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */

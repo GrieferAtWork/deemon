@@ -167,10 +167,10 @@ pipe_new_impl(size_t pipe_size) {
 #endif /* ipc_Pipe_USE_pipe_OR_pipe2 */
 
 	/* Fill in the result of the to-be returned objects. */
-#ifdef DEESYSTEM_FILE_HAVE_sf_filename
+#ifdef DeeSystemFile_HAVE_sf_filename
 	reader_file->sf_filename = NULL;
 	writer_file->sf_filename = NULL;
-#endif /* DEESYSTEM_FILE_HAVE_sf_filename */
+#endif /* DeeSystemFile_HAVE_sf_filename */
 	DeeFileObject_Init(reader_file, &DeePipeReader_Type);
 	DeeFileObject_Init(writer_file, &DeePipeWriter_Type);
 	DeeTuple_SET(result, 0, (DeeObject *)reader_file); /* Inherit reference */

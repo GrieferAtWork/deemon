@@ -53,7 +53,7 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
-INTDEF struct module_symbol empty_module_buckets[];
+INTDEF struct Dee_module_symbol empty_module_buckets[];
 DEFINE_STRUCT_CACHE_EX(sym, struct symbol,
                        MAX_C(sizeof(struct symbol),
                              sizeof(struct text_label)),
@@ -294,7 +294,7 @@ again:
 			if (this_origin->bs_this == self) /* Bound & reachable this-symbol. */
 				return true;
 			if (this_origin == sym_base) /* Unbound this-symbol (valid in any kind of this-call) */
-				return (this_origin->bs_flags & CODE_FTHISCALL) != 0;
+				return (this_origin->bs_flags & Dee_CODE_FTHISCALL) != 0;
 		} while ((this_origin = this_origin->bs_prev) != NULL);
 	}	break;
 
@@ -349,7 +349,7 @@ again:
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
-		if (self->s_attr.a_attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+		if (self->s_attr.a_attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
 			return true;
 		if (symbol_get_haseffect(self->s_attr.a_class, caller_scope))
 			return true;
@@ -361,7 +361,7 @@ again:
 		return symbol_get_haseffect(self->s_attr.a_this, caller_scope);
 
 	case SYMBOL_TYPE_EXTERN:
-		if (self->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
+		if (self->s_extern.e_symbol->ss_flags & Dee_MODSYM_FPROPERTY)
 			return true;
 		break;
 
@@ -387,9 +387,9 @@ again:
 		if (!(self->s_attr.a_attr->ca_flag &
 		      /* A non-private symbol may be accessed from the outside, meaning
 		       * that writing to this kind of symbol _does_ have side-effects. */
-		      CLASS_ATTRIBUTE_FPRIVATE))
+		      Dee_CLASS_ATTRIBUTE_FPRIVATE))
 			return true;
-		if (self->s_attr.a_attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+		if (self->s_attr.a_attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
 			return true; /* Properties have side-effects */
 		if (symbol_get_haseffect(self->s_attr.a_class, caller_scope))
 			return true;
@@ -401,7 +401,7 @@ again:
 		return symbol_get_haseffect(self->s_attr.a_this, caller_scope);
 
 	case SYMBOL_TYPE_EXTERN:
-		if (self->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
+		if (self->s_extern.e_symbol->ss_flags & Dee_MODSYM_FPROPERTY)
 			return true;
 		break;
 
@@ -545,7 +545,7 @@ visitsym(struct symbol *__restrict self, Dee_visit_t proc, void *arg) {
 PRIVATE NONNULL((1)) void DCALL
 scope_fini(DeeScopeObject *__restrict self) {
 	struct symbol **biter, **bend, *iter, *next;
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	DeeCompiler_DelItem(self);
 	biter = self->s_map;
 	bend  = biter + self->s_mapa;
@@ -606,7 +606,7 @@ INTERN DeeTypeObject DeeScope_Type = {
 	/* .tp_name     = */ "Scope",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeScopeObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeScopeObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ NULL, /*&DeeObject_Type*/
 	/* .tp_init = */ {
@@ -670,7 +670,7 @@ INTERN DeeTypeObject DeeClassScope_Type = {
 	/* .tp_name     = */ "ClassScope",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeScopeObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeScopeObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeScope_Type,
 	/* .tp_init = */ {
@@ -770,7 +770,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 	/* .tp_name     = */ "BaseScope",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeScopeObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeScopeObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeScope_Type,
 	/* .tp_init = */ {
@@ -825,13 +825,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 root_scope_ctor(DeeRootScopeObject *__restrict self) {
 	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),
 	      sizeof(DeeRootScopeObject) - offsetof(DeeScopeObject, s_prev));
-	weakref_support_init((DeeScopeObject *)self);
+	Dee_weakref_support_init((DeeScopeObject *)self);
 	self->rs_scope.bs_scope.s_base = &self->rs_scope;
 	self->rs_scope.bs_root         = self;
 	self->rs_bucketv               = empty_module_buckets;
-#if CODE_FNORMAL != 0
-	self->rs_scope.bs_flags = CODE_FNORMAL;
-#endif /* CODE_FNORMAL != 0 */
+#if Dee_CODE_FNORMAL != 0
+	self->rs_scope.bs_flags = Dee_CODE_FNORMAL;
+#endif /* Dee_CODE_FNORMAL != 0 */
 #if Dee_MODULE_FNORMAL != 0
 	self->rs_flags = Dee_MODULE_FNORMAL;
 #endif /* Dee_MODULE_FNORMAL != 0 */
@@ -847,15 +847,15 @@ root_scope_init(DeeRootScopeObject *__restrict self,
 		goto err;
 	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),
 	      sizeof(DeeRootScopeObject) - offsetof(DeeScopeObject, s_prev));
-	weakref_support_init((DeeScopeObject *)self);
+	Dee_weakref_support_init((DeeScopeObject *)self);
 	Dee_Incref(module);
 	self->rs_scope.bs_scope.s_base = &self->rs_scope;
 	self->rs_scope.bs_root         = self;
 	self->rs_module                = module;
 	self->rs_bucketv               = empty_module_buckets;
-#if CODE_FNORMAL != 0
-	self->rs_scope.bs_flags = CODE_FNORMAL;
-#endif /* CODE_FNORMAL != 0 */
+#if Dee_CODE_FNORMAL != 0
+	self->rs_scope.bs_flags = Dee_CODE_FNORMAL;
+#endif /* Dee_CODE_FNORMAL != 0 */
 #if Dee_MODULE_FNORMAL != 0
 	self->rs_flags = Dee_MODULE_FNORMAL;
 #endif /* Dee_MODULE_FNORMAL != 0 */
@@ -874,14 +874,14 @@ root_scope_fini(DeeRootScopeObject *__restrict self) {
 	Dee_Decrefv(self->rs_importv, self->rs_importc);
 	Dee_Free(self->rs_importv);
 	if (self->rs_bucketv != empty_module_buckets) {
-		struct module_symbol *iter, *end;
+		struct Dee_module_symbol *iter, *end;
 		end = (iter = self->rs_bucketv) + (self->rs_bucketm + 1);
 		for (; iter < end; ++iter) {
-			if (!MODULE_SYMBOL_GETNAMESTR(iter))
+			if (!Dee_MODULE_SYMBOL_GETNAMESTR(iter))
 				continue;
-			if (iter->ss_flags & MODSYM_FNAMEOBJ)
-				Dee_Decref(COMPILER_CONTAINER_OF(MODULE_SYMBOL_GETNAMESTR(iter), DeeStringObject, s_str));
-			if (iter->ss_flags & MODSYM_FDOCOBJ)
+			if (iter->ss_flags & Dee_MODSYM_FNAMEOBJ)
+				Dee_Decref(COMPILER_CONTAINER_OF(Dee_MODULE_SYMBOL_GETNAMESTR(iter), DeeStringObject, s_str));
+			if (iter->ss_flags & Dee_MODSYM_FDOCOBJ)
 				Dee_Decref(COMPILER_CONTAINER_OF(iter->ss_doc, DeeStringObject, s_str));
 		}
 		Dee_Free(self->rs_bucketv);
@@ -922,7 +922,7 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 	/* .tp_name     = */ "RootScope",
 	/* .tp_doc      = */ DOC("(module:?DModule)"),
 	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeScopeObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeScopeObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeBaseScope_Type,
 	/* .tp_init = */ {
@@ -1098,10 +1098,10 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	ASSERT(!current_basescope->bs_default);
 	ASSERT(!current_basescope->bs_varargs);
 	ASSERT(!current_basescope->bs_varkwds);
-	ASSERT(!(current_basescope->bs_flags & (CODE_FVARARGS | CODE_FVARKWDS)));
+	ASSERT(!(current_basescope->bs_flags & (Dee_CODE_FVARARGS | Dee_CODE_FVARKWDS)));
 
 	/* Copy basic flags and counters. */
-	current_basescope->bs_flags |= other->bs_flags & (CODE_FVARARGS | CODE_FVARKWDS);
+	current_basescope->bs_flags |= other->bs_flags & (Dee_CODE_FVARARGS | Dee_CODE_FVARKWDS);
 	current_basescope->bs_argc_max = other->bs_argc_max;
 	current_basescope->bs_argc_min = other->bs_argc_min;
 	current_basescope->bs_argc     = other->bs_argc;
@@ -1157,7 +1157,7 @@ err:
 	current_basescope->bs_argc     = 0;
 	current_basescope->bs_argc_min = 0;
 	current_basescope->bs_argc_max = 0;
-	current_basescope->bs_flags &= ~CODE_FVARARGS;
+	current_basescope->bs_flags &= ~Dee_CODE_FVARARGS;
 	return -1;
 }
 

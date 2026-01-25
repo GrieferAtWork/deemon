@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
 /*!export Dee_NRLOCK_**/
 /*!export Dee_NRATOMIC_LOCK_**/
 /*!export Dee_nratomic_lock_**/
@@ -25,12 +26,9 @@
 /*!export Dee_nrshared_lock_**/
 /*!export _Dee_nrshared_lock_**/
 /*!export _Dee_NRLOCK_TID_**/
-/*!export _Dee_SIZEOF_NRLOCK_TID_T*/
-/*!export _Dee_nrlock_gettid*/
 /*!export _Dee_nrlock_gettid_**/
-/*!export _Dee_nrlock_tid_t*/
 #ifndef GUARD_DEEMON_UTIL_NRLOCK_H
-#define GUARD_DEEMON_UTIL_NRLOCK_H 1
+#define GUARD_DEEMON_UTIL_NRLOCK_H 1 /*!export-*/
 
 #include "../api.h"
 

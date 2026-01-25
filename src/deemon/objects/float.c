@@ -242,8 +242,8 @@ float_int(Float *__restrict self) {
 	if likely(result) {
 		size_t i = (size_t)result->ob_size - 1;
 		for (;;) {
-			digit d = (digit)frac;
-			result->ob_digit[i] = (digit)d;
+			Dee_digit_t d = (Dee_digit_t)frac;
+			result->ob_digit[i] = (Dee_digit_t)d;
 			if (i == 0)
 				break;
 			--i;

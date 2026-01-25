@@ -30,7 +30,7 @@ __seq_hash__()->?Dint {
 #ifndef DEFINED_default_seq_hash_with_foreach_cb
 #define DEFINED_default_seq_hash_with_foreach_cb
 struct default_seq_hash_with_foreach_data {
-	Dee_hash_t sqhwf_result;   /* Hash result (or DEE_HASHOF_EMPTY_SEQUENCE when sqhwf_nonempty=false) */
+	Dee_hash_t sqhwf_result;   /* Hash result (or Dee_HASHOF_EMPTY_SEQUENCE when sqhwf_nonempty=false) */
 	bool       sqhwf_nonempty; /* True after the first element */
 };
 
@@ -55,7 +55,7 @@ default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem) {
 #ifndef DEFINED_default_seq_hash_with_foreach_pair_cb
 #define DEFINED_default_seq_hash_with_foreach_pair_cb
 struct default_seq_hash_with_foreach_pair_data {
-	Dee_hash_t sqhwfp_result;   /* Hash result (or DEE_HASHOF_EMPTY_SEQUENCE when sqhwfp_nonempty=false) */
+	Dee_hash_t sqhwfp_result;   /* Hash result (or Dee_HASHOF_EMPTY_SEQUENCE when sqhwfp_nonempty=false) */
 	bool       sqhwfp_nonempty; /* True after the first element */
 };
 
@@ -96,12 +96,12 @@ __seq_hash__.seq_operator_hash([[nonnull]] DeeObject *__restrict self)
 	return DeeObject_HashGeneric(self);
 })}
 %{$none = 0}
-%{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
+%{$empty = Dee_HASHOF_EMPTY_SEQUENCE}
 %{$with__seq_operator_foreach =
 [[prefix(DEFINE_default_seq_hash_with_foreach_cb)]]
 [[prefix(DEFINE_seq_handle_hash_error)]] {
 	struct default_seq_hash_with_foreach_data data;
-	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
+	data.sqhwf_result   = Dee_HASHOF_EMPTY_SEQUENCE;
 	data.sqhwf_nonempty = false;
 	if unlikely(CALL_DEPENDENCY(seq_operator_foreach, self, &default_seq_hash_with_foreach_cb, &data))
 		goto err;
@@ -113,7 +113,7 @@ err:
 [[prefix(DEFINE_default_seq_hash_with_foreach_pair_cb)]]
 [[prefix(DEFINE_seq_handle_hash_error)]] {
 	struct default_seq_hash_with_foreach_pair_data data;
-	data.sqhwfp_result   = DEE_HASHOF_EMPTY_SEQUENCE;
+	data.sqhwfp_result   = Dee_HASHOF_EMPTY_SEQUENCE;
 	data.sqhwfp_nonempty = false;
 	if unlikely(CALL_DEPENDENCY(seq_operator_foreach_pair, self, &default_seq_hash_with_foreach_pair_cb, &data))
 		goto err;
@@ -130,11 +130,11 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size == 0)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	tp_getitem_index_fast = THIS_TYPE->tp_seq->tp_getitem_index_fast;
 	elem = (*tp_getitem_index_fast)(self, 0);
 	if unlikely(!elem) {
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -142,7 +142,7 @@ err:
 		Dee_hash_t elem_hash;
 		elem = (*tp_getitem_index_fast)(self, i);
 		if unlikely(!elem) {
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}
@@ -160,12 +160,12 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size == 0)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	elem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, 0);
 	if unlikely(!elem)
 		goto err;
 	if unlikely(elem == ITER_DONE) {
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -175,7 +175,7 @@ err:
 		if unlikely(!elem)
 			goto err;
 		if unlikely(elem == ITER_DONE) {
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}
@@ -195,12 +195,12 @@ err:
 	if unlikely(size == (size_t)-1)
 		goto err;
 	if (size == 0)
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	elem = CALL_DEPENDENCY(seq_operator_getitem_index, self, 0);
 	if unlikely(!elem) {
 		if (!DeeError_Catch(&DeeError_UnboundItem))
 			goto err;
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -210,7 +210,7 @@ err:
 		if unlikely(!elem) {
 			if (!DeeError_Catch(&DeeError_UnboundItem))
 				goto err;
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}
@@ -239,13 +239,13 @@ err:
 			goto err_sizeob_indexob;
 		Dee_Decref(indexob);
 		Dee_Decref(sizeob);
-		return DEE_HASHOF_EMPTY_SEQUENCE;
+		return Dee_HASHOF_EMPTY_SEQUENCE;
 	}
 	elem = CALL_DEPENDENCY(seq_operator_getitem, self, indexob);
 	if unlikely(!elem) {
 		if (!DeeError_Catch(&DeeError_UnboundItem))
 			goto err_sizeob_indexob;
-		result = DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HASHOF_UNBOUND_ITEM;
 	} else {
 		result = DeeObject_HashInherited(elem);
 	}
@@ -263,7 +263,7 @@ err:
 		if unlikely(!elem) {
 			if (!DeeError_Catch(&DeeError_UnboundItem))
 				goto err_sizeob_indexob;
-			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+			elem_hash = Dee_HASHOF_UNBOUND_ITEM;
 		} else {
 			elem_hash = DeeObject_HashInherited(elem);
 		}

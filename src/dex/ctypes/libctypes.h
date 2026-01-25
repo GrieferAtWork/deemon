@@ -1076,12 +1076,12 @@ INTDEF ATTR_COLD void DCALL err_no_cfunction(void);
 
 
 typedef struct struct_type_object DeeStructTypeObject;
-struct string_object;
+struct Dee_string_object;
 struct struct_field {
-	DREF struct string_object *sf_name;   /* [0..1] The name of this field (NULL is used as sentinel) */
-	Dee_hash_t                 sf_hash;   /* [valid_if(sf_name)][const][== DeeString_Hash(sf_name)] */
-	uintptr_t                  sf_offset; /* [valid_if(sf_name)] Offset of the field (from `DeeStruct_Data()') */
-	DREF DeeLValueTypeObject  *sf_type;   /* [1..1][valid_if(sf_name)] The l-value variant of this field's type. */
+	DREF struct Dee_string_object *sf_name;   /* [0..1] The name of this field (NULL is used as sentinel) */
+	Dee_hash_t                     sf_hash;   /* [valid_if(sf_name)][const][== DeeString_Hash(sf_name)] */
+	uintptr_t                      sf_offset; /* [valid_if(sf_name)] Offset of the field (from `DeeStruct_Data()') */
+	DREF DeeLValueTypeObject      *sf_type;   /* [1..1][valid_if(sf_name)] The l-value variant of this field's type. */
 };
 
 struct struct_type_object {

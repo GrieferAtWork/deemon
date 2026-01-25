@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeProperty_**/
 #ifndef GUARD_DEEMON_PROPERTY_H
-#define GUARD_DEEMON_PROPERTY_H 1
+#define GUARD_DEEMON_PROPERTY_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -26,13 +28,7 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_property_object property_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_property_object DeePropertyObject;
-
-struct Dee_property_object {
+typedef struct Dee_property_object {
 	/* A wrapper object describing an instance
 	 * property when accessed through the class:
 	 * >> class MyClass {
@@ -65,7 +61,7 @@ struct Dee_property_object {
 	DREF DeeObject *p_get; /* [0..1][const] Getter callback. */
 	DREF DeeObject *p_del; /* [0..1][const] Delete callback. */
 	DREF DeeObject *p_set; /* [0..1][const] Setter callback. */
-};
+} DeePropertyObject;
 
 DDATDEF DeeTypeObject DeeProperty_Type; /* `Property from deemon' */
 #define DeeProperty_Check(ob)      DeeObject_InstanceOf(ob, &DeeProperty_Type)

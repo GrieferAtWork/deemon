@@ -166,18 +166,18 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libdisasm_public_printcode
 			goto err;
 	}
 	if (!out) {
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		error = libdisasm_printcode(&unicode_printer_print,
+		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+		error = libdisasm_printcode(&Dee_unicode_printer_print,
 		                            &printer,
 		                            code->co_code,
 		                            code->co_code + code->co_codebytes,
 		                            code, NULL, flag_values);
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(error < 0) {
-			unicode_printer_fini(&printer);
+			Dee_unicode_printer_fini(&printer);
 			goto err;
 		}
-		return unicode_printer_pack(&printer);
+		return Dee_unicode_printer_pack(&printer);
 	}
 	error = libdisasm_printcode((Dee_formatprinter_t)&DeeFile_WriteAll, out,
 	                            code->co_code,
@@ -193,7 +193,7 @@ err:
 
 
 DEX_BEGIN
-DEX_MEMBER_F("printcode", &libdisasm_public_printcode, MODSYM_FREADONLY,
+DEX_MEMBER_F("printcode", &libdisasm_public_printcode, Dee_DEXSYM_READONLY,
              "(co:?X2?Dfunction?Ert:Code,flags=!0)->?Dstring\n"
              "(co:?X2?Dfunction?Ert:Code,flags=!P{})->?Dstring\n"
              "(co:?X2?Dfunction?Ert:Code,out:?DFile,flags=!0)->?Dint\n"

@@ -220,8 +220,8 @@ funcstaticsiter_next(FunctionStaticsIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst funcstaticsiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&funcstaticsiter_getseq,
@@ -914,8 +914,8 @@ PRIVATE struct type_iterator funcsymbolsbynameiter_iterator = {
 };
 
 PRIVATE struct type_nii tpconst funcsymbolsbynameiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_getseq,
@@ -1073,10 +1073,10 @@ DDI_GetRefIdByName(DeeDDIObject const *self, char const *name, size_t len) {
 			uint8_t op = *reader++;
 			switch (op) {
 
-			case DDI_EXDAT_O_END:
+			case Dee_DDI_EXDAT_O_END:
 				goto done_exdat;
 
-			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP8: {
+			case Dee_DDI_EXDAT_O_RNAM | Dee_DDI_EXDAT_OP8: {
 				uint8_t got_rid      = UNALIGNED_GETLE8(reader + 0);
 				char const *got_name = str_base + UNALIGNED_GETLE8(reader + 1);
 				if (strcmpz(got_name, name, len) == 0)
@@ -1084,7 +1084,7 @@ DDI_GetRefIdByName(DeeDDIObject const *self, char const *name, size_t len) {
 				reader += 1 + 1;
 			}	break;
 
-			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP16: {
+			case Dee_DDI_EXDAT_O_RNAM | Dee_DDI_EXDAT_OP16: {
 				uint16_t got_rid     = UNALIGNED_GETLE16(reader + 0);
 				char const *got_name = str_base + UNALIGNED_GETLE16(reader + 2);
 				if (strcmpz(got_name, name, len) == 0)
@@ -1092,7 +1092,7 @@ DDI_GetRefIdByName(DeeDDIObject const *self, char const *name, size_t len) {
 				reader += 2 + 2;
 			}	break;
 
-			case DDI_EXDAT_O_RNAM | DDI_EXDAT_OP32: {
+			case Dee_DDI_EXDAT_O_RNAM | Dee_DDI_EXDAT_OP32: {
 				uint16_t got_rid     = UNALIGNED_GETLE16(reader + 0);
 				char const *got_name = str_base + UNALIGNED_GETLE32(reader + 2);
 				if (strcmpz(got_name, name, len) == 0)
@@ -1101,17 +1101,17 @@ DDI_GetRefIdByName(DeeDDIObject const *self, char const *name, size_t len) {
 			}	break;
 
 			default:
-				switch (op & DDI_EXDAT_OPMASK) {
+				switch (op & Dee_DDI_EXDAT_OPMASK) {
 
-				case DDI_EXDAT_OP8:
+				case Dee_DDI_EXDAT_OP8:
 					reader += 1 + 1;
 					break;
 
-				case DDI_EXDAT_OP16:
+				case Dee_DDI_EXDAT_OP16:
 					reader += 2 + 2;
 					break;
 
-				case DDI_EXDAT_OP32:
+				case Dee_DDI_EXDAT_OP32:
 					reader += 2 + 4;
 					break;
 
@@ -2254,8 +2254,8 @@ PRIVATE struct type_iterator yfuncsymbolsbynameiter_iterator = {
 };
 
 PRIVATE struct type_nii tpconst yfuncsymbolsbynameiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_getseq,
@@ -3060,7 +3060,7 @@ frameargs_size(FrameArgs *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frameargs_getitem_index(FrameArgs *__restrict self, size_t index) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF DeeObject *result;
 	DeeCodeObject *code = self->fa_code;
 	if unlikely(index >= code->co_argc_max) {
@@ -3095,7 +3095,7 @@ err:
 #ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frameargs_bounditem_index(FrameArgs *__restrict self, size_t index) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DeeCodeObject *code = self->fa_code;
 	if (index >= code->co_argc_max)
 		return Dee_BOUND_MISSING;
@@ -3123,7 +3123,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 frameargs_get_func(FrameArgs *__restrict self) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF DeeFunctionObject *result;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->fa_frame));
 	if unlikely(!frame)
@@ -3139,7 +3139,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 frameargs_init(FrameArgs *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DeeArg_Unpack1(err, argc, argv, "FrameArgs", &self->fa_frame);
 	if (DeeObject_AssertTypeExact(self->fa_frame, &DeeFrame_Type))
 		goto err;
@@ -3272,7 +3272,7 @@ INTERN DeeTypeObject FrameArgs_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetArgsWrapper(DeeFrameObject *__restrict self) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF FrameArgs *result;
 	result = DeeObject_MALLOC(FrameArgs);
 	if unlikely(!result)
@@ -3312,7 +3312,7 @@ framelocals_size(FrameLocals *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 framelocals_getitem_index(FrameLocals *__restrict self, size_t index) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_localc) {
 		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_localc);
@@ -3337,7 +3337,7 @@ err:
 #ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framelocals_bounditem_index(FrameLocals *__restrict self, size_t index) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	if unlikely(index >= self->fl_localc)
 		return Dee_BOUND_MISSING;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->fl_frame));
@@ -3356,7 +3356,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framelocals_delitem_index(FrameLocals *__restrict self, size_t index) {
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
 		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_localc);
@@ -3376,7 +3376,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 framelocals_setitem_index(FrameLocals *self, size_t index, DeeObject *value) {
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
 		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_localc);
@@ -3397,7 +3397,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 framelocals_mh_seq_xchitem_index(FrameLocals *self, size_t index, DeeObject *value) {
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
 		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->fl_localc);
@@ -3424,7 +3424,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 framelocals_mh_seq_enumerate_index(FrameLocals *__restrict self, Dee_seq_enumerate_index_t proc,
                                    void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	if (end > self->fl_localc)
 		end = self->fl_localc;
 	for (; start < end; ++start) {
@@ -3450,7 +3450,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 framelocals_get_func(FrameLocals *__restrict self) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF DeeFunctionObject *result;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->fl_frame));
 	if unlikely(!frame)
@@ -3475,7 +3475,7 @@ framelocals_copy(FrameLocals *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framelocals_init(FrameLocals *__restrict self,
                  size_t argc, DeeObject *const *argv) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DeeArg_Unpack1(err, argc, argv, "FrameLocals", &self->fl_frame);
 	if (DeeObject_AssertTypeExact(self->fl_frame, &DeeFrame_Type))
 		goto err;
@@ -3614,7 +3614,7 @@ INTERN DeeTypeObject FrameLocals_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetLocalsWrapper(DeeFrameObject *__restrict self) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF FrameLocals *result;
 	result = DeeObject_MALLOC(FrameLocals);
 	if unlikely(!result)
@@ -3648,7 +3648,7 @@ typedef struct {
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 framestack_size(FrameStack *__restrict self) {
 	uint16_t result;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->fs_frame));
 	if unlikely(!frame)
 		goto err;
@@ -3662,7 +3662,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 framestack_getitem_index(FrameStack *__restrict self, size_t index) {
 	uint16_t stackc;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF DeeObject *result;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->fs_frame));
 	if unlikely(!frame)
@@ -3685,7 +3685,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framestack_bounditem_index(FrameStack *__restrict self, size_t index) {
 	uint16_t stackc;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DeeObject *value;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->fs_frame));
 	if unlikely(!frame)
@@ -3706,7 +3706,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 framestack_mh_seq_xchitem_index(FrameStack *self, size_t index, DeeObject *value) {
 	uint16_t stackc;
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	DREF DeeObject *oldvalue;
 	/* Lock in assembly-mode, since the stack may contain instruction pointers. */
 	frame = DeeFrame_LockWriteAssembly(Dee_AsObject(self->fs_frame));
@@ -3741,7 +3741,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
 framestack_get_func(FrameStack *__restrict self) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DREF DeeFunctionObject *result;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->fs_frame));
 	if unlikely(!frame)
@@ -3776,7 +3776,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 framestack_mh_seq_enumerate_index(FrameStack *__restrict self, Dee_seq_enumerate_index_t proc,
                                   void *arg, size_t start, size_t end) {
 	Dee_ssize_t temp, result = 0;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	for (; start < end; ++start) {
 		uint16_t stackc;
 		DREF DeeObject *item;
@@ -3811,7 +3811,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 framestack_mh_seq_insert(FrameStack *self, size_t index, DeeObject *value) {
 	uint16_t stackc, stacka;
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	DREF DeeObject **stackv;
 	DeeCodeObject *code;
 
@@ -3832,8 +3832,8 @@ again:
 	if (stackc >= stacka) {
 		DREF DeeObject **new_stackv;
 		uint16_t new_stacka;
-		/* Must allocate a larger stack (only allowed if the code has the "CODE_FLENIENT" flag) */
-		if (!(code->co_flags & CODE_FLENIENT))
+		/* Must allocate a larger stack (only allowed if the code has the "Dee_CODE_FLENIENT" flag) */
+		if (!(code->co_flags & Dee_CODE_FLENIENT))
 			goto err_stack_too_large_endwrite;
 		new_stacka = stacka * 2;
 		if unlikely(new_stacka < stackc)
@@ -3884,7 +3884,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 framestack_mh_seq_pop(FrameStack *self, Dee_ssize_t index) {
 	uint16_t stackc, i;
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	DREF DeeObject **stackv;
 	DREF DeeObject *result;
 
@@ -4282,8 +4282,8 @@ FrameSymbolsByName_GetCLidName(FrameSymbolsByName *self, canonical_lid_t clid) {
 	uint16_t sp_size;
 	canonical_lid_t orig_clid = clid;
 	DeeCodeObject *code = self->frsbn_func->fo_code;
-	struct code_frame const *frame;
-	struct ddi_state dds;
+	struct Dee_code_frame const *frame;
+	struct Dee_ddi_state dds;
 	uint8_t *ddi_status;
 
 	/* Check for arguments */
@@ -4313,13 +4313,13 @@ FrameSymbolsByName_GetCLidName(FrameSymbolsByName *self, canonical_lid_t clid) {
 	DeeFrame_LockEndRead(Dee_AsObject(self->frsbn_frame));
 
 	ddi_status = DeeCode_FindDDI(Dee_AsObject(code), &dds, NULL,
-	                             ip_addr, DDI_STATE_FNORMAL);
-	if (ddi_status == DDI_NEXT_ERR)
+	                             ip_addr, Dee_DDI_STATE_FNORMAL);
+	if (ddi_status == Dee_DDI_NEXT_ERR)
 		goto err;
-	if (ddi_status != DDI_NEXT_DONE) {
+	if (ddi_status != Dee_DDI_NEXT_DONE) {
 		if (clid < code->co_localc) {
-			struct ddi_xregs *iter;
-			DDI_STATE_DO(iter, &dds) {
+			struct Dee_ddi_xregs *iter;
+			Dee_DDI_STATE_DO(iter, &dds) {
 				if ((uint16_t)clid < iter->dx_lcnamc) {
 					char const *local_name;
 					if ((local_name = DeeCode_GetDDIString(Dee_AsObject(code), iter->dx_lcnamv[clid])) != NULL) {
@@ -4330,7 +4330,7 @@ FrameSymbolsByName_GetCLidName(FrameSymbolsByName *self, canonical_lid_t clid) {
 					}
 				}
 			}
-			DDI_STATE_WHILE(iter, &dds);
+			Dee_DDI_STATE_WHILE(iter, &dds);
 			Dee_ddi_state_fini(&dds);
 			goto fallback;
 		}
@@ -4338,8 +4338,8 @@ FrameSymbolsByName_GetCLidName(FrameSymbolsByName *self, canonical_lid_t clid) {
 
 		/* Check for stack variables */
 		if (clid < sp_size) {
-			struct ddi_xregs *iter;
-			DDI_STATE_DO(iter, &dds) {
+			struct Dee_ddi_xregs *iter;
+			Dee_DDI_STATE_DO(iter, &dds) {
 				uint16_t sp_count = iter->dx_base.dr_usp;
 				if (sp_count > iter->dx_spnama)
 					sp_count = iter->dx_spnama;
@@ -4353,7 +4353,7 @@ FrameSymbolsByName_GetCLidName(FrameSymbolsByName *self, canonical_lid_t clid) {
 					}
 				}
 			}
-			DDI_STATE_WHILE(iter, &dds);
+			Dee_DDI_STATE_WHILE(iter, &dds);
 			Dee_ddi_state_fini(&dds);
 			/*goto fallback;*/
 		}
@@ -4375,7 +4375,7 @@ struct canonical_lid_location {
  * @return: true:  Success; `result' was filled in with info about the location.
  * @return: false: No such location (only happens for too-great stack locations) */
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-code_frame_get_clid_addr(struct code_frame const *self,
+code_frame_get_clid_addr(struct Dee_code_frame const *self,
                          struct canonical_lid_location *__restrict result,
                          canonical_lid_t clid) {
 	DeeCodeObject *code = self->cf_func->fo_code;
@@ -4432,7 +4432,7 @@ set_aid_default_pointer:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 FrameSymbolsByName_GetCLidValue(FrameSymbolsByName *self, canonical_lid_t clid) {
 	DREF DeeObject *result = ITER_DONE;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	struct canonical_lid_location loc;
 	frame = DeeFrame_LockRead(Dee_AsObject(self->frsbn_frame));
 	if unlikely(!frame)
@@ -4471,7 +4471,7 @@ FrameSymbolsByName_XchCLidValue(FrameSymbolsByName *self,
                                 canonical_lid_t clid,
                                 /*0..1*/ DeeObject *value) {
 	DREF DeeObject *result = ITER_DONE;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	struct canonical_lid_location loc;
 	frame = DeeFrame_LockWrite(Dee_AsObject(self->frsbn_frame));
 	if unlikely(!frame)
@@ -4713,8 +4713,8 @@ PRIVATE struct type_iterator framesymbolsbynameiter_iterator = {
 };
 
 PRIVATE struct type_nii tpconst framesymbolsbynameiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_getseq,
@@ -4872,8 +4872,8 @@ FrameSymbolsByName_TryName2LocId(FrameSymbolsByName *self,
 	DeeCodeObject *code = self->frsbn_func->fo_code;
 	uint16_t i;
 	canonical_lid_t result;
-	struct ddi_state dds;
-	struct code_frame const *frame;
+	struct Dee_ddi_state dds;
+	struct Dee_code_frame const *frame;
 	uint8_t *ddi_status;
 
 	/* Check for argument names. */
@@ -4900,15 +4900,15 @@ again_lock_frame:
 		goto err;
 	ddi_status = DeeCode_FindDDI(Dee_AsObject(code), &dds, NULL,
 	                             Dee_code_frame_getipaddr(frame),
-	                             DDI_STATE_FNOEXCEPT);
-	if (ddi_status == DDI_NEXT_ERR) {
+	                             Dee_DDI_STATE_FNOEXCEPT);
+	if (ddi_status == Dee_DDI_NEXT_ERR) {
 		DeeFrame_LockEndRead(Dee_AsObject(self->frsbn_frame));
 		if (Dee_CollectMemory(1))
 			goto again_lock_frame;
 		goto err;
-	} else if (ddi_status != DDI_NEXT_DONE) {
-		struct ddi_xregs *iter;
-		DDI_STATE_DO(iter, &dds) {
+	} else if (ddi_status != Dee_DDI_NEXT_DONE) {
+		struct Dee_ddi_xregs *iter;
+		Dee_DDI_STATE_DO(iter, &dds) {
 			uint16_t lc_count = iter->dx_lcnamc;
 			uint16_t sp_count = iter->dx_base.dr_usp;
 			if (lc_count > self->frsbn_localc)
@@ -4936,7 +4936,7 @@ again_lock_frame:
 				}
 			}
 		}
-		DDI_STATE_WHILE(iter, &dds);
+		Dee_DDI_STATE_WHILE(iter, &dds);
 		DeeFrame_LockEndRead(Dee_AsObject(self->frsbn_frame));
 		Dee_ddi_state_fini(&dds);
 	} else {
@@ -5040,7 +5040,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 framesymbolsbyname_mh_setold_ex(FrameSymbolsByName *self,
                                 DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	struct canonical_lid_location loc;
 	canonical_lid_t clid = FrameSymbolsByName_TryKey2LocId(self, key);
 	if unlikely(clid == (canonical_lid_t)-2)
@@ -5092,7 +5092,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 framesymbolsbyname_mh_setnew_ex(FrameSymbolsByName *self,
                                 DeeObject *key, DeeObject *value) {
 	DREF DeeObject *oldvalue;
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	struct canonical_lid_location loc;
 	canonical_lid_t clid = FrameSymbolsByName_Key2LocId(self, key);
 	if unlikely(clid == (canonical_lid_t)-1)
@@ -5446,7 +5446,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 framesymbolsbyname_init_kw(FrameSymbolsByName *__restrict self,
                            size_t argc, DeeObject *const *argv,
                            DeeObject *kw) {
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	DeeCodeObject *code;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("_FrameSymbolsByName", params: "
 	DeeFrameObject *frame;
@@ -5703,7 +5703,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetSymbolsByNameWrapper(DeeFrameObject *__restrict self) {
 	DeeCodeObject *code;
 	DREF FrameSymbolsByName *result;
-	struct code_frame const *frame;
+	struct Dee_code_frame const *frame;
 	result = DeeObject_MALLOC(FrameSymbolsByName);
 	if unlikely(!result)
 		goto err;

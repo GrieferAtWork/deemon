@@ -198,7 +198,7 @@ tpp_pragma_message_printf(char const *format, ...) {
 	Dee_ssize_t result;
 	DREF DeeObject *stdout_file;
 	va_list args;
-	stdout_file = DeeFile_GetStd(DEE_STDOUT);
+	stdout_file = DeeFile_GetStd(Dee_STDOUT);
 	if unlikely(!stdout_file)
 		goto err;
 	va_start(args, format);
@@ -566,8 +566,8 @@ DeeCompilerError_Print(DeeObject *__restrict self,
 	DeeCompilerErrorObject *me;
 	Dee_ssize_t temp, result = 0;
 	size_t i, count;
-	struct compiler_error_loc *main_loc;
-	struct compiler_error_loc *iter;
+	struct Dee_compiler_error_loc *main_loc;
+	struct Dee_compiler_error_loc *iter;
 	char const *file_and_line;
 	me = (DeeCompilerErrorObject *)self;
 	count         = me->ce_errorc;

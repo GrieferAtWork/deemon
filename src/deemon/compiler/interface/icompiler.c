@@ -104,7 +104,7 @@ compiler_init(DeeCompilerObject *__restrict self,
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!self->cp_scope)
 		goto err;
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	bzero(&self->cp_tags, sizeof(self->cp_tags));
 	bzero(&self->cp_items, sizeof(self->cp_items));
 	Dee_atomic_rwlock_cinit(&self->cp_items.cis_lock);
@@ -826,9 +826,9 @@ parse_handler_flags(char const *__restrict flags,
 		if (flag_length) {
 #define IS_FLAG(x) (flag_length == COMPILER_STRLEN(x) && bcmpc(flags, x, COMPILER_STRLEN(x), sizeof(char)) == 0)
 			if (IS_FLAG("finally")) {
-				result->ce_flags |= EXCEPTION_HANDLER_FFINALLY;
+				result->ce_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
 			} else if (IS_FLAG("interrupt")) {
-				result->ce_flags |= EXCEPTION_HANDLER_FINTERPT;
+				result->ce_flags |= Dee_EXCEPTION_HANDLER_FINTERPT;
 			} else {
 				return DeeError_Throwf(&DeeError_ValueError,
 				                       "Unknown handler flag %$q",
@@ -875,7 +875,7 @@ unpack_catch_expression(DeeObject *__restrict triple,
 	}
 	/* Parse flags. */
 	result->ce_mode  = CATCH_EXPR_FNORMAL;
-	result->ce_flags = EXCEPTION_HANDLER_FNORMAL;
+	result->ce_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 	if (DeeString_Check(args[0])) {
 		if unlikely(parse_handler_flags(DeeString_STR(args[0]), result))
 			goto err;
@@ -1565,7 +1565,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_operator_id(DeeObject *__restrict opid, Dee_operator_t *__restrict p_result) {
 	if (DeeString_Check(opid)) {
 		char const *name = DeeString_STR(opid);
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name, (size_t)-1);
 		if (info != NULL) {
 			*p_result = info->oi_id;

@@ -72,35 +72,35 @@ DECL_BEGIN
 #ifndef CONFIG_LANGUAGE_NO_ASM
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
-                         struct ascii_printer *__restrict printer) {
+                         struct Dee_ascii_printer *__restrict printer) {
 	Dee_ssize_t temp, result = 0;
 	char const *raw_operand_string = NULL;
 	if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
-		temp = ascii_printer_putc(printer, '[');
+		temp = Dee_ascii_printer_putc(printer, '[');
 		if unlikely(temp)
 			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACEFLAG) {
-		temp = ascii_printer_putc(printer, '{');
+		temp = Dee_ascii_printer_putc(printer, '{');
 		if unlikely(temp)
 			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FIMMVAL) {
-		temp = ascii_printer_putc(printer, '$');
+		temp = Dee_ascii_printer_putc(printer, '$');
 		if unlikely(temp)
 			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FSTACKFLAG) {
-		temp = ascii_printer_putc(printer, '#');
+		temp = Dee_ascii_printer_putc(printer, '#');
 		if unlikely(temp)
 			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FSTACKFLAG2) {
-		temp = ASCII_PRINTER_PRINT(printer, " #");
+		temp = Dee_ASCII_PRINTER_PRINT(printer, " #");
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
@@ -120,44 +120,44 @@ asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
 		goto do_raw_string;
 
 	case OPERAND_CLASS_REF:
-		temp = ascii_printer_printf(printer, "ref %u",
-		                            (unsigned int)self->io_symid);
+		temp = Dee_ascii_printer_printf(printer, "ref %u",
+		                                (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_ARG:
-		temp = ascii_printer_printf(printer, "arg %u",
-		                            (unsigned int)self->io_symid);
+		temp = Dee_ascii_printer_printf(printer, "arg %u",
+		                                (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_CONST:
-		temp = ascii_printer_printf(printer, "const %u",
-		                            (unsigned int)self->io_symid);
+		temp = Dee_ascii_printer_printf(printer, "const %u",
+		                                (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_STATIC:
-		temp = ascii_printer_printf(printer, "static %u",
-		                            (unsigned int)self->io_symid);
+		temp = Dee_ascii_printer_printf(printer, "static %u",
+		                                (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_MODULE:
-		temp = ascii_printer_printf(printer, "module %u",
-		                            (unsigned int)self->io_symid);
+		temp = Dee_ascii_printer_printf(printer, "module %u",
+		                                (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_EXTERN:
-		temp = ascii_printer_printf(printer, "extern %u:%u",
-		                            (unsigned int)self->io_extern.io_modid,
-		                            (unsigned int)self->io_extern.io_symid);
+		temp = Dee_ascii_printer_printf(printer, "extern %u:%u",
+		                                (unsigned int)self->io_extern.io_modid,
+		                                (unsigned int)self->io_extern.io_symid);
 		break;
 
 	case OPERAND_CLASS_GLOBAL:
-		temp = ascii_printer_printf(printer, "global %u",
-		                            (unsigned int)self->io_symid);
+		temp = Dee_ascii_printer_printf(printer, "global %u",
+		                                (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_LOCAL:
-		temp = ascii_printer_printf(printer, "local %u",
-		                            (unsigned int)self->io_symid);
+		temp = Dee_ascii_printer_printf(printer, "local %u",
+		                                (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_SDISP8:
@@ -186,12 +186,12 @@ asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
 			if (self->io_intexpr.ie_val == 0)
 				suffix = "";
 			if (name) {
-				temp = ascii_printer_printf(printer, "%s%s%s",
-				                            name->k_name, mode, suffix);
+				temp = Dee_ascii_printer_printf(printer, "%s%s%s",
+				                                name->k_name, mode, suffix);
 			} else {
-				temp = ascii_printer_printf(printer, ".L<%p>%s%s",
-				                            self->io_intexpr.ie_sym,
-				                            mode, suffix);
+				temp = Dee_ascii_printer_printf(printer, ".L<%p>%s%s",
+				                                self->io_intexpr.ie_sym,
+				                                mode, suffix);
 			}
 			if (!self->io_intexpr.ie_val)
 				break;
@@ -202,9 +202,9 @@ asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
 		if ((self->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_DISP8 ||
 		    (self->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_DISP16 ||
 		    (self->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_DISP32) {
-			temp = ascii_printer_printf(printer, "%" PRFu64, self->io_intexpr.ie_val);
+			temp = Dee_ascii_printer_printf(printer, "%" PRFu64, self->io_intexpr.ie_val);
 		} else {
-			temp = ascii_printer_printf(printer, "%" PRFd64, self->io_intexpr.ie_val);
+			temp = Dee_ascii_printer_printf(printer, "%" PRFd64, self->io_intexpr.ie_val);
 		}
 		break;
 
@@ -363,33 +363,33 @@ asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
 	case OPERAND_CLASS_LOCK:
 		raw_operand_string = "lock";
 do_raw_string:
-		temp = ascii_printer_print(printer,
-		                           raw_operand_string,
-		                           strlen(raw_operand_string));
+		temp = Dee_ascii_printer_print(printer,
+		                               raw_operand_string,
+		                               strlen(raw_operand_string));
 		break;
 
 	default:
-		temp = ascii_printer_printf(printer, "??" "?(%u)",
-		                            (unsigned int)self->io_class);
+		temp = Dee_ascii_printer_printf(printer, "??" "?(%u)",
+		                                (unsigned int)self->io_class);
 		break;
 	}
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
 	if (self->io_class & OPERAND_CLASS_FDOTSFLAG) {
-		temp = ASCII_PRINTER_PRINT(printer, "...");
+		temp = Dee_ASCII_PRINTER_PRINT(printer, "...");
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACEFLAG) {
-		temp = ascii_printer_putc(printer, '}');
+		temp = Dee_ascii_printer_putc(printer, '}');
 		if unlikely(temp)
 			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
-		temp = ascii_printer_putc(printer, ']');
+		temp = Dee_ascii_printer_putc(printer, ']');
 		if unlikely(temp)
 			goto err;
 		++result;
@@ -402,11 +402,11 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 asm_invocation_print(struct asm_invocation const *__restrict self,
                      struct asm_mnemonic const *__restrict instr,
-                     struct ascii_printer *__restrict printer) {
+                     struct Dee_ascii_printer *__restrict printer) {
 	Dee_ssize_t temp, result = 0;
 	unsigned int i;
 	if (self->ai_flags & INVOKE_FPUSH) {
-		temp = ASCII_PRINTER_PRINT(printer, "push ");
+		temp = Dee_ASCII_PRINTER_PRINT(printer, "push ");
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
@@ -415,56 +415,56 @@ asm_invocation_print(struct asm_invocation const *__restrict self,
 		switch (self->ai_prefix) {
 
 		case ASM_STACK:
-			temp = ascii_printer_printf(printer, "stack #%u: ",
-			                            (unsigned int)self->ai_prefix_id1);
+			temp = Dee_ascii_printer_printf(printer, "stack #%u: ",
+			                                (unsigned int)self->ai_prefix_id1);
 			break;
 
 		case ASM_STATIC:
-			temp = ascii_printer_printf(printer, "static %u: ",
-			                            (unsigned int)self->ai_prefix_id1);
+			temp = Dee_ascii_printer_printf(printer, "static %u: ",
+			                                (unsigned int)self->ai_prefix_id1);
 			break;
 
 		case ASM_EXTERN:
-			temp = ascii_printer_printf(printer, "extern %u:%u: ",
-			                            (unsigned int)self->ai_prefix_id1,
-			                            (unsigned int)self->ai_prefix_id2);
+			temp = Dee_ascii_printer_printf(printer, "extern %u:%u: ",
+			                                (unsigned int)self->ai_prefix_id1,
+			                                (unsigned int)self->ai_prefix_id2);
 			break;
 
 		case ASM_GLOBAL:
-			temp = ascii_printer_printf(printer, "global %u: ",
-			                            (unsigned int)self->ai_prefix_id1);
+			temp = Dee_ascii_printer_printf(printer, "global %u: ",
+			                                (unsigned int)self->ai_prefix_id1);
 			break;
 
 		case ASM_LOCAL:
-			temp = ascii_printer_printf(printer, "local %u: ",
-			                            (unsigned int)self->ai_prefix_id1);
+			temp = Dee_ascii_printer_printf(printer, "local %u: ",
+			                                (unsigned int)self->ai_prefix_id1);
 			break;
 
 		default:
-			temp = ascii_printer_printf(printer, "??" "?(%u) %u:%u: ",
-			                            (unsigned int)self->ai_prefix,
-			                            (unsigned int)self->ai_prefix_id1,
-			                            (unsigned int)self->ai_prefix_id2);
+			temp = Dee_ascii_printer_printf(printer, "??" "?(%u) %u:%u: ",
+			                                (unsigned int)self->ai_prefix,
+			                                (unsigned int)self->ai_prefix_id1,
+			                                (unsigned int)self->ai_prefix_id2);
 			break;
 		}
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
 	}
-	temp = ascii_printer_print(printer,
-	                           instr->am_name,
-	                           strlen(instr->am_name));
+	temp = Dee_ascii_printer_print(printer,
+	                               instr->am_name,
+	                               strlen(instr->am_name));
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
 	for (i = 0; i < self->ai_opcount; ++i) {
 		if (i == 0) {
-			temp = ascii_printer_putc(printer, ' ');
+			temp = Dee_ascii_printer_putc(printer, ' ');
 			if unlikely(temp)
 				goto err;
 			++result;
 		} else {
-			temp = ASCII_PRINTER_PRINT(printer, ", ");
+			temp = Dee_ASCII_PRINTER_PRINT(printer, ", ");
 			if unlikely(temp < 0)
 				goto err;
 			result += temp;
@@ -483,12 +483,12 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 asm_invocation_tostring(struct asm_invocation const *__restrict self,
                         struct asm_mnemonic const *__restrict instr) {
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
 	if unlikely(asm_invocation_print(self, instr, &printer) < 0)
 		goto err;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 
@@ -820,7 +820,7 @@ retry:
 		 * functions, validate that we match that requirement. */
 		if ((iter->ao_flags & (ASM_OVERLOAD_FRET | ASM_OVERLOAD_FYLD)) &&
 		    !!(iter->ao_flags & ASM_OVERLOAD_FYLD) !=
-		    !!(current_basescope->bs_flags & CODE_FYIELDING))
+		    !!(current_basescope->bs_flags & Dee_CODE_FYIELDING))
 			continue;
 
 		/* Match operands against each other. */
@@ -1255,7 +1255,7 @@ do_emit_instruction:
 
 	/* Make sure to always set the assembly flag
 	 * for code objects containing user-assembly. */
-	current_basescope->bs_flags |= CODE_FASSEMBLY;
+	current_basescope->bs_flags |= Dee_CODE_FASSEMBLY;
 done:
 	return 0;
 }
@@ -1663,7 +1663,7 @@ abs_stack_any:
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
 		if (sym->s_type != SYMBOL_TYPE_EXTERN)
 			goto next_option;
-		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
+		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FPROPERTY)
 			goto next_option;
 		eid = asm_esymid(sym);
 		if unlikely(eid < 0)
@@ -2025,7 +2025,7 @@ err_undefined_mode:
 
 struct assembly_formatter {
 	struct ast            *af_ast;     /* [1..1] The user-assembly ast. */
-	struct ascii_printer   af_printer; /* Printer for the resulting assembly text. */
+	struct Dee_ascii_printer   af_printer; /* Printer for the resulting assembly text. */
 	DREF DeeStringObject **af_opreprv; /* [1..1][af_ast->a_assembly.as_opc][owned]
 	                                    * Vector of pre-allocated operand representations. */
 };
@@ -2040,7 +2040,7 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 	for (; iter < end; ++iter)
 		Dee_XDecref(*iter);
 	Dee_Free(self->af_opreprv);
-	ascii_printer_fini(&self->af_printer);
+	Dee_ascii_printer_fini(&self->af_printer);
 }
 
 
@@ -2049,15 +2049,15 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) /*ref*/ struct TPPString *DCALL
 assembly_formatter_format(struct assembly_formatter *__restrict self,
                           struct TPPString const *__restrict input) {
-#define print(p, s)                                                   \
-	do {                                                              \
-		if unlikely(ascii_printer_print(&self->af_printer, p, s) < 0) \
-			goto err;                                                 \
+#define print(p, s)                                                       \
+	do {                                                                  \
+		if unlikely(Dee_ascii_printer_print(&self->af_printer, p, s) < 0) \
+			goto err;                                                     \
 	}	__WHILE0
-#define printf(...)                                                           \
-	do {                                                                      \
-		if unlikely(ascii_printer_printf(&self->af_printer, __VA_ARGS__) < 0) \
-			goto err;                                                         \
+#define printf(...)                                                               \
+	do {                                                                          \
+		if unlikely(Dee_ascii_printer_printf(&self->af_printer, __VA_ARGS__) < 0) \
+			goto err;                                                             \
 	}	__WHILE0
 	char const *iter, *end, *flush_start;
 	char ch;
@@ -2084,7 +2084,7 @@ next:
 		if (ch == '(') {
 			/* To prevent ambiguity, we allow format options to be surrounded by (...) */
 			has_paren = true;
-			iter      = unicode_skipspaceutf8_n(iter, end);
+			iter      = Dee_unicode_skipspaceutf8_n(iter, end);
 			ch        = *iter++;
 		}
 		if (ch != '%') {
@@ -2109,7 +2109,7 @@ next:
 				char const *name_start;
 				struct TPPKeyword *name;
 				struct asm_operand *op_iter, *op_end;
-				iter = unicode_skipspaceutf8_n(iter, end);
+				iter = Dee_unicode_skipspaceutf8_n(iter, end);
 				ch   = *iter++;
 				if (!DeeUni_IsSymStrt(ch)) {
 					DeeError_Throwf(&DeeError_CompilerError,
@@ -2140,7 +2140,7 @@ err_unknown_operand:
 				}
 				goto err_unknown_operand;
 has_operand:
-				iter = unicode_skipspaceutf8_n(iter - 1, end);
+				iter = Dee_unicode_skipspaceutf8_n(iter - 1, end);
 				ch   = *iter++;
 				if (ch != ']') {
 					DeeError_Throwf(&DeeError_CompilerError,
@@ -2188,7 +2188,7 @@ has_operand:
 		}
 done_special:
 		if (has_paren) {
-			iter = unicode_skipspaceutf8_n(iter, end);
+			iter = Dee_unicode_skipspaceutf8_n(iter, end);
 			if (*iter != ')') {
 				DeeError_Throwf(&DeeError_CompilerError,
 				                "Expected `)' after `%(' in user-assembly text");
@@ -2285,7 +2285,7 @@ ast_genasm_userasm(struct ast *__restrict self) {
 		                                                            sizeof(DREF DeeStringObject *));
 		if unlikely(!formatter.af_opreprv)
 			goto err;
-		ascii_printer_init(&formatter.af_printer);
+		Dee_ascii_printer_init(&formatter.af_printer);
 
 		/* Generate text representations of assembly operands. */
 		dst         = formatter.af_opreprv;

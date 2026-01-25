@@ -248,7 +248,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL librt_getstacklimit_f_impl(void)
 }
 
 /*[[[deemon (print_CMethod from rt.gen.unpack)("setstacklimit", """
-	uint16_t newval=!0 = DEE_CONFIG_DEFAULT_STACK_LIMIT
+	uint16_t newval=!0 = Dee_EXEC_DEFAULT_STACK_LIMIT
 """);]]]*/
 #define librt_setstacklimit_params "newval=!0"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL librt_setstacklimit_f_impl(uint16_t newval);
@@ -256,7 +256,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL librt_setstacklimit_f(size_t argc, DeeObje
 	struct {
 		uint16_t newval;
 	} args;
-	args.newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
+	args.newval = Dee_EXEC_DEFAULT_STACK_LIMIT;
 	DeeArg_Unpack0Or1X(err, argc, argv, "setstacklimit", &args.newval, UNPu16, DeeObject_AsUInt16);
 	return librt_setstacklimit_f_impl(args.newval);
 err:
@@ -2113,7 +2113,7 @@ librt_get_ModuleLibNames_f(void) {
 }
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
-PRIVATE DEFINE_BYTES(small_bytes, Dee_BUFFER_FREADONLY, 1, { 0 });
+PRIVATE Dee_DEFINE_BYTES(small_bytes, Dee_BUFFER_FREADONLY, 1, { 0 });
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_BytesFind_uncached_f(void) {
@@ -2511,32 +2511,32 @@ librt_get_ReBytesSplitIterator_f(void) {
 	return_cached(get_Iterator_of(librt_get_ReBytesSplit_f()));
 }
 
-PRIVATE DEFINE_CODE(DeeCode_EmptyYielding,
-                    /* co_flags:      */ CODE_FCOPYABLE | CODE_FYIELDING,
-                    /* co_localc:     */ 0,
-                    /* co_constc:     */ 0,
-                    /* co_refc:       */ 0,
-                    /* co_refstaticc: */ 0,
-                    /* co_exceptc:    */ 0,
-                    /* co_argc_min:   */ 0,
-                    /* co_argc_max:   */ 0,
-                    /* co_framesize:  */ 0,
-                    /* co_codebytes:  */ 1,
-                    /* co_module:     */ &DeeModule_Deemon,
-                    /* co_keywords:   */ NULL,
-                    /* co_defaultv:   */ NULL,
-                    /* co_constv:     */ NULL,
-                    /* co_exceptv:    */ NULL,
-                    /* co_ddi:        */ &DeeDDI_Empty,
-                    /* co_code:       */ { ASM_RET_NONE });
-PRIVATE DEFINE_FUNCTION_NOREFS(DeeFunction_EmptyYielding,
-                               /* fo_code: */ (DeeCodeObject *)&DeeCode_EmptyYielding);
-PRIVATE DEFINE_YIELD_FUNCTION_NOARGS(DeeYieldFunction_Empty,
-                                     /* yf_func: */ (DeeFunctionObject *)&DeeFunction_EmptyYielding.ob,
-                                     /* yf_kw:   */ NULL,
-                                     /* yf_this: */ NULL);
+PRIVATE Dee_DEFINE_CODE(DeeCode_EmptyYielding,
+                        /* co_flags:      */ Dee_CODE_FCOPYABLE | Dee_CODE_FYIELDING,
+                        /* co_localc:     */ 0,
+                        /* co_constc:     */ 0,
+                        /* co_refc:       */ 0,
+                        /* co_refstaticc: */ 0,
+                        /* co_exceptc:    */ 0,
+                        /* co_argc_min:   */ 0,
+                        /* co_argc_max:   */ 0,
+                        /* co_framesize:  */ 0,
+                        /* co_codebytes:  */ 1,
+                        /* co_module:     */ &DeeModule_Deemon,
+                        /* co_keywords:   */ NULL,
+                        /* co_defaultv:   */ NULL,
+                        /* co_constv:     */ NULL,
+                        /* co_exceptv:    */ NULL,
+                        /* co_ddi:        */ &DeeDDI_Empty,
+                        /* co_code:       */ { ASM_RET_NONE });
+PRIVATE Dee_DEFINE_FUNCTION_NOREFS(DeeFunction_EmptyYielding,
+                                   /* fo_code: */ (DeeCodeObject *)&DeeCode_EmptyYielding);
+PRIVATE Dee_DEFINE_YIELD_FUNCTION_NOARGS(DeeYieldFunction_Empty,
+                                         /* yf_func: */ (DeeFunctionObject *)&DeeFunction_EmptyYielding.ob,
+                                         /* yf_kw:   */ NULL,
+                                         /* yf_this: */ NULL);
 PRIVATE struct {
-	struct gc_head_link _gc_head_data;
+	struct Dee_gc_head_link _gc_head_data;
 	DeeYieldFunctionIteratorObject ob;
 } DeeYieldFunctionIterator_Empty = {
 	{ NULL, NULL },
@@ -2557,7 +2557,7 @@ PRIVATE struct {
 			/* .cf_this    = */ NULL,
 			/* .cf_result  = */ NULL,
 			/* .cf_stacksz = */ 0,
-			/* .cf_flags   = */ CODE_FCOPYABLE | CODE_FYIELDING,
+			/* .cf_flags   = */ Dee_CODE_FCOPYABLE | Dee_CODE_FYIELDING,
 		},
 #ifndef CONFIG_NO_THREADS
 		/* .yi_lock = */ Dee_RSHARED_RWLOCK_INIT,
@@ -2573,7 +2573,7 @@ PRIVATE DeeFrameObject DeeFrame_Empty = {
 	{ (Dee_atomic_rwlock_t *)&DeeYieldFunctionIterator_Empty.ob.yi_lock },
 	/* .f_lock  = */ Dee_ATOMIC_RWLOCK_INIT,
 #endif /* !CONFIG_NO_THREADS */
-	/* .f_flags = */ DEEFRAME_FREADONLY | DEEFRAME_FSHRLOCK | DEEFRAME_FRECLOCK,
+	/* .f_flags = */ Dee_FRAME_FREADONLY | Dee_FRAME_FSHRLOCK | Dee_FRAME_FRECLOCK,
 	/* .f_revsp = */ 0,
 };
 
@@ -3059,9 +3059,9 @@ import * from rt.gen.dexutils;
 MODULE_NAME = "rt";
 
 include("constants.def");
-gi("HASHOF_EMPTY_SEQUENCE", "DEE_HASHOF_EMPTY_SEQUENCE");
-gi("HASHOF_UNBOUND_ITEM", "DEE_HASHOF_UNBOUND_ITEM");
-gi("HASHOF_RECURSIVE_ITEM", "DEE_HASHOF_RECURSIVE_ITEM");
+gi("HASHOF_EMPTY_SEQUENCE", "Dee_HASHOF_EMPTY_SEQUENCE");
+gi("HASHOF_UNBOUND_ITEM", "Dee_HASHOF_UNBOUND_ITEM");
+gi("HASHOF_RECURSIVE_ITEM", "Dee_HASHOF_RECURSIVE_ITEM");
 ]]]*/
 #include "constants.def"
 /*[[[end]]]*/
@@ -3086,11 +3086,11 @@ DEX_BEGIN
 	"Returns the current stack limit, that is the max number of "         \
 	/**/ "user-code functions that may be executed consecutively before " \
 	/**/ "a :StackOverflow error is thrown\n"                             \
-	"The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)
+	"The default stack limit is $" PP_STR(Dee_EXEC_DEFAULT_STACK_LIMIT)
 DEX_MEMBER_F("getstacklimit", &librt_getstacklimit, DEXSYM_READONLY, DOCOF_getstacklimit),
 
 #define DOCOF_setstacklimit                                              \
-	"(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"   \
+	"(new_limit=!" PP_STR(Dee_EXEC_DEFAULT_STACK_LIMIT) ")->?Dint\n"   \
 	"#tIntegerOverflow{@new_limit is negative, or greater than $0xffff}" \
 	"Set the new stack limit to @new_limit and return the old limit\n"   \
 	"The stack limit is checked every time a user-code function is "     \

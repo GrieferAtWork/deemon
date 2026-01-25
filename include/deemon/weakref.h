@@ -17,10 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
 /*!export DeeWeakRef**/
 /*!export DeeWeakRefAble**/
 #ifndef GUARD_DEEMON_WEAKREF_H
-#define GUARD_DEEMON_WEAKREF_H 1
+#define GUARD_DEEMON_WEAKREF_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -28,7 +29,7 @@
 
 DECL_BEGIN
 
-typedef struct {
+typedef struct Dee_weakref_object {
 	Dee_OBJECT_HEAD
 	struct Dee_weakref wr_ref; /* The weak reference pointer. */
 	DREF DeeObject    *wr_del; /* [0..1][const] Deletion callback. */

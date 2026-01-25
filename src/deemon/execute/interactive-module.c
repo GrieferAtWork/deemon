@@ -66,8 +66,8 @@ DECLARE_STRUCT_CACHE(sym, struct symbol)
 
 
 struct compiler_options_mapping {
-	struct compiler_options  com_opt; /* The compiler options copy. */
-	struct compiler_options *com_map; /* [1..1][const] The associated source-options mapping */
+	struct Dee_compiler_options  com_opt; /* The compiler options copy. */
+	struct Dee_compiler_options *com_map; /* [1..1][const] The associated source-options mapping */
 };
 
 typedef struct {
@@ -100,7 +100,7 @@ typedef struct {
 	                                       * Set of `MODULE_INTERACTIVE_MODE_F*' */
 	DREF DeeObject          *im_stream;   /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
 	                                       * The stream from which source code is read. */
-	struct compiler_options  im_options;  /* [OVERRIDE(.[co_inner->*]->co_inner, [owned])]
+	struct Dee_compiler_options  im_options;  /* [OVERRIDE(.[co_inner->*]->co_inner, [owned])]
 	                                       * [OVERRIDE(.[co_inner->*]->co_pathname, [TAG(DREF)])]
 	                                       * [OVERRIDE(.[co_inner->*]->co_filename, [TAG(DREF)])]
 	                                       * [OVERRIDE(.[co_inner->*]->co_rootname, [TAG(DREF)])]
@@ -116,7 +116,7 @@ typedef struct {
 	                                       * The compiler used for compiling source code */
 	/*ref*/ struct TPPFile  *im_basefile; /* [0..1][(!= NULL) == (im_module.mo_root != NULL)][lock(im_lock)]
 	                                       * The TPP base file that is linked against `im_stream' */
-	struct code_frame        im_frame;    /* [OVERRIDE(.cf_func, [0..1][(!= NULL) == (:im_module.mo_root != NULL)][TAG(DREF)]
+	struct Dee_code_frame        im_frame;    /* [OVERRIDE(.cf_func, [0..1][(!= NULL) == (:im_module.mo_root != NULL)][TAG(DREF)]
 	                                       *                     [COMMENT("A function object referring to the code object used "
 	                                       *                              "to execute interactive assembly. This object is copied "
 	                                       *                              "prior to being modified the same way `im_module.mo_root' "
@@ -326,10 +326,10 @@ INTDEF int DCALL skip_lf(void);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 imod_next(InteractiveModule *__restrict self) {
 	DREF DeeObject *result;
-	struct code_frame *top_frame;
+	struct Dee_code_frame *top_frame;
 	DREF struct ast *statement_ast;
 	DeeCodeObject *current_code;
-	struct traceback_object *current_traceback;
+	struct Dee_traceback_object *current_traceback;
 	size_t preexisting_codesize;
 	bool is_reusing_code_object;
 	uint16_t old_co_flags;
@@ -337,7 +337,7 @@ imod_next(InteractiveModule *__restrict self) {
 	uint16_t old_co_constc;
 	uint16_t old_co_exceptc;
 	uint32_t old_co_framesize;
-	struct except_handler *old_co_exceptv;
+	struct Dee_except_handler *old_co_exceptv;
 	DeeDDIObject *old_co_ddi;
 	int link_error;
 
@@ -680,35 +680,35 @@ gencode_failed:
 					current_code->co_exceptc = old_co_exceptc;
 					current_code->co_exceptv = old_co_exceptv;
 				} else if (is_reusing_code_object) {
-					struct except_handler *full_exceptv;
-					full_exceptv = (struct except_handler *)Dee_Reallocc(old_co_exceptv,
+					struct Dee_except_handler *full_exceptv;
+					full_exceptv = (struct Dee_except_handler *)Dee_Reallocc(old_co_exceptv,
 					                                                     current_code->co_exceptc + old_co_exceptc,
-					                                                     sizeof(struct except_handler));
+					                                                     sizeof(struct Dee_except_handler));
 					if unlikely(!full_exceptv)
 						goto gencode_failed;
 					memcpyc(full_exceptv + old_co_exceptc,
 					        current_code->co_exceptv,
 					        current_code->co_exceptc,
-					        sizeof(struct except_handler));
+					        sizeof(struct Dee_except_handler));
 					Dee_Free(current_code->co_exceptv);
 					current_code->co_exceptc += old_co_exceptc;
 					current_code->co_exceptv = full_exceptv;
 				} else {
-					struct except_handler *full_exceptv;
+					struct Dee_except_handler *full_exceptv;
 					uint16_t i;
-					full_exceptv = (struct except_handler *)Dee_Reallocc(current_code->co_exceptv,
+					full_exceptv = (struct Dee_except_handler *)Dee_Reallocc(current_code->co_exceptv,
 					                                                     current_code->co_exceptc + old_co_exceptc,
-					                                                     sizeof(struct except_handler));
+					                                                     sizeof(struct Dee_except_handler));
 					if unlikely(!full_exceptv)
 						goto gencode_failed;
 					memmoveupc(full_exceptv + old_co_exceptc,
 					           full_exceptv,
 					           current_code->co_exceptc,
-					           sizeof(struct except_handler));
+					           sizeof(struct Dee_except_handler));
 					memcpyc(full_exceptv,
 					        old_co_exceptv,
 					        old_co_exceptc,
-					        sizeof(struct except_handler));
+					        sizeof(struct Dee_except_handler));
 					for (i = 0; i < old_co_exceptc; ++i)
 						Dee_XIncref(full_exceptv[i].eh_mask);
 					current_code->co_exceptc += old_co_exceptc;
@@ -823,7 +823,7 @@ done_exec:
 
 
 PRIVATE void DCALL
-incref_options(struct compiler_options *__restrict self) {
+incref_options(struct Dee_compiler_options *__restrict self) {
 	Dee_XIncref(self->co_pathname);
 	Dee_XIncref(self->co_filename);
 	Dee_XIncref(self->co_rootname);
@@ -831,7 +831,7 @@ incref_options(struct compiler_options *__restrict self) {
 }
 
 PRIVATE void DCALL
-decref_options(struct compiler_options *__restrict self) {
+decref_options(struct Dee_compiler_options *__restrict self) {
 	Dee_XDecref(self->co_pathname);
 	Dee_XDecref(self->co_filename);
 	Dee_XDecref(self->co_rootname);
@@ -839,7 +839,7 @@ decref_options(struct compiler_options *__restrict self) {
 }
 
 PRIVATE void DCALL
-visit_options(struct compiler_options *__restrict self, Dee_visit_t proc, void *arg) {
+visit_options(struct Dee_compiler_options *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisit(self->co_pathname);
 	Dee_XVisit(self->co_filename);
 	Dee_XVisit(self->co_rootname);
@@ -850,7 +850,7 @@ visit_options(struct compiler_options *__restrict self, Dee_visit_t proc, void *
 PRIVATE int DCALL
 copy_options_chain(struct compiler_options_mapping **p_root,
                    struct compiler_options_mapping **p_result,
-                   struct compiler_options *__restrict source) {
+                   struct Dee_compiler_options *__restrict source) {
 	struct compiler_options_mapping *iter;
 	iter = *p_root;
 	/* Search for a pre-existing mapping for `source' */
@@ -864,7 +864,7 @@ copy_options_chain(struct compiler_options_mapping **p_root,
 	iter = (struct compiler_options_mapping *)Dee_Malloc(sizeof(struct compiler_options_mapping));
 	if unlikely(!iter)
 		goto err;
-	memcpy(iter, source, sizeof(struct compiler_options));
+	memcpy(iter, source, sizeof(struct Dee_compiler_options));
 	iter->com_opt.co_inner = NULL;
 	iter->com_map          = source;
 	/* Save the result. */
@@ -889,11 +889,11 @@ err:
 
 
 PRIVATE void DCALL
-free_options_chain(struct compiler_options *entry,
-                   struct compiler_options *base,
+free_options_chain(struct Dee_compiler_options *entry,
+                   struct Dee_compiler_options *base,
                    unsigned int depth) {
 	unsigned int i;
-	struct compiler_options *iter = base;
+	struct Dee_compiler_options *iter = base;
 	for (i = 0; i < depth; ++i) {
 		if (iter == entry)
 			return; /* Options loop detected */
@@ -906,11 +906,11 @@ free_options_chain(struct compiler_options *entry,
 }
 
 PRIVATE void DCALL
-visit_options_chain(struct compiler_options *entry,
-                    struct compiler_options *base,
+visit_options_chain(struct Dee_compiler_options *entry,
+                    struct Dee_compiler_options *base,
                     unsigned int depth, Dee_visit_t proc, void *arg) {
 	unsigned int i;
-	struct compiler_options *iter = base;
+	struct Dee_compiler_options *iter = base;
 	for (i = 0; i < depth; ++i) {
 		if (iter == entry)
 			return; /* Options loop detected */
@@ -925,25 +925,25 @@ visit_options_chain(struct compiler_options *entry,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 module_rehash_globals(DeeModuleObject *__restrict self) {
 	size_t i, new_mask = (self->mo_bucketm << 1) | 1;
-	struct module_symbol *new_vec;
+	struct Dee_module_symbol *new_vec;
 	ASSERT(!(new_mask & (new_mask + 1)));
-	new_vec = (struct module_symbol *)Dee_Callocc(new_mask + 1,
-	                                              sizeof(struct module_symbol));
+	new_vec = (struct Dee_module_symbol *)Dee_Callocc(new_mask + 1,
+	                                              sizeof(struct Dee_module_symbol));
 	if unlikely(!new_vec)
 		goto err;
 	for (i = 0; i <= self->mo_bucketm; ++i) {
 		size_t j, perturb;
-		struct module_symbol *item;
+		struct Dee_module_symbol *item;
 		item = &self->mo_bucketv[i];
 		if (!item->ss_name)
 			continue;
 		perturb = j = item->ss_hash & new_mask;
 		for (;; Dee_MODULE_HASHNX(j, perturb)) {
-			struct module_symbol *new_item = &new_vec[j & new_mask];
+			struct Dee_module_symbol *new_item = &new_vec[j & new_mask];
 			if (new_item->ss_name)
 				continue;
 			/* Copy the old item into this new slot. */
-			memcpy(new_item, item, sizeof(struct module_symbol));
+			memcpy(new_item, item, sizeof(struct Dee_module_symbol));
 			break;
 		}
 	}
@@ -981,12 +981,12 @@ module_import_symbol(DeeModuleObject *self,
 	hash    = DeeString_Hash(name);
 	perturb = i = Dee_MODULE_HASHST(self, hash);
 	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct module_symbol *item = Dee_MODULE_HASHIT(self, i);
+		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(self, i);
 		if (item->ss_name)
 			continue;
 		/* Use this item. */
 		item->ss_name  = DeeString_STR(name);
-		item->ss_flags = MODSYM_FNAMEOBJ;
+		item->ss_flags = Dee_MODSYM_FNAMEOBJ;
 		item->ss_doc   = NULL;
 		item->ss_hash  = hash;
 		item->ss_index = self->mo_globalc - 1;
@@ -1024,7 +1024,7 @@ err:
  *   memory in the heap, considering how we operate as a yield-like function.
  */
 #define INTERACTIVE_MODULE_CODE_FLAGS \
-	(CODE_FASSEMBLY | CODE_FLENIENT | CODE_FVARARGS | CODE_FHEAPFRAME | CODE_FYIELDING)
+	(Dee_CODE_FASSEMBLY | Dee_CODE_FLENIENT | Dee_CODE_FVARARGS | Dee_CODE_FHEAPFRAME | Dee_CODE_FYIELDING)
 
 
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -1039,7 +1039,7 @@ imod_init(InteractiveModule *__restrict self,
           DeeObject *source_stream,
           unsigned int mode,
           int start_line, int start_col,
-          struct compiler_options *options,
+          struct Dee_compiler_options *options,
           DeeObject *source_pathname,
           DeeObject *module_name,
           DeeObject *argv,
@@ -1052,7 +1052,7 @@ imod_init(InteractiveModule *__restrict self,
 		argv = Dee_EmptyTuple;
 	/* First off: Copy compiler options */
 	if (options) {
-		memcpy(&self->im_options, options, sizeof(struct compiler_options));
+		memcpy(&self->im_options, options, sizeof(struct Dee_compiler_options));
 		/* Recursively copy inner options from the given set of compiler options. */
 		if (options->co_inner) {
 			self->im_options.co_inner = NULL;
@@ -1062,7 +1062,7 @@ imod_init(InteractiveModule *__restrict self,
 				goto err;
 		}
 	} else {
-		bzero(&self->im_options, sizeof(struct compiler_options));
+		bzero(&self->im_options, sizeof(struct Dee_compiler_options));
 		/* Enable the LFSTMT option by default. */
 		self->im_options.co_parser |= PARSE_FLFSTMT;
 	}
@@ -1098,19 +1098,19 @@ imod_init(InteractiveModule *__restrict self,
 			                                STRING_ERROR_FIGNORE);
 			if unlikely(!module_name)
 				goto err_options;
-			self->im_module.mo_name = (DREF struct string_object *)module_name; /* Inherit reference */
+			self->im_module.mo_name = (DREF DeeStringObject *)module_name; /* Inherit reference */
 		} else {
 			module_name = DeeString_NewEmpty();
 		}
 	} else {
 		Dee_Incref(module_name);
-		self->im_module.mo_name = (DREF struct string_object *)module_name;
+		self->im_module.mo_name = (DREF DeeStringObject *)module_name;
 	}
 
 	/* Fill in the module's path name. */
 	ASSERT_OBJECT_TYPE_EXACT_OPT(source_pathname, &DeeString_Type);
 	Dee_XIncref(source_pathname);
-	self->im_module.mo_path = (DREF struct string_object *)source_pathname;
+	self->im_module.mo_path = (DREF DeeStringObject *)source_pathname;
 
 	/* Set global hook members as NULL pointers. */
 	LIST_ENTRY_UNBOUND_INIT(&self->im_module.mo_link);
@@ -1123,8 +1123,8 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_module.mo_globalv = NULL;
 	self->im_module.mo_flags   = Dee_MODULE_FLOADING | Dee_MODULE_FINITIALIZING;
 	self->im_module.mo_bucketm = INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK;
-	self->im_module.mo_bucketv = (struct module_symbol *)Dee_Callocc(INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK + 1,
-	                                                                 sizeof(struct module_symbol));
+	self->im_module.mo_bucketv = (struct Dee_module_symbol *)Dee_Callocc(INTERACTIVE_MODULE_DEFAULT_GLOBAL_SYMBOL_MASK + 1,
+	                                                                 sizeof(struct Dee_module_symbol));
 	if unlikely(!self->im_module.mo_bucketv)
 		goto err_name;
 
@@ -1140,7 +1140,7 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_module.mo_loader = NULL;
 #endif /* !CONFIG_NO_THREADS */
 
-	weakref_support_init(&self->im_module);
+	Dee_weakref_support_init(&self->im_module);
 
 	/* With that, all module-level and some interactive
 	 * level components have already been initialized. */
@@ -1153,7 +1153,7 @@ imod_init(InteractiveModule *__restrict self,
 	Dee_rshared_rwlock_init(&self->im_exec_lock);
 
 	/* Setup the contents of the initial code frame. */
-	self->im_frame.cf_prev  = CODE_FRAME_NOT_EXECUTING;
+	self->im_frame.cf_prev  = Dee_CODE_FRAME_NOT_EXECUTING;
 	self->im_frame.cf_argc  = DeeTuple_SIZE(argv);
 	self->im_frame.cf_argv  = DeeTuple_ELEM(argv);
 	self->im_frame.cf_frame = NULL;
@@ -1300,7 +1300,7 @@ do_create_base_name:
 				current_rootscope->rs_globalc = self->im_module.mo_globalc;
 				for (i = 0; i <= self->im_module.mo_bucketm; ++i) {
 					struct symbol *sym, **bucket;
-					struct module_symbol *modsym;
+					struct Dee_module_symbol *modsym;
 					modsym = &self->im_module.mo_bucketv[i];
 					if (!modsym->ss_name)
 						continue;
@@ -1313,8 +1313,8 @@ err_compiler_basefile:
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 					sym->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-					sym->s_name = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(modsym),
-					                                     MODULE_SYMBOL_GETNAMELEN(modsym),
+					sym->s_name = TPPLexer_LookupKeyword(Dee_MODULE_SYMBOL_GETNAMESTR(modsym),
+					                                     Dee_MODULE_SYMBOL_GETNAMELEN(modsym),
 					                                     1);
 					if unlikely(!sym->s_name)
 						goto err_compiler_basefile;
@@ -1371,7 +1371,7 @@ err_compiler_basefile:
 		init_code->co_argc_max  = 0;
 		init_code->co_framesize = 0;
 		init_code->co_codebytes = sizeof(instruction_t);
-		init_code->co_module   = (DREF struct module_object *)self;
+		init_code->co_module   = (DREF struct Dee_module_object *)self;
 		init_code->co_defaultv = NULL;
 		init_code->co_constv   = NULL;
 		init_code->co_exceptv  = NULL;
@@ -1419,13 +1419,13 @@ err_stream:
 err_globals:
 	Dee_XDecrefv(self->im_module.mo_globalv, self->im_module.mo_globalc);
 	for (i = 0; i <= self->im_module.mo_bucketm; ++i) {
-		struct module_symbol *sym;
+		struct Dee_module_symbol *sym;
 		sym = &self->im_module.mo_bucketv[i];
 		if (!sym->ss_name)
 			continue;
-		if (sym->ss_flags & MODSYM_FNAMEOBJ)
+		if (sym->ss_flags & Dee_MODSYM_FNAMEOBJ)
 			Dee_Decref(COMPILER_CONTAINER_OF(sym->ss_name, DeeStringObject, s_str));
-		if (sym->ss_flags & MODSYM_FDOCOBJ)
+		if (sym->ss_flags & Dee_MODSYM_FDOCOBJ)
 			Dee_Decref(COMPILER_CONTAINER_OF(sym->ss_doc, DeeStringObject, s_str));
 	}
 	Dee_Free(self->im_module.mo_bucketv);
@@ -1716,7 +1716,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenInteractive(DeeObject *source_stream,
                           unsigned int mode,
                           int start_line, int start_col,
-                          struct compiler_options *options,
+                          struct Dee_compiler_options *options,
                           DeeObject *source_pathname,
                           DeeObject *module_name,
                           DeeObject *argv,
@@ -1751,7 +1751,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeModule_OpenInteractiveString(DeeObject *source_stream,
                                 unsigned int mode,
                                 int start_line, int start_col,
-                                struct compiler_options *options,
+                                struct Dee_compiler_options *options,
                                 /*utf-8*/ char const *source_pathname,
                                 size_t source_pathsize,
                                 /*utf-8*/ char const *module_name,
@@ -1826,10 +1826,10 @@ imod_clear(InteractiveModule *__restrict self) {
 	size_t localc, old_globalc;
 	DREF DeeObject *old_stream;
 	DREF DeeObject **old_globalv;
-	struct compiler_options old_options;
+	struct Dee_compiler_options old_options;
 	DREF DeeCompilerObject *old_compiler;
 	/*ref*/ struct TPPFile *old_basefile;
-	struct code_frame old_frame;
+	struct Dee_code_frame old_frame;
 	InteractiveModule_ExecLockWriteNoInt(self);
 	InteractiveModule_LockWriteNoInt(self);
 	old_stream        = self->im_stream;
@@ -1838,11 +1838,11 @@ imod_clear(InteractiveModule *__restrict self) {
 	self->im_basefile = NULL;
 	old_compiler      = self->im_compiler;
 	self->im_compiler = NULL;
-	memcpy(&old_options, &self->im_options, sizeof(struct compiler_options));
-	bzero(&self->im_options, sizeof(struct compiler_options));
+	memcpy(&old_options, &self->im_options, sizeof(struct Dee_compiler_options));
+	bzero(&self->im_options, sizeof(struct Dee_compiler_options));
 	self->im_options.co_assembler |= ASM_FNODEC;
 	InteractiveModule_LockEndWrite(self);
-	memcpy(&old_frame, &self->im_frame, sizeof(struct code_frame));
+	memcpy(&old_frame, &self->im_frame, sizeof(struct Dee_code_frame));
 	self->im_frame.cf_func    = NULL;
 	self->im_frame.cf_frame   = NULL;
 	self->im_frame.cf_stack   = NULL;
@@ -1961,7 +1961,7 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 	/* .tp_name     = */ "_InteractiveModule",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeModuleObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeModuleObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeModule_Type,
 	/* .tp_init = */ {

@@ -17,11 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
 /*!export Dee_ATOMIC_**/
 /*!export Dee_atomic_**/
 /*!export atomic_**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_UTIL_ATOMIC_H
-#define GUARD_DEEMON_UTIL_ATOMIC_H 1
+#define GUARD_DEEMON_UTIL_ATOMIC_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -110,7 +112,7 @@ _Dee_atomic_fetchnand_no_threads(T *p, S value) {
 #else /* ... */
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__, __UINTn_TYPE__ */
 
-#define DEE_DEFINE_ATOMIC_HELPERS(n, T)                   \
+#define _Dee_PRIVATE_DEFINE_ATOMIC_HELPERS(n, T)          \
 	LOCAL WUNUSED NONNULL((1)) T                          \
 	_Dee_atomic_xch_no_threads_##n(T *p, T value) {       \
 		T result = *p;                                    \
@@ -135,46 +137,47 @@ _Dee_atomic_fetchnand_no_threads(T *p, S value) {
 		*p = ~(*p & value);                               \
 		return result;                                    \
 	}
-DEE_DEFINE_ATOMIC_HELPERS(8, __UINT8_TYPE__)
-DEE_DEFINE_ATOMIC_HELPERS(16, __UINT16_TYPE__)
-DEE_DEFINE_ATOMIC_HELPERS(32, __UINT32_TYPE__)
+_Dee_PRIVATE_DEFINE_ATOMIC_HELPERS(8, __UINT8_TYPE__)
+_Dee_PRIVATE_DEFINE_ATOMIC_HELPERS(16, __UINT16_TYPE__)
+_Dee_PRIVATE_DEFINE_ATOMIC_HELPERS(32, __UINT32_TYPE__)
 #ifdef __UINT64_TYPE__
-DEE_DEFINE_ATOMIC_HELPERS(64, __UINT64_TYPE__)
+_Dee_PRIVATE_DEFINE_ATOMIC_HELPERS(64, __UINT64_TYPE__)
 #endif /* __UINT64_TYPE__ */
+#undef _Dee_PRIVATE_DEFINE_ATOMIC_HELPERS
 
 #ifdef __COMPILER_HAVE_TYPEOF
-#define _Dee_ATOMIC_RECAST(x, y) ((__typeof__(x))(y))
+#define _Dee_PRIVATE_ATOMIC_RECAST(x, y) ((__typeof__(x))(y))
 #elif 1
-#define _Dee_ATOMIC_RECAST(x, y) (1 ? (y) : (x))
+#define _Dee_PRIVATE_ATOMIC_RECAST(x, y) (1 ? (y) : (x))
 #else /* ... */
-#define _Dee_ATOMIC_RECAST(x, y) (y)
+#define _Dee_PRIVATE_ATOMIC_RECAST(x, y) (y)
 #endif /* !... */
 #ifdef _MSC_VER
-#define _Dee_ATOMIC_DOWNCAST(T) (T)(__UINTPTR_TYPE__)
+#define _Dee_PRIVATE_ATOMIC_DOWNCAST(T) (T)(__UINTPTR_TYPE__)
 #else /* _MSC_VER */
-#define _Dee_ATOMIC_DOWNCAST(T) (T)
+#define _Dee_PRIVATE_ATOMIC_DOWNCAST(T) (T)
 #endif /* !_MSC_VER */
 /* clang-format off */
-#define Dee_atomic_xch_explicit(p, value, order)                                                                                                    \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_xch_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_xch_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_xch_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_xch_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
-#define Dee_atomic_fetchand_explicit(p, value, order)                                                                                                    \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchand_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_fetchand_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_fetchand_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_fetchand_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
-#define Dee_atomic_fetchor_explicit(p, value, order)                                                                                                    \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchor_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_fetchor_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_fetchor_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_fetchor_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
-#define Dee_atomic_fetchnand_explicit(p, value, order)                                                                                                    \
-	_Dee_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchnand_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
-	                         sizeof(x) == 2 ? _Dee_atomic_fetchnand_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
-	                         sizeof(x) == 4 ? _Dee_atomic_fetchnand_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
-	                                          _Dee_atomic_fetchnand_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_xch_explicit(p, value, order)                                                                                                                    \
+	_Dee_PRIVATE_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_xch_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                                 sizeof(x) == 2 ? _Dee_atomic_xch_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                                 sizeof(x) == 4 ? _Dee_atomic_xch_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                                  _Dee_atomic_xch_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_fetchand_explicit(p, value, order)                                                                                                                    \
+	_Dee_PRIVATE_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchand_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                                 sizeof(x) == 2 ? _Dee_atomic_fetchand_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                                 sizeof(x) == 4 ? _Dee_atomic_fetchand_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                                  _Dee_atomic_fetchand_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_fetchor_explicit(p, value, order)                                                                                                                    \
+	_Dee_PRIVATE_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchor_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                                 sizeof(x) == 2 ? _Dee_atomic_fetchor_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                                 sizeof(x) == 4 ? _Dee_atomic_fetchor_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                                  _Dee_atomic_fetchor_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
+#define Dee_atomic_fetchnand_explicit(p, value, order)                                                                                                                    \
+	_Dee_PRIVATE_ATOMIC_RECAST(*(x), sizeof(x) == 1 ? _Dee_atomic_fetchnand_no_threads_8((__UINT8_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT8_TYPE__)(value)) :    \
+	                                 sizeof(x) == 2 ? _Dee_atomic_fetchnand_no_threads_16((__UINT16_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT16_TYPE__)(value)) : \
+	                                 sizeof(x) == 4 ? _Dee_atomic_fetchnand_no_threads_32((__UINT32_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT32_TYPE__)(value)) : \
+	                                                  _Dee_atomic_fetchnand_no_threads_64((__UINT64_TYPE__ *)(p), _Dee_PRIVATE_ATOMIC_DOWNCAST(__UINT64_TYPE__)(value)))
 /* clang-format on */
 #endif /* !... */
 

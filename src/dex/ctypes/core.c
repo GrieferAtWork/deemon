@@ -1031,7 +1031,7 @@ DeeSType_GetTypeOf(DeeObject *__restrict self) {
 
 INTERN ATTR_COLD int DCALL
 err_unimplemented_operator(DeeSTypeObject *__restrict tp, Dee_operator_t operator_name) {
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(DeeSType_AsType(tp)), operator_name);
 	ASSERT_OBJECT(DeeSType_AsType(tp));
 	ASSERT(DeeType_Check(DeeSType_AsType(tp)));
@@ -2172,36 +2172,36 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ftype_repr(DeeCFunctionTypeObject *__restrict self) {
 	size_t i;
 	ctypes_cc_t cc;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	bool is_first_arg = true;
-	if unlikely(unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_orig)) < 0)
+	if unlikely(Dee_unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_orig)) < 0)
 		goto err;
-	if unlikely((self->ft_cc & CC_FVARARGS ? UNICODE_PRINTER_PRINT(&printer, ".vfunc(")
-	                                       : UNICODE_PRINTER_PRINT(&printer, ".func(")) < 0)
+	if unlikely((self->ft_cc & CC_FVARARGS ? Dee_UNICODE_PRINTER_PRINT(&printer, ".vfunc(")
+	                                       : Dee_UNICODE_PRINTER_PRINT(&printer, ".func(")) < 0)
 		goto err;
 	cc = (ctypes_cc_t)((unsigned int)self->ft_cc & ~CC_FVARARGS);
 	if (cc != CC_DEFAULT) {
 		char const *cc_name = cc_getname(cc);
 		if (cc_name) {
-			if unlikely(unicode_printer_printf(&printer, "%q", cc_name) < 0)
+			if unlikely(Dee_unicode_printer_printf(&printer, "%q", cc_name) < 0)
 				goto err;
 			is_first_arg = false;
 		}
 	}
 	for (i = 0; i < self->ft_argc; ++i) {
 		if (!is_first_arg) {
-			if unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&printer, ", ") < 0)
 				goto err;
 		}
 		is_first_arg = false;
-		if unlikely(unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_argv[i])) < 0)
+		if unlikely(Dee_unicode_printer_printobjectrepr(&printer, DeeSType_AsObject(self->ft_argv[i])) < 0)
 			goto err;
 	}
-	if unlikely(unicode_printer_putascii(&printer, ')'))
+	if unlikely(Dee_unicode_printer_putascii(&printer, ')'))
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 

@@ -273,7 +273,7 @@ get_compiler_item_impl(DeeTypeObject *__restrict type,
 again:
 	Dee_compiler_items_lock_read(&self->cp_items);
 	if (self->cp_items.cis_list) {
-		struct compiler_item_object_list *list;
+		struct Dee_compiler_item_object_list *list;
 		list = &self->cp_items.cis_list[Dee_HashPointer(value) & self->cp_items.cis_mask];
 		LIST_FOREACH(result, list, ci_link) {
 			if (result->ci_value != value)
@@ -296,7 +296,7 @@ again:
 	Dee_compiler_items_lock_write(&self->cp_items);
 	if (self->cp_items.cis_list) {
 		DREF CompilerItem *new_result;
-		struct compiler_item_object_list *list;
+		struct Dee_compiler_item_object_list *list;
 		list = &self->cp_items.cis_list[Dee_HashPointer(value) & self->cp_items.cis_mask];
 		LIST_FOREACH (new_result, list, ci_link) {
 			if likely(new_result->ci_value != value)
@@ -313,11 +313,11 @@ again:
 	/* Insert the new item into the hash-map. */
 	if (self->cp_items.cis_size >= self->cp_items.cis_mask) {
 		size_t new_mask = (self->cp_items.cis_mask << 1) | 1;
-		struct compiler_item_object_list *new_map;
+		struct Dee_compiler_item_object_list *new_map;
 		if (new_mask == 1)
 			new_mask = 16 - 1;
-		new_map = (struct compiler_item_object_list *)Dee_TryCallocc(new_mask + 1,
-		                                                             sizeof(struct compiler_item_object_list));
+		new_map = (struct Dee_compiler_item_object_list *)Dee_TryCallocc(new_mask + 1,
+		                                                             sizeof(struct Dee_compiler_item_object_list));
 		if unlikely(!new_map && !self->cp_items.cis_list) {
 			Dee_compiler_items_lock_endwrite(&self->cp_items);
 			DeeObject_FREE(result);
@@ -330,7 +330,7 @@ again:
 			for (i = 0; i <= self->cp_items.cis_mask; ++i) {
 				DeeCompilerItemObject *iter, *next;
 				LIST_FOREACH_SAFE (iter, &self->cp_items.cis_list[i], ci_link, next) {
-					struct compiler_item_object_list *newlist;
+					struct Dee_compiler_item_object_list *newlist;
 					newlist = &new_map[Dee_COMPILER_ITEM_HASH(iter) & new_mask];
 					LIST_REMOVE(iter, ci_link);
 					LIST_INSERT_HEAD(newlist, iter, ci_link);
@@ -344,7 +344,7 @@ again:
 
 	/* Insert the new item into the hash-map. */
 	{
-		struct compiler_item_object_list *list;
+		struct Dee_compiler_item_object_list *list;
 		list = &self->cp_items.cis_list[Dee_HashPointer(value) & self->cp_items.cis_mask];
 		LIST_INSERT_HEAD(list, result, ci_link);
 	}
@@ -400,7 +400,7 @@ DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
 /* Delete (clear) the compiler item associated with `value'. */
 INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 	CompilerItem *item;
-	struct compiler_item_object_list *list;
+	struct Dee_compiler_item_object_list *list;
 	DeeCompilerObject *com = DeeCompiler_Current;
 	if (!com)
 		return false;
@@ -461,7 +461,7 @@ DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 		ASSERT(com->cp_items.cis_list != NULL);
 		for (i = 0; i <= com->cp_items.cis_mask; ++i) {
 			CompilerItem *iter, *next;
-			struct compiler_item_object_list *list;
+			struct Dee_compiler_item_object_list *list;
 			list = &com->cp_items.cis_list[i];
 			LIST_FOREACH_SAFE (iter, list, ci_link, next) {
 				if (DeeObject_InstanceOfExact(iter, type) &&

@@ -85,7 +85,7 @@ mf_fini(DeeMemoryFileObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mf_read(DeeMemoryFileObject *__restrict self, void *__restrict buffer,
-        size_t bufsize, dioflag_t UNUSED(flags)) {
+        size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
 	size_t result;
 	byte_t const *srcptr;
 	DeeMemoryFile_LockRead(self);
@@ -117,7 +117,7 @@ again_locked:
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mf_pread(DeeMemoryFileObject *__restrict self, void *__restrict buffer,
-         size_t bufsize, Dee_pos_t pos, dioflag_t UNUSED(flags)) {
+         size_t bufsize, Dee_pos_t pos, Dee_ioflag_t UNUSED(flags)) {
 	size_t result;
 	DeeMemoryFile_LockRead(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
@@ -212,7 +212,7 @@ mf_close(DeeMemoryFileObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-mf_getc(DeeMemoryFileObject *__restrict self, dioflag_t UNUSED(flags)) {
+mf_getc(DeeMemoryFileObject *__restrict self, Dee_ioflag_t UNUSED(flags)) {
 	int result;
 	DeeMemoryFile_LockWrite(self);
 	ASSERT(self->mf_ptr >= self->mf_begin);
@@ -296,15 +296,15 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&mf_read,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_ioflag_t))&mf_read,
 	/* .ft_write  = */ NULL,
 	/* .ft_seek   = */ (Dee_pos_t (DCALL *)(DeeFileObject *__restrict, Dee_off_t, int))&mf_seek,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&mf_close,
-	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, dioflag_t))&mf_pread,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&mf_pread,
 	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&mf_getc,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&mf_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&mf_ungetc,
 	/* .ft_putc   = */ NULL
 };
@@ -383,7 +383,7 @@ PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 reader_read(DeeFileReaderObject *__restrict self, void *__restrict buffer,
-            size_t bufsize, dioflag_t UNUSED(flags)) {
+            size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
 	size_t result;
 	byte_t const *srcptr;
 	DeeFileReader_LockRead(self);
@@ -418,7 +418,7 @@ again_locked:
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 reader_pread(DeeFileReaderObject *__restrict self, void *__restrict buffer,
-             size_t bufsize, Dee_pos_t pos, dioflag_t UNUSED(flags)) {
+             size_t bufsize, Dee_pos_t pos, Dee_ioflag_t UNUSED(flags)) {
 	size_t result;
 	DeeFileReader_LockRead(self);
 	ASSERT(self->r_ptr >= self->r_begin);
@@ -591,7 +591,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-reader_getc(DeeFileReaderObject *__restrict self, dioflag_t UNUSED(flags)) {
+reader_getc(DeeFileReaderObject *__restrict self, Dee_ioflag_t UNUSED(flags)) {
 	int result;
 	DeeFileReader_LockWrite(self);
 	ASSERT(self->r_ptr >= self->r_begin);
@@ -843,15 +843,15 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&reader_read,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_ioflag_t))&reader_read,
 	/* .ft_write  = */ NULL,
 	/* .ft_seek   = */ (Dee_pos_t (DCALL *)(DeeFileObject *__restrict, Dee_off_t, int))&reader_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_sync,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&reader_close,
-	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, dioflag_t))&reader_pread,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&reader_pread,
 	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&reader_getc,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&reader_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&reader_ungetc,
 	/* .ft_putc   = */ NULL
 };
@@ -929,7 +929,7 @@ err_r:
 PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 writer_ctor(DeeFileWriterObject *__restrict self) {
 	Dee_atomic_rwlock_init(&self->w_lock);
-	unicode_printer_init(&self->w_printer);
+	Dee_unicode_printer_init(&self->w_printer);
 	self->w_string = NULL;
 	return 0;
 }
@@ -1054,12 +1054,12 @@ writer_fini(DeeFileWriterObject *__restrict self) {
 		Dee_Decref(self->w_string);
 	} else if (!self->w_printer.up_buffer) {
 		/* ... */
-	} else if ((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	} else if ((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 		                                 DeeStringObject,
 		                                 s_str));
 	} else {
-		unicode_printer_fini(&self->w_printer);
+		Dee_unicode_printer_fini(&self->w_printer);
 	}
 }
 
@@ -1070,7 +1070,7 @@ writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) 
 		Dee_Visit(self->w_string);
 	} else if (!self->w_printer.up_buffer) {
 		/* ... */
-	} else if ((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	} else if ((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		Dee_Visit(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 		                                DeeStringObject,
 		                                s_str));
@@ -1099,7 +1099,7 @@ DeeFileWriter_GetString(DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFileWriter_Type);
 again:
 	DeeFileWriter_LockRead(me);
-	if ((me->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	if ((me->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		/* Special case for 1-byte strings. */
 		ASSERT(!me->w_string);
 		if (!me->w_printer.up_buffer) {
@@ -1117,7 +1117,7 @@ again:
 					Dee_string_utf_free(result->s_data);
 					result->s_data = NULL;
 				}
-				result->s_hash = DEE_STRING_HASH_UNSET;
+				result->s_hash = Dee_STRING_HASH_UNSET;
 				result->s_len  = me->w_printer.up_length;
 				result = (DREF DeeStringObject *)DeeObject_TryReallocc(result, offsetof(DeeStringObject, s_str),
 				                                                       me->w_printer.up_length + 1, sizeof(char));
@@ -1145,7 +1145,7 @@ again:
 #endif /* !CONFIG_NO_THREADS */
 		{
 			/* Must pack together a multi-byte string. */
-			result = (DREF DeeStringObject *)unicode_printer_trypack(&me->w_printer);
+			result = (DREF DeeStringObject *)Dee_unicode_printer_trypack(&me->w_printer);
 			if unlikely(!result)
 				goto err_collect;
 			me->w_string           = result;
@@ -1180,22 +1180,22 @@ writer_delstring(DeeFileWriterObject *__restrict self) {
 		DeeStringObject *old_string;
 		old_string     = self->w_string;
 		self->w_string = NULL;
-		unicode_printer_init(&self->w_printer);
+		Dee_unicode_printer_init(&self->w_printer);
 		DeeFileWriter_LockEndWrite(self);
 		Dee_Decref(old_string);
 	} else if (!self->w_printer.up_buffer) {
 		ASSERT(self->w_printer.up_length == 0);
-		ASSERT((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+		ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 		DeeFileWriter_LockEndWrite(self);
-	} else if ((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	} else if ((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 		                                 DeeStringObject,
 		                                 s_str));
-		unicode_printer_init(&self->w_printer);
+		Dee_unicode_printer_init(&self->w_printer);
 		DeeFileWriter_LockEndWrite(self);
 	} else {
-		unicode_printer_fini(&self->w_printer);
-		unicode_printer_init(&self->w_printer);
+		Dee_unicode_printer_fini(&self->w_printer);
+		Dee_unicode_printer_init(&self->w_printer);
 		DeeFileWriter_LockEndWrite(self);
 	}
 	return 0;
@@ -1205,7 +1205,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 writer_setstring(DeeFileWriterObject *__restrict self,
                  DeeStringObject *__restrict value) {
 	DREF DeeStringObject *old_string;
-	struct unicode_printer old_printer;
+	struct Dee_unicode_printer old_printer;
 	if (DeeNone_Check(value))
 		goto do_del_string;
 	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
@@ -1214,7 +1214,7 @@ writer_setstring(DeeFileWriterObject *__restrict self,
 		goto do_del_string;
 	Dee_Incref(value);
 	DeeFileWriter_LockWrite(self);
-	memcpy(&old_printer, &self->w_printer, sizeof(struct unicode_printer));
+	memcpy(&old_printer, &self->w_printer, sizeof(struct Dee_unicode_printer));
 	old_string               = self->w_string;
 	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(value);
 	if (self->w_printer.up_flags == STRING_WIDTH_1BYTE) {
@@ -1231,13 +1231,13 @@ writer_setstring(DeeFileWriterObject *__restrict self,
 		Dee_Decref(old_string);
 	} else if (!old_printer.up_buffer) {
 		ASSERT(old_printer.up_length == 0);
-		ASSERT((old_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-	} else if ((old_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		ASSERT((old_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+	} else if ((old_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		Dee_Decref(COMPILER_CONTAINER_OF(old_printer.up_buffer,
 		                                 DeeStringObject,
 		                                 s_str));
 	} else {
-		unicode_printer_fini(&old_printer);
+		Dee_unicode_printer_fini(&old_printer);
 	}
 	return 0;
 do_del_string:
@@ -1253,7 +1253,7 @@ writer_sizeof(DeeFileWriterObject *self) {
 	result = sizeof(DeeFileWriterObject) +
 	         (self->w_printer.up_buffer
 	          ? ((WSTR_LENGTH(self->w_printer.up_buffer) + 1) *
-	             STRING_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH))
+	             STRING_SIZEOF_WIDTH(self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH))
 	          : 0);
 	DeeFileWriter_LockEndRead(self);
 	return DeeInt_NewSize(result);
@@ -1350,7 +1350,7 @@ writer_tryappend8(DeeFileWriterObject *__restrict self,
 		}
 		DeeObject_Init(init_buffer, &DeeString_Type);
 		init_buffer->s_data = NULL;
-		init_buffer->s_hash = DEE_STRING_HASH_UNSET;
+		init_buffer->s_hash = Dee_STRING_HASH_UNSET;
 		init_buffer->s_len  = init_size;
 		memcpy(init_buffer->s_str, buffer, bufsize);
 		self->w_printer.up_buffer = init_buffer->s_str;
@@ -1360,7 +1360,7 @@ writer_tryappend8(DeeFileWriterObject *__restrict self,
 	avail   = WSTR_LENGTH(self->w_printer.up_buffer);
 	written = self->w_printer.up_length;
 	ASSERT(avail >= written);
-	SWITCH_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) {
+	SWITCH_SIZEOF_WIDTH(self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
 		if (written + bufsize > avail) {
@@ -1461,10 +1461,10 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			}
 			DeeObject_Init(init_buffer, &DeeString_Type);
 			init_buffer->s_data   = NULL;
-			init_buffer->s_hash   = DEE_STRING_HASH_UNSET;
+			init_buffer->s_hash   = Dee_STRING_HASH_UNSET;
 			init_buffer->s_len    = init_size;
 			init_buffer->s_str[0] = (char)(uint8_t)ch;
-			ASSERT((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+			ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 			self->w_printer.up_buffer = init_buffer->s_str;
 			self->w_printer.up_length = 1;
 		} else if (ch <= 0xffff) {
@@ -1478,7 +1478,7 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			init_buffer[0]            = (uint16_t)ch;
 			self->w_printer.up_buffer = init_buffer;
 			self->w_printer.up_length = 1;
-			ASSERT((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+			ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 			self->w_printer.up_flags |= STRING_WIDTH_2BYTE;
 		} else {
 			uint32_t *init_buffer;
@@ -1491,7 +1491,7 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			init_buffer[0]            = ch;
 			self->w_printer.up_buffer = init_buffer;
 			self->w_printer.up_length = 1;
-			ASSERT((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+			ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 			self->w_printer.up_flags |= STRING_WIDTH_4BYTE;
 		}
 		goto ok;
@@ -1501,7 +1501,7 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 	avail   = WSTR_LENGTH(self->w_printer.up_buffer);
 	written = self->w_printer.up_length;
 	ASSERT(avail >= written);
-	SWITCH_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) {
+	SWITCH_SIZEOF_WIDTH(self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
 		if (ch <= 0xff) {
@@ -1545,7 +1545,7 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			Dee_DecrefNokill(&DeeString_Type);
 			self->w_printer.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
-			self->w_printer.up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 			self->w_printer.up_flags |= STRING_WIDTH_2BYTE;
 			++self->w_printer.up_length;
@@ -1566,7 +1566,7 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			Dee_DecrefNokill(&DeeString_Type);
 			self->w_printer.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
-			self->w_printer.up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 			self->w_printer.up_flags |= STRING_WIDTH_4BYTE;
 			++self->w_printer.up_length;
@@ -1588,7 +1588,7 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 				new_buffer[i] = src[i];
 			new_buffer[length]        = ch;
 			self->w_printer.up_buffer = new_buffer;
-			self->w_printer.up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 			self->w_printer.up_flags |= STRING_WIDTH_4BYTE;
 			++self->w_printer.up_length;
 			Dee_Free((size_t *)src - 1);
@@ -1645,13 +1645,13 @@ utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 writer_write(DeeFileWriterObject *__restrict self,
              uint8_t const *__restrict buffer,
-             size_t bufsize, dioflag_t UNUSED(flags)) {
+             size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
 	size_t result = bufsize;
 again:
 	DeeFileWriter_LockWrite(self);
 	if (self->w_string) {
 		DeeStringObject *wstr = self->w_string;
-		unsigned int width    = self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH;
+		unsigned int width    = self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH;
 		ASSERT(DeeString_WIDTH(wstr) != STRING_WIDTH_1BYTE);
 		ASSERT(DeeString_WIDTH(wstr) == width);
 		ASSERT(self->w_printer.up_buffer == DeeString_WSTR(wstr));
@@ -1694,7 +1694,7 @@ again:
 		} else {
 			/* The string isn't being shared, so we can just discard all unused data,
 			 * and keep on appending to the pre-generated multi-byte buffer. */
-			struct string_utf *utf = wstr->s_data;
+			struct Dee_string_utf *utf = wstr->s_data;
 			ASSERT(utf != NULL);
 
 			/* WARNING: Just string UTF finalizer that doesn't free width data for `width' */
@@ -1714,7 +1714,7 @@ again:
 		}
 		self->w_string = NULL;
 	} else if (self->w_printer.up_buffer &&
-	           (self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	           (self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		DeeStringObject *written_buffer;
 		written_buffer = COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
 		                                       DeeStringObject,
@@ -1739,7 +1739,7 @@ again:
 			DeeObject_Init(buffer_copy, &DeeString_Type);
 			buffer_copy->s_len  = buffer_length;
 			buffer_copy->s_data = NULL;
-			buffer_copy->s_hash = DEE_STRING_HASH_UNSET;
+			buffer_copy->s_hash = Dee_STRING_HASH_UNSET;
 			self->w_printer.up_buffer = (char *)memcpyc(buffer_copy->s_str, written_buffer->s_str,
 			                                            self->w_printer.up_length, sizeof(char));
 			DeeFileWriter_LockEndWrite(self);
@@ -1751,17 +1751,17 @@ again:
 	/* At this point, we know that the buffer has been locked, and that
 	 * the pre-written string has been unshared. - Now we can actually
 	 * get to work and start appending the new content! */
-	if (self->w_printer.up_flags & UNICODE_PRINTER_FPENDING) {
+	if (self->w_printer.up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 		/* Complete a UTF-8 sequence. */
-		uint8_t seqlen = unicode_utf8seqlen[self->w_printer.up_pend[0]];
-		uint8_t gotlen = (self->w_printer.up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
-		uint8_t missing, full_sequence[UNICODE_UTF8_CURLEN], *tempptr;
+		uint8_t seqlen = Dee_unicode_utf8seqlen[self->w_printer.up_pend[0]];
+		uint8_t gotlen = (self->w_printer.up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
+		uint8_t missing, full_sequence[Dee_UNICODE_UTF8_CURLEN], *tempptr;
 		ASSERT(gotlen < seqlen);
 		missing = seqlen - gotlen;
 		if (missing > bufsize) {
 			/* Append what we got, but that won't be all of it... */
 			memcpy(self->w_printer.up_pend + gotlen, buffer, bufsize);
-			self->w_printer.up_flags += (uint8_t)bufsize << UNICODE_PRINTER_FPENDING_SHFT;
+			self->w_printer.up_flags += (uint8_t)bufsize << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 			goto done_unlock;
 		}
 
@@ -1773,7 +1773,7 @@ again:
 			if (Dee_CollectMemory(4))
 				goto again;
 		}
-		self->w_printer.up_flags &= ~UNICODE_PRINTER_FPENDING;
+		self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
 		buffer += missing;
 		bufsize -= missing;
 	}
@@ -1799,11 +1799,11 @@ again:
 			}
 
 			/* Goto a multi-byte sequence. */
-			seqlen = unicode_utf8seqlen[*iter];
+			seqlen = Dee_unicode_utf8seqlen[*iter];
 			if (seqlen > (size_t)(end - iter)) {
 				/* Incomplete sequence (remember the portion already given) */
 				seqlen = (uint8_t)(end - iter);
-				self->w_printer.up_flags |= seqlen << UNICODE_PRINTER_FPENDING_SHFT;
+				self->w_printer.up_flags |= seqlen << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 				memcpy(self->w_printer.up_pend, iter, seqlen);
 				goto done_unlock;
 			}
@@ -1889,7 +1889,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_class_members = */ NULL
 	},
 	/* .ft_read   = */ NULL,
-	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&writer_write,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_ioflag_t))&writer_write,
 	/* .ft_seek   = */ NULL,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
@@ -1925,7 +1925,7 @@ done:
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 printer_write(DeeFilePrinterObject *__restrict self,
               uint8_t const *__restrict buffer,
-              size_t bufsize, dioflag_t UNUSED(flags)) {
+              size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
 	Dee_ssize_t status;
 	if (DeeFilePrinter_LockRead(self))
 		goto err;
@@ -2011,7 +2011,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 		/* .tp_class_members = */ NULL
 	},
 	/* .ft_read   = */ NULL,
-	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&printer_write,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_ioflag_t))&printer_write,
 	/* .ft_seek   = */ NULL,
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,

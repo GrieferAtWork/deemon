@@ -659,7 +659,7 @@ row_fini(Row *__restrict self) {
 		cell_destroyrow(self->r_cells, self->r_rowfmt->rf_ncol);
 		Dee_Decref(self->r_rowfmt);
 	}
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -1049,7 +1049,7 @@ INTERN DeeTypeObject Row_Type = {
 	/* .tp_doc      = */ DOC("[](key:?Dstring)->" T_SQL_OBJECT "\n"
 	                         "[](index:?Dint)->" T_SQL_OBJECT),
 	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Row),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(Row),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {

@@ -17,44 +17,29 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export Dee_objectlist*/
+/*!export **/
 /*!export Dee_OBJECTLIST_**/
 /*!export Dee_objectlist_**/
 /*!export _Dee_objectlist_**/
-/*!export objectlist_**/
-/*!export OBJECTLIST_**/
 #ifndef GUARD_DEEMON_UTIL_OBJECTLIST_H
-#define GUARD_DEEMON_UTIL_OBJECTLIST_H 1
+#define GUARD_DEEMON_UTIL_OBJECTLIST_H 1 /*!export-*/
 
 #include "../api.h"
 
-#include "../alloc.h"           /* Dee_*alloc*, Dee_Free */
+#include "../alloc.h" /* Dee_*alloc*, Dee_Free */
 #include "../object.h"
 #include "../seq.h"
-#include "../system-features.h" /* memchrp */
 #include "../tuple.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uintptr_t */
 
-DECL_BEGIN
+#ifndef __INTELLISENSE__
+#include "../system-features.h" /* memchrp */
+#endif /* !__INTELLISENSE__ */
 
-#ifdef DEE_SOURCE
-#define Dee_objectlist           objectlist /*!export objectlist*/
-#define OBJECTLIST_INIT          Dee_OBJECTLIST_INIT
-#define objectlist_init          Dee_objectlist_init
-#define objectlist_cinit         Dee_objectlist_cinit
-#define objectlist_fini          Dee_objectlist_fini
-#define objectlist_initseq       Dee_objectlist_initseq
-#define objectlist_alloc         Dee_objectlist_alloc
-#define objectlist_append        Dee_objectlist_append
-#define objectlist_extendseq     Dee_objectlist_extendseq
-#define objectlist_packlist      Dee_objectlist_packlist
-#define objectlist_packtuple     Dee_objectlist_packtuple
-#define objectlist_contains_byid Dee_objectlist_contains_byid
-#define objectlist_setallocated  Dee_objectlist_setallocated
-#endif /* DEE_SOURCE */
+DECL_BEGIN
 
 /* Helpers to alloc/realloc object vectors. */
 #define Dee_objectlist_elemv_trymalloc(elemc)              ((DREF DeeObject **)Dee_TryMallocc(elemc, sizeof(DREF DeeObject *)))
@@ -250,7 +235,7 @@ Dee_objectlist_packlist(struct Dee_objectlist *__restrict self);
 /* Pack the given objectlist into a Tuple.
  * Upon success, `self' will have been finalized. */
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_objectlist_packtuple(struct objectlist *__restrict self) {
+Dee_objectlist_packtuple(struct Dee_objectlist *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeTuple_NewVectorSymbolic(self->ol_elemc, self->ol_elemv);
 	if likely(result)
@@ -260,7 +245,7 @@ Dee_objectlist_packtuple(struct objectlist *__restrict self) {
 
 /* Check if `self' contains the *exact* element `elem' */
 LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
-Dee_objectlist_contains_byid(struct objectlist *__restrict self, DeeObject *elem) {
+Dee_objectlist_contains_byid(struct Dee_objectlist *__restrict self, DeeObject *elem) {
 #ifdef memchrp
 	return memchrp(self->ol_elemv, (uintptr_t)elem, self->ol_elemc) != NULL;
 #else /* memchrp */

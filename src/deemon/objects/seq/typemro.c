@@ -271,8 +271,8 @@ typebasesiter_nii_peek(TypeMROIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst typemroiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_UNIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&typemroiter_nii_getseq,
@@ -290,8 +290,8 @@ PRIVATE struct type_nii tpconst typemroiter_nii = {
 };
 
 PRIVATE struct type_nii tpconst typebasesiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_UNIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&typebasesiter_nii_getseq,

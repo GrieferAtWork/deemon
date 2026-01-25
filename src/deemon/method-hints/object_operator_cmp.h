@@ -38,8 +38,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 impl_instance_builtin_compare(DeeTypeObject *tp_self,
                               DeeObject *self,
                               DeeObject *other) {
-	struct instance_desc *instance, *other_instance;
-	struct class_desc *desc;
+	struct Dee_instance_desc *instance, *other_instance;
+	struct Dee_class_desc *desc;
 	uint16_t i, size;
 	int temp;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
@@ -84,8 +84,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 impl_instance_builtin_compare_eq(DeeTypeObject *tp_self,
                                  DeeObject *self,
                                  DeeObject *other) {
-	struct instance_desc *instance, *other_instance;
-	struct class_desc *desc;
+	struct Dee_instance_desc *instance, *other_instance;
+	struct Dee_class_desc *desc;
 	uint16_t i, size;
 	int temp;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));

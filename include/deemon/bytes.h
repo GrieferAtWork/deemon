@@ -17,36 +17,34 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_bytes_**/
+/*!export DeeBytes**/
+/*!export Dee_DEFINE_BYTES**/
+/*!export Dee_bytes_printer*/
+/*!export Dee_bytes_printer_**/
+/*!export Dee_BYTES_PRINTER_**/
 #ifndef GUARD_DEEMON_BYTES_H
-#define GUARD_DEEMON_BYTES_H 1
+#define GUARD_DEEMON_BYTES_H 1 /*!export-*/
 
 #include "api.h"
 
-#ifndef __INTELLISENSE__
-#include "alloc.h"  /* DeeObject_Free */
-#include "object.h"
-#endif /* !__INTELLISENSE__ */
-#include "types.h"
-/**/
-
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
-/**/
+
+#include "types.h"
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* NULL, size_t */
 
+#ifndef __INTELLISENSE__
+#include "alloc.h" /* DeeObject_Free */
+#include "format.h"
+#include "object.h"
+#endif /* !__INTELLISENSE__ */
+
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_bytes_object  bytes_object
-#define Dee_bytes_printer bytes_printer
-#define DEFINE_BYTES      Dee_DEFINE_BYTES
-#define DEFINE_BYTES_EX   Dee_DEFINE_BYTES_EX
-#endif /* DEE_SOURCE */
-
-
-typedef struct Dee_bytes_object DeeBytesObject;
-struct Dee_bytes_object {
+typedef struct Dee_bytes_object {
 	Dee_OBJECT_HEAD
 	__BYTE_TYPE__                         *b_base;    /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
@@ -71,7 +69,7 @@ struct Dee_bytes_object {
 #endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	unsigned int                           b_flags;   /* [const] Buffer access flags (Set of `Dee_BUFFER_F*') */
 	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_data);   /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
-};
+} DeeBytesObject;
 
 
 /* Define a statically initialized Bytes object `name' */
@@ -158,7 +156,8 @@ DDATDEF DeeTypeObject DeeBytes_Type;
  *       Other instances may be used as well!
  * NOTE: The empty Bytes object is writable (though there is no memory to write to)
  */
-struct Dee_empty_bytes_struct {
+/*!export -_Dee_empty_bytes_struct*/
+struct _Dee_empty_bytes_struct {
 	Dee_OBJECT_HEAD
 	__BYTE_TYPE__  *b_base;
 	size_t          b_size;
@@ -167,8 +166,8 @@ struct Dee_empty_bytes_struct {
 	unsigned int    b_flags;
 	__BYTE_TYPE__   b_data[1];
 };
-DDATDEF struct Dee_empty_bytes_struct DeeBytes_Empty;
-#define Dee_EmptyBytes ((DeeObject *)&DeeBytes_Empty)
+DDATDEF struct _Dee_empty_bytes_struct DeeBytes_Empty;
+#define Dee_EmptyBytes ((DeeObject *)&DeeBytes_Empty) /*!export*/
 #ifdef __INTELLISENSE__
 #define DeeBytes_NewEmpty() ((DeeObject *)&DeeBytes_Empty)
 #else /* __INTELLISENSE__ */
@@ -306,7 +305,7 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int
 /*   BYTES PRINTER API                                                               */
 /* ================================================================================= */
 struct Dee_bytes_printer {
-	/* A bytes printer is similar to `unicode_printer' found in <deemon/string.h>,
+	/* A bytes printer is similar to `Dee_unicode_printer' found in <deemon/string.h>,
 	 * however instead of constructing a unicode object, it creates a writable bytes
 	 * object consisting of unicode characters within the range 00-FF.
 	 * Attempting to print a unicode character outside that range will result in
@@ -315,7 +314,7 @@ struct Dee_bytes_printer {
 	 * a single byte)
 	 * As far as API usage goes, a `Dee_bytes_printer' functions very much the same as a
 	 * unicode printer, with its UTF-8-enabled & Dee_formatprinter_t-compatible function
-	 * being `bytes_printer_print'
+	 * being `Dee_bytes_printer_print'
 	 */
 	size_t          bp_length;  /* The number of bytes already printed. */
 	DeeBytesObject *bp_bytes;   /* [0..1][owned] The resulting Bytes object. */
@@ -331,39 +330,13 @@ struct Dee_bytes_printer {
 #define Dee_bytes_printer_fini(self) DeeObject_Free((self)->bp_bytes)
 #endif /* !__INTELLISENSE__ */
 
-#ifdef DEE_SOURCE
-#define BYTES_PRINTER_INIT  Dee_BYTES_PRINTER_INIT
-#define BYTES_PRINTER_SIZE  Dee_BYTES_PRINTER_SIZE
-#define bytes_printer_init  Dee_bytes_printer_init
-#define bytes_printer_fini  Dee_bytes_printer_fini
-#ifdef __INTELLISENSE__
-#define Dee_bytes_printer_pack            bytes_printer_pack
-#define Dee_bytes_printer_print           bytes_printer_print
-#define Dee_bytes_printer_putc            bytes_printer_putc
-#define Dee_bytes_printer_putb            bytes_printer_putb
-#define Dee_bytes_printer_repeat          bytes_printer_repeat
-#define Dee_bytes_printer_append          bytes_printer_append
-#define Dee_bytes_printer_alloc           bytes_printer_alloc
-#define Dee_bytes_printer_release         bytes_printer_release
-#define Dee_bytes_printer_printf          bytes_printer_printf
-#define Dee_bytes_printer_vprintf         bytes_printer_vprintf
-#define Dee_bytes_printer_printobject     bytes_printer_printobject
-#define Dee_bytes_printer_printobjectrepr bytes_printer_printobjectrepr
-#else /* __INTELLISENSE__ */
-#define bytes_printer_printf          Dee_bytes_printer_printf
-#define bytes_printer_vprintf         Dee_bytes_printer_vprintf
-#define bytes_printer_printobject     Dee_bytes_printer_printobject
-#define bytes_printer_printobjectrepr Dee_bytes_printer_printobjectrepr
-#endif /* !__INTELLISENSE__ */
-#endif /* DEE_SOURCE */
-
 /* _Always_ inherit all byte data (even upon error) saved in
  * `self', and construct a new Bytes object from all that data, before
  * returning a reference to that object.
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
  *      ---> Regardless of return value, `self' is finalized and left
  *           in an undefined state, the same way it would have been
- *           after a call to `bytes_printer_fini()'
+ *           after a call to `Dee_bytes_printer_fini()'
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
@@ -397,7 +370,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
  * -> A far as unicode support goes, this function has _nothing_ to
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
- * -> The equivalent unicode_printer function is `unicode_printer_print8' */
+ * -> The equivalent Dee_unicode_printer function is `Dee_unicode_printer_print8' */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DPRINTER_CC Dee_bytes_printer_append)(struct Dee_bytes_printer *__restrict self,
                                        __BYTE_TYPE__ const *__restrict data,
@@ -431,24 +404,6 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printobjectrepr)(struct D
 #define Dee_bytes_printer_putb(self, byte)       __builtin_expect(Dee_bytes_printer_putb(self, byte), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
-
-#ifdef DEE_SOURCE
-#ifndef __INTELLISENSE__
-#define bytes_printer_pack            Dee_bytes_printer_pack
-#define bytes_printer_print           Dee_bytes_printer_print
-#define bytes_printer_putc            Dee_bytes_printer_putc
-#define bytes_printer_putb            Dee_bytes_printer_putb
-#define bytes_printer_repeat          Dee_bytes_printer_repeat
-#define bytes_printer_append          Dee_bytes_printer_append
-#define bytes_printer_alloc           Dee_bytes_printer_alloc
-#define bytes_printer_release         Dee_bytes_printer_release
-#define bytes_printer_printf          Dee_bytes_printer_printf
-#define bytes_printer_vprintf         Dee_bytes_printer_vprintf
-#define bytes_printer_printobject     Dee_bytes_printer_printobject
-#define bytes_printer_printobjectrepr Dee_bytes_printer_printobjectrepr
-#endif /* !__INTELLISENSE__ */
-#endif /* DEE_SOURCE */
-
 
 DECL_END
 

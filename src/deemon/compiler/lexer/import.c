@@ -51,7 +51,7 @@ DECL_BEGIN
 DeeSystem_DEFINE_memrend(dee_memrend)
 #endif /* !CONFIG_HAVE_memrend */
 
-INTERN struct compiler_options *inner_compiler_options = NULL;
+INTERN struct Dee_compiler_options *inner_compiler_options = NULL;
 
 #define TOK_ISDOT(x) ((x) == '.' || (x) == TOK_DOTDOT || (x) == TOK_DOTS)
 LOCAL unsigned int DCALL dot_count(tok_t tk) {
@@ -149,19 +149,19 @@ err:
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
 import_module_symbol(DeeModuleObject *__restrict mod,
                      struct TPPKeyword *__restrict name) {
 	Dee_hash_t i, perturb;
 	Dee_hash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
 	perturb = i = Dee_MODULE_HASHST(mod, hash);
 	for (;; Dee_MODULE_HASHNX(i, perturb)) {
-		struct module_symbol *item = Dee_MODULE_HASHIT(mod, i);
+		struct Dee_module_symbol *item = Dee_MODULE_HASHIT(mod, i);
 		if (!item->ss_name)
 			break; /* Not found */
 		if (item->ss_hash != hash)
 			continue; /* Non-matching hash */
-		if (!MODULE_SYMBOL_EQUALS(item, name->k_name, name->k_size))
+		if (!Dee_MODULE_SYMBOL_EQUALS(item, name->k_name, name->k_size))
 			continue; /* Differing strings. */
 		return item;  /* Found it! */
 	}
@@ -172,17 +172,17 @@ import_module_symbol(DeeModuleObject *__restrict mod,
  * @return:  0: OK
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-ast_parse_module_name(struct unicode_printer *__restrict printer,
+ast_parse_module_name(struct Dee_unicode_printer *__restrict printer,
                       bool for_alias) {
 	int result = 0;
 	for (;;) {
 		if (TOK_ISDOT(tok)) {
-			if (unicode_printer_printascii(printer, "...", dot_count(tok)) < 0)
+			if (Dee_unicode_printer_printascii(printer, "...", dot_count(tok)) < 0)
 				goto err;
 			result = 1;
 			if unlikely(yield() < 0)
 				goto err;
-			if (UNICODE_PRINTER_LENGTH(printer) == 1 &&
+			if (Dee_UNICODE_PRINTER_LENGTH(printer) == 1 &&
 			    (!TPP_ISKEYWORD(tok) && tok != TOK_STRING &&
 			     (tok != TOK_CHAR || HAS(EXT_CHARACTER_LITERALS)) &&
 			     !TOK_ISDOT(tok)))
@@ -195,9 +195,9 @@ ast_parse_module_name(struct unicode_printer *__restrict printer,
 			                   : W_RESERVED_IDENTIFIER_IN_MODULE_NAME_NOALIAS,
 			         token.t_kwd))
 				goto err;
-			if (unicode_printer_print(printer,
-			                          token.t_kwd->k_name,
-			                          token.t_kwd->k_size) < 0)
+			if (Dee_unicode_printer_print(printer,
+			                              token.t_kwd->k_name,
+			                              token.t_kwd->k_size) < 0)
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
@@ -224,7 +224,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-ast_parse_symbol_name(struct unicode_printer *__restrict printer,
+ast_parse_symbol_name(struct Dee_unicode_printer *__restrict printer,
                       bool for_alias) {
 	int result = 0;
 	if (TPP_ISKEYWORD(tok)) {
@@ -235,9 +235,9 @@ ast_parse_symbol_name(struct unicode_printer *__restrict printer,
 		                   : W_RESERVED_IDENTIFIER_IN_SYMBOL_NAME_NOALIAS,
 		         token.t_kwd))
 			goto err;
-		if (unicode_printer_print(printer,
-		                          token.t_kwd->k_name,
-		                          token.t_kwd->k_size) < 0)
+		if (Dee_unicode_printer_print(printer,
+		                              token.t_kwd->k_name,
+		                              token.t_kwd->k_size) < 0)
 			goto err;
 		if unlikely(yield() < 0)
 			goto err;
@@ -271,19 +271,19 @@ INTERN WUNUSED DREF DeeModuleObject *DCALL
 parse_module_byname(bool for_alias) {
 	DREF DeeModuleObject *result;
 	DREF DeeStringObject *module_name;
-	struct unicode_printer name = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer name = Dee_UNICODE_PRINTER_INIT;
 	struct ast_loc loc;
 	loc_here(&loc);
 	if unlikely(ast_parse_module_name(&name, for_alias) < 0)
 		goto err_printer;
-	module_name = (DREF DeeStringObject *)unicode_printer_pack(&name);
+	module_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&name);
 	if unlikely(!module_name)
 		goto err;
 	result = import_module_by_name(module_name, &loc);
 	Dee_Decref(module_name);
 	return result;
 err_printer:
-	unicode_printer_fini(&name);
+	Dee_unicode_printer_fini(&name);
 err:
 	return NULL;
 }
@@ -292,7 +292,7 @@ INTERN WUNUSED NONNULL((1)) struct symbol *DFCALL
 ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
 	DREF DeeModuleObject *mod;
 	struct symbol *extern_symbol;
-	struct module_symbol *modsym;
+	struct Dee_module_symbol *modsym;
 
 	/* Parse the name of the module from which to import a symbol. */
 	mod = parse_module_byname(true);
@@ -376,11 +376,11 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 			goto bad_symbol_name;
 		for (; iter < end; ++iter) {
 			uint32_t ch;
-			uniflag_t flags;
-			ch    = unicode_readutf8_n(&iter, end);
+			Dee_uniflag_t flags;
+			ch    = Dee_unicode_readutf8_n(&iter, end);
 			flags = DeeUni_Flags(ch);
-			if (iter == symbol_start ? !(flags & UNICODE_ISSYMSTRT)
-			                         : !(flags & UNICODE_ISSYMCONT)) {
+			if (iter == symbol_start ? !(flags & Dee_UNICODE_ISSYMSTRT)
+			                         : !(flags & Dee_UNICODE_ISSYMCONT)) {
 bad_symbol_name:
 				if (is_module) {
 					if (WARN(W_INVALID_NAME_FOR_MODULE_SYMBOL,
@@ -410,7 +410,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 parse_import_symbol(struct import_item *__restrict result,
                     bool allow_module_name) {
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 	int return_value = 0;
 	loc_here(&result->ii_import_loc);
 	if (TPP_ISKEYWORD(tok)) {
@@ -433,14 +433,14 @@ parse_import_symbol(struct import_item *__restrict result,
 				goto err;
 			if unlikely(yield() < 0)
 				goto err;
-			unicode_printer_init(&printer);
+			Dee_unicode_printer_init(&printer);
 			loc_here(&result->ii_import_loc);
 			return_value = allow_module_name
 			               ? ast_parse_module_name(&printer, true)
 			               : ast_parse_symbol_name(&printer, true);
 			if unlikely(return_value < 0)
 				goto err_printer;
-			result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+			result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 			if unlikely(!result->ii_import_name)
 				goto err;
 		} else if (tok == KWD_as) {
@@ -473,10 +473,10 @@ parse_import_symbol(struct import_item *__restrict result,
 			if (is_reserved_symbol_name(result->ii_symbol_name) &&
 			    WARNAT(&result->ii_import_loc, W_RESERVED_IDENTIFIER_IN_MODULE_NAME, result->ii_symbol_name))
 				goto err;
-			unicode_printer_init(&printer);
-			if unlikely(unicode_printer_print(&printer,
-			                                  result->ii_symbol_name->k_name,
-			                                  result->ii_symbol_name->k_size) < 0)
+			Dee_unicode_printer_init(&printer);
+			if unlikely(Dee_unicode_printer_print(&printer,
+			                                      result->ii_symbol_name->k_name,
+			                                      result->ii_symbol_name->k_size) < 0)
 				goto err_printer;
 			goto complete_module_name;
 		} else {
@@ -491,10 +491,10 @@ parse_import_symbol(struct import_item *__restrict result,
 	} else if (TOK_ISDOT(tok) && allow_module_name) {
 		/* - `.foo.bar'
 		 * - `.foo.bar as foobar' */
-		unicode_printer_init(&printer);
+		Dee_unicode_printer_init(&printer);
 complete_module_name:
 		return_value = 1;
-		if unlikely(unicode_printer_printascii(&printer, "...", dot_count(tok)) < 0)
+		if unlikely(Dee_unicode_printer_printascii(&printer, "...", dot_count(tok)) < 0)
 			goto err_printer;
 		if unlikely(yield() < 0)
 			goto err_printer;
@@ -505,7 +505,7 @@ complete_module_name:
 			if unlikely(ast_parse_module_name(&printer, true) < 0)
 				goto err_printer;
 		}
-		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!result->ii_import_name)
 			goto err;
 		if (tok == KWD_as) {
@@ -546,13 +546,13 @@ autogenerate_symbol_name:
 		 * - `"foo" as foobar'
 		 * - `"foo.bar"'
 		 * - `"foo.bar" as foobar' */
-		unicode_printer_init(&printer);
+		Dee_unicode_printer_init(&printer);
 		return_value = allow_module_name
 		               ? ast_parse_module_name(&printer, true)
 		               : ast_parse_symbol_name(&printer, true);
 		if unlikely(return_value < 0)
 			goto err_printer;
-		result->ii_import_name = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+		result->ii_import_name = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!result->ii_import_name)
 			goto err;
 		if (tok != KWD_as)
@@ -581,7 +581,7 @@ autogenerate_symbol_name:
 	}
 	return return_value;
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	goto err;
 err_name:
 	Dee_Decref(result->ii_import_name);
@@ -592,7 +592,7 @@ err:
 PRIVATE NONNULL((1)) int DCALL
 ast_import_all_from_module(DeeModuleObject *__restrict mod,
                            struct ast_loc *loc) {
-	struct module_symbol *iter, *end;
+	struct Dee_module_symbol *iter, *end;
 	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 	if (mod == MODULE_CURRENT) {
 		if (WARNAT(loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))
@@ -603,12 +603,12 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 	for (; iter < end; ++iter) {
 		struct symbol *sym;
 		struct TPPKeyword *name;
-		if (!MODULE_SYMBOL_GETNAMESTR(iter))
+		if (!Dee_MODULE_SYMBOL_GETNAMESTR(iter))
 			continue; /* Empty slot. */
-		if (iter->ss_flags & MODSYM_FHIDDEN)
+		if (iter->ss_flags & Dee_MODSYM_FHIDDEN)
 			continue; /* Hidden symbol. */
-		name = TPPLexer_LookupKeyword(MODULE_SYMBOL_GETNAMESTR(iter),
-		                              MODULE_SYMBOL_GETNAMELEN(iter),
+		name = TPPLexer_LookupKeyword(Dee_MODULE_SYMBOL_GETNAMESTR(iter),
+		                              Dee_MODULE_SYMBOL_GETNAMELEN(iter),
 		                              1);
 		if unlikely(!name)
 			goto err;
@@ -637,11 +637,11 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 					if (sym->s_extern.e_symbol == iter)
 						continue; /* Same declaration. */
 				} else {
-					/* TODO: Special handling when aliasing `MODSYM_FEXTERN'-symbols.
+					/* TODO: Special handling when aliasing `Dee_MODSYM_FEXTERN'-symbols.
 					 *       Importing an external symbol that has been aliased should
 					 *       not cause ambiguity if it is the original symbol with which
 					 *       the new one would collide (this goes if at least either the
-					 *       old, or the new symbol has the `MODSYM_FEXTERN' flag)
+					 *       old, or the new symbol has the `Dee_MODSYM_FEXTERN' flag)
 					 */
 
 					/* Special case: When both the old and new symbol refers to an external `final global'
@@ -654,12 +654,12 @@ ast_import_all_from_module(DeeModuleObject *__restrict mod,
 					 * bind against the symbol as found in `deemon', otherwise check if either module uses
 					 * the other, in which case: bind against the symbol of the module being used (aka.
 					 * further down in the dependency tree) */
-					if ((sym->s_extern.e_symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR |
-					                                         MODSYM_FPROPERTY | MODSYM_FEXTERN)) ==
-					    /*                               */ (MODSYM_FREADONLY | MODSYM_FCONSTEXPR) &&
-					    (iter->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR |
-					                       MODSYM_FPROPERTY | MODSYM_FEXTERN)) ==
-					    /*             */ (MODSYM_FREADONLY | MODSYM_FCONSTEXPR)) {
+					if ((sym->s_extern.e_symbol->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR |
+					                                         Dee_MODSYM_FPROPERTY | Dee_MODSYM_FEXTERN)) ==
+					    /*                               */ (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR) &&
+					    (iter->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR |
+					                       Dee_MODSYM_FPROPERTY | Dee_MODSYM_FEXTERN)) ==
+					    /*             */ (Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)) {
 						/* Both symbols are non-varying (allowing value inlining).
 						 * -> Make sure both modules have been loaded, and compare the values that have been bound.
 						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
@@ -761,7 +761,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_import_single_from_module(DeeModuleObject *__restrict mod,
                               struct import_item *__restrict item) {
-	struct module_symbol *sym;
+	struct Dee_module_symbol *sym;
 	struct symbol *import_symbol;
 	if (mod == MODULE_CURRENT) {
 		if (WARNAT(&item->ii_import_loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))

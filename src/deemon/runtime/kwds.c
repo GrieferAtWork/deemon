@@ -65,8 +65,8 @@ typedef DeeKwdsMappingObject KwdsMapping;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(Kwds, ki_map); /* [1..1][const] The associated keywords table. */
-	struct kwds_entry         *ki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
-	struct kwds_entry         *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	struct Dee_kwds_entry         *ki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
+	struct Dee_kwds_entry         *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } KwdsIterator;
 
 #define READ_ITER(x) atomic_read(&(x)->ki_iter)
@@ -131,7 +131,7 @@ STATIC_ASSERT(offsetof(KwdsIterator, ki_map) == offsetof(ProxyObject, po_obj));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_bool(KwdsIterator *__restrict self) {
-	struct kwds_entry *entry;
+	struct Dee_kwds_entry *entry;
 	entry = READ_ITER(self);
 	for (;;) {
 		if (entry >= self->ki_end)
@@ -147,7 +147,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kwdsiter_nextpair(KwdsIterator *__restrict self,
                  DREF DeeObject *key_and_value[2]) {
 	DREF DeeObject *value;
-	struct kwds_entry *old_iter, *entry;
+	struct Dee_kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
@@ -174,7 +174,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwdsiter_nextkey(KwdsIterator *__restrict self) {
-	struct kwds_entry *old_iter, *entry;
+	struct Dee_kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
@@ -193,7 +193,7 @@ kwdsiter_nextkey(KwdsIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwdsiter_nextvalue(KwdsIterator *__restrict self) {
-	struct kwds_entry *old_iter, *entry;
+	struct Dee_kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
@@ -214,7 +214,7 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 kwdsiter_advance(KwdsIterator *__restrict self, size_t step) {
 	size_t result;
 	for (;;) {
-		struct kwds_entry *old_iter, *new_iter;
+		struct Dee_kwds_entry *old_iter, *new_iter;
 		result   = 0;
 		old_iter = atomic_read(&self->ki_iter);
 		new_iter    = old_iter;
@@ -251,7 +251,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kwdsiter_compare(KwdsIterator *self, KwdsIterator *other) {
 	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
-	Dee_return_compareT(struct kwds_entry *, READ_ITER(self),
+	Dee_return_compareT(struct Dee_kwds_entry *, READ_ITER(self),
 	                    /*                */ READ_ITER(other));
 err:
 	return Dee_COMPARE_ERR;
@@ -340,7 +340,7 @@ DeeKwds_NewWithHint(size_t num_items) {
 		init_mask = (init_mask << 1) | 1;
 	result = (DREF Kwds *)DeeObject_Callocc(offsetof(Kwds, kw_map),
 	                                        init_mask + 1,
-	                                        sizeof(struct kwds_entry));
+	                                        sizeof(struct Dee_kwds_entry));
 	if unlikely(!result)
 		goto done;
 	result->kw_mask = init_mask;
@@ -356,20 +356,20 @@ kwds_rehash(DREF Kwds *__restrict self) {
 	size_t new_mask = (self->kw_mask << 1) | 1;
 	result = (DREF Kwds *)DeeObject_Callocc(offsetof(Kwds, kw_map),
 	                                        new_mask + 1,
-	                                        sizeof(struct kwds_entry));
+	                                        sizeof(struct Dee_kwds_entry));
 	if unlikely(!result)
 		goto done;
 	result->kw_mask = new_mask;
 	for (i = 0; i <= self->kw_mask; ++i) {
-		struct kwds_entry *src = &self->kw_map[i];
+		struct Dee_kwds_entry *src = &self->kw_map[i];
 		if (!src->ke_name)
 			continue;
 		perturb = j = src->ke_hash & new_mask;
 		for (;; DeeKwds_MAPNEXT(j, perturb)) {
-			struct kwds_entry *dst = &result->kw_map[j & new_mask];
+			struct Dee_kwds_entry *dst = &result->kw_map[j & new_mask];
 			if (dst->ke_name)
 				continue;
-			memcpy(dst, src, sizeof(struct kwds_entry));
+			memcpy(dst, src, sizeof(struct Dee_kwds_entry));
 			break;
 		}
 	}
@@ -387,7 +387,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
                                     char const *__restrict name,
                                     size_t name_len, Dee_hash_t hash) {
 	Dee_hash_t i, perturb;
-	struct kwds_entry *entry;
+	struct Dee_kwds_entry *entry;
 	DREF Kwds *self = (DREF Kwds *)*p_self;
 	if (self->kw_size * 2 > self->kw_mask) {
 		/* Must allocate a larger map. */
@@ -422,7 +422,7 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t
                        DeeObject *__restrict name) {
 	DREF DeeObject **p_self = (DREF DeeObject **)arg;
 	Dee_hash_t i, perturb, hash;
-	struct kwds_entry *entry;
+	struct Dee_kwds_entry *entry;
 	DREF Kwds *self = (DREF Kwds *)*p_self;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if (self->kw_size * 2 > self->kw_mask) {
@@ -472,7 +472,7 @@ DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index) {
 PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void) {
 	DREF Kwds *result;
 	result = (DREF Kwds *)DeeObject_Mallocc(offsetof(Kwds, kw_map),
-	                                        2, sizeof(struct kwds_entry));
+	                                        2, sizeof(struct Dee_kwds_entry));
 	if unlikely(!result)
 		goto done;
 	result->kw_map[0].ke_name = NULL;
@@ -518,19 +518,19 @@ kwds_visit(Kwds *__restrict self, Dee_visit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 kwds_serialize(Kwds *__restrict self, DeeSerial *__restrict writer) {
 	Kwds *out;
-	size_t i, sizeof_kwds = offsetof(Kwds, kw_map) + (self->kw_mask + 1) * sizeof(struct kwds_entry);
+	size_t i, sizeof_kwds = offsetof(Kwds, kw_map) + (self->kw_mask + 1) * sizeof(struct Dee_kwds_entry);
 	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_kwds, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, Kwds);
 	out->kw_size = self->kw_size;
 	out->kw_mask = self->kw_mask;
-	memcpyc(out->kw_map, self->kw_map, self->kw_mask + 1, sizeof(struct kwds_entry));
+	memcpyc(out->kw_map, self->kw_map, self->kw_mask + 1, sizeof(struct Dee_kwds_entry));
 	for (i = 0; i <= self->kw_mask; ++i) {
 		if (self->kw_map[i].ke_name) {
 			Dee_seraddr_t addrof_out_entry_name;
 			addrof_out_entry_name = addr + offsetof(Kwds, kw_map) +
-			                        i * sizeof(struct kwds_entry);
+			                        i * sizeof(struct Dee_kwds_entry);
 			if unlikely(DeeSerial_PutObject(writer, addrof_out_entry_name,
 			                                self->kw_map[i].ke_name))
 				goto err;
@@ -617,7 +617,7 @@ kwds_foreach_pair(Kwds *self, Dee_foreach_pair_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
 	for (i = 0; i <= self->kw_mask; ++i) {
 		DREF DeeObject *indexob;
-		struct kwds_entry *entry = &self->kw_map[i];
+		struct Dee_kwds_entry *entry = &self->kw_map[i];
 		if (!entry->ke_name)
 			continue;
 		indexob = DeeInt_NewSize(entry->ke_index);
@@ -865,7 +865,7 @@ DeeKwds_IndexOf(DeeObject const *__restrict self, /*string*/ DeeObject *__restri
 	hash    = DeeString_Hash(name);
 	perturb = i = hash & me->kw_mask;
 	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
+		struct Dee_kwds_entry *entry;
 		entry = &me->kw_map[i & me->kw_mask];
 		if (!entry->ke_name)
 			break;
@@ -886,7 +886,7 @@ DeeKwds_IndexOfStringHash(DeeObject const *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeKwds_Type);
 	perturb = i = hash & me->kw_mask;
 	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
+		struct Dee_kwds_entry *entry;
 		entry = &me->kw_map[i & me->kw_mask];
 		if (!entry->ke_name)
 			break;
@@ -907,7 +907,7 @@ DeeKwds_IndexOfStringLenHash(DeeObject const *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeKwds_Type);
 	perturb = i = hash & me->kw_mask;
 	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
+		struct Dee_kwds_entry *entry;
 		entry = &me->kw_map[i & me->kw_mask];
 		if (!entry->ke_name)
 			break;
@@ -925,8 +925,8 @@ DeeKwds_IndexOfStringLenHash(DeeObject const *__restrict self,
 typedef struct {
 	OBJECT_HEAD
 	DREF KwdsMapping        *ki_map;  /* [1..1][const] The associated keywords mapping. */
-	DWEAK struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
-	struct kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	DWEAK struct Dee_kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
+	struct Dee_kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } KmapIterator;
 
 #define READ_ITER(x) atomic_read(&(x)->ki_iter)
@@ -972,7 +972,7 @@ kmapiter_visit(KmapIterator *__restrict self, Dee_visit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_bool(KmapIterator *__restrict self) {
-	struct kwds_entry *entry;
+	struct Dee_kwds_entry *entry;
 	entry = READ_ITER(self);
 	for (;;) {
 		if (entry >= self->ki_end)
@@ -987,7 +987,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kmapiter_nextpair(KmapIterator *__restrict self,
                   DREF DeeObject *key_and_value[2]) {
 	DREF DeeObject *value;
-	struct kwds_entry *old_iter, *entry;
+	struct Dee_kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
@@ -1013,7 +1013,7 @@ kmapiter_nextpair(KmapIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmapiter_nextkey(KmapIterator *__restrict self) {
-	struct kwds_entry *old_iter, *entry;
+	struct Dee_kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
@@ -1033,7 +1033,7 @@ kmapiter_nextkey(KmapIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmapiter_nextvalue(KmapIterator *__restrict self) {
 	DREF DeeObject *value;
-	struct kwds_entry *old_iter, *entry;
+	struct Dee_kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
 		entry    = old_iter;
@@ -1309,7 +1309,7 @@ kmap_foreach_pair(KwdsMapping *self, Dee_foreach_pair_t proc, void *arg) {
 	Kwds *kwds = self->kmo_kwds;
 	for (i = 0; i <= kwds->kw_mask; ++i) {
 		DeeObject *value;
-		struct kwds_entry *entry = &kwds->kw_map[i];
+		struct Dee_kwds_entry *entry = &kwds->kw_map[i];
 		if (!entry->ke_name)
 			continue;
 		ASSERT(entry->ke_index < self->kmo_kwds->kw_size);

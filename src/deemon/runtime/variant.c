@@ -613,7 +613,7 @@ PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 Dee_variant_hash_impl(struct Dee_variant const *__restrict self) {
 	switch (self->var_type) {
 	case Dee_VARIANT_UNBOUND:
-		return DEE_HASHOF_UNBOUND_ITEM;
+		return Dee_HASHOF_UNBOUND_ITEM;
 	case Dee_VARIANT_OBJECT:
 		return DeeObject_Hash(self->var_data.d_object);
 	case Dee_VARIANT_INT32:

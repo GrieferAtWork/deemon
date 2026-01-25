@@ -17,8 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeDeepCopy_**/
+/*!export Dee_deepcopy_heap_**/
 #ifndef GUARD_DEEMON_DEEPCOPY_H
-#define GUARD_DEEMON_DEEPCOPY_H 1
+#define GUARD_DEEMON_DEEPCOPY_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -94,10 +97,6 @@ struct Dee_deepcopy_heap {
 #define Dee_deepcopy_heap_destroy(self)    (Dee_Free((self)->ddch_base), Dee_Free(self))
 #endif /* !__INTELLISENSE__ */
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-
-#ifdef DEE_SOURCE
-#define Dee_gc_head gc_head
-#endif /* DEE_SOURCE */
 
 struct Dee_gc_head;
 

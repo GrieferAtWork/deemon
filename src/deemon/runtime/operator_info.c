@@ -83,7 +83,7 @@ INTDEF struct type_operator const type_operators[LENGTHOF_type_operators];
  * NOTE: The given `typetype' must be a type-type, meaning it must
  *       be the result of `Dee_TYPE(Dee_TYPE(ob))', in order to return
  *       information about generic operators that can be used on `ob' */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct opinfo const *DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, Dee_operator_t id) {
 	/* Fallback: select operator defined by the core "DeeType_Type".
 	 * NOTE: This could be done by scanning its table using the below loop,
@@ -201,11 +201,11 @@ next_base:
  * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous).
  * @param: argc: The number of extra arguments taken by the operator (excluding
  *               the "this"-argument), or `(size_t)-1' if unknown. */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) struct opinfo const *DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
                               char const *__restrict name, size_t argc) {
 	size_t i;
-	struct opinfo const *result;
+	struct Dee_opinfo const *result;
 #ifndef __OPTIMIZE_SIZE__
 #define EQAT(ptr, str) (bcmp(ptr, str, sizeof(str)) == 0)
 #define RETURN(name)   return &type_operators[name].to_decl
@@ -646,13 +646,13 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 
 	/* Fallback: scan the operator table of `DeeType_Type' */
 	for (i = 0; i < COMPILER_LENOF(type_operators); ++i) {
-		struct opinfo const *info = &type_operators[i].to_decl;
+		struct Dee_opinfo const *info = &type_operators[i].to_decl;
 		if (strcmp(info->oi_sname, name) == 0)
 			return info;
 	}
 	result = NULL;
 	for (i = 0; i < COMPILER_LENOF(type_operators); ++i) {
-		struct opinfo const *info = &type_operators[i].to_decl;
+		struct Dee_opinfo const *info = &type_operators[i].to_decl;
 		if (strcmp(info->oi_uname, name) == 0) {
 			if (result)
 				return NULL; /* Ambiguous name */
@@ -663,12 +663,12 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 	return result;
 }
 
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct opinfo const *DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
                                  char const *__restrict name, size_t namelen,
                                  size_t argc) {
-#define LENGTHOF__opinfo__oi_sname COMPILER_LENOF(((struct opinfo *)0)->oi_sname)
-#define LENGTHOF__opinfo__oi_uname COMPILER_LENOF(((struct opinfo *)0)->oi_uname)
+#define LENGTHOF__opinfo__oi_sname COMPILER_LENOF(((struct Dee_opinfo *)0)->oi_sname)
+#define LENGTHOF__opinfo__oi_uname COMPILER_LENOF(((struct Dee_opinfo *)0)->oi_uname)
 	char buf[(LENGTHOF__opinfo__oi_sname > LENGTHOF__opinfo__oi_uname
 	          ? LENGTHOF__opinfo__oi_sname
 	          : LENGTHOF__opinfo__oi_uname) +
@@ -956,7 +956,7 @@ nope:
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) void const *DCALL
 DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
-                     struct opinfo const *__restrict info) {
+                     struct Dee_opinfo const *__restrict info) {
 	ASSERT(info->oi_class != OPCLASS_CUSTOM);
 	if (info->oi_class != OPCLASS_TYPE) {
 		self = *(DeeTypeObject **)((uintptr_t)self + info->oi_class);
@@ -980,7 +980,7 @@ DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, Dee_operator_t name) 
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	void const *my_ptr;
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	DeeTypeObject *base, *result;
 	DeeTypeMRO mro;
 
@@ -1037,7 +1037,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 
 PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOperatorContainerOrigin(DeeTypeObject *__restrict self,
-                                   struct opinfo const *info,
+                                   struct Dee_opinfo const *info,
                                    void const *container_pointer) {
 	DeeTypeObject *base;
 	DeeTypeMRO mro;
@@ -1057,7 +1057,7 @@ DeeType_GetOperatorContainerOrigin(DeeTypeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
 DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
                                DeeTypeObject *type_type,
-                               struct opinfo const *info) {
+                               struct Dee_opinfo const *info) {
 	/* Quick check: is the operator already implemented? */
 	if (DeeType_GetOpPointer(self, info) != NULL)
 		return true;
@@ -1154,7 +1154,7 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 
 	/* Try to inherit a non-standard operator (e.g. operators defined by "DeeFile_Type"). */
 	{
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		DeeTypeObject *declaring_type_type;
 		info = DeeTypeType_GetOperatorByIdEx(Dee_TYPE(self), name, &declaring_type_type);
 		if (info)
@@ -1202,7 +1202,7 @@ invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self
 
 	/* Check for standard operators in the type-type of "self". */
 	{
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		info = DeeTypeType_GetOperatorById(Dee_TYPE(tp_self), name);
 		if (info) {
 			/* Invoke operator using "info" */
@@ -1373,7 +1373,7 @@ print_call_args_repr(Dee_formatprinter_t printer, void *arg,
 			ASSERT(DeeKwds_SIZE(kw) <= argc);
 			first_keyword = argc - DeeKwds_SIZE(kw);
 			if (i >= first_keyword) {
-				struct kwds_entry *keyword_descr;
+				struct Dee_kwds_entry *keyword_descr;
 				size_t keyword_index;
 				keyword_index = i - first_keyword;
 				keyword_descr = DeeKwds_GetByIndex(kw, keyword_index);
@@ -1413,7 +1413,7 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
                             char const *self_prefix, size_t self_prefix_len,
                             char const *self_suffix, size_t self_suffix_len) {
 	Dee_ssize_t temp, result = 0;
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(DeeObject_Class(self)), name);
 	switch (name) {
 
@@ -1819,7 +1819,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 to_contains(TypeOperators *self, DeeObject *name_or_id) {
 	Dee_operator_t id;
 	if (DeeString_Check(name_or_id)) {
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self->to_type),
 		                                     DeeString_STR(name_or_id),
 		                                     (size_t)-1);
@@ -1948,7 +1948,7 @@ PRIVATE struct type_cmp toi_cmp = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 toi_next(TypeOperatorsIterator *__restrict self) {
 	DeeTypeObject *tp = self->toi_type;
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	Dee_operator_t result;
 	Dee_operator_t start;
 	for (;;) {

@@ -613,8 +613,8 @@ jmapiter_nii_hasprev(DeeJsonIteratorObject *__restrict self) {
 
 
 PRIVATE struct type_nii tpconst jseqiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&jseqiter_getseq,
@@ -632,8 +632,8 @@ PRIVATE struct type_nii tpconst jseqiter_nii = {
 };
 
 PRIVATE struct type_nii tpconst jmapiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&jmapiter_getseq,
@@ -1797,16 +1797,16 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeJson_ParseString(struct json_parser *__restrict self) {
 	int status;
 	Dee_ssize_t error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	/* Print the JSON string into a unicode-printer to convert it into a deemon string. */
-	status = libjson_parser_printstring(self, &unicode_printer_print, &printer, &error);
+	status = libjson_parser_printstring(self, &Dee_unicode_printer_print, &printer, &error);
 	if (status != JSON_ERROR_OK) {
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 		if (status == JSON_ERROR_SYSERR)
-			goto err;    /* `unicode_printer_print()' returned a negative value. */
+			goto err;    /* `Dee_unicode_printer_print()' returned a negative value. */
 		goto err_syntax; /* Either a *true* syntax error, or current token isn't a string. */
 	}
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_syntax:
 	err_json_syntax();
 err:
@@ -1841,7 +1841,7 @@ DeeJson_ParseLargeInteger(struct json_parser *__restrict self, char const *start
 
 	case JSON_ENCODING_UTF8:
 		result = DeeInt_FromString(start, (size_t)(end - start),
-		                           DEEINT_STRING(0, DEEINT_STRING_FNOSEPS));
+		                           Dee_INT_STRING(0, Dee_INT_STRING_FNOSEPS));
 		break;
 
 	case JSON_ENCODING_UTF16LE:
@@ -1887,7 +1887,7 @@ DeeJson_ParseLargeInteger(struct json_parser *__restrict self, char const *start
 			goto err;
 		}
 		result = DeeInt_FromString(input_utf8, WSTR_LENGTH(input_utf8),
-		                           DEEINT_STRING(0, DEEINT_STRING_FNOSEPS));
+		                           Dee_INT_STRING(0, Dee_INT_STRING_FNOSEPS));
 		Dee_Decref(input_str);
 	}	break;
 
@@ -2023,7 +2023,7 @@ struct type_expression_name {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_expression_name_unescape(struct type_expression_name *__restrict self) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	char const *iter, *end, *flush_start;
 
 	/* Parse the string and unescape special symbols. */
@@ -2033,8 +2033,8 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 	while (iter < end) {
 		char ch = *iter++;
 		if (ch == '\\') { /* Remove every first '\'-character */
-			if unlikely(unicode_printer_print(&printer, flush_start,
-			                                  (size_t)((iter - 1) - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(&printer, flush_start,
+			                                      (size_t)((iter - 1) - flush_start)) < 0)
 				goto err_printer;
 			flush_start = iter;
 			if (iter < end)
@@ -2042,13 +2042,13 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 		}
 	}
 	if (flush_start < end) {
-		if unlikely(unicode_printer_print(&printer, flush_start,
-		                                  (size_t)(end - flush_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(&printer, flush_start,
+		                                      (size_t)(end - flush_start)) < 0)
 			goto err_printer;
 	}
 
 	/* Pack the unicode string */
-	self->ten_str = (DREF DeeStringObject *)unicode_printer_pack(&printer);
+	self->ten_str = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 	if unlikely(!self->ten_str)
 		goto err;
 	self->ten_start = DeeString_AsUtf8(Dee_AsObject(self->ten_str));
@@ -2060,7 +2060,7 @@ err_ten_str:
 	Dee_Decref(self->ten_str);
 	goto err;
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return -1;
 }
@@ -2418,7 +2418,7 @@ DeeJsonObject_ParseWithTypeAnnotationEx(DeeJsonParser *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeJsonObject_ParseTypedObjectList(DeeJsonParser *__restrict self,
                                    struct type_expression_parser *__restrict seq_elem_tx_parser,
-                                   struct objectlist *__restrict result,
+                                   struct Dee_objectlist *__restrict result,
                                    bool throw_error_if_typing_fails) {
 	int tok;
 	DREF DeeTypeObject *wanted_type;
@@ -2446,7 +2446,7 @@ DeeJsonObject_ParseTypedObjectList(DeeJsonParser *__restrict self,
 					return 1;
 				goto err;
 			}
-			error = objectlist_append(result, item);
+			error = Dee_objectlist_append(result, item);
 			Dee_Decref(item);
 			if unlikely(error)
 				goto err_wanted_type;
@@ -2485,7 +2485,7 @@ DeeJsonObject_ParseTypedObjectList(DeeJsonParser *__restrict self,
 					return 1;
 				goto err;
 			}
-			error = objectlist_append(result, item);
+			error = Dee_objectlist_append(result, item);
 			Dee_Decref(item);
 			if unlikely(error)
 				goto err_wanted_type;
@@ -2548,7 +2548,7 @@ DeeJsonObject_ParseWithTypeAnnotationEx(DeeJsonParser *__restrict self,
 		int tok;
 		char const *pos;
 		uint32_t saved_flags;
-		struct objectlist ol;
+		struct Dee_objectlist ol;
 		DREF DeeTypeObject *seq_type;
 		if (tx_parser->tep_doc[-1] == 'S') {
 			/* Generic sequence */
@@ -2598,12 +2598,12 @@ err_seq_type:
 		saved_flags = tx_parser->tep_flags;
 		tx_parser->tep_flags &= (TYPE_EXPRESSION_FLAG_NEED_DOC_ON_TYPE_ERROR |
 		                         TYPE_EXPRESSION_FLAG_NEED_DOC_ON_SUCCESS);
-		objectlist_init(&ol);
+		Dee_objectlist_init(&ol);
 		tok = DeeJsonObject_ParseTypedObjectList(self, tx_parser, &ol,
 		                                         throw_error_if_typing_fails);
 		tx_parser->tep_flags = saved_flags;
 		if unlikely(tok != 0) {
-			objectlist_fini(&ol);
+			Dee_objectlist_fini(&ol);
 			Dee_Decref(seq_type);
 			if unlikely(tok < 0)
 				goto err;
@@ -2617,10 +2617,10 @@ err_seq_type:
 		if (seq_type == &DeeList_Type || seq_type == &DeeSeq_Type) {
 			DREF DeeListObject *result;
 			Dee_DecrefNokill(seq_type);
-			result = (DREF DeeListObject *)objectlist_packlist(&ol);
+			result = (DREF DeeListObject *)Dee_objectlist_packlist(&ol);
 			if unlikely(!result) {
 err_ol:
-				objectlist_fini(&ol);
+				Dee_objectlist_fini(&ol);
 				goto err;
 			}
 			return Dee_AsObject(result);
@@ -2630,7 +2630,7 @@ err_ol:
 		if (seq_type == &DeeTuple_Type) {
 			DREF DeeTupleObject *result;
 			Dee_DecrefNokill(seq_type);
-			result = (DREF DeeTupleObject *)objectlist_packtuple(&ol);
+			result = (DREF DeeTupleObject *)Dee_objectlist_packtuple(&ol);
 			if unlikely(!result)
 				goto err_ol;
 			return Dee_AsObject(result);
@@ -2648,7 +2648,7 @@ err_ol:
 				result = DeeObject_New(seq_type, 1, &svec);
 				DeeSharedVector_Decref(svec);
 			}
-			objectlist_fini(&ol);
+			Dee_objectlist_fini(&ol);
 			Dee_Decref(seq_type);
 			return result;
 		}
@@ -2935,11 +2935,11 @@ PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 DeeJsonObject_ParseIntoClassAttribute(DeeJsonParser *__restrict self,
                                       DeeObject *into,
                                       DeeTypeObject *into_attr_type,
-                                      struct class_desc *into_attr_class,
-                                      struct class_attribute *into_attr,
+                                      struct Dee_class_desc *into_attr_class,
+                                      struct Dee_class_attribute *into_attr,
                                       bool throw_error_if_typing_fails) {
 	int result;
-	struct instance_desc *into_instance;
+	struct Dee_instance_desc *into_instance;
 	DREF DeeObject *value;
 	if (into_attr->ca_doc) {
 		struct type_expression_parser parser;
@@ -2995,8 +2995,8 @@ DeeJsonObject_ParseIntoAttribute(DeeJsonParser *__restrict self,
 	DREF DeeObject *value;
 	DeeTypeObject *into_type = Dee_TYPE(into);
 	if (DeeType_IsClass(into_type)) {
-		struct class_desc *attr_class;
-		struct class_attribute *attr;
+		struct Dee_class_desc *attr_class;
+		struct Dee_class_attribute *attr;
 		attr_class = DeeClass_DESC(into_type);
 		attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, (DeeObject *)attr_name);
 		if (!attr) {
@@ -3698,16 +3698,16 @@ FORCELOCAL WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL libjson_write_f_impl(De
 			goto err;
 		return_reference_(into);
 	} else {
-		struct ascii_printer printer = ASCII_PRINTER_INIT;
-		if (DeeJsonWriter_Init(&writer, &ascii_printer_print, &printer, format))
+		struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
+		if (DeeJsonWriter_Init(&writer, &Dee_ascii_printer_print, &printer, format))
 			goto err_ascii_printer;
 		error = DeeJson_WriteObject(&writer, data);
 		DeeJsonWriter_Fini(&writer);
 		if unlikely(error != 0)
 			goto err_ascii_printer;
-		return ascii_printer_pack(&printer);
+		return Dee_ascii_printer_pack(&printer);
 err_ascii_printer:
-		ascii_printer_fini(&printer);
+		Dee_ascii_printer_fini(&printer);
 		/* fallthru to `err' */
 	}
 err:
@@ -3720,7 +3720,7 @@ DEX_BEGIN
 /* TODO: Add another argument `path' that allows you to only parse certain sub-
  *       components of a larger JSON-blob. For this, it's probably best to implement
  *       a sub-set of JsonPath: https://github.com/json-path/JsonPath */
-DEX_MEMBER_F("parse", &libjson_parse, MODSYM_FREADONLY,
+DEX_MEMBER_F("parse", &libjson_parse, Dee_DEXSYM_READONLY,
              "(data:?X4?DFile?DBytes?Dstring?DMapping)->?X7?Dfloat?Dint?Dstring?Dbool?N?GSequence?GMapping\n"
              "(data:?X4?DFile?DBytes?Dstring?DMapping,into)->\n"
              "(data:?X4?DFile?DBytes?Dstring?DMapping,into:?DType)->\n"
@@ -3735,7 +3735,7 @@ DEX_MEMBER_F("parse", &libjson_parse, MODSYM_FREADONLY,
              /**/ "or it may throw an error should such data exist. The exact behavior is implementation-"
              /**/ "specific. Though if no exception is thrown, such trailing data is ignored and has no "
              /**/ "effect."),
-DEX_MEMBER_F("write", &libjson_write, MODSYM_FREADONLY,
+DEX_MEMBER_F("write", &libjson_write, Dee_DEXSYM_READONLY,
              "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,pretty=!f,recursion:?X2?DCallable?N=!N)->?Dstring\n"
              "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into:?DFile,pretty=!f,recursion:?X2?DCallable?N=!N)->?DFile\n"
              "#precursion{An optional callback that is invoked to replace inner instances of objects referencing "
@@ -3745,8 +3745,8 @@ DEX_MEMBER_F("write", &libjson_write, MODSYM_FREADONLY,
              /**/ "into a string which is then returned. In either case, you can use @pretty to specify "
              /**/ "if a pretty representation (using newlines, and indentation), or a compact one should "
              /**/ "be used in generated JSON. The default is to generate compact JSON."),
-DEX_MEMBER_F_NODOC("Sequence", &DeeJsonSequence_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("Mapping", &DeeJsonMapping_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Sequence", &DeeJsonSequence_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Mapping", &DeeJsonMapping_Type, Dee_DEXSYM_READONLY),
 
 DEX_END(NULL, NULL, NULL);
 

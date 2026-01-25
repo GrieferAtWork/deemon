@@ -48,10 +48,10 @@ typedef struct root_scope_object  DeeRootScopeObject;
 
 struct TPPKeyword;
 struct ast;
-struct string_object;
-struct module_object;
+struct Dee_string_object;
+struct Dee_module_object;
 struct asm_sym;
-struct class_attribute;
+struct Dee_class_attribute;
 
 /* Declaration information encoded in documentation strings:
  *
@@ -408,8 +408,8 @@ struct decl_ast {
 			                                          * type declaration information (through `struct symbol::s_decltype') */
 		}                   da_func;   /* [DAST_FUNC] The representation is a function. */
 		struct {
-			struct decl_ast           *a_base; /* [1..1][owned] Attribute base expression. */
-			DREF struct string_object *a_name; /* [1..1] Attribute name. */
+			struct decl_ast               *a_base; /* [1..1][owned] Attribute base expression. */
+			DREF struct Dee_string_object *a_name; /* [1..1] Attribute name. */
 		}                   da_attr;   /* [DAST_ATTR] The representation is the attribute of another expression. */
 		struct {
 			struct decl_ast *m_key_value; /* [2..2][owned] 0: The map key; 1: The map value. */
@@ -417,7 +417,7 @@ struct decl_ast {
 		struct {
 			struct decl_ast *w_cell;   /* [2..2][owned] 0: The cell container; 1: The cell element. */
 		}                   da_with;   /* [DAST_WITH] Representation for cell-like containers. */
-		DREF struct string_object *da_string; /* [1..1][DAST_STRING] Custom string. */
+		DREF struct Dee_string_object *da_string; /* [1..1][DAST_STRING] Custom string. */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -590,17 +590,17 @@ struct symbol {
 	struct decl_ast      s_decltype; /* Symbol declaration type. */
 	union {                        /* Type-specific symbol data. */
 		struct {
-			DREF struct module_object *e_module; /* [1..1] The module from which the symbol is imported. */
-			struct module_symbol      *e_symbol; /* [1..1] The symbol imported from another module. */
+			DREF struct Dee_module_object *e_module; /* [1..1] The module from which the symbol is imported. */
+			struct Dee_module_symbol      *e_symbol; /* [1..1] The symbol imported from another module. */
 		}                s_extern; /* [SYMBOL_TYPE_EXTERN] */
-		DREF struct module_object     *s_module; /* [SYMBOL_TYPE_MODULE] */
+		DREF struct Dee_module_object     *s_module; /* [SYMBOL_TYPE_MODULE] */
 		struct {
-			DREF struct string_object *g_doc;    /* [0..1] An optional documentation string of this global symbol. */
+			DREF struct Dee_string_object *g_doc;    /* [0..1] An optional documentation string of this global symbol. */
 		}                s_global; /* [SYMBOL_TYPE_GLOBAL] */
 		struct {
-			struct class_attribute *a_attr;   /* [1..1] The attribute that is being described. */
-			DREF struct symbol     *a_class;  /* [1..1][REF(SYMBOL_NREAD(.))] The class that is defining the symbol. */
-			DREF struct symbol     *a_this;   /* [0..1][REF(SYMBOL_NREAD(.))] The instance to which the attribute is bound (NULL when this is a class attribute). */
+			struct Dee_class_attribute *a_attr;   /* [1..1] The attribute that is being described. */
+			DREF struct symbol         *a_class;  /* [1..1][REF(SYMBOL_NREAD(.))] The class that is defining the symbol. */
+			DREF struct symbol         *a_this;   /* [0..1][REF(SYMBOL_NREAD(.))] The instance to which the attribute is bound (NULL when this is a class attribute). */
 		}                s_attr;   /* [SYMBOL_TYPE_CATTR] Class / instance attribute */
 		struct {
 			DREF struct symbol     *gs_get;   /* [0..1][REF(SYMBOL_NREAD(.))] A symbol that must be called as getter. */
@@ -1039,23 +1039,23 @@ struct base_scope_object {
 
 
 struct root_scope_object {
-	DeeBaseScopeObject         rs_scope;   /* Underlying base scope. */
+	DeeBaseScopeObject             rs_scope;   /* Underlying base scope. */
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	DREF struct module_object *rs_module;  /* [1..1][const] The module that is being compiled. */
+	DREF struct Dee_module_object *rs_module;  /* [1..1][const] The module that is being compiled. */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	/* NOTE: Fields below are only modified during code generation (aka. by the assembler)
 	 *    >> Before assembly starts for the first time, they should all be ZERO/NULL-initialized. */
-	DREF DeeCodeObject        *rs_code;    /* [0..1][LINK(->co_next)] Linked list of all code objects already generated for this module. */
-	DREF struct module_object**rs_importv; /* [1..1][0..rs_importc|ALLOC(rs_importa)] Vector of other modules imported by this one. */
-	struct module_symbol      *rs_bucketv; /* [0..rs_bucketm+1][owned_if(!= empty_module_buckets)]
-	                                        * Hash-vector for translating a string into a `uint16_t' index for a global variable.
-	                                        * This is where module symbol names are stored and also.
-	                                        * HINT: This vector is populated by the assembler during code generation. */
-	uint16_t                   rs_flags;   /* Module flags (Set of `MODULE_F*') */
-	uint16_t                   rs_globalc; /* The total number of global variables. */
-	uint16_t                   rs_bucketm; /* Mask applied to symbol buckets. */
-	uint16_t                   rs_importc; /* The total number of other modules imported by this one. */
-	uint16_t                   rs_importa; /* The allocated amount of memory for the imported module vector. */
+	DREF DeeCodeObject            *rs_code;    /* [0..1][LINK(->co_next)] Linked list of all code objects already generated for this module. */
+	DREF struct Dee_module_object**rs_importv; /* [1..1][0..rs_importc|ALLOC(rs_importa)] Vector of other modules imported by this one. */
+	struct Dee_module_symbol      *rs_bucketv; /* [0..rs_bucketm+1][owned_if(!= empty_module_buckets)]
+	                                            * Hash-vector for translating a string into a `uint16_t' index for a global variable.
+	                                            * This is where module symbol names are stored and also.
+	                                            * HINT: This vector is populated by the assembler during code generation. */
+	uint16_t                       rs_flags;   /* Module flags (Set of `MODULE_F*') */
+	uint16_t                       rs_globalc; /* The total number of global variables. */
+	uint16_t                       rs_bucketm; /* Mask applied to symbol buckets. */
+	uint16_t                       rs_importc; /* The total number of other modules imported by this one. */
+	uint16_t                       rs_importa; /* The allocated amount of memory for the imported module vector. */
 };
 
 #ifdef CONFIG_BUILDING_DEEMON

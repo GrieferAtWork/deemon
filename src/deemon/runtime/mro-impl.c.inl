@@ -60,12 +60,12 @@ DECL_BEGIN
 
 
 #ifndef DEFINE_MRO_ATTRLEN_FUNCTIONS
-INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
+INTERN WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *
 (DCALL DeeType_QueryAttributeHash)(DeeTypeObject *tp_invoker,
                                    DeeTypeObject *tp_self,
                                    /*String*/ DeeObject *attr,
                                    Dee_hash_t hash) {
-	struct class_attribute *result;
+	struct Dee_class_attribute *result;
 	result = DeeClass_QueryInstanceAttributeHash(tp_self, attr, hash);
 	if (result)
 		Dee_membercache_addattrib(&tp_invoker->tp_cache, tp_self, hash, result);
@@ -73,12 +73,12 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 }
 #endif /* !DEFINE_MRO_ATTRLEN_FUNCTIONS */
 
-INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
+INTERN WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *
 (DCALL S(DeeType_QueryAttributeStringHash,
          DeeType_QueryAttributeStringLenHash))(DeeTypeObject *tp_invoker,
                                                DeeTypeObject *tp_self,
                                                ATTR_ARG, Dee_hash_t hash) {
-	struct class_attribute *result;
+	struct Dee_class_attribute *result;
 	result = S(DeeClass_QueryInstanceAttributeStringHash(tp_self, attr, hash),
 	           DeeClass_QueryInstanceAttributeStringLenHash(tp_self, attr, attrlen, hash));
 	if (result)
@@ -87,12 +87,12 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 }
 
 #ifndef DEFINE_MRO_ATTRLEN_FUNCTIONS
-INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
+INTERN WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *
 (DCALL DeeType_QueryClassAttributeHash)(DeeTypeObject *tp_invoker,
                                         DeeTypeObject *tp_self,
                                         /*String*/ DeeObject *attr,
                                         Dee_hash_t hash) {
-	struct class_attribute *result;
+	struct Dee_class_attribute *result;
 	result = DeeClass_QueryClassAttributeHash(tp_self, attr, hash);
 	if (result)
 		Dee_membercache_addattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
@@ -100,12 +100,12 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 }
 #endif /* !DEFINE_MRO_ATTRLEN_FUNCTIONS */
 
-INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
+INTERN WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *
 (DCALL S(DeeType_QueryClassAttributeStringHash,
          DeeType_QueryClassAttributeStringLenHash))(DeeTypeObject *tp_invoker,
                                                     DeeTypeObject *tp_self,
                                                     ATTR_ARG, Dee_hash_t hash) {
-	struct class_attribute *result;
+	struct Dee_class_attribute *result;
 	result = S(DeeClass_QueryClassAttributeStringHash(tp_self, attr, hash),
 	           DeeClass_QueryClassAttributeStringLenHash(tp_self, attr, attrlen, hash));
 	if (result)
@@ -114,12 +114,12 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 }
 
 #ifndef DEFINE_MRO_ATTRLEN_FUNCTIONS
-INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
+INTERN WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *
 (DCALL DeeType_QueryInstanceAttributeHash)(DeeTypeObject *tp_invoker,
                                            DeeTypeObject *tp_self,
                                            /*String*/ DeeObject *attr,
                                            Dee_hash_t hash) {
-	struct class_attribute *result;
+	struct Dee_class_attribute *result;
 	result = DeeClass_QueryInstanceAttributeHash(tp_self, attr, hash);
 	if (result)
 		Dee_membercache_addinstanceattrib(&tp_invoker->tp_class_cache, tp_self, hash, result);
@@ -127,12 +127,12 @@ INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
 }
 #endif /* !DEFINE_MRO_ATTRLEN_FUNCTIONS */
 
-INTERN WUNUSED NONNULL((1, 2, 3)) struct class_attribute *
+INTERN WUNUSED NONNULL((1, 2, 3)) struct Dee_class_attribute *
 (DCALL S(DeeType_QueryInstanceAttributeStringHash,
          DeeType_QueryInstanceAttributeStringLenHash))(DeeTypeObject *tp_invoker,
                                                        DeeTypeObject *tp_self,
                                                        ATTR_ARG, Dee_hash_t hash) {
-	struct class_attribute *result;
+	struct Dee_class_attribute *result;
 	result = S(DeeClass_QueryInstanceAttributeStringHash(tp_self, attr, hash),
 	           DeeClass_QueryInstanceAttributeStringLenHash(tp_self, attr, attrlen, hash));
 	if (result)

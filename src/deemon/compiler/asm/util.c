@@ -201,8 +201,8 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	DeeDict_LockReadAndOptimize(self);
 	vsize         = self->d_vused;
 	hmask         = self->d_hmask;
-	src_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	dst_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(vsize);
+	src_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+	dst_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(vsize);
 	sizeof_result = _RoDict_SizeOf3(vsize, hmask, dst_hidxio);
 	result = _RoDict_TryMalloc(sizeof_result);
 	if unlikely(!result) {
@@ -239,10 +239,10 @@ PRIVATE NONNULL((1, 3)) void DCALL
 roset_insert_nocheck(DeeRoSetObject *__restrict self, Dee_hash_t hash,
                      /*inherit(always)*/ DREF DeeObject *key) {
 	Dee_hash_t i, perturb;
-	struct roset_item *item;
-	perturb = i = ROSET_HASHST(self, hash);
-	for (;; ROSET_HASHNX(i, perturb)) {
-		item = ROSET_HASHIT(self, i);
+	struct Dee_roset_item *item;
+	perturb = i = DeeRoSet_HashSt(self, hash);
+	for (;; DeeRoSet_HashNx(i, perturb)) {
+		item = DeeRoSet_HashIt(self, i);
 		if (!item->rsi_key)
 			break;
 	}
@@ -253,12 +253,8 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self, Dee_hash_t hash,
 }
 
 #define dummy (&DeeDict_Dummy)
-#define SIZEOF_RODICT(mask) \
-	(offsetof(DeeRoDictObject, rd_elem) + (((mask) + 1) * sizeof(struct rodict_item)))
-#define RODICT_INITIAL_MASK 0x1f
-
 #define SIZEOF_ROSET(mask) \
-	(offsetof(DeeRoSetObject, rs_elem) + (((mask) + 1) * sizeof(struct roset_item)))
+	(offsetof(DeeRoSetObject, rs_elem) + (((mask) + 1) * sizeof(struct Dee_roset_item)))
 #define ROSET_INITIAL_MASK 0x1f
 
 
@@ -561,7 +557,7 @@ push_dict_parts:
 	for (i = Dee_dict_vidx_tovirt(0);
 	     Dee_dict_vidx_virt_lt_real(i, value->d_vsize); ++i) {
 		int error;
-		struct dict_item *item;
+		struct Dee_dict_item *item;
 		DREF DeeObject *item_key, *item_value;
 		item     = &_DeeDict_GetVirtVTab(value)[i];
 		item_key = item->di_key;
@@ -605,7 +601,7 @@ PRIVATE WUNUSED NONNULL((1)) int
 	 *       packing everything together as a set. */
 	int32_t cid;
 	size_t i, mask, ro_mask, num_items;
-	struct hashset_item *elem;
+	struct Dee_hashset_item *elem;
 	DREF DeeRoSetObject *roset;
 check_set_again:
 	DeeHashSet_LockRead(value);
@@ -675,7 +671,7 @@ push_set_parts:
 	num_items = 0;
 	DeeHashSet_LockRead(value);
 	for (i = 0; i <= value->hs_mask; ++i) {
-		struct hashset_item *item;
+		struct Dee_hashset_item *item;
 		DREF DeeObject *item_key;
 		item     = &value->hs_elem[i];
 		item_key = item->hsi_key;
@@ -787,9 +783,9 @@ check_function_class:
 		case SYMBOL_TYPE_EXTERN:
 			ASSERT(function->s_extern.e_module);
 			ASSERT(function->s_extern.e_symbol);
-			if (function->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
+			if (function->s_extern.e_symbol->ss_flags & Dee_MODSYM_FPROPERTY)
 				break;
-			if (function->s_extern.e_symbol->ss_flags & MODSYM_FEXTERN) {
+			if (function->s_extern.e_symbol->ss_flags & Dee_MODSYM_FEXTERN) {
 				symid = function->s_extern.e_symbol->ss_impid;
 				ASSERT(symid < function->s_extern.e_module->mo_importc);
 				symid = asm_newmodule(function->s_extern.e_module->mo_importv[symid]);
@@ -814,7 +810,7 @@ check_function_class:
 
 		case SYMBOL_TYPE_CATTR: {
 			struct symbol *class_sym, *this_sym;
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 			int32_t symid2;
 			class_sym = function->s_attr.a_class;
 			this_sym  = function->s_attr.a_this;
@@ -833,9 +829,9 @@ check_function_class:
 					if (asm_ggetcmember(attr->ca_addr))        /* args..., func */
 						goto err;
 				}
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 					/* Must invoke the getter callback. */
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 						if (asm_gpush_symbol(class_sym, warn_ast))
 							goto err; /* args..., getter, class */
 						if (asm_gcall(1))
@@ -844,7 +840,7 @@ check_function_class:
 						if (asm_gcall(0))
 							goto err; /* args..., func */
 					}
-				} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+				} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					if (argc != (uint8_t)-1) {
 						if (asm_grrot(argc + 1))
 							goto err; /* func, args... */
@@ -872,7 +868,7 @@ check_function_class:
 			if unlikely(asm_check_thiscall(function, warn_ast))
 				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+			if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 				symid2 = asm_newconst(attr->ca_name);
 				if unlikely(symid2 < 0)
 					goto err;
@@ -887,17 +883,17 @@ check_function_class:
 			}
 
 			/* Regular, old member variable. */
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
 					if unlikely(symid < 0)
 						goto err;
-					if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
+					if ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 					    this_sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-						if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+						if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 							/* Invoke the getter callback. */
-							if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET, 0))
+							if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_GET, 0))
 								goto err;
 							goto got_attribute_value;
 						}
@@ -931,9 +927,9 @@ check_function_class:
 				if (asm_ggetmember_this(attr->ca_addr))
 					goto err;
 			}
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				/* Call the getter of the attribute. */
-				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+				if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 					if (asm_gcall(0))
 						goto err; /* Directly invoke. */
 				} else {
@@ -943,7 +939,7 @@ check_function_class:
 					if (asm_gcall(1))
 						goto err;
 				}
-			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				/* Access to an instance member function (must produce a bound method). */
 				/* args..., func */
 				if unlikely(argc != (uint8_t)-1) {
@@ -1025,9 +1021,9 @@ check_sym_class:
 		symid = asm_esymid(sym);
 		if unlikely(symid < 0)
 			goto err;
-		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
+		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FPROPERTY) {
 			/* Generate an external call to the getter. */
-			uint16_t slot = Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)) + MODULE_PROPERTY_GET;
+			uint16_t slot = Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)) + Dee_MODULE_PROPERTY_GET;
 			return asm_gcall_extern((uint16_t)symid, slot, 0);
 		}
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
@@ -1081,7 +1077,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_CATTR: {
 		struct symbol *class_sym, *this_sym;
-		struct class_attribute *attr;
+		struct Dee_class_attribute *attr;
 		int32_t symid2;
 		class_sym = sym->s_attr.a_class;
 		this_sym  = sym->s_attr.a_this;
@@ -1100,9 +1096,9 @@ check_sym_class:
 				if (asm_ggetcmember(attr->ca_addr))        /* func */
 					goto err;
 			}
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				/* Must invoke the getter callback. */
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					if (asm_gpush_symbol(class_sym, warn_ast))
 						goto err; /* getter, class */
 					if (asm_gcall(1))
@@ -1111,7 +1107,7 @@ check_sym_class:
 					if (asm_gcall(0))
 						goto err; /* func */
 				}
-			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err; /* func, class_sym */
 				symid = asm_newmodule(DeeModule_GetDeemon());
@@ -1127,7 +1123,7 @@ check_sym_class:
 		if unlikely(asm_check_thiscall(sym, warn_ast))
 			goto err;
 		SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+		if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 			symid2 = asm_newconst(attr->ca_name);
 			if unlikely(symid2 < 0)
 				goto err;
@@ -1140,17 +1136,17 @@ check_sym_class:
 		}
 
 		/* Regular, old member variable. */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
 				if unlikely(symid < 0)
 					goto err;
-				if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
-				    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
+				if ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD)) ==
+				    (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 				    this_sym->s_type == SYMBOL_TYPE_THIS &&
 				    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 					/* Invoke the getter callback. */
-					return asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET, 0);
+					return asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_GET, 0);
 				}
 				if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr))
 					goto err;
@@ -1180,16 +1176,16 @@ check_sym_class:
 			if (asm_ggetmember_this(attr->ca_addr))
 				goto err;
 		}
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 			/* Call the getter of the attribute. */
-			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD))
+			if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD))
 				return asm_gcall(0); /* Directly invoke. */
 			/* Invoke as a this-call. */
 			if (asm_gpush_symbol(this_sym, warn_ast))
 				goto err;
 			return asm_gcall(1);
 		}
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 			/* Access to an instance member function (must produce a bound method). */
 			symid = asm_newmodule(DeeModule_GetDeemon());
 			if unlikely(symid < 0)
@@ -1224,7 +1220,7 @@ check_sym_class:
 		return asm_gpush_this_module();
 
 	case SYMBOL_TYPE_MYFUNC:
-		if (current_basescope->bs_flags & CODE_FTHISCALL) {
+		if (current_basescope->bs_flags & Dee_CODE_FTHISCALL) {
 			/* Must bind the function. */
 			if (asm_gpush_this_function())
 				goto err;
@@ -1282,7 +1278,7 @@ check_sym_class:
 		return true;
 
 	case SYMBOL_TYPE_EXTERN:
-		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY))
+		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))
 			break; /* Cannot write-prefix properties, or read-only symbols. */
 		return true;
 
@@ -1312,7 +1308,7 @@ check_sym_class:
 		return true;
 
 	case SYMBOL_TYPE_EXTERN:
-		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
+		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FPROPERTY)
 			break; /* Cannot prefix properties. */
 		return true;
 
@@ -1340,7 +1336,7 @@ check_sym_class:
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_EXTERN:
-		ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY),
+		ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FPROPERTY),
 		        "Cannot prefix property symbols");
 		symid = asm_esymid(sym);
 		if unlikely(symid < 0)
@@ -1421,7 +1417,7 @@ check_sym_class:
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_EXTERN:
-		ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY),
+		ASSERTF(!(SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FPROPERTY),
 		        "Cannot prefix property symbols");
 		symid = asm_esymid(sym);
 		if unlikely(symid < 0)
@@ -1523,7 +1519,7 @@ check_sym_class:
 	}	break;
 
 	case SYMBOL_TYPE_EXTERN:
-		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
+		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FPROPERTY)
 			goto fallback;
 		symid = asm_esymid(sym);
 		if unlikely(symid < 0)
@@ -1557,7 +1553,7 @@ check_sym_class:
 
 	case SYMBOL_TYPE_CATTR: {
 		struct symbol *class_sym, *this_sym;
-		struct class_attribute *attr;
+		struct Dee_class_attribute *attr;
 		class_sym = sym->s_attr.a_class;
 		this_sym  = sym->s_attr.a_this;
 		attr      = sym->s_attr.a_attr;
@@ -1576,9 +1572,9 @@ test_class_attribute:
 		if unlikely(asm_check_thiscall(sym, warn_ast))
 			goto err;
 		SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-		if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))
+		if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))
 #ifndef CONFIG_INLINE_GETSET_BINDING_CHECKER
-		    || (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+		    || (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
 #endif /* !CONFIG_INLINE_GETSET_BINDING_CHECKER */
 		    ) {
 			if (asm_gpush_symbol(this_sym, warn_ast))
@@ -1590,7 +1586,7 @@ test_class_attribute:
 
 		/* Regular, old member variable. */
 #ifdef CONFIG_INLINE_GETSET_BINDING_CHECKER
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 			/* Special case: must invoke the attribute as a getter, and make
 			 * sure that doing so doesn't produce any UnboundAttribute errors. */
 			struct asm_sym *guard_begin, *guard_end;
@@ -1599,26 +1595,26 @@ test_class_attribute:
 			if unlikely(!guard_begin)
 				goto err;
 			asm_defsym(guard_begin);
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
 					if unlikely(symid < 0)
 						goto err;
-					if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
-					    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
+					if ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD)) ==
+					    (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 					    this_sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 						/* Invoke the getter callback. */
-						if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET, 0))
+						if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_GET, 0))
 							goto err;
 						goto got_attribute_value;
 					}
-					if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET))
+					if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_GET))
 						goto err;
 				} else {
 					if (asm_gpush_symbol(class_sym, warn_ast))
 						goto err;
-					if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_GET))
+					if (asm_ggetcmember(attr->ca_addr + Dee_CLASS_GETSET_GET))
 						goto err;
 				}
 			} else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
@@ -1627,23 +1623,23 @@ test_class_attribute:
 					goto err;
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err;
-				if (asm_ggetmember(attr->ca_addr + CLASS_GETSET_GET))
+				if (asm_ggetmember(attr->ca_addr + Dee_CLASS_GETSET_GET))
 					goto err;
 			} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
 				if unlikely(symid < 0)
 					goto err;
-				if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET))
+				if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_GET))
 					goto err;
 			} else {
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err;
-				if (asm_ggetmember_this(attr->ca_addr + CLASS_GETSET_GET))
+				if (asm_ggetmember_this(attr->ca_addr + Dee_CLASS_GETSET_GET))
 					goto err;
 			}
 
 			/* At this point, we've acquired to getter callback. - Now to invoke it. */
-			if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+			if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 				if (asm_gcall(0))
 					goto err;
 			} else {
@@ -1680,7 +1676,7 @@ got_attribute_value:
 
 			/* Setup an exception handler for dealing with unbound-attribute errors. */
 			exception_handler->ex_addr  = guard_begin;
-			exception_handler->ex_flags = EXCEPTION_HANDLER_FHANDLED;
+			exception_handler->ex_flags = Dee_EXCEPTION_HANDLER_FHANDLED;
 			exception_handler->ex_mask  = &DeeError_UnboundAttribute;
 			Dee_Incref(&DeeError_UnboundAttribute);
 			++guard_begin->as_used;
@@ -1705,7 +1701,7 @@ got_attribute_value:
 			return 0;
 		}
 #endif /* CONFIG_INLINE_GETSET_BINDING_CHECKER */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 			goto test_class_attribute;
 		if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 		    SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
@@ -1793,17 +1789,17 @@ check_sym_class:
 			return asm_gdel_static((uint16_t)symid);
 
 		case SYMBOL_TYPE_EXTERN: {
-			struct module_symbol *modsym;
+			struct Dee_module_symbol *modsym;
 			int32_t mid;
 			modsym = SYMBOL_EXTERN_SYMBOL(sym);
 			mid    = asm_esymid(sym);
 			if unlikely(mid < 0)
 				goto err;
-			if (modsym->ss_flags & MODSYM_FPROPERTY) {
+			if (modsym->ss_flags & Dee_MODSYM_FPROPERTY) {
 				/* Call an external property:
-				 * >> call    extern <mid>:<gid + MODULE_PROPERTY_DEL>, #0
+				 * >> call    extern <mid>:<gid + Dee_MODULE_PROPERTY_DEL>, #0
 				 * >> pop     top */
-				uint16_t slot = Dee_module_symbol_getindex(modsym) + MODULE_PROPERTY_DEL;
+				uint16_t slot = Dee_module_symbol_getindex(modsym) + Dee_MODULE_PROPERTY_DEL;
 				if (asm_gcall_extern((uint16_t)mid, slot, 0))
 					goto err;
 				return asm_gpop();
@@ -1813,7 +1809,7 @@ check_sym_class:
 				 * >> delattr pop, const DeeModule_GlobalName(<module>, <gid>) */
 				int32_t cid;
 				DREF DeeStringObject *name_obj;
-				name_obj = module_symbol_getnameobj(modsym);
+				name_obj = Dee_module_symbol_getnameobj(modsym);
 				if unlikely(!name_obj)
 					goto err;
 				cid = asm_newconst_inherited(name_obj);
@@ -1857,30 +1853,30 @@ check_sym_class:
 
 		case SYMBOL_TYPE_CATTR: {
 			struct symbol *class_sym, *this_sym;
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 			class_sym = sym->s_attr.a_class;
 			this_sym  = sym->s_attr.a_this;
 			attr      = sym->s_attr.a_attr;
 			SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 				break; /* TODO: Dedicated warning. */
 			if (!this_sym) {
 del_class_attribute:
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 					/* Must invoke the getter callback. */
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
 						if unlikely(symid < 0)
 							goto err;
-						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_DEL)) /* func */
+						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_DEL)) /* func */
 							goto err;
 					} else {
 						if (asm_gpush_symbol(class_sym, warn_ast))             /* class_sym */
 							goto err;
-						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_DEL)) /* func */
+						if (asm_ggetcmember(attr->ca_addr + Dee_CLASS_GETSET_DEL)) /* func */
 							goto err;
 					}
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 						if (asm_gpush_symbol(class_sym, warn_ast))
 							goto err; /* delete, class */
 						if (asm_gcall(1))
@@ -1907,7 +1903,7 @@ del_class_attribute:
 			if unlikely(asm_check_thiscall(sym, warn_ast))
 				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+			if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 				int32_t symid2 = asm_newconst(attr->ca_name);
 				if unlikely(symid2 < 0)
 					goto err;
@@ -1920,28 +1916,28 @@ del_class_attribute:
 			}
 
 			/* Regular, old member variable. */
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				/* Call the delete function of the attribute. */
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
 						if unlikely(symid < 0)
 							goto err;
-						if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
-						    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
+						if ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD)) ==
+						    (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 						    this_sym->s_type == SYMBOL_TYPE_THIS &&
 						    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 							/* Invoke the delete callback. */
-							if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_DEL, 0))
+							if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_DEL, 0))
 								goto err;
 							goto pop_unused_result;
 						}
-						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_DEL))
+						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_DEL))
 							goto err;
 					} else {
 						if (asm_gpush_symbol(class_sym, warn_ast))
 							goto err;
-						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_DEL))
+						if (asm_ggetcmember(attr->ca_addr + Dee_CLASS_GETSET_DEL))
 							goto err;
 					}
 				} else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
@@ -1950,21 +1946,21 @@ del_class_attribute:
 						goto err;
 					if (asm_gpush_symbol(class_sym, warn_ast))
 						goto err;
-					if (asm_ggetmember(attr->ca_addr + CLASS_GETSET_DEL))
+					if (asm_ggetmember(attr->ca_addr + Dee_CLASS_GETSET_DEL))
 						goto err;
 				} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
 					if unlikely(symid < 0)
 						goto err;
-					if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_DEL))
+					if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_DEL))
 						goto err;
 				} else {
 					if (asm_gpush_symbol(class_sym, warn_ast))
 						goto err;
-					if (asm_ggetmember_this(attr->ca_addr + CLASS_GETSET_DEL))
+					if (asm_ggetmember_this(attr->ca_addr + Dee_CLASS_GETSET_DEL))
 						goto err;
 				}
-				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+				if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 					if (asm_gcall(0))
 						goto err; /* Directly invoke. */
 				} else {
@@ -1977,7 +1973,7 @@ del_class_attribute:
 pop_unused_result:
 				return asm_gpop();
 			}
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 				goto del_class_attribute;
 			if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 			    SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
@@ -2038,7 +2034,7 @@ check_sym_class:
 
 		case SYMBOL_TYPE_EXTERN:
 			ASSERT(SYMBOL_EXTERN_SYMBOL(sym));
-			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FREADONLY) {
+			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FREADONLY) {
 				/* ERROR: Can't modify read-only external symbol. */
 				if (ASM_WARN(W_ASM_EXTERNAL_SYMBOL_IS_READONLY, sym))
 					goto err;
@@ -2047,10 +2043,10 @@ check_sym_class:
 			symid = asm_esymid(sym);
 			if unlikely(symid < 0)
 				goto err;
-			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY) {
+			if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & Dee_MODSYM_FPROPERTY) {
 				uint16_t slot;
 				/* Invoke the external setter callback. */
-				slot = Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)) + MODULE_PROPERTY_SET;
+				slot = Dee_module_symbol_getindex(SYMBOL_EXTERN_SYMBOL(sym)) + Dee_MODULE_PROPERTY_SET;
 				if (asm_gcall_extern((uint16_t)symid, slot, 1))
 					goto err;
 				return asm_gpop();
@@ -2175,30 +2171,30 @@ check_sym_class:
 
 		case SYMBOL_TYPE_CATTR: {
 			struct symbol *class_sym, *this_sym;
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 			class_sym = sym->s_attr.a_class;
 			this_sym  = sym->s_attr.a_this;
 			attr      = sym->s_attr.a_attr;
 			SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
 			if (!this_sym) {
 set_class_attribute:
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 						break;
 					/* Must invoke the setter callback. */
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
 						if unlikely(symid < 0)
 							goto err;
-						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET)) /* value, func */
+						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET)) /* value, func */
 							goto err;
 					} else {
 						if (asm_gpush_symbol(class_sym, warn_ast))             /* value, class_sym */
 							goto err;
-						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET)) /* value, func */
+						if (asm_ggetcmember(attr->ca_addr + Dee_CLASS_GETSET_SET)) /* value, func */
 							goto err;
 					}
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 						if (asm_gpush_symbol(class_sym, warn_ast)) /* value, setter, class */
 							goto err;
 						if (asm_glrot(3))                          /* setter, class, value */
@@ -2217,7 +2213,7 @@ set_class_attribute:
 					goto err; /* value, class */
 				if (asm_gswap())
 					goto err; /* class, value */
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) {
 					/* XXX: Assert that not already bound? */
 				}
 				if (asm_gdefcmember(attr->ca_addr))
@@ -2229,7 +2225,7 @@ set_class_attribute:
 			if unlikely(asm_check_thiscall(sym, warn_ast))
 				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+			if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 do_virtual_access:
 				symid = asm_newconst(attr->ca_name);
 				if unlikely(symid < 0)
@@ -2245,30 +2241,30 @@ do_virtual_access:
 			}
 
 			/* Regular, old member variable. */
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 					break;
 				/* Call the setter function of the attribute. */
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
 						if unlikely(symid < 0)
 							goto err;
-						if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
-						    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
+						if ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD)) ==
+						    (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 						    this_sym->s_type == SYMBOL_TYPE_THIS &&
 						    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 							/* Invoke the setter callback. */
-							if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET, 0))
+							if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET, 0))
 								goto err;
 							goto pop_unused_result;
 						}
-						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET))
+						if (asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET))
 							goto err;
 					} else {
 						if (asm_gpush_symbol(class_sym, warn_ast))
 							goto err;
-						if (asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET))
+						if (asm_ggetcmember(attr->ca_addr + Dee_CLASS_GETSET_SET))
 							goto err;
 					}
 				} else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
@@ -2277,23 +2273,23 @@ do_virtual_access:
 						goto err;
 					if (asm_gpush_symbol(class_sym, warn_ast))
 						goto err;
-					if (asm_ggetmember(attr->ca_addr + CLASS_GETSET_SET))
+					if (asm_ggetmember(attr->ca_addr + Dee_CLASS_GETSET_SET))
 						goto err;
 				} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
 					if unlikely(symid < 0)
 						goto err;
-					if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET))
+					if (asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET))
 						goto err;
 				} else {
 					if (asm_gpush_symbol(class_sym, warn_ast))
 						goto err;
-					if (asm_ggetmember_this(attr->ca_addr + CLASS_GETSET_SET))
+					if (asm_ggetmember_this(attr->ca_addr + Dee_CLASS_GETSET_SET))
 						goto err;
 				}
 
 				/* value, callback */
-				if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+				if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 					if (asm_gswap())
 						goto err; /* callback, value */
 					if (asm_gcall(1))
@@ -2310,11 +2306,11 @@ do_virtual_access:
 pop_unused_result:
 				return asm_gpop();
 			}
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 				goto set_class_attribute;
 			if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 			    SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 					goto do_virtual_access; /* There is no `setmemberi pop, pop, $<imm8>, pop' instruction, so use fallback */
 				if (asm_gpush_symbol(this_sym, warn_ast))
 					goto err; /* value, this */
@@ -2328,12 +2324,12 @@ pop_unused_result:
 				symid = asm_rsymid(class_sym);
 				if unlikely(symid < 0)
 					goto err;
-				if ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				if ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 				    ? asm_gsetmemberi_this_r((uint16_t)symid, attr->ca_addr)
 				    : asm_gsetmember_this_r((uint16_t)symid, attr->ca_addr))
 					goto err;
 			} else {
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 					goto do_virtual_access; /* There is no `setmemberi this, pop, $<imm8>, pop' instruction, so use fallback */
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err; /* value, class */

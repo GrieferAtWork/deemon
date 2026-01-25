@@ -31,7 +31,7 @@
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/file.h>
-#include <deemon/format.h>            /* unicode_printer_printf() -> DeeFormat_Printf() */
+#include <deemon/format.h>            /* Dee_unicode_printer_printf() -> DeeFormat_Printf() */
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -59,12 +59,12 @@ INTDEF char const *TPPCALL find_most_likely_warning(char const *__restrict name)
 INTDEF char const *TPPCALL find_most_likely_extension(char const *__restrict name);
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-print_symbol_declaration(struct unicode_printer *__restrict printer,
+print_symbol_declaration(struct Dee_unicode_printer *__restrict printer,
                          struct symbol const *__restrict sym) {
 	Dee_ssize_t temp, result;
 	if (!sym->s_decl.l_file)
 		return 0;
-	result = unicode_printer_printf(printer,
+	result = Dee_unicode_printer_printf(printer,
 	                                TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
 	                                ? "\n%s(%d,%d) : "
 	                                : "\n%s:%d:%d: ",
@@ -73,7 +73,7 @@ print_symbol_declaration(struct unicode_printer *__restrict printer,
 	                                sym->s_decl.l_col + 1);
 	if unlikely(result < 0)
 		goto err;
-	temp = unicode_printer_printf(printer, "See reference to declaration of `%s'", SYMBOL_NAME(sym));
+	temp = Dee_unicode_printer_printf(printer, "See reference to declaration of `%s'", SYMBOL_NAME(sym));
 	if unlikely(temp < 0)
 		goto err_temp;
 	return result + temp;
@@ -86,17 +86,17 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-print_warning_message(struct unicode_printer *__restrict _printer,
+print_warning_message(struct Dee_unicode_printer *__restrict _printer,
                       int _wnum, va_list _args) {
 	static char const nth[4][3] = { "st", "nd", "rd", "th" };
 	Dee_ssize_t _warnf_temp, _warnf_result = 0;
 	struct TPPString *_temp_string = NULL;
 #ifndef __INTELLISENSE__
-#define WARNF(...)                                                                     \
-	do {                                                                               \
-		if unlikely((_warnf_temp = unicode_printer_printf(_printer, __VA_ARGS__)) < 0) \
-			goto _warnf_err;                                                           \
-		_warnf_result += _warnf_temp;                                                  \
+#define WARNF(...)                                                                         \
+	do {                                                                                   \
+		if unlikely((_warnf_temp = Dee_unicode_printer_printf(_printer, __VA_ARGS__)) < 0) \
+			goto _warnf_err;                                                               \
+		_warnf_result += _warnf_temp;                                                      \
 	}	__WHILE0
 #define PRINT_SYMBOL_DECLARATION(sym)                                            \
 	do {                                                                         \
@@ -157,12 +157,12 @@ _warnf_err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_warning_message(int wnum, va_list args) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(print_warning_message(&printer, wnum, args) < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -200,7 +200,7 @@ parser_errors_fini(struct parser_errors *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-parser_throw(struct compiler_error_object *__restrict error) {
+parser_throw(struct Dee_compiler_error_object *__restrict error) {
 	ASSERT_OBJECT_TYPE(error, &DeeError_CompilerError);
 	/* Special case: If TPP was started using `-E' or `-F', then it is
 	 *               possible that no compiler is currently active, in
@@ -270,11 +270,11 @@ err:
 
 INTERN void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
-                        /*inherit*/ struct except_frame *__restrict frame);
+                        /*inherit*/ struct Dee_except_frame *__restrict frame);
 
 
 INTERN int DCALL parser_rethrow(bool must_fail) {
-	struct except_frame **p_iter, *iter;
+	struct Dee_except_frame **p_iter, *iter;
 	uint16_t num_errors;
 	DeeThreadObject *caller = DeeThread_Self();
 	ASSERTF(caller->t_exceptsz >= current_parser_errors.pe_except,
@@ -304,7 +304,7 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 				if (ITER_ISOK(iter->ef_trace))
 					Dee_Decref(iter->ef_trace);
 				--caller->t_exceptsz;
-				except_frame_free(iter);
+				Dee_except_frame_free(iter);
 				continue;
 			}
 			p_iter = &iter->ef_prev;
@@ -433,7 +433,7 @@ err_handle_all_but_last:
 			if (ITER_ISOK(iter->ef_trace))
 				Dee_Decref(iter->ef_trace);
 			Dee_Decref(iter->ef_error);
-			except_frame_free(iter);
+			Dee_except_frame_free(iter);
 		}
 		--caller->t_exceptsz;
 	}
@@ -458,11 +458,11 @@ PRIVATE int const tpp_warning_mode_matrix[3] = {
 
 PRIVATE int DCALL
 capture_compiler_location(struct TPPFile *__restrict file,
-                          struct compiler_error_loc *__restrict result,
-                          struct compiler_error_loc **__restrict p_main_loc) {
+                          struct Dee_compiler_error_loc *__restrict result,
+                          struct Dee_compiler_error_loc **__restrict p_main_loc) {
 #if 1 /* ORDER: low --> high */
-	struct compiler_error_loc *extension;
-	struct compiler_error_loc *start = result;
+	struct Dee_compiler_error_loc *extension;
+	struct Dee_compiler_error_loc *start = result;
 	ASSERT(file->f_kind != TPPFILE_KIND_EXPLICIT);
 	ASSERT(file != &TPPFile_Empty);
 	for (;;) {
@@ -497,7 +497,7 @@ capture_compiler_location(struct TPPFile *__restrict file,
 		if (file->f_kind == TPPFILE_KIND_EXPLICIT ||
 		    file == &TPPFile_Empty)
 			break;
-		extension = (struct compiler_error_loc *)Dee_Malloc(sizeof(struct compiler_error_loc));
+		extension = (struct Dee_compiler_error_loc *)Dee_Malloc(sizeof(struct Dee_compiler_error_loc));
 		if unlikely(!extension)
 			goto err;
 		result->cl_prev = extension;
@@ -533,8 +533,8 @@ err:
 		if (next_file->f_kind != TPPFILE_KIND_EXPLICIT &&
 		    file != &TPPFile_Empty) {
 			/* Recursively extend debug information */
-			struct compiler_error_loc *extension;
-			extension = (struct compiler_error_loc *)Dee_Malloc(sizeof(struct compiler_error_loc));
+			struct Dee_compiler_error_loc *extension;
+			extension = (struct Dee_compiler_error_loc *)Dee_Malloc(sizeof(struct Dee_compiler_error_loc));
 			if unlikely(!extension)
 				goto err;
 			if unlikely(capture_compiler_location(next_file, extension, p_main_loc)) {
@@ -621,7 +621,7 @@ handle_compiler_warning(struct ast_loc *loc,
 		goto err_error;
 
 	/* Initializer other members of the error object. */
-	weakref_support_init(error);
+	Dee_weakref_support_init(error);
 	error->e_cause   = NULL;
 	error->ce_errorc = 0;
 	error->ce_errorv = NULL;

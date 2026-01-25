@@ -38,8 +38,8 @@ DECL_BEGIN
  * to underlying sequence elements.
  *  - Transformations are applied by performing the same
  *    operation on the each-wrapper, with all operations
- *    with the exception of sequence (`type_seq') and
- *    cast (`type_cast') operators with continue to behave
+ *    with the exception of sequence (`tp_seq') and
+ *    cast (`tp_cast') operators with continue to behave
  *    normally, and as would be expected for a sequence.
  *  - An exception to this is the first operator invoked
  *    after the `each' wrapper is accessed, which _always_
@@ -60,7 +60,7 @@ DECL_BEGIN
  * >> print repr x.map(x -> x.upper().center(8));
  */
 
-struct string_object;
+struct Dee_string_object;
 
 #define SEQ_EACH_HEAD \
 	PROXY_OBJECT_HEAD(se_seq) /* [1..1][const] The sequence being accessed. */
@@ -196,19 +196,19 @@ typedef struct {
 /* Special proxies for commonly used operators. */
 typedef struct {
 	SEQ_EACH_HEAD
-	DREF struct string_object *sg_attr; /* [1..1][const] The name of the attribute to access. */
+	DREF struct Dee_string_object *sg_attr; /* [1..1][const] The name of the attribute to access. */
 } SeqEachGetAttr;
 
 typedef struct {
 	SEQ_EACH_HEAD
-	DREF struct string_object                *sg_attr;  /* [1..1][const] The name of the attribute to access. */
+	DREF struct Dee_string_object            *sg_attr;  /* [1..1][const] The name of the attribute to access. */
 	size_t                                    sg_argc;  /* [const] Amount of arguments to pass. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, sg_argv); /* [1..1][const][0..sg_argc] Vector of arguments to pass. */
 } SeqEachCallAttr;
 
 typedef struct {
 	SEQ_EACH_HEAD
-	DREF struct string_object                *sg_attr;  /* [1..1][const] The name of the attribute to access. */
+	DREF struct Dee_string_object            *sg_attr;  /* [1..1][const] The name of the attribute to access. */
 	DREF DeeObject                           *sg_kw;    /* [1..1][const] Additional keyword to pass during invocation. */
 	size_t                                    sg_argc;  /* [const] Amount of arguments to pass. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, sg_argv); /* [1..1][const][0..sg_argc] Vector of arguments to pass. */

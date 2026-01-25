@@ -67,7 +67,7 @@
 
 DECL_BEGIN
 
-INTDEF struct module_symbol empty_module_buckets[];
+INTDEF struct Dee_module_symbol empty_module_buckets[];
 
 /* Try to load an extension file.
  * NOTE: This isn't where the dex gets initialized!
@@ -77,15 +77,15 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 dex_load_handle(DeeDexObject *__restrict self,
                 void *handle,
                 DeeObject *__restrict input_file) {
-	struct module_symbol *modsym;
-	struct dex_symbol const *symbols;
-	struct dex *descriptor;
+	struct Dee_module_symbol *modsym;
+	struct Dee_dex_symbol const *symbols;
+	struct Dee_dex *descriptor;
 	DREF DeeObject **globals;
 	size_t symcount, glbcount;
 	uint16_t symi, bucket_mask;
-	descriptor = (struct dex *)DeeSystem_DlSym(handle, "DEX");
+	descriptor = (struct Dee_dex *)DeeSystem_DlSym(handle, "DEX");
 	if (!descriptor)
-		descriptor = (struct dex *)DeeSystem_DlSym(handle, "_DEX");
+		descriptor = (struct Dee_dex *)DeeSystem_DlSym(handle, "_DEX");
 	DBG_ALIGNMENT_ENABLE();
 	if (!descriptor) {
 		DeeError_Throwf(&DeeError_RuntimeError,
@@ -102,7 +102,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 	glbcount = 0;
 	if (symbols) {
 		while (symbols->ds_name) {
-			if ((symbols->ds_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
+			if ((symbols->ds_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY) {
 				symbols += 2;
 				glbcount += 2;
 			}
@@ -130,13 +130,13 @@ dex_load_handle(DeeDexObject *__restrict self,
 	if ((bucket_mask - symcount) < 16)
 		bucket_mask <<= 1;
 	--bucket_mask;
-	modsym = (struct module_symbol *)Dee_Callocc(bucket_mask + 1,
-	                                             sizeof(struct module_symbol));
+	modsym = (struct Dee_module_symbol *)Dee_Callocc(bucket_mask + 1,
+	                                             sizeof(struct Dee_module_symbol));
 	if unlikely(!modsym)
 		goto err_glob;
 	/* Set the symbol table and global variable vector. */
 	for (symi = 0; symi < (uint16_t)glbcount; ++symi) {
-		struct dex_symbol const *sym = &symbols[symi];
+		struct Dee_dex_symbol const *sym = &symbols[symi];
 		Dee_hash_t i, perturb, hash;
 		ASSERT(sym->ds_name);
 		ASSERTF(!sym->ds_obj || DeeObject_Check(sym->ds_obj),
@@ -145,7 +145,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 		hash    = Dee_HashStr(sym->ds_name);
 		perturb = i = hash & bucket_mask;
 		for (;; Dee_MODULE_HASHNX(i, perturb)) {
-			struct module_symbol *target = &modsym[i & bucket_mask];
+			struct Dee_module_symbol *target = &modsym[i & bucket_mask];
 			if (target->ss_name)
 				continue;
 			target->ss_name  = sym->ds_name;
@@ -153,13 +153,13 @@ dex_load_handle(DeeDexObject *__restrict self,
 			target->ss_index = symi;
 			target->ss_hash  = hash;
 			target->ss_flags = (uint8_t)sym->ds_flags;
-			ASSERT(!(sym->ds_flags & (MODSYM_FNAMEOBJ | MODSYM_FDOCOBJ)));
+			ASSERT(!(sym->ds_flags & (Dee_MODSYM_FNAMEOBJ | Dee_MODSYM_FDOCOBJ)));
 			break;
 		}
 		/* Safe the proper initialization object in the global table. */
 		globals[symi] = sym->ds_obj;
 		Dee_XIncref(sym->ds_obj);
-		if ((sym->ds_flags & (MODSYM_FPROPERTY | MODSYM_FREADONLY)) == MODSYM_FPROPERTY) {
+		if ((sym->ds_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY) {
 			/* Initialize a property */
 			globals[symi + 1] = sym[1].ds_obj;
 			globals[symi + 2] = sym[2].ds_obj;
@@ -297,7 +297,7 @@ DeeDex_New(DeeObject *__restrict name) {
 	result->d_module.mo_name    = (DeeStringObject *)name;
 	result->d_module.mo_bucketv = empty_module_buckets;
 	Dee_Incref(name);
-	weakref_support_init(&result->d_module);
+	Dee_weakref_support_init(&result->d_module);
 	return DeeGC_Track(Dee_AsObject(&result->d_module));
 err:
 	return NULL;
@@ -436,7 +436,7 @@ PRIVATE NONNULL((1, 2)) void DCALL
 dex_visit(DeeDexObject *__restrict self,
           Dee_visit_t proc, void *arg) {
 	if (self->d_module.mo_flags & Dee_MODULE_FDIDLOAD) {
-		struct dex_symbol *iter;
+		struct Dee_dex_symbol *iter;
 		ASSERT(self->d_dex);
 		iter = self->d_dex->d_symbols;
 		if (iter) {

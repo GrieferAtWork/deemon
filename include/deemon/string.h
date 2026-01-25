@@ -17,17 +17,41 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export -CONFIG_**/
+/*!export DeeAscii_**/
+/*!export DeeCodec_**/
+/*!export DeeDbgString_**/
+/*!export DeeDbg_string_utf_**/
+/*!export DeeString**/
+/*!export DeeUni_**/
+/*!export Dee_ASCII_PRINTER_**/
+/*!export Dee_STRING_**/
+/*!export Dee_UNICODE_CONVERT_**/
+/*!export Dee_UNICODE_IS**/
+/*!export Dee_UNICODE_PRINTER_**/
+/*!export Dee_UNICODE_**/
+/*!export Dee_ascii_printer**/
+/*!export Dee_charptr**/
+/*!export Dee_string_fini_hook**/
+/*!export Dee_string_utf**/
+/*!export Dee_string_**/
+/*!export Dee_unicode_printer**/
+/*!export STRING_ERROR_F**/
+/*!export _DeeAscii_**/
+/*!export _DeeString_**/
+/*!export _DeeUni_**/
+/*!fixincludes regex keep_default_groups*/
+/*!fixincludes regex group "CASE_WIDTH_(1|2|4)BYTE"       "CASE_WIDTH_nBYTE"       3*/
+/*!fixincludes regex group "Dee_CASE_WIDTH_(1|2|4)BYTE"   "Dee_CASE_WIDTH_nBYTE"   3*/
+/*!fixincludes regex group "STRING_WIDTH_(1|2|4)BYTE"     "STRING_WIDTH_nBYTE"     3*/
+/*!fixincludes regex group "Dee_STRING_WIDTH_(1|2|4)BYTE" "Dee_STRING_WIDTH_nBYTE" 3*/
 #ifndef GUARD_DEEMON_STRING_H
-#define GUARD_DEEMON_STRING_H 1
+#define GUARD_DEEMON_STRING_H 1 /*!export-*/
 
 #include "api.h"
 
 #include "types.h"
-#ifndef __INTELLISENSE__
-#include "alloc.h"  /* DeeDbgObject_*, DeeDbg_*, DeeObject_*, Dee_*alloc*, Dee_Free, Dee_UntrackAlloc */
-#include "object.h"
-#endif /* !__INTELLISENSE__ */
-
 #include <hybrid/__overflow.h> /* __hybrid_overflow_uadd, __hybrid_overflow_umul */
 #include <hybrid/byteorder.h>  /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/host.h>       /* __ARCH_PAGESIZE, __linux__, __unix__ */
@@ -37,6 +61,11 @@
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, size_t, wchar_t */
 #include <stdint.h>  /* int32_t, uintN_t, uintptr_t */
+
+#ifndef __INTELLISENSE__
+#include "alloc.h"  /* DeeDbgObject_*, DeeDbg_*, DeeObject_*, Dee_*alloc*, Dee_Free, Dee_UntrackAlloc */
+#include "object.h"
+#endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
@@ -119,7 +148,7 @@
      !defined(__UNICODE_ISSYMCONT) || !defined(unicode_issymcont) ||   \
      !defined(____unicode_descriptor_defined) ||                       \
      !defined(__CRT_HAVE_unicode_fold) ||                              \
-     !defined(UNICODE_FOLDED_MAX))
+     !defined(Dee_UNICODE_FOLDED_MAX))
 #undef CONFIG_HAVE_UNICODE_H
 #define CONFIG_NO_UNICODE_H
 #endif /* !... */
@@ -131,8 +160,8 @@ DECL_BEGIN
 #ifndef CONFIG_HAVE_strlen
 #define CONFIG_HAVE_strlen
 #undef strlen
-#define strlen dee_strlen
-LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
+#define strlen dee_strlen /*!export-*/
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
 	size_t result;
 	for (result = 0; str[result]; ++result)
 		;
@@ -143,9 +172,9 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #ifndef CONFIG_HAVE_memcmp
 #define CONFIG_HAVE_memcmp
 #undef memcmp
-#define memcmp dee_memcmp
+#define memcmp dee_memcmp /*!export-*/
 LOCAL WUNUSED NONNULL((1, 2)) int
-dee_memcmp(void const *s1, void const *s2, size_t n) {
+dee_memcmp(void const *s1, void const *s2, size_t n) { /*!export-*/
 	uint8_t const *p1 = (uint8_t const *)s1;
 	uint8_t const *p2 = (uint8_t const *)s2;
 	while (n--) {
@@ -161,7 +190,7 @@ dee_memcmp(void const *s1, void const *s2, size_t n) {
 #ifndef CONFIG_HAVE_bcmp
 #define CONFIG_HAVE_bcmp
 #undef bcmp
-#define bcmp(s1, s2, num_bytes) memcmp(s1, s2, num_bytes)
+#define bcmp(s1, s2, num_bytes) memcmp(s1, s2, num_bytes) /*!export-*/
 #endif /* !CONFIG_HAVE_bcmp */
 
 
@@ -204,19 +233,6 @@ dee_memcmp(void const *s1, void const *s2, size_t n) {
  *
  */
 
-
-#ifdef DEE_SOURCE
-#define Dee_ascii_printer   ascii_printer
-#define Dee_unicode_printer unicode_printer
-#define Dee_string_object   string_object
-#define Dee_string_utf      string_utf
-#define Dee_unitraits       unitraits
-#define Dee_regex_range     regex_range
-#define Dee_regex_range_ex  regex_range_ex
-#define Dee_regex_range_ptr regex_range_ptr
-#endif /* DEE_SOURCE */
-
-
 struct Dee_string_utf;
 struct Dee_ascii_printer;
 struct Dee_unicode_printer;
@@ -235,13 +251,7 @@ typedef wchar_t Dee_wchar_t;
 #else /* __native_wchar_t_defined */
 typedef __WCHAR_TYPE__ Dee_wchar_t;
 #endif /* !__native_wchar_t_defined */
-#ifdef DEE_SOURCE
-#define Dee_charptr       dcharptr
-#define Dee_charptr_const dcharptr_const
-#endif /* DEE_SOURCE */
 
-#ifndef DEE_CHARPTR_DEFINED
-#define DEE_CHARPTR_DEFINED
 union Dee_charptr {
 	void        *ptr;
 	uint8_t     *cp8;
@@ -250,6 +260,7 @@ union Dee_charptr {
 	char        *cp_char;
 	Dee_wchar_t *cp_wchar;
 };
+
 union Dee_charptr_const {
 	void        const *ptr;
 	uint8_t     const *cp8;
@@ -258,7 +269,6 @@ union Dee_charptr_const {
 	char        const *cp_char;
 	Dee_wchar_t const *cp_wchar;
 };
-#endif /* !DEE_CHARPTR_DEFINED */
 
 
 
@@ -379,10 +389,6 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #define CASE_WIDTH_1BYTE        Dee_CASE_WIDTH_1BYTE
 #define CASE_WIDTH_2BYTE        Dee_CASE_WIDTH_2BYTE
 #define CASE_WIDTH_4BYTE        Dee_CASE_WIDTH_4BYTE
-#define STRING_UTF_FNORMAL      Dee_STRING_UTF_FNORMAL
-#define STRING_UTF_FASCII       Dee_STRING_UTF_FASCII
-#define STRING_UTF_FINVBYT      Dee_STRING_UTF_FINVBYT
-#define STRING_UTF_FFINIHOOK    Dee_STRING_UTF_FFINIHOOK
 #endif /* DEE_SOURCE */
 
 struct Dee_string_utf {
@@ -466,8 +472,8 @@ struct Dee_string_object {
 	Dee_OBJECT_HEAD
 	struct Dee_string_utf  *s_data; /* [0..1][owned][lock(WRITE_ONCE)]
 	                                 * Extended string data, as well as unicode information & lazily allocated caches. */
-	Dee_hash_t              s_hash; /* [valid_if(!= DEE_STRING_HASH_UNSET)][lock(WRITE_ONCE)] The string's hash. */
-#define DEE_STRING_HASH_UNSET ((Dee_hash_t)-1) /* A hash-representation of the string. */
+	Dee_hash_t              s_hash; /* [valid_if(!= Dee_STRING_HASH_UNSET)][lock(WRITE_ONCE)] The string's hash. */
+#define Dee_STRING_HASH_UNSET ((Dee_hash_t)-1) /* A hash-representation of the string. */
 	size_t                  s_len;  /* [const] The number of bytes found in the single-byte string text. */
 	COMPILER_FLEXIBLE_ARRAY(/*unsigned*/ char,
 	                        s_str); /* [const][s_len] The single-byte string text.
@@ -493,7 +499,7 @@ struct Dee_string_object {
 	} name = {                                                    \
 		Dee_OBJECT_HEAD_INIT(&DeeString_Type),                    \
 		&name.s_utf,                                              \
-		DEE_STRING_HASH_UNSET,                                    \
+		Dee_STRING_HASH_UNSET,                                    \
 		(sizeof(str) / sizeof(char)) - 1,                         \
 		str,                                                      \
 		{ Dee_STRING_WIDTH_1BYTE,                                 \
@@ -869,7 +875,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeString_TryResizeBuffer(DREF DeeObject *
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Print the text of `self' to `printer', encoded as a UTF-8 string.
- * NOTE: If `printer' is `&unicode_printer_print', special optimization
+ * NOTE: If `printer' is `&Dee_unicode_printer_print', special optimization
  *       is done, meaning that this is the preferred method of printing
  *       an object to a unicode printer.
  * NOTE: This optimization is also done when `DeeObject_Print' is used. */
@@ -928,7 +934,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned
 
 #ifndef __ARCH_PAGESIZE_MIN
 #ifdef __ARCH_PAGESIZE
-#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE /*!export-*/
 #endif /* __ARCH_PAGESIZE */
 #endif /* !__ARCH_PAGESIZE_MIN */
 
@@ -1015,7 +1021,7 @@ DeeDbgString_NewAutoWithHash(/*unsigned*/ char const *__restrict str,
 	if (result) {
 		Dee_hash_t hashof_str = ((DeeStringObject const *)result)->s_hash;
 		if unlikely(hashof_str != hash) {
-			if unlikely(hashof_str != DEE_STRING_HASH_UNSET)
+			if unlikely(hashof_str != Dee_STRING_HASH_UNSET)
 				goto return_new_string;
 			((DeeStringObject *)result)->s_hash = hash;
 		}
@@ -1803,7 +1809,7 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 	DREF DeeStringObject *result;
 	result = COMPILER_CONTAINER_OF((char *)buffer, DeeStringObject, s_str);
 	result->s_data               = NULL;
-	result->s_hash               = DEE_STRING_HASH_UNSET;
+	result->s_hash               = Dee_STRING_HASH_UNSET;
 	result->s_str[result->s_len] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	return Dee_AsObject(result);
@@ -2268,24 +2274,20 @@ INTDEF DeeStringObject1Char DeeString_Latin1[256];
 #define Dee_UNICODE_ISSYMCONT  __UNICODE_ISSYMCONT
 typedef uint16_t Dee_uniflag_t;
 
-#ifdef DEE_SOURCE
-#undef Dee_unitraits
-#define unitraits      __unitraits
-#endif /* DEE_SOURCE */
 #define Dee_unitraits  __unitraits
-#define ut_flags       __ut_flags
-#define ut_digit_idx   __ut_digit_idx
-#define ut_fold_idx    __ut_fold_idx
-#define ut_lower       __ut_lower
-#define ut_upper       __ut_upper
-#define ut_title       __ut_title
+#define ut_flags       __ut_flags     /*!export-*/
+#define ut_digit_idx   __ut_digit_idx /*!export-*/
+#define ut_fold_idx    __ut_fold_idx  /*!export-*/
+#define ut_lower       __ut_lower     /*!export-*/
+#define ut_upper       __ut_upper     /*!export-*/
+#define ut_title       __ut_title     /*!export-*/
 
 /* Unicode character traits database access. */
 #define DeeUni_Descriptor(ch) __unicode_descriptor((__CHAR32_TYPE__)(ch))
 
 /* Max number of characters which may be generated
  * by case folding a single unicode character. */
-#define Dee_UNICODE_FOLDED_MAX UNICODE_FOLDED_MAX
+#define Dee_UNICODE_FOLDED_MAX Dee_UNICODE_FOLDED_MAX
 
 /* case-fold the given unicode character `ch', and
  * return the number of resulting folded characters.
@@ -2625,41 +2627,6 @@ DDATDEF char const _DeeAscii_Itoa[101];
 #endif /* !DeeUni_IsSymCont */
 #define DeeUni_IsSpaceNoLf(ch) (DeeUni_Flags(ch) & Dee_UNICODE_ISEMPTY)
 
-#ifdef DEE_SOURCE
-#define UNICODE_ISCNTRL    Dee_UNICODE_ISCNTRL
-#define UNICODE_ISCTAB     Dee_UNICODE_ISCTAB
-#define UNICODE_ISXTAB     Dee_UNICODE_ISXTAB
-#define UNICODE_ISTAB      Dee_UNICODE_ISTAB
-#define UNICODE_ISWHITE    Dee_UNICODE_ISWHITE
-#define UNICODE_ISEMPTY    Dee_UNICODE_ISEMPTY
-#define UNICODE_ISLF       Dee_UNICODE_ISLF
-#define UNICODE_ISSPACE    Dee_UNICODE_ISSPACE
-#define UNICODE_ISLOWER    Dee_UNICODE_ISLOWER
-#define UNICODE_ISUPPER    Dee_UNICODE_ISUPPER
-#define UNICODE_ISXALPHA   Dee_UNICODE_ISXALPHA
-#define UNICODE_ISALPHA    Dee_UNICODE_ISALPHA
-#define UNICODE_ISDIGIT    Dee_UNICODE_ISDIGIT
-#define UNICODE_ISHEX      Dee_UNICODE_ISHEX
-#define UNICODE_ISXDIGIT   Dee_UNICODE_ISXDIGIT
-#define UNICODE_ISALNUM    Dee_UNICODE_ISALNUM
-#define UNICODE_ISPUNCT    Dee_UNICODE_ISPUNCT
-#define UNICODE_ISGRAPH    Dee_UNICODE_ISGRAPH
-#define UNICODE_ISPRINT    Dee_UNICODE_ISPRINT
-#define UNICODE_ISBLANK    Dee_UNICODE_ISBLANK
-#define UNICODE_ISTITLE    Dee_UNICODE_ISTITLE
-#define UNICODE_ISXNUMERIC Dee_UNICODE_ISXNUMERIC
-#define UNICODE_ISNUMERIC  Dee_UNICODE_ISNUMERIC
-#define UNICODE_ISSYMSTRT  Dee_UNICODE_ISSYMSTRT
-#define UNICODE_ISSYMCONT  Dee_UNICODE_ISSYMCONT
-typedef Dee_uniflag_t uniflag_t;
-#ifndef UNICODE_FOLDED_MAX
-#define UNICODE_FOLDED_MAX Dee_UNICODE_FOLDED_MAX
-#endif /* !UNICODE_FOLDED_MAX */
-#define UNICODE_CONVERT_LOWER Dee_UNICODE_CONVERT_LOWER
-#define UNICODE_CONVERT_UPPER Dee_UNICODE_CONVERT_UPPER
-#define UNICODE_CONVERT_TITLE Dee_UNICODE_CONVERT_TITLE
-#endif /* DEE_SOURCE */
-
 
 
 
@@ -2684,26 +2651,6 @@ NONNULL((1)) void Dee_ascii_printer_fini(struct Dee_ascii_printer *__restrict se
 #define Dee_ascii_printer_init(self) (void)((self)->ap_length = 0, (self)->ap_string = NULL)
 #define Dee_ascii_printer_fini(self) DeeObject_Free((self)->ap_string)
 #endif /* !__INTELLISENSE__ */
-
-#ifdef DEE_SOURCE
-#define ASCII_PRINTER_INIT Dee_ASCII_PRINTER_INIT
-#define ASCII_PRINTER_STR  Dee_ASCII_PRINTER_STR
-#define ASCII_PRINTER_LEN  Dee_ASCII_PRINTER_LEN
-#define ascii_printer_init Dee_ascii_printer_init
-#define ascii_printer_fini Dee_ascii_printer_fini
-#ifdef __INTELLISENSE__
-#define Dee_ascii_printer_print    ascii_printer_print
-#define Dee_ascii_printer_alloc    ascii_printer_alloc
-#define Dee_ascii_printer_release  ascii_printer_release
-#define Dee_ascii_printer_printf   ascii_printer_printf
-#define Dee_ascii_printer_vprintf  ascii_printer_vprintf
-#define ASCII_PRINTER_PRINT        Dee_ASCII_PRINTER_PRINT
-#define Dee_ascii_printer_putc     ascii_printer_putc
-#define Dee_ascii_printer_allocstr ascii_printer_allocstr
-#define Dee_ascii_printer_pack     ascii_printer_pack
-#endif /* __INTELLISENSE__ */
-#endif /* DEE_SOURCE */
-
 
 
 /* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t') */
@@ -2740,11 +2687,11 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_ascii_printer_putc)(struct Dee_ascii
  * Upon error (append failed to allocate more memory), NULL is returned.
  * HINT: This function is very useful when creating
  *       string tables for NUL-terminated strings:
- *       >> ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
- *       >> ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
- *       >> ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
+ *       >> Dee_ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
+ *       >> Dee_ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
+ *       >> Dee_ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
  * @return: * :   A pointer to a volatile memory location within the already printed string
- *                (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
+ *                (the caller should calculate the offset to `Dee_ASCII_PRINTER_STR(self)'
  *                to ensure consistency if the function is called multiple times)
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) char *DCALL
@@ -2762,20 +2709,6 @@ Dee_ascii_printer_pack(/*inherit(always)*/ struct Dee_ascii_printer *__restrict 
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
-#ifdef DEE_SOURCE
-#ifndef __INTELLISENSE__
-#define ascii_printer_print    Dee_ascii_printer_print
-#define ascii_printer_alloc    Dee_ascii_printer_alloc
-#define ascii_printer_release  Dee_ascii_printer_release
-#define ascii_printer_printf   Dee_ascii_printer_printf
-#define ascii_printer_vprintf  Dee_ascii_printer_vprintf
-#define ASCII_PRINTER_PRINT    Dee_ASCII_PRINTER_PRINT
-#define ascii_printer_putc     Dee_ascii_printer_putc
-#define ascii_printer_allocstr Dee_ascii_printer_allocstr
-#define ascii_printer_pack     Dee_ascii_printer_pack
-#endif /* !__INTELLISENSE__ */
-#endif /* DEE_SOURCE */
-
 
 
 
@@ -2792,7 +2725,7 @@ struct Dee_unicode_printer {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define up_buffer  _dee_aunion.up_buffer
+#define up_buffer  _dee_aunion.up_buffer /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 #else
@@ -2817,113 +2750,6 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #define Dee_unicode_printer_fini(self) \
 	DeeString_FreeWidthBuffer((self)->up_buffer, Dee_UNICODE_PRINTER_WIDTH(self))
 #endif /* !__INTELLISENSE__ */
-
-#ifdef DEE_SOURCE
-#define UNICODE_PRINTER_FWIDTH              Dee_UNICODE_PRINTER_FWIDTH
-#define UNICODE_PRINTER_FPENDING            Dee_UNICODE_PRINTER_FPENDING
-#define UNICODE_PRINTER_FPENDING_SHFT       Dee_UNICODE_PRINTER_FPENDING_SHFT
-#define UNICODE_PRINTER_INIT                Dee_UNICODE_PRINTER_INIT
-#define unicode_printer_init                Dee_unicode_printer_init
-#define unicode_printer_fini                Dee_unicode_printer_fini
-#define UNICODE_PRINTER_ISEMPTY             Dee_UNICODE_PRINTER_ISEMPTY
-#define UNICODE_PRINTER_LENGTH              Dee_UNICODE_PRINTER_LENGTH
-#define UNICODE_PRINTER_BUFSIZE             Dee_UNICODE_PRINTER_BUFSIZE
-#define UNICODE_PRINTER_WIDTH               Dee_UNICODE_PRINTER_WIDTH
-#define UNICODE_PRINTER_GETCHAR             Dee_UNICODE_PRINTER_GETCHAR
-#define UNICODE_PRINTER_SETCHAR             Dee_UNICODE_PRINTER_SETCHAR
-#define unicode_printer_truncate            Dee_unicode_printer_truncate
-#define unicode_printer_clear               Dee_unicode_printer_clear
-#ifdef __INTELLISENSE__
-#define Dee_unicode_printer_init_string     unicode_printer_init_string
-#define Dee_unicode_printer_pack            unicode_printer_pack
-#define Dee_unicode_printer_trypack         unicode_printer_trypack
-#define Dee_unicode_printer_allocate        unicode_printer_allocate
-#define Dee_unicode_printer_putc            unicode_printer_putc
-#define Dee_unicode_printer_putascii        unicode_printer_putascii
-#define Dee_unicode_printer_pututf8         unicode_printer_pututf8
-#define Dee_unicode_printer_pututf16        unicode_printer_pututf16
-#define Dee_unicode_printer_pututf32        unicode_printer_pututf32
-#define Dee_unicode_printer_put8            unicode_printer_put8
-#define Dee_unicode_printer_put16           unicode_printer_put16
-#define Dee_unicode_printer_put32           unicode_printer_put32
-#define Dee_unicode_printer_print           unicode_printer_print
-#define Dee_unicode_printer_printutf16      unicode_printer_printutf16
-#define Dee_unicode_printer_printascii      unicode_printer_printascii
-#define Dee_unicode_printer_printutf8       unicode_printer_printutf8
-#define Dee_unicode_printer_printutf32      unicode_printer_printutf32
-#define Dee_unicode_printer_printwide       unicode_printer_printwide
-#define Dee_unicode_printer_repeatascii     unicode_printer_repeatascii
-#define Dee_unicode_printer_reserve         unicode_printer_reserve
-#define Dee_unicode_printer_printinto       unicode_printer_printinto
-#define Dee_unicode_printer_printstring     unicode_printer_printstring
-#define Dee_unicode_printer_print8          unicode_printer_print8
-#define Dee_unicode_printer_print16         unicode_printer_print16
-#define Dee_unicode_printer_print32         unicode_printer_print32
-#define Dee_unicode_printer_reuse           unicode_printer_reuse
-#define Dee_unicode_printer_reuse8          unicode_printer_reuse8
-#define Dee_unicode_printer_reuse16         unicode_printer_reuse16
-#define Dee_unicode_printer_reuse32         unicode_printer_reuse32
-#define Dee_unicode_printer_alloc_utf8      unicode_printer_alloc_utf8
-#define Dee_unicode_printer_tryalloc_utf8   unicode_printer_tryalloc_utf8
-#define Dee_unicode_printer_resize_utf8     unicode_printer_resize_utf8
-#define Dee_unicode_printer_tryresize_utf8  unicode_printer_tryresize_utf8
-#define Dee_unicode_printer_free_utf8       unicode_printer_free_utf8
-#define Dee_unicode_printer_commit_utf8     unicode_printer_commit_utf8
-#define Dee_unicode_printer_alloc_utf16     unicode_printer_alloc_utf16
-#define Dee_unicode_printer_tryalloc_utf16  unicode_printer_tryalloc_utf16
-#define Dee_unicode_printer_resize_utf16    unicode_printer_resize_utf16
-#define Dee_unicode_printer_tryresize_utf16 unicode_printer_tryresize_utf16
-#define Dee_unicode_printer_free_utf16      unicode_printer_free_utf16
-#define Dee_unicode_printer_commit_utf16    unicode_printer_commit_utf16
-#define Dee_unicode_printer_alloc_utf32     unicode_printer_alloc_utf32
-#define Dee_unicode_printer_tryalloc_utf32  unicode_printer_tryalloc_utf32
-#define Dee_unicode_printer_resize_utf32    unicode_printer_resize_utf32
-#define Dee_unicode_printer_tryresize_utf32 unicode_printer_tryresize_utf32
-#define Dee_unicode_printer_free_utf32      unicode_printer_free_utf32
-#define Dee_unicode_printer_commit_utf32    unicode_printer_commit_utf32
-#define Dee_unicode_printer_alloc_wchar     unicode_printer_alloc_wchar
-#define Dee_unicode_printer_tryalloc_wchar  unicode_printer_tryalloc_wchar
-#define Dee_unicode_printer_resize_wchar    unicode_printer_resize_wchar
-#define Dee_unicode_printer_tryresize_wchar unicode_printer_tryresize_wchar
-#define Dee_unicode_printer_free_wchar      unicode_printer_free_wchar
-#define Dee_unicode_printer_commit_wchar    unicode_printer_commit_wchar
-#if 0
-#define Dee_unicode_printer_alloc8          unicode_printer_alloc8
-#define Dee_unicode_printer_tryalloc8       unicode_printer_tryalloc8
-#define Dee_unicode_printer_resize8         unicode_printer_resize8
-#define Dee_unicode_printer_tryresize8      unicode_printer_tryresize8
-#define Dee_unicode_printer_free8           unicode_printer_free8
-#define Dee_unicode_printer_confirm8        unicode_printer_confirm8
-#define Dee_unicode_printer_alloc16         unicode_printer_alloc16
-#define Dee_unicode_printer_tryalloc16      unicode_printer_tryalloc16
-#define Dee_unicode_printer_resize16        unicode_printer_resize16
-#define Dee_unicode_printer_tryresize16     unicode_printer_tryresize16
-#define Dee_unicode_printer_free16          unicode_printer_free16
-#define Dee_unicode_printer_confirm16       unicode_printer_confirm16
-#define Dee_unicode_printer_alloc32         unicode_printer_alloc32
-#define Dee_unicode_printer_tryalloc32      unicode_printer_tryalloc32
-#define Dee_unicode_printer_resize32        unicode_printer_resize32
-#define Dee_unicode_printer_tryresize32     unicode_printer_tryresize32
-#define Dee_unicode_printer_free32          unicode_printer_free32
-#define Dee_unicode_printer_confirm32       unicode_printer_confirm32
-#endif
-#define Dee_unicode_printer_memchr          unicode_printer_memchr
-#define Dee_unicode_printer_memrchr         unicode_printer_memrchr
-#define Dee_unicode_printer_memmove         unicode_printer_memmove
-#define Dee_unicode_printer_memcmp8         unicode_printer_memcmp8
-#define Dee_unicode_printer_memcmp16        unicode_printer_memcmp16
-#define Dee_unicode_printer_memcmp32        unicode_printer_memcmp32
-#define Dee_unicode_printer_memcpy8         unicode_printer_memcpy8
-#define Dee_unicode_printer_memcpy16        unicode_printer_memcpy16
-#define Dee_unicode_printer_memcpy32        unicode_printer_memcpy32
-#define Dee_unicode_printer_printf          unicode_printer_printf
-#define Dee_unicode_printer_vprintf         unicode_printer_vprintf
-#define Dee_unicode_printer_printobject     unicode_printer_printobject
-#define Dee_unicode_printer_printobjectrepr unicode_printer_printobjectrepr
-#define UNICODE_PRINTER_PRINT               Dee_UNICODE_PRINTER_PRINT
-#endif /* __INTELLISENSE__ */
-#endif /* DEE_SOURCE */
-
 
 #define Dee_UNICODE_PRINTER_ISEMPTY(x)       ((x)->up_length == 0)
 #define Dee_UNICODE_PRINTER_LENGTH(x)        ((x)->up_length) /* Used length */
@@ -3313,15 +3139,11 @@ DFUNDEF NONNULL((1, 2)) void
 (DCALL Dee_unicode_printer_memcpy32)(struct Dee_unicode_printer *__restrict self,
                                      uint32_t const *src, size_t dst, size_t num_chars);
 
-/* Erase `count' characters at index `i' from the given unicode_printer `self' */
+/* Erase `count' characters at index `i' from the given Dee_unicode_printer `self' */
 #define Dee_unicode_printer_erase(self, i, count)                                           \
 	(void)(Dee_unicode_printer_memmove(self, i, (i) + (count),                              \
 	                                   Dee_UNICODE_PRINTER_LENGTH(self) - ((i) + (count))), \
 	       (self)->up_length -= (count))
-#ifdef DEE_SOURCE
-#define unicode_printer_erase Dee_unicode_printer_erase
-#endif /* DEE_SOURCE */
-
 
 
 #ifndef __INTELLISENSE__
@@ -3349,98 +3171,6 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
 #define Dee_unicode_printer_printobject(self, ob)       DeeObject_Print(ob, &Dee_unicode_printer_print, self)
 #define Dee_unicode_printer_printobjectrepr(self, ob)   DeeObject_PrintRepr(ob, &Dee_unicode_printer_print, self)
 #endif /* !__INTELLISENSE__ */
-
-#ifdef DEE_SOURCE
-#ifndef __INTELLISENSE__
-#define unicode_printer_init_string     Dee_unicode_printer_init_string
-#define unicode_printer_pack            Dee_unicode_printer_pack
-#define unicode_printer_trypack         Dee_unicode_printer_trypack
-#define unicode_printer_allocate        Dee_unicode_printer_allocate
-#define unicode_printer_putc            Dee_unicode_printer_putc
-#define unicode_printer_putascii        Dee_unicode_printer_putascii
-#define unicode_printer_pututf8         Dee_unicode_printer_pututf8
-#define unicode_printer_pututf16        Dee_unicode_printer_pututf16
-#define unicode_printer_pututf32        Dee_unicode_printer_pututf32
-#define unicode_printer_put8            Dee_unicode_printer_put8
-#define unicode_printer_put16           Dee_unicode_printer_put16
-#define unicode_printer_put32           Dee_unicode_printer_put32
-#define unicode_printer_print           Dee_unicode_printer_print
-#define unicode_printer_printutf16      Dee_unicode_printer_printutf16
-#define unicode_printer_printascii      Dee_unicode_printer_printascii
-#define unicode_printer_printutf8       Dee_unicode_printer_printutf8
-#define unicode_printer_printutf32      Dee_unicode_printer_printutf32
-#define unicode_printer_printwide       Dee_unicode_printer_printwide
-#define unicode_printer_repeatascii     Dee_unicode_printer_repeatascii
-#define unicode_printer_reserve         Dee_unicode_printer_reserve
-#define unicode_printer_printinto       Dee_unicode_printer_printinto
-#define unicode_printer_printstring     Dee_unicode_printer_printstring
-#define unicode_printer_print8          Dee_unicode_printer_print8
-#define unicode_printer_print16         Dee_unicode_printer_print16
-#define unicode_printer_print32         Dee_unicode_printer_print32
-#define unicode_printer_reuse           Dee_unicode_printer_reuse
-#define unicode_printer_reuse8          Dee_unicode_printer_reuse8
-#define unicode_printer_reuse16         Dee_unicode_printer_reuse16
-#define unicode_printer_reuse32         Dee_unicode_printer_reuse32
-#define unicode_printer_alloc_utf8      Dee_unicode_printer_alloc_utf8
-#define unicode_printer_tryalloc_utf8   Dee_unicode_printer_tryalloc_utf8
-#define unicode_printer_resize_utf8     Dee_unicode_printer_resize_utf8
-#define unicode_printer_tryresize_utf8  Dee_unicode_printer_tryresize_utf8
-#define unicode_printer_free_utf8       Dee_unicode_printer_free_utf8
-#define unicode_printer_commit_utf8     Dee_unicode_printer_commit_utf8
-#define unicode_printer_alloc_utf16     Dee_unicode_printer_alloc_utf16
-#define unicode_printer_tryalloc_utf16  Dee_unicode_printer_tryalloc_utf16
-#define unicode_printer_resize_utf16    Dee_unicode_printer_resize_utf16
-#define unicode_printer_tryresize_utf16 Dee_unicode_printer_tryresize_utf16
-#define unicode_printer_free_utf16      Dee_unicode_printer_free_utf16
-#define unicode_printer_commit_utf16    Dee_unicode_printer_commit_utf16
-#define unicode_printer_alloc_utf32     Dee_unicode_printer_alloc_utf32
-#define unicode_printer_tryalloc_utf32  Dee_unicode_printer_tryalloc_utf32
-#define unicode_printer_resize_utf32    Dee_unicode_printer_resize_utf32
-#define unicode_printer_tryresize_utf32 Dee_unicode_printer_tryresize_utf32
-#define unicode_printer_free_utf32      Dee_unicode_printer_free_utf32
-#define unicode_printer_commit_utf32    Dee_unicode_printer_commit_utf32
-#define unicode_printer_alloc_wchar     Dee_unicode_printer_alloc_wchar
-#define unicode_printer_tryalloc_wchar  Dee_unicode_printer_tryalloc_wchar
-#define unicode_printer_resize_wchar    Dee_unicode_printer_resize_wchar
-#define unicode_printer_tryresize_wchar Dee_unicode_printer_tryresize_wchar
-#define unicode_printer_free_wchar      Dee_unicode_printer_free_wchar
-#define unicode_printer_commit_wchar    Dee_unicode_printer_commit_wchar
-#if 0
-#define unicode_printer_alloc8          Dee_unicode_printer_alloc8
-#define unicode_printer_tryalloc8       Dee_unicode_printer_tryalloc8
-#define unicode_printer_resize8         Dee_unicode_printer_resize8
-#define unicode_printer_tryresize8      Dee_unicode_printer_tryresize8
-#define unicode_printer_free8           Dee_unicode_printer_free8
-#define unicode_printer_confirm8        Dee_unicode_printer_confirm8
-#define unicode_printer_alloc16         Dee_unicode_printer_alloc16
-#define unicode_printer_tryalloc16      Dee_unicode_printer_tryalloc16
-#define unicode_printer_resize16        Dee_unicode_printer_resize16
-#define unicode_printer_tryresize16     Dee_unicode_printer_tryresize16
-#define unicode_printer_free16          Dee_unicode_printer_free16
-#define unicode_printer_confirm16       Dee_unicode_printer_confirm16
-#define unicode_printer_alloc32         Dee_unicode_printer_alloc32
-#define unicode_printer_tryalloc32      Dee_unicode_printer_tryalloc32
-#define unicode_printer_resize32        Dee_unicode_printer_resize32
-#define unicode_printer_tryresize32     Dee_unicode_printer_tryresize32
-#define unicode_printer_free32          Dee_unicode_printer_free32
-#define unicode_printer_confirm32       Dee_unicode_printer_confirm32
-#endif
-#define unicode_printer_memchr          Dee_unicode_printer_memchr
-#define unicode_printer_memrchr         Dee_unicode_printer_memrchr
-#define unicode_printer_memmove         Dee_unicode_printer_memmove
-#define unicode_printer_memcmp8         Dee_unicode_printer_memcmp8
-#define unicode_printer_memcmp16        Dee_unicode_printer_memcmp16
-#define unicode_printer_memcmp32        Dee_unicode_printer_memcmp32
-#define unicode_printer_memcpy8         Dee_unicode_printer_memcpy8
-#define unicode_printer_memcpy16        Dee_unicode_printer_memcpy16
-#define unicode_printer_memcpy32        Dee_unicode_printer_memcpy32
-#define unicode_printer_printf          Dee_unicode_printer_printf
-#define unicode_printer_vprintf         Dee_unicode_printer_vprintf
-#define unicode_printer_printobject     Dee_unicode_printer_printobject
-#define unicode_printer_printobjectrepr Dee_unicode_printer_printobjectrepr
-#define UNICODE_PRINTER_PRINT           Dee_UNICODE_PRINTER_PRINT
-#endif /* !__INTELLISENSE__ */
-#endif /* DEE_SOURCE */
 
 
 

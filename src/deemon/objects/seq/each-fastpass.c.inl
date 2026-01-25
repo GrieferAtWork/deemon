@@ -90,9 +90,9 @@ DECL_BEGIN
 
 #ifdef DEFINE_SeqEachGetAttr
 struct LOCAL_seX(inplace_foreach_data) {
-	struct string_object *sifd_attr;
-	int (DCALL           *sifd_op)(DREF DeeObject **__restrict p_self, DeeObject *other);
-	DeeObject            *sifd_other;
+	DeeStringObject *sifd_attr;
+	int (DCALL      *sifd_op)(DREF DeeObject **__restrict p_self, DeeObject *other);
+	DeeObject       *sifd_other;
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL

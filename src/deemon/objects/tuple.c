@@ -1003,8 +1003,8 @@ tuple_iterator_nii_peek(TupleIterator *__restrict self) {
 
 
 PRIVATE struct type_nii tpconst tuple_iterator_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&tuple_iterator_nii_getseq,
@@ -1491,16 +1491,16 @@ tuple_str(Tuple *__restrict self) {
 	 * >> print Tuple { "foo", "bar" };  // Prints "foobar\n"
 	 */
 	size_t i;
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer p = Dee_UNICODE_PRINTER_INIT;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		DeeObject *elem;
 		elem = DeeTuple_GET(self, i);
-		if (unicode_printer_printobject(&p, elem) < 0)
+		if (Dee_unicode_printer_printobject(&p, elem) < 0)
 			goto err;
 	}
-	return unicode_printer_pack(&p);
+	return Dee_unicode_printer_pack(&p);
 err:
-	unicode_printer_fini(&p);
+	Dee_unicode_printer_fini(&p);
 	return NULL;
 }
 
@@ -1550,22 +1550,22 @@ tuple_repr(Tuple *__restrict self) {
 	if (DeeTuple_SIZE(self) == 1) {
 		return DeeString_Newf("(%r,)", DeeTuple_GET(self, 0));
 	} else {
-		struct unicode_printer p = UNICODE_PRINTER_INIT;
-		if (unicode_printer_putascii(&p, '(') < 0)
+		struct Dee_unicode_printer p = Dee_UNICODE_PRINTER_INIT;
+		if (Dee_unicode_printer_putascii(&p, '(') < 0)
 			goto err;
 		count = DeeTuple_SIZE(self);
 		for (i = 0; i < count; ++i) {
 			/* Print this item. */
-			if (i && UNICODE_PRINTER_PRINT(&p, ", ") < 0)
+			if (i && Dee_UNICODE_PRINTER_PRINT(&p, ", ") < 0)
 				goto err;
-			if (unicode_printer_printobjectrepr(&p, DeeTuple_GET(self, i)) < 0)
+			if (Dee_unicode_printer_printobjectrepr(&p, DeeTuple_GET(self, i)) < 0)
 				goto err;
 		}
-		if (unicode_printer_putascii(&p, ')') < 0)
+		if (Dee_unicode_printer_putascii(&p, ')') < 0)
 			goto err;
-		return unicode_printer_pack(&p);
+		return Dee_unicode_printer_pack(&p);
 err:
-		unicode_printer_fini(&p);
+		Dee_unicode_printer_fini(&p);
 	}
 	return NULL;
 }

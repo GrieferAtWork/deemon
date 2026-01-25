@@ -326,17 +326,17 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes, error);
 		} else {
 			/* Construct a new buffer that is then read into. */
-			struct bytes_printer p = BYTES_PRINTER_INIT;
+			struct Dee_bytes_printer p = Dee_BYTES_PRINTER_INIT;
 			for (;;) {
 				size_t buflen;
 				uint8_t *buf;
 				buflen = args.count;
 				if (buflen > POSIX_READ_BUFSIZE)
 					buflen = POSIX_READ_BUFSIZE;
-				buf = bytes_printer_alloc(&p, buflen);
+				buf = Dee_bytes_printer_alloc(&p, buflen);
 				if unlikely(!buf) {
 err_bytes_printer:
-					bytes_printer_fini(&p);
+					Dee_bytes_printer_fini(&p);
 					goto err;
 				}
 				error = posix_read_f_impl(fd_fd, buf, buflen);
@@ -346,12 +346,12 @@ err_bytes_printer:
 					break; /* Done! */
 				if (error != buflen) {
 					/* Incomplete transfer (stop reading) */
-					bytes_printer_release(&p, buflen - (size_t)error);
+					Dee_bytes_printer_release(&p, buflen - (size_t)error);
 					break;
 				}
 				args.count -= error;
 			}
-			result_bytes = (DREF DeeBytesObject *)bytes_printer_pack(&p);
+			result_bytes = (DREF DeeBytesObject *)Dee_bytes_printer_pack(&p);
 		}
 		return Dee_AsObject(result_bytes);
 	}
@@ -643,17 +643,17 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *cons
 			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes, error);
 		} else {
 			/* Construct a new buffer that is then read into. */
-			struct bytes_printer p = BYTES_PRINTER_INIT;
+			struct Dee_bytes_printer p = Dee_BYTES_PRINTER_INIT;
 			for (;;) {
 				size_t buflen;
 				uint8_t *buf;
 				buflen = count;
 				if (buflen > POSIX_READ_BUFSIZE)
 					buflen = POSIX_READ_BUFSIZE;
-				buf = bytes_printer_alloc(&p, buflen);
+				buf = Dee_bytes_printer_alloc(&p, buflen);
 				if unlikely(!buf) {
 err_bytes_printer:
-					bytes_printer_fini(&p);
+					Dee_bytes_printer_fini(&p);
 					goto err;
 				}
 				error = posix_pread_f_impl(fd_fd, buf, buflen, offset);
@@ -663,13 +663,13 @@ err_bytes_printer:
 					break; /* Done! */
 				if (error != buflen) {
 					/* Incomplete transfer (stop reading) */
-					bytes_printer_release(&p, buflen - error);
+					Dee_bytes_printer_release(&p, buflen - error);
 					break;
 				}
 				count -= error;
 				offset += error;
 			}
-			result_bytes = (DREF DeeBytesObject *)bytes_printer_pack(&p);
+			result_bytes = (DREF DeeBytesObject *)Dee_bytes_printer_pack(&p);
 		}
 		return Dee_AsObject(result_bytes);
 	}	break;

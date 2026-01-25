@@ -199,7 +199,7 @@ module_dir_iterator_init(struct module_dir_iterator *__restrict self) {
 		*dst++ = (WCHAR)'\\';
 		*dst++ = (WCHAR)'.';
 		*dst++ = (WCHAR)'\\';
-		while ((ch = unicode_readutf8(&absname)) != 0) {
+		while ((ch = Dee_unicode_readutf8(&absname)) != 0) {
 			/* encode utf-32 character as utf-16 */
 			dst = (LPWSTR)Dee_unicode_writeutf16((uint16_t *)dst, ch);
 		}

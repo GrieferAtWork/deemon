@@ -39,6 +39,11 @@
 
 DECL_BEGIN
 
+struct jit_object_entry;
+struct Dee_instance_desc;
+struct Dee_class_attribute;
+struct Dee_string_object;
+
 /* JIT Token ID overrides. */
 #define JIT_KEYWORD    TOK_KEYWORD_BEGIN
 #define JIT_STRING     TOK_STRING
@@ -274,10 +279,6 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 #define TOKEN_IS_DOT_count(self) ((self)->jl_tok == TOK_DOTS ? 3 : 1)
 
 
-struct jit_object_entry;
-struct instance_desc;
-struct class_attribute;
-
 #define JIT_SYMBOL_NONE      0x0000 /* No symbol (unused) */
 #define JIT_SYMBOL_POINTER   0x0001 /* Pointer to an object reference (used to describe local & inherited variables) */
 #define JIT_SYMBOL_OBJENT    0x0002 /* Object table entry. */
@@ -303,10 +304,10 @@ struct jit_symbol {
 		struct {
 			DREF DeeModuleObject      *jx_mod;     /* [1..1] The module that is being referenced.
 			                                        * NOTE: Guarantied to be a regular, or a DEX module. */
-			struct module_symbol      *jx_sym;     /* The symbol that is being accessed. */
+			struct Dee_module_symbol      *jx_sym;     /* The symbol that is being accessed. */
 		} js_extern; /* JIT_SYMBOL_EXTERN */
 
-		DREF struct string_object     *js_global;  /* [1..1] JIT_SYMBOL_GLOBAL user-level global symbol name. */
+		DREF struct Dee_string_object *js_global;  /* [1..1] JIT_SYMBOL_GLOBAL user-level global symbol name. */
 
 		struct {
 			/*utf-8*/ char const      *jg_namestr; /* [0..jg_namelen] The global symbol name. */
@@ -315,14 +316,14 @@ struct jit_symbol {
 		} js_globalstr; /* JIT_SYMBOL_GLOBALSTR */
 
 		struct {
-			DREF DeeObject            *jc_obj;     /* [1..1][const] The object who's members are being referenced. */
-			struct class_attribute    *jc_attr;    /* [1..1][const] Attribute descriptor. */
-			struct instance_desc      *jc_desc;    /* [1..1][const] Instance descriptor. */
+			DREF DeeObject             *jc_obj;    /* [1..1][const] The object who's members are being referenced. */
+			struct Dee_class_attribute *jc_attr;   /* [1..1][const] Attribute descriptor. */
+			struct Dee_instance_desc   *jc_desc;   /* [1..1][const] Instance descriptor. */
 		} js_clsattrib; /* JIT_SYMBOL_CLSATTRIB */
 
 		struct {
-			DREF DeeObject            *ja_base;    /* [1..1] Expression base object */
-			DREF struct string_object *ja_name;    /* [1..1] Attribute name object */
+			DREF DeeObject                *ja_base;    /* [1..1] Expression base object */
+			DREF struct Dee_string_object *ja_name;    /* [1..1] Attribute name object */
 		} js_attr; /* JIT_SYMBOL_ATTR */
 
 		struct {
@@ -393,10 +394,10 @@ struct jit_lvalue {
 		struct {
 			DREF DeeModuleObject      *lx_mod;     /* [1..1] The module that is being referenced.
 			                                        * NOTE: Guarantied to be a regular, or a DEX module. */
-			struct module_symbol      *lx_sym;     /* The symbol that is being accessed. */
+			struct Dee_module_symbol      *lx_sym;     /* The symbol that is being accessed. */
 		} lv_extern; /* JIT_LVALUE_EXTERN */
 
-		DREF struct string_object     *lv_global;  /* [1..1] JIT_LVALUE_GLOBAL user-level global symbol name. */
+		DREF struct Dee_string_object *lv_global;  /* [1..1] JIT_LVALUE_GLOBAL user-level global symbol name. */
 
 		struct {
 			/*utf-8*/ char const      *lg_namestr; /* [0..jg_namelen] The global symbol name. */
@@ -405,14 +406,14 @@ struct jit_lvalue {
 		} lv_globalstr; /* JIT_LVALUE_GLOBALSTR */
 
 		struct {
-			DREF DeeObject            *lc_obj;     /* [1..1][const] The object who's members are being referenced. */
-			struct class_attribute    *lc_attr;    /* [1..1][const] Attribute descriptor. */
-			struct instance_desc      *lc_desc;    /* [1..1][const] Instance descriptor. */
+			DREF DeeObject             *lc_obj;    /* [1..1][const] The object who's members are being referenced. */
+			struct Dee_class_attribute *lc_attr;   /* [1..1][const] Attribute descriptor. */
+			struct Dee_instance_desc   *lc_desc;   /* [1..1][const] Instance descriptor. */
 		} lv_clsattrib; /* JIT_LVALUE_CLSATTRIB */
 
 		struct {
-			DREF DeeObject            *la_base;    /* [1..1] Expression base object */
-			DREF struct string_object *la_name;    /* [1..1] Attribute name object */
+			DREF DeeObject                *la_base;/* [1..1] Expression base object */
+			DREF struct Dee_string_object *la_name;/* [1..1] Attribute name object */
 		} lv_attr; /* JIT_LVALUE_ATTR */
 
 		struct {
@@ -506,12 +507,13 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITLValueList_AppendRValue(JITLValueList *__restrict self,
                            DeeObject *__restrict value);
 
-struct objectlist;
+struct Dee_objectlist;
+
 /* Copy `self' and append all of the referenced objects to the given object list.
  * NOTE: `self' remains valid after this operation! */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 JITLValueList_CopyObjects(JITLValueList *__restrict self,
-                          struct objectlist *__restrict dst,
+                          struct Dee_objectlist *__restrict dst,
                           JITContext *__restrict context);
 
 /* Unpack `values' and assign each of the unpacked values to
@@ -649,25 +651,25 @@ struct jit_object_entry {
 		                                        * Value associated with this entry (NULL if unbound). */
 
 		struct {
-			DREF DeeTypeObject        *a_class;     /* [1..1][const] The class that is declaring the attribute */
-			struct class_attribute    *a_attr;      /* [1..1][const] Attribute descriptor. */
+			DREF DeeTypeObject         *a_class;    /* [1..1][const] The class that is declaring the attribute */
+			struct Dee_class_attribute *a_attr;     /* [1..1][const] Attribute descriptor. */
 		} oe_attr;                                  /* JIT_OBJECT_ENTRY_TYPE_ATTR */
 
 		struct {
-			DREF DeeObject            *af_obj;      /* [1..1][const] The object who's members are being referenced. */
-			struct class_attribute    *af_attr;     /* [1..1][const] Attribute descriptor. */
-			struct instance_desc      *af_desc;     /* [1..1][const] Instance descriptor. */
+			DREF DeeObject             *af_obj;     /* [1..1][const] The object who's members are being referenced. */
+			struct Dee_class_attribute *af_attr;    /* [1..1][const] Attribute descriptor. */
+			struct Dee_instance_desc   *af_desc;    /* [1..1][const] Instance descriptor. */
 		} oe_attr_fixed;                            /* JIT_OBJECT_ENTRY_TYPE_ATTR_FIXED */
 
 		struct {
 			DREF DeeModuleObject      *es_mod;      /* [1..1] The module that is being referenced.
 			                                         * NOTE: Guarantied to be a regular, or a DEX module. */
-			struct module_symbol      *es_sym;      /* The symbol that is being accessed. */
+			struct Dee_module_symbol  *es_sym;      /* The symbol that is being accessed. */
 		} oe_extern_symbol;                         /* JIT_OBJECT_ENTRY_EXTERN_SYMBOL */
 
 		struct {
-			DREF DeeObject            *ea_base;     /* [1..1] Expression base object */
-			DREF struct string_object *ea_name;     /* [1..1] Attribute name object */
+			DREF DeeObject                *ea_base; /* [1..1] Expression base object */
+			DREF struct Dee_string_object *ea_name; /* [1..1] Attribute name object */
 		} oe_extern_attr;                           /* JIT_OBJECT_ENTRY_EXTERN_ATTR */
 
 		struct {
@@ -1078,7 +1080,7 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 JITLexer_EvalModuleName(JITLexer *__restrict self,
-                        struct unicode_printer *printer,
+                        struct Dee_unicode_printer *printer,
                         /*utf-8*/ unsigned char const **p_name_start,
                         /*utf-8*/ unsigned char const **p_name_end);
 #define JITLexer_SkipModuleName(self) \
@@ -1091,14 +1093,14 @@ JITLexer_EvalModuleName(JITLexer *__restrict self,
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
 JITLexer_EvalModuleNameIntoPrinter(JITLexer *__restrict self,
-                                   struct unicode_printer *__restrict printer);
+                                   struct Dee_unicode_printer *__restrict printer);
 
 /* Evaluate a symbol name for an import statement and write it to `printer'
  * @return:  0: Successfully.
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2)) int DFCALL
 JITLexer_EvalSymbolNameIntoPrinter(JITLexer *__restrict self,
-                                   struct unicode_printer *__restrict printer);
+                                   struct Dee_unicode_printer *__restrict printer);
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipSymbolNameIntoPrinter(JITLexer *__restrict self);
 
@@ -1289,9 +1291,9 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL JITLexer_EvalFromImport(JITLe
 INTDEF WUNUSED NONNULL((1)) int DFCALL JITLexer_SkipFromImport(JITLexer *__restrict self);
 
 struct jit_import_item {
-	char const           *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
-	size_t                ii_symbol_size; /* Length of `ii_symbol_name' (in characters) */
-	DREF DeeStringObject *ii_import_name; /* [0..1] The name of the object being imported.
+	char const                    *ii_symbol_name; /* [1..1] The name by which the item should be imported. */
+	size_t                         ii_symbol_size; /* Length of `ii_symbol_name' (in characters) */
+	DREF struct Dee_string_object *ii_import_name; /* [0..1] The name of the object being imported.
 	                                       * When NULL, `ii_symbol_name' is used instead. */
 };
 

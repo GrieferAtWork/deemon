@@ -282,14 +282,14 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #endif /* !LOCAL_IS_MASKED */
 {
 #ifdef LOCAL_IS_LINES
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	union dcharptr_const flush_start, newend;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	union Dee_charptr_const flush_start, newend;
 #endif /* LOCAL_IS_LINES */
 #ifdef LOCAL_IS_MASKED
-	union dcharptr_const mskstr;
+	union Dee_charptr_const mskstr;
 	size_t msklen;
 #endif /* LOCAL_IS_MASKED */
-	union dcharptr_const mystr, newstr;
+	union Dee_charptr_const mystr, newstr;
 	size_t mylen, newlen;
 
 #ifdef LOCAL_IS_MASKED
@@ -397,14 +397,14 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				union dcharptr_const flush_end;
+				union Dee_charptr_const flush_end;
 				flush_end.cp8 = newstr.cp8;
 				while (LOCAL_MEMENDSWITHB(flush_start.cp8, (size_t)(flush_end.cp8 - flush_start.cp8))) {
 					flush_end.cp8 -= LOCAL_matchlen;
 				}
 				if (flush_end.cp8 < newstr.cp8) {
-					if unlikely(unicode_printer_print8(&printer, flush_start.cp8,
-					                                   (size_t)(flush_end.cp8 - flush_start.cp8)) < 0)
+					if unlikely(Dee_unicode_printer_print8(&printer, flush_start.cp8,
+					                                       (size_t)(flush_end.cp8 - flush_start.cp8)) < 0)
 						goto err;
 					flush_start.cp8 = newstr.cp8; /* Skip over whitespace */
 				}
@@ -419,14 +419,14 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				union dcharptr_const new_flush_start;
+				union Dee_charptr_const new_flush_start;
 				new_flush_start.cp8 = newstr.cp8;
 				while (LOCAL_MEMSTARTSWITHB(new_flush_start.cp8, (size_t)(newend.cp8 - new_flush_start.cp8))) {
 					new_flush_start.cp8 += LOCAL_matchlen;
 				}
 				if (new_flush_start.cp8 > newstr.cp8) {
-					if unlikely(unicode_printer_print8(&printer, flush_start.cp8,
-					                                   (size_t)(newstr.cp8 - flush_start.cp8)) < 0)
+					if unlikely(Dee_unicode_printer_print8(&printer, flush_start.cp8,
+					                                       (size_t)(newstr.cp8 - flush_start.cp8)) < 0)
 						goto err;
 					flush_start.cp8 = new_flush_start.cp8; /* Skip over whitespace */
 					newstr.cp8      = new_flush_start.cp8;
@@ -435,13 +435,13 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #endif /* LOCAL_IS_LSTRIP */
 		}
 		ASSERT(newstr.cp8 == newend.cp8);
-		if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
-			if unlikely(unicode_printer_print8(&printer, flush_start.cp8,
-			                                   (size_t)(newstr.cp8 - flush_start.cp8)) < 0)
+		if (!Dee_UNICODE_PRINTER_ISEMPTY(&printer)) {
+			if unlikely(Dee_unicode_printer_print8(&printer, flush_start.cp8,
+			                                       (size_t)(newstr.cp8 - flush_start.cp8)) < 0)
 				goto err;
 			goto return_printer;
 		}
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 #endif /* LOCAL_IS_LINES */
 
 		if (newlen == mylen)
@@ -497,14 +497,14 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				union dcharptr_const flush_end;
+				union Dee_charptr_const flush_end;
 				flush_end.cp16 = newstr.cp16;
 				while (LOCAL_MEMENDSWITHW(flush_start.cp16, (size_t)(flush_end.cp16 - flush_start.cp16))) {
 					flush_end.cp16 -= LOCAL_matchlen;
 				}
 				if (flush_end.cp16 < newstr.cp16) {
-					if unlikely(unicode_printer_print16(&printer, flush_start.cp16,
-					                                    (size_t)(flush_end.cp16 - flush_start.cp16)) < 0)
+					if unlikely(Dee_unicode_printer_print16(&printer, flush_start.cp16,
+					                                        (size_t)(flush_end.cp16 - flush_start.cp16)) < 0)
 						goto err;
 					flush_start.cp16 = newstr.cp16; /* Skip over whitespace */
 				}
@@ -519,14 +519,14 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				union dcharptr_const new_flush_start;
+				union Dee_charptr_const new_flush_start;
 				new_flush_start.cp16 = newstr.cp16;
 				while (LOCAL_MEMSTARTSWITHW(new_flush_start.cp16, (size_t)(newend.cp16 - new_flush_start.cp16))) {
 					new_flush_start.cp16 += LOCAL_matchlen;
 				}
 				if (new_flush_start.cp16 > newstr.cp16) {
-					if unlikely(unicode_printer_print16(&printer, flush_start.cp16,
-					                                    (size_t)(newstr.cp16 - flush_start.cp16)) < 0)
+					if unlikely(Dee_unicode_printer_print16(&printer, flush_start.cp16,
+					                                        (size_t)(newstr.cp16 - flush_start.cp16)) < 0)
 						goto err;
 					flush_start.cp16 = new_flush_start.cp16; /* Skip over whitespace */
 					newstr.cp16      = new_flush_start.cp16;
@@ -535,13 +535,13 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #endif /* LOCAL_IS_LSTRIP */
 		}
 		ASSERT(newstr.cp16 == newend.cp16);
-		if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
-			if unlikely(unicode_printer_print16(&printer, flush_start.cp16,
-			                                    (size_t)(newstr.cp16 - flush_start.cp16)) < 0)
+		if (!Dee_UNICODE_PRINTER_ISEMPTY(&printer)) {
+			if unlikely(Dee_unicode_printer_print16(&printer, flush_start.cp16,
+			                                        (size_t)(newstr.cp16 - flush_start.cp16)) < 0)
 				goto err;
 			goto return_printer;
 		}
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 #endif /* LOCAL_IS_LINES */
 
 		if (newlen == mylen)
@@ -601,14 +601,14 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				union dcharptr_const flush_end;
+				union Dee_charptr_const flush_end;
 				flush_end.cp32 = newstr.cp32;
 				while (LOCAL_MEMENDSWITHL(flush_start.cp32, (size_t)(flush_end.cp32 - flush_start.cp32))) {
 					flush_end.cp32 -= LOCAL_matchlen;
 				}
 				if (flush_end.cp32 < newstr.cp32) {
-					if unlikely(unicode_printer_print32(&printer, flush_start.cp32,
-					                                    (size_t)(flush_end.cp32 - flush_start.cp32)) < 0)
+					if unlikely(Dee_unicode_printer_print32(&printer, flush_start.cp32,
+					                                        (size_t)(flush_end.cp32 - flush_start.cp32)) < 0)
 						goto err;
 					flush_start.cp32 = newstr.cp32; /* Skip over whitespace */
 				}
@@ -623,14 +623,14 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				union dcharptr_const new_flush_start;
+				union Dee_charptr_const new_flush_start;
 				new_flush_start.cp32 = newstr.cp32;
 				while (LOCAL_MEMSTARTSWITHL(new_flush_start.cp32, (size_t)(newend.cp32 - new_flush_start.cp32))) {
 					new_flush_start.cp32 += LOCAL_matchlen;
 				}
 				if (new_flush_start.cp32 > newstr.cp32) {
-					if unlikely(unicode_printer_print32(&printer, flush_start.cp32,
-					                                    (size_t)(newstr.cp32 - flush_start.cp32)) < 0)
+					if unlikely(Dee_unicode_printer_print32(&printer, flush_start.cp32,
+					                                        (size_t)(newstr.cp32 - flush_start.cp32)) < 0)
 						goto err;
 					flush_start.cp32 = new_flush_start.cp32; /* Skip over whitespace */
 					newstr.cp32      = new_flush_start.cp32;
@@ -639,13 +639,13 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #endif /* LOCAL_IS_LSTRIP */
 		}
 		ASSERT(newstr.cp32 == newend.cp32);
-		if (!UNICODE_PRINTER_ISEMPTY(&printer)) {
-			if unlikely(unicode_printer_print32(&printer, flush_start.cp32,
-			                                    (size_t)(newstr.cp32 - flush_start.cp32)) < 0)
+		if (!Dee_UNICODE_PRINTER_ISEMPTY(&printer)) {
+			if unlikely(Dee_unicode_printer_print32(&printer, flush_start.cp32,
+			                                        (size_t)(newstr.cp32 - flush_start.cp32)) < 0)
 				goto err;
 			goto return_printer;
 		}
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 #endif /* LOCAL_IS_LINES */
 
 		if (newlen == mylen)
@@ -674,16 +674,16 @@ LOCAL_DeeString_Strip(String *__restrict self LOCAL__PARAM_max_count)
 #ifdef LOCAL_IS_SSTRIP
 return_self:
 #ifdef LOCAL_IS_LINES
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 #endif /* LOCAL_IS_LINES */
 #endif /* LOCAL_IS_SSTRIP */
 return_self_noprinter:
 	return_reference_(self);
 #ifdef LOCAL_IS_LINES
 return_printer:
-	return (DREF String *)unicode_printer_pack(&printer);
+	return (DREF String *)Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #elif defined(LOCAL_IS_MASKED)
 err:

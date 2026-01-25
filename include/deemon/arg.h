@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
 /*!export DeeArg_**/
 /*!export DeeArg_Unpack**/
 /*!export DeeArg_UnpackStruct**/
@@ -26,8 +27,9 @@
 /*!export Dee_KEYWORD_**/
 /*!export Dee_UNP**/
 /*!export UNP**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_ARG_H
-#define GUARD_DEEMON_ARG_H 1
+#define GUARD_DEEMON_ARG_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -42,11 +44,11 @@ DECL_BEGIN
 
 
 #ifdef DEE_SOURCE
-#define K             Dee_KEYWORD
-#define KS            Dee_KEYWORD_STR
-#define KEX           Dee_KEYWORD_EX
-#define KEND          Dee_KEYWORD_END
-#define DEFINE_KWLIST Dee_DEFINE_KWLIST /*!export*/
+#define K             Dee_KEYWORD     /*!export-*/
+#define KS            Dee_KEYWORD_STR /*!export-*/
+#define KEX           Dee_KEYWORD_EX  /*!export-*/
+#define KEND          Dee_KEYWORD_END /*!export-*/
+#define DEFINE_KWLIST Dee_DEFINE_KWLIST
 #endif /* DEE_SOURCE */
 
 
@@ -263,120 +265,120 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 	}	__WHILE0
 #else /* __OPTIMIZE_SIZE__ */
 #ifdef __COMPILER_HAVE_TYPEOF
-#define __DeeArg_ASSIGN(p_arg, value) (*(p_arg) = (__typeof__(*(p_arg)))(value))
+#define _Dee_PRIVATE_ArgAssign(p_arg, value) (*(p_arg) = (__typeof__(*(p_arg)))(value))
 #else /* __COMPILER_HAVE_TYPEOF */
 /* !!! This version here technically breaks "strict-aliasing rules", but without
  * !!! compiler support for "typeof", there's nothing we can do about that. Luckily,
  * !!! MSVC (being the only compiler not to support typeof) doesn't care about
  * !!! strict aliasing rules. */
-#define __DeeArg_ASSIGN(p_arg, value) (*(DeeObject **)(p_arg) = (value))
+#define _Dee_PRIVATE_ArgAssign(p_arg, value) (*(DeeObject **)(p_arg) = (value))
 #endif /* !__COMPILER_HAVE_TYPEOF */
 
 /* Dummy converter function used to encode "o" (object) operands in `DeeArg_Unpack<N>X' */
-#define _DeeArg_AsObject(self, p_result) (__DeeArg_ASSIGN(p_result, self), 0)
+#define _DeeArg_AsObject(self, p_result) (_Dee_PRIVATE_ArgAssign(p_result, self), 0)
 
 /* Cat with empty string to assert that "function_name" is a compile-time
  * string literal (if it isn't, then the __OPTIMIZE_SIZE__ variant above
  * would fail to compile) */
-#define _DeeArg_FuncName(function_name) "" function_name
-#define DeeArg_Unpack0(err, argc, argv, function_name)          \
-	if unlikely ((argc) != 0) {                                 \
-		DeeArg_BadArgc0(_DeeArg_FuncName(function_name), argc); \
-		goto err;                                               \
-	} else                                                      \
+#define _Dee_PRIVATE_ArgFuncName(function_name) "" function_name
+#define DeeArg_Unpack0(err, argc, argv, function_name)                  \
+	if unlikely((argc) != 0) {                                          \
+		DeeArg_BadArgc0(_Dee_PRIVATE_ArgFuncName(function_name), argc); \
+		goto err;                                                       \
+	} else                                                              \
 		(void)(argv)
-#define DeeArg_Unpack1(err, argc, argv, function_name, p_arg0)  \
-	if unlikely ((argc) != 1) {                                 \
-		DeeArg_BadArgc1(_DeeArg_FuncName(function_name), argc); \
-		goto err;                                               \
-	} else                                                      \
-		(void)(__DeeArg_ASSIGN(p_arg0, (argv)[0]),              \
+#define DeeArg_Unpack1(err, argc, argv, function_name, p_arg0)          \
+	if unlikely((argc) != 1) {                                          \
+		DeeArg_BadArgc1(_Dee_PRIVATE_ArgFuncName(function_name), argc); \
+		goto err;                                                       \
+	} else                                                              \
+		(void)(_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]),               \
 		       __builtin_assume(*(p_arg0)))
-#define DeeArg_Unpack2(err, argc, argv, function_name, p_arg0, p_arg1) \
-	if unlikely ((argc) != 2) {                                        \
-		DeeArg_BadArgc(_DeeArg_FuncName(function_name), argc, 2);      \
-		goto err;                                                      \
-	} else                                                             \
-		(void)(__DeeArg_ASSIGN(p_arg0, (argv)[0]),                     \
-		       __DeeArg_ASSIGN(p_arg1, (argv)[1]),                     \
-		       __builtin_assume(*(p_arg0)),                            \
+#define DeeArg_Unpack2(err, argc, argv, function_name, p_arg0, p_arg1)    \
+	if unlikely((argc) != 2) {                                            \
+		DeeArg_BadArgc(_Dee_PRIVATE_ArgFuncName(function_name), argc, 2); \
+		goto err;                                                         \
+	} else                                                                \
+		(void)(_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]),                 \
+		       _Dee_PRIVATE_ArgAssign(p_arg1, (argv)[1]),                 \
+		       __builtin_assume(*(p_arg0)),                               \
 		       __builtin_assume(*(p_arg1)))
 #define DeeArg_Unpack3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2) \
-	if unlikely ((argc) != 3) {                                                \
-		DeeArg_BadArgc(_DeeArg_FuncName(function_name), argc, 3);              \
+	if unlikely((argc) != 3) {                                                 \
+		DeeArg_BadArgc(_Dee_PRIVATE_ArgFuncName(function_name), argc, 3);      \
 		goto err;                                                              \
 	} else                                                                     \
-		(void)(__DeeArg_ASSIGN(p_arg0, (argv)[0]),                             \
-		       __DeeArg_ASSIGN(p_arg1, (argv)[1]),                             \
-		       __DeeArg_ASSIGN(p_arg2, (argv)[2]),                             \
+		(void)(_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]),                      \
+		       _Dee_PRIVATE_ArgAssign(p_arg1, (argv)[1]),                      \
+		       _Dee_PRIVATE_ArgAssign(p_arg2, (argv)[2]),                      \
 		       __builtin_assume(*(p_arg0)),                                    \
 		       __builtin_assume(*(p_arg1)),                                    \
 		       __builtin_assume(*(p_arg2)))
-#define DeeArg_Unpack0Or1(err, argc, argv, function_name, p_arg0)          \
-	do {                                                                   \
-		switch (argc) {                                                    \
-		case 1:                                                            \
-			__DeeArg_ASSIGN(p_arg0, (argv)[0]);                            \
-			__builtin_assume(*(p_arg0));                                   \
-			break;                                                         \
-		case 0:                                                            \
-			break;                                                         \
-		default:                                                           \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 0, 1); \
-			goto err;                                                      \
-		}                                                                  \
+#define DeeArg_Unpack0Or1(err, argc, argv, function_name, p_arg0)                  \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 1:                                                                    \
+			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                             \
+			__builtin_assume(*(p_arg0));                                           \
+			break;                                                                 \
+		case 0:                                                                    \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 0, 1); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
-#define DeeArg_Unpack1Or2(err, argc, argv, function_name, p_arg0, p_arg1)  \
-	do {                                                                   \
-		switch (argc) {                                                    \
-		case 2:                                                            \
-			__DeeArg_ASSIGN(p_arg1, (argv)[1]);                            \
-			__builtin_assume(*(p_arg1));                                   \
-			ATTR_FALLTHROUGH                                               \
-		case 1:                                                            \
-			__DeeArg_ASSIGN(p_arg0, (argv)[0]);                            \
-			__builtin_assume(*(p_arg0));                                   \
-			break;                                                         \
-		default:                                                           \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 1, 2); \
-			goto err;                                                      \
-		}                                                                  \
+#define DeeArg_Unpack1Or2(err, argc, argv, function_name, p_arg0, p_arg1)          \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 2:                                                                    \
+			_Dee_PRIVATE_ArgAssign(p_arg1, (argv)[1]);                             \
+			__builtin_assume(*(p_arg1));                                           \
+			ATTR_FALLTHROUGH                                                       \
+		case 1:                                                                    \
+			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                             \
+			__builtin_assume(*(p_arg0));                                           \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 1, 2); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
-#define DeeArg_Unpack0Or1Or2(err, argc, argv, function_name, p_arg0, p_arg1) \
-	do {                                                                     \
-		switch (argc) {                                                      \
-		case 2:                                                              \
-			__DeeArg_ASSIGN(p_arg1, (argv)[1]);                              \
-			__builtin_assume(*(p_arg1));                                     \
-			ATTR_FALLTHROUGH                                                 \
-		case 1:                                                              \
-			__DeeArg_ASSIGN(p_arg0, (argv)[0]);                              \
-			__builtin_assume(*(p_arg0));                                     \
-			break;                                                           \
-		case 0:                                                              \
-			break;                                                           \
-		default:                                                             \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 0, 2);   \
-			goto err;                                                        \
-		}                                                                    \
+#define DeeArg_Unpack0Or1Or2(err, argc, argv, function_name, p_arg0, p_arg1)       \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 2:                                                                    \
+			_Dee_PRIVATE_ArgAssign(p_arg1, (argv)[1]);                             \
+			__builtin_assume(*(p_arg1));                                           \
+			ATTR_FALLTHROUGH                                                       \
+		case 1:                                                                    \
+			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                                    \
+			__builtin_assume(*(p_arg0));                                           \
+			break;                                                                 \
+		case 0:                                                                    \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 0, 2); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
 #define DeeArg_Unpack1Or2Or3(err, argc, argv, function_name, p_arg0, p_arg1, p_arg2) \
 	do {                                                                             \
 		switch (argc) {                                                              \
 		case 3:                                                                      \
-			__DeeArg_ASSIGN(p_arg2, (argv)[2]);                                      \
+			_Dee_PRIVATE_ArgAssign(p_arg2, (argv)[2]);                               \
 			__builtin_assume(*(p_arg2));                                             \
 			ATTR_FALLTHROUGH                                                         \
 		case 2:                                                                      \
-			__DeeArg_ASSIGN(p_arg1, (argv)[1]);                                      \
+			_Dee_PRIVATE_ArgAssign(p_arg1, (argv)[1]);                               \
 			__builtin_assume(*(p_arg1));                                             \
 			ATTR_FALLTHROUGH                                                         \
 		case 1:                                                                      \
-			__DeeArg_ASSIGN(p_arg0, (argv)[0]);                                      \
+			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                               \
 			__builtin_assume(*(p_arg0));                                             \
 			break;                                                                   \
 		default:                                                                     \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 1, 3);           \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 1, 3);   \
 			goto err;                                                                \
 		}                                                                            \
 	}	__WHILE0
@@ -384,163 +386,163 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 	do {                                                                                \
 		switch (argc) {                                                                 \
 		case 3:                                                                         \
-			__DeeArg_ASSIGN(p_arg2, (argv)[2]);                                         \
+			_Dee_PRIVATE_ArgAssign(p_arg2, (argv)[2]);                                  \
 			__builtin_assume(*(p_arg2));                                                \
 			ATTR_FALLTHROUGH                                                            \
 		case 2:                                                                         \
-			__DeeArg_ASSIGN(p_arg1, (argv)[1]);                                         \
+			_Dee_PRIVATE_ArgAssign(p_arg1, (argv)[1]);                                  \
 			__builtin_assume(*(p_arg1));                                                \
 			ATTR_FALLTHROUGH                                                            \
 		case 1:                                                                         \
-			__DeeArg_ASSIGN(p_arg0, (argv)[0]);                                         \
+			_Dee_PRIVATE_ArgAssign(p_arg0, (argv)[0]);                                  \
 			__builtin_assume(*(p_arg0));                                                \
 			break;                                                                      \
 		case 0:                                                                         \
 			break;                                                                      \
 		default:                                                                        \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 0, 3);              \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 0, 3);      \
 			goto err;                                                                   \
 		}                                                                               \
 	}	__WHILE0
-#define DeeArg_Unpack1X(err, argc, argv, function_name,             \
-                        p_arg0, UNP0, Object_AsUnp0)                \
-	do {                                                            \
-		if unlikely ((argc) != 1) {                                 \
-			DeeArg_BadArgc1(_DeeArg_FuncName(function_name), argc); \
-			goto err;                                               \
-		}                                                           \
-		if unlikely (Object_AsUnp0((argv)[0], p_arg0))              \
-			goto err;                                               \
+#define DeeArg_Unpack1X(err, argc, argv, function_name,                     \
+                        p_arg0, UNP0, Object_AsUnp0)                        \
+	do {                                                                    \
+		if unlikely((argc) != 1) {                                          \
+			DeeArg_BadArgc1(_Dee_PRIVATE_ArgFuncName(function_name), argc); \
+			goto err;                                                       \
+		}                                                                   \
+		if unlikely(Object_AsUnp0((argv)[0], p_arg0))                       \
+			goto err;                                                       \
 	}	__WHILE0
-#define DeeArg_Unpack2X(err, argc, argv, function_name,               \
-                        p_arg0, UNP0, Object_AsUnp0,                  \
-                        p_arg1, UNP1, Object_AsUnp1)                  \
-	do {                                                              \
-		if unlikely ((argc) != 2) {                                   \
-			DeeArg_BadArgc(_DeeArg_FuncName(function_name), argc, 2); \
-			goto err;                                                 \
-		}                                                             \
-		if unlikely (Object_AsUnp0((argv)[0], p_arg0))                \
-			goto err;                                                 \
-		if unlikely (Object_AsUnp1((argv)[1], p_arg1))                \
-			goto err;                                                 \
+#define DeeArg_Unpack2X(err, argc, argv, function_name,                       \
+                        p_arg0, UNP0, Object_AsUnp0,                          \
+                        p_arg1, UNP1, Object_AsUnp1)                          \
+	do {                                                                      \
+		if unlikely((argc) != 2) {                                            \
+			DeeArg_BadArgc(_Dee_PRIVATE_ArgFuncName(function_name), argc, 2); \
+			goto err;                                                         \
+		}                                                                     \
+		if unlikely(Object_AsUnp0((argv)[0], p_arg0))                         \
+			goto err;                                                         \
+		if unlikely(Object_AsUnp1((argv)[1], p_arg1))                         \
+			goto err;                                                         \
 	}	__WHILE0
-#define DeeArg_Unpack3X(err, argc, argv, function_name,               \
-                        p_arg0, UNP0, Object_AsUnp0,                  \
-                        p_arg1, UNP1, Object_AsUnp1,                  \
-                        p_arg2, UNP2, Object_AsUnp2)                  \
-	do {                                                              \
-		if unlikely ((argc) != 3) {                                   \
-			DeeArg_BadArgc(_DeeArg_FuncName(function_name), argc, 3); \
-			goto err;                                                 \
-		}                                                             \
-		if unlikely (Object_AsUnp0((argv)[0], p_arg0))                \
-			goto err;                                                 \
-		if unlikely (Object_AsUnp1((argv)[1], p_arg1))                \
-			goto err;                                                 \
-		if unlikely (Object_AsUnp2((argv)[2], p_arg2))                \
-			goto err;                                                 \
+#define DeeArg_Unpack3X(err, argc, argv, function_name,                       \
+                        p_arg0, UNP0, Object_AsUnp0,                          \
+                        p_arg1, UNP1, Object_AsUnp1,                          \
+                        p_arg2, UNP2, Object_AsUnp2)                          \
+	do {                                                                      \
+		if unlikely((argc) != 3) {                                            \
+			DeeArg_BadArgc(_Dee_PRIVATE_ArgFuncName(function_name), argc, 3); \
+			goto err;                                                         \
+		}                                                                     \
+		if unlikely(Object_AsUnp0((argv)[0], p_arg0))                         \
+			goto err;                                                         \
+		if unlikely(Object_AsUnp1((argv)[1], p_arg1))                         \
+			goto err;                                                         \
+		if unlikely(Object_AsUnp2((argv)[2], p_arg2))                         \
+			goto err;                                                         \
 	}	__WHILE0
-#define DeeArg_Unpack0Or1X(err, argc, argv, function_name,                 \
-                           p_arg0, UNP0, Object_AsUnp0)                    \
-	do {                                                                   \
-		switch (argc) {                                                    \
-		case 1:                                                            \
-			if unlikely (Object_AsUnp0((argv)[0], p_arg0))                 \
-				goto err;                                                  \
-			break;                                                         \
-		case 0:                                                            \
-			break;                                                         \
-		default:                                                           \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 0, 1); \
-			goto err;                                                      \
-		}                                                                  \
+#define DeeArg_Unpack0Or1X(err, argc, argv, function_name,                         \
+                           p_arg0, UNP0, Object_AsUnp0)                            \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 1:                                                                    \
+			if unlikely(Object_AsUnp0((argv)[0], p_arg0))                          \
+				goto err;                                                          \
+			break;                                                                 \
+		case 0:                                                                    \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 0, 1); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
-#define DeeArg_Unpack1XOr2X(err, argc, argv, function_name,                \
-                            p_arg0, UNP0, Object_AsUnp0,                   \
-                            p_arg1, UNP1, Object_AsUnp1)                   \
-	do {                                                                   \
-		switch (argc) {                                                    \
-		case 2:                                                            \
-			if unlikely (Object_AsUnp1((argv)[1], p_arg1))                 \
-				goto err;                                                  \
-			ATTR_FALLTHROUGH                                               \
-		case 1:                                                            \
-			if unlikely (Object_AsUnp0((argv)[0], p_arg0))                 \
-				goto err;                                                  \
-			break;                                                         \
-		default:                                                           \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 1, 2); \
-			goto err;                                                      \
-		}                                                                  \
+#define DeeArg_Unpack1XOr2X(err, argc, argv, function_name,                        \
+                            p_arg0, UNP0, Object_AsUnp0,                           \
+                            p_arg1, UNP1, Object_AsUnp1)                           \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 2:                                                                    \
+			if unlikely(Object_AsUnp1((argv)[1], p_arg1))                          \
+				goto err;                                                          \
+			ATTR_FALLTHROUGH                                                       \
+		case 1:                                                                    \
+			if unlikely(Object_AsUnp0((argv)[0], p_arg0))                          \
+				goto err;                                                          \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 1, 2); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
-#define DeeArg_Unpack0Or1XOr2X(err, argc, argv, function_name,             \
-                               p_arg0, UNP0, Object_AsUnp0,                \
-                               p_arg1, UNP1, Object_AsUnp1)                \
-	do {                                                                   \
-		switch (argc) {                                                    \
-		case 2:                                                            \
-			if unlikely (Object_AsUnp1((argv)[1], p_arg1))                 \
-				goto err;                                                  \
-			ATTR_FALLTHROUGH                                               \
-		case 1:                                                            \
-			if unlikely (Object_AsUnp0((argv)[0], p_arg0))                 \
-				goto err;                                                  \
-			break;                                                         \
-		case 0:                                                            \
-			break;                                                         \
-		default:                                                           \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 0, 2); \
-			goto err;                                                      \
-		}                                                                  \
+#define DeeArg_Unpack0Or1XOr2X(err, argc, argv, function_name,                     \
+                               p_arg0, UNP0, Object_AsUnp0,                        \
+                               p_arg1, UNP1, Object_AsUnp1)                        \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 2:                                                                    \
+			if unlikely(Object_AsUnp1((argv)[1], p_arg1))                          \
+				goto err;                                                          \
+			ATTR_FALLTHROUGH                                                       \
+		case 1:                                                                    \
+			if unlikely(Object_AsUnp0((argv)[0], p_arg0))                          \
+				goto err;                                                          \
+			break;                                                                 \
+		case 0:                                                                    \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 0, 2); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
-#define DeeArg_Unpack1XOr2XOr3X(err, argc, argv, function_name,            \
-                                p_arg0, UNP0, Object_AsUnp0,               \
-                                p_arg1, UNP1, Object_AsUnp1,               \
-                                p_arg2, UNP2, Object_AsUnp2)               \
-	do {                                                                   \
-		switch (argc) {                                                    \
-		case 3:                                                            \
-			if unlikely (Object_AsUnp2((argv)[2], p_arg2))                 \
-				goto err;                                                  \
-			ATTR_FALLTHROUGH                                               \
-		case 2:                                                            \
-			if unlikely (Object_AsUnp1((argv)[1], p_arg1))                 \
-				goto err;                                                  \
-			ATTR_FALLTHROUGH                                               \
-		case 1:                                                            \
-			if unlikely (Object_AsUnp0((argv)[0], p_arg0))                 \
-				goto err;                                                  \
-			break;                                                         \
-		default:                                                           \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 1, 3); \
-			goto err;                                                      \
-		}                                                                  \
+#define DeeArg_Unpack1XOr2XOr3X(err, argc, argv, function_name,                    \
+                                p_arg0, UNP0, Object_AsUnp0,                       \
+                                p_arg1, UNP1, Object_AsUnp1,                       \
+                                p_arg2, UNP2, Object_AsUnp2)                       \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 3:                                                                    \
+			if unlikely(Object_AsUnp2((argv)[2], p_arg2))                          \
+				goto err;                                                          \
+			ATTR_FALLTHROUGH                                                       \
+		case 2:                                                                    \
+			if unlikely(Object_AsUnp1((argv)[1], p_arg1))                          \
+				goto err;                                                          \
+			ATTR_FALLTHROUGH                                                       \
+		case 1:                                                                    \
+			if unlikely(Object_AsUnp0((argv)[0], p_arg0))                          \
+				goto err;                                                          \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 1, 3); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
-#define DeeArg_Unpack0Or1XOr2XOr3X(err, argc, argv, function_name,         \
-                                   p_arg0, UNP0, Object_AsUnp0,            \
-                                   p_arg1, UNP1, Object_AsUnp1,            \
-                                   p_arg2, UNP2, Object_AsUnp2)            \
-	do {                                                                   \
-		switch (argc) {                                                    \
-		case 3:                                                            \
-			if unlikely (Object_AsUnp2((argv)[2], p_arg2))                 \
-				goto err;                                                  \
-			ATTR_FALLTHROUGH                                               \
-		case 2:                                                            \
-			if unlikely (Object_AsUnp1((argv)[1], p_arg1))                 \
-				goto err;                                                  \
-			ATTR_FALLTHROUGH                                               \
-		case 1:                                                            \
-			if unlikely (Object_AsUnp0((argv)[0], p_arg0))                 \
-				goto err;                                                  \
-			break;                                                         \
-		case 0:                                                            \
-			break;                                                         \
-		default:                                                           \
-			DeeArg_BadArgcEx(_DeeArg_FuncName(function_name), argc, 0, 3); \
-			goto err;                                                      \
-		}                                                                  \
+#define DeeArg_Unpack0Or1XOr2XOr3X(err, argc, argv, function_name,                 \
+                                   p_arg0, UNP0, Object_AsUnp0,                    \
+                                   p_arg1, UNP1, Object_AsUnp1,                    \
+                                   p_arg2, UNP2, Object_AsUnp2)                    \
+	do {                                                                           \
+		switch (argc) {                                                            \
+		case 3:                                                                    \
+			if unlikely(Object_AsUnp2((argv)[2], p_arg2))                          \
+				goto err;                                                          \
+			ATTR_FALLTHROUGH                                                       \
+		case 2:                                                                    \
+			if unlikely(Object_AsUnp1((argv)[1], p_arg1))                          \
+				goto err;                                                          \
+			ATTR_FALLTHROUGH                                                       \
+		case 1:                                                                    \
+			if unlikely(Object_AsUnp0((argv)[0], p_arg0))                          \
+				goto err;                                                          \
+			break;                                                                 \
+		case 0:                                                                    \
+			break;                                                                 \
+		default:                                                                   \
+			DeeArg_BadArgcEx(_Dee_PRIVATE_ArgFuncName(function_name), argc, 0, 3); \
+			goto err;                                                              \
+		}                                                                          \
 	}	__WHILE0
 #define DeeArg_UnpackStruct2(err, argc, argv, function_name, p_args, p_arg0, p_arg1) \
 	DeeArg_Unpack2(err, argc, argv, function_name, p_arg0, p_arg1)

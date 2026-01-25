@@ -347,61 +347,61 @@ PRIVATE void DCALL libnet_fini(void) {
 
 DEX_BEGIN
 
-DEX_MEMBER_F_NODOC("socket", &DeeSocket_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("sockaddr", &DeeSockAddr_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("NetError", &DeeError_NetError, MODSYM_FREADONLY),
-DEX_MEMBER_F("getafname", &libnet_getafname, MODSYM_FREADONLY,
+DEX_MEMBER_F_NODOC("socket", &DeeSocket_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("sockaddr", &DeeSockAddr_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("NetError", &DeeError_NetError, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F("getafname", &libnet_getafname, Dee_DEXSYM_READONLY,
              "(" libnet_getafname_params ")->?X2?Dstring?Dint\n"
              "Return the name of a given address family, given its system-dependent ID\n"
              "When not known, re-return the given @id"),
-DEX_MEMBER_F("getafof", &libnet_getafof, MODSYM_FREADONLY,
+DEX_MEMBER_F("getafof", &libnet_getafof, Dee_DEXSYM_READONLY,
              "(" libnet_getafof_params ")->?Dint\n"
              "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
              "Return the system-dependent ID of a given address family @name, or re-return the given @id.\n"
              "The given @name is encoded the same way as the first constructor argument for ?Gsocket"),
-DEX_MEMBER_F("gettypename", &libnet_gettypename, MODSYM_FREADONLY,
+DEX_MEMBER_F("gettypename", &libnet_gettypename, Dee_DEXSYM_READONLY,
              "(" libnet_gettypename_params ")->?X2?Dstring?Dint\n"
              "Return the name of a given socket type @type, given its system-dependent ID\n"
              "When not known, re-return the given @type"),
-DEX_MEMBER_F("gettypeof", &libnet_gettypeof, MODSYM_FREADONLY,
+DEX_MEMBER_F("gettypeof", &libnet_gettypeof, Dee_DEXSYM_READONLY,
              "(" libnet_gettypeof_params ")->?Dint\n"
              "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
              "Return the system-dependent ID of a given socket type @name, or re-return the given @type.\n"
              "The given @name is encoded the same way as the second constructor argument for ?Gsocket"),
-DEX_MEMBER_F("getprotoname", &libnet_getprotoname, MODSYM_FREADONLY,
+DEX_MEMBER_F("getprotoname", &libnet_getprotoname, Dee_DEXSYM_READONLY,
              "(" libnet_getprotoname_params ")->?X2?Dstring?Dint\n"
              "Return the name of a given protocol @proto, given its system-dependent ID\n"
              "When not known, re-return the given @proto"),
-DEX_MEMBER_F("getprotoof", &libnet_getprotoof, MODSYM_FREADONLY,
+DEX_MEMBER_F("getprotoof", &libnet_getprotoof, Dee_DEXSYM_READONLY,
              "(" libnet_getprotoof_params ")->?Dint\n"
              "#t{?ANoSupport?GNetError}{The given @name is not recognized by this library}"
              "Return the system-dependent ID of a given protocol name @name, or re-return the given @proto.\n"
              "The given @name is encoded the same way as the third constructor argument for ?Gsocket"),
-DEX_MEMBER_F("getmsgflagsname", &libnet_getmsgflagsname, MODSYM_FREADONLY,
+DEX_MEMBER_F("getmsgflagsname", &libnet_getmsgflagsname, Dee_DEXSYM_READONLY,
              "(" libnet_getmsgflagsname_params ")->?X2?Dstring?Dint\n"
              "Return the name of a given message flags @msgflags, given a system-dependent set of flags\n"
              "When not known, re-return the given @msgflags"),
-DEX_MEMBER_F("getmsgflagsof", &libnet_getmsgflagsof, MODSYM_FREADONLY,
+DEX_MEMBER_F("getmsgflagsof", &libnet_getmsgflagsof, Dee_DEXSYM_READONLY,
              "(" libnet_getmsgflagsof_params ")->?Dint\n"
              "#t{?ANoSupport?GNetError}{The given @flags contains at least one flag that is not recognized by this library}"
              "Return a system-dependent set of flags for given message flags @flags, or re-return the given @flags.\n"
              "The given @flags is encoded the same way as the flags argument passed to ?Arecv?Gsocket"),
-DEX_MEMBER_F("ntoh16", &libnet_ntoh16, MODSYM_FREADONLY,
+DEX_MEMBER_F("ntoh16", &libnet_ntoh16, Dee_DEXSYM_READONLY,
              "(" libnet_ntoh16_params ")->?Dint\n"
              "Convert a 16-bit integer @x from network-endian to host-endian"),
-DEX_MEMBER_F("ntoh32", &libnet_ntoh32, MODSYM_FREADONLY,
+DEX_MEMBER_F("ntoh32", &libnet_ntoh32, Dee_DEXSYM_READONLY,
              "(" libnet_ntoh32_params ")->?Dint\n"
              "Convert a 32-bit integer @x from network-endian to host-endian"),
-DEX_MEMBER_F("ntoh64", &libnet_ntoh64, MODSYM_FREADONLY,
+DEX_MEMBER_F("ntoh64", &libnet_ntoh64, Dee_DEXSYM_READONLY,
              "(" libnet_ntoh64_params ")->?Dint\n"
              "Convert a 64-bit integer @x from network-endian to host-endian"),
-DEX_MEMBER_F("hton16", &libnet_hton16, MODSYM_FREADONLY,
+DEX_MEMBER_F("hton16", &libnet_hton16, Dee_DEXSYM_READONLY,
              "(" libnet_hton16_params ")->?Dint\n"
              "Convert a 16-bit integer @x from host-endian to network-endian"),
-DEX_MEMBER_F("hton32", &libnet_hton32, MODSYM_FREADONLY,
+DEX_MEMBER_F("hton32", &libnet_hton32, Dee_DEXSYM_READONLY,
              "(" libnet_hton32_params ")->?Dint\n"
              "Convert a 32-bit integer @x from host-endian to network-endian"),
-DEX_MEMBER_F("hton64", &libnet_hton64, MODSYM_FREADONLY,
+DEX_MEMBER_F("hton64", &libnet_hton64, Dee_DEXSYM_READONLY,
              "(" libnet_hton64_params ")->?Dint\n"
              "Convert a 64-bit integer @x from host-endian to network-endian"),
 

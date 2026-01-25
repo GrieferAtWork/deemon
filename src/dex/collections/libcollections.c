@@ -51,7 +51,7 @@ err_changed_sequence(DeeObject *__restrict seq) {
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name) {
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
 	return DeeError_Throwf(&DeeError_NotImplemented,
@@ -66,17 +66,17 @@ PRIVATE WUNUSED int DCALL libcollections_init(void) {
 
 
 DEX_BEGIN
-DEX_MEMBER_F_NODOC("Accu", &Accu_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("Deque", &Deque_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("FixedList", &FixedList_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("UniqueDict", &UDict_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("UniqueSet", &USet_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RangeMap", &RangeMap_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("RBTree", &RBTree_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("CachedDict", &DeeCachedDict_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("Bitset", &Bitset_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("BitsetView", &BitsetView_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F("bits", &BitsetView_Type, MODSYM_FREADONLY,
+DEX_MEMBER_F_NODOC("Accu", &Accu_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Deque", &Deque_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("FixedList", &FixedList_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("UniqueDict", &UDict_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("UniqueSet", &USet_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RangeMap", &RangeMap_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("RBTree", &RBTree_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("CachedDict", &DeeCachedDict_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Bitset", &Bitset_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("BitsetView", &BitsetView_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F("bits", &BitsetView_Type, Dee_DEXSYM_READONLY,
              "Alias for ?GBitsetView, that should be used as a "
              /**/ "function to access the bits of buffer-like objects"),
 

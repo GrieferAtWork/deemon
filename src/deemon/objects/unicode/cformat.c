@@ -111,7 +111,7 @@ print_repr_precision(DeeObject *__restrict self, size_t length,
 		                            DeeBytes_SIZE(self));
 		DeeBytes_DecUse(self);
 	} else {
-		union dcharptr_const str;
+		union Dee_charptr_const str;
 		str.ptr = DeeString_WSTR(self);
 		ASSERT(length <= WSTR_LENGTH(str.ptr));
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
@@ -579,28 +579,28 @@ do_handle_string_for_percent_s:
 				/* Special case: rjust-quote with width.
 				 * For this case, we must pre-generate the quoted
 				 * string so we can know it's exact length. */
-				struct unicode_printer subprinter = UNICODE_PRINTER_INIT;
+				struct Dee_unicode_printer subprinter = Dee_UNICODE_PRINTER_INIT;
 				temp = print_repr_precision(in_arg, str_length,
-				                            &unicode_printer_print,
+				                            &Dee_unicode_printer_print,
 				                            &subprinter, flags);
 				if unlikely(temp < 0) {
 err_subprinter:
-					unicode_printer_fini(&subprinter);
+					Dee_unicode_printer_fini(&subprinter);
 					goto err;
 				}
 				/* Print leading spaces. */
 				temp = DeeFormat_Repeat(format_printer, arg, ' ',
 				                        width -
-				                        UNICODE_PRINTER_LENGTH(&subprinter));
+				                        Dee_UNICODE_PRINTER_LENGTH(&subprinter));
 				if unlikely(temp < 0)
 					goto err_subprinter;
 				result += temp;
 				/* Print the substring. */
-				temp = unicode_printer_printinto(&subprinter, printer, arg);
+				temp = Dee_unicode_printer_printinto(&subprinter, printer, arg);
 				if unlikely(temp < 0)
 					goto err_subprinter;
 				result += temp;
-				unicode_printer_fini(&subprinter);
+				Dee_unicode_printer_fini(&subprinter);
 			}
 		}	break;
 
@@ -656,25 +656,25 @@ err_subprinter:
 			GETARG();
 			if (width) {
 				/* Must pre-print the object, so we can know its length and can properly insert spacings. */
-				struct unicode_printer preprinter = UNICODE_PRINTER_INIT;
+				struct Dee_unicode_printer preprinter = Dee_UNICODE_PRINTER_INIT;
 				size_t preprinter_length;
 				temp = ch == 'r'
-				       ? DeeObject_PrintRepr(in_arg, &unicode_printer_print, &preprinter)
-				       : DeeObject_Print(in_arg, &unicode_printer_print, &preprinter);
+				       ? DeeObject_PrintRepr(in_arg, &Dee_unicode_printer_print, &preprinter)
+				       : DeeObject_Print(in_arg, &Dee_unicode_printer_print, &preprinter);
 				if unlikely(temp < 0) {
 err_preprinter:
-					unicode_printer_fini(&preprinter);
+					Dee_unicode_printer_fini(&preprinter);
 					goto err;
 				}
-				preprinter_length = UNICODE_PRINTER_LENGTH(&preprinter);
+				preprinter_length = Dee_UNICODE_PRINTER_LENGTH(&preprinter);
 				if (width > preprinter_length && !(flags & F_LJUST)) {
 					temp = DeeFormat_Repeat(format_printer, arg, ' ', width - preprinter_length);
 					if unlikely(temp < 0)
 						goto err_preprinter;
 					result += temp;
 				}
-				temp = unicode_printer_printinto(&preprinter, printer, arg);
-				unicode_printer_fini(&preprinter);
+				temp = Dee_unicode_printer_printinto(&preprinter, printer, arg);
+				Dee_unicode_printer_fini(&preprinter);
 				if unlikely(temp < 0)
 					goto err_preprinter;
 				result += temp;
@@ -707,31 +707,31 @@ err_preprinter:
 			GETARG();
 			if (DeeObject_AsDouble(in_arg, &value))
 				goto err;
-#if (F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
-     F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
-     F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
-     F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
-     F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
-     F_HASPREC == DEEFLOAT_PRINT_FPRECISION)
+#if (F_LJUST == Dee_FLOAT_PRINT_FLJUST &&     \
+     F_SIGN == Dee_FLOAT_PRINT_FSIGN &&       \
+     F_SPACE == Dee_FLOAT_PRINT_FSPACE &&     \
+     F_PADZERO == Dee_FLOAT_PRINT_FPADZERO && \
+     F_HASWIDTH == Dee_FLOAT_PRINT_FWIDTH &&  \
+     F_HASPREC == Dee_FLOAT_PRINT_FPRECISION)
 			temp = DeeFloat_Print(value, printer, arg, width, precision, flags);
-#else /* F_... == DEEFLOAT_PRINT_F... */
+#else /* F_... == Dee_FLOAT_PRINT_F... */
 			{
-				unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
+				unsigned int float_flags = Dee_FLOAT_PRINT_FNORMAL;
 				if (flags & F_LJUST)
-					float_flags |= DEEFLOAT_PRINT_FLJUST;
+					float_flags |= Dee_FLOAT_PRINT_FLJUST;
 				if (flags & F_SIGN)
-					float_flags |= DEEFLOAT_PRINT_FSIGN;
+					float_flags |= Dee_FLOAT_PRINT_FSIGN;
 				if (flags & F_SPACE)
-					float_flags |= DEEFLOAT_PRINT_FSPACE;
+					float_flags |= Dee_FLOAT_PRINT_FSPACE;
 				if (flags & F_PADZERO)
-					float_flags |= DEEFLOAT_PRINT_FPADZERO;
+					float_flags |= Dee_FLOAT_PRINT_FPADZERO;
 				if (flags & F_HASWIDTH)
-					float_flags |= DEEFLOAT_PRINT_FWIDTH;
+					float_flags |= Dee_FLOAT_PRINT_FWIDTH;
 				if (flags & F_HASPREC)
-					float_flags |= DEEFLOAT_PRINT_FPRECISION;
+					float_flags |= Dee_FLOAT_PRINT_FPRECISION;
 				temp = DeeFloat_Print(value, printer, arg, width, precision, float_flags);
 			}
-#endif /* F_... != DEEFLOAT_PRINT_F... */
+#endif /* F_... != Dee_FLOAT_PRINT_F... */
 			if unlikely(temp < 0)
 				goto err;
 			result += temp;

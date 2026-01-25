@@ -72,7 +72,7 @@ err_guard_assumes:
 			goto err_guard_assumes;
 		ast_assumes_fini(&guard_assumes);
 		for (; iter < end; ++iter) {
-			if (iter->ce_flags & EXCEPTION_HANDLER_FFINALLY) {
+			if (iter->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY) {
 				/* Finally branches are always executed, meaning they
 				 * are run in-line with the guarded expression. */
 				if (iter->ce_mask &&
@@ -127,7 +127,7 @@ err_guard_assumes:
 		for (; iter < end; ++iter) {
 			if (iter->ce_mask &&
 			    ast_optimize(stack, iter->ce_mask,
-			                 !(iter->ce_flags & EXCEPTION_HANDLER_FFINALLY)))
+			                 !(iter->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY)))
 				goto err;
 			if (ast_optimize(stack, iter->ce_code, result_used))
 				goto err;
@@ -135,7 +135,7 @@ err_guard_assumes:
 	}
 	iter = self->a_try.t_catchv;
 	for (; iter < end; ++iter) {
-		if (iter->ce_flags & EXCEPTION_HANDLER_FFINALLY)
+		if (iter->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY)
 			continue;
 		/* `catch (object)' --> `catch (...)' */
 		if (iter->ce_mask &&

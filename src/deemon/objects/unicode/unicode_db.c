@@ -19,7 +19,6 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_UNICODE_DB_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_UNICODE_DB_C 1
-#define unitraits db_unitraits /* Prevent clashes with system names. */
 
 #include <deemon/api.h>
 
@@ -35,14 +34,14 @@ DECL_BEGIN
 
 #ifdef CONFIG_HAVE_UNICODE_H
 
-PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct unitraits const *
+PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct Dee_unitraits const *
 (DCALL DeeUni_Descriptor)(uint32_t ch) {
-	return (struct unitraits *)__unicode_descriptor(ch);
+	return (struct Dee_unitraits *)__unicode_descriptor(ch);
 }
 
 PUBLIC size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
-                        uint32_t buf[UNICODE_FOLDED_MAX]) {
+                        uint32_t buf[Dee_UNICODE_FOLDED_MAX]) {
 	return (size_t)(unicode_fold((__CHAR32_TYPE__)ch,
 	                             (__CHAR32_TYPE__ *)buf) -
 	                (__CHAR32_TYPE__ *)buf);
@@ -65,21 +64,21 @@ PUBLIC ATTR_CONST WUNUSED double
 
 #else /* CONFIG_HAVE_UNICODE_H */
 
-#define TCNTRL    UNICODE_ISCNTRL
-#define TCTAB     UNICODE_ISCTAB
-#define TXTAB     UNICODE_ISXTAB
-#define TWHITE    UNICODE_ISWHITE
-#define TLF       UNICODE_ISLF
-#define TLOWER    UNICODE_ISLOWER
-#define TUPPER    UNICODE_ISUPPER
-#define TXALPHA   UNICODE_ISXALPHA
-#define TDIGIT    UNICODE_ISDIGIT
-#define THEX      UNICODE_ISHEX
-#define TPUNCT    UNICODE_ISPUNCT
-#define TTITLE    UNICODE_ISTITLE
-#define TXNUMERIC UNICODE_ISXNUMERIC
-#define TSYMSTRT  UNICODE_ISSYMSTRT
-#define TSYMCONT  UNICODE_ISSYMCONT
+#define TCNTRL    Dee_UNICODE_ISCNTRL
+#define TCTAB     Dee_UNICODE_ISCTAB
+#define TXTAB     Dee_UNICODE_ISXTAB
+#define TWHITE    Dee_UNICODE_ISWHITE
+#define TLF       Dee_UNICODE_ISLF
+#define TLOWER    Dee_UNICODE_ISLOWER
+#define TUPPER    Dee_UNICODE_ISUPPER
+#define TXALPHA   Dee_UNICODE_ISXALPHA
+#define TDIGIT    Dee_UNICODE_ISDIGIT
+#define THEX      Dee_UNICODE_ISHEX
+#define TPUNCT    Dee_UNICODE_ISPUNCT
+#define TTITLE    Dee_UNICODE_ISTITLE
+#define TXNUMERIC Dee_UNICODE_ISXNUMERIC
+#define TSYMSTRT  Dee_UNICODE_ISSYMSTRT
+#define TSYMCONT  Dee_UNICODE_ISSYMCONT
 
 /* Representation of a unicode character numerical value (s.a. `unicode_getnumeric(3)')
  * Because characters exist that represent  fractions (like ½), we  need to be able  to
@@ -121,7 +120,7 @@ PRIVATE struct unifold const unicode_fold_descriptors[UNICODE_FOLD_COUNT];
 #define UNICODE_DIGIT_COUNT 149
 PRIVATE unidigit_t const unicode_digits[UNICODE_DIGIT_COUNT];
 #define UNICODE_DESCRIPTOR_COUNT 42
-PRIVATE struct unitraits const unicode_descriptors[UNICODE_DESCRIPTOR_COUNT];
+PRIVATE struct Dee_unitraits const unicode_descriptors[UNICODE_DESCRIPTOR_COUNT];
 #define UNICODE_COUNT                0xe01f0
 #define UNICODE_SHIFT                7
 #define UNICODE_TAB1_MASK            0x7f
@@ -132,7 +131,7 @@ PRIVATE uint16_t const unicode_tab1[42];
 PRIVATE uint16_t const unicode_tab2[42];
 #else /* __INTELLISENSE__ */
 #undef __unitraits
-#define __unitraits unitraits
+#define __unitraits Dee_unitraits
 #undef ATTR_SECTION
 #define ATTR_SECTION(x) /* nothing */
 #include "db/db.dat"
@@ -141,7 +140,7 @@ PRIVATE uint16_t const unicode_tab2[42];
 STATIC_ASSERT_MSG(UNICODE_FOLD_MAXLEN <= Dee_UNICODE_FOLDED_MAX,
                   "Dee_UNICODE_FOLDED_MAX must be increased!");
 
-PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED struct unitraits const *
+PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED struct Dee_unitraits const *
 (DCALL DeeUni_Descriptor)(uint32_t ch) {
 	if likely(ch < UNICODE_COUNT)
 		return &UNICODE_DESCRIPTOR(ch);
@@ -186,8 +185,8 @@ PUBLIC ATTR_CONST WUNUSED double
 
 PUBLIC NONNULL((2)) size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
-                        uint32_t buf[UNICODE_FOLDED_MAX]) {
-	struct unitraits const *trt;
+                        uint32_t buf[Dee_UNICODE_FOLDED_MAX]) {
+	struct Dee_unitraits const *trt;
 	struct unifold const *fold;
 	trt = DeeUni_Descriptor(ch);
 	if (trt->ut_fold_idx >= UNICODE_FOLD_COUNT) {
@@ -215,7 +214,7 @@ PUBLIC NONNULL((2)) size_t
 }
 
 
-PUBLIC uniflag_t const _DeeAscii_Flags[256] = {
+PUBLIC Dee_uniflag_t const _DeeAscii_Flags[256] = {
 /*[[[deemon
 
 #define ascii_iscntrl(ch)    ((ch) <= 0x1f || (ch) == 0x7f)

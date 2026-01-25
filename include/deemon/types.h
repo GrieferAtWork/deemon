@@ -17,8 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_ITER_**/
+/*!export Dee_SIZEOF_**/
+/*!export Dee_weakref_support_**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_TYPES_H
-#define GUARD_DEEMON_TYPES_H 1
+#define GUARD_DEEMON_TYPES_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -37,10 +42,6 @@ DECL_BEGIN
 #endif /* !DREF */
 
 #ifdef DEE_SOURCE
-#define Dee_object       object_
-#define Dee_type_object  type_object
-#define Dee_weakref      weakref
-#define Dee_weakref_list weakref_list
 #define OBJECT_HEAD      Dee_OBJECT_HEAD
 #define OBJECT_HEAD_EX   Dee_OBJECT_HEAD_EX
 #define OBJECT_HEAD_INIT Dee_OBJECT_HEAD_INIT
@@ -127,15 +128,15 @@ struct Dee_reftracker;
 #define DEE_REFTRACKER_UNTRACKED ((struct Dee_reftracker  *)(uintptr_t)-1l)
 #define _Dee_PRIVATE_REFCHANGE_PRIVATE_DATA \
 	struct Dee_reftracker *ob_trace; /* [0..1][owned][lock(WRITE_ONCE)] Tracked reference counter data. */
-#define DEE_OBJECT_OFFSETOF_DATA (__SIZEOF_POINTER__ * 3)
+#define Dee_OBJECT_OFFSETOF_DATA (__SIZEOF_POINTER__ * 3)
 #else /* CONFIG_TRACE_REFCHANGES */
 #define _Dee_PRIVATE_REFCHANGE_PRIVATE_DATA  /* nothing */
-#define DEE_OBJECT_OFFSETOF_DATA (__SIZEOF_POINTER__ * 2)
+#define Dee_OBJECT_OFFSETOF_DATA (__SIZEOF_POINTER__ * 2)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 /* Statically defined offsets within deemon objects. */
-#define DEE_OBJECT_OFFSETOF_REFCNT  0
-#define DEE_OBJECT_OFFSETOF_TYPE    __SIZEOF_POINTER__
+#define Dee_OBJECT_OFFSETOF_REFCNT  0
+#define Dee_OBJECT_OFFSETOF_TYPE    __SIZEOF_POINTER__
 
 
 #define Dee_OBJECT_HEAD_EX(Ttype) \
@@ -266,15 +267,6 @@ DECL_BEGIN
 	 ? (Dee_weakref_support_fini)(&(x)->ob_weakrefs)                    \
 	 : (void)0)
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
-
-#ifdef DEE_SOURCE
-#define WEAKREF_SUPPORT      Dee_WEAKREF_SUPPORT
-#define WEAKREF_SUPPORT_ADDR Dee_WEAKREF_SUPPORT_ADDR
-#define WEAKREF_SUPPORT_INIT Dee_WEAKREF_SUPPORT_INIT
-#define weakref_support_init Dee_weakref_support_init
-#define weakref_support_fini Dee_weakref_support_fini
-#endif /* DEE_SOURCE */
-
 
 DECL_END
 

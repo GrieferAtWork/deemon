@@ -29,7 +29,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
 #include <deemon/error.h>
-#include <deemon/format.h>             /* unicode_printer_vprintf -> DeeFormat_VPrintf */
+#include <deemon/format.h>             /* Dee_unicode_printer_vprintf -> DeeFormat_VPrintf */
 #include <deemon/int.h>
 #include <deemon/method-hints.h>
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_3 */
@@ -83,7 +83,7 @@ DeeSystem_DEFINE_memmem(dee_memmem)
 /* Release exactly `datalen' bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
 PUBLIC NONNULL((1)) void
-(DCALL Dee_ascii_printer_release)(struct ascii_printer *__restrict self, size_t datalen) {
+(DCALL Dee_ascii_printer_release)(struct Dee_ascii_printer *__restrict self, size_t datalen) {
 	ASSERT(self->ap_length >= datalen);
 	/* This's actually all that needs to be
 	 * done with the current implementation. */
@@ -93,7 +93,7 @@ PUBLIC NONNULL((1)) void
 /* Allocate space for `datalen' bytes at the end of `self',
  * then return a pointer to the start of this new buffer. */
 PUBLIC WUNUSED NONNULL((1)) char *
-(DCALL Dee_ascii_printer_alloc)(struct ascii_printer *__restrict self, size_t datalen) {
+(DCALL Dee_ascii_printer_alloc)(struct Dee_ascii_printer *__restrict self, size_t datalen) {
 	String *string;
 	size_t alloc_size;
 	char *result;
@@ -154,7 +154,7 @@ realloc_again:
 
 /* Print a single character, returning -1 on error or 0 on success. */
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_ascii_printer_putc)(struct ascii_printer *__restrict self, char ch) {
+(DCALL Dee_ascii_printer_putc)(struct Dee_ascii_printer *__restrict self, char ch) {
 	/* Quick check: Can we print to an existing buffer. */
 	if (self->ap_string &&
 	    self->ap_length < self->ap_string->s_len) {
@@ -162,7 +162,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 		goto done;
 	}
 	/* Fallback: go the long route. */
-	if (ascii_printer_print(self, &ch, 1) < 0)
+	if (Dee_ascii_printer_print(self, &ch, 1) < 0)
 		goto err;
 done:
 	return 0;
@@ -175,10 +175,10 @@ PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 (DPRINTER_CC Dee_ascii_printer_print)(void *__restrict self,
                                       char const *__restrict data,
                                       size_t datalen) {
-	struct ascii_printer *me;
+	struct Dee_ascii_printer *me;
 	String *string;
 	size_t alloc_size;
-	me = (struct ascii_printer *)self;
+	me = (struct Dee_ascii_printer *)self;
 	ASSERT(data || !datalen);
 	if ((string = me->ap_string) == NULL) {
 		/* Make sure not to allocate a string when the used length remains ZERO.
@@ -244,7 +244,7 @@ done:
 /* Pack together data from a string printer and return the generated contained string.
  * Upon success, as well as upon failure, the state of `self' is undefined upon return. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL Dee_ascii_printer_pack)(struct ascii_printer *__restrict self) {
+(DCALL Dee_ascii_printer_pack)(struct Dee_ascii_printer *__restrict self) {
 	DREF String *result = self->ap_string;
 	if unlikely(!result)
 		return_reference_(Dee_EmptyString);
@@ -275,15 +275,15 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
  * Upon error (append failed to allocate more memory), NULL is returned.
  * HINT: This function is very useful when creating
  *       string tables for NUL-terminated strings:
- *       >> ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
- *       >> ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
- *       >> ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
+ *       >> Dee_ascii_printer_allocstr("foobar\0"); // Table is now `foobar\0'
+ *       >> Dee_ascii_printer_allocstr("foo\0");    // Table is now `foobar\0foo\0'
+ *       >> Dee_ascii_printer_allocstr("bar\0");    // Table is still `foobar\0foo\0' - `bar\0' points into `foobar\0'
  * @return: * :   A pointer to a volatile memory location within the already printed string
- *                (the caller should calculate the offset to `ASCII_PRINTER_STR(self)'
+ *                (the caller should calculate the offset to `Dee_ASCII_PRINTER_STR(self)'
  *                to ensure consistency if the function is called multiple times)
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) char *
-(DCALL Dee_ascii_printer_allocstr)(struct ascii_printer *__restrict self,
+(DCALL Dee_ascii_printer_allocstr)(struct Dee_ascii_printer *__restrict self,
                                    char const *__restrict str, size_t length) {
 	char *result;
 	Dee_ssize_t error;
@@ -295,7 +295,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) char *
 	}
 
 	/* Append a new string. */
-	error = ascii_printer_print(self, str, length);
+	error = Dee_ascii_printer_print(self, str, length);
 	if unlikely(error < 0)
 		goto err;
 	ASSERT(self->ap_string || (!self->ap_length && !length));
@@ -427,7 +427,7 @@ PUBLIC WUNUSED DREF DeeObject *
 PUBLIC NONNULL((1)) void DCALL
 DeeString_FreeWidth(DeeObject *__restrict self) {
 	DeeStringObject *me;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	me = (DeeStringObject *)self;
 	ASSERTF(DeeString_Check(me), "Not a string buffer");
 	ASSERTF(!DeeObject_IsShared(me), "String buffers cannot be shared");
@@ -559,14 +559,14 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 		out->s_data = NULL;
 	} else {
 		Dee_seraddr_t addrof_data;
-		struct string_utf *out_data;
-		struct string_utf *in_data = self->s_data;
-		addrof_data = DeeSerial_Malloc(writer, sizeof(struct string_utf), in_data);
+		struct Dee_string_utf *out_data;
+		struct Dee_string_utf *in_data = self->s_data;
+		addrof_data = DeeSerial_Malloc(writer, sizeof(struct Dee_string_utf), in_data);
 		if (!Dee_SERADDR_ISOK(addrof_data))
 			goto err;
 		if (DeeSerial_PutAddr(writer, addr + offsetof(String, s_data), addrof_data))
 			goto err;
-		out_data = DeeSerial_Addr2Mem(writer, addrof_data, struct string_utf);
+		out_data = DeeSerial_Addr2Mem(writer, addrof_data, struct Dee_string_utf);
 		out_data->u_width = in_data->u_width;
 		out_data->u_flags = in_data->u_flags;
 		/* Individual strings are written as-needed */
@@ -575,7 +575,7 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 		out_data->u_data[STRING_WIDTH_4BYTE] = NULL;
 		out_data->u_utf8  = NULL;
 		out_data->u_utf16 = NULL;
-#define addrin_data(field) (addrof_data + offsetof(struct string_utf, field))
+#define addrin_data(field) (addrof_data + offsetof(struct Dee_string_utf, field))
 		if (in_data->u_data[STRING_WIDTH_1BYTE] == (void *)self->s_str) {
 			if (DeeSerial_PutAddr(writer, addrin_data(u_data[STRING_WIDTH_1BYTE]), addr + offsetof(String, s_str)))
 				goto err;
@@ -632,12 +632,12 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_VNewf(/*utf-8*/ char const *__restrict format, va_list args) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(unicode_printer_vprintf(&printer, format, args) < 0)
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	if unlikely(Dee_unicode_printer_vprintf(&printer, format, args) < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -731,12 +731,12 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) Dee_hash_t
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_repr(DeeObject *__restrict self) {
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(DeeString_PrintRepr(self, &ascii_printer_print, &printer) < 0)
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
+	if unlikely(DeeString_PrintRepr(self, &Dee_ascii_printer_print, &printer) < 0)
 		goto err;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 
@@ -894,7 +894,7 @@ DeeString_InvokeUserFiniHooks(String const *__restrict self) {
 
 
 /* Destroy the regex cache associated with `self'.
- * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FFINIHOOK' was set. */
+ * Called from `DeeString_Type.tp_fini' when `Dee_STRING_UTF_FFINIHOOK' was set. */
 INTDEF NONNULL((1)) void DCALL /* From "./unicode/regex.c" */
 DeeString_DestroyRegex(String const *__restrict self);
 
@@ -923,7 +923,7 @@ DeeString_InvokeFiniHooks(String const *__restrict self) {
  * @return: -1: Insufficient memory (an error was thrown) */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	DeeStringObject *me = (DeeStringObject *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeString_Type);
 	utf = me->s_data;
@@ -931,7 +931,7 @@ DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self) {
 		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
-		bzero(utf, sizeof(struct string_utf));
+		bzero(utf, sizeof(struct Dee_string_utf));
 		utf->u_width = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		utf = Dee_string_utf_untrack(utf);
@@ -941,7 +941,7 @@ DeeString_EnableFiniHook(/*string*/ DeeObject *__restrict self) {
 		}
 	}
 	ASSERT(utf);
-	atomic_or(&utf->u_flags, STRING_UTF_FFINIHOOK);
+	atomic_or(&utf->u_flags, Dee_STRING_UTF_FFINIHOOK);
 	return 0;
 err:
 	return -1;
@@ -955,7 +955,7 @@ err:
  * @return: false: Insufficient memory (**NO** error was thrown) */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeString_TryEnableFiniHook(/*string*/ DeeObject *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	DeeStringObject *me = (DeeStringObject *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeString_Type);
 	utf = me->s_data;
@@ -963,7 +963,7 @@ DeeString_TryEnableFiniHook(/*string*/ DeeObject *__restrict self) {
 		utf = Dee_string_utf_tryalloc();
 		if unlikely(!utf)
 			goto err;
-		bzero(utf, sizeof(struct string_utf));
+		bzero(utf, sizeof(struct Dee_string_utf));
 		utf->u_width = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		utf = Dee_string_utf_untrack(utf);
@@ -973,7 +973,7 @@ DeeString_TryEnableFiniHook(/*string*/ DeeObject *__restrict self) {
 		}
 	}
 	ASSERT(utf);
-	atomic_or(&utf->u_flags, STRING_UTF_FFINIHOOK);
+	atomic_or(&utf->u_flags, Dee_STRING_UTF_FFINIHOOK);
 	return true;
 err:
 	return false;
@@ -982,11 +982,11 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 string_fini(String *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	/* Clean up UTF data. */
 	if ((utf = self->s_data) != NULL) {
 		/* Invoke finalization hooks if the relevant flag was set. */
-		if unlikely(utf->u_flags & STRING_UTF_FFINIHOOK)
+		if unlikely(utf->u_flags & Dee_STRING_UTF_FFINIHOOK)
 			DeeString_InvokeFiniHooks(self);
 
 		Dee_string_utf_fini(utf, self);
@@ -1015,7 +1015,7 @@ compare_string_bytes(String *__restrict lhs,
 			return Dee_CompareFromDiff(result);
 	} else {
 		byte_t const *rhs_str;
-		struct string_utf *lhs_utf;
+		struct Dee_string_utf *lhs_utf;
 
 		/* Compare against single-byte string. */
 		rhs_str = DeeBytes_DATA(rhs);
@@ -1088,7 +1088,7 @@ compare_strings(String *lhs, String *rhs) {
 			if (result != 0)
 				return Dee_CompareFromDiff(result);
 		} else {
-			struct string_utf *rhs_utf = rhs->s_data;
+			struct Dee_string_utf *rhs_utf = rhs->s_data;
 			switch (rhs_utf->u_width) {
 
 			CASE_WIDTH_2BYTE: {
@@ -1123,7 +1123,7 @@ compare_strings(String *lhs, String *rhs) {
 	} else if (!rhs->s_data ||
 	           rhs->s_data->u_width == STRING_WIDTH_1BYTE) {
 		uint8_t const *rhs_str;
-		struct string_utf *lhs_utf;
+		struct Dee_string_utf *lhs_utf;
 		/* Compare against single-byte string. */
 		rhs_str = (uint8_t const *)rhs->s_str;
 		rhs_len = rhs->s_len;
@@ -1159,8 +1159,8 @@ compare_strings(String *lhs, String *rhs) {
 		default: __builtin_unreachable();
 		}
 	} else {
-		struct string_utf const *lhs_utf;
-		struct string_utf const *rhs_utf;
+		struct Dee_string_utf const *lhs_utf;
+		struct Dee_string_utf const *rhs_utf;
 		lhs_utf = lhs->s_data;
 		rhs_utf = rhs->s_data;
 		ASSERT(lhs_utf != NULL);
@@ -1429,8 +1429,8 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(String, si_string); /* [1..1][const] The string that is being iterated. */
-	union dcharptr_const         si_iter;    /* [1..1][weak] The current iterator position. */
-	union dcharptr_const         si_end;     /* [1..1][const] The string end pointer. */
+	union Dee_charptr_const      si_iter;    /* [1..1][weak] The current iterator position. */
+	union Dee_charptr_const      si_end;     /* [1..1][const] The string end pointer. */
 	unsigned int                 si_width;   /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*'). */
 } StringIterator;
 #define READ_ITER_PTR(x) atomic_read(&(x)->si_iter.ptr)
@@ -1442,7 +1442,7 @@ STATIC_ASSERT(offsetof(StringIterator, si_string) == offsetof(ProxyObject, po_ob
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {
 	DREF DeeObject *result;
-	union dcharptr_const pos, new_pos;
+	union Dee_charptr_const pos, new_pos;
 
 	/* Consume one character (atomically) */
 	do {
@@ -1574,7 +1574,7 @@ stringiter_nii_hasprev(StringIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 stringiter_nii_getindex(StringIterator *__restrict self) {
-	union dcharptr_const pos;
+	union Dee_charptr_const pos;
 	pos.ptr = READ_ITER_PTR(self);
 	return (size_t)(pos.cp8 - (byte_t const *)DeeString_WSTR(self->si_string)) /
 	       STRING_SIZEOF_WIDTH(self->si_width);
@@ -1598,7 +1598,7 @@ stringiter_nii_rewind(StringIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_prev(StringIterator *__restrict self) {
-	union dcharptr_const pos, new_pos;
+	union Dee_charptr_const pos, new_pos;
 	do {
 		pos.ptr = atomic_read(&self->si_iter.ptr);
 		if (pos.ptr <= (void *)DeeString_WSTR(self->si_string))
@@ -1610,7 +1610,7 @@ stringiter_nii_prev(StringIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_next(StringIterator *__restrict self) {
-	union dcharptr_const pos, new_pos;
+	union Dee_charptr_const pos, new_pos;
 
 	/* Consume one character (atomically) */
 	do {
@@ -1625,7 +1625,7 @@ stringiter_nii_next(StringIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_nii_peek(StringIterator *__restrict self) {
 	DREF DeeObject *result;
-	union dcharptr_const pos;
+	union Dee_charptr_const pos;
 	pos.ptr = self->si_iter.ptr;
 	if (pos.ptr >= self->si_end.ptr)
 		return ITER_DONE;
@@ -1650,8 +1650,8 @@ stringiter_nii_peek(StringIterator *__restrict self) {
 }
 
 PRIVATE struct type_nii tpconst stringiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&stringiter_nii_getseq,
@@ -1772,7 +1772,7 @@ string_size(String *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getitem_index(String *__restrict self, size_t index) {
 	int width = DeeString_WIDTH(self);
-	union dcharptr_const str;
+	union Dee_charptr_const str;
 	size_t len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
@@ -1798,7 +1798,7 @@ err_oob:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_trygetitem_index(String *__restrict self, size_t index) {
 	int width = DeeString_WIDTH(self);
-	union dcharptr_const str;
+	union Dee_charptr_const str;
 	size_t len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
@@ -1872,7 +1872,7 @@ PRIVATE struct type_cmp string_cmp = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_foreach(String *self, Dee_foreach_t proc, void *arg) {
-	union dcharptr_const ptr, end;
+	union Dee_charptr_const ptr, end;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -1940,7 +1940,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_foreach_reverse(String *self, Dee_foreach_t proc, void *arg) {
-	union dcharptr_const ptr, end;
+	union Dee_charptr_const ptr, end;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -2009,7 +2009,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_mh_seq_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
                               void *arg, size_t start, size_t end) {
-	union dcharptr_const ptr;
+	union Dee_charptr_const ptr;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -2084,7 +2084,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_mh_seq_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb,
                                       void *arg, size_t start, size_t end) {
-	union dcharptr_const ptr;
+	union Dee_charptr_const ptr;
 	Dee_ssize_t temp, result = 0;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -2156,7 +2156,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	size_t result;
-	union dcharptr_const ptr, end;
+	union Dee_charptr_const ptr, end;
 	DREF DeeObject **dst_iter = dst;
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -2224,7 +2224,7 @@ err_dst_iter:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_getitem(String *self, DeeObject *index) {
 	int width = DeeString_WIDTH(self);
-	union dcharptr_const str;
+	union Dee_charptr_const str;
 	size_t i, len;
 	str.ptr = DeeString_WSTR(self);
 	len     = WSTR_LENGTH(str.ptr);
@@ -2341,11 +2341,11 @@ err:
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 string_fromseq_foreach_cb(void *arg, DeeObject *item) {
 	uint32_t chr;
-	struct unicode_printer *printer;
-	printer = (struct unicode_printer *)arg;
+	struct Dee_unicode_printer *printer;
+	printer = (struct Dee_unicode_printer *)arg;
 	if (DeeObject_AsUInt32(item, &chr))
 		goto err;
-	return (Dee_ssize_t)unicode_printer_putc(printer, chr);
+	return (Dee_ssize_t)Dee_unicode_printer_putc(printer, chr);
 err:
 	return -1;
 }
@@ -2354,7 +2354,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t status;
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("fromseq", params: "
 	ordinals:?S?Dint
 ", docStringPrefix: "string");]]]*/
@@ -2364,20 +2364,20 @@ string_class_fromseq(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "fromseq", &args.ordinals);
 /*[[[end]]]*/
-	unicode_printer_init(&printer);
+	Dee_unicode_printer_init(&printer);
 #ifndef __OPTIMIZE_SIZE__
 	{
 		size_t hint = DeeObject_SizeFast(args.ordinals);
 		if (hint != (size_t)-1)
-			(void)unicode_printer_allocate(&printer, hint, STRING_WIDTH_1BYTE);
+			(void)Dee_unicode_printer_allocate(&printer, hint, STRING_WIDTH_1BYTE);
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	status = DeeObject_Foreach(args.ordinals, &string_fromseq_foreach_cb, &printer);
 	if unlikely(status < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 err:
 	return NULL;
 }
@@ -2404,7 +2404,7 @@ DeeString_Ordinals(DeeObject *__restrict self);
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_hashed(String *__restrict self) {
-	return_bool(self->s_hash != DEE_STRING_HASH_UNSET);
+	return_bool(self->s_hash != Dee_STRING_HASH_UNSET);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2414,11 +2414,11 @@ string_hasutf(String *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_hasfinihooks(String *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	utf = atomic_read(&self->s_data);
 	if (utf == NULL)
 		return_false;
-	return_bool((atomic_read(&utf->u_flags) & STRING_UTF_FFINIHOOK) != 0);
+	return_bool((atomic_read(&utf->u_flags) & Dee_STRING_UTF_FFINIHOOK) != 0);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2479,13 +2479,13 @@ err_empty:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_sizeof(String *__restrict self) {
 	size_t result;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	result = offsetof(String, s_str);
 	result += (self->s_len + 1) * sizeof(char);
 	utf = self->s_data;
 	if (utf) {
 		unsigned int i;
-		result += sizeof(struct string_utf);
+		result += sizeof(struct Dee_string_utf);
 		for (i = 1; i < STRING_WIDTH_COUNT; ++i) {
 			if (!utf->u_data[i])
 				continue;
@@ -3005,9 +3005,9 @@ PRIVATE struct {
 	uint32_t zero;
 } empty_utf = { 0, 0 };
 
-PRIVATE struct string_utf empty_string_utf = {
+PRIVATE struct Dee_string_utf empty_string_utf = {
 	/* .u_width = */ STRING_WIDTH_1BYTE, /* Every character fits into a single byte (because there are no characters) */
-	/* .u_flags = */ STRING_UTF_FASCII,
+	/* .u_flags = */ Dee_STRING_UTF_FASCII,
 	/* .u_data  = */ {
 		/* [STRING_WIDTH_1BYTE] = */ (size_t *)&DeeString_Empty.s_zero,
 		/* [STRING_WIDTH_2BYTE] = */ (size_t *)&empty_utf.zero,

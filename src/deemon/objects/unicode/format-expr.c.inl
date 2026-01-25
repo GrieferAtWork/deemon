@@ -335,12 +335,12 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 		int decode_status;
 		size_t index;
 		char const *intrepr = self->sfa_parser.sfp_iter;
-		decode_status = Dee_TAtoiu(intrepr, intlen, DEEINT_STRING(0, DEEINT_STRING_FTRY), &index);
+		decode_status = Dee_TAtoiu(intrepr, intlen, Dee_INT_STRING(0, Dee_INT_STRING_FTRY), &index);
 		if unlikely(decode_status < 0)
 			goto err;
 		if (decode_status > 0) {
 			DREF DeeObject *index_ob;
-			index_ob = DeeInt_FromString(intrepr, intlen, DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
+			index_ob = DeeInt_FromString(intrepr, intlen, Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL));
 			if unlikely(!index_ob)
 				goto err;
 			result = DeeObject_GetItem(self->sfa_args, index_ob);
@@ -448,7 +448,7 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 #endif /* !CONFIG_NO_FPU */
 #ifndef DEFINE_sfa_skipexpr
 		result = DeeInt_FromString(self->sfa_parser.sfp_iter, intlen,
-		                           DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
+		                           Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL));
 		/*if unlikely(!result)
 			goto err;*/
 #endif /* !DEFINE_sfa_skipexpr */

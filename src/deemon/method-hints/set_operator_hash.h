@@ -54,11 +54,11 @@ set_handle_hash_error(DeeObject *self) {
 __set_hash__.set_operator_hash([[nonnull]] DeeObject *__restrict self)
 %{unsupported_alias("default__seq_operator_hash__unsupported")}
 %{$none = 0}
-%{$empty = DEE_HASHOF_EMPTY_SEQUENCE}
+%{$empty = Dee_HASHOF_EMPTY_SEQUENCE}
 %{$with__set_operator_foreach =
 [[prefix(DEFINE_default_set_hash_with_foreach_cb)]]
 [[prefix(DEFINE_set_handle_hash_error)]] {
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
 	if unlikely(CALL_DEPENDENCY(set_operator_foreach, self,
 	                            &default_set_hash_with_foreach_cb,
 	                            &result))

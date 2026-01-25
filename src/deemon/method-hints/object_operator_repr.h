@@ -38,11 +38,11 @@ err_r:
 err:
 	return NULL;
 }}
-%{class using CLASS_OPERATOR_PRINTREPR:
+%{class using Dee_CLASS_OPERATOR_PRINTREPR:
 	[[prefix(DEFINE_instance_call_with_file_writer)]]
 {
 	DREF DeeObject *func, *result;
-	func = DeeClass_GetOperator(THIS_TYPE, CLASS_OPERATOR_PRINTREPR);
+	func = DeeClass_GetOperator(THIS_TYPE, Dee_CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_writer(self, func);
@@ -53,13 +53,13 @@ err:
 }}
 %{using tp_cast.tp_printrepr: {
 	Dee_ssize_t status;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	status = CALL_DEPENDENCY(tp_cast.tp_printrepr, self, &unicode_printer_print, &printer);
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
+	status = CALL_DEPENDENCY(tp_cast.tp_printrepr, self, &Dee_unicode_printer_print, &printer);
 	if unlikely(status < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }} = OPERATOR_REPR;
 
@@ -82,11 +82,11 @@ tp_cast.tp_printrepr([[nonnull]] DeeObject *__restrict self,
 err:
 	return -1;
 }}
-%{class using CLASS_OPERATOR_PRINTREPR:
+%{class using Dee_CLASS_OPERATOR_PRINTREPR:
 	[[prefix(DEFINE_instance_call_with_file_printer)]]
 {
 	Dee_ssize_t result;
-	DREF DeeObject *func = DeeClass_GetOperator(THIS_TYPE, CLASS_OPERATOR_PRINTREPR);
+	DREF DeeObject *func = DeeClass_GetOperator(THIS_TYPE, Dee_CLASS_OPERATOR_PRINTREPR);
 	if unlikely(!func)
 		goto err;
 	result = instance_call_with_file_printer(self, func, printer, arg);

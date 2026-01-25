@@ -17,8 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeRT_Err**/
+/*!export DeeRT_ATTRIBUTE_ACCESS_**/
 #ifndef GUARD_DEEMON_ERROR_RT_H
-#define GUARD_DEEMON_ERROR_RT_H 1
+#define GUARD_DEEMON_ERROR_RT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -64,11 +67,11 @@ DFUNDEF ATTR_COLD NONNULL((1)) int
                                  /*Numeric*/ /*0..1*/ DeeObject *minval,
                                  /*Numeric*/ /*0..1*/ DeeObject *maxval,
                                  bool positive);
-#define DeeRT_ErrIntegerOverflow(value, minval, maxval, positive)                          \
+#define DeeRT_ErrIntegerOverflow(value, minval, maxval, positive)      \
 	Dee_ASSUMED_VALUE((DeeRT_ErrIntegerOverflow)(Dee_AsObject(value),  \
 	                                             Dee_AsObject(minval), \
 	                                             Dee_AsObject(maxval), \
-	                                             positive),                                \
+	                                             positive),            \
 	                  -1)
 
 /* Same as "DeeRT_ErrIntegerOverflow", but minval/maxval are set as
@@ -243,9 +246,6 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrIndexOutOfBoundsObj)(DeeOb
 #define DeeRT_ErrIndexOutOfBounds(seq, index, length)    Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBounds)(Dee_AsObject(seq), index, length), -1)
 #define DeeRT_ErrIndexOutOfBoundsObj(seq, index, length) Dee_ASSUMED_VALUE((DeeRT_ErrIndexOutOfBoundsObj)(Dee_AsObject(seq), Dee_AsObject(index), Dee_AsObject(length)), -1)
 #ifdef CONFIG_BUILDING_DEEMON
-#ifdef DEE_SOURCE
-#define Dee_code_frame code_frame
-#endif /* DEE_SOURCE */
 struct Dee_code_frame; /* Exception thrown by "ASM_VARARGS_GETITEM" if the index is out-of-bounds */
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrVaIndexOutOfBounds)(struct Dee_code_frame const *__restrict frame, size_t index);
 #define DeeRT_ErrVaIndexOutOfBounds(frame, index) \
@@ -321,25 +321,23 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeRT_ErrItemNotFoundEx)(DeeObject 
 
 /* Throws an `DeeError_RegexNotFound' indicating that
  * the given "regex" could not be found within "data"
- * @param: eflags: Set of `DEE_RE_EXEC_*' */
+ * @param: eflags: Set of `Dee_RE_EXEC_*' */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeRT_ErrRegexNotFound)(DeeObject *data, DeeObject *regex,
                                size_t start, size_t end, size_t range,
                                DeeObject *rules, unsigned int eflags);
-#define DeeRT_ErrRegexNotFound(data, regex, start, end, range, rules, eflags)           \
-	Dee_ASSUMED_VALUE((DeeRT_ErrRegexNotFound)(Dee_AsObject(data),  \
-	                                           Dee_AsObject(regex), \
-	                                           start, end, range,                       \
-	                                           Dee_AsObject(rules), \
-	                                           eflags),                                 \
+#define DeeRT_ErrRegexNotFound(data, regex, start, end, range, rules, eflags) \
+	Dee_ASSUMED_VALUE((DeeRT_ErrRegexNotFound)(Dee_AsObject(data),            \
+	                                           Dee_AsObject(regex),           \
+	                                           start, end, range,             \
+	                                           Dee_AsObject(rules),           \
+	                                           eflags),                       \
 	                  -1)
 
 #ifdef DEE_SOURCE
-#define Dee_class_attribute class_attribute
-#define Dee_class_desc      class_desc
-#define Dee_type_method     type_method
-#define Dee_type_getset     type_getset
-#define Dee_type_member     type_member
+#define Dee_type_method type_method /*!export-*/
+#define Dee_type_getset type_getset /*!export-*/
+#define Dee_type_member type_member /*!export-*/
 #endif /* DEE_SOURCE */
 struct Dee_attrdesc;
 struct Dee_class_attribute;

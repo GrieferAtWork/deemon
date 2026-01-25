@@ -482,7 +482,7 @@ Query_GetRow(Query *__restrict self) {
 
 	/* Initialize the new row */
 	DeeObject_Init(result, &Row_Type);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->r_lock);
 	result->r_query = self;
 	Dee_Incref(self);
@@ -499,7 +499,7 @@ Query_GetRow(Query *__restrict self) {
 
 	/* Check for case: another thread also allocated the row */
 	if unlikely(existing_row) {
-		weakref_support_fini(result);
+		Dee_weakref_support_fini(result);
 		Dee_DecrefNokill(self); /* result->r_query */
 		Dee_DecrefNokill(&Row_Type);
 		Row_Free(result);
@@ -507,7 +507,7 @@ Query_GetRow(Query *__restrict self) {
 	}
 	return result;
 err_r:
-	weakref_support_fini(result);
+	Dee_weakref_support_fini(result);
 	Dee_DecrefNokill(self); /* result->r_query */
 	Dee_DecrefNokill(&Row_Type);
 	Row_Free(result);
@@ -650,7 +650,7 @@ again_with_row:
 
 	/* Initialize the new row and remember it */
 	DeeObject_Init(result, &Row_Type);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->r_lock);
 	result->r_query = self;
 	Dee_Incref(self);
@@ -861,7 +861,7 @@ INTERN DeeTypeObject Query_Type = {
 	/* NOTE: "TP_FVARIABLE" because of our custom destroy function
 	 *       (so must prevent _hostasm from using stack allocation) */
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Query),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(Query),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {

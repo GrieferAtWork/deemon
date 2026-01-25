@@ -743,7 +743,7 @@ PRIVATE int DCALL get_default_backlog(void) {
 		goto def;
 	}
 	status = Dee_Atou16(DeeString_STR(value), DeeString_SIZE(value),
-	                    DEEINT_STRING(0, DEEINT_STRING_FNORMAL), &result);
+	                    Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL), &result);
 	Dee_Decref(value);
 	if (status) {
 		if (!DeeError_Handled(Dee_ERROR_HANDLED_NORMAL))
@@ -1839,18 +1839,18 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 	Dee_ssize_t recv_length;
 	if (max_bufsize == (size_t)-1) {
 		if (!source) {
-			struct bytes_printer printer = BYTES_PRINTER_INIT;
-			size_t chunksize             = get_recv_chunksize();
+			struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
+			size_t chunksize = get_recv_chunksize();
 			/* Variable-length buffer. */
 			for (;;) {
-				uint8_t *part = bytes_printer_alloc(&printer, chunksize);
+				uint8_t *part = Dee_bytes_printer_alloc(&printer, chunksize);
 				if unlikely(!part)
 					goto err_printer;
 				recv_length = DeeSocket_Recv(self, timeout_nanoseconds, part, chunksize, flags);
 				if (recv_length == -2) {
 					/* A timeout during the first pass must cause ITER_DONE to be returned. */
-					if (BYTES_PRINTER_SIZE(&printer) == chunksize) {
-						bytes_printer_fini(&printer);
+					if (Dee_BYTES_PRINTER_SIZE(&printer) == chunksize) {
+						Dee_bytes_printer_fini(&printer);
 						return ITER_DONE;
 					}
 					/* Handle timeout as end-of-data. */
@@ -1859,7 +1859,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 				if unlikely(recv_length < 0)
 					goto err_printer;
 				/* Release unused data. */
-				bytes_printer_release(&printer, chunksize - (size_t)recv_length);
+				Dee_bytes_printer_release(&printer, chunksize - (size_t)recv_length);
 				/* Stop trying when no more data can be read. */
 				if (!recv_length)
 					break;
@@ -1867,9 +1867,9 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 				timeout_nanoseconds = 0;
 			}
 			/* Pack together the generated string. */
-			return bytes_printer_pack(&printer);
+			return Dee_bytes_printer_pack(&printer);
 err_printer:
-			bytes_printer_fini(&printer);
+			Dee_bytes_printer_fini(&printer);
 			return NULL;
 		}
 		/* With a specific source address, we must receive data in a single burst! */
@@ -2785,49 +2785,49 @@ socket_str(DeeSocketObject *__restrict self) {
 	bool has_sock, has_peer;
 	uint16_t state = atomic_read(&self->s_state);
 	SockAddr sock, peer;
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if (ascii_printer_printf(&printer, "<socket %K, %K, %K: ",
-	                         sock_getafnameorid(self->s_sockaddr.sa.sa_family),
-	                         sock_gettypenameorid(self->s_type),
-	                         sock_getprotonameorid(self->s_proto)) < 0)
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
+	if (Dee_ascii_printer_printf(&printer, "<socket %K, %K, %K: ",
+	                             sock_getafnameorid(self->s_sockaddr.sa.sa_family),
+	                             sock_gettypenameorid(self->s_type),
+	                             sock_getprotonameorid(self->s_proto)) < 0)
 		goto err;
 	if (!(state & SOCKET_FOPENED)) {
-		if (ASCII_PRINTER_PRINT(&printer, " Closed") < 0)
+		if (Dee_ASCII_PRINTER_PRINT(&printer, " Closed") < 0)
 			goto err;
 	} else {
 		has_sock = !DeeSocket_GetSockName(self, &sock, false);
 		has_peer = !DeeSocket_GetPeerAddr(self, &peer, false);
 		if (has_sock && has_peer) {
-			if (ascii_printer_printf(&printer, "%K -> %K",
-			                         SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS),
-			                         SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS)) < 0)
+			if (Dee_ascii_printer_printf(&printer, "%K -> %K",
+			                             SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS),
+			                             SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS)) < 0)
 				goto err;
 		} else if (has_sock) {
-			if (ascii_printer_printf(&printer, "%K",
-			                         SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS)) < 0)
+			if (Dee_ascii_printer_printf(&printer, "%K",
+			                             SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS)) < 0)
 				goto err;
 		} else if (has_peer) {
-			if (ascii_printer_printf(&printer, "local -> %K",
-			                         SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS)) < 0)
+			if (Dee_ascii_printer_printf(&printer, "local -> %K",
+			                             SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS)) < 0)
 				goto err;
 		}
-		if (state & SOCKET_FBOUND && ASCII_PRINTER_PRINT(&printer, " Bound") < 0)
+		if (state & SOCKET_FBOUND && Dee_ASCII_PRINTER_PRINT(&printer, " Bound") < 0)
 			goto err;
-		if (state & SOCKET_FCONNECTED && ASCII_PRINTER_PRINT(&printer, " Connected") < 0)
+		if (state & SOCKET_FCONNECTED && Dee_ASCII_PRINTER_PRINT(&printer, " Connected") < 0)
 			goto err;
-		if (state & SOCKET_FLISTENING && ASCII_PRINTER_PRINT(&printer, " Listening") < 0)
+		if (state & SOCKET_FLISTENING && Dee_ASCII_PRINTER_PRINT(&printer, " Listening") < 0)
 			goto err;
 		if (state & (SOCKET_FSHUTDOWN_R | SOCKET_FSHUTDOWN_W) &&
-		    ascii_printer_printf(&printer, " Shutdown(%s%s)",
-		                         state & SOCKET_FSHUTDOWN_R ? "r" : "",
-		                         state & SOCKET_FSHUTDOWN_W ? "w" : "") < 0)
+		    Dee_ascii_printer_printf(&printer, " Shutdown(%s%s)",
+		                             state & SOCKET_FSHUTDOWN_R ? "r" : "",
+		                             state & SOCKET_FSHUTDOWN_W ? "w" : "") < 0)
 			goto err;
 	}
-	if (ASCII_PRINTER_PRINT(&printer, ">") < 0)
+	if (Dee_ASCII_PRINTER_PRINT(&printer, ">") < 0)
 		goto err;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 
@@ -2837,49 +2837,49 @@ socket_repr(DeeSocketObject *__restrict self) {
 	bool has_sock, has_peer;
 	uint16_t state = atomic_read(&self->s_state);
 	SockAddr sock, peer;
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if (ascii_printer_printf(&printer, "<socket(%R, %R, %R): ",
-	                         sock_getafnameorid(self->s_sockaddr.sa.sa_family),
-	                         sock_gettypenameorid(self->s_type),
-	                         sock_getprotonameorid(self->s_proto)) < 0)
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
+	if (Dee_ascii_printer_printf(&printer, "<socket(%R, %R, %R): ",
+	                             sock_getafnameorid(self->s_sockaddr.sa.sa_family),
+	                             sock_gettypenameorid(self->s_type),
+	                             sock_getprotonameorid(self->s_proto)) < 0)
 		goto err;
 	if (!(state & SOCKET_FOPENED)) {
-		if (ASCII_PRINTER_PRINT(&printer, " Closed") < 0)
+		if (Dee_ASCII_PRINTER_PRINT(&printer, " Closed") < 0)
 			goto err;
 	} else {
 		has_sock = !DeeSocket_GetSockName(self, &sock, false);
 		has_peer = !DeeSocket_GetPeerAddr(self, &peer, false);
 		if (has_sock && has_peer) {
-			if (ascii_printer_printf(&printer, "%K -> %K",
-			                         SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL),
-			                         SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL)) < 0)
+			if (Dee_ascii_printer_printf(&printer, "%K -> %K",
+			                             SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL),
+			                             SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL)) < 0)
 				goto err;
 		} else if (has_sock) {
-			if (ascii_printer_printf(&printer, "%K",
-			                         SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL)) < 0)
+			if (Dee_ascii_printer_printf(&printer, "%K",
+			                             SockAddr_ToString(&sock, self->s_proto, SOCKADDR_STR_FNOFAIL)) < 0)
 				goto err;
 		} else if (has_peer) {
-			if (ascii_printer_printf(&printer, "local -> %K",
-			                         SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL)) < 0)
+			if (Dee_ascii_printer_printf(&printer, "local -> %K",
+			                             SockAddr_ToString(&peer, self->s_proto, SOCKADDR_STR_FNOFAIL)) < 0)
 				goto err;
 		}
-		if (state & SOCKET_FBOUND && ASCII_PRINTER_PRINT(&printer, " Bound") < 0)
+		if (state & SOCKET_FBOUND && Dee_ASCII_PRINTER_PRINT(&printer, " Bound") < 0)
 			goto err;
-		if (state & SOCKET_FCONNECTED && ASCII_PRINTER_PRINT(&printer, " Connected") < 0)
+		if (state & SOCKET_FCONNECTED && Dee_ASCII_PRINTER_PRINT(&printer, " Connected") < 0)
 			goto err;
-		if (state & SOCKET_FLISTENING && ASCII_PRINTER_PRINT(&printer, " Listening") < 0)
+		if (state & SOCKET_FLISTENING && Dee_ASCII_PRINTER_PRINT(&printer, " Listening") < 0)
 			goto err;
 		if (state & (SOCKET_FSHUTDOWN_R | SOCKET_FSHUTDOWN_W) &&
-		    ascii_printer_printf(&printer, " Shutdown(%s%s)",
-		                         state & SOCKET_FSHUTDOWN_R ? "r" : "",
-		                         state & SOCKET_FSHUTDOWN_W ? "w" : "") < 0)
+		    Dee_ascii_printer_printf(&printer, " Shutdown(%s%s)",
+		                             state & SOCKET_FSHUTDOWN_R ? "r" : "",
+		                             state & SOCKET_FSHUTDOWN_W ? "w" : "") < 0)
 			goto err;
 	}
-	if (ASCII_PRINTER_PRINT(&printer, ">") < 0)
+	if (Dee_ASCII_PRINTER_PRINT(&printer, ">") < 0)
 		goto err;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 #endif

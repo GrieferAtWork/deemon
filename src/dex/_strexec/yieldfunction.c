@@ -1723,7 +1723,7 @@ service_exception_handlers:
 									/* A new exception was thrown on-top of ours. (we must still handle our old one) */
 									{
 										uint16_t ind = ts->t_exceptsz - old_except_sz;
-										struct except_frame *exc, **p_exc;
+										struct Dee_except_frame *exc, **p_exc;
 										exc = *(p_exc = &ts->t_except);
 										while (ind--) {
 											p_exc = &exc->ef_prev;
@@ -1735,7 +1735,7 @@ service_exception_handlers:
 										if (ITER_ISOK(exc->ef_trace))
 											Dee_Decref((DeeObject *)exc->ef_trace);
 										Dee_Decref(exc->ef_error);
-										except_frame_free(exc);
+										Dee_except_frame_free(exc);
 									}
 									goto service_exception_handlers;
 								}

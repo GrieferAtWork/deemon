@@ -166,7 +166,7 @@ typedef DeeSystemFileObject SystemFile;
 /************************************************************************/
 /* Special support for `OutputDebugStringA()'                           */
 /************************************************************************/
-#ifdef DEE_STDDBG_IS_UNIQUE
+#ifdef Dee_STDDBG_IS_UNIQUE
 #ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
 #define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
@@ -176,7 +176,7 @@ extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 PRIVATE size_t DCALL
 debugfile_write(DeeFileObject *__restrict UNUSED(self),
                 void const *__restrict buffer,
-                size_t bufsize, dioflag_t UNUSED(flags)) {
+                size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
 	size_t result;
 	/* Forward all data to stderr. */
 	result = DeeFile_Write(DeeFile_DefaultStderr, buffer, bufsize);
@@ -291,7 +291,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 	/* .ft_ungetc = */ NULL,
 	/* .ft_putc   = */ NULL
 };
-#endif /* DEE_STDDBG_IS_UNIQUE */
+#endif /* Dee_STDDBG_IS_UNIQUE */
 
 
 #ifdef DeeSystem_FILE_USE_STUB
@@ -940,12 +940,12 @@ err:
 
 
 #ifdef DeeSystem_FILE_USE_STUB
-PRIVATE DeeFileObject std_file = { FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type) };
+PRIVATE DeeFileObject std_file = { Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type) };
 
 /* Return the the default stream for a given STD number. */
 PUBLIC ATTR_RETNONNULL DeeObject *DCALL
 DeeFile_DefaultStd(unsigned int id) {
-	ASSERT(id <= DEE_STDDBG);
+	ASSERT(id <= Dee_STDDBG);
 	(void)id;
 	return Dee_AsObject(&std_file);
 }
@@ -970,38 +970,38 @@ DeeFile_DefaultStd(unsigned int id) {
 #endif /* ... */
 #endif /* ... */
 
-STATIC_ASSERT(DEE_STDIN == 0);
-STATIC_ASSERT(DEE_STDOUT == 1);
-STATIC_ASSERT(DEE_STDERR == 2);
-#ifdef DEE_STDDBG_IS_UNIQUE
-STATIC_ASSERT(DEE_STDDBG == 3);
-#endif /* DEE_STDDBG_IS_UNIQUE */
+STATIC_ASSERT(Dee_STDIN == 0);
+STATIC_ASSERT(Dee_STDOUT == 1);
+STATIC_ASSERT(Dee_STDERR == 2);
+#ifdef Dee_STDDBG_IS_UNIQUE
+STATIC_ASSERT(Dee_STDDBG == 3);
+#endif /* Dee_STDDBG_IS_UNIQUE */
 
 PRIVATE SystemFile sysf_std[] = {
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 }
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL, FILE_TYPE_UNKNOWN, 0 }
 #elif defined(DeeSystem_FILE_USE_unix_fd)
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDIN_FILENO, -1 },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDOUT_FILENO, -1 },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDERR_FILENO, -1 }
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDIN_FILENO, -1 },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDOUT_FILENO, -1 },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, STDERR_FILENO, -1 }
 #elif defined(DeeSystem_FILE_USE_stdio_FILE)
 #ifdef deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdin, NULL },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdout, NULL },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stderr, NULL }
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdin, NULL },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stdout, NULL },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, stderr, NULL }
 #else /* deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD */
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
-	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL }
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL }
 #endif /* !deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD */
 #endif /* ... */
 
-#ifdef DEE_STDDBG_IS_UNIQUE
+#ifdef Dee_STDDBG_IS_UNIQUE
 	,
-	{ FILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(void *)-1, Dee_fd_INVALID, Dee_fd_INVALID }
-#endif /* DEE_STDDBG_IS_UNIQUE */
+	{ Dee_FILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(void *)-1, Dee_fd_INVALID, Dee_fd_INVALID }
+#endif /* Dee_STDDBG_IS_UNIQUE */
 };
 
 #if !defined(deemon_file_CAN_STATIC_INITIALIZE_SYSF_STD) && defined(DeeSystem_FILE_USE_stdio_FILE)
@@ -1018,7 +1018,7 @@ DeeFile_DefaultStd(unsigned int id) {
 	return Dee_AsObject(&sysf_std[id]);
 #elif defined(DeeSystem_FILE_USE_stdio_FILE)
 	SystemFile *result;
-	ASSERT(id <= DEE_STDDBG);
+	ASSERT(id <= Dee_STDDBG);
 	result = &sysf_std[id];
 	if unlikely(!result->sf_handle) {
 		FILE *new_file;
@@ -1029,11 +1029,11 @@ DeeFile_DefaultStd(unsigned int id) {
 #else /* ... */
 		switch (id) {
 
-		case DEE_STDIN:
+		case Dee_STDIN:
 			new_file = stdin;
 			break;
 
-		case DEE_STDOUT:
+		case Dee_STDOUT:
 			new_file = stdout;
 			break;
 
@@ -1077,10 +1077,10 @@ DeeFile_DefaultStd(unsigned int id) {
 		DWORD std_id;
 		HANDLE std_handle;
 		switch (id) {
-		case DEE_STDIN:
+		case Dee_STDIN:
 			std_id = STD_INPUT_HANDLE;
 			break;
-		case DEE_STDOUT:
+		case Dee_STDOUT:
 			std_id = STD_OUTPUT_HANDLE;
 			break;
 		default:
@@ -1362,7 +1362,7 @@ nt_write_utf8_to_console(SystemFile *__restrict self,
 	end = (iter = buffer) + bufsize;
 	while (iter < end) {
 		uint8_t chr = *iter;
-		uint8_t len = unicode_utf8seqlen_safe[chr];
+		uint8_t len = Dee_unicode_utf8seqlen_safe[chr];
 		ASSERT(len != 0);
 		if (len > (size_t)(end - iter))
 			break;
@@ -1526,7 +1526,7 @@ dee_fwrite(void const *buf, size_t elemsize, size_t elemcount, FILE *stream) {
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer,
-             size_t bufsize, dioflag_t flags) {
+             size_t bufsize, Dee_ioflag_t flags) {
 
 	/* Windows implementation */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
@@ -1696,7 +1696,7 @@ again:
 PRIVATE size_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer,
-              size_t bufsize, dioflag_t UNUSED(flags)) {
+              size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
 
 	/* Windows implementation */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
@@ -1860,7 +1860,7 @@ INTERN size_t DCALL
 sysfile_pread(SystemFile *__restrict self,
               void *__restrict buffer,
               size_t bufsize, Dee_pos_t pos,
-              dioflag_t flags) {
+              Dee_ioflag_t flags) {
 
 	/* Windows implementation */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
@@ -1942,7 +1942,7 @@ PRIVATE size_t DCALL
 sysfile_pwrite(SystemFile *__restrict self,
                void const *__restrict buffer,
                size_t bufsize, Dee_pos_t pos,
-               dioflag_t flags) {
+               Dee_ioflag_t flags) {
 
 	/* Windows implementation */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
@@ -2422,7 +2422,7 @@ sysfile_close(SystemFile *__restrict self) {
 
 #ifdef deemon_file_HAVE_sysfile_getc
 PRIVATE NONNULL((1)) int DCALL
-sysfile_getc(SystemFile *__restrict self, dioflag_t flags) {
+sysfile_getc(SystemFile *__restrict self, Dee_ioflag_t flags) {
 
 	/* Stdio implementation */
 #ifdef DeeSystem_FILE_USE_stdio_FILE
@@ -2513,7 +2513,7 @@ sysfile_ungetc(SystemFile *__restrict self, int ch) {
 
 #ifdef deemon_file_HAVE_sysfile_putc
 PRIVATE int DCALL
-sysfile_putc(SystemFile *__restrict self, int ch, dioflag_t flags) {
+sysfile_putc(SystemFile *__restrict self, int ch, Dee_ioflag_t flags) {
 
 	/* Stdio implementation */
 #ifdef DeeSystem_FILE_USE_stdio_FILE
@@ -2884,9 +2884,9 @@ err:
 #ifdef DeeSystem_FILE_USE_stdio_FILE
 #define deemon_file_HAVE_sysfile_fini
 #endif /* DeeSystem_FILE_USE_stdio_FILE */
-#ifdef DEESYSTEM_FILE_HAVE_sf_filename
+#ifdef DeeSystemFile_HAVE_sf_filename
 #define deemon_file_HAVE_sysfile_fini
-#endif /* DEESYSTEM_FILE_HAVE_sf_filename */
+#endif /* DeeSystemFile_HAVE_sf_filename */
 
 
 #ifdef deemon_file_HAVE_sysfile_fini
@@ -2922,9 +2922,9 @@ sysfile_fini(SystemFile *__restrict self) {
 #endif /* CONFIG_HAVE_fclose */
 #endif /* DeeSystem_FILE_USE_stdio_FILE */
 
-#ifdef DEESYSTEM_FILE_HAVE_sf_filename
+#ifdef DeeSystemFile_HAVE_sf_filename
 	Dee_XDecref(self->sf_filename);
-#endif /* DEESYSTEM_FILE_HAVE_sf_filename */
+#endif /* DeeSystemFile_HAVE_sf_filename */
 }
 #endif /* deemon_file_HAVE_sysfile_fini */
 
@@ -3131,10 +3131,10 @@ PRIVATE struct type_member tpconst sysfile_members[] = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sysfile_print(SystemFile *__restrict self, Dee_formatprinter_t printer, void * arg) {
-#ifdef DEESYSTEM_FILE_HAVE_sf_filename
+#ifdef DeeSystemFile_HAVE_sf_filename
 	if (self->sf_filename != NULL)
 		return DeeFormat_Printf(printer, arg, "<File %r>", self->sf_filename);
-#endif /* DEESYSTEM_FILE_HAVE_sf_filename */
+#endif /* DeeSystemFile_HAVE_sf_filename */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
 	return DeeFormat_Printf(printer, arg, "<File (handle %p)>", self->sf_handle);
 #elif defined(DeeSystem_FILE_USE_unix_fd)
@@ -3149,10 +3149,10 @@ sysfile_print(SystemFile *__restrict self, Dee_formatprinter_t printer, void * a
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sysfile_printrepr(SystemFile *__restrict self, Dee_formatprinter_t printer, void * arg) {
-#ifdef DEESYSTEM_FILE_HAVE_sf_filename
+#ifdef DeeSystemFile_HAVE_sf_filename
 	if (self->sf_filename != NULL)
 		return DeeFormat_Printf(printer, arg, "File.open(%r)", self->sf_filename);
-#endif /* DEESYSTEM_FILE_HAVE_sf_filename */
+#endif /* DeeSystemFile_HAVE_sf_filename */
 #ifdef DeeSystem_FILE_USE_nt_HANDLE
 	{
 		char const *name = self->ob_type->ft_base.tp_name;
@@ -3264,24 +3264,24 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ sysfile_class_members
 	},
-	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
-	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_ioflag_t))&sysfile_read,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_ioflag_t))&sysfile_write,
 	/* .ft_seek   = */ (Dee_pos_t (DCALL *)(DeeFileObject *__restrict, Dee_off_t, int))&sysfile_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_pos_t))&sysfile_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&sysfile_close,
 #ifdef deemon_file_HAVE_sysfile_pread
-	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, dioflag_t))&sysfile_pread,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&sysfile_pread,
 #else /* deemon_file_HAVE_sysfile_pread */
 	/* .ft_pread  = */ NULL,
 #endif /* !deemon_file_HAVE_sysfile_pread */
 #ifdef deemon_file_HAVE_sysfile_pwrite
-	/* .ft_pwrite = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_pos_t, dioflag_t))&sysfile_pwrite,
+	/* .ft_pwrite = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_pos_t, Dee_ioflag_t))&sysfile_pwrite,
 #else /* deemon_file_HAVE_sysfile_pwrite */
 	/* .ft_pwrite = */ NULL,
 #endif /* !deemon_file_HAVE_sysfile_pwrite */
 #ifdef deemon_file_HAVE_sysfile_getc
-	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&sysfile_getc,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&sysfile_getc,
 #else /* deemon_file_HAVE_sysfile_getc */
 	/* .ft_getc   = */ NULL,
 #endif /* !deemon_file_HAVE_sysfile_getc */
@@ -3291,7 +3291,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_ungetc = */ NULL,
 #endif /* !deemon_file_HAVE_sysfile_ungetc */
 #ifdef deemon_file_HAVE_sysfile_putc
-	/* .ft_putc   = */ (int (DCALL *)(DeeFileObject *__restrict, int, dioflag_t))&sysfile_putc
+	/* .ft_putc   = */ (int (DCALL *)(DeeFileObject *__restrict, int, Dee_ioflag_t))&sysfile_putc
 #else /* deemon_file_HAVE_sysfile_putc */
 	/* .ft_putc   = */ NULL
 #endif /* !deemon_file_HAVE_sysfile_putc */

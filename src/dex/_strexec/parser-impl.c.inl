@@ -147,7 +147,7 @@ DECL_BEGIN
 PRIVATE ATTR_COLD int DCALL
 err_cannot_invoke_inplace(DeeObject *base, Dee_operator_t opname) {
 	DeeTypeObject *typetype = &DeeType_Type;
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	if (base) {
 		typetype = Dee_TYPE(base);
 		if (typetype == &DeeSuper_Type)
@@ -643,7 +643,7 @@ DEFINE_PRIMARY(UnaryHead) {
 #ifdef JIT_EVAL
 		result = DeeInt_FromString(JITLexer_TokPtr(self),
 		                           JITLexer_TokLen(self),
-		                           DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
+		                           Dee_INT_STRING(0, Dee_INT_STRING_FNORMAL));
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
@@ -947,7 +947,7 @@ done_y1:
 					uint32_t ch;
 					char const *next;
 					next = (char const *)source_end;
-					ch   = unicode_readutf8_rev_n(&next, source_start);
+					ch   = Dee_unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
 					source_end = (unsigned char const *)next;
@@ -1062,7 +1062,7 @@ not_a_java_lambda:
 						uint32_t ch;
 						char const *next;
 						next = (char const *)source_end;
-						ch   = unicode_readutf8_rev_n(&next, source_start);
+						ch   = Dee_unicode_readutf8_rev_n(&next, source_start);
 						if (!DeeUni_IsSpace(ch))
 							break;
 						source_end = (unsigned char const *)next;
@@ -1161,7 +1161,7 @@ not_a_java_lambda:
 					uint32_t ch;
 					char const *next;
 					next = (char const *)source_end;
-					ch   = unicode_readutf8_rev_n(&next, source_start);
+					ch   = Dee_unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
 					source_end = (unsigned char const *)next;
@@ -1811,7 +1811,7 @@ err_oo_class_reinit_lvalue:
 					uint32_t ch;
 					char const *next;
 					next = (char const *)source_end;
-					ch   = unicode_readutf8_rev_n(&next, source_start);
+					ch   = Dee_unicode_readutf8_rev_n(&next, source_start);
 					if (!DeeUni_IsSpace(ch))
 						break;
 					source_end = (unsigned char const *)next;
@@ -1852,7 +1852,7 @@ err_oo_class_reinit_lvalue:
 					goto err;
 				symbol_hash = Dee_HashUtf8(symbol_name, symbol_size);
 				if (DeeModule_Check(mod)) {
-					struct module_symbol *symbol;
+					struct Dee_module_symbol *symbol;
 					symbol = DeeModule_GetSymbolStringLenHash((DREF DeeModuleObject *)mod,
 					                                          symbol_name, symbol_size,
 					                                          symbol_hash);
@@ -2063,9 +2063,9 @@ err_result_copy:
 							 * that had been declared as `private' or `final'. If it does,
 							 * then we _must_ (as per the specs) access that attribute
 							 * statically, rather than dynamically! */
-							struct class_attribute *attrib;
+							struct Dee_class_attribute *attrib;
 							attrib = DeeClass_QueryClassAttributeStringLen(oo_class, attr_name, attr_size);
-							if (attrib != NULL && (attrib->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+							if (attrib != NULL && (attrib->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 								/* Yes, it does! -> Construct an l-value reference to the accessed instance member. */
 								JITLexer_Yield(self);
 								self->jl_lvalue.lv_kind = JIT_LVALUE_CLSATTRIB;

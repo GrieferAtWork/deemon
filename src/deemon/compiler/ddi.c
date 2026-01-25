@@ -32,7 +32,7 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>    /* qsort(), bzero(), ... */
 #include <deemon/system.h>             /* DeeSystem_BaseName() */
-#include <deemon/util/bytewriter.h>    /* BYTEWRITER_INIT, bytewriter, bytewriter_alloc, bytewriter_fini, bytewriter_flush, bytewriter_putb, bytewriter_putl, bytewriter_putw */
+#include <deemon/util/bytewriter.h>    /* DEE_BYTEWRITER_INIT, Dee_bytewriter, Dee_bytewriter_alloc, bytewriter_fini, Dee_bytewriter_flush, Dee_bytewriter_putb, Dee_bytewriter_putl, Dee_bytewriter_putw */
 
 #include <hybrid/byteswap.h> /* HTOLE16, HTOLE32 */
 #include <hybrid/typecore.h> /* __SIZEOF_INT__ */
@@ -250,40 +250,40 @@ ddi_transition(uint8_t *__restrict text,
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-xddi_putsymbol(struct bytewriter *__restrict writer,
+xddi_putsymbol(struct Dee_bytewriter *__restrict writer,
                uint8_t symbol_class,
                uint16_t symbol_id,
                uint32_t name_offset) {
 	uint8_t length;
 	if (name_offset > UINT16_MAX) {
-		length = DDI_EXDAT_OP32;
+		length = Dee_DDI_EXDAT_OP32;
 	} else if (name_offset > UINT8_MAX || symbol_id > UINT8_MAX) {
-		length = DDI_EXDAT_OP16;
+		length = Dee_DDI_EXDAT_OP16;
 	} else {
-		length = DDI_EXDAT_OP8;
+		length = Dee_DDI_EXDAT_OP8;
 	}
-	if (bytewriter_putb(writer, length | symbol_class))
+	if (Dee_bytewriter_putb(writer, length | symbol_class))
 		goto err;
 	switch (length) {
 
-	case DDI_EXDAT_OP8:
-		if (bytewriter_putb(writer, (uint8_t)symbol_id))
+	case Dee_DDI_EXDAT_OP8:
+		if (Dee_bytewriter_putb(writer, (uint8_t)symbol_id))
 			goto err;
-		if (bytewriter_putb(writer, (uint8_t)name_offset))
-			goto err;
-		break;
-
-	case DDI_EXDAT_OP16:
-		if (bytewriter_putw(writer, HTOLE16(symbol_id)))
-			goto err;
-		if (bytewriter_putw(writer, HTOLE16((uint16_t)name_offset)))
+		if (Dee_bytewriter_putb(writer, (uint8_t)name_offset))
 			goto err;
 		break;
 
-	case DDI_EXDAT_OP32:
-		if (bytewriter_putw(writer, HTOLE16(symbol_id)))
+	case Dee_DDI_EXDAT_OP16:
+		if (Dee_bytewriter_putw(writer, (uint16_t)HTOLE16(symbol_id)))
 			goto err;
-		if (bytewriter_putl(writer, HTOLE32(name_offset)))
+		if (Dee_bytewriter_putw(writer, (uint16_t)HTOLE16(name_offset)))
+			goto err;
+		break;
+
+	case Dee_DDI_EXDAT_OP32:
+		if (Dee_bytewriter_putw(writer, (uint16_t)HTOLE16(symbol_id)))
+			goto err;
+		if (Dee_bytewriter_putl(writer, (uint16_t)HTOLE32(name_offset)))
 			goto err;
 		break;
 
@@ -299,7 +299,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	DeeDDIObject *result;
 	size_t result_size;
 	uint8_t *code_iter;
-	struct ascii_printer strtab;
+	struct Dee_ascii_printer strtab;
 	/* Check for simple case: no DDI information needs to be generated. */
 	if (current_assembler.a_flag & ASM_FNODDI)
 		return_reference_(&DeeDDI_Empty);
@@ -317,7 +317,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 			goto err;
 	}
 	/* Initialize the string printer we're using for the ddi's string table. */
-	ascii_printer_init(&strtab);
+	Dee_ascii_printer_init(&strtab);
 	code_iter = result->d_ddi;
 
 	/* As the first step, let's replace all checkpoint
@@ -336,7 +336,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	if (current_basescope->bs_name) {
 		/* Allocate the name of the current function. */
 		ASSERT(strtab.ap_length == 0);
-		if (ascii_printer_print(&strtab, current_basescope->bs_name->k_name,
+		if (Dee_ascii_printer_print(&strtab, current_basescope->bs_name->k_name,
 		                        current_basescope->bs_name->k_size + 1) < 0)
 			goto err_result_printer;
 		/* Link the initial symbol name for the main function. */
@@ -389,16 +389,16 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 				file_begin = (char *)DeeSystem_BaseName(filename, length);
 				if (file_begin > filename) {
 					char *tab_str, backup;
-					tab_str = ascii_printer_allocstr(&strtab, file_begin,
-					                                 (size_t)(length - (file_begin - filename)) + 1);
+					tab_str = Dee_ascii_printer_allocstr(&strtab, file_begin,
+					                                     (size_t)(length - (file_begin - filename)) + 1);
 					if unlikely(!tab_str)
 						goto err_result_printer;
 					file_offset = (uint32_t)(tab_str - strtab.ap_string->s_str);
 					/* Now to allocate the path. */
 					backup         = file_begin[-1];
 					file_begin[-1] = '\0'; /* TPP allocates these dynamically to we can cheat a bit... */
-					tab_str = ascii_printer_allocstr(&strtab, filename,
-					                                 (size_t)(file_begin - filename));
+					tab_str = Dee_ascii_printer_allocstr(&strtab, filename,
+					                                     (size_t)(file_begin - filename));
 					file_begin[-1] = backup;
 					if unlikely(!tab_str)
 						goto err_result_printer;
@@ -413,7 +413,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 					/* Special case: The filename has no path associated. */
 					if (length)
 						++length;
-					filename = ascii_printer_allocstr(&strtab, filename, length);
+					filename = Dee_ascii_printer_allocstr(&strtab, filename, length);
 					if unlikely(!filename)
 						goto err_result_printer;
 					file_offset        = (uint32_t)(filename - strtab.ap_string->s_str);
@@ -441,9 +441,9 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 						/* Local-binding */
 						ASSERT(binding->db_index < current_assembler.a_localc);
 						if (binding->db_name) {
-							symbol_name_str = ascii_printer_allocstr(&strtab,
-							                                         binding->db_name->k_name,
-							                                         binding->db_name->k_size + 1);
+							symbol_name_str = Dee_ascii_printer_allocstr(&strtab,
+							                                             binding->db_name->k_name,
+							                                             binding->db_name->k_size + 1);
 							if unlikely(!symbol_name_str)
 								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
@@ -464,9 +464,9 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 					} else {
 						/* Stack-binding */
 						if (binding->db_name) {
-							symbol_name_str = ascii_printer_allocstr(&strtab,
-							                                     binding->db_name->k_name,
-							                                     binding->db_name->k_size + 1);
+							symbol_name_str = Dee_ascii_printer_allocstr(&strtab,
+							                                             binding->db_name->k_name,
+							                                             binding->db_name->k_size + 1);
 							if unlikely(!symbol_name_str)
 								goto err_result_printer;
 							/* Allocate an entry for the symbol name. */
@@ -621,8 +621,8 @@ do_realloc:
 	if (!(current_assembler.a_flag & ASM_FNODDIXDAT)) {
 		uint16_t i, offset;
 		struct symbol *sym;
-		struct bytewriter writer = BYTEWRITER_INIT;
-		if unlikely(!bytewriter_alloc(&writer, 4))
+		struct Dee_bytewriter writer = DEE_BYTEWRITER_INIT;
+		if unlikely(!Dee_bytewriter_alloc(&writer, 4))
 			goto err_xwriter; /* `dx_size' */
 		/* Generate debug information for references and static variables. */
 		for (i = 0; i < current_assembler.a_refc; ++i) {
@@ -630,12 +630,12 @@ do_realloc:
 			sym = current_assembler.a_refv[i].sr_sym;
 			if (sym->s_name->k_size == 0)
 				continue; /* Anonymous reference. */
-			namebuf = ascii_printer_allocstr(&strtab,
-			                                 sym->s_name->k_name,
-			                                 sym->s_name->k_size + 1);
+			namebuf = Dee_ascii_printer_allocstr(&strtab,
+			                                     sym->s_name->k_name,
+			                                     sym->s_name->k_size + 1);
 			if unlikely(!namebuf)
 				goto err_xwriter;
-			if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_RNAM, i,
+			if unlikely(xddi_putsymbol(&writer, Dee_DDI_EXDAT_O_RNAM, i,
 			                           (uint32_t)(namebuf - strtab.ap_string->s_str)))
 				goto err_xwriter;
 		}
@@ -649,12 +649,12 @@ do_realloc:
 					continue; /* Anonymous symbol (asm-level). */
 				if (sym->s_name->k_size == 0)
 					continue; /* Anonymous symbol (ast-level). */
-				namebuf = ascii_printer_allocstr(&strtab,
-				                              sym->s_name->k_name,
-				                              sym->s_name->k_size + 1);
+				namebuf = Dee_ascii_printer_allocstr(&strtab,
+				                                     sym->s_name->k_name,
+				                                     sym->s_name->k_size + 1);
 				if unlikely(!namebuf)
 					goto err_xwriter;
-				if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_RNAM, offset + i,
+				if unlikely(xddi_putsymbol(&writer, Dee_DDI_EXDAT_O_RNAM, offset + i,
 				                           (uint32_t)(namebuf - strtab.ap_string->s_str)))
 					goto err_xwriter;
 			}
@@ -664,10 +664,10 @@ do_realloc:
 			bytewriter_fini(&writer);
 			/*result->d_exdat = NULL;*/
 		} else {
-			if unlikely(bytewriter_putb(&writer, DDI_EXDAT_O_END))
+			if unlikely(Dee_bytewriter_putb(&writer, Dee_DDI_EXDAT_O_END))
 				goto err_xwriter;
 			((struct Dee_ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
-			result->d_exdat = (struct Dee_ddi_exdat *)bytewriter_flush(&writer);
+			result->d_exdat = (struct Dee_ddi_exdat *)Dee_bytewriter_flush(&writer);
 		}
 		__IF0 {
 err_xwriter:
@@ -689,7 +689,7 @@ err_xwriter:
 			result = new_result;
 	}
 	/* Pack the string printer and call it a day. */
-	result->d_strtab = (DREF struct string_object *)ascii_printer_pack(&strtab);
+	result->d_strtab = (DREF DeeStringObject *)Dee_ascii_printer_pack(&strtab);
 	if unlikely(!result->d_strtab)
 		goto err_result;
 	if (!current_basescope->bs_name) {
@@ -702,7 +702,7 @@ err_xwriter:
 	return result;
 err_result_printer:
 	/* Free all buffers and fail. */
-	ascii_printer_fini(&strtab);
+	Dee_ascii_printer_fini(&strtab);
 err_result:
 	Dee_Free((void *)result->d_exdat);
 	Dee_Free((void *)result->d_strings);

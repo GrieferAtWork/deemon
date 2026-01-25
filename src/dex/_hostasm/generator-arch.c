@@ -571,18 +571,18 @@ DeeCode_LidNameAtAddr(DeeCodeObject *__restrict self,
 	struct Dee_ddi_state st;
 	struct Dee_ddi_xregs *iter;
 	ptr = DeeCode_FindDDI(Dee_AsObject(self), &st, NULL,
-	                      code_addr, DDI_STATE_FNOTHROW);
-	if (!DDI_ISOK(ptr))
+	                      code_addr, Dee_DDI_STATE_FNOTHROW);
+	if (!Dee_DDI_ISOK(ptr))
 		return NULL;
 	result = NULL;
-	DDI_STATE_DO(iter, &st) {
+	Dee_DDI_STATE_DO(iter, &st) {
 		if (lid < iter->dx_lcnamc) {
 			result = DeeCode_GetDDIString(Dee_AsObject(self), iter->dx_lcnamv[lid]);
 			if (result)
 				goto done;
 		}
 	}
-	DDI_STATE_WHILE(iter, &st);
+	Dee_DDI_STATE_WHILE(iter, &st);
 done:
 	Dee_ddi_state_fini(&st);
 	return result;

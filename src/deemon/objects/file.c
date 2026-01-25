@@ -121,7 +121,7 @@ PRIVATE WUNUSED NONNULL((1)) uint32_t
 	int b;
 	byte_t buf[6];
 	uint32_t result = (uint32_t)byte0;
-	switch (unicode_utf8seqlen[result]) {
+	switch (Dee_unicode_utf8seqlen[result]) {
 
 	case 0:
 	case 1:
@@ -383,7 +383,7 @@ do_invoke_ft_getc:
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_UngetUtf8(DeeObject *__restrict self, uint32_t ch) {
 	int result;
-	char buf[UNICODE_UTF8_CURLEN], *endp;
+	char buf[Dee_UNICODE_UTF8_CURLEN], *endp;
 	int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 again:
@@ -407,7 +407,7 @@ do_handle_filetype:
 do_invoke_generic_ft_ungetc:
 	ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
 do_invoke_ft_ungetc:
-	endp = unicode_writeutf8(buf, ch);
+	endp = Dee_unicode_writeutf8(buf, ch);
 	do {
 		--endp;
 		result = (*ft_ungetc)((DeeFileObject *)self, (int)(unsigned int)(unsigned char)*endp);
@@ -615,7 +615,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
                  size_t maxbytes, bool keep_lf) {
-	struct bytes_printer printer;
+	struct Dee_bytes_printer printer;
 	int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -649,10 +649,10 @@ do_handle_filetype:
 	ft_getc   = (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&DeeFile_Getcf;
 	ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
 do_operate_using_ft_getc_and_ft_ungetc:
-	bytes_printer_init(&printer);
+	Dee_bytes_printer_init(&printer);
 
 	/* Keep on reading characters until a linefeed is encountered. */
-	while (BYTES_PRINTER_SIZE(&printer) < maxbytes) {
+	while (Dee_BYTES_PRINTER_SIZE(&printer) < maxbytes) {
 		int ch;
 		ch = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
 		if (ch == '\r') {
@@ -665,10 +665,10 @@ do_operate_using_ft_getc_and_ft_ungetc:
 
 			/* Found a \r\n or \r-linefeed. */
 			if (keep_lf) {
-				if (bytes_printer_putb(&printer, '\r'))
+				if (Dee_bytes_printer_putb(&printer, '\r'))
 					goto err_printer;
-				if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < maxbytes &&
-				    bytes_printer_putb(&printer, '\n'))
+				if (ch == '\n' && Dee_BYTES_PRINTER_SIZE(&printer) < maxbytes &&
+				    Dee_bytes_printer_putb(&printer, '\n'))
 					goto err_printer;
 			}
 			goto done_printer;
@@ -677,28 +677,28 @@ do_operate_using_ft_getc_and_ft_ungetc:
 			goto err_printer;
 		if (ch == '\n') {
 			/* Found a \n-linefeed */
-			if (keep_lf && bytes_printer_putb(&printer, '\n'))
+			if (keep_lf && Dee_bytes_printer_putb(&printer, '\n'))
 				goto err_printer;
 			goto done_printer;
 		}
 		if (ch == GETC_EOF) {
 			/* Stop on EOF */
-			if (!BYTES_PRINTER_SIZE(&printer)) {
+			if (!Dee_BYTES_PRINTER_SIZE(&printer)) {
 				/* Nothing was read -> return ITER_DONE */
-				bytes_printer_fini(&printer);
+				Dee_bytes_printer_fini(&printer);
 				return ITER_DONE;
 			}
 			goto done_printer;
 		}
 
 		/* Print the character. */
-		if (bytes_printer_putb(&printer, (byte_t)ch))
+		if (Dee_bytes_printer_putb(&printer, (byte_t)ch))
 			goto err_printer;
 	}
 done_printer:
-	return bytes_printer_pack(&printer);
+	return Dee_bytes_printer_pack(&printer);
 err_printer:
-	bytes_printer_fini(&printer);
+	Dee_bytes_printer_fini(&printer);
 err:
 	return NULL;
 }
@@ -731,11 +731,11 @@ err:
 INTDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
 sysfile_read(DeeSystemFileObject *__restrict self,
              void *buffer, size_t bufsize,
-             dioflag_t flags);
+             Dee_ioflag_t flags);
 INTERN WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 sysfile_pread(DeeSystemFileObject *__restrict self,
               void *buffer, size_t bufsize,
-              Dee_pos_t pos, dioflag_t flags);
+              Dee_pos_t pos, Dee_ioflag_t flags);
 
 PRIVATE WUNUSED DREF /*Bytes*/ DeeObject *DCALL
 file_read_trymap(Dee_fd_t fd, size_t maxbytes,
@@ -803,7 +803,7 @@ do_handle_filetype:
 		goto do_handle_filetype;
 	}
 do_invoke_generic_ft_read:
-	ft_read = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dioflag_t flags))&DeeFile_Readf;
+	ft_read = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t flags))&DeeFile_Readf;
 do_invoke_ft_read:
 #ifdef HAVE_file_read_trymap
 	/* if `ft_read' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
@@ -812,7 +812,7 @@ do_invoke_ft_read:
 	 * which can then be wrapped by a regular `Bytes' object.
 	 * -> That way, we can provide the user with O(1) reads from large files! */
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
-	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dioflag_t flags))&sysfile_read)) {
+	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_ioflag_t flags))&sysfile_read)) {
 		DREF /*Bytes*/ DeeObject *result;
 		Dee_fd_t os_fd = DeeSystemFile_Fileno(self);
 		if unlikely(os_fd == Dee_fd_INVALID)
@@ -827,15 +827,15 @@ do_invoke_ft_read:
 #endif /* HAVE_file_read_trymap */
 
 	{
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
-		size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
+		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
+		size_t readtext_bufsize = READTEXT_INITIAL_BUFSIZE;
 		while (maxbytes) {
 			void *buffer;
 			size_t read_size;
 			size_t bufsize = MIN(maxbytes, readtext_bufsize);
 
 			/* Allocate more buffer memory. */
-			buffer = bytes_printer_alloc(&printer, bufsize);
+			buffer = Dee_bytes_printer_alloc(&printer, bufsize);
 			if unlikely(!buffer)
 				goto err_printer;
 
@@ -844,7 +844,7 @@ do_invoke_ft_read:
 			if unlikely(read_size == (size_t)-1)
 				goto err_printer;
 			ASSERT(read_size <= bufsize);
-			bytes_printer_release(&printer, bufsize - read_size);
+			Dee_bytes_printer_release(&printer, bufsize - read_size);
 			if (!read_size || (!readall && read_size < bufsize))
 				break; /* EOF */
 			maxbytes -= read_size;
@@ -852,9 +852,9 @@ do_invoke_ft_read:
 				readtext_bufsize *= 2;
 		}
 /*done_printer:*/
-		return bytes_printer_pack(&printer);
+		return Dee_bytes_printer_pack(&printer);
 err_printer:
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 	} /* Scope... */
 err:
 	return NULL;
@@ -886,7 +886,7 @@ do_handle_filetype:
 		goto do_handle_filetype;
 	}
 do_invoke_generic_ft_pread:
-	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, dioflag_t flags))&DeeFile_PReadf;
+	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t flags))&DeeFile_PReadf;
 do_invoke_ft_pread:
 #ifdef HAVE_file_read_trymap
 	/* if `ft_pread' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
@@ -895,7 +895,7 @@ do_invoke_ft_pread:
 	 * which can then be wrapped by a regular `Bytes' object.
 	 * -> That way, we can provide the user with O(1) reads from large files! */
 	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
-	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, dioflag_t flags))&sysfile_pread)) {
+	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, Dee_pos_t, Dee_ioflag_t flags))&sysfile_pread)) {
 		DREF /*Bytes*/ DeeObject *result;
 		result = file_read_trymap(DeeSystemFile_GetHandle(self),
 		                          maxbytes, pos, readall);
@@ -906,15 +906,15 @@ do_invoke_ft_pread:
 #endif /* HAVE_file_read_trymap */
 
 	{
-		struct bytes_printer printer = BYTES_PRINTER_INIT;
-		size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
+		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
+		size_t readtext_bufsize = READTEXT_INITIAL_BUFSIZE;
 		while (maxbytes) {
 			void *buffer;
 			size_t read_size;
 			size_t bufsize = MIN(maxbytes, readtext_bufsize);
 
 			/* Allocate more buffer memory. */
-			buffer = bytes_printer_alloc(&printer, bufsize);
+			buffer = Dee_bytes_printer_alloc(&printer, bufsize);
 			if unlikely(!buffer)
 				goto err_printer;
 
@@ -923,7 +923,7 @@ do_invoke_ft_pread:
 			if unlikely(read_size == (size_t)-1)
 				goto err_printer;
 			ASSERT(read_size <= bufsize);
-			bytes_printer_release(&printer, bufsize - read_size);
+			Dee_bytes_printer_release(&printer, bufsize - read_size);
 			if (!read_size || (!readall && read_size < bufsize))
 				break; /* EOF */
 			maxbytes -= read_size;
@@ -932,9 +932,9 @@ do_invoke_ft_pread:
 				readtext_bufsize *= 2;
 		}
 /*done_printer:*/
-		return bytes_printer_pack(&printer);
+		return Dee_bytes_printer_pack(&printer);
 err_printer:
-		bytes_printer_fini(&printer);
+		Dee_bytes_printer_fini(&printer);
 	} /* Scope... */
 /*err:*/
 	return NULL;
@@ -1416,8 +1416,8 @@ found_option:
 		/* Wrap the file in a buffer. */
 		new_result = DeeFileBuffer_New(result,
 		                               (oflags & OPEN_FACCMODE) == OPEN_FRDONLY
-		                               ? (FILE_BUFFER_MODE_AUTO | FILE_BUFFER_FREADONLY)
-		                               : (FILE_BUFFER_MODE_AUTO),
+		                               ? (Dee_FILE_BUFFER_MODE_AUTO | Dee_FILE_BUFFER_FREADONLY)
+		                               : (Dee_FILE_BUFFER_MODE_AUTO),
 		                               0);
 		Dee_Decref(result);
 		if unlikely(!new_result)
@@ -1499,13 +1499,13 @@ PRIVATE struct type_method tpconst file_class_methods[] = {
 };
 
 
-#ifdef DEE_STDDBG_IS_UNIQUE
+#ifdef Dee_STDDBG_IS_UNIQUE
 #define DEE_STDCNT 4
 PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE, ITER_DONE };
-#else /* DEE_STDDBG_IS_UNIQUE */
+#else /* Dee_STDDBG_IS_UNIQUE */
 #define DEE_STDCNT 3
 PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE };
-#endif /* !DEE_STDDBG_IS_UNIQUE */
+#endif /* !Dee_STDDBG_IS_UNIQUE */
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t dee_std_lock = Dee_ATOMIC_RWLOCK_INIT;
@@ -1528,13 +1528,13 @@ PRIVATE Dee_atomic_rwlock_t dee_std_lock = Dee_ATOMIC_RWLOCK_INIT;
 #define dee_std_lock_end()        Dee_atomic_rwlock_end(&dee_std_lock)
 
 PRIVATE uint16_t const std_buffer_modes[DEE_STDCNT] = {
-	/* [DEE_STDIN ] = */ FILE_BUFFER_MODE_AUTO | FILE_BUFFER_FREADONLY,
-	/* [DEE_STDOUT] = */ FILE_BUFFER_MODE_AUTO,
-	/* [DEE_STDERR] = */ FILE_BUFFER_MODE_AUTO
-#ifdef DEE_STDDBG_IS_UNIQUE
+	/* [Dee_STDIN ] = */ Dee_FILE_BUFFER_MODE_AUTO | Dee_FILE_BUFFER_FREADONLY,
+	/* [Dee_STDOUT] = */ Dee_FILE_BUFFER_MODE_AUTO,
+	/* [Dee_STDERR] = */ Dee_FILE_BUFFER_MODE_AUTO
+#ifdef Dee_STDDBG_IS_UNIQUE
 	,
-	/* [DEE_STDDBG] = */ FILE_BUFFER_MODE_AUTO
-#endif /* DEE_STDDBG_IS_UNIQUE */
+	/* [Dee_STDDBG] = */ Dee_FILE_BUFFER_MODE_AUTO
+#endif /* Dee_STDDBG_IS_UNIQUE */
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1582,7 +1582,7 @@ done:
 
 
 /* Return a file stream for a standard file number `id'.
- * @param: id:   One of `DEE_STD*' (Except `DEE_STDDBG')
+ * @param: id:   One of `DEE_STD*' (Except `Dee_STDDBG')
  * @param: file: The file to use, or `NULL' to unbind that stream.
  * `DeeFile_GetStd()' will throw an `UnboundAttribute' error if the stream isn't assigned. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -1776,31 +1776,31 @@ file_std_isbound(unsigned int id) {
 			Dee_Decref(old_stream);                                 \
 		return 0;                                                   \
 	}
-DEFINE_FILE_CLASS_STD_FUNCTIONS(stdin, DEE_STDIN)
-DEFINE_FILE_CLASS_STD_FUNCTIONS(stdout, DEE_STDOUT)
-DEFINE_FILE_CLASS_STD_FUNCTIONS(stderr, DEE_STDERR)
+DEFINE_FILE_CLASS_STD_FUNCTIONS(stdin, Dee_STDIN)
+DEFINE_FILE_CLASS_STD_FUNCTIONS(stdout, Dee_STDOUT)
+DEFINE_FILE_CLASS_STD_FUNCTIONS(stderr, Dee_STDERR)
 #undef DEFINE_FILE_CLASS_STD_FUNCTIONS
 
-#if DEE_STDDBG != DEE_STDERR
+#if Dee_STDDBG != Dee_STDERR
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_stddbg(DeeObject *__restrict UNUSED(self)) {
-	return_reference(DeeFile_DefaultStd(DEE_STDDBG));
+	return_reference(DeeFile_DefaultStd(Dee_STDDBG));
 }
-#endif /* DEE_STDDBG != DEE_STDERR */
+#endif /* Dee_STDDBG != Dee_STDERR */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_default_stdin(DeeObject *__restrict UNUSED(self)) {
-	return_reference(DeeFile_DefaultStd(DEE_STDIN));
+	return_reference(DeeFile_DefaultStd(Dee_STDIN));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_default_stdout(DeeObject *__restrict UNUSED(self)) {
-	return_reference(DeeFile_DefaultStd(DEE_STDOUT));
+	return_reference(DeeFile_DefaultStd(Dee_STDOUT));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_default_stderr(DeeObject *__restrict UNUSED(self)) {
-	return_reference(DeeFile_DefaultStd(DEE_STDERR));
+	return_reference(DeeFile_DefaultStd(Dee_STDERR));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1850,11 +1850,11 @@ PRIVATE struct type_getset tpconst file_class_getsets[] = {
 	               &file_class_default_stderr,
 	               "->?DFile\n"
 	               "The default standard error stream"),
-#if DEE_STDDBG == DEE_STDERR
+#if Dee_STDDBG == Dee_STDERR
 #define LINKED_P_file_class_stddbg &file_class_default_stderr
-#else /* DEE_STDDBG == DEE_STDERR */
+#else /* Dee_STDDBG == Dee_STDERR */
 #define LINKED_P_file_class_stddbg &file_class_stddbg
-#endif /* DEE_STDDBG != DEE_STDERR */
+#endif /* Dee_STDDBG != Dee_STDERR */
 	TYPE_GETTER("stddbg",
 	            LINKED_P_file_class_stddbg,
 	            "->?DFile\n"

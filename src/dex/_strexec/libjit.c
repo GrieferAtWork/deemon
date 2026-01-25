@@ -235,7 +235,7 @@ err:
 
 
 DEX_BEGIN
-DEX_MEMBER_F("exec", &libjit_exec, MODSYM_FREADONLY,
+DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
              "(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule,import?:?DCallable)->\n"
              "Execute a given expression @expr and return the result\n"
              "This function is used to implement the builtin ?Dexec function"),
@@ -440,9 +440,9 @@ DEX_MEMBER_F("exec", &libjit_exec, MODSYM_FREADONLY,
  *          thus allowing for a custom implementation which could then set a ceiling on
  *          memory allocation
  */
-DEX_MEMBER_F_NODOC("Function", &JITFunction_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("YieldFunction", &JITYieldFunction_Type, MODSYM_FREADONLY),
-DEX_MEMBER_F_NODOC("YieldFunctionIterator", &JITYieldFunctionIterator_Type, MODSYM_FREADONLY),
+DEX_MEMBER_F_NODOC("Function", &JITFunction_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("YieldFunction", &JITYieldFunction_Type, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("YieldFunctionIterator", &JITYieldFunctionIterator_Type, Dee_DEXSYM_READONLY),
 DEX_END(NULL, NULL, NULL);
 
 DECL_END

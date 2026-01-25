@@ -94,7 +94,7 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
 #if 0
 	exc_hand->ex_stack = current_assembler.a_stackcur;
 #endif
-	exc_hand->ex_flags = EXCEPTION_HANDLER_FHANDLED;
+	exc_hand->ex_flags = Dee_EXCEPTION_HANDLER_FHANDLED;
 	++guard_begin->as_used;
 	++guard_end->as_used;
 	++temp->as_used;
@@ -111,7 +111,7 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
 #if 0
 	exc_hand->ex_stack = current_assembler.a_stackcur;
 #endif
-	exc_hand->ex_flags = EXCEPTION_HANDLER_FHANDLED;
+	exc_hand->ex_flags = Dee_EXCEPTION_HANDLER_FHANDLED;
 	++guard_begin->as_used;
 	++guard_end->as_used;
 	++temp->as_used;

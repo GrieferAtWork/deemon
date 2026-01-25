@@ -36,7 +36,7 @@ typedef struct {
 	/* Joined files are created when `operator |' is used on
 	 * a type derived from `File', in which case the 2 files
 	 * are used to create a so-called joined file type. */
-	FILE_OBJECT_HEAD
+	Dee_FILE_OBJECT_HEAD
 	size_t                                    j_count;  /* [const] Amount of files that are being joined together. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, j_files); /* [j_count][const] Vector of joined files.
 	                                                     * NOTE: This vector is accessible as an
@@ -55,7 +55,7 @@ typedef struct {
 	 *
 	 * It is not only used to automatically detect the encoding of a
 	 * file, but also be able to encode/decode its contents to/from UTF-8. */
-	FILE_OBJECT_HEAD
+	Dee_FILE_OBJECT_HEAD
 	DREF DeeObject *d_file;         /* [1..1][const] The underlying file stream. */
 #define DECODER_ENCODING_UNSET    0 /* Automatically determine the encoding upon first access. */
 #define DECODER_ENCODING_UTF8     1 /* UTF-8 or ASCII */

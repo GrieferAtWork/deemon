@@ -25,7 +25,7 @@
 #include <deemon/gc.h>
 #include <deemon/object.h>
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
-#include <deemon/util/objectlist.h> /* objectlist, objectlist_init */
+#include <deemon/util/objectlist.h> /* objectlist, Dee_objectlist_init */
 
 #include "../generic-proxy.h"
 
@@ -39,10 +39,10 @@ DECL_BEGIN
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t cswi_lock;  /* The lock used to synchronize the cache below. */
+	Dee_atomic_lock_t     cswi_lock;  /* The lock used to synchronize the cache below. */
 #endif /* !CONFIG_NO_THREADS */
-	DREF DeeObject   *cswi_iter;  /* [0..1][lock(cswi_lock)] The iterator whose results are being cached (or NULL once exhausted). */
-	struct objectlist cswi_cache; /* [lock(cswi_lock)] Cache of results returned by `cswi_iter' */
+	DREF DeeObject       *cswi_iter;  /* [0..1][lock(cswi_lock)] The iterator whose results are being cached (or NULL once exhausted). */
+	struct Dee_objectlist cswi_cache; /* [lock(cswi_lock)] Cache of results returned by `cswi_iter' */
 } CachedSeq_WithIter;
 
 /* Uses an auto-growing vector for elements, that is fed by an iterator. */
@@ -72,7 +72,7 @@ CachedSeq_WithIter_New(/*inherit(always)*/ DREF DeeObject *iter) {
 		goto err;
 	result->cswi_iter = iter; /* Inherit reference */
 	Dee_atomic_lock_init(&result->cswi_lock);
-	objectlist_init(&result->cswi_cache);
+	Dee_objectlist_init(&result->cswi_cache);
 	DeeObject_Init(result, &CachedSeq_WithIter_Type);
 	return DeeGC_TRACK(CachedSeq_WithIter, result);
 err:
@@ -144,7 +144,7 @@ typedef struct {
 	struct cachedseq_index cswgi_maxsize; /* [lock(cswgi_lock)] First index known to be out-of-bounds (or {NULL,(size_t)-1} if not yet calculated). */
 	struct cachedseq_index cswgi_loaded;  /* [lock(cswgi_lock)] # of leading, consecutive sequence elements that have been loaded (can assume that absence in the cache means UNBOUND) */
 	/* XXX: Remove "cswgi_vector"? */
-	struct objectlist      cswgi_vector;  /* [lock(cswgi_lock)] Cache for "small" indices (may contain NULL-elements) (s.a. `CACHEDSEQ_WITHGETITEM_ISSMALLINDEX') */
+	struct Dee_objectlist  cswgi_vector;  /* [lock(cswgi_lock)] Cache for "small" indices (may contain NULL-elements) (s.a. `CACHEDSEQ_WITHGETITEM_ISSMALLINDEX') */
 	struct indexbtab       cswgi_btab;    /* [lock(cswgi_lock)] Binary-table for "large" indices */
 } CachedSeq_WithGetItem;
 

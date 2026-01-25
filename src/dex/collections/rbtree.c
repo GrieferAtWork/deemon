@@ -1068,8 +1068,8 @@ rbtreeiter_visit(RBTreeIterator *__restrict self, Dee_visit_t proc, void *arg) {
 }
 
 PRIVATE struct type_nii tpconst rbtreeiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&rbtreeiter_nii_getseq,
@@ -1563,7 +1563,7 @@ int_a_plus_1_equals_b(DeeIntObject *a, DeeIntObject *b) {
 			goto nope;
 	} else {
 		for (i = 0;;) {
-			digit d;
+			Dee_digit_t d;
 			if (i >= a_size)
 				goto nope;
 			d = a->ob_digit[i] + 1;
@@ -3141,8 +3141,8 @@ rbtree_fini(RBTree *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rbtree_assign(RBTree *self, DeeObject *other) {
 	ATTR_ALIGNED(COMPILER_ALIGNOF(RBTree))
-	char buf[sizeof(RBTree) - DEE_OBJECT_OFFSETOF_DATA];
-	RBTree *temp = (RBTree *)(buf - DEE_OBJECT_OFFSETOF_DATA);
+	char buf[sizeof(RBTree) - Dee_OBJECT_OFFSETOF_DATA];
+	RBTree *temp = (RBTree *)(buf - Dee_OBJECT_OFFSETOF_DATA);
 	struct rbtree_node *old_tree;
 	if (DeeObject_InstanceOfExact(other, &RBTree_Type)) {
 		if unlikely(self == (RBTree *)other)
@@ -3239,13 +3239,13 @@ rbtree_bool(RBTree *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtree_repr(RBTree *__restrict self) {
-	struct unicode_printer p;
+	struct Dee_unicode_printer p;
 	struct rbtree_node *node;
 	uintptr_t version;
 	bool is_first;
 again:
-	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "RBTree({ ") < 0)
+	Dee_unicode_printer_init(&p);
+	if (Dee_UNICODE_PRINTER_PRINT(&p, "RBTree({ ") < 0)
 		goto err;
 	is_first = true;
 	RBTree_LockRead(self);
@@ -3264,13 +3264,13 @@ again:
 		Dee_Increfv(item, 3);
 		RBTree_LockEndRead(self);
 		if (!is_first) {
-			if unlikely(UNICODE_PRINTER_PRINT(&p, ", ") < 0) {
+			if unlikely(Dee_UNICODE_PRINTER_PRINT(&p, ", ") < 0) {
 				Dee_Decrefv_unlikely(item, 3);
 				goto err;
 			}
 		}
-		temp = unicode_printer_printf(&p, "[%r:%r]: %r",
-		                              item[0], item[1], item[2]);
+		temp = Dee_unicode_printer_printf(&p, "[%r:%r]: %r",
+		                                  item[0], item[1], item[2]);
 		Dee_Decrefv_unlikely(item, 3);
 		if unlikely(temp < 0)
 			goto err;
@@ -3283,16 +3283,16 @@ again:
 	} while ((node = rbtree_abi_nextnode(node)) != NULL);
 unlock_and_stop:
 	RBTree_LockEndRead(self);
-	if unlikely((is_first ? UNICODE_PRINTER_PRINT(&p, "})")
-	                      : UNICODE_PRINTER_PRINT(&p, " })")) < 0)
+	if unlikely((is_first ? Dee_UNICODE_PRINTER_PRINT(&p, "})")
+	                      : Dee_UNICODE_PRINTER_PRINT(&p, " })")) < 0)
 		goto err;
-	return unicode_printer_pack(&p);
+	return Dee_unicode_printer_pack(&p);
 restart:
 	RBTree_LockEndRead(self);
-	unicode_printer_fini(&p);
+	Dee_unicode_printer_fini(&p);
 	goto again;
 err:
-	unicode_printer_fini(&p);
+	Dee_unicode_printer_fini(&p);
 	return NULL;
 }
 

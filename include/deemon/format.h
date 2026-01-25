@@ -17,8 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeFormat_**/
+/*!export Dee_PCK**/
+/*!export Dee_PRF**/
+/*!export Dee_*s*printf**/
+/*!export PCK**/
+/*!export PRF**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_FORMAT_H
-#define GUARD_DEEMON_FORMAT_H 1
+#define GUARD_DEEMON_FORMAT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -85,76 +93,76 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
  * - DeeFormat_Printf()
  * - DeeString_Newf()
  * - ... */
-#define _Dee_PRF8 "" /* Due to integer promotions, we can assume that any 8-bit integral alwas
-                      * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
+#define _Dee_PRIVATE_PRF8 "" /* Due to integer promotions, we can assume that any 8-bit integral alwas
+                              * gets promoted to an integer, because we can assume that `sizeof(int) >= 1' */
 #if __VA_SIZE >= 2
-#define _Dee_PRF16 ""
+#define _Dee_PRIVATE_PRF16 ""
 #elif __SIZEOF_SHORT__ == 2
-#define _Dee_PRF16 "h"
+#define _Dee_PRIVATE_PRF16 "h"
 #elif __SIZEOF_LONG__ == 2
-#define _Dee_PRF16 "l"
+#define _Dee_PRIVATE_PRF16 "l"
 #elif __SIZEOF_POINTER__ == 2
-#define _Dee_PRF16 "I"
+#define _Dee_PRIVATE_PRF16 "I"
 #elif __SIZEOF_CHAR__ == 2
-#define _Dee_PRF16 "hh"
+#define _Dee_PRIVATE_PRF16 "hh"
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 2
-#define _Dee_PRF16 "ll"
+#define _Dee_PRIVATE_PRF16 "ll"
 #else /* ... == 2 */
-#define _Dee_PRF16 "I16"
+#define _Dee_PRIVATE_PRF16 "I16"
 #endif /* ... != 2 */
 #if __VA_SIZE >= 4
-#define _Dee_PRF32 ""
+#define _Dee_PRIVATE_PRF32 ""
 #elif __SIZEOF_LONG__ == 4
-#define _Dee_PRF32 "l"
+#define _Dee_PRIVATE_PRF32 "l"
 #elif __SIZEOF_SHORT__ == 4
-#define _Dee_PRF32 "h"
+#define _Dee_PRIVATE_PRF32 "h"
 #elif __SIZEOF_POINTER__ == 4
-#define _Dee_PRF32 "I"
+#define _Dee_PRIVATE_PRF32 "I"
 #elif __SIZEOF_CHAR__ == 4
-#define _Dee_PRF32 "hh"
+#define _Dee_PRIVATE_PRF32 "hh"
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 4
-#define _Dee_PRF32 "ll"
+#define _Dee_PRIVATE_PRF32 "ll"
 #else /* ... == 4 */
-#define _Dee_PRF32 "I32"
+#define _Dee_PRIVATE_PRF32 "I32"
 #endif /* ... != 4 */
 #if __VA_SIZE >= 8
-#define _Dee_PRF64 ""
+#define _Dee_PRIVATE_PRF64 ""
 #elif __SIZEOF_LONG__ == 8
-#define _Dee_PRF64 "l"
+#define _Dee_PRIVATE_PRF64 "l"
 #elif __SIZEOF_POINTER__ == 8
-#define _Dee_PRF64 "I"
+#define _Dee_PRIVATE_PRF64 "I"
 #elif __SIZEOF_SHORT__ == 8
-#define _Dee_PRF64 "h"
+#define _Dee_PRIVATE_PRF64 "h"
 #elif __SIZEOF_CHAR__ == 8
-#define _Dee_PRF64 "hh"
+#define _Dee_PRIVATE_PRF64 "hh"
 #elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_LONG_LONG__ == 8
-#define _Dee_PRF64 "ll"
+#define _Dee_PRIVATE_PRF64 "ll"
 #else /* ... == 8 */
-#define _Dee_PRF64 "I64"
+#define _Dee_PRIVATE_PRF64 "I64"
 #endif /* ... != 8 */
-#define _Dee_PRF128 "I128"
+#define _Dee_PRIVATE_PRF128 "I128"
 
 
-#define Dee_PRFu8   _Dee_PRF8 "u"
-#define Dee_PRFd8   _Dee_PRF8 "d"
-#define Dee_PRFx8   _Dee_PRF8 "x"
-#define Dee_PRFX8   _Dee_PRF8 "X"
-#define Dee_PRFu16  _Dee_PRF16 "u"
-#define Dee_PRFd16  _Dee_PRF16 "d"
-#define Dee_PRFx16  _Dee_PRF16 "x"
-#define Dee_PRFX16  _Dee_PRF16 "X"
-#define Dee_PRFu32  _Dee_PRF32 "u"
-#define Dee_PRFd32  _Dee_PRF32 "d"
-#define Dee_PRFx32  _Dee_PRF32 "x"
-#define Dee_PRFX32  _Dee_PRF32 "X"
-#define Dee_PRFu64  _Dee_PRF64 "u"
-#define Dee_PRFd64  _Dee_PRF64 "d"
-#define Dee_PRFx64  _Dee_PRF64 "x"
-#define Dee_PRFX64  _Dee_PRF64 "X"
-#define Dee_PRFu128 _Dee_PRF128 "u"
-#define Dee_PRFd128 _Dee_PRF128 "d"
-#define Dee_PRFx128 _Dee_PRF128 "x"
-#define Dee_PRFX128 _Dee_PRF128 "X"
+#define Dee_PRFu8   _Dee_PRIVATE_PRF8 "u"
+#define Dee_PRFd8   _Dee_PRIVATE_PRF8 "d"
+#define Dee_PRFx8   _Dee_PRIVATE_PRF8 "x"
+#define Dee_PRFX8   _Dee_PRIVATE_PRF8 "X"
+#define Dee_PRFu16  _Dee_PRIVATE_PRF16 "u"
+#define Dee_PRFd16  _Dee_PRIVATE_PRF16 "d"
+#define Dee_PRFx16  _Dee_PRIVATE_PRF16 "x"
+#define Dee_PRFX16  _Dee_PRIVATE_PRF16 "X"
+#define Dee_PRFu32  _Dee_PRIVATE_PRF32 "u"
+#define Dee_PRFd32  _Dee_PRIVATE_PRF32 "d"
+#define Dee_PRFx32  _Dee_PRIVATE_PRF32 "x"
+#define Dee_PRFX32  _Dee_PRIVATE_PRF32 "X"
+#define Dee_PRFu64  _Dee_PRIVATE_PRF64 "u"
+#define Dee_PRFd64  _Dee_PRIVATE_PRF64 "d"
+#define Dee_PRFx64  _Dee_PRIVATE_PRF64 "x"
+#define Dee_PRFX64  _Dee_PRIVATE_PRF64 "X"
+#define Dee_PRFu128 _Dee_PRIVATE_PRF128 "u"
+#define Dee_PRFd128 _Dee_PRIVATE_PRF128 "d"
+#define Dee_PRFx128 _Dee_PRIVATE_PRF128 "x"
+#define Dee_PRFX128 _Dee_PRIVATE_PRF128 "X"
 
 #define _Dee_PRIVATE_PRFu1         Dee_PRFu8
 #define _Dee_PRIVATE_PRFd1         Dee_PRFd8
@@ -243,7 +251,7 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
 
 /* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
- *       when targeting an `ascii_printer'
+ *       when targeting a `Dee_ascii_printer'
  * Output:
  * - ASCII+isprint --> keep
  * - ASCII+iscntrl --> \r, \n, \b, ...
@@ -306,7 +314,7 @@ DeeFormat_Print32(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                   size_t textlen);
 
 
-struct va_list_struct {
+struct Dee_va_list_struct {
 	va_list vl_ap;
 };
 
@@ -357,7 +365,7 @@ Dee_VPackf(char const *__restrict format, va_list args);
 
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Dee_VPPackf(char const **__restrict p_format,
-            struct va_list_struct *__restrict p_args);
+            struct Dee_va_list_struct *__restrict p_args);
 
 DFUNDEF NONNULL((1)) void DCALL
 Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
@@ -531,7 +539,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 (DCALL Dee_VPUnpackf)(DeeObject *__restrict self,
                       char const **__restrict p_format,
-                      struct va_list_struct *__restrict p_args);
+                      struct Dee_va_list_struct *__restrict p_args);
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL Dee_UnpackStruct)(DeeObject *__restrict self,
                          char const *__restrict format, void *out);
@@ -586,8 +594,8 @@ DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 
 
 #ifndef Dee_operator_t_DEFINED
-#define Dee_operator_t_DEFINED
-typedef uint16_t Dee_operator_t;
+#define Dee_operator_t_DEFINED   /*!export-*/
+typedef uint16_t Dee_operator_t; /*!export-*/
 #endif /* !Dee_operator_t_DEFINED */
 
 /* Print a representation of invoking operator `name' on `self' with the given arguments.

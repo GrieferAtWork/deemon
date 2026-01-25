@@ -17,8 +17,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeHeap_**/
+/*!export DeeDbgHeap_**/
+/*!export Dee_HEAPCHUNK_**/
+/*!export Dee_HEAP_M_**/
+/*!export Dee_heapregion_**/
 #ifndef GUARD_DEEMON_HEAP_H
-#define GUARD_DEEMON_HEAP_H 1
+#define GUARD_DEEMON_HEAP_H 1 /*!export-*/
 
 #include "api.h"
 

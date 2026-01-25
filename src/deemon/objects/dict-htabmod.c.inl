@@ -85,7 +85,7 @@ LOCAL_dict_htab_modify8(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint
 	}
 }
 
-#if DEE_DICT_HIDXIO_COUNT >= 2
+#if Dee_DICT_HIDXIO_COUNT >= 2
 LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify16(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint16_t)) {
 	size_t i;
@@ -94,9 +94,9 @@ LOCAL_dict_htab_modify16(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 		LOCAL_modify(htab[i]);
 	}
 }
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
+#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
 
-#if DEE_DICT_HIDXIO_COUNT >= 3
+#if Dee_DICT_HIDXIO_COUNT >= 3
 LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify32(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint32_t)) {
 	size_t i;
@@ -105,9 +105,9 @@ LOCAL_dict_htab_modify32(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 		LOCAL_modify(htab[i]);
 	}
 }
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
+#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
 
-#if DEE_DICT_HIDXIO_COUNT >= 4
+#if Dee_DICT_HIDXIO_COUNT >= 4
 LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify64(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint64_t)) {
 	size_t i;
@@ -116,28 +116,28 @@ LOCAL_dict_htab_modify64(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 		LOCAL_modify(htab[i]);
 	}
 }
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
 
 INTERN ATTR_NOINLINE NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(Dee_dict_vidx_t)) {
-	if (DEE_DICT_HIDXIO_IS8(self->d_valloc)) {
+	if (Dee_DICT_HIDXIO_IS8(self->d_valloc)) {
 		LOCAL_dict_htab_modify8(self LOCAL_dict_htab_modify__ARGS(uint8_t));
 	} else
-#if DEE_DICT_HIDXIO_COUNT >= 2
-	if (DEE_DICT_HIDXIO_IS16(self->d_valloc)) {
+#if Dee_DICT_HIDXIO_COUNT >= 2
+	if (Dee_DICT_HIDXIO_IS16(self->d_valloc)) {
 		LOCAL_dict_htab_modify16(self LOCAL_dict_htab_modify__ARGS(uint16_t));
 	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
-#if DEE_DICT_HIDXIO_COUNT >= 3
-	if (DEE_DICT_HIDXIO_IS32(self->d_valloc)) {
+#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
+#if Dee_DICT_HIDXIO_COUNT >= 3
+	if (Dee_DICT_HIDXIO_IS32(self->d_valloc)) {
 		LOCAL_dict_htab_modify32(self LOCAL_dict_htab_modify__ARGS(uint32_t));
 	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
-#if DEE_DICT_HIDXIO_COUNT >= 4
-	if (DEE_DICT_HIDXIO_IS64(self->d_valloc)) {
+#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
+#if Dee_DICT_HIDXIO_COUNT >= 4
+	if (Dee_DICT_HIDXIO_IS64(self->d_valloc)) {
 		LOCAL_dict_htab_modify64(self LOCAL_dict_htab_modify__ARGS(uint64_t));
 	} else
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
 	{
 		__builtin_unreachable();
 	}

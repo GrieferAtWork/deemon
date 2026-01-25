@@ -46,7 +46,7 @@ struct seq_combinations {
 
 struct seq_combinations_iterator {
 	PROXY_OBJECT_HEAD_EX(SeqCombinations, sci_com)  /* [1..1][const] Underlying sequence combinations controller */
-	WEAKREF(SeqCombinationsView)          sci_view; /* [0..1] View that is aliasing "sci_idx" */
+	Dee_WEAKREF(SeqCombinationsView)      sci_view; /* [0..1] View that is aliasing "sci_idx" */
 	COMPILER_FLEXIBLE_ARRAY(size_t,       sci_idx); /* [lock(ATOMIC)][sci_com->sc_rparam] Index matrix */
 };
 
@@ -59,7 +59,7 @@ struct seq_combinations_view {
 	                                                         * and dereference it without needing to hold any locks, because
 	                                                         * at the moment that this pointer is exchanged, the old location
 	                                                         * will remain valid. */
-	WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 };
 
 /* Get/Set(once) the "scv_idx" field of "SeqCombinationsView" */

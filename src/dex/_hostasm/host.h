@@ -194,7 +194,7 @@
 
 DECL_BEGIN
 
-#define Dee_function_object function_object
+#define Dee_function_object Dee_function_object
 struct Dee_function_object;
 
 
@@ -233,18 +233,18 @@ union host_rawfunc_entry {
 	DREF DeeObject *(DCALL *hfe_call_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);                                                            /* HOST_CC_CALL_KW */
 	DREF DeeObject *(DCALL *hfe_call_tuple)(DeeObject *args);                                                                                            /* HOST_CC_CALL_TUPLE */
 	DREF DeeObject *(DCALL *hfe_call_tuple_kw)(DeeObject *args, DeeObject *kw);                                                                          /* HOST_CC_CALL_TUPLE_KW */
-	DREF DeeObject *(DCALL *hfe_func_call)(struct function_object *func, size_t argc, DeeObject *const *argv);                                           /* HOST_CC_FUNC_CALL */
-	DREF DeeObject *(DCALL *hfe_func_call_kw)(struct function_object *func, size_t argc, DeeObject *const *argv, DeeObject *kw);                         /* HOST_CC_FUNC_CALL_KW */
-	DREF DeeObject *(DCALL *hfe_func_call_tuple)(struct function_object *func, DeeObject *args);                                                         /* HOST_CC_FUNC_CALL_TUPLE */
-	DREF DeeObject *(DCALL *hfe_func_call_tuple_kw)(struct function_object *func, DeeObject *args, DeeObject *kw);                                       /* HOST_CC_FUNC_CALL_TUPLE_KW */
+	DREF DeeObject *(DCALL *hfe_func_call)(struct Dee_function_object *func, size_t argc, DeeObject *const *argv);                                           /* HOST_CC_FUNC_CALL */
+	DREF DeeObject *(DCALL *hfe_func_call_kw)(struct Dee_function_object *func, size_t argc, DeeObject *const *argv, DeeObject *kw);                         /* HOST_CC_FUNC_CALL_KW */
+	DREF DeeObject *(DCALL *hfe_func_call_tuple)(struct Dee_function_object *func, DeeObject *args);                                                         /* HOST_CC_FUNC_CALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_func_call_tuple_kw)(struct Dee_function_object *func, DeeObject *args, DeeObject *kw);                                       /* HOST_CC_FUNC_CALL_TUPLE_KW */
 	DREF DeeObject *(DCALL *hfe_thiscall)(DeeObject *thisarg, size_t argc, DeeObject *const *argv);                                                      /* HOST_CC_THISCALL */
 	DREF DeeObject *(DCALL *hfe_thiscall_kw)(DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);                                    /* HOST_CC_THISCALL_KW */
 	DREF DeeObject *(DCALL *hfe_thiscall_tuple)(DeeObject *thisarg, DeeObject *args);                                                                    /* HOST_CC_THISCALL_TUPLE */
 	DREF DeeObject *(DCALL *hfe_thiscall_tuple_kw)(DeeObject *thisarg, DeeObject *args, DeeObject *kw);                                                  /* HOST_CC_THISCALL_TUPLE_KW */
-	DREF DeeObject *(DCALL *hfe_func_thiscall)(struct function_object *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv);                   /* HOST_CC_FUNC_THISCALL */
-	DREF DeeObject *(DCALL *hfe_func_thiscall_kw)(struct function_object *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw); /* HOST_CC_FUNC_THISCALL_KW */
-	DREF DeeObject *(DCALL *hfe_func_thiscall_tuple)(struct function_object *func, DeeObject *thisarg, DeeObject *args);                                 /* HOST_CC_FUNC_THISCALL_TUPLE */
-	DREF DeeObject *(DCALL *hfe_func_thiscall_tuple_kw)(struct function_object *func, DeeObject *thisarg, DeeObject *args, DeeObject *kw);               /* HOST_CC_FUNC_THISCALL_TUPLE_KW */
+	DREF DeeObject *(DCALL *hfe_func_thiscall)(struct Dee_function_object *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv);                   /* HOST_CC_FUNC_THISCALL */
+	DREF DeeObject *(DCALL *hfe_func_thiscall_kw)(struct Dee_function_object *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw); /* HOST_CC_FUNC_THISCALL_KW */
+	DREF DeeObject *(DCALL *hfe_func_thiscall_tuple)(struct Dee_function_object *func, DeeObject *thisarg, DeeObject *args);                                 /* HOST_CC_FUNC_THISCALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_func_thiscall_tuple_kw)(struct Dee_function_object *func, DeeObject *thisarg, DeeObject *args, DeeObject *kw);               /* HOST_CC_FUNC_THISCALL_TUPLE_KW */
 };
 
 

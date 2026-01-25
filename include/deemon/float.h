@@ -17,8 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeFloat_**/
+/*!export Dee_FLOAT_PRINT_F**/
+/*!export CONFIG_HAVE_IEEE754**/
+/*!export Dee_Strto*d*/
 #ifndef GUARD_DEEMON_FLOAT_H
-#define GUARD_DEEMON_FLOAT_H 1
+#define GUARD_DEEMON_FLOAT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -68,18 +73,15 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define Dee_float_object float_object
-#define DEFINE_FLOAT     Dee_DEFINE_FLOAT
+#define DEFINE_FLOAT Dee_DEFINE_FLOAT
 #endif /* DEE_SOURCE */
 
-typedef struct Dee_float_object DeeFloatObject;
-
-struct Dee_float_object {
+typedef struct Dee_float_object {
 	Dee_OBJECT_HEAD
 #ifdef CONFIG_HAVE_FPU
 	double      f_value; /* [const] The value of this float as a C-double. */
 #endif /* CONFIG_HAVE_FPU */
-};
+} DeeFloatObject;
 
 #ifdef CONFIG_HAVE_FPU
 #define Dee_DEFINE_FLOAT(name, value) DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), value }
@@ -109,7 +111,7 @@ DFUNDEF NONNULL((1)) __LONGDOUBLE DCALL Dee_Strtold(char const *str, char **p_en
 
 
 /* Print a string representation of the given floating point value.
- * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
+ * @param: flags: Set of `Dee_FLOAT_PRINT_F*' */
 #ifdef CONFIG_HAVE_FPU
 DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 DeeFloat_Print(double value, Dee_formatprinter_t printer, void *arg,
@@ -120,15 +122,15 @@ DeeFloat_LPrint(__LONGDOUBLE value, Dee_formatprinter_t printer, void *arg,
                 size_t width, size_t precision, unsigned int flags);
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 #define DeeFloat_PrintRepr(self, printer, arg) \
-	DeeFloat_Print(DeeFloat_VALUE(self), printer, arg, 0, 0, DEEFLOAT_PRINT_FNORMAL)
+	DeeFloat_Print(DeeFloat_VALUE(self), printer, arg, 0, 0, Dee_FLOAT_PRINT_FNORMAL)
 #endif /* CONFIG_HAVE_FPU */
-#define DEEFLOAT_PRINT_FNORMAL    0x0000 /* Normal printing flags. */
-#define DEEFLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */
-#define DEEFLOAT_PRINT_FSIGN      0x0004 /* Always print a sign. */
-#define DEEFLOAT_PRINT_FSPACE     0x0008 /* When no sign is printed, put a space character instead. */
-#define DEEFLOAT_PRINT_FPADZERO   0x0010 /* Use '0' to pad leading digits to fit `width'. */
-#define DEEFLOAT_PRINT_FWIDTH     0x0020 /* The given `width' must be respected. */
-#define DEEFLOAT_PRINT_FPRECISION 0x0040 /* The given `precision' must be respected. */
+#define Dee_FLOAT_PRINT_FNORMAL    0x0000 /* Normal printing flags. */
+#define Dee_FLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */
+#define Dee_FLOAT_PRINT_FSIGN      0x0004 /* Always print a sign. */
+#define Dee_FLOAT_PRINT_FSPACE     0x0008 /* When no sign is printed, put a space character instead. */
+#define Dee_FLOAT_PRINT_FPADZERO   0x0010 /* Use '0' to pad leading digits to fit `width'. */
+#define Dee_FLOAT_PRINT_FWIDTH     0x0020 /* The given `width' must be respected. */
+#define Dee_FLOAT_PRINT_FPRECISION 0x0040 /* The given `precision' must be respected. */
 
 DECL_END
 

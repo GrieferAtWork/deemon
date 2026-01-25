@@ -302,8 +302,8 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	 *    As far as runtime support goes, that's already there:
 	 *     - __stack/local variables don't need runtime support, as they would be handled by the compiler
 	 *     - global variables already provide and implement 2 flags:
-	 *       - MODSYM_FREADONLY   (enables write-once semantics)
-	 *       - MODSYM_FCONSTEXPR  (allows the optimizer to inline the symbol's value)
+	 *       - Dee_MODSYM_FREADONLY   (enables write-once semantics)
+	 *       - Dee_MODSYM_FCONSTEXPR  (allows the optimizer to inline the symbol's value)
 	 *    foo.dee:
 	 *    >> global normal_global = 42;
 	 *    >> global final fixed_value = 42;

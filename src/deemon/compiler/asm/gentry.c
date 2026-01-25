@@ -154,7 +154,7 @@ INTERN WUNUSED NONNULL((1)) int
 	end         = (iter = try_ast->a_try.t_catchv) + try_ast->a_try.t_catchc;
 	old_finflag = current_assembler.a_finflag;
 	for (; iter < end; ++iter) {
-		if (!(iter->ce_flags & EXCEPTION_HANDLER_FFINALLY))
+		if (!(iter->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY))
 			continue;
 		my_first_finally = asm_newsym();
 		if unlikely(!my_first_finally)
@@ -277,7 +277,7 @@ gen_guard:
 		catch_mask                  = NULL;
 		/* Keep track of what kind of handler this is. */
 		hand_frame.hf_flags = iter->ce_flags;
-		if (hand_frame.hf_flags & EXCEPTION_HANDLER_FFINALLY) {
+		if (hand_frame.hf_flags & Dee_EXCEPTION_HANDLER_FFINALLY) {
 			struct asm_sym *finally_exit = NULL;
 			/* Finally handlers are written in-line directly after the protected code.
 			 * Additionally, their stack alignment matches that of the guarded code,
@@ -318,7 +318,7 @@ gen_guard:
 				uint16_t num_catch = 0;
 				catch_iter         = current_assembler.a_handler;
 				for (; catch_iter; catch_iter = catch_iter->hf_prev) {
-					if (!(catch_iter->hf_flags & EXCEPTION_HANDLER_FFINALLY))
+					if (!(catch_iter->hf_flags & Dee_EXCEPTION_HANDLER_FFINALLY))
 						++num_catch;
 				}
 				if (asm_gendfinally_n(num_catch))
@@ -329,7 +329,7 @@ gen_guard:
 				struct catch_expr *iter2     = iter + 1;
 				struct asm_sym *next_finally = existing_finally;
 				for (; iter2 < end; ++iter2) {
-					if (!(iter2->ce_flags & EXCEPTION_HANDLER_FFINALLY))
+					if (!(iter2->ce_flags & Dee_EXCEPTION_HANDLER_FFINALLY))
 						continue;
 					next_finally = asm_newsym();
 					if unlikely(!next_finally)
@@ -428,7 +428,7 @@ gen_guard:
 			/* Set the FFINALLY flag in the resulting code object, thus
 			 * ensuring that finally-blocks are executed after return. */
 			if (is_guarding)
-				current_basescope->bs_flags |= CODE_FFINALLY;
+				current_basescope->bs_flags |= Dee_CODE_FFINALLY;
 		} else {
 			struct asm_sec *prev_section;
 			struct asm_sym *jump_across = NULL;
@@ -699,7 +699,7 @@ do_multimask_rethrow:
 			 * handler that would not contain any code other than `throw except'
 			 * to re-throw the last error. (or rather continue handling it)
 			 * Such a handler can be optimized by making use of the
-			 * `EXCEPTION_HANDLER_FHANDLED' flag to let the runtime handle
+			 * `Dee_EXCEPTION_HANDLER_FHANDLED' flag to let the runtime handle
 			 * its associated exception before using the handler's guard
 			 * end address as its entry point, continuing execution after
 			 * the error has been discarded.
@@ -746,7 +746,7 @@ do_multimask_rethrow:
 				handler_entry->as_addr = (code_addr_t)(prev_section->sec_iter - prev_section->sec_begin);
 				/* Use the FHANDLED flag to discard the error,
 				 * rather than generating text to do the same. */
-				hand_frame.hf_flags |= EXCEPTION_HANDLER_FHANDLED;
+				hand_frame.hf_flags |= Dee_EXCEPTION_HANDLER_FHANDLED;
 			} else {
 				/* Before regular exit from a catch-block, handle the current exception. */
 				if (asm_gendcatch())
@@ -793,7 +793,7 @@ do_multimask_rethrow:
 #if 0
 						descriptor->ex_stack = handler_stack;
 #endif
-						descriptor->ex_flags = EXCEPTION_HANDLER_FNORMAL;
+						descriptor->ex_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 					}
 
 					/* This is the cleanup code. */

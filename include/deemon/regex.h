@@ -17,8 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export Dee_RE_**/
+/*!export DeeRegex**/
 #ifndef GUARD_DEEMON_REGEX_H
-#define GUARD_DEEMON_REGEX_H 1
+#define GUARD_DEEMON_REGEX_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -55,26 +58,26 @@ struct DeeRegexCode {
 	uint16_t      rc_ngrps;     /* # of groups referenced by code (<= 0x100) */
 	uint16_t      rc_nvars;     /* # of variables referenced by code (<= 0x100) */
 	uint8_t       rc_flags;     /* Regex code flags (set of `RE_CODE_FLAG_*') */
-#define DEE_RE_CODE_FLAG_NORMAL     0x00 /* Normal flags. */
-#define DEE_RE_CODE_FLAG_NEEDGROUPS 0x01 /* Groups are expected to be correct (set if `REOP_GROUP_MATCH*' opcodes are used) */
-#define DEE_RE_CODE_FLAG_OPTGROUPS  0x02 /* The regex code contains optional groups (e.g. "foo(x)?bar" or "foo(|b(a)r)") */
+#define Dee_RE_CODE_FLAG_NORMAL     0x00 /* Normal flags. */
+#define Dee_RE_CODE_FLAG_NEEDGROUPS 0x01 /* Groups are expected to be correct (set if `REOP_GROUP_MATCH*' opcodes are used) */
+#define Dee_RE_CODE_FLAG_OPTGROUPS  0x02 /* The regex code contains optional groups (e.g. "foo(x)?bar" or "foo(|b(a)r)") */
 	__COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, rc_code); /* Code buffer (`REOP_*' instruction stream) */
 };
 
 
 /* Possible flags for `DeeString_GetRegex()' */
-#define DEE_REGEX_COMPILE_NORMAL 0x0000 /* Normal regex compiler flags */
-#define DEE_REGEX_COMPILE_ICASE  0x0001 /* Produce a case-insensitive pattern */
-#define DEE_REGEX_COMPILE_NOUTF8 0x0002 /* Disable utf-8 processing; pattern is parsed and matched as byte-only */
+#define Dee_RE_COMPILE_NORMAL 0x0000 /* Normal regex compiler flags */
+#define Dee_RE_COMPILE_ICASE  0x0001 /* Produce a case-insensitive pattern */
+#define Dee_RE_COMPILE_NOUTF8 0x0002 /* Disable utf-8 processing; pattern is parsed and matched as byte-only */
 
 /* Lazily compile `self' as a deemon regex pattern.
  * Regex patterns for strings are compiled once, and cached thereafter,
  * before being destroyed at the same time as the corresponding string.
- * @param: compile_flags: Set of `DEE_REGEX_COMPILE_*'
+ * @param: compile_flags: Set of `Dee_RE_COMPILE_*'
  * @param: rules:         When non-NULL, a string containing extra rules
  *                        that are or'd into `compile_flags'. For this purpose,
  *                        each character from `rules' is parsed as a flag:
- *                        - "i": DEE_REGEX_COMPILE_ICASE
+ *                        - "i": Dee_RE_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) struct DeeRegexCode const *DCALL
@@ -102,8 +105,8 @@ struct DeeRegexMatch {
 };
 
 /* Flags for `struct DeeRegexExec::rx_eflags' */
-#define DEE_RE_EXEC_NOTBOL 0x0001 /* '^' (REOP_AT_SOL) doesn't match at the start of the input buffer (but only at an actual begin-of-line) */
-#define DEE_RE_EXEC_NOTEOL 0x0002 /* '$' (REOP_AT_EOL) doesn't match at the end of the input buffer (but only before an actual line-feed) */
+#define Dee_RE_EXEC_NOTBOL 0x0001 /* '^' (REOP_AT_SOL) doesn't match at the start of the input buffer (but only at an actual begin-of-line) */
+#define Dee_RE_EXEC_NOTEOL 0x0002 /* '$' (REOP_AT_EOL) doesn't match at the end of the input buffer (but only before an actual line-feed) */
 
 struct DeeRegexExec {
 	struct DeeRegexCode const *rx_code;     /* [1..1] Regex code */
@@ -113,24 +116,24 @@ struct DeeRegexExec {
 	                                         * - Upon failure, the contents of this buffer are left in an undefined state
 	                                         * - Offsets written INCLUDE `rx_startoff' (i.e. are always `>= rx_startoff') */
 	void const                *rx_inbase;   /* [0..rx_insize][valid_if(rx_startoff < rx_endoff)] Input data to scan
-	                                         * When `rx_code' was compiled with `DEE_REGEX_COMPILE_NOUTF8', this data
+	                                         * When `rx_code' was compiled with `Dee_RE_COMPILE_NOUTF8', this data
 	                                         * is treated as raw bytes; otherwise, it is treated as a utf-8 string.
 	                                         * In either case, `rx_insize' is the # of bytes within this buffer. */
 	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase' */
 	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase' of data to match. */
 	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase' of data to match. */
-	unsigned int               rx_eflags;   /* Execution-flags (set of `DEE_RE_EXEC_*') */
+	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*') */
 };
 
 /* Special return values for functions below. */
-#define DEE_RE_STATUS_NOMATCH (-1) /* Nothing was matched */
-#define DEE_RE_STATUS_ERROR   (-2) /* An error occurred */
+#define Dee_RE_STATUS_NOMATCH (-1) /* Nothing was matched */
+#define Dee_RE_STATUS_ERROR   (-2) /* An error occurred */
 
 
 /* Perform a regex match
  * @return: >= 0: The # of matched bytes starting at `exec->rx_startoff'
- * @return: DEE_RE_STATUS_NOMATCH: Nothing was matched
- * @return: DEE_RE_STATUS_ERROR:   An error occurred */
+ * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
+ * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_Match(struct DeeRegexExec const *__restrict exec);
 
@@ -142,8 +145,8 @@ DeeRegex_Match(struct DeeRegexExec const *__restrict exec);
  * @param: p_match_size: When non-NULL, set to the # of bytes that were actually matched.
  *                       This would have  been the return  value of  `re_exec_match(3R)'.
  * @return: >= 0:        The offset where the matched area starts (in `[exec->rx_startoff, exec->rx_startoff + search_range)').
- * @return: DEE_RE_STATUS_NOMATCH: Nothing was matched
- * @return: DEE_RE_STATUS_ERROR:   An error occurred */
+ * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
+ * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_Search(struct DeeRegexExec const *__restrict exec,
                 size_t search_range, size_t *p_match_size);

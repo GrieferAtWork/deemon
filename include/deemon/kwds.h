@@ -17,8 +17,18 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeArg_TryGetKwNR**/
+/*!export DeeBlackListKw**/
+/*!export DeeBlackListKwds**/
+/*!export DeeKwArgs**/
+/*!export DeeKwBlackList_**/
+/*!export DeeKwMapping_**/
+/*!export DeeKw_**/
+/*!export DeeKwdsMapping**/
+/*!export DeeKwds**/
 #ifndef GUARD_DEEMON_KWDS_H
-#define GUARD_DEEMON_KWDS_H 1
+#define GUARD_DEEMON_KWDS_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -137,18 +147,7 @@ DECL_BEGIN
  *     - Prints "{ "b": 20 }"
  */
 
-
-#ifdef DEE_SOURCE
-#define Dee_kwds_entry    kwds_entry
-#define Dee_string_object string_object
-#define Dee_kwds_object   kwds_object
-#define Dee_kwargs        kwargs
-#define DEFINE_KWDS       Dee_DEFINE_KWDS
-#define Dee_code_object   code_object
-#endif /* DEE_SOURCE */
-
 struct Dee_string_object;
-struct Dee_code_object;
 
 struct Dee_kwds_entry {
 	DREF struct Dee_string_object *ke_name;  /* [1..1][SENTINAL(NULL)] Keyword name. */
@@ -160,8 +159,7 @@ struct Dee_kwds_entry {
 	                                          *       argument, aka. `(argc - :kw_size) + 0' */
 };
 
-typedef struct Dee_kwds_object DeeKwdsObject;
-struct Dee_kwds_object {
+typedef struct Dee_kwds_object {
 	/* This type of object is used by user-code to
 	 * re-map the designation of optional arguments.
 	 * When given, unpacking the an argument list will
@@ -203,7 +201,7 @@ struct Dee_kwds_object {
 	size_t                                         kw_size; /* [const] The number of valid entries in `kw_map'. */
 	size_t                                         kw_mask; /* [const] Mask for keyword names. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_kwds_entry, kw_map); /* [kw_mask+1][const] Keyword name->index map. */
-};
+} DeeKwdsObject;
 #define DeeKwds_MAPNEXT(i, perturb) \
 	((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 
@@ -510,6 +508,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeKw_TryGetItemNRStringLenHash
 #define DeeKw_TryGetItemNRString(kw, name)             DeeKw_TryGetItemNRStringHash(kw, name, Dee_HashStr(name))
 #define DeeKw_TryGetItemNRStringLen(kw, name, namelen) DeeKw_TryGetItemNRStringLenHash(kw, name, namelen, Dee_HashPtr(name, namelen))
 
+
+struct Dee_code_object;
 
 /* Construct the canonical wrapper for "**kwds" in a user-defined function,
  * such that the names of positional arguments passed via "kw" are black-listed.

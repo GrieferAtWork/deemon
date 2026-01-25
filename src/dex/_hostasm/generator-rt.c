@@ -72,15 +72,15 @@ INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 libhostasm_rt_err_unbound_local(DeeCodeObject *code, void *ip, uint16_t local_index) {
 	char const *code_name = NULL;
 	uint8_t *error;
-	struct ddi_state state;
+	struct Dee_ddi_state state;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ASSERT(local_index < code->co_localc);
 	error = DeeCode_FindDDI(Dee_AsObject(code), &state, NULL,
 	                        (code_addr_t)((instruction_t *)ip - code->co_code),
-	                        DDI_STATE_FNOTHROW);
-	if (DDI_ISOK(error)) {
-		struct ddi_xregs *iter;
-		DDI_STATE_DO(iter, &state) {
+	                        Dee_DDI_STATE_FNOTHROW);
+	if (Dee_DDI_ISOK(error)) {
+		struct Dee_ddi_xregs *iter;
+		Dee_DDI_STATE_DO(iter, &state) {
 			if (local_index < iter->dx_lcnamc) {
 				char const *local_name;
 				if (!code_name)
@@ -98,7 +98,7 @@ libhostasm_rt_err_unbound_local(DeeCodeObject *code, void *ip, uint16_t local_in
 				}
 			}
 		}
-		DDI_STATE_WHILE(iter, &state);
+		Dee_DDI_STATE_WHILE(iter, &state);
 		Dee_ddi_state_fini(&state);
 	}
 	if (!code_name)
@@ -118,8 +118,7 @@ libhostasm_rt_err_unbound_arg(DeeCodeObject *code, void *ip, uint16_t arg_index)
 	ASSERT(arg_index < code->co_argc_max);
 	code_name = DeeCode_NAME(code);
 	if (code->co_keywords) {
-		struct string_object *kwname;
-		kwname = code->co_keywords[arg_index];
+		DeeStringObject *kwname = code->co_keywords[arg_index];
 		if (!DeeString_IsEmpty(kwname)) {
 			return DeeError_Throwf(&DeeError_UnboundLocal,
 			                       "Unbound argument %k%s%s",
@@ -165,32 +164,32 @@ libhostasm_rt_err_unbound_class_member(DeeTypeObject *__restrict class_type, uin
 	/* Check if we can find the proper member so we can pass its name. */
 	size_t i;
 	char const *name = "??" "?";
-	struct class_desc *desc;
+	struct Dee_class_desc *desc;
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
 	desc = DeeClass_DESC(class_type);
 	for (i = 0; i <= desc->cd_desc->cd_cattr_mask; ++i) {
-		struct class_attribute *attr;
+		struct Dee_class_attribute *attr;
 		attr = &desc->cd_desc->cd_cattr_list[i];
 		if (!attr->ca_name)
 			continue;
 		if (addr < attr->ca_addr)
 			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
 			continue;
 		name = DeeString_STR(attr->ca_name);
 		goto got_it;
 	}
 	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
-		struct class_attribute *attr;
+		struct Dee_class_attribute *attr;
 		attr = &desc->cd_desc->cd_iattr_list[i];
 		if (!attr->ca_name)
 			continue;
 		if (addr < attr->ca_addr)
 			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
 			continue;
-		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM))
 			continue;
 		name = DeeString_STR(attr->ca_name);
 		goto got_it;
@@ -205,20 +204,20 @@ libhostasm_rt_err_unbound_instance_member(DeeTypeObject *__restrict class_type, 
 	/* Check if we can find the proper member so we can pass its name. */
 	size_t i;
 	char const *name = "??" "?";
-	struct class_desc *desc;
+	struct Dee_class_desc *desc;
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
 	desc = DeeClass_DESC(class_type);
 	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
-		struct class_attribute *attr;
+		struct Dee_class_attribute *attr;
 		attr = &desc->cd_desc->cd_iattr_list[i];
 		if (!attr->ca_name)
 			continue;
 		if (addr < attr->ca_addr)
 			continue;
-		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
 			continue;
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 			continue;
 		name = DeeString_STR(attr->ca_name);
 		break;

@@ -138,7 +138,7 @@ INTDEF WUNUSED NONNULL((1, 2)) bool (DCALL scope_reaches_symbol)(struct scope_ob
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
 
 
-struct unicode_printer;
+struct Dee_unicode_printer;
 
 /* @return: 0:  OK
  * @return: -1: Error. */
@@ -154,7 +154,7 @@ set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
 /* Print the repr-form of the given ast-location to the given unicode printer `(filename, line, col)' */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 print_ast_loc_repr(struct ast_loc *__restrict self,
-                   struct unicode_printer *__restrict printer);
+                   struct Dee_unicode_printer *__restrict printer);
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
  * @return: -2:      A keyword wasn't found (and `create_missing' was false) */

@@ -1,6 +1,6 @@
 
 #define __SIZEOF_POINTER__        8
-#define DEE_EXEC_ALTSTACK_SIZE   (__SIZEOF_POINTER__*1024*512)
+#define Dee_EXEC_ALTSTACK_SIZE   (__SIZEOF_POINTER__*1024*512)
 
 #ifndef _MSC_VER
 #error "Only meant for MSVC version"
@@ -31,7 +31,7 @@ DeeCode_ExecFrameSafeAltStack PROC
 	push  RAX /* Preserve the alt-stack base-pointer */
 	push  RBX
 	mov   RBX, RSP
-	lea   RSP, [RAX + DEE_EXEC_ALTSTACK_SIZE - 32]
+	lea   RSP, [RAX + Dee_EXEC_ALTSTACK_SIZE - 32]
 	call  DeeCode_ExecFrameSafe
 	mov   RSP, RBX
 	pop   RBX
@@ -56,7 +56,7 @@ DeeCode_ExecFrameFastAltStack PROC
 	push  RAX /* Preserve the alt-stack base-pointer */
 	push  RBX
 	mov   RBX, RSP
-	lea   RSP, [RAX + DEE_EXEC_ALTSTACK_SIZE - 32]
+	lea   RSP, [RAX + Dee_EXEC_ALTSTACK_SIZE - 32]
 	call  DeeCode_ExecFrameFast
 	mov   RSP, RBX
 	pop   RBX

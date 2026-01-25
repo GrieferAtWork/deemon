@@ -17,27 +17,36 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeMA_**/
+/*!export DeeMA_*_t*/
+/*!export DeeObject_*MethodHint**/
+/*!export DeeType_*MethodHint**/
+/*!export DeeType_Has*Trait*/
+/*!export DeeType_TRAIT_**/
+/*!export Dee_TYPE_METHOD_HINT**/
+/*!export TYPE_METHOD_HINT**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_METHOD_HINTS_H
-#define GUARD_DEEMON_METHOD_HINTS_H 1
+#define GUARD_DEEMON_METHOD_HINTS_H 1 /*!export-*/
 
 #include "api.h"
 
 #include <hybrid/typecore.h> /* __UINTPTR_HALF_TYPE__ */
 
 #include "types.h"
-#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
-#include "object.h" /* struct Dee_type_object::tp_mhcache */
-#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
-/**/
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
+
+#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
+#include "object.h" /* struct Dee_type_object::tp_mhcache */
+#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
 #define Dee_type_method_hint type_method_hint
-#define Dee_super_object     super_object
 #endif /* DEE_SOURCE */
 
 /*
@@ -84,6 +93,7 @@ typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_seq_enumerate_t)(void *
 typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_seq_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
 
 #if 0
+/*!export -my_**/
 struct my_foreach_data {
 };
 
@@ -922,15 +932,15 @@ typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_enumerate_inde
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifdef __INTELLISENSE__
-#define _DeeMA_ATTRSTR(x) (#x)
+#define _DeeMA_ATTRSTR(x) (#x) /*!export-*/
 #else /* __INTELLISENSE__ */
 /* Load attribute names from built-in string constants
  * (where all of these attributes have to appear also) */
-#include "../../src/deemon/runtime/strings.h"
-#define _DeeMA_ATTRSTR(x) STR_##x
+#include "../../src/deemon/runtime/strings.h" /*!KEEPME*/
+#define _DeeMA_ATTRSTR(x) STR_##x /*!export-*/
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_BUILDING_DEEMON */
-#define _DeeMA_ATTRSTR(x) #x
+#define _DeeMA_ATTRSTR(x) #x /*!export-*/
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 /*[[[deemon (printMethodAttributeDecls from "...src.deemon.method-hints.method-hints")();]]]*/

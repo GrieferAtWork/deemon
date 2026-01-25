@@ -649,7 +649,7 @@ DECL_BEGIN
  *       such that in the case of a function being annotated,
  *       argument variables are visible. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-doctext_compile(struct unicode_printer *__restrict doctext);
+doctext_compile(struct Dee_unicode_printer *__restrict doctext);
 
 DECL_END
 #endif /* CONFIG_BUILDING_DEEMON */

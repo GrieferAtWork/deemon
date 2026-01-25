@@ -723,7 +723,7 @@ again_open:
 	Dee_atomic_rwlock_init(&self->db_querycache_lock);
 	self->db_sf_hook = sf_hook;
 	self->db_ti_hook = ti_hook;
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	Dee_shared_lock_init(&self->db_dblock);
 	self->db_thread = NULL;
 	self->db_freelist = NULL;
@@ -765,7 +765,7 @@ err_sf_hook_ti_hook_lib_self_sf_hook:
 	DeeString_RemoveFiniHook(&self->db_sf_hook->dsfh_hook);
 err_sf_hook_ti_hook_lib_self:
 	Dee_weakref_fini(&sf_hook->dsfh_db);
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	(void)sqlite3_close_v2(self->db_db);
 err_sf_hook_ti_hook_lib:
 	libsqlite3_fini();
@@ -1179,7 +1179,7 @@ INTERN DeeTypeObject DB_Type = {
 	/* .tp_name     = */ "DB",
 	/* .tp_doc      = */ DOC("(filename:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DB),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DB),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {

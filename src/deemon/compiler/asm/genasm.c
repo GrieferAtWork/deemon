@@ -526,7 +526,7 @@ done_push_none:
 		    /* NOTE: Don't optimize `return none' --> `return' in yield functions.
 		     *       When yielding, the `ASM_RET_NONE' instruction behaves differently
 		     *       from what a regular `ASM_RET' for `Dee_None' does! */
-		    (!(current_basescope->bs_flags & CODE_FYIELDING) &&
+		    (!(current_basescope->bs_flags & Dee_CODE_FYIELDING) &&
 		     self->a_return->a_type == AST_CONSTEXPR &&
 		     DeeNone_Check(self->a_return->a_constexpr))) {
 			DO(asm_putddi(self));
@@ -1268,7 +1268,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 		/* Special case: The arguments of the operator are variadic. */
 		if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
 			struct symbol *prefix_symbol;
-			struct opinfo const *info;
+			struct Dee_opinfo const *info;
 			info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_name);
 			if (self->a_operator.o_op0->a_type == AST_SYM &&
 			    (!info || (info->oi_cc & OPCC_FINPLACE))) {
@@ -1706,7 +1706,7 @@ push_a_if_used:
 		case OPERATOR_SIZE:
 			if unlikely(!self->a_operator.o_op0)
 				goto generic_operator;
-			if ((current_basescope->bs_flags & CODE_FVARARGS) &&
+			if ((current_basescope->bs_flags & Dee_CODE_FVARARGS) &&
 			    self->a_operator.o_op0->a_type == AST_SYM) {
 				struct symbol *sym = self->a_operator.o_op0->a_sym;
 				SYMBOL_INPLACE_UNWIND_ALIAS(sym);
@@ -1753,7 +1753,7 @@ push_a_if_used:
 			 * >> if (42 == #varargs) ...
 			 * There is a dedicated instruction for comparing the size of varargs.
 			 */
-			if unlikely(!(current_basescope->bs_flags & CODE_FVARARGS))
+			if unlikely(!(current_basescope->bs_flags & Dee_CODE_FVARARGS))
 				break;
 			if (self->a_operator.o_op0->a_type == AST_OPERATOR) {
 				if (self->a_operator.o_op0->a_flag != OPERATOR_SIZE)
@@ -2026,7 +2026,7 @@ push_a_if_used:
 			/* Generic operator assembler. */
 			uint8_t argc;
 			struct symbol *prefix_symbol;
-			struct opinfo const *info;
+			struct Dee_opinfo const *info;
 generic_operator:
 			argc = 0;
 			info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_name);

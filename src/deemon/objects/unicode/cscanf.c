@@ -87,17 +87,17 @@ INTDEF DeeTypeObject StringScan_Type;
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 match_contains(char const *sel_start, char const *sel_end, uint32_t ch) {
 	while (sel_start < sel_end) {
-		uint32_t sel_ch = unicode_readutf8_n(&sel_start, sel_end);
+		uint32_t sel_ch = Dee_unicode_readutf8_n(&sel_start, sel_end);
 		/* Deal with character escaping. */
 		if (sel_ch == '\\')
-			sel_ch = unicode_readutf8_n(&sel_start, sel_end);
+			sel_ch = Dee_unicode_readutf8_n(&sel_start, sel_end);
 		if (sel_start < sel_end && *sel_start == '-') {
 			/* Selection range. */
 			uint32_t sel_max;
 			++sel_start;
-			sel_max = unicode_readutf8_n(&sel_start, sel_end);
+			sel_max = Dee_unicode_readutf8_n(&sel_start, sel_end);
 			if (sel_max == '\\')
-				sel_max = unicode_readutf8_n(&sel_start, sel_end);
+				sel_max = Dee_unicode_readutf8_n(&sel_start, sel_end);
 			/* Check if part of this range. */
 			if (ch >= sel_ch && ch <= sel_max)
 				return true;
@@ -147,10 +147,10 @@ next_format:
 		/* Check: Ignored field. */
 		if (format >= format_end)
 			goto out_formatend;
-		ch32 = unicode_readutf8(&format);
+		ch32 = Dee_unicode_readutf8(&format);
 		if (ch32 == '*') {
 			ignore_data = true;
-			ch32        = unicode_readutf8(&format);
+			ch32        = Dee_unicode_readutf8(&format);
 		}
 		/* Check: is the max field width given. */
 		{
@@ -160,7 +160,7 @@ next_format:
 				for (;;) {
 					if (format >= format_end)
 						goto out_formatend;
-					ch32 = unicode_readutf8(&format);
+					ch32 = Dee_unicode_readutf8(&format);
 					if (!DeeUni_AsDigit(ch32, 10, &digit))
 						break;
 					width *= 10;
@@ -203,7 +203,7 @@ do_integer_scan:
 				char const *prev_data;
 				prev_data  = data;
 				radix_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
-				                      : unicode_readutf8_n(&data, data_end);
+				                      : Dee_unicode_readutf8_n(&data, data_end);
 				if (DeeUni_AsDigitVal(radix_ch32) == 0) {
 					--width;
 					if (width && (*data == 'x' || *data == 'X')) {
@@ -237,7 +237,7 @@ do_integer_scan:
 				}
 				prev_data = data;
 				data_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
-				                     : unicode_readutf8_n(&data, data_end);
+				                     : Dee_unicode_readutf8_n(&data, data_end);
 				if (!DeeUni_AsDigit(data_ch32, scan_radix, &digit)) {
 					data = prev_data;
 					break;
@@ -245,14 +245,14 @@ do_integer_scan:
 			}
 			if (ignore_data)
 				goto next_format;
-			/* NOTE: Pass the `DEEINT_STRING_FTRY' flag to have `DeeInt_FromString()'
+			/* NOTE: Pass the `Dee_INT_STRING_FTRY' flag to have `DeeInt_FromString()'
 			 *       return ITER_DONE in case of parsing failure, meaning that we in
 			 *       turn will stop enumeration. */
 			result = DeeInt_FromString(spec_data_start,
 			                           (size_t)(data - spec_data_start),
-			                           DEEINT_STRING(radix,
-			                                         DEEINT_STRING_FNORMAL |
-			                                         DEEINT_STRING_FTRY));
+			                           Dee_INT_STRING(radix,
+			                                         Dee_INT_STRING_FNORMAL |
+			                                         Dee_INT_STRING_FTRY));
 			break;
 
 		case 'c':
@@ -281,7 +281,7 @@ do_integer_scan:
 					uint32_t data_ch;
 					char const *prev_data;
 					prev_data = data;
-					data_ch   = unicode_readutf8_n(&data, data_end);
+					data_ch   = Dee_unicode_readutf8_n(&data, data_end);
 					if (!DeeUni_IsSpace(data_ch)) {
 						data = prev_data;
 						break;
@@ -316,7 +316,7 @@ do_integer_scan:
 		case 'L':
 			if (format >= format_end)
 				goto out_formatend;
-			ch32 = unicode_readutf8(&format);
+			ch32 = Dee_unicode_readutf8(&format);
 			goto next_spec;
 
 		case '[': {
@@ -357,7 +357,7 @@ do_integer_scan:
 			} else {
 				while (data < data_end && width) {
 					char const *prev_data = data;
-					uint32_t data_ch = unicode_readutf8_n(&data, data_end);
+					uint32_t data_ch = Dee_unicode_readutf8_n(&data, data_end);
 					if (!(match_contains(sel_begin, format, data_ch) ^ inverse_selection)) {
 						data = prev_data;
 						break;
@@ -399,7 +399,7 @@ yield_string_from_spec_data_start_until_data:
 				total_consumption = 0;
 				while (iter < data) {
 					++total_consumption;
-					unicode_readutf8_n(&iter, data);
+					Dee_unicode_readutf8_n(&iter, data);
 				}
 				result = DeeInt_NewSize(total_consumption);
 			}
@@ -431,7 +431,7 @@ yield_string_from_spec_data_start_until_data:
 		} else {
 			while (data < data_end) {
 				char const *prev_data = data;
-				uint32_t data_ch = unicode_readutf8_n(&data, data_end);
+				uint32_t data_ch = Dee_unicode_readutf8_n(&data, data_end);
 				if (!DeeUni_IsSpace(data_ch)) {
 					data = prev_data;
 					break;
@@ -469,7 +469,7 @@ yield_string_from_spec_data_start_until_data:
 			if (is_bytes)
 				goto out_missmatch;
 			/*prev_data = data;*/
-			data_ch = unicode_readutf8_n(&data, data_end);
+			data_ch = Dee_unicode_readutf8_n(&data, data_end);
 			if (!DeeUni_IsLF(data_ch)) {
 				/*data = prev_data;*/
 				goto out_missmatch;

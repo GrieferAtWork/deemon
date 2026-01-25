@@ -108,7 +108,7 @@ ast_parse_template_string(void) {
 	DREF struct ast **format_argv = NULL;
 	struct ast_loc loc;
 	struct ast *result;
-	struct unicode_printer format_printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer format_printer = Dee_UNICODE_PRINTER_INIT;
 	char *flush_start, *text_iter, *text_end, quote;
 	loc_here(&loc);
 parse_current_token_as_template_string:
@@ -136,8 +136,8 @@ parse_current_token_as_template_string:
 			}
 
 			/* Flush template text until '{' */
-			if unlikely(unicode_printer_print(&format_printer, flush_start,
-			                                  (size_t)((text_iter - 1) - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(&format_printer, flush_start,
+			                                      (size_t)((text_iter - 1) - flush_start)) < 0)
 				goto err;
 
 			/* Parse an expression at this position. */
@@ -220,18 +220,18 @@ err_old_flags:
 				}
 
 				/* The remainder of the expression is the format-argument */
-				if unlikely(unicode_printer_put8(&format_printer, '{'))
+				if unlikely(Dee_unicode_printer_put8(&format_printer, '{'))
 					goto err_expr_ast;
-				if unlikely(unicode_printer_print(&format_printer, token.t_begin,
-				                                  (size_t)(rbrace - token.t_begin)) < 0)
+				if unlikely(Dee_unicode_printer_print(&format_printer, token.t_begin,
+				                                      (size_t)(rbrace - token.t_begin)) < 0)
 					goto err_expr_ast;
-				if unlikely(unicode_printer_put8(&format_printer, '}'))
+				if unlikely(Dee_unicode_printer_put8(&format_printer, '}'))
 					goto err_expr_ast;
 				if (*rbrace == '}')
 					++rbrace;
 				token.t_begin = rbrace;
 			} else if (tok == '}') {
-				if unlikely(unicode_printer_print(&format_printer, "{}", 2) < 0)
+				if unlikely(Dee_unicode_printer_print(&format_printer, "{}", 2) < 0)
 					goto err_expr_ast;
 				++token.t_begin;
 			} else {
@@ -301,8 +301,8 @@ err_expr_ast:
 		case '\\': {
 			/* Do normal backslash escaping (including \{ --> { and \} --> }) */
 			ch = '\0';
-			if unlikely(unicode_printer_print(&format_printer, flush_start,
-			                                  (size_t)((text_iter - 1) - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(&format_printer, flush_start,
+			                                      (size_t)((text_iter - 1) - flush_start)) < 0)
 				goto err;
 			if (text_iter < text_end)
 				ch = *text_iter++;
@@ -318,7 +318,7 @@ err_expr_ast:
 				/* Special case: in template strings, these can also be escaped with a backslash.
 				 * However, because we're using them with `string.format', we still have to escape
 				 * them for use with it (by writing them twice)! */
-				if unlikely(unicode_printer_put8(&format_printer, ch))
+				if unlikely(Dee_unicode_printer_put8(&format_printer, ch))
 					goto err;
 				break;
 
@@ -358,7 +358,7 @@ parse_hex_integer:
 					uint8_t val;
 					char *old_iter;
 					old_iter = text_iter;
-					ch32     = unicode_readutf8_n(&text_iter, text_end);
+					ch32     = Dee_unicode_readutf8_n(&text_iter, text_end);
 					if (!DeeUni_AsDigit(ch32, 16, &val)) {
 						text_iter = old_iter;
 						break;
@@ -374,7 +374,7 @@ parse_hex_integer:
 						goto err;
 					break;
 				}
-				if (unicode_printer_putc(&format_printer, digit_value))
+				if (Dee_unicode_printer_putc(&format_printer, digit_value))
 					goto err;
 				goto after_escaped_putc;
 			}	break;
@@ -392,7 +392,7 @@ parse_oct_integer:
 						uint8_t digit;
 						char *old_iter;
 						old_iter = text_iter;
-						ch32     = unicode_readutf8_n(&text_iter, text_end);
+						ch32     = Dee_unicode_readutf8_n(&text_iter, text_end);
 						if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 							text_iter = old_iter;
 							break;
@@ -401,18 +401,18 @@ parse_oct_integer:
 						digit_value |= digit;
 						++count;
 					}
-					if (unicode_printer_putc(&format_printer, digit_value))
+					if (Dee_unicode_printer_putc(&format_printer, digit_value))
 						goto err;
 					goto after_escaped_putc;
 				}
 				if ((unsigned char)ch >= 0xc0) {
 					uint32_t ch32;
-					struct unitraits const *desc;
+					struct Dee_unitraits const *desc;
 					uint8_t digit;
 					--text_iter;
-					ch32 = unicode_readutf8_n(&text_iter, text_end);
+					ch32 = Dee_unicode_readutf8_n(&text_iter, text_end);
 					desc = DeeUni_Descriptor(ch32);
-					if (desc->ut_flags & UNICODE_ISLF)
+					if (desc->ut_flags & Dee_UNICODE_ISLF)
 						goto after_escaped_putc; /* Escaped line-feed */
 					if (DeeUniTrait_AsDigit(desc, 8, &digit)) {
 						/* Unicode digit character. */
@@ -427,7 +427,7 @@ parse_oct_integer:
 			}	break;
 
 			}
-			if unlikely(unicode_printer_put8(&format_printer, ch))
+			if unlikely(Dee_unicode_printer_put8(&format_printer, ch))
 				goto err;
 after_escaped_putc:
 			flush_start = text_iter;
@@ -439,7 +439,7 @@ after_escaped_putc:
 	}
 
 	/* Flush the remainder. */
-	if unlikely(unicode_printer_print(&format_printer, flush_start,
+	if unlikely(Dee_unicode_printer_print(&format_printer, flush_start,
 	                                  (size_t)(text_end - flush_start)) < 0)
 		goto err;
 	if unlikely(yield() < 0)
@@ -458,7 +458,7 @@ after_escaped_putc:
 	{
 		DREF struct ast *temp;
 		DREF DeeObject *format_str;
-		format_str = unicode_printer_pack(&format_printer);
+		format_str = Dee_unicode_printer_pack(&format_printer);
 		if unlikely(!format_str)
 			goto err_noprinter;
 		result = ast_constexpr(format_str);
@@ -488,7 +488,7 @@ after_escaped_putc:
 	}
 	return result;
 err:
-	unicode_printer_fini(&format_printer);
+	Dee_unicode_printer_fini(&format_printer);
 err_noprinter:
 	while (format_argc) {
 		--format_argc;

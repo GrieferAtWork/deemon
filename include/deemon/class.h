@@ -17,8 +17,20 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeClassDesc_**/
+/*!export DeeClassDescriptor_**/
+/*!export DeeClass_**/
+/*!export DeeInstanceMember_**/
+/*!export DeeInstance_**/
+/*!export Dee_CLASS_ATTRIBUTE_**/
+/*!export Dee_CLASS_**/
+/*!export Dee_TP_FCLASS_**/
+/*!export Dee_class_desc_**/
+/*!export Dee_instance_desc_**/
+/*!export instance_**/
 #ifndef GUARD_DEEMON_CLASS_H
-#define GUARD_DEEMON_CLASS_H 1
+#define GUARD_DEEMON_CLASS_H 1 /*!export-*/
 
 #ifndef _DEE_WITHOUT_INCLUDES
 #include "api.h"
@@ -217,41 +229,6 @@
 
 DECL_BEGIN
 
-
-#ifdef DEE_SOURCE
-#define Dee_module_object           module_object
-#define Dee_string_object           string_object
-#define Dee_class_descriptor_object class_descriptor_object
-#define Dee_class_optable           class_optable
-#define Dee_class_desc              class_desc
-#define Dee_instance_desc           instance_desc
-#define Dee_class_operator          class_operator
-#define Dee_class_attribute         class_attribute
-#define Dee_instancemember_object   instancemember_object
-#define class_desc_as_instance      Dee_class_desc_as_instance
-#define CLASS_HEADER_OPC1           Dee_CLASS_HEADER_OPC1
-#define CLASS_HEADER_OPC2           Dee_CLASS_HEADER_OPC2
-#define CLASS_GETSET_GET            Dee_CLASS_GETSET_GET
-#define CLASS_GETSET_DEL            Dee_CLASS_GETSET_DEL
-#define CLASS_GETSET_SET            Dee_CLASS_GETSET_SET
-#define CLASS_GETSET_COUNT          Dee_CLASS_GETSET_COUNT
-#define CLASS_ATTRIBUTE_FNORMAL     Dee_CLASS_ATTRIBUTE_FNORMAL
-#define CLASS_ATTRIBUTE_FPUBLIC     Dee_CLASS_ATTRIBUTE_FPUBLIC
-#define CLASS_ATTRIBUTE_FPRIVATE    Dee_CLASS_ATTRIBUTE_FPRIVATE
-#define CLASS_ATTRIBUTE_FVISIBILITY Dee_CLASS_ATTRIBUTE_FVISIBILITY
-#define CLASS_ATTRIBUTE_FFINAL      Dee_CLASS_ATTRIBUTE_FFINAL
-#define CLASS_ATTRIBUTE_FREADONLY   Dee_CLASS_ATTRIBUTE_FREADONLY
-#define CLASS_ATTRIBUTE_FMETHOD     Dee_CLASS_ATTRIBUTE_FMETHOD
-#define CLASS_ATTRIBUTE_FGETSET     Dee_CLASS_ATTRIBUTE_FGETSET
-#define CLASS_ATTRIBUTE_FCLASSMEM   Dee_CLASS_ATTRIBUTE_FCLASSMEM
-#define CLASS_ATTRIBUTE_FMASK       Dee_CLASS_ATTRIBUTE_FMASK
-#define CLASS_ATTRIBUTE_ALLOW_AUTOINIT Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT
-#endif /* DEE_SOURCE */
-
-
-struct Dee_string_object;
-typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
-
 #define Dee_CLASS_GETSET_GET   0 /* Offset to the getter of a user-defined getset in a class. */
 #define Dee_CLASS_GETSET_DEL   1 /* Offset to the delete of a user-defined getset in a class. */
 #define Dee_CLASS_GETSET_SET   2 /* Offset to the setter of a user-defined getset in a class. */
@@ -267,7 +244,7 @@ typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
 #define Dee_CLASS_ATTRIBUTE_FMETHOD   0x0010 /* When accessed as get in `foo.bar', return an `InstanceMethod(MEMBER_TABLE[ca_addr], foo)' (calling `foo.bar()' will similarly perform a this-call). */
 #define Dee_CLASS_ATTRIBUTE_FGETSET   0x0020 /* Access to the attribute is done via get/set, with the callbacks being `CLASS_GETSET_*' offsets from `ca_addr'.
                                               * When `Dee_CLASS_ATTRIBUTE_FMETHOD' is set, callbacks are invoked as this-calls.
-                                              * When `Dee_CLASS_ATTRIBUTE_FREADONLY' is set, only `CLASS_GETSET_GET' is ever accessed,
+                                              * When `Dee_CLASS_ATTRIBUTE_FREADONLY' is set, only `Dee_CLASS_GETSET_GET' is ever accessed,
                                               * and all other callbacks behave as though they were unbound. */
 /*      Dee_CLASS_ATTRIBUTE_F         0x0040  * ... */
 #define Dee_CLASS_ATTRIBUTE_FCLASSMEM 0x0080 /* An instance-attribute is stored in class memory (usually set for instance member functions).
@@ -277,6 +254,7 @@ typedef struct Dee_class_descriptor_object DeeClassDescriptorObject;
 /*      Dee_CLASS_ATTRIBUTE_F         0x8000  * ... */
 #define Dee_CLASS_ATTRIBUTE_FMASK     0x00b7 /* Mask of known flag bits. */
 
+struct Dee_string_object;
 struct Dee_class_attribute {
 	DREF struct Dee_string_object *ca_name; /* [0..1][const] Name of this member.
 	                                         * NOTE: NULL indicates a sentinel/unused entry. */
@@ -300,7 +278,7 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
                                DeeTypeObject *__restrict impl_class);
 #define class_attribute_mayaccess(self, impl_class)   \
-	(!((self)->ca_flag & CLASS_ATTRIBUTE_FPRIVATE) || \
+	(!((self)->ca_flag & Dee_CLASS_ATTRIBUTE_FPRIVATE) || \
 	 class_attribute_mayaccess_impl(self, impl_class))
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -319,12 +297,9 @@ class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
  * NOTE: When this operator isn't set, super-classes are
  *       always initialized using their default-constructor,
  *       essentially passing an empty argument list. */
-#ifdef DEE_SOURCE
-#define CLASS_OPERATOR_SUPERARGS     (Dee_OPERATOR_USERCOUNT + 0)
-#define CLASS_OPERATOR_PRINT         (Dee_OPERATOR_USERCOUNT + 1) /* `operator str(fp: File): none' */
-#define CLASS_OPERATOR_PRINTREPR     (Dee_OPERATOR_USERCOUNT + 2) /* `operator repr(fp: File): none' */
-#define CLASS_OPERATOR_USERCOUNT     (Dee_OPERATOR_USERCOUNT + 3)
-#endif /* DEE_SOURCE */
+#define Dee_CLASS_OPERATOR_SUPERARGS (Dee_OPERATOR_USERCOUNT + 0)
+#define Dee_CLASS_OPERATOR_PRINT     (Dee_OPERATOR_USERCOUNT + 1) /* `operator str(fp: File): none' */
+#define Dee_CLASS_OPERATOR_PRINTREPR (Dee_OPERATOR_USERCOUNT + 2) /* `operator repr(fp: File): none' */
 #define Dee_CLASS_OPERATOR_USERCOUNT (Dee_OPERATOR_USERCOUNT + 3)
 
 
@@ -347,8 +322,19 @@ struct Dee_class_operator {
 	                         *       by simply declaring it, but not assigning a callback. */
 };
 
+/* Special values for `DeeClassDescriptorObject::cd_flags' */
+#define Dee_TP_FCLASS_AUTOINIT  Dee_TP_FGC       /* FLAG: When set, the construction operator is implemented to automatically initialize
+                                                  *       class members in compliance to the `this = default;' constructor definition.
+                                                  *       Additionally, if not already defined by the caller, this flag also causes
+                                                  *       `operator repr' to be implemented (see above).
+                                                  * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
+#define Dee_TP_FCLASS_SUPERKWDS Dee_TP_FHEAP     /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
+                                                  *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
+                                                  *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
+#define Dee_TP_FCLASS_NOBUILTIN Dee_TP_FVARIABLE /* FLAG: Don't auto-define builtin operators */
 
-struct Dee_class_descriptor_object {
+struct Dee_string_object;
+typedef struct Dee_class_descriptor_object {
 	/* The descriptor for the configuration of a user-defined class object:
 	 * >> class MyClass {
 	 * >>     static function cfunc() {
@@ -378,15 +364,15 @@ struct Dee_class_descriptor_object {
 	 * >>     .cd_imemb_size = 1, // imember
 	 * >>     .cd_cattr_mask = 7, // cfunc, cmember, cprop  (3 -> 7)
 	 * >>     .cd_cattr_list = {
-	 * >>         { "cfunc",   .ca_addr = 0, .ca_flag = CLASS_ATTRIBUTE_FREADONLY },
-	 * >>         { "cmember", .ca_addr = 1, .ca_flag = CLASS_ATTRIBUTE_FNORMAL },
-	 * >>         { "cprop",   .ca_addr = 2, .ca_flag = CLASS_ATTRIBUTE_FGETSET },
+	 * >>         { "cfunc",   .ca_addr = 0, .ca_flag = Dee_CLASS_ATTRIBUTE_FREADONLY },
+	 * >>         { "cmember", .ca_addr = 1, .ca_flag = Dee_CLASS_ATTRIBUTE_FNORMAL },
+	 * >>         { "cprop",   .ca_addr = 2, .ca_flag = Dee_CLASS_ATTRIBUTE_FGETSET },
 	 * >>     },
 	 * >>     .cd_iattr_mask = 7, // ifunc, imember, iprop  (3 -> 7)
 	 * >>     .cd_iattr_list = {
-	 * >>         { "ifunc",   .ca_addr = 5, .ca_flag = CLASS_ATTRIBUTE_FCLASSMEM|CLASS_ATTRIBUTE_FMETHOD },
-	 * >>         { "imember", .ca_addr = 0, .ca_flag = CLASS_ATTRIBUTE_FNORMAL },
-	 * >>         { "iprop",   .ca_addr = 6, .ca_flag = CLASS_ATTRIBUTE_FCLASSMEM|CLASS_ATTRIBUTE_FMETHOD|CLASS_ATTRIBUTE_FGETSET },
+	 * >>         { "ifunc",   .ca_addr = 5, .ca_flag = Dee_CLASS_ATTRIBUTE_FCLASSMEM|Dee_CLASS_ATTRIBUTE_FMETHOD },
+	 * >>         { "imember", .ca_addr = 0, .ca_flag = Dee_CLASS_ATTRIBUTE_FNORMAL },
+	 * >>         { "iprop",   .ca_addr = 6, .ca_flag = Dee_CLASS_ATTRIBUTE_FCLASSMEM|Dee_CLASS_ATTRIBUTE_FMETHOD|Dee_CLASS_ATTRIBUTE_FGETSET },
 	 * >>     },
 	 * >> }
 	 * INSTANCE (class):
@@ -394,13 +380,13 @@ struct Dee_class_descriptor_object {
 	 * >>     .cd_members = {
 	 * >>         [0]                    = <function cfunc() { print "static function"; }>,
 	 * >>         [1]                    = <cmember = "static member">,
-	 * >>         [2 + CLASS_GETSET_GET] = <cprop:get: get()  { return "static member"; }>,
-	 * >>         [2 + CLASS_GETSET_DEL] = <cprop:del: del()  { print "static member"; }>,
-	 * >>         [2 + CLASS_GETSET_SET] = <cprop:set: set(v) { print "static member"; }>,
+	 * >>         [2 + Dee_CLASS_GETSET_GET] = <cprop:get: get()  { return "static member"; }>,
+	 * >>         [2 + Dee_CLASS_GETSET_DEL] = <cprop:del: del()  { print "static member"; }>,
+	 * >>         [2 + Dee_CLASS_GETSET_SET] = <cprop:set: set(v) { print "static member"; }>,
 	 * >>         [5]                    = <function ifunc() { print "instance function"; }>,
-	 * >>         [6 + CLASS_GETSET_GET] = <iprop:get: get()  { return "instance member"; }>,
-	 * >>         [6 + CLASS_GETSET_DEL] = <iprop:del: del()  { print "instance member"; }>,
-	 * >>         [6 + CLASS_GETSET_SET] = <iprop:set: set(v) { print "instance member"; }>
+	 * >>         [6 + Dee_CLASS_GETSET_GET] = <iprop:get: get()  { return "instance member"; }>,
+	 * >>         [6 + Dee_CLASS_GETSET_DEL] = <iprop:del: del()  { print "instance member"; }>,
+	 * >>         [6 + Dee_CLASS_GETSET_SET] = <iprop:set: set(v) { print "instance member"; }>
 	 * >>     }
 	 * >> }
 	 * INSTANCE (class-instance):
@@ -413,25 +399,14 @@ struct Dee_class_descriptor_object {
 	Dee_OBJECT_HEAD
 	DREF struct Dee_string_object                      *cd_name;        /* [0..1][const] Name of the class. */
 	DREF struct Dee_string_object                      *cd_doc;         /* [0..1][const] Documentation strings for the class itself, and its operators. */
-#ifdef DEE_SOURCE
-#define CLASS_TP_FAUTOINIT                              Dee_TP_FGC      /* FLAG: When set, the construction operator is implemented to automatically initialize
-                                                                         *       class members in compliance to the `this = default;' constructor definition.
-                                                                         *       Additionally, if not already defined by the caller, this flag also causes
-                                                                         *       `operator repr' to be implemented (see above).
-                                                                         * NOTE: This flag should not be used together with `TP_FINHERITCTOR' */
-#define CLASS_TP_FSUPERKWDS                             Dee_TP_FHEAP    /* FLAG: When set, the superargs operator actually returns a tuple `(args, kwds)' which
-                                                                         *       should then be used to invoke the super-constructor as `super(args..., **kwds)'
-                                                                         *       Otherwise, `args' is returned, and the super-constructor is called as `super(args...)' */
-#define CLASS_TP_FNOBUILTIN                             Dee_TP_FVARIABLE/* FLAG: Don't auto-define builtin operators */
-#endif /* DEE_SOURCE */
 	uint16_t                                            cd_flags;       /* [const] Additional flags to set for the resulting type (set of `TP_F*').
 	                                                                     * NOTE: The `TP_FINHERITCTOR' flag has special meaning here,
-	                                                                     *       in that its presence causes `CLASS_OPERATOR_SUPERARGS'
+	                                                                     *       in that its presence causes `Dee_CLASS_OPERATOR_SUPERARGS'
 	                                                                     *       to be implemented such that it forwards all arguments
 	                                                                     *       to the underlying base-type, while also implementing
 	                                                                     *       `OPERATOR_CONSTRUCTOR' as a no-op for any number of
 	                                                                     *       arguments.
-	                                                                     *       If the user overrides `CLASS_OPERATOR_SUPERARGS',
+	                                                                     *       If the user overrides `Dee_CLASS_OPERATOR_SUPERARGS',
 	                                                                     *       the `TP_FINHERITCTOR' flag is simply ignored.
 	                                                                     *       If the user overrides `OPERATOR_CONSTRUCTOR',
 	                                                                     *       the user's constructor will be invoked, though
@@ -448,7 +423,7 @@ struct Dee_class_descriptor_object {
 	struct Dee_class_attribute                         *cd_cattr_list;  /* [1..cd_cattr_mask+1][owned_if(!= INTERNAL(empty-class-attribute-table))]
 	                                                                     * [const] The class attribute hash-vector. */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_class_attribute, cd_iattr_list); /* [cd_iattr_mask+1] The instance attribute hash-vector. */
-};
+} DeeClassDescriptorObject;
 #define DeeClassDescriptor_CLSOPNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 #define DeeClassDescriptor_CATTRNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
 #define DeeClassDescriptor_IATTRNEXT(i, perturb) ((i) = (((i) << 2) + (i) + (perturb) + 1), (perturb) >>= 5)
@@ -757,17 +732,17 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_VCallClassAttri
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute const *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, DeeObject *value);
 #else /* __INTELLISENSE__ */
-#define DeeClass_GetClassAttribute(class_type, attr)                    DeeInstance_GetAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
-#define DeeClass_BoundClassAttribute(class_type, attr)                  DeeInstance_BoundAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
-#define DeeClass_CallClassAttribute(class_type, attr, argc, argv)       DeeInstance_CallAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, argc, argv)
-#define DeeClass_CallClassAttributeKw(class_type, attr, argc, argv, kw) DeeInstance_CallAttributeKw(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, argc, argv, kw)
+#define DeeClass_GetClassAttribute(class_type, attr)                    DeeInstance_GetAttribute(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
+#define DeeClass_BoundClassAttribute(class_type, attr)                  DeeInstance_BoundAttribute(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
+#define DeeClass_CallClassAttribute(class_type, attr, argc, argv)       DeeInstance_CallAttribute(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, argc, argv)
+#define DeeClass_CallClassAttributeKw(class_type, attr, argc, argv, kw) DeeInstance_CallAttributeKw(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, argc, argv, kw)
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-#define DeeClass_CallClassAttributeTuple(class_type, attr, args)        DeeInstance_CallAttributeTuple(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, args)
-#define DeeClass_CallClassAttributeTupleKw(class_type, attr, args, kw)  DeeInstance_CallAttributeTupleKw(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, args, kw)
+#define DeeClass_CallClassAttributeTuple(class_type, attr, args)        DeeInstance_CallAttributeTuple(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, args)
+#define DeeClass_CallClassAttributeTupleKw(class_type, attr, args, kw)  DeeInstance_CallAttributeTupleKw(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, args, kw)
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-#define DeeClass_VCallClassAttributef(class_type, attr, format, args)   DeeInstance_VCallAttributef(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, format, args)
-#define DeeClass_DelClassAttribute(class_type, attr)                    DeeInstance_DelAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
-#define DeeClass_SetClassAttribute(class_type, attr, value)             DeeInstance_SetAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, value)
+#define DeeClass_VCallClassAttributef(class_type, attr, format, args)   DeeInstance_VCallAttributef(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, format, args)
+#define DeeClass_DelClassAttribute(class_type, attr)                    DeeInstance_DelAttribute(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
+#define DeeClass_SetClassAttribute(class_type, attr, value)             DeeInstance_SetAttribute(DeeClass_DESC(class_type), Dee_class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, value)
 #endif /* !__INTELLISENSE__ */
 
 /* Get/Call/Del/Set a class attribute, as acquired
@@ -867,7 +842,7 @@ DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, Dee_oper
  * `instance_t*' function, which the proceeds to load (and
  * potentially cache) the operator, before invoking it. */
 
-/* `OPERATOR_CONSTRUCTOR' + `CLASS_OPERATOR_SUPERARGS' */
+/* `OPERATOR_CONSTRUCTOR' + `Dee_CLASS_OPERATOR_SUPERARGS' */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_super_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_super_ctor(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
@@ -881,7 +856,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_kwsuper_init(DeeObject *__restric
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_kwsuper_tinitkw(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_kwsuper_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-/* `CLASS_OPERATOR_SUPERARGS' */
+/* `Dee_CLASS_OPERATOR_SUPERARGS' */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_super_tctor(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_super_ctor(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
@@ -968,8 +943,8 @@ struct Dee_serial;
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_serialize(DeeObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 #endif
 
-#ifdef CLASS_TP_FAUTOINIT
-/* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
+#ifdef Dee_TP_FCLASS_AUTOINIT
+/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT'). */
 #define instance_auto_tctor instance_tctor
 #define instance_auto_ctor  instance_ctor
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
@@ -998,7 +973,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_initkw(DeeObj
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_builtin_auto_printrepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
-#endif /* CLASS_TP_FAUTOINIT */
+#endif /* Dee_TP_FCLASS_AUTOINIT */
 
 
 /* Hooks when the user-class overrides the associated operator. */
@@ -1026,13 +1001,12 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) size_t DCALL instance_iterattr(DeeTypeObject *
  * >> }
  * >> print type MyClass.foo; // DeeInstanceMember_Type
  */
-typedef struct Dee_instancemember_object DeeInstanceMemberObject;
-struct Dee_instancemember_object {
+typedef struct Dee_instance_member_object {
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject               *im_type;      /* [1..1][const] The user-class type, instances of which implement this member. */
-	struct Dee_class_attribute const *im_attribute; /* [1..1][const] The instance attribute (`CLASS_ATTRIBUTE_FCLASSMEM' shouldn't
+	struct Dee_class_attribute const *im_attribute; /* [1..1][const] The instance attribute (`Dee_CLASS_ATTRIBUTE_FCLASSMEM' shouldn't
 	                                                 * be set, though this isn't asserted) that should be accessed. */
-};
+} DeeInstanceMemberObject;
 
 DDATDEF DeeTypeObject DeeInstanceMember_Type;
 #define DeeInstanceMember_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeInstanceMember_Type) /* `_instancemember' is final */

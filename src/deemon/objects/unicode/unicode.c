@@ -540,14 +540,14 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) uint16_t const *
 (DCALL DeeString_As2Byte)(DeeObject *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 again:
 	utf = ((String *)self)->s_data;
 	if (!utf) {
 		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
-		bzero(utf, sizeof(struct string_utf));
+		bzero(utf, sizeof(struct Dee_string_utf));
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 #if STRING_WIDTH_1BYTE != 0
 		utf->u_width = STRING_WIDTH_1BYTE;
@@ -586,14 +586,14 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) uint32_t const *
 (DCALL DeeString_As4Byte)(DeeObject *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 again:
 	utf = ((String *)self)->s_data;
 	if (!utf) {
 		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
-		bzero(utf, sizeof(struct string_utf));
+		bzero(utf, sizeof(struct Dee_string_utf));
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 #if STRING_WIDTH_1BYTE != 0
 		utf->u_width = STRING_WIDTH_1BYTE;
@@ -646,7 +646,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
 DeeString_AsUtf8(DeeObject *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	uint8_t const *iter, *end;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 again:
@@ -654,7 +654,7 @@ again:
 	if (utf) {
 		if (utf->u_utf8)
 			return utf->u_utf8;
-		if ((utf->u_flags & STRING_UTF_FASCII) ||
+		if ((utf->u_flags & Dee_STRING_UTF_FASCII) ||
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 set_utf8_and_return_1byte:
 			atomic_write(&utf->u_utf8, DeeString_STR(self));
@@ -667,7 +667,7 @@ set_utf8_and_return_1byte:
 		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
-		bzero(utf, sizeof(struct string_utf));
+		bzero(utf, sizeof(struct Dee_string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
@@ -726,7 +726,7 @@ set_utf8_and_return_1byte:
 		return (char const *)result;
 	}
 	/* No latin1 characters here! */
-	atomic_or(&utf->u_flags, STRING_UTF_FASCII);
+	atomic_or(&utf->u_flags, Dee_STRING_UTF_FASCII);
 	goto set_utf8_and_return_1byte;
 err:
 	return NULL;
@@ -734,7 +734,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
 DeeString_TryAsUtf8(DeeObject *__restrict self) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	uint8_t const *iter, *end;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 again:
@@ -742,7 +742,7 @@ again:
 	if (utf) {
 		if (utf->u_utf8)
 			return utf->u_utf8;
-		if ((utf->u_flags & STRING_UTF_FASCII) ||
+		if ((utf->u_flags & Dee_STRING_UTF_FASCII) ||
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 set_utf8_and_return_1byte:
 			atomic_write(&utf->u_utf8, DeeString_STR(self));
@@ -755,7 +755,7 @@ set_utf8_and_return_1byte:
 		utf = Dee_string_utf_tryalloc();
 		if unlikely(!utf)
 			goto err;
-		bzero(utf, sizeof(struct string_utf));
+		bzero(utf, sizeof(struct Dee_string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
@@ -814,7 +814,7 @@ set_utf8_and_return_1byte:
 		return (char const *)result;
 	}
 	/* No latin1 characters here! */
-	atomic_or(&utf->u_flags, STRING_UTF_FASCII);
+	atomic_or(&utf->u_flags, Dee_STRING_UTF_FASCII);
 	goto set_utf8_and_return_1byte;
 err:
 	return NULL;
@@ -828,8 +828,8 @@ err:
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) /*latin-1*/ byte_t const *DCALL
 DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
-	struct string_utf *utf;
-	union dcharptr_const str;
+	struct Dee_string_utf *utf;
+	union Dee_charptr_const str;
 	bool contains_invalid;
 	byte_t *result;
 	size_t i, length;
@@ -844,7 +844,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	/* The single-byte variant of the string was already allocated.
 	 * Check how that variant's INV-byte flag compares to the caller's
 	 * allow_invalid option. */
-	if (!allow_invalid && (utf->u_flags & STRING_UTF_FINVBYT))
+	if (!allow_invalid && (utf->u_flags & Dee_STRING_UTF_FINVBYT))
 		goto err_invalid_string;
 
 	/* Check for a cached single-byte variant. */
@@ -864,7 +864,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 		/* The actual length of the string matches the length of of its single-byte
 		 * variant, in other words meaning that all of its characters could fit into
 		 * that range, and that the string consists only of ASCII characters. */
-		atomic_or(&utf->u_flags, STRING_UTF_FASCII);
+		atomic_or(&utf->u_flags, Dee_STRING_UTF_FASCII);
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		return (byte_t const *)DeeString_STR(self);
 	}
@@ -912,7 +912,7 @@ DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 
 	/* All right. - We've managed to construct the single-byte variant. */
 	if (contains_invalid)
-		atomic_or(&utf->u_flags, STRING_UTF_FINVBYT);
+		atomic_or(&utf->u_flags, Dee_STRING_UTF_FINVBYT);
 
 	/* Deal with race conditions. */
 	if (!atomic_cmpxch(&utf->u_data[STRING_WIDTH_1BYTE], NULL, (size_t *)result)) {
@@ -934,7 +934,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) uint16_t const *DCALL
 DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	utf = ((String *)self)->s_data;
 	if (utf) {
@@ -1095,37 +1095,37 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_printstring(struct unicode_printer *__restrict self,
+Dee_unicode_printer_printstring(struct Dee_unicode_printer *__restrict self,
                                 DeeObject *__restrict string) {
-	struct string_utf *utf;
-	union dcharptr_const str;
+	struct Dee_string_utf *utf;
+	union Dee_charptr_const str;
 	ASSERT_OBJECT_TYPE_EXACT(string, &DeeString_Type);
 	utf = ((String *)string)->s_data;
 	/* Try to optimize, by printing character data directly. */
 	if (!utf) {
 		/* Raw, 8-bit character (aka. LATIN-1) */
-		return unicode_printer_print8(self,
-		                              (uint8_t *)DeeString_STR(string),
-		                              DeeString_SIZE(string));
+		return Dee_unicode_printer_print8(self,
+		                                  (uint8_t *)DeeString_STR(string),
+		                                  DeeString_SIZE(string));
 	}
 	/* Directly print sized string data (without the need to convert to & from UTF-8). */
 	str.ptr = utf->u_data[utf->u_width];
 	SWITCH_SIZEOF_WIDTH(utf->u_width) {
 
 	CASE_WIDTH_1BYTE:
-		return unicode_printer_print8(self, str.cp8, WSTR_LENGTH(str.cp8));
+		return Dee_unicode_printer_print8(self, str.cp8, WSTR_LENGTH(str.cp8));
 
 	CASE_WIDTH_2BYTE:
-		return unicode_printer_print16(self, str.cp16, WSTR_LENGTH(str.cp16));
+		return Dee_unicode_printer_print16(self, str.cp16, WSTR_LENGTH(str.cp16));
 
 	CASE_WIDTH_4BYTE:
-		return unicode_printer_print32(self, str.cp32, WSTR_LENGTH(str.cp32));
+		return Dee_unicode_printer_print32(self, str.cp32, WSTR_LENGTH(str.cp32));
 	}
 }
 
 
 /* Print the text of `self' to `printer', encoded as a UTF-8 string.
- * NOTE: If `printer' is `&unicode_printer_print', special optimization
+ * NOTE: If `printer' is `&Dee_unicode_printer_print', special optimization
  *       is done, meaning that this is the preferred method of printing
  *       an object to a unicode printer.
  * NOTE: This optimization is also done when `DeeObject_Print' is used. */
@@ -1133,7 +1133,7 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintUtf8(DeeObject *__restrict self,
                     Dee_formatprinter_t printer,
                     void *arg) {
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	uint8_t const *iter, *end, *flush_start;
 	Dee_ssize_t temp, result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -1144,34 +1144,34 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
 	 * UTF-8 version of the string) */
 again:
 	utf = ((String *)self)->s_data;
-	if (printer == &unicode_printer_print) {
-		union dcharptr_const str;
+	if (printer == &Dee_unicode_printer_print) {
+		union Dee_charptr_const str;
 		/* Try to optimize, by printing character data directly. */
 		if (!utf) {
 			/* Raw, 8-bit character (aka. LATIN-1) */
-			return unicode_printer_print8((struct unicode_printer *)arg,
-			                              (uint8_t const *)DeeString_STR(self),
-			                              DeeString_SIZE(self));
+			return Dee_unicode_printer_print8((struct Dee_unicode_printer *)arg,
+			                                  (uint8_t const *)DeeString_STR(self),
+			                                  DeeString_SIZE(self));
 		}
 		/* Directly print sized string data (without the need to convert to & from UTF-8). */
 		str.ptr = utf->u_data[utf->u_width];
 		SWITCH_SIZEOF_WIDTH(utf->u_width) {
 
 		CASE_WIDTH_1BYTE:
-			return unicode_printer_print8((struct unicode_printer *)arg, str.cp8, WSTR_LENGTH(str.cp8));
+			return Dee_unicode_printer_print8((struct Dee_unicode_printer *)arg, str.cp8, WSTR_LENGTH(str.cp8));
 
 		CASE_WIDTH_2BYTE:
-			return unicode_printer_print16((struct unicode_printer *)arg, str.cp16, WSTR_LENGTH(str.cp16));
+			return Dee_unicode_printer_print16((struct Dee_unicode_printer *)arg, str.cp16, WSTR_LENGTH(str.cp16));
 
 		CASE_WIDTH_4BYTE:
-			return unicode_printer_print32((struct unicode_printer *)arg, str.cp32, WSTR_LENGTH(str.cp32));
+			return Dee_unicode_printer_print32((struct Dee_unicode_printer *)arg, str.cp32, WSTR_LENGTH(str.cp32));
 		}
 	}
 	if (utf) {
 		/* The string has a pre-allocated UTF-8 variant. */
 		if (utf->u_utf8)
 			return (*printer)(arg, utf->u_utf8, WSTR_LENGTH(utf->u_utf8));
-		if ((utf->u_flags & STRING_UTF_FASCII) ||
+		if ((utf->u_flags & Dee_STRING_UTF_FASCII) ||
 		    (utf->u_width != STRING_WIDTH_1BYTE)) {
 			/* The single-byte variant is known to be encoded in UTF-8, or ASCII */
 print_ascii:
@@ -1185,7 +1185,7 @@ print_ascii:
 		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
-		bzero(utf, sizeof(struct string_utf));
+		bzero(utf, sizeof(struct Dee_string_utf));
 		utf->u_width = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		if unlikely(!atomic_cmpxch_weak(&((String *)self)->s_data, NULL, utf)) {
@@ -1220,7 +1220,7 @@ print_ascii:
 	}
 	if (flush_start == (uint8_t const *)DeeString_STR(self)) {
 		/* The entire string is ASCII (remember this fact!) */
-		atomic_or(&utf->u_flags, STRING_UTF_FASCII);
+		atomic_or(&utf->u_flags, Dee_STRING_UTF_FASCII);
 		goto print_ascii;
 	}
 
@@ -1241,7 +1241,7 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
                     Dee_formatprinter_t printer, void *arg) {
-	union dcharptr_const str;
+	union Dee_charptr_const str;
 	Dee_ssize_t temp, result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	str.ptr = DeeString_WSTR(self);
@@ -1458,7 +1458,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	size_t i, length, utf8_length;
 	DREF String *result;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -1485,7 +1485,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	utf = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
-	bzero(utf, sizeof(struct string_utf));
+	bzero(utf, sizeof(struct Dee_string_utf));
 	if (utf8_length == length) {
 		utf->u_width = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
@@ -1494,7 +1494,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	}
 	char16_to_utf8(text, length, (uint8_t *)result->s_str);
 	utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data */
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
@@ -1511,7 +1511,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) {
 	size_t i, length, utf8_length;
 	DREF String *result;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -1538,7 +1538,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	utf = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
-	bzero(utf, sizeof(struct string_utf));
+	bzero(utf, sizeof(struct Dee_string_utf));
 	if (utf8_length == length) {
 		utf->u_width = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
@@ -1548,7 +1548,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 		char16_to_utf8(text, length, (uint8_t *)result->s_str);
 	}
 	utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data */
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
@@ -1565,7 +1565,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_PackUtf16Buffer(/*inherit(always)*/ uint16_t *__restrict text,
                           unsigned int error_mode) {
 	size_t i, length, utf8_length;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	DREF String *result;
 	size_t character_count;
 	int kind = 0; /* 0: UTF-16 w/o surrogates
@@ -1666,7 +1666,7 @@ read_text_i:
 	utf = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
-	bzero(utf, sizeof(struct string_utf));
+	bzero(utf, sizeof(struct Dee_string_utf));
 	utf->u_utf16 = (_Dee_string_utf_utf16_t *)text; /* Inherit data */
 	if (utf8_length == length) {
 		size_t j;
@@ -1730,7 +1730,7 @@ read_text_i:
 		}
 	}
 	result->s_data = Dee_string_utf_untrack(utf);
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	return Dee_AsObject(result);
@@ -1746,7 +1746,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/ uint16_t *__restrict text) {
 	size_t i, length, utf8_length;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	DREF String *result;
 	size_t character_count;
 	int kind = 0; /* 0: UTF-16 w/o surrogates
@@ -1821,7 +1821,7 @@ continue_at_i:
 	utf = Dee_string_utf_tryalloc();
 	if unlikely(!utf)
 		goto err_r;
-	bzero(utf, sizeof(struct string_utf));
+	bzero(utf, sizeof(struct Dee_string_utf));
 	utf->u_utf16 = (_Dee_string_utf_utf16_t *)text; /* Inherit data */
 	if (utf8_length == length) {
 		size_t j;
@@ -1884,7 +1884,7 @@ continue_at_i:
 		}
 	}
 	result->s_data = Dee_string_utf_untrack(utf);
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	return Dee_AsObject(result);
@@ -1902,7 +1902,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
                           unsigned int error_mode) {
 	size_t i, length, utf8_length;
 	DREF String *result;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -1952,7 +1952,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	utf = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
-	bzero(utf, sizeof(struct string_utf));
+	bzero(utf, sizeof(struct Dee_string_utf));
 	utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)text; /* Inherit data */
 	utf32_to_utf8(text, length, (uint8_t *)result->s_str);
 	if (utf8_length == length) {
@@ -1963,7 +1963,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 		utf->u_width = STRING_WIDTH_4BYTE;
 	}
 	result->s_data = Dee_string_utf_untrack(utf);
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
@@ -1979,7 +1979,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) {
 	size_t i, length, utf8_length;
 	DREF String *result;
-	struct string_utf *utf;
+	struct Dee_string_utf *utf;
 	length = ((size_t *)text)[-1];
 	if unlikely(!length) {
 		Dee_Free((size_t *)text - 1);
@@ -2014,7 +2014,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	utf = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
-	bzero(utf, sizeof(struct string_utf));
+	bzero(utf, sizeof(struct Dee_string_utf));
 	utf->u_data[STRING_WIDTH_4BYTE] = (size_t *)text; /* Inherit data */
 	utf32_to_utf8(text, length, (uint8_t *)result->s_str);
 	if (utf8_length == length) {
@@ -2025,7 +2025,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 		utf->u_width = STRING_WIDTH_4BYTE;
 	}
 	result->s_data = Dee_string_utf_untrack(utf);
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
@@ -2175,7 +2175,7 @@ PUBLIC WUNUSED DREF DeeObject *
 {
 	DREF String *result;
 	uint8_t *iter, *end;
-	struct string_utf *utf = NULL;
+	struct Dee_string_utf *utf = NULL;
 	uint32_t *buffer32, *dst32;
 	size_t i, simple_length, utf_length;
 #ifdef NDEBUG
@@ -2198,7 +2198,7 @@ PUBLIC WUNUSED DREF DeeObject *
 			++iter;
 			continue;
 		}
-		seqlen = unicode_utf8seqlen[ch];
+		seqlen = Dee_unicode_utf8seqlen[ch];
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2247,7 +2247,7 @@ use_buffer32:
 					*dst32++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2307,7 +2307,7 @@ err_buffer32:
 					*dst16++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2366,7 +2366,7 @@ err_buffer16:
 		break;
 	}
 	result->s_data = Dee_string_utf_untrack(utf);
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_len  = length;
 	result->s_str[length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
@@ -2409,7 +2409,7 @@ PUBLIC WUNUSED DREF DeeObject *
 {
 	DREF String *result;
 	uint8_t *iter, *end;
-	struct string_utf *utf = NULL;
+	struct Dee_string_utf *utf = NULL;
 	uint32_t *buffer32, *dst32;
 	size_t i, simple_length, utf_length;
 	ASSERT(error_mode == STRING_ERROR_FREPLAC ||
@@ -2434,7 +2434,7 @@ PUBLIC WUNUSED DREF DeeObject *
 			++iter;
 			continue;
 		}
-		seqlen = unicode_utf8seqlen[ch];
+		seqlen = Dee_unicode_utf8seqlen[ch];
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2479,7 +2479,7 @@ use_buffer32:
 					*dst32++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2536,7 +2536,7 @@ err_buffer32:
 					*dst16++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2592,7 +2592,7 @@ err_buffer16:
 		break;
 	}
 	result->s_data = Dee_string_utf_untrack(utf);
-	result->s_hash = DEE_STRING_HASH_UNSET;
+	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_len  = length;
 	result->s_str[length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
@@ -2616,7 +2616,7 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
                   unsigned int error_mode) {
 	DREF String *result;
 	uint8_t *iter, *end;
-	struct string_utf *utf = NULL;
+	struct Dee_string_utf *utf = NULL;
 	uint32_t *buffer32, *dst32;
 	size_t i, simple_length, utf_length;
 	result = (DREF String *)self;
@@ -2632,7 +2632,7 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
 			++iter;
 			continue;
 		}
-		seqlen = unicode_utf8seqlen[ch];
+		seqlen = Dee_unicode_utf8seqlen[ch];
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2680,7 +2680,7 @@ use_buffer32:
 					*dst32++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2740,7 +2740,7 @@ err_buffer32:
 					*dst16++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					if (error_mode == STRING_ERROR_FREPLAC) {
@@ -2814,7 +2814,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_TrySetUtf8(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 	DREF String *result;
 	uint8_t *iter, *end;
-	struct string_utf *utf = NULL;
+	struct Dee_string_utf *utf = NULL;
 	uint32_t *buffer32, *dst32;
 	size_t i, simple_length, utf_length;
 	result = (DREF String *)self;
@@ -2830,7 +2830,7 @@ DeeString_TrySetUtf8(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 			++iter;
 			continue;
 		}
-		seqlen = unicode_utf8seqlen[ch];
+		seqlen = Dee_unicode_utf8seqlen[ch];
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			--end;
@@ -2869,7 +2869,7 @@ use_buffer32:
 					*dst32++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
@@ -2920,7 +2920,7 @@ use_buffer32:
 					*dst16++ = ch;
 					continue;
 				}
-				seqlen = unicode_utf8seqlen[ch];
+				seqlen = Dee_unicode_utf8seqlen[ch];
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
@@ -3026,8 +3026,8 @@ DeeString_Convert(String *__restrict self,
                   size_t start, size_t end,
                   uintptr_t kind) {
 	unsigned int width;
-	union dcharptr_const str;
-	union dcharptr result;
+	union Dee_charptr_const str;
+	union Dee_charptr result;
 	size_t i, length;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	width   = DeeString_WIDTH(self);
@@ -3067,10 +3067,10 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
-	uintptr_t kind = UNICODE_CONVERT_TITLE;
+	uintptr_t kind = Dee_UNICODE_CONVERT_TITLE;
 	unsigned int width;
-	union dcharptr_const str;
-	union dcharptr result;
+	union Dee_charptr_const str;
+	union Dee_charptr result;
 	size_t i, length;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	width   = DeeString_WIDTH(self);
@@ -3091,27 +3091,27 @@ DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
 	CASE_WIDTH_1BYTE:
 		for (i = 0; i < end; ++i) {
 			uint8_t ch = str.cp8[start + i];
-			struct unitraits const *desc = DeeUni_Descriptor(ch);
+			struct Dee_unitraits const *desc = DeeUni_Descriptor(ch);
 			result.cp8[i] = (uint8_t)(ch + *(int32_t const *)((byte_t const *)desc + kind));
-			kind = (desc->ut_flags & UNICODE_ISSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+			kind = (desc->ut_flags & Dee_UNICODE_ISSPACE) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 		}
 		break;
 
 	CASE_WIDTH_2BYTE:
 		for (i = 0; i < end; ++i) {
 			uint16_t ch = str.cp16[start + i];
-			struct unitraits const *desc  = DeeUni_Descriptor(ch);
+			struct Dee_unitraits const *desc  = DeeUni_Descriptor(ch);
 			result.cp16[i] = (uint16_t)(ch + *(int32_t const *)((byte_t const *)desc + kind));
-			kind = (desc->ut_flags & UNICODE_ISSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+			kind = (desc->ut_flags & Dee_UNICODE_ISSPACE) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 		}
 		break;
 
 	CASE_WIDTH_4BYTE:
 		for (i = 0; i < end; ++i) {
 			uint32_t ch = str.cp32[start + i];
-			struct unitraits const *desc  = DeeUni_Descriptor(ch);
+			struct Dee_unitraits const *desc  = DeeUni_Descriptor(ch);
 			result.cp32[i] = (uint32_t)(ch + *(int32_t const *)((byte_t const *)desc + kind));
-			kind = (desc->ut_flags & UNICODE_ISSPACE) ? UNICODE_CONVERT_TITLE : UNICODE_CONVERT_LOWER;
+			kind = (desc->ut_flags & Dee_UNICODE_ISSPACE) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 		}
 		break;
 	}
@@ -3123,8 +3123,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 DeeString_Capitalize(String *__restrict self, size_t start, size_t end) {
 	unsigned int width;
-	union dcharptr_const str;
-	union dcharptr result;
+	union Dee_charptr_const str;
+	union Dee_charptr result;
 	size_t i, length;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	width   = DeeString_WIDTH(self);
@@ -3168,8 +3168,8 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 DeeString_Swapcase(String *__restrict self, size_t start, size_t end) {
 	unsigned int width;
-	union dcharptr_const str;
-	union dcharptr result;
+	union Dee_charptr_const str;
+	union Dee_charptr result;
 	size_t i, length;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	width   = DeeString_WIDTH(self);
@@ -3215,7 +3215,7 @@ PUBLIC WUNUSED ATTR_INOUT(1) uint32_t
 	char const *iter = *ptext;
 	uint32_t result = (uint32_t)(uint8_t)*iter++;
 	if (result >= 0xc0) {
-		switch (unicode_utf8seqlen[result]) {
+		switch (Dee_unicode_utf8seqlen[result]) {
 
 		case 0:
 		case 1:
@@ -3299,7 +3299,7 @@ PUBLIC ATTR_INOUT(1) NONNULL((2)) uint32_t
 		return 0;
 	result = (uint32_t)(uint8_t)*iter++;
 	if (result >= 0xc0) {
-		uint8_t len = unicode_utf8seqlen[result];
+		uint8_t len = Dee_unicode_utf8seqlen[result];
 		if (iter + len - 1 >= text_end)
 			len = (uint8_t)(text_end - iter)+1;
 		switch (len) {
@@ -3497,7 +3497,7 @@ PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
 		*dst++ = 0x80 | (uint8_t)((ch >> 6) & 0x3f);
 		*dst++ = 0x80 | (uint8_t)((ch) & 0x3f);
 	} else {
-		STATIC_ASSERT(UNICODE_UTF8_CURLEN >= 7);
+		STATIC_ASSERT(Dee_UNICODE_UTF8_CURLEN >= 7);
 		*dst++ = 0xfe;
 		*dst++ = 0x80 | (uint8_t)((ch >> 30) & 0x03 /* & 0x3f*/);
 		*dst++ = 0x80 | (uint8_t)((ch >> 24) & 0x3f);
@@ -3523,9 +3523,9 @@ PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
 
 /* Unicode printer API */
 PUBLIC NONNULL((1)) bool DCALL
-Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
+Dee_unicode_printer_allocate(struct Dee_unicode_printer *__restrict self,
                              size_t num_chars, unsigned int width) {
-	ASSERT(!(width & ~UNICODE_PRINTER_FWIDTH));
+	ASSERT(!(width & ~Dee_UNICODE_PRINTER_FWIDTH));
 	if unlikely(!num_chars)
 		goto done;
 	if (!self->up_buffer) {
@@ -3536,10 +3536,10 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 			self->up_flags |= (unsigned char)width;
 		} else {
 			width = (unsigned int)STRING_WIDTH_COMMON((unsigned int)(self->up_flags &
-			                                                         UNICODE_PRINTER_FWIDTH),
+			                                                         Dee_UNICODE_PRINTER_FWIDTH),
 			                                          width);
 			self->up_length += num_chars;
-			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 			self->up_flags |= width;
 		}
 #else /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
@@ -3551,7 +3551,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 	} else {
 		/* Check if sufficient memory is already available. */
-		union dcharptr buffer;
+		union Dee_charptr buffer;
 		size_t avail, required;
 		buffer.ptr = self->up_buffer;
 		avail      = WSTR_LENGTH(buffer.ptr);
@@ -3559,7 +3559,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 		ASSERT(self->up_length <= avail);
 		if (avail < required) {
 			/* Try to pre-allocate memory by extending upon what has already been written. */
-			SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+			SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 			CASE_WIDTH_1BYTE:
 				if (width == STRING_WIDTH_1BYTE) {
@@ -3584,7 +3584,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 					                                     s_str));
 					self->up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
-					self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+					self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 					self->up_flags |= STRING_WIDTH_2BYTE;
 				} else {
@@ -3601,7 +3601,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 					                                     s_str));
 					self->up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
-					self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+					self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 					self->up_flags |= STRING_WIDTH_4BYTE;
 				}
@@ -3626,7 +3626,7 @@ Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
 						new_buffer[i] = (uint32_t)buffer.cp16[i];
 					DeeString_Free2ByteBuffer(buffer.cp16);
 					self->up_buffer = new_buffer;
-					self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+					self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 					self->up_flags |= STRING_WIDTH_4BYTE;
 				}
 				break;
@@ -3661,7 +3661,7 @@ Dee_unicode_printer_init_string(struct Dee_unicode_printer *__restrict self,
 
 	/* Check for special case: caller is giving using the empty string. */
 	if unlikely(str == (String *)Dee_EmptyString) {
-		unicode_printer_init(self);
+		Dee_unicode_printer_init(self);
 		Dee_DecrefNokill(str);
 		return;
 	}
@@ -3723,11 +3723,11 @@ inherit_latin1_string:
  * NOTE: A pending, incomplete UTF-8 character sequence is discarded.
  *      ---> Regardless of return value, `self' is finalized and left
  *           in an undefined state, the same way it would have been
- *           after a call to `unicode_printer_fini()'
+ *           after a call to `Dee_unicode_printer_fini()'
  * @return: * :   A reference to the packed string.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_unicode_printer_pack(/*inherit(always)*/ struct unicode_printer *__restrict self) {
+Dee_unicode_printer_pack(/*inherit(always)*/ struct Dee_unicode_printer *__restrict self) {
 	void *result_buffer = self->up_buffer;
 	if unlikely(!result_buffer)
 		return DeeString_NewEmpty();
@@ -3735,7 +3735,7 @@ Dee_unicode_printer_pack(/*inherit(always)*/ struct unicode_printer *__restrict 
 		void *new_buffer;
 		new_buffer = DeeString_TryResizeWidthBuffer(result_buffer,
 		                                            self->up_length,
-		                                            UNICODE_PRINTER_WIDTH(self));
+		                                            Dee_UNICODE_PRINTER_WIDTH(self));
 		if likely(new_buffer)
 			result_buffer = new_buffer;
 	}
@@ -3743,12 +3743,12 @@ Dee_unicode_printer_pack(/*inherit(always)*/ struct unicode_printer *__restrict 
 		unsigned char flags = self->up_flags;
 		DBG_memset(self, 0xcc, sizeof(*self));
 		return DeeString_PackWidthBuffer(result_buffer,
-		                                 flags & UNICODE_PRINTER_FWIDTH);
+		                                 flags & Dee_UNICODE_PRINTER_FWIDTH);
 	}
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__restrict self) {
+Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct Dee_unicode_printer *__restrict self) {
 	void *result_buffer = self->up_buffer;
 	if unlikely(!result_buffer)
 		return DeeString_NewEmpty();
@@ -3757,18 +3757,18 @@ Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__re
 		void *new_buffer;
 		new_buffer = DeeString_TryResizeWidthBuffer(result_buffer,
 		                                            self->up_length,
-		                                            UNICODE_PRINTER_WIDTH(self));
+		                                            Dee_UNICODE_PRINTER_WIDTH(self));
 		if likely(new_buffer)
 			result_buffer = new_buffer;
 	}
 #ifdef NDEBUG
 	return DeeString_TryPackWidthBuffer(result_buffer,
-	                                    UNICODE_PRINTER_WIDTH(self));
+	                                    Dee_UNICODE_PRINTER_WIDTH(self));
 #else /* NDEBUG */
 	{
 		DREF DeeObject *result;
 		result = DeeString_TryPackWidthBuffer(result_buffer,
-		                                      UNICODE_PRINTER_WIDTH(self));
+		                                      Dee_UNICODE_PRINTER_WIDTH(self));
 		if likely(result)
 			DBG_memset(self, 0xcc, sizeof(*self));
 		return result;
@@ -3778,27 +3778,27 @@ Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__re
 
 
 LOCAL WUNUSED NONNULL((1)) int
-(DCALL unicode_printer_putc8)(struct unicode_printer *__restrict self,
+(DCALL unicode_printer_putc8)(struct Dee_unicode_printer *__restrict self,
                               uint8_t ch) {
 	size_t size_avail;
-	union dcharptr string;
+	union Dee_charptr string;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		/* Allocate the initial buffer. */
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (self->up_length > UNICODE_PRINTER_INITIAL_BUFSIZE ||
-		    (UNICODE_PRINTER_WIDTH(self)) != STRING_WIDTH_1BYTE) {
+		    Dee_UNICODE_PRINTER_WIDTH(self) != STRING_WIDTH_1BYTE) {
 			self->up_buffer = DeeString_TryNewWidthBuffer(self->up_length,
-			                                              UNICODE_PRINTER_WIDTH(self));
+			                                              Dee_UNICODE_PRINTER_WIDTH(self));
 			if (!self->up_buffer)
 				goto allocate_initial_normally;
 			self->up_length = 1;
-			UNICODE_PRINTER_SETCHAR(self, 0, ch);
+			Dee_UNICODE_PRINTER_SETCHAR(self, 0, ch);
 			goto done;
 		} else {
 			DeeStringObject *buffer;
 allocate_initial_normally:
-			ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+			ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 			buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
 			                                                 UNICODE_PRINTER_INITIAL_BUFSIZE + 1,
 			                                                 sizeof(char));
@@ -3819,7 +3819,7 @@ allocate_initial_normally:
 #else /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		DeeStringObject *buffer;
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 		buffer = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
 		                                                 UNICODE_PRINTER_INITIAL_BUFSIZE + 1,
 		                                                 sizeof(char));
@@ -3844,11 +3844,11 @@ allocate_initial_normally:
 		/* Must allocate more memory. */
 		string.ptr = DeeString_TryResizeWidthBuffer(string.ptr,
 		                                            size_avail * 2,
-		                                            UNICODE_PRINTER_WIDTH(self));
+		                                            Dee_UNICODE_PRINTER_WIDTH(self));
 		if unlikely(!string.ptr) {
 			string.ptr = DeeString_ResizeWidthBuffer(self->up_buffer,
 			                                         size_avail + 1,
-			                                         UNICODE_PRINTER_WIDTH(self));
+			                                         Dee_UNICODE_PRINTER_WIDTH(self));
 			if unlikely(!string.ptr)
 				goto err;
 		}
@@ -3856,7 +3856,7 @@ allocate_initial_normally:
 	}
 
 	/* Simply append the new character. */
-	SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+	SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
 		string.cp8[self->up_length] = ch;
@@ -3923,7 +3923,7 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_unicode_printer_putascii)(struct unicode_printer *__restrict self, char ch) {
+(DCALL Dee_unicode_printer_putascii)(struct Dee_unicode_printer *__restrict self, char ch) {
 	ASSERTF((uint8_t)ch <= 0x7f,
 	        "The given ch (U+%.4I8x) is not an ASCII character",
 	        (uint8_t)ch);
@@ -3937,8 +3937,8 @@ PUBLIC WUNUSED NONNULL((1)) int
  * @return:  0: Successfully appended the character.
  * @return: -1: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_unicode_printer_putc)(struct unicode_printer *__restrict self, uint32_t ch) {
-	union dcharptr string;
+(DCALL Dee_unicode_printer_putc)(struct Dee_unicode_printer *__restrict self, uint32_t ch) {
+	union Dee_charptr string;
 	if (ch <= 0xff)
 		return unicode_printer_putc8(self, (uint8_t)ch);
 	string.ptr = self->up_buffer;
@@ -3949,11 +3949,11 @@ PUBLIC WUNUSED NONNULL((1)) int
 		initial_length = self->up_length;
 		if (initial_length < UNICODE_PRINTER_INITIAL_BUFSIZE)
 			initial_length = UNICODE_PRINTER_INITIAL_BUFSIZE;
-		if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE)
+		if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE)
 			goto allocate_initial_as_32;
-		if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE && ch <= 0xffff)
+		if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE && ch <= 0xffff)
 			goto allocate_initial_as_16;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 		if (ch <= 0xffff) {
 allocate_initial_as_16:
 			string.cp16 = DeeString_TryNew2ByteBuffer(initial_length);
@@ -3985,7 +3985,7 @@ allocate_initial_as_32:
 		self->up_buffer = string.ptr;
 		goto done;
 #else /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 		if (ch <= 0xffff) {
 			string.cp16 = DeeString_TryNew2ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
 			if unlikely(!string.cp16) {
@@ -4011,7 +4011,7 @@ allocate_initial_as_32:
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 	}
 	ASSERT(self->up_length <= WSTR_LENGTH(string.ptr));
-	SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+	SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
 		/* Must always upcast, regardless of where we're at. */
@@ -4022,7 +4022,7 @@ allocate_initial_as_32:
 				goto err;
 			self->up_buffer = string.ptr;
 #if STRING_WIDTH_1BYTE != 0
-			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 			self->up_flags |= STRING_WIDTH_2BYTE;
 			goto append_2byte;
@@ -4033,7 +4033,7 @@ allocate_initial_as_32:
 				goto err;
 			self->up_buffer = string.ptr;
 #if STRING_WIDTH_1BYTE != 0
-			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 			self->up_flags |= STRING_WIDTH_4BYTE;
 			goto append_4byte;
@@ -4063,7 +4063,7 @@ append_2byte:
 			if unlikely(!string.cp32)
 				goto err;
 			self->up_buffer = string.cp32;
-			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 			self->up_flags |= STRING_WIDTH_4BYTE;
 			goto append_4byte;
 		}
@@ -4097,52 +4097,51 @@ err:
 
 /* Append a given UTF-8 character. */
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_unicode_printer_pututf8)(struct unicode_printer *__restrict self, uint8_t ch) {
-	if (self->up_flags & UNICODE_PRINTER_FPENDING) {
+(DCALL Dee_unicode_printer_pututf8)(struct Dee_unicode_printer *__restrict self, uint8_t ch) {
+	if (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 		/* Complete a pending UTF-8 multi-byte sequence. */
 		uint8_t curlen, reqlen;
-		curlen = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+		curlen = (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		self->up_pend[curlen] = ch;
-		reqlen = unicode_utf8seqlen[self->up_pend[0]];
+		reqlen = Dee_unicode_utf8seqlen[self->up_pend[0]];
 		ASSERT(curlen + 1 <= reqlen);
 		if (curlen + 1 == reqlen) {
 			/* Append the full character. */
-			int result;
 			uint32_t ch32 = utf8_getchar((uint8_t *)self->up_pend, reqlen);
-			result        = unicode_printer_putc(self, ch32);
+			int result    = Dee_unicode_printer_putc(self, ch32);
 			if likely(result >= 0)
-				self->up_flags &= ~UNICODE_PRINTER_FPENDING;
+				self->up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
 			return result;
 		}
-		self->up_flags += 1 << UNICODE_PRINTER_FPENDING_SHFT;
+		self->up_flags += 1 << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		return 0;
 	}
 	if (ch >= 0xc0) {
 		/* Start of a multi-byte sequence. */
 		self->up_pend[0] = ch;
-		self->up_flags |= 1 << UNICODE_PRINTER_FPENDING_SHFT;
+		self->up_flags |= 1 << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		return 0;
 	}
 	return unicode_printer_putc8(self, ch);
 }
 
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_unicode_printer_pututf16)(struct unicode_printer *__restrict self, uint16_t ch) {
-	if (self->up_flags & UNICODE_PRINTER_FPENDING) {
+(DCALL Dee_unicode_printer_pututf16)(struct Dee_unicode_printer *__restrict self, uint16_t ch) {
+	if (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 		uint32_t ch32;
 		/* Complete a utf-16 surrogate pair. */
 		ch32 = UTF16_COMBINE_SURROGATES(*(uint16_t *)self->up_pend, ch);
-		self->up_flags &= ~UNICODE_PRINTER_FPENDING;
-		return unicode_printer_putc(self, ch32);
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
+		return Dee_unicode_printer_putc(self, ch32);
 	}
 	if (ch >= UTF16_HIGH_SURROGATE_MIN &&
 	    ch <= UTF16_HIGH_SURROGATE_MAX) {
 		/* High surrogate word. */
 		*(uint16_t *)self->up_pend = ch;
-		self->up_flags |= 1 << UNICODE_PRINTER_FPENDING_SHFT;
+		self->up_flags |= 1 << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		return 0;
 	}
-	return unicode_printer_putc(self, ch);
+	return Dee_unicode_printer_putc(self, ch);
 }
 
 
@@ -4156,31 +4155,30 @@ PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DPRINTER_CC
 Dee_unicode_printer_print(void *__restrict self,
                           /*utf-8*/ char const *__restrict text,
                           size_t textlen) {
-	struct unicode_printer *me;
+	struct Dee_unicode_printer *me;
 	size_t result = textlen;
 	char const *flush_start;
-	me = (struct unicode_printer *)self;
-	while (me->up_flags & UNICODE_PRINTER_FPENDING) {
+	me = (struct Dee_unicode_printer *)self;
+	while (me->up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 		/* Complete a pending UTF-8 sequence. */
 		uint8_t curlen, reqlen;
 		if (!textlen)
 			goto done;
-		curlen = (me->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+		curlen = (me->up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		me->up_pend[curlen] = (uint8_t)*text++;
 		--textlen;
-		reqlen = unicode_utf8seqlen[me->up_pend[0]];
+		reqlen = Dee_unicode_utf8seqlen[me->up_pend[0]];
 		ASSERT(curlen + 1 <= reqlen);
 		if (curlen + 1 >= reqlen) {
 			/* Append the full character. */
-			int error;
 			uint32_t ch32 = utf8_getchar((uint8_t *)me->up_pend, reqlen);
-			error         = unicode_printer_putc(me, ch32);
+			int error     = Dee_unicode_printer_putc(me, ch32);
 			if unlikely(error < 0)
 				goto err;
-			me->up_flags &= ~UNICODE_PRINTER_FPENDING;
+			me->up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
 			break;
 		}
-		me->up_flags += 1 << UNICODE_PRINTER_FPENDING_SHFT;
+		me->up_flags += 1 << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 	}
 again_flush:
 	flush_start = text;
@@ -4191,26 +4189,26 @@ again_flush:
 
 	/* Print ASCII text. */
 	if (flush_start != text) {
-		if unlikely(unicode_printer_print8(me,
-		                                   (uint8_t const *)flush_start,
-		                                   (size_t)(text - flush_start)) < 0)
+		if unlikely(Dee_unicode_printer_print8(me,
+		                                       (uint8_t const *)flush_start,
+		                                       (size_t)(text - flush_start)) < 0)
 			goto err;
 	}
 	if (textlen) {
 		uint8_t seqlen;
 		uint32_t ch32;
 		ASSERT((unsigned char)*text >= 0xc0);
-		seqlen = unicode_utf8seqlen[(uint8_t)*text];
+		seqlen = Dee_unicode_utf8seqlen[(uint8_t)*text];
 		if (seqlen > textlen) {
 			/* Incomplete sequence! (safe as pending UTF-8) */
 			memcpyb(me->up_pend, text, textlen);
-			me->up_flags |= (uint8_t)textlen << UNICODE_PRINTER_FPENDING_SHFT;
+			me->up_flags |= (uint8_t)textlen << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 			goto done;
 		}
 
 		/* Expand the utf-8 sequence and emit it as a single character. */
 		ch32 = utf8_getchar((uint8_t const *)text, seqlen);
-		if (unicode_printer_putc(me, ch32))
+		if (Dee_unicode_printer_putc(me, ch32))
 			goto err;
 		text += seqlen;
 		textlen -= seqlen;
@@ -4224,21 +4222,21 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_printutf16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_printutf16(struct Dee_unicode_printer *__restrict self,
                                /*utf-16*/ uint16_t const *__restrict text,
                                size_t textlen) {
 	size_t result = textlen;
 	uint16_t const *flush_start;
 	uint16_t low_surrogate, high_surrogate;
-	if (self->up_flags & UNICODE_PRINTER_FPENDING) {
+	if (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 		/* Complete a pending UTF-16 sequence. */
 		if (!textlen)
 			goto done;
 		high_surrogate = *(uint16_t *)self->up_pend;
 		low_surrogate  = text[0];
-		if (unicode_printer_putc(self, UTF16_COMBINE_SURROGATES(high_surrogate, low_surrogate)))
+		if (Dee_unicode_printer_putc(self, UTF16_COMBINE_SURROGATES(high_surrogate, low_surrogate)))
 			goto err;
-		self->up_flags &= ~UNICODE_PRINTER_FPENDING;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
 		++text;
 		--textlen;
 	}
@@ -4253,7 +4251,7 @@ again_flush:
 
 	/* Print pure UTF-16 text. */
 	if (flush_start != text) {
-		if unlikely(unicode_printer_print16(self, flush_start, (size_t)(text - flush_start)) < 0)
+		if unlikely(Dee_unicode_printer_print16(self, flush_start, (size_t)(text - flush_start)) < 0)
 			goto err;
 	}
 
@@ -4262,7 +4260,7 @@ again_flush:
 		if (textlen == 1) {
 			/* Incomplete surrogate pair. */
 			*(uint16_t *)self->up_pend = text[0];
-			self->up_flags |= (1 << UNICODE_PRINTER_FPENDING_SHFT);
+			self->up_flags |= (1 << Dee_UNICODE_PRINTER_FPENDING_SHFT);
 			goto done;
 		}
 
@@ -4270,7 +4268,7 @@ again_flush:
 		high_surrogate = text[0];
 		low_surrogate  = text[1];
 		ch32 = UTF16_COMBINE_SURROGATES(high_surrogate, low_surrogate);
-		if (unicode_printer_putc(self, ch32))
+		if (Dee_unicode_printer_putc(self, ch32))
 			goto err;
 		text += 2;
 		textlen -= 2;
@@ -4286,24 +4284,24 @@ err:
 
 
 /* Print raw 8, 16 or 32-bit sequences of unicode characters.
- *  - `unicode_printer_print8' prints characters from the range U+0000 .. U+00FF (aka. latin-1)
- *  - `unicode_printer_print16' prints characters from the range U+0000 .. U+FFFF
- *  - `unicode_printer_print32' prints characters from the range U+0000 .. U+10FFFF (FFFFFFFF)
+ *  - `Dee_unicode_printer_print8' prints characters from the range U+0000 .. U+00FF (aka. latin-1)
+ *  - `Dee_unicode_printer_print16' prints characters from the range U+0000 .. U+FFFF
+ *  - `Dee_unicode_printer_print32' prints characters from the range U+0000 .. U+10FFFF (FFFFFFFF)
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
+Dee_unicode_printer_print8(struct Dee_unicode_printer *__restrict self,
                            uint8_t const *__restrict text,
                            size_t textlen) {
 	size_t result = textlen;
-	union dcharptr string;
+	union Dee_charptr string;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		String *base_string;
 		size_t initial_alloc;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		if unlikely(!textlen)
 			goto done;
@@ -4314,7 +4312,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -4335,7 +4333,7 @@ Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
 	}
 
 	/* Append new string data. */
-	SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+	SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
 		if (self->up_length + textlen > WSTR_LENGTH(string.cp8)) {
@@ -4415,17 +4413,17 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
+Dee_unicode_printer_repeatascii(struct Dee_unicode_printer *__restrict self,
                                 char ch, size_t num_chars) {
 	size_t result = num_chars;
-	union dcharptr string;
+	union Dee_charptr string;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		String *base_string;
 		size_t initial_alloc;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		if unlikely(!num_chars)
 			goto done;
@@ -4436,7 +4434,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -4457,7 +4455,7 @@ Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
 	}
 
 	/* Append new string data. */
-	SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+	SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
 		if (self->up_length + num_chars > WSTR_LENGTH(string.cp8)) {
@@ -4535,17 +4533,17 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_print16(struct Dee_unicode_printer *__restrict self,
                             uint16_t const *__restrict text,
                             size_t textlen) {
 	size_t result = textlen;
-	union dcharptr string;
+	union Dee_charptr string;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		size_t initial_alloc;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		if unlikely(!textlen)
 			goto done;
@@ -4555,7 +4553,7 @@ Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -4571,13 +4569,13 @@ Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
 		self->up_buffer = string.cp16;
 		self->up_length = textlen;
 #if STRING_WIDTH_1BYTE != 0
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 		self->up_flags |= STRING_WIDTH_2BYTE;
 		goto done;
 	}
 
-	SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+	SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE: {
 		size_t i;
@@ -4592,7 +4590,7 @@ Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
 				goto err;
 			self->up_buffer = string.cp16;
 #if STRING_WIDTH_1BYTE != 0
-			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 			self->up_flags |= STRING_WIDTH_2BYTE;
 			goto append_2byte;
@@ -4670,19 +4668,19 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
+Dee_unicode_printer_print32(struct Dee_unicode_printer *__restrict self,
                             uint32_t const *__restrict text,
                             size_t textlen) {
 	size_t i, result = textlen;
-	union dcharptr string;
+	union Dee_charptr string;
 	if (textlen == 1)
-		return unicode_printer_putc(self, text[0]) ? -1 : 1;
+		return Dee_unicode_printer_putc(self, text[0]) ? -1 : 1;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		size_t initial_alloc;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		if unlikely(!textlen)
 			goto done;
@@ -4692,7 +4690,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -4708,13 +4706,13 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 		self->up_buffer = string.cp32;
 		self->up_length = textlen;
 #if STRING_WIDTH_1BYTE != 0
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 		self->up_flags |= STRING_WIDTH_4BYTE;
 		goto done;
 	}
 
-	SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+	SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
 		/* Check if there are any characters > 0xff */
@@ -4729,7 +4727,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 					goto err;
 				self->up_buffer = string.cp16;
 #if STRING_WIDTH_1BYTE != 0
-				self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+				self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 				self->up_flags |= STRING_WIDTH_2BYTE;
 				goto append_2byte;
@@ -4742,7 +4740,7 @@ Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
 				goto err;
 			self->up_buffer = string.cp32;
 #if STRING_WIDTH_1BYTE != 0
-			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 			self->up_flags |= STRING_WIDTH_4BYTE;
 			goto append_4byte;
@@ -4781,7 +4779,7 @@ append_2byte:
 			if unlikely(!string.cp32)
 				goto err;
 			self->up_buffer = string.cp32;
-			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 			self->up_flags |= STRING_WIDTH_4BYTE;
 			goto append_4byte;
 		}
@@ -4836,21 +4834,21 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
+Dee_unicode_printer_printinto(struct Dee_unicode_printer *__restrict self,
                               Dee_formatprinter_t printer, void *arg) {
-	union dcharptr_const str;
+	union Dee_charptr_const str;
 	size_t length;
 	Dee_ssize_t result;
 
 	/* Optimization for when the target is another unicode-printer. */
 	length = self->up_length;
-	if (printer == &unicode_printer_print) {
-		struct unicode_printer *dst;
-		dst = (struct unicode_printer *)arg;
+	if (printer == &Dee_unicode_printer_print) {
+		struct Dee_unicode_printer *dst;
+		dst = (struct Dee_unicode_printer *)arg;
 		if (!dst->up_buffer) {
 			/* The simplest cast: the target buffer is currently empty, and since
 			 * we're allocated to modify `self', we can simply move everything! */
-			memcpy(dst, self, sizeof(struct unicode_printer));
+			memcpy(dst, self, sizeof(struct Dee_unicode_printer));
 			self->up_length = 0;
 			self->up_buffer = NULL;
 			self->up_flags  = STRING_WIDTH_1BYTE;
@@ -4860,16 +4858,16 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 		 * Since we know that the target is a unicode-printer,
 		 * we don't have to perform any UTF-8 conversions! */
 		str.ptr = self->up_buffer;
-		SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+		SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 		CASE_WIDTH_1BYTE:
-			return unicode_printer_print8(dst, str.cp8, length);
+			return Dee_unicode_printer_print8(dst, str.cp8, length);
 
 		CASE_WIDTH_2BYTE:
-			return unicode_printer_print16(dst, str.cp16, length);
+			return Dee_unicode_printer_print16(dst, str.cp16, length);
 
 		CASE_WIDTH_4BYTE:
-			return unicode_printer_print32(dst, str.cp32, length);
+			return Dee_unicode_printer_print32(dst, str.cp32, length);
 		}
 	}
 
@@ -4881,7 +4879,7 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 	if (str.ptr != NULL)
 #endif /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 	{
-		SWITCH_SIZEOF_WIDTH(UNICODE_PRINTER_WIDTH(self)) {
+		SWITCH_SIZEOF_WIDTH(Dee_UNICODE_PRINTER_WIDTH(self)) {
 
 		CASE_WIDTH_1BYTE:
 			result = DeeFormat_Print8(printer, arg, str.cp8, length);
@@ -4900,10 +4898,10 @@ Dee_unicode_printer_printinto(struct unicode_printer *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
+Dee_unicode_printer_reserve(struct Dee_unicode_printer *__restrict self,
                             size_t num_chars) {
 	size_t result = self->up_length;
-	union dcharptr str;
+	union Dee_charptr str;
 	str.ptr = self->up_buffer;
 	if unlikely(!str.ptr) {
 		String *init_buffer;
@@ -4919,7 +4917,7 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -4946,10 +4944,10 @@ Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
 				new_size *= 2;
 			} while (new_size < new_length);
 			str.ptr = DeeString_TryResizeWidthBuffer(str.ptr, new_size,
-			                                         UNICODE_PRINTER_WIDTH(self));
+			                                         Dee_UNICODE_PRINTER_WIDTH(self));
 			if unlikely(!str.ptr) {
 				str.ptr = DeeString_ResizeWidthBuffer(str.ptr, new_length,
-				                                      UNICODE_PRINTER_WIDTH(self));
+				                                      Dee_UNICODE_PRINTER_WIDTH(self));
 				if unlikely(!str.ptr)
 					goto err;
 			}
@@ -4970,14 +4968,14 @@ err:
 /* Print a unicode character `ch', encoded as UTF-8 into `printer' */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeFormat_Putc(/*utf-8*/ Dee_formatprinter_t printer, void *arg, uint32_t ch) {
-	char utf8_repr[UNICODE_UTF8_CURLEN];
+	char utf8_repr[Dee_UNICODE_UTF8_CURLEN];
 	size_t utf8_len;
-	if (printer == &unicode_printer_print) {
-		if (unicode_printer_putc((struct unicode_printer *)arg, ch))
+	if (printer == &Dee_unicode_printer_print) {
+		if (Dee_unicode_printer_putc((struct Dee_unicode_printer *)arg, ch))
 			goto err;
 		return 1;
 	}
-	utf8_len = (size_t)(unicode_writeutf8(utf8_repr, ch) - utf8_repr);
+	utf8_len = (size_t)(Dee_unicode_writeutf8(utf8_repr, ch) - utf8_repr);
 	return (*printer)(arg, utf8_repr, utf8_len);
 err:
 	return -1;
@@ -4991,12 +4989,12 @@ err:
  * @return: * : The offset from the base of string being printed, where the given `str' can be found.
  * @return: -1: Failed to allocate the string. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_reuse(struct unicode_printer *__restrict self,
+Dee_unicode_printer_reuse(struct Dee_unicode_printer *__restrict self,
                           /*utf-8*/ char const *__restrict str, size_t length) {
 	size_t result;
 	/* TODO: Search for an existing instance. */
 	result = self->up_length;
-	if unlikely(unicode_printer_print(self, str, length))
+	if unlikely(Dee_unicode_printer_print(self, str, length))
 		goto err;
 	return result;
 err:
@@ -5004,12 +5002,12 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_reuse8(struct unicode_printer *__restrict self,
+Dee_unicode_printer_reuse8(struct Dee_unicode_printer *__restrict self,
                            uint8_t const *__restrict str, size_t length) {
 	size_t result;
 	/* TODO: Search for an existing instance. */
 	result = self->up_length;
-	if unlikely(unicode_printer_print8(self, str, length))
+	if unlikely(Dee_unicode_printer_print8(self, str, length))
 		goto err;
 	return result;
 err:
@@ -5017,12 +5015,12 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_reuse16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_reuse16(struct Dee_unicode_printer *__restrict self,
                             uint16_t const *__restrict str, size_t length) {
 	size_t result;
 	/* TODO: Search for an existing instance. */
 	result = self->up_length;
-	if unlikely(unicode_printer_print16(self, str, length))
+	if unlikely(Dee_unicode_printer_print16(self, str, length))
 		goto err;
 	return result;
 err:
@@ -5030,12 +5028,12 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-Dee_unicode_printer_reuse32(struct unicode_printer *__restrict self,
+Dee_unicode_printer_reuse32(struct Dee_unicode_printer *__restrict self,
                             uint32_t const *__restrict str, size_t length) {
 	size_t result;
 	/* TODO: Search for an existing instance. */
 	result = self->up_length;
-	if unlikely(unicode_printer_print32(self, str, length))
+	if unlikely(Dee_unicode_printer_print32(self, str, length))
 		goto err;
 	return result;
 err:
@@ -5045,9 +5043,9 @@ err:
 
 /* Unicode utf-8 buffer API */
 PUBLIC WUNUSED NONNULL((1)) char *DCALL
-Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
+Dee_unicode_printer_tryalloc_utf8(struct Dee_unicode_printer *__restrict self,
                                   size_t length) {
-	union dcharptr string;
+	union Dee_charptr string;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		String *base_string;
@@ -5055,9 +5053,9 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 		uint8_t num_pending;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
-		num_pending = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+		num_pending = (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		length += num_pending;
 		/* Allocate the initial buffer. */
 		initial_alloc = length;
@@ -5066,7 +5064,7 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -5089,12 +5087,12 @@ Dee_unicode_printer_tryalloc_utf8(struct unicode_printer *__restrict self,
 #endif /* !__OPTIMIZE_SIZE__ */
 		return (char *)mempcpy(base_string->s_str, self->up_pend, num_pending);
 	}
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
 		/* The unicode printer uses a single-byte character width, so we
 		 * can allocate from that buffer and later check if only UTF-8
 		 * was written. */
 		uint8_t num_pending;
-		num_pending = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+		num_pending = (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		length += num_pending;
 		if (self->up_length + length > WSTR_LENGTH(string.cp_char)) {
 			String *new_string;
@@ -5134,13 +5132,13 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) char *DCALL
-Dee_unicode_printer_tryresize_utf8(struct unicode_printer *__restrict self,
+Dee_unicode_printer_tryresize_utf8(struct Dee_unicode_printer *__restrict self,
                                    char *buf, size_t new_length) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
 		size_t old_length, total_avail, new_alloc, old_alloc;
 		String *new_buffer;
 		if (!buf)
-			return unicode_printer_tryalloc_utf8(self, new_length);
+			return Dee_unicode_printer_tryalloc_utf8(self, new_length);
 		ASSERT(self->up_buffer != NULL);
 		ASSERT(buf >= (char *)((uint8_t *)self->up_buffer));
 		ASSERT(buf <= (char *)((uint8_t *)self->up_buffer + self->up_length));
@@ -5192,33 +5190,33 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) char *DCALL
-Dee_unicode_printer_alloc_utf8(struct unicode_printer *__restrict self,
+Dee_unicode_printer_alloc_utf8(struct Dee_unicode_printer *__restrict self,
                                size_t length) {
 	char *result;
 	do {
-		result = unicode_printer_tryalloc_utf8(self, length);
+		result = Dee_unicode_printer_tryalloc_utf8(self, length);
 	} while (unlikely(!result) && Dee_CollectMemoryc(length, sizeof(uint8_t)));
 	return result;
 }
 
 PUBLIC WUNUSED NONNULL((1)) char *DCALL
-Dee_unicode_printer_resize_utf8(struct unicode_printer *__restrict self,
+Dee_unicode_printer_resize_utf8(struct Dee_unicode_printer *__restrict self,
                                 char *buf, size_t new_length) {
 	char *result;
 	do {
-		result = unicode_printer_tryresize_utf8(self, buf, new_length);
+		result = Dee_unicode_printer_tryresize_utf8(self, buf, new_length);
 	} while (unlikely(!result) && Dee_CollectMemoryc(new_length, sizeof(uint8_t)));
 	return result;
 }
 
 PUBLIC NONNULL((1)) void DCALL
-Dee_unicode_printer_free_utf8(struct unicode_printer *__restrict self, char *buf) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
+Dee_unicode_printer_free_utf8(struct Dee_unicode_printer *__restrict self, char *buf) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
 		if (!buf)
 			return;
 
 		/* Deal with pending characters. */
-		buf -= (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+		buf -= (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		ASSERT(buf >= (char *)((uint8_t *)self->up_buffer));
 		ASSERT(buf <= (char *)((uint8_t *)self->up_buffer + self->up_length));
 
@@ -5230,23 +5228,23 @@ Dee_unicode_printer_free_utf8(struct unicode_printer *__restrict self, char *buf
 }
 
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
+Dee_unicode_printer_commit_utf8(struct Dee_unicode_printer *__restrict self,
                                 char *buf, size_t final_length) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE) {
 		size_t count;
 		uint8_t *iter;
 		size_t confirm_length = final_length;
 		if (!buf)
 			return 0;
-		if (self->up_flags & UNICODE_PRINTER_FPENDING) {
+		if (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 			uint8_t num_pending;
 			/* Include pending UTF-8 characters.
 			 * -> When the buffer was originally allocated, these had been included
 			 *    as a hidden prefix to the buffer that the user requested. */
-			num_pending = (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+			num_pending = (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
 			buf -= num_pending;
 			confirm_length += num_pending;
-			self->up_flags &= ~UNICODE_PRINTER_FPENDING;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
 		}
 		ASSERT(buf >= (char *)((uint8_t *)self->up_buffer));
 		ASSERT(buf + confirm_length <= (char *)((uint8_t *)self->up_buffer + self->up_length));
@@ -5264,11 +5262,11 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 				continue; /* Pure ASCII / invalid UTF-8 (which we ignore here) */
 
 			/* Decode the full unicode character. */
-			utf8_length = unicode_utf8seqlen[ch];
+			utf8_length = Dee_unicode_utf8seqlen[ch];
 			ASSERT(utf8_length >= 2);
 			if (utf8_length > count) {
 				/* Incomplete, trailing UTF-8 sequence */
-				self->up_flags |= (uint8_t)count << UNICODE_PRINTER_FPENDING_SHFT;
+				self->up_flags |= (uint8_t)count << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 				memcpyc(self->up_pend, iter - 1,
 				        count, sizeof(uint8_t));
 				confirm_length -= count;
@@ -5307,7 +5305,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 							++i;
 							continue;
 						}
-						utf8_length = unicode_utf8seqlen[ch];
+						utf8_length = Dee_unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						if (i + utf8_length > utf8_convlength) {
 							/* Incomplete UTF-8 sequence. */
@@ -5316,7 +5314,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 							        &utf8_start[i],
 							        pendsz,
 							        sizeof(unsigned char));
-							self->up_flags |= pendsz << UNICODE_PRINTER_FPENDING_SHFT;
+							self->up_flags |= pendsz << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 							utf8_convlength = i;
 							break;
 						}
@@ -5342,7 +5340,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 							++i;
 							continue;
 						}
-						utf8_length = unicode_utf8seqlen[ch];
+						utf8_length = Dee_unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						ASSERT(utf8_length <= 4);
 						*dst++ = utf8_getchar16(&utf8_start[i], utf8_length);
@@ -5357,7 +5355,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 					self->up_buffer = string16;
 					self->up_length = w16_length;
 #if STRING_WIDTH_1BYTE != 0
-					self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+					self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 					self->up_flags |= STRING_WIDTH_2BYTE;
 					goto return_final_length;
@@ -5374,7 +5372,7 @@ upcast_to_32bit:
 							++i;
 							continue;
 						}
-						utf8_length = unicode_utf8seqlen[ch];
+						utf8_length = Dee_unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						w32_length -= (utf8_length - 1);
 						i += utf8_length;
@@ -5394,7 +5392,7 @@ upcast_to_32bit:
 							++i;
 							continue;
 						}
-						utf8_length = unicode_utf8seqlen[ch];
+						utf8_length = Dee_unicode_utf8seqlen[ch];
 						ASSERT(utf8_length >= 2);
 						*dst++ = utf8_getchar(&utf8_start[i], utf8_length);
 						i += utf8_length;
@@ -5408,7 +5406,7 @@ upcast_to_32bit:
 					self->up_buffer = string32;
 					self->up_length = w32_length;
 #if STRING_WIDTH_1BYTE != 0
-					self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+					self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 					self->up_flags |= STRING_WIDTH_4BYTE;
 					goto return_final_length;
@@ -5424,7 +5422,7 @@ return_final_length:
 		Dee_ssize_t result;
 
 		/* Simply print the buffer as UTF-8 text. */
-		result = unicode_printer_print(self, buf, final_length);
+		result = Dee_unicode_printer_print(self, buf, final_length);
 		Dee_Free(buf);
 		return result;
 	}
@@ -5436,17 +5434,17 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1)) uint16_t *DCALL
-Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_tryalloc_utf16(struct Dee_unicode_printer *__restrict self,
                                    size_t length) {
-	union dcharptr string;
+	union Dee_charptr string;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		size_t initial_alloc;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
-		if (self->up_flags & UNICODE_PRINTER_FPENDING)
+		if (self->up_flags & Dee_UNICODE_PRINTER_FPENDING)
 			++length;
 
 		/* Allocate the initial buffer. */
@@ -5456,7 +5454,7 @@ Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -5470,16 +5468,16 @@ Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
 		self->up_length = length;
 		self->up_buffer = string.cp16;
 #if STRING_WIDTH_1BYTE != 0
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 		self->up_flags |= STRING_WIDTH_2BYTE;
-		if (!(self->up_flags & UNICODE_PRINTER_FPENDING))
+		if (!(self->up_flags & Dee_UNICODE_PRINTER_FPENDING))
 			return string.cp16;
 		*string.cp16 = *(uint16_t *)self->up_pend;
 		return string.cp16 + 1;
 	}
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
-		if (self->up_flags & UNICODE_PRINTER_FPENDING)
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
+		if (self->up_flags & Dee_UNICODE_PRINTER_FPENDING)
 			++length;
 		if (self->up_length + length > WSTR_LENGTH(string.cp16)) {
 			/* Must allocate more memory. */
@@ -5498,7 +5496,7 @@ Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
 		}
 		string.cp16 += self->up_length;
 		self->up_length += length;
-		if (!(self->up_flags & UNICODE_PRINTER_FPENDING))
+		if (!(self->up_flags & Dee_UNICODE_PRINTER_FPENDING))
 			return string.cp16;
 		*string.cp16 = *(uint16_t *)self->up_pend;
 		return string.cp16 + 1;
@@ -5509,13 +5507,13 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) uint16_t *DCALL
-Dee_unicode_printer_tryresize_utf16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_tryresize_utf16(struct Dee_unicode_printer *__restrict self,
                                     uint16_t *buf, size_t new_length) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
 		uint16_t *string;
 		size_t old_length, total_avail, new_alloc, old_alloc;
 		if (!buf)
-			return unicode_printer_tryalloc_utf16(self, new_length);
+			return Dee_unicode_printer_tryalloc_utf16(self, new_length);
 		string = (uint16_t *)self->up_buffer;
 		ASSERT(string != NULL);
 		ASSERT(buf >= string);
@@ -5564,34 +5562,34 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) uint16_t *DCALL
-Dee_unicode_printer_alloc_utf16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_alloc_utf16(struct Dee_unicode_printer *__restrict self,
                                 size_t length) {
 	uint16_t *result;
 	do {
-		result = unicode_printer_tryalloc_utf16(self, length);
+		result = Dee_unicode_printer_tryalloc_utf16(self, length);
 	} while (unlikely(!result) && Dee_CollectMemoryc(length, sizeof(uint16_t)));
 	return result;
 }
 
 PUBLIC WUNUSED NONNULL((1)) uint16_t *DCALL
-Dee_unicode_printer_resize_utf16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_resize_utf16(struct Dee_unicode_printer *__restrict self,
                                  uint16_t *buf, size_t new_length) {
 	uint16_t *result;
 	do {
-		result = unicode_printer_tryresize_utf16(self, buf, new_length);
+		result = Dee_unicode_printer_tryresize_utf16(self, buf, new_length);
 	} while (unlikely(!result) && Dee_CollectMemoryc(new_length, sizeof(uint16_t)));
 	return result;
 }
 
 PUBLIC NONNULL((1)) void DCALL
-Dee_unicode_printer_free_utf16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_free_utf16(struct Dee_unicode_printer *__restrict self,
                                uint16_t *buf) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
 		if (!buf)
 			return;
 
 		/* Deal with pending characters. */
-		buf -= (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+		buf -= (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
 		ASSERT(buf >= (uint16_t *)self->up_buffer);
 		ASSERT(buf <= (uint16_t *)self->up_buffer + self->up_length);
 
@@ -5603,18 +5601,18 @@ Dee_unicode_printer_free_utf16(struct unicode_printer *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-Dee_unicode_printer_commit_utf16(struct unicode_printer *__restrict self,
+Dee_unicode_printer_commit_utf16(struct Dee_unicode_printer *__restrict self,
                                  uint16_t *buf, size_t final_length) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
 		size_t count;
 		uint16_t *iter;
 		size_t confirm_length = final_length;
 		if (!buf)
 			return 0;
-		if (self->up_flags & UNICODE_PRINTER_FPENDING) {
+		if (self->up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 			--buf;
 			++confirm_length;
-			self->up_flags &= ~UNICODE_PRINTER_FPENDING;
+			self->up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
 		}
 		ASSERT(buf >= (uint16_t *)self->up_buffer);
 		ASSERT(buf + confirm_length <= (uint16_t *)self->up_buffer + self->up_length);
@@ -5629,7 +5627,7 @@ Dee_unicode_printer_commit_utf16(struct unicode_printer *__restrict self,
 			if (!count) {
 				/* Unmatched high surrogate. */
 				*(uint16_t *)self->up_pend = ch;
-				self->up_flags |= 1 << UNICODE_PRINTER_FPENDING_SHFT;
+				self->up_flags |= 1 << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 				break;
 			}
 
@@ -5652,7 +5650,7 @@ check_low_surrogate:
 					if (!count--) {
 						/* Unmatched high surrogate. */
 						*(uint16_t *)self->up_pend = ch;
-						self->up_flags |= 1 << UNICODE_PRINTER_FPENDING_SHFT;
+						self->up_flags |= 1 << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 						break;
 					}
 					ch = *iter++;
@@ -5693,7 +5691,7 @@ check_low_surrogate:
 				Dee_Free((size_t *)self->up_buffer - 1);
 				self->up_buffer = w32_string;
 				self->up_length = result_length;
-				self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+				self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 				self->up_flags |= STRING_WIDTH_4BYTE;
 				goto return_final_length;
 			}
@@ -5707,9 +5705,7 @@ return_final_length:
 		Dee_ssize_t result;
 
 		/* Simply print the buffer as UTF-16 text. */
-		result = unicode_printer_printutf16(self,
-		                                    buf,
-		                                    final_length);
+		result = Dee_unicode_printer_printutf16(self, buf, final_length);
 		Dee_Free(buf);
 		return result;
 	}
@@ -5720,15 +5716,15 @@ err:
 
 
 PUBLIC WUNUSED NONNULL((1)) uint32_t *
-(DCALL Dee_unicode_printer_tryalloc_utf32)(struct unicode_printer *__restrict self,
+(DCALL Dee_unicode_printer_tryalloc_utf32)(struct Dee_unicode_printer *__restrict self,
                                            size_t length) {
-	union dcharptr string;
+	union Dee_charptr string;
 	string.ptr = self->up_buffer;
 	if (!string.ptr) {
 		size_t initial_alloc;
 #ifndef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		ASSERT(!self->up_length);
-		ASSERT(UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
+		ASSERT(Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_1BYTE);
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 
 		/* Allocate the initial buffer. */
@@ -5738,7 +5734,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 #ifdef CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION
 		if (initial_alloc < self->up_length)
 			initial_alloc = self->up_length;
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #if STRING_WIDTH_1BYTE != 0
 		self->up_flags |= STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
@@ -5752,12 +5748,12 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 		self->up_length = length;
 		self->up_buffer = string.cp32;
 #if STRING_WIDTH_1BYTE != 0
-		self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
+		self->up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 		self->up_flags |= STRING_WIDTH_4BYTE;
 		return string.cp32;
 	}
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE) {
 		if (self->up_length + length > WSTR_LENGTH(string.cp32)) {
 			/* Must allocate more memory. */
 			size_t new_alloc = WSTR_LENGTH(string.cp32);
@@ -5783,13 +5779,13 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) uint32_t *
-(DCALL Dee_unicode_printer_tryresize_utf32)(struct unicode_printer *__restrict self,
+(DCALL Dee_unicode_printer_tryresize_utf32)(struct Dee_unicode_printer *__restrict self,
                                             uint32_t *buf, size_t new_length) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE) {
 		uint32_t *string;
 		size_t old_length, total_avail, new_alloc, old_alloc;
 		if (!buf)
-			return unicode_printer_tryalloc_utf32(self, new_length);
+			return Dee_unicode_printer_tryalloc_utf32(self, new_length);
 		string = (uint32_t *)self->up_buffer;
 		ASSERT(string != NULL);
 		ASSERT(buf >= string);
@@ -5838,29 +5834,29 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) uint32_t *
-(DCALL Dee_unicode_printer_alloc_utf32)(struct unicode_printer *__restrict self,
+(DCALL Dee_unicode_printer_alloc_utf32)(struct Dee_unicode_printer *__restrict self,
                                         size_t length) {
 	uint32_t *result;
 	do {
-		result = unicode_printer_tryalloc_utf32(self, length);
+		result = Dee_unicode_printer_tryalloc_utf32(self, length);
 	} while (unlikely(!result) && Dee_CollectMemoryc(length, sizeof(uint32_t)));
 	return result;
 }
 
 PUBLIC WUNUSED NONNULL((1)) uint32_t *
-(DCALL Dee_unicode_printer_resize_utf32)(struct unicode_printer *__restrict self,
+(DCALL Dee_unicode_printer_resize_utf32)(struct Dee_unicode_printer *__restrict self,
                                          uint32_t *buf, size_t new_length) {
 	uint32_t *result;
 	do {
-		result = unicode_printer_tryresize_utf32(self, buf, new_length);
+		result = Dee_unicode_printer_tryresize_utf32(self, buf, new_length);
 	} while (unlikely(!result) && Dee_CollectMemoryc(new_length, sizeof(uint32_t)));
 	return result;
 }
 
 PUBLIC NONNULL((1)) void
-(DCALL Dee_unicode_printer_free_utf32)(struct unicode_printer *__restrict self,
+(DCALL Dee_unicode_printer_free_utf32)(struct Dee_unicode_printer *__restrict self,
                                        uint32_t *buf) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_4BYTE) {
 		if (!buf)
 			return;
 		ASSERT(buf >= (uint32_t *)self->up_buffer);
@@ -5873,10 +5869,10 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
-(DCALL Dee_unicode_printer_commit_utf32)(struct unicode_printer *__restrict self,
+(DCALL Dee_unicode_printer_commit_utf32)(struct Dee_unicode_printer *__restrict self,
                                          /*inherit(always)*/ uint32_t *buf,
                                          size_t final_length) {
-	if (UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
+	if (Dee_UNICODE_PRINTER_WIDTH(self) == STRING_WIDTH_2BYTE) {
 		if (!buf)
 			return 0;
 		ASSERT(buf >= (uint32_t *)self->up_buffer);
@@ -5888,9 +5884,7 @@ PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 	} else {
 		Dee_ssize_t result;
 		/* Simply print the buffer as UTF-16 text. */
-		result = unicode_printer_printutf32(self,
-		                                    buf,
-		                                    final_length);
+		result = Dee_unicode_printer_printutf32(self, buf, final_length);
 		Dee_Free(buf);
 		return result;
 	}
@@ -5912,19 +5906,19 @@ PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	if unlikely(DeeString_DecodeBackslashEscaped(&printer, start, length, error_mode))
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
 /* @return: 0 : Success
  * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
+DeeString_DecodeBackslashEscaped(struct Dee_unicode_printer *__restrict printer,
                                  /*utf-8*/ char const *__restrict start,
                                  size_t length, unsigned int error_mode) {
 	char const *iter, *end, *flush_start;
@@ -5937,8 +5931,8 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
 			++iter;
 			continue;
 		}
-		if unlikely(unicode_printer_print(printer, flush_start,
-		                                  (size_t)(iter - flush_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(printer, flush_start,
+		                                      (size_t)(iter - flush_start)) < 0)
 			goto err;
 		++iter;
 		ch = *iter++;
@@ -5976,7 +5970,7 @@ parse_hex_integer:
 				uint32_t ch32;
 				uint8_t val;
 				char const *old_iter = iter;
-				ch32 = unicode_readutf8_n(&iter, end);
+				ch32 = Dee_unicode_readutf8_n(&iter, end);
 				if (!DeeUni_AsDigit(ch32, 16, &val)) {
 					iter = old_iter;
 					break;
@@ -5993,7 +5987,7 @@ parse_hex_integer:
 				                "No digits, or hex-chars found after \\x, \\u or \\U");
 				goto err;
 			}
-			if (unicode_printer_putc(printer, digit_value))
+			if (Dee_unicode_printer_putc(printer, digit_value))
 				goto err;
 		}	break;
 
@@ -6029,7 +6023,7 @@ parse_hex_integer:
 			ch = (char)0x1b;
 			/*goto put_ch;*/
 put_ch:
-			if (unicode_printer_putc(printer, (uint32_t)(unsigned char)ch))
+			if (Dee_unicode_printer_putc(printer, (uint32_t)(unsigned char)ch))
 				goto err;
 			break;
 
@@ -6044,7 +6038,7 @@ parse_oct_integer:
 					uint8_t digit;
 					uint32_t ch32;
 					char const *old_iter = iter;
-					ch32 = unicode_readutf8_n(&iter, end);
+					ch32 = Dee_unicode_readutf8_n(&iter, end);
 					if (!DeeUni_AsDigit(ch32, 8, &digit)) {
 						iter = old_iter;
 						break;
@@ -6053,17 +6047,17 @@ parse_oct_integer:
 					digit_value |= digit;
 					++count;
 				}
-				if (unicode_printer_putc(printer, digit_value))
+				if (Dee_unicode_printer_putc(printer, digit_value))
 					goto err;
 				break;
 			}
 			if ((unsigned char)ch >= 0xc0) {
 				uint32_t ch32;
-				struct unitraits const *desc;
+				struct Dee_unitraits const *desc;
 				--iter;
-				ch32 = unicode_readutf8_n(&iter, end);
+				ch32 = Dee_unicode_readutf8_n(&iter, end);
 				desc = DeeUni_Descriptor(ch32);
-				if (desc->ut_flags & UNICODE_ISLF)
+				if (desc->ut_flags & Dee_UNICODE_ISLF)
 					break; /* Escaped line-feed */
 				if (DeeUniTrait_AsDigit(desc, 8, &digit_value))
 					goto parse_oct_integer; /* Unicode digit character. */
@@ -6076,7 +6070,7 @@ continue_or_replace:
 			if (error_mode & STRING_ERROR_FIGNORE)
 				continue;
 			if (error_mode & STRING_ERROR_FREPLAC) {
-				if (unicode_printer_putc(printer, '?'))
+				if (Dee_unicode_printer_putc(printer, '?'))
 					goto err;
 				continue;
 			}
@@ -6089,8 +6083,8 @@ continue_or_replace:
 	}
 
 	/* Flush the remainder. */
-	if unlikely(unicode_printer_print(printer, flush_start,
-	                                  (size_t)(end - flush_start)) < 0)
+	if unlikely(Dee_unicode_printer_print(printer, flush_start,
+	                                      (size_t)(end - flush_start)) < 0)
 		goto err;
 	return 0;
 err:
@@ -6107,25 +6101,24 @@ PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DPRINTER_CC
 Dee_bytes_printer_print(void *__restrict self,
                         /*utf-8*/ char const *__restrict text,
                         size_t textlen) {
+	struct Dee_bytes_printer *me = (struct Dee_bytes_printer *)self;
 	uint32_t ch32;
 	char const *flush_start;
 	size_t result = textlen;
-	struct bytes_printer *me;
-	me = (struct bytes_printer *)self;
 	while (me->bp_numpend) {
 		/* Complete a pending UTF-8 sequence. */
 		uint8_t reqlen;
 		if (!textlen)
 			goto done;
 		me->bp_pend[me->bp_numpend] = (uint8_t)*text++;
-		reqlen = unicode_utf8seqlen[me->bp_pend[0]];
+		reqlen = Dee_unicode_utf8seqlen[me->bp_pend[0]];
 		ASSERT(me->bp_numpend + 1 <= reqlen);
 		if (me->bp_numpend + 1 == reqlen) {
 			/* Append the full character. */
 			ch32 = utf8_getchar(me->bp_pend, reqlen);
 			if unlikely(ch32 > 0xff)
 				goto err_bytes_too_large;
-			if unlikely(bytes_printer_putc(me, (char)(uint8_t)ch32))
+			if unlikely(Dee_bytes_printer_putc(me, (char)(uint8_t)ch32))
 				goto err;
 			me->bp_numpend = 0;
 			break;
@@ -6141,14 +6134,14 @@ again_flush:
 
 	/* Print ASCII text. */
 	if (flush_start < text) {
-		if unlikely(bytes_printer_append(me, (uint8_t const *)flush_start,
+		if unlikely(Dee_bytes_printer_append(me, (uint8_t const *)flush_start,
 		                                 (size_t)(text - flush_start)) < 0)
 			goto err;
 	}
 	if (textlen) {
 		uint8_t seqlen;
 		ASSERT((unsigned char)*text >= 0xc0);
-		seqlen = unicode_utf8seqlen[(uint8_t)*text];
+		seqlen = Dee_unicode_utf8seqlen[(uint8_t)*text];
 		if (seqlen > textlen) {
 			/* Incomplete sequence! (safe as pending UTF-8) */
 			memcpyb(me->bp_pend, text, textlen);
@@ -6160,7 +6153,7 @@ again_flush:
 		ch32 = utf8_getchar((uint8_t const *)text, seqlen);
 		if unlikely(ch32 > 0xff)
 			goto err_bytes_too_large;
-		if unlikely(bytes_printer_putc(me, (char)(uint8_t)ch32))
+		if unlikely(Dee_bytes_printer_putc(me, (char)(uint8_t)ch32))
 			goto err;
 		text += seqlen;
 		textlen -= seqlen;
@@ -6177,14 +6170,14 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_bytes_printer_putc)(struct bytes_printer *__restrict self, char ch) {
+(DCALL Dee_bytes_printer_putc)(struct Dee_bytes_printer *__restrict self, char ch) {
 	/* Quick check: If the character is apart of the
 	 *              ASCII range, just append it as a byte. */
 	if likely((uint8_t)ch < 0x80)
-		return bytes_printer_putb(self, (uint8_t)ch);
+		return Dee_bytes_printer_putb(self, (uint8_t)ch);
 
 	/* Print the character as a UTF-8 string. */
-	return unlikely(bytes_printer_print(self, &ch, 1) < 0) ? -1 : 0;
+	return unlikely(Dee_bytes_printer_print(self, &ch, 1) < 0) ? -1 : 0;
 }
 
 /* Convert an 8, 16, or 32-bit character array to UTF-8 and write it to `printer'
@@ -6198,10 +6191,10 @@ DeeFormat_Print8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
 	uint8_t utf8_buffer[2];
 
 	/* Optimizations for special printer targets. */
-	if (printer == &bytes_printer_print)
-		return bytes_printer_append((struct bytes_printer *)arg, text, textlen);
-	if (printer == &unicode_printer_print)
-		return unicode_printer_print8((struct unicode_printer *)arg, text, textlen);
+	if (printer == &Dee_bytes_printer_print)
+		return Dee_bytes_printer_append((struct Dee_bytes_printer *)arg, text, textlen);
+	if (printer == &Dee_unicode_printer_print)
+		return Dee_unicode_printer_print8((struct Dee_unicode_printer *)arg, text, textlen);
 
 	/* Ascii-only data can simply be forwarded one-on-one */
 	result = 0;
@@ -6233,8 +6226,8 @@ DeeFormat_Print16(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
 	Dee_ssize_t temp, result = 0;
 	uint8_t utf8_buffer[3]; /* TODO: Buffer more than 1 character at-a-time */
 	size_t utf8_length;
-	if (printer == &unicode_printer_print)
-		return unicode_printer_print16((struct unicode_printer *)arg, text, textlen);
+	if (printer == &Dee_unicode_printer_print)
+		return Dee_unicode_printer_print16((struct Dee_unicode_printer *)arg, text, textlen);
 	while (textlen--) {
 		uint16_t ch = *text++;
 		if (ch <= UTF8_1BYTE_MAX) {
@@ -6263,12 +6256,12 @@ DeeFormat_Print32(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
                   size_t textlen) {
 	Dee_ssize_t temp, result = 0;
 	size_t utf8_length;
-	uint8_t utf8_buffer[UNICODE_UTF8_CURLEN]; /* TODO: Buffer more than 1 character at-a-time */
-	if (printer == &unicode_printer_print)
-		return unicode_printer_print32((struct unicode_printer *)arg, text, textlen);
+	uint8_t utf8_buffer[Dee_UNICODE_UTF8_CURLEN]; /* TODO: Buffer more than 1 character at-a-time */
+	if (printer == &Dee_unicode_printer_print)
+		return Dee_unicode_printer_print32((struct Dee_unicode_printer *)arg, text, textlen);
 	while (textlen--) {
 		uint32_t ch = *text++;
-		utf8_length = (size_t)((uint8_t *)unicode_writeutf8((char *)utf8_buffer, ch) - utf8_buffer);
+		utf8_length = (size_t)((uint8_t *)Dee_unicode_writeutf8((char *)utf8_buffer, ch) - utf8_buffer);
 		DO(err, (*printer)(arg, (char const *)utf8_buffer, utf8_length));
 	}
 	return result;
@@ -6281,8 +6274,8 @@ err:
 /* Helper functions for manipulating strings that have already been created. */
 PUBLIC WUNUSED NONNULL((1)) uint32_t
 (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index) {
-	union dcharptr_const str;
-	struct string_utf *utf;
+	union Dee_charptr_const str;
+	struct Dee_string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	utf = self->s_data;
 	if (!utf) {
@@ -6307,8 +6300,8 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t
 PUBLIC NONNULL((1)) void
 (DCALL DeeString_SetChar)(DeeStringObject *__restrict self,
                           size_t index, uint32_t value) {
-	union dcharptr str;
-	struct string_utf *utf;
+	union Dee_charptr str;
+	struct Dee_string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT(!DeeObject_IsShared(self));
 	utf = self->s_data;
@@ -6387,8 +6380,8 @@ check_1byte:
 						size_t i = index;
 						uint8_t *utf8_dst;
 						utf8_dst = (uint8_t *)self->s_str;
-						utf8_dst = (uint8_t *)unicode_skiputf8_c(utf8_dst, i);
-						switch (unicode_utf8seqlen[*utf8_dst]) {
+						utf8_dst = (uint8_t *)Dee_unicode_skiputf8_c(utf8_dst, i);
+						switch (Dee_unicode_utf8seqlen[*utf8_dst]) {
 
 						case 0:
 						case 1:
@@ -6468,8 +6461,8 @@ check_1byte:
 PUBLIC NONNULL((1)) void
 (DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
                           size_t dst, size_t src, size_t num_chars) {
-	union dcharptr str;
-	struct string_utf *utf;
+	union Dee_charptr str;
+	struct Dee_string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT(!DeeObject_IsShared(self));
 	utf = self->s_data;
@@ -6560,22 +6553,22 @@ check_1byte:
 						char *utf8_src, *utf8_dst, *end;
 						size_t i;
 						if (dst < src) {
-							utf8_dst = unicode_skiputf8_c(self->s_str, dst);
-							utf8_src = unicode_skiputf8_c(utf8_dst, src - dst);
-							end      = unicode_skiputf8_c(utf8_src, num_chars);
+							utf8_dst = Dee_unicode_skiputf8_c(self->s_str, dst);
+							utf8_src = Dee_unicode_skiputf8_c(utf8_dst, src - dst);
+							end      = Dee_unicode_skiputf8_c(utf8_src, num_chars);
 						} else {
-							utf8_src = unicode_skiputf8_c(self->s_str, dst);
+							utf8_src = Dee_unicode_skiputf8_c(self->s_str, dst);
 							utf8_dst = utf8_src;
 							i        = dst - src;
 							if (num_chars > i) {
-								utf8_dst = unicode_skiputf8_c(utf8_dst, i);
-								end      = unicode_skiputf8_c(utf8_dst, num_chars - (dst - src));
+								utf8_dst = Dee_unicode_skiputf8_c(utf8_dst, i);
+								end      = Dee_unicode_skiputf8_c(utf8_dst, num_chars - (dst - src));
 							} else {
 								end = NULL;
 								while (i--) {
 									if (!num_chars--)
 										end = utf8_dst;
-									utf8_dst = unicode_skiputf8(utf8_dst);
+									utf8_dst = Dee_unicode_skiputf8(utf8_dst);
 								}
 								ASSERT(end != NULL);
 							}

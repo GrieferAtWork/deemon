@@ -480,10 +480,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 array_repr(DeeArrayTypeObject *tp_self, void *base) {
 	union pointer iter, end;
 	size_t item_size;
-	struct ascii_printer p = ASCII_PRINTER_INIT;
+	struct Dee_ascii_printer p = Dee_ASCII_PRINTER_INIT;
 
 	/* Print all array elements in a fashion that mimics `sequence.operator repr' */
-	if unlikely(ASCII_PRINTER_PRINT(&p, "{ ") < 0)
+	if unlikely(Dee_ASCII_PRINTER_PRINT(&p, "{ ") < 0)
 		goto err;
 	item_size = DeeSType_Sizeof(tp_self->at_orig);
 	end.ptr = iter.ptr = base;
@@ -492,23 +492,23 @@ array_repr(DeeArrayTypeObject *tp_self, void *base) {
 		DREF DeeObject *item_repr;
 		Dee_ssize_t temp;
 		if (iter.ptr != base &&
-		    ASCII_PRINTER_PRINT(&p, ", ") < 0)
+		    Dee_ASCII_PRINTER_PRINT(&p, ", ") < 0)
 			goto err;
 		item_repr = DeeStruct_Repr(tp_self->at_orig, iter.ptr);
 		if unlikely(!item_repr)
 			goto err;
-		temp = ascii_printer_print(&p, DeeString_STR(item_repr),
+		temp = Dee_ascii_printer_print(&p, DeeString_STR(item_repr),
 		                           DeeString_SIZE(item_repr));
 		Dee_Decref_likely(item_repr);
 		if unlikely(temp < 0)
 			goto err;
 		iter.uint += item_size;
 	}
-	if unlikely(ASCII_PRINTER_PRINT(&p, " }") < 0)
+	if unlikely(Dee_ASCII_PRINTER_PRINT(&p, " }") < 0)
 		goto err;
-	return ascii_printer_pack(&p);
+	return Dee_ascii_printer_pack(&p);
 err:
-	ascii_printer_fini(&p);
+	Dee_ascii_printer_fini(&p);
 	return NULL;
 }
 

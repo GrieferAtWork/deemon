@@ -72,7 +72,7 @@ PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = 0;
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	return DeeGC_TRACK(FixedList, result);
 err:
@@ -91,7 +91,7 @@ fl_copy(FixedList *__restrict self) {
 	FixedList_LockRead(self);
 	Dee_XMovrefv(result->fl_elem, self->fl_elem, self->fl_size);
 	FixedList_LockEndRead(self);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	return DeeGC_TRACK(FixedList, result);
 err:
@@ -109,7 +109,7 @@ fl_serialize(FixedList *__restrict self,
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, out_addr, FixedList);
-	weakref_support_init(out);
+	Dee_weakref_support_init(out);
 	Dee_atomic_rwlock_init(&out->fl_lock);
 	out->fl_size = self->fl_size;
 	FixedList_LockRead(self);
@@ -211,7 +211,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		result->fl_size = size;
 	}
 /*done:*/
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	return DeeGC_TRACK(FixedList, result);
 err_r_elem:
@@ -224,7 +224,7 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 fl_fini(FixedList *__restrict self) {
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	Dee_XDecrefv(self->fl_elem, self->fl_size);
 }
 
@@ -556,7 +556,7 @@ fl_getrange_index(FixedList *__restrict self, Dee_ssize_t i_begin, Dee_ssize_t i
 	             self->fl_elem + range.sr_start,
 	             range_size);
 	FixedList_LockEndRead(self);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	return DeeGC_Track((DeeObject *)result);
 err:
@@ -585,7 +585,7 @@ fl_getrange_index_n(FixedList *__restrict self, Dee_ssize_t i_begin) {
 	             self->fl_elem + start,
 	             range_size);
 	FixedList_LockEndRead(self);
-	weakref_support_init(result);
+	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
 	return DeeGC_Track((DeeObject *)result);
 err:
@@ -1478,7 +1478,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	                         "contains->\n"
 	                         "Returns ?t if @item is apart of @this FixedList, ?f otherwise"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(FixedList),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(FixedList),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
@@ -1687,8 +1687,8 @@ fli_bool(FixedListIterator *__restrict self) {
 
 
 PRIVATE struct type_nii tpconst fli_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&fli_getseq,

@@ -49,7 +49,7 @@ DECL_BEGIN
 #undef container_of
 #define container_of COMPILER_CONTAINER_OF
 
-INTDEF struct module_symbol empty_module_buckets[];
+INTDEF struct Dee_module_symbol empty_module_buckets[];
 
 /* Compile a new module, using `current_rootscope' for module information,
  * and the given code object as root code executed when the module is loaded.

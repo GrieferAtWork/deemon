@@ -17,13 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export Dee_atomic_ref*/
-/*!export Dee_atomic_ref**/
-/*!export Dee_ATOMIC_REF**/
-/*!export _Dee_atomic_ref**/
-/*!export _Dee_ATOMIC_REF**/
+/*!export **/
+/*!export Dee_atomic_ref_**/
+/*!export Dee_ATOMIC_REF_**/
+/*!export -_Dee_private_atomic_ref_**/
+/*!export -_Dee_PRIVATE_ATOMIC_REF_**/
 #ifndef GUARD_DEEMON_UTIL_ATOMIC_REF_H
-#define GUARD_DEEMON_UTIL_ATOMIC_REF_H 1
+#define GUARD_DEEMON_UTIL_ATOMIC_REF_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -89,32 +89,32 @@ typedef struct Dee_atomic_ref {
 #define Dee_ATOMIC_REF(T) Dee_atomic_ref_t
 
 #ifdef CONFIG_NO_THREADS
-#define _Dee_ATOMIC_REF_INIT_COMMON_        /* nothing */
-#define _Dee_atomic_ref_init_common_(self)  /* nothing */
-#define _Dee_atomic_ref_cinit_common_(self) /* nothing */
-#define _Dee_atomic_ref_incuse(self)        (void)0
-#define _Dee_atomic_ref_decuse(self)        (void)0
-#define _Dee_atomic_ref_await(self)         (void)0
+#define _Dee_PRIVATE_ATOMIC_REF_INIT_COMMON_        /* nothing */
+#define _Dee_private_atomic_ref_init_common_(self)  /* nothing */
+#define _Dee_private_atomic_ref_cinit_common_(self) /* nothing */
+#define _Dee_private_atomic_ref_incuse(self)        (void)0
+#define _Dee_private_atomic_ref_decuse(self)        (void)0
+#define _Dee_private_atomic_ref_await(self)         (void)0
 #else /* CONFIG_NO_THREADS */
-#define _Dee_ATOMIC_REF_INIT_COMMON_        0,
-#define _Dee_atomic_ref_init_common_(self)  (self)->ar_use = 0,
-#define _Dee_atomic_ref_cinit_common_(self) Dee_ASSERT((self)->ar_use == 0),
-#define _Dee_atomic_ref_incuse(self)        __hybrid_atomic_inc(&(self)->ar_use, __ATOMIC_ACQUIRE)
-#define _Dee_atomic_ref_decuse(self)        __hybrid_atomic_dec(&(self)->ar_use, __ATOMIC_RELEASE)
-#define _Dee_atomic_ref_await(self)                                     \
+#define _Dee_PRIVATE_ATOMIC_REF_INIT_COMMON_        0,
+#define _Dee_private_atomic_ref_init_common_(self)  (self)->ar_use = 0,
+#define _Dee_private_atomic_ref_cinit_common_(self) Dee_ASSERT((self)->ar_use == 0),
+#define _Dee_private_atomic_ref_incuse(self)        __hybrid_atomic_inc(&(self)->ar_use, __ATOMIC_ACQUIRE)
+#define _Dee_private_atomic_ref_decuse(self)        __hybrid_atomic_dec(&(self)->ar_use, __ATOMIC_RELEASE)
+#define _Dee_private_atomic_ref_await(self)                                     \
 	do {                                                                \
 		while (__hybrid_atomic_load(&(self)->ar_use, __ATOMIC_ACQUIRE)) \
 			__hybrid_yield();                                           \
 	}	__WHILE0
 #endif /* !CONFIG_NO_THREADS */
 
-#define Dee_ATOMIC_REF_INIT(/*0..1*/ /*inherit(always)*/ obj) { _Dee_ATOMIC_REF_INIT_COMMON_ obj }
-#define Dee_atomic_ref_init_inherited(self, /*0..1*/ /*inherit(always)*/ obj)  (void)(_Dee_atomic_ref_init_common_(self) (self)->ar_obj = (obj))
-#define Dee_atomic_ref_cinit_inherited(self, /*0..1*/ /*inherit(always)*/ obj) (void)(_Dee_atomic_ref_cinit_common_(self) (self)->ar_obj = (obj))
-#define Dee_atomic_ref_init(self, /*1..1*/ obj)   (void)(_Dee_atomic_ref_init_common_(self) (self)->ar_obj = Dee_AsObject(obj), Dee_Incref((self)->ar_obj))
-#define Dee_atomic_ref_cinit(self, /*1..1*/ obj)  (void)(_Dee_atomic_ref_cinit_common_(self) (self)->ar_obj = Dee_AsObject(obj), Dee_Incref((self)->ar_obj))
-#define Dee_atomic_ref_xinit(self, /*0..1*/ obj)  (void)(_Dee_atomic_ref_init_common_(self) (self)->ar_obj = (obj), Dee_XIncref((self)->ar_obj))
-#define Dee_atomic_ref_cxinit(self, /*0..1*/ obj) (void)(_Dee_atomic_ref_cinit_common_(self) (self)->ar_obj = (obj), Dee_XIncref((self)->ar_obj))
+#define Dee_ATOMIC_REF_INIT(/*0..1*/ /*inherit(always)*/ obj) { _Dee_PRIVATE_ATOMIC_REF_INIT_COMMON_ obj }
+#define Dee_atomic_ref_init_inherited(self, /*0..1*/ /*inherit(always)*/ obj)  (void)(_Dee_private_atomic_ref_init_common_(self) (self)->ar_obj = (obj))
+#define Dee_atomic_ref_cinit_inherited(self, /*0..1*/ /*inherit(always)*/ obj) (void)(_Dee_private_atomic_ref_cinit_common_(self) (self)->ar_obj = (obj))
+#define Dee_atomic_ref_init(self, /*1..1*/ obj)   (void)(_Dee_private_atomic_ref_init_common_(self) (self)->ar_obj = Dee_AsObject(obj), Dee_Incref((self)->ar_obj))
+#define Dee_atomic_ref_cinit(self, /*1..1*/ obj)  (void)(_Dee_private_atomic_ref_cinit_common_(self) (self)->ar_obj = Dee_AsObject(obj), Dee_Incref((self)->ar_obj))
+#define Dee_atomic_ref_xinit(self, /*0..1*/ obj)  (void)(_Dee_private_atomic_ref_init_common_(self) (self)->ar_obj = (obj), Dee_XIncref((self)->ar_obj))
+#define Dee_atomic_ref_cxinit(self, /*0..1*/ obj) (void)(_Dee_private_atomic_ref_cinit_common_(self) (self)->ar_obj = (obj), Dee_XIncref((self)->ar_obj))
 #define Dee_atomic_ref_fini(self)  Dee_Decref((self)->ar_obj)
 #define Dee_atomic_ref_xfini(self) Dee_XDecref((self)->ar_obj)
 
@@ -129,19 +129,19 @@ typedef struct Dee_atomic_ref {
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_atomic_ref_get(Dee_atomic_ref_t *__restrict self) {
 	DREF DeeObject *result;
-	_Dee_atomic_ref_incuse(self);
+	_Dee_private_atomic_ref_incuse(self);
 	result = Dee_atomic_ref_getaddr(self);
 	Dee_Incref(result);
-	_Dee_atomic_ref_decuse(self);
+	_Dee_private_atomic_ref_decuse(self);
 	return result;
 }
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_atomic_ref_xget(Dee_atomic_ref_t *__restrict self) {
 	DREF DeeObject *result;
-	_Dee_atomic_ref_incuse(self);
+	_Dee_private_atomic_ref_incuse(self);
 	result = Dee_atomic_ref_getaddr(self);
 	Dee_XIncref(result);
-	_Dee_atomic_ref_decuse(self);
+	_Dee_private_atomic_ref_decuse(self);
 	return result;
 }
 #endif /* !CONFIG_NO_THREADS */
@@ -156,7 +156,7 @@ Dee_atomic_ref_xch_inherited(Dee_atomic_ref_t *__restrict self,
 #else /* CONFIG_NO_THREADS */
 	result = __hybrid_atomic_xch(&self->ar_obj, newval, __ATOMIC_SEQ_CST);
 #endif /* !CONFIG_NO_THREADS */
-	_Dee_atomic_ref_await(self);
+	_Dee_private_atomic_ref_await(self);
 	return result;
 }
 
@@ -170,7 +170,7 @@ Dee_atomic_ref_xxch_inherited(Dee_atomic_ref_t *__restrict self,
 #else /* CONFIG_NO_THREADS */
 	result = __hybrid_atomic_xch(&self->ar_obj, newval, __ATOMIC_SEQ_CST);
 #endif /* !CONFIG_NO_THREADS */
-	_Dee_atomic_ref_await(self);
+	_Dee_private_atomic_ref_await(self);
 	return result;
 }
 
@@ -228,7 +228,7 @@ Dee_atomic_ref_cmpxch_inherited(Dee_atomic_ref_t *__restrict self,
 	result = __hybrid_atomic_cmpxch(&self->ar_obj, oldval, newval,
 	                                __ATOMIC_SEQ_CST, __ATOMIC_RELAXED);
 	if (result)
-		_Dee_atomic_ref_await(self);
+		_Dee_private_atomic_ref_await(self);
 	return result;
 }
 LOCAL WUNUSED NONNULL((1, 2, 3)) __BOOL DCALL
@@ -264,7 +264,7 @@ Dee_atomic_ref_xcmpxch_inherited(Dee_atomic_ref_t *__restrict self,
 	result = __hybrid_atomic_cmpxch(&self->ar_obj, oldval, newval,
 	                                __ATOMIC_SEQ_CST, __ATOMIC_RELAXED);
 	if (result)
-		_Dee_atomic_ref_await(self);
+		_Dee_private_atomic_ref_await(self);
 	return result;
 }
 LOCAL WUNUSED NONNULL((1)) __BOOL DCALL

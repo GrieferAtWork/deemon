@@ -480,7 +480,7 @@ make_bound_expression(struct ast *__restrict base_expr,
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
+DeeString_DecodeLFEscaped(struct Dee_unicode_printer *__restrict printer,
                           /*utf-8*/ char const *__restrict start,
                           size_t length) {
 	/* Still allow escaped line-feeds! */
@@ -492,15 +492,15 @@ DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
 		candidate = (char *)memchr(start, '\\', (size_t)(end - (char *)start));
 		if (!candidate)
 			break;
-		if (unicode_printer_printutf8(printer, flush_start,
-		                              (size_t)(candidate - flush_start)) < 0)
+		if (Dee_unicode_printer_printutf8(printer, flush_start,
+		                                  (size_t)(candidate - flush_start)) < 0)
 			goto err;
 		flush_start = candidate;
 		++candidate;
 		start = (char *)candidate;
 		ASSERT(start <= end);
 		if (start < end) {
-			ch = unicode_readutf8_n(&candidate, end);
+			ch = Dee_unicode_readutf8_n(&candidate, end);
 			if (DeeUni_IsLF(ch)) {
 				if (ch == '\r' && candidate < end && *candidate == '\n')
 					++candidate; /* CRLF */
@@ -508,8 +508,8 @@ DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
 			}
 		}
 	}
-	if (unicode_printer_printutf8(printer, flush_start,
-	                              (size_t)(end - flush_start)) < 0)
+	if (Dee_unicode_printer_printutf8(printer, flush_start,
+	                                  (size_t)(end - flush_start)) < 0)
 		goto err;
 	return 0;
 err:
@@ -518,7 +518,7 @@ err:
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-ast_decode_unicode_string(struct unicode_printer *__restrict printer) {
+ast_decode_unicode_string(struct Dee_unicode_printer *__restrict printer) {
 	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
 	char *escape_start = token.t_begin;
 	char *escape_end   = token.t_end;
@@ -558,7 +558,7 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DFCALL
 ast_parse_string(void) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
 	do {
 		if unlikely(ast_decode_unicode_string(&printer))
@@ -567,9 +567,9 @@ ast_parse_string(void) {
 			goto err;
 	} while (tok == TOK_STRING ||
 	         (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)));
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -694,11 +694,11 @@ count_chars_without_escaped_linefeeds(char const *start,
 	size_t result = 0;
 	while (start < end) {
 		uint32_t ch;
-		ch = unicode_readutf8_n(&start, end);
+		ch = Dee_unicode_readutf8_n(&start, end);
 		if (ch == '\\') {
-			ch = unicode_readutf8_n(&start, end);
+			ch = Dee_unicode_readutf8_n(&start, end);
 			if (ch == '\r')
-				unicode_readutf8_n(&start, end);
+				Dee_unicode_readutf8_n(&start, end);
 			continue;
 		}
 		++result;
@@ -763,8 +763,8 @@ ast_parse_unaryhead(unsigned int lookup_mode) {
 		/* Use our own integer parser, so we can process arbitrary-precision integers. */
 		toklen = (size_t)(token.t_end - token.t_begin);
 		resval = DeeInt_FromString(token.t_begin, toklen,
-		                           DEEINT_STRING(0, DEEINT_STRING_FESCAPED |
-		                                            DEEINT_STRING_FTRY));
+		                           Dee_INT_STRING(0, Dee_INT_STRING_FESCAPED |
+		                                            Dee_INT_STRING_FTRY));
 
 		/* Check if the integer failed to be parsed. */
 		if unlikely(resval == ITER_DONE) {

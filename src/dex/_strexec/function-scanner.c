@@ -250,7 +250,7 @@ JITLexer_QuickSkipModuleName(JITLexer *__restrict self) {
 				unsigned char const *temp;
 				--end;
 				temp = end;
-				ch32 = unicode_readutf8_n(&end, self->jl_end);
+				ch32 = Dee_unicode_readutf8_n(&end, self->jl_end);
 				if (!DeeUni_IsSymCont(ch32)) {
 					end = temp;
 					break;
@@ -1173,7 +1173,7 @@ JITFunction_TrimSurroundingBraces(/*utf-8*/ char const **__restrict p_source_sta
 		uint32_t ch;
 		char const *next;
 		next = source_start;
-		ch   = unicode_readutf8_n(&next, source_end);
+		ch   = Dee_unicode_readutf8_n(&next, source_end);
 		if (!DeeUni_IsSpace(ch))
 			break;
 		source_start = next;
@@ -1182,7 +1182,7 @@ JITFunction_TrimSurroundingBraces(/*utf-8*/ char const **__restrict p_source_sta
 		uint32_t ch;
 		char const *next;
 		next = source_end;
-		ch   = unicode_readutf8_rev_n(&next, source_start);
+		ch   = Dee_unicode_readutf8_rev_n(&next, source_start);
 		if (!DeeUni_IsSpace(ch))
 			break;
 		source_end = next;

@@ -392,28 +392,28 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_c_escape(DeeObject *__restrict self) {
 	Dee_ssize_t error;
-	struct ascii_printer printer = ASCII_PRINTER_INIT;
+	struct Dee_ascii_printer printer = Dee_ASCII_PRINTER_INIT;
 	if (DeeBytes_Check(self)) {
-		error = DeeFormat_QuoteBytes(&ascii_printer_print, &printer,
+		error = DeeFormat_QuoteBytes(&Dee_ascii_printer_print, &printer,
 		                             (uint8_t const *)DeeBytes_DATA(self),
 		                             DeeBytes_SIZE(self));
 	} else if (DeeString_Check(self)) {
-		union dcharptr_const str;
+		union Dee_charptr_const str;
 		str.ptr = DeeString_WSTR(self);
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 		CASE_WIDTH_1BYTE:
-			error = DeeFormat_Quote8(&ascii_printer_print, &printer,
+			error = DeeFormat_Quote8(&Dee_ascii_printer_print, &printer,
 			                         str.cp8, WSTR_LENGTH(str.cp8));
 			break;
 
 		CASE_WIDTH_2BYTE:
-			error = DeeFormat_Quote16(&ascii_printer_print, &printer,
+			error = DeeFormat_Quote16(&Dee_ascii_printer_print, &printer,
 			                          str.cp16, WSTR_LENGTH(str.cp16));
 			break;
 
 		CASE_WIDTH_4BYTE:
-			error = DeeFormat_Quote32(&ascii_printer_print, &printer,
+			error = DeeFormat_Quote32(&Dee_ascii_printer_print, &printer,
 			                          str.cp32, WSTR_LENGTH(str.cp32));
 			break;
 		}
@@ -423,9 +423,9 @@ encode_c_escape(DeeObject *__restrict self) {
 	}
 	if unlikely(error < 0)
 		goto err_ascii_printer;
-	return ascii_printer_pack(&printer);
+	return Dee_ascii_printer_pack(&printer);
 err_ascii_printer:
-	ascii_printer_fini(&printer);
+	Dee_ascii_printer_fini(&printer);
 	return NULL;
 }
 

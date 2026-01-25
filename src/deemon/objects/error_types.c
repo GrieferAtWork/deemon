@@ -606,7 +606,7 @@ INIT_CUSTOM_SYSTEM_ERROR_NO_NEW_FIELDS("NoSymlink",
 #endif /* !EXIT_SUCCESS */
 
 PRIVATE int DCALL
-appexit_init(struct appexit_object *__restrict self,
+appexit_init(struct Dee_appexit_object *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	int result;
 	self->ae_exitcode = EXIT_SUCCESS;
@@ -618,27 +618,27 @@ appexit_init(struct appexit_object *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-appexit_copy(struct appexit_object *__restrict self,
-             struct appexit_object *__restrict other) {
+appexit_copy(struct Dee_appexit_object *__restrict self,
+             struct Dee_appexit_object *__restrict other) {
 	self->ae_exitcode = other->ae_exitcode;
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-appexit_print(struct appexit_object *__restrict self,
+appexit_print(struct Dee_appexit_object *__restrict self,
               Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "<AppExit with exitcode %d>", self->ae_exitcode);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-appexit_printrepr(struct appexit_object *__restrict self,
+appexit_printrepr(struct Dee_appexit_object *__restrict self,
                   Dee_formatprinter_t printer, void *arg) {
 	return DeeFormat_Printf(printer, arg, "AppExit(%d)", self->ae_exitcode);
 }
 
 PRIVATE struct type_member tpconst appexit_members[] = {
 	TYPE_MEMBER_FIELD("exitcode", STRUCT_CONST | STRUCT_INT,
-	                  offsetof(struct appexit_object, ae_exitcode)),
+	                  offsetof(struct Dee_appexit_object, ae_exitcode)),
 	TYPE_MEMBER_END
 };
 
@@ -675,14 +675,14 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 	/* If callbacks aren't supposed to be executed, discard
 	 * all of them and prevent the addition of new ones. */
 	if (!run_atexit)
-		Dee_RunAtExit(DEE_RUNATEXIT_FDONTRUN);
+		Dee_RunAtExit(Dee_RUNATEXIT_FDONTRUN);
 #ifdef CONFIG_HAVE_exit
 	exit(exitcode);
 #else /* CONFIG_HAVE_exit */
 	/* No stdlib support. Instead, we must throw an AppExit error. */
 	{
-		struct appexit_object *error;
-		error = DeeObject_MALLOC(struct appexit_object);
+		struct Dee_appexit_object *error;
+		error = DeeObject_MALLOC(struct Dee_appexit_object);
 		if likely(error) {
 			/* Initialize the appexit error. */
 			error->ae_exitcode = exitcode;
@@ -769,7 +769,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	                            * and all-interrupt handlers to catch this error) */
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-			/* T:              */ struct appexit_object,
+			/* T:              */ struct Dee_appexit_object,
 			/* tp_ctor:        */ &DeeStructObject_Ctor,
 			/* tp_copy_ctor:   */ &appexit_copy,
 			/* tp_deep_ctor:   */ &appexit_copy,
@@ -920,14 +920,14 @@ INIT_CUSTOM_SIGNAL("Interrupt", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt ty
 /* Signal.Interrupt.ThreadExit                                          */
 /************************************************************************/
 PRIVATE struct type_member tpconst threadexit_members[] = {
-	TYPE_MEMBER_FIELD("__result__", STRUCT_OBJECT, offsetof(struct threadexit_object, te_result)),
+	TYPE_MEMBER_FIELD("__result__", STRUCT_OBJECT, offsetof(struct Dee_threadexit_object, te_result)),
 	TYPE_MEMBER_END
 };
 PUBLIC DeeTypeObject DeeError_ThreadExit =
 INIT_CUSTOM_SIGNAL("ThreadExit", NULL, TP_FNORMAL | TP_FINTERRUPT /* Interrupt type! */, &DeeError_Interrupt,
                    NULL, &DeeStructObject_Copy, &DeeStructObject_Deep, &DeeStructObject_Init,
                    &DeeStructObject_InitKw, &DeeStructObject_Serialize,
-                   &DeeStructObject_Visit, struct threadexit_object,
+                   &DeeStructObject_Visit, struct Dee_threadexit_object,
                    NULL, NULL, NULL, &DeeStructObject_PrintRepr,
                    NULL, NULL, threadexit_members, interrupt_class_members);
 

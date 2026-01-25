@@ -264,6 +264,52 @@ class Header {
 			}
 		}
 	}
+
+	public dump(): Header {
+		print(filename, ":");
+		if (includes) {
+			print("	includes:");
+			for (local inc: includes.sorted())
+				print("		- ", inc);
+		}
+		if (noIncludeComments)
+			print("	noIncludeComments");
+		if (ignoreUnnecessaryInclude)
+			print("	ignoreUnnecessaryInclude");
+		if (discourageInclude)
+			print("	discourageInclude");
+		if (alwaysIncludes) {
+			print("	alwaysIncludes:");
+			for (local x: alwaysIncludes.map(operator str).sorted())
+				print("		- ", x);
+		}
+		if (exports) {
+			print("	exports:");
+			local longestExportLength: int = exports.each.length > ...;
+			for (local x: exports.sorted()) {
+				print("		- ", x),;
+				if (x in exportsFromAlwaysIncludes)
+					print(" " * (longestExportLength - #x), " !inherited"),;
+				print;
+			}
+		}
+		if (exportGroups) {
+			print("	exportGroups:");
+			for (local x: exportGroups)
+				print("		- ", x);
+		}
+		if (exportsAfterExtraIncludes) {
+			print("	exportsAfterExtraIncludes:");
+			for (local x: exportsAfterExtraIncludes.keys.sorted()) {
+				local extra: Set with Set with DependentFile = exportsAfterExtraIncludes[x];
+				print("		- ", x, ": ", ", ".join((
+					for (local includeGroup: extra)
+						f'\{ {", ".join(includeGroup.map(e -> str e))} \}'
+				).sorted()));
+			}
+		}
+		return this;
+	}
 }
 
 @@Mapping of default headers
@@ -301,6 +347,8 @@ local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 
 
 local class HeaderParser {
+	this = default;
+
 	public member filename: string;
 	public member header: Header;
 	public member data: Bytes;
@@ -318,14 +366,6 @@ local class HeaderParser {
 	public member lastExportPos: int = 0;
 	public member lastIncludeString: Bytes | none = none;
 	public member lastIncludeStringPos: int = 0;
-
-	this(filename: string) {
-		with (local fp = File.open(filename, "rb"))
-			data = fp.read();
-		end = #data;
-		header = Header(filename: filename);
-		this.filename = filename;
-	}
 
 	public lc(at: int): (int, int) {
 		local sol = data.rfind("\n", 0, at) + 1;
@@ -425,6 +465,20 @@ local class HeaderParser {
 		}
 		if (eol < 0)
 			eol = end;
+		return eol;
+	}
+
+	private findEolWithBlockComments(pos: int): int {
+again:
+		local eol = findEol(pos);
+		local blockCommentStart = data.find("/*", pos, eol);
+		if (blockCommentStart >= pos) {
+			local blockCommentEnd = data.find("*/", blockCommentStart + 2, end);
+			if (blockCommentEnd > eol) {
+				pos = blockCommentEnd + 2;
+				goto again;
+			}
+		}
 		return eol;
 	}
 
@@ -747,7 +801,7 @@ again:
 		if (result == "#") {
 			local sol = data.rfind("\n", 0, pos) + 1;
 			if (data.isspace(sol, pos - 1)) {
-				local eol = findEol(pos);
+				local eol = findEolWithBlockComments(pos);
 				local oldEnd = end;
 				end = eol;
 				parseDirective();
@@ -823,18 +877,20 @@ skip_paren_block:
 		case "enum": {
 			local keywordPos = pos;
 			local keyword = next();
-			if (keyword in "([{") {
-				tok = keyword;
-				goto skip_paren_block;
-			}
-			for (;;) {
+			if (keyword.issymbol()) {
 				tok = next();
-				if (!tok || tok == "{")
-					break;
-				keyword = tok;
+				if (tok == "{") {
+					addKeyword(keyword, keywordPos);
+					goto skip_paren_block;
+				} else if (tok == ";") {
+#if 0 /* Incomplete struct shouldn't be considered an export */
+					addKeyword(keyword, keywordPos);
+#endif
+					goto again;
+				}
+				goto again_tok;
 			}
-			if (keyword.issymbol())
-				addKeyword(keyword, keywordPos);
+			tok = keyword;
 			goto again_tok;
 		}	break;
 
@@ -846,6 +902,10 @@ skip_paren_block:
 		local keyword = tok;
 		local keywordPos = pos - #keyword; /* Hacky, but good enough */
 		tok = next();
+		while (tok == "[") {
+			skipParenBlock("[");
+			tok = next();
+		}
 
 		/* This matches the "foo" in: "DECL int foo;"
 		 *
@@ -853,7 +913,7 @@ skip_paren_block:
 		 * >> int foo __attribute__((aligned(42)));
 		 *
 		 * Current, we'd actually match "__attribute__" as an export name! */
-		if (tok == ";") {
+		if (tok in ";") {
 			addKeyword(keyword, keywordPos);
 			goto again;
 		}
@@ -918,8 +978,20 @@ skip_paren_block:
 	}
 }
 
+function loadHeaderWithData(filename: string, data: Bytes): Header {
+	return HeaderParser(
+		data:     data,
+		end:      #data,
+		header:   Header(filename: filename),
+		filename: filename,
+	).parseAll().finish();
+}
+
 function loadHeader(filename: string): Header {
-	return HeaderParser(filename).parseAll().finish();
+	local data: Bytes;
+	with (local fp = File.open(filename, "rb"))
+		data = fp.read();
+	return loadHeaderWithData(filename, data);
 }
 
 
@@ -1028,6 +1100,19 @@ class SrcFileInfo {
 	public final member noFormatRegions: {(int, int)...};
 	public member data: Bytes;
 	public member dataChanged: bool = false;
+
+	/* TODO: selfProvidedKeyword: {string...}
+	 *
+	 * When the file contains a line like:
+	 * >> struct Dee_thread_object;  // No need to #include <deemon/thread.h>
+	 * >> #define strlen my_strlen   // No need to #include <deemon/system-features.h>
+	 *
+	 * This should use the same symbol-detection-function as used by "HeaderParser"!
+	 *
+	 * NOTE: However, if the relevant #include is already present, and all symbols,
+	 *       somehow exported by the header are re-defined in this manner locally,
+	 *       then the header mustn't be auto-removed. -- There may be a reason why
+	 *       the include is present anyways. */
 
 	private member m_clangFormatSpecs: ClangFormatSpecs;
 	public property clangFormatSpecs: ClangFormatSpecs = {
@@ -1739,51 +1824,8 @@ class FixIncludes {
 	@@see what was actually loaded, and debug weird behavior when includes
 	@@appear to be linked incorrectly)
 	public dumpHeaders(): FixIncludes {
-		for (local filename: headersByFilename.keys.sorted()) {
-			local hdr: Header = headersByFilename[filename];
-			print(filename, ":");
-			if (hdr.includes) {
-				print("	includes:");
-				for (local inc: hdr.includes.sorted())
-					print("		- ", inc);
-			}
-			if (hdr.noIncludeComments)
-				print("	noIncludeComments");
-			if (hdr.ignoreUnnecessaryInclude)
-				print("	ignoreUnnecessaryInclude");
-			if (hdr.discourageInclude)
-				print("	discourageInclude");
-			if (hdr.alwaysIncludes) {
-				print("	alwaysIncludes:");
-				for (local x: hdr.alwaysIncludes.map(operator str).sorted())
-					print("		- ", x);
-			}
-			if (hdr.exports) {
-				print("	exports:");
-				local longestExportLength: int = hdr.exports.each.length > ...;
-				for (local x: hdr.exports.sorted()) {
-					print("		- ", x),;
-					if (x in hdr.exportsFromAlwaysIncludes)
-						print(" " * (longestExportLength - #x), " !inherited"),;
-					print;
-				}
-			}
-			if (hdr.exportGroups) {
-				print("	exportGroups:");
-				for (local x: hdr.exportGroups)
-					print("		- ", x);
-			}
-			if (hdr.exportsAfterExtraIncludes) {
-				print("	exportsAfterExtraIncludes:");
-				for (local x: hdr.exportsAfterExtraIncludes.keys.sorted()) {
-					local extra: Set with Set with DependentFile = hdr.exportsAfterExtraIncludes[x];
-					print("		- ", x, ": ", ", ".join((
-						for (local includeGroup: extra)
-							f'\{ {", ".join(includeGroup.map(e -> str e))} \}'
-					).sorted()));
-				}
-			}
-		}
+		for (local filename: headersByFilename.keys.sorted())
+			headersByFilename[filename].dump();
 		return this;
 	}
 

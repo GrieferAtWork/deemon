@@ -40,13 +40,13 @@
 
 DECL_BEGIN
 
-struct unicode_printer;
-struct compiler_options;
-struct module_symbol;
+struct Dee_unicode_printer;
+struct Dee_compiler_options;
+struct Dee_module_symbol;
 
 /* Parser flags (Set of `PARSE_F*') */
 INTDEF uint16_t parser_flags;
-INTDEF struct compiler_options *inner_compiler_options;
+INTDEF struct Dee_compiler_options *inner_compiler_options;
 
 
 /* Parse a string. */
@@ -57,7 +57,7 @@ INTDEF WUNUSED DREF struct ast *DFCALL ast_parse_template_string(void);
 
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-ast_decode_unicode_string(struct unicode_printer *__restrict printer);
+ast_decode_unicode_string(struct Dee_unicode_printer *__restrict printer);
 
 #define PARSE_UNARY_DISALLOW_CASTS 0x10000
 
@@ -493,11 +493,11 @@ ast_parse_loopexpr_hybrid(unsigned int *p_was_expression);
 
 
 
-struct module_object;
+struct Dee_module_object;
 
 /* Special return value to the module currently being compiled. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#define MODULE_CURRENT ((struct module_object *)ITER_DONE)
+#define MODULE_CURRENT ((struct Dee_module_object *)ITER_DONE)
 #define decref_parse_module_byname(x) ((x) == MODULE_CURRENT ? (void)0 : Dee_Decref(x))
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define MODULE_CURRENT current_rootscope->rs_module
@@ -511,11 +511,11 @@ struct module_object;
  * @return: * :             The named module
  * @return: NULL:           Error was thrown
  * @return: MODULE_CURRENT: The module currently being compiled */
-INTDEF WUNUSED DREF struct module_object *DCALL
+INTDEF WUNUSED DREF struct Dee_module_object *DCALL
 parse_module_byname(bool for_alias);
 
-INTDEF WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-import_module_symbol(struct module_object *__restrict mod,
+INTDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL
+import_module_symbol(struct Dee_module_object *__restrict mod,
                      struct TPPKeyword *__restrict name);
 
 
@@ -571,13 +571,13 @@ struct ast_annotations {
 };
 
 struct ast_tags_printers {
-	struct unicode_printer at_decl; /* A custom declaration overwrite (for creating a custom documentation prefix). */
-	struct unicode_printer at_doc;  /* The documentation string that should be applied to the following declaration. */
+	struct Dee_unicode_printer at_decl; /* A custom declaration overwrite (for creating a custom documentation prefix). */
+	struct Dee_unicode_printer at_doc;  /* The documentation string that should be applied to the following declaration. */
 };
 
 struct ast_tags {
-	struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
-	struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
+	struct Dee_unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
+	struct Dee_unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
 	struct ast_annotations at_anno;         /* AST Annotations. */
 	uint16_t               at_expect;       /* Set of `AST_FCOND_LIKELY|AST_FCOND_UNLIKELY' */
 	uint16_t               at_class_flags;  /* Set of `TP_F*' or'd to flags during creation of a new class. */
@@ -585,13 +585,13 @@ struct ast_tags {
 	uint16_t               at_attr_flags;   /* Set of `CLASS_ATTRIBUTE_F*' or'd to flags during creation of a new class attribute. */
 };
 
-#define AST_TAGS_BACKUP_PRINTERS(buf)                                   \
-	(memcpy(&(buf), &current_tags, 2 * sizeof(struct unicode_printer)), \
-	 bzero(&current_tags, 2 * sizeof(struct unicode_printer)))
-#define AST_TAGS_RESTORE_PRINTERS(buf)            \
-	(unicode_printer_fini(&current_tags.at_decl), \
-	 unicode_printer_fini(&current_tags.at_doc),  \
-	 memcpy(&current_tags, &(buf), 2 * sizeof(struct unicode_printer)))
+#define AST_TAGS_BACKUP_PRINTERS(buf)                                       \
+	(memcpy(&(buf), &current_tags, 2 * sizeof(struct Dee_unicode_printer)), \
+	 bzero(&current_tags, 2 * sizeof(struct Dee_unicode_printer)))
+#define AST_TAGS_RESTORE_PRINTERS(buf)                \
+	(Dee_unicode_printer_fini(&current_tags.at_decl), \
+	 Dee_unicode_printer_fini(&current_tags.at_doc),  \
+	 memcpy(&current_tags, &(buf), 2 * sizeof(struct Dee_unicode_printer)))
 
 
 /* Current set of active AST tags.
@@ -610,7 +610,7 @@ ast_tags_doc(struct decl_ast const *__restrict decl);
 /* Escape documentation text from "Encoded Documentation Text"
  * into "Fully Encoded Documentation Text" */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-doctext_escape(struct unicode_printer *__restrict doctext);
+doctext_escape(struct Dee_unicode_printer *__restrict doctext);
 
 /* Add a new annotation to the current set of tags. */
 INTDEF WUNUSED NONNULL((1)) int

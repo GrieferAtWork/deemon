@@ -74,7 +74,7 @@ DECL_BEGIN
 #define LIBREGEX_USED__re_max_failures  200000 /* Use a hard-coded, fixed limit on how large the on-fail stack can grow */
 
 
-/* Configure libregex syntax, and inject our `DEE_REGEX_COMPILE_*' flags. */
+/* Configure libregex syntax, and inject our `Dee_RE_COMPILE_*' flags. */
 #undef RE_SYNTAX_ICASE
 #undef RE_SYNTAX_NO_UTF8
 #define LIBREGEX_CONSTANT__RE_SYNTAX_BACKSLASH_ESCAPE_IN_LISTS 1
@@ -97,11 +97,11 @@ DECL_BEGIN
 #define LIBREGEX_CONSTANT__RE_SYNTAX_NO_POSIX_BACKTRACKING     0
 #define LIBREGEX_CONSTANT__RE_SYNTAX_NO_GNU_OPS                0
 #define LIBREGEX_CONSTANT__RE_SYNTAX_INVALID_INTERVAL_ORD      0
-#define RE_SYNTAX_ICASE                                        DEE_REGEX_COMPILE_ICASE
+#define RE_SYNTAX_ICASE                                        Dee_RE_COMPILE_ICASE
 #define LIBREGEX_CONSTANT__RE_SYNTAX_CARET_ANCHORS_HERE        1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_CONTEXT_INVALID_DUP       1
 #define LIBREGEX_CONSTANT__RE_SYNTAX_ANCHORS_IGNORE_EFLAGS     0
-#define RE_SYNTAX_NO_UTF8                                      DEE_REGEX_COMPILE_NOUTF8
+#define RE_SYNTAX_NO_UTF8                                      Dee_RE_COMPILE_NOUTF8
 #define LIBREGEX_CONSTANT__RE_SYNTAX_NO_KOS_OPS                0
 
 /* Prevent collisions with types declared by native system headers */
@@ -120,15 +120,15 @@ DECL_BEGIN
 #undef RE_CODE_FLAG_OPTGROUPS
 #define RE_REGOFF_UNSET         ((re_regoff_t)-1)
 #define re_code                 DeeRegexCode
-#define RE_CODE_FLAG_NORMAL     DEE_RE_CODE_FLAG_NORMAL
-#define RE_CODE_FLAG_NEEDGROUPS DEE_RE_CODE_FLAG_NEEDGROUPS
-#define RE_CODE_FLAG_OPTGROUPS  DEE_RE_CODE_FLAG_OPTGROUPS
+#define RE_CODE_FLAG_NORMAL     Dee_RE_CODE_FLAG_NORMAL
+#define RE_CODE_FLAG_NEEDGROUPS Dee_RE_CODE_FLAG_NEEDGROUPS
+#define RE_CODE_FLAG_OPTGROUPS  Dee_RE_CODE_FLAG_OPTGROUPS
 #define __re_code_defined
 
 #undef RE_EXEC_NOTBOL
 #undef RE_EXEC_NOTEOL
-#define RE_EXEC_NOTBOL DEE_RE_EXEC_NOTBOL
-#define RE_EXEC_NOTEOL DEE_RE_EXEC_NOTEOL
+#define RE_EXEC_NOTBOL Dee_RE_EXEC_NOTBOL
+#define RE_EXEC_NOTEOL Dee_RE_EXEC_NOTEOL
 #define __re_regmatch_t_defined
 typedef struct DeeRegexMatch re_regmatch_t;
 
@@ -185,7 +185,7 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
-static_assert(DEE_RE_STATUS_NOMATCH == (-RE_NOMATCH));
+static_assert(Dee_RE_STATUS_NOMATCH == (-RE_NOMATCH));
 
 PRIVATE ATTR_CONST ATTR_RETNONNULL WUNUSED
 char const *DCALL re_strerror(re_errno_t error) {
@@ -246,18 +246,18 @@ PRIVATE WUNUSED int DCALL re_handle_error(re_errno_t error) {
 
 /* Perform a regex match
  * @return: >= 0: The # of matched bytes starting at `exec->rx_startoff'
- * @return: DEE_RE_STATUS_NOMATCH: Nothing was matched
- * @return: DEE_RE_STATUS_ERROR:   An error occurred */
+ * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
+ * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_Match(struct DeeRegexExec const *__restrict exec) {
 	Dee_ssize_t result;
 again:
 	result = libre_exec_match(exec);
-	if likely(result >= DEE_RE_STATUS_NOMATCH)
+	if likely(result >= Dee_RE_STATUS_NOMATCH)
 		return result;
 	if (re_handle_error((re_errno_t)-result) == 0)
 		goto again;
-	return DEE_RE_STATUS_ERROR;
+	return Dee_RE_STATUS_ERROR;
 }
 
 /* Similar to `DeeRegex_Match', try to match a pattern against the given input buffer. Do this
@@ -268,19 +268,19 @@ again:
  * @param: p_match_size: When non-NULL, set to the # of bytes that were actually matched.
  *                       This would have  been the return  value of  `re_exec_match(3R)'.
  * @return: >= 0:        The offset where the matched area starts (in `[exec->rx_startoff, exec->rx_startoff + search_range)').
- * @return: DEE_RE_STATUS_NOMATCH: Nothing was matched
- * @return: DEE_RE_STATUS_ERROR:   An error occurred */
+ * @return: Dee_RE_STATUS_NOMATCH: Nothing was matched
+ * @return: Dee_RE_STATUS_ERROR:   An error occurred */
 PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 DeeRegex_Search(struct DeeRegexExec const *__restrict exec,
                 size_t search_range, size_t *p_match_size) {
 	Dee_ssize_t result;
 again:
 	result = libre_exec_search(exec, search_range, p_match_size);
-	if likely(result >= DEE_RE_STATUS_NOMATCH)
+	if likely(result >= Dee_RE_STATUS_NOMATCH)
 		return result;
 	if (re_handle_error((re_errno_t)-result) == 0)
 		goto again;
-	return DEE_RE_STATUS_ERROR;
+	return Dee_RE_STATUS_ERROR;
 }
 
 /* Similar to `DeeRegex_Search()', but never matches epsilon.
@@ -291,11 +291,11 @@ DeeRegex_SearchNoEpsilon(struct DeeRegexExec const *__restrict exec,
 	Dee_ssize_t result;
 again:
 	result = libre_exec_search_noepsilon(exec, search_range, p_match_size);
-	if likely(result >= DEE_RE_STATUS_NOMATCH)
+	if likely(result >= Dee_RE_STATUS_NOMATCH)
 		return result;
 	if (re_handle_error((re_errno_t)-result) == 0)
 		goto again;
-	return DEE_RE_STATUS_ERROR;
+	return Dee_RE_STATUS_ERROR;
 }
 
 
@@ -310,11 +310,11 @@ DeeRegex_RSearch(struct DeeRegexExec const *__restrict exec,
 	Dee_ssize_t result;
 again:
 	result = libre_exec_rsearch(exec, search_range, p_match_size);
-	if likely(result >= DEE_RE_STATUS_NOMATCH)
+	if likely(result >= Dee_RE_STATUS_NOMATCH)
 		return result;
 	if (re_handle_error((re_errno_t)-result) == 0)
 		goto again;
-	return DEE_RE_STATUS_ERROR;
+	return Dee_RE_STATUS_ERROR;
 }
 
 
@@ -458,7 +458,7 @@ PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 
 
 /* Destroy the regex cache associated with `self'.
- * Called from `DeeString_Type.tp_fini' when `STRING_UTF_FFINIHOOK' was set. */
+ * Called from `DeeString_Type.tp_fini' when `Dee_STRING_UTF_FFINIHOOK' was set. */
 INTERN NONNULL((1)) void DCALL
 DeeString_DestroyRegex(DeeStringObject const *__restrict self) {
 	struct regex_cache_entry *item, old_item;
@@ -489,11 +489,11 @@ DeeString_DestroyRegex(DeeStringObject const *__restrict self) {
 /* Lazily compile `self' as a deemon regex pattern.
  * Regex patterns for strings are compiled once, and cached thereafter,
  * before being destroyed at the same time as the corresponding string.
- * @param: compile_flags: Set of `DEE_REGEX_COMPILE_*'
+ * @param: compile_flags: Set of `Dee_RE_COMPILE_*'
  * @param: rules:         When non-NULL, a string containing extra rules
  *                        that are or'd into `compile_flags'. For this purpose,
  *                        each character from `rules' is parsed as a flag:
- *                        - "i": DEE_REGEX_COMPILE_ICASE
+ *                        - "i": Dee_RE_COMPILE_ICASE
  * @return: * :   The compiled regex pattern.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) struct DeeRegexCode const *DCALL
@@ -516,7 +516,7 @@ again_rules_iter:
 		switch (*iter++) {
 
 		case 'i':
-			compile_flags |= DEE_REGEX_COMPILE_ICASE;
+			compile_flags |= Dee_RE_COMPILE_ICASE;
 			goto again_rules_iter;
 
 		case '\0':
@@ -579,7 +579,7 @@ again_insert_result:
 			/* Race condition: another thread was faster (but use their result) */
 			ASSERTF(me->s_data != NULL,
 			        "String is in regex cache, but doesn't have UTF-data allocated?");
-			ASSERTF(me->s_data->u_flags & STRING_UTF_FFINIHOOK,
+			ASSERTF(me->s_data->u_flags & Dee_STRING_UTF_FFINIHOOK,
 			        "String is in regex cache, but doesn't have regex-flag set?");
 			existing_regex = item->rce_regex;
 			regex_cache_lock_endwrite();
@@ -659,7 +659,7 @@ DeeString_GetRegexFlags(/*String*/ DeeObject *__restrict self,
 	regex_cache_lock_endread();
 
 	/* Shouldn't get here... */
-	return DEE_REGEX_COMPILE_NORMAL;
+	return Dee_RE_COMPILE_NORMAL;
 }
 
 

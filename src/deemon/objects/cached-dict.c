@@ -54,7 +54,7 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 
 typedef DeeCachedDictObject CachedDict;
 
-#define empty_cdict_items ((struct cached_dict_item *)DeeCachedDict_EmptyItems)
+#define empty_cdict_items ((struct Dee_cached_dict_item *)DeeCachedDict_EmptyItems)
 
 
 
@@ -74,25 +74,25 @@ cdict_ctor(CachedDict *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cdict_copy(CachedDict *__restrict self,
            CachedDict *__restrict other) {
-	struct cached_dict_item *iter, *end;
+	struct Dee_cached_dict_item *iter, *end;
 	Dee_atomic_rwlock_init(&self->cd_lock);
 again:
 	DeeCachedDict_LockRead(other);
 	self->cd_mask = other->cd_mask;
 	self->cd_size = other->cd_size;
 	if ((self->cd_elem = other->cd_elem) != empty_cdict_items) {
-		self->cd_elem = (struct cached_dict_item *)Dee_TryMallocc(other->cd_mask + 1,
-		                                                          sizeof(struct cached_dict_item));
+		self->cd_elem = (struct Dee_cached_dict_item *)Dee_TryMallocc(other->cd_mask + 1,
+		                                                              sizeof(struct Dee_cached_dict_item));
 		if unlikely(!self->cd_elem) {
 			DeeCachedDict_LockEndRead(other);
 			if (Dee_CollectMemoryc(other->cd_mask + 1,
-			                       sizeof(struct cached_dict_item)))
+			                       sizeof(struct Dee_cached_dict_item)))
 				goto again;
 			goto err;
 		}
 		memcpyc(self->cd_elem, other->cd_elem,
 		        self->cd_mask + 1,
-		        sizeof(struct cached_dict_item));
+		        sizeof(struct Dee_cached_dict_item));
 		end = (iter = self->cd_elem) + (self->cd_mask + 1);
 		for (; iter < end; ++iter) {
 			if (!iter->cdi_key)
@@ -114,7 +114,7 @@ cdict_fini(CachedDict *__restrict self) {
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_mask == 0));
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_size == 0));
 	if (self->cd_elem != empty_cdict_items) {
-		struct cached_dict_item *iter, *end;
+		struct Dee_cached_dict_item *iter, *end;
 		end = (iter = self->cd_elem) + (self->cd_mask + 1);
 		for (; iter < end; ++iter) {
 			if (!iter->cdi_key)
@@ -139,7 +139,7 @@ cdict_clear(CachedDict *__restrict self) {
 	 *
 	 * see also: "util/test/deemon-kwcall-reference-loophole.dee"
 	 */
-	struct cached_dict_item *elem;
+	struct Dee_cached_dict_item *elem;
 	size_t mask;
 	DeeCachedDict_LockWrite(self);
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_mask == 0));
@@ -155,7 +155,7 @@ cdict_clear(CachedDict *__restrict self) {
 
 	/* Destroy the vector. */
 	if (elem != empty_cdict_items) {
-		struct cached_dict_item *iter, *end;
+		struct Dee_cached_dict_item *iter, *end;
 		end = (iter = elem) + (mask + 1);
 		for (; iter < end; ++iter) {
 			if (!iter->cdi_key)
@@ -174,7 +174,7 @@ cdict_visit(CachedDict *__restrict self, Dee_visit_t proc, void *arg) {
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_mask == 0));
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_size == 0));
 	if (self->cd_elem != empty_cdict_items) {
-		struct cached_dict_item *iter, *end;
+		struct Dee_cached_dict_item *iter, *end;
 		end = (iter = self->cd_elem) + (self->cd_mask + 1);
 		for (; iter < end; ++iter) {
 			if (!iter->cdi_key)
@@ -193,14 +193,14 @@ cdict_visit(CachedDict *__restrict self, Dee_visit_t proc, void *arg) {
  * @return: false: Not enough memory. - The caller should collect some and try again. */
 PRIVATE NONNULL((1)) bool DCALL
 dict_rehash(CachedDict *__restrict self) {
-	struct cached_dict_item *new_vector, *iter, *end;
+	struct Dee_cached_dict_item *new_vector, *iter, *end;
 	size_t new_mask;
 	new_mask = self->cd_mask;
 	new_mask = (new_mask << 1) | 1;
 	if unlikely(new_mask == 1)
 		new_mask = 16 - 1; /* Start out bigger than 2. */
 	ASSERT(self->cd_size < new_mask);
-	new_vector = (struct cached_dict_item *)Dee_TryCallocc(new_mask + 1, sizeof(struct cached_dict_item));
+	new_vector = (struct Dee_cached_dict_item *)Dee_TryCallocc(new_mask + 1, sizeof(struct Dee_cached_dict_item));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_mask == 0));
@@ -209,7 +209,7 @@ dict_rehash(CachedDict *__restrict self) {
 		/* Re-insert all existing items into the new CachedDict vector. */
 		end = (iter = self->cd_elem) + (self->cd_mask + 1);
 		for (; iter < end; ++iter) {
-			struct cached_dict_item *item;
+			struct Dee_cached_dict_item *item;
 			Dee_hash_t i, perturb;
 
 			/* Skip dummy keys. */
@@ -241,9 +241,9 @@ DeeCachedDict_Remember(DeeCachedDictObject *__restrict self,
                        /*inherit(always)*/ DREF DeeObject *key,
                        /*inherit(always)*/ DREF DeeObject *value, Dee_hash_t hash) {
 	size_t mask;
-	struct cached_dict_item *vector;
+	struct Dee_cached_dict_item *vector;
 	int error;
-	struct cached_dict_item *first_dummy;
+	struct Dee_cached_dict_item *first_dummy;
 	Dee_hash_t i, perturb;
 again_lock:
 	DeeCachedDict_LockRead(self);
@@ -254,7 +254,7 @@ again:
 	perturb = i = hash & mask;
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
 		DeeObject *item_key;
-		struct cached_dict_item *item = &vector[i & mask];
+		struct Dee_cached_dict_item *item = &vector[i & mask];
 		if (!item->cdi_key) {
 			if (!first_dummy)
 				first_dummy = item;
@@ -459,7 +459,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 cdict_getitemnr(DeeCachedDictObject *__restrict self,
                 /*string*/ DeeObject *__restrict key) {
 	size_t mask;
-	struct cached_dict_item *vector;
+	struct Dee_cached_dict_item *vector;
 	Dee_hash_t i, perturb;
 	int error;
 	Dee_hash_t hash = DeeObject_Hash(key);
@@ -470,7 +470,7 @@ restart:
 	perturb = i = hash & mask;
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
 		DeeObject *item_key, *item_value;
-		struct cached_dict_item *item = &vector[i & mask];
+		struct Dee_cached_dict_item *item = &vector[i & mask];
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -509,7 +509,7 @@ cdict_getitemnr_string_hash(DeeCachedDictObject *__restrict self,
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
-		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		struct Dee_cached_dict_item *item = DeeCachedDict_HashIt(self, i);
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -535,7 +535,7 @@ cdict_getitemnr_string_len_hash(DeeCachedDictObject *__restrict self,
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
-		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		struct Dee_cached_dict_item *item = DeeCachedDict_HashIt(self, i);
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -556,7 +556,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 cdict_trygetitemnr(DeeCachedDictObject *__restrict self,
                    /*string*/ DeeObject *__restrict key) {
 	size_t mask;
-	struct cached_dict_item *vector;
+	struct Dee_cached_dict_item *vector;
 	Dee_hash_t i, perturb;
 	int error;
 	Dee_hash_t hash = DeeObject_Hash(key);
@@ -567,7 +567,7 @@ restart:
 	perturb = i = hash & mask;
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
 		DeeObject *item_key, *item_value;
-		struct cached_dict_item *item = &vector[i & mask];
+		struct Dee_cached_dict_item *item = &vector[i & mask];
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -605,7 +605,7 @@ cdict_trygetitemnr_string_hash(DeeCachedDictObject *__restrict self,
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
-		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		struct Dee_cached_dict_item *item = DeeCachedDict_HashIt(self, i);
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -631,7 +631,7 @@ cdict_trygetitemnr_string_len_hash(DeeCachedDictObject *__restrict self,
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
-		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		struct Dee_cached_dict_item *item = DeeCachedDict_HashIt(self, i);
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -652,7 +652,7 @@ cdict_trygetitemnr_string_len_hash(DeeCachedDictObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cdict_iscached(DeeCachedDictObject *self, DeeObject *key, Dee_hash_t hash) {
 	size_t mask;
-	struct cached_dict_item *vector;
+	struct Dee_cached_dict_item *vector;
 	Dee_hash_t i, perturb;
 	int error;
 	DeeCachedDict_LockRead(self);
@@ -662,7 +662,7 @@ restart:
 	perturb = i = hash & mask;
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
 		DeeObject *item_key;
-		struct cached_dict_item *item = &vector[i & mask];
+		struct Dee_cached_dict_item *item = &vector[i & mask];
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -696,7 +696,7 @@ cdict_iscached_string_hash(DeeCachedDictObject *self, char const *key, Dee_hash_
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
-		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		struct Dee_cached_dict_item *item = DeeCachedDict_HashIt(self, i);
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -719,7 +719,7 @@ cdict_iscached_string_len_hash(DeeCachedDictObject *self, char const *key,
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
-		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		struct Dee_cached_dict_item *item = DeeCachedDict_HashIt(self, i);
 		if (!item->cdi_key)
 			break; /* Not found */
 		if (item->cdi_hash != hash)
@@ -1058,9 +1058,9 @@ again:
 			goto err;
 	} else {
 		size_t i;
-		struct cached_dict_item *out_elem;
-		struct cached_dict_item const *in_elem;
-		sizeof_elem = (used_mask + 1) * sizeof(struct cached_dict_item);
+		struct Dee_cached_dict_item *out_elem;
+		struct Dee_cached_dict_item const *in_elem;
+		sizeof_elem = (used_mask + 1) * sizeof(struct Dee_cached_dict_item);
 		addrof_elem = DeeSerial_TryMalloc(writer, sizeof_elem, NULL);
 		if (!Dee_SERADDR_ISOK(addrof_elem)) {
 			DeeCachedDict_LockEndRead(self);
@@ -1075,7 +1075,7 @@ again:
 				goto again;
 			}
 		}
-		out_elem = DeeSerial_Addr2Mem(writer, addrof_elem, struct cached_dict_item);
+		out_elem = DeeSerial_Addr2Mem(writer, addrof_elem, struct Dee_cached_dict_item);
 		in_elem  = self->cd_elem;
 		for (i = 0; i <= used_mask; ++i) {
 			*out_elem = *in_elem;
@@ -1093,20 +1093,20 @@ again:
 		/* Serialize cached items. */
 		for (i = 0; i <= used_mask; ++i) {
 			Dee_seraddr_t addrof_out_elem;
-			addrof_out_elem = addrof_elem + i * sizeof(struct cached_dict_item);
-			out_elem = DeeSerial_Addr2Mem(writer, addrof_out_elem, struct cached_dict_item);
+			addrof_out_elem = addrof_elem + i * sizeof(struct Dee_cached_dict_item);
+			out_elem = DeeSerial_Addr2Mem(writer, addrof_out_elem, struct Dee_cached_dict_item);
 			if (out_elem->cdi_key) {
 				DREF DeeObject *key   = out_elem->cdi_key;
 				DREF DeeObject *value = out_elem->cdi_value;
-				int error = DeeSerial_PutObject(writer, addrof_out_elem + offsetof(struct cached_dict_item, cdi_key), key);
+				int error = DeeSerial_PutObject(writer, addrof_out_elem + offsetof(struct Dee_cached_dict_item, cdi_key), key);
 				if likely(error == 0)
-					error = DeeSerial_PutObject(writer, addrof_out_elem + offsetof(struct cached_dict_item, cdi_value), value);
+					error = DeeSerial_PutObject(writer, addrof_out_elem + offsetof(struct Dee_cached_dict_item, cdi_value), value);
 				Dee_Decref_unlikely(value);
 				Dee_Decref_unlikely(key);
 				if unlikely(error) {
 					for (; i <= used_mask; ++i) {
-						addrof_out_elem = addrof_elem + i * sizeof(struct cached_dict_item);
-						out_elem = DeeSerial_Addr2Mem(writer, addrof_out_elem, struct cached_dict_item);
+						addrof_out_elem = addrof_elem + i * sizeof(struct Dee_cached_dict_item);
+						out_elem = DeeSerial_Addr2Mem(writer, addrof_out_elem, struct Dee_cached_dict_item);
 						if (out_elem->cdi_key) {
 							Dee_Decref_unlikely(out_elem->cdi_value);
 							Dee_Decref_unlikely(out_elem->cdi_key);
@@ -1195,7 +1195,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 };
 
 
-PUBLIC_CONST struct cached_dict_item const DeeCachedDict_EmptyItems[1] = {
+PUBLIC_CONST struct Dee_cached_dict_item const DeeCachedDict_EmptyItems[1] = {
 	{ NULL, NULL, 0 }
 };
 

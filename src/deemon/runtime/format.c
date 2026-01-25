@@ -978,28 +978,28 @@ nextfmt:
 		if (length == LENGTH_L) {
 			long double value;
 			value = va_arg(args, long double);
-#if (F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
-     F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
-     F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
-     F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
-     F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
-     F_HASPREC == DEEFLOAT_PRINT_FPRECISION)
+#if (F_LJUST == Dee_FLOAT_PRINT_FLJUST &&     \
+     F_SIGN == Dee_FLOAT_PRINT_FSIGN &&       \
+     F_SPACE == Dee_FLOAT_PRINT_FSPACE &&     \
+     F_PADZERO == Dee_FLOAT_PRINT_FPADZERO && \
+     F_HASWIDTH == Dee_FLOAT_PRINT_FWIDTH &&  \
+     F_HASPREC == Dee_FLOAT_PRINT_FPRECISION)
 			temp = DeeFloat_LPrint(value, printer, arg, width, precision, flags);
 #else /* ... */
 			{
-				unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
+				unsigned int float_flags = Dee_FLOAT_PRINT_FNORMAL;
 				if (flags & F_LJUST)
-					float_flags |= DEEFLOAT_PRINT_FLJUST;
+					float_flags |= Dee_FLOAT_PRINT_FLJUST;
 				if (flags & F_SIGN)
-					float_flags |= DEEFLOAT_PRINT_FSIGN;
+					float_flags |= Dee_FLOAT_PRINT_FSIGN;
 				if (flags & F_SPACE)
-					float_flags |= DEEFLOAT_PRINT_FSPACE;
+					float_flags |= Dee_FLOAT_PRINT_FSPACE;
 				if (flags & F_PADZERO)
-					float_flags |= DEEFLOAT_PRINT_FPADZERO;
+					float_flags |= Dee_FLOAT_PRINT_FPADZERO;
 				if (flags & F_HASWIDTH)
-					float_flags |= DEEFLOAT_PRINT_FWIDTH;
+					float_flags |= Dee_FLOAT_PRINT_FWIDTH;
 				if (flags & F_HASPREC)
-					float_flags |= DEEFLOAT_PRINT_FPRECISION;
+					float_flags |= Dee_FLOAT_PRINT_FPRECISION;
 				temp = DeeFloat_LPrint(value, printer, arg, width, precision, float_flags);
 			}
 #endif /* !... */
@@ -1008,28 +1008,28 @@ nextfmt:
 		{
 			double value;
 			value = va_arg(args, double);
-#if (F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
-     F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
-     F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
-     F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
-     F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
-     F_HASPREC == DEEFLOAT_PRINT_FPRECISION)
+#if (F_LJUST == Dee_FLOAT_PRINT_FLJUST &&     \
+     F_SIGN == Dee_FLOAT_PRINT_FSIGN &&       \
+     F_SPACE == Dee_FLOAT_PRINT_FSPACE &&     \
+     F_PADZERO == Dee_FLOAT_PRINT_FPADZERO && \
+     F_HASWIDTH == Dee_FLOAT_PRINT_FWIDTH &&  \
+     F_HASPREC == Dee_FLOAT_PRINT_FPRECISION)
 			temp = DeeFloat_Print(value, printer, arg, width, precision, flags);
 #else /* ... */
 		{
-			unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
+			unsigned int float_flags = Dee_FLOAT_PRINT_FNORMAL;
 			if (flags & F_LJUST)
-				float_flags |= DEEFLOAT_PRINT_FLJUST;
+				float_flags |= Dee_FLOAT_PRINT_FLJUST;
 			if (flags & F_SIGN)
-				float_flags |= DEEFLOAT_PRINT_FSIGN;
+				float_flags |= Dee_FLOAT_PRINT_FSIGN;
 			if (flags & F_SPACE)
-				float_flags |= DEEFLOAT_PRINT_FSPACE;
+				float_flags |= Dee_FLOAT_PRINT_FSPACE;
 			if (flags & F_PADZERO)
-				float_flags |= DEEFLOAT_PRINT_FPADZERO;
+				float_flags |= Dee_FLOAT_PRINT_FPADZERO;
 			if (flags & F_HASWIDTH)
-				float_flags |= DEEFLOAT_PRINT_FWIDTH;
+				float_flags |= Dee_FLOAT_PRINT_FWIDTH;
 			if (flags & F_HASPREC)
-				float_flags |= DEEFLOAT_PRINT_FPRECISION;
+				float_flags |= Dee_FLOAT_PRINT_FPRECISION;
 			temp = DeeFloat_Print(value, printer, arg, width, precision, float_flags);
 		}
 #endif /* !... */
@@ -1093,7 +1093,7 @@ DeeFormat_Printf(Dee_formatprinter_t printer, void *arg,
 
 /* Quote (backslash-escape) the given text, printing the resulting text to `printer'.
  * NOTE: This function always generates pure ASCII, and is therefor safe to be used
- *       when targeting an `ascii_printer'
+ *       when targeting a `Dee_ascii_printer'
  * Output:
  * - ASCII+isprint --> keep
  * - ASCII+iscntrl --> \r, \n, \b, ...
@@ -1116,7 +1116,7 @@ DeeFormat_Quote(Dee_formatprinter_t printer, void *arg,
 		}
 		if (flush_start < text)
 			DO((*printer)(arg, flush_start, (size_t)(text - flush_start)));
-		ch = unicode_readutf8_n(&text, end);
+		ch = Dee_unicode_readutf8_n(&text, end);
 		esc = escapeseq;
 		*esc++ = '\\';
 		switch (ch) {
@@ -1474,16 +1474,16 @@ DeeFormat_Repeat(/*ascii*/ Dee_formatprinter_t printer, void *arg,
 	}
 
 	/* Fast-paths for certain printers. */
-	if (printer == &unicode_printer_print) {
-		return unicode_printer_repeatascii((struct unicode_printer *)arg, ch, count);
-	} else if (printer == &ascii_printer_print) {
-		char *buf = ascii_printer_alloc((struct ascii_printer *)arg, count);
+	if (printer == &Dee_unicode_printer_print) {
+		return Dee_unicode_printer_repeatascii((struct Dee_unicode_printer *)arg, ch, count);
+	} else if (printer == &Dee_ascii_printer_print) {
+		char *buf = Dee_ascii_printer_alloc((struct Dee_ascii_printer *)arg, count);
 		if unlikely(!buf)
 			return -1;
 		memset(buf, ch, count);
 		return (Dee_ssize_t)count;
-	} else if (printer == &bytes_printer_print) {
-		unsigned char *buf = bytes_printer_alloc((struct bytes_printer *)arg, count);
+	} else if (printer == &Dee_bytes_printer_print) {
+		unsigned char *buf = Dee_bytes_printer_alloc((struct Dee_bytes_printer *)arg, count);
 		if unlikely(!buf)
 			return -1;
 		memset(buf, ch, count);
@@ -1531,7 +1531,7 @@ DeeFormat_RepeatUtf8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
 		uint8_t ch = (uint8_t)str[i];
 		if (ch < 0xc0)
 			continue;
-		ch = unicode_utf8seqlen[ch];
+		ch = Dee_unicode_utf8seqlen[ch];
 		ASSERT(ch != 0);
 		utf8_length -= ch - 1;
 		i += ch - 1;
@@ -1549,7 +1549,7 @@ DeeFormat_RepeatUtf8(/*utf-8*/ Dee_formatprinter_t printer, void *arg,
 		i = 0;
 		while (i < length && total_characters--) {
 			uint8_t chr = (uint8_t)str[i];
-			uint8_t len = unicode_utf8seqlen_safe[chr];
+			uint8_t len = Dee_unicode_utf8seqlen_safe[chr];
 			i += len;
 		}
 		temp = (*printer)(arg, str, i);
@@ -1654,7 +1654,7 @@ Dee_snprintf(char *__restrict buffer, size_t bufsize,
 /* Extensible formating functions                                       */
 /************************************************************************/
 
-LOCAL WUNUSED NONNULL((1)) struct kwds_entry *DCALL
+LOCAL WUNUSED NONNULL((1)) struct Dee_kwds_entry *DCALL
 kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
 	size_t i;
 	for (i = 0; i <= self->kw_mask; ++i) {
@@ -1715,7 +1715,7 @@ PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 	Dee_ssize_t temp, result = 0;
 	if (kw && DeeKwds_Check(kw)) {
 		size_t kwargc = DeeKwds_SIZE(kw);
-		struct kwds_entry *entry;
+		struct Dee_kwds_entry *entry;
 		if unlikely(kwargc > argc) {
 			kwargc = argc;
 		} else {

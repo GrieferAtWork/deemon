@@ -2857,7 +2857,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f_imp
 /*[[[end]]]*/
 {
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeNTSystem_PrintFinalPathNameByHandle(&printer, (void *)hFile, dwFlags);
 	if (error != 0) {
 		if unlikely(error < 0)
@@ -2872,14 +2872,14 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f_imp
 			goto err;
 		}
 	}
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 system_error:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	RETURN_ERROR(GetLastError(),
 	             "Failed to determine the filename of handle %p",
 	             hFile);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -2984,7 +2984,7 @@ FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL libwin32_GetMappedFileName
 /*[[[end]]]*/
 {
 	int error;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	error = DeeNTSystem_PrintMappedFileName(&printer, (void *)hProcess, lpv);
 	if (error != 0) {
 		if unlikely(error < 0)
@@ -2993,14 +2993,14 @@ FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL libwin32_GetMappedFileName
 			SetLastError(ERROR_INVALID_FUNCTION);
 		goto system_error;
 	}
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 system_error:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	RETURN_ERROR(GetLastError(),
 	             "Failed to determine the mapped filename of address %p in process %p",
 	             lpv, hProcess);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 

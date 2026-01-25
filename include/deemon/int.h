@@ -26,8 +26,26 @@
  *       way that deemon's (phyton's) arbitrary-length integers are implemented,
  *       with all algorithms found in `int_logic.c' originating from phython
  *       before being adjusted to fit deemon's runtime. */
+/*!export **/
+/*!export DEFINE_*INT**/
+/*!export Dee_DEFINE_*INT**/
+/*!export Dee_DIGIT_**/
+/*!export DeeInt_**/
+/*!export Dee_Ato**/
+/*!export Dee_ATOI_**/
+/*!export Dee_INT_*_OVERFLOW*/
+/*!export Dee_INT_PRINT**/
+/*!export Dee_INT_*SIGNED**/
+/*!export Dee_INT_STRING**/
+/*!export Dee_SIZEOF_*DIGIT*/
+/*!export Dee_TAtoi**/
+/*!export Dee_*digit*_t*/
+/*!export INT_*_OVERFLOW*/
+/*!export INT_*SIGNED*/
+/*!export _DeeInt_**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_INT_H
-#define GUARD_DEEMON_INT_H 1
+#define GUARD_DEEMON_INT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -77,12 +95,6 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_int_object int_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_int_object DeeIntObject;
-
 #if __SIZEOF_POINTER__ >= 8
 #define Dee_DIGIT_BITS 30
 #else /* __SIZEOF_POINTER__ >= 8 */
@@ -109,17 +121,7 @@ typedef int64_t Dee_stwodigits_t;
 #define Dee_DIGIT_MASK ((Dee_digit_t)(Dee_DIGIT_BASE - 1))
 
 
-#ifdef DEE_SOURCE
-#define DIGIT_BITS Dee_DIGIT_BITS
-typedef Dee_digit_t digit;
-typedef Dee_sdigit_t sdigit;
-typedef Dee_twodigits_t twodigits;
-typedef Dee_stwodigits_t stwodigits;
-#define DIGIT_BASE Dee_DIGIT_BASE
-#define DIGIT_MASK Dee_DIGIT_MASK
-#endif /* DEE_SOURCE */
-
-struct Dee_int_object {
+typedef struct Dee_int_object {
 	Dee_OBJECT_HEAD
 	Dee_ssize_t                          ob_size;   /* Number of used digits (negative of that number for negative integers) */
 	COMPILER_FLEXIBLE_ARRAY(Dee_digit_t, ob_digit); /* Bit-vector of the integer, split in digits of `Dee_DIGIT_BITS' bits each.
@@ -127,7 +129,7 @@ struct Dee_int_object {
 	                                                 * in host-endian.
 	                                                 * The total number of digits is the absolute value of `ob_size',
 	                                                 * which is negative if the value of the integer is too. */
-};
+} DeeIntObject;
 
 #define _Dee_PRIVATE_ABS(value)             \
 	((value) < 0                            \
@@ -537,9 +539,9 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 
 /* Calculate the worst-case required memory for writing a given integer in LEB format. */
 #define DeeInt_GetSlebMaxSize(self) \
-	(((_DeeInt_GetAbsSize(self) + 1) * DIGIT_BITS) / 7)
+	(((_DeeInt_GetAbsSize(self) + 1) * Dee_DIGIT_BITS) / 7)
 #define DeeInt_GetUlebMaxSize(self) \
-	((((size_t)Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size + 1) * DIGIT_BITS) / 7)
+	((((size_t)Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size + 1) * Dee_DIGIT_BITS) / 7)
 #define _DeeInt_GetAbsSize(self)                                   \
 	(Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size < 0          \
 	 ? (size_t)(-Dee_REQUIRES_OBJECT(DeeIntObject, self)->ob_size) \
@@ -800,22 +802,22 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
 DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
                  size_t len, uint32_t radix_and_flags);
-#define DEEINT_STRING(radix, flags) ((radix) << DEEINT_STRING_RSHIFT | (flags))
-#define DEEINT_STRING_RSHIFT   16
-#define DEEINT_STRING_FNORMAL  0x0000
-#define DEEINT_STRING_FESCAPED 0x0001 /* Decode escaped linefeeds in the given input string. */
-#define DEEINT_STRING_FTRY     0x0002 /* Don't throw a ValueError, but return ITER_DONE. */
-#define DEEINT_STRING_FNOSEPS  0x0004 /* Error out if _-characters are encountered during parsing. */
+#define Dee_INT_STRING(radix, flags) ((radix) << Dee_INT_STRING_RSHIFT | (flags))
+#define Dee_INT_STRING_RSHIFT   16
+#define Dee_INT_STRING_FNORMAL  0x0000
+#define Dee_INT_STRING_FESCAPED 0x0001 /* Decode escaped linefeeds in the given input string. */
+#define Dee_INT_STRING_FTRY     0x0002 /* Don't throw a ValueError, but return ITER_DONE. */
+#define Dee_INT_STRING_FNOSEPS  0x0004 /* Error out if _-characters are encountered during parsing. */
 
-/* @param: radix_and_flags: Set of `DEEINT_STRING_F* | DEEATOI_STRING_F*',
+/* @param: radix_and_flags: Set of `Dee_INT_STRING_F* | Dee_ATOI_STRING_F*',
  * @return:  0: Successfully parsed an integer.
- * @return: -1: An error occurred. (never returned when `DEEINT_STRING_FTRY' is set)
- * @return:  1: Failed to parse an integer. (returned when `DEEINT_STRING_FTRY' is set) */
+ * @return: -1: An error occurred. (never returned when `Dee_INT_STRING_FTRY' is set)
+ * @return:  1: Failed to parse an integer. (returned when `Dee_INT_STRING_FTRY' is set) */
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
-#define DEEATOI_STRING_FSIGNED 0x0008 /* The generated value is signed. */
+#define Dee_ATOI_STRING_FSIGNED 0x0008 /* The generated value is signed. */
 
 #ifdef __INTELLISENSE__
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atos8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
@@ -827,10 +829,10 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou16)(/*utf-8*/ char const *__r
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint32_t *__restrict value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint64_t *__restrict value);
 #else /* __INTELLISENSE__ */
-#define Dee_Atos8(str, len, radix_and_flags, value)  Dee_Atoi8(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
-#define Dee_Atos16(str, len, radix_and_flags, value) Dee_Atoi16(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
-#define Dee_Atos32(str, len, radix_and_flags, value) Dee_Atoi32(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
-#define Dee_Atos64(str, len, radix_and_flags, value) Dee_Atoi64(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
+#define Dee_Atos8(str, len, radix_and_flags, value)  Dee_Atoi8(str, len, (radix_and_flags) | Dee_ATOI_STRING_FSIGNED, value)
+#define Dee_Atos16(str, len, radix_and_flags, value) Dee_Atoi16(str, len, (radix_and_flags) | Dee_ATOI_STRING_FSIGNED, value)
+#define Dee_Atos32(str, len, radix_and_flags, value) Dee_Atoi32(str, len, (radix_and_flags) | Dee_ATOI_STRING_FSIGNED, value)
+#define Dee_Atos64(str, len, radix_and_flags, value) Dee_Atoi64(str, len, (radix_and_flags) | Dee_ATOI_STRING_FSIGNED, value)
 #define Dee_Atou8(str, len, radix_and_flags, value)  Dee_Atoi8(str, len, radix_and_flags, (int8_t *)(value))
 #define Dee_Atou16(str, len, radix_and_flags, value) Dee_Atoi16(str, len, radix_and_flags, (int16_t *)(value))
 #define Dee_Atou32(str, len, radix_and_flags, value) Dee_Atoi32(str, len, radix_and_flags, (int32_t *)(value))
@@ -839,7 +841,7 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 
 #ifdef __NO_builtin_choose_expr
 #define _Dee_PRIVATE_ATOI_FLAGS(T, flags) \
-	(((T)-1) < (T)0 ? (flags) | DEEATOI_STRING_FSIGNED : (flags))
+	(((T)-1) < (T)0 ? (flags) | Dee_ATOI_STRING_FSIGNED : (flags))
 #define Dee_TAtoi(T, str, len, radix_and_flags, value)                                                        \
 	(sizeof(T) <= 1 ? Dee_Atoi8(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int8_t *)(value)) :   \
 	 sizeof(T) <= 2 ? Dee_Atoi16(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)) : \
@@ -852,7 +854,7 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 	                  Dee_Atoi64(str, len, (radix_and_flags), (int64_t *)(value)))
 #else /* __NO_builtin_choose_expr */
 #define _Dee_PRIVATE_ATOI_FLAGS(T, flags) \
-	__builtin_choose_expr(((T)-1) < (T)0, (flags) | DEEATOI_STRING_FSIGNED, (flags))
+	__builtin_choose_expr(((T)-1) < (T)0, (flags) | Dee_ATOI_STRING_FSIGNED, (flags))
 #define Dee_TAtoi(T, str, len, radix_and_flags, value)                                                                            \
 	__builtin_choose_expr(sizeof(T) <= 1, Dee_Atoi8(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int8_t *)(value)),    \
 	__builtin_choose_expr(sizeof(T) <= 2, Dee_Atoi16(str, len, _Dee_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)),  \
@@ -865,7 +867,7 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 	                                             Dee_Atoi64(str, len, (radix_and_flags), (int64_t *)(value)))))
 #endif /* !__NO_builtin_choose_expr */
 #define Dee_TAtois(str, len, radix_and_flags, value)                                                                                    \
-	Dee_TAtoiu(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
+	Dee_TAtoiu(str, len, (radix_and_flags) | Dee_ATOI_STRING_FSIGNED, value)
 
 
 /* Print an integer to a given format-printer.
@@ -877,22 +879,22 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 DFUNDEF WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
 DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
              size_t precision, Dee_formatprinter_t printer, void *arg);
-#define DEEINT_PRINT(radix, flags) ((radix) << DEEINT_PRINT_RSHIFT | (flags))
-#define DEEINT_PRINT_RSHIFT  16
-#define DEEINT_PRINT_FNORMAL 0x0000
-#define DEEINT_PRINT_FUPPER  0x0001 /* Use uppercase characters for printing digits above `9' */
-#define DEEINT_PRINT_FNUMSYS 0x0002 /* Prepend the number system prefix before the integer itself (e.g.: `0x').
-                                     * NOTE: If the radix cannot be represented as a prefix, this flag is ignored. */
-#define DEEINT_PRINT_FSIGN   0x0004 /* Always prepend a sign, even before for positive numbers. */
-#define DEEINT_PRINT_FSEPS   0x0008 /* Include _-characters to denote thousands/group-separators */
+#define Dee_INT_PRINT(radix, flags) ((radix) << Dee_INT_PRINT_RSHIFT | (flags))
+#define Dee_INT_PRINT_RSHIFT  16
+#define Dee_INT_PRINT_FNORMAL 0x0000
+#define Dee_INT_PRINT_FUPPER  0x0001 /* Use uppercase characters for printing digits above `9' */
+#define Dee_INT_PRINT_FNUMSYS 0x0002 /* Prepend the number system prefix before the integer itself (e.g.: `0x').
+                                      * NOTE: If the radix cannot be represented as a prefix, this flag is ignored. */
+#define Dee_INT_PRINT_FSIGN   0x0004 /* Always prepend a sign, even before for positive numbers. */
+#define Dee_INT_PRINT_FSEPS   0x0008 /* Include _-characters to denote thousands/group-separators */
 
-#define DEEINT_PRINT_BIN     DEEINT_PRINT(2, DEEINT_PRINT_FNORMAL)
-#define DEEINT_PRINT_OCT     DEEINT_PRINT(8, DEEINT_PRINT_FNORMAL)
-#define DEEINT_PRINT_DEC     DEEINT_PRINT(10, DEEINT_PRINT_FNORMAL)
-#define DEEINT_PRINT_HEX     DEEINT_PRINT(16, DEEINT_PRINT_FNORMAL)
+#define Dee_INT_PRINT_BIN     Dee_INT_PRINT(2, Dee_INT_PRINT_FNORMAL)
+#define Dee_INT_PRINT_OCT     Dee_INT_PRINT(8, Dee_INT_PRINT_FNORMAL)
+#define Dee_INT_PRINT_DEC     Dee_INT_PRINT(10, Dee_INT_PRINT_FNORMAL)
+#define Dee_INT_PRINT_HEX     Dee_INT_PRINT(16, Dee_INT_PRINT_FNORMAL)
 
 #define DeeInt_PrintRepr(self, printer, arg) \
-	DeeInt_Print(self, DEEINT_PRINT_DEC, 0, printer, arg)
+	DeeInt_Print(self, Dee_INT_PRINT_DEC, 0, printer, arg)
 
 
 #define _Dee_PRIVATE_NEWINT_1      DeeInt_NewInt8
@@ -963,17 +965,17 @@ DeeInt_Print(/*Int*/ DeeObject *__restrict self, uint32_t radix_and_flags,
 #define DeeInt_NewIntptr(val)  _DeeInt_NewS(__SIZEOF_POINTER__, val)
 #define DeeInt_NewUIntptr(val) _DeeInt_NewU(__SIZEOF_POINTER__, val)
 
-#if DIGIT_BITS <= 16
+#if Dee_DIGIT_BITS <= 16
 #define DeeInt_NewDigit(val)      _DeeInt_NewU(2, val)
 #define DeeInt_NewSDigit(val)     _DeeInt_NewS(2, val)
 #define DeeInt_NewTwoDigits(val)  _DeeInt_NewU(4, val)
 #define DeeInt_NewSTwoDigits(val) _DeeInt_NewS(4, val)
-#else /* DIGIT_BITS <= 16 */
+#else /* Dee_DIGIT_BITS <= 16 */
 #define DeeInt_NewDigit(val)      _DeeInt_NewU(4, val)
 #define DeeInt_NewSDigit(val)     _DeeInt_NewS(4, val)
 #define DeeInt_NewTwoDigits(val)  _DeeInt_NewU(8, val)
 #define DeeInt_NewSTwoDigits(val) _DeeInt_NewS(8, val)
-#endif /* DIGIT_BITS > 16 */
+#endif /* Dee_DIGIT_BITS > 16 */
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

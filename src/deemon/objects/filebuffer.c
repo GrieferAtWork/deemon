@@ -57,7 +57,7 @@
 
 DECL_BEGIN
 
-LIST_HEAD(file_buffer_object_list, file_buffer_object);
+LIST_HEAD(file_buffer_object_list, Dee_file_buffer_object);
 typedef DeeFileBufferObject Buffer;
 
 /* [0..1][lock(buffer_ttys_lock)] Chain of tty-buffers. */
@@ -89,10 +89,10 @@ PRIVATE ATTR_COLD int DCALL err_buffer_closed(void);
 #define BUFFER_IO_ERROR      (-1) /* Error (an exception was thrown) */
 #define BUFFER_IO_DID_UNLOCK (-2) /* The buffer had to be unlocked (try again) */
 #define GETC_DID_UNLOCK      (-3) /* The buffer had to be unlocked (try again) (for `buffer_getc_or_unlock') */
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_or_unlock(Buffer *__restrict self, byte_t *__restrict buffer, size_t bufsize, dioflag_t flags);
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_or_unlock(Buffer *__restrict self, byte_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_or_unlock(Buffer *__restrict self, byte_t *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_or_unlock(Buffer *__restrict self, byte_t const *__restrict buffer, size_t bufsize, Dee_ioflag_t flags);
 PRIVATE WUNUSED NONNULL((1)) Dee_pos_t DCALL buffer_seek_or_unlock(Buffer *__restrict self, Dee_off_t off, int whence);
-PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_getc_or_unlock(Buffer *__restrict self, Dee_ioflag_t flags);
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_ungetc_nolock(Buffer *__restrict self, int ch);
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_trunc_nolock(Buffer *__restrict self, Dee_pos_t new_size);
@@ -100,7 +100,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_sync_nolock(Buffer *__restrict sel
 #define BUFFER_SYNC_FNORMAL          0x0000
 #define BUFFER_SYNC_FERROR_IF_CLOSED 0x0001 /* Throw an error if the buffer was closed. */
 #define BUFFER_SYNC_FNOSYNC_FILE     0x0002 /* Don't synchronize the underlying file, regardless of whether
-                                             * or not the `FILE_BUFFER_FSYNC' flag has been set. */
+                                             * or not the `Dee_FILE_BUFFER_FSYNC' flag has been set. */
 
 
 #ifdef CONFIG_HAVE_atexit
@@ -174,10 +174,10 @@ buffer_init(Buffer *__restrict self,
             uint16_t mode, size_t size) {
 	ASSERT_OBJECT(file);
 	/* Validate that the given `mode' is an accepted buffer mode. */
-	ASSERT((mode & ~(FILE_BUFFER_FREADONLY | FILE_BUFFER_FSYNC | FILE_BUFFER_FCLOFILE)) == FILE_BUFFER_MODE_NONE ||
-	       (mode & ~(FILE_BUFFER_FREADONLY | FILE_BUFFER_FSYNC | FILE_BUFFER_FCLOFILE)) == FILE_BUFFER_MODE_FULL ||
-	       (mode & ~(FILE_BUFFER_FREADONLY | FILE_BUFFER_FSYNC | FILE_BUFFER_FCLOFILE)) == FILE_BUFFER_MODE_LINE ||
-	       (mode & ~(FILE_BUFFER_FREADONLY | FILE_BUFFER_FSYNC | FILE_BUFFER_FCLOFILE)) == FILE_BUFFER_MODE_AUTO);
+	ASSERT((mode & ~(Dee_FILE_BUFFER_FREADONLY | Dee_FILE_BUFFER_FSYNC | Dee_FILE_BUFFER_FCLOFILE)) == Dee_FILE_BUFFER_MODE_NONE ||
+	       (mode & ~(Dee_FILE_BUFFER_FREADONLY | Dee_FILE_BUFFER_FSYNC | Dee_FILE_BUFFER_FCLOFILE)) == Dee_FILE_BUFFER_MODE_FULL ||
+	       (mode & ~(Dee_FILE_BUFFER_FREADONLY | Dee_FILE_BUFFER_FSYNC | Dee_FILE_BUFFER_FCLOFILE)) == Dee_FILE_BUFFER_MODE_LINE ||
+	       (mode & ~(Dee_FILE_BUFFER_FREADONLY | Dee_FILE_BUFFER_FSYNC | Dee_FILE_BUFFER_FCLOFILE)) == Dee_FILE_BUFFER_MODE_AUTO);
 
 	if ((self->fb_size = size) != 0) {
 		/* Allocate the initial buffer. */
@@ -224,17 +224,17 @@ err:
 #ifdef NDEBUG
 PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_realloc_nolock(Buffer *__restrict self, size_t new_size) {
-	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
+	if (self->fb_flag & Dee_FILE_BUFFER_FSTATICBUF)
 		return (byte_t *)Dee_Malloc(new_size);
-	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
+	ASSERT(!(self->fb_flag & Dee_FILE_BUFFER_FREADING));
 	return (byte_t *)Dee_Realloc(self->fb_base, new_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_tryrealloc_nolock(Buffer *__restrict self, size_t new_size) {
-	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
+	if (self->fb_flag & Dee_FILE_BUFFER_FSTATICBUF)
 		return (byte_t *)Dee_TryMalloc(new_size);
-	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
+	ASSERT(!(self->fb_flag & Dee_FILE_BUFFER_FREADING));
 	return (byte_t *)Dee_TryRealloc(self->fb_base, new_size);
 }
 #else /* NDEBUG */
@@ -243,9 +243,9 @@ buffer_tryrealloc_nolock(Buffer *__restrict self, size_t new_size) {
 PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_realloc_nolock_d(Buffer *__restrict self, size_t new_size,
                         char const *file, int line) {
-	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
+	if (self->fb_flag & Dee_FILE_BUFFER_FSTATICBUF)
 		return (byte_t *)DeeDbg_Malloc(new_size, file, line);
-	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
+	ASSERT(!(self->fb_flag & Dee_FILE_BUFFER_FREADING));
 	return (byte_t *)DeeDbg_Realloc(self->fb_base, new_size, file, line);
 }
 #define buffer_tryrealloc_nolock(self, new_size) \
@@ -253,9 +253,9 @@ buffer_realloc_nolock_d(Buffer *__restrict self, size_t new_size,
 PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_tryrealloc_nolock_d(Buffer *__restrict self, size_t new_size,
                            char const *file, int line) {
-	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
+	if (self->fb_flag & Dee_FILE_BUFFER_FSTATICBUF)
 		return (byte_t *)DeeDbg_TryMalloc(new_size, file, line);
-	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
+	ASSERT(!(self->fb_flag & Dee_FILE_BUFFER_FREADING));
 	return (byte_t *)DeeDbg_TryRealloc(self->fb_base, new_size, file, line);
 }
 #endif /* !NDEBUG */
@@ -267,14 +267,14 @@ buffer_determine_isatty(Buffer *__restrict self) {
 	int is_a_tty;
 	DREF DeeObject *file;
 	uint16_t flags = self->fb_flag;
-	if (flags & (FILE_BUFFER_FNOTATTY |
-	             FILE_BUFFER_FISATTY)) {
+	if (flags & (Dee_FILE_BUFFER_FNOTATTY |
+	             Dee_FILE_BUFFER_FISATTY)) {
 set_lfflag:
-		if (flags & FILE_BUFFER_FLNIFTTY) {
-			self->fb_flag &= ~FILE_BUFFER_FLNIFTTY;
+		if (flags & Dee_FILE_BUFFER_FLNIFTTY) {
+			self->fb_flag &= ~Dee_FILE_BUFFER_FLNIFTTY;
 			/* Set the line-buffered flag if it is a TTY. */
-			if (flags & FILE_BUFFER_FISATTY)
-				self->fb_flag |= FILE_BUFFER_FLNBUF;
+			if (flags & Dee_FILE_BUFFER_FISATTY)
+				self->fb_flag |= Dee_FILE_BUFFER_FLNBUF;
 		}
 		return 0;
 	}
@@ -285,7 +285,7 @@ set_lfflag:
 	Dee_Decref(file);
 	if unlikely(is_a_tty < 0)
 		goto err;
-	self->fb_flag |= is_a_tty ? FILE_BUFFER_FISATTY : FILE_BUFFER_FNOTATTY;
+	self->fb_flag |= is_a_tty ? Dee_FILE_BUFFER_FISATTY : Dee_FILE_BUFFER_FNOTATTY;
 	flags = self->fb_flag;
 	goto set_lfflag;
 err_closed:
@@ -299,8 +299,8 @@ err:
  *               NOTE: If this is another file buffer, its pointed-to
  *                     file is unwound, so-long at it hasn't been closed.
  * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with
- *                      `FILE_BUFFER_FREADONLY', `FILE_BUFFER_FSYNC' and
- *                      `FILE_BUFFER_FCLOFILE'
+ *                      `Dee_FILE_BUFFER_FREADONLY', `Dee_FILE_BUFFER_FSYNC' and
+ *                      `Dee_FILE_BUFFER_FCLOFILE'
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFileBuffer_New(DeeObject *__restrict file,
@@ -321,7 +321,7 @@ err_r:
 }
 
 /* Change the operations mode of a given buffer.
- * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with `FILE_BUFFER_FSYNC'
+ * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with `Dee_FILE_BUFFER_FSYNC'
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
@@ -329,11 +329,11 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 	int result = 0;
 	byte_t *new_buffer;
 	Buffer *me = (Buffer *)self;
-	ASSERT((mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_NONE ||
-	       (mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_FULL ||
-	       (mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_LINE ||
-	       (mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_AUTO ||
-	       mode == FILE_BUFFER_MODE_KEEP);
+	ASSERT((mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_NONE ||
+	       (mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_FULL ||
+	       (mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_LINE ||
+	       (mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_AUTO ||
+	       mode == Dee_FILE_BUFFER_MODE_KEEP);
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeFileBuffer_Type);
 	if (DeeFileBuffer_LockWrite(me))
 		return -1;
@@ -342,19 +342,19 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 		goto done;
 
 	/* Set the new buffering mode. */
-	if (mode != FILE_BUFFER_MODE_KEEP) {
-		me->fb_flag &= ~(FILE_BUFFER_FNODYNSCALE |
-		                 FILE_BUFFER_FLNBUF |
-		                 FILE_BUFFER_FLNIFTTY);
+	if (mode != Dee_FILE_BUFFER_MODE_KEEP) {
+		me->fb_flag &= ~(Dee_FILE_BUFFER_FNODYNSCALE |
+		                 Dee_FILE_BUFFER_FLNBUF |
+		                 Dee_FILE_BUFFER_FLNIFTTY);
 		me->fb_flag |= mode;
 	}
 	me->fb_chsz = 0;
 	if (!size) {
-		if (!(me->fb_flag & FILE_BUFFER_FNODYNSCALE)) {
-			if (me->fb_flag & FILE_BUFFER_FREADING)
+		if (!(me->fb_flag & Dee_FILE_BUFFER_FNODYNSCALE)) {
+			if (me->fb_flag & Dee_FILE_BUFFER_FREADING)
 				goto err_cannot_resize;
 			/* Resize-to-zero. */
-			if (!(me->fb_flag & FILE_BUFFER_FSTATICBUF))
+			if (!(me->fb_flag & Dee_FILE_BUFFER_FSTATICBUF))
 				Dee_Free(me->fb_base);
 			me->fb_ptr  = (byte_t *)NULL + (me->fb_ptr - me->fb_base);
 			me->fb_cnt  = 0;
@@ -365,7 +365,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 		}
 	} else if (size != me->fb_size) {
 		size_t bufoff;
-		if (me->fb_flag & FILE_BUFFER_FREADING)
+		if (me->fb_flag & Dee_FILE_BUFFER_FREADING)
 			goto err_cannot_resize;
 		new_buffer = buffer_realloc_nolock(me, size);
 		if unlikely(!new_buffer)
@@ -470,7 +470,7 @@ DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me) {
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_read_or_unlock(Buffer *__restrict self,
                       byte_t *__restrict buffer,
-                      size_t bufsize, dioflag_t flags) {
+                      size_t bufsize, Dee_ioflag_t flags) {
 	size_t read_size, result = 0;
 	size_t bufavail;
 	uint16_t old_flags;
@@ -519,7 +519,7 @@ read_from_buffer:
 		goto err_closed;
 
 	/* If we're a TTY buffer, flush all other TTY buffers before reading. */
-	if (self->fb_flag & FILE_BUFFER_FISATTY) {
+	if (self->fb_flag & Dee_FILE_BUFFER_FISATTY) {
 		int error;
 		error = DeeFileBuffer_SyncTTYs(self);
 		if unlikely(error != 0) {
@@ -542,7 +542,7 @@ read_from_buffer:
 	if unlikely(!self->fb_size) {
 		size_t initial_bufsize;
 		ASSERT(self->fb_ptr == self->fb_base);
-		if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
+		if unlikely(self->fb_flag & Dee_FILE_BUFFER_FNODYNSCALE) {
 			/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
 			self->fb_ptr = self->fb_base;
@@ -568,13 +568,13 @@ read_through:
 			result += read_size;
 			goto done;
 		}
-		if (bufsize >= FILE_BUFSIZ_MAX)
+		if (bufsize >= Dee_FILE_BUFSIZ_MAX)
 			goto read_through;
 		initial_bufsize = bufsize * 2;
-		if (initial_bufsize > FILE_BUFSIZ_MAX)
-			initial_bufsize = FILE_BUFSIZ_MAX;
-		if (initial_bufsize < FILE_BUFSIZ_MIN)
-			initial_bufsize = FILE_BUFSIZ_MIN;
+		if (initial_bufsize > Dee_FILE_BUFSIZ_MAX)
+			initial_bufsize = Dee_FILE_BUFSIZ_MAX;
+		if (initial_bufsize < Dee_FILE_BUFSIZ_MIN)
+			initial_bufsize = Dee_FILE_BUFSIZ_MIN;
 		new_buffer = buffer_tryrealloc_nolock(self, initial_bufsize);
 		if unlikely(!new_buffer) {
 			if (Dee_CollectMemory(1))
@@ -587,13 +587,13 @@ read_through:
 		size_t new_bufsize;
 		/* The caller wants at least as much as this buffer could even handle.
 		 * Upscale the buffer, or use load data using read-through mode. */
-		if (self->fb_flag & (FILE_BUFFER_FNODYNSCALE | FILE_BUFFER_FREADING))
+		if (self->fb_flag & (Dee_FILE_BUFFER_FNODYNSCALE | Dee_FILE_BUFFER_FREADING))
 			goto read_through;
-		if (bufsize > FILE_BUFSIZ_MAX)
+		if (bufsize > Dee_FILE_BUFSIZ_MAX)
 			goto read_through;
 		new_bufsize = bufsize * 2;
-		if (new_bufsize > FILE_BUFSIZ_MAX)
-			new_bufsize = FILE_BUFSIZ_MAX;
+		if (new_bufsize > Dee_FILE_BUFSIZ_MAX)
+			new_bufsize = Dee_FILE_BUFSIZ_MAX;
 
 		/* Upscale the buffer. */
 		new_buffer = buffer_tryrealloc_nolock(self, new_bufsize);
@@ -628,11 +628,11 @@ read_through:
 	/* Actually read the data. */
 	new_buffer = self->fb_base;
 	old_flags  = self->fb_flag;
-	self->fb_flag |= FILE_BUFFER_FREADING;
+	self->fb_flag |= Dee_FILE_BUFFER_FREADING;
 	read_size = DeeFile_Readf(file, self->fb_base, self->fb_size, flags);
 	Dee_Decref(file);
-	self->fb_flag &= ~FILE_BUFFER_FREADING;
-	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
+	self->fb_flag &= ~Dee_FILE_BUFFER_FREADING;
+	self->fb_flag |= old_flags & Dee_FILE_BUFFER_FREADING;
 	if unlikely(read_size == (size_t)-1)
 		goto err;
 	if unlikely(read_size == 0)
@@ -656,7 +656,7 @@ did_unlock:
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_write_or_unlock(Buffer *__restrict self,
                        byte_t const *__restrict buffer,
-                       size_t bufsize, dioflag_t flags) {
+                       size_t bufsize, Dee_ioflag_t flags) {
 	size_t result = 0;
 	size_t new_bufsize;
 	size_t bufavail;
@@ -664,7 +664,7 @@ buffer_write_or_unlock(Buffer *__restrict self,
 	DREF DeeObject *file;
 	if (buffer_determine_isatty(self))
 		goto err;
-	if (self->fb_flag & FILE_BUFFER_FREADONLY) {
+	if (self->fb_flag & Dee_FILE_BUFFER_FREADONLY) {
 		DeeError_Throwf(&DeeError_NotImplemented,
 		                "The buffer hasn't been opened for writing");
 		goto err;
@@ -697,7 +697,7 @@ again:
 		}
 
 		/* If this is a TTY device, add it to the chain of changed ones. */
-		if (self->fb_flag & FILE_BUFFER_FISATTY)
+		if (self->fb_flag & Dee_FILE_BUFFER_FISATTY)
 			buffer_addtty(self);
 
 		/* Update the file pointer. */
@@ -710,10 +710,10 @@ again:
 
 		/* When operating in line-buffered mode, check
 		 * if there was a linefeed in what we just wrote. */
-		if ((self->fb_flag & FILE_BUFFER_FLNBUF) &&
+		if ((self->fb_flag & Dee_FILE_BUFFER_FLNBUF) &&
 		    (memchr(buffer, '\n', bufsize) ||
 		     memchr(buffer, '\r', bufsize))) {
-			if (self->fb_flag & FILE_BUFFER_FISATTY) {
+			if (self->fb_flag & Dee_FILE_BUFFER_FISATTY) {
 				int error = DeeFileBuffer_SyncTTYs(self);
 				if unlikely(error) {
 					if unlikely(error < 0)
@@ -740,12 +740,12 @@ again:
 
 	/* No more buffer available.
 	 * Either we must flush the buffer, or we must extend it. */
-	if (self->fb_size >= FILE_BUFSIZ_MAX ||
-	    (self->fb_flag & (FILE_BUFFER_FNODYNSCALE |
-	                      FILE_BUFFER_FREADING))) {
+	if (self->fb_size >= Dee_FILE_BUFSIZ_MAX ||
+	    (self->fb_flag & (Dee_FILE_BUFFER_FNODYNSCALE |
+	                      Dee_FILE_BUFFER_FREADING))) {
 		/* Buffer is too large or cannot be relocated.
 		 * >> Therefor, we must flush it, then try again. */
-		if (self->fb_flag & FILE_BUFFER_FISATTY) {
+		if (self->fb_flag & Dee_FILE_BUFFER_FISATTY) {
 			int error = DeeFileBuffer_SyncTTYs(self);
 			if unlikely(error) {
 				if unlikely(error < 0)
@@ -784,14 +784,14 @@ do_writethrough:
 
 	/* Extend the buffer */
 	new_bufsize = self->fb_size * 2;
-	if (new_bufsize < FILE_BUFSIZ_MIN)
-		new_bufsize = FILE_BUFSIZ_MIN;
-	if (new_bufsize > FILE_BUFSIZ_MAX)
-		new_bufsize = FILE_BUFSIZ_MAX;
+	if (new_bufsize < Dee_FILE_BUFSIZ_MIN)
+		new_bufsize = Dee_FILE_BUFSIZ_MIN;
+	if (new_bufsize > Dee_FILE_BUFSIZ_MAX)
+		new_bufsize = Dee_FILE_BUFSIZ_MAX;
 	new_buffer = buffer_tryrealloc_nolock(self, new_bufsize);
 	if unlikely(!new_buffer) {
 		/* Buffer relocation failed. - sync() + operate in write-through mode as fallback. */
-		if (self->fb_flag & FILE_BUFFER_FISATTY) {
+		if (self->fb_flag & Dee_FILE_BUFFER_FISATTY) {
 			int error = DeeFileBuffer_SyncTTYs(self);
 			if unlikely(error) {
 				if unlikely(error < 0)
@@ -891,7 +891,7 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 full_seek:
 	if (buffer_determine_isatty(self))
 		goto err;
-	if (self->fb_flag & FILE_BUFFER_FISATTY) {
+	if (self->fb_flag & Dee_FILE_BUFFER_FISATTY) {
 		int error = DeeFileBuffer_SyncTTYs(self);
 		if unlikely(error) {
 			if unlikely(error < 0)
@@ -968,12 +968,12 @@ again:
 
 	/* Write all changed data. */
 	old_flags = self->fb_flag;
-	self->fb_flag |= FILE_BUFFER_FREADING;
+	self->fb_flag |= Dee_FILE_BUFFER_FREADING;
 	temp = DeeFile_WriteAll(file,
 	                        self->fb_chng,
 	                        changed_size);
-	self->fb_flag &= ~FILE_BUFFER_FREADING;
-	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
+	self->fb_flag &= ~Dee_FILE_BUFFER_FREADING;
+	self->fb_flag |= old_flags & Dee_FILE_BUFFER_FREADING;
 	Dee_Decref(file);
 	if unlikely(temp == (size_t)-1)
 		goto err;
@@ -988,7 +988,7 @@ again:
 		buffer_deltty(self);
 
 		/* Also synchronize the underlying file. */
-		if ((self->fb_flag & FILE_BUFFER_FSYNC) &&
+		if ((self->fb_flag & Dee_FILE_BUFFER_FSYNC) &&
 		    !(mode & BUFFER_SYNC_FNOSYNC_FILE)) {
 			int error;
 			file = self->fb_file;
@@ -1008,7 +1008,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags) {
+buffer_getc_or_unlock(Buffer *__restrict self, Dee_ioflag_t flags) {
 	byte_t *new_buffer;
 	size_t read_size;
 	DREF DeeObject *file;
@@ -1040,7 +1040,7 @@ read_from_buffer:
 	/* If we're a TTY buffer, flush all other TTY buffers before reading. */
 	if (buffer_determine_isatty(self))
 		goto err;
-	if (self->fb_flag & FILE_BUFFER_FISATTY) {
+	if (self->fb_flag & Dee_FILE_BUFFER_FISATTY) {
 		int error;
 		error = DeeFileBuffer_SyncTTYs(self);
 		if unlikely(error != 0) {
@@ -1061,7 +1061,7 @@ read_from_buffer:
 
 	/* If no buffer had been allocated, allocate one now. */
 	if unlikely(!self->fb_size) {
-		if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
+		if unlikely(self->fb_flag & Dee_FILE_BUFFER_FNODYNSCALE) {
 			/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
 read_through:
 			file = self->fb_file;
@@ -1086,23 +1086,23 @@ read_through:
 			goto done;
 		}
 		/* Start out with the smallest size. */
-		new_buffer = buffer_tryrealloc_nolock(self, FILE_BUFSIZ_MIN);
+		new_buffer = buffer_tryrealloc_nolock(self, Dee_FILE_BUFSIZ_MIN);
 		if unlikely(!new_buffer) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
 		}
 		self->fb_base = new_buffer;
-		self->fb_size = FILE_BUFSIZ_MIN;
+		self->fb_size = Dee_FILE_BUFSIZ_MIN;
 	} else {
-		if (self->fb_size < FILE_BUFSIZ_MIN &&
-		    !(self->fb_flag & (FILE_BUFFER_FNODYNSCALE | FILE_BUFFER_FREADING))) {
+		if (self->fb_size < Dee_FILE_BUFSIZ_MIN &&
+		    !(self->fb_flag & (Dee_FILE_BUFFER_FNODYNSCALE | Dee_FILE_BUFFER_FREADING))) {
 			/* Upscale the buffer. */
-			new_buffer = buffer_tryrealloc_nolock(self, FILE_BUFSIZ_MIN);
+			new_buffer = buffer_tryrealloc_nolock(self, Dee_FILE_BUFSIZ_MIN);
 			if unlikely(!new_buffer)
 				goto read_through;
 			self->fb_base = new_buffer;
-			self->fb_size = FILE_BUFSIZ_MIN;
+			self->fb_size = Dee_FILE_BUFSIZ_MIN;
 		}
 	}
 
@@ -1129,11 +1129,11 @@ read_through:
 	/* Actually read the data. */
 	new_buffer = self->fb_base;
 	old_flags  = self->fb_flag;
-	self->fb_flag |= FILE_BUFFER_FREADING;
+	self->fb_flag |= Dee_FILE_BUFFER_FREADING;
 	read_size = DeeFile_Readf(file, self->fb_base, self->fb_size, flags);
 	Dee_Decref(file);
-	self->fb_flag &= ~FILE_BUFFER_FREADING;
-	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
+	self->fb_flag &= ~Dee_FILE_BUFFER_FREADING;
+	self->fb_flag |= old_flags & Dee_FILE_BUFFER_FREADING;
 	if unlikely(read_size == (size_t)-1)
 		goto err;
 	if unlikely(self->fb_cnt)
@@ -1171,9 +1171,9 @@ again:
 	if (self->fb_ptr != self->fb_base)
 		goto unget_in_buffer;
 	/* The buffer is already full. - Try to resize it, then insert at the front. */
-	if (self->fb_flag & FILE_BUFFER_FREADING)
+	if (self->fb_flag & Dee_FILE_BUFFER_FREADING)
 		goto eof;
-	if (self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
+	if (self->fb_flag & Dee_FILE_BUFFER_FNODYNSCALE) {
 		/* Check for special case: Even when dynscale is disabled,
 		 * still allow for an unget buffer of at least a single byte. */
 		if (self->fb_size != 0)
@@ -1185,7 +1185,7 @@ again:
 	inc_size = self->fb_size;
 	/* Determine the minimum buffer size. */
 	if unlikely(!inc_size)
-		inc_size = (self->fb_flag & FILE_BUFFER_FNODYNSCALE) ? 1 : FILE_BUFSIZ_MIN;
+		inc_size = (self->fb_flag & Dee_FILE_BUFFER_FNODYNSCALE) ? 1 : Dee_FILE_BUFSIZ_MIN;
 	if (inc_size > self->fb_fblk)
 		inc_size = (size_t)self->fb_fblk;
 	new_bufsize = self->fb_size + inc_size;
@@ -1258,7 +1258,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_read(Buffer *__restrict self,
             void *__restrict buffer,
-            size_t bufsize, dioflag_t flags) {
+            size_t bufsize, Dee_ioflag_t flags) {
 	size_t result;
 	do {
 		if (DeeFileBuffer_LockWrite(self))
@@ -1274,7 +1274,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_write(Buffer *__restrict self,
              void const *__restrict buffer,
-             size_t bufsize, dioflag_t flags) {
+             size_t bufsize, Dee_ioflag_t flags) {
 	size_t result;
 	do {
 		if (DeeFileBuffer_LockWrite(self))
@@ -1305,7 +1305,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-buffer_getc(Buffer *__restrict self, dioflag_t flags) {
+buffer_getc(Buffer *__restrict self, Dee_ioflag_t flags) {
 	int result;
 	do {
 		if (DeeFileBuffer_LockWrite(self))
@@ -1371,7 +1371,7 @@ buffer_close(Buffer *__restrict self) {
 	flags  = self->fb_flag;
 
 	/* Close the underlying file when that flag is set. */
-	if ((flags & FILE_BUFFER_FCLOFILE) &&
+	if ((flags & Dee_FILE_BUFFER_FCLOFILE) &&
 	    DeeFile_Close(file))
 		goto err_unlock;
 
@@ -1380,7 +1380,7 @@ buffer_close(Buffer *__restrict self) {
 	/* Clear out buffer pointers. */
 	self->fb_ptr = NULL;
 	self->fb_cnt = 0;
-	if (flags & FILE_BUFFER_FREADING) {
+	if (flags & Dee_FILE_BUFFER_FREADING) {
 		buffer = NULL;
 	} else {
 		self->fb_base = NULL;
@@ -1388,9 +1388,9 @@ buffer_close(Buffer *__restrict self) {
 	}
 	self->fb_chng = NULL;
 	self->fb_chsz = 0;
-	if (flags & FILE_BUFFER_FSTATICBUF)
+	if (flags & Dee_FILE_BUFFER_FSTATICBUF)
 		buffer = NULL;
-	self->fb_flag = FILE_BUFFER_FNORMAL | (flags & FILE_BUFFER_FREADING);
+	self->fb_flag = Dee_FILE_BUFFER_FNORMAL | (flags & Dee_FILE_BUFFER_FREADING);
 	self->fb_fpos = 0;
 	buffer_deltty(self);
 	DeeFileBuffer_LockEndWrite(self);
@@ -1411,11 +1411,11 @@ struct mode_name {
 };
 
 PRIVATE struct mode_name const mode_names[] = {
-	{ { 'k', 'e', 'e', 'p' }, FILE_BUFFER_MODE_KEEP }, /* Must be kept first. */
-	{ { 'n', 'o', 'n', 'e' }, FILE_BUFFER_MODE_NONE },
-	{ { 'f', 'u', 'l', 'l' }, FILE_BUFFER_MODE_FULL },
-	{ { 'l', 'i', 'n', 'e' }, FILE_BUFFER_MODE_LINE },
-	{ { 'a', 'u', 't', 'o' }, FILE_BUFFER_MODE_AUTO }
+	{ { 'k', 'e', 'e', 'p' }, Dee_FILE_BUFFER_MODE_KEEP }, /* Must be kept first. */
+	{ { 'n', 'o', 'n', 'e' }, Dee_FILE_BUFFER_MODE_NONE },
+	{ { 'f', 'u', 'l', 'l' }, Dee_FILE_BUFFER_MODE_FULL },
+	{ { 'l', 'i', 'n', 'e' }, Dee_FILE_BUFFER_MODE_LINE },
+	{ { 'a', 'u', 't', 'o' }, Dee_FILE_BUFFER_MODE_AUTO }
 };
 
 /* CASEEQ(x, 'w') --> x == 'w' || x == 'W' */
@@ -1437,11 +1437,11 @@ buffer_print(Buffer *__restrict self, Dee_formatprinter_t printer, void * arg) {
 	buffer_flags = self->fb_flag;
 	Dee_Incref(inner_file);
 	DeeFileBuffer_LockEndRead(self);
-	if (buffer_flags & FILE_BUFFER_FLNBUF) {
+	if (buffer_flags & Dee_FILE_BUFFER_FLNBUF) {
 		mode = "Line";
-	} else if (buffer_flags & FILE_BUFFER_FNODYNSCALE) {
+	} else if (buffer_flags & Dee_FILE_BUFFER_FNODYNSCALE) {
 		mode = "NoOp";
-	} else if (buffer_flags & FILE_BUFFER_FLNIFTTY) {
+	} else if (buffer_flags & Dee_FILE_BUFFER_FLNIFTTY) {
 		mode = "Auto";
 	} else {
 		mode = "Full";
@@ -1482,11 +1482,11 @@ buffer_printrepr(Buffer *__restrict self, Dee_formatprinter_t printer, void * ar
 		mode_iter = stpcpy(mode_iter, "close,");
 	if (buffer_flags & Dee_FILE_BUFFER_FREADONLY)
 		mode_iter = stpcpy(mode_iter, "readonly,");
-	if (buffer_flags & FILE_BUFFER_FLNBUF) {
+	if (buffer_flags & Dee_FILE_BUFFER_FLNBUF) {
 		mode_iter = stpcpy(mode_iter, "line");
-	} else if (buffer_flags & FILE_BUFFER_FNODYNSCALE) {
+	} else if (buffer_flags & Dee_FILE_BUFFER_FNODYNSCALE) {
 		mode_iter = stpcpy(mode_iter, "none");
-	} else if (buffer_flags & FILE_BUFFER_FLNIFTTY) {
+	} else if (buffer_flags & Dee_FILE_BUFFER_FLNIFTTY) {
 		mode_iter = stpcpy(mode_iter, "auto");
 	} else {
 		mode_iter = stpcpy(mode_iter, "full");
@@ -1506,7 +1506,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_init_operator(Buffer *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	uint16_t mode = (FILE_BUFFER_MODE_AUTO);
+	uint16_t mode = (Dee_FILE_BUFFER_MODE_AUTO);
 	struct {
 		DeeObject *file;
 		char const *mode_str;
@@ -1544,9 +1544,9 @@ buffer_init_operator(Buffer *__restrict self,
 				} else {
 					goto err_invalid_mode;
 				}
-				if (mode & FILE_BUFFER_FREADONLY)
+				if (mode & Dee_FILE_BUFFER_FREADONLY)
 					goto err_invalid_mode;
-				mode |= FILE_BUFFER_FREADONLY;
+				mode |= Dee_FILE_BUFFER_FREADONLY;
 				continue;
 			}
 			if (CASEEQ(*mode_iter, 'c')) {
@@ -1560,9 +1560,9 @@ buffer_init_operator(Buffer *__restrict self,
 				           mode_iter[4] == ',') {
 					mode_iter += 5;
 				}
-				if (mode & FILE_BUFFER_FCLOFILE)
+				if (mode & Dee_FILE_BUFFER_FCLOFILE)
 					goto err_invalid_mode;
-				mode |= FILE_BUFFER_FCLOFILE;
+				mode |= Dee_FILE_BUFFER_FCLOFILE;
 				continue;
 			}
 			if (CASEEQ(*mode_iter, 's')) {
@@ -1575,9 +1575,9 @@ buffer_init_operator(Buffer *__restrict self,
 				           mode_iter[3] == ',') {
 					mode_iter += 4;
 				}
-				if (mode & FILE_BUFFER_FSYNC)
+				if (mode & Dee_FILE_BUFFER_FSYNC)
 					goto err_invalid_mode;
-				mode |= FILE_BUFFER_FSYNC;
+				mode |= Dee_FILE_BUFFER_FSYNC;
 				continue;
 			}
 			break;
@@ -1630,7 +1630,7 @@ buffer_fini(Buffer *__restrict self) {
 	}
 
 	Dee_XDecref(self->fb_file);
-	if (!(self->fb_flag & FILE_BUFFER_FSTATICBUF))
+	if (!(self->fb_flag & Dee_FILE_BUFFER_FSTATICBUF))
 		Dee_Free(self->fb_base);
 }
 
@@ -1666,9 +1666,9 @@ again:
 	self__fb_fpos = self->fb_fpos;
 	self__fb_flag = self->fb_flag;
 #if 1 /* Don't serialize references to static buffers */
-	self__fb_flag &= ~FILE_BUFFER_FSTATICBUF;
+	self__fb_flag &= ~Dee_FILE_BUFFER_FSTATICBUF;
 #else
-	if (self__fb_flag & FILE_BUFFER_FSTATICBUF) {
+	if (self__fb_flag & Dee_FILE_BUFFER_FSTATICBUF) {
 		Dee_XIncref(self__fb_file);
 		DeeFileBuffer_LockEndRead(self);
 		/* XXX: Maybe not allowed buffers to be copied  */
@@ -1723,7 +1723,7 @@ unlock_and_free_buffer_and_start_over:
 			if (self__fb_fpos != self->fb_fpos)
 				goto unlock_and_free_buffer_and_start_over;
 #if 1 /* Don't serialize references to static buffers */
-			if (self__fb_flag != (self->fb_flag & ~FILE_BUFFER_FSTATICBUF))
+			if (self__fb_flag != (self->fb_flag & ~Dee_FILE_BUFFER_FSTATICBUF))
 				goto unlock_and_free_buffer_and_start_over;
 #else
 			if (self__fb_flag != self->fb_flag)
@@ -1816,7 +1816,7 @@ buffer_isatty(Buffer *__restrict self) {
 	DeeFileBuffer_LockEndWrite(self);
 	if unlikely(error)
 		goto err;
-	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
+	return_bool(self->fb_flag & Dee_FILE_BUFFER_FISATTY);
 err:
 	return NULL;
 }
@@ -1834,7 +1834,7 @@ buffer_flush(Buffer *self, size_t argc, DeeObject *const *argv) {
 	DeeFileBuffer_LockEndWrite(self);
 	if unlikely(error)
 		goto err;
-	return_bool(self->fb_flag & FILE_BUFFER_FISATTY);
+	return_bool(self->fb_flag & Dee_FILE_BUFFER_FISATTY);
 err:
 	return NULL;
 }
@@ -1876,9 +1876,9 @@ buffer_setbuf(Buffer *self, size_t argc,
 			           mode_iter[3] == ',') {
 				mode_iter += 4;
 			}
-			if (mode & FILE_BUFFER_FSYNC)
+			if (mode & Dee_FILE_BUFFER_FSYNC)
 				goto err_invalid_mode;
-			mode |= FILE_BUFFER_FSYNC;
+			mode |= Dee_FILE_BUFFER_FSYNC;
 			continue;
 		}
 		break;
@@ -2125,15 +2125,15 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
-	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&buffer_read,
-	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&buffer_write,
+	/* .ft_read   = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, Dee_ioflag_t))&buffer_read,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, Dee_ioflag_t))&buffer_write,
 	/* .ft_seek   = */ (Dee_pos_t (DCALL *)(DeeFileObject *__restrict, Dee_off_t, int))&buffer_seek,
 	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *__restrict))&buffer_sync,
 	/* .ft_trunc  = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_pos_t))&buffer_trunc,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&buffer_close,
 	/* .ft_pread  = */ NULL,
 	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, dioflag_t))&buffer_getc,
+	/* .ft_getc   = */ (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&buffer_getc,
 	/* .ft_ungetc = */ (int (DCALL *)(DeeFileObject *__restrict, int))&buffer_ungetc,
 	/* .ft_putc   = */ NULL
 };

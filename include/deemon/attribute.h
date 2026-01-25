@@ -17,8 +17,12 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeAttribute**/
+/*!export DeeEnumAttr**/
+/*!export DeeEnumAttrIterator**/
 #ifndef GUARD_DEEMON_ATTRIBUTE_H
-#define GUARD_DEEMON_ATTRIBUTE_H 1
+#define GUARD_DEEMON_ATTRIBUTE_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -29,33 +33,23 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_attribute_object         attribute_object
-#define Dee_enumattr_object          enumattr_object
-#define Dee_enumattr_iterator_object enumattr_iterator_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_attribute_object DeeAttributeObject;
-typedef struct Dee_enumattr_object DeeEnumAttrObject;
-typedef struct Dee_enumattr_iterator_object DeeEnumAttrIteratorObject;
-
-struct Dee_attribute_object {
+typedef struct Dee_attribute_object {
 	Dee_OBJECT_HEAD
 	struct Dee_attrdesc a_desc; /* [OVERRIDE(.ad_info.ai_decl, [DREF])][const] Attribute descriptor. */
-};
+} DeeAttributeObject;
 
-struct Dee_enumattr_object {
+typedef struct Dee_enumattr_object {
 	Dee_OBJECT_HEAD
 	DREF DeeObject     *ea_obj;  /* [1..1][const] The object whose attributes are being enumerated. */
 	struct Dee_attrhint ea_hint; /* [OVERRIDE(.ah_decl, [DREF])][const] Filter for attributes matching this hint */
-};
+} DeeEnumAttrObject;
 
-struct Dee_enumattr_iterator_object {
+typedef struct Dee_enumattr_iterator_object {
 	Dee_OBJECT_HEAD
 	DREF DeeEnumAttrObject *ei_seq;  /* [1..1][const] The underlying enumattr() controller. */
 	size_t                  ei_itsz; /* [const] Size of "ei_iter" (in bytes) */
 	struct Dee_attriter     ei_iter; /* Attribute enumerator. */
-};
+} DeeEnumAttrIteratorObject;
 
 DDATDEF DeeTypeObject DeeAttribute_Type;        /* `Attribute from deemon' */
 DDATDEF DeeTypeObject DeeEnumAttr_Type;         /* `enumattr from deemon' */

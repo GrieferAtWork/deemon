@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>           /* Dee_accu, Dee_accu_*, HAVE_Dee_ACCU_FLOAT, HAVE_Dee_ACCU_INT64 */
+#include <deemon/accu.h>           /* Dee_accu, Dee_accu_*, Dee_ACCU_FLOAT_DEFINED, Dee_ACCU_INT64_DEFINED */
 #include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
@@ -60,12 +60,12 @@ Dee_accu_fini(struct Dee_accu *__restrict self) {
 	case Dee_ACCU_FIRST:
 	case Dee_ACCU_NONE:
 	case Dee_ACCU_INT:
-#ifdef HAVE_Dee_ACCU_INT64
+#ifdef Dee_ACCU_INT64_DEFINED
 	case Dee_ACCU_INT64:
-#endif /* HAVE_Dee_ACCU_INT64 */
-#ifdef HAVE_Dee_ACCU_FLOAT
+#endif /* Dee_ACCU_INT64_DEFINED */
+#ifdef Dee_ACCU_FLOAT_DEFINED
 	case Dee_ACCU_FLOAT:
-#endif /* HAVE_Dee_ACCU_FLOAT */
+#endif /* Dee_ACCU_FLOAT_DEFINED */
 		break;
 	case Dee_ACCU_SECOND:
 	case Dee_ACCU_OBJECT:
@@ -73,10 +73,10 @@ Dee_accu_fini(struct Dee_accu *__restrict self) {
 		Dee_Decref(self->acu_value.v_object);
 		break;
 	case Dee_ACCU_STRING:
-		unicode_printer_fini(&self->acu_value.v_string);
+		Dee_unicode_printer_fini(&self->acu_value.v_string);
 		break;
 	case Dee_ACCU_BYTES:
-		bytes_printer_fini(&self->acu_value.v_bytes);
+		Dee_bytes_printer_fini(&self->acu_value.v_bytes);
 		break;
 	case Dee_ACCU_TUPLE:
 		Dee_tuple_builder_fini(&self->acu_value.v_tuple);
@@ -92,12 +92,12 @@ Dee_accu_visit(struct Dee_accu *__restrict self,
 	case Dee_ACCU_FIRST:
 	case Dee_ACCU_NONE:
 	case Dee_ACCU_INT:
-#ifdef HAVE_Dee_ACCU_INT64
+#ifdef Dee_ACCU_INT64_DEFINED
 	case Dee_ACCU_INT64:
-#endif /* HAVE_Dee_ACCU_INT64 */
-#ifdef HAVE_Dee_ACCU_FLOAT
+#endif /* Dee_ACCU_INT64_DEFINED */
+#ifdef Dee_ACCU_FLOAT_DEFINED
 	case Dee_ACCU_FLOAT:
-#endif /* HAVE_Dee_ACCU_FLOAT */
+#endif /* Dee_ACCU_FLOAT_DEFINED */
 	case Dee_ACCU_STRING:
 	case Dee_ACCU_BYTES:
 		break;
@@ -136,19 +136,19 @@ Dee_accu_pack(struct Dee_accu *__restrict self, DeeObject *empty) {
 	case Dee_ACCU_LIST:
 		return self->acu_value.v_object;
 	case Dee_ACCU_STRING:
-		return unicode_printer_pack(&self->acu_value.v_string);
+		return Dee_unicode_printer_pack(&self->acu_value.v_string);
 	case Dee_ACCU_BYTES:
-		return bytes_printer_pack(&self->acu_value.v_bytes);
+		return Dee_bytes_printer_pack(&self->acu_value.v_bytes);
 	case Dee_ACCU_INT:
 		return DeeInt_NewSSize(self->acu_value.v_int);
-#ifdef HAVE_Dee_ACCU_INT64
+#ifdef Dee_ACCU_INT64_DEFINED
 	case Dee_ACCU_INT64:
 		return DeeInt_NewInt64(self->acu_value.v_int64);
-#endif /* HAVE_Dee_ACCU_INT64 */
-#ifdef HAVE_Dee_ACCU_FLOAT
+#endif /* Dee_ACCU_INT64_DEFINED */
+#ifdef Dee_ACCU_FLOAT_DEFINED
 	case Dee_ACCU_FLOAT:
 		return DeeFloat_New(self->acu_value.v_float);
-#endif /* HAVE_Dee_ACCU_FLOAT */
+#endif /* Dee_ACCU_FLOAT_DEFINED */
 	case Dee_ACCU_TUPLE:
 		return Dee_tuple_builder_pack(&self->acu_value.v_tuple);
 	default: __builtin_unreachable();
@@ -162,10 +162,10 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeStringObject *DCALL
 string_cat(DeeStringObject *__restrict self, DeeObject *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeBytesObject *DCALL
 bytes_add(DeeBytesObject *self, DeeObject *other);
-#ifdef HAVE_Dee_ACCU_FLOAT
+#ifdef Dee_ACCU_FLOAT_DEFINED
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeFloatObject *DCALL
 float_add(DeeFloatObject *__restrict self, DeeObject *__restrict other);
-#endif /* HAVE_Dee_ACCU_FLOAT */
+#endif /* Dee_ACCU_FLOAT_DEFINED */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
 tuple_concat(DeeTupleObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeListObject *DCALL
@@ -181,16 +181,16 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 	/* Select special (more efficient) implementations for specific types. */
 	if (tp_add == (DeeNO_add_t)&string_cat) {
 		Dee_ssize_t result;
-		unicode_printer_init(&self->acu_value.v_string);
+		Dee_unicode_printer_init(&self->acu_value.v_string);
 		self->acu_mode = Dee_ACCU_STRING;
-		result = unicode_printer_printstring(&self->acu_value.v_string, first);
+		result = Dee_unicode_printer_printstring(&self->acu_value.v_string, first);
 		Dee_Decref(first);
 		if unlikely(result < 0)
 			goto err;
-		return unicode_printer_printobject(&self->acu_value.v_string, second);
+		return Dee_unicode_printer_printobject(&self->acu_value.v_string, second);
 	} else if (tp_add == (DeeNO_add_t)&bytes_add) {
 		Dee_ssize_t result;
-		bytes_printer_init(&self->acu_value.v_bytes);
+		Dee_bytes_printer_init(&self->acu_value.v_bytes);
 		self->acu_mode = Dee_ACCU_BYTES;
 		DeeBytes_IncUse(first);
 		result = Dee_bytes_printer_append(&self->acu_value.v_bytes,
@@ -200,7 +200,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		Dee_Decref(first);
 		if unlikely(result < 0)
 			goto err;
-		return bytes_printer_printobject(&self->acu_value.v_bytes, second);
+		return Dee_bytes_printer_printobject(&self->acu_value.v_bytes, second);
 	} else if (tp_add == (DeeNO_add_t)&int_add) {
 		int64_t intval1, intval2;
 		if unlikely(!DeeInt_Check(second))
@@ -211,7 +211,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 			goto fallback;
 		if (OVERFLOW_SADD(intval1, intval2, &intval1))
 			goto fallback;
-#ifdef HAVE_Dee_ACCU_INT64
+#ifdef Dee_ACCU_INT64_DEFINED
 		if (intval1 >= INT32_MIN && intval1 <= INT32_MAX) {
 			self->acu_value.v_int = (int32_t)intval1;
 			self->acu_mode = Dee_ACCU_INT;
@@ -219,12 +219,12 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 			self->acu_value.v_int64 = intval1;
 			self->acu_mode = Dee_ACCU_INT64;
 		}
-#else /* HAVE_Dee_ACCU_INT64 */
+#else /* Dee_ACCU_INT64_DEFINED */
 		self->acu_value.v_int = (Dee_ssize_t)intval1;
 		self->acu_mode = Dee_ACCU_INT;
-#endif /* !HAVE_Dee_ACCU_INT64 */
+#endif /* !Dee_ACCU_INT64_DEFINED */
 		Dee_Decref(first);
-#ifdef HAVE_Dee_ACCU_FLOAT
+#ifdef Dee_ACCU_FLOAT_DEFINED
 	} else if (tp_add == (DeeNO_add_t)&float_add) {
 		double second_value;
 		if (DeeObject_AsDouble(second, &second_value))
@@ -232,7 +232,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		self->acu_value.v_float = DeeFloat_VALUE(first) + second_value;
 		self->acu_mode = Dee_ACCU_FLOAT;
 		Dee_Decref(first);
-#endif /* HAVE_Dee_ACCU_FLOAT */
+#endif /* Dee_ACCU_FLOAT_DEFINED */
 	} else if (tp_add == (DeeNO_add_t)&tuple_concat) {
 		if (!DeeObject_IsShared(first)) {
 			/* Can re-use the initial "first" tuple as an in-place buffer. */
@@ -309,12 +309,12 @@ Dee_accu_add(/*struct Dee_accu*/ void *self, DeeObject *item) {
 		return DeeList_AppendSequence((DeeObject *)me->acu_value.v_list, item);
 
 	case Dee_ACCU_STRING:
-		return unicode_printer_printobject(&me->acu_value.v_string, item);
+		return Dee_unicode_printer_printobject(&me->acu_value.v_string, item);
 
 	case Dee_ACCU_BYTES:
-		return bytes_printer_printobject(&me->acu_value.v_bytes, item);
+		return Dee_bytes_printer_printobject(&me->acu_value.v_bytes, item);
 
-#ifdef HAVE_Dee_ACCU_INT64
+#ifdef Dee_ACCU_INT64_DEFINED
 	case Dee_ACCU_INT: {
 		int32_t addend, result;
 		if unlikely(!DeeInt_Check(item)) {
@@ -344,14 +344,14 @@ convert_int_to_object:
 		}
 		me->acu_value.v_int = result;
 	}	break;
-#endif /* HAVE_Dee_ACCU_INT64 */
+#endif /* Dee_ACCU_INT64_DEFINED */
 
-#ifdef HAVE_Dee_ACCU_INT64
+#ifdef Dee_ACCU_INT64_DEFINED
 	case Dee_ACCU_INT64:
-#else /* HAVE_Dee_ACCU_INT64 */
+#else /* Dee_ACCU_INT64_DEFINED */
 	case Dee_ACCU_INT:
 #define v_int64 v_int
-#endif /* !HAVE_Dee_ACCU_INT64 */
+#endif /* !Dee_ACCU_INT64_DEFINED */
 	{
 		int64_t addend;
 		if unlikely(!DeeInt_Check(item)) {
@@ -372,14 +372,14 @@ convert_int64_to_object:
 	}	break;
 #undef v_int64
 
-#ifdef HAVE_Dee_ACCU_FLOAT
+#ifdef Dee_ACCU_FLOAT_DEFINED
 	case Dee_ACCU_FLOAT: {
 		double item_float;
 		if (DeeObject_AsDouble(item, &item_float))
 			goto err;
 		me->acu_value.v_float += item_float;
 	}	break;
-#endif /* !HAVE_Dee_ACCU_FLOAT */
+#endif /* !Dee_ACCU_FLOAT_DEFINED */
 
 	case Dee_ACCU_TUPLE:
 		return Dee_tuple_builder_appenditems(&me->acu_value.v_tuple, item);

@@ -520,7 +520,7 @@ do_operator_gr:
 	case KWD_super:
 		if (!(features & P_OPERATOR_FCLASS))
 			goto default_case;
-		result = CLASS_OPERATOR_SUPERARGS;
+		result = Dee_CLASS_OPERATOR_SUPERARGS;
 		goto done_y1;
 
 	case '=':
@@ -772,7 +772,7 @@ default_case:
 		 * NOTE: This is also where a lot of backwards-compatibility lies, as
 		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
 		{
-			struct opinfo const *info;
+			struct Dee_opinfo const *info;
 			/* TODO: Don't hard-code "DeeFileType_Type" here. Instead, hard-code "DeeType_Type"
 			 *       and query custom operators at runtime. */
 			info = DeeTypeType_GetOperatorByNameLen(&DeeFileType_Type, name_begin, name_size, (size_t)-1);
@@ -804,7 +804,7 @@ default_case:
 			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'u', 'p', 'e') &&
 			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'a', 'r', 'g') &&
 			    UNALIGNED_GET8(name_begin + 8) == 's' && (features & P_OPERATOR_FCLASS)) {
-				result = CLASS_OPERATOR_SUPERARGS;
+				result = Dee_CLASS_OPERATOR_SUPERARGS;
 				goto done_y1;
 			}
 			if (name_size == 6 &&

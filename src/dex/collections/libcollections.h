@@ -458,7 +458,7 @@ struct udict_object {
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t ud_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
-	WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 };
 
 #define UDict_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(UDict, self)->ud_mask)
@@ -545,7 +545,7 @@ struct uset_object {
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t us_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
-	WEAKREF_SUPPORT
+	Dee_WEAKREF_SUPPORT
 };
 
 #define USet_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(USet, self)->us_mask)

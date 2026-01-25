@@ -397,12 +397,12 @@ check_small_constargs_symbol:
 					goto check_small_constargs_symbol;
 
 				case SYMBOL_TYPE_EXTERN: {
-					struct module_symbol *modsym;
+					struct Dee_module_symbol *modsym;
 					modsym = funsym->s_extern.e_symbol;
-					if (modsym->ss_flags & MODSYM_FPROPERTY)
+					if (modsym->ss_flags & Dee_MODSYM_FPROPERTY)
 						break;
 					/* Direct call to symbol. */
-					if (modsym->ss_flags & MODSYM_FEXTERN) {
+					if (modsym->ss_flags & Dee_MODSYM_FEXTERN) {
 						ASSERT(modsym->ss_impid < funsym->s_extern.e_module->mo_importc);
 						symid = asm_newmodule(funsym->s_extern.e_module->mo_importv[modsym->ss_impid]);
 					} else {
@@ -439,7 +439,7 @@ check_small_constargs_symbol:
 
 				case SYMBOL_TYPE_CATTR: {
 					struct symbol *class_sym, *this_sym;
-					struct class_attribute *attr;
+					struct Dee_class_attribute *attr;
 invoke_cattr_funsym_small:
 					class_sym = funsym->s_attr.a_class;
 					this_sym  = funsym->s_attr.a_this;
@@ -456,15 +456,15 @@ invoke_cattr_funsym_small:
 							DO(asm_gpush_symbol(class_sym, func));
 							DO(asm_ggetcmember(attr->ca_addr));
 						}
-						if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+						if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 							/* Must invoke the getter callback. */
-							if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+							if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 								DO(asm_gpush_symbol(class_sym, func)); /* getter, class */
 								DO(asm_gcall(1)); /* func */
 							} else {
 								DO(asm_gcall(0));
 							}
-						} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+						} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 							ASSERT(argc != (uint8_t)-1);
 							DO(asm_gpush_symbol(class_sym, func)); /* func, class_sym */
 							DO(push_tuple_items(args->a_constexpr, args));
@@ -480,7 +480,7 @@ invoke_cattr_funsym_small:
 					/* The attribute must be accessed as virtual. */
 					DO(asm_check_thiscall(funsym, func));
 					SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-					if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+					if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 						symid = asm_newconst(attr->ca_name);
 						if unlikely(symid < 0)
 							goto err;
@@ -499,17 +499,17 @@ invoke_cattr_funsym_small:
 						goto pop_unused;
 					}
 					/* Regular, old member variable. */
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 						if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 							symid = asm_rsymid(class_sym);
 							if unlikely(symid < 0)
 								goto err;
-							if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
+							if ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 							    this_sym->s_type == SYMBOL_TYPE_THIS &&
 							    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-								if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+								if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 									/* Invoke the getter callback. */
-									DO(asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET, 0));
+									DO(asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_GET, 0));
 									goto got_small_method;
 								}
 								DO(push_tuple_items(args->a_constexpr, args));
@@ -541,16 +541,16 @@ invoke_cattr_funsym_small:
 						DO(asm_gpush_symbol(class_sym, func));
 						DO(asm_ggetmember_this(attr->ca_addr));
 					}
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 						/* Call the getter of the attribute. */
-						if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+						if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 							/* Invoke as a this-call. */
 							DO(asm_gpush_symbol(this_sym, func));
 							DO(asm_gcall(1));
 						} else {
 							DO(asm_gcall(0)); /* Directly invoke. */
 						}
-					} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+					} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 						/* Access to an instance member function (must produce a bound method). */
 						DO(asm_gpush_symbol(this_sym, func)); /* func, this */
 						ASSERT(argc != (uint8_t)-1);
@@ -569,7 +569,7 @@ got_small_method:
 				case SYMBOL_TYPE_MYFUNC:
 					if (funsym->s_scope->s_base != current_basescope)
 						break;
-					if (!(current_basescope->bs_flags & CODE_FTHISCALL))
+					if (!(current_basescope->bs_flags & Dee_CODE_FTHISCALL))
 						break;
 					ASSERT(!SYMBOL_MUST_REFERENCE_NOTTHIS(funsym));
 					/* Call to the current or surrounding function, when
@@ -594,7 +594,7 @@ got_small_method:
 			if (func->a_type == AST_CONSTEXPR && argc <= 1 &&
 			    (DeeObjMethod_Check(func->a_constexpr) ||
 			     DeeKwObjMethod_Check(func->a_constexpr))) {
-				struct objmethod_origin origin;
+				struct Dee_objmethod_origin origin;
 				if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 					/* call to some other object. */
 					int32_t attrid;
@@ -666,15 +666,15 @@ check_getattr_base_symbol_class_small:
 							goto pop_unused;
 
 						case SYMBOL_TYPE_MODULE: {
-							struct module_symbol *modsym;
+							struct Dee_module_symbol *modsym;
 							int32_t module_id;
 							/* module.attr() --> call extern ... */
 							modsym = DeeModule_GetSymbol(sym->s_module, function_attr->a_constexpr);
 							if (!modsym)
 								break;
-							if (modsym->ss_flags & MODSYM_FPROPERTY)
+							if (modsym->ss_flags & Dee_MODSYM_FPROPERTY)
 								break;
-							if (modsym->ss_flags & MODSYM_FEXTERN) {
+							if (modsym->ss_flags & Dee_MODSYM_FEXTERN) {
 								ASSERT(modsym->ss_impid < sym->s_module->mo_importc);
 								module_id = asm_newmodule(sym->s_module->mo_importv[modsym->ss_impid]);
 							} else {
@@ -790,7 +790,7 @@ do_perform_supercallattr_small:
 			funsym = SYMBOL_UNWIND_ALIAS(func->a_sym);
 			if (funsym->s_type == SYMBOL_TYPE_CATTR) {
 				struct symbol *class_sym, *this_sym;
-				struct class_attribute *attr;
+				struct Dee_class_attribute *attr;
 invoke_cattr_funsym_tuple:
 				class_sym = funsym->s_attr.a_class;
 				this_sym  = funsym->s_attr.a_this;
@@ -807,15 +807,15 @@ invoke_cattr_funsym_tuple:
 						DO(asm_gpush_symbol(class_sym, func));
 						DO(asm_ggetcmember(attr->ca_addr));
 					}
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 						/* Must invoke the getter callback. */
-						if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+						if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 							DO(asm_gpush_symbol(class_sym, func)); /* getter, class */
 							DO(asm_gcall(1)); /* func */
 						} else {
 							DO(asm_gcall(0));
 						}
-					} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+					} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 						DO(asm_gpush_symbol(class_sym, func)); /* func, class_sym */
 						DO(ast_genasm_one_as_tuple(args)); /* func, class_sym, Tuple(args) */
 						DO(asm_putddi(ddi_ast));
@@ -831,7 +831,7 @@ invoke_cattr_funsym_tuple:
 				/* The attribute must be accessed as virtual. */
 				DO(asm_check_thiscall(funsym, func));
 				SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-				if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+				if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 					symid = asm_newconst(attr->ca_name);
 					if unlikely(symid < 0)
 						goto err;
@@ -851,7 +851,7 @@ invoke_cattr_funsym_tuple:
 				}
 
 				/* Regular, old member variable. */
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
 						if unlikely(symid < 0)
@@ -880,16 +880,16 @@ invoke_cattr_funsym_tuple:
 					DO(asm_gpush_symbol(class_sym, func));
 					DO(asm_ggetmember_this(attr->ca_addr));
 				}
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 					/* Call the getter of the attribute. */
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 						/* Invoke as a this-call. */
 						DO(asm_gpush_symbol(this_sym, func));
 						DO(asm_gcall(1));
 					} else {
 						DO(asm_gcall(0)); /* Directly invoke. */
 					}
-				} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+				} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					/* Access to an instance member function (must produce a bound method). */
 					DO(asm_gpush_symbol(this_sym, func)); /* func, this */
 					DO(ast_genasm_one_as_tuple(args)); /* func, this, Tuple(args) */
@@ -906,7 +906,7 @@ invoke_cattr_funsym_tuple:
 		if (func->a_type == AST_CONSTEXPR &&
 		    (DeeObjMethod_Check(func->a_constexpr) ||
 		     DeeKwObjMethod_Check(func->a_constexpr))) {
-			struct objmethod_origin origin;
+			struct Dee_objmethod_origin origin;
 			if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 				int32_t attrid;
 				DREF DeeObject *name_ob;
@@ -1015,7 +1015,7 @@ check_getattr_base_symbol_class_tuple:
 				if (func->a_type == AST_CONSTEXPR &&
 				    (DeeObjMethod_Check(func->a_constexpr) ||
 				     DeeKwObjMethod_Check(func->a_constexpr))) {
-					struct objmethod_origin origin;
+					struct Dee_objmethod_origin origin;
 					if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 						int32_t attrid;
 						DREF DeeObject *name_ob;
@@ -1168,9 +1168,9 @@ check_funsym_class:
 			goto check_funsym_class;
 
 		case SYMBOL_TYPE_EXTERN:
-			if (funsym->s_extern.e_symbol->ss_flags & MODSYM_FPROPERTY)
+			if (funsym->s_extern.e_symbol->ss_flags & Dee_MODSYM_FPROPERTY)
 				break;
-			if (funsym->s_extern.e_symbol->ss_flags & MODSYM_FEXTERN) {
+			if (funsym->s_extern.e_symbol->ss_flags & Dee_MODSYM_FEXTERN) {
 				symid = funsym->s_extern.e_symbol->ss_impid;
 				ASSERT(symid < funsym->s_extern.e_module->mo_importc);
 				symid = asm_newmodule(funsym->s_extern.e_module->mo_importv[symid]);
@@ -1206,7 +1206,7 @@ check_funsym_class:
 
 		case SYMBOL_TYPE_CATTR: {
 			struct symbol *class_sym, *this_sym;
-			struct class_attribute *attr;
+			struct Dee_class_attribute *attr;
 invoke_cattr_funsym_argv:
 			class_sym = funsym->s_attr.a_class;
 			this_sym  = funsym->s_attr.a_this;
@@ -1223,15 +1223,15 @@ invoke_cattr_funsym_argv:
 					DO(asm_gpush_symbol(class_sym, func));
 					DO(asm_ggetcmember(attr->ca_addr));
 				}
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 					/* Must invoke the getter callback. */
-					if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+					if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 						DO(asm_gpush_symbol(class_sym, func)); /* getter, class */
 						DO(asm_gcall(1)); /* func */
 					} else {
 						DO(asm_gcall(0));
 					}
-				} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+				} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					DO(asm_gpush_symbol(class_sym, func)); /* func, class_sym */
 					if (argc != (uint8_t)-1) {
 						DO(asm_gargv(argc, argv));
@@ -1254,7 +1254,7 @@ invoke_cattr_funsym_argv:
 			/* The attribute must be accessed as virtual. */
 			DO(asm_check_thiscall(funsym, func));
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+			if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 				symid = asm_newconst(attr->ca_name);
 				if unlikely(symid < 0)
 					goto err;
@@ -1274,17 +1274,17 @@ invoke_cattr_funsym_argv:
 			}
 
 			/* Regular, old member variable. */
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 					symid = asm_rsymid(class_sym);
 					if unlikely(symid < 0)
 						goto err;
-					if ((attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) &&
+					if ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 					    this_sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-						if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+						if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 							/* Invoke the getter callback. */
-							DO(asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_GET, 0));
+							DO(asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_GET, 0));
 							goto got_method;
 						}
 						DO(asm_gargv(argc, argv));
@@ -1316,16 +1316,16 @@ invoke_cattr_funsym_argv:
 				DO(asm_gpush_symbol(class_sym, func));
 				DO(asm_ggetmember_this(attr->ca_addr));
 			}
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				/* Call the getter of the attribute. */
-				if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+				if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 					/* Invoke as a this-call. */
 					DO(asm_gpush_symbol(this_sym, func));
 					DO(asm_gcall(1));
 				} else {
 					DO(asm_gcall(0)); /* Directly invoke. */
 				}
-			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			} else if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				/* Access to an instance member function (must produce a bound method). */
 				DO(asm_gpush_symbol(this_sym, func)); /* func, this */
 				if unlikely(argc != (uint8_t)-1) {
@@ -1350,7 +1350,7 @@ got_method:
 		case SYMBOL_TYPE_MYFUNC:
 			if (funsym->s_scope->s_base != current_basescope)
 				break;
-			if (!(current_basescope->bs_flags & CODE_FTHISCALL))
+			if (!(current_basescope->bs_flags & Dee_CODE_FTHISCALL))
 				break;
 			if unlikely(argc >= (uint8_t)-1)
 				break;
@@ -1377,7 +1377,7 @@ got_method:
 	if (func->a_type == AST_CONSTEXPR &&
 	    (DeeObjMethod_Check(func->a_constexpr) ||
 	     DeeKwObjMethod_Check(func->a_constexpr))) {
-		struct objmethod_origin origin;
+		struct Dee_objmethod_origin origin;
 		if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 			int32_t attrid;
 			DREF DeeObject *name_ob;
@@ -1450,15 +1450,15 @@ check_getattr_base_symbol_class_argv:
 					goto pop_unused;
 
 				case SYMBOL_TYPE_MODULE: {
-					struct module_symbol *modsym;
+					struct Dee_module_symbol *modsym;
 					int32_t module_id;
 					/* module.attr() --> call extern ... */
 					modsym = DeeModule_GetSymbol(sym->s_module, function_attr->a_constexpr);
 					if (!modsym)
 						break;
-					if (modsym->ss_flags & MODSYM_FPROPERTY)
+					if (modsym->ss_flags & Dee_MODSYM_FPROPERTY)
 						break;
-					if (modsym->ss_flags & MODSYM_FEXTERN) {
+					if (modsym->ss_flags & Dee_MODSYM_FEXTERN) {
 						ASSERT(modsym->ss_impid < sym->s_module->mo_importc);
 						module_id = asm_newmodule(sym->s_module->mo_importv[modsym->ss_impid]);
 					} else {
@@ -1567,7 +1567,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 	if (func->a_type == AST_CONSTEXPR &&
 	    (DeeObjMethod_Check(func->a_constexpr) ||
 	     DeeKwObjMethod_Check(func->a_constexpr))) {
-		struct objmethod_origin origin;
+		struct Dee_objmethod_origin origin;
 		if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 			int32_t attrid;
 			DREF DeeObject *name_ob;

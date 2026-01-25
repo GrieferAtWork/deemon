@@ -1,0 +1,101 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from c.fixincludes;
+import * from deemon;
+
+local hdr: Header = loadHeaderWithData("myfile.txt", r'
+//!export *
+
+// Detection of c-style declarations
+DECL int sym1;
+DECL int sym2();
+DECL sym3 (int);
+DECL int (sym4)();
+DECL sym5 (CC ignore_me_1);
+DECL int (CC sym6)();
+
+struct ignore_me_2;
+struct include_me {};
+
+// Detection of c-style macros
+#define sym7 42
+#define ignore_me_3 42 //!export-
+#define ignore_me_4 42 //!export -
+#define ignore_me_5 42 /*!export-*/
+#define ignore_me_6 42 /*!export -*/
+#define ignore_me_7 42 /*!export - */
+#define ignore_me_8 42
+#define ignore_me_SOMETHING_PREFIX_BLA_BLA_BLA 42
+
+/*!export -ignore_me_8*/
+/*!export -ignore_me_9*/
+/*!export -ignore_me_SOMETHING_PREFIX_**/
+
+#define ignore_me_9 42
+#define ignore_me_SOMETHING_PREFIX_BLA_BLUB_BLUB 42
+
+//!export custom_symbol
+//!export ignored*symbol
+
+int include_me_10;
+int ignore_me_10;  //!export-
+
+int include_me_11[];
+int include_me_12[1];
+
+enum my_enum {
+	VALUE_1, // TODO: These symbols should also appear as exports!
+	VALUE_2,
+	VALUE_3,
+};
+
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_assign_t)(DeeObject *self, DeeObject *value);
+
+'.bytes());
+
+local expectedSymbols = Set.frozen({
+	"sym1",
+	"sym2",
+	"sym3",
+	"sym4",
+	"sym5",
+	"sym6",
+	"sym7",
+	"include_me",
+	"custom_symbol",
+	"include_me_10",
+	"include_me_11",
+	"include_me_12",
+	"my_enum",
+	"DeeNO_assign_t",
+});
+
+assert hdr.exports == expectedSymbols, f"\n"
+	f"correct: {repr((expectedSymbols & hdr.exports).sorted())}\n"
+	f"missing: {repr((expectedSymbols - hdr.exports).sorted())}\n"
+	f"wrong:   {repr((hdr.exports - expectedSymbols).sorted())}\n"
+	;
+
+
+
+
+

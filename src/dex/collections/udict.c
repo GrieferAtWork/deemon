@@ -312,7 +312,7 @@ udict_setitem(UDict *self, DeeObject *key, DeeObject *value);
 
 PRIVATE NONNULL((1)) void DCALL
 udict_fini(UDict *__restrict self) {
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_mask == 0));
 	ASSERT((self->ud_elem == empty_dict_items) == (self->ud_size == 0));
 	ASSERT(self->ud_used <= self->ud_size);
@@ -380,7 +380,7 @@ udict_init_sequence(UDict *__restrict self,
 	self->ud_used = 0;
 	self->ud_elem = (struct udict_item *)empty_dict_items;
 	Dee_atomic_rwlock_init(&self->ud_lock);
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	if (DeeObject_ForeachPair(sequence, udict_setitem_as_foreach_PTR, self))
 		goto err_self;
 	return 0;
@@ -397,7 +397,7 @@ udict_ctor(UDict *__restrict self) {
 	self->ud_used = 0;
 	self->ud_elem = (struct udict_item *)empty_dict_items;
 	Dee_atomic_rwlock_init(&self->ud_lock);
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 }
 
@@ -432,7 +432,7 @@ again:
 		}
 	}
 	UDict_LockEndRead(other);
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	return 0;
 err:
 	return -1;
@@ -1117,15 +1117,15 @@ udict_sizeof(UDict *self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udict_repr(UDict *__restrict self) {
-	struct unicode_printer p;
+	struct Dee_unicode_printer p;
 	Dee_ssize_t error;
 	struct udict_item *iter, *end;
 	bool is_first;
 	struct udict_item *vector;
 	size_t mask;
 again:
-	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "collections.UniqueDict({ ") < 0)
+	Dee_unicode_printer_init(&p);
+	if (Dee_UNICODE_PRINTER_PRINT(&p, "collections.UniqueDict({ ") < 0)
 		goto err;
 	UDict_LockRead(self);
 	is_first = true;
@@ -1143,7 +1143,7 @@ again:
 		Dee_Incref(value);
 		UDict_LockEndRead(self);
 		/* Print this key/value pair. */
-		error = unicode_printer_printf(&p, "%s%r: %r", is_first ? "" : ", ", key, value);
+		error = Dee_unicode_printer_printf(&p, "%s%r: %r", is_first ? "" : ", ", key, value);
 		Dee_Decref(value);
 		Dee_Decref(key);
 		if unlikely(error < 0)
@@ -1155,16 +1155,16 @@ again:
 			goto restart;
 	}
 	UDict_LockEndRead(self);
-	if unlikely((is_first ? UNICODE_PRINTER_PRINT(&p, "})")
-	                      : UNICODE_PRINTER_PRINT(&p, " })")) < 0)
+	if unlikely((is_first ? Dee_UNICODE_PRINTER_PRINT(&p, "})")
+	                      : Dee_UNICODE_PRINTER_PRINT(&p, " })")) < 0)
 		goto err;
-	return unicode_printer_pack(&p);
+	return Dee_unicode_printer_pack(&p);
 restart:
 	UDict_LockEndRead(self);
-	unicode_printer_fini(&p);
+	Dee_unicode_printer_fini(&p);
 	goto again;
 err:
-	unicode_printer_fini(&p);
+	Dee_unicode_printer_fini(&p);
 	return NULL;
 }
 
@@ -1361,7 +1361,7 @@ INTERN DeeTypeObject UDict_Type = {
 	/* .tp_doc      = */ DOC("A mutable mapping-like container that uses ?Aid?O "
 	                         /**/ "and ${x === y} to detect/prevent duplicates\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(UDict),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(UDict),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {

@@ -17,8 +17,85 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export ASSERT_OBJECT_**/
+/*!export ASSERT_OBJECT_TYPE_**/
+/*!export -CONFIG_HAVE_**/
+/*!export Dee_HASHOF_***/
+/*!export DeeAssert_BadObject**/
+/*!export DeeBuffer_**/
+/*!export DeeFatal_Bad**/
+/*!export _DeeFatal_Bad**/
+/*!export DeeObject_**/
+/*!export DeeTypeMRO_**/
+/*!export DeeTypeType_**/
+/*!export DeeType_**/
+/*!export DeeType_mro_foreach_**/
+/*!export Dee_ASSERT_OBJECT_**/
+/*!export Dee_BOUND_**/
+/*!export Dee_BUFFER_**/
+/*!export Dee_COMPARE_**/
+/*!export Dee_Clear_**/
+/*!export Dee_Compare**/
+/*!export Dee_Incref**/
+/*!export Dee_Decref**/
+/*!export Dee_Incprefv**/
+/*!export Dee_Decprefv**/
+/*!export Dee_GC_PRIORITY_**/
+/*!export Dee_HAS_**/
+/*!export Dee_Hash**/
+/*!export Dee_INT_**/
+/*!export Dee_METHOD_FCONSTCALL_**/
+/*!export Dee_Movrefv**/
+/*!export Dee_Movprefv**/
+/*!export Dee_OPERATOR_**/
+/*!export -_Dee_PRIVATE_**/
+/*!export Dee_REQUIRES_**/
+/*!export Dee_STRUCT_**/
+/*!export Dee_Setrefv**/
+/*!export Dee_Setprefv**/
+/*!export Dee_TF_**/
+/*!export Dee_TYPE_GETSET**/
+/*!export Dee_TYPE_GETTER**/
+/*!export Dee_TYPE_*METHOD**/
+/*!export Dee_TYPE_MEMBER_**/
+/*!export Dee_TYPE_OPERATOR_**/
+/*!export Dee_Visit**/
+/*!export Dee_WEAKREF**/
+/*!export Dee_XClear**/
+/*!export Dee_XDecprefv**/
+/*!export Dee_XDecrefv**/
+/*!export Dee_XDecref**/
+/*!export Dee_XIncprefv**/
+/*!export Dee_XIncrefv**/
+/*!export Dee_XIncref**/
+/*!export Dee_XMovprefv**/
+/*!export Dee_XMovrefv**/
+/*!export Dee_XVisit**/
+/*!export Dee_*method_t*/
+/*!export Dee_operator_**/
+/*!export Dee_return_**/
+/*!export Dee_type_**/
+/*!export type_**/
+/*!export Dee_weakref_**/
+/*!export FAKE_OPERATOR_**/
+/*!export INT_**/
+/*!export METHOD_FCONSTCALL_**/
+/*!export METHOD_F**/
+/*!export OPCC_**/
+/*!export OPERATOR_**/
+/*!export STRUCT_**/
+/*!export TF_**/
+/*!export TYPE_GETSET**/
+/*!export TYPE_GETTER**/
+/*!export TYPE_*METHOD**/
+/*!export TYPE_MEMBER**/
+/*!export TYPE_OPERATOR_**/
+/*!export _DeeRefcnt_**/
+/*!fixincludes no_include_comments*/ /* This header is so central to deemon, that comments don't really add anything here! */
+/*!always include "types.h"*/        /* This header always being included is guarantied by the ABI */
 #ifndef GUARD_DEEMON_OBJECT_H
-#define GUARD_DEEMON_OBJECT_H 1
+#define GUARD_DEEMON_OBJECT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -65,8 +142,8 @@ DECL_BEGIN
 #ifndef CONFIG_HAVE_strlen
 #define CONFIG_HAVE_strlen
 #undef strlen
-#define strlen dee_strlen
-LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
+#define strlen dee_strlen /*!export-*/
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
 	size_t result;
 	for (result = 0; str[result]; ++result)
 		;
@@ -76,13 +153,10 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
-#define Dee_class_desc       class_desc
 #define Dee_type_method      type_method
 #define Dee_type_getset      type_getset
 #define Dee_type_member      type_member
 #define Dee_type_method_hint type_method_hint
-#define Dee_type_constructor type_constructor
-#define Dee_type_cast        type_cast
 #define Dee_type_gc          type_gc
 #define Dee_type_math        type_math
 #define Dee_type_cmp         type_cmp
@@ -94,8 +168,23 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 #define Dee_type_callable    type_callable
 #define Dee_type_buffer      type_buffer
 #define Dee_type_operator    type_operator
-#define Dee_opinfo           opinfo
-#define Dee_module_object    module_object
+
+/* Explicitly export unescaped names, since "fixincludes" won't see these otherwise */
+/*!export type_method*/
+/*!export type_getset*/
+/*!export type_member*/
+/*!export type_method_hint*/
+/*!export type_gc*/
+/*!export type_math*/
+/*!export type_cmp*/
+/*!export type_nii*/
+/*!export type_seq*/
+/*!export type_iterator*/
+/*!export type_attr*/
+/*!export type_with*/
+/*!export type_callable*/
+/*!export type_buffer*/
+/*!export type_operator*/
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
@@ -119,9 +208,9 @@ DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
  *
  * It doesn't *have* to be zero; it could be anything. But
  * thinking about it, only zero *really* makes sense... */
-#define DEE_HASHOF_EMPTY_SEQUENCE 0
-#define DEE_HASHOF_UNBOUND_ITEM   0
-#define DEE_HASHOF_RECURSIVE_ITEM 0
+#define Dee_HASHOF_EMPTY_SEQUENCE 0
+#define Dee_HASHOF_UNBOUND_ITEM   0
+#define Dee_HASHOF_RECURSIVE_ITEM 0
 
 
 
@@ -292,7 +381,7 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #define DeeObject_DATA(self) ((void *)(&(self)->ob_type + 1))
 #endif /* !CONFIG_TRACE_REFCHANGES */
 #else /* __INTELLISENSE__ */
-#define DeeObject_DATA(self) ((void *)((__BYTE_TYPE__ *)(self) + DEE_OBJECT_OFFSETOF_DATA))
+#define DeeObject_DATA(self) ((void *)((__BYTE_TYPE__ *)(self) + Dee_OBJECT_OFFSETOF_DATA))
 #endif /* !__INTELLISENSE__ */
 
 
@@ -401,11 +490,6 @@ struct Dee_weakref {
 #define Dee_WEAKREF(T) struct Dee_weakref
 #endif /* !__cplusplus */
 
-#ifdef DEE_SOURCE
-#define WEAKREF_INIT Dee_WEAKREF_INIT
-#define WEAKREF      Dee_WEAKREF
-#endif /* DEE_SOURCE */
-
 /* The used NULL-pointer value for user-defined weakref callbacks.
  * It is only important that bit#0 be clear during assignment, however
  * a value distinct from NULL (or rather: 0) can be used to make it
@@ -422,8 +506,7 @@ struct Dee_weakref {
 	((uintptr_t)-1 & ~(uintptr_t)1)
 #endif /* !... */
 #else /* !NDEBUG */
-#define _Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
-	0
+#define _Dee_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR 0
 #endif /* NDEBUG */
 
 
@@ -1076,15 +1159,15 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 DECL_BEGIN
 #undef memsetl
 #ifdef __x86_64__
-extern void __stosd(unsigned long *, unsigned long, unsigned __int64);
+extern void __stosd(unsigned long *, unsigned long, unsigned __int64); /*!export-*/
 #define memsetl(dst, c, n)                   \
 	(__stosd((unsigned long *)(void *)(dst), \
 	         (unsigned long)(c),             \
 	         (unsigned __int64)(n)),         \
 	 (uint32_t *)(void *)(dst))
 #else /* __x86_64__ */
-extern void __stosd(unsigned long *, unsigned long, unsigned int);
-#define memsetl(dst, c, n)                   \
+extern void __stosd(unsigned long *, unsigned long, unsigned int); /*!export-*/
+#define memsetl(dst, c, n) /*!export-*/      \
 	(__stosd((unsigned long *)(void *)(dst), \
 	         (unsigned long)(c),             \
 	         (unsigned int)(n)),             \
@@ -1110,9 +1193,9 @@ DECL_END
 #if defined(_MSC_VER) && defined(__x86_64__)
 #define CONFIG_HAVE_memsetq
 DECL_BEGIN
-extern void __stosq(unsigned long long *, unsigned long long, unsigned __int64);
+extern void __stosq(unsigned long long *, unsigned long long, unsigned __int64); /*!export-*/
 #undef memsetq
-#define memsetq(dst, c, n)                        \
+#define memsetq(dst, c, n) /*!export-*/           \
 	(__stosq((unsigned long long *)(void *)(dst), \
 	         (unsigned long long)(c),             \
 	         (unsigned __int64)(n)),              \
@@ -1139,15 +1222,15 @@ DECL_END
 DECL_BEGIN
 #undef memsetw
 #ifdef __x86_64__
-extern void __stosw(unsigned short *, unsigned short, unsigned __int64);
-#define memsetw(dst, c, n)                    \
+extern void __stosw(unsigned short *, unsigned short, unsigned __int64); /*!export-*/
+#define memsetw(dst, c, n) /*!export-*/       \
 	(__stosw((unsigned short *)(void *)(dst), \
 	         (unsigned short)(c),             \
 	         (unsigned __int64)(n)),          \
 	 (uint16_t *)(void *)(dst))
 #else /* __x86_64__ */
-extern void __stosw(unsigned short *, unsigned short, unsigned int);
-#define memsetw(dst, c, n)                    \
+extern void __stosw(unsigned short *, unsigned short, unsigned int); /*!export-*/
+#define memsetw(dst, c, n) /*!export-*/       \
 	(__stosw((unsigned short *)(void *)(dst), \
 	         (unsigned short)(c),             \
 	         (unsigned int)(n)),              \
@@ -1164,16 +1247,16 @@ DECL_END
 #elif __SIZEOF_POINTER__ == 1
 #ifdef CONFIG_NO_memset
 #undef CONFIG_HAVE_memset
-#else
+#else /* CONFIG_NO_memset */
 #define CONFIG_HAVE_memset
-#endif
+#endif /* !CONFIG_NO_memset */
 #ifndef CONFIG_HAVE_memset
 #define CONFIG_HAVE_memset
 DECL_BEGIN
 #undef memset
-#define memset dee_memset
+#define memset dee_memset /*!export-*/
 LOCAL WUNUSED ATTR_OUTS(1, 3) void *
-dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
+dee_memset(void *__restrict dst, int byte, size_t num_bytes) { /*!export-*/
 	uint8_t *dst_p = (uint8_t *)dst;
 	while (num_bytes--)
 		*dst_p++ = (uint8_t)(unsigned int)byte;
@@ -1422,19 +1505,20 @@ LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 
 /* Serialization address (points into the abstract serialization buffer) */
 #ifndef Dee_seraddr_t_DEFINED
-#define Dee_seraddr_t_DEFINED
-typedef __UINTPTR_TYPE__ Dee_seraddr_t;
+#define Dee_seraddr_t_DEFINED           /*!export-*/
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
 #endif /* !Dee_seraddr_t_DEFINED */
 
 struct Dee_serial;
 
 #if 0
+/*!export -myob_**/
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-myobject_serialize(MyObject *__restrict self, DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+myob_serialize(MyObject *__restrict self, DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
-myobject_serialize(MyObject *__restrict self, DeeSerial *__restrict writer) {
+myob_serialize(MyObject *__restrict self, DeeSerial *__restrict writer) {
 }
 #endif
 
@@ -1444,81 +1528,81 @@ myobject_serialize(MyObject *__restrict self, DeeSerial *__restrict writer) {
 
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 extern "C++" {namespace __intern {
-#define _Dee_REQUIRE_VAR_tp_ctor(tp_ctor) ::__intern::__Dee_REQUIRE_VAR_tp_ctor(tp_ctor)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_ctor(Tobj *(DCALL *)(void)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_VAR_tp_ctor(decltype(nullptr));
-#define _Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor) ::__intern::__Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_copy_ctor(Tobj *(DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_VAR_tp_copy_ctor(decltype(nullptr));
-#define _Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor) ::__intern::__Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor(Tobj *(DCALL *)(size_t, DeeObject *const *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor(decltype(nullptr));
-#define _Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw) ::__intern::__Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor_kw(Tobj *(DCALL *)(size_t, DeeObject *const *, DeeObject *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_VAR_tp_any_ctor_kw(decltype(nullptr));
-#define _Dee_REQUIRE_VAR_tp_serialize(tp_serialize) ::__intern::__Dee_REQUIRE_VAR_tp_serialize(tp_serialize)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_VAR_tp_serialize(Dee_seraddr_t (DCALL *)(Tobj *__restrict, struct Dee_serial *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_VAR_tp_serialize(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_ctor(tp_ctor) ::__intern::__Dee_PRIVATE_REQUIRE_VAR_tp_ctor(tp_ctor)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_ctor(Tobj *(DCALL *)(void)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_ctor(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor) ::__intern::__Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(Tobj *(DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor(tp_any_ctor) ::__intern::__Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor(tp_any_ctor)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor(Tobj *(DCALL *)(size_t, DeeObject *const *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw) ::__intern::__Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor_kw(Tobj *(DCALL *)(size_t, DeeObject *const *, DeeObject *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor_kw(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_serialize(tp_serialize) ::__intern::__Dee_PRIVATE_REQUIRE_VAR_tp_serialize(tp_serialize)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_serialize(Dee_seraddr_t (DCALL *)(Tobj *__restrict, struct Dee_serial *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_VAR_tp_serialize(decltype(nullptr));
 
-#define _Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor) ::__intern::__Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_ctor(int (DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_ctor(decltype(nullptr));
-#define _Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor) ::__intern::__Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_copy_ctor(int (DCALL *)(Tobj *__restrict, Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_copy_ctor(decltype(nullptr));
-#define _Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor) ::__intern::__Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor(int (DCALL *)(Tobj *__restrict, size_t, DeeObject *const *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor(decltype(nullptr));
-#define _Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw) ::__intern::__Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor_kw(int (DCALL *)(Tobj *__restrict, size_t, DeeObject *const *, DeeObject *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_any_ctor_kw(decltype(nullptr));
-#define _Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize) ::__intern::__Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_serialize(int (DCALL *)(Tobj *__restrict, struct Dee_serial *__restrict, Dee_seraddr_t)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_ALLOC_tp_serialize(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(tp_ctor) ::__intern::__Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(tp_ctor)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(int (DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor) ::__intern::__Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(int (DCALL *)(Tobj *__restrict, Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor) ::__intern::__Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(int (DCALL *)(Tobj *__restrict, size_t, DeeObject *const *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw) ::__intern::__Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(int (DCALL *)(Tobj *__restrict, size_t, DeeObject *const *, DeeObject *)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(tp_serialize) ::__intern::__Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(tp_serialize)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(int (DCALL *)(Tobj *__restrict, struct Dee_serial *__restrict, Dee_seraddr_t)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(decltype(nullptr));
 
-#define _Dee_REQUIRE_tp_alloc(tp_alloc) ::__intern::__Dee_REQUIRE_tp_alloc(tp_alloc)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_tp_alloc(Tobj *(DCALL *)(void)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_tp_alloc(void *(DCALL *)(void));
-Dee_funptr_t __Dee_REQUIRE_tp_alloc(decltype(nullptr));
-#define _Dee_REQUIRE_tp_free(tp_free) ::__intern::__Dee_REQUIRE_tp_free(tp_free)
-template<class Tobj> Dee_funptr_t __Dee_REQUIRE_tp_free(void (DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
-Dee_funptr_t __Dee_REQUIRE_tp_free(void (DCALL *)(void *__restrict));
-Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_tp_alloc(tp_alloc) ::__intern::__Dee_PRIVATE_REQUIRE_tp_alloc(tp_alloc)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_alloc(Tobj *(DCALL *)(void)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_alloc(void *(DCALL *)(void));
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_alloc(decltype(nullptr));
+#define _Dee_PRIVATE_REQUIRE_tp_free(tp_free) ::__intern::__Dee_PRIVATE_REQUIRE_tp_free(tp_free)
+template<class Tobj> Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(void (DCALL *)(Tobj *__restrict)/*, decltype(((Tobj *)0)->ob_refcnt)=0*/);
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(void (DCALL *)(void *__restrict));
+Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 }}
 #else /* __INTELLISENSE__ && __cplusplus */
-#define _Dee_REQUIRE_VAR_tp_ctor(tp_ctor)                 (Dee_funptr_t)(tp_ctor)
-#define _Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor)       (Dee_funptr_t)(tp_copy_ctor)
-#define _Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor)         (Dee_funptr_t)(tp_any_ctor)
-#define _Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw)   (Dee_funptr_t)(tp_any_ctor_kw)
-#define _Dee_REQUIRE_VAR_tp_serialize(tp_serialize)       (Dee_funptr_t)(tp_serialize)
-#define _Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor)               (Dee_funptr_t)(tp_ctor)
-#define _Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor)     (Dee_funptr_t)(tp_copy_ctor)
-#define _Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor)       (Dee_funptr_t)(tp_any_ctor)
-#define _Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw) (Dee_funptr_t)(tp_any_ctor_kw)
-#define _Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize)     (Dee_funptr_t)(tp_serialize)
-#define _Dee_REQUIRE_tp_alloc(tp_alloc)                   (Dee_funptr_t)(tp_alloc)
-#define _Dee_REQUIRE_tp_free(tp_free)                     (Dee_funptr_t)(tp_free)
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_ctor(tp_ctor)                 (Dee_funptr_t)(tp_ctor)
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor)       (Dee_funptr_t)(tp_copy_ctor)
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor(tp_any_ctor)         (Dee_funptr_t)(tp_any_ctor)
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw)   (Dee_funptr_t)(tp_any_ctor_kw)
+#define _Dee_PRIVATE_REQUIRE_VAR_tp_serialize(tp_serialize)       (Dee_funptr_t)(tp_serialize)
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(tp_ctor)               (Dee_funptr_t)(tp_ctor)
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor)     (Dee_funptr_t)(tp_copy_ctor)
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor)       (Dee_funptr_t)(tp_any_ctor)
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw) (Dee_funptr_t)(tp_any_ctor_kw)
+#define _Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(tp_serialize)     (Dee_funptr_t)(tp_serialize)
+#define _Dee_PRIVATE_REQUIRE_tp_alloc(tp_alloc)                   (Dee_funptr_t)(tp_alloc)
+#define _Dee_PRIVATE_REQUIRE_tp_free(tp_free)                     (Dee_funptr_t)(tp_free)
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 /************************************************************************/
 /* Initializers for TP_FVARIABLE types                                  */
 /************************************************************************/
-#define Dee_TYPE_CONSTRUCTOR_INIT_VAR(tp_ctor,           \
-                                      tp_copy_ctor,      \
-                                      tp_deep_ctor,      \
-                                      tp_any_ctor,       \
-                                      tp_any_ctor_kw,    \
-                                      tp_serialize,      \
-                                      tp_free)           \
-	{{                                                   \
-		_Dee_REQUIRE_VAR_tp_ctor(tp_ctor),               \
-		_Dee_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor),     \
-		_Dee_REQUIRE_VAR_tp_copy_ctor(tp_deep_ctor),     \
-		_Dee_REQUIRE_VAR_tp_any_ctor(tp_any_ctor),       \
-		_Dee_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw), \
-		_Dee_REQUIRE_VAR_tp_serialize(tp_serialize),     \
-		_Dee_REQUIRE_tp_free(tp_free),                   \
-		{ NULL }                                         \
+#define Dee_TYPE_CONSTRUCTOR_INIT_VAR(tp_ctor,                   \
+                                      tp_copy_ctor,              \
+                                      tp_deep_ctor,              \
+                                      tp_any_ctor,               \
+                                      tp_any_ctor_kw,            \
+                                      tp_serialize,              \
+                                      tp_free)                   \
+	{{                                                           \
+		_Dee_PRIVATE_REQUIRE_VAR_tp_ctor(tp_ctor),               \
+		_Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor),     \
+		_Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(tp_deep_ctor),     \
+		_Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor(tp_any_ctor),       \
+		_Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw), \
+		_Dee_PRIVATE_REQUIRE_VAR_tp_serialize(tp_serialize),     \
+		_Dee_PRIVATE_REQUIRE_tp_free(tp_free),                   \
+		{ NULL }                                                 \
 	}}
 
 
@@ -1527,23 +1611,23 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
 /************************************************************************/
 
 /* With custom allocator */
-#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor,           \
-                                        tp_copy_ctor,      \
-                                        tp_deep_ctor,      \
-                                        tp_any_ctor,       \
-                                        tp_any_ctor_kw,    \
-                                        tp_serialize,      \
-                                        tp_alloc,          \
-                                        tp_free)           \
-	{{                                                     \
-		_Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor),               \
-		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),     \
-		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),     \
-		_Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),       \
-		_Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw), \
-		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize),     \
-		_Dee_REQUIRE_tp_free(tp_free),                     \
-		{ _Dee_REQUIRE_tp_alloc(tp_alloc) }                \
+#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor,                   \
+                                        tp_copy_ctor,              \
+                                        tp_deep_ctor,              \
+                                        tp_any_ctor,               \
+                                        tp_any_ctor_kw,            \
+                                        tp_serialize,              \
+                                        tp_alloc,                  \
+                                        tp_free)                   \
+	{{                                                             \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(tp_ctor),               \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),     \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),     \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),       \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw), \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(tp_serialize),     \
+		_Dee_PRIVATE_REQUIRE_tp_free(tp_free),                     \
+		{ _Dee_PRIVATE_REQUIRE_tp_alloc(tp_alloc) }                \
 	}}
 
 /* Specifies an automatic object allocator. */
@@ -1559,12 +1643,12 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
                                                   tp_any_ctor_kw,   \
                                                   tp_serialize)     \
 	{{                                                              \
-		_Dee_REQUIRE_ALLOC_tp_ctor(tp_ctor),                        \
-		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),              \
-		_Dee_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),              \
-		_Dee_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),                \
-		_Dee_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw),          \
-		_Dee_REQUIRE_ALLOC_tp_serialize(tp_serialize),              \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(tp_ctor),                \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),      \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),      \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),        \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw),  \
+		_Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(tp_serialize),      \
 		(Dee_funptr_t)NULL,                                         \
 		{ (Dee_funptr_t)(void *)(uintptr_t)(tp_instance_size) }     \
 	}}
@@ -1573,12 +1657,12 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
  * for types with a FIXED size (which most objects have). */
 #ifdef GUARD_DEEMON_ALLOC_H
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("alloc.h"))*/
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
 	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                   \
@@ -1602,13 +1686,12 @@ Dee_funptr_t __Dee_REQUIRE_tp_free(decltype(nullptr));
  * dedicated allocator functions when doing so would require the creation
  * of relocations that might cause loading times to become larger. */
 #ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("alloc.h"))*/
 #else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED    /*!export(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC /*!export(include("alloc.h"))*/
 #endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-
 #endif /* GUARD_DEEMON_ALLOC_H */
 
 
@@ -1669,7 +1752,7 @@ struct Dee_type_constructor {
 			}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 			_dee_aunion
-#define tp_instance_size _dee_aunion.tp_instance_size
+#define tp_instance_size _dee_aunion.tp_instance_size /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 			;
 		} tp_alloc; /* [valid_if(!TP_FVARIABLE)] */
@@ -1709,8 +1792,8 @@ struct Dee_type_constructor {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define tp_alloc _dee_aunion.tp_alloc
-#define tp_var   _dee_aunion.tp_var
+#define tp_alloc _dee_aunion.tp_alloc /*!export-*/
+#define tp_var   _dee_aunion.tp_var   /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 
@@ -2325,6 +2408,8 @@ struct Dee_type_seq {
 };
 
 #if 0
+/*!export -MyObject*/
+/*!export -myob_**/
 typedef struct {
 	OBJECT_HEAD
 } MyObject;
@@ -3005,6 +3090,7 @@ typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *Dee_setmethod_t)(DeeObject *self
 typedef WUNUSED_T NONNULL_T((1)) int (DCALL *Dee_boundmethod_t)(DeeObject *__restrict self);
 #if Dee_BOUND_YES == 1
 #if defined(DCALL_RETURN_COMMON) || __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+/*!export -_DeeNone_**/
 #ifdef DCALL_CALLER_CLEANUP
 DFUNDEF size_t (DCALL _DeeNone_rets1)(void); /* Always returns "1" */
 #define Dee_boundmethod__ALWAYS_PTR (Dee_boundmethod_t)&_DeeNone_rets1
@@ -3506,7 +3592,7 @@ struct Dee_type_member {
 	             ? Dee_STRUCT_BOOLBIT6                                                            \
 	             : err)
 #ifdef __INTELLISENSE__
-#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask, err)                                       \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC_CHK(mask, err)                                   \
 	_Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(                                                    \
 	mask, ((mask) == UINT8_C(0x80) || (mask) == UINT16_C(0x8000) ||                        \
 	       (mask) == UINT32_C(0x800000) || (mask) == UINT32_C(0x80000000) ||               \
@@ -3514,14 +3600,14 @@ struct Dee_type_member {
 	       (mask) == UINT64_C(0x80000000000000) || (mask) == UINT64_C(0x8000000000000000)) \
 	      ? Dee_STRUCT_BOOLBIT7                                                            \
 	      : err)
-#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)               \
-	((int(*)[_Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask, -1)])0, \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)                  \
+	((int(*)[_Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC_CHK(mask, -1)])0, \
 	 _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, Dee_STRUCT_BOOLBIT7))
 #else /* __INTELLISENSE__ */
-#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask) \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask) \
 	_Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, Dee_STRUCT_BOOLBIT7)
 #endif /* !__INTELLISENSE__ */
-#define Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)    \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)   \
 	((mask)&UINT8_C(0xff)                          \
 	 ? 0                                           \
 	 : (mask)&UINT16_C(0xff00)                     \
@@ -3538,7 +3624,7 @@ struct Dee_type_member {
 	             ? 6                               \
 	             : 7)
 #else /* UINT64_C */
-#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)                                    \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)                                   \
 	(((mask) == UINT8_C(0x01) || (mask) == UINT16_C(0x0100) ||                    \
 	  (mask) == UINT32_C(0x010000) || (mask) == UINT32_C(0x01000000))             \
 	 ? Dee_STRUCT_BOOLBIT0                                                        \
@@ -3561,29 +3647,29 @@ struct Dee_type_member {
 	              (mask) == UINT32_C(0x400000) || (mask) == UINT32_C(0x40000000)) \
 	             ? Dee_STRUCT_BOOLBIT6                                            \
 	             : Dee_STRUCT_BOOLBIT7)
-#define Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask) \
-	((mask)&UINT8_C(0xff)                       \
-	 ? 0                                        \
-	 : (mask)&UINT16_C(0xff00)                  \
-	   ? 1                                      \
-	   : (mask)&UINT32_C(0xff0000)              \
-	     ? 2                                    \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask) \
+	((mask)&UINT8_C(0xff)                        \
+	 ? 0                                         \
+	 : (mask)&UINT16_C(0xff00)                   \
+	   ? 1                                       \
+	   : (mask)&UINT32_C(0xff0000)               \
+	     ? 2                                     \
 	     : 3)
 #endif /* !UINT64_C */
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask) \
-	offsetof(struct_type, field) + Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask) \
+	offsetof(struct_type, field) + _Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask)     \
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask)    \
 	offsetof(struct_type, field) + (sizeof(((struct_type *)0)->field) - \
-	                                (1 + Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)))
+	                                (1 + _Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)))
 #else /* __BYTE_ORDER__ == ... */
 #error "Unsupported endian"
 #endif /* __BYTE_ORDER__ != ... */
-#define Dee_TYPE_MEMBER_BITFIELD_DOC(name, flags, struct_type, field, flagmask, doc)           \
-	Dee_TYPE_MEMBER_FIELD_DOC(name, (flags) | Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(flagmask),      \
-	                          Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, flagmask), \
+#define Dee_TYPE_MEMBER_BITFIELD_DOC(name, flags, struct_type, field, flagmask, doc)            \
+	Dee_TYPE_MEMBER_FIELD_DOC(name, (flags) | _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(flagmask),      \
+	                          _Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, flagmask), \
 	                          doc)
 #define Dee_TYPE_MEMBER_BITFIELD(name, flags, struct_type, field, flagmask) \
 	Dee_TYPE_MEMBER_BITFIELD_DOC(name, flags, struct_type, field, flagmask, NULL)
@@ -3925,27 +4011,27 @@ struct Dee_opinfo const &_Dee_OPINFO_INIT(Dee_operator_t id, uint16_t class_, ui
 #define Dee_OPINFO_INIT(id, class, offset, cc, uname, sname, iname, invoke) \
 	{ id, class, offset, cc, uname, sname, iname, invoke }
 #endif /* !__INTELLISENSE__ || !__cplusplus */
-#define _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, invoke)                                                           \
-	{ id, OPCLASS_CUSTOM, 0, OPCC_SPECIAL, { _DEE_UINTPTR_AS_CHAR_LIST((char)(unsigned char), flags) }, "", "", \
+#define _Dee_PRIVATE_OPINFO_INIT_AS_CUSTOM(id, flags, invoke)                                                           \
+	{ id, OPCLASS_CUSTOM, 0, OPCC_SPECIAL, { _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST((char)(unsigned char), flags) }, "", "", \
 	  (struct Dee_operator_invoke Dee_tpconst *)(void Dee_tpconst *)(void const *)Dee_REQUIRES_OPERATOR_INVOKE_CB(invoke) }
 #ifdef DEE_SOURCE
 #define OPINFO_INIT Dee_OPINFO_INIT
 #endif /* DEE_SOURCE */
 
 #if __SIZEOF_POINTER__ == 4 && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT32_C(0xff)), T(((v) & UINT32_C(0xff00)) >> 8), T(((v) & UINT32_C(0xff0000)) >> 16), T(((v) & UINT32_C(0xff000000)) >> 24)
+#define _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT32_C(0xff)), T(((v) & UINT32_C(0xff00)) >> 8), T(((v) & UINT32_C(0xff0000)) >> 16), T(((v) & UINT32_C(0xff000000)) >> 24)
 #elif __SIZEOF_POINTER__ == 8 && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT64_C(0xff)), T(((v) & UINT64_C(0xff00)) >> 8), T(((v) & UINT64_C(0xff0000)) >> 16), T(((v) & UINT64_C(0xff000000)) >> 24), T(((v) & UINT64_C(0xff00000000)) >> 32), T(((v) & UINT64_C(0xff0000000000)) >> 40), T(((v) & UINT64_C(0xff000000000000)) >> 48), T(((v) & UINT64_C(0xff00000000000000)) >> 56)
+#define _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT64_C(0xff)), T(((v) & UINT64_C(0xff00)) >> 8), T(((v) & UINT64_C(0xff0000)) >> 16), T(((v) & UINT64_C(0xff000000)) >> 24), T(((v) & UINT64_C(0xff00000000)) >> 32), T(((v) & UINT64_C(0xff0000000000)) >> 40), T(((v) & UINT64_C(0xff000000000000)) >> 48), T(((v) & UINT64_C(0xff00000000000000)) >> 56)
 #elif __SIZEOF_POINTER__ == 4 && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T(((v) & UINT32_C(0xff000000)) >> 24), T(((v) & UINT32_C(0xff0000)) >> 16), T(((v) & UINT32_C(0xff00)) >> 8), T((v) & UINT32_C(0xff))
+#define _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST(T, v) T(((v) & UINT32_C(0xff000000)) >> 24), T(((v) & UINT32_C(0xff0000)) >> 16), T(((v) & UINT32_C(0xff00)) >> 8), T((v) & UINT32_C(0xff))
 #elif __SIZEOF_POINTER__ == 8 && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T(((v) & UINT64_C(0xff00000000000000)) >> 56), T(((v) & UINT64_C(0xff000000000000)) >> 48), T(((v) & UINT64_C(0xff0000000000)) >> 40), T(((v) & UINT64_C(0xff00000000)) >> 32), T(((v) & UINT64_C(0xff000000)) >> 24), T(((v) & UINT64_C(0xff0000)) >> 16), T(((v) & UINT64_C(0xff00)) >> 8), T((v) & UINT64_C(0xff))
+#define _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST(T, v) T(((v) & UINT64_C(0xff00000000000000)) >> 56), T(((v) & UINT64_C(0xff000000000000)) >> 48), T(((v) & UINT64_C(0xff0000000000)) >> 40), T(((v) & UINT64_C(0xff00000000)) >> 32), T(((v) & UINT64_C(0xff000000)) >> 24), T(((v) & UINT64_C(0xff0000)) >> 16), T(((v) & UINT64_C(0xff00)) >> 8), T((v) & UINT64_C(0xff))
 #elif __SIZEOF_POINTER__ == 2 && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT16_C(0xff)), T(((v) & UINT16_C(0xff00)) >> 8)
+#define _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT16_C(0xff)), T(((v) & UINT16_C(0xff00)) >> 8)
 #elif __SIZEOF_POINTER__ == 2 && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T(((v) & UINT16_C(0xff00)) >> 8), T((v) & UINT16_C(0xff))
+#define _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST(T, v) T(((v) & UINT16_C(0xff00)) >> 8), T((v) & UINT16_C(0xff))
 #elif __SIZEOF_POINTER__ == 1
-#define _DEE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT8_C(0xff))
+#define _Dee_PRIVATE_UINTPTR_AS_CHAR_LIST(T, v) T((v) & UINT8_C(0xff))
 #elif !defined(__DEEMON__)
 #error "Unsupported __SIZEOF_POINTER__"
 #endif /* !... */
@@ -3967,9 +4053,9 @@ struct Dee_type_operator {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define to_decl  _dee_aunion.to_decl
-#define to_spec  _dee_aunion.to_spec
-#define to_id    _dee_aunion.to_id
+#define to_decl  _dee_aunion.to_decl /*!export-*/
+#define to_spec  _dee_aunion.to_spec /*!export-*/
+#define to_id    _dee_aunion.to_id   /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -3983,8 +4069,8 @@ struct Dee_type_operator {
 #define Dee_TYPE_OPERATOR_DECL(id, class, offset, cc, uname, sname, iname, invoke) \
 	{ { Dee_OPINFO_INIT(id, class, offset, cc, uname, sname, iname, invoke) } }
 #endif /* !__INTELLISENSE__ || !__cplusplus */
-#define Dee_TYPE_OPERATOR_CUSTOM(id, invoke, flags) { { _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, invoke) } }
-#define Dee_TYPE_OPERATOR_FLAGS(id, flags)          { { _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, NULL) } }
+#define Dee_TYPE_OPERATOR_CUSTOM(id, invoke, flags) { { _Dee_PRIVATE_OPINFO_INIT_AS_CUSTOM(id, flags, invoke) } }
+#define Dee_TYPE_OPERATOR_FLAGS(id, flags)          { { _Dee_PRIVATE_OPINFO_INIT_AS_CUSTOM(id, flags, NULL) } }
 #ifdef DEE_SOURCE
 #define type_operator_iscustom Dee_type_operator_iscustom
 #define type_operator_isdecl   Dee_type_operator_isdecl
@@ -4005,7 +4091,7 @@ struct Dee_type_operator {
                                         * Instances of this type have special behavior when thrown as errors,
                                         * or when delivered to threads through use of `Thread.interrupt()'.
                                         * In such situations, the error can only be caught by exception handlers
-                                        * specifically marked as `@[interrupt]' (or rather `EXCEPTION_HANDLER_FINTERPT')
+                                        * specifically marked as `@[interrupt]' (or rather `Dee_EXCEPTION_HANDLER_FINTERPT')
                                         * Additionally (but only when `CONFIG_NO_THREADS' is disabled), such errors are
                                         * re-scheduled in the pending-interrupt system of the calling thread when they
                                         * are thrown in a context where errors are normally discarded (such as destructions
@@ -4030,8 +4116,8 @@ struct Dee_type_operator {
 /*      Dee_TP_F                0x0080  * ... */
 /*      Dee_TP_F                0x0100  * ... */
 /*      Dee_TP_F                0x0200  * ... */
-#define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
-#define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `string_object' that this type holds a reference to. */
+#define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
+#define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
 #define Dee_TP_FMAYREVIVE       0x1000 /* This type's `tp_dtor' may revive the object (return with the object's `ob_refcnt > 0')
                                         * Note that when reviving an object, `tp_dtor' must (in addition to an external reference)
                                         * gift the caller one further reference to the object that got revived (meaning that upon
@@ -4098,7 +4184,7 @@ struct Dee_type_object {
 	uint16_t                            tp_weakrefs; /* Offset to `offsetof(Dee?Object, ob_weakrefs)', or 0 when not supported.
 	                                                  * NOTE: Must be explicitly inherited by derived types.
 	                                                  * NOTE: This member must explicitly be initialized during object construction
-	                                                  *       using `weakref_support_init' and `weakref_support_fini', during destruction. */
+	                                                  *       using `Dee_weakref_support_init' and `Dee_weakref_support_fini', during destruction. */
 	uint32_t                            tp_features; /* Type sub-class specific features (Set of `TF_*'). */
 	DREF DeeTypeObject                 *tp_base;     /* [0..1][const] Base class.
 	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
@@ -5436,7 +5522,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 #endif /* !__INTELLISENSE__ */
 
 
-INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
+INTDEF ATTR_ERROR("Invalid integer size") int _Dee_PRIVATE_invalid_integer_size(void);
 #ifndef __NO_builtin_choose_expr
 #define DeeObject_AsIntX(self, result)                                                                 \
 	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeObject_AsInt8(self, (int8_t *)(result)),         \
@@ -5444,14 +5530,14 @@ INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeObject_AsInt32(self, (int32_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeObject_AsInt64(self, (int64_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeObject_AsInt128(self, (Dee_int128_t *)(result)), \
-	                                               _Dee_invalid_integer_size())))))
+	                                               _Dee_PRIVATE_invalid_integer_size())))))
 #define DeeObject_AsUIntX(self, result)                                                                  \
 	__builtin_choose_expr(sizeof(*(result)) == 1,  DeeObject_AsUInt8(self, (uint8_t *)(result)),         \
 	__builtin_choose_expr(sizeof(*(result)) == 2,  DeeObject_AsUInt16(self, (uint16_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 4,  DeeObject_AsUInt32(self, (uint32_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 8,  DeeObject_AsUInt64(self, (uint64_t *)(result)),       \
 	__builtin_choose_expr(sizeof(*(result)) == 16, DeeObject_AsUInt128(self, (Dee_uint128_t *)(result)), \
-	                                               _Dee_invalid_integer_size())))))
+	                                               _Dee_PRIVATE_invalid_integer_size())))))
 #else /* !__NO_builtin_choose_expr */
 #define DeeObject_AsIntX(self, result)                                              \
 	(sizeof(*(result)) == 1 ?  DeeObject_AsInt8(self, (int8_t *)(result)) :         \
@@ -5459,14 +5545,14 @@ INTDEF ATTR_ERROR("Invalid integer size") int _Dee_invalid_integer_size(void);
 	 sizeof(*(result)) == 4 ?  DeeObject_AsInt32(self, (int32_t *)(result)) :       \
 	 sizeof(*(result)) == 8 ?  DeeObject_AsInt64(self, (int64_t *)(result)) :       \
 	 sizeof(*(result)) == 16 ? DeeObject_AsInt128(self, (Dee_int128_t *)(result)) : \
-	                           _Dee_invalid_integer_size())
+	                           _Dee_PRIVATE_invalid_integer_size())
 #define DeeObject_AsUIntX(self, result)                                               \
 	(sizeof(*(result)) == 1 ?  DeeObject_AsUInt8(self, (uint8_t *)(result)) :         \
 	 sizeof(*(result)) == 2 ?  DeeObject_AsUInt16(self, (uint16_t *)(result)) :       \
 	 sizeof(*(result)) == 4 ?  DeeObject_AsUInt32(self, (uint32_t *)(result)) :       \
 	 sizeof(*(result)) == 8 ?  DeeObject_AsUInt64(self, (uint64_t *)(result)) :       \
 	 sizeof(*(result)) == 16 ? DeeObject_AsUInt128(self, (Dee_uint128_t *)(result)) : \
-	                           _Dee_invalid_integer_size())
+	                           _Dee_PRIVATE_invalid_integer_size())
 #endif /* __NO_builtin_choose_expr */
 
 DECL_END

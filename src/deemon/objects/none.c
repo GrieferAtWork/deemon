@@ -995,7 +995,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	                         ".=(attr:?Dstring)->?N\n"
 	                         "No-op that ignores all arguments and always re-returns ?N"),
 	/* .tp_flags    = */ TP_FVARIABLE | TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT | TP_FFINAL | TP_FDEEPIMMUTABLE,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeNoneObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeNoneObject),
 	/* .tp_features = */ TF_SINGLETON | TF_KW,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
@@ -1046,7 +1046,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 
 PUBLIC DeeNoneObject DeeNone_Singleton = {
 	OBJECT_HEAD_INIT(&DeeNone_Type),
-	WEAKREF_SUPPORT_INIT
+	Dee_WEAKREF_SUPPORT_INIT
 };
 
 DECL_END

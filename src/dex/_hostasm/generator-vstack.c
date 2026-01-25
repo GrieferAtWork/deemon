@@ -1486,7 +1486,7 @@ fg_vpushinit_varkwds(struct fungen *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fg_vpushinit_stdout(struct fungen *__restrict self) {
-	int result = fg_vpush_imm32(self, DEE_STDOUT);
+	int result = fg_vpush_imm32(self, Dee_STDOUT);
 	if likely(result == 0)
 		result = fg_vcallapi(self, &DeeFile_GetStd, VCALL_CC_OBJECT, 1);
 	return result;
@@ -1538,7 +1538,7 @@ fg_vpush_xlocal(struct fungen *__restrict self,
 		/* Check for special case: when the function *only* takes varargs, and
 		 * the calling convention provides us with a caller-given argument tuple,
 		 * then simply push that tuple instead of allocating a new one! */
-		if unlikely(!(self->fg_assembler->fa_code->co_flags & CODE_FVARARGS))
+		if unlikely(!(self->fg_assembler->fa_code->co_flags & Dee_CODE_FVARARGS))
 			return err_unsupported_opcode(self->fg_assembler->fa_code, instr);
 		if (self->fg_assembler->fa_code->co_argc_max == 0 &&
 		    (self->fg_assembler->fa_cc & HOST_CC_F_TUPLE))
@@ -1546,7 +1546,7 @@ fg_vpush_xlocal(struct fungen *__restrict self,
 		break;
 
 	case MEMSTATE_XLOCAL_VARKWDS:
-		if unlikely(!(self->fg_assembler->fa_code->co_flags & CODE_FVARKWDS))
+		if unlikely(!(self->fg_assembler->fa_code->co_flags & Dee_CODE_FVARKWDS))
 			return err_unsupported_opcode(self->fg_assembler->fa_code, instr);
 		break;
 
@@ -1719,9 +1719,9 @@ DeeClassDescriptor_IsClassAttributeReadOnly(DeeClassDescriptorObject const *__re
                                             uint16_t addr) {
 	size_t i;
 	for (i = 0; i <= self->cd_iattr_mask; ++i) {
-		struct class_attribute const *attr;
+		struct Dee_class_attribute const *attr;
 		attr = &self->cd_iattr_list[i];
-		if ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) &&
+		if ((attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) &&
 		    (addr >= attr->ca_addr || addr < attr->ca_addr + Dee_CLASS_GETSET_COUNT))
 			return true; /* get/del/set callbacks should only be assigned once */
 		if (addr == attr->ca_addr)
@@ -1739,7 +1739,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fg_vpush_cmember_unsafe_at_runtime(struct fungen *__restrict self,
                                    DeeTypeObject *class_type,
                                    uint16_t addr, unsigned int flags) {
-	struct class_desc *desc = DeeClass_DESC(class_type);
+	struct Dee_class_desc *desc = DeeClass_DESC(class_type);
 	struct host_section *text;
 	struct host_section *cold;
 	DREF struct memstate *saved_state;
@@ -1835,7 +1835,7 @@ fg_vpush_cmember(struct fungen *__restrict self,
 	DO(fg_vdirect1(self));
 	type_mval = fg_vtop(self);
 	if (memval_direct_isconst(type_mval)) {
-		struct class_desc *desc;
+		struct Dee_class_desc *desc;
 		DeeTypeObject *class_type = (DeeTypeObject *)memval_const_getobj(type_mval);
 		if unlikely(DeeObject_AssertType(class_type, &DeeType_Type))
 			goto err;
@@ -1893,7 +1893,7 @@ fg_vbound_cmember(struct fungen *__restrict self,
 	type_mval = fg_vtop(self);
 	if (memval_direct_isconst(type_mval)) {
 		DeeObject **p_valloc;
-		struct class_desc *desc;
+		struct Dee_class_desc *desc;
 		DeeTypeObject *class_type = (DeeTypeObject *)memval_const_getobj(type_mval);
 		if unlikely(DeeObject_AssertType(class_type, &DeeType_Type))
 			goto err;
@@ -1976,7 +1976,7 @@ fg_vpop_cmember(struct fungen *__restrict self,
 				if (!memobj_xinfo_cdesc_wasinit(type_cdesc, addr)) {
 					memobj_xinfo_cdesc_setinit(type_cdesc, addr);
 					/* The cmember slot is known to be NULL, so we can just directly write to it:
-					 * >> struct class_desc *cd = <type>->tp_class;
+					 * >> struct Dee_class_desc *cd = <type>->tp_class;
 					 * >> cd->cd_members[<addr>] = <value>; // Inherit */
 					DO(fg_vref2(self, 2));                                /* type, value */
 					DO(fg_vdup_at(self, 2));                              /* type, value, type */
@@ -1992,7 +1992,7 @@ fg_vpop_cmember(struct fungen *__restrict self,
 				/* Object is being shared -> cannot trust what we (think we) know
 				 * about cmember slot initialization. However, can still generate
 				 * inline code to do:
-				 * >> struct class_desc *cd = <type>->tp_class;
+				 * >> struct Dee_class_desc *cd = <type>->tp_class;
 				 * >> #if !(type_mobj->mo_flags & MEMOBJ_F_ONEREF)
 				 * >> Dee_atomic_rwlock_write(cd);
 				 * >> #endif
@@ -2029,7 +2029,7 @@ fg_vpush_imember_unsafe_at_runtime(struct fungen *__restrict self,
 	struct host_section *text;
 	struct host_section *cold;
 	DREF struct memstate *saved_state;
-	struct class_desc *desc = DeeClass_DESC(type);
+	struct Dee_class_desc *desc = DeeClass_DESC(type);
 #ifndef CONFIG_NO_THREADS
 	ptrdiff_t lock_offset;
 #endif /* !CONFIG_NO_THREADS */
@@ -2046,9 +2046,9 @@ fg_vpush_imember_unsafe_at_runtime(struct fungen *__restrict self,
 	}
 
 #ifndef CONFIG_NO_THREADS
-	lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
+	lock_offset = desc->cd_offset + offsetof(struct Dee_instance_desc, id_lock);
 #endif /* !CONFIG_NO_THREADS */
-	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct instance_desc, id_vtab),
+	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct Dee_instance_desc, id_vtab),
 	                                   addr, sizeof(DREF DeeObject *));
 	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
 
@@ -2143,7 +2143,7 @@ fg_vpush_imember(struct fungen *__restrict self,
 	 * safe semantics are required or not. */
 	type_mval = fg_vtop(self);
 	if (memval_direct_isconst(type_mval) && !safe) {
-		struct class_desc *desc;
+		struct Dee_class_desc *desc;
 		DeeTypeObject *class_type = (DeeTypeObject *)memval_const_getobj(type_mval);
 		if (DeeObject_AssertType(class_type, &DeeType_Type))
 			goto err;
@@ -2190,7 +2190,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fg_vdel_or_pop_imember_unsafe_at_runtime(struct fungen *__restrict self,
                                          DeeTypeObject *type, uint16_t addr) {
-	struct class_desc *desc = DeeClass_DESC(type);
+	struct Dee_class_desc *desc = DeeClass_DESC(type);
 #ifndef CONFIG_NO_THREADS
 	ptrdiff_t lock_offset;
 #endif /* !CONFIG_NO_THREADS */
@@ -2220,9 +2220,9 @@ fg_vdel_or_pop_imember_unsafe_at_runtime(struct fungen *__restrict self,
 	}
 
 #ifndef CONFIG_NO_THREADS
-	lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
+	lock_offset = desc->cd_offset + offsetof(struct Dee_instance_desc, id_lock);
 #endif /* !CONFIG_NO_THREADS */
-	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct instance_desc, id_vtab),
+	slot_offset = _Dee_MallococBufsize(desc->cd_offset + offsetof(struct Dee_instance_desc, id_vtab),
 	                                   addr, sizeof(DREF DeeObject *));
 	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
 
@@ -2267,7 +2267,7 @@ fg_vpop_imember(struct fungen *__restrict self,
 	 * safe semantics are required or not. */
 	mval = fg_vtop(self) - 1;
 	if (memval_direct_isconst(mval) && !safe) {
-		struct class_desc *desc;
+		struct Dee_class_desc *desc;
 		DeeTypeObject *class_type = (DeeTypeObject *)memval_const_getobj(mval);
 		if (DeeObject_AssertType(class_type, &DeeType_Type))
 			goto err;
@@ -3558,7 +3558,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vpush_mod_global(struct fungen *__restrict self,
                     struct Dee_module_object *mod, uint16_t gid, bool ref) {
 	struct memloc *loc;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
 	symbol = DeeModule_GetSymbolID(mod, gid);
@@ -3622,7 +3622,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vbound_mod_global(struct fungen *__restrict self,
                      struct Dee_module_object *mod, uint16_t gid) {
 	struct memval *mval;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
 	symbol = DeeModule_GetSymbolID(mod, gid);

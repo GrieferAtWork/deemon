@@ -80,7 +80,7 @@ struct LOCAL_string_format_data {
 	void                       *sfd_printarg; /* [?..?] Cookie for `sfd_sprinter' and `sfd_dprinter' */
 	Dee_ssize_t                 sfd_result;   /* Result of invocations of `sfd_sprinter' and `sfd_dprinter' (or negative after error) */
 #else /* DEFINE_DeeString_FormatPrinter */
-	struct unicode_printer      sfd_uprinter; /* Output printer (content leading up to `sfd_parser.sfp_iter' is already printed) */
+	struct Dee_unicode_printer      sfd_uprinter; /* Output printer (content leading up to `sfd_parser.sfp_iter' is already printed) */
 #endif /* !DEFINE_DeeString_FormatPrinter */
 };
 #endif /* ... */
@@ -99,8 +99,8 @@ struct LOCAL_string_format_data {
 #define LOCAL_string_format_data_getdprinter(sfd) ((sfd)->sfd_dprinter)
 #define LOCAL_string_format_data_getprintarg(sfd) ((sfd)->sfd_printarg)
 #else /* DEFINE_DeeString_FormatPrinter */
-#define LOCAL_string_format_data_getsprinter(sfd) ((Dee_formatprinter_t)&unicode_printer_print)
-#define LOCAL_string_format_data_getdprinter(sfd) (&unicode_printer_print)
+#define LOCAL_string_format_data_getsprinter(sfd) ((Dee_formatprinter_t)&Dee_unicode_printer_print)
+#define LOCAL_string_format_data_getdprinter(sfd) (&Dee_unicode_printer_print)
 #define LOCAL_string_format_data_getprintarg(sfd) (&(sfd)->sfd_uprinter)
 #endif /* !DEFINE_DeeString_FormatPrinter */
 
@@ -204,11 +204,11 @@ LOCAL_parse_format_template_for_object_format_ex(struct LOCAL_string_format_data
                                                  char const *flush_start, DeeObject *elem) {
 	Dee_ssize_t result;
 	char const *next_brace;
-	struct unicode_printer format_str_printer;
+	struct Dee_unicode_printer format_str_printer;
 	DREF DeeObject *format_str;
-	unicode_printer_init(&format_str_printer);
-	if unlikely(unicode_printer_printutf8(&format_str_printer, data->sfd_parser.sfp_iter,
-	                                      (size_t)(flush_start - data->sfd_parser.sfp_iter) - 1) < 0)
+	Dee_unicode_printer_init(&format_str_printer);
+	if unlikely(Dee_unicode_printer_printutf8(&format_str_printer, data->sfd_parser.sfp_iter,
+	                                          (size_t)(flush_start - data->sfd_parser.sfp_iter) - 1) < 0)
 		goto err_format_str_printer;
 	next_brace = find_next_brace(flush_start, data->sfd_parser.sfp_wend);
 again_handle_next_brace:
@@ -217,8 +217,8 @@ again_handle_next_brace:
 	if unlikely(next_brace[0] == next_brace[1]) {
 		++next_brace;
 /*handle_brace_after_escape_character:*/
-		if unlikely(unicode_printer_printutf8(&format_str_printer, flush_start,
-		                                      (size_t)(next_brace - flush_start) - 1) < 0)
+		if unlikely(Dee_unicode_printer_printutf8(&format_str_printer, flush_start,
+		                                          (size_t)(next_brace - flush_start) - 1) < 0)
 			goto err_format_str_printer;
 		flush_start = next_brace;
 		next_brace  = find_next_brace(flush_start + 1, data->sfd_parser.sfp_wend);
@@ -226,11 +226,11 @@ again_handle_next_brace:
 	}
 	if unlikely(next_brace[0] == '{')
 		goto err_format_str_printer_err_lbrace_in_format_in_simple;
-	if unlikely(unicode_printer_printutf8(&format_str_printer, flush_start,
-	                                      (size_t)(next_brace - flush_start)) < 0)
+	if unlikely(Dee_unicode_printer_printutf8(&format_str_printer, flush_start,
+	                                          (size_t)(next_brace - flush_start)) < 0)
 		goto err_format_str_printer;
 	data->sfd_parser.sfp_iter = next_brace;
-	format_str = unicode_printer_pack(&format_str_printer);
+	format_str = Dee_unicode_printer_pack(&format_str_printer);
 	if unlikely(!format_str)
 		goto err;
 	result = DeeObject_PrintFormat(elem,
@@ -245,7 +245,7 @@ err_format_str_printer_err_lbrace_in_format_in_simple:
 err_format_str_printer_unmatched:
 	err_unmatched_lbrace_in_simple();
 err_format_str_printer:
-	unicode_printer_fini(&format_str_printer);
+	Dee_unicode_printer_fini(&format_str_printer);
 err:
 	return -1;
 }
@@ -422,16 +422,16 @@ DeeString_Format(DeeObject *pattern, DeeObject *args)
 	return DeeString_FormatWStr(pattern_wstr, args);
 #elif defined(DEFINE_DeeString_FormatWStr) && defined(__OPTIMIZE_SIZE__)
 	Dee_ssize_t status;
-	struct unicode_printer printer;
-	unicode_printer_init(&printer);
+	struct Dee_unicode_printer printer;
+	Dee_unicode_printer_init(&printer);
 	status = DeeString_FormatPrinter(pattern_wstr, WSTR_LENGTH(pattern_wstr), args,
-	                                 (Dee_formatprinter_t)&unicode_printer_printutf8,
-	                                 &unicode_printer_print, &printer);
+	                                 (Dee_formatprinter_t)&Dee_unicode_printer_printutf8,
+	                                 &Dee_unicode_printer_print, &printer);
 	if unlikely(status < 0)
 		goto err;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 #else /* ... */
 #ifdef DEFINE_DeeString_Format
@@ -465,7 +465,7 @@ err:
 	data.sfd_result   = 0;
 #define LOCAL_err_printerr done
 #else /* DEFINE_DeeString_FormatPrinter */
-	unicode_printer_init(&data.sfd_uprinter);
+	Dee_unicode_printer_init(&data.sfd_uprinter);
 #define LOCAL_err_printerr err_printer
 #endif /* !DEFINE_DeeString_FormatPrinter */
 again_handle_brace:
@@ -551,14 +551,14 @@ done:
 #ifdef DEFINE_DeeString_FormatPrinter
 	return data.sfd_result;
 #else /* DEFINE_DeeString_FormatPrinter */
-	return unicode_printer_pack(&data.sfd_uprinter);
+	return Dee_unicode_printer_pack(&data.sfd_uprinter);
 #endif /* !DEFINE_DeeString_FormatPrinter */
 err_not_enough_args:
 	DeeError_Throwf(&DeeError_UnpackError,
 	                "Insufficient number of arguments");
 #ifndef DEFINE_DeeString_FormatPrinter
 err_printer:
-	unicode_printer_fini(&data.sfd_uprinter);
+	Dee_unicode_printer_fini(&data.sfd_uprinter);
 #endif /* !DEFINE_DeeString_FormatPrinter */
 #ifdef WANT_err
 #undef WANT_err

@@ -156,7 +156,7 @@ DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	case ASM_RET:
 		/* In yielding code, the `ret' instruction does actually
 		 * return, since it would actually be the `yield' instruction. */
-		if (code_flags & CODE_FYIELDING)
+		if (code_flags & Dee_CODE_FYIELDING)
 			break;
 		ATTR_FALLTHROUGH
 	case ASM_RET_NONE:

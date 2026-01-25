@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeStructObject_**/
 #ifndef GUARD_DEEMON_STRUCT_H
-#define GUARD_DEEMON_STRUCT_H 1
+#define GUARD_DEEMON_STRUCT_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -140,7 +142,7 @@ DDATDEF struct Dee_type_cmp DeeStructObject_Cmp;
 
 
 #ifdef DEE_SOURCE
-#define Dee_type_member type_member
+#define Dee_type_member type_member /*!export-*/
 #endif /* DEE_SOURCE */
 struct Dee_type_member;
 

@@ -338,7 +338,7 @@ bs_size(Bitset *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bs_hash(Bitset *__restrict self) {
 	size_t bitno;
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
 	bitset_foreach (bitno, self->bs_bitset, self->bs_nbits) {
 		result = Dee_HashCombine(result, bitno);
 	}
@@ -2538,7 +2538,7 @@ bsv_size(BitsetView *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bsv_hash(BitsetView *__restrict self) {
 	size_t bitno;
-	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	Dee_hash_t result = Dee_HASHOF_EMPTY_SEQUENCE;
 	for (bitno = self->bsv_startbit;
 	     bitno < self->bsv_endbit; ++bitno) {
 		if (bitset_test(BitsetView_GetBitset(self), bitno)) {
@@ -4489,8 +4489,8 @@ bsiter_visit(BitsetIterator *__restrict self, Dee_visit_t proc, void *arg) {
 
 
 PRIVATE struct type_nii tpconst bsiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&bsiter_nii_getseq,

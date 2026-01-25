@@ -17,8 +17,10 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeCell**/
 #ifndef GUARD_DEEMON_CELL_H
-#define GUARD_DEEMON_CELL_H 1
+#define GUARD_DEEMON_CELL_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -31,19 +33,13 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_cell_object cell_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_cell_object DeeCellObject;
-
-struct Dee_cell_object {
+typedef struct Dee_cell_object {
 	Dee_OBJECT_HEAD /* GC Object. */
 	DREF DeeObject     *c_item; /* [0..1] The object contained within this Cell. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t c_lock; /* Lock used for accessing this Cell. */
 #endif /* !CONFIG_NO_THREADS */
-};
+} DeeCellObject;
 
 #ifdef CONFIG_NO_THREADS
 #define DeeCell_GetItemPointer(self) (self)->c_item

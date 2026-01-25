@@ -1027,7 +1027,7 @@ continue_at_iter:
 			retval = DeeClass_FindInstanceAttribute(tp_self, tp_iter, self, specs, result);
 			LOCAL_process_retval(retval, done);
 #else /* ... */
-			struct class_attribute *cattr;
+			struct Dee_class_attribute *cattr;
 			cattr = LOCAL_DeeType_QueryAttribute(tp_self, tp_iter);
 			if (cattr != NULL) {
 #ifdef LOCAL_IS_HAS
@@ -1038,7 +1038,7 @@ continue_at_iter:
 				retinfo->ai_value.v_attr = cattr;
 				return true;
 #else /* LOCAL_IS_HAS */
-				struct class_desc *desc;
+				struct Dee_class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
 				if unlikely(!class_attribute_mayaccess(cattr, tp_iter)) {
 					DeeRT_ErrCRestrictedAttrCA(self, cattr,

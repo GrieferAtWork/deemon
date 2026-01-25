@@ -222,7 +222,7 @@ err:
 
 %[define(DEFINE_WITH_ZSTRING =
 #ifndef WITH_ZSTRING
-#include <hybrid/host.h>
+#include <hybrid/host.h> /* __ARCH_PAGESIZE */
 #if defined(__ARCH_PAGESIZE) && !defined(__OPTIMIZE_SIZE__)
 #define is_nulterm_string(str, len)                              \
 	((len) > 0 &&                                                \

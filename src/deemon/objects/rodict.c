@@ -96,8 +96,8 @@ rodict_verify(RoDict *__restrict self) {
 	ASSERT(self->rd_vsize <= self->rd_hmask);
 	ASSERT(IS_POWER_OF_TWO(self->rd_hmask + 1));
 	ASSERT(self->rd_htab == _DeeRoDict_GetRealVTab(self) + self->rd_vsize);
-	hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
-	ASSERT(/*hidxio >= 0 &&*/ hidxio < DEE_DICT_HIDXIO_COUNT);
+	hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
+	ASSERT(/*hidxio >= 0 &&*/ hidxio < Dee_DICT_HIDXIO_COUNT);
 	/* hidxio==0 may differ if "self" was statically initialized in a dex module,
 	 * in which case `self->rd_hidxget' might point into that module's PLT/GOT. */
 	ASSERT(self->rd_hidxget == Dee_dict_hidxio[hidxio].dhxio_get || hidxio == 0);
@@ -222,7 +222,7 @@ Dee_rodict_builder_init_with_hint(struct Dee_rodict_builder *__restrict self,
 	size_t sizeof_dict;
 	size_t hmask;
 	shift_t hidxio;
-	hidxio      = DEE_DICT_HIDXIO_FROMALLOC(num_items);
+	hidxio      = Dee_DICT_HIDXIO_FROMALLOC(num_items);
 	hmask       = dict_hmask_from_count(num_items);
 	sizeof_dict = _RoDict_SafeSizeOf3(num_items, hmask, hidxio);
 	dict        = _RoDict_TryMalloc(sizeof_dict);
@@ -257,8 +257,8 @@ rodict_trunc_vtab(RoDict *__restrict self, size_t old_valloc, size_t new_valloc)
 	shift_t old_hidxio, new_hidxio;
 	size_t new_sizeof;
 	ASSERT(new_valloc < old_valloc);
-	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(old_valloc);
-	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	old_hidxio = Dee_DICT_HIDXIO_FROMALLOC(old_valloc);
+	new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
 	old_htab   = self->rd_htab;
 	new_htab   = _DeeRoDict_GetRealVTab(self) + new_valloc;
 	ASSERT(old_htab >= (void *)(_DeeRoDict_GetRealVTab(self) + self->rd_vsize)); /* ">=" because of over-allocation */
@@ -304,12 +304,12 @@ rodict_builder_first_setitem(struct Dee_rodict_builder *me,
 	ASSERT(!me->rdb_dict);
 	valloc = DICT_FROMSEQ_DEFAULT_HINT;
 	hmask  = dict_hmask_from_count(valloc);
-	ASSERT(DEE_DICT_HIDXIO_FROMALLOC(valloc) == 0);
+	ASSERT(Dee_DICT_HIDXIO_FROMALLOC(valloc) == 0);
 	dict = _RoDict_TryMalloc(_RoDict_SizeOf3(valloc, hmask, 0));
 	if unlikely(!dict) {
 		valloc = 1;
 		hmask  = dict_tiny_hmask_from_count(valloc);
-		ASSERT(DEE_DICT_HIDXIO_FROMALLOC(valloc) == 0);
+		ASSERT(Dee_DICT_HIDXIO_FROMALLOC(valloc) == 0);
 		dict = _RoDict_Malloc(_RoDict_SizeOf3(valloc, hmask, 0));
 		if unlikely(!dict)
 			goto err;
@@ -353,8 +353,8 @@ rodict_builder_grow(struct Dee_rodict_builder *__restrict me) {
 		new_hmask = (new_hmask << 1) | 1;
 	old_valloc = me->rdb_valloc;
 	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, true);
-	old_hidxio = DEE_DICT_HIDXIO_FROMALLOC(old_valloc);
-	new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+	old_hidxio = Dee_DICT_HIDXIO_FROMALLOC(old_valloc);
+	new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
 	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 
 	/* Do the allocation. */
@@ -364,7 +364,7 @@ rodict_builder_grow(struct Dee_rodict_builder *__restrict me) {
 		/* Try again with a smaller buffer size */
 		new_hmask  = dict_tiny_hmask_from_count(min_valloc);
 		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, false);
-		new_hidxio = DEE_DICT_HIDXIO_FROMALLOC(new_valloc);
+		new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
 		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 		new_sizeof = _RoDict_SafeSizeOf3(new_valloc, new_hmask, new_hidxio);
 		new_dict   = _RoDict_Realloc(old_dict, new_sizeof);
@@ -537,8 +537,8 @@ again:
 	DeeDict_LockReadAndOptimize(me);
 	vsize         = me->d_vused;
 	hmask         = me->d_hmask;
-	src_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(me->d_valloc);
-	dst_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(vsize);
+	src_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(me->d_valloc);
+	dst_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(vsize);
 	sizeof_result = _RoDict_SizeOf3(vsize, hmask, dst_hidxio);
 	result = _RoDict_TryMalloc(sizeof_result);
 	if unlikely(!result) {
@@ -843,7 +843,7 @@ rodict_deepcopy(RoDict *__restrict self) {
 	size_t sizeof_result, i;
 	DREF RoDict *result;
 	shift_t hidxio;
-	hidxio        = DEE_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
+	hidxio        = Dee_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
 	sizeof_result = _RoDict_SizeOf3(self->rd_vsize, self->rd_hmask, hidxio);
 	result        = _RoDict_Malloc(sizeof_result);
 	if unlikely(!result)
@@ -930,7 +930,7 @@ rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 	size_t sizeof__rd_htab;
 	Dee_seraddr_t addrof_out;
 	byte_t *out__rd_htab;
-	shift_t hidxio = DEE_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
+	shift_t hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
 	sizeof__rd_htab = (self->rd_hmask + 1) << hidxio;
 	sizeof_dict = _RoDict_SizeOf3(self->rd_vsize, self->rd_hmask, hidxio);
 	addrof_out  = DeeSerial_ObjectMalloc(writer, sizeof_dict, self);
@@ -1520,7 +1520,7 @@ rodict_sizeof(RoDict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict___hidxio__(RoDict *__restrict self) {
-	shift_t result = DEE_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
+	shift_t result = Dee_DICT_HIDXIO_FROMALLOC(self->rd_vsize);
 	return DeeInt_NEWU(result);
 }
 
@@ -1937,8 +1937,8 @@ again:
 	DeeDict_LockReadAndOptimize(dict_keys);
 	vsize         = dict_keys->d_vused;
 	hmask         = dict_keys->d_hmask;
-	src_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(dict_keys->d_valloc);
-	dst_hidxio    = DEE_DICT_HIDXIO_FROMALLOC(vsize);
+	src_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(dict_keys->d_valloc);
+	dst_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(vsize);
 	sizeof_result = _RoDict_SizeOf3(vsize, hmask, dst_hidxio);
 	result = _RoDict_TryMalloc(sizeof_result);
 	if unlikely(!result) {
@@ -1989,7 +1989,7 @@ rodict_from_rodict_keys(DeeRoDictObject *dict_keys, DeeObject *value, DeeObject 
 	DREF RoDict *result;
 	size_t i, sizeof_result;
 	shift_t hidxio;
-	hidxio        = DEE_DICT_HIDXIO_FROMALLOC(dict_keys->rd_vsize);
+	hidxio        = Dee_DICT_HIDXIO_FROMALLOC(dict_keys->rd_vsize);
 	sizeof_result = _RoDict_SizeOf3(dict_keys->rd_vsize, dict_keys->rd_hmask, hidxio);
 	result        = _RoDict_Malloc(sizeof_result);
 	if unlikely(!result)
@@ -2143,9 +2143,9 @@ PRIVATE struct type_getset tpconst rodict_getsets[] = {
 	                 "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
 	                 "#T{?#__hidxio__|htab word type~"
 	                 /**/ "$0|?Ectypes:uint8_t"
-	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
-	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
-	                 /**/ IF_DEE_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
+	                 /**/ IF_Dee_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
+	                 /**/ IF_Dee_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
+	                 /**/ IF_Dee_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
 	                 "}"),
 	TYPE_GETSET_END
 };

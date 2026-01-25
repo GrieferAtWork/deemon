@@ -214,7 +214,7 @@ type_inherit_weakrefs(DeeTypeObject *__restrict self) {
 #endif /* CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS */
 
 /* ==== Core Object API ==== */
-LOCAL WUNUSED NONNULL((1)) struct weakref_list *DCALL
+LOCAL WUNUSED NONNULL((1)) struct Dee_weakref_list *DCALL
 weakrefs_get(DeeObject *__restrict ob) {
 	DeeTypeObject *tp = Dee_TYPE(ob);
 #ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
@@ -224,7 +224,7 @@ weakrefs_get(DeeObject *__restrict ob) {
 	while (!tp->tp_weakrefs && DeeType_Base(tp))
 		tp = DeeType_Base(tp);
 #endif /* !CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS */
-	return (struct weakref_list *)((uintptr_t)ob + tp->tp_weakrefs);
+	return (struct Dee_weakref_list *)((uintptr_t)ob + tp->tp_weakrefs);
 }
 #define WEAKREFS_GET(ob) weakrefs_get(ob)
 #define WEAKREFS_OK(list, ob) \
@@ -303,24 +303,24 @@ LOCAL NONNULL((1)) void DCALL ptrlock_waitfor(void **self) {
 #define WEAKREF_EMPTY_NEXTVAL NULL
 #define WEAKREF_SETBAD(x, T)  (void)0
 #else /* NDEBUG */
-#define WEAKREF_EMPTY_NEXTVAL (struct weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK)
+#define WEAKREF_EMPTY_NEXTVAL ((struct Dee_weakref *)((uintptr_t)WEAKREF_BAD_POINTER & PTRLOCK_ADDR_MASK))
 #define WEAKREF_SETBAD(x, T)  ((x) = (T)WEAKREF_BAD_POINTER)
 #endif /* !NDEBUG */
 
 
 #ifdef __INTELLISENSE__
 PUBLIC NONNULL((1, 2)) bool
-(DCALL Dee_weakref_init)(struct weakref *__restrict self,
+(DCALL Dee_weakref_init)(struct Dee_weakref *__restrict self,
                          DeeObject *__restrict ob,
                          Dee_weakref_callback_t callback)
 #else /* __INTELLISENSE__ */
 PUBLIC NONNULL((1, 2)) bool
-(DCALL Dee_weakref_init)(struct weakref *__restrict self,
+(DCALL Dee_weakref_init)(struct Dee_weakref *__restrict self,
                          DeeObject *__restrict ob)
 #endif /* !__INTELLISENSE__ */
 {
-	struct weakref_list *list;
-	struct weakref *next;
+	struct Dee_weakref_list *list;
+	struct Dee_weakref *next;
 	ASSERT_OBJECT(ob);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 #ifdef __INTELLISENSE__
@@ -331,7 +331,7 @@ again:
 	if unlikely(!WEAKREFS_OK(list, ob))
 		return false;
 	LOCK_POINTER(list->wl_nodes);
-	next = (struct weakref *)GET_POINTER(list->wl_nodes);
+	next = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
 	self->wr_obj   = ob;
 	self->wr_pself = &list->wl_nodes;
 	self->wr_next  = next;
@@ -383,8 +383,8 @@ Dee_weakref_initmany_trylock(struct Dee_weakref *const *weakref_v, size_t weakre
 	for (i = 0; i < weakref_c; ++i) {
 		struct Dee_weakref *wref = weakref_v[i];
 		DeeObject *ob = wref->wr_obj;
-		struct weakref_list *list = WEAKREFS_GET(ob);
-		struct weakref *next;
+		struct Dee_weakref_list *list = WEAKREFS_GET(ob);
+		struct Dee_weakref *next;
 		if (!TRYLOCK_POINTER(list->wl_nodes)) {
 			if (Dee_weakref_initmany_contains_ob(weakref_v, weakref_c, ob))
 				continue;
@@ -393,7 +393,7 @@ Dee_weakref_initmany_trylock(struct Dee_weakref *const *weakref_v, size_t weakre
 			WAITFOR_POINTER(list->wl_nodes);
 			return false;
 		}
-		next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		next = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
 		if (next && unlikely(!WEAKREF_TRYLOCK(next))) {
 			UNLOCK_POINTER(list->wl_nodes);
 			Dee_weakref_initmany_unlock(weakref_v, i);
@@ -418,10 +418,10 @@ Dee_weakref_initmany_exec(struct Dee_weakref *const *weakref_v, size_t weakref_c
 	for (i = 0; i < weakref_c; ++i) {
 		struct Dee_weakref *wref = weakref_v[i];
 		DeeObject *ob = wref->wr_obj;
-		struct weakref_list *list = WEAKREFS_GET(ob);
-		struct weakref *next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		struct Dee_weakref_list *list = WEAKREFS_GET(ob);
+		struct Dee_weakref *next = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
 		wref->wr_pself = &list->wl_nodes;
-		wref->wr_next = (struct weakref *)((uintptr_t)next | PTRLOCK_LOCK_MASK);
+		wref->wr_next = (struct Dee_weakref *)((uintptr_t)next | PTRLOCK_LOCK_MASK);
 		if (next) {
 			ASSERT(next->wr_pself == &list->wl_nodes);
 			ASSERT(next->wr_obj == ob);
@@ -437,13 +437,13 @@ Dee_weakref_initmany_unlock_and_inherit(struct Dee_weakref **weakref_v, size_t w
 	while (weakref_c--) {
 		struct Dee_weakref *wref = weakref_v[weakref_c];
 		DREF DeeObject *ob = wref->wr_obj;
-		struct weakref_list *list;
-		struct weakref *next;
+		struct Dee_weakref_list *list;
+		struct Dee_weakref *next;
 		result[weakref_c] = ob; /* Inherit reference */
 		if (Dee_weakref_initmany_contains_ob(weakref_v, weakref_c, ob))
 			continue; /* Happens later... */
 		list = WEAKREFS_GET(ob);
-		next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		next = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
 		ASSERTF(next, "How is there no node? We just added (at least) one!");
 		ASSERT(next->wr_pself == &list->wl_nodes);
 		ASSERT(next->wr_obj == ob);
@@ -458,12 +458,12 @@ Dee_weakref_initmany_unlock(struct Dee_weakref *const *weakref_v, size_t weakref
 	while (weakref_c--) {
 		struct Dee_weakref *wref = weakref_v[weakref_c];
 		DeeObject *ob = wref->wr_obj;
-		struct weakref_list *list;
-		struct weakref *next;
+		struct Dee_weakref_list *list;
+		struct Dee_weakref *next;
 		if (Dee_weakref_initmany_contains_ob(weakref_v, weakref_c, ob))
 			continue; /* Happens later... */
 		list = WEAKREFS_GET(ob);
-		next = (struct weakref *)GET_POINTER(list->wl_nodes);
+		next = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
 		if (next)
 			WEAKREF_UNLOCK(next);
 		UNLOCK_POINTER(list->wl_nodes);
@@ -474,19 +474,19 @@ Dee_weakref_initmany_unlock(struct Dee_weakref *const *weakref_v, size_t weakref
 
 #ifdef __INTELLISENSE__
 PUBLIC NONNULL((1, 2)) void
-(DCALL Dee_weakref_copy)(struct weakref *__restrict self,
-                         struct weakref const *__restrict other)
+(DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self,
+                         struct Dee_weakref const *__restrict other)
 #else /* __INTELLISENSE__ */
 PUBLIC NONNULL((1, 2)) void
-(DCALL Dee_weakref_copy)(struct weakref *__restrict self,
-                         struct weakref *__restrict other)
+(DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self,
+                         struct Dee_weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
 {
 	ASSERT(self != other);
 #ifndef NDEBUG
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
-	WEAKREF_SETBAD(self->wr_pself, struct weakref **);
+	WEAKREF_SETBAD(self->wr_pself, struct Dee_weakref **);
 	self->wr_del  = other->wr_del;
 again:
 	if (other->wr_obj) {
@@ -499,14 +499,14 @@ again:
 				goto again;
 			}
 			self->wr_pself = other->wr_pself;
-			self->wr_next  = (struct weakref *)other;
+			self->wr_next  = (struct Dee_weakref *)other;
 			self->wr_obj   = other->wr_obj;
-			((struct weakref *)other)->wr_pself = &self->wr_next;
+			((struct Dee_weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_UNLOCK(other);     /* WEAKREF_UNLOCK(other); */
 			WEAKREF_PREV_UNLOCK(self); /* WEAKREF_UNLOCK(other->PREV); */
 		} else {
 			ASSERT(other->wr_next == (struct Dee_weakref *)PTRLOCK_LOCK_MASK);
-			atomic_write(&((struct weakref *)other)->wr_next, WEAKREF_EMPTY_NEXTVAL); /* WEAKREF_UNLOCK(other); */
+			atomic_write(&((struct Dee_weakref *)other)->wr_next, WEAKREF_EMPTY_NEXTVAL); /* WEAKREF_UNLOCK(other); */
 			goto set_dst_empty;
 		}
 	} else {
@@ -517,27 +517,27 @@ set_dst_empty:
 }
 
 PUBLIC NONNULL((1, 2)) void DCALL
-Dee_weakref_move(struct weakref *__restrict dst,
-                 struct weakref *__restrict src) {
+Dee_weakref_move(struct Dee_weakref *__restrict dst,
+                 struct Dee_weakref *__restrict src) {
 	ASSERT(dst != src);
 #ifndef NDEBUG
 	ASSERT(src->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
 	dst->wr_del = src->wr_del;
 again:
-	WEAKREF_SETBAD(dst->wr_pself, struct weakref **);
+	WEAKREF_SETBAD(dst->wr_pself, struct Dee_weakref **);
 	if (src->wr_obj) {
 		WEAKREF_LOCK(src);
 		COMPILER_READ_BARRIER();
 		if likely(src->wr_obj) {
-			struct weakref *next;
+			struct Dee_weakref *next;
 			if unlikely(TRYLOCK_POINTER(*src->wr_pself)) {
 				/* Prevent a deadlock. */
 				WEAKREF_UNLOCK(src);
 				SCHED_YIELD();
 				goto again;
 			}
-			next          = (struct weakref *)GET_POINTER(src->wr_next);
+			next          = (struct Dee_weakref *)GET_POINTER(src->wr_next);
 			dst->wr_pself = src->wr_pself;
 			dst->wr_next  = next;
 			dst->wr_obj   = src->wr_obj;
@@ -567,12 +567,12 @@ set_dst_empty:
 
 #ifdef __INTELLISENSE__
 PUBLIC NONNULL((1, 2)) void
-(DCALL Dee_weakref_copyassign)(struct weakref *self,
-                               struct weakref const *other)
+(DCALL Dee_weakref_copyassign)(struct Dee_weakref *self,
+                               struct Dee_weakref const *other)
 #else /* __INTELLISENSE__ */
 PUBLIC NONNULL((1, 2)) void
-(DCALL Dee_weakref_copyassign)(struct weakref *self,
-                               struct weakref *other)
+(DCALL Dee_weakref_copyassign)(struct Dee_weakref *self,
+                               struct Dee_weakref *other)
 #endif /* !__INTELLISENSE__ */
 {
 #ifndef NDEBUG
@@ -595,7 +595,7 @@ again:
 			}
 #define LOCAL_UNLOCK_self() WEAKREF_UNLOCK(self)
 			if unlikely(!WEAKREF_TRYLOCK(self)) {
-				struct weakref **other_pself = other->wr_pself;
+				struct Dee_weakref **other_pself = other->wr_pself;
 				LOCAL_UNLOCK_other__prev();
 				LOCAL_UNLOCK_other();
 				if (other_pself == &self->wr_next)
@@ -605,7 +605,7 @@ again:
 			}
 			COMPILER_READ_BARRIER();
 			if (self->wr_obj) {
-				struct weakref *old_self_next;
+				struct Dee_weakref *old_self_next;
 				if unlikely(self->wr_obj == other->wr_obj) {
 					/* Special case: both point to the same object -> must clear `other' */
 					LOCAL_UNLOCK_self();
@@ -622,7 +622,7 @@ again:
 					SCHED_YIELD();
 					goto again;
 				}
-				old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+				old_self_next = (struct Dee_weakref *)GET_POINTER(self->wr_next);
 				if (old_self_next) {
 					if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 						/* Prevent a deadlock. */
@@ -645,14 +645,14 @@ again:
 			/* Insert `self' before `other' */
 			self->wr_pself = other->wr_pself;
 			self->wr_obj   = other->wr_obj;
-			((struct weakref *)other)->wr_pself = &self->wr_next;
+			((struct Dee_weakref *)other)->wr_pself = &self->wr_next;
 			WEAKREF_PREV_UNLOCK(self);           /* LOCAL_UNLOCK_other__prev(); */
 			LOCAL_UNLOCK_other();
 			atomic_write(&self->wr_next, other); /* LOCAL_UNLOCK_self(); */
 #undef LOCAL_UNLOCK_self
 #undef LOCAL_UNLOCK_other__prev
 		} else {
-			atomic_write(&((struct weakref *)other)->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
+			atomic_write(&((struct Dee_weakref *)other)->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
 			Dee_weakref_clear(self);
 		}
 #undef LOCAL_UNLOCK_other
@@ -662,8 +662,8 @@ again:
 }
 
 PUBLIC NONNULL((1, 2)) void DCALL
-Dee_weakref_moveassign(struct weakref *self,
-                       struct weakref *other) {
+Dee_weakref_moveassign(struct Dee_weakref *self,
+                       struct Dee_weakref *other) {
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
@@ -676,14 +676,14 @@ again:
 #define LOCAL_UNLOCK_other() WEAKREF_UNLOCK(other)
 		COMPILER_READ_BARRIER();
 		if likely(other->wr_obj) {
-			struct weakref *next;
+			struct Dee_weakref *next;
 #define LOCAL_UNLOCK_other__prev() atomic_write(other->wr_pself, other)
 			if unlikely(!WEAKREF_PREV_TRYLOCK(other)) {
 				LOCAL_UNLOCK_other();
 				SCHED_YIELD();
 				goto again;
 			}
-			next = (struct weakref *)GET_POINTER(other->wr_next);
+			next = (struct Dee_weakref *)GET_POINTER(other->wr_next);
 #define LOCAL_UNLOCK_other__next() do { if (next) WEAKREF_UNLOCK(next); } __WHILE0
 			if (next) {
 				if unlikely(!WEAKREF_TRYLOCK(next)) {
@@ -704,7 +704,7 @@ again:
 					}
 					atomic_write(other->wr_pself, next); /* LOCAL_UNLOCK_other__prev(); */
 					other->wr_obj = NULL;
-					WEAKREF_SETBAD(other->wr_pself, struct weakref **);
+					WEAKREF_SETBAD(other->wr_pself, struct Dee_weakref **);
 					atomic_write(&other->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
 					return;
 				}
@@ -716,7 +716,7 @@ again:
 			}
 			COMPILER_READ_BARRIER();
 			if (self->wr_obj) {
-				struct weakref *old_self_next;
+				struct Dee_weakref *old_self_next;
 				if unlikely(self->wr_obj == other->wr_obj) {
 					/* Special case: both point to the same object -> must clear `other' */
 					if (next) {
@@ -725,7 +725,7 @@ again:
 					}
 					atomic_write(other->wr_pself, next); /* LOCAL_UNLOCK_other__prev(); */
 					other->wr_obj = NULL;
-					WEAKREF_SETBAD(other->wr_pself, struct weakref **);
+					WEAKREF_SETBAD(other->wr_pself, struct Dee_weakref **);
 					atomic_write(&other->wr_next, WEAKREF_EMPTY_NEXTVAL); /* LOCAL_UNLOCK_other(); */
 					LOCAL_UNLOCK_self();
 					return;
@@ -740,7 +740,7 @@ again:
 					SCHED_YIELD();
 					goto again;
 				}
-				old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+				old_self_next = (struct Dee_weakref *)GET_POINTER(self->wr_next);
 				if (old_self_next) {
 					if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 						/* Prevent a deadlock. */
@@ -764,7 +764,7 @@ again:
 			self->wr_pself = other->wr_pself;
 			self->wr_obj   = other->wr_obj;
 			other->wr_obj = NULL;
-			WEAKREF_SETBAD(other->wr_pself, struct weakref **);
+			WEAKREF_SETBAD(other->wr_pself, struct Dee_weakref **);
 			if (next) {
 				next->wr_pself = &self->wr_next;
 				WEAKREF_UNLOCK(next);                             /* LOCAL_UNLOCK_other__next(); */
@@ -787,7 +787,7 @@ again:
 
 /* Finalize a given weak reference. */
 PUBLIC NONNULL((1)) void DCALL
-Dee_weakref_fini(struct weakref *__restrict self) {
+Dee_weakref_fini(struct Dee_weakref *__restrict self) {
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
@@ -796,14 +796,14 @@ again:
 		WEAKREF_LOCK(self);
 		COMPILER_READ_BARRIER();
 		if likely(self->wr_obj) {
-			struct weakref *next;
+			struct Dee_weakref *next;
 			if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
 				/* Prevent a deadlock. */
 				WEAKREF_UNLOCK(self);
 				SCHED_YIELD();
 				goto again;
 			}
-			next = (struct weakref *)GET_POINTER(self->wr_next);
+			next = (struct Dee_weakref *)GET_POINTER(self->wr_next);
 			if (next) {
 				if unlikely(!WEAKREF_TRYLOCK(next)) {
 					/* Prevent a deadlock. */
@@ -819,13 +819,13 @@ again:
 		}
 		/*WEAKREF_UNLOCK(self);*/
 	}
-	WEAKREF_SETBAD(self->wr_pself, struct weakref **);
-	WEAKREF_SETBAD(self->wr_next, struct weakref *);
+	WEAKREF_SETBAD(self->wr_pself, struct Dee_weakref **);
+	WEAKREF_SETBAD(self->wr_next, struct Dee_weakref *);
 	WEAKREF_SETBAD(self->wr_obj, DeeObject *);
 }
 
 PUBLIC NONNULL((1)) bool DCALL
-Dee_weakref_clear(struct weakref *__restrict self) {
+Dee_weakref_clear(struct Dee_weakref *__restrict self) {
 #ifndef NDEBUG
 	ASSERT(self->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
@@ -834,13 +834,13 @@ again:
 		WEAKREF_LOCK(self);
 		COMPILER_READ_BARRIER();
 		if likely(self->wr_obj) {
-			struct weakref *next;
+			struct Dee_weakref *next;
 			if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
 				WEAKREF_UNLOCK(self);
 				SCHED_YIELD();
 				goto again;
 			}
-			next = (struct weakref *)GET_POINTER(self->wr_next);
+			next = (struct Dee_weakref *)GET_POINTER(self->wr_next);
 			if (next) {
 				if unlikely(!WEAKREF_TRYLOCK(next)) {
 					/* Prevent a deadlock. */
@@ -855,7 +855,7 @@ again:
 			atomic_write(self->wr_pself, next);
 			self->wr_obj = NULL;
 		}
-		WEAKREF_SETBAD(self->wr_pself, struct weakref **);
+		WEAKREF_SETBAD(self->wr_pself, struct Dee_weakref **);
 		atomic_write(&self->wr_next, WEAKREF_EMPTY_NEXTVAL);
 		return true;
 	}
@@ -868,9 +868,9 @@ again:
  * @return: false: The given object `ob' does not support weak referencing
  *                 and the stored weak reference was not modified. */
 PUBLIC NONNULL((1, 2)) bool DCALL
-Dee_weakref_set(struct weakref *__restrict self,
+Dee_weakref_set(struct Dee_weakref *__restrict self,
                 DeeObject *__restrict ob) {
-	struct weakref_list *new_list;
+	struct Dee_weakref_list *new_list;
 	ASSERT_OBJECT(ob);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
 	new_list = WEAKREFS_GET(ob);
@@ -882,14 +882,14 @@ again:
 		/* Still the same object. */
 		WEAKREF_UNLOCK(self);
 	} else {
-		struct weakref *next;
+		struct Dee_weakref *next;
 		if unlikely(!TRYLOCK_POINTER(new_list->wl_nodes)) {
 			WEAKREF_UNLOCK(self);
 			SCHED_YIELD();
 			goto again;
 		}
 
-		next = (struct weakref *)GET_POINTER(new_list->wl_nodes);
+		next = (struct Dee_weakref *)GET_POINTER(new_list->wl_nodes);
 		if (next) {
 			if unlikely(!WEAKREF_TRYLOCK(next)) {
 				UNLOCK_POINTER(new_list->wl_nodes);
@@ -901,7 +901,7 @@ again:
 
 		/* Delete a previously assigned object. */
 		if (self->wr_obj) {
-			struct weakref *old_self_next;
+			struct Dee_weakref *old_self_next;
 			if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
 				if (next)
 					WEAKREF_UNLOCK(next);            /* WEAKREF_UNLOCK(new_list->FIRST) */
@@ -910,7 +910,7 @@ again:
 				SCHED_YIELD();
 				goto again;
 			}
-			old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+			old_self_next = (struct Dee_weakref *)GET_POINTER(self->wr_next);
 			if (old_self_next) {
 				if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 					/* Prevent a deadlock. */
@@ -946,10 +946,10 @@ again:
  * @return: NULL: Failed to lock the weak reference (No error is thrown in this case). */
 #ifdef __INTELLISENSE__
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL Dee_weakref_lock)(struct weakref const *__restrict self)
+(DCALL Dee_weakref_lock)(struct Dee_weakref const *__restrict self)
 #else /* __INTELLISENSE__ */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
+(DCALL Dee_weakref_lock)(struct Dee_weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
 	DREF DeeObject *result;
@@ -971,10 +971,10 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 /* Return the state of a snapshot of `self' currently being bound. */
 #ifdef __INTELLISENSE__
 PUBLIC WUNUSED NONNULL((1)) bool
-(DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
+(DCALL Dee_weakref_bound)(struct Dee_weakref const *__restrict self)
 #else /* __INTELLISENSE__ */
 PUBLIC WUNUSED NONNULL((1)) bool
-(DCALL Dee_weakref_bound)(struct weakref *__restrict self)
+(DCALL Dee_weakref_bound)(struct Dee_weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
 	DeeObject *curr;
@@ -1003,7 +1003,7 @@ PUBLIC WUNUSED NONNULL((1)) bool
  * the actual pointed-to weak object of `self' isn't changed).
  * NOTE: You may pass `NULL' for `new_ob' to clear the weakref. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_weakref_cmpxch(struct weakref *__restrict self,
+Dee_weakref_cmpxch(struct Dee_weakref *__restrict self,
                    DeeObject *old_ob,
                    DeeObject *new_ob) {
 	DREF DeeObject *result;
@@ -1022,7 +1022,7 @@ again:
 			if unlikely(!old_ob) {
 				WEAKREF_UNLOCK(self);
 			} else {
-				struct weakref *next;
+				struct Dee_weakref *next;
 
 				/* Delete a previously assigned object. */
 				if unlikely(!WEAKREF_PREV_TRYLOCK(self)) {
@@ -1030,7 +1030,7 @@ again:
 					SCHED_YIELD();
 					goto again;
 				}
-				next = (struct weakref *)GET_POINTER(self->wr_next);
+				next = (struct Dee_weakref *)GET_POINTER(self->wr_next);
 				if (next) {
 					if unlikely(!WEAKREF_TRYLOCK(next)) {
 						/* Prevent a deadlock. */
@@ -1046,11 +1046,11 @@ again:
 
 				/* Now to re-insert the weakref. */
 				self->wr_obj = NULL;
-				WEAKREF_SETBAD(self->wr_pself, struct weakref **);
+				WEAKREF_SETBAD(self->wr_pself, struct Dee_weakref **);
 				atomic_write(&self->wr_next, WEAKREF_EMPTY_NEXTVAL); /* WEAKREF_UNLOCK(self) */
 			}
 		} else {
-			struct weakref_list *new_list;
+			struct Dee_weakref_list *new_list;
 			new_list = WEAKREFS_GET(new_ob);
 			if unlikely(!WEAKREFS_OK(new_list, new_ob)) {
 				WEAKREF_UNLOCK(self);
@@ -1060,14 +1060,14 @@ again:
 				/* Special case: `old_ob' matches `new_ob' */
 				WEAKREF_UNLOCK(self);
 			} else {
-				struct weakref *next;
+				struct Dee_weakref *next;
 				if (!TRYLOCK_POINTER(new_list->wl_nodes)) {
 					WEAKREF_UNLOCK(self);
 					SCHED_YIELD();
 					goto again;
 				}
 
-				next = (struct weakref *)GET_POINTER(new_list->wl_nodes);
+				next = (struct Dee_weakref *)GET_POINTER(new_list->wl_nodes);
 				if (next) {
 					if (!WEAKREF_TRYLOCK(next)) {
 						UNLOCK_POINTER(new_list->wl_nodes); /* WEAKREF_UNLOCK(new_list) */
@@ -1079,7 +1079,7 @@ again:
 
 				/* Delete a previously assigned object. */
 				if (old_ob) {
-					struct weakref *old_self_next;
+					struct Dee_weakref *old_self_next;
 					if (!WEAKREF_PREV_TRYLOCK(self)) {
 						if (next)
 							WEAKREF_UNLOCK(next);           /* WEAKREF_UNLOCK(new_list->FIRST) */
@@ -1088,7 +1088,7 @@ again:
 						SCHED_YIELD();
 						goto again;
 					}
-					old_self_next = (struct weakref *)GET_POINTER(self->wr_next);
+					old_self_next = (struct Dee_weakref *)GET_POINTER(self->wr_next);
 					if (old_self_next) {
 						if unlikely(!WEAKREF_TRYLOCK(old_self_next)) {
 							/* Prevent a deadlock. */
@@ -1168,13 +1168,13 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 		/* Delete all weak references linked against this type level. */
 destroy_weak:
 		if (has_noninherited_weakrefs(undo_start)) {
-			struct weakref *iter, *next;
-			struct weakref_list *list;
+			struct Dee_weakref *iter, *next;
+			struct Dee_weakref_list *list;
 			ASSERT(undo_start->tp_weakrefs >= sizeof(DeeObject));
-			list = (struct weakref_list *)((uintptr_t)self + undo_start->tp_weakrefs);
+			list = (struct Dee_weakref_list *)((uintptr_t)self + undo_start->tp_weakrefs);
 restart_clear_weakrefs:
 			LOCK_POINTER(list->wl_nodes);
-			iter = (struct weakref *)GET_POINTER(list->wl_nodes);
+			iter = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
 			if (iter == NULL) {
 				UNLOCK_POINTER(list->wl_nodes);
 			} else {
@@ -1185,7 +1185,7 @@ restart_clear_weakrefs:
 					goto restart_clear_weakrefs;
 				}
 				ASSERT(iter->wr_pself == &list->wl_nodes);
-				next = (struct weakref *)GET_POINTER(iter->wr_next);
+				next = (struct Dee_weakref *)GET_POINTER(iter->wr_next);
 				if (next) {
 					if (!WEAKREF_TRYLOCK(next)) {
 						/* Prevent deadlock. */
@@ -1201,7 +1201,7 @@ restart_clear_weakrefs:
 				/* Overwrite the weakly referenced object with NULL,
 				 * indicating that the link has been severed. */
 				atomic_write(&list->wl_nodes, next); /* WEAKREF_UNLOCK(list) */
-				WEAKREF_SETBAD(iter->wr_pself, struct weakref **);
+				WEAKREF_SETBAD(iter->wr_pself, struct Dee_weakref **);
 				iter->wr_obj = NULL;
 				COMPILER_WRITE_BARRIER();
 				if (iter->wr_del) {
@@ -1297,11 +1297,11 @@ DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeFatal_BadDecref, 12),
 
 /* Finalize weakref support */
 PUBLIC NONNULL((1)) void
-(DCALL Dee_weakref_support_fini)(struct weakref_list *__restrict list) {
-	struct weakref *iter, *next;
+(DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict list) {
+	struct Dee_weakref *iter, *next;
 restart_clear_weakrefs:
 	LOCK_POINTER(list->wl_nodes);
-	iter = (struct weakref *)GET_POINTER(list->wl_nodes);
+	iter = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
 #ifdef __OPTIMIZE_SIZE__
 	if (iter != NULL)
 #else /* __OPTIMIZE_SIZE__ */
@@ -1315,7 +1315,7 @@ restart_clear_weakrefs:
 			goto restart_clear_weakrefs;
 		}
 		ASSERT(iter->wr_pself == &list->wl_nodes);
-		next = (struct weakref *)GET_POINTER(iter->wr_next);
+		next = (struct Dee_weakref *)GET_POINTER(iter->wr_next);
 		if (next) {
 			if (!WEAKREF_TRYLOCK(next)) {
 				/* Prevent deadlock. */
@@ -1331,7 +1331,7 @@ restart_clear_weakrefs:
 		/* Overwrite the weakly referenced object with NULL,
 		 * indicating that the link has been severed. */
 		atomic_write(&list->wl_nodes, next);
-		WEAKREF_SETBAD(iter->wr_pself, struct weakref **);
+		WEAKREF_SETBAD(iter->wr_pself, struct Dee_weakref **);
 		iter->wr_obj = NULL;
 		COMPILER_WRITE_BARRIER();
 		if (iter->wr_del) {
@@ -2248,16 +2248,16 @@ object_format_method(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	{
 		Dee_ssize_t error;
-		struct unicode_printer printer = UNICODE_PRINTER_INIT;
+		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		error = object_format_generic(self,
-		                              &unicode_printer_print,
+		                              &Dee_unicode_printer_print,
 		                              &printer, format_utf8,
 		                              WSTR_LENGTH(format_utf8));
 		if unlikely(error < 0)
 			goto err_printer;
-		return unicode_printer_pack(&printer);
+		return Dee_unicode_printer_pack(&printer);
 err_printer:
-		unicode_printer_fini(&printer);
+		Dee_unicode_printer_fini(&printer);
 	}
 err:
 	return NULL;
@@ -2379,27 +2379,27 @@ err:
 	return NULL;
 }
 
-#define DEFINE_DEPRECATED_INPLACE_BINARY(name, func)               \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL             \
-	object_##name(DeeObject *self, size_t argc,                    \
-	              DeeObject *const *argv) {                        \
-		DREF DeeObject *selfref;                                   \
-		int error;                                                 \
-		DeeObject *other;                                          \
+#define DEFINE_DEPRECATED_INPLACE_BINARY(name, func)              \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL            \
+	object_##name(DeeObject *self, size_t argc,                   \
+	              DeeObject *const *argv) {                       \
+		DREF DeeObject *selfref;                                  \
+		int error;                                                \
+		DeeObject *other;                                         \
 		DeeArg_Unpack1(err, argc, argv, "__" #name "__", &other); \
-		selfref = self;                                            \
-		Dee_Incref(selfref);                                       \
-		error = func(&selfref, other);                             \
-		if unlikely(error)                                         \
-			goto err_selfref;                                      \
-		error = DeeObject_Assign(self, selfref);                   \
-		if unlikely(error)                                         \
-			goto err_selfref;                                      \
-		return selfref;                                            \
-	err_selfref:                                                   \
-		Dee_Decref(selfref);                                       \
-	err:                                                           \
-		return NULL;                                               \
+		selfref = self;                                           \
+		Dee_Incref(selfref);                                      \
+		error = func(&selfref, other);                            \
+		if unlikely(error)                                        \
+			goto err_selfref;                                     \
+		error = DeeObject_Assign(self, selfref);                  \
+		if unlikely(error)                                        \
+			goto err_selfref;                                     \
+		return selfref;                                           \
+	err_selfref:                                                  \
+		Dee_Decref(selfref);                                      \
+	err:                                                          \
+		return NULL;                                              \
 	}
 DEFINE_DEPRECATED_INPLACE_BINARY(iadd, DeeObject_InplaceAdd)
 DEFINE_DEPRECATED_INPLACE_BINARY(isub, DeeObject_InplaceSub)
@@ -2609,7 +2609,7 @@ object_id_get(DeeObject *__restrict self) {
 	return DeeInt_NewUIntptr(DeeObject_Id(self));
 }
 
-PRIVATE DEFINE_CLSPROPERTY(object_id_get_cobj, &DeeObject_Type, &object_id_get, NULL, NULL, NULL);
+PRIVATE Dee_DEFINE_CLSPROPERTY(object_id_get_cobj, &DeeObject_Type, &object_id_get, NULL, NULL, NULL);
 PRIVATE struct type_member tpconst object_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("id", &object_id_get_cobj,
 	                      "Alias for ?#{i:id} to speed up expressions such as ${Object.id}"),
@@ -2959,7 +2959,7 @@ PRIVATE NONNULL((1)) void DCALL
 type_fini(DeeTypeObject *__restrict self) {
 	/* Clear weak references and check for revival. */
 	Dee_weakref_fini(&self->tp_module);
-	weakref_support_fini(self);
+	Dee_weakref_support_fini(self);
 	ASSERTF(self->tp_flags & TP_FHEAP,
 	        "Non heap-allocated type %k is being destroyed (This shouldn't happen)",
 	        self);
@@ -3260,7 +3260,7 @@ err:
 
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
-class_desc_serialize(struct class_desc *__restrict self,
+class_desc_serialize(struct Dee_class_desc *__restrict self,
                      DeeSerial *__restrict writer);
 
 INTDEF struct type_cmp instance_builtin_cmp;
@@ -3276,7 +3276,7 @@ type_serialize(DeeTypeObject *__restrict self,
 	if (DeeSerial_PutWeakref(writer, ADDROF(tp_module), &self->tp_module))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, DeeTypeObject);
-	weakref_support_init(out);
+	Dee_weakref_support_init(out);
 	out->tp_name     = NULL;
 	out->tp_doc      = NULL;
 	out->tp_flags    = self->tp_flags | TP_FHEAP;
@@ -3530,7 +3530,7 @@ err_missing_mandatory_init(DeeTypeObject *__restrict self) {
 
 PRIVATE char const str_shared_ctor_failed[] = "Constructor of shared object failed";
 INTDEF NONNULL((1)) void DCALL
-instance_clear_members(struct instance_desc *__restrict self, uint16_t size);
+instance_clear_members(struct Dee_instance_desc *__restrict self, uint16_t size);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_new_raw(DeeTypeObject *__restrict self) {
@@ -3548,8 +3548,8 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	/* Search for the first non-class base. */
 	first_base = self;
 	while (DeeType_IsClass(first_base)) {
-		struct class_desc *desc        = DeeClass_DESC(first_base);
-		struct instance_desc *instance = DeeInstance_DESC(desc, result);
+		struct Dee_class_desc *desc = DeeClass_DESC(first_base);
+		struct Dee_instance_desc *instance = DeeInstance_DESC(desc, result);
 		Dee_atomic_rwlock_init(&instance->id_lock);
 		bzeroc(instance->id_vtab,
 		       desc->cd_desc->cd_imemb_size,
@@ -3604,8 +3604,8 @@ err_r:
 	}
 	first_base = self;
 	while (DeeType_IsClass(first_base)) {
-		struct class_desc *desc        = DeeClass_DESC(first_base);
-		struct instance_desc *instance = DeeInstance_DESC(desc, result);
+		struct Dee_class_desc *desc = DeeClass_DESC(first_base);
+		struct Dee_instance_desc *instance = DeeInstance_DESC(desc, result);
 		instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
 		first_base = DeeType_Base(first_base);
 		if (!first_base)
@@ -3628,17 +3628,17 @@ set_basic_member(DeeTypeObject *tp_self, DeeObject *self,
 		goto done_temp;
 	do {
 		if (DeeType_IsClass(iter)) {
-			struct class_attribute *attr;
-			struct instance_desc *instance;
-			struct class_desc *desc;
+			struct Dee_class_attribute *attr;
+			struct Dee_instance_desc *instance;
+			struct Dee_class_desc *desc;
 			DREF DeeObject *old_value;
 			attr = DeeType_QueryAttributeHash(tp_self, iter,
 			                                  (DeeObject *)member_name,
 			                                  attr_hash);
 			if (!attr)
 				goto next_base;
-			if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
-			                     CLASS_ATTRIBUTE_FGETSET))
+			if (attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FCLASSMEM |
+			                     Dee_CLASS_ATTRIBUTE_FGETSET))
 				goto next_base;
 			desc     = DeeClass_DESC(iter);
 			instance = DeeInstance_DESC(desc, self);
@@ -3671,17 +3671,17 @@ set_private_basic_member(DeeTypeObject *tp_self, DeeObject *self,
 	char const *attr_name = DeeString_STR(member_name);
 	Dee_hash_t attr_hash  = DeeString_Hash(member_name);
 	if (DeeType_IsClass(tp_self)) {
-		struct class_attribute *attr;
-		struct instance_desc *instance;
-		struct class_desc *desc = DeeClass_DESC(tp_self);
+		struct Dee_class_attribute *attr;
+		struct Dee_instance_desc *instance;
+		struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
 		DREF DeeObject *old_value;
 		attr = DeeClassDesc_QueryInstanceAttributeStringHash(desc,
 		                                                     attr_name,
 		                                                     attr_hash);
 		if (!attr)
 			goto not_found;
-		if (attr->ca_flag & (CLASS_ATTRIBUTE_FCLASSMEM |
-		                     CLASS_ATTRIBUTE_FGETSET))
+		if (attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FCLASSMEM |
+		                     Dee_CLASS_ATTRIBUTE_FGETSET))
 			goto not_found;
 		instance = DeeInstance_DESC(desc, self);
 		Dee_Incref(value);
@@ -3800,8 +3800,8 @@ type_new_extended(DeeTypeObject *self, DeeObject *initializer) {
 	/* Search for the first non-class base. */
 	first_base = self;
 	while (DeeType_IsClass(first_base)) {
-		struct class_desc *desc        = DeeClass_DESC(first_base);
-		struct instance_desc *instance = DeeInstance_DESC(desc, result);
+		struct Dee_class_desc *desc = DeeClass_DESC(first_base);
+		struct Dee_instance_desc *instance = DeeInstance_DESC(desc, result);
 		Dee_atomic_rwlock_init(&instance->id_lock);
 		bzeroc(instance->id_vtab,
 		       desc->cd_desc->cd_imemb_size,
@@ -3881,8 +3881,8 @@ err_r_firstbase:
 err_r:
 	first_base = self;
 	while (DeeType_IsClass(first_base)) {
-		struct class_desc *desc        = DeeClass_DESC(first_base);
-		struct instance_desc *instance = DeeInstance_DESC(desc, result);
+		struct Dee_class_desc *desc = DeeClass_DESC(first_base);
+		struct Dee_instance_desc *instance = DeeInstance_DESC(desc, result);
 		instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
 		first_base = DeeType_Base(first_base);
 		if (!first_base)
@@ -3932,7 +3932,7 @@ type_newinstance(DeeTypeObject *self, size_t argc,
 			size_t i;
 			DeeKwdsObject *kwds = (DeeKwdsObject *)kw;
 			for (i = 0; i <= kwds->kw_mask; ++i) {
-				struct kwds_entry *ke = &kwds->kw_map[i];
+				struct Dee_kwds_entry *ke = &kwds->kw_map[i];
 				if (!ke->ke_name)
 					continue;
 				ASSERT(ke->ke_index < argc);
@@ -4116,7 +4116,7 @@ impl_type_hasprivateattribute_string_hash(DeeTypeObject *__restrict self,
 	/* TODO: Lookup the attribute in the member cache, and
 	 *       see which type is set as the declaring type! */
 	if (DeeType_IsClass(self)) {
-		struct class_desc *desc = DeeClass_DESC(self);
+		struct Dee_class_desc *desc = DeeClass_DESC(self);
 		if (DeeClassDesc_QueryInstanceAttributeStringHash(desc, name_str, name_hash) != NULL)
 			goto found;
 	} else {
@@ -4212,7 +4212,7 @@ type_hasoperator(DeeTypeObject *self, size_t argc,
 	                    &name, &op_argc))
 		goto err;
 	if (DeeString_Check(name)) {
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self),
 		                                     DeeString_STR(name),
 		                                     op_argc);
@@ -4242,7 +4242,7 @@ type_hasprivateoperator(DeeTypeObject *self, size_t argc,
 	                    &name, &op_argc))
 		goto err;
 	if (DeeString_Check(name)) {
-		struct opinfo const *info;
+		struct Dee_opinfo const *info;
 		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self),
 		                                     DeeString_STR(name),
 		                                     op_argc);
@@ -4766,7 +4766,7 @@ type_issingleton(DeeTypeObject *__restrict self) {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
-get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
+get_module_from_addr(struct Dee_class_desc *__restrict my_class, uint16_t addr) {
 	DeeObject *slot;
 	DREF DeeModuleObject *result = NULL;
 	Dee_class_desc_lock_read(my_class);
@@ -4783,7 +4783,7 @@ get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeModuleObject *DCALL
 DeeClass_GetModule(DeeTypeObject *__restrict self) {
-	struct class_desc *my_class    = self->tp_class;
+	struct Dee_class_desc *my_class = self->tp_class;
 	DeeClassDescriptorObject *desc = my_class->cd_desc;
 	DREF DeeModuleObject *result;
 	size_t i;
@@ -4807,14 +4807,14 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 		if (result)
 			goto done;
 		if ((desc->cd_cattr_list[i].ca_flag &
-		     (CLASS_ATTRIBUTE_FREADONLY | CLASS_ATTRIBUTE_FGETSET)) ==
-		    (CLASS_ATTRIBUTE_FGETSET)) {
+		     (Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FGETSET)) ==
+		    (Dee_CLASS_ATTRIBUTE_FGETSET)) {
 			result = get_module_from_addr(my_class,
-			                              desc->cd_cattr_list[i].ca_addr + CLASS_GETSET_DEL);
+			                              desc->cd_cattr_list[i].ca_addr + Dee_CLASS_GETSET_DEL);
 			if (result)
 				goto done;
 			result = get_module_from_addr(my_class,
-			                              desc->cd_cattr_list[i].ca_addr + CLASS_GETSET_SET);
+			                              desc->cd_cattr_list[i].ca_addr + Dee_CLASS_GETSET_SET);
 			if (result)
 				goto done;
 		}
@@ -4822,40 +4822,40 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 	for (i = 0; i <= desc->cd_iattr_mask; ++i) {
 		if (!desc->cd_iattr_list[i].ca_name)
 			continue;
-		if (!(desc->cd_iattr_list[i].ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+		if (!(desc->cd_iattr_list[i].ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM))
 			continue;
-#if CLASS_GETSET_GET == 0
+#if Dee_CLASS_GETSET_GET == 0
 		result = get_module_from_addr(my_class,
 		                              desc->cd_iattr_list[i].ca_addr);
 		if (result)
 			goto done;
-#endif /* CLASS_GETSET_GET == 0 */
+#endif /* Dee_CLASS_GETSET_GET == 0 */
 		if ((desc->cd_iattr_list[i].ca_flag &
-		     (CLASS_ATTRIBUTE_FREADONLY | CLASS_ATTRIBUTE_FGETSET)) ==
-		    (CLASS_ATTRIBUTE_FGETSET)) {
-#if CLASS_GETSET_GET != 0
+		     (Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FGETSET)) ==
+		    (Dee_CLASS_ATTRIBUTE_FGETSET)) {
+#if Dee_CLASS_GETSET_GET != 0
 			result = get_module_from_addr(my_class,
-			                              desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_GET);
+			                              desc->cd_iattr_list[i].ca_addr + Dee_CLASS_GETSET_GET);
 			if (result)
 				goto done;
-#endif /* CLASS_GETSET_GET != 0 */
+#endif /* Dee_CLASS_GETSET_GET != 0 */
 			result = get_module_from_addr(my_class,
-			                              desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_DEL);
+			                              desc->cd_iattr_list[i].ca_addr + Dee_CLASS_GETSET_DEL);
 			if (result)
 				goto done;
 			result = get_module_from_addr(my_class,
-			                              desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_SET);
+			                              desc->cd_iattr_list[i].ca_addr + Dee_CLASS_GETSET_SET);
 			if (result)
 				goto done;
 		}
-#if CLASS_GETSET_GET != 0
+#if Dee_CLASS_GETSET_GET != 0
 		else {
 			result = get_module_from_addr(my_class,
 			                              desc->cd_iattr_list[i].ca_addr);
 			if (result)
 				goto done;
 		}
-#endif /* CLASS_GETSET_GET != 0 */
+#endif /* Dee_CLASS_GETSET_GET != 0 */
 	}
 	return NULL;
 done:
@@ -5559,7 +5559,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	 *       behavior that "deepcopy MyClass()" will just return another instance of
 	 *       `MyClass', and not an instance of a new class that is a copy of MyClass! */
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT | TP_FDEEPIMMUTABLE,
-	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
+	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type, /* class Type: Object { ... } */
 	/* .tp_init = */ {

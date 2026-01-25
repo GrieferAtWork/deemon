@@ -203,7 +203,7 @@ yes:
 /* Ensure that the given `filename' describes an absolute path. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 	char const *iter, *after_space, *begin, *end, *flush_start, *flush_end;
 	char ch;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
@@ -218,7 +218,7 @@ DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Strip leading space. */
-	iter = after_space = unicode_skipspaceutf8_n(begin, end);
+	iter = after_space = Dee_unicode_skipspaceutf8_n(begin, end);
 	if (!DeeSystem_IsAbs(iter)) {
 		/* Print the current working directory when the given path isn't absolute. */
 		if unlikely(DeeSystem_PrintPwd(&printer, true) < 0)
@@ -226,17 +226,17 @@ DeeSystem_MakeNormalAndAbsolute(/*String*/ DeeObject *__restrict filename) {
 
 		/* Handle drive-relative paths. */
 #ifdef DeeSystem_HAVE_FS_DRIVES
-		if (DeeSystem_IsSep(iter[0]) && UNICODE_PRINTER_LENGTH(&printer)) {
+		if (DeeSystem_IsSep(iter[0]) && Dee_UNICODE_PRINTER_LENGTH(&printer)) {
 			size_t index = 0;
 
 			/* This sep must exist because it was printed by `DeeSystem_PrintPwd()' */
-			while ((++index, UNICODE_PRINTER_GETCHAR(&printer, index - 1) != DeeSystem_SEP))
+			while ((++index, Dee_UNICODE_PRINTER_GETCHAR(&printer, index - 1) != DeeSystem_SEP))
 				;
-			unicode_printer_truncate(&printer, index);
+			Dee_unicode_printer_truncate(&printer, index);
 
 			/* Strip leading slashes. */
 			for (;;) {
-				iter = unicode_skipspaceutf8_n(iter, end);
+				iter = Dee_unicode_skipspaceutf8_n(iter, end);
 				if (iter >= end)
 					break;
 				if (!DeeSystem_IsSep(*iter))
@@ -269,14 +269,14 @@ next:
 
 		/* Skip multiple slashes and whitespace following a path separator. */
 		for (;;) {
-			iter = unicode_skipspaceutf8_n(iter, end);
+			iter = Dee_unicode_skipspaceutf8_n(iter, end);
 			if (iter >= end)
 				break;
 			if (!DeeSystem_IsSep(*iter))
 				break;
 			++iter;
 		}
-		flush_end = unicode_skipspaceutf8_rev_n(flush_end, flush_start);
+		flush_end = Dee_unicode_skipspaceutf8_rev_n(flush_end, flush_start);
 
 		/* Analyze the last path portion for being a special name (`.' or `..') */
 		if (flush_end[-1] == '.') {
@@ -285,12 +285,12 @@ next:
 				size_t printer_length, new_end;
 
 				/* Delete the last directory that was written. */
-				printer_length = UNICODE_PRINTER_LENGTH(&printer);
+				printer_length = Dee_UNICODE_PRINTER_LENGTH(&printer);
 				if (!printer_length)
 					goto do_flush_after_sep;
-				if (UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == DeeSystem_SEP)
+				if (Dee_UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == DeeSystem_SEP)
 					--printer_length;
-				new_end = unicode_printer_memrchr(&printer, DeeSystem_SEP, 0, printer_length);
+				new_end = Dee_unicode_printer_memrchr(&printer, DeeSystem_SEP, 0, printer_length);
 				if (new_end == (size_t)-1) {
 					/* Special handling to trim a path segment at the very start of the given path. */
 					if (printer_length == 0)
@@ -301,7 +301,7 @@ next:
 				}
 
 				/* Truncate the valid length of the printer to after the previous slash. */
-				unicode_printer_truncate(&printer, new_end);
+				Dee_unicode_printer_truncate(&printer, new_end);
 				goto done_flush;
 			} else if (flush_end[-3] == DeeSystem_SEP && flush_end - 3 >= flush_start) {
 				/* Parent-directory-reference. */
@@ -311,8 +311,8 @@ next:
 				if (!new_end)
 					goto done_flush;
 				flush_end = new_end + 1; /* Include the previous sep in this flush. */
-				if (unicode_printer_print(&printer, flush_start,
-				                          (size_t)(flush_end - flush_start)) < 0)
+				if (Dee_unicode_printer_print(&printer, flush_start,
+				                              (size_t)(flush_end - flush_start)) < 0)
 					goto err;
 				goto done_flush;
 			} else if (flush_end - 1 == flush_start) {
@@ -347,8 +347,8 @@ do_flush_after_sep:
 		}
 		/* Flush everything prior to the path. */
 		ASSERT(flush_end >= flush_start);
-		if (unicode_printer_print(&printer, flush_start,
-		                          (size_t)(flush_end - flush_start)) < 0)
+		if (Dee_unicode_printer_print(&printer, flush_start,
+		                              (size_t)(flush_end - flush_start)) < 0)
 			goto err;
 		flush_start = iter;
 		if (did_print_sep) {
@@ -361,7 +361,7 @@ do_flush_after_sep:
 			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar' */
 		} else {
 			/* The slash must be printed explicitly: `foo / bar' */
-			if (unicode_printer_putascii(&printer, DeeSystem_SEP) < 0)
+			if (Dee_unicode_printer_putascii(&printer, DeeSystem_SEP) < 0)
 				goto err;
 		}
 done_flush_nostart:
@@ -378,8 +378,8 @@ done:
 
 		/* Check for special case: The printer was never used.
 		 * If this is the case, we can simply re-return the given path. */
-		if (UNICODE_PRINTER_ISEMPTY(&printer) && (after_space == begin)) {
-			unicode_printer_fini(&printer);
+		if (Dee_UNICODE_PRINTER_ISEMPTY(&printer) && (after_space == begin)) {
+			Dee_unicode_printer_fini(&printer);
 #ifdef CONFIG_HOST_WINDOWS
 return_unmodified:
 #endif /* CONFIG_HOST_WINDOWS */
@@ -387,14 +387,14 @@ return_unmodified:
 		}
 
 		/* Actually print the remainder. */
-		if (unicode_printer_print(&printer, flush_start,
-		                          (size_t)(iter - flush_start)) < 0)
+		if (Dee_unicode_printer_print(&printer, flush_start,
+		                              (size_t)(iter - flush_start)) < 0)
 			goto err;
 	}
 	/* Pack everything together. */
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -412,7 +412,7 @@ DeeSystem_IsNormalAndAbsolute(/*utf-8*/ char const *filename, size_t filename_le
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Strip leading space. */
-	filename = unicode_skipspaceutf8_n(filename, end);
+	filename = Dee_unicode_skipspaceutf8_n(filename, end);
 	if (!DeeSystem_IsAbsN(filename, (size_t)(end - filename)))
 		goto no;
 	iter = flush_start = filename;
@@ -434,9 +434,9 @@ next:
 handle_eof:
 		flush_end = iter - 1;
 		/* Skip multiple slashes and whitespace following a path separator. */
-		if (iter != unicode_skipspaceutf8_n(iter, end))
+		if (iter != Dee_unicode_skipspaceutf8_n(iter, end))
 			goto no;
-		if (flush_end != unicode_skipspaceutf8_rev_n(flush_end, flush_start))
+		if (flush_end != Dee_unicode_skipspaceutf8_rev_n(flush_end, flush_start))
 			goto no;
 
 		/* Analyze the last path portion for being a special name (`.' or `..') */
@@ -473,7 +473,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 #ifdef DeeSystem_PrintPwd_USE_GetCurrentDirectoryW
 	LPWSTR buffer;
 	DWORD new_bufsize, bufsize = PATH_MAX;
-	buffer = unicode_printer_alloc_wchar(printer, bufsize);
+	buffer = Dee_unicode_printer_alloc_wchar(printer, bufsize);
 	if unlikely(!buffer)
 		goto err;
 again:
@@ -499,7 +499,7 @@ DWORD dwError;
 	if (new_bufsize > bufsize) {
 		LPWSTR new_buffer;
 		/* Increase the buffer and try again. */
-		new_buffer = unicode_printer_resize_wchar(printer, buffer, new_bufsize);
+		new_buffer = Dee_unicode_printer_resize_wchar(printer, buffer, new_bufsize);
 		if unlikely(!new_buffer)
 			goto err_release;
 		bufsize = new_bufsize;
@@ -520,20 +520,20 @@ DWORD dwError;
 		++new_bufsize;
 		include_trailing_sep = false;
 	}
-	if unlikely(unicode_printer_commit_wchar(printer, buffer, new_bufsize) < 0)
+	if unlikely(Dee_unicode_printer_commit_wchar(printer, buffer, new_bufsize) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {
 		uint32_t ch;
-		ch = UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1);
+		ch = Dee_UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1);
 		if (!DeeSystem_IsSep(ch)) {
-			if (unicode_printer_putascii(printer, DeeSystem_SEP))
+			if (Dee_unicode_printer_putascii(printer, DeeSystem_SEP))
 				goto err;
 		}
 	}
 	return 0;
 err_release:
-	unicode_printer_free_wchar(printer, buffer);
+	Dee_unicode_printer_free_wchar(printer, buffer);
 err:
 	return -1;
 #endif /* DeeSystem_PrintPwd_USE_GetCurrentDirectoryW */
@@ -547,8 +547,8 @@ err:
 #endif /* !DeeSystem_PrintPwd_USE_wgetcwd */
 	IFELSE_WCHAR(Dee_wchar_t, char) *buffer, *new_buffer;
 	size_t bufsize = PATH_MAX, buflen;
-	buffer = IFELSE_WCHAR(unicode_printer_alloc_wchar(printer, bufsize),
-	                      unicode_printer_alloc_utf8(printer, bufsize));
+	buffer = IFELSE_WCHAR(Dee_unicode_printer_alloc_wchar(printer, bufsize),
+	                      Dee_unicode_printer_alloc_utf8(printer, bufsize));
 	if unlikely(!buffer)
 		goto err;
 #ifdef EINTR
@@ -586,8 +586,8 @@ again:
 #endif /* CONFIG_HAVE_errno && ERANGE */
 		DBG_ALIGNMENT_ENABLE();
 		bufsize *= 2;
-		new_buffer = IFELSE_WCHAR(unicode_printer_resize_wchar(printer, buffer, bufsize),
-		                          unicode_printer_resize_utf8(printer, buffer, bufsize));
+		new_buffer = IFELSE_WCHAR(Dee_unicode_printer_resize_wchar(printer, buffer, bufsize),
+		                          Dee_unicode_printer_resize_utf8(printer, buffer, bufsize));
 		if unlikely(!new_buffer)
 			goto err_release;
 		DBG_ALIGNMENT_DISABLE();
@@ -610,22 +610,22 @@ again:
 		++buflen;
 		include_trailing_sep = false;
 	}
-	if unlikely(IFELSE_WCHAR(unicode_printer_commit_wchar(printer, buffer, buflen),
-	                         unicode_printer_commit_utf8(printer, buffer, buflen)) < 0)
+	if unlikely(IFELSE_WCHAR(Dee_unicode_printer_commit_wchar(printer, buffer, buflen),
+	                         Dee_unicode_printer_commit_utf8(printer, buffer, buflen)) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {
 		uint32_t ch;
-		ch = UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1);
+		ch = Dee_UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1);
 		if (!DeeSystem_IsSep(ch)) {
-			if (unicode_printer_putascii(printer, DeeSystem_SEP))
+			if (Dee_unicode_printer_putascii(printer, DeeSystem_SEP))
 				goto err;
 		}
 	}
 	return 0;
 err_release:
-	IFELSE_WCHAR(unicode_printer_free_wchar(printer, buffer),
-	             unicode_printer_free_utf8(printer, buffer));
+	IFELSE_WCHAR(Dee_unicode_printer_free_wchar(printer, buffer),
+	             Dee_unicode_printer_free_utf8(printer, buffer));
 err:
 	return -1;
 #undef IFELSE_WCHAR
@@ -650,14 +650,14 @@ err:
 		if (!include_trailing_sep)
 			pwdlen = 1;
 	}
-	if (unicode_printer_printutf8(printer, pwd, pwdlen) < 0)
+	if (Dee_unicode_printer_printutf8(printer, pwd, pwdlen) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {
 		uint32_t ch;
-		ch = UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1);
+		ch = Dee_UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1);
 		if (!DeeSystem_IsSep(ch)) {
-			if (unicode_printer_putascii(printer, DeeSystem_SEP))
+			if (Dee_unicode_printer_putascii(printer, DeeSystem_SEP))
 				goto err;
 		}
 	}
@@ -668,9 +668,9 @@ err:
 
 #ifdef DeeSystem_PrintPwd_USE_DOT
 	Dee_ssize_t error;
-	error = unicode_printer_printutf8(printer,
-	                                  "." DeeSystem_SEP_S,
-	                                  include_trailing_sep ? 2 : 1);
+	error = Dee_unicode_printer_printutf8(printer,
+	                                      "." DeeSystem_SEP_S,
+	                                      include_trailing_sep ? 2 : 1);
 	if likely(error > 0)
 		error = 0;
 	return (int)error;

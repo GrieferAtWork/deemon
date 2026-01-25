@@ -730,9 +730,9 @@ dkwobjmethod_vcallf_len(Dee_kwobjmethod_t self,
 		goto err_noargs;
 
 	/* Use the first argument as the this-argument. */
-	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	thisarg = Dee_VPPackf((char const **)&format, (struct Dee_va_list_struct *)VALIST_ADDR(args));
 	if unlikely(!thisarg) {
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
@@ -763,9 +763,9 @@ dobjmethod_vcallf_len(Dee_objmethod_t self,
 		goto err_noargs;
 
 	/* Use the first argument as the this-argument. */
-	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	thisarg = Dee_VPPackf((char const **)&format, (struct Dee_va_list_struct *)VALIST_ADDR(args));
 	if unlikely(!thisarg) {
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
@@ -801,9 +801,9 @@ dkwobjmethod_vcallf(Dee_kwobjmethod_t self,
 		goto err_noargs;
 
 	/* Use the first argument as the this-argument. */
-	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	thisarg = Dee_VPPackf((char const **)&format, (struct Dee_va_list_struct *)VALIST_ADDR(args));
 	if unlikely(!thisarg) {
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
@@ -834,9 +834,9 @@ dobjmethod_vcallf(Dee_objmethod_t self,
 		goto err_noargs;
 
 	/* Use the first argument as the this-argument. */
-	thisarg = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	thisarg = Dee_VPPackf((char const **)&format, (struct Dee_va_list_struct *)VALIST_ADDR(args));
 	if unlikely(!thisarg) {
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
@@ -1011,7 +1011,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #define LOCAL_err_classmethod_requires_at_least_1_argument() err_classmethod_requires_at_least_1_argument_string(tp_self, LOCAL_attr)
 #endif /* !LOCAL_HAS_len */
 #ifdef LOCAL_IS_CLASS
-#define LOCAL_DeeInstance_DESC(desc) class_desc_as_instance(desc)
+#define LOCAL_DeeInstance_DESC(desc) Dee_class_desc_as_instance(desc)
 #else /* LOCAL_IS_CLASS */
 #define LOCAL_DeeInstance_DESC(desc) DeeInstance_DESC(desc, LOCAL_self)
 #endif /* !LOCAL_IS_CLASS */
@@ -1041,11 +1041,11 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 		uint16_t type;
 		item = Dee_membercache_table_hashit(table, i);
 		type = atomic_read(&item->mcs_type);
-		if (type == MEMBERCACHE_UNUSED)
+		if (type == Dee_MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != LOCAL_hash)
 			continue;
-		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+		if unlikely(type == Dee_MEMBERCACHE_UNINITIALIZED)
 			continue; /* Don't dereference uninitialized items! */
 		if (!LOCAL_Dee_membercache_slot_matches(item))
 			continue;
@@ -1062,22 +1062,22 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 		Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 		return true;
 #elif defined(LOCAL_IS_FINDINFO)
-		STATIC_ASSERT(Dee_ATTRINFO_METHOD == MEMBERCACHE_METHOD);
-		STATIC_ASSERT(Dee_ATTRINFO_GETSET == MEMBERCACHE_GETSET);
-		STATIC_ASSERT(Dee_ATTRINFO_MEMBER == MEMBERCACHE_MEMBER);
-		STATIC_ASSERT(Dee_ATTRINFO_ATTR == MEMBERCACHE_ATTRIB);
-		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_METHOD == MEMBERCACHE_INSTANCE_METHOD);
-		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_GETSET == MEMBERCACHE_INSTANCE_GETSET);
-		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_MEMBER == MEMBERCACHE_INSTANCE_MEMBER);
-		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_ATTR == MEMBERCACHE_INSTANCE_ATTRIB);
+		STATIC_ASSERT(Dee_ATTRINFO_METHOD == Dee_MEMBERCACHE_METHOD);
+		STATIC_ASSERT(Dee_ATTRINFO_GETSET == Dee_MEMBERCACHE_GETSET);
+		STATIC_ASSERT(Dee_ATTRINFO_MEMBER == Dee_MEMBERCACHE_MEMBER);
+		STATIC_ASSERT(Dee_ATTRINFO_ATTR == Dee_MEMBERCACHE_ATTRIB);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_METHOD == Dee_MEMBERCACHE_INSTANCE_METHOD);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_GETSET == Dee_MEMBERCACHE_INSTANCE_GETSET);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_MEMBER == Dee_MEMBERCACHE_INSTANCE_MEMBER);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_ATTR == Dee_MEMBERCACHE_INSTANCE_ATTRIB);
 		retinfo->ai_type = type;
 		retinfo->ai_decl = (DeeObject *)item->mcs_decl;
 		switch (type) {
 
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_ATTRIB:
+		case Dee_MEMBERCACHE_INSTANCE_ATTRIB:
 #endif /* LOCAL_IS_CLASS */
-		case MEMBERCACHE_ATTRIB:
+		case Dee_MEMBERCACHE_ATTRIB:
 			retinfo->ai_value.v_attr = item->mcs_attrib.a_attr;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			break;
@@ -1091,7 +1091,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			 * and overall, doing it this was is still faster that not using the
 			 * cache at all! */
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_METHOD: {
+		case Dee_MEMBERCACHE_METHOD: {
 			struct Dee_type_method memb;
 			struct Dee_type_method const *iter;
 			memcpy(&memb, &item->mcs_method, sizeof(memb));
@@ -1106,7 +1106,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			retinfo->ai_value.v_method = iter;
 		}	break;
 
-		case MEMBERCACHE_GETSET: {
+		case Dee_MEMBERCACHE_GETSET: {
 			struct Dee_type_getset memb;
 			struct Dee_type_getset const *iter;
 			memcpy(&memb, &item->mcs_getset, sizeof(memb));
@@ -1121,7 +1121,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			retinfo->ai_value.v_getset = iter;
 		}	break;
 
-		case MEMBERCACHE_MEMBER: {
+		case Dee_MEMBERCACHE_MEMBER: {
 			struct Dee_type_member memb;
 			struct Dee_type_member const *iter;
 			memcpy(&memb, &item->mcs_member, sizeof(memb));
@@ -1138,9 +1138,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #endif /* LOCAL_IS_CLASS */
 
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_METHOD:
+		case Dee_MEMBERCACHE_INSTANCE_METHOD:
 #else /* LOCAL_IS_CLASS */
-		case MEMBERCACHE_METHOD:
+		case Dee_MEMBERCACHE_METHOD:
 #endif /* !LOCAL_IS_CLASS */
 		{
 			struct Dee_type_method memb;
@@ -1158,9 +1158,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 		}	break;
 
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_GETSET:
+		case Dee_MEMBERCACHE_INSTANCE_GETSET:
 #else /* LOCAL_IS_CLASS */
-		case MEMBERCACHE_GETSET:
+		case Dee_MEMBERCACHE_GETSET:
 #endif /* !LOCAL_IS_CLASS */
 		{
 			struct Dee_type_getset memb;
@@ -1178,9 +1178,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 		}	break;
 
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_MEMBER:
+		case Dee_MEMBERCACHE_INSTANCE_MEMBER:
 #else /* LOCAL_IS_CLASS */
-		case MEMBERCACHE_MEMBER:
+		case Dee_MEMBERCACHE_MEMBER:
 #endif /* !LOCAL_IS_CLASS */
 		{
 			struct Dee_type_member memb;
@@ -1207,7 +1207,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
      defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) || defined(LOCAL_IS_VCALLF))
 		/* Get or Call... */
 
-		case MEMBERCACHE_METHOD: {
+		case Dee_MEMBERCACHE_METHOD: {
 			Dee_objmethod_t func = item->mcs_method.m_func;
 #ifdef LOCAL_IS_GET
 #ifdef LOCAL_HAS_self
@@ -1272,7 +1272,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #endif /* !LOCAL_IS_GET */
 		}	break;
 
-		case MEMBERCACHE_GETSET: {
+		case Dee_MEMBERCACHE_GETSET: {
 #ifdef LOCAL_IS_GET
 			Dee_getmethod_t get = item->mcs_getset.gs_get;
 #ifndef LOCAL_HAS_self
@@ -1347,7 +1347,7 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_GET */
 		}	break;
 
-		case MEMBERCACHE_MEMBER: {
+		case Dee_MEMBERCACHE_MEMBER: {
 #ifdef LOCAL_IS_GET
 #ifdef LOCAL_HAS_self
 			struct type_member_buffer buf;
@@ -1390,11 +1390,11 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_GET */
 		}	break;
 
-		case MEMBERCACHE_ATTRIB: {
+		case Dee_MEMBERCACHE_ATTRIB: {
 #ifdef LOCAL_IS_GET
-			struct class_attribute *catt = item->mcs_attrib.a_attr;
+			struct Dee_class_attribute *catt = item->mcs_attrib.a_attr;
 #ifdef LOCAL_HAS_self
-			struct class_desc *desc = item->mcs_attrib.a_desc;
+			struct Dee_class_desc *desc = item->mcs_attrib.a_desc;
 #else /* LOCAL_HAS_self */
 			DeeTypeObject *decl = item->mcs_decl;
 #endif /* !LOCAL_HAS_self */
@@ -1408,15 +1408,15 @@ check_and_invoke_callback:
 #endif /* !LOCAL_HAS_self */
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_HAS_self
-			struct class_attribute *catt;
-			struct class_desc *desc;
+			struct Dee_class_attribute *catt;
+			struct Dee_class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			return LOCAL_invoke_attribute(desc, LOCAL_DeeInstance_DESC(desc),
 			                              LOCAL_self, catt);
 #else /* LOCAL_HAS_self */
-			struct class_attribute *catt;
+			struct Dee_class_attribute *catt;
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
@@ -1427,7 +1427,7 @@ check_and_invoke_callback:
 		}	break;
 
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_METHOD: {
+		case Dee_MEMBERCACHE_INSTANCE_METHOD: {
 			Dee_objmethod_t func;
 			DeeTypeObject *decl;
 			func = item->mcs_method.m_func;
@@ -1467,7 +1467,7 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_GET */
 		}	break;
 
-		case MEMBERCACHE_INSTANCE_GETSET: {
+		case Dee_MEMBERCACHE_INSTANCE_GETSET: {
 #ifdef LOCAL_IS_GET
 			Dee_getmethod_t get = item->mcs_getset.gs_get;
 			Dee_delmethod_t del = item->mcs_getset.gs_del;
@@ -1504,7 +1504,7 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_GET */
 		}	break;
 
-		case MEMBERCACHE_INSTANCE_MEMBER: {
+		case Dee_MEMBERCACHE_INSTANCE_MEMBER: {
 #ifdef LOCAL_IS_GET
 			struct type_member member;
 			DeeTypeObject *decl;
@@ -1532,16 +1532,16 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_GET */
 		}	break;
 
-		case MEMBERCACHE_INSTANCE_ATTRIB: {
+		case Dee_MEMBERCACHE_INSTANCE_ATTRIB: {
 #ifdef LOCAL_IS_GET
-			struct class_attribute *catt;
+			struct Dee_class_attribute *catt;
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 			return DeeClass_GetInstanceAttribute(decl, catt);
 #else /* LOCAL_IS_GET */
-			struct class_attribute *catt;
+			struct Dee_class_attribute *catt;
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
@@ -1555,15 +1555,15 @@ check_and_invoke_callback:
 		/* Bound, Delete, or Set */
 
 #ifndef LOCAL_IS_SET_BASIC
-		case MEMBERCACHE_METHOD:
+		case Dee_MEMBERCACHE_METHOD:
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_METHOD:
-		case MEMBERCACHE_INSTANCE_GETSET:
-		case MEMBERCACHE_INSTANCE_MEMBER:
+		case Dee_MEMBERCACHE_INSTANCE_METHOD:
+		case Dee_MEMBERCACHE_INSTANCE_GETSET:
+		case Dee_MEMBERCACHE_INSTANCE_MEMBER:
 #endif /* LOCAL_IS_CLASS */
 #ifndef LOCAL_HAS_self
-		case MEMBERCACHE_GETSET:
-		case MEMBERCACHE_MEMBER:
+		case Dee_MEMBERCACHE_GETSET:
+		case Dee_MEMBERCACHE_MEMBER:
 #endif /* !LOCAL_HAS_self */
 		{
 #ifdef LOCAL_IS_BOUND
@@ -1584,7 +1584,7 @@ check_and_invoke_callback:
 		}	break;
 
 #ifdef LOCAL_HAS_self
-		case MEMBERCACHE_GETSET: {
+		case Dee_MEMBERCACHE_GETSET: {
 #ifdef LOCAL_IS_BOUND
 			Dee_boundmethod_t bound;
 			Dee_getmethod_t getter;
@@ -1643,7 +1643,7 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_SET_BASIC */
 
 #ifdef LOCAL_HAS_self
-		case MEMBERCACHE_MEMBER: {
+		case Dee_MEMBERCACHE_MEMBER: {
 			struct type_member_buffer buf;
 			type_member_buffer_init(&buf, &item->mcs_member);
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
@@ -1662,9 +1662,9 @@ check_and_invoke_callback:
 		}	break;
 #endif /* LOCAL_HAS_self */
 
-		case MEMBERCACHE_ATTRIB: {
+		case Dee_MEMBERCACHE_ATTRIB: {
 #ifdef LOCAL_IS_INSTANCE
-			struct class_attribute *catt;
+			struct Dee_class_attribute *catt;
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
@@ -1679,8 +1679,8 @@ check_and_invoke_callback:
 #error "Invalid configuration"
 #endif /* !... */
 #else /* LOCAL_IS_INSTANCE */
-			struct class_attribute *catt;
-			struct class_desc *desc;
+			struct Dee_class_attribute *catt;
+			struct Dee_class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
@@ -1697,8 +1697,8 @@ check_and_invoke_callback:
 		}	break;
 
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_ATTRIB: {
-			struct class_attribute *catt;
+		case Dee_MEMBERCACHE_INSTANCE_ATTRIB: {
+			struct Dee_class_attribute *catt;
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
@@ -1731,14 +1731,14 @@ check_and_invoke_callback:
 #define LOCAL_tp_getsets tp_getsets
 #define LOCAL_tp_members tp_members
 #endif /* !LOCAL_IS_CLASS */
-		case MEMBERCACHE_METHOD:
+		case Dee_MEMBERCACHE_METHOD:
 			result->ad_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
 			result->ad_doc = item->mcs_method.m_doc;
 			result->ad_info.ai_type = Dee_ATTRINFO_METHOD;
 			result->ad_info.ai_value.v_method = locate_type_method(item->mcs_decl->LOCAL_tp_methods, item->mcs_method.m_name);
 			break;
 
-		case MEMBERCACHE_GETSET:
+		case Dee_MEMBERCACHE_GETSET:
 			result->ad_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_PROPERTY;
 			result->ad_doc = item->mcs_getset.gs_doc;
 			result->ad_info.ai_type = Dee_ATTRINFO_GETSET;
@@ -1751,7 +1751,7 @@ check_and_invoke_callback:
 				result->ad_perm |= Dee_ATTRPERM_F_CANSET;
 			break;
 
-		case MEMBERCACHE_MEMBER:
+		case Dee_MEMBERCACHE_MEMBER:
 			result->ad_perm = LOCAL_ATTR_xMEMBER | Dee_ATTRPERM_F_CANGET;
 			result->ad_doc = item->mcs_member.m_doc;
 			result->ad_info.ai_type = Dee_ATTRINFO_MEMBER;
@@ -1765,9 +1765,9 @@ check_and_invoke_callback:
 #undef LOCAL_tp_getsets
 #undef LOCAL_tp_members
 
-		case MEMBERCACHE_ATTRIB: {
-			struct class_attribute *catt;
-			struct instance_desc *inst;
+		case Dee_MEMBERCACHE_ATTRIB: {
+			struct Dee_class_attribute *catt;
+			struct Dee_instance_desc *inst;
 			catt = item->mcs_attrib.a_attr;
 			result->ad_info.ai_type = Dee_ATTRINFO_ATTR;
 			result->ad_info.ai_value.v_attr = catt;
@@ -1780,20 +1780,20 @@ check_and_invoke_callback:
 				result->ad_doc = DeeString_STR(catt->ca_doc);
 				Dee_Incref(catt->ca_doc);
 			}
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FPRIVATE)
 				result->ad_perm |= Dee_ATTRPERM_F_PRIVATE;
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				result->ad_perm |= Dee_ATTRPERM_F_PROPERTY;
-			} else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			} else if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				result->ad_perm |= Dee_ATTRPERM_F_CANCALL;
 			}
 
 #ifdef LOCAL_IS_CLASS
-			inst = class_desc_as_instance(item->mcs_attrib.a_desc);
+			inst = Dee_class_desc_as_instance(item->mcs_attrib.a_desc);
 #else /* LOCAL_IS_CLASS */
 			inst = NULL;
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
-				inst = class_desc_as_instance(item->mcs_attrib.a_desc);
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
+				inst = Dee_class_desc_as_instance(item->mcs_attrib.a_desc);
 			} else if (instance) {
 				inst = DeeInstance_DESC(item->mcs_attrib.a_desc, instance);
 			}
@@ -1801,31 +1801,31 @@ check_and_invoke_callback:
 #endif /* !LOCAL_IS_CLASS */
 			{
 				Dee_instance_desc_lock_read(inst);
-				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
+				if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+					if (!inst->id_vtab[catt->ca_addr + Dee_CLASS_GETSET_GET])
 						result->ad_perm &= ~Dee_ATTRPERM_F_CANGET;
-					if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
+					if (!(catt->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
+						if (!inst->id_vtab[catt->ca_addr + Dee_CLASS_GETSET_DEL])
 							result->ad_perm &= ~Dee_ATTRPERM_F_CANDEL;
-						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
+						if (!inst->id_vtab[catt->ca_addr + Dee_CLASS_GETSET_SET])
 							result->ad_perm &= ~Dee_ATTRPERM_F_CANSET;
 					}
 				}
 				Dee_instance_desc_lock_endread(inst);
 			}
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 				result->ad_perm &= ~(Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		}	break;
 
 #ifdef LOCAL_IS_CLASS
-		case MEMBERCACHE_INSTANCE_METHOD:
+		case Dee_MEMBERCACHE_INSTANCE_METHOD:
 			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANCALL;
 			result->ad_doc = item->mcs_method.m_doc;
 			result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_METHOD;
 			result->ad_info.ai_value.v_instance_method = locate_type_method(item->mcs_decl->tp_methods, item->mcs_method.m_name);
 			break;
 
-		case MEMBERCACHE_INSTANCE_GETSET:
+		case Dee_MEMBERCACHE_INSTANCE_GETSET:
 			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_PROPERTY;
 			result->ad_doc = item->mcs_getset.gs_doc;
 			result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_GETSET;
@@ -1838,7 +1838,7 @@ check_and_invoke_callback:
 				result->ad_perm |= Dee_ATTRPERM_F_CANSET;
 			break;
 
-		case MEMBERCACHE_INSTANCE_MEMBER:
+		case Dee_MEMBERCACHE_INSTANCE_MEMBER:
 			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER;
 			result->ad_doc = item->mcs_member.m_doc;
 			result->ad_info.ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
@@ -1849,8 +1849,8 @@ check_and_invoke_callback:
 			}
 			break;
 
-		case MEMBERCACHE_INSTANCE_ATTRIB: {
-			struct class_attribute *catt;
+		case Dee_MEMBERCACHE_INSTANCE_ATTRIB: {
+			struct Dee_class_attribute *catt;
 			result->ad_doc = NULL;
 			catt = item->mcs_attrib.a_attr;
 			result->ad_perm = Dee_ATTRPERM_F_CMEMBER | Dee_ATTRPERM_F_IMEMBER | Dee_ATTRPERM_F_WRAPPER | Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET;
@@ -1863,30 +1863,30 @@ check_and_invoke_callback:
 				result->ad_doc = DeeString_STR(catt->ca_doc);
 				Dee_Incref(catt->ca_doc);
 			}
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FPRIVATE)
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FPRIVATE)
 				result->ad_perm |= Dee_ATTRPERM_F_PRIVATE;
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
 				result->ad_perm |= Dee_ATTRPERM_F_PROPERTY;
-			} else if (catt->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			} else if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				result->ad_perm |= Dee_ATTRPERM_F_CANCALL;
 			}
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
-				struct instance_desc *inst;
-				inst = class_desc_as_instance(item->mcs_attrib.a_desc);
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
+				struct Dee_instance_desc *inst;
+				inst = Dee_class_desc_as_instance(item->mcs_attrib.a_desc);
 				Dee_instance_desc_lock_read(inst);
-				if (catt->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_GET])
+				if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+					if (!inst->id_vtab[catt->ca_addr + Dee_CLASS_GETSET_GET])
 						result->ad_perm &= ~Dee_ATTRPERM_F_CANGET;
-					if (!(catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
-						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_DEL])
+					if (!(catt->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
+						if (!inst->id_vtab[catt->ca_addr + Dee_CLASS_GETSET_DEL])
 							result->ad_perm &= ~Dee_ATTRPERM_F_CANDEL;
-						if (!inst->id_vtab[catt->ca_addr + CLASS_GETSET_SET])
+						if (!inst->id_vtab[catt->ca_addr + Dee_CLASS_GETSET_SET])
 							result->ad_perm &= ~Dee_ATTRPERM_F_CANSET;
 					}
 				}
 				Dee_instance_desc_lock_endread(inst);
 			}
-			if (catt->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+			if (catt->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 				result->ad_perm &= ~(Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET);
 		}	break;
 #endif /* LOCAL_IS_CLASS */

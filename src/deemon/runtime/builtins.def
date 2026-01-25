@@ -66,32 +66,32 @@
 #endif /* !BUILTIN_NO_INCLUDES */
 
 /* Very important symbols: `Signal', `Error' and `Traceback' */
-BUILTIN(Signal, &DeeError_Signal, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Error, &DeeError_Error, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Traceback, &DeeTraceback_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
+BUILTIN(Signal, &DeeError_Signal, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Error, &DeeError_Error, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Traceback, &DeeTraceback_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 
 /* Basic, builtin types. */
-BUILTIN(bool, &DeeBool_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(string, &DeeString_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(int, &DeeInt_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(float, &DeeFloat_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Bytes, &DeeBytes_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Tuple, &DeeTuple_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(List, &DeeList_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Dict, &DeeDict_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(HashSet, &DeeHashSet_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Object, &DeeObject_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Type, &DeeType_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Cell, &DeeCell_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(WeakRef, &DeeWeakRef_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
+BUILTIN(bool, &DeeBool_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(string, &DeeString_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(int, &DeeInt_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(float, &DeeFloat_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Bytes, &DeeBytes_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Tuple, &DeeTuple_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(List, &DeeList_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Dict, &DeeDict_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(HashSet, &DeeHashSet_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Object, &DeeObject_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Type, &DeeType_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Cell, &DeeCell_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(WeakRef, &DeeWeakRef_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 
 /* Abstract base classes. */
-BUILTIN(Sequence, &DeeSeq_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Mapping, &DeeMapping_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Set, &DeeSet_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Iterator, &DeeIterator_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Callable, &DeeCallable_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Numeric, &DeeNumeric_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
+BUILTIN(Sequence, &DeeSeq_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Mapping, &DeeMapping_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Set, &DeeSet_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Iterator, &DeeIterator_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Callable, &DeeCallable_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Numeric, &DeeNumeric_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 
 /* XXX: This one should be removed when classes have been overhauled to
  *      include weakref-functionality as an option flag during class
@@ -110,25 +110,25 @@ BUILTIN(Numeric, &DeeNumeric_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
  *      >> local a = MyClass();
  *      >> local b = WeakRef(a);
  */
-BUILTIN(WeakRefAble, &DeeWeakRefAble_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
+BUILTIN(WeakRefAble, &DeeWeakRefAble_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 
 /* "none" is really only here for doc strings (?N is an alias for ?Dnone, so this needs to be here) */
-BUILTIN(none, Dee_None, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
+BUILTIN(none, Dee_None, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 
 /* Core functional types. */
-BUILTIN(Function, &DeeFunction_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Module, &DeeModule_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Thread, &DeeThread_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Super, &DeeSuper_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(InstanceMethod, &DeeInstanceMethod_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Property, &DeeProperty_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(File, &DeeFile_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Attribute, &DeeAttribute_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(Frame, &DeeFrame_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN(enumattr, &DeeEnumAttr_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
+BUILTIN(Function, &DeeFunction_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Module, &DeeModule_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Thread, &DeeThread_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Super, &DeeSuper_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(InstanceMethod, &DeeInstanceMethod_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Property, &DeeProperty_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(File, &DeeFile_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Attribute, &DeeAttribute_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(Frame, &DeeFrame_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
+BUILTIN(enumattr, &DeeEnumAttr_Type, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR)
 
 /* Functionality groups. */
-BUILTIN_DOC(gc, &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY,
+BUILTIN_DOC(gc, &DeeGCEnumTracked_Singleton, Dee_MODSYM_FREADONLY,
             "A sequence-like singleton that can be used to either enumerate all "
             /**/ "tracked GC objects, check if an object is being tracked, or collect "
             /**/ "all GC objects no longer referenced anywhere else")
@@ -151,19 +151,19 @@ DECL_END
 
 /* Check if an object has a given attribute.
  * >> hasattr(ob: Object, attr: string): bool; */
-BUILTIN_DOC(hasattr, &DeeBuiltin_HasAttr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(hasattr, &DeeBuiltin_HasAttr, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring)->?Dbool\n"
             "#r{Indicative of @ob containing an attribute @attr}")
 
 /* Check if an object has a given item */
-BUILTIN_DOC(hasitem, &DeeBuiltin_HasItem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(hasitem, &DeeBuiltin_HasItem, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(ob,key:?O)->?Dbool\n"
             "(ob,index:?Dint)->?Dbool\n"
             "#r{Indicative of @ob containing an item @key or @index}")
 
 /* Check if a given object attribute is bound.
  * >> boundattr(ob: Object, attr: string, allow_missing: bool = true): bool; */
-BUILTIN_DOC(boundattr, &DeeBuiltin_BoundAttr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(boundattr, &DeeBuiltin_BoundAttr, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring,allow_missing=!t)->?Dbool\n"
             "#tAttributeError{The attribute doesn't exist, and @allow_missing is ?f}"
             "#r{Indicative of attribute @attr of @ob currently being bound}"
@@ -177,7 +177,7 @@ BUILTIN_DOC(boundattr, &DeeBuiltin_BoundAttr, MODSYM_FREADONLY | MODSYM_FCONSTEX
 
 /* Check if a given object item is bound.
  * >> bounditem(ob: Object, index: int | Object, allow_missing: bool = true): bool; */
-BUILTIN_DOC(bounditem, &DeeBuiltin_BoundItem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(bounditem, &DeeBuiltin_BoundItem, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(ob,index:?Dint,allow_missing=!t)->?Dbool\n"
             "(ob,key:?O,allow_missing=!t)->?Dbool\n"
             "#tKeyError{The given @key doesn't exist, and @allow_missing is ?f}"
@@ -192,7 +192,7 @@ BUILTIN_DOC(bounditem, &DeeBuiltin_BoundItem, MODSYM_FREADONLY | MODSYM_FCONSTEX
 
 /* Compare 2 objects, returning one of -1, 0 or 1.
  * >> compare(lhs: Object, rhs: Object): int; */
-BUILTIN_DOC(compare, &DeeBuiltin_Compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(compare, &DeeBuiltin_Compare, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(lhs,rhs)->?Dint\n"
             "#tNotImplemented{The type of @lhs does not implement comparison}"
             "#tTypeError{The types of @lhs and @rhs cannot be compared}"
@@ -203,7 +203,7 @@ BUILTIN_DOC(compare, &DeeBuiltin_Compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             /**/ "print compare(\"foo\", \"bar\"); /* 1 */"
             "}")
 
-BUILTIN_DOC(equals, &DeeBuiltin_Equals, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(equals, &DeeBuiltin_Equals, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(a,b)->?Dbool\n"
             "#r{?t if @a and @b are equal, ?f if they aren't or cannot be compared}"
             "This function is similar to ${operator ==}, but automatically catches some errors:"
@@ -230,7 +230,7 @@ BUILTIN_DOC(equals, &DeeBuiltin_Equals, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
  * NOTE: This is what `import' links against when used
  *       as a stand-alone within an expression (after
  *       injecting the current module as a leading arg). */
-BUILTIN_DOC(__import__, &DeeBuiltin_Import, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(__import__, &DeeBuiltin_Import, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(base:?DModule,name:?Dstring)->?DModule\n"
             "#tValueError{The given @name is invalid}"
             "#tFileNotFound{The named @name could not be found}"
@@ -241,7 +241,7 @@ BUILTIN_DOC(__import__, &DeeBuiltin_Import, MODSYM_FREADONLY | MODSYM_FCONSTEXPR
  * >> import(module_name: string, base?: Module): string;
  * NOTE: This is what `import' links against when
  *       as a stand-alone within an expression. */
-BUILTIN_DOC(hash, &DeeBuiltin_Hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(hash, &DeeBuiltin_Hash, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(objects!)->?Dint\n"
             "Combine the hashes of a given set of objects in a way that also "
             /**/ "tries to preserve the order in which objects are being hashed.\n"
@@ -252,7 +252,7 @@ BUILTIN_DOC(hash, &DeeBuiltin_Hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 
 
 /* TODO: Add more options to this function */
-BUILTIN_DOC(exec, &DeeBuiltin_Exec, MODSYM_FNORMAL,
+BUILTIN_DOC(exec, &DeeBuiltin_Exec, Dee_MODSYM_FNORMAL,
             "(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule)->?O\n"
             "Evaluate a user-code deemon expression and return the result\n"
             "This type of evaluation is much more restrictive than evaluation of "
@@ -268,21 +268,21 @@ BUILTIN_DOC(exec, &DeeBuiltin_Exec, MODSYM_FNORMAL,
 
 
 /* Builtin runtime operator helpers. */
-BUILTIN(__pooad, &rt_pooad, MODSYM_FREADONLY | MODSYM_FHIDDEN)
-BUILTIN(__neosb, &rt_neosb, MODSYM_FREADONLY | MODSYM_FHIDDEN)
-BUILTIN(__giosi, &rt_giosi, MODSYM_FREADONLY | MODSYM_FHIDDEN)
-BUILTIN(__grosr, &rt_grosr, MODSYM_FREADONLY | MODSYM_FHIDDEN)
-BUILTIN(__gaosa, &rt_gaosa, MODSYM_FREADONLY | MODSYM_FHIDDEN)
-BUILTIN(__roloc, &rt_roloc, MODSYM_FREADONLY | MODSYM_FHIDDEN)
+BUILTIN(__pooad, &rt_pooad, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
+BUILTIN(__neosb, &rt_neosb, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
+BUILTIN(__giosi, &rt_giosi, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
+BUILTIN(__grosr, &rt_grosr, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
+BUILTIN(__gaosa, &rt_gaosa, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
+BUILTIN(__roloc, &rt_roloc, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
 
 /* Used to implement the `assert' keyword.
  * NOTE: This function is not marked as read-only,
  *       because user-code is allowed to override it! */
-BUILTIN(__assert, &rt_assert, MODSYM_FHIDDEN)
+BUILTIN(__assert, &rt_assert, Dee_MODSYM_FHIDDEN)
 
 /* Internal function used to implement argument count checks in
  * function taking optional arguments. */
-BUILTIN(__badcall, &rt_badcall, MODSYM_FREADONLY | MODSYM_FHIDDEN)
+BUILTIN(__badcall, &rt_badcall, Dee_MODSYM_FREADONLY | Dee_MODSYM_FHIDDEN)
 
 #undef BUILTIN_DOC
 #undef BUILTIN

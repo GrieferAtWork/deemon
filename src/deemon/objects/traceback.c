@@ -64,7 +64,7 @@ INTERN struct empty_traceback_object DeeTraceback_Empty = {
 
 /* Same as `DeeTraceback_New()', but throw errors when returning NULL. */
 INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
-DeeTraceback_NewWithException(struct thread_object *__restrict thread) {
+DeeTraceback_NewWithException(struct Dee_thread_object *__restrict thread) {
 	DREF DeeTracebackObject *result;
 	/* `DeeTraceback_New()' is special in that it doesn't throw exceptions.
 	 * However, we want there to be an out-of-memory exception when we're
@@ -80,12 +80,12 @@ DeeTraceback_NewWithException(struct thread_object *__restrict thread) {
  * an error and return `NULL' if doing so failed.
  * NOTE: The given `thread' must be the caller's. */
 INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
-DeeTraceback_New(struct thread_object *__restrict thread) {
-	struct code_frame *dst, *src;
+DeeTraceback_New(struct Dee_thread_object *__restrict thread) {
+	struct Dee_code_frame *dst, *src;
 	DREF DeeTracebackObject *result;
 	ASSERTF(thread == DeeThread_Self(), "Traceback for other threads must be created using `DeeThread_Trace()'");
 	result = (DREF DeeTracebackObject *)DeeGCObject_TryMallocc(offsetof(DeeTracebackObject, tb_frames),
-	                                                           thread->t_execsz, sizeof(struct code_frame));
+	                                                           thread->t_execsz, sizeof(struct Dee_code_frame));
 	if unlikely(!result)
 		goto err;
 
@@ -103,10 +103,10 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 		DeeObject *dont_track_this = NULL;
 		--dst;
 		ASSERT(src != NULL);
-		ASSERT(src != CODE_FRAME_NOT_EXECUTING);
+		ASSERT(src != Dee_CODE_FRAME_NOT_EXECUTING);
 
 		/* Do a shallow memcpy of the execution frame. */
-		memcpy(dst, src, sizeof(struct code_frame));
+		memcpy(dst, src, sizeof(struct Dee_code_frame));
 
 		/* Create references and duplicate local variables. */
 		ASSERT_OBJECT_TYPE(dst->cf_func, &DeeFunction_Type);
@@ -114,9 +114,9 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 		Dee_Incref(dst->cf_func);
 		code          = dst->cf_func->fo_code;
 		dst->cf_flags = code->co_flags;
-		if (code->co_flags & CODE_FTHISCALL) {
+		if (code->co_flags & Dee_CODE_FTHISCALL) {
 			ASSERT_OBJECT(dst->cf_this);
-			if (!(code->co_flags & CODE_FCONSTRUCTOR)) {
+			if (!(code->co_flags & Dee_CODE_FCONSTRUCTOR)) {
 				Dee_Incref(dst->cf_this);
 			} else {
 				dont_track_this = dst->cf_this;
@@ -176,9 +176,9 @@ err:
 /* Fill in stack information in the given traceback for `frame'. */
 INTERN NONNULL((1, 2)) void DCALL
 DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
-                      struct code_frame *__restrict frame,
+                      struct Dee_code_frame *__restrict frame,
                       uint16_t frame_id) {
-	struct code_frame *dst;
+	struct Dee_code_frame *dst;
 	uint16_t stacksz;
 	DeeObject *dont_track_this;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTraceback_Type);
@@ -222,7 +222,7 @@ done:
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeTracebackObject, ti_trace); /* [1..1][const] The traceback that is being iterated. */
-	struct code_frame                       *ti_next;   /* [1..1][in(ti_trace->tb_frames)][atomic]
+	struct Dee_code_frame                       *ti_next;   /* [1..1][in(ti_trace->tb_frames)][atomic]
 	                                                     * The next frame (yielded in reverse order) */
 } TraceIterator;
 #define READ_NEXT(x)     atomic_read(&(x)->ti_next)
@@ -296,7 +296,7 @@ traceiter_bool(TraceIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceiter_next(TraceIterator *__restrict self) {
-	struct code_frame *result_frame;
+	struct Dee_code_frame *result_frame;
 	do {
 		result_frame = atomic_read(&self->ti_next);
 		if unlikely(result_frame < self->ti_trace->tb_frames)
@@ -306,7 +306,7 @@ traceiter_next(TraceIterator *__restrict self) {
 	/* Create a new frame wrapper for this entry. */
 	return DeeFrame_NewReferenceWithLock(Dee_AsObject(self->ti_trace),
 	                                     result_frame,
-	                                     DEEFRAME_FREADONLY,
+	                                     Dee_FRAME_FREADONLY,
 	                                     &self->ti_trace->tb_lock);
 }
 
@@ -346,7 +346,7 @@ traceiter_nii_rewind(TraceIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceiter_nii_peek(TraceIterator *__restrict self) {
-	struct code_frame *result_frame;
+	struct Dee_code_frame *result_frame;
 	result_frame = READ_NEXT(self);
 	if unlikely(result_frame < self->ti_trace->tb_frames)
 		return ITER_DONE;
@@ -354,7 +354,7 @@ traceiter_nii_peek(TraceIterator *__restrict self) {
 	/* Create a new frame wrapper for this entry. */
 	return DeeFrame_NewReferenceWithLock(Dee_AsObject(self->ti_trace),
 	                                     result_frame,
-	                                     DEEFRAME_FREADONLY,
+	                                     Dee_FRAME_FREADONLY,
 	                                     &self->ti_trace->tb_lock);
 }
 
@@ -367,7 +367,7 @@ traceiter_nii_hasprev(TraceIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_nii_next(TraceIterator *__restrict self) {
-	struct code_frame *result_frame;
+	struct Dee_code_frame *result_frame;
 	do {
 		result_frame = atomic_read(&self->ti_next);
 		if unlikely(result_frame < self->ti_trace->tb_frames)
@@ -380,8 +380,8 @@ traceiter_nii_next(TraceIterator *__restrict self) {
 
 
 PRIVATE struct type_nii tpconst traceiter_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
 	{
 		/* .nii_common = */ {
 			/* .nii_getseq   = */ (Dee_funptr_t)&traceiter_nii_getseq,
@@ -408,7 +408,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 traceiter_compare(TraceIterator *self, TraceIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeTracebackIterator_Type))
 		goto err;
-	Dee_return_compareT(struct code_frame *, READ_NEXT(other), /* Yes: reverse because yielding also happens in reverse! */
+	Dee_return_compareT(struct Dee_code_frame *, READ_NEXT(other), /* Yes: reverse because yielding also happens in reverse! */
 	                    /*                */ READ_NEXT(self));
 err:
 	return Dee_COMPARE_ERR;
@@ -488,7 +488,7 @@ PRIVATE WUNUSED DREF DeeTracebackObject *DCALL traceback_new(void) {
 
 PRIVATE NONNULL((1)) void DCALL
 traceback_fini(DeeTracebackObject *__restrict self) {
-	struct code_frame *frame;
+	struct Dee_code_frame *frame;
 	size_t frame_index;
 	Dee_Decref(self->tb_thread);
 	frame_index = self->tb_numframes;
@@ -594,7 +594,7 @@ err:
 PRIVATE NONNULL((1, 2)) void DCALL
 traceback_visit(DeeTracebackObject *__restrict self,
                 Dee_visit_t proc, void *arg) {
-	struct code_frame *iter, *end;
+	struct Dee_code_frame *iter, *end;
 	DeeTraceback_LockAcquire(self);
 	Dee_Visit(self->tb_thread);
 	end = (iter = self->tb_frames) + self->tb_numframes;
@@ -623,7 +623,7 @@ traceback_visit(DeeTracebackObject *__restrict self,
 PRIVATE NONNULL((1)) void DCALL
 traceback_clear(DeeTracebackObject *__restrict self) {
 	DREF DeeObject *decref_later_buffer[64], **decref_later;
-	struct code_frame *iter, *end;
+	struct Dee_code_frame *iter, *end;
 again:
 	decref_later = decref_later_buffer;
 	DeeTraceback_LockAcquire(self);
@@ -831,7 +831,7 @@ INTERN WUNUSED NONNULL((1)) DeeTracebackObject *DCALL
 traceback_ofthrow_impl(DeeObject *__restrict error) {
 	DeeTracebackObject *result;
 	DeeThreadObject *me = DeeThread_Self();
-	struct except_frame *except = me->t_except;
+	struct Dee_except_frame *except = me->t_except;
 	while (except && except->ef_error != error)
 		except = except->ef_prev;
 	if (!except) {
@@ -899,7 +899,7 @@ traceback_sizeof(DeeTracebackObject *self) {
 	uint16_t i;
 	result = _Dee_MallococBufsize(offsetof(DeeTracebackObject, tb_frames),
 	                              self->tb_numframes,
-	                              sizeof(struct code_frame));
+	                              sizeof(struct Dee_code_frame));
 	for (i = 0; i < self->tb_numframes; ++i) {
 		if (self->tb_frames[i].cf_frame)
 			result += self->tb_frames[i].cf_func->fo_code->co_framesize;

@@ -485,10 +485,10 @@ corrupt_dep_index_reloc_rrel:
 #if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
 	if (self->e_typedata.td_reloc.er_offsetof_gchead) {
 		/* Link in GC objects (if there are any) */
-		struct gc_head *gc_head = (struct gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
-		struct gc_head *gc_tail = (struct gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
+		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
+		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
 		DeeGC_TrackMany_Lock();
-		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Exec(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
 		DeeGC_TrackMany_Unlock();
 	}
 #endif
@@ -1931,9 +1931,9 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
                                DeeObject *__restrict ref, unsigned int flags) {
 	size_t total;
 	Dee_seraddr_t result;
-	struct gc_head *copy;
+	struct Dee_gc_head *copy;
 	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use decwriter_object_malloc_impl()");
-	if (OVERFLOW_UADD(num_bytes, sizeof(struct gc_head_link), &total))
+	if (OVERFLOW_UADD(num_bytes, sizeof(struct Dee_gc_head_link), &total))
 		total = (size_t)-1;
 	result = decwriter_malloc_impl(self, total, DeeGC_Head(ref), flags);
 	if unlikely(!result)
@@ -1944,32 +1944,32 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	       (self->dw_gctail == 0));
 	if (self->dw_gctail == 0) {
 		/* First GC object... */
-		struct gc_head_link *link;
+		struct Dee_gc_head_link *link;
 		self->dw_gchead = result;
-		link = DeeDecWriter_Addr2Mem(self, result, struct gc_head_link);
+		link = DeeDecWriter_Addr2Mem(self, result, struct Dee_gc_head_link);
 		link->gc_next  = NULL;
 		link->gc_pself = NULL;
 	} else {
 		/* Append to end of GC list. */
-		if (decwriter_putaddr(self, self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct gc_head_link, gc_next), result))
+		if (decwriter_putaddr(self, self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct Dee_gc_head_link, gc_next), result))
 			goto err_r;
-		if (decwriter_putaddr(self, result + (Dee_dec_addr32_t)offsetof(struct gc_head_link, gc_pself),
-		                      self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct gc_head_link, gc_next)))
+		if (decwriter_putaddr(self, result + (Dee_dec_addr32_t)offsetof(struct Dee_gc_head_link, gc_pself),
+		                      self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct Dee_gc_head_link, gc_next)))
 			goto err_r;
 	}
 	self->dw_gctail = result;
 
 	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
-	copy = DeeDecWriter_Addr2Mem(self, result, struct gc_head);
+	copy = DeeDecWriter_Addr2Mem(self, result, struct Dee_gc_head);
 	copy->gc_object.ob_refcnt = 1;
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->gc_object.ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
 	if unlikely(decwriter_putobject(self,
-	                                result + offsetof(struct gc_head, gc_object.ob_type),
+	                                result + offsetof(struct Dee_gc_head, gc_object.ob_type),
 	                                Dee_AsObject(Dee_TYPE(ref))))
 		goto err_r;
-	result += offsetof(struct gc_head, gc_object);
+	result += offsetof(struct Dee_gc_head, gc_object);
 	return result;
 err_r:
 	decwriter_free(self, result, ref);
@@ -3058,19 +3058,19 @@ Dec_GetBuiltin(uint8_t set, uint8_t id) {
 
 #define DECFILE_PADDING 32
 
-struct module_object;
-struct compiler_options;
-struct string_object;
-struct code_object;
-struct ddi_object;
+struct Dee_module_object;
+struct Dee_compiler_options;
+struct Dee_string_object;
+struct Dee_code_object;
+struct Dee_ddi_object;
 
 typedef struct {
 	union {
-		uint8_t const         *df_data;    /* [0..df_size+DECFILE_PADDING]
-		                                    * A full mapping of all data from the input DEC file, followed
-		                                    * by a couple of bytes of padding data that is ZERO-initialized. */
-		uint8_t const         *df_base;    /* [0..df_size] Base address of the DEC image mapped into host memory. */
-		Dec_Ehdr const        *df_ehdr;    /* [0..1] A pointer to the DEC file header mapped into host memory. */
+		uint8_t const             *df_data;    /* [0..df_size+DECFILE_PADDING]
+		                                        * A full mapping of all data from the input DEC file, followed
+		                                        * by a couple of bytes of padding data that is ZERO-initialized. */
+		uint8_t const             *df_base;    /* [0..df_size] Base address of the DEC image mapped into host memory. */
+		Dec_Ehdr const            *df_ehdr;    /* [0..1] A pointer to the DEC file header mapped into host memory. */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -3079,14 +3079,14 @@ typedef struct {
 #define df_ehdr _dee_aunion.df_ehdr
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
-	size_t                     df_size;    /* Total number of usable bytes of memory
-	                                        * that can be found within the source file. */
-	DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */
-	DREF struct module_object *df_module;  /* [1..1] The module that is being loaded. */
-	struct compiler_options   *df_options; /* [0..1] Compilation options. */
-	DREF struct string_object *df_strtab;  /* [0..1] Lazily allocated copy of the string table.
-	                                        *        This string is used by DDI descriptors in
-	                                        *        order to allow for sharing of string tables. */
+	size_t                         df_size;    /* Total number of usable bytes of memory
+	                                            * that can be found within the source file. */
+	DREF struct Dee_string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */
+	DREF struct Dee_module_object *df_module;  /* [1..1] The module that is being loaded. */
+	struct Dee_compiler_options   *df_options; /* [0..1] Compilation options. */
+	DREF struct Dee_string_object *df_strtab;  /* [0..1] Lazily allocated copy of the string table.
+	                                            *        This string is used by DDI descriptors in
+	                                            *        order to allow for sharing of string tables. */
 } DecFile;
 
 
@@ -3099,10 +3099,10 @@ PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              struct DeeMapFile *__restrict input,
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-             struct module_object *__restrict module,
+             struct Dee_module_object *__restrict module,
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-             struct string_object *__restrict dec_pathname,
-             struct compiler_options *options);
+             struct Dee_string_object *__restrict dec_pathname,
+             struct Dee_compiler_options *options);
 PRIVATE NONNULL((1)) void DCALL
 DecFile_Fini(DecFile *__restrict self);
 
@@ -3164,14 +3164,14 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 /* @return: * :        New reference to a code object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF struct code_object *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct Dee_code_object *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
                  uint8_t const **__restrict p_reader);
 
 /* @return: * :        New reference to a ddi object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF struct ddi_object *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF struct Dee_ddi_object *DCALL
 DecFile_LoadDDI(DecFile *__restrict self,
                 uint8_t const *__restrict reader,
                 bool is_8bit_ddi);
@@ -3252,7 +3252,7 @@ DecFile_Init(DecFile *__restrict self,
              DeeModuleObject *__restrict module,
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
              DeeStringObject *__restrict dec_pathname,
-             struct compiler_options *options) {
+             struct Dee_compiler_options *options) {
 	Dec_Ehdr *hdr;
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
@@ -3570,7 +3570,7 @@ err:
 	goto stop;
 }
 
-INTDEF struct module_symbol empty_module_buckets[];
+INTDEF struct Dee_module_symbol empty_module_buckets[];
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE WUNUSED DREF DeeModuleObject *DCALL
@@ -3620,7 +3620,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 	uint8_t const *end = self->df_base + self->df_size;
 	uint8_t const *reader;
 	uint16_t bucket_mask;
-	struct module_symbol *bucketv;
+	struct Dee_module_symbol *bucketv;
 	char const *strtab;
 	/* Quick check: Without a global variable table, nothing needs to be loaded. */
 	if (!hdr->e_globoff) {
@@ -3657,8 +3657,8 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 	--bucket_mask;
 
 	/* Allocate the module bucket vector. */
-	bucketv = (struct module_symbol *)Dee_Callocc(bucket_mask + 1,
-	                                              sizeof(struct module_symbol));
+	bucketv = (struct Dee_module_symbol *)Dee_Callocc(bucket_mask + 1,
+	                                              sizeof(struct Dee_module_symbol));
 	if unlikely(!bucketv)
 		goto err;
 
@@ -3672,7 +3672,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 		if unlikely(reader >= end)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Validate bounds. */
 		flags = (uint8_t)UNALIGNED_GETLE16(reader), reader += 2;
-		if (flags & ~MODSYM_FMASK)
+		if (flags & ~Dee_MODSYM_FMASK)
 			GOTO_CORRUPTED(reader, stop_symbolv); /* Unknown flags are being used. */
 		/* The first `globalc' descriptors lack the `s_addr' field. */
 		addr2 = (uint8_t)-1;
@@ -3680,9 +3680,9 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 			addr = i;
 		} else {
 			addr = UNALIGNED_GETLE16(reader), reader += 2;
-			if (flags & MODSYM_FEXTERN) {
+			if (flags & Dee_MODSYM_FEXTERN) {
 				addr2 = (uint8_t)UNALIGNED_GETLE16(reader), reader += 2;
-				if (!(flags & MODSYM_FPROPERTY)) {
+				if (!(flags & Dee_MODSYM_FPROPERTY)) {
 					/* Validate module index. */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 					Dec_Strmap const *impmap  = (Dec_Strmap const *)(self->df_base + LETOH32(hdr->e_impoff));
@@ -3718,7 +3718,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 		perturb = hash_i = name_hash & bucket_mask;
 		for (;; Dee_MODULE_HASHNX(hash_i, perturb)) {
 			DREF DeeStringObject *temp;
-			struct module_symbol *target = &bucketv[hash_i & bucket_mask];
+			struct Dee_module_symbol *target = &bucketv[hash_i & bucket_mask];
 			if (target->ss_name)
 				continue;
 			/* Found an unused slot compatible with the hash of this symbol's name. */
@@ -3727,7 +3727,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 				goto err_symbolv;
 			temp->s_hash    = name_hash; /* Save the name hash. */
 			target->ss_name = DeeString_STR(temp);
-			flags |= MODSYM_FNAMEOBJ;
+			flags |= Dee_MODSYM_FNAMEOBJ;
 			if (doclen) {
 				/* Allocate the documentation string. */
 				temp = (DREF DeeStringObject *)DeeString_NewUtf8(doc,
@@ -3736,7 +3736,7 @@ DecFile_LoadGlobals(DecFile *__restrict self)
 				if unlikely(!temp)
 					goto err_symbolv;
 				target->ss_doc = DeeString_STR(temp);
-				flags |= MODSYM_FDOCOBJ;
+				flags |= Dee_MODSYM_FDOCOBJ;
 			}
 			target->ss_index = addr;
 			target->ss_impid = (uint8_t)addr2;
@@ -3796,8 +3796,8 @@ err:
 }
 
 
-INTDEF struct class_operator empty_class_operators[];
-INTDEF struct class_attribute empty_class_attributes[];
+INTDEF struct Dee_class_operator empty_class_operators[];
+INTDEF struct Dee_class_attribute empty_class_attributes[];
 
 
 /* @return: * :        A reference to the object that got loaded.
@@ -4011,7 +4011,7 @@ err_function_code:
 				iattr_mask = (iattr_mask << 1) | 1;
 		}
 		result = (DREF DeeObject *)DeeObject_Callocc(offsetof(DeeClassDescriptorObject, cd_iattr_list),
-		                                             iattr_mask + 1, sizeof(struct class_attribute));
+		                                             iattr_mask + 1, sizeof(struct Dee_class_attribute));
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(descriptor, &DeeClassDescriptor_Type);
@@ -4028,24 +4028,24 @@ err_function_code:
 		               DeeString_NewUtf8(doc, doclen, STRING_ERROR_FSTRICT)) == NULL)
 			goto err_r;
 		if (op_count) {
-			struct class_operator *opbind_list;
+			struct Dee_class_operator *opbind_list;
 			/* Load the operator descriptor table. */
 			if (reader + op_count * 2 > (uint8_t *)fileend)
 				GOTO_CORRUPTED(reader, corrupt_r);
 			opbind_mask = 0;
 			while (op_count > (opbind_mask / 3) * 2)
 				opbind_mask = (opbind_mask << 1) | 1;
-			opbind_list = (struct class_operator *)Dee_Mallocc(opbind_mask + 1,
-			                                                   sizeof(struct class_operator));
+			opbind_list = (struct Dee_class_operator *)Dee_Mallocc(opbind_mask + 1,
+			                                                   sizeof(struct Dee_class_operator));
 			if unlikely(!opbind_list)
 				goto err_r;
 			memset(opbind_list, 0xff,
 			       (opbind_mask + 1) *
-			       sizeof(struct class_operator));
+			       sizeof(struct Dee_class_operator));
 			descriptor->cd_clsop_mask = opbind_mask;
 			descriptor->cd_clsop_list = opbind_list;
 			for (i = 0; i < op_count; ++i) {
-				struct class_operator *entry;
+				struct Dee_class_operator *entry;
 				uint8_t opname, opaddr;
 				Dee_operator_t j, perturb;
 				opname = UNALIGNED_GETLE8(reader), reader += 1;
@@ -4063,19 +4063,19 @@ err_function_code:
 			}
 		}
 		if (cattr_count) {
-			struct class_attribute *cattr_list;
+			struct Dee_class_attribute *cattr_list;
 			/* Load the class attribute descriptor table. */
 			cattr_mask = 0;
 			while (cattr_count > (cattr_mask / 3) * 2)
 				cattr_mask = (cattr_mask << 1) | 1;
-			cattr_list = (struct class_attribute *)Dee_Callocc(cattr_mask + 1,
-			                                                   sizeof(struct class_attribute));
+			cattr_list = (struct Dee_class_attribute *)Dee_Callocc(cattr_mask + 1,
+			                                                   sizeof(struct Dee_class_attribute));
 			if unlikely(!cattr_list)
 				goto err_r;
 			descriptor->cd_cattr_list = cattr_list;
 			descriptor->cd_cattr_mask = cattr_mask;
 			for (i = 0; i < cattr_count; ++i) {
-				struct class_attribute *entry;
+				struct Dee_class_attribute *entry;
 				Dee_hash_t j, perturb, hash;
 				uint8_t ataddr, atflags;
 				DREF DeeStringObject *name_ob;
@@ -4083,7 +4083,7 @@ err_function_code:
 					GOTO_CORRUPTED(reader, corrupt_r);
 				ataddr  = UNALIGNED_GETLE8(reader), reader += 1;
 				atflags = UNALIGNED_GETLE8(reader), reader += 1;
-				if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
+				if unlikely(atflags & ~Dee_CLASS_ATTRIBUTE_FMASK)
 					GOTO_CORRUPTED(reader, corrupt_r);
 				if unlikely(ataddr >= cmemb_size)
 					GOTO_CORRUPTED(reader, corrupt_r);
@@ -4120,7 +4120,7 @@ err_function_code:
 		}
 		/* Load the instance attribute descriptor table. */
 		for (i = 0; i < iattr_count; ++i) {
-			struct class_attribute *entry;
+			struct Dee_class_attribute *entry;
 			Dee_hash_t j, perturb, hash;
 			uint8_t ataddr, atflags;
 			DREF DeeStringObject *name_ob;
@@ -4128,9 +4128,9 @@ err_function_code:
 				GOTO_CORRUPTED(reader, corrupt_r);
 			ataddr  = UNALIGNED_GETLE8(reader), reader += 1;
 			atflags = UNALIGNED_GETLE8(reader), reader += 1;
-			if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
+			if unlikely(atflags & ~Dee_CLASS_ATTRIBUTE_FMASK)
 				GOTO_CORRUPTED(reader, corrupt_r);
-			if unlikely(ataddr >= ((atflags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
+			if unlikely(ataddr >= ((atflags & Dee_CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
 				GOTO_CORRUPTED(reader, corrupt_r);
 			name = strtab + Dec_DecodePointer(&reader);
 			if unlikely(name < strtab || name >= fileend)
@@ -4387,7 +4387,7 @@ err_function_code:
 					iattr_mask = (iattr_mask << 1) | 1;
 			}
 			result = (DREF DeeObject *)DeeObject_Callocc(offsetof(DeeClassDescriptorObject, cd_iattr_list),
-			                                             iattr_mask + 1, sizeof(struct class_attribute));
+			                                             iattr_mask + 1, sizeof(struct Dee_class_attribute));
 			if unlikely(!result)
 				goto err;
 			DeeObject_Init(descriptor, &DeeClassDescriptor_Type);
@@ -4404,24 +4404,24 @@ err_function_code:
 			               DeeString_NewUtf8(doc, doclen, STRING_ERROR_FSTRICT)) == NULL)
 				goto err_r;
 			if (op_count) {
-				struct class_operator *opbind_list;
+				struct Dee_class_operator *opbind_list;
 				/* Load the operator descriptor table. */
 				if (reader + op_count * 4 > (uint8_t *)fileend)
 					GOTO_CORRUPTED(reader, corrupt_r);
 				opbind_mask = 0;
 				while (op_count > (opbind_mask / 3) * 2)
 					opbind_mask = (opbind_mask << 1) | 1;
-				opbind_list = (struct class_operator *)Dee_Mallocc(opbind_mask + 1,
-				                                                   sizeof(struct class_operator));
+				opbind_list = (struct Dee_class_operator *)Dee_Mallocc(opbind_mask + 1,
+				                                                   sizeof(struct Dee_class_operator));
 				if unlikely(!opbind_list)
 					goto err_r;
 				memset(opbind_list, 0xff,
 				       (opbind_mask + 1) *
-				       sizeof(struct class_operator));
+				       sizeof(struct Dee_class_operator));
 				descriptor->cd_clsop_mask = opbind_mask;
 				descriptor->cd_clsop_list = opbind_list;
 				for (i = 0; i < op_count; ++i) {
-					struct class_operator *entry;
+					struct Dee_class_operator *entry;
 					Dee_operator_t opname, j, perturb;
 					uint16_t opaddr;
 					opname = UNALIGNED_GETLE16(reader), reader += 2;
@@ -4441,7 +4441,7 @@ err_function_code:
 				}
 			}
 			if (cattr_count) {
-				struct class_attribute *cattr_list;
+				struct Dee_class_attribute *cattr_list;
 				/* Load the class attribute descriptor table. */
 				cattr_mask = 0;
 #if __SIZEOF_POINTER__ < 8
@@ -4450,14 +4450,14 @@ err_function_code:
 #endif /* __SIZEOF_POINTER__ < 8 */
 				while (cattr_count > (cattr_mask / 3) * 2)
 					cattr_mask = (cattr_mask << 1) | 1;
-				cattr_list = (struct class_attribute *)Dee_Callocc(cattr_mask + 1,
-				                                                   sizeof(struct class_attribute));
+				cattr_list = (struct Dee_class_attribute *)Dee_Callocc(cattr_mask + 1,
+				                                                   sizeof(struct Dee_class_attribute));
 				if unlikely(!cattr_list)
 					goto err_r;
 				descriptor->cd_cattr_list = cattr_list;
 				descriptor->cd_cattr_mask = cattr_mask;
 				for (i = 0; i < cattr_count; ++i) {
-					struct class_attribute *entry;
+					struct Dee_class_attribute *entry;
 					Dee_hash_t j, perturb, hash;
 					uint16_t ataddr, atflags;
 					DREF DeeStringObject *name_ob;
@@ -4465,7 +4465,7 @@ err_function_code:
 						GOTO_CORRUPTED(reader, corrupt_r);
 					ataddr  = UNALIGNED_GETLE16(reader), reader += 2;
 					atflags = UNALIGNED_GETLE16(reader), reader += 2;
-					if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
+					if unlikely(atflags & ~Dee_CLASS_ATTRIBUTE_FMASK)
 						GOTO_CORRUPTED(reader, corrupt_r);
 					if unlikely(ataddr >= cmemb_size)
 						GOTO_CORRUPTED(reader, corrupt_r);
@@ -4502,7 +4502,7 @@ err_function_code:
 			}
 			/* Load the instance attribute descriptor table. */
 			for (i = 0; i < iattr_count; ++i) {
-				struct class_attribute *entry;
+				struct Dee_class_attribute *entry;
 				Dee_hash_t j, perturb, hash;
 				uint16_t ataddr, atflags;
 				DREF DeeStringObject *name_ob;
@@ -4510,9 +4510,9 @@ err_function_code:
 					GOTO_CORRUPTED(reader, corrupt_r);
 				ataddr  = UNALIGNED_GETLE16(reader), reader += 2;
 				atflags = UNALIGNED_GETLE16(reader), reader += 2;
-				if unlikely(atflags & ~CLASS_ATTRIBUTE_FMASK)
+				if unlikely(atflags & ~Dee_CLASS_ATTRIBUTE_FMASK)
 					GOTO_CORRUPTED(reader, corrupt_r);
-				if unlikely(ataddr >= ((atflags & CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
+				if unlikely(ataddr >= ((atflags & Dee_CLASS_ATTRIBUTE_FCLASSMEM) ? cmemb_size : imemb_size))
 					GOTO_CORRUPTED(reader, corrupt_r);
 				name = strtab + Dec_DecodePointer(&reader);
 				if unlikely(name < strtab || name >= fileend)
@@ -4796,7 +4796,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
 
 	/* Parse the initial DDI register state. */
 	result->d_start.dr_flags = UNALIGNED_GETLE16(reader), reader += 2;
-	if (result->d_start.dr_flags & ~DDI_REGS_FMASK)
+	if (result->d_start.dr_flags & ~Dee_DDI_REGS_FMASK)
 		GOTO_CORRUPTED(reader, err_currupted_r);
 	result->d_start.dr_uip  = (code_addr_t)decode_uleb((uint8_t const **)&reader);
 	result->d_start.dr_usp  = (uint16_t)decode_uleb((uint8_t const **)&reader);
@@ -4826,13 +4826,13 @@ DecFile_LoadDDI(DecFile *__restrict self,
 			if (xdat + xsiz >= self->df_base + self->df_size)
 				GOTO_CORRUPTED(xdat, err_currupted_r_maps);
 			xres = (struct Dee_ddi_exdat *)Dee_MallococSafe(offsetof(struct Dee_ddi_exdat, dx_data),
-			                                                xsiz, DDI_EXDAT_MAXSIZE);
+			                                                xsiz, Dee_DDI_EXDAT_MAXSIZE);
 			if unlikely(!xres)
 				goto err_r_maps;
 			xres->dx_size = xsiz;
 			/* Initialize X-data information. */
 			bssptr = mempcpy(xres->dx_data, xdat, xsiz);
-			bzero(bssptr, DDI_EXDAT_MAXSIZE);
+			bzero(bssptr, Dee_DDI_EXDAT_MAXSIZE);
 			result->d_exdat = xres;
 		}
 	}
@@ -4889,9 +4889,9 @@ DecFile_LoadCode(DecFile *__restrict self,
 	end    = self->df_base + self->df_size;
 	header.co_flags = UNALIGNED_GETLE16(reader), reader += 2;
 	/* Validate known flags. */
-	if (header.co_flags & ~(CODE_FMASK | DEC_CODE_F8BIT))
+	if (header.co_flags & ~(Dee_CODE_FMASK | Dee_CODE_FDEC_8BIT))
 		GOTO_CORRUPTED(reader, corrupt);
-	if (header.co_flags & DEC_CODE_F8BIT) {
+	if (header.co_flags & Dee_CODE_FDEC_8BIT) {
 		if unlikely(reader + sizeof(Dec_8BitCode) - 2 >= end)
 			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
 		/* Read all the fields and widen them. */
@@ -4939,8 +4939,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		/* The origin of the code cannot be trusted and we must append
 		 * a couple of trailing instruction bytes to the code object. */
 
-		/* Allocate the resulting code object, as well as set the CODE_FASSEMBLY flag. */
-		header.co_flags |= CODE_FASSEMBLY;
+		/* Allocate the resulting code object, as well as set the Dee_CODE_FASSEMBLY flag. */
+		header.co_flags |= Dee_CODE_FASSEMBLY;
 		result = DeeCode_Malloc(header.co_textsiz + INSTRLEN_MAX);
 		if likely(result) {
 			/* Initialize trailing bytes as `ret none' instructions. */
@@ -5024,11 +5024,11 @@ DecFile_LoadCode(DecFile *__restrict self,
 		uint16_t count;
 		uint8_t const *except_reader;
 		bool is8bit;
-		struct except_handler *exceptv;
+		struct Dee_except_handler *exceptv;
 		except_reader = self->df_base + header.co_exceptoff;
 		if unlikely(except_reader >= end) /* Validate bounds */
 			GOTO_CORRUPTED(except_reader, corrupt_r_static);
-		is8bit = !!(header.co_flags & DEC_CODE_F8BIT);
+		is8bit = !!(header.co_flags & Dee_CODE_FDEC_8BIT);
 		if (is8bit) {
 			count = UNALIGNED_GETLE8(except_reader);
 			except_reader += 1;
@@ -5038,7 +5038,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		}
 
 		/* Allocate the exception vector. */
-		exceptv = (struct except_handler *)Dee_Mallocc(count, sizeof(struct except_handler));
+		exceptv = (struct Dee_except_handler *)Dee_Mallocc(count, sizeof(struct Dee_except_handler));
 		if unlikely(!exceptv)
 			goto err_r_static;
 
@@ -5048,7 +5048,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		/* Load all the exception handlers. */
 		for (result->co_exceptc = 0;
 		     result->co_exceptc < count; ++result->co_exceptc) {
-			struct except_handler *hand;
+			struct Dee_except_handler *hand;
 			hand = exceptv + result->co_exceptc;
 			if unlikely(except_reader >= end) /* Validate bounds */
 				GOTO_CORRUPTED(except_reader, corrupt_r_except);
@@ -5066,7 +5066,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 			}
 
 			/* Do some quick validation on the exception descriptor. */
-			if (hand->eh_flags & ~EXCEPTION_HANDLER_FMASK)
+			if (hand->eh_flags & ~Dee_EXCEPTION_HANDLER_FMASK)
 				GOTO_CORRUPTED(except_reader, corrupt_r_except);
 			if (hand->eh_start >= hand->eh_end)
 				GOTO_CORRUPTED(except_reader, corrupt_r_except);
@@ -5105,7 +5105,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		ddi_reader = self->df_base + header.co_ddioff;
 		if unlikely(ddi_reader >= end || ddi_reader < self->df_base)
 			GOTO_CORRUPTED(ddi_reader, corrupt_r_except);
-		ddi = DecFile_LoadDDI(self, ddi_reader, !!(header.co_flags & DEC_CODE_F8BIT));
+		ddi = DecFile_LoadDDI(self, ddi_reader, !!(header.co_flags & Dee_CODE_FDEC_8BIT));
 		if unlikely(!ITER_ISOK(ddi)) {
 			if (!ddi)
 				goto err_r_except;
@@ -5131,7 +5131,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		                                            sizeof(DREF DeeStringObject *));
 		if unlikely(!kwds)
 			goto err_r_ddi;
-		if (header.co_flags & DEC_CODE_F8BIT) {
+		if (header.co_flags & Dee_CODE_FDEC_8BIT) {
 			for (i = 0; i < result->co_argc_max; ++i) {
 				uint32_t addr;
 				char const *name;
@@ -5207,8 +5207,8 @@ err_kwds_i:
 	                       sizeof(DREF DeeObject *);
 
 	/* Forceably set the heapframe flag when the frame is very large. */
-	if unlikely(result->co_framesize >= CODE_LARGEFRAME_THRESHOLD)
-		result->co_flags |= CODE_FHEAPFRAME;
+	if unlikely(result->co_framesize >= Dee_CODE_LARGEFRAME_THRESHOLD)
+		result->co_flags |= Dee_CODE_FHEAPFRAME;
 
 	/* Fill in module information for the code object. */
 	result->co_module = self->df_module;
@@ -5345,9 +5345,9 @@ err:
 	if (module->mo_bucketm) {
 		do {
 			if (module->mo_bucketv[module->mo_bucketm].ss_name) {
-				if (module->mo_bucketv[module->mo_bucketm].ss_flags & MODSYM_FNAMEOBJ)
+				if (module->mo_bucketv[module->mo_bucketm].ss_flags & Dee_MODSYM_FNAMEOBJ)
 					Dee_Decref(COMPILER_CONTAINER_OF(module->mo_bucketv[module->mo_bucketm].ss_name, DeeStringObject, s_str));
-				if (module->mo_bucketv[module->mo_bucketm].ss_flags & MODSYM_FDOCOBJ)
+				if (module->mo_bucketv[module->mo_bucketm].ss_flags & Dee_MODSYM_FDOCOBJ)
 					Dee_Decref(COMPILER_CONTAINER_OF(module->mo_bucketv[module->mo_bucketm].ss_doc, DeeStringObject, s_str));
 			}
 		} while (module->mo_bucketm--);

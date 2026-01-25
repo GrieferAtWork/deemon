@@ -53,7 +53,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 
 PRIVATE NONNULL((1)) void DCALL
 comerr_init_common(DeeCompilerErrorObject *__restrict self) {
-	weakref_support_init(self);
+	Dee_weakref_support_init(self);
 	self->ce_mode = 0;
 	self->ce_wnum = 0;
 	self->ce_locs.cl_prev = NULL;
@@ -112,7 +112,7 @@ comerr_fini(DeeCompilerErrorObject *__restrict self) {
 	        "More than one location requires a base file to be present");
 	if (self->ce_locs.cl_file) {
 		/* Cleanup saved file locations. */
-		struct compiler_error_loc *next, *iter;
+		struct Dee_compiler_error_loc *next, *iter;
 		TPPFile_Decref(self->ce_locs.cl_file);
 		iter = self->ce_locs.cl_prev;
 		while (iter) {

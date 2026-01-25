@@ -41,15 +41,6 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_compiler_item_object      compiler_item_object
-#define Dee_compiler_item_object_list compiler_item_object_list
-#define Dee_compiler_wrapper_object   compiler_wrapper_object
-#define Dee_compiler_object           compiler_object
-#define Dee_compiler_options          compiler_options
-#define Dee_compiler_items            compiler_items
-#endif /* DEE_SOURCE */
-
 typedef struct Dee_compiler_object DeeCompilerObject;
 struct Dee_compiler_options;
 
@@ -232,9 +223,9 @@ DDATDEF Dee_rshared_rwlock_t DeeCompiler_Lock;
  * the currently active global compiler context.
  * WARNING: Do _NOT_ attempt to write to this weak reference! _EVER_! */
 #ifdef GUARD_DEEMON_COMPILER_COMPILER_C
-DDATDEF struct Dee_weakref DeeCompiler_Active;
+DDATDEF Dee_WEAKREF(DeeCompilerObject) DeeCompiler_Active;
 #else /* GUARD_DEEMON_COMPILER_COMPILER_C */
-DDATDEF struct Dee_weakref const DeeCompiler_Active;
+DDATDEF Dee_WEAKREF(DeeCompilerObject) const DeeCompiler_Active;
 #endif /* !GUARD_DEEMON_COMPILER_COMPILER_C */
 
 /* [0..1][lock(DeeCompiler_Lock)] The currently active compiler.

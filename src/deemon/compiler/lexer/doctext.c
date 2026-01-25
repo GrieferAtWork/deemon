@@ -49,7 +49,7 @@ skip_tpp_comment_line_prefix_after_escaped_linefeed(char const *iter,
 	orig_line_start = iter;
 	for (;;) {
 		uint32_t ch;
-		ch = unicode_readutf8_n(&iter, end);
+		ch = Dee_unicode_readutf8_n(&iter, end);
 		if (DeeUni_IsLF(ch) || !ch)
 			break;
 		if (DeeUni_IsSpace(ch))
@@ -59,23 +59,23 @@ skip_tpp_comment_line_prefix_after_escaped_linefeed(char const *iter,
 			 * the start of the documentation string on this line. - Since
 			 * we're trying to act like TPP hadn't escaped the linefeed, we
 			 * must also remove such a comment. */
-			ch = unicode_readutf8_n(&iter, end);
+			ch = Dee_unicode_readutf8_n(&iter, end);
 			if (ch != '*')
 				break;
 			do {
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 again_search_for_c_comment_end_after_escaped_linefeed:
 				;
 			} while (ch && ch != '*');
 			if (ch != '*')
 				break;
-			ch = unicode_readutf8_n(&iter, end);
+			ch = Dee_unicode_readutf8_n(&iter, end);
 			if (ch != '/')
 				goto again_search_for_c_comment_end_after_escaped_linefeed;
 			continue;
 		}
 		if (ch == '@') {
-			ch = unicode_readutf8_n(&iter, end);
+			ch = Dee_unicode_readutf8_n(&iter, end);
 			if (ch != '@')
 				break;
 			/* The double-@ has been found! */
@@ -97,16 +97,16 @@ done:
  *       of their respective documentation text areas.
  * @return: *: The actual # of erased characters. */
 PRIVATE NONNULL((1)) size_t DCALL
-unicode_printer_erase_whitespace(struct unicode_printer *__restrict self,
+unicode_printer_erase_whitespace(struct Dee_unicode_printer *__restrict self,
                                  size_t i, size_t count) {
 	size_t real_count;
 	for (real_count = 0; real_count < count; ++real_count) {
 		uint32_t ch;
-		ch = UNICODE_PRINTER_GETCHAR(self, i + real_count);
+		ch = Dee_UNICODE_PRINTER_GETCHAR(self, i + real_count);
 		if (!DeeUni_IsSpace(ch))
 			break;
 	}
-	unicode_printer_erase(self, i, real_count);
+	Dee_unicode_printer_erase(self, i, real_count);
 	return real_count;
 }
 
@@ -119,7 +119,7 @@ lstrip_whitespace(/*utf-8*/ char const *start,
 		uint32_t ch;
 		char const *ch_start;
 		ch_start = start;
-		ch = unicode_readutf8_n(&start, end);
+		ch = Dee_unicode_readutf8_n(&start, end);
 		if (!DeeUni_IsSpace(ch)) {
 			start = ch_start;
 			break;
@@ -136,7 +136,7 @@ rstrip_whitespace(/*utf-8*/ char const *start,
 		uint32_t ch;
 		char const *ch_end;
 		ch_end = end;
-		ch = unicode_readutf8_rev_n(&end, start);
+		ch = Dee_unicode_readutf8_rev_n(&end, start);
 		if (!DeeUni_IsSpace(ch)) {
 			end = ch_end;
 			break;
@@ -152,7 +152,7 @@ lstrip_whitespacenolf(/*utf-8*/ char const *start,
 		uint32_t ch;
 		char const *ch_start;
 		ch_start = start;
-		ch = unicode_readutf8_n(&start, end);
+		ch = Dee_unicode_readutf8_n(&start, end);
 		if (!DeeUni_IsSpaceNoLf(ch)) {
 			start = ch_start;
 			break;
@@ -168,7 +168,7 @@ lstrip_whitespacenolf_and_one_optional_colon(/*utf-8*/ char const *start,
 		uint32_t ch;
 		char const *ch_start;
 		ch_start = start;
-		ch = unicode_readutf8_n(&start, end);
+		ch = Dee_unicode_readutf8_n(&start, end);
 		if (!DeeUni_IsSpaceNoLf(ch)) {
 			if (ch == ':')
 				return lstrip_whitespacenolf(start, end);
@@ -186,7 +186,7 @@ find_first_unmatched_closing_parenthesis(/*utf-8*/ char const *start,
 	unsigned int recursion = 0;
 	uint32_t ch;
 	for (;;) {
-		ch = unicode_readutf8_n(&start, end);
+		ch = Dee_unicode_readutf8_n(&start, end);
 		if (ch == '(') {
 			++recursion;
 		} else if (ch == ')') {
@@ -208,7 +208,7 @@ skip_symbol_or_recursive_parenthesis(/*utf-8*/ char const *start,
 	uint32_t ch;
 	char const *ch_start;
 	ch_start = start;
-	ch = unicode_readutf8_n(&start, end);
+	ch = Dee_unicode_readutf8_n(&start, end);
 	if (ch == '(') {
 		char const *result;
 		result = find_first_unmatched_closing_parenthesis(start, end);
@@ -217,7 +217,7 @@ skip_symbol_or_recursive_parenthesis(/*utf-8*/ char const *start,
 	} else if (DeeUni_IsSymStrt(ch)) {
 		do {
 			ch_start = start;
-			ch = unicode_readutf8_n(&start, end);
+			ch = Dee_unicode_readutf8_n(&start, end);
 		} while (DeeUni_IsSymCont(ch));
 	}
 	return ch_start;
@@ -228,11 +228,11 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 is_symbol(/*utf-8*/ char const *start,
           /*utf-8*/ char const *end) {
 	uint32_t ch;
-	ch = unicode_readutf8_n(&start, end);
+	ch = Dee_unicode_readutf8_n(&start, end);
 	if (!DeeUni_IsSymStrt(ch))
 		goto no;
 	for (;;) {
-		ch = unicode_readutf8_n(&start, end);
+		ch = Dee_unicode_readutf8_n(&start, end);
 		if (!ch && (start >= end))
 			break; /* Done */
 		if (!DeeUni_IsSymCont(ch)) {
@@ -240,7 +240,7 @@ is_symbol(/*utf-8*/ char const *start,
 			 *               so if a \ is followed by _, then we can still consider
 			 *               it as a symbol character here! */
 			if (ch == '\\') {
-				ch = unicode_readutf8_n(&start, end);
+				ch = Dee_unicode_readutf8_n(&start, end);
 				if (DeeUni_IsSymCont(ch))
 					continue;
 			}
@@ -256,14 +256,14 @@ no:
 /* Strip trailing characters from `printer' until its length <= stop_at,
  * or until its last character no longer is a whitespace character. */
 PRIVATE NONNULL((1)) void DCALL
-strip_trailing_whitespace_until(struct unicode_printer *__restrict printer,
+strip_trailing_whitespace_until(struct Dee_unicode_printer *__restrict printer,
                                 size_t stop_at) {
 	size_t len = printer->up_length;
 	for (;;) {
 		uint32_t ch;
 		if (len <= stop_at)
 			break;
-		ch = UNICODE_PRINTER_GETCHAR(printer, len - 1);
+		ch = Dee_UNICODE_PRINTER_GETCHAR(printer, len - 1);
 		if (DeeUni_IsLF(ch))
 			break;
 		if (!DeeUni_IsSpace(ch))
@@ -274,14 +274,14 @@ strip_trailing_whitespace_until(struct unicode_printer *__restrict printer,
 }
 
 PRIVATE NONNULL((1)) void DCALL
-strip_all_trailing_whitespace_until(struct unicode_printer *__restrict printer,
+strip_all_trailing_whitespace_until(struct Dee_unicode_printer *__restrict printer,
                                     size_t stop_at) {
 	size_t len = printer->up_length;
 	for (;;) {
 		uint32_t ch;
 		if (len <= stop_at)
 			break;
-		ch = UNICODE_PRINTER_GETCHAR(printer, len - 1);
+		ch = Dee_UNICODE_PRINTER_GETCHAR(printer, len - 1);
 		if (!DeeUni_IsSpace(ch))
 			break;
 		--len;
@@ -290,14 +290,14 @@ strip_all_trailing_whitespace_until(struct unicode_printer *__restrict printer,
 }
 
 PRIVATE NONNULL((1)) void DCALL
-strip_trailing_whitespace(struct unicode_printer *__restrict printer,
+strip_trailing_whitespace(struct Dee_unicode_printer *__restrict printer,
                           size_t stop_at) {
 	size_t len = printer->up_length;
 	for (;;) {
 		uint32_t ch;
 		if (len <= stop_at)
 			break;
-		ch = UNICODE_PRINTER_GETCHAR(printer, len - 1);
+		ch = Dee_UNICODE_PRINTER_GETCHAR(printer, len - 1);
 		if (!DeeUni_IsSpace(ch))
 			break;
 		--len;
@@ -310,7 +310,7 @@ contains_only_decimals_dot_colon_or_backslash(/*utf-8*/ char const *text,
                                               /*utf-8*/ char const *end) {
 	uint32_t ch;
 	for (;;) {
-		ch = unicode_readutf8_n(&text, end);
+		ch = Dee_unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (DeeUni_IsDigit(ch))
@@ -341,11 +341,11 @@ find_nonescaped_match(/*utf-8*/ char const *text,
 		char const *ch_start;
 		uint32_t ch;
 		ch_start = text;
-		ch = unicode_readutf8_n(&text, end);
+		ch = Dee_unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch == '\\') {
-			unicode_readutf8_n(&text, end);
+			Dee_unicode_readutf8_n(&text, end);
 			continue;
 		}
 		if (ch == (unsigned char)find_open) {
@@ -367,7 +367,7 @@ find_nonescaped_match(/*utf-8*/ char const *text,
  * all \|-sequences into |-characters. - This function is used by the
  * line-printer functions used by tables. */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-reprint_but_unescape_backslash_pipe(struct unicode_printer *__restrict printer,
+reprint_but_unescape_backslash_pipe(struct Dee_unicode_printer *__restrict printer,
                                     /*utf-8*/ char const *text,
                                     /*utf-8*/ char const *end) {
 	char const *flush_start;
@@ -376,13 +376,13 @@ reprint_but_unescape_backslash_pipe(struct unicode_printer *__restrict printer,
 		uint32_t ch;
 		char const *ch_start, *escape_start;
 		ch_start = text;
-		ch = unicode_readutf8_n(&text, end);
+		ch = Dee_unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch != '\\')
 			continue;
 		escape_start = text;
-		ch = unicode_readutf8_n(&text, end);
+		ch = Dee_unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch == '|' || ch == '\\') {
@@ -390,13 +390,13 @@ reprint_but_unescape_backslash_pipe(struct unicode_printer *__restrict printer,
 			 *       Otherwise, something like "\\ " would cause the
 			 *       space character to become escaped during re-parse */
 			/* Escape */
-			if unlikely(unicode_printer_print(printer, flush_start,
+			if unlikely(Dee_unicode_printer_print(printer, flush_start,
 			                                  (size_t)(ch_start - flush_start)) < 0)
 				goto err;
 			flush_start = escape_start;
 		}
 	}
-	if unlikely(unicode_printer_print(printer, flush_start,
+	if unlikely(Dee_unicode_printer_print(printer, flush_start,
 	                                  (size_t)(end - flush_start)) < 0)
 		goto err;
 	return 0;
@@ -412,7 +412,7 @@ err:
  *      \ _ @ ` [ ] ( ) - + | = ~ * # : >
  */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-print_escaped(struct unicode_printer *__restrict printer,
+print_escaped(struct Dee_unicode_printer *__restrict printer,
               /*utf-8*/ char const *text,
               /*utf-8*/ char const *end) {
 	char const *flush_start;
@@ -421,28 +421,28 @@ print_escaped(struct unicode_printer *__restrict printer,
 		uint32_t ch;
 		char const *ch_start;
 		ch_start = text;
-		ch = unicode_readutf8_n(&text, end);
+		ch = Dee_unicode_readutf8_n(&text, end);
 		if (!ch && (text >= end))
 			break;
 		if (ch == '#' || ch == '$' || ch == '%' || ch == '&' || ch == '~' ||
 		    ch == '^' || ch == '{' || ch == '}' || ch == '[' || ch == ']' ||
 		    ch == '|' || ch == '?' || ch == '*' || ch == '@' || ch == '-' ||
 		    ch == '+' || ch == ':') {
-			if unlikely(unicode_printer_print(printer, flush_start,
-			                                  (size_t)(ch_start - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(printer, flush_start,
+			                                      (size_t)(ch_start - flush_start)) < 0)
 				goto err;
 do_escape_ch:
-			if unlikely(unicode_printer_putascii(printer, '#'))
+			if unlikely(Dee_unicode_printer_putascii(printer, '#'))
 				goto err;
 			flush_start = ch_start;
 		}
 		if (ch == '\\') {
-			if unlikely(unicode_printer_print(printer, flush_start,
-			                                  (size_t)(ch_start - flush_start)) < 0)
+			if unlikely(Dee_unicode_printer_print(printer, flush_start,
+			                                      (size_t)(ch_start - flush_start)) < 0)
 				goto err;
 			flush_start = ch_start;
 			ch_start    = text;
-			ch = unicode_readutf8_n(&text, end);
+			ch = Dee_unicode_readutf8_n(&text, end);
 			if (ch == '[' || ch == ']' || ch == '|' || ch == '~' ||
 			    ch == '*' || ch == '@' || ch == '-' || ch == '+' ||
 			    ch == '#' || ch == ':')
@@ -453,8 +453,8 @@ do_escape_ch:
 				flush_start = ch_start;
 		}
 	}
-	if unlikely(unicode_printer_print(printer, flush_start,
-	                                  (size_t)(end - flush_start)) < 0)
+	if unlikely(Dee_unicode_printer_print(printer, flush_start,
+	                                      (size_t)(end - flush_start)) < 0)
 		goto err;
 	return 0;
 err:
@@ -467,7 +467,7 @@ err:
  * All lines are also right-stripped of trailing space characters.
  * This function is used to dedent ```-style multi-line code blocks. */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-print_escaped_dedent(struct unicode_printer *__restrict printer,
+print_escaped_dedent(struct Dee_unicode_printer *__restrict printer,
                      /*utf-8*/ char const *text,
                      /*utf-8*/ char const *end,
                      size_t num_characters) {
@@ -480,12 +480,12 @@ print_escaped_dedent(struct unicode_printer *__restrict printer,
 			uint32_t ch;
 			char const *ch_start;
 			ch_start = text;
-			ch = unicode_readutf8_n(&text, end);
+			ch = Dee_unicode_readutf8_n(&text, end);
 			if (nskip) {
 				if (DeeUni_IsLF(ch)) {
 					/* Empty line (reset the counter) */
 do_reset_on_newline:
-					if unlikely(unicode_printer_put32(printer, ch))
+					if unlikely(Dee_unicode_printer_put32(printer, ch))
 						goto err;
 					nskip = num_characters;
 				} else {
@@ -505,7 +505,7 @@ do_reset_on_newline:
 				current_line_start = ch_start;
 				for (;;) {
 					ch_start = text;
-					ch = unicode_readutf8_n(&text, end);
+					ch = Dee_unicode_readutf8_n(&text, end);
 					if (DeeUni_IsLF(ch))
 						break;
 					if (!ch && (text >= end)) {
@@ -542,7 +542,7 @@ find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__re
 	size_t current_line_leading_spaces = 0;
 	for (;;) {
 		uint32_t ch;
-		ch = unicode_readutf8_n(&text, end);
+		ch = Dee_unicode_readutf8_n(&text, end);
 		if (DeeUni_IsLF(ch)) {
 			if (min_line_leading_spaces == (size_t)-1)
 				*p_text = text; /* Skip an empty leading line */
@@ -567,7 +567,7 @@ find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__re
 		for (;;) {
 			if (!ch && (text >= end))
 				goto done;
-			ch = unicode_readutf8_n(&text, end);
+			ch = Dee_unicode_readutf8_n(&text, end);
 			if (DeeUni_IsLF(ch))
 				break;
 		}
@@ -589,7 +589,7 @@ find_end_of_current_line_with_first_ch(uint32_t ch,
 			/* Deal with windows-style line-feeds */
 			if (ch == '\r') {
 				char const *temp = iter;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 				if (ch != '\n')
 					iter = temp;
 			}
@@ -598,12 +598,12 @@ find_end_of_current_line_with_first_ch(uint32_t ch,
 		}
 		if (ch == '\\') {
 			/* Deal with escaped line-feeds */
-			ch = unicode_readutf8_n(&iter, end);
+			ch = Dee_unicode_readutf8_n(&iter, end);
 			if (DeeUni_IsLF(ch)) {
 				/* Deal with windows-style line-feeds */
 				if (ch == '\r') {
 					char const *temp = iter;
-					ch = unicode_readutf8_n(&iter, end);
+					ch = Dee_unicode_readutf8_n(&iter, end);
 					if (ch != '\n')
 						iter = temp;
 				}
@@ -614,7 +614,7 @@ find_end_of_current_line_with_first_ch(uint32_t ch,
 			}
 			continue;
 		}
-		ch = unicode_readutf8_n(&iter, end);
+		ch = Dee_unicode_readutf8_n(&iter, end);
 	}
 }
 
@@ -628,17 +628,17 @@ find_end_of_current_line_with_first_ch(uint32_t ch,
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,
-           struct unicode_printer *__restrict result_printer,
-           /*nullable*/ struct unicode_printer *source_printer,
+           struct Dee_unicode_printer *__restrict result_printer,
+           /*nullable*/ struct Dee_unicode_printer *source_printer,
            unsigned int flags);
 
 /* Compile the string from `source_printer' and write the result to `result_printer'
  * NOTE: This function is allowed to modify `source_printer' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-do_compile_printer_to_printer(struct unicode_printer *__restrict result_printer,
-                              struct unicode_printer *__restrict source_printer,
+do_compile_printer_to_printer(struct Dee_unicode_printer *__restrict result_printer,
+                              struct Dee_unicode_printer *__restrict source_printer,
                               unsigned int flags) {
-	if likely((source_printer->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	if likely((source_printer->up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		/* Directly compile the original documentation text. */
 		return do_compile((/*utf-8*/ char const *)source_printer->up_buffer,
 		                  (/*utf-8*/ char const *)source_printer->up_buffer + source_printer->up_length,
@@ -647,8 +647,8 @@ do_compile_printer_to_printer(struct unicode_printer *__restrict result_printer,
 		/* Re-package as a 1-byte, utf-8 string. */
 		DREF DeeStringObject *rawtext;
 		/*utf-8*/ char const *rawutf8;
-		rawtext = (DREF DeeStringObject *)unicode_printer_pack(source_printer);
-		unicode_printer_init(source_printer);
+		rawtext = (DREF DeeStringObject *)Dee_unicode_printer_pack(source_printer);
+		Dee_unicode_printer_init(source_printer);
 		if unlikely(!rawtext)
 			goto err;
 
@@ -682,8 +682,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,
-           struct unicode_printer *__restrict result_printer,
-           /*nullable*/ struct unicode_printer *source_printer,
+           struct Dee_unicode_printer *__restrict result_printer,
+           /*nullable*/ struct Dee_unicode_printer *source_printer,
            unsigned int flags) {
 	uint32_t ch;
 	char const *ch_start;
@@ -699,25 +699,25 @@ do_compile(/*utf-8*/ char const *text,
 		if unlikely((expr) < 0) \
 			goto err;           \
 	}	__WHILE0
-#define FLUSHTO(flushto)                                                        \
-	do {                                                                        \
-		ASSERT((flushto) >= flush_start);                                       \
-		if unlikely(unicode_printer_print(result_printer, flush_start,          \
-		                                  (size_t)((flushto)-flush_start)) < 0) \
-			goto err;                                                           \
+#define FLUSHTO(flushto)                                                            \
+	do {                                                                            \
+		ASSERT((flushto) >= flush_start);                                           \
+		if unlikely(Dee_unicode_printer_print(result_printer, flush_start,          \
+		                                      (size_t)((flushto)-flush_start)) < 0) \
+			goto err;                                                               \
 	}	__WHILE0
-#define PUTUNI(ch)                                       \
-	do {                                                 \
-		if (unicode_printer_put32(result_printer, (ch))) \
-			goto err;                                    \
+#define PUTUNI(ch)                                           \
+	do {                                                     \
+		if (Dee_unicode_printer_put32(result_printer, (ch))) \
+			goto err;                                        \
 	}	__WHILE0
-#define PUTASCII(ch)                                        \
-	do {                                                    \
-		if (unicode_printer_putascii(result_printer, (ch))) \
-			goto err;                                       \
+#define PUTASCII(ch)                                            \
+	do {                                                        \
+		if (Dee_unicode_printer_putascii(result_printer, (ch))) \
+			goto err;                                           \
 	}	__WHILE0
-#define PRINT(ptr, len)      DO(unicode_printer_print(result_printer, ptr, len))
-#define PRINTASCII(ptr, len) DO(unicode_printer_printascii(result_printer, ptr, len))
+#define PRINT(ptr, len)      DO(Dee_unicode_printer_print(result_printer, ptr, len))
+#define PRINTASCII(ptr, len) DO(Dee_unicode_printer_printascii(result_printer, ptr, len))
 
 	/* Strip trailing whitespace. */
 	end = rstrip_whitespace(text, end);
@@ -730,7 +730,7 @@ do_compile(/*utf-8*/ char const *text,
 	 * white-space characters. */
 	for (;;) {
 		ch_start = iter;
-		ch = unicode_readutf8_n(&iter, end);
+		ch = Dee_unicode_readutf8_n(&iter, end);
 		if (DeeUni_IsLF(ch)) {
 			current_line_start          = iter;
 			current_line_leading_spaces = 0;
@@ -751,12 +751,12 @@ do_compile(/*utf-8*/ char const *text,
 	result_printer_origlen  = result_printer->up_length;
 
 	ch_start = iter;
-	ch       = unicode_readutf8_n(&iter, end);
+	ch       = Dee_unicode_readutf8_n(&iter, end);
 	goto do_switch_ch_at_start_of_line;
 	for (;;) {
 do_read_and_switch_ch:
 		ch_start = iter;
-		ch = unicode_readutf8_n(&iter, end);
+		ch = Dee_unicode_readutf8_n(&iter, end);
 do_switch_ch:
 		ASSERT(ch_start >= flush_start);
 		ASSERT(iter >= flush_start);
@@ -789,10 +789,10 @@ do_set_current_line:
 			FLUSHTO(ch_start);
 do_set_current_line_noflush:
 			ch_start = iter;
-			nextchar = unicode_readutf8_n(&iter, end);
+			nextchar = Dee_unicode_readutf8_n(&iter, end);
 			if (ch == '\r' && nextchar == '\n') {
 				ch_start = iter;
-				nextchar = unicode_readutf8_n(&iter, end);
+				nextchar = Dee_unicode_readutf8_n(&iter, end);
 			}
 			ch = nextchar;
 
@@ -806,7 +806,7 @@ do_set_current_line_noflush:
 			__IF0 {
 start_newline_with_explicit_linefeed:
 				ch_start = iter;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 scan_newline_with_first_ch_and_explicit_linefeed:
 				has_explicit_linefeed = true;
 			}
@@ -815,7 +815,7 @@ scan_newline_with_first_ch_and_explicit_linefeed:
 			goto check_ch_after_lf;
 			for (;;) {
 				ch_start = iter;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 check_ch_after_lf:
 				if (DeeUni_IsLF(ch)) {
 					if (ch == '\r' && (iter < end && *iter == '\r'))
@@ -870,7 +870,7 @@ check_ch_after_lf:
 					prev_line_start = current_line_start_after_whitespace;
 					prev_line_end   = current_line_start_after_whitespace;
 					do {
-						temp_ch = unicode_readutf8_n(&prev_line_end, next_line_start);
+						temp_ch = Dee_unicode_readutf8_n(&prev_line_end, next_line_start);
 						if (!temp_ch && (prev_line_end <= prev_line_start))
 							goto do_join_with_linefeed;
 						if (DeeUni_IsLF(temp_ch))
@@ -879,7 +879,7 @@ check_ch_after_lf:
 
 					/* Check if `prev_line_end' points to a non-whitespace character. */
 					temp = prev_line_end;
-					temp_ch = unicode_readutf8_n(&prev_line_end, next_line_start);
+					temp_ch = Dee_unicode_readutf8_n(&prev_line_end, next_line_start);
 					if (DeeUni_IsSpace(temp_ch))
 						goto do_join_with_linefeed;
 					prev_line_end = temp;
@@ -888,13 +888,13 @@ check_ch_after_lf:
 					prev_line_end = rstrip_whitespace(prev_line_start, prev_line_end);
 
 					/* Check if there's a :-character before `prev_line_end' */
-					temp_ch = unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
+					temp_ch = Dee_unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
 					if (temp_ch != ':')
 						goto do_join_with_linefeed;
 
 					/* Check if the :-character is preceded by `.', <space> or <issymcont>
 					 * If it is, then we must join the two lines via space */
-					temp_ch = unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
+					temp_ch = Dee_unicode_readutf8_rev_n(&prev_line_end, prev_line_start);
 					if (DeeUni_IsSymCont(temp_ch) || DeeUni_IsSpace(temp_ch) || temp_ch == '.')
 						goto do_join_with_space;
 do_join_with_linefeed:
@@ -947,7 +947,7 @@ do_switch_ch_at_start_of_line:
 				/* Seek ahead to the start of the first cell. */
 				for (;;) {
 					ch_start = iter;
-					ch       = unicode_readutf8_n(&iter, end);
+					ch       = Dee_unicode_readutf8_n(&iter, end);
 					if (!ch && (iter >= end))
 						goto not_a_table;
 					if (DeeUni_IsLF(ch))
@@ -966,12 +966,12 @@ do_switch_ch_at_start_of_line:
 						 * of remaining `corner_ch'-characters as `column_count' */
 						column_count = 0;
 						for (;;) {
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch)) {
 								/* Deal with windows-style line-feeds */
 								if (ch == '\r') {
 									char const *temp = iter;
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = temp;
 								}
@@ -989,7 +989,7 @@ do_switch_ch_at_start_of_line:
 						/* A top border was present, and we did parse it.
 						 * Now we must move on to the start of the first cell. */
 						for (;;) {
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 								goto not_a_table;
 							if (DeeUni_IsSpace(ch))
@@ -1003,7 +1003,7 @@ do_switch_ch_at_start_of_line:
 						/* Skip additional whitespace at the start of the first cell. */
 						for (;;) {
 							ch_start = iter;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 								goto not_a_table;
 							if (!DeeUni_IsSpace(ch))
@@ -1039,7 +1039,7 @@ do_switch_ch_at_start_of_line:
 								++column_count;
 							}
 							if (scan_ch == '\\') {
-								scan_ch = unicode_readutf8_n(&scan_iter, end);
+								scan_ch = Dee_unicode_readutf8_n(&scan_iter, end);
 								if (DeeUni_IsLF(scan_ch) || (!scan_ch && scan_iter >= end))
 									break;
 							}
@@ -1047,7 +1047,7 @@ do_switch_ch_at_start_of_line:
 							 *       A |-character inside of @(foo | bar) should automatically
 							 *       be escaped, and similar should happen for `foo | bar' (i.e.
 							 *       inlined code) */
-							scan_ch = unicode_readutf8_n(&scan_iter, end);
+							scan_ch = Dee_unicode_readutf8_n(&scan_iter, end);
 						}
 						if (!column_count)
 							goto not_a_table;
@@ -1066,12 +1066,12 @@ do_switch_ch_at_start_of_line:
 					char const *prev_iter = iter;
 
 					/* Rewind whitespace characters. */
-					prev_ch = unicode_readutf8_rev_n(&iter, table_top_left);
+					prev_ch = Dee_unicode_readutf8_rev_n(&iter, table_top_left);
 					if (DeeUni_IsSpace(prev_ch))
 						continue;
 					iter     = prev_iter;
 					ch_start = prev_iter;
-					ch       = unicode_readutf8_n(&iter, table_top_left);
+					ch       = Dee_unicode_readutf8_n(&iter, table_top_left);
 					break;
 				}
 
@@ -1079,12 +1079,12 @@ do_switch_ch_at_start_of_line:
 				 *       iter points after that same character! */
 				{
 					struct table_column {
-						struct unicode_printer tc_body;      /* The inner body of the cell. */
+						struct Dee_unicode_printer tc_body;      /* The inner body of the cell. */
 						size_t                 tc_linestart; /* Offset at the start of the current line. */
 					};
 
 					/* The buffer for the compiled contents of the table. */
-					struct unicode_printer table_output = UNICODE_PRINTER_INIT;
+					struct Dee_unicode_printer table_output = Dee_UNICODE_PRINTER_INIT;
 					struct table_column *columns; /* [1..column_count][owned] Vector of column buffers. */
 					size_t column_index;
 					bool need_thin_separator = false;
@@ -1098,7 +1098,7 @@ do_switch_ch_at_start_of_line:
 
 					/* Initialize printers for the cells. */
 					for (column_index = 0; column_index < column_count; ++column_index)
-						unicode_printer_init(&columns[column_index].tc_body);
+						Dee_unicode_printer_init(&columns[column_index].tc_body);
 					for (;;) {
 						/* Pointer to the start of the first cell on the previous table line
 						 * (used for matching vertical characters in a count-miss-match scenario)
@@ -1140,7 +1140,7 @@ do_handle_end_of_line_in_table_line:
 										/* Deal with windows-style line-feeds */
 										if (ch == '\r') {
 											char const *temp = iter;
-											ch = unicode_readutf8_n(&iter, end);
+											ch = Dee_unicode_readutf8_n(&iter, end);
 											if (ch != '\n') {
 												iter = temp;
 												/*ch = '\r';*/
@@ -1184,7 +1184,7 @@ do_handle_wrong_number_of_cells:
 										cell_start     = current_table_line;
 										prev_line_iter = previous_table_line;
 										prev_line_separator_ch = vertical_ch;
-										prev_line_ch = unicode_readutf8_n(&prev_line_iter, end);
+										prev_line_ch = Dee_unicode_readutf8_n(&prev_line_iter, end);
 
 										/* Handle the case where the previous line is actually a thick
 										 * separator or table top/bottom border, in which case we must
@@ -1197,8 +1197,8 @@ do_handle_wrong_number_of_cells:
 											prev_line_ch_was_escaped = false;
 continue_table_extended_scan_after_escape:
 											ch_start     = iter;
-											ch           = unicode_readutf8_n(&iter, end);
-											prev_line_ch = unicode_readutf8_n(&prev_line_iter, end);
+											ch           = Dee_unicode_readutf8_n(&iter, end);
+											prev_line_ch = Dee_unicode_readutf8_n(&prev_line_iter, end);
 											if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 												break;
 											if (DeeUni_IsLF(prev_line_ch)) {
@@ -1211,7 +1211,7 @@ continue_table_extended_scan_after_escape:
 													if (!DeeUni_IsSpace(ch))
 														goto not_a_table2_or_done_table;
 													ch_start = iter;
-													ch = unicode_readutf8_n(&iter, end);
+													ch = Dee_unicode_readutf8_n(&iter, end);
 												}
 												ASSERT(column_index == column_count);
 												break;
@@ -1242,7 +1242,7 @@ continue_table_extended_scan_after_escape:
 												goto err_table;
 
 											/* Append trailing new-line characters to this column */
-											if unlikely(unicode_printer_putascii(&columns[column_index].tc_body, '\n'))
+											if unlikely(Dee_unicode_printer_putascii(&columns[column_index].tc_body, '\n'))
 												goto err_table;
 											++column_index;
 											cell_start = iter;
@@ -1255,7 +1255,7 @@ continue_table_extended_scan_after_escape:
 										/* Deal with windows-style line-feeds */
 										if (ch == '\r') {
 											char const *temp = iter;
-											ch = unicode_readutf8_n(&iter, end);
+											ch = Dee_unicode_readutf8_n(&iter, end);
 											if (ch != '\n') {
 												iter = temp;
 											} else {
@@ -1275,14 +1275,14 @@ continue_table_extended_scan_after_escape:
 									has_nonempty_cell  = true;
 									goto got_table_line;
 not_a_table2_or_done_table:
-									if (UNICODE_PRINTER_ISEMPTY(&table_output))
+									if (Dee_UNICODE_PRINTER_ISEMPTY(&table_output))
 										goto not_a_table2;
 									if (!nextline_start)
 										goto not_a_table2;
 
 									/* Finalize partially written cells. */
 									for (column_index = 0; column_index < column_count; ++column_index)
-										unicode_printer_fini(&columns[column_index].tc_body);
+										Dee_unicode_printer_fini(&columns[column_index].tc_body);
 									iter = nextline_start;
 									goto done_table_nochk_columns;
 								}
@@ -1290,7 +1290,7 @@ not_a_table2_or_done_table:
 								/* Ignore |-characters that are pre-fixed by \-characters */
 								if (ch == '\\') {
 									ch_start = iter;
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && (iter >= end)))
 										goto do_handle_end_of_line_in_table_line;
 									if (ch == vertical_ch)
@@ -1302,7 +1302,7 @@ not_a_table2_or_done_table:
 								 *       be escaped, and similar should happen for `foo | bar' (i.e.
 								 *       inlined code) */
 								ch_start = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 							}
 
 							/* Figure out where the contents of the current cell end. */
@@ -1312,7 +1312,7 @@ not_a_table2_or_done_table:
 								/* Empty cell. */
 								++column_index;
 								ch_start = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 								continue;
 							}
 
@@ -1323,7 +1323,7 @@ not_a_table2_or_done_table:
 								/* Append empty lines to all cells already written as empty. */
 								size_t i;
 								for (i = 0; i < column_index; ++i) {
-									if unlikely(unicode_printer_putascii(&columns[i].tc_body, '\n'))
+									if unlikely(Dee_unicode_printer_putascii(&columns[i].tc_body, '\n'))
 										goto err_table;
 								}
 								has_nonempty_cell = true;
@@ -1336,19 +1336,19 @@ not_a_table2_or_done_table:
 								                                                cell_start, cell_end))
 									goto err_table;
 							} else {
-								if unlikely(unicode_printer_print(&columns[column_index].tc_body,
-								                                  cell_start, (size_t)(cell_end - cell_start)) < 0)
+								if unlikely(Dee_unicode_printer_print(&columns[column_index].tc_body,
+								                                      cell_start, (size_t)(cell_end - cell_start)) < 0)
 									goto err_table;
 							}
 
 							/* Append trailing new-line characters to this column */
-							if unlikely(unicode_printer_putascii(&columns[column_index].tc_body, '\n'))
+							if unlikely(Dee_unicode_printer_putascii(&columns[column_index].tc_body, '\n'))
 								goto err_table;
 
 							/* Move on to the next cell */
 							++column_index;
 							ch_start = iter;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 						} /* for (;;) */
 						{
 							/* Table row separator:
@@ -1364,7 +1364,7 @@ got_table_line:
 							/* Skip leading spaces at the start of the next line. */
 							for (;;) {
 								ch_start = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 								if (DeeUni_IsSpace(ch) && !DeeUni_IsLF(ch))
 									continue;
 								break;
@@ -1379,7 +1379,7 @@ got_table_line:
 								char const *nextline_firstcell_start;
 								bool did_encounter_horizontal_character;
 								ch_start = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 								if (corner_ch_is_known && corner_ch != vertical_ch) {
 extend_table_row_or_insert_thin_separator:
 									if (need_thin_separator) {
@@ -1417,10 +1417,10 @@ extend_table_row_or_insert_thin_separator:
 continue_row_at_nextline_firstcell_start:
 										ch_start = nextline_firstcell_start;
 										iter     = nextline_firstcell_start;
-										ch       = unicode_readutf8_n(&iter, end);
+										ch       = Dee_unicode_readutf8_n(&iter, end);
 										goto extend_table_row_or_insert_thin_separator;
 									}
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 								}
 
 								/* If we didn't encounter any horizontal characters, then the
@@ -1435,7 +1435,7 @@ continue_row_at_nextline_firstcell_start:
 								/* Scan until the end of this row. */
 								column_index = 1;
 								for (;;) {
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 										break;
 									if (DeeUni_IsSpace(ch))
@@ -1462,12 +1462,12 @@ continue_row_at_nextline_firstcell_start:
 								/* Deal with windows-line-feeds */
 								if (ch == '\r') {
 									char const *temp = iter;
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = temp;
 								}
 								ch_start = iter;
-								ch       = unicode_readutf8_n(&iter, end);
+								ch       = Dee_unicode_readutf8_n(&iter, end);
 								nextline_start = iter;
 
 								/* NOTE: ch/ch_start point at the first character of the line that followed
@@ -1485,7 +1485,7 @@ thick_border_is_actually_table_end:
 									}
 									if (DeeUni_IsSpace(ch)) {
 										ch_start = iter;
-										ch = unicode_readutf8_n(&iter, end);
+										ch = Dee_unicode_readutf8_n(&iter, end);
 										continue;
 									}
 									if (ch != vertical_ch)
@@ -1493,7 +1493,7 @@ thick_border_is_actually_table_end:
 
 									/* First character after the initial <vertical_ch> */
 									ch_start = iter;
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									break;
 								}
 							} else if (ch == corner_ch) {
@@ -1513,7 +1513,7 @@ do_handle_corner_ch_as_thick_row:
 								/* ch/ch_start now point at the first non-whitespace character of the next line. */
 								column_index = 0;
 								for (;;) {
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 										break;
 									if (DeeUni_IsSpace(ch))
@@ -1541,14 +1541,14 @@ do_handle_corner_ch_as_thick_row:
 								 * continues, or if the thick row was actually the table's footer */
 								nextline_start = iter;
 								if (ch == '\r') {
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = nextline_start;
 								}
 
 								/* Skip leading whitespace. */
 								for (;;) {
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
 										goto set_end_of_table;
 									if (DeeUni_IsSpace(ch))
@@ -1562,7 +1562,7 @@ do_handle_corner_ch_as_thick_row:
 
 								/* Read the first character for the first cell after the thick separator. */
 								ch_start = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 							} else if (table_iscorner(ch) && !corner_ch_is_known) {
 								corner_ch_is_known = true;
 								corner_ch          = ch;
@@ -1577,9 +1577,9 @@ end_table_row:
 							 *               doesn't have any contents, and all columns
 							 *               are currently empty. */
 							if (row_separator == 0 && !has_nonempty_cell &&
-							    UNICODE_PRINTER_ISEMPTY(&table_output)) {
+							    Dee_UNICODE_PRINTER_ISEMPTY(&table_output)) {
 								for (column_index = 0; column_index < column_count; ++column_index) {
-									if (!UNICODE_PRINTER_ISEMPTY(&columns[column_index].tc_body))
+									if (!Dee_UNICODE_PRINTER_ISEMPTY(&columns[column_index].tc_body))
 										goto table_has_nonempty_column;
 								}
 								goto not_a_table2;
@@ -1592,7 +1592,7 @@ table_has_nonempty_column:
 							for (column_index = 0; column_index < column_count; ++column_index) {
 								if (column_index != 0) {
 									/* Write the cell separator. */
-									if unlikely(unicode_printer_putascii(&table_output, '|'))
+									if unlikely(Dee_unicode_printer_putascii(&table_output, '|'))
 										goto err_table;
 								}
 
@@ -1601,14 +1601,14 @@ table_has_nonempty_column:
 								                                          &columns[column_index].tc_body,
 								                                          flags & ~DOCTEXT_COMPILE_FLAG_ROOT))
 									goto err_table;
-								unicode_printer_fini(&columns[column_index].tc_body);
-								unicode_printer_init(&columns[column_index].tc_body);
+								Dee_unicode_printer_fini(&columns[column_index].tc_body);
+								Dee_unicode_printer_init(&columns[column_index].tc_body);
 							}
 							if (row_separator == 0)
 								goto done_table;
 
 							/* Terminate the row with either a thin, or a thick separator. */
-							if unlikely(unicode_printer_putascii(&table_output, row_separator))
+							if unlikely(Dee_unicode_printer_putascii(&table_output, row_separator))
 								goto err_table;
 							need_thin_separator = false;
 						}
@@ -1619,7 +1619,7 @@ table_has_nonempty_column:
 					} /* for (;;) */
 done_table:
 					/* Make sure that the table isn't entirely empty! */
-					if (UNICODE_PRINTER_ISEMPTY(&table_output))
+					if (Dee_UNICODE_PRINTER_ISEMPTY(&table_output))
 						goto not_a_table2;
 
 					/* NOTE: At this point, `iter' points at the start of
@@ -1628,13 +1628,13 @@ done_table:
 #ifndef NDEBUG
 					/* Make sure that all column buffers are empty when the table ends. */
 					for (column_index = 0; column_index < column_count; ++column_index)
-						ASSERT(UNICODE_PRINTER_ISEMPTY(&columns[column_index].tc_body));
+						ASSERT(Dee_UNICODE_PRINTER_ISEMPTY(&columns[column_index].tc_body));
 #endif /* !NDEBUG */
 done_table_nochk_columns:
 					Dee_Free(columns);
 
 					/* Flush to the start of the table. */
-					if unlikely(unicode_printer_print(result_printer, flush_start,
+					if unlikely(Dee_unicode_printer_print(result_printer, flush_start,
 					                                  (size_t)(table_top_left - flush_start)) < 0)
 						goto err_table_output;
 
@@ -1645,41 +1645,41 @@ done_table_nochk_columns:
 						should_strip_leading_space = false;
 
 					/* Write the table header */
-					if unlikely(unicode_printer_printascii(result_printer, "#T{", 3) < 0)
+					if unlikely(Dee_unicode_printer_printascii(result_printer, "#T{", 3) < 0)
 						goto err_table_output;
 
 					/* Print the compiled table contents into the result printer. */
-					if unlikely(unicode_printer_printinto(&table_output,
-					                                      &unicode_printer_print,
-					                                      result_printer) < 0)
+					if unlikely(Dee_unicode_printer_printinto(&table_output,
+					                                          &Dee_unicode_printer_print,
+					                                          result_printer) < 0)
 						goto err_table_output;
 
 					/* Write the table footer */
-					if unlikely(unicode_printer_putascii(result_printer, '}'))
+					if unlikely(Dee_unicode_printer_putascii(result_printer, '}'))
 						goto err_table_output;
 
 					/* Destroy the table output buffer. */
-					unicode_printer_fini(&table_output);
+					Dee_unicode_printer_fini(&table_output);
 
 					/* Continue parsing with the explicit line-feed in mind */
 					goto start_newline_with_explicit_linefeed;
 err_table:
 					for (column_index = 0; column_index < column_count; ++column_index)
-						unicode_printer_fini(&columns[column_index].tc_body);
+						Dee_unicode_printer_fini(&columns[column_index].tc_body);
 					Dee_Free(columns);
 err_table_output:
-					unicode_printer_fini(&table_output);
+					Dee_unicode_printer_fini(&table_output);
 					goto err;
 not_a_table2:
-					unicode_printer_fini(&table_output);
+					Dee_unicode_printer_fini(&table_output);
 					for (column_index = 0; column_index < column_count; ++column_index)
-						unicode_printer_fini(&columns[column_index].tc_body);
+						Dee_unicode_printer_fini(&columns[column_index].tc_body);
 					Dee_Free(columns);
 				}
 not_a_table:
 				ch_start = table_top_left;
 				iter     = table_top_left;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 #if table_iscorner('+') || table_isvert('+')
 				if (ch == '+')
 					goto check_for_list;
@@ -1704,7 +1704,7 @@ check_for_list:
 				list_prefix_ch  = ch;
 				is_ordered_list = ch >= '0' && ch <= '9';
 				list_firstline_start = ch_start;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 
 				/* Scan the list item prefix of an ordered list. */
 				item_prefix_start  = NULL;
@@ -1718,7 +1718,7 @@ check_for_list:
 					for (;;) {
 						if (ch == ':') {
 							item_prefix_end = iter;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							if (!DeeUni_IsSpace(ch))
 								goto not_a_list;
 							list_prefix_ch  = ':';
@@ -1727,7 +1727,7 @@ check_for_list:
 						if (ch == '.') {
 							/* Check if the next character is whitespace. */
 							item_prefix_end = iter;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							if (!DeeUni_IsSpace(ch)) {
 								++list_element_indent;
 								continue;
@@ -1739,7 +1739,7 @@ check_for_list:
 						/* Only decimal characters (and '.') are allowed in here! */
 						if (!DeeUni_IsDigit(ch))
 							goto not_a_list;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						++list_element_indent;
 					}
 				}
@@ -1755,7 +1755,7 @@ check_for_list:
 not_a_list:
 					ch_start = list_firstline_start;
 					iter     = list_firstline_start;
-					ch = unicode_readutf8_n(&iter, end);
+					ch = Dee_unicode_readutf8_n(&iter, end);
 					break;
 				}
 
@@ -1774,7 +1774,7 @@ not_a_list:
 got_space_after_list_start:
 				for (;;) {
 					ch_start = iter;
-					ch = unicode_readutf8_n(&iter, end);
+					ch = Dee_unicode_readutf8_n(&iter, end);
 					if (DeeUni_IsLF(ch))
 						goto not_a_list;
 					if (!DeeUni_IsSpace(ch))
@@ -1822,7 +1822,7 @@ list_begin_next_line:
 				 *          "element 1\nelement 1 line 2\nelement 1 line 3\n\nelement 1 line 4"
 				 * HINT: In this example, `list_element_indent == 3' */
 				{
-					struct unicode_printer item_printer = UNICODE_PRINTER_INIT;
+					struct Dee_unicode_printer item_printer = Dee_UNICODE_PRINTER_INIT;
 					bool has_next_item;
 					for (;;) {
 						char const *list_line_start;
@@ -1839,8 +1839,8 @@ list_continue_current_line:
 						 * from `list_line_start' up until `list_line_end' (so-as to include the line-feed) to
 						 * `item_printer', so-as to be re-parsed once the entirety of the current list
 						 * item has been gathered. */
-						if unlikely(unicode_printer_print(&item_printer, list_line_start,
-						                                  (size_t)(list_line_end - list_line_start)) < 0)
+						if unlikely(Dee_unicode_printer_print(&item_printer, list_line_start,
+						                                      (size_t)(list_line_end - list_line_start)) < 0)
 							goto err_item_printer;
 						list_line_start = iter;
 
@@ -1862,16 +1862,16 @@ list_continue_current_line:
 						nextline_indentation = 0;
 						for (;;) {
 							ch_start = iter;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							if (DeeUni_IsLF(ch)) {
 								/* Special case: The line may be shorter, but it only contains whitespace.
 								 *               This is counted as an insert-marker for an explicit line-feed! */
-								if unlikely(unicode_printer_putascii(&item_printer, '\n'))
+								if unlikely(Dee_unicode_printer_putascii(&item_printer, '\n'))
 									goto err_item_printer;
 								/* Deal with windows-style line-feeds */
 								if (ch == '\r') {
 									char const *temp = iter;
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (ch != '\n')
 										iter = temp;
 								}
@@ -1891,14 +1891,14 @@ list_continue_current_line:
 								temp  = iter;
 								temp2 = ch_start;
 								ch_start = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 								if (DeeUni_IsLF(ch)) {
-									if unlikely(unicode_printer_putascii(&item_printer, '\n'))
+									if unlikely(Dee_unicode_printer_putascii(&item_printer, '\n'))
 										goto err_item_printer;
 									/* Deal with windows-style line-feeds */
 									if (ch == '\r') {
 										char const *temp3 = iter;
-										ch = unicode_readutf8_n(&iter, end);
+										ch = Dee_unicode_readutf8_n(&iter, end);
 										if (ch != '\n')
 											iter = temp3;
 									}
@@ -1921,7 +1921,7 @@ list_continue_current_line:
 						 * then we know for certain the list has been terminated. */
 						if (nextline_indentation != list_prefix_indent) {
 end_of_list:
-							iter          = list_line_start;
+							iter = list_line_start;
 							has_next_item = false;
 							goto do_append_list_item;
 						}
@@ -1942,7 +1942,7 @@ end_of_list:
 							for (;;) {
 								if (DeeUni_IsDigit(ch)) {
 continue_scan_order_list_prefix:
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									++nextline_indentation;
 									if (nextline_indentation >= list_element_indent)
 										goto end_of_list; /* Indentation has grown too large... */
@@ -1958,7 +1958,7 @@ continue_scan_order_list_prefix:
 									}
 again_handle_dot_in_ordered_list_prefix:
 									ch_start = iter;
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									++nextline_indentation;
 									if (nextline_indentation >= list_element_indent)
 										goto end_of_list; /* Indentation has grown too large... */
@@ -1978,14 +1978,14 @@ again_handle_dot_in_ordered_list_prefix:
 
 						/* Append the current item, but continue the current list. */
 						ch_start = iter;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						++nextline_indentation;
 skip_whitespace_after_list_item_prefix:
 						while (nextline_indentation < list_element_indent) {
 							if (!DeeUni_IsSpace(ch) || DeeUni_IsLF(ch))
 								goto end_of_list;
 							ch_start = iter;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							++nextline_indentation;
 						}
 						if (nextline_indentation != list_element_indent)
@@ -1999,10 +1999,10 @@ do_append_list_item:
 					if unlikely(do_compile_printer_to_printer(result_printer, &item_printer,
 					                                          flags & ~DOCTEXT_COMPILE_FLAG_ROOT)) {
 err_item_printer:
-						unicode_printer_fini(&item_printer);
+						Dee_unicode_printer_fini(&item_printer);
 						goto err;
 					}
-					unicode_printer_fini(&item_printer);
+					Dee_unicode_printer_fini(&item_printer);
 
 					/* If the list has more items, then continue parsing them!
 					 * NOTE: At this point, ch/ch_start point at the first character
@@ -2050,7 +2050,7 @@ err_item_printer:
 					} else if (bcmpc(anno_start, "interrupt", 9, sizeof(char)) == 0) {
 						anno_start += 9;
 						anno_start = lstrip_whitespacenolf(anno_start, end);
-						ch = unicode_readutf8_n(&anno_start, end);
+						ch = Dee_unicode_readutf8_n(&anno_start, end);
 						if (DeeUni_IsLF(ch) || (ch == 0 && anno_start >= end)) {
 							/* Special case: `@interrupt' annotation */
 							FLUSHTO(ch_start);
@@ -2078,7 +2078,7 @@ err_item_printer:
 							if (anno_tag == 'p' || anno_tag == 't') {
 								char const *ref_start, *ref_end;
 								ref_start = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 								if (ch == '@') /* Ignore a leading '@'-character */
 									ref_start = iter;
 								ref_end = skip_symbol_or_recursive_parenthesis(ref_start, end);
@@ -2122,7 +2122,7 @@ err_item_printer:
 							description_start       = iter;
 							iter = anno_after_at;
 							while (iter < description_start) {
-								iter = unicode_skiputf8(iter);
+								iter = Dee_unicode_skiputf8(iter);
 								++anno_description_indent;
 							}
 	
@@ -2132,18 +2132,18 @@ err_item_printer:
 							 * whitespace characters. */
 							PUTASCII('{');
 							{
-								struct unicode_printer tag_body_printer = UNICODE_PRINTER_INIT;
+								struct Dee_unicode_printer tag_body_printer = Dee_UNICODE_PRINTER_INIT;
 								char const *currline_start, *currline_end;
 								size_t nextline_indentation;
 								iter = description_start;
 								ch_start = iter;
-								ch       = unicode_readutf8_n(&iter, end);
+								ch       = Dee_unicode_readutf8_n(&iter, end);
 again_copy_tag_body_line:
 								/* Figure out the bounds of the current line. */
 								currline_start = ch_start;
 								currline_end   = find_end_of_current_line_with_first_ch(ch, &iter, end);
-								if unlikely(unicode_printer_print(&tag_body_printer, currline_start,
-								                                  (size_t)(currline_end - currline_start)) < 0)
+								if unlikely(Dee_unicode_printer_print(&tag_body_printer, currline_start,
+								                                      (size_t)(currline_end - currline_start)) < 0)
 									goto err_tag_body_printer;
 								currline_start = iter;
 
@@ -2151,16 +2151,16 @@ again_copy_tag_body_line:
 								nextline_indentation = 0;
 								for (;;) {
 									ch_start = iter;
-									ch = unicode_readutf8_n(&iter, end);
+									ch = Dee_unicode_readutf8_n(&iter, end);
 									if (DeeUni_IsLF(ch)) {
 										/* Special case: The line may be shorter, but it only contains whitespace.
 										 *               This is counted as an insert-marker for an explicit line-feed! */
-										if unlikely(unicode_printer_putascii(&tag_body_printer, '\n'))
+										if unlikely(Dee_unicode_printer_putascii(&tag_body_printer, '\n'))
 											goto err_tag_body_printer;
 										/* Deal with windows-style line-feeds */
 										if (ch == '\r') {
 											char const *temp = iter;
-											ch = unicode_readutf8_n(&iter, end);
+											ch = Dee_unicode_readutf8_n(&iter, end);
 											if (ch != '\n')
 												iter = temp;
 										}
@@ -2180,14 +2180,14 @@ again_copy_tag_body_line:
 										temp  = iter;
 										temp2 = ch_start;
 										ch_start = iter;
-										ch = unicode_readutf8_n(&iter, end);
+										ch = Dee_unicode_readutf8_n(&iter, end);
 										if (DeeUni_IsLF(ch)) {
-											if unlikely(unicode_printer_putascii(&tag_body_printer, '\n'))
+											if unlikely(Dee_unicode_printer_putascii(&tag_body_printer, '\n'))
 												goto err_tag_body_printer;
 											/* Deal with windows-style line-feeds */
 											if (ch == '\r') {
 												char const *temp3 = iter;
-												ch = unicode_readutf8_n(&iter, end);
+												ch = Dee_unicode_readutf8_n(&iter, end);
 												if (ch != '\n')
 													iter = temp3;
 											}
@@ -2210,10 +2210,10 @@ again_copy_tag_body_line:
 								if unlikely(do_compile_printer_to_printer(result_printer, &tag_body_printer,
 								                                          flags & ~DOCTEXT_COMPILE_FLAG_ROOT)) {
 err_tag_body_printer:
-									unicode_printer_fini(&tag_body_printer);
+									Dee_unicode_printer_fini(&tag_body_printer);
 									goto err;
 								}
-								unicode_printer_fini(&tag_body_printer);
+								Dee_unicode_printer_fini(&tag_body_printer);
 								iter = currline_start;
 							} /* Scope... */
 							PUTASCII('}');
@@ -2244,7 +2244,7 @@ err_tag_body_printer:
 			uint32_t escaped_ch;
 			char const *escaped_ch_start;
 			escaped_ch_start = iter;
-			escaped_ch = unicode_readutf8_n(&iter, end);
+			escaped_ch = Dee_unicode_readutf8_n(&iter, end);
 			switch (escaped_ch) {
 
 			case 0:
@@ -2263,7 +2263,7 @@ err_tag_body_printer:
 				/* When escaping a line-feed, also check for windows-style linefeeds */
 				char const *temp = iter;
 				uint32_t second_lf_char;
-				second_lf_char = unicode_readutf8_n(&iter, end);
+				second_lf_char = Dee_unicode_readutf8_n(&iter, end);
 				if (second_lf_char != '\n') {
 					/* Only include the second character in the escape if it's a \n */
 					iter = temp;
@@ -2275,7 +2275,7 @@ err_tag_body_printer:
 					uint32_t trailing_space_character;
 					char const *orig_ch_start;
 					orig_ch_start = ch_start;
-					trailing_space_character = unicode_readutf8_rev_n(&ch_start, flush_start);
+					trailing_space_character = Dee_unicode_readutf8_rev_n(&ch_start, flush_start);
 					if (trailing_space_character == 0 && (ch_start <= flush_start)) {
 						strip_trailing_whitespace_until(result_printer,
 						                                result_printer_origlen);
@@ -2305,7 +2305,7 @@ err_tag_body_printer:
 				iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
 				flush_start = iter;
 				ch_start    = iter;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 				goto scan_newline_with_first_ch_and_explicit_linefeed;
 
 			/* ESCAPED INPUT:  \ _ @ ` [ ] ( ) - + | = ~ * # : */
@@ -2345,7 +2345,7 @@ err_tag_body_printer:
 				flush_start = escaped_ch_start;
 				/* Check if this is escaping an extended block. */
 				ch_start = iter;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 				if (ch == escaped_ch) {
 					if (ch == '`') {
 						/* Code-blocks can appear with 3 backticks, in
@@ -2353,11 +2353,11 @@ err_tag_body_printer:
 						char const *temp;
 						temp     = ch_start;
 						ch_start = iter;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						if (ch != '`') {
 							ch_start = temp;
 							iter     = temp;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 						}
 					}
 					goto do_switch_ch; /* Yes -> Also escape the second character */
@@ -2411,7 +2411,7 @@ check_ordered_list_digit:
 			orig_iter = iter;
 			iter      = ch_start;
 			do {
-				prev_ch = unicode_readutf8_rev_n(&iter, text);
+				prev_ch = Dee_unicode_readutf8_rev_n(&iter, text);
 			} while (prev_ch == '_');
 			iter = orig_iter;
 			if (DeeUni_IsSymCont(prev_ch) || prev_ch == '\\')
@@ -2425,7 +2425,7 @@ check_ordered_list_digit:
 			char const *body_start, *body_end;
 			construct_start = ch_start;
 			after_first_ch = iter;
-			nextch = unicode_readutf8_n(&iter, end);
+			nextch = Dee_unicode_readutf8_n(&iter, end);
 			if (nextch == ch) {
 				/* Extended attribute block.
 				 * -> Search for the end of the block and re-parse the body */
@@ -2433,10 +2433,10 @@ check_ordered_list_digit:
 				body_start = iter;
 				for (;;) {
 					body_end = iter;
-					nextch = unicode_readutf8_n(&iter, end);
+					nextch = Dee_unicode_readutf8_n(&iter, end);
 					if (nextch == ch) {
 						did_find_single = true;
-						nextch = unicode_readutf8_n(&iter, end);
+						nextch = Dee_unicode_readutf8_n(&iter, end);
 						if (nextch != ch)
 							continue;
 						break;
@@ -2457,7 +2457,7 @@ check_ordered_list_digit:
 						if (did_find_single) {
 							PRINTASCII(buf, count / 2);
 							iter = construct_start;
-							unicode_readutf8_n(&iter, end);
+							Dee_unicode_readutf8_n(&iter, end);
 							flush_start = iter;
 						} else {
 							PRINTASCII(buf, count);
@@ -2467,7 +2467,7 @@ check_ordered_list_digit:
 						goto do_read_and_switch_ch;
 					}
 					if (nextch == '\\') /* Escaped the next character. */
-						unicode_readutf8_n(&iter, end);
+						Dee_unicode_readutf8_n(&iter, end);
 				}
 			} else {
 				/* Search until a space/line-feed character is found, or the construct is ended correctly */
@@ -2489,7 +2489,7 @@ check_ordered_list_digit:
 							char const *followup;
 							followup = iter;
 							do {
-								nextch = unicode_readutf8_n(&iter, end);
+								nextch = Dee_unicode_readutf8_n(&iter, end);
 							} while (nextch == '_');
 							if (!DeeUni_IsSymCont(nextch)) {
 								iter = followup;
@@ -2501,9 +2501,9 @@ check_ordered_list_digit:
 						break; /* Found the end! */
 					}
 					if (nextch == '\\') /* Escaped the next character. */
-						unicode_readutf8_n(&iter, end);
+						Dee_unicode_readutf8_n(&iter, end);
 					body_end = iter;
-					nextch   = unicode_readutf8_n(&iter, end);
+					nextch   = Dee_unicode_readutf8_n(&iter, end);
 				}
 			}
 
@@ -2541,7 +2541,7 @@ check_ordered_list_digit:
 			/* Check if the body qualifies for being a symbol */
 			flush_start = iter;
 			ch_start = iter;
-			ch = unicode_readutf8_n(&iter, end);
+			ch = Dee_unicode_readutf8_n(&iter, end);
 			{
 				bool need_braces;
 
@@ -2581,14 +2581,14 @@ not_a_link:
 				iter     = after_lbracket;
 				goto escape_current_character;
 			}
-			after_lparen = unicode_skiputf8(before_rbracket);
-			ch = unicode_readutf8_n(&after_lparen, end);
+			after_lparen = Dee_unicode_skiputf8(before_rbracket);
+			ch = Dee_unicode_readutf8_n(&after_lparen, end);
 			if (ch != '(')
 				goto not_a_link;
 			before_rparen = find_nonescaped_match(after_lparen, end, '(', ')');
 			if (!before_rparen)
 				goto not_a_link;
-			after_rparen = unicode_skiputf8(before_rparen);
+			after_rparen = Dee_unicode_skiputf8(before_rparen);
 
 			/* Flush up until the leading [-character */
 			FLUSHTO(before_lbracket);
@@ -2598,7 +2598,7 @@ not_a_link:
 			for (;;) {
 				char const *temp;
 				temp = after_lbracket;
-				ch = unicode_readutf8_n(&after_lbracket, before_rbracket);
+				ch = Dee_unicode_readutf8_n(&after_lbracket, before_rbracket);
 				if (DeeUni_IsSpace(ch)) {
 					has_leading_space = true;
 					continue;
@@ -2609,7 +2609,7 @@ not_a_link:
 			for (;;) {
 				char const *temp;
 				temp = before_rbracket;
-				ch = unicode_readutf8_rev_n(&before_rbracket, after_lbracket);
+				ch = Dee_unicode_readutf8_rev_n(&before_rbracket, after_lbracket);
 				if (DeeUni_IsSpace(ch)) {
 					has_trailing_space = true;
 					continue;
@@ -2620,9 +2620,9 @@ not_a_link:
 
 			/* If there is leading space, and the printer doesn't already end with a space
 			 * character, then print one additional space character before the link. */
-			if (has_leading_space && UNICODE_PRINTER_LENGTH(result_printer) > result_printer_origlen) {
+			if (has_leading_space && Dee_UNICODE_PRINTER_LENGTH(result_printer) > result_printer_origlen) {
 				uint32_t lastch;
-				lastch = UNICODE_PRINTER_GETCHAR(result_printer, UNICODE_PRINTER_LENGTH(result_printer) - 1);
+				lastch = Dee_UNICODE_PRINTER_GETCHAR(result_printer, Dee_UNICODE_PRINTER_LENGTH(result_printer) - 1);
 				if (!DeeUni_IsSpace(lastch))
 					PUTASCII(' ');
 			}
@@ -2651,7 +2651,7 @@ not_a_link:
 				/* Skip all additional space characters following the link */
 				for (;;) {
 					ch_start = iter;
-					ch = unicode_readutf8_n(&iter, end);
+					ch = Dee_unicode_readutf8_n(&iter, end);
 					if (!DeeUni_IsSpace(ch) || (!ch && iter >= end))
 						break;
 				}
@@ -2668,10 +2668,10 @@ not_a_link:
 			char const *before_right_backtick;
 			before_left_backtick = ch_start;
 			after_left_backtick  = iter;
-			ch = unicode_readutf8_n(&iter, end);
+			ch = Dee_unicode_readutf8_n(&iter, end);
 			if (ch == '`') {
 				char const *temp = iter;
-				ch = unicode_readutf8_n(&iter, end);
+				ch = Dee_unicode_readutf8_n(&iter, end);
 				if (ch == '`') {
 					char const *end_of_first_line;
 					after_left_backtick = iter;
@@ -2681,17 +2681,17 @@ not_a_link:
 					end_of_first_line = NULL;
 					for (;;) {
 						before_right_backtick = iter;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						if (!ch && (iter >= end))
 							goto not_a_code;
 						if (DeeUni_IsLF(ch) && !end_of_first_line)
 							end_of_first_line = before_right_backtick;
 						if (ch != '`')
 							continue;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						if (ch != '`')
 							continue;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						if (ch == '`')
 							break;
 					}
@@ -2717,10 +2717,10 @@ not_a_link:
 						/* Skip the line-feed between the first and second line in
 						 * order to determine the true start of the second line. */
 						start_of_second_line = end_of_first_line;
-						ch = unicode_readutf8_n(&start_of_second_line, before_right_backtick);
+						ch = Dee_unicode_readutf8_n(&start_of_second_line, before_right_backtick);
 						if (ch == '\r') {
 							char const *temp2 = start_of_second_line;
-							ch = unicode_readutf8_n(&start_of_second_line, before_right_backtick);
+							ch = Dee_unicode_readutf8_n(&start_of_second_line, before_right_backtick);
 							if (ch != '\n')
 								start_of_second_line = temp2;
 						}
@@ -2753,7 +2753,7 @@ not_a_link:
 						}
 						flush_start = iter;
 						ch_start    = iter;
-						ch          = unicode_readutf8_n(&iter, end);
+						ch          = Dee_unicode_readutf8_n(&iter, end);
 						{
 							bool need_braces;
 							need_braces = DeeUni_IsSymCont(ch) ||
@@ -2795,7 +2795,7 @@ not_a_link:
 do_handle_autoescaped_linefeed:
 							if (ch == '\r') {
 								char const *temp2 = iter;
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 								if (ch != '\n')
 									iter = temp2;
 							}
@@ -2806,13 +2806,13 @@ do_handle_autoescaped_linefeed:
 							/* Read the first character from the next line. */
 							flush_start = iter;
 							ch_start    = iter;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 							goto scan_newline_with_first_ch_and_explicit_linefeed;
 						} else if (DeeUni_IsSpace(ch)) {
 							/* Allow for trailing space before an eventual line-feed */
 							char const *temp2 = ch_start;
 							for (;;) {
-								ch = unicode_readutf8_n(&iter, end);
+								ch = Dee_unicode_readutf8_n(&iter, end);
 								if (DeeUni_IsLF(ch))
 									goto do_handle_autoescaped_linefeed;
 								if (DeeUni_IsSpace(ch))
@@ -2821,7 +2821,7 @@ do_handle_autoescaped_linefeed:
 							}
 							ch_start = temp2;
 							iter     = temp2;
-							ch = unicode_readutf8_n(&iter, end);
+							ch = Dee_unicode_readutf8_n(&iter, end);
 						}
 						goto do_switch_ch;
 					}
@@ -2835,10 +2835,10 @@ do_handle_autoescaped_linefeed:
 						if (DeeUni_IsLF(ch))
 							goto not_a_code;
 						before_right_backtick = iter;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						if (ch != '`')
 							continue;
-						ch = unicode_readutf8_n(&iter, end);
+						ch = Dee_unicode_readutf8_n(&iter, end);
 						if (ch == '`')
 							break;
 					}
@@ -2851,7 +2851,7 @@ do_handle_autoescaped_linefeed:
 					if (DeeUni_IsLF(ch))
 						goto not_a_code;
 					before_right_backtick = iter;
-					ch = unicode_readutf8_n(&iter, end);
+					ch = Dee_unicode_readutf8_n(&iter, end);
 					if (ch == '`' || ch == '\'')
 						break;
 				}
@@ -2864,7 +2864,7 @@ do_handle_autoescaped_linefeed:
 			 * if we have to force braces because the next character would continue a symbol) */
 			flush_start = iter;
 			ch_start    = iter;
-			ch = unicode_readutf8_n(&iter, end);
+			ch = Dee_unicode_readutf8_n(&iter, end);
 
 			/* Print the code contents as an escaped string (but don't re-parse the contents). */
 			{
@@ -2905,7 +2905,7 @@ not_a_code:
 				for (;;) {
 					uint32_t second_space;
 					ch_start     = iter;
-					second_space = unicode_readutf8_n(&iter, end);
+					second_space = Dee_unicode_readutf8_n(&iter, end);
 					if (DeeUni_IsLF(second_space)) {
 						FLUSHTO(before_first_space);
 						ch = second_space;
@@ -2934,14 +2934,14 @@ not_a_code:
 		}
 	}
 done:
-	if (flush_start == text && UNICODE_PRINTER_ISEMPTY(result_printer) && source_printer) {
+	if (flush_start == text && Dee_UNICODE_PRINTER_ISEMPTY(result_printer) && source_printer) {
 		/* Steal all data from the source printer (that way we don't have to copy anything!). */
-		memcpy(result_printer, source_printer, sizeof(struct unicode_printer));
+		memcpy(result_printer, source_printer, sizeof(struct Dee_unicode_printer));
 		result_printer->up_length = (size_t)(end - text);
-		unicode_printer_init(source_printer);
+		Dee_unicode_printer_init(source_printer);
 	} else {
-		if unlikely(unicode_printer_print(result_printer, flush_start,
-		                                  (size_t)(end - flush_start)) < 0)
+		if unlikely(Dee_unicode_printer_print(result_printer, flush_start,
+		                                      (size_t)(end - flush_start)) < 0)
 			goto err;
 	}
 
@@ -2955,9 +2955,9 @@ done_dontflush:
 		size_t i = result_printer_origlen;
 		if (should_strip_leading_space)
 			unicode_printer_erase_whitespace(result_printer, i, min_line_leading_spaces);
-		while (i < UNICODE_PRINTER_LENGTH(result_printer)) {
+		while (i < Dee_UNICODE_PRINTER_LENGTH(result_printer)) {
 			uint32_t ch2;
-			ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+			ch2 = Dee_UNICODE_PRINTER_GETCHAR(result_printer, i);
 			++i;
 			if (!DeeUni_IsLF(ch2)) {
 				if (ch2 == '{') {
@@ -2965,9 +2965,9 @@ done_dontflush:
 					 * and may contain line-feed characters which we must ignore! */
 					size_t recursion = 0;
 					for (;;) {
-						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+						if (i >= Dee_UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now;
-						ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+						ch2 = Dee_UNICODE_PRINTER_GETCHAR(result_printer, i);
 						++i;
 						if (ch2 == '#') {
 							++i;
@@ -2979,8 +2979,8 @@ done_dontflush:
 							--recursion;
 						}
 					}
-				} else if (ch2 == '#' && i < UNICODE_PRINTER_LENGTH(result_printer)) {
-					ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+				} else if (ch2 == '#' && i < Dee_UNICODE_PRINTER_LENGTH(result_printer)) {
+					ch2 = Dee_UNICODE_PRINTER_GETCHAR(result_printer, i);
 					if (ch2 == '{' || ch2 == '#') {
 						++i; /* Escaped brace/pound (ignore) */
 					} else if (ch2 == 'T' || ch2 == 'L' || ch2 == 'p' ||
@@ -2993,23 +2993,23 @@ done_dontflush:
 						 *
 						 * The same also goes for `@param', `@return' and `@throws' */
 						++i;
-						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+						if (i >= Dee_UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now; /* Shouldn't happen... */
-						if (ch2 == 'L' && UNICODE_PRINTER_GETCHAR(result_printer, i) != '{') {
+						if (ch2 == 'L' && Dee_UNICODE_PRINTER_GETCHAR(result_printer, i) != '{') {
 							++i;
-							if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+							if (i >= Dee_UNICODE_PRINTER_LENGTH(result_printer))
 								goto done_return_now; /* Shouldn't happen... */
 						}
-						ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+						ch2 = Dee_UNICODE_PRINTER_GETCHAR(result_printer, i);
 						if (ch2 == '{') {
 							/* Find the matching brace character. */
 skip_over_brace_block_in_erase_whitespace:
 							++i;
 							recursion = 0;
 							for (;;) {
-								if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+								if (i >= Dee_UNICODE_PRINTER_LENGTH(result_printer))
 									goto done_return_now;
-								ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+								ch2 = Dee_UNICODE_PRINTER_GETCHAR(result_printer, i);
 								++i;
 								if (ch2 == '#') {
 									++i;
@@ -3024,9 +3024,9 @@ skip_over_brace_block_in_erase_whitespace:
 						} else if (DeeUni_IsSymStrt(ch2)) {
 							for (;;) {
 								++i;
-								if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+								if (i >= Dee_UNICODE_PRINTER_LENGTH(result_printer))
 									goto done_return_now;
-								ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+								ch2 = Dee_UNICODE_PRINTER_GETCHAR(result_printer, i);
 								if (!DeeUni_IsSymCont(ch2))
 									break;
 							}
@@ -3034,9 +3034,9 @@ skip_over_brace_block_in_erase_whitespace:
 							continue; /* Shouldn't happen */
 						}
 
-						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+						if (i >= Dee_UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now;
-						if (UNICODE_PRINTER_GETCHAR(result_printer, i) == '{') {
+						if (Dee_UNICODE_PRINTER_GETCHAR(result_printer, i) == '{') {
 							/* #p and #t accept an optional {BODY} argument after the initial argument. */
 							goto skip_over_brace_block_in_erase_whitespace;
 						}
@@ -3047,7 +3047,7 @@ skip_over_brace_block_in_erase_whitespace:
 			}
 			if (ch2 == '\r') {
 				/* Check if the next character is a \n, in which case: erase after that one */
-				ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+				ch2 = Dee_UNICODE_PRINTER_GETCHAR(result_printer, i);
 				if (ch2 == '\n')
 					++i;
 			}
@@ -3076,13 +3076,13 @@ err:
  *       such that in the case of a function being annotated,
  *       argument variables are visible. */
 INTERN WUNUSED NONNULL((1)) int DCALL
-doctext_compile(struct unicode_printer *__restrict doctext) {
+doctext_compile(struct Dee_unicode_printer *__restrict doctext) {
 	/* Fast-pass: no documentation text defined. */
-	if (UNICODE_PRINTER_ISEMPTY(doctext))
+	if (Dee_UNICODE_PRINTER_ISEMPTY(doctext))
 		goto done;
 
-	if likely((doctext->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
-		struct unicode_printer result = UNICODE_PRINTER_INIT;
+	if likely((doctext->up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		struct Dee_unicode_printer result = Dee_UNICODE_PRINTER_INIT;
 		/* Directly compile the original documentation text. */
 #ifndef NDEBUG
 		*((char *)doctext->up_buffer + doctext->up_length) = '\0';
@@ -3090,17 +3090,17 @@ doctext_compile(struct unicode_printer *__restrict doctext) {
 		if unlikely(do_compile((/*utf-8*/ char const *)doctext->up_buffer,
 		                       (/*utf-8*/ char const *)doctext->up_buffer + doctext->up_length,
 		                       &result, doctext, DOCTEXT_COMPILE_FLAG_ROOT)) {
-			unicode_printer_fini(&result);
+			Dee_unicode_printer_fini(&result);
 			goto err;
 		}
-		unicode_printer_fini(doctext);
-		memcpy(doctext, &result, sizeof(struct unicode_printer));
+		Dee_unicode_printer_fini(doctext);
+		memcpy(doctext, &result, sizeof(struct Dee_unicode_printer));
 	} else {
 		/* Re-package as a 1-byte, utf-8 string. */
 		DREF DeeStringObject *rawtext;
 		/*utf-8*/ char const *rawutf8;
-		rawtext = (DREF DeeStringObject *)unicode_printer_pack(doctext);
-		unicode_printer_init(doctext);
+		rawtext = (DREF DeeStringObject *)Dee_unicode_printer_pack(doctext);
+		Dee_unicode_printer_init(doctext);
 		if unlikely(!rawtext)
 			goto err;
 

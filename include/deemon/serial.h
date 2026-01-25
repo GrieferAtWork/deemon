@@ -17,8 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeSerial**/
+/*!export Dee_SERADDR_**/
 #ifndef GUARD_DEEMON_SERIAL_H
-#define GUARD_DEEMON_SERIAL_H 1
+#define GUARD_DEEMON_SERIAL_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -64,6 +67,9 @@ struct Dee_serial;
 typedef struct Dee_serial DeeSerial;
 
 #if 0
+/*!export -ADDROF*/
+/*!export -myobject_**/
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myobject_serialize(MyObject *__restrict self,
                    DeeSerial *__restrict writer,
@@ -100,9 +106,9 @@ err:
 
 
 #ifndef Dee_weakref_callback_t_DEFINED
-#define Dee_weakref_callback_t_DEFINED
+#define Dee_weakref_callback_t_DEFINED /*!export-*/
 /* Prototype for callbacks to-be invoked when a weakref'd object gets destroyed. */
-typedef NONNULL_T((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
+typedef NONNULL_T((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self); /*!export-*/
 #endif /* !Dee_weakref_callback_t_DEFINED */
 
 

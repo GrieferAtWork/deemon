@@ -17,8 +17,16 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DeeBuiltin_**/
+/*!export DeeModule**/
+/*!export Dee_COMPILER_ERROR_FATALITY_**/
+/*!export Dee_MODSYM_F**/
+/*!export Dee_MODULE_F**/
+/*!export Dee_module_**/
+/*!export _Dee_MODULE_**/
 #ifndef GUARD_DEEMON_MODULE_H
-#define GUARD_DEEMON_MODULE_H 1
+#define GUARD_DEEMON_MODULE_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -273,36 +281,6 @@ DECL_BEGIN
  */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
-#ifdef DEE_SOURCE
-#define Dee_tuple_object          tuple_object
-#define Dee_thread_object         thread_object
-#define Dee_string_object         string_object
-#define Dee_code_object           code_object
-#define Dee_module_object         module_object
-#define Dee_module_symbol         module_symbol
-#define Dee_compiler_error_object compiler_error_object
-#define Dee_compiler_options      compiler_options
-#define Dee_cmethod_object        cmethod_object
-#define MODSYM_FNORMAL            Dee_MODSYM_FNORMAL
-#define MODSYM_FREADONLY          Dee_MODSYM_FREADONLY
-#define MODSYM_FCONSTEXPR         Dee_MODSYM_FCONSTEXPR
-#define MODSYM_FALIAS             Dee_MODSYM_FALIAS
-#define MODSYM_FHIDDEN            Dee_MODSYM_FHIDDEN
-#define MODSYM_FPROPERTY          Dee_MODSYM_FPROPERTY
-#define MODSYM_FEXTERN            Dee_MODSYM_FEXTERN
-#define MODSYM_FMASK              Dee_MODSYM_FMASK
-#define MODSYM_FNAMEOBJ           Dee_MODSYM_FNAMEOBJ
-#define MODSYM_FDOCOBJ            Dee_MODSYM_FDOCOBJ
-#define MODULE_PROPERTY_GET       Dee_MODULE_PROPERTY_GET
-#define MODULE_PROPERTY_DEL       Dee_MODULE_PROPERTY_DEL
-#define MODULE_PROPERTY_SET       Dee_MODULE_PROPERTY_SET
-#define MODULE_SYMBOL_EQUALS      Dee_MODULE_SYMBOL_EQUALS
-#define MODULE_SYMBOL_GETNAMESTR  Dee_MODULE_SYMBOL_GETNAMESTR
-#define MODULE_SYMBOL_GETNAMELEN  Dee_MODULE_SYMBOL_GETNAMELEN
-#define MODULE_SYMBOL_GETDOCSTR   Dee_MODULE_SYMBOL_GETDOCSTR
-#define MODULE_SYMBOL_GETDOCLEN   Dee_MODULE_SYMBOL_GETDOCLEN
-#endif /* DEE_SOURCE */
-
 struct Dee_string_object;
 struct Dee_code_object;
 struct Dee_cmethod_object;
@@ -324,7 +302,7 @@ typedef struct Dee_module_object DeeModuleObject;
                                          * is part of the calling module), or attempting to write/delete at
                                          * runtime and a non-NULL value has already been assigned.
                                          *
-                                         * When this flag and `MODSYM_FCONSTEXPR' are both set, then the
+                                         * When this flag and `Dee_MODSYM_FCONSTEXPR' are both set, then the
                                          * compiler is allowed (but not required) to initialize the module,
                                          * then propagate this symbol's actual value as a compile-time
                                          * constant expression, should that value be one of the following
@@ -355,11 +333,11 @@ typedef struct Dee_module_object DeeModuleObject;
                                          *          used to modify the value of an external/global symbol,
                                          *          meaning that you must still always assume that any
                                          *          module member no longer contains the proper value. */
-#define Dee_MODSYM_FCONSTEXPR      0x02 /* May be combined with `MODSYM_FREADONLY' to allow the compiler to
+#define Dee_MODSYM_FCONSTEXPR      0x02 /* May be combined with `Dee_MODSYM_FREADONLY' to allow the compiler to
                                          * propagate this symbol as a constant expression at compile-time,
                                          * so-long as its runtime-value matches the criteria detailed above.
                                          * NOTE: Regardless of this flag, the compiler mustn't propagate the
-                                         *       assigned value when `MODSYM_FPROPERTY' it set. */
+                                         *       assigned value when `Dee_MODSYM_FPROPERTY' it set. */
 #define Dee_MODSYM_FALIAS          0x04 /* This symbol is aliasing another.
                                          *
                                          * This flag is handled by `DeeModule_GlobalName()', which will try
@@ -383,7 +361,7 @@ typedef struct Dee_module_object DeeModuleObject;
                                          * -     `global import foo = bar from baz;'
                                          * - vs. `local import foo = bar from baz;'
                                          * (Default visibility would be `local') */
-#define Dee_MODSYM_FMASK           0x3f /* Mask of known MODSYM_F* flags (those that are allowed by DEC files). */
+#define Dee_MODSYM_FMASK           0x3f /* Mask of known Dee_MODSYM_F* flags (those that are allowed by DEC files). */
 #define Dee_MODSYM_FNAMEOBJ        0x40 /* The symbol's name is actually a reference to a string object's `s_str' */
 #define Dee_MODSYM_FDOCOBJ         0x80 /* The symbol's doc is actually a reference to a string object's `s_str'
                                          * NOTE: When this flag is set, `ss_doc' is always [1..1] */
@@ -399,12 +377,12 @@ struct Dee_module_symbol {
 	char const              *ss_name;  /* [0..1] Name of this symbol (NULL marks the sentinel) */
 	char const              *ss_doc;   /* [0..1] An optional documentation string. */
 	Dee_hash_t               ss_hash;  /* [== Dee_HashStr(ss_name)] Hash-value of this symbol. */
-	__UINTPTR_QUARTER_TYPE__ ss_flags; /* Set of `MODSYM_F*'. */
-	__UINTPTR_QUARTER_TYPE__ ss_impid; /* [< :mo_importc][valid_if(MODSYM_FEXTERN)] The index of the referenced module in the import vector. */
-	__UINTPTR_HALF_TYPE__    ss_index; /* [< :mo_globalc][valid_if(!MODSYM_FEXTERN)] The index of this symbol in the `:mo_globalv' vector.
-	                                    * [< :mo_importv[ss_impid]->mo_globalc][valid_if(MODSYM_FEXTERN)] The index of this symbol in the module's `:mo_globalv' vector.
+	__UINTPTR_QUARTER_TYPE__ ss_flags; /* Set of `Dee_MODSYM_F*'. */
+	__UINTPTR_QUARTER_TYPE__ ss_impid; /* [< :mo_importc][valid_if(Dee_MODSYM_FEXTERN)] The index of the referenced module in the import vector. */
+	__UINTPTR_HALF_TYPE__    ss_index; /* [< :mo_globalc][valid_if(!Dee_MODSYM_FEXTERN)] The index of this symbol in the `:mo_globalv' vector.
+	                                    * [< :mo_importv[ss_impid]->mo_globalc][valid_if(Dee_MODSYM_FEXTERN)] The index of this symbol in the module's `:mo_globalv' vector.
 	                                    * NOTE: In the case of a property, either 1 or 3 indices are allocated,
-	                                    *       3 if `MODSYM_FREADONLY' isn't set, and 1 if it is. */
+	                                    *       3 if `Dee_MODSYM_FREADONLY' isn't set, and 1 if it is. */
 };
 
 #define Dee_module_symbol_getindex(self) ((uint16_t)(self)->ss_index)
@@ -413,23 +391,19 @@ struct Dee_module_symbol {
 	(bcmp((x)->ss_name, name, (size) * sizeof(char)) == 0 && \
 	 (x)->ss_name[size] == 0)
 #define Dee_MODULE_SYMBOL_EQUALS_STR(x, string)                                                 \
-	(((x)->ss_flags & MODSYM_FNAMEOBJ)                                                          \
+	(((x)->ss_flags & Dee_MODSYM_FNAMEOBJ)                                                      \
 	 ? DeeString_EqualsSTR(string, COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) \
 	 : DeeString_EqualsBuf(string, (x)->ss_name, strlen((x)->ss_name)))
 #define Dee_MODULE_SYMBOL_GETNAMESTR(x) ((x)->ss_name)
-#define Dee_MODULE_SYMBOL_GETNAMELEN(x) (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : strlen((x)->ss_name))
+#define Dee_MODULE_SYMBOL_GETNAMELEN(x) (((x)->ss_flags & Dee_MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : strlen((x)->ss_name))
 #define Dee_MODULE_SYMBOL_GETDOCSTR(x)  ((x)->ss_doc)
-#define Dee_MODULE_SYMBOL_GETDOCLEN(x)  (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str)) : strlen((x)->ss_doc))
+#define Dee_MODULE_SYMBOL_GETDOCLEN(x)  (((x)->ss_flags & Dee_MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str)) : strlen((x)->ss_doc))
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL Dee_module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF struct Dee_string_object *DCALL Dee_module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
-#define Dee_module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str))) : DeeString_NewWithHash((x)->ss_name, (x)->ss_hash)))
-#define Dee_module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str))) : DeeString_NewUtf8((x)->ss_doc, strlen((x)->ss_doc), Dee_STRING_ERROR_FIGNORE)))
-#ifdef DEE_SOURCE
-#define module_symbol_getnameobj   Dee_module_symbol_getnameobj
-#define module_symbol_getdocobj    Dee_module_symbol_getdocobj
-#endif /* DEE_SOURCE */
+#define Dee_module_symbol_getnameobj(x) ((DeeStringObject *)(((x)->ss_flags & Dee_MODSYM_FNAMEOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str))) : DeeString_NewWithHash((x)->ss_name, (x)->ss_hash)))
+#define Dee_module_symbol_getdocobj(x)  ((DeeStringObject *)(((x)->ss_flags & Dee_MODSYM_FDOCOBJ) ? DeeObject_NewRef(Dee_AsObject(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str))) : DeeString_NewUtf8((x)->ss_doc, strlen((x)->ss_doc), Dee_STRING_ERROR_FIGNORE)))
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 
@@ -530,7 +504,7 @@ struct Dee_compiler_options {
 	                                                     * executing a DEC file without the original source at hand is not
 	                                                     * intended behavior per-sé. */
 #define Dee_DEC_FUNTRUSTED        0x0004                /* The origin of the DEC source is not trusted.
-	                                                     * When this flag is set, all generated code objects have the `CODE_FASSEMBLY'
+	                                                     * When this flag is set, all generated code objects have the `Dee_CODE_FASSEMBLY'
 	                                                     * flag set, as well as have their text followed by `INSTRLEN_MAX'
 	                                                     * bytes of `ASM_RET_NONE' instruction (aka. trailing ZERO-bytes).
 	                                                     * This way, the contained assembly will be unable to escape its
@@ -1273,8 +1247,8 @@ DFUNDEF NONNULL((1)) void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restr
 
 struct Dee_static_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
-	struct gc_head_link m_head;
-	DeeModuleObject     m_module;
+	struct Dee_gc_head_link m_head;
+	DeeModuleObject         m_module;
 };
 
 DDATDEF DeeTypeObject DeeModule_Type;

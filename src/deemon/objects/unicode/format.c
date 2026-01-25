@@ -520,7 +520,7 @@ again:
 		if (ch >= 0x80) {
 			char const *next_ptr = ptr;
 			uint32_t uni = Dee_unicode_readutf8_n(&next_ptr, self->sfa_parser.sfp_wend);
-			uniflag_t flags = DeeUni_Flags(uni);
+			Dee_uniflag_t flags = DeeUni_Flags(uni);
 			if (flags & Dee_UNICODE_ISSPACE) {
 				ptr = next_ptr;
 				goto again;
@@ -530,7 +530,7 @@ again:
 				RETURN0(SFA_TOK_KEYWORD);
 			}
 		} else {
-			uniflag_t flags;
+			Dee_uniflag_t flags;
 			flags = DeeUni_Flags(ch);
 			if (flags & Dee_UNICODE_ISSPACE) {
 	case ' ': case '\t': case '\r': case '\n':
@@ -812,12 +812,12 @@ string_format_advanced_do_format_ex_with_escapes(struct string_format_advanced *
                                                  DeeObject *__restrict value,
                                                  char const *next_brace) {
 	Dee_ssize_t result;
-	struct unicode_printer format;
+	struct Dee_unicode_printer format;
 	DREF DeeObject *format_str;
-	unicode_printer_init(&format);
+	Dee_unicode_printer_init(&format);
 again_handle_next_brace:
-	if unlikely(unicode_printer_printutf8(&format, self->sfa_parser.sfp_iter,
-	                                      (size_t)(next_brace - self->sfa_parser.sfp_iter)) < 0)
+	if unlikely(Dee_unicode_printer_printutf8(&format, self->sfa_parser.sfp_iter,
+	                                          (size_t)(next_brace - self->sfa_parser.sfp_iter)) < 0)
 		goto err_format_printer;
 	ASSERT(*next_brace == '{' || *next_brace == '}');
 
@@ -841,7 +841,7 @@ again_handle_next_brace_nullable:
 		void *saved_sfa_arg;
 		saved_sfa_printer = self->sfa_printer;
 		saved_sfa_arg     = self->sfa_arg;
-		self->sfa_printer = &unicode_printer_print;
+		self->sfa_printer = &Dee_unicode_printer_print;
 		self->sfa_arg     = &format;
 
 		/* Print object repr into the "format"-printer */
@@ -863,14 +863,14 @@ again_handle_next_brace_nullable:
 
 	ASSERT(*next_brace == '}'); /* Known to be unescaped -> end of argument */
 	self->sfa_parser.sfp_iter = next_brace + 1;
-	format_str = unicode_printer_pack(&format);
+	format_str = Dee_unicode_printer_pack(&format);
 	if unlikely(!format_str)
 		goto err;
 	result = DeeObject_PrintFormat(value, self->sfa_printer, self->sfa_arg, format_str);
 	Dee_Decref(format_str);
 	return result;
 err_format_printer:
-	unicode_printer_fini(&format);
+	Dee_unicode_printer_fini(&format);
 err:
 	return -1;
 }
@@ -1042,13 +1042,13 @@ string_format_advanced_do1_intostr(struct string_format_advanced *__restrict sel
 	Dee_formatprinter_t saved_sfa_printer;
 	void *saved_sfa_arg;
 	bool saved_sfa_inparen;
-	struct unicode_printer printer;
+	struct Dee_unicode_printer printer;
 	Dee_ssize_t temp;
-	unicode_printer_init(&printer);
+	Dee_unicode_printer_init(&printer);
 	saved_sfa_printer = self->sfa_printer;
 	saved_sfa_arg     = self->sfa_arg;
 	saved_sfa_inparen = self->sfa_inparen;
-	self->sfa_printer = &unicode_printer_print;
+	self->sfa_printer = &Dee_unicode_printer_print;
 	self->sfa_arg     = &printer;
 	temp = string_format_advanced_do1(self);
 	self->sfa_printer = saved_sfa_printer;
@@ -1056,9 +1056,9 @@ string_format_advanced_do1_intostr(struct string_format_advanced *__restrict sel
 	self->sfa_inparen = saved_sfa_inparen;
 	if unlikely(temp < 0)
 		goto err_printer;
-	return unicode_printer_pack(&printer);
+	return Dee_unicode_printer_pack(&printer);
 err_printer:
-	unicode_printer_fini(&printer);
+	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
 

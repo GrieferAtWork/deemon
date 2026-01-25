@@ -194,7 +194,7 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_move_assign[2] = {
 };
 PRIVATE struct oh_init_spec_class tpconst oh_class_str[3] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__str__with__STR, OPERATOR_STR, OPERATOR_USERCOUNT),
-	OH_INIT_SPEC_CLASS_INIT(&usrtype__str__with__PRINT, CLASS_OPERATOR_PRINT, OPERATOR_USERCOUNT),
+	OH_INIT_SPEC_CLASS_INIT(&usrtype__str__with__PRINT, Dee_CLASS_OPERATOR_PRINT, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_str[2] = {
@@ -203,7 +203,7 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_str[2] = {
 };
 PRIVATE struct oh_init_spec_class tpconst oh_class_print[3] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__print__with__STR, OPERATOR_STR, OPERATOR_USERCOUNT),
-	OH_INIT_SPEC_CLASS_INIT(&usrtype__print__with__PRINT, CLASS_OPERATOR_PRINT, OPERATOR_USERCOUNT),
+	OH_INIT_SPEC_CLASS_INIT(&usrtype__print__with__PRINT, Dee_CLASS_OPERATOR_PRINT, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_print[2] = {
@@ -212,7 +212,7 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_print[2] = {
 };
 PRIVATE struct oh_init_spec_class tpconst oh_class_repr[3] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__repr__with__REPR, OPERATOR_REPR, OPERATOR_USERCOUNT),
-	OH_INIT_SPEC_CLASS_INIT(&usrtype__repr__with__PRINTREPR, CLASS_OPERATOR_PRINTREPR, OPERATOR_USERCOUNT),
+	OH_INIT_SPEC_CLASS_INIT(&usrtype__repr__with__PRINTREPR, Dee_CLASS_OPERATOR_PRINTREPR, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_repr[2] = {
@@ -221,7 +221,7 @@ PRIVATE struct oh_init_spec_impl tpconst oh_impls_repr[2] = {
 };
 PRIVATE struct oh_init_spec_class tpconst oh_class_printrepr[3] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__printrepr__with__REPR, OPERATOR_REPR, OPERATOR_USERCOUNT),
-	OH_INIT_SPEC_CLASS_INIT(&usrtype__printrepr__with__PRINTREPR, CLASS_OPERATOR_PRINTREPR, OPERATOR_USERCOUNT),
+	OH_INIT_SPEC_CLASS_INIT(&usrtype__printrepr__with__PRINTREPR, Dee_CLASS_OPERATOR_PRINTREPR, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_printrepr[2] = {

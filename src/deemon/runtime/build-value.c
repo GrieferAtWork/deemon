@@ -274,7 +274,7 @@ do_int:
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Dee_VPPackf(char const **__restrict p_format,
-            struct va_list_struct *__restrict p_args) {
+            struct Dee_va_list_struct *__restrict p_args) {
 	DREF DeeObject *result;
 	char const *format = *p_format;
 again:
@@ -515,10 +515,10 @@ end:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_VNewf(char const *__restrict format, va_list args) {
-	struct va_list_struct *p_args;
+	struct Dee_va_list_struct *p_args;
 	DREF DeeTupleObject *result;
 	size_t i, tuple_size = count_pack_args(format);
-	p_args = (struct va_list_struct *)VALIST_ADDR(args);
+	p_args = (struct Dee_va_list_struct *)VALIST_ADDR(args);
 	result = DeeTuple_NewUninitialized(tuple_size);
 	if unlikely(!result)
 		goto err;
@@ -543,12 +543,12 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_VPackf(char const *__restrict format, va_list args) {
 	DREF DeeObject *result;
-	result = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	result = Dee_VPPackf((char const **)&format, (struct Dee_va_list_struct *)VALIST_ADDR(args));
 	if unlikely(!result) {
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 	} else if unlikely(*format != '\0') {
 		/* More objects at the end -> cannot pack */
-		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
+		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		Dee_Decref(result);
 		err_invalid_argc(NULL, 2, 1, 1); /* TODO: 2 is just a guess; it could also be more... */
 		result = NULL;
@@ -598,7 +598,7 @@ Dee_VPackf(char const *__restrict format, va_list args) {
  */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 Dee_Packf(char const *__restrict format, ...) {
-	struct va_list_struct args;
+	struct Dee_va_list_struct args;
 	DREF DeeObject *result;
 	va_start(args.vl_ap, format);
 	result = Dee_VPPackf((char const **)&format, &args);

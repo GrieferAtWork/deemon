@@ -70,7 +70,7 @@ again:
 		if unlikely(copy_valloc > other->d_valloc)
 			copy_valloc = other->d_valloc;
 	}
-	copy_hidxio = DEE_DICT_HIDXIO_FROMALLOC(copy_valloc);
+	copy_hidxio = Dee_DICT_HIDXIO_FROMALLOC(copy_valloc);
 	copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
 	copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
 
@@ -79,7 +79,7 @@ again:
 		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
 		if unlikely(copy_valloc > other->d_valloc)
 			copy_valloc = other->d_valloc;
-		copy_hidxio = DEE_DICT_HIDXIO_FROMALLOC(copy_valloc);
+		copy_hidxio = Dee_DICT_HIDXIO_FROMALLOC(copy_valloc);
 		copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
 		copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
 		if unlikely(!copy_tabs) {
@@ -143,7 +143,7 @@ again:
 
 	if (copy_hmask == other->d_hmask) {
 		/* No need to re-build the hash table. Can instead copy is verbatim. */
-		shift_t orig_hidxio = DEE_DICT_HIDXIO_FROMALLOC(other->d_valloc);
+		shift_t orig_hidxio = Dee_DICT_HIDXIO_FROMALLOC(other->d_valloc);
 		size_t htab_words = copy_hmask + 1;
 		ASSERT(copy_hidxio <= orig_hidxio || (copy_hidxio + 1) == orig_hidxio);
 		if (orig_hidxio == copy_hidxio) {

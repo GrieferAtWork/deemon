@@ -332,7 +332,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_loopexpr(void) {
 		goto err;
 
 	/* Generate expressions always create yield-functions. */
-	current_basescope->bs_flags |= CODE_FYIELDING;
+	current_basescope->bs_flags |= Dee_CODE_FYIELDING;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
 
 	/* Parse the generator loop. */

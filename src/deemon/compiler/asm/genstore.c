@@ -252,16 +252,16 @@ check_getattr_sym:
 			}	break;
 
 			case SYMBOL_TYPE_MODULE: {
-				struct module_symbol *modsym;
+				struct Dee_module_symbol *modsym;
 				int32_t module_id;
 				/* module.attr --> push extern ... */
 				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
 				                             Dee_AsObject(attrname));
 				if (!modsym)
 					break;
-				if (!PUSH_RESULT && !(modsym->ss_flags & MODSYM_FPROPERTY))
+				if (!PUSH_RESULT && !(modsym->ss_flags & Dee_MODSYM_FPROPERTY))
 					goto done;
-				if (modsym->ss_flags & MODSYM_FEXTERN) {
+				if (modsym->ss_flags & Dee_MODSYM_FEXTERN) {
 					uint16_t impid = modsym->ss_impid;
 					ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
 					module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
@@ -273,8 +273,8 @@ check_getattr_sym:
 
 				/* Push an external symbol accessed through its module. */
 				DO(asm_putddi(ddi_ast));
-				return modsym->ss_flags & MODSYM_FPROPERTY
-				       ? asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym) + MODULE_PROPERTY_GET, 0)
+				return modsym->ss_flags & Dee_MODSYM_FPROPERTY
+				       ? asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym) + Dee_MODULE_PROPERTY_GET, 0)
 				       : asm_gpush_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym));
 			}	break;
 
@@ -414,18 +414,18 @@ check_boundattr_sym:
 			}	break;
 
 			case SYMBOL_TYPE_MODULE: {
-				struct module_symbol *modsym;
+				struct Dee_module_symbol *modsym;
 				int32_t module_id;
 				/* module.attr --> push bnd extern ... */
 				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
 				                             Dee_AsObject(attrname));
 				if (!modsym)
 					break;
-				if (modsym->ss_flags & MODSYM_FPROPERTY)
+				if (modsym->ss_flags & Dee_MODSYM_FPROPERTY)
 					break; /* Handle property-like module symbols via attributes. */
 				if (!PUSH_RESULT)
 					goto done;
-				if (modsym->ss_flags & MODSYM_FEXTERN) {
+				if (modsym->ss_flags & Dee_MODSYM_FEXTERN) {
 					uint16_t impid = modsym->ss_impid;
 					ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
 					module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
@@ -558,7 +558,7 @@ asm_set_cattr_symbol(struct symbol *__restrict sym,
                      struct ast *__restrict ddi_ast,
                      unsigned int gflags) {
 	struct symbol *class_sym, *this_sym;
-	struct class_attribute *attr;
+	struct Dee_class_attribute *attr;
 	int32_t symid;
 	ASSERT(sym->s_type == SYMBOL_TYPE_CATTR);
 	class_sym = sym->s_attr.a_class;
@@ -567,8 +567,8 @@ asm_set_cattr_symbol(struct symbol *__restrict sym,
 	SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
 	if (!this_sym) {
 set_class_attribute:
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 				goto fallback;
 			/* Must invoke the setter callback. */
 			if (PUSH_RESULT)
@@ -576,12 +576,12 @@ set_class_attribute:
 			DO(asm_putddi(ddi_ast));
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
-				DO(asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET)); /* [result], func */
+				DO(asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET)); /* [result], func */
 			} else {
 				DO(asm_gpush_symbol(class_sym, ddi_ast));              /* [result], class_sym */
-				DO(asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET)); /* [result], func */
+				DO(asm_ggetcmember(attr->ca_addr + Dee_CLASS_GETSET_SET)); /* [result], func */
 			}
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {
+			if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 				DO(asm_gpush_symbol(class_sym, ddi_ast)); /* [result], setter, class */
 				if (PUSH_RESULT) {
 					DO(asm_gdup_n(1)); /* result, setter, class, value */
@@ -612,7 +612,7 @@ set_class_attribute:
 			DO(ast_genasm_one(value, ASM_G_FPUSHRES)); /* class, value */
 			DO(asm_putddi(ddi_ast));
 		}
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) {
 			/* XXX: Assert that not already bound? */
 		}
 		DO(asm_gdefcmember(attr->ca_addr)); /* [result], class */
@@ -622,7 +622,7 @@ set_class_attribute:
 	/* Check if the attribute must be accessed as virtual. */
 	DO(asm_check_thiscall(sym, ddi_ast));
 	SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
-	if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+	if (!(attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL))) {
 do_virtual_access:
 		symid = asm_newconst(attr->ca_name);
 		if unlikely(symid < 0)
@@ -650,19 +650,19 @@ do_virtual_access:
 	}
 
 	/* Regular, old member variable. */
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 			goto fallback;
 		/* Call the setter function of the attribute. */
 		if (PUSH_RESULT)
 			DO(ast_genasm(value, ASM_G_FPUSHRES)); /* value */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 			if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 				symid = asm_rsymid(class_sym);
 				if unlikely(symid < 0)
 					goto err;
-				if ((attr->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD)) ==
-				    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
+				if ((attr->ca_flag & (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD)) ==
+				    (Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FMETHOD) &&
 				    this_sym->s_type == SYMBOL_TYPE_THIS &&
 				    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 					/* Invoke the setter callback. */
@@ -671,33 +671,33 @@ do_virtual_access:
 					DO(asm_putddi(ddi_ast));
 					if (PUSH_RESULT)
 						DO(asm_gdup()); /* [result], value */
-					DO(asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET, 0));
+					DO(asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET, 0));
 					goto pop_unused_result;
 				}
 				DO(asm_putddi(ddi_ast));
-				DO(asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET)); /* [result], setter */
+				DO(asm_ggetcmember_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET)); /* [result], setter */
 			} else {
 				DO(asm_putddi(ddi_ast));
 				DO(asm_gpush_symbol(class_sym, ddi_ast)); /* [result], class_sym */
-				DO(asm_ggetcmember(attr->ca_addr + CLASS_GETSET_SET)); /* [result], setter */
+				DO(asm_ggetcmember(attr->ca_addr + Dee_CLASS_GETSET_SET)); /* [result], setter */
 			}
 		} else if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 		           SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
 			DO(asm_putddi(ddi_ast));
 			DO(asm_gpush_symbol(this_sym, ddi_ast));              /* [result], this_sym */
 			DO(asm_gpush_symbol(class_sym, ddi_ast));             /* [result], this_sym, class_sym */
-			DO(asm_ggetmember(attr->ca_addr + CLASS_GETSET_SET)); /* [result], setter */
+			DO(asm_ggetmember(attr->ca_addr + Dee_CLASS_GETSET_SET)); /* [result], setter */
 		} else if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 			symid = asm_rsymid(class_sym);
 			if unlikely(symid < 0)
 				goto err;
-			DO(asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET)); /* [result], setter */
+			DO(asm_ggetmember_this_r((uint16_t)symid, attr->ca_addr + Dee_CLASS_GETSET_SET)); /* [result], setter */
 		} else {
 			DO(asm_gpush_symbol(class_sym, ddi_ast)); /* [result], class_sym */
-			DO(asm_ggetmember_this(attr->ca_addr + CLASS_GETSET_SET)); /* [result], setter */
+			DO(asm_ggetmember_this(attr->ca_addr + Dee_CLASS_GETSET_SET)); /* [result], setter */
 		}
 		/* [result], setter */
-		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD)) {
+		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD)) {
 			if (PUSH_RESULT) {
 				DO(asm_gdup_n(0)); /* result, setter, value */
 			} else {
@@ -719,11 +719,11 @@ do_virtual_access:
 pop_unused_result:
 		return asm_gpop();
 	}
-	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+	if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 		goto set_class_attribute;
 	if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 	    SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 			goto do_virtual_access; /* There is no `setmemberi pop, pop, $<imm8>, pop' instruction, so use fallback */
 		if (PUSH_RESULT) {
 			DO(ast_genasm(value, ASM_G_FPUSHRES)); /* result */
@@ -747,13 +747,13 @@ pop_unused_result:
 		DO(asm_putddi(ddi_ast));
 		if (PUSH_RESULT)
 			DO(asm_gdup()); /* [result], value */
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) {
 			DO(asm_gsetmemberi_this_r((uint16_t)symid, attr->ca_addr)); /* [result] */
 		} else {
 			DO(asm_gsetmember_this_r((uint16_t)symid, attr->ca_addr)); /* [result] */
 		}
 	} else {
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 			goto do_virtual_access; /* There is no `setmemberi this, pop, $<imm8>, pop' instruction, so use fallback */
 		if (PUSH_RESULT) {
 			DO(ast_genasm(value, ASM_G_FPUSHRES)); /* result */
@@ -857,16 +857,16 @@ check_base_symbol_class:
 			}	break;
 
 			case SYMBOL_TYPE_MODULE: {
-				struct module_symbol *modsym;
+				struct Dee_module_symbol *modsym;
 				int32_t module_id;
 				/* module.attr --> pop extern ... */
 				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
 				                             name->a_constexpr);
 				if (!modsym)
 					break;
-				if (modsym->ss_flags & MODSYM_FREADONLY)
+				if (modsym->ss_flags & Dee_MODSYM_FREADONLY)
 					break;
-				if (modsym->ss_flags & MODSYM_FEXTERN) {
+				if (modsym->ss_flags & Dee_MODSYM_FEXTERN) {
 					uint16_t impid = modsym->ss_impid;
 					ASSERT(impid < SYMBOL_MODULE_MODULE(sym)->mo_importc);
 					module_id = asm_newmodule(SYMBOL_MODULE_MODULE(sym)->mo_importv[impid]);
@@ -880,9 +880,9 @@ check_base_symbol_class:
 				DO(asm_putddi(ddi_ast));
 				if (PUSH_RESULT)
 					DO(asm_gdup());
-				if (modsym->ss_flags & MODSYM_FPROPERTY) {
+				if (modsym->ss_flags & Dee_MODSYM_FPROPERTY) {
 					/* Invoke the setter callback. */
-					DO(asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym) + MODULE_PROPERTY_SET, 1));
+					DO(asm_gcall_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym) + Dee_MODULE_PROPERTY_SET, 1));
 					return asm_gpop();
 				}
 				return asm_gpop_extern((uint16_t)module_id, Dee_module_symbol_getindex(modsym));
@@ -1128,7 +1128,7 @@ check_src_sym_class:
 		return asm_gpush_this_module_p();
 
 	case SYMBOL_TYPE_MYFUNC:
-		if (current_basescope->bs_flags & CODE_FTHISCALL)
+		if (current_basescope->bs_flags & Dee_CODE_FTHISCALL)
 			break; /* The function has to be bound! */
 		/* mov PREFIX, this_function */
 		DO(asm_putddi(dst_ast));
@@ -1180,7 +1180,7 @@ check_src_sym_class:
 
 	case SYMBOL_TYPE_EXTERN:
 		/* mov PREFIX, extern <imm8/16>:<imm8/16> */
-		if (SYMBOL_EXTERN_SYMBOL(src_sym)->ss_flags & MODSYM_FPROPERTY)
+		if (SYMBOL_EXTERN_SYMBOL(src_sym)->ss_flags & Dee_MODSYM_FPROPERTY)
 			break; /* Cannot be used for external properties. */
 		symid = asm_esymid(src_sym);
 		if unlikely(symid < 0)
@@ -1456,11 +1456,11 @@ check_dst_sym_class:
 							hand->ex_start = except_begin;
 							hand->ex_end   = except_end;
 							hand->ex_addr  = Linit_try_except;
-							hand->ex_flags = EXCEPTION_HANDLER_FFINALLY;
+							hand->ex_flags = Dee_EXCEPTION_HANDLER_FFINALLY;
 							++except_begin->as_used;
 							++except_end->as_used;
 							++Linit_try_except->as_used;
-							current_basescope->bs_flags |= CODE_FFINALLY;
+							current_basescope->bs_flags |= Dee_CODE_FFINALLY;
 						}
 					}
 
@@ -1625,7 +1625,7 @@ check_dst_sym_class_hybrid:
 				case SYMBOL_TYPE_EXTERN:
 					/* mov extern <imm8/16>, PREFIX */
 					if (SYMBOL_EXTERN_SYMBOL(dst_sym)->ss_flags &
-					    (MODSYM_FREADONLY | MODSYM_FPROPERTY))
+					    (Dee_MODSYM_FREADONLY | Dee_MODSYM_FPROPERTY))
 						break;
 					symid = asm_esymid(dst_sym);
 					if unlikely(symid < 0)

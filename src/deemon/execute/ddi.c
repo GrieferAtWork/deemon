@@ -90,7 +90,7 @@ Dee_ddi_next_simple(uint8_t *__restrict ip,
 
 		case DDI_STOP:
 			*p_uip = uip;
-			return DDI_NEXT_DONE; /* End of DDI stream. */
+			return Dee_DDI_NEXT_DONE; /* End of DDI stream. */
 
 		case DDI_ADDUIP:
 			++uip;
@@ -130,14 +130,14 @@ Dee_ddi_next_simple(uint8_t *__restrict ip,
 
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_regs(uint8_t *__restrict ip,
-                  struct ddi_regs *__restrict regs) {
+                  struct Dee_ddi_regs *__restrict regs) {
 	/* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
 	for (;;) {
 		uint8_t op = *ip++;
 		switch (op) {
 
 		case DDI_STOP:
-			return DDI_NEXT_DONE; /* End of DDI stream. */
+			return Dee_DDI_NEXT_DONE; /* End of DDI stream. */
 
 		case DDI_ADDUIP:
 			++regs->dr_uip;
@@ -147,35 +147,35 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 		case DDI_ADDLNO: {
 			int temp;
 			temp = get_sleb((uint8_t **)&ip);
-			if (!(regs->dr_flags & DDI_REGS_FSECOND))
+			if (!(regs->dr_flags & Dee_DDI_REGS_FSECOND))
 				regs->dr_lno += temp;
 		}	break;
 
 		case DDI_SETCOL: {
 			int temp;
 			temp = get_sleb((uint8_t **)&ip);
-			if (!(regs->dr_flags & DDI_REGS_FSECOND))
+			if (!(regs->dr_flags & Dee_DDI_REGS_FSECOND))
 				regs->dr_col = temp;
 		}	break;
 
 		case DDI_SETPATH: {
 			uint16_t temp;
 			temp = (uint16_t)get_uleb((uint8_t **)&ip);
-			if (!(regs->dr_flags & DDI_REGS_FSECOND))
+			if (!(regs->dr_flags & Dee_DDI_REGS_FSECOND))
 				regs->dr_path = temp;
 		}	break;
 
 		case DDI_SETFILE: {
 			uint16_t temp;
 			temp = (uint16_t)get_uleb((uint8_t **)&ip);
-			if (!(regs->dr_flags & DDI_REGS_FSECOND))
+			if (!(regs->dr_flags & Dee_DDI_REGS_FSECOND))
 				regs->dr_file = temp;
 		}	break;
 
 		case DDI_SETNAME: {
 			uint16_t temp;
 			temp = (uint16_t)get_uleb((uint8_t **)&ip);
-			if (!(regs->dr_flags & DDI_REGS_FSECOND))
+			if (!(regs->dr_flags & Dee_DDI_REGS_FSECOND))
 				regs->dr_name = temp;
 		}	break;
 
@@ -206,17 +206,17 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 			switch (cmd & DDI_X_CMDMASK) {
 
 			case DDI_X_TOGGLESTMT:
-				if (!(regs->dr_flags & DDI_REGS_FSECOND))
-					regs->dr_flags ^= DDI_REGS_FISSTMT;
+				if (!(regs->dr_flags & Dee_DDI_REGS_FSECOND))
+					regs->dr_flags ^= Dee_DDI_REGS_FISSTMT;
 				break;
 
 			case DDI_X_PUSHSTATE:
-				regs->dr_flags += DDI_REGS_FSECONE;
+				regs->dr_flags += Dee_DDI_REGS_FSECONE;
 				break;
 
 			case DDI_X_POPSTATE:
-				if (regs->dr_flags & DDI_REGS_FSECOND)
-					regs->dr_flags -= DDI_REGS_FSECONE;
+				if (regs->dr_flags & Dee_DDI_REGS_FSECOND)
+					regs->dr_flags -= Dee_DDI_REGS_FSECONE;
 				break;
 
 			default: break;
@@ -225,7 +225,7 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 
 		default:
 			regs->dr_uip += DDI_GENERIC_IP(op);
-			if (!(regs->dr_flags & DDI_REGS_FSECOND))
+			if (!(regs->dr_flags & Dee_DDI_REGS_FSECOND))
 				regs->dr_lno += DDI_GENERIC_LN(op);
 			return ip; /* Checkpoint. */
 		}
@@ -235,7 +235,7 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 
 
 PRIVATE NONNULL((1)) int DCALL
-ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
+ddi_xrealloc_sp(struct Dee_ddi_xregs *__restrict regs,
                 uint16_t min_size, unsigned int flags) {
 	uint16_t new_alloc, *new_vec;
 	new_alloc = regs->dx_spnama * 2;
@@ -246,7 +246,7 @@ ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
 	                                      sizeof(uint16_t));
 	if (!new_vec) {
 		new_alloc = min_size;
-		if (flags & DDI_STATE_FNOTHROW) {
+		if (flags & Dee_DDI_STATE_FNOTHROW) {
 			new_vec = (uint16_t *)Dee_TryReallocc(regs->dx_spnamv,
 			                                      new_alloc,
 			                                      sizeof(uint16_t));
@@ -268,7 +268,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_state(uint8_t *__restrict ip,
-                   struct ddi_state *__restrict self,
+                   struct Dee_ddi_state *__restrict self,
                    unsigned int flags) {
 	/* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
 next_ip:
@@ -277,7 +277,7 @@ next_ip:
 		switch (op) {
 
 		case DDI_STOP:
-			return DDI_NEXT_DONE; /* End of DDI stream. */
+			return Dee_DDI_NEXT_DONE; /* End of DDI stream. */
 
 		case DDI_ADDUIP:
 			++self->rs_regs.dr_uip;
@@ -312,21 +312,21 @@ next_ip:
 			--self->rs_regs.dr_usp;
 			/* Unbind the stack-symbols. */
 			if (self->rs_regs.dr_usp < self->rs_xregs.dx_spnama)
-				self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp] = DDI_REGS_UNBOUND_NAME;
+				self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp] = Dee_DDI_REGS_UNBOUND_NAME;
 			break;
 
 		case DDI_ADDUSP: {
 			int16_t offset;
 			offset = (int16_t)get_sleb((uint8_t **)&ip);
 			self->rs_regs.dr_usp += offset;
-			if (offset < 0 && !(flags & DDI_STATE_FNONAMES) &&
+			if (offset < 0 && !(flags & Dee_DDI_STATE_FNONAMES) &&
 			    self->rs_regs.dr_usp < self->rs_xregs.dx_spnama) {
 				/* Unbind all stack-symbols as they fall out of view. */
 				uint16_t i, clr_cnt;
 				clr_cnt = MIN(self->rs_xregs.dx_spnama - self->rs_regs.dr_usp,
 				              (uint16_t)-offset);
 				for (i = 0; i < clr_cnt; ++i)
-					self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp + i] = DDI_REGS_UNBOUND_NAME;
+					self->rs_xregs.dx_spnamv[self->rs_regs.dr_usp + i] = Dee_DDI_REGS_UNBOUND_NAME;
 			}
 		}	break;
 
@@ -334,7 +334,7 @@ next_ip:
 			uint16_t address;
 			/* Define the name of a stack-symbol. */
 			address = (uint16_t)get_uleb((uint8_t **)&ip);
-			if (flags & DDI_STATE_FNONAMES)
+			if (flags & Dee_DDI_STATE_FNONAMES)
 				break;
 			if unlikely(!self->rs_regs.dr_usp)
 				break; /* Shouldn't happen... */
@@ -348,7 +348,7 @@ next_ip:
 			uint16_t index, address;
 			index   = (uint16_t)get_uleb((uint8_t **)&ip);
 			address = (uint16_t)get_uleb((uint8_t **)&ip);
-			if (flags & DDI_STATE_FNONAMES)
+			if (flags & Dee_DDI_STATE_FNONAMES)
 				break;
 			if (index >= self->rs_xregs.dx_lcnamc) {
 				/* Bind a stack-symbol. */
@@ -367,16 +367,16 @@ next_ip:
 		case DDI_DELLCNAME: {
 			unsigned int index;
 			index = get_uleb((uint8_t **)&ip);
-			if (flags & DDI_STATE_FNONAMES)
+			if (flags & Dee_DDI_STATE_FNONAMES)
 				break;
 			if (index >= self->rs_xregs.dx_lcnamc) {
 				/* Unbind a stack-symbol. */
 				index -= self->rs_xregs.dx_lcnamc;
 				if (index < self->rs_xregs.dx_spnama)
-					self->rs_xregs.dx_spnamv[index] = DDI_REGS_UNBOUND_NAME;
+					self->rs_xregs.dx_spnamv[index] = Dee_DDI_REGS_UNBOUND_NAME;
 			} else {
 				/* Unbind a local-symbol. */
-				self->rs_xregs.dx_lcnamv[index] = DDI_REGS_UNBOUND_NAME;
+				self->rs_xregs.dx_lcnamv[index] = Dee_DDI_REGS_UNBOUND_NAME;
 			}
 		}	break;
 
@@ -386,27 +386,27 @@ next_ip:
 			switch (cmd & DDI_X_CMDMASK) {
 
 			case DDI_X_TOGGLESTMT:
-				self->rs_regs.dr_flags ^= DDI_REGS_FISSTMT;
+				self->rs_regs.dr_flags ^= Dee_DDI_REGS_FISSTMT;
 				break;
 
 			case DDI_X_PUSHSTATE: {
-				struct ddi_saved *save;
+				struct Dee_ddi_saved *save;
 				/* Save the current register state. */
-				save = (struct ddi_saved *)Dee_TryMalloc(sizeof(struct ddi_saved));
+				save = (struct Dee_ddi_saved *)Dee_TryMalloc(sizeof(struct Dee_ddi_saved));
 				if unlikely(!save) {
-					if (flags & DDI_STATE_FNOTHROW)
+					if (flags & Dee_DDI_STATE_FNOTHROW)
 						goto next_ip;
-					if (flags & DDI_STATE_FNOEXCEPT)
+					if (flags & Dee_DDI_STATE_FNOEXCEPT)
 						goto err;
-					save = (struct ddi_saved *)Dee_Malloc(sizeof(struct ddi_saved));
+					save = (struct Dee_ddi_saved *)Dee_Malloc(sizeof(struct Dee_ddi_saved));
 					if unlikely(!save)
 						goto err;
 				}
 				memcpy(&save->s_save.dx_base.dr_usp, &self->rs_xregs.dx_base.dr_usp,
-				       sizeof(struct ddi_xregs) - offsetof(struct ddi_xregs, dx_spnama));
+				       sizeof(struct Dee_ddi_xregs) - offsetof(struct Dee_ddi_xregs, dx_spnama));
 				/* Copy bound local-symbol names */
 				save->s_save.dx_lcnamc = self->rs_xregs.dx_lcnamc;
-				if (flags & DDI_STATE_FNONAMES)
+				if (flags & Dee_DDI_STATE_FNONAMES)
 					save->s_save.dx_lcnamc = 0;
 				if (!save->s_save.dx_lcnamc) {
 					save->s_save.dx_lcnamv = NULL;
@@ -414,9 +414,9 @@ next_ip:
 					save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_lcnamc,
 					                                                    sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_lcnamv) {
-						if (flags & (DDI_STATE_FNOTHROW | DDI_STATE_FNOEXCEPT)) {
+						if (flags & (Dee_DDI_STATE_FNOTHROW | Dee_DDI_STATE_FNOEXCEPT)) {
 							Dee_Free(save);
-							if (flags & DDI_STATE_FNOEXCEPT)
+							if (flags & Dee_DDI_STATE_FNOEXCEPT)
 								goto err;
 							goto next_ip;
 						}
@@ -433,9 +433,9 @@ next_ip:
 				if (save->s_save.dx_spnama > self->rs_xregs.dx_base.dr_usp)
 					save->s_save.dx_spnama = self->rs_xregs.dx_base.dr_usp;
 				while (save->s_save.dx_spnama &&
-				       self->rs_xregs.dx_spnamv[save->s_save.dx_spnama - 1] == DDI_REGS_UNBOUND_NAME)
+				       self->rs_xregs.dx_spnamv[save->s_save.dx_spnama - 1] == Dee_DDI_REGS_UNBOUND_NAME)
 					--save->s_save.dx_spnama;
-				if (flags & DDI_STATE_FNONAMES)
+				if (flags & Dee_DDI_STATE_FNONAMES)
 					save->s_save.dx_spnama = 0;
 				if (!save->s_save.dx_spnama) {
 					save->s_save.dx_spnamv = NULL;
@@ -443,10 +443,10 @@ next_ip:
 					save->s_save.dx_spnamv = (uint16_t *)Dee_TryMallocc(save->s_save.dx_spnama,
 					                                                    sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_spnamv) {
-						if (flags & (DDI_STATE_FNOTHROW | DDI_STATE_FNOEXCEPT)) {
+						if (flags & (Dee_DDI_STATE_FNOTHROW | Dee_DDI_STATE_FNOEXCEPT)) {
 							Dee_Free(save->s_save.dx_lcnamv);
 							Dee_Free(save);
-							if (flags & DDI_STATE_FNOEXCEPT)
+							if (flags & Dee_DDI_STATE_FNOEXCEPT)
 								goto err;
 							goto next_ip;
 						}
@@ -470,14 +470,14 @@ err_save:
 			}	break;
 
 			case DDI_X_POPSTATE: {
-				struct ddi_saved *save;
+				struct Dee_ddi_saved *save;
 				if ((save = self->rs_save) == NULL)
 					break;
 				/* Restore the saved register state (but don't modify the UIP/USP registers) */
 				Dee_Free(self->rs_xregs.dx_spnamv);
 				Dee_Free(self->rs_xregs.dx_lcnamv);
 				memcpy(&self->rs_xregs.dx_base.dr_flags, &save->s_save.dx_base.dr_flags,
-				       sizeof(struct ddi_xregs) - offsetof(struct ddi_xregs, dx_base.dr_flags));
+				       sizeof(struct Dee_ddi_xregs) - offsetof(struct Dee_ddi_xregs, dx_base.dr_flags));
 				self->rs_save = save->s_prev;
 				Dee_Free(save);
 			}	break;
@@ -493,9 +493,9 @@ err_save:
 		}
 	}
 err:
-	if (flags & DDI_STATE_FNOTHROW)
+	if (flags & Dee_DDI_STATE_FNOTHROW)
 		goto next_ip;
-	return DDI_NEXT_ERR;
+	return Dee_DDI_NEXT_ERR;
 }
 
 /* Initialize the given DDI register state from `code'.
@@ -503,12 +503,12 @@ err:
  * @return: * :            Successfully initialized the register state.
  *                         A pointer to the next DDI instruction.
  *                         This pointer can be used to enumerate DDI information.
- * @return: DDI_NEXT_ERR:  [!DDI_STATE_FNOTHROW] An error occurred.
- * NOTE: Upon error (return == DDI_NEXT_DONE || return == DDI_NEXT_ERR),
+ * @return: Dee_DDI_NEXT_ERR:  [!Dee_DDI_STATE_FNOTHROW] An error occurred.
+ * NOTE: Upon error (return == Dee_DDI_NEXT_DONE || return == Dee_DDI_NEXT_ERR),
  *       the given ddi-state `self' is initialized to a no-op state that
  *       can still be used in a call to `Dee_ddi_state_fini()'! */
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
-Dee_ddi_state_init(struct ddi_state *__restrict self,
+Dee_ddi_state_init(struct Dee_ddi_state *__restrict self,
                    DeeObject *__restrict code,
                    unsigned int flags) {
 	DeeDDIObject *ddi;
@@ -516,10 +516,10 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	ddi = ((DeeCodeObject *)code)->co_ddi;
 	ASSERT_OBJECT_TYPE_EXACT(ddi, &DeeDDI_Type);
-	memcpy(&self->rs_regs, &ddi->d_start, sizeof(struct ddi_regs));
+	memcpy(&self->rs_regs, &ddi->d_start, sizeof(struct Dee_ddi_regs));
 	self->rs_xregs.dx_lcnamc = ((DeeCodeObject *)code)->co_localc;
 	self->rs_xregs.dx_spnama = (uint16_t)DeeCode_StackDepth((DeeCodeObject *)code);
-	if (flags & DDI_STATE_FNONAMES) {
+	if (flags & Dee_DDI_STATE_FNONAMES) {
 		self->rs_xregs.dx_lcnamc = 0;
 		self->rs_xregs.dx_spnama = 0;
 	}
@@ -530,19 +530,19 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 		self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_lcnamc,
 		                                                      sizeof(uint16_t));
 		if unlikely(!self->rs_xregs.dx_lcnamv) {
-			if (flags & DDI_STATE_FNOTHROW) {
+			if (flags & Dee_DDI_STATE_FNOTHROW) {
 				self->rs_xregs.dx_lcnamc = 0;
 			} else {
-				if (flags & DDI_STATE_FNOEXCEPT)
-					return DDI_NEXT_ERR;
+				if (flags & Dee_DDI_STATE_FNOEXCEPT)
+					return Dee_DDI_NEXT_ERR;
 				self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_Mallocc(self->rs_xregs.dx_lcnamc,
 				                                                   sizeof(uint16_t));
 				if unlikely(!self->rs_xregs.dx_lcnamv)
-					return DDI_NEXT_ERR;
+					return Dee_DDI_NEXT_ERR;
 			}
 		}
 		for (i = 0; i < self->rs_xregs.dx_lcnamc; ++i)
-			self->rs_xregs.dx_lcnamv[i] = DDI_REGS_UNBOUND_NAME;
+			self->rs_xregs.dx_lcnamv[i] = Dee_DDI_REGS_UNBOUND_NAME;
 	}
 	/* Allocate an initial stack-name buffer. */
 	if (!self->rs_xregs.dx_spnama) {
@@ -554,7 +554,7 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 			self->rs_xregs.dx_spnama = 0; /* The SP-buffer is optional, so don't sweat it if this failed. */
 		} else {
 			for (i = 0; i < self->rs_xregs.dx_spnama; ++i) {
-				self->rs_xregs.dx_spnamv[i] = DDI_REGS_UNBOUND_NAME;
+				self->rs_xregs.dx_spnamv[i] = Dee_DDI_REGS_UNBOUND_NAME;
 			}
 		}
 	}
@@ -567,15 +567,15 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 		result = ddi->d_ddi;
 		do {
 			result = Dee_ddi_next_state(result, self, flags);
-		} while (DDI_ISOK(result) && result < end);
+		} while (Dee_DDI_ISOK(result) && result < end);
 		return result;
 	}
 	return ddi->d_ddi;
 }
 
 PUBLIC NONNULL((1)) void DCALL
-Dee_ddi_state_fini(struct ddi_state *__restrict self) {
-	struct ddi_saved *iter, *next;
+Dee_ddi_state_fini(struct Dee_ddi_state *__restrict self) {
+	struct Dee_ddi_saved *iter, *next;
 	iter = self->rs_save;
 	while (iter) {
 		next = iter->s_prev;
@@ -596,8 +596,8 @@ Dee_ddi_state_fini(struct ddi_state *__restrict self) {
  * @param: opt_endip: [out] When non-NULL, filled with the UIP of the closest checkpoint above `uip'
  * @param: flags:           Set of `DDI_STATE_F*'
  * @return: * :             Successfully found the DDI state describing `uip'
- * @return: DDI_NEXT_ERR:   [!DDI_STATE_FNOTHROW] An error occurred.
- * @return: DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP' was read. */
+ * @return: Dee_DDI_NEXT_ERR:   [!Dee_DDI_STATE_FNOTHROW] An error occurred.
+ * @return: Dee_DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP' was read. */
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 DeeCode_FindDDI(DeeObject *__restrict self,
                 struct Dee_ddi_state *__restrict start_state,
@@ -605,11 +605,11 @@ DeeCode_FindDDI(DeeObject *__restrict self,
                 unsigned int flags) {
 	uint8_t *ip, *end_ip;
 	ip = Dee_ddi_state_init(start_state, self, flags);
-	while (DDI_ISOK(ip)) {
+	while (Dee_DDI_ISOK(ip)) {
 		code_addr_t end_uip;
 		end_uip = start_state->rs_regs.dr_uip;
 		end_ip  = Dee_ddi_next_simple(ip, &end_uip);
-		if (!DDI_ISOK(end_ip)) {
+		if (!Dee_DDI_ISOK(end_ip)) {
 			ip = end_ip;
 			break;
 		}
@@ -624,26 +624,31 @@ DeeCode_FindDDI(DeeObject *__restrict self,
 	return ip;
 }
 
-
-PUBLIC DEFINE_DDI(DeeDDI_Empty,
-                  /* d_strings: */ NULL,
-                  /* d_strtab:  */ (DeeStringObject *)Dee_EmptyString,
-                  /* d_exdat:   */ NULL,
-                  /* d_ddisize: */ 1,
-                  /* d_nstring: */ 0,
-                  /* d_ddiinit: */ 0,
-                  /* d_start:   */ {
-                      /* .dr_uip   = */ 0,
-                      /* .dr_usp   = */ 0,
-                      /* .dr_flags = */ 0,
-                      /* .dr_path  = */ 0,
-                      /* .dr_file  = */ 0,
-                      /* .dr_name  = */ 0,
-                      /* ._dr_pad  = */ { 0 },
-                      /* .dr_col   = */ 0,
-                      /* .dr_lno   = */ 0
-                  },
-                  /* d_ddi:     */ { DDI_STOP });
+/* clang-format off */
+PUBLIC Dee_DEFINE_DDI(
+	DeeDDI_Empty,
+	/* d_strings: */ NULL,
+	/* d_strtab:  */ (DeeStringObject *)Dee_EmptyString,
+	/* d_exdat:   */ NULL,
+	/* d_ddisize: */ 1,
+	/* d_nstring: */ 0,
+	/* d_ddiinit: */ 0,
+	/* d_start:   */ {
+		/* .dr_uip   = */ 0,
+		/* .dr_usp   = */ 0,
+		/* .dr_flags = */ 0,
+		/* .dr_path  = */ 0,
+		/* .dr_file  = */ 0,
+		/* .dr_name  = */ 0,
+		/* ._dr_pad  = */ { 0 },
+		/* .dr_col   = */ 0,
+		/* .dr_lno   = */ 0
+	},
+	/* d_ddi: */ {
+		DDI_STOP
+	}
+);
+/* clang-format on */
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 ddi_serialize(DeeDDIObject *__restrict self, DeeSerial *__restrict writer) {
@@ -668,7 +673,7 @@ ddi_serialize(DeeDDIObject *__restrict self, DeeSerial *__restrict writer) {
 			goto err;
 	}
 	if (self->d_exdat) {
-		size_t sizeof_exdat = offsetof(struct ddi_exdat, dx_data) + self->d_exdat->dx_size;
+		size_t sizeof_exdat = offsetof(struct Dee_ddi_exdat, dx_data) + self->d_exdat->dx_size;
 		if (DeeSerial_PutMemdup(writer, addr + offsetof(DeeDDIObject, d_exdat),
 		                        self->d_exdat, sizeof_exdat))
 			goto err;
@@ -742,7 +747,7 @@ ddi_compare_eq_impl(DeeDDIObject *self, DeeDDIObject *other) {
 		goto nope;
 	if (bcmpc(self->d_strings, other->d_strings, self->d_nstring, sizeof(*self->d_strings)) != 0)
 		goto nope;
-	if (bcmp(&self->d_start, &other->d_start, self->d_ddisize + sizeof(struct ddi_regs)) != 0)
+	if (bcmp(&self->d_start, &other->d_start, self->d_ddisize + sizeof(struct Dee_ddi_regs)) != 0)
 		goto nope;
 	return Dee_COMPARE_EQ;
 nope:

@@ -172,7 +172,7 @@
 #define LOCAL_DeeArg_VUnpack              DeeArg_VUnpack
 #define LOCAL_DeeArg_VUnpackKw            DeeArg_VUnpackKw
 #define LOCAL_Dee_VUnpackf                Dee_VUnpackf
-#define LOCAL_PARAM_P_OUT                 struct va_list_struct *__restrict p_args
+#define LOCAL_PARAM_P_OUT                 struct Dee_va_list_struct *__restrict p_args
 #define LOCAL_PARAM_OUT                   va_list args
 #define LOCAL_ARG_P_OUT                   p_args
 #define LOCAL_ARG_OUT                     args
@@ -974,7 +974,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
                              char const *__restrict format, LOCAL_PARAM_OUT) {
 	int temp;
 #ifdef DEFINE_DeeArg_Unpack
-	struct va_list_struct *p_args = (struct va_list_struct *)VALIST_ADDR(args);
+	struct Dee_va_list_struct *p_args = (struct Dee_va_list_struct *)VALIST_ADDR(args);
 #else /* DEFINE_DeeArg_Unpack */
 	void **p_out = &out;
 #ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
@@ -1034,7 +1034,7 @@ kwds_findstr(DeeKwdsObject *__restrict self,
 	Dee_hash_t i, perturb;
 	perturb = i = hash & self->kw_mask;
 	for (;; i = (i << 2) + i + perturb + 1, perturb >>= 5) {
-		struct kwds_entry *entry;
+		struct Dee_kwds_entry *entry;
 		entry = &self->kw_map[i & self->kw_mask];
 		if (!entry->ke_name)
 			break;
@@ -1057,7 +1057,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 	bool is_optional;
 	int temp;
 #ifdef DEFINE_DeeArg_Unpack
-	struct va_list_struct *p_args;
+	struct Dee_va_list_struct *p_args;
 #else /* DEFINE_DeeArg_Unpack */
 	void **p_out;
 #ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
@@ -1070,7 +1070,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 	fmt_start   = format;
 	is_optional = false;
 #ifdef DEFINE_DeeArg_Unpack
-	p_args = (struct va_list_struct *)VALIST_ADDR(args);
+	p_args = (struct Dee_va_list_struct *)VALIST_ADDR(args);
 #else /* DEFINE_DeeArg_Unpack */
 	p_out = &out;
 #ifdef COMPILER_HAVE_PISSASS_BUGGY_STACK_ALIGNMENT
@@ -1295,7 +1295,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                            char const *__restrict format,
                            LOCAL_PARAM_OUT) {
 #ifdef DEFINE_DeeArg_Unpack
-	return Dee_VPUnpackf(self, (char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
+	return Dee_VPUnpackf(self, (char const **)&format, (struct Dee_va_list_struct *)VALIST_ADDR(args));
 #else /* DEFINE_DeeArg_Unpack */
 	return Dee_PUnpackStruct(self, (char const **)&format, &out);
 #endif /* !DEFINE_DeeArg_Unpack */
@@ -1381,7 +1381,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 (Dee_Unpackf)(DeeObject *__restrict self,
               char const *__restrict format, ...) {
 	int result;
-	struct va_list_struct args;
+	struct Dee_va_list_struct args;
 	va_start(args.vl_ap, format);
 #ifdef CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY
 	/* Compile-time assert that our config is correct.

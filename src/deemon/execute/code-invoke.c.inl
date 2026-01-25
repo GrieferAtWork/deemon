@@ -179,7 +179,7 @@ LOCAL_DeeFunction_OptimizeAndCall(DeeFunctionObject *self
 
 	/* Fallback: do a normal invocation (in this case,
 	 * `DeeCode_OptimizeCallThreshold' was set to (size_t)-1,
-	 * or `CODE_FNOOPTIMIZE' was set, so this won't loop) */
+	 * or `Dee_CODE_FNOOPTIMIZE' was set, so this won't loop) */
 #if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
 	return DeeFunction_ThisCallTupleKw(self, this_arg, args, kw);
 #elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
@@ -252,7 +252,7 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 {
 	DREF DeeObject *result;
 	DeeCodeObject *code;
-	struct code_frame frame;
+	struct Dee_code_frame frame;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeFunction_Type);
 #ifdef CALL_THIS
 	ASSERT_OBJECT(this_arg);
@@ -261,7 +261,7 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 
 	/* Handle miss-match the THISCALL calling behavior. */
 #ifdef CALL_THIS
-	if unlikely(!(code->co_flags & CODE_FTHISCALL)) {
+	if unlikely(!(code->co_flags & Dee_CODE_FTHISCALL)) {
 		DREF DeeTupleObject *packed_args;
 
 		/* Re-package the argument tuple and perform a regular call. */
@@ -285,11 +285,11 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 		return result;
 	}
 #else /* CALL_THIS */
-	if unlikely(code->co_flags & CODE_FTHISCALL) {
+	if unlikely(code->co_flags & Dee_CODE_FTHISCALL) {
 		/* Special case: Invoke the function as a this-call. */
 		if unlikely(!GET_ARGC()) {
 			err_invalid_argc(DeeCode_NAME(code), 0, code->co_argc_min + 1,
-			                 code->co_flags & CODE_FVARARGS
+			                 code->co_flags & Dee_CODE_FVARARGS
 			                 ? (size_t)-1
 			                 : ((size_t)code->co_argc_max + 1));
 			goto err;
@@ -376,7 +376,7 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 		size_t kw_used; /* # of keyword arguments that have been loaded from `kw'.
 		                 * NOTE: Once all provided arguments have been loaded, this is used
 		                 *       to check if _all_ keywords have actually been used, which
-		                 *       is a requirement when `CODE_FVARKWDS' isn't set. */
+		                 *       is a requirement when `Dee_CODE_FVARKWDS' isn't set. */
 	
 		/* Keep track of metrics. */
 #ifdef CONFIG_HAVE_CODE_METRICS
@@ -392,7 +392,7 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 		if unlikely(code->co_metrics.com_call_kw > DeeCode_OptimizeCallThreshold)
 #endif /* !CALL_TUPLE */
 		{
-			if (!(code->co_flags & CODE_FNOOPTIMIZE)) {
+			if (!(code->co_flags & Dee_CODE_FNOOPTIMIZE)) {
 #if defined(CALL_TUPLE) && defined(CALL_THIS)
 				return DeeFunction_OptimizeAndThisCallTupleKw(self, this_arg, args, kw);
 #elif defined(CALL_TUPLE) && !defined(CALL_THIS)
@@ -411,7 +411,7 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 #define err_ex_frame err
 #endif /* Dee_Alloca */
 #ifndef __INTELLISENSE__
-		switch (code->co_flags & (CODE_FVARKWDS | CODE_FYIELDING)) {
+		switch (code->co_flags & (Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)) {
 
 		case 0:
 			if likely(DeeKwds_Check(kw)) {
@@ -424,35 +424,35 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 			}
 			break;
 
-		case CODE_FVARKWDS:
+		case Dee_CODE_FVARKWDS:
 			if likely(DeeKwds_Check(kw)) {
-#define CODE_FLAGS    CODE_FVARKWDS
+#define CODE_FLAGS    Dee_CODE_FVARKWDS
 #include "code-invoke-kw.c.inl"
 			} else {
 #define KW_IS_MAPPING 1
-#define CODE_FLAGS    CODE_FVARKWDS
+#define CODE_FLAGS    Dee_CODE_FVARKWDS
 #include "code-invoke-kw.c.inl"
 			}
 			break;
 
-		case CODE_FYIELDING:
+		case Dee_CODE_FYIELDING:
 			if likely(DeeKwds_Check(kw)) {
-#define CODE_FLAGS    CODE_FYIELDING
+#define CODE_FLAGS    Dee_CODE_FYIELDING
 #include "code-invoke-kw.c.inl"
 			} else {
 #define KW_IS_MAPPING 1
-#define CODE_FLAGS    CODE_FYIELDING
+#define CODE_FLAGS    Dee_CODE_FYIELDING
 #include "code-invoke-kw.c.inl"
 			}
 			break;
 
-		case CODE_FVARKWDS | CODE_FYIELDING:
+		case Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING:
 			if likely(DeeKwds_Check(kw)) {
-#define CODE_FLAGS   (CODE_FVARKWDS | CODE_FYIELDING)
+#define CODE_FLAGS   (Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)
 #include "code-invoke-kw.c.inl"
 			} else {
 #define KW_IS_MAPPING 1
-#define CODE_FLAGS   (CODE_FVARKWDS | CODE_FYIELDING)
+#define CODE_FLAGS   (Dee_CODE_FVARKWDS | Dee_CODE_FYIELDING)
 #include "code-invoke-kw.c.inl"
 			}
 			break;
@@ -467,7 +467,7 @@ err_ex_frame_full:
 		goto err;
 #ifndef Dee_Alloca
 err_ex_frame:
-		Dee_Free((void *)((uintptr_t)frame.cf_kw + offsetof(struct code_frame_kwds, fk_kargv)));
+		Dee_Free((void *)((uintptr_t)frame.cf_kw + offsetof(struct Dee_code_frame_kwds, fk_kargv)));
 		goto err;
 #else /* !Dee_Alloca */
 #undef err_ex_frame
@@ -523,7 +523,7 @@ err_ex_frame:
 	if unlikely(code->co_metrics.com_call > DeeCode_OptimizeCallThreshold)
 #endif /* !CALL_TUPLE */
 	{
-		if (!(code->co_flags & CODE_FNOOPTIMIZE)) {
+		if (!(code->co_flags & Dee_CODE_FNOOPTIMIZE)) {
 #if defined(CALL_TUPLE) && defined(CALL_THIS)
 			return DeeFunction_OptimizeAndThisCallTuple(self, this_arg, args);
 #elif defined(CALL_TUPLE) && !defined(CALL_THIS)
@@ -541,17 +541,17 @@ err_ex_frame:
 
 	if unlikely(GET_ARGC() < code->co_argc_min ||
 	            (GET_ARGC() > code->co_argc_max &&
-	             !(code->co_flags & CODE_FVARARGS))) {
+	             !(code->co_flags & Dee_CODE_FVARARGS))) {
 		/* ERROR: Invalid argument count! */
 		err_invalid_argc(DeeCode_NAME(code),
 		                 GET_ARGC(), code->co_argc_min,
-		                 code->co_flags & CODE_FVARARGS
+		                 code->co_flags & Dee_CODE_FVARARGS
 		                 ? (size_t)-1
 		                 : (size_t)code->co_argc_max);
 		goto err;
 	}
 
-	if (!(code->co_flags & CODE_FYIELDING)) {
+	if (!(code->co_flags & Dee_CODE_FYIELDING)) {
 		/* Default scenario: Perform a this-call. */
 		frame.cf_func   = self;
 		frame.cf_argc   = GET_ARGC();
@@ -559,7 +559,7 @@ err_ex_frame:
 		frame.cf_result = NULL;
 		frame.cf_kw     = NULL;
 #ifdef Dee_Alloca
-		if (!(code->co_flags & CODE_FHEAPFRAME)) {
+		if (!(code->co_flags & Dee_CODE_FHEAPFRAME)) {
 			frame.cf_frame = (DeeObject **)Dee_Alloca(code->co_framesize);
 		} else
 #endif /* Dee_Alloca */
@@ -574,7 +574,7 @@ err_ex_frame:
 		       code->co_localc,
 		       sizeof(DREF DeeObject *));
 #ifndef NDEBUG
-		frame.cf_prev = CODE_FRAME_NOT_EXECUTING;
+		frame.cf_prev = Dee_CODE_FRAME_NOT_EXECUTING;
 #endif /* !NDEBUG */
 		frame.cf_stack = frame.cf_frame + code->co_localc;
 		frame.cf_sp    = frame.cf_stack;
@@ -590,7 +590,7 @@ err_ex_frame:
 #endif /* CALL_TUPLE */
 
 		/* With the frame now set up, actually invoke the code. */
-		if unlikely(code->co_flags & CODE_FASSEMBLY) {
+		if unlikely(code->co_flags & Dee_CODE_FASSEMBLY) {
 			frame.cf_stacksz = 0;
 			result = DeeCode_ExecFrameSafe(&frame);
 
@@ -622,7 +622,7 @@ err_ex_frame:
 		}
 
 #ifdef Dee_Alloca
-		if (code->co_flags & CODE_FHEAPFRAME)
+		if (code->co_flags & Dee_CODE_FHEAPFRAME)
 #endif /* Dee_Alloca */
 		{
 			Dee_Free(frame.cf_frame);

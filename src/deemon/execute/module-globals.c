@@ -138,8 +138,8 @@ PRIVATE struct type_cmp modexportsiter_cmp = {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_it_getattr_symbol(DeeModuleObject *__restrict self,
-                         struct module_symbol *__restrict symbol) {
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+                         struct Dee_module_symbol *__restrict symbol) {
+	if likely(!(symbol->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
 		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
@@ -153,10 +153,10 @@ read_symbol:
 	}
 
 	/* External symbol, or property. */
-	if (symbol->ss_flags & MODSYM_FPROPERTY) {
+	if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
@@ -179,7 +179,7 @@ modexportsiter_next(ModuleExportsIterator *__restrict self) {
 	do_DeeModule_LockSymbols(err, mod);
 again:
 	for (;;) {
-		struct module_symbol *symbol;
+		struct Dee_module_symbol *symbol;
 		old_index = atomic_read(&self->mei_index);
 		if (old_index > mod->mo_bucketm) {
 			do_DeeModule_UnlockSymbols(mod);
@@ -189,7 +189,7 @@ again:
 		for (;;) {
 			symbol = &mod->mo_bucketv[new_index];
 			if (symbol->ss_name) {
-				result_name = Dee_AsObject(module_symbol_getnameobj(symbol));
+				result_name = Dee_AsObject(Dee_module_symbol_getnameobj(symbol));
 				if unlikely(!result_name) {
 					do_DeeModule_UnlockSymbols(mod);
 					return NULL;
@@ -357,8 +357,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeModule_GetAttrSymbol_asitem(ModuleExports *exports_map,
                                DeeModuleObject *self,
-                               struct module_symbol *symbol) {
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+                               struct Dee_module_symbol *symbol) {
+	if likely(!(symbol->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
 		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
@@ -367,7 +367,7 @@ read_symbol:
 		Dee_XIncref(result);
 		DeeModule_LockEndRead(self);
 		if unlikely(!result) {
-			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
+			if (symbol->ss_flags & Dee_MODSYM_FNAMEOBJ) {
 				DeeRT_ErrUnknownKey(exports_map,
 				                    COMPILER_CONTAINER_OF(symbol->ss_name,
 				                                          DeeStringObject,
@@ -380,14 +380,14 @@ read_symbol:
 	}
 
 	/* External symbol, or property. */
-	if (symbol->ss_flags & MODSYM_FPROPERTY) {
+	if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
-			if (symbol->ss_flags & MODSYM_FNAMEOBJ) {
+			if (symbol->ss_flags & Dee_MODSYM_FNAMEOBJ) {
 				DeeRT_ErrUnknownKey(exports_map,
 				                    COMPILER_CONTAINER_OF(symbol->ss_name,
 				                                          DeeStringObject,
@@ -410,8 +410,8 @@ read_symbol:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_TryGetAttrSymbol_asitem(DeeModuleObject *self,
-                                  struct module_symbol *symbol) {
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+                                  struct Dee_module_symbol *symbol) {
+	if likely(!(symbol->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
 		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
@@ -425,11 +425,11 @@ read_symbol:
 	}
 
 	/* External symbol, or property. */
-	if (symbol->ss_flags & MODSYM_FPROPERTY) {
+	if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
 		DREF DeeObject *result;
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
@@ -454,19 +454,19 @@ read_symbol:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrSymbol_asitem(DeeModuleObject *self,
-                                 struct module_symbol *symbol) {
-	if likely(!(symbol->ss_flags & (MODSYM_FEXTERN | MODSYM_FPROPERTY))) {
+                                 struct Dee_module_symbol *symbol) {
+	if likely(!(symbol->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
 read_symbol:
 		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
 		return Dee_BOUND_FROMBOOL(atomic_read(&self->mo_globalv[Dee_module_symbol_getindex(symbol)]));
 	}
 
 	/* External symbol, or property. */
-	if (symbol->ss_flags & MODSYM_FPROPERTY) {
+	if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
 		DREF DeeObject *result;
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
@@ -496,7 +496,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 modexports_getitem(ModuleExports *self, DeeObject *key) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if (DeeString_Check(key)) {
 		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
@@ -523,7 +523,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_bounditem(ModuleExports *self, DeeObject *key) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if (DeeString_Check(key)) {
 		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
@@ -549,7 +549,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_hasitem(ModuleExports *self, DeeObject *key) {
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if (DeeString_Check(key)) {
 		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
@@ -575,7 +575,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 modexports_trygetitem(ModuleExports *self, DeeObject *key) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if (DeeString_Check(key)) {
 		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
@@ -602,7 +602,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_delitem(ModuleExports *self, DeeObject *key) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if (DeeString_Check(key)) {
 		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
@@ -629,7 +629,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 modexports_setitem(ModuleExports *self, DeeObject *key, DeeObject *value) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if (DeeString_Check(key)) {
 		do_DeeModule_LockSymbols(err, mod);
 		symbol = DeeModule_GetSymbol(mod, key);
@@ -656,7 +656,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 modexports_getitem_index(ModuleExports *self, size_t key) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
 	do_DeeModule_LockSymbols(err, mod);
@@ -680,7 +680,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexports_bounditem_index(ModuleExports *self, size_t key) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
 	do_DeeModule_LockSymbols(err, mod);
@@ -703,7 +703,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexports_hasitem_index(ModuleExports *self, size_t key) {
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
 	do_DeeModule_LockSymbols(err, mod);
@@ -726,7 +726,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 modexports_trygetitem_index(ModuleExports *self, size_t key) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
 	do_DeeModule_LockSymbols(err, mod);
@@ -750,7 +750,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexports_delitem_index(ModuleExports *self, size_t key) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
 	do_DeeModule_LockSymbols(err, mod);
@@ -774,7 +774,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 modexports_setitem_index(ModuleExports *self, size_t key, DeeObject *value) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	if unlikely(key > UINT16_MAX)
 		goto err_nokey;
 	do_DeeModule_LockSymbols(err, mod);
@@ -801,7 +801,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 modexports_getitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
@@ -822,7 +822,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_bounditem_string_hash(ModuleExports *self, char const *key, Dee_hash_t hash) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
@@ -842,7 +842,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_hasitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t hash) {
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
@@ -862,7 +862,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 modexports_trygetitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
@@ -883,7 +883,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_delitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t hash) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
@@ -904,7 +904,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 modexports_setitem_string_hash(ModuleExports *self, char const *key, Dee_hash_t hash, DeeObject *value) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringHash(mod, key, hash);
 	if unlikely(!symbol)
@@ -927,7 +927,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 modexports_getitem_string_len_hash(ModuleExports *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
@@ -948,7 +948,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_bounditem_string_len_hash(ModuleExports *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
@@ -968,7 +968,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_hasitem_string_len_hash(ModuleExports *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
@@ -988,7 +988,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 modexports_trygetitem_string_len_hash(ModuleExports *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
@@ -1009,7 +1009,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexports_delitem_string_len_hash(ModuleExports *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
@@ -1030,7 +1030,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 modexports_setitem_string_len_hash(ModuleExports *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
-	struct module_symbol *symbol;
+	struct Dee_module_symbol *symbol;
 	do_DeeModule_LockSymbols(err, mod);
 	symbol = DeeModule_GetSymbolStringLenHash(mod, key, keylen, hash);
 	if unlikely(!symbol)
@@ -1058,10 +1058,10 @@ modexports_mh_map_enumerate(ModuleExports *self, Dee_seq_enumerate_t proc, void 
 	for (i = 0; i <= mod->mo_bucketm; ++i) {
 		DREF DeeStringObject *item_name;
 		DREF DeeObject *item_value;
-		struct module_symbol *item = &mod->mo_bucketv[i];
+		struct Dee_module_symbol *item = &mod->mo_bucketv[i];
 		if (!item->ss_name)
 			continue;
-		item_name = module_symbol_getnameobj(item);
+		item_name = Dee_module_symbol_getnameobj(item);
 		if unlikely(!item_name)
 			goto err_unlock;
 		item_value = DeeModule_TryGetAttrSymbol_asitem(mod, item);

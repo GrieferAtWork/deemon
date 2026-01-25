@@ -104,6 +104,8 @@ tpp_unknown_file(int mode, char *__restrict filename,
                  size_t filename_size,
                  struct TPPKeyword **p_keyword_entry);
 
+struct Dee_file_object;
+
 /* TPP isn't exported by deemon, so we configure it to only be used internally. */
 #define TPPString_Free(x)                       Dee_Free(x)
 #define TPP_assert                              Dee_ASSERT
@@ -116,7 +118,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 #define TPP_CONFIG_MINMACRO                     1 /* Enable minimal-macro mode, disabling all of those predefined C macros. */
 #define TPP_CONFIG_USERSTREAMS                  1 /* Use `DeeFileObject *' as stream type for TPP. */
 #define TPP_CONFIG_RAW_STRING_LITERALS          1 /* Enable support for raw string literals. */
-#define TPP_USERSTREAM_TYPE                     struct file_object *
+#define TPP_USERSTREAM_TYPE                     struct Dee_file_object *
 #define TPP_USERSTREAM_INVALID                  NULL
 #define TPP_CONFIG_SET_API_ERROR                1 /* Get TPP to set errors on bad-alloc. */
 #define TPP_CONFIG_SET_API_ERROR_BADALLOC       Dee_BadAlloc /* Get TPP to call this function on bad-alloc. */

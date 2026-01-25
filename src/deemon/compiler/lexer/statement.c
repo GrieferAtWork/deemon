@@ -345,7 +345,7 @@ do_else_branch:
 			 *               in both return and yield functions. */
 			result = ast_return(NULL);
 		} else {
-			if ((current_basescope->bs_flags & CODE_FYIELDING) &&
+			if ((current_basescope->bs_flags & Dee_CODE_FYIELDING) &&
 			    WARN(W_RETURN_IN_YIELD_FUNCTION))
 				goto err;
 			current_basescope->bs_cflags |= BASESCOPE_FRETURN;
@@ -390,7 +390,7 @@ do_else_branch:
 		ast_decref(merge);
 		if unlikely(!result)
 			goto err;
-		current_basescope->bs_flags |= CODE_FYIELDING;
+		current_basescope->bs_flags |= Dee_CODE_FYIELDING;
 		if (current_basescope->bs_cflags & BASESCOPE_FRETURN &&
 		    WARN(W_YIELD_AFTER_RETURN))
 			goto err;

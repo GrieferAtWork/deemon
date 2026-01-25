@@ -97,16 +97,16 @@ PRIVATE DEFINE_CMETHOD0(ipc_SHELL_get, &process_get_shell, METHOD_FPURECALL);
 DEX_BEGIN
 DEX_MEMBER_NODOC("Process", &DeeProcess_Type),
 DEX_MEMBER_NODOC("Pipe", &DeePipe_Type.ft_base),
-DEX_MEMBER_F("SHELL", &ipc_SHELL_get, MODSYM_FREADONLY | MODSYM_FPROPERTY,
-             "->?Dstring\n"
-             "The absolute filename of the used system shell command interpreter program\n"
-             "When the $\"$SHELL\" environment variable is defined, this global evaluates "
-             /**/ "to that variable's contents. Otherwise (except on windows), the system "
-             /**/ "file #C{/etc/shells} is read line-by-line, and the first line containing "
-             /**/ "an absolute filename that points to an executable file is used. If that "
-             /**/ "file doesn't exist or does not specify a valid shell program, a system-"
-             /**/ "specific default is used, which is #C{cmd.exe} on windows, and #C{/bin/sh} "
-             /**/ "on all other systems."),
+DEX_GETTER("SHELL", &ipc_SHELL_get,
+           "->?Dstring\n"
+           "The absolute filename of the used system shell command interpreter program\n"
+           "When the $\"$SHELL\" environment variable is defined, this global evaluates "
+           /**/ "to that variable's contents. Otherwise (except on windows), the system "
+           /**/ "file #C{/etc/shells} is read line-by-line, and the first line containing "
+           /**/ "an absolute filename that points to an executable file is used. If that "
+           /**/ "file doesn't exist or does not specify a valid shell program, a system-"
+           /**/ "specific default is used, which is #C{cmd.exe} on windows, and #C{/bin/sh} "
+           /**/ "on all other systems."),
 
 #ifdef HAVE_libipc_fini
 #define PTR_libipc_fini &libipc_fini

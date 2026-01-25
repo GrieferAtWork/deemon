@@ -37,12 +37,26 @@
 /* Compatibility header for porting KOS system libraries for use with deemon */
 
 /* clang-format off */
-#include <hybrid/bitset.h> /* bitset_*  (to replace <sys/bitstr.h>) */
+#include <hybrid/bitset.h>  /* bitset_*  (to replace <sys/bitstr.h>) */
 /* clang-format on */
 
 #ifndef DEE_SOURCE
 #error "This header should only be used when `DEE_SOURCE' is also enabled"
 #endif /* !DEE_SOURCE */
+
+#ifdef CONFIG_NO_UNICODE_H
+#undef CONFIG_HAVE_UNICODE_H
+#elif !defined(CONFIG_HAVE_UNICODE_H) && \
+      (__has_include(<unicode.h>) || (defined(__NO_has_include) && \
+      (defined(__KOS__) && __KOS_VERSION__ >= 400)))
+#define CONFIG_HAVE_UNICODE_H
+#endif
+
+/* Must include KOS's `<unicode.h>' first since we kind-of
+ * re-define some of its symbols when `DEE_SOURCE' is enabled. */
+#ifdef CONFIG_HAVE_UNICODE_H
+#include <unicode.h>
+#endif /* CONFIG_HAVE_UNICODE_H */
 
 DECL_BEGIN
 
@@ -434,6 +448,70 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define __UNICODE_ISSYMSTRT Dee_UNICODE_ISSYMSTRT
 #undef __UNICODE_ISSYMCONT
 #define __UNICODE_ISSYMCONT Dee_UNICODE_ISSYMCONT
+#undef unicode_utf8seqlen
+#define unicode_utf8seqlen Dee_unicode_utf8seqlen
+#undef unicode_utf8seqlen_safe
+#define unicode_utf8seqlen_safe Dee_unicode_utf8seqlen_safe
+#undef unicode_readutf8_n
+#define unicode_readutf8_n Dee_unicode_readutf8_n
+#undef unicode_readutf8
+#define unicode_readutf8 Dee_unicode_readutf8
+#undef unicode_readutf8_rev
+#define unicode_readutf8_rev Dee_unicode_readutf8_rev
+#undef unicode_readutf8_rev_n
+#define unicode_readutf8_rev_n Dee_unicode_readutf8_rev_n
+#undef unicode_skiputf8
+#define unicode_skiputf8 Dee_unicode_skiputf8
+#undef unicode_skiputf8_c
+#define unicode_skiputf8_c Dee_unicode_skiputf8_c
+#undef unicode_writeutf8
+#define unicode_writeutf8 Dee_unicode_writeutf8
+#undef unicode_skipspaceutf8
+#define unicode_skipspaceutf8 Dee_unicode_skipspaceutf8
+#undef unicode_skipspaceutf8_n
+#define unicode_skipspaceutf8_n Dee_unicode_skipspaceutf8_n
+#undef unicode_skipspaceutf8_rev
+#define unicode_skipspaceutf8_rev Dee_unicode_skipspaceutf8_rev
+#undef unicode_skipspaceutf8_rev_n
+#define unicode_skipspaceutf8_rev_n Dee_unicode_skipspaceutf8_rev_n
+#undef unicode_readutf16_n
+#define unicode_readutf16_n Dee_unicode_readutf16_n
+#undef unicode_readutf32_n
+#define unicode_readutf32_n Dee_unicode_readutf32_n
+#undef unicode_readutf16_swap_n
+#define unicode_readutf16_swap_n Dee_unicode_readutf16_swap_n
+#undef unicode_readutf32_swap_n
+#define unicode_readutf32_swap_n Dee_unicode_readutf32_swap_n
+#undef unicode_readutf16_rev_n
+#define unicode_readutf16_rev_n Dee_unicode_readutf16_rev_n
+#undef unicode_readutf32_rev_n
+#define unicode_readutf32_rev_n Dee_unicode_readutf32_rev_n
+#undef unicode_readutf16_swap_rev_n
+#define unicode_readutf16_swap_rev_n Dee_unicode_readutf16_swap_rev_n
+#undef unicode_readutf32_swap_rev_n
+#define unicode_readutf32_swap_rev_n Dee_unicode_readutf32_swap_rev_n
+#undef unicode_readutf16le_n
+#define unicode_readutf16le_n Dee_unicode_readutf16le_n
+#undef unicode_readutf32le_n
+#define unicode_readutf32le_n Dee_unicode_readutf32le_n
+#undef unicode_readutf16be_n
+#define unicode_readutf16be_n Dee_unicode_readutf16be_n
+#undef unicode_readutf32be_n
+#define unicode_readutf32be_n Dee_unicode_readutf32be_n
+#undef unicode_readutf16le_rev_n
+#define unicode_readutf16le_rev_n Dee_unicode_readutf16le_rev_n
+#undef unicode_readutf32le_rev_n
+#define unicode_readutf32le_rev_n Dee_unicode_readutf32le_rev_n
+#undef unicode_readutf16be_rev_n
+#define unicode_readutf16be_rev_n Dee_unicode_readutf16be_rev_n
+#undef unicode_readutf32be_rev_n
+#define unicode_readutf32be_rev_n Dee_unicode_readutf32be_rev_n
+#undef UNICODE_UTF8_MAXLEN
+#define UNICODE_UTF8_MAXLEN Dee_UNICODE_UTF8_MAXLEN
+#undef UNICODE_UTF8_CURLEN
+#define UNICODE_UTF8_CURLEN Dee_UNICODE_UTF8_CURLEN
+#undef UNICODE_UTF8_DEFLEN
+#define UNICODE_UTF8_DEFLEN Dee_UNICODE_UTF8_DEFLEN
 #endif /* !CONFIG_HAVE_UNICODE_H */
 
 #undef __libc_hex2int

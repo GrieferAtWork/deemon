@@ -17,14 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!export Dee_simple_hashset*/
+/*!export **/
 /*!export Dee_simple_hashset_**/
 /*!export Dee_SIMPLE_HASHSET_**/
-/*!export Dee_simple_hashset_with_lock*/
 /*!export Dee_simple_hashset_with_lock_**/
 /*!export Dee_SIMPLE_HASHSET_WITH_LOCK_**/
 #ifndef GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H
-#define GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H 1
+#define GUARD_DEEMON_UTIL_SIMPLE_HASHSET_H 1 /*!export-*/
 
 #include "../api.h"
 

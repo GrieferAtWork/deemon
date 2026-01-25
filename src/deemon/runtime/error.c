@@ -118,7 +118,7 @@ stderr_printer(void *__restrict self,
 #if defined(CONFIG_HOST_WINDOWS) && !defined(Dee_DPRINT_IS_NOOP)
 	Dee_DPRINTER(self, data, datalen);
 #endif /* CONFIG_HOST_WINDOWS && !Dee_DPRINT_IS_NOOP */
-	deemon_stderr = DeeFile_GetStd(DEE_STDERR);
+	deemon_stderr = DeeFile_GetStd(Dee_STDERR);
 	if likely(deemon_stderr) {
 		result = DeeFile_WriteAll(deemon_stderr, data, datalen);
 		Dee_Decref_unlikely(deemon_stderr);
@@ -176,7 +176,7 @@ prefix_printer_print(void *arg, char const *__restrict data, size_t datalen) {
 		Dee_ssize_t result = (*me->pp_printer)(me->pp_arg, data, datalen);
 		if likely(result >= 0) {
 			char const *data_end = data + datalen;
-			uint32_t last_ch = unicode_readutf8_rev_n(&data, data_end);
+			uint32_t last_ch = Dee_unicode_readutf8_rev_n(&data, data_end);
 			if (DeeUni_IsLF(last_ch)) {
 				me->pp_state = PREFIX_PRINTER_STATE__ATSOL;
 			} else {
@@ -264,21 +264,21 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeError_ThrowInherited)(/*inherit(always)*/ DREF DeeObject *__restrict error) {
-	struct except_frame *frame;
+	struct Dee_except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT_OBJECT(error);
 	if (error == Dee_AsObject(&DeeError_NoMemory_instance)) {
 		/* Special handling for throwing a bad-allocation error.
 		 * >> Required to prevent infinite recursion when allocating
 		 *    the exception frame for an out-of-memory error. */
-		frame = except_frame_tryalloc();
+		frame = Dee_except_frame_tryalloc();
 	} else {
-		frame = except_frame_alloc();
+		frame = Dee_except_frame_alloc();
 	}
 	if unlikely(!frame) {
 		/* TODO: OOM needs special handling where we:
-		 * - Always have at least 1 fallback "except_frame" per thread for use by OOM
-		 * - Every "except_frame" has a way of encoding that N additional OOM errors
+		 * - Always have at least 1 fallback "Dee_except_frame" per thread for use by OOM
+		 * - Every "Dee_except_frame" has a way of encoding that N additional OOM errors
 		 *   happened after that frame (but before the next frame)
 		 * - This way, OOM can always be thrown, even if no further frame can be
 		 *   allocated anymore. */
@@ -354,33 +354,33 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 
 INTERN NONNULL((1, 2)) void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
-                        /*inherit*/ struct except_frame *__restrict frame) {
+                        /*inherit*/ struct Dee_except_frame *__restrict frame) {
 	DREF DeeObject *frame_error = frame->ef_error;
 
 	/* Special handling for interrupt exceptions.
 	 * >> Rather than handling this now, we must instead re-schedule
 	 *    the interrupt to be executed next with max priority. */
-	STATIC_ASSERT(sizeof(struct thread_interrupt) <=
-	              sizeof(struct except_frame));
-	STATIC_ASSERT(offsetof(struct thread_interrupt, ti_intr) ==
-	              offsetof(struct except_frame, ef_error));
+	STATIC_ASSERT(sizeof(struct Dee_thread_interrupt) <=
+	              sizeof(struct Dee_except_frame));
+	STATIC_ASSERT(offsetof(struct Dee_thread_interrupt, ti_intr) ==
+	              offsetof(struct Dee_except_frame, ef_error));
 
 	/* Drop a reference to the traceback. - Those don't get scheduled. */
 	if (ITER_ISOK(frame->ef_trace))
 		Dee_Decref(frame->ef_trace);
 	_DeeThread_AcquireInterrupt(ts);
 	if (ts->t_interrupt.ti_intr) {
-		struct thread_interrupt *pend;
-		pend = (struct thread_interrupt *)frame;
+		struct Dee_thread_interrupt *pend;
+		pend = (struct Dee_thread_interrupt *)frame;
 
 		/* If we can safe memory doing it, relocate the
 		 * frame to best fit the pending interrupt. */
-		__STATIC_IF(sizeof(struct thread_interrupt) < sizeof(struct except_frame)) {
-			pend = (struct thread_interrupt *)Dee_TryRealloc(frame, sizeof(struct thread_interrupt));
+		__STATIC_IF(sizeof(struct Dee_thread_interrupt) < sizeof(struct Dee_except_frame)) {
+			pend = (struct Dee_thread_interrupt *)Dee_TryRealloc(frame, sizeof(struct Dee_thread_interrupt));
 			if unlikely(!pend)
-				pend = (struct thread_interrupt *)frame; /* Not. A. Problem. */
+				pend = (struct Dee_thread_interrupt *)frame; /* Not. A. Problem. */
 		}
-		memcpy(pend, &ts->t_interrupt, sizeof(struct thread_interrupt));
+		memcpy(pend, &ts->t_interrupt, sizeof(struct Dee_thread_interrupt));
 		ts->t_interrupt.ti_next = pend;
 		frame                   = NULL; /* Indicate that the frame is being re-used. */
 	}
@@ -397,7 +397,7 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 	_DeeThread_ReleaseInterrupt(ts);
 
 	/* If the frame wasn't used, then still free it! */
-	except_frame_xfree(frame);
+	Dee_except_frame_xfree(frame);
 }
 
 /* Handle the current error, discarding it in the process.
@@ -405,7 +405,7 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
  * @return: true:  The current error was handled.
  * @return: false: No error could be handled. */
 PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode) {
-	struct except_frame *frame;
+	struct Dee_except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT((ts->t_except != NULL) == (ts->t_exceptsz != 0));
 	if ((frame = ts->t_except) == NULL)
@@ -428,7 +428,7 @@ PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode) {
 	Dee_Decref(frame->ef_error);
 	if (ITER_ISOK(frame->ef_trace))
 		Dee_Decref(frame->ef_trace);
-	except_frame_free(frame);
+	Dee_except_frame_free(frame);
 	return true;
 }
 

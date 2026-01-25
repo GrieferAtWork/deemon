@@ -307,28 +307,28 @@ do_handle_code:
 		if unlikely(!name)
 			goto err;
 		if (NAMEISKWD("yielding")) {
-			current_basescope->bs_flags |= CODE_FYIELDING;
+			current_basescope->bs_flags |= Dee_CODE_FYIELDING;
 		} else if (NAMEISKWD("copyable")) {
-			current_basescope->bs_flags |= CODE_FCOPYABLE;
+			current_basescope->bs_flags |= Dee_CODE_FCOPYABLE;
 		} else if (NAMEISKWD_S(8, STR_assembly)) {
-			current_basescope->bs_flags |= CODE_FASSEMBLY;
+			current_basescope->bs_flags |= Dee_CODE_FASSEMBLY;
 		} else if (NAMEISKWD("lenient")) {
-			current_basescope->bs_flags |= CODE_FLENIENT;
+			current_basescope->bs_flags |= Dee_CODE_FLENIENT;
 		} else if (NAMEISKWD("varargs")) {
-			current_basescope->bs_flags |= CODE_FVARARGS;
+			current_basescope->bs_flags |= Dee_CODE_FVARARGS;
 		} else if (NAMEISKWD("varkwds")) {
-			current_basescope->bs_flags |= CODE_FVARKWDS;
+			current_basescope->bs_flags |= Dee_CODE_FVARKWDS;
 		} else if (NAMEISKWD("thiscall")) {
-			current_basescope->bs_flags |= CODE_FTHISCALL;
+			current_basescope->bs_flags |= Dee_CODE_FTHISCALL;
 		} else if (NAMEISKWD("heapframe")) {
-			current_basescope->bs_flags |= CODE_FHEAPFRAME;
+			current_basescope->bs_flags |= Dee_CODE_FHEAPFRAME;
 		} else if (NAMEISKWD("finally")) {
-			current_basescope->bs_flags |= CODE_FFINALLY;
+			current_basescope->bs_flags |= Dee_CODE_FFINALLY;
 		} else if (NAMEISKWD("constructor")) {
-			current_basescope->bs_flags |= CODE_FCONSTRUCTOR;
+			current_basescope->bs_flags |= Dee_CODE_FCONSTRUCTOR;
 #if 0
 		} else if (NAMEISKWD("no_assembly")) {
-			current_basescope->bs_flags &= ~CODE_FASSEMBLY;
+			current_basescope->bs_flags &= ~Dee_CODE_FASSEMBLY;
 #endif
 		} else {
 			DO(WARN(W_UASM_CODE_UNKNOWN_FLAG, name->k_name));
@@ -405,9 +405,9 @@ do_handle_reloc:
 do_handle_except:
 		/* `.except <start>, <end>, <entry>, [',' ~~ <tags>...]'
 		 * tags:
-		 *   - `[@]finally'     -- Set the `EXCEPTION_HANDLER_FFINALLY' bit.
-		 *   - `[@]interrupt'   -- Set the `EXCEPTION_HANDLER_FINTERPT' bit.
-		 *   - `[@]handled'     -- Set the `EXCEPTION_HANDLER_FHANDLED' bit.
+		 *   - `[@]finally'     -- Set the `Dee_EXCEPTION_HANDLER_FFINALLY' bit.
+		 *   - `[@]interrupt'   -- Set the `Dee_EXCEPTION_HANDLER_FINTERPT' bit.
+		 *   - `[@]handled'     -- Set the `Dee_EXCEPTION_HANDLER_FHANDLED' bit.
 		 *   - `[@]mask(const)' -- Use `const' as exception handler mask.
 		 */
 		except_start = do_parse_symbol_for_except();
@@ -415,7 +415,7 @@ do_handle_except:
 		except_end = do_parse_symbol_for_except();
 		DO(skip(',', W_EXPECTED_COMMA));
 		except_entry = do_parse_symbol_for_except();
-		except_flags = EXCEPTION_HANDLER_FNORMAL;
+		except_flags = Dee_EXCEPTION_HANDLER_FNORMAL;
 		except_mask  = NULL;
 		while (tok == ',') {
 			char const *tag_start, *tag_end;
@@ -439,11 +439,11 @@ except_unknown_tag:
 			(COMPILER_STRLEN(x) == (tag_end - tag_start) && \
 			 MEMCASEEQ(tag_start, x, sizeof(x) - sizeof(char)))
 			if (IS_TAG("finally")) {
-				except_flags |= EXCEPTION_HANDLER_FFINALLY;
+				except_flags |= Dee_EXCEPTION_HANDLER_FFINALLY;
 			} else if (IS_TAG("interrupt")) {
-				except_flags |= EXCEPTION_HANDLER_FINTERPT;
+				except_flags |= Dee_EXCEPTION_HANDLER_FINTERPT;
 			} else if (IS_TAG("handled")) {
-				except_flags |= EXCEPTION_HANDLER_FHANDLED;
+				except_flags |= Dee_EXCEPTION_HANDLER_FHANDLED;
 			} else if (IS_TAG("mask")) {
 				DREF DeeObject *mask;
 				if unlikely(yield() < 0)
@@ -510,7 +510,7 @@ do_handle_qword:
 do_emit_memory:
 		/* Disable PEEPHOLE and set the ASSEMBLY code bit. */
 		current_assembler.a_flag &= ~(ASM_FPEEPHOLE);
-		current_basescope->bs_flags |= CODE_FASSEMBLY;
+		current_basescope->bs_flags |= Dee_CODE_FASSEMBLY;
 		for (;;) {
 			DO(uasm_parse_intexpr(&value, UASM_INTEXPR_FHASSP));
 			if (value.ie_sym) {
@@ -791,7 +791,7 @@ do_handle_adjstack:
 		current_assembler.a_flag &= ~(ASM_FPEEPHOLE);
 #endif
 		/* Make sure to set the assembly flag if the stack-depth was tinkered with. */
-		current_basescope->bs_flags |= CODE_FASSEMBLY;
+		current_basescope->bs_flags |= Dee_CODE_FASSEMBLY;
 		/* Set the new instruction depth. */
 		current_assembler.a_stackcur = (uint16_t)new_depth.ie_val;
 		if (current_assembler.a_stackmax < current_assembler.a_stackcur)

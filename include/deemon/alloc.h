@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
 /*!export DeeDbgObject_**/
 /*!export DeeDbgSlab_**/
 /*!export DeeDbg_**/
@@ -27,7 +28,6 @@
 /*!export Dee_*alloc**/
 /*!export Dee_Try*alloc**/
 /*!export Dee_Free**/
-/*!export Dee_XFreea*/
 /*!export DeeObject_*ALLOC**/
 /*!export DeeObject_TRY*ALLOC**/
 /*!export DeeObject_*alloc**/
@@ -39,18 +39,16 @@
 /*!export DeeObject_FREE*/
 /*!export DeeObject_Slab**/
 /*!export DeeObject_**/
-/*!export Dee_BadAlloc*/
 /*!export Dee_CollectMemory**/
 /*!export Dee_MALLOCA_**/
-/*!export Dee_Memalign*/
-/*!export Dee_TryMemalign*/
-/*!export Dee_UntrackAlloc*/
-/*!export Dee_ReleaseSystemMemory*/
 /*!export Dee_SLAB_**/
 /*!export Dee_TYPE_CONSTRUCTOR_INIT_**/
 /*!export _Dee_Malloc*Bufsize**/
+/*!export -CONFIG_HAVE_**/
+/*!export -_Dee_PRIVATE_**/
+/*!export -alloca*/
 #ifndef GUARD_DEEMON_ALLOC_H
-#define GUARD_DEEMON_ALLOC_H 1
+#define GUARD_DEEMON_ALLOC_H 1 /*!export-*/
 
 #include "api.h"
 
@@ -163,14 +161,16 @@
 #ifndef CONFIG_HAVE_alloca
 #ifdef CONFIG_HAVE__alloca
 #define CONFIG_HAVE_alloca
-#define alloca _alloca
+#define alloca _alloca /*!export-*/
 #elif __has_builtin(__builtin_alloca)
-#define alloca __builtin_alloca
+#define alloca __builtin_alloca /*!export-*/
 #else /* ... */
 #include <hybrid/__alloca.h> /* __hybrid_alloca */
 #ifdef __hybrid_alloca
 #define CONFIG_HAVE_alloca
-#define alloca __hybrid_alloca
+#ifndef __hybrid_alloca_IS_alloca
+#define alloca __hybrid_alloca /*!export-*/
+#endif /* !__hybrid_alloca_IS_alloca */
 #endif /* __hybrid_alloca */
 #endif /* !... */
 #endif /* !CONFIG_HAVE_alloca */
@@ -530,9 +530,6 @@ DFUNDEF void *(DCALL DeeDbgObject_UntrackAlloc)(void *ptr, char const *file, int
  * Should be called prior to `DeeObject_Free()' for any object
  * who's reference counter was modified at any point in time. */
 #ifdef CONFIG_TRACE_REFCHANGES
-#ifdef DEE_SOURCE
-#define Dee_object object_
-#endif /* DEE_SOURCE */
 struct Dee_object;
 DFUNDEF NONNULL((1)) void
 (DCALL DeeObject_FreeTracker)(struct Dee_object *__restrict self);
@@ -1282,9 +1279,9 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 #define CONFIG_HAVE_memset
 DECL_BEGIN
 #undef memset
-#define memset dee_memset
+#define memset dee_memset /*!export-*/
 LOCAL WUNUSED ATTR_OUTS(1, 3) void *
-dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
+dee_memset(void *__restrict dst, int byte, size_t num_bytes) { /*!export-*/
 	uint8_t *dst_p = (uint8_t *)dst;
 	while (num_bytes--)
 		*dst_p++ = (uint8_t)(unsigned int)byte;
@@ -1296,7 +1293,7 @@ DECL_END
 #ifndef CONFIG_HAVE_bzero
 #define CONFIG_HAVE_bzero
 #undef bzero
-#define bzero(dst, num_bytes) (void)memset(dst, 0, num_bytes)
+#define bzero(dst, num_bytes) (void)memset(dst, 0, num_bytes) /*!export-*/
 #endif /* !CONFIG_HAVE_bzero */
 
 

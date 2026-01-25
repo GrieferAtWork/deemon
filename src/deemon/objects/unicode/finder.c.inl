@@ -54,10 +54,10 @@ typedef struct {
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(StringFind, sfi_find)       /* [1..1][const] The underlying find-controller. */
-	union dcharptr_const             sfi_start;      /* [1..1][const] Starting pointer. */
-	DWEAK union dcharptr_const       sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	union dcharptr_const             sfi_end;        /* [1..1][const] End pointer. */
-	union dcharptr_const             sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	union Dee_charptr_const          sfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK union Dee_charptr_const    sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	union Dee_charptr_const          sfi_end;        /* [1..1][const] End pointer. */
+	union Dee_charptr_const          sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t                           sfi_needle_len; /* [const] Length of the needle being searched. */
 	size_t                           sfi_find_delta; /* [const] Delta added to `sfi_ptr' after each match */
 	unsigned int                     sfi_width;      /* [const] The common width of the searched, and needle string. */
@@ -265,7 +265,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sfi_next(StringFindIterator *__restrict self) {
-	union dcharptr_const ptr, new_ptr;
+	union Dee_charptr_const ptr, new_ptr;
 	size_t scan_size;
 again:
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
@@ -307,7 +307,7 @@ iter_done:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 scfi_nextpair(StringFindIterator *__restrict self, DREF DeeObject *pair[2]) {
-	union dcharptr_const ptr, new_ptr;
+	union Dee_charptr_const ptr, new_ptr;
 	size_t match_length, result, find_delta;
 	size_t scan_size;
 again:
@@ -390,7 +390,7 @@ STATIC_ASSERT(offsetof(StringFindIterator, sfi_find) == offsetof(ProxyObject, po
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
-	union dcharptr_const ptr;
+	union Dee_charptr_const ptr;
 	size_t scan_size;
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	if (OVERFLOW_USUB((uintptr_t)self->sfi_end.ptr, (uintptr_t)ptr.ptr, &scan_size))
@@ -417,7 +417,7 @@ iter_done:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_bool(StringFindIterator *__restrict self) {
-	union dcharptr_const ptr;
+	union Dee_charptr_const ptr;
 	size_t scan_size;
 	ptr.ptr = atomic_read(&self->sfi_ptr.ptr);
 	if (OVERFLOW_USUB((uintptr_t)self->sfi_end.ptr, (uintptr_t)ptr.ptr, &scan_size))

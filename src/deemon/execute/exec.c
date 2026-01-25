@@ -180,7 +180,7 @@ DeeExec_RunStream(DeeObject *source_stream,
                   unsigned int mode,
                   size_t argc, DeeObject *const *argv,
                   int start_line, int start_col,
-                  struct compiler_options *options,
+                  struct Dee_compiler_options *options,
                   DeeObject *default_symbols,
                   DeeObject *source_pathname,
                   DeeObject *module_name) {
@@ -205,7 +205,7 @@ DeeExec_RunStreamString(DeeObject *source_stream,
                         unsigned int mode,
                         size_t argc, DeeObject *const *argv,
                         int start_line, int start_col,
-                        struct compiler_options *options,
+                        struct Dee_compiler_options *options,
                         DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname,
                         size_t source_pathsize,
@@ -255,7 +255,7 @@ PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               unsigned int mode,
                               int start_line, int start_col,
-                              struct compiler_options *options,
+                              struct Dee_compiler_options *options,
                               DeeObject *default_symbols,
                               DeeObject *source_pathname,
                               DeeObject *module_name) {
@@ -282,7 +282,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeExec_CompileModuleStreamString(DeeObject *source_stream,
                                   unsigned int mode,
                                   int start_line, int start_col,
-                                  struct compiler_options *options,
+                                  struct Dee_compiler_options *options,
                                   DeeObject *default_symbols,
                                   /*utf-8*/ char const *source_pathname,
                                   size_t source_pathsize,
@@ -326,7 +326,7 @@ PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
                                     unsigned int mode,
                                     int start_line, int start_col,
-                                    struct compiler_options *options,
+                                    struct Dee_compiler_options *options,
                                     DeeObject *default_symbols,
                                     /*utf-8*/ char const *source_pathname,
                                     size_t source_pathsize,
@@ -359,7 +359,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                   unsigned int mode, size_t argc, DeeObject *const *argv,
                   int start_line, int start_col,
-                  struct compiler_options *options,
+                  struct Dee_compiler_options *options,
                   DeeObject *default_symbols,
                   DeeObject *source_pathname,
                   DeeObject *module_name) {
@@ -388,7 +388,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                         unsigned int mode, size_t argc, DeeObject *const *argv,
                         int start_line, int start_col,
-                        struct compiler_options *options,
+                        struct Dee_compiler_options *options,
                         DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname,
                         size_t source_pathsize,
@@ -420,7 +420,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                             unsigned int mode, int start_line, int start_col,
-                            struct compiler_options *options,
+                            struct Dee_compiler_options *options,
                             DeeObject *default_symbols,
                             DeeObject *source_pathname,
                             DeeObject *module_name) {
@@ -446,7 +446,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                               unsigned int mode, int start_line, int start_col,
-                              struct compiler_options *options,
+                              struct Dee_compiler_options *options,
                               DeeObject *default_symbols,
                               DeeObject *source_pathname,
                               DeeObject *module_name) {
@@ -472,7 +472,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF struct Dee_module_object *DCALL
 DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                   unsigned int mode, int start_line, int start_col,
-                                  struct compiler_options *options,
+                                  struct Dee_compiler_options *options,
                                   DeeObject *default_symbols,
                                   /*utf-8*/ char const *source_pathname,
                                   size_t source_pathsize,
@@ -502,7 +502,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                     unsigned int mode, int start_line, int start_col,
-                                    struct compiler_options *options,
+                                    struct Dee_compiler_options *options,
                                     DeeObject *default_symbols,
                                     /*utf-8*/ char const *source_pathname,
                                     size_t source_pathsize,
@@ -563,7 +563,7 @@ PRIVATE uint16_t atexit_mode = ATEXIT_FNORMAL;
 
 /* Run callbacks that have been registered using `Dee_AtExit()'
  * @return:  0: Successfully executed all callbacks.
- * @return: -1: An error occurred (never returned when `DEE_RUNATEXIT_FRUNALL' is passed)
+ * @return: -1: An error occurred (never returned when `Dee_RUNATEXIT_FRUNALL' is passed)
  * NOTE: This function is automatically called when `exit()'
  *       from stdlib is used to stop execution of the program. */
 PUBLIC int DCALL
@@ -583,7 +583,7 @@ Dee_RunAtExit(uint16_t flags) {
 	atexit_size = 0;
 	atexit_lock_release();
 	while (size--) {
-		if (!(flags & DEE_RUNATEXIT_FDONTRUN)) {
+		if (!(flags & Dee_RUNATEXIT_FDONTRUN)) {
 			DREF DeeObject *temp;
 			/* Invoke the callback. */
 			temp = DeeObject_Call(list[size].ae_func,
@@ -591,7 +591,7 @@ Dee_RunAtExit(uint16_t flags) {
 			                      DeeTuple_ELEM(list[size].ae_args));
 			if unlikely(!temp) {
 				/* An error occurred. */
-				if (flags & DEE_RUNATEXIT_FRUNALL) {
+				if (flags & Dee_RUNATEXIT_FRUNALL) {
 					/* Just dump the error (including interrupts). */
 					DeeError_Print("Unhandled error in atexit() callback",
 					               ERROR_PRINT_HANDLEINTR);
@@ -627,7 +627,7 @@ done:
 
 PRIVATE void __LIBCCALL atexit_callback(void) {
 	/* Simply run all registered atexit() functions. */
-	Dee_RunAtExit(DEE_RUNATEXIT_FRUNALL);
+	Dee_RunAtExit(Dee_RUNATEXIT_FRUNALL);
 }
 
 /* High-level functionality for registering at-exit hooks.
@@ -895,7 +895,7 @@ do_kill_user:
 	/* If the caller indicates a fast shutdown, then we don't have to bother
 	 * doing all the other cleanup below that's only purpose is to prevent
 	 * memory leaks. */
-	if (flags & Dee_Shutdown_F_FAST)
+	if (flags & Dee_SHUTDOWN_F_FAST)
 		return;
 
 	/* Uninstall the keyboard interrupt handler. */

@@ -476,7 +476,7 @@ DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_tryfinally,
 	if unlikely(!catchv)
 		goto err;
 	catchv[0].ce_code  = finally_expression;         /* Reference is incremented later. */
-	catchv[0].ce_flags = EXCEPTION_HANDLER_FFINALLY; /* Regular, old finally-handler. */
+	catchv[0].ce_flags = Dee_EXCEPTION_HANDLER_FFINALLY; /* Regular, old finally-handler. */
 	catchv[0].ce_mask  = NULL;                       /* Regular finally-handlers don't have masks. */
 #ifdef CONFIG_NO_AST_DEBUG
 	result = ast_try(guarded_expression, 1, catchv);

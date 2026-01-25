@@ -115,9 +115,9 @@ get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) 
 	/* TODO: Search the type's instance-attribute cache and check
 	 *       if the attribute is implemented by the type itself. */
 	if (DeeType_IsClass(tp_self)) {
-		struct class_attribute *member;
+		struct Dee_class_attribute *member;
 		if ((member = DeeType_QueryAttributeHash(tp_self, tp_self, name, hash)) != NULL) {
-			struct class_desc *desc = DeeClass_DESC(tp_self);
+			struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
 			return DeeInstance_GetAttribute(desc, DeeInstance_DESC(desc, self), self, member);
 		}
 		result = ITER_DONE;
@@ -2062,7 +2062,7 @@ iterator_is_bidirectional(DeeObject *__restrict self) {
 		struct type_math *m;
 		c = tp_self->tp_cmp;
 		if (c && c->tp_nii)
-			return c->tp_nii->nii_class == TYPE_ITERX_CLASS_BIDIRECTIONAL;
+			return c->tp_nii->nii_class == Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL;
 		m = tp_self->tp_math;
 		if (m) {
 			if (m->tp_dec && m->tp_dec != &iterator_dec)

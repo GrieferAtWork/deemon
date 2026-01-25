@@ -105,7 +105,7 @@ is_operator_class_inherited(DeeTypeObject *__restrict type_type,
 /* Class callbacks for inside of `type' */
 INTERN NONNULL((1)) void DCALL
 class_fini(DeeTypeObject *__restrict self) {
-	struct class_desc *my_class;
+	struct Dee_class_desc *my_class;
 	DREF DeeObject *buffer[64];
 	size_t buflen;
 	uint16_t i, size;
@@ -137,13 +137,13 @@ again:
 	}
 
 	/* Also clear all cached operators. */
-	for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
-		struct class_optable *table;
+	for (i = 0; i < Dee_CLASS_HEADER_OPC1; ++i) {
+		struct Dee_class_optable *table;
 		uint16_t j;
 		table = my_class->cd_ops[i];
 		if (!table)
 			continue;
-		for (j = 0; j < CLASS_HEADER_OPC2; ++j) {
+		for (j = 0; j < Dee_CLASS_HEADER_OPC2; ++j) {
 			DeeObject *ob = table->co_operators[j];
 			if (!ob)
 				continue;
@@ -175,7 +175,7 @@ again:
 	/* With all references objects who's destruction could potentially
 	 * have side-effects now gone, we can move on to free heap-allocated
 	 * data structures. */
-	for (i = 0; i < CLASS_HEADER_OPC1; ++i)
+	for (i = 0; i < Dee_CLASS_HEADER_OPC1; ++i)
 		Dee_Free(my_class->cd_ops[i]);
 	Dee_Decref(my_class->cd_desc);
 
@@ -221,19 +221,19 @@ again:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
-class_desc_serialize(struct class_desc *__restrict self,
+class_desc_serialize(struct Dee_class_desc *__restrict self,
                      DeeSerial *__restrict writer) {
-	struct class_desc *out;
+	struct Dee_class_desc *out;
 	uint16_t member_count = self->cd_desc->cd_cmemb_size;
-	size_t sizeof_self = _Dee_MallococBufsize(offsetof(struct class_desc, cd_members),
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(struct Dee_class_desc, cd_members),
 	                                          member_count, sizeof(DREF DeeObject *));
 	Dee_seraddr_t out_addr = DeeSerial_Malloc(writer, sizeof_self, self);
-#define ADDROF(field) (out_addr + offsetof(struct class_desc, field))
+#define ADDROF(field) (out_addr + offsetof(struct Dee_class_desc, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	if (DeeSerial_PutObject(writer, ADDROF(cd_desc), self->cd_desc))
 		goto err;
-	out = DeeSerial_Addr2Mem(writer, out_addr, struct class_desc);
+	out = DeeSerial_Addr2Mem(writer, out_addr, struct Dee_class_desc);
 	out->cd_offset = self->cd_offset;
 	Dee_atomic_rwlock_init(&out->cd_lock);
 	bzero(out->cd_ops, sizeof(out->cd_ops));
@@ -250,7 +250,7 @@ err:
 
 INTERN NONNULL((1, 2)) void DCALL
 class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
-	struct class_desc *my_class;
+	struct Dee_class_desc *my_class;
 	uint16_t i, size;
 	my_class = DeeClass_DESC(self);
 	size     = my_class->cd_desc->cd_cmemb_size;
@@ -258,12 +258,12 @@ class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_XVisitv(my_class->cd_members, size);
 
 	/* Also free all cached operators. */
-	for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
-		struct class_optable *table;
+	for (i = 0; i < Dee_CLASS_HEADER_OPC1; ++i) {
+		struct Dee_class_optable *table;
 		table = my_class->cd_ops[i];
 		if (!table)
 			continue;
-		Dee_XVisitv(table->co_operators, CLASS_HEADER_OPC2);
+		Dee_XVisitv(table->co_operators, Dee_CLASS_HEADER_OPC2);
 	}
 	Dee_class_desc_lock_endread(my_class);
 	/* Only ever references strings itself, so no point in visiting this one! */
@@ -272,7 +272,7 @@ class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
 
 INTERN NONNULL((1)) void DCALL
 class_clear(DeeTypeObject *__restrict self) {
-	struct class_desc *my_class;
+	struct Dee_class_desc *my_class;
 	DREF DeeObject *buffer[64];
 	size_t buflen;
 	uint16_t i, size;
@@ -300,13 +300,13 @@ again:
 		buffer[buflen++] = ob; /* Inherit reference. */
 	}
 	/* Also clear all cached operators. */
-	for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
-		struct class_optable *table;
+	for (i = 0; i < Dee_CLASS_HEADER_OPC1; ++i) {
+		struct Dee_class_optable *table;
 		uint16_t j;
 		table = my_class->cd_ops[i];
 		if (!table)
 			continue;
-		for (j = 0; j < CLASS_HEADER_OPC2; ++j) {
+		for (j = 0; j < Dee_CLASS_HEADER_OPC2; ++j) {
 			DeeObject *ob = table->co_operators[j];
 			if (!ob)
 				continue;
@@ -336,7 +336,7 @@ again:
 
 INTERN NONNULL((1)) void DCALL
 class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
-	struct class_desc *my_class;
+	struct Dee_class_desc *my_class;
 	DREF DeeObject *buffer[64];
 	size_t buflen;
 	uint16_t i, size;
@@ -366,13 +366,13 @@ again:
 		buffer[buflen++] = ob; /* Inherit reference. */
 	}
 	/* Also clear all cached operators. */
-	for (i = 0; i < CLASS_HEADER_OPC1; ++i) {
-		struct class_optable *table;
+	for (i = 0; i < Dee_CLASS_HEADER_OPC1; ++i) {
+		struct Dee_class_optable *table;
 		uint16_t j;
 		table = my_class->cd_ops[i];
 		if (!table)
 			continue;
-		for (j = 0; j < CLASS_HEADER_OPC2; ++j) {
+		for (j = 0; j < Dee_CLASS_HEADER_OPC2; ++j) {
 			DeeObject *ob = table->co_operators[j];
 			if (!ob)
 				continue;
@@ -404,16 +404,16 @@ again:
 
 
 PRIVATE NONNULL((1, 3)) void DCALL
-class_desc_cache_operator(struct class_desc *__restrict self,
+class_desc_cache_operator(struct Dee_class_desc *__restrict self,
                           Dee_operator_t name, DeeObject *__restrict func) {
-	struct class_optable *table;
+	struct Dee_class_optable *table;
 	Dee_operator_t table_index;
-	ASSERT(name < CLASS_OPERATOR_USERCOUNT);
-	table_index = name / CLASS_HEADER_OPC2;
+	ASSERT(name < Dee_CLASS_OPERATOR_USERCOUNT);
+	table_index = name / Dee_CLASS_HEADER_OPC2;
 again:
 	table = atomic_read(&self->cd_ops[table_index]);
 	if (!table) {
-		table = (struct class_optable *)Dee_TryCalloc(sizeof(struct class_optable));
+		table = (struct Dee_class_optable *)Dee_TryCalloc(sizeof(struct Dee_class_optable));
 		if unlikely(!table)
 			goto done;
 		if unlikely(!atomic_cmpxch_weak(&self->cd_ops[table_index], NULL, table)) {
@@ -425,28 +425,28 @@ again:
 
 	/* Cache the operator function in the callback table. */
 	Dee_Incref(func);
-	if (!atomic_cmpxch(&table->co_operators[name % CLASS_HEADER_OPC2], NULL, func))
+	if (!atomic_cmpxch(&table->co_operators[name % Dee_CLASS_HEADER_OPC2], NULL, func))
 		Dee_DecrefNokill(func);
 done:
 	;
 }
 
 #define OPERATOR_IS_CONSTRUCTOR_INHERITED(x) \
-	((x) <= OPERATOR_MOVEASSIGN || (x) == CLASS_OPERATOR_SUPERARGS)
+	((x) <= OPERATOR_MOVEASSIGN || (x) == Dee_CLASS_OPERATOR_SUPERARGS)
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
-                              struct class_desc *__restrict self,
+                              struct Dee_class_desc *__restrict self,
                               Dee_operator_t name) {
 	DREF DeeObject *result;
 	DeeClassDescriptorObject *desc;
 	Dee_operator_t i, perturb;
-	if (name < CLASS_OPERATOR_USERCOUNT) {
-		struct class_optable *table;
-		table = self->cd_ops[name / CLASS_HEADER_OPC2];
+	if (name < Dee_CLASS_OPERATOR_USERCOUNT) {
+		struct Dee_class_optable *table;
+		table = self->cd_ops[name / Dee_CLASS_HEADER_OPC2];
 		if likely(table) {
 			Dee_class_desc_lock_read(self);
-			result = table->co_operators[name % CLASS_HEADER_OPC2];
+			result = table->co_operators[name % Dee_CLASS_HEADER_OPC2];
 			if likely(result) {
 				Dee_Incref(result);
 				Dee_class_desc_lock_endread(self);
@@ -460,7 +460,7 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 	desc = self->cd_desc;
 	i = perturb = name & desc->cd_clsop_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
-		struct class_operator *entry;
+		struct Dee_class_operator *entry;
 		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 		ASSERTF(entry->co_name != (Dee_operator_t)-1, "Operator %#I16x not implemented", name);
 		if (entry->co_name != name)
@@ -479,7 +479,7 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 		Dee_class_desc_lock_endread(self);
 
 		/* Try to cache the associated operator (if possible) */
-		if (name < CLASS_OPERATOR_USERCOUNT)
+		if (name < Dee_CLASS_OPERATOR_USERCOUNT)
 			class_desc_cache_operator(self, name, result);
 		return result;
 	}
@@ -499,16 +499,16 @@ DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) 
 	DeeTypeMRO_Init(&mro, iter);
 	do {
 		/* Search the descriptor cache of this type. */
-		struct class_desc *iter_class;
+		struct Dee_class_desc *iter_class;
 		DeeClassDescriptorObject *desc;
 		Dee_operator_t i, perturb;
 		iter_class = DeeClass_DESC(iter);
-		if (name < CLASS_OPERATOR_USERCOUNT) {
-			struct class_optable *table;
-			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
+		if (name < Dee_CLASS_OPERATOR_USERCOUNT) {
+			struct Dee_class_optable *table;
+			table = iter_class->cd_ops[name / Dee_CLASS_HEADER_OPC2];
 			if likely(table) {
 				Dee_class_desc_lock_read(iter_class);
-				result = table->co_operators[name % CLASS_HEADER_OPC2];
+				result = table->co_operators[name % Dee_CLASS_HEADER_OPC2];
 				if likely(result) {
 					Dee_Incref(result);
 					Dee_class_desc_lock_endread(iter_class);
@@ -525,7 +525,7 @@ DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) 
 		desc = iter_class->cd_desc;
 		i = perturb = name & desc->cd_clsop_mask;
 		for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
-			struct class_operator *entry;
+			struct Dee_class_operator *entry;
 			entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 			if (entry->co_name != name) {
 				if (entry->co_name == (Dee_operator_t)-1)
@@ -546,7 +546,7 @@ DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) 
 
 			/* Try to cache the associated operator (if possible)
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
-			if (name < CLASS_OPERATOR_USERCOUNT) {
+			if (name < Dee_CLASS_OPERATOR_USERCOUNT) {
 				if (iter == self || !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 					class_desc_cache_operator(DeeClass_DESC(self), name, result);
 			}
@@ -570,16 +570,16 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t nam
 	DeeTypeMRO_Init(&mro, iter);
 	do {
 		/* Search the descriptor cache of this type. */
-		struct class_desc *iter_class;
+		struct Dee_class_desc *iter_class;
 		DeeClassDescriptorObject *desc;
 		Dee_operator_t i, perturb;
 		iter_class = DeeClass_DESC(iter);
-		if (name < CLASS_OPERATOR_USERCOUNT) {
-			struct class_optable *table;
-			table = iter_class->cd_ops[name / CLASS_HEADER_OPC2];
+		if (name < Dee_CLASS_OPERATOR_USERCOUNT) {
+			struct Dee_class_optable *table;
+			table = iter_class->cd_ops[name / Dee_CLASS_HEADER_OPC2];
 			if likely(table) {
 				Dee_class_desc_lock_read(iter_class);
-				result = table->co_operators[name % CLASS_HEADER_OPC2];
+				result = table->co_operators[name % Dee_CLASS_HEADER_OPC2];
 				if likely(result) {
 					Dee_Incref(result);
 					Dee_class_desc_lock_endread(iter_class);
@@ -596,7 +596,7 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t nam
 		desc = iter_class->cd_desc;
 		i = perturb = name & desc->cd_clsop_mask;
 		for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
-			struct class_operator *entry;
+			struct Dee_class_operator *entry;
 			entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 			if (entry->co_name != name) {
 				if (entry->co_name == (Dee_operator_t)-1)
@@ -617,7 +617,7 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t nam
 
 			/* Try to cache the associated operator (if possible)
 			 * NOTE: Make sure not to accidentally cache inherited constructors! */
-			if (name < CLASS_OPERATOR_USERCOUNT) {
+			if (name < Dee_CLASS_OPERATOR_USERCOUNT) {
 				if (iter == self || !OPERATOR_IS_CONSTRUCTOR_INHERITED(name))
 					class_desc_cache_operator(DeeClass_DESC(self), name, result);
 			}
@@ -633,7 +633,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DeeClassDescriptorObject *desc;
 	Dee_operator_t i, perturb;
-	struct class_desc *self_class;
+	struct Dee_class_desc *self_class;
 	self_class = DeeClass_DESC(self);
 
 	/* Lookup extended, or un-cached operators. */
@@ -641,7 +641,7 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, Dee_operato
 	i = perturb = name & desc->cd_clsop_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		DREF DeeObject *result;
-		struct class_operator *entry;
+		struct Dee_class_operator *entry;
 		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 		if (entry->co_name != name) {
 			if (entry->co_name == (Dee_operator_t)-1)
@@ -706,14 +706,14 @@ INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
 DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DeeClassDescriptorObject *desc;
 	Dee_operator_t i, perturb;
-	struct class_desc *self_class;
+	struct Dee_class_desc *self_class;
 	self_class = DeeClass_DESC(self);
 
 	/* Lookup extended, or un-cached operators. */
 	desc = self_class->cd_desc;
 	i = perturb = name & desc->cd_clsop_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
-		struct class_operator *entry;
+		struct Dee_class_operator *entry;
 		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 		if (entry->co_name != name) {
 			if (entry->co_name == (Dee_operator_t)-1)
@@ -730,7 +730,7 @@ DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, Dee_oper
 
 
 INTERN NONNULL((1)) void DCALL
-instance_clear_members(struct instance_desc *__restrict self, uint16_t size) {
+instance_clear_members(struct Dee_instance_desc *__restrict self, uint16_t size) {
 	DREF DeeObject *buffer[64];
 	size_t buflen;
 	uint16_t i;
@@ -770,7 +770,7 @@ again:
 
 INTERN NONNULL((1)) void DCALL
 instance_builtin_destructor(DeeObject *__restrict self) {
-	struct class_desc *desc;
+	struct Dee_class_desc *desc;
 	desc = DeeClass_DESC(Dee_TYPE(self));
 	/* Clear all the members of this instance. */
 	instance_clear_members(DeeInstance_DESC(desc, self),
@@ -808,15 +808,15 @@ instance_builtin_serialize(DeeObject *__restrict self,
 		first_non_class = DeeType_Base(first_non_class);
 	}
 
-	/* Write out "instance_desc" of every class instance. */
+	/* Write out "Dee_instance_desc" of every class instance. */
 	do {
-		struct class_desc *cdesc;
-		struct instance_desc *idesc, *odesc;
+		struct Dee_class_desc *cdesc;
+		struct Dee_instance_desc *idesc, *odesc;
 		uint16_t objc;
 		ASSERT(DeeType_IsClass(tp));
 		cdesc = DeeClass_DESC(tp);
 		idesc = DeeInstance_DESC(cdesc, self);
-		odesc = DeeSerial_Addr2Mem(writer, addr + cdesc->cd_offset, struct instance_desc);
+		odesc = DeeSerial_Addr2Mem(writer, addr + cdesc->cd_offset, struct Dee_instance_desc);
 		objc  = cdesc->cd_desc->cd_imemb_size;
 		Dee_atomic_rwlock_init(&odesc->id_lock);
 		Dee_instance_desc_lock_read(idesc);
@@ -824,7 +824,7 @@ instance_builtin_serialize(DeeObject *__restrict self,
 		Dee_instance_desc_lock_endread(idesc);
 		if (DeeSerial_XInplacePutObjectv(writer,
 		                                 addr + cdesc->cd_offset +
-		                                 offsetof(struct instance_desc, id_vtab),
+		                                 offsetof(struct Dee_instance_desc, id_vtab),
 		                                 objc))
 			goto err;
 		tp = DeeType_Base(tp);
@@ -837,8 +837,8 @@ err:
 
 INTERN NONNULL((1)) void DCALL
 instance_destructor(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self  = Dee_TYPE(self);
-	struct class_desc *desc = DeeClass_DESC(tp_self);
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
 	DREF DeeObject *callback, *result;
 	callback = class_desc_get_known_operator(tp_self, desc, OPERATOR_DESTRUCTOR);
 	if unlikely(!callback) {
@@ -884,11 +884,11 @@ instance_destructor(DeeObject *__restrict self) {
 #else /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 #define IF_NOBASE(x) /* nothing */
 #endif /* !CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-#ifdef CLASS_TP_FAUTOINIT
+#ifdef Dee_TP_FCLASS_AUTOINIT
 #define IF_AUTOINIT(x) x
-#else /* CLASS_TP_FAUTOINIT */
+#else /* Dee_TP_FCLASS_AUTOINIT */
 #define IF_AUTOINIT(x) /* nothing */
-#endif /* !CLASS_TP_FAUTOINIT */
+#endif /* !Dee_TP_FCLASS_AUTOINIT */
 
 #define IF_AUTOINITNB(x) IF_NOBASE(IF_AUTOINIT(x))
 
@@ -1048,8 +1048,8 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_tcopy(DeeTypeObject *tp_self,
                DeeObject *__restrict self,
                DeeObject *other) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -1093,8 +1093,8 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_tdeepcopy(DeeTypeObject *tp_self,
                    DeeObject *__restrict self,
                    DeeObject *other) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -1156,9 +1156,9 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_tcopy(DeeTypeObject *tp_self,
                        DeeObject *__restrict self,
                        DeeObject *other) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	struct instance_desc *other_instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_instance_desc *other_instance;
 	DeeTypeObject *tp_super;
 	uint16_t size;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
@@ -1189,9 +1189,9 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
                               DeeObject *__restrict self,
                               DeeObject *other) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	struct instance_desc *other_instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_instance_desc *other_instance;
 	uint16_t size;
 	ASSERT(DeeObject_InstanceOf(other, tp_self));
 
@@ -1210,8 +1210,8 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_tdeepload(DeeTypeObject *tp_self,
                            DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	uint16_t i, size;
 
 	/* Replace all members with deep copies of themself. */
@@ -1276,9 +1276,9 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_tassign(DeeTypeObject *tp_self,
                          DeeObject *self,
                          DeeObject *other) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	struct instance_desc *other_instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_instance_desc *other_instance;
 	DeeTypeObject *tp_super;
 	uint16_t i, size;
 	DREF DeeObject **old_items;
@@ -1323,9 +1323,9 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_tmoveassign(DeeTypeObject *tp_self,
                              DeeObject *self,
                              DeeObject *other) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
-	struct instance_desc *other_instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_instance_desc *other_instance;
 	DeeTypeObject *tp_super;
 	uint16_t i, size;
 	DREF DeeObject **old_items;
@@ -1501,17 +1501,17 @@ err:
 }
 
 /* User-defined constructor invocation. */
-/* `OPERATOR_CONSTRUCTOR' + `CLASS_OPERATOR_SUPERARGS' */
+/* `OPERATOR_CONSTRUCTOR' + `Dee_CLASS_OPERATOR_SUPERARGS' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_super_tctor(DeeTypeObject *tp_self,
                      DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args, *result;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, 0, NULL);
@@ -1579,13 +1579,13 @@ err_args_only:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_kwsuper_tctor(DeeTypeObject *tp_self,
                        DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args, *result;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, 0, NULL);
@@ -1664,13 +1664,13 @@ err_args_only:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                      size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args, *result;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, argc, argv);
@@ -1738,13 +1738,13 @@ err_args_only:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                        size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args, *result;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, argc, argv);
@@ -1824,13 +1824,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_super_tinitkw(DeeTypeObject *tp_self,
                        DeeObject *__restrict self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args, *result;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallKwInherited(func, argc, argv, kw);
@@ -1899,13 +1899,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_kwsuper_tinitkw(DeeTypeObject *tp_self,
                          DeeObject *__restrict self, size_t argc,
                          DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args, *result;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallKwInherited(func, argc, argv, kw);
@@ -1981,17 +1981,17 @@ err_args_only:
 	goto err;
 }
 
-/* `CLASS_OPERATOR_SUPERARGS' */
+/* `Dee_CLASS_OPERATOR_SUPERARGS' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_super_tctor(DeeTypeObject *tp_self,
                              DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, 0, NULL);
@@ -2036,13 +2036,13 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_kwsuper_tctor(DeeTypeObject *tp_self,
                                DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, 0, NULL);
@@ -2099,13 +2099,13 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                              size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, argc, argv);
@@ -2150,13 +2150,13 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                                size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallInherited(func, argc, argv);
@@ -2214,13 +2214,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_super_tinitkw(DeeTypeObject *tp_self,
                                DeeObject *__restrict self, size_t argc,
                                DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallKwInherited(func, argc, argv, kw);
@@ -2266,13 +2266,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_kwsuper_tinitkw(DeeTypeObject *tp_self,
                                  DeeObject *__restrict self, size_t argc,
                                  DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *args;
 	DeeTypeObject *tp_super;
 
 	/* Figure out the arguments to-be passed to the super-constructor. */
-	func = class_desc_get_known_operator(tp_self, desc, CLASS_OPERATOR_SUPERARGS);
+	func = class_desc_get_known_operator(tp_self, desc, Dee_CLASS_OPERATOR_SUPERARGS);
 	if unlikely(!func)
 		goto err;
 	args = DeeObject_CallKwInherited(func, argc, argv, kw);
@@ -2330,8 +2330,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tctor(DeeTypeObject *tp_self,
                DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -2377,8 +2377,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -2425,8 +2425,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tinitkw(DeeTypeObject *tp_self,
                  DeeObject *__restrict self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -2474,8 +2474,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_nobase_tctor(DeeTypeObject *tp_self,
                       DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 
 	/* Lookup the user-defined constructor for this class. */
@@ -2510,8 +2510,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                       size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 
 	/* Lookup the user-defined constructor for this class. */
@@ -2547,8 +2547,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_nobase_tinitkw(DeeTypeObject *tp_self,
                         DeeObject *__restrict self, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 
 	/* Lookup the user-defined constructor for this class. */
@@ -2586,8 +2586,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_inherited_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                          size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -2633,8 +2633,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_inherited_tinitkw(DeeTypeObject *tp_self,
                            DeeObject *__restrict self, size_t argc,
                            DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -2680,8 +2680,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_tctor(DeeTypeObject *tp_self,
                        DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 
 	/* Default-initialize the members of this instance. */
@@ -2705,8 +2705,8 @@ err_members:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                        size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	if unlikely(argc != 0) {
 		err_unimplemented_constructor(tp_self, argc, argv);
@@ -2736,8 +2736,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_tinitkw(DeeTypeObject *tp_self,
                          DeeObject *__restrict self, size_t argc,
                          DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 	if unlikely(argc != 0) {
 		err_unimplemented_constructor(tp_self, argc, argv);
@@ -2778,8 +2778,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_tctor(DeeTypeObject *tp_self,
                               DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 
 	/* Default-initialize the members of this instance. */
 	Dee_atomic_rwlock_init(&instance->id_lock);
@@ -2793,8 +2793,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_tinit(DeeTypeObject *tp_self,
                               DeeObject *__restrict self,
                               size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	if unlikely(argc != 0)
 		return err_unimplemented_constructor(tp_self, argc, argv);
 
@@ -2810,8 +2810,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self,
                                 DeeObject *__restrict self, size_t argc,
                                 DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	if unlikely(argc != 0) {
 		err_unimplemented_constructor(tp_self, argc, argv);
 		goto err;
@@ -2842,8 +2842,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_inherited_tctor(DeeTypeObject *tp_self,
                                  DeeObject *__restrict self) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 
 	/* Default-initialize the members of this instance. */
@@ -2867,8 +2867,8 @@ err_members:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_inherited_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                                  size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 
 	/* Default-initialize the members of this instance. */
@@ -2898,8 +2898,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_inherited_tinitkw(DeeTypeObject *tp_self,
                                    DeeObject *__restrict self, size_t argc,
                                    DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 
 	/* Default-initialize the members of this instance. */
@@ -3106,12 +3106,12 @@ instance_builtin_inherited_initkw(DeeObject *__restrict self, size_t argc,
 
 
 
-#ifdef CLASS_TP_FAUTOINIT
-PRIVATE WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
+#ifdef Dee_TP_FCLASS_AUTOINIT
+PRIVATE WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *DCALL
 find_next_attribute(DeeClassDescriptorObject *__restrict self,
                     uint16_t *__restrict pnext_table_index) {
 	size_t i;
-	struct class_attribute *result = NULL, *entry;
+	struct Dee_class_attribute *result = NULL, *entry;
 	uint16_t next_table_index      = *pnext_table_index;
 	uint16_t nearest_table_index   = (uint16_t)-1;
 	if unlikely(next_table_index >= self->cd_imemb_size)
@@ -3122,7 +3122,7 @@ find_next_attribute(DeeClassDescriptorObject *__restrict self,
 			continue;
 		if (entry->ca_addr >= nearest_table_index)
 			continue;
-		if (!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(entry))
+		if (!Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT(entry))
 			continue;
 		result              = entry;
 		nearest_table_index = entry->ca_addr;
@@ -3134,13 +3134,13 @@ done:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_autoload_members(DeeTypeObject *tp_self,
-                          struct class_desc *__restrict desc,
-                          struct instance_desc *__restrict instance,
+                          struct Dee_class_desc *__restrict desc,
+                          struct Dee_instance_desc *__restrict instance,
                           size_t argc, DeeObject *const *argv) {
 	size_t i;
 	uint16_t next_table_index = 0;
 	for (i = 0; i < argc; ++i) {
-		struct class_attribute *at;
+		struct Dee_class_attribute *at;
 		at = find_next_attribute(desc->cd_desc, &next_table_index);
 		if unlikely(!at)
 			goto err_argc;
@@ -3155,15 +3155,15 @@ err:
 }
 
 struct instance_autoload_foreach_data {
-	DeeTypeObject        *ialf_tp_self;
-	struct class_desc    *ialf_desc;
-	struct instance_desc *ialf_instance;
-	uint16_t              ialf_next_table_index;
+	DeeTypeObject            *ialf_tp_self;
+	struct Dee_class_desc    *ialf_desc;
+	struct Dee_instance_desc *ialf_instance;
+	uint16_t                  ialf_next_table_index;
 };
 
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 instance_autoload_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
-	struct class_attribute *at;
+	struct Dee_class_attribute *at;
 	struct instance_autoload_foreach_data *data;
 	data = (struct instance_autoload_foreach_data *)arg;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
@@ -3173,7 +3173,7 @@ instance_autoload_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 		DeeRT_ErrUnknownAttrDuringInitialization(data->ialf_tp_self, key);
 		goto err;
 	}
-	if unlikely(!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
+	if unlikely(!Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
 		DeeRT_ErrRestrictedAttrCADuringInitialization(data->ialf_tp_self, at);
 		goto err;
 	}
@@ -3193,8 +3193,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_autoload_members_kw(DeeTypeObject *tp_self,
-                             struct class_desc *__restrict desc,
-                             struct instance_desc *__restrict instance,
+                             struct Dee_class_desc *__restrict desc,
+                             struct Dee_instance_desc *__restrict instance,
                              size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	uint16_t next_table_index;
 	if (!kw)
@@ -3210,7 +3210,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 		kw_argv         = argv + positional_argc;
 		/* Load positional arguments into the first positional_argc instance members. */
 		for (i = 0; i < positional_argc; ++i) {
-			struct class_attribute *at;
+			struct Dee_class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
 			if unlikely(!at) {
 				err_invalid_argc(DeeType_GetName(tp_self), argc, 0, i);
@@ -3220,7 +3220,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				goto err;
 		}
 		for (i = 0; i <= kwds->kw_mask; ++i) {
-			struct class_attribute *at;
+			struct Dee_class_attribute *at;
 			if (!kwds->kw_map[i].ke_name)
 				continue;
 			at = DeeClassDesc_QueryInstanceAttributeHash(desc,
@@ -3230,7 +3230,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				DeeRT_ErrUnknownAttrDuringInitialization(tp_self, kwds->kw_map[i].ke_name);
 				goto err;
 			}
-			if unlikely(!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
+			if unlikely(!Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
 				DeeRT_ErrRestrictedAttrCADuringInitialization(tp_self, at);
 				goto err;
 			}
@@ -3248,7 +3248,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 		struct instance_autoload_foreach_data data;
 		/* Load positional arguments into the first positional_argc instance members. */
 		for (i = 0; i < argc; ++i) {
-			struct class_attribute *at;
+			struct Dee_class_attribute *at;
 			at = find_next_attribute(desc->cd_desc, &next_table_index);
 			if unlikely(!at) {
 				err_invalid_argc(DeeType_GetName(tp_self), argc, 0, i);
@@ -3281,8 +3281,8 @@ instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
 		result += temp;                  \
 	}	__WHILE0
 	Dee_ssize_t temp, result;
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	uint16_t i, count = desc->cd_desc->cd_imemb_size;
 	DREF DeeObject *ob;
 	bool is_first = true;
@@ -3299,13 +3299,13 @@ instance_builtin_auto_tprintrepr(DeeTypeObject *tp_self,
 		Dee_instance_desc_lock_endread(instance);
 		for (attr_index = 0;
 		     attr_index <= desc->cd_desc->cd_iattr_mask; ++attr_index) {
-			struct class_attribute *at;
+			struct Dee_class_attribute *at;
 			at = &desc->cd_desc->cd_iattr_list[attr_index];
 			if (!at->ca_name)
 				continue;
 			if (at->ca_addr != i)
 				continue;
-			if (!CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
+			if (!Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at))
 				continue;
 			if (!is_first)
 				DO(err_ob, DeeFormat_PRINT(printer, arg, ", "));
@@ -3334,12 +3334,12 @@ instance_builtin_auto_printrepr(DeeObject *__restrict self,
 	return instance_builtin_auto_tprintrepr(Dee_TYPE(self), self, printer, arg);
 }
 
-/* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
+/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                     size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
 
@@ -3390,12 +3390,10 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_tinitkw(DeeTypeObject *tp_self,
                       DeeObject *__restrict self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc;
-	struct instance_desc *instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 	DeeTypeObject *tp_super;
-	desc     = DeeClass_DESC(tp_self);
-	instance = DeeInstance_DESC(desc, self);
 
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
@@ -3443,8 +3441,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                             size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 
 	/* Default-initialize the members of this instance. */
@@ -3480,8 +3478,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_auto_tinitkw(DeeTypeObject *tp_self,
                               DeeObject *__restrict self, size_t argc,
                               DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DeeTypeObject *tp_super;
 
 	/* Default-initialize the members of this instance. */
@@ -3539,12 +3537,12 @@ instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc,
 
 
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-/* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
+/* No predefined construction operators (with `Dee_TP_FCLASS_AUTOINIT'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                            size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
 
 	/* Lookup the user-defined constructor for this class. */
@@ -3580,11 +3578,9 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_nobase_tinitkw(DeeTypeObject *tp_self,
                              DeeObject *__restrict self, size_t argc,
                              DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc;
-	struct instance_desc *instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *func, *result;
-	desc     = DeeClass_DESC(tp_self);
-	instance = DeeInstance_DESC(desc, self);
 
 	/* Lookup the user-defined constructor for this class. */
 	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_CONSTRUCTOR);
@@ -3618,8 +3614,8 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
                                    size_t argc, DeeObject *const *argv) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 
 	/* Default-initialize the members of this instance. */
 	Dee_atomic_rwlock_init(&instance->id_lock);
@@ -3641,8 +3637,8 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self,
                                      DeeObject *__restrict self, size_t argc,
                                      DeeObject *const *argv, DeeObject *kw) {
-	struct class_desc *desc        = DeeClass_DESC(tp_self);
-	struct instance_desc *instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 
 	/* Default-initialize the members of this instance. */
 	Dee_atomic_rwlock_init(&instance->id_lock);
@@ -3684,7 +3680,7 @@ instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
 	return instance_builtin_auto_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-#endif /* CLASS_TP_FAUTOINIT */
+#endif /* Dee_TP_FCLASS_AUTOINIT */
 
 
 
@@ -3717,10 +3713,8 @@ INTERN NONNULL((1, 2, 3)) void DCALL
 instance_tvisit(DeeTypeObject *tp_self,
                 DeeObject *__restrict self,
                 Dee_visit_t proc, void *arg) {
-	struct class_desc *desc;
-	struct instance_desc *instance;
-	desc     = DeeClass_DESC(tp_self);
-	instance = DeeInstance_DESC(desc, self);
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
 	Dee_XVisitv(instance->id_vtab, desc->cd_desc->cd_imemb_size);
 	Dee_instance_desc_lock_endread(instance);
@@ -3729,14 +3723,11 @@ instance_tvisit(DeeTypeObject *tp_self,
 INTERN NONNULL((1, 2)) void DCALL
 instance_tclear(DeeTypeObject *tp_self,
                 DeeObject *__restrict self) {
-	struct class_desc *desc;
-	uint16_t i;
-	struct instance_desc *instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *buffer[64];
-	size_t buflen;
-	desc     = DeeClass_DESC(tp_self);
-	instance = DeeInstance_DESC(desc, self);
-	buflen   = 0;
+	size_t buflen = 0;
+	uint16_t i;
 	Dee_instance_desc_lock_write(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 again_i:
@@ -3765,14 +3756,11 @@ INTERN NONNULL((1, 2)) void DCALL
 instance_tpclear(DeeTypeObject *tp_self,
                  DeeObject *__restrict self,
                  unsigned int gc_priority) {
-	struct class_desc *desc;
-	uint16_t i;
-	struct instance_desc *instance;
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	DREF DeeObject *buffer[64];
-	size_t buflen;
-	desc     = DeeClass_DESC(tp_self);
-	instance = DeeInstance_DESC(desc, self);
-	buflen   = 0;
+	size_t buflen = 0;
+	uint16_t i;
 	Dee_instance_desc_lock_write(instance);
 	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
 again_i:
@@ -3895,7 +3883,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bind_class_operator(DeeTypeObject *__restrict type_type,
                     DeeTypeObject *__restrict class_type,
                     Dee_operator_t operator_name) {
-	struct opinfo const *info;
+	struct Dee_opinfo const *info;
 	info = DeeTypeType_GetOperatorById(type_type, operator_name);
 	if likely(info) {
 		/* Dedicated operator with C-wrapper. */
@@ -4032,7 +4020,7 @@ DeeType_GetFirstRelevantBase(DeeTypeObject *__restrict self) {
 PRIVATE NONNULL((1, 2)) int DCALL
 class_bases_init(struct class_bases *__restrict self,
                  DeeObject *__restrict bases) {
-	struct objectlist bases_list;
+	struct Dee_objectlist bases_list;
 	if (DeeNone_Check(bases)) {
 		/* Special case: no base */
 no_base:
@@ -4063,13 +4051,13 @@ no_base:
 		 * >> } */
 		size_t direct_base_count;
 		size_t mro_i, mro_end;
-		if (objectlist_initseq(&bases_list, bases))
+		if (Dee_objectlist_initseq(&bases_list, bases))
 			goto err;
 
 		/* Check for special case: no bases */
 		direct_base_count = bases_list.ol_elemc;
 		if unlikely(direct_base_count == 0) {
-			objectlist_fini(&bases_list);
+			Dee_objectlist_fini(&bases_list);
 			goto no_base;
 		}
 
@@ -4146,7 +4134,7 @@ use_this_base_as_primary_base:
 				DeeTypeMRO base_mro;
 				base = DeeTypeMRO_Init(&base_mro, base);
 				do {
-					if (!objectlist_contains_byid(&bases_list, Dee_AsObject(base))) {
+					if (!Dee_objectlist_contains_byid(&bases_list, Dee_AsObject(base))) {
 						if (Dee_objectlist_append(&bases_list, Dee_AsObject(base)))
 							goto err_bases_list;
 					}
@@ -4159,7 +4147,7 @@ use_this_base_as_primary_base:
 		}
 
 		/* Finalize the MRO vector. */
-		if (objectlist_setallocated(&bases_list, bases_list.ol_elemc + 1))
+		if (Dee_objectlist_setallocated(&bases_list, bases_list.ol_elemc + 1))
 			goto err_bases_list;
 		bases_list.ol_elemv[bases_list.ol_elemc] = NULL;
 		self->cb_mro = (DREF DeeTypeObject **)bases_list.ol_elemv; /* Inherit vector + references */
@@ -4171,7 +4159,7 @@ use_this_base_as_primary_base:
 done:
 	return 0;
 err_bases_list:
-	objectlist_fini(&bases_list);
+	Dee_objectlist_fini(&bases_list);
 err:
 	return -1;
 }
@@ -4199,7 +4187,7 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 	DeeClassDescriptorObject *desc;
 	DREF DeeTypeObject *result;
 	DeeTypeObject *result_type_type;
-	struct class_desc *result_class;
+	struct Dee_class_desc *result_class;
 	size_t result_class_size;
 	ASSERT_OBJECT_TYPE_EXACT(descriptor, &DeeClassDescriptor_Type);
 	ASSERT_OBJECT_TYPE_OPT(declaring_module, &DeeModule_Type);
@@ -4239,8 +4227,8 @@ err_custom_allocator:
 		goto err_cbases;
 
 	/* Allocate the class descriptor. */
-	result_class = (struct class_desc *)Dee_Callococ(offsetof(struct class_desc, cd_members),
-	                                                 desc->cd_cmemb_size, sizeof(DREF DeeObject *));
+	result_class = (struct Dee_class_desc *)Dee_Callococ(offsetof(struct Dee_class_desc, cd_members),
+	                                                     desc->cd_cmemb_size, sizeof(DREF DeeObject *));
 	if unlikely(!result_class) {
 		DeeGCObject_Free(result);
 		goto err_cbases;
@@ -4286,7 +4274,7 @@ err_custom_allocator:
 
 	/* Determine the memory data size of instances for this class. */
 	result->tp_init.tp_alloc.tp_instance_size = result_class->cd_offset;                         /* Memory used by base-classes. */
-	result->tp_init.tp_alloc.tp_instance_size += offsetof(struct instance_desc, id_vtab);        /* Instance descriptor header. */
+	result->tp_init.tp_alloc.tp_instance_size += offsetof(struct Dee_instance_desc, id_vtab);    /* Instance descriptor header. */
 	result->tp_init.tp_alloc.tp_instance_size += desc->cd_imemb_size * sizeof(DREF DeeObject *); /* Instance member objects. */
 
 	/* When the type doesn't have any instance members, it's an abstract type... */
@@ -4333,7 +4321,7 @@ err_custom_allocator:
 		uint16_t constructor_features = 0;
 		uint16_t i = 0;
 		do {
-			struct class_operator *op;
+			struct Dee_class_operator *op;
 			op = &desc->cd_clsop_list[i];
 			if (op->co_name == (Dee_operator_t)-1)
 				continue;
@@ -4357,7 +4345,7 @@ err_custom_allocator:
 					result->tp_init.tp_assign = NULL;
 				break;
 
-			case CLASS_OPERATOR_SUPERARGS:
+			case Dee_CLASS_OPERATOR_SUPERARGS:
 				constructor_features |= FEATURE_SUPERARGS;
 				break;
 
@@ -4372,7 +4360,7 @@ err_custom_allocator:
 					result->tp_cast.tp_print = &usrtype__print__with__STR;
 				break;
 
-			case CLASS_OPERATOR_PRINT:
+			case Dee_CLASS_OPERATOR_PRINT:
 				result->tp_cast.tp_print = &usrtype__print__with__PRINT;
 				if (result->tp_cast.tp_str == NULL)
 					result->tp_cast.tp_str = &usrtype__str__with__PRINT;
@@ -4384,7 +4372,7 @@ err_custom_allocator:
 					result->tp_cast.tp_printrepr = &usrtype__printrepr__with__REPR;
 				break;
 
-			case CLASS_OPERATOR_PRINTREPR:
+			case Dee_CLASS_OPERATOR_PRINTREPR:
 				result->tp_cast.tp_printrepr = &usrtype__printrepr__with__PRINTREPR;
 				if (result->tp_cast.tp_repr == NULL)
 					result->tp_cast.tp_repr = &usrtype__repr__with__PRINTREPR;
@@ -4406,8 +4394,8 @@ err_custom_allocator:
 		switch (constructor_features) {
 
 		case FEATURE_CONSTRUCTOR | FEATURE_SUPERARGS:
-			/* TODO: SUPERARGS + CLASS_TP_FAUTOINIT */
-			if (desc->cd_flags & CLASS_TP_FSUPERKWDS) {
+			/* TODO: SUPERARGS + Dee_TP_FCLASS_AUTOINIT */
+			if (desc->cd_flags & Dee_TP_FCLASS_SUPERKWDS) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_kwsuper_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_kwsuper_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_kwsuper_initkw;
@@ -4419,8 +4407,8 @@ err_custom_allocator:
 			break;
 
 		case FEATURE_CONSTRUCTOR:
-#ifdef CLASS_TP_FAUTOINIT
-			if (desc->cd_flags & CLASS_TP_FAUTOINIT) {
+#ifdef Dee_TP_FCLASS_AUTOINIT
+			if (desc->cd_flags & Dee_TP_FCLASS_AUTOINIT) {
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 				if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
 					result->tp_init.tp_alloc.tp_ctor        = &instance_auto_nobase_ctor;
@@ -4434,7 +4422,7 @@ err_custom_allocator:
 					result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_auto_initkw;
 				}
 			} else
-#endif /* CLASS_TP_FAUTOINIT */
+#endif /* Dee_TP_FCLASS_AUTOINIT */
 			if (desc->cd_flags & TP_FINHERITCTOR) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_inherited_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_inherited_init;
@@ -4455,8 +4443,8 @@ err_custom_allocator:
 			break;
 
 		case FEATURE_SUPERARGS:
-			/* TODO: SUPERARGS + CLASS_TP_FAUTOINIT */
-			if (desc->cd_flags & CLASS_TP_FSUPERKWDS) {
+			/* TODO: SUPERARGS + Dee_TP_FCLASS_AUTOINIT */
+			if (desc->cd_flags & Dee_TP_FCLASS_SUPERKWDS) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_kwsuper_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_kwsuper_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_kwsuper_initkw;
@@ -4468,8 +4456,8 @@ err_custom_allocator:
 			break;
 
 		default:
-#ifdef CLASS_TP_FAUTOINIT
-			if (desc->cd_flags & CLASS_TP_FAUTOINIT) {
+#ifdef Dee_TP_FCLASS_AUTOINIT
+			if (desc->cd_flags & Dee_TP_FCLASS_AUTOINIT) {
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 				if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
 					result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_auto_nobase_ctor;
@@ -4483,7 +4471,7 @@ err_custom_allocator:
 					result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_auto_initkw;
 				}
 			} else
-#endif /* CLASS_TP_FAUTOINIT */
+#endif /* Dee_TP_FCLASS_AUTOINIT */
 			if (desc->cd_flags & TP_FINHERITCTOR) {
 				/* this = super */
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_inherited_ctor;
@@ -4508,12 +4496,12 @@ err_custom_allocator:
 	}
 
 	/* Provide builtin support for comparison, if not already defined by the type itself! */
-#ifdef CLASS_TP_FAUTOINIT
-	if ((!result->tp_cast.tp_repr && !result->tp_cast.tp_printrepr) && (desc->cd_flags & CLASS_TP_FAUTOINIT))
+#ifdef Dee_TP_FCLASS_AUTOINIT
+	if ((!result->tp_cast.tp_repr && !result->tp_cast.tp_printrepr) && (desc->cd_flags & Dee_TP_FCLASS_AUTOINIT))
 		result->tp_cast.tp_printrepr = &instance_builtin_auto_printrepr;
-#endif /* CLASS_TP_FAUTOINIT */
-	if (!result->tp_cmp && !(desc->cd_flags & CLASS_TP_FNOBUILTIN)
-#if 1 /* TODO: Get rid of this once the compiler is able to produce "CLASS_TP_FNOBUILTIN"
+#endif /* Dee_TP_FCLASS_AUTOINIT */
+	if (!result->tp_cmp && !(desc->cd_flags & Dee_TP_FCLASS_NOBUILTIN)
+#if 1 /* TODO: Get rid of this once the compiler is able to produce "Dee_TP_FCLASS_NOBUILTIN"
        * right now, this is here for the "class MyCell: Cell" test (asserting that cross-
        * dependent operators are inherited as sets) */
 	    && desc->cd_imemb_size > 0

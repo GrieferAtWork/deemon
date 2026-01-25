@@ -80,7 +80,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	ASSERT(sym->s_nread);
 	/* Optimize constant, extern symbols. */
 	if (sym->s_type == SYMBOL_TYPE_EXTERN &&
-	    (sym->s_extern.e_symbol->ss_flags & (MODSYM_FPROPERTY | MODSYM_FCONSTEXPR)) == MODSYM_FCONSTEXPR) {
+	    (sym->s_extern.e_symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FCONSTEXPR)) == Dee_MODSYM_FCONSTEXPR) {
 		/* The symbol is allowed to be expanded at compile-time. */
 		int error;
 		DeeModuleObject *symmod;

@@ -101,11 +101,11 @@ Dee_attrinfo_typeof(struct Dee_attrinfo *__restrict self) {
 		sym = self->ai_value.v_modsym;
 		ASSERT(sym >= mod->mo_bucketv &&
 		       sym <= mod->mo_bucketv + mod->mo_bucketm);
-		if (sym->ss_flags & MODSYM_FPROPERTY)
+		if (sym->ss_flags & Dee_MODSYM_FPROPERTY)
 			break;
-		if (!(sym->ss_flags & MODSYM_FREADONLY))
+		if (!(sym->ss_flags & Dee_MODSYM_FREADONLY))
 			break;
-		if likely(!(sym->ss_flags & MODSYM_FEXTERN)) {
+		if likely(!(sym->ss_flags & Dee_MODSYM_FEXTERN)) {
 			DeeObject *symval;
 read_modsym:
 			ASSERT(Dee_module_symbol_getindex(sym) < mod->mo_globalc);
@@ -146,11 +146,11 @@ read_modsym:
 	}	break;
 
 	case Dee_ATTRINFO_ATTR: {
-		struct class_desc *desc;
-		struct class_attribute const *attr;
+		struct Dee_class_desc *desc;
+		struct Dee_class_attribute const *attr;
 		DeeObject *value;
 		attr = self->ai_value.v_attr;
-		if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
+		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FGETSET)
 			break;
 		if (attr->ca_flag & Dee_CLASS_ATTRIBUTE_FMETHOD) {
 			Dee_Incref(&DeeInstanceMethod_Type);
@@ -190,8 +190,8 @@ read_modsym:
 		return &DeeClsMember_Type;
 
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
-		struct class_desc *desc;
-		struct class_attribute const *attr;
+		struct Dee_class_desc *desc;
+		struct Dee_class_attribute const *attr;
 		DeeObject *value;
 		attr = self->ai_value.v_attr;
 		if (!(attr->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)) {
@@ -339,8 +339,8 @@ Dee_attrdesc_callget(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 		return Dee_type_member_get(self->ad_info.ai_value.v_member, thisarg);
 
 	case Dee_ATTRINFO_ATTR: {
-		struct class_desc *desc;
-		struct instance_desc *inst;
+		struct Dee_class_desc *desc;
+		struct Dee_instance_desc *inst;
 		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
 			goto err;
 		desc = DeeClass_DESC(self->ad_info.ai_decl);
@@ -442,8 +442,8 @@ Dee_attrdesc_callbound(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 	}	break;
 
 	case Dee_ATTRINFO_ATTR: {
-		struct class_desc *desc;
-		struct instance_desc *inst;
+		struct Dee_class_desc *desc;
+		struct Dee_instance_desc *inst;
 		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
 			goto err;
 		desc = DeeClass_DESC(self->ad_info.ai_decl);
@@ -528,8 +528,8 @@ Dee_attrdesc_calldel(struct Dee_attrdesc const *self, DeeObject *thisarg) {
 		return Dee_type_member_del(self->ad_info.ai_value.v_member, thisarg);
 
 	case Dee_ATTRINFO_ATTR: {
-		struct class_desc *desc;
-		struct instance_desc *inst;
+		struct Dee_class_desc *desc;
+		struct Dee_instance_desc *inst;
 		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
 			goto err;
 		desc = DeeClass_DESC(self->ad_info.ai_decl);
@@ -615,8 +615,8 @@ Dee_attrdesc_callset(struct Dee_attrdesc const *self, DeeObject *thisarg, DeeObj
 		return Dee_type_member_set(self->ad_info.ai_value.v_member, thisarg, value);
 
 	case Dee_ATTRINFO_ATTR: {
-		struct class_desc *desc;
-		struct instance_desc *inst;
+		struct Dee_class_desc *desc;
+		struct Dee_instance_desc *inst;
 		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
 			goto err;
 		desc = DeeClass_DESC(self->ad_info.ai_decl);
@@ -719,8 +719,8 @@ again:
 		return DeeObjMethod_CallFunc(self->ad_info.ai_value.v_method->m_func, thisarg, argc, argv);
 
 	case Dee_ATTRINFO_ATTR: {
-		struct class_desc *desc;
-		struct instance_desc *inst;
+		struct Dee_class_desc *desc;
+		struct Dee_instance_desc *inst;
 		if (DeeObject_AssertTypeOrAbstract(thisarg, (DeeTypeObject *)self->ad_info.ai_decl))
 			goto err;
 		desc = DeeClass_DESC(self->ad_info.ai_decl);
@@ -1308,7 +1308,7 @@ again:
 #define Dee_membercache_table_trycalloc(mask)                                                         \
 	(struct Dee_membercache_table *)Dee_TryCallococ(offsetof(struct Dee_membercache_table, mc_table), \
 	                                                (mask) + 1, sizeof(struct Dee_membercache_slot))
-STATIC_ASSERT(MEMBERCACHE_UNUSED == 0);
+STATIC_ASSERT(Dee_MEMBERCACHE_UNUSED == 0);
 
 PRIVATE NONNULL((1, 2)) void DCALL
 Dee_membercache_table_do_addslot(struct Dee_membercache_table *__restrict self,
@@ -1318,9 +1318,9 @@ Dee_membercache_table_do_addslot(struct Dee_membercache_table *__restrict self,
 	perturb = i = Dee_membercache_table_hashst(self, item->mcs_hash);
 	for (;; Dee_membercache_table_hashnx(i, perturb)) {
 		slot = Dee_membercache_table_hashit(self, i);
-		if (slot->mcs_type == MEMBERCACHE_UNUSED)
+		if (slot->mcs_type == Dee_MEMBERCACHE_UNUSED)
 			break;
-		ASSERTF(slot->mcs_type != MEMBERCACHE_UNINITIALIZED,
+		ASSERTF(slot->mcs_type != Dee_MEMBERCACHE_UNINITIALIZED,
 		        "We're building a new cache-table, so how can "
 		        "that new table contain UNINITIALIZED items?");
 	}
@@ -1358,9 +1358,9 @@ Dee_membercache_table_new(struct Dee_membercache_table const *old_table,
 			struct Dee_membercache_slot const *slot;
 			slot = &old_table->mc_table[i];
 			type = atomic_read(&slot->mcs_type);
-			if (type == MEMBERCACHE_UNUSED)
+			if (type == Dee_MEMBERCACHE_UNUSED)
 				continue;
-			if (type == MEMBERCACHE_UNINITIALIZED)
+			if (type == Dee_MEMBERCACHE_UNINITIALIZED)
 				continue; /* Don't migrate slots that aren't fully initialized. */
 
 			/* Keep this cache-slot as part of the resulting cache-table. */
@@ -1404,11 +1404,11 @@ again_search_slots:
 		uint16_t type;
 		slot = Dee_membercache_table_hashit(self, i);
 		type = atomic_read(&slot->mcs_type);
-		if (type == MEMBERCACHE_UNUSED)
+		if (type == Dee_MEMBERCACHE_UNUSED)
 			break;
 
 #ifndef CONFIG_NO_THREADS
-		if (type == MEMBERCACHE_UNINITIALIZED) {
+		if (type == Dee_MEMBERCACHE_UNINITIALIZED) {
 			/* Encountered an uninitialized slot along the cache-chain.
 			 *
 			 * This means that some other thread is currently writing an
@@ -1445,8 +1445,8 @@ again_search_slots:
 	/* Not found. - Try to allocate this empty slot.
 	 * If it's no longer empty, start over */
 	if (!atomic_cmpxch_or_write(&slot->mcs_type,
-	                            MEMBERCACHE_UNUSED,
-	                            MEMBERCACHE_UNINITIALIZED))
+	                            Dee_MEMBERCACHE_UNUSED,
+	                            Dee_MEMBERCACHE_UNINITIALIZED))
 		goto again_search_slots;
 
 	/* At this point, we've successfully allocated a slot within the cache-table.
@@ -1454,7 +1454,7 @@ again_search_slots:
 	 * about the order here, in that we _MUST_ fill in the type-field LAST!
 	 *
 	 * This is because by setting the type-field to something other than
-	 * `MEMBERCACHE_UNINITIALIZED', we essentially commit the new slot
+	 * `Dee_MEMBERCACHE_UNINITIALIZED', we essentially commit the new slot
 	 * into the cache. */
 	memcpy((byte_t *)slot + COMPILER_OFFSETAFTER(struct Dee_membercache_slot, mcs_type),
 	       (byte_t *)item + COMPILER_OFFSETAFTER(struct Dee_membercache_slot, mcs_type),
@@ -1468,16 +1468,16 @@ again_search_slots:
 
 #ifndef Dee_DPRINT_IS_NOOP
 PRIVATE char const membercache_type_names[][16] = {
-	/* [MEMBERCACHE_UNUSED         ] = */ "??UNUSED",
-	/* [MEMBERCACHE_UNINITIALIZED  ] = */ "??UNINITIALIZED",
-	/* [MEMBERCACHE_METHOD         ] = */ "method",
-	/* [MEMBERCACHE_GETSET         ] = */ "getset",
-	/* [MEMBERCACHE_MEMBER         ] = */ "member",
-	/* [MEMBERCACHE_ATTRIB         ] = */ "attrib",
-	/* [MEMBERCACHE_INSTANCE_METHOD] = */ "instance_method",
-	/* [MEMBERCACHE_INSTANCE_GETSET] = */ "instance_getset",
-	/* [MEMBERCACHE_INSTANCE_MEMBER] = */ "instance_member",
-	/* [MEMBERCACHE_INSTANCE_ATTRIB] = */ "instance_attrib",
+	/* [Dee_MEMBERCACHE_UNUSED         ] = */ "??UNUSED",
+	/* [Dee_MEMBERCACHE_UNINITIALIZED  ] = */ "??UNINITIALIZED",
+	/* [Dee_MEMBERCACHE_METHOD         ] = */ "method",
+	/* [Dee_MEMBERCACHE_GETSET         ] = */ "getset",
+	/* [Dee_MEMBERCACHE_MEMBER         ] = */ "member",
+	/* [Dee_MEMBERCACHE_ATTRIB         ] = */ "attrib",
+	/* [Dee_MEMBERCACHE_INSTANCE_METHOD] = */ "instance_method",
+	/* [Dee_MEMBERCACHE_INSTANCE_GETSET] = */ "instance_getset",
+	/* [Dee_MEMBERCACHE_INSTANCE_MEMBER] = */ "instance_member",
+	/* [Dee_MEMBERCACHE_INSTANCE_ATTRIB] = */ "instance_attrib",
 };
 
 #define PRIVATE_IS_KNOWN_TYPETYPE(x) \
@@ -1608,7 +1608,7 @@ Dee_membercache_addmethod(struct Dee_membercache *self,
                           DeeTypeObject *decl, Dee_hash_t hash,
                           struct type_method const *method) {
 	struct Dee_membercache_slot slot;
-	slot.mcs_type = MEMBERCACHE_METHOD;
+	slot.mcs_type = Dee_MEMBERCACHE_METHOD;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
 	memcpy(&slot.mcs_method, method, sizeof(struct type_method));
@@ -1621,7 +1621,7 @@ Dee_membercache_addinstancemethod(struct Dee_membercache *self,
                                   struct type_method const *method) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
-	slot.mcs_type = MEMBERCACHE_INSTANCE_METHOD;
+	slot.mcs_type = Dee_MEMBERCACHE_INSTANCE_METHOD;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
 	memcpy(&slot.mcs_method, method, sizeof(struct type_method));
@@ -1633,7 +1633,7 @@ Dee_membercache_addgetset(struct Dee_membercache *self,
                           DeeTypeObject *decl, Dee_hash_t hash,
                           struct type_getset const *getset) {
 	struct Dee_membercache_slot slot;
-	slot.mcs_type = MEMBERCACHE_GETSET;
+	slot.mcs_type = Dee_MEMBERCACHE_GETSET;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
 	memcpy(&slot.mcs_getset, getset, sizeof(struct type_getset));
@@ -1646,7 +1646,7 @@ Dee_membercache_addinstancegetset(struct Dee_membercache *self,
                                   struct type_getset const *getset) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
-	slot.mcs_type = MEMBERCACHE_INSTANCE_GETSET;
+	slot.mcs_type = Dee_MEMBERCACHE_INSTANCE_GETSET;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
 	memcpy(&slot.mcs_getset, getset, sizeof(struct type_getset));
@@ -1658,7 +1658,7 @@ Dee_membercache_addmember(struct Dee_membercache *self,
                           DeeTypeObject *decl, Dee_hash_t hash,
                           struct type_member const *member) {
 	struct Dee_membercache_slot slot;
-	slot.mcs_type = MEMBERCACHE_MEMBER;
+	slot.mcs_type = Dee_MEMBERCACHE_MEMBER;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
 	memcpy(&slot.mcs_member, member, sizeof(struct type_member));
@@ -1671,7 +1671,7 @@ Dee_membercache_addinstancemember(struct Dee_membercache *self,
                                   struct type_member const *member) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
-	slot.mcs_type = MEMBERCACHE_INSTANCE_MEMBER;
+	slot.mcs_type = Dee_MEMBERCACHE_INSTANCE_MEMBER;
 	slot.mcs_hash = hash;
 	slot.mcs_decl = decl;
 	memcpy(&slot.mcs_member, member, sizeof(struct type_member));
@@ -1681,9 +1681,9 @@ Dee_membercache_addinstancemember(struct Dee_membercache *self,
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addattrib(struct Dee_membercache *self,
                           DeeTypeObject *decl, Dee_hash_t hash,
-                          struct class_attribute *attrib) {
+                          struct Dee_class_attribute *attrib) {
 	struct Dee_membercache_slot slot;
-	slot.mcs_type          = MEMBERCACHE_ATTRIB;
+	slot.mcs_type          = Dee_MEMBERCACHE_ATTRIB;
 	slot.mcs_hash          = hash;
 	slot.mcs_decl          = decl;
 	slot.mcs_attrib.a_name = DeeString_STR(attrib->ca_name);
@@ -1695,10 +1695,10 @@ Dee_membercache_addattrib(struct Dee_membercache *self,
 INTERN NONNULL((1, 2, 4)) int DCALL
 Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
                                   DeeTypeObject *decl, Dee_hash_t hash,
-                                  struct class_attribute *attrib) {
+                                  struct Dee_class_attribute *attrib) {
 	struct Dee_membercache_slot slot;
 	ASSERT(self != &decl->tp_cache);
-	slot.mcs_type          = MEMBERCACHE_INSTANCE_ATTRIB;
+	slot.mcs_type          = Dee_MEMBERCACHE_INSTANCE_ATTRIB;
 	slot.mcs_hash          = hash;
 	slot.mcs_decl          = decl;
 	slot.mcs_attrib.a_name = DeeString_STR(attrib->ca_name);
@@ -1742,11 +1742,11 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 		uint16_t type;
 		item = Dee_membercache_table_hashit(table, i);
 		type = atomic_read(&item->mcs_type);
-		if (type == MEMBERCACHE_UNUSED)
+		if (type == Dee_MEMBERCACHE_UNUSED)
 			break;
 		if (item->mcs_hash != hash)
 			continue;
-		if unlikely(type == MEMBERCACHE_UNINITIALIZED)
+		if unlikely(type == Dee_MEMBERCACHE_UNINITIALIZED)
 			continue; /* Don't dereference uninitialized items! */
 		if (strcmp(item->mcs_name, attr) != 0)
 			continue;
@@ -1805,7 +1805,7 @@ Dee_membercache_patchmethod(struct Dee_membercache *self, DeeTypeObject *decl, D
 	if (result > 0) {
 		/* Entry already exists (try to patch it) */
 		result = Dee_membercache_patch(self, decl, new_method->m_name, hash,
-		                               MEMBERCACHE_METHOD, &do_patch_method,
+		                               Dee_MEMBERCACHE_METHOD, &do_patch_method,
 		                               new_method, old_method);
 	}
 	return result;
@@ -1825,7 +1825,7 @@ Dee_membercache_patchinstancemethod(struct Dee_membercache *self, DeeTypeObject 
 	if (result > 0) {
 		/* Entry already exists (try to patch it) */
 		result = Dee_membercache_patch(self, decl, new_method->m_name, hash,
-		                               MEMBERCACHE_INSTANCE_METHOD, &do_patch_method,
+		                               Dee_MEMBERCACHE_INSTANCE_METHOD, &do_patch_method,
 		                               new_method, old_method);
 	}
 	return result;
@@ -1871,7 +1871,7 @@ Dee_membercache_patchgetset(struct Dee_membercache *self, DeeTypeObject *decl, D
 	if (result > 0) {
 		/* Entry already exists (try to patch it) */
 		result = Dee_membercache_patch(self, decl, new_getset->gs_name, hash,
-		                               MEMBERCACHE_GETSET, &do_patch_getset,
+		                               Dee_MEMBERCACHE_GETSET, &do_patch_getset,
 		                               new_getset, old_getset);
 	}
 	return result;
@@ -1891,7 +1891,7 @@ Dee_membercache_patchinstancegetset(struct Dee_membercache *self, DeeTypeObject 
 	if (result > 0) {
 		/* Entry already exists (try to patch it) */
 		result = Dee_membercache_patch(self, decl, new_getset->gs_name, hash,
-		                               MEMBERCACHE_INSTANCE_GETSET, &do_patch_getset,
+		                               Dee_MEMBERCACHE_INSTANCE_GETSET, &do_patch_getset,
 		                               new_getset, old_getset);
 	}
 	return result;

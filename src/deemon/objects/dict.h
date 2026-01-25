@@ -68,48 +68,48 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 /*DFUNDEF NONNULL((1)) void DCALL Dee_dict_sethidx8(void *__restrict htab, size_t index, size_t value);*/
 INTDEF NONNULL((1)) void DCALL Dee_dict_movhidx8(void *__restrict dst, void const *__restrict src, size_t n_words);
 
-#if DEE_DICT_HIDXIO_COUNT >= 2
+#if Dee_DICT_HIDXIO_COUNT >= 2
 INTDEF WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx16(void const *__restrict htab, size_t index);
 INTDEF NONNULL((1)) void DCALL Dee_dict_sethidx16(void *__restrict htab, size_t index, size_t value);
 INTDEF NONNULL((1)) void DCALL Dee_dict_movhidx16(void *__restrict dst, void const *__restrict src, size_t n_words);
 #define Dee_dict_uprhidx8_PTR &Dee_dict_uprhidx8
 INTDEF NONNULL((1)) void DCALL Dee_dict_uprhidx8(void *__restrict dst, void const *__restrict src, size_t n_words);
 INTDEF NONNULL((1)) void DCALL Dee_dict_dwnhidx16(void *__restrict dst, void const *__restrict src, size_t n_words);
-#endif /* DEE_DICT_HIDXIO_COUNT >= 2 */
+#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
 
-#if DEE_DICT_HIDXIO_COUNT >= 3
+#if Dee_DICT_HIDXIO_COUNT >= 3
 INTDEF WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx32(void const *__restrict htab, size_t index);
 INTDEF NONNULL((1)) void DCALL Dee_dict_sethidx32(void *__restrict htab, size_t index, size_t value);
 INTDEF NONNULL((1)) void DCALL Dee_dict_movhidx32(void *__restrict dst, void const *__restrict src, size_t n_words);
 #define Dee_dict_uprhidx16_PTR &Dee_dict_uprhidx16
 INTDEF NONNULL((1)) void DCALL Dee_dict_uprhidx16(void *__restrict dst, void const *__restrict src, size_t n_words);
 INTDEF NONNULL((1)) void DCALL Dee_dict_dwnhidx32(void *__restrict dst, void const *__restrict src, size_t n_words);
-#endif /* DEE_DICT_HIDXIO_COUNT >= 3 */
+#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
 
-#if DEE_DICT_HIDXIO_COUNT >= 4
+#if Dee_DICT_HIDXIO_COUNT >= 4
 INTDEF WUNUSED NONNULL((1)) size_t DCALL Dee_dict_gethidx64(void const *__restrict htab, size_t index);
 INTDEF NONNULL((1)) void DCALL Dee_dict_sethidx64(void *__restrict htab, size_t index, size_t value);
 INTDEF NONNULL((1)) void DCALL Dee_dict_movhidx64(void *__restrict dst, void const *__restrict src, size_t n_words);
 #define Dee_dict_uprhidx32_PTR &Dee_dict_uprhidx32
 INTDEF NONNULL((1)) void DCALL Dee_dict_uprhidx32(void *__restrict dst, void const *__restrict src, size_t n_words);
 INTDEF NONNULL((1)) void DCALL Dee_dict_dwnhidx64(void *__restrict dst, void const *__restrict src, size_t n_words);
-#endif /* DEE_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
 
-#if DEE_DICT_HIDXIO_COUNT >= 2
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_2(...) __VA_ARGS__
-#else /* DEE_DICT_HIDXIO_COUNT >= 2 */
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_2(...) /* nothing */
-#endif /* DEE_DICT_HIDXIO_COUNT < 2 */
-#if DEE_DICT_HIDXIO_COUNT >= 3
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_3(...) __VA_ARGS__
-#else /* DEE_DICT_HIDXIO_COUNT >= 3 */
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_3(...) /* nothing */
-#endif /* DEE_DICT_HIDXIO_COUNT < 3 */
-#if DEE_DICT_HIDXIO_COUNT >= 4
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_4(...) __VA_ARGS__
-#else /* DEE_DICT_HIDXIO_COUNT >= 4 */
-#define IF_DEE_DICT_HIDXIO_COUNT_GE_4(...) /* nothing */
-#endif /* DEE_DICT_HIDXIO_COUNT < 4 */
+#if Dee_DICT_HIDXIO_COUNT >= 2
+#define IF_Dee_DICT_HIDXIO_COUNT_GE_2(...) __VA_ARGS__
+#else /* Dee_DICT_HIDXIO_COUNT >= 2 */
+#define IF_Dee_DICT_HIDXIO_COUNT_GE_2(...) /* nothing */
+#endif /* Dee_DICT_HIDXIO_COUNT < 2 */
+#if Dee_DICT_HIDXIO_COUNT >= 3
+#define IF_Dee_DICT_HIDXIO_COUNT_GE_3(...) __VA_ARGS__
+#else /* Dee_DICT_HIDXIO_COUNT >= 3 */
+#define IF_Dee_DICT_HIDXIO_COUNT_GE_3(...) /* nothing */
+#endif /* Dee_DICT_HIDXIO_COUNT < 3 */
+#if Dee_DICT_HIDXIO_COUNT >= 4
+#define IF_Dee_DICT_HIDXIO_COUNT_GE_4(...) __VA_ARGS__
+#else /* Dee_DICT_HIDXIO_COUNT >= 4 */
+#define IF_Dee_DICT_HIDXIO_COUNT_GE_4(...) /* nothing */
+#endif /* Dee_DICT_HIDXIO_COUNT < 4 */
 
 
 /* This right here encodes our target ratio of used vs. unused hash indices.
@@ -276,7 +276,7 @@ dict_tiny_hmask_from_count(size_t num_item) {
 }
 
 #define dict_sizeoftabs_from_hmask_and_valloc(hmask, valloc) \
-	dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, DEE_DICT_HIDXIO_FROMALLOC(valloc))
+	dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, Dee_DICT_HIDXIO_FROMALLOC(valloc))
 LOCAL ATTR_CONST size_t DCALL
 dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(size_t hmask, size_t valloc, shift_t hidxio) {
 	size_t result, hmask_size;
@@ -433,9 +433,9 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 #define _RoDict_Free(p)               DeeObject_Free(p)
 
 #define _RoDict_SizeOf(valloc, hmask) \
-	_RoDict_SizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
+	_RoDict_SizeOf3(valloc, hmask, Dee_DICT_HIDXIO_FROMALLOC(valloc))
 #define _RoDict_SafeSizeOf(valloc, hmask) \
-	_RoDict_SafeSizeOf3(valloc, hmask, DEE_DICT_HIDXIO_FROMALLOC(valloc))
+	_RoDict_SafeSizeOf3(valloc, hmask, Dee_DICT_HIDXIO_FROMALLOC(valloc))
 #define _RoDict_SizeOf3(valloc, hmask, hidxio)           \
 	(offsetof(DeeRoDictObject, rd_vtab) +                \
 	 ((size_t)(valloc) * sizeof(struct Dee_dict_item)) + \

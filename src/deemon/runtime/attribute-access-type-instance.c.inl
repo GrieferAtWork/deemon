@@ -384,7 +384,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 			if (retval != LOCAL_ATTR_NOT_FOUND_RESULT)
 				goto done;
 #else /* LOCAL_IS_FIND */
-			struct class_attribute *cattr;
+			struct Dee_class_attribute *cattr;
 			cattr = LOCAL_DeeType_QueryInstanceAttribute(self, iter);
 			if (cattr != NULL) {
 #ifdef LOCAL_IS_HAS

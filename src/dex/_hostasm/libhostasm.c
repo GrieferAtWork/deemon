@@ -99,10 +99,10 @@ PRIVATE DEFINE_CMETHOD(test_throw_o, &test_throw, METHOD_FNORMAL);
 
 DEX_BEGIN
 #ifdef CONFIG_HAVE_LIBHOSTASM
-DEX_MEMBER_F("test_compile_and_run", &test_compile_and_run_o, MODSYM_FREADONLY,
+DEX_MEMBER_F("test_compile_and_run", &test_compile_and_run_o, Dee_DEXSYM_READONLY,
              "(func:?DFunction,args=!T0)->"),
 #ifdef HAVE_test_throw
-DEX_MEMBER_F("test_throw", &test_throw_o, MODSYM_FREADONLY, "()"),
+DEX_MEMBER_F("test_throw", &test_throw_o, Dee_DEXSYM_READONLY, "()"),
 #endif /* HAVE_test_throw */
 #else /* CONFIG_HAVE_LIBHOSTASM */
 DEX_MEMBER_NODOC("__dummy__", Dee_None),

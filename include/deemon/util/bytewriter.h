@@ -18,6 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export **/
+/*!export Dee_bytewriter_**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_UTIL_BYTEWRITER_H
 #define GUARD_DEEMON_UTIL_BYTEWRITER_H 1 /*!export -*/
 
@@ -25,26 +27,13 @@
 
 #include <hybrid/typecore.h> /* __UINT64_TYPE__ */
 
-#include "../alloc.h"  /* Dee_*alloc*, Dee_Free */
+#include "../alloc.h" /* Dee_*alloc*, Dee_Free */
 #include "../object.h"
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
-
-#ifdef DEE_SOURCE
-#define Dee_bytewriter   bytewriter /*!export bytewriter*/
-#define BYTEWRITER_INIT  DEE_BYTEWRITER_INIT
-#define bytewriter_init  Dee_bytewriter_init
-#define bytewriter_cinit Dee_bytewriter_cinit
-#define bytewriter_putb  Dee_bytewriter_putb
-#define bytewriter_putw  Dee_bytewriter_putw
-#define bytewriter_putl  Dee_bytewriter_putl
-#define bytewriter_putq  Dee_bytewriter_putq
-#define bytewriter_alloc Dee_bytewriter_alloc
-#define bytewriter_flush Dee_bytewriter_flush
-#endif /* DEE_SOURCE */
 
 struct Dee_bytewriter {
 	uint8_t *bw_base;  /* [0..1][owned] Base address. */
@@ -111,7 +100,7 @@ err:
 
 
 /* Append a single byte/word/dword or qword, returning -1 on error and 0 on success */
-#define DEE_DEFINE_BYTEWRITER_PUTX(name, T, x)                  \
+#define _Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(name, T, x)         \
 	LOCAL WUNUSED NONNULL((1)) int                              \
 	(DCALL name)(struct Dee_bytewriter *__restrict self, T x) { \
 		T *buf;                                                 \
@@ -123,13 +112,13 @@ err:
 	err:                                                        \
 		return -1;                                              \
 	}
-DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putb, uint8_t, byte)
-DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putw, uint16_t, word)
-DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putl, uint32_t, dword)
+_Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putb, uint8_t, byte)
+_Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putw, uint16_t, word)
+_Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putl, uint32_t, dword)
 #ifdef __UINT64_TYPE__
-DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putq, __UINT64_TYPE__, qword)
+_Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putq, __UINT64_TYPE__, qword)
 #endif /* __UINT64_TYPE__ */
-#undef DEE_DEFINE_BYTEWRITER_PUTX
+#undef _Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
