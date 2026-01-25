@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc, _Dee_MallococBufsize */
-#include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
+#include <deemon/alloc.h> /* DeeObject_MALLOC, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc, _Dee_MallococBufsize */
+#include <deemon/arg.h>   /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
 #include <deemon/code.h>
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>
@@ -34,11 +34,12 @@
 #include <deemon/seq.h>
 #include <deemon/serial.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>    /* memcpy(), ... */
+#include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
-#include <deemon/util/atomic.h>        /* atomic_* */
-#include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */
+#include <deemon/tuple.h>
+#include <deemon/util/atomic.h> /* atomic_* */
+#include <deemon/util/lock.h>   /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */
 
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
@@ -140,7 +141,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 				}
 			}
 		}
-		Dee_XIncref(dst->cf_vargs);
+		Dee_XIncref((DeeTupleObject *)dst->cf_vargs);
 		if (ITER_ISOK(dst->cf_result))
 			Dee_Incref(dst->cf_result);
 

@@ -3788,7 +3788,6 @@ type_new_extended(DeeTypeObject *self, DeeObject *initializer) {
 	int temp;
 	DREF DeeObject *init_fields, *init_args, *init_kw;
 	DeeTypeObject *first_base, *iter;
-	ASSERT(self);
 	if unlikely(self->tp_flags & TP_FVARIABLE) {
 		err_init_var_type(self);
 		goto err;
