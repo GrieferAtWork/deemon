@@ -1294,6 +1294,19 @@ class SrcIncludeGroup {
 
 global FixIncludes;
 
+class FixConfig {
+	this = default;
+
+	@@Configure how missing includes should be generated. Possible values:
+	@@ - @"shortest": Use either `<foo.h>` or `"foo.h"`, which-ever is shorter.
+	@@   When both are equal-sized, prefer `"foo.h"`
+	@@ - @"relative": Always use `"foo.h"`, except when impossible
+	@@ - @"system": Always use `<foo.h>`, except when impossible
+	@@ - @"relativeIfNoUpRefs": Always use `"foo.h"`, but try not to use `"../foo.h"`
+	@@ - @"shortestButNoUpRefs": Use the shortest, but always use `<foo.h>` over `"../foo.h"`
+	public final member missingIncludeFormat: string = "shortest";
+}
+
 class SrcFileInfo {
 	this = default;
 	public final member filename: string;
@@ -1506,7 +1519,7 @@ next_keyword:;
 		);
 	}
 
-	public fix(fixIncludes: FixIncludes) {
+	public fix(fixIncludes: FixIncludes, config: FixConfig) {
 		local removedIncludes: {string...} = HashSet();
 		local keywordsFromIncludes: {string...} = HashSet();
 		local includedFilenames: {string...} = HashSet();
@@ -1589,10 +1602,44 @@ next_keyword:;
 		);
 		local includeGroups = this.includeGroups;
 		for (local hdr, keywords: missing) {
-			local bestSystemIncludeString: string | none = hdr.shortestInclude;
-			local missingIncludeString: string = bestSystemIncludeString !is none
-				? f"<{bestSystemIncludeString}>"
-				: f'"{posix.relpath(hdr.filename, posix.headof(filename))}"';
+			local systemIncludeString: string | none = hdr.shortestInclude;
+			if (systemIncludeString !is none)
+				systemIncludeString = f"<{systemIncludeString}>";
+			local relativeIncludePath: string | none = hdr.filename !is none
+				? posix.relpath(hdr.filename, posix.headof(filename)).replace(posix.FS_SEP, "/")
+				: none;
+			if (relativeIncludePath !is none)
+				relativeIncludePath = f'"{relativeIncludePath}"';
+			local missingIncludeString: string;
+			if (relativeIncludePath is none) {
+				missingIncludeString = systemIncludeString;
+			} else if (systemIncludeString is none) {
+				missingIncludeString = relativeIncludePath;
+			} else {
+				switch (config.missingIncludeFormat) {
+				case "shortest":
+					missingIncludeString = {systemIncludeString, relativeIncludePath} < ...;
+					break;
+				case "shortestButNoUpRefs":
+					missingIncludeString = !relativeIncludePath.startswith("../")
+						? ({systemIncludeString, relativeIncludePath} < ...)
+						: systemIncludeString;
+					break;
+				case "relative":
+					missingIncludeString = relativeIncludePath;
+					break;
+				case "system":
+					missingIncludeString = systemIncludeString;
+					break;
+				case "relativeIfNoUpRefs":
+					missingIncludeString = relativeIncludePath.startswith("../")
+						? systemIncludeString
+						: relativeIncludePath;
+					break;
+				default:
+					throw Error(f"Bad value for 'missingIncludeFormat': {repr config.missingIncludeFormat}");
+				}
+			}
 			local comment: string | none = none;
 			if (!hdr.noIncludeComments) {
 				keywords = HashSet(keywords);
@@ -2098,8 +2145,10 @@ class FixIncludes {
 
 
 	@@Fix `#include`-s in @filename based on information loaded into @this @FixIncludes
-	public fixFile(filename: string): FixIncludes {
-		loadSrcFileInfo(filename).fix(this);
+	public fixFile(filename: string, config: FixConfig | none = none): FixIncludes {
+		if (config is none)
+			config = FixConfig();
+		loadSrcFileInfo(filename).fix(this, config);
 		return this;
 	}
 
@@ -2109,6 +2158,7 @@ class FixIncludes {
 		exclude: {string...},
 		pool: ThreadPool,
 		fixTasks: {string: Task},
+		config: FixConfig,
 	) {
 		for (local ent: posix.opendir(absPath)) {
 			local name = ent.d_name;
@@ -2120,12 +2170,12 @@ class FixIncludes {
 					if (absName !in fixTasks) {
 						fixTasks[absName] = pool.run(() -> {
 							printStderr(f"Checking {repr absName}...");
-							fixFile(absName);
+							fixFile(absName, config);
 						});
 					}
 				}
 			} else if (ent.d_type == posix.DT_DIR) {
-				doFixPath(absName, exclude, pool, fixTasks);
+				doFixPath(absName, exclude, pool, fixTasks, config);
 			}
 		}
 	}
@@ -2134,13 +2184,16 @@ class FixIncludes {
 	public fixPaths(
 		include: {string...},
 		exclude: {string...},
+		config: FixConfig | none = none,
 	): FixIncludes {
+		if (config is none)
+			config = FixConfig();
 		local pool = ThreadPool();
 		local fixTasks: {string: Task} = Dict();
 		exclude = Set.frozen(for (local xp: exclude) posix.resolvepath(posix.abspath(xp)));
 		for (local path: include.sorted()) {
 			path = posix.resolvepath(posix.abspath(path));
-			doFixPath(path, exclude, pool, fixTasks);
+			doFixPath(path, exclude, pool, fixTasks, config);
 		}
 		pool.waitfor();
 		for (local task: fixTasks.values)

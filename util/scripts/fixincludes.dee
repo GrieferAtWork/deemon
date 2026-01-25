@@ -52,7 +52,9 @@ function main() {
 			f"{ROOTDIR}/src/deemon/method-hints",
 			f"{ROOTDIR}/src/dex/hashlib/algorithms",
 			f"{ROOTDIR}/src/dex/_hostasm/libgen86",
-		})
+		}, config: fixincludes.FixConfig(
+			missingIncludeFormat: "shortestButNoUpRefs"
+		))
 #endif
 		;
 }
