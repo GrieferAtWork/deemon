@@ -29,7 +29,7 @@
 #include "../int.h"             /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
 #include "../object.h"
 #include "../system-features.h" /* ceil, floor, isgreater, isgreaterequal, isless, islessequal, islessgreater, isnormal, isunordered, nextafter, pow, round, strlen, trunc */
-#include "../types.h"           /* DREF, DeeObject, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, _Dee_HashSelectC */
+#include "../types.h"           /* DREF, DeeObject, Dee_[u]int128_t, Dee_ssize_t, _Dee_HashSelectC */
 #include "numeric.h"
 #include "object.h"
 

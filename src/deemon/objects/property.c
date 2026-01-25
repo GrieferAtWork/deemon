@@ -33,7 +33,7 @@
 #include <deemon/module.h>             /* DeeModuleObject */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
+#include <deemon/property.h>           /* DeePropertyObject */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
 

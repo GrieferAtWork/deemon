@@ -27,7 +27,7 @@
 #include <deemon/bool.h>            /* return_bool, return_false, return_true */
 #include <deemon/error-rt.h>        /* DeeRT_ErrTUnboundAttr */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/file.h>            /* DeeFSFile_Type, DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystemFile_Type, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPEN_F* */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPEN_F* */
 #include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewUIntptr */

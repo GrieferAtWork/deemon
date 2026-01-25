@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Callocc, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPx16 */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
-#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstanceMember_Type, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
 #include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_code_frame */
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */

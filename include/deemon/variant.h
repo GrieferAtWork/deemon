@@ -32,7 +32,7 @@
 #include <hybrid/typecore.h>    /* __ALIGNOF_*__, __BYTE_TYPE__, __SIZEOF_*__, __UINTPTR_TYPE__ */
 
 #include "object.h"
-#include "types.h"       /* DREF, DeeObject, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include "types.h"       /* DREF, DeeObject, DeeTypeObject, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 #include "util/atomic.h" /* Dee_atomic_read */
 
 #include <stdbool.h> /* bool */

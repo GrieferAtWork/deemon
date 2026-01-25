@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_*, Dee_appexit_object, Dee_threadexit_object, ERROR_HANDLED_NORMAL */
-#include <deemon/error_types.h>        /* DeeError_*_instance, DeeNoMemoryErrorObject, DeeSignalObject, DeeSystemErrorObject */
+#include <deemon/error_types.h>        /* DeeNoMemoryErrorObject, DeeSignalObject, DeeSystemErrorObject */
 #include <deemon/exec.h>               /* Dee_AtExit, Dee_RUNATEXIT_FDONTRUN, Dee_RunAtExit */
 #include <deemon/format.h>             /* DeeFormat_*, Dee_snprintf */
 #include <deemon/module.h>             /* DeeModule_CallExternStringf */

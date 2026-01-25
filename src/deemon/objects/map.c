@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_TypeError */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/kwds.h>               /* DeeKwArgs* */
-#include <deemon/map.h>                /* DeeMapping_EmptyInstance, DeeMapping_Type */
+#include <deemon/map.h>                /*  */
 #include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_map_frozen_t, DeeMH_map_iterkeys_t, DeeMH_map_itervalues_t, DeeMH_map_keys_t, DeeMH_map_operator_iter_t, DeeMH_map_values_t, DeeObject_InvokeMethodHint, DeeType_HasTrait, DeeType_RequireMethodHint, DeeType_TRAIT___map_getitem_always_bound__ */
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/none.h>               /* DeeNone_Type, Dee_None */

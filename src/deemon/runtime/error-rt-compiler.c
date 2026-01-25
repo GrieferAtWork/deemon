@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
-#include <deemon/error.h>              /* DeeErrorObject, DeeError_* */
+#include <deemon/error.h>              /* DeeErrorObject, DeeError_Error, DeeError_NOTIMPLEMENTED */
 #include <deemon/error_types.h>        /* DeeCompilerErrorObject, DeeCompilerError_Print, Dee_compiler_error_loc */
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>     /* DeeNO_print_t */

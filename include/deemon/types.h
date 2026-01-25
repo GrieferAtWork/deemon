@@ -22,6 +22,8 @@
 /*!export Dee_SIZEOF_**/
 /*!export Dee_weakref_support_**/
 /*!export -_Dee_PRIVATE_**/
+/*!fixincludes regex keep_default_groups*/
+/*!fixincludes regex group "Dee_u?int128_t" "Dee_[u]int128_t" 2*/
 #ifndef GUARD_DEEMON_TYPES_H
 #define GUARD_DEEMON_TYPES_H 1 /*!export-*/
 

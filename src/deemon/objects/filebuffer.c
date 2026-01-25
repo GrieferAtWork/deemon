@@ -26,7 +26,7 @@
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE, ERROR_PRINT_HANDLEINTR */
-#include <deemon/file.h>            /* DeeFileBuffer_Type, DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_stdio_FILE, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_GETSET, Dee_ioflag_t, GETC_EOF, GETC_ERR */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_stdio_FILE, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_GETSET, Dee_ioflag_t, GETC_EOF, GETC_ERR */
 #include <deemon/filetypes.h>       /* DeeFileBufferObject, DeeFileBuffer_*, Dee_FILE_BUFFER_F*, Dee_FILE_BUFFER_MODE_*, Dee_FILE_BUFSIZ_MAX, Dee_FILE_BUFSIZ_MIN, Dee_file_buffer_object */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/none.h>            /* return_none */

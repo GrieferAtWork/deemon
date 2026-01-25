@@ -27,7 +27,7 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/method-hints.h>    /* DeeType_*MethodHint*, Dee_tmh_id */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>  /* DeeType_GetNativeOperatorOOM, DeeType_GetNativeOperatorUnsupported, DeeType_GetOperatorOfTno, Dee_compact_tno_id_t, Dee_tno_id, _DeeType_GetOperatorOfTno, _DeeType_GetTnoOfOperator, usrtype__* */
+#include <deemon/operator-hints.h>  /* DeeType_GetNativeOperatorOOM, DeeType_GetNativeOperatorUnsupported, DeeType_GetOperatorOfTno, Dee_compact_tno_id_t, Dee_tno_id, usrtype__* */
 #include <deemon/seq.h>             /* DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/system-features.h> /* memcpyc, memmovedownc, memset */
 #include <deemon/util/atomic.h>     /* atomic_* */

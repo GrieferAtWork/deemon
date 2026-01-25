@@ -30,7 +30,7 @@
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* bcmp, memcmp, memcpy, strcmp, strlen */
 #include <deemon/system.h>          /* DeeSystem_IsStaticPointer */
-#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_write, atomic_xch */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_*, _Dee_variant_* */
 

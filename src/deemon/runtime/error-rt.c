@@ -44,7 +44,7 @@
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATED, Dee_except_frame */
 #include <deemon/traceback.h>          /* DeeTracebackObject, DeeTraceback_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/variant.h>            /* Dee_variant, Dee_variant_* */
 

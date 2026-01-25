@@ -36,7 +36,7 @@
 #include <deemon/none.h>               /* return_none */
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeNO_nextpair_t, DeeType_RequireNativeOperator, maketyped__getattr */
-#include <deemon/seq.h>                /* DeeIterator_EmptyInstance, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
+#include <deemon/seq.h>                /* DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 

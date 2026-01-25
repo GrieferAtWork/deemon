@@ -92,7 +92,7 @@
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/dex.h>     /* DeeDexObject, DeeDex_New, Dee_DEXSYM_PROPERTY, Dee_DEXSYM_READONLY, Dee_dex_symbol, Dee_module_dexdata, _Dee_MODULE_DEXDATA_INIT_BUILDID, _Dee_MODULE_DEXDATA_INIT_BUILDTS, dex_load_handle */
-#include <deemon/exec.h>    /* DeeExec_CompileModuleStream_impl, DeeExec_RUNMODE_*, DeeModule_GetPath, DeeModule_Path */
+#include <deemon/exec.h>    /* DeeExec_CompileModuleStream_impl, DeeExec_RUNMODE_*, DeeModule_GetPath */
 #include <deemon/file.h>    /* DeeFile_*, OPEN_F* */
 #include <deemon/mapfile.h> /* DeeMapFile* */
 

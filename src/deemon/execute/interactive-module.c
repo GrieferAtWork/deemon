@@ -32,7 +32,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack */
-#include <deemon/module.h>             /* DeeInteractiveModule_Type, DeeModuleObject, DeeModule_Type, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
+#include <deemon/module.h>             /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* bzero*, memcpy*, memmoveupc, memset */

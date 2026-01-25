@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type, DeeEnumAttr* */
+#include <deemon/attribute.h>          /* DeeAttributeObject, DeeEnumAttrIteratorObject, DeeEnumAttrObject */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_* */

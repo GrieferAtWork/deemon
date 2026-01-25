@@ -29,7 +29,7 @@
 #include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, DeeFloatObject, DeeFloat_New, DeeFloat_Type */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_* */
 #include <deemon/none-operator.h>      /* DeeNone_* */
-#include <deemon/numeric.h>            /* DeeNumeric_Type */
+#include <deemon/numeric.h>            /*  */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, isgreater, isgreaterequal, isless, islessequal, islessgreater */

@@ -29,7 +29,7 @@
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
-#include <deemon/file.h>               /* DeeFileBuffer_Type, DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeObject_AsFd, DeeSystemFile_*, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_*, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_SEEK, FILE_OPERATOR_UNGETC, GETC_EOF, GETC_ERR, OPEN_F* */
+#include <deemon/file.h>               /* DeeFileBuffer_Type, DeeFileObject, DeeFileTypeObject, DeeFileType_Check, DeeFileType_CheckExact, DeeFile_*, DeeObject_AsFd, DeeSystemFile_*, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_*, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_SEEK, FILE_OPERATOR_UNGETC, GETC_EOF, GETC_ERR, OPEN_F* */
 #include <deemon/filetypes.h>          /* DeeFileBuffer_New, DeeFileReader_Type, DeeFileWriter_Type, DeeSystemFileObject, DeeSystemFile_GetHandle, Dee_FILE_BUFFER_FREADONLY, Dee_FILE_BUFFER_MODE_AUTO */
 #include <deemon/format.h>             /* DeeFormat_VPrintf, PRFuSIZ, PRFx32 */
 #include <deemon/int.h>                /* DeeInt_* */

@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>             /* DeeArg_UnpackStruct2, DeeArg_UnpackStructKw */
 #include <deemon/callable.h>        /* DeeCallable_Type */
-#include <deemon/module.h>          /* DeeBuiltin_Import, DeeBuiltin_ImportType, DeeModule*, Dee_MODULE_FABSFILE */
+#include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FABSFILE */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FIGNORE */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8 */

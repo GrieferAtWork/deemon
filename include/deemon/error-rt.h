@@ -27,7 +27,7 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 
-#include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_[u]int128_t, Dee_ssize_t */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

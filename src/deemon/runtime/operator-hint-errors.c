@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* Dee_BadAlloc */
 #include <deemon/computed-operators.h>
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>     /* _DeeType_GetNativeOperatorOOM, _DeeType_GetNativeOperatorUnsupported */
+#include <deemon/operator-hints.h>     /*  */
 /**/
 
 #include "operator-hint-errors.h"

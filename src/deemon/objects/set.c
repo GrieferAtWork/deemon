@@ -32,7 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_SEQCLASS_SET */
-#include <deemon/set.h>                /* DeeSet_EmptyInstance, DeeSet_Type */
+#include <deemon/set.h>                /*  */
 #include <deemon/string.h>             /* DeeString_STR */
 
 #include "../runtime/method-hint-defaults.h"

@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/dex.h>    /* DeeDexObject, DeeDex_Check, DeeDex_Type, Dee_dex, Dee_dex_symbol */
+#include <deemon/dex.h>    /* DeeDexObject, DeeDex_Check, Dee_dex, Dee_dex_symbol */
 #include <deemon/module.h> /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_FDIDLOAD, Dee_MODULE_HASHNX, Dee_module_symbol */
 #include <deemon/object.h>
 

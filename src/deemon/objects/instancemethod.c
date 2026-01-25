@@ -30,7 +30,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */
-#include <deemon/instancemethod.h>     /* DeeInstanceMethodObject, DeeInstanceMethod_Type */
+#include <deemon/instancemethod.h>     /* DeeInstanceMethodObject */
 #include <deemon/none.h>               /* DeeNone_Singleton, return_none */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeString_STR */

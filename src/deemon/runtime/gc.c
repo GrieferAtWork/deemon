@@ -31,7 +31,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/exec.h>               /*  */
 #include <deemon/format.h>             /* PRFuSIZ */
-#include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton, DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_gc_head */
+#include <deemon/gc.h>                 /* DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_gc_head */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/module.h>             /* DeeModule* */
 #include <deemon/object.h>

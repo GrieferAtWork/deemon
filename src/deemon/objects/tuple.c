@@ -38,7 +38,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_Newf, DeeString_STR, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* bzeroc, memcpy*, mempcpyc, memset */
-#include <deemon/tuple.h>              /* DeeNullableTuple*, DeeTuple*, Dee_EmptyTuple, Dee_empty_tuple_struct, Dee_nullable_tuple_builder, Dee_nullable_tuple_builder_alloc, Dee_tuple_builder* */
+#include <deemon/tuple.h>              /* DeeNullableTuple_NewEmpty, DeeTuple*, Dee_EmptyTuple, Dee_empty_tuple_struct, Dee_nullable_tuple_builder, Dee_nullable_tuple_builder_alloc, Dee_tuple_builder* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/host.h>      /* __ARCH_VA_LIST_IS_STACK_POINTER */

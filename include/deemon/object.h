@@ -106,7 +106,7 @@
 #include <hybrid/host.h>      /* __i386__, __pic__, __x86_64__ */
 #include <hybrid/typecore.h>  /* __*_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__, __UINT32_C, __UINT64_C */
 
-#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_OFFSETOF_DATA, Dee_REQUIRES_OBJECT, Dee_SIZEOF_HASH_T, Dee_SIZEOF_REFCNT_T, Dee_TYPE, Dee_WEAKREF_SUPPORT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_int128_t, Dee_refcnt_t, Dee_ssize_t, Dee_uint128_t, Dee_unlockinfo */
+#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_OFFSETOF_DATA, Dee_REQUIRES_OBJECT, Dee_SIZEOF_HASH_T, Dee_SIZEOF_REFCNT_T, Dee_TYPE, Dee_WEAKREF_SUPPORT, Dee_[u]int128_t, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t, Dee_unlockinfo */
 #include "util/lock.h" /* Dee_atomic_lock_t, Dee_atomic_rwlock_t */
 
 #include <stdarg.h>  /* va_list */

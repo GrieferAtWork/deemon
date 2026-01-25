@@ -31,9 +31,9 @@
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
-#include <deemon/struct.h>          /* DeeStructObject_Cmp, Dee_struct_object_foreach_field_cb_t, Dee_struct_object_foreach_field_undo_t */
+#include <deemon/struct.h>          /* Dee_struct_object_foreach_field_cb_t, Dee_struct_object_foreach_field_undo_t */
 #include <deemon/system-features.h> /* bzero, memcpy */
-#include <deemon/types.h>           /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK */
+#include <deemon/types.h>           /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 
