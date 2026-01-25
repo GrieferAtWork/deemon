@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/string.h> /* DeeUni_*, Dee_UNICODE_FOLDED_MAX, Dee_UNICODE_IS*, Dee_uniflag_t, Dee_unitraits, _DeeAscii_* */
+#include <deemon/string.h> /* Dee_UNICODE_FOLDED_MAX, Dee_UNICODE_IS*, Dee_uniflag_t, Dee_unitraits, _DeeAscii_* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/typecore.h>  /* __CHAR32_TYPE__ */

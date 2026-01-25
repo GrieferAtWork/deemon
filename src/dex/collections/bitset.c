@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_BadArgcEx, DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
+#include <deemon/arg.h>             /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
 #include <deemon/bool.h>            /* DeeBool_Check, DeeBool_IsTrue, return_bool, return_false, return_true */
 #include <deemon/bytes.h>           /* DeeBytes* */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrIndexOverflow */
@@ -43,8 +43,8 @@
 #include <deemon/system-features.h> /* memcpy* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
-#include <hybrid/__atomic.h>  /* __hybrid_bitset_atomic_*, bitset_atomic_* */
-#include <hybrid/__bitset.h>  /* __hybrid_bitset_* */
+#include <hybrid/__atomic.h>  /*  */
+#include <hybrid/__bitset.h>  /*  */
 #include <hybrid/bitset.h>    /* BITSET_*, _BITSET_*, bitset_* */
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_USUB */

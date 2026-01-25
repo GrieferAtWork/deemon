@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_TRYMALLOC, Dee_BadAlloc */
+#include <deemon/alloc.h>           /* DeeObject_TRYMALLOC */
 #include <deemon/bytes.h>           /* DeeBytes_Check, DeeBytes_SIZE */
-#include <deemon/code.h>            /* DeeCode_*, Dee_DDI_ISOK, Dee_DDI_STATE_*, Dee_code_frame, Dee_code_object, Dee_ddi_*, Dee_operator_t, code_addr_t, instruction_t */
+#include <deemon/code.h>            /* DeeCode_*, Dee_DDI_ISOK, Dee_DDI_STATE_*, Dee_code_frame, Dee_code_object, Dee_ddi_*, code_addr_t, instruction_t */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/error_types.h>     /* DeeError_NoMemory_instance, DeeNoMemoryErrorObject */
 #include <deemon/format.h>          /* DeeFormat_PrintArgumentTypesKw, PRF* */

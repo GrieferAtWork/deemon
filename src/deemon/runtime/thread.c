@@ -37,17 +37,17 @@
 #include <deemon/module.h>             /* DeeModule_GetShortName */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/string.h>             /* DEFINE_STRING, DeeString* */
+#include <deemon/string.h>             /* DeeString* */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8 */
 #include <deemon/system-error.h>       /* DeeSystemError_Pop, DeeSystemError_Push */
-#include <deemon/system-features.h>    /* CLOCK_MONOTONIC, CLOCK_REALTIME, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, abort, bsd_signal, bzero*, clock_gettime, clock_gettime64, fprintf, getpid, gettid, gettimeofday, gettimeofday64, kill, memcpy*, memmovedownc, memmoveupc, memset, nanosleep, nanosleep64, pselect, pthread_create, pthread_detach, pthread_getspecific, pthread_gettid_np, pthread_join, pthread_key_create, pthread_key_delete, pthread_kill, pthread_self, pthread_setspecific, pthread_sigqueue, select, sigaction, signal, stderr, strerror, strlen, syscall, sysv_signal, tgkill, thrd_create, thrd_current, thrd_detach, thrd_join, thrd_nomem, thrd_success, time, time64, tss_create, tss_delete, tss_get, tss_set, useconds_t, usleep */
+#include <deemon/system-features.h>    /* CLOCK_MONOTONIC, CLOCK_REALTIME, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, abort, bsd_signal, bzero*, clock_gettime, clock_gettime64, fprintf, getpid, gettid, gettimeofday, gettimeofday64, kill, memcpy*, memmovedownc, memmoveupc, memset, nanosleep, nanosleep64, pselect, pthread_create, pthread_detach, pthread_getspecific, pthread_gettid_np, pthread_join, pthread_key_create, pthread_key_delete, pthread_kill, pthread_self, pthread_setspecific, pthread_sigqueue, select, sigaction, signal, stderr, strerror, strlen, syscall, sysv_signal, tgkill, thrd_create, thrd_current, thrd_detach, thrd_join, thrd_nomem, thrd_success, time, time64, tss_create, tss_delete, tss_get, tss_set, usleep */
 #include <deemon/system.h>             /* DeeNTSystem_IsBadAllocError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>             /* DeeExec_StackLimit, DeeThreadObject, DeeThread_Accede, DeeThread_AddInterruptHook, DeeThread_CheckExact, DeeThread_CheckInterrupt, DeeThread_CheckInterruptSelf, DeeThread_ClearTls, DeeThread_Detach, DeeThread_FromTid, DeeThread_GetTid, DeeThread_GetTimeMicroSeconds, DeeThread_HasCrashed, DeeThread_HasStarted, DeeThread_HasTerminated, DeeThread_Interrupt, DeeThread_InterruptAndJoinAll, DeeThread_Join, DeeThread_RemoveInterruptHook, DeeThread_Resume, DeeThread_ResumeAll, DeeThread_Secede, DeeThread_Self, DeeThread_Sleep, DeeThread_SleepNoInt, DeeThread_Start, DeeThread_SubSystemFini, DeeThread_SubSystemInit, DeeThread_Suspend, DeeThread_SuspendAll, DeeThread_Trace, DeeThread_Type, DeeThread_WaitFor, DeeThread_Wake, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_DEEPASSOC_HASHIT, Dee_DEEPASSOC_HASHNX, Dee_DEEPASSOC_HASHST, Dee_DeepCopyAddAssoc, Dee_EXEC_DEFAULT_STACK_LIMIT, Dee_THREAD_STATE_DETACHING, Dee_THREAD_STATE_HASTHREAD, Dee_THREAD_STATE_HASTID, Dee_THREAD_STATE_INITIAL, Dee_THREAD_STATE_INTERRUPTED, Dee_THREAD_STATE_INTERRUPTING, Dee_THREAD_STATE_SHUTDOWNINTR, Dee_THREAD_STATE_STARTED, Dee_THREAD_STATE_STARTING, Dee_THREAD_STATE_SUSPENDED, Dee_THREAD_STATE_SUSPENDING, Dee_THREAD_STATE_TERMINATED, Dee_THREAD_STATE_TERMINATING, Dee_THREAD_STATE_UNMANAGED, Dee_THREAD_STATE_WAITING, Dee_deep_assoc_entry, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_object, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free, deepcopy_clear, deepcopy_lookup, except_frame_gettb */
+#include <deemon/thread.h>             /* DeeExec_StackLimit, DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_Type, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_DEEPASSOC_HASHIT, Dee_DEEPASSOC_HASHNX, Dee_DEEPASSOC_HASHST, Dee_THREAD_STATE_DETACHING, Dee_THREAD_STATE_HASTHREAD, Dee_THREAD_STATE_HASTID, Dee_THREAD_STATE_INITIAL, Dee_THREAD_STATE_INTERRUPTED, Dee_THREAD_STATE_INTERRUPTING, Dee_THREAD_STATE_SHUTDOWNINTR, Dee_THREAD_STATE_STARTED, Dee_THREAD_STATE_STARTING, Dee_THREAD_STATE_SUSPENDED, Dee_THREAD_STATE_SUSPENDING, Dee_THREAD_STATE_TERMINATED, Dee_THREAD_STATE_TERMINATING, Dee_THREAD_STATE_UNMANAGED, Dee_THREAD_STATE_WAITING, Dee_deep_assoc_entry, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_object, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
 #include <deemon/traceback.h>          /* DeeTraceback*, Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple, Dee_tuple_object */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_* */
-#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_SHARED_LOCK_INIT, Dee_atomic_lock_init, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_init, Dee_atomic_rwlock_*, Dee_shared_lock_* */
 #include <deemon/util/once.h>          /* Dee_ONCE */
 
 #include <hybrid/debug-alignment.h>  /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -61,7 +61,7 @@
 #include "../runtime/strings.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* UINT16_C, UINT32_C, int64_t, uintN_t, uintptr_t */
 
 #ifdef _WIN32_WCE

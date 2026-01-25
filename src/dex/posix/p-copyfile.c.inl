@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw, UNP* */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/file.h>            /* DeeFile_Filename, DeeFile_Open, DeeSystemFile_Check, DeeSystem_FILE_USE_nt_HANDLE, OPEN_F* */
@@ -39,7 +39,7 @@
 #include <deemon/object.h>          /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, RENAME_NOREPLACE */
 #include <deemon/object.h>
-#include <deemon/objmethod.h> /* DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h> /*  */
 #include <deemon/serial.h>    /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>    /* DeeString_Check, DeeString_IsEmpty */
 

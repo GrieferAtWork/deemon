@@ -34,19 +34,19 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/computed-operators.h>
 #include <deemon/dec.h>                /* DeeDecWriter, DeeDecWriter_*, DeeDec_* */
-#include <deemon/exec.h>               /* DeeExec_* */
+#include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
 #include <deemon/gc.h>                 /* DeeGC_TRACK */
 #include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
 #include <deemon/object.h>
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
 #include <deemon/string.h>             /* DeeString*, Dee_unicode_printer_fini */
 #include <deemon/system-features.h>    /* bzero, memcpy, memset */
-#include <deemon/util/rlock.h>         /* Dee_RSHARED_RWLOCK_INIT, Dee_rshared_rwlock_t */
+#include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_t */
 
 #include <hybrid/typecore.h> /* __REGISTER_TYPE__ */
 
 #include <stdbool.h> /* false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint8_t, uint16_t */
 
 DECL_BEGIN

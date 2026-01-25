@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack1, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>            /* DeeBool_Type, Dee_False, Dee_True, return_false, return_true */
 #include <deemon/bytes.h>           /* DeeBytes* */
 #include <deemon/class.h>           /* DeeClassDesc_QueryInstanceAttribute, DeeClass_DESC, DeeInstance_DESC, DeeInstance_SetAttribute, Dee_class_attribute, Dee_class_desc, Dee_instance_desc */
@@ -40,14 +40,14 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/hashset.h>         /* DeeHashSet_Type */
 #include <deemon/int.h>             /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FNOSEPS */
-#include <deemon/list.h>            /* DeeListObject, DeeList_Type */
+#include <deemon/list.h>            /* DeeListObject, DeeList_Type, Dee_objectlist_packlist */
 #include <deemon/map.h>             /* DeeMapping_Type */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetExtern */
 #include <deemon/mro.h>             /* DeeObject_EnumAttr, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_nameobj, Dee_attrhint */
 #include <deemon/none.h>            /* DeeNone*, Dee_None, return_none */
 #include <deemon/numeric.h>         /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, DeeSharedVector_Decref, DeeSharedVector_NewShared, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */

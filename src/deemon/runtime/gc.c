@@ -29,9 +29,9 @@
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_CODE_FFINALLY, instruction_t */
 #include <deemon/computed-operators.h>
-#include <deemon/exec.h>               /* DeeExec_KillUserCode */
+#include <deemon/exec.h>               /*  */
 #include <deemon/format.h>             /* PRFuSIZ */
-#include <deemon/gc.h>                 /* DeeDbgGCObject_*alloc*, DeeDbgGCObject_Free, DeeGCEnumTracked_Singleton, DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_*, Dee_GC_HEAD_SIZE, Dee_gc_head */
+#include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton, DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_gc_head */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/module.h>             /* DeeModule* */
 #include <deemon/object.h>
@@ -40,7 +40,7 @@
 #include <deemon/system-features.h>    /* bzeroc, link, memcpy*, memmovedownc, memmoveupc, memset */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
-#include <deemon/util/rlock.h>         /* Dee_RSHARED_LOCK_INIT, Dee_rshared_lock_* */
+#include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
@@ -48,8 +48,8 @@
 #include "../objects/gc_inspect.h"
 #include "strings.h"
 
-#include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* UINT32_C, uint16_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES

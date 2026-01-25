@@ -59,7 +59,7 @@
 /**/
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 

@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw, UNPu16, UNPuN */
 #include <deemon/asm.h>                /* ASM_RET_NONE, INSTRLEN_MAX, instruction_t */
 #include <deemon/bool.h>               /* return_false, return_true */
-#include <deemon/code.h>               /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_*, Dee_DEFINE_CODE, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_SIZE, Dee_SIZEOF_CODE_ADDR_T, Dee_TRIGGER_BREAKPOINT_CONTINUE, Dee_code_frame, Dee_code_metrics_init, Dee_except_handler, Dee_function_info, Dee_hostasm_*, Dee_operator_t, code_size_t, instruction_t */
+#include <deemon/code.h>               /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_SIZE, Dee_SIZEOF_CODE_ADDR_T, Dee_TRIGGER_BREAKPOINT_CONTINUE, Dee_code_frame, Dee_code_metrics_init, Dee_except_handler, Dee_function_info, Dee_hostasm_code_init, code_size_t, instruction_t */
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
@@ -39,8 +39,8 @@
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly, DeeSeq_* */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/seq.h>
-#include <deemon/string.h>          /* DEFINE_STRING, DeeString*, Dee_EmptyString */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANONYMOUS, MAP_FILE, MAP_GROWSDOWN, MAP_GROWSUP, MAP_PRIVATE, MAP_STACK, MAP_UNINITIALIZED, O_RDONLY, PROT_READ, PROT_WRITE, bcmp, bcmpc, bzero, close, memcpy*, mempcpyc, memset, mmap, mmap64, munmap, open, strchr, strlen */
+#include <deemon/string.h>          /* DeeString*, Dee_EmptyString */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANONYMOUS, O_RDONLY, bcmp, bcmpc, bzero, close, memcpy*, mempcpyc, memset, mmap64, munmap, open, strchr, strlen */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterruptSelf, DeeThread_FOREACH, DeeThread_ResumeAll, DeeThread_Self, DeeThread_SleepNoInt, DeeThread_SuspendAll */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
@@ -57,7 +57,7 @@
 #include "../runtime/strings.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_PATHS_H

@@ -32,20 +32,19 @@
 #include <deemon/file.h>               /* DeeFileBuffer_Type, DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeObject_AsFd, DeeSystemFile_*, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_*, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_SEEK, FILE_OPERATOR_UNGETC, GETC_EOF, GETC_ERR, OPEN_F* */
 #include <deemon/filetypes.h>          /* DeeFileBuffer_New, DeeFileReader_Type, DeeFileWriter_Type, DeeSystemFileObject, DeeSystemFile_GetHandle, Dee_FILE_BUFFER_FREADONLY, Dee_FILE_BUFFER_MODE_AUTO */
 #include <deemon/format.h>             /* DeeFormat_VPrintf, PRFuSIZ, PRFx32 */
-#include <deemon/int.h>                /* DEFINE_UINT15, DEFINE_UINT32, DeeInt_* */
+#include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/mapfile.h>            /* DeeMapFile* */
 #include <deemon/module.h>             /* DeeModule* */
 #include <deemon/none-operator.h>      /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
 #include <deemon/none.h>               /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>                /* DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutFuncPtr, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen, Dee_unicode_writeutf8 */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, readall, stderr, stdin, stdout, strchr, strend, writeall */
 #include <deemon/util/atomic.h>        /* atomic_read */
-#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <hybrid/host.h>      /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h>    /* MIN */
@@ -59,7 +58,7 @@
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* uintN_t, uintptr_t */
 
 #undef byte_t

@@ -31,7 +31,7 @@
 #include <deemon/asm.h>             /* Dee_instruction_t */
 #include <deemon/bool.h>            /* DeeBool_Check, DeeBool_For, Dee_False, Dee_True */
 #include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClass_*, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endwrite, Dee_class_desc_lock_write, Dee_instance_desc */
-#include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, Dee_CODE_FVARARGS, Dee_CODE_FVARKWDS, Dee_instruction_t, Dee_operator_t */
+#include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, Dee_CODE_FVARARGS, Dee_CODE_FVARKWDS, Dee_instruction_t */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/file.h>            /* DeeFile_GetStd, Dee_STDOUT */
 #include <deemon/format.h>          /* PRFuSIZ */

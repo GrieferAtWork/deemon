@@ -32,14 +32,13 @@
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE*, UNALIGNED_SETLE* */
 #include <hybrid/sequence/list.h> /* SLIST_FOREACH */
-#include <hybrid/typecore.h>      /* __SIZEOF_CHAR__ */
 #include <hybrid/unaligned.h>     /* UNALIGNED_GETLE*, UNALIGNED_SETLE* */
 
 #include "../../runtime/strings.h"
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN, INT32_MAX, INT32_MIN, UINT8_MAX, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN

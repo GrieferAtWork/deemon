@@ -38,7 +38,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, bzeroc, memcpyc, memsetp */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzeroc, memcpyc */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */

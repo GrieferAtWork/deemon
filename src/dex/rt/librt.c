@@ -27,16 +27,16 @@
 #include <deemon/api.h>
 
 #include <deemon/abi/ctypes.h>        /* DeeCTypes_CreateVoidPointer */
-#include <deemon/arg.h>               /* DEFINE_KWLIST, DeeArg_Unpack0Or1X, DeeArg_UnpackStructKw, UNPu16 */
+#include <deemon/arg.h>               /* DeeArg_Unpack0Or1X, DeeArg_UnpackStructKw, UNPu16 */
 #include <deemon/asm.h>               /* ASM_RET_NONE */
 #include <deemon/attribute.h>         /* DeeAttribute_Type, DeeEnumAttrIterator_Type, DeeEnumAttr_Type */
 #include <deemon/bool.h>              /* DeeBool_Type, Dee_False, Dee_True */
-#include <deemon/bytes.h>             /* DeeBytes_Type, Dee_DEFINE_BYTES, Dee_EmptyBytes */
+#include <deemon/bytes.h>             /* DeeBytes_Type, Dee_EmptyBytes */
 #include <deemon/cached-dict.h>       /* DeeCachedDict_Type */
 #include <deemon/callable.h>          /* DeeCallable_Type */
 #include <deemon/cell.h>              /* DeeCell_Type */
 #include <deemon/class.h>             /* DeeClassDescriptor_Type, DeeClass_New, DeeInstanceMember_Type */
-#include <deemon/code.h>              /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING, Dee_DEFINE_CODE, Dee_DEFINE_FUNCTION_NOREFS, Dee_DEFINE_YIELD_FUNCTION_NOARGS */
+#include <deemon/code.h>              /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING */
 #include <deemon/compiler/compiler.h>
 #include <deemon/dex.h>               /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_*, DeeDex_Type */
 #include <deemon/dict.h>              /* DeeDict_Type, Dee_DICT_HTAB_EOF, Dee_DICT_ITEM_INIT, Dee_dict_* */
@@ -58,17 +58,17 @@
 #include <deemon/none.h>              /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
 #include <deemon/numeric.h>           /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>         /* DEFINE_*CMETHOD*, DeeCMethod*_*, DeeClsMember_Type, DeeClsMethod_Type, DeeClsProperty_Type, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethod_Type */
+#include <deemon/objmethod.h>         /* DeeCMethod*_*, DeeClsMember_Type, DeeClsMethod_Type, DeeClsProperty_Type, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethod_Type */
 #include <deemon/property.h>          /* DeeProperty_Type */
 #include <deemon/rodict.h>            /* DeeRoDictObject, DeeRoDict_Type, Dee_EmptyRoDict */
 #include <deemon/roset.h>             /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
 #include <deemon/seq.h>               /* DeeIterator_Type, DeeRange_New, DeeRange_NewInt, DeeRefVector_NewReadonly, DeeSeqOne_Type, DeeSeqSomeObject, DeeSeqSome_Type, DeeSeq_Type, DeeSharedVector_Type, Dee_EmptySeq */
 #include <deemon/set.h>               /* DeeSet_Type, Dee_EmptySet, Dee_UniversalSet */
-#include <deemon/string.h>            /* DEFINE_STRING_EX, DeeStringObject, DeeString_Type, Dee_EmptyString */
+#include <deemon/string.h>            /* DeeStringObject, DeeString_Type, Dee_EmptyString */
 #include <deemon/super.h>             /* DeeSuper_Type */
 #include <deemon/thread.h>            /* DeeExec_StackLimit, DeeThread_Type, Dee_EXEC_DEFAULT_STACK_LIMIT */
 #include <deemon/traceback.h>         /* DeeFrameObject, DeeFrame_Type, DeeTraceback_Type, Dee_FRAME_F* */
-#include <deemon/tuple.h>             /* DEFINE_TUPLE, DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
+#include <deemon/tuple.h>             /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>       /* atomic_* */
 #include <deemon/util/lock.h>         /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_t */
 #include <deemon/util/rlock.h>        /* Dee_RSHARED_RWLOCK_INIT */

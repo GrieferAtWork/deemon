@@ -31,7 +31,7 @@
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeRefVector_New, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSharedVector_*, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSharedVector_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/util/atomic.h>        /* atomic_* */

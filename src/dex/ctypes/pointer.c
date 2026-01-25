@@ -38,7 +38,7 @@
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* CONFIG_HAVE_wcslen, DeeSystem_DEFINE_wcslen, memcpy, memmove, strlen, wcslen */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_wcslen, memcpy, memmove, strlen */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */

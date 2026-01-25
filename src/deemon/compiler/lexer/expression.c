@@ -37,7 +37,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>            /* DeeString_DecodeBackslashEscaped, DeeString_NewSized, DeeUni_IsLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
 #include <deemon/stringutils.h>       /* Dee_unicode_readutf8_n */
-#include <deemon/system-features.h>   /* CONFIG_HAVE_memrchr, DeeSystem_DEFINE_memrchr, memchr, memmoveupc, memrchr */
+#include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, memchr, memmoveupc */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
 
 #include "../../runtime/strings.h"

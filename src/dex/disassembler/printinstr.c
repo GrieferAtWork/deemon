@@ -34,7 +34,7 @@
 #include <deemon/module.h>          /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString_PrintUtf8, DeeString_STR */
-#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, CONFIG_HAVE_strstr, DeeSystem_DEFINE_strcmp, memcmp, strchr, strcmp, strstr */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcmp, strchr */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32 */
 #include <hybrid/limitcore.h> /* __UINT16_MAX__ */
@@ -44,7 +44,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* UINT16_MAX, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
+#include <stdint.h>  /* int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
 

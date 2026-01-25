@@ -25,8 +25,8 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Callocc, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPx16 */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
-#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_*, DeeInstanceMemberObject, DeeInstanceMember_New, DeeInstanceMember_Type, DeeInstance_*, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_*, class_attribute_mayaccess_impl */
-#include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_code_frame, Dee_operator_t */
+#include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstanceMember_Type, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
+#include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_code_frame */
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
@@ -44,7 +44,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_LEN, Dee_EmptyString, Dee_ascii_printer* */
 #include <deemon/super.h>              /* DeeSuper* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, strchr, strcmp, strlen */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, strchr, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_* */

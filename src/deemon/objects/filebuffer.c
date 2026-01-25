@@ -35,7 +35,7 @@
 #include <deemon/string.h>          /* DeeUni_ToLower */
 #include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit, fflush, memchr, memcpy, mempcpy, stpcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
-#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>      /* Dee_rshared_rwlock_init */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
@@ -44,7 +44,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* INT64_MAX, SIZE_MAX, uint16_t, uint32_t */
 

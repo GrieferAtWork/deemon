@@ -28,11 +28,11 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
 #include <deemon/system-features.h> /* AT_REMOVEDIR, AT_REMOVEREG, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, remove, rmdir, rmdirat, unlink, unlinkat, wremove, wrmdir, wunlink */
 #include <deemon/system.h>          /* DeeNTSystem_IsBadAllocError, DeeNTSystem_IsIntr, DeeUnixSystem_GetFD */

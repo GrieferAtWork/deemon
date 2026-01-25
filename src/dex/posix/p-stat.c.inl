@@ -27,9 +27,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/abi/time.h>        /* DECLARE_DeeTime_NewFILETIME, DECLARE_DeeTime_NewUnix */
+#include <deemon/abi/time.h>        /*  */
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack* */
+#include <deemon/arg.h>             /* DeeArg_Unpack* */
 #include <deemon/bool.h>            /* DeeBool_For, DeeBool_NewFalse, Dee_False, return_bool, return_false, return_true */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_* */
@@ -37,8 +37,8 @@
 #include <deemon/format.h>          /* Dee_sprintf */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
-#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, DeeUni_ToLower, Dee_wchar_t, WSTR_LENGTH */
+#include <deemon/objmethod.h>       /*  */
+#include <deemon/string.h>          /* DeeString*, DeeUni_ToLower, Dee_wchar_t, WSTR_LENGTH */
 #include <deemon/system-features.h> /* AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, bzero, clearerr, fclose, ferror, fopen, fopen64, fseek, fseeko, fseeko64, fstat, fstatat, fstatat64, fstat64, ftell, ftello, ftello64, lstat, lstat64, memcasecmp, stat, stat64, strchr, strend, wlstat, wlstat64, wstat, wstat64 */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_IsSep, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */

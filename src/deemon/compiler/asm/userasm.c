@@ -32,7 +32,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/object.h>
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memmovedownc, memmoveupc, memset, strcmp, strlen */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memmovedownc, memmoveupc, memset, strlen */
 #include <deemon/types.h>              /* DREF, DeeObject, Dee_AsObject, Dee_ssize_t, ITER_DONE */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */

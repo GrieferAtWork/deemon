@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_Mallocc, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Try*alloc* */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_* */
@@ -36,17 +36,17 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/notify.h>          /* DeeNotify_Broadcast, Dee_NOTIFICATION_CLASS_ENVIRON */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeIterator_Type */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FREPLAC, STRING_ERROR_FSTRICT */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_IF_E1, ENV_LOCK, ENV_UNLOCK, bcmpc, calloc, clearenv, environ, getenv, memcpyc, memmovedownc, mempcpyc, putenv, putenv_s, setenv, strchr, strend, strlen, unsetenv, wcschr, wcslen, wenviron, wgetenv, wputenv, wputenv_s, wsetenv, wunsetenv */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_IF_E1, ENV_LOCK, ENV_UNLOCK, bcmpc, calloc, clearenv, environ, getenv, memcpyc, memmovedownc, mempcpyc, putenv, putenv_s, setenv, strchr, strend, strlen, unsetenv, wenviron, wgetenv, wputenv, wputenv_s, wsetenv, wunsetenv */
 #include <deemon/system.h>          /* DeeNTSystem_IsBadAllocError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
-#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, offsetof, size_t, wchar_t */
 #include <stdint.h>  /* uint8_t */
 

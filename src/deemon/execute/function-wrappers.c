@@ -37,7 +37,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmpz, DeeSystem_DEFINE_strcmpz, bcmp, memcpy*, memmovedownc, memmoveupc, strcmpz, strlen */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmpz, bcmp, memcpy*, memmovedownc, memmoveupc, strlen */
 #include <deemon/traceback.h>          /* DeeFrame* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_WakeAll */

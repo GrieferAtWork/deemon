@@ -27,12 +27,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/bool.h>            /* return_false, return_true */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_SystemError */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString_AsUtf8, DeeString_AsWide, Dee_wchar_t */
 #include <deemon/system-features.h> /* AT_EACCESS, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, DeeSystem_IF_E2, access, euidaccess, faccessat, waccess */
 #include <deemon/system.h>          /* DeeUnixSystem_ThrowErrorf */

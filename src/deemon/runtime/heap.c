@@ -48,18 +48,18 @@ ClCompile.BasicRuntimeChecks = Default
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#include <deemon/alloc.h>           /* DeeDbg_*, DeeMem_ClearCaches, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Memalign, Dee_TryMemalign */
+#include <deemon/alloc.h>           /* Dee_CollectMemory */
 #include <deemon/format.h>          /* PRF* */
 #include <deemon/gc.h>              /* Dee_gc_head */
-#include <deemon/heap.h>            /* DeeDbgHeap_AddHeapRegion, DeeDbgHeap_DelHeapRegion, DeeHeap_*, Dee_HEAPCHUNK_ALIGN, Dee_HEAP_M_*, Dee_heap_mallinfo, Dee_heapchunk, Dee_heapchunk_getnext, Dee_heapregion, Dee_heapregion_*, Dee_heaptail */
+#include <deemon/heap.h>            /* DeeHeap_*, Dee_HEAPCHUNK_ALIGN, Dee_HEAP_M_*, Dee_heap_mallinfo, Dee_heapchunk, Dee_heapchunk_getnext, Dee_heapregion, Dee_heapregion_*, Dee_heaptail */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_libentry, Dee_module_object, _Dee_MODULE_FNOADDR */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANONYMOUS, MAP_PRIVATE, MREMAP_MAYMOVE, O_RDWR, PROT_READ, PROT_WRITE, bzero, calloc, fprintf, free, getpagesize, malloc, memcpy, mmap, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANONYMOUS, MREMAP_MAYMOVE, O_RDWR, bzero, calloc, fprintf, free, getpagesize, malloc, memcpy, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
 #include <deemon/types.h>           /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t */
 #include <deemon/util/atomic.h>     /* atomic_* */
-#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
-#include <deemon/util/rlock.h>      /* Dee_RATOMIC_LOCK_INIT, Dee_RSHARED_LOCK_INIT, Dee_ratomic_lock_*, Dee_rshared_lock_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/rlock.h>      /* Dee_ratomic_lock_*, Dee_rshared_lock_* */
 
 #include <hybrid/align.h>           /* CEILDIV, IS_ALIGNED */
 #include <hybrid/bit.h>             /* CLZ, CTZ */
@@ -71,8 +71,8 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/typecore.h>        /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* SIZE_MAX, UINT32_C, UINT64_C, uintptr_t */
+#include <stddef.h>  /* offsetof, size_t */
+#include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
 
 #undef Dee_TryMalloc
 #undef Dee_TryCalloc

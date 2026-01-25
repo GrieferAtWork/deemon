@@ -32,7 +32,7 @@
 #include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_FREE, DeeGC_TRACK */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeStringObject, DeeString_STR, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, strcmp, strlen */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, strlen */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

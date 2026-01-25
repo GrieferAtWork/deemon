@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>          /* Dee_Free, Dee_UntrackAlloc */
 #include <deemon/class.h>          /* Dee_CLASS_* */
 #include <deemon/map.h>            /* DeeMapping_Type */
-#include <deemon/method-hints.h>   /* DeeType_*MethodHint*, Dee_tmh_id, type_method_hint */
+#include <deemon/method-hints.h>   /* Dee_tmh_id, type_method_hint */
 #include <deemon/mro.h>            /* DeeObject_TFindPrivateAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo */
 #include <deemon/object.h>
 #include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutDefaults, Dee_tno_id */

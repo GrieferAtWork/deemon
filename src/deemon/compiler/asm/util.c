@@ -40,7 +40,7 @@
 #include <deemon/module.h>             /* DeeModule_GetDeemon, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_* */
 #include <deemon/none.h>               /* DeeNoneObject, DeeNone_Check */
 #include <deemon/object.h>
-#include <deemon/rodict.h>             /* DeeRoDict*, _DeeRoDict_GetRealVTab */
+#include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, Dee_seq_range */
 #include <deemon/string.h>             /* DeeStringObject */

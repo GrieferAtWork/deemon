@@ -36,8 +36,8 @@
 #include <deemon/seq.h>             /* DeeSeq_NewEmpty */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeAscii_ItoaLowerDigit, DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_*, Dee_uniflag_t, WSTR_LENGTH */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memrev, CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memrev, DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, memcasecmp, memchr, memcmp, memcpy*, mempcpy, memrev, memset, memsetp, open */
-#include <deemon/tuple.h>           /* DEFINE_TUPLE, DeeTuple* */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrev, DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, memcasecmp, memchr, memcmp, memcpy*, mempcpy, memset, open */
+#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_xch */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_TYPE__ */

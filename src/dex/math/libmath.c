@@ -31,12 +31,12 @@
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_CONSTEXPR, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/float.h>           /* DEFINE_FLOAT, DeeFloat_New */
+#include <deemon/float.h>           /* DeeFloat_New */
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_TryAsInt, INT_NEG_OVERFLOW, INT_POS_OVERFLOW */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, acos, acosh, asin, asincos, asincosh, asinh, atan, atan2, atanh, cbrt, ceil, copysign, cos, cosh, erf, erfc, exp, exp2, expm1, fabs, fdim, floor, fmod, frexp, hypot, ilogb, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, lgamma, log, log1p, log2, log10, logb, modf, nan, nextafter, pow, remainder, remquo, round, scalbln, scalbn, signbit, sin, sincos, sincosh, sinh, sqrt, tan, tanh, tgamma */
+#include <deemon/objmethod.h>       /* DEFINE_CMETHOD1 */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, acos, acosh, asin, asincos, asincosh, asinh, atan, atan2, atanh, cbrt, ceil, copysign, cos, cosh, erf, erfc, exp, exp2, expm1, fdim, floor, fmod, frexp, hypot, ilogb, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, lgamma, log, log1p, log2, log10, logb, modf, nan, nextafter, pow, remainder, remquo, round, scalbln, scalbn, sin, sincos, sincosh, sinh, sqrt, tan, tanh, tgamma */
 #include <deemon/tuple.h>           /* DeeTuple_Newf, DeeTuple_PackSymbolic */
 
 #include <hybrid/limitcore.h> /* __INT_MAX__, __INT_MIN__ */

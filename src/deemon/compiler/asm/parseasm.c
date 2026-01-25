@@ -32,12 +32,11 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
-#include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsInt64 */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_GetShortName, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeUni_* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bzero, calloc, memcasecmp, memchr, strcasecmp */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bzero, memcasecmp, memchr, strcasecmp */
 
 #include <hybrid/sequence/list.h> /* SLIST_EMPTY, SLIST_FIRST */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__ */

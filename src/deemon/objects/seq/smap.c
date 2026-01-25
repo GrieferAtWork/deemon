@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/map.h>                /* DeeMapping_Type, DeeSharedItem, DeeSharedMap_* */
+#include <deemon/map.h>                /* DeeMapping_Type, DeeSharedItem, DeeSharedMap_Type */
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */

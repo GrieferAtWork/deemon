@@ -42,7 +42,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h>  /* UINT16_MAX, uint8_t */
+#include <stdint.h>  /* uint8_t */
 
 #ifndef UINT16_MAX
 #include <hybrid/limitcore.h> /* __UINT16_MAX__ */

@@ -39,8 +39,8 @@
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE, WSTR_LENGTH */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, bcmpc, memcpy*, memset, strcasecmp, strcasecmpz, strcmp, strcmpz, strlen */
-#include <deemon/system.h>             /* DeeSystem_* */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_*, bcmpc, memcpy*, memset, strlen */
+#include <deemon/system.h>             /* DeeSystem_HAVE_FS_ICASE, DeeSystem_IsSep */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQUIRE, Dee_atomic_cmpxch_val, atomic_* */

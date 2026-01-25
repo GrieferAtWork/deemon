@@ -36,10 +36,10 @@
 #include <deemon/none-operator.h>   /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DeeCMethodObject */
+#include <deemon/objmethod.h>       /* DeeCMethodObject */
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString_STR */
+#include <deemon/string.h>          /* DeeString_STR */
 #include <deemon/system-features.h> /* memset */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
 #include <deemon/tuple.h>           /* DeeTuple* */

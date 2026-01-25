@@ -28,7 +28,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>               /* DeeDict_Dummy */
 #include <deemon/error-rt.h>           /* DeeRT_ErrEmptySequence */
-#include <deemon/float.h>              /* DEFINE_FLOAT */
+#include <deemon/float.h>              /*  */
 #include <deemon/format.h>             /* DeeFormat_PRINT */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_Track */
 #include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */

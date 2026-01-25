@@ -29,7 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/rodict.h>          /* DeeRoDictObject */
 #include <deemon/string.h>          /* DeeString* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcmp, memcpy, memmovedown, strcmp, strlen */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcmp, memcpy, memmovedown, strlen */
 
 #include <hybrid/bit.h>      /* CLZ */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */

@@ -34,7 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeStringObject, DeeString_TryNewUtf8, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_memcasemem, DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_memcasemem, memcasecmp, memcasemem, strlen */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_memcasemem, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_TranslateErrno, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 

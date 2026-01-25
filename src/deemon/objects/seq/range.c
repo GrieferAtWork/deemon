@@ -33,7 +33,7 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Singleton */
 #include <deemon/object.h>
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeRange_New, DeeRange_NewInt, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_EmptySeq, Dee_seq_range */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

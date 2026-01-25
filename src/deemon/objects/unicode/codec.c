@@ -27,9 +27,9 @@
 #include <deemon/format.h>          /* DeeFormat_*, PRFuSIZ */
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/object.h>
-#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeCodec_Decode, DeeCodec_Encode, DeeString*, DeeUni_IsUpper, DeeUni_ToLower, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, STRING_ERROR_F*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
-#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcpy*, memmovedownc, mempcpyc, strcmp */
-#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_IsUpper, DeeUni_ToLower, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, STRING_ERROR_F*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcpy*, memmovedownc, mempcpyc */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/typecore.h>  /* __BYTE_TYPE__ */
@@ -40,7 +40,7 @@
 #include "codec.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t

@@ -29,7 +29,7 @@
 #include <deemon/alloc.h>     /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/numeric.h>   /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/string.h>    /* DEFINE_STRING, DeeString_STR */
+#include <deemon/string.h>    /* DeeString_STR */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stddef.h> /* NULL, size_t */

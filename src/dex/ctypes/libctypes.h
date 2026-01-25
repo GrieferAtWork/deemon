@@ -25,10 +25,10 @@
 #include <deemon/alloc.h>     /* DeeObject_Free, DeeObject_Malloc */
 #include <deemon/mro.h>       /* Dee_attrhint, Dee_attriter */
 #include <deemon/object.h>
-#include <deemon/string.h>    /* Dee_string_object, Dee_wchar_t */
+#include <deemon/string.h>    /* Dee_wchar_t */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
-#include <hybrid/sequence/list.h> /* LIST_ENTRY, LIST_HEAD */
+#include <hybrid/sequence/list.h> /* LIST_ENTRY */
 #include <hybrid/typecore.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */
 
 #include <stdbool.h> /* bool */

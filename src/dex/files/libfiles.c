@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h> /* DEX_* */
+#include <deemon/dex.h> /* DEX_BEGIN, DEX_MEMBER_NODOC */
 
 #include <stddef.h> /* NULL */
 

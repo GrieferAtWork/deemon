@@ -31,15 +31,15 @@
 #include <deemon/instancemethod.h>  /* DeeInstanceMethod_Type */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/mro.h>             /* DeeObject_EnumAttr, DeeObject_IterAttr, DeeTypeMRO_Patch*, DeeType_Find*Attr*, Dee_ALIGNOF_ATTRITER, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_MEMBERCACHE_*, Dee_attrdesc, Dee_attrdesc_*, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo, Dee_attrinfo_typeof, Dee_attrinfo_typeof_ininstance, Dee_attriter, Dee_attriter_*, Dee_attriterchain, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attriterchain_item, Dee_attriterchain_item_fromiter, Dee_attriterchain_type, Dee_attrspec, Dee_enumattr_t, Dee_membercache_*, Dee_type_member_*, type_getset_findattr, type_member_findattr, type_method_findattr */
+#include <deemon/mro.h>             /* DeeObject_IterAttr, Dee_ALIGNOF_ATTRITER, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_MEMBERCACHE_*, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrdesc_nameobj, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo, Dee_attriter, Dee_attriter_*, Dee_attriterchain, Dee_attriterchain_builder, Dee_attriterchain_builder_getbufsize, Dee_attriterchain_item, Dee_attriterchain_item_fromiter, Dee_attriterchain_type, Dee_attrspec, Dee_enumattr_t, Dee_membercache_*, Dee_type_member_* */
 #include <deemon/none-operator.h>   /* _DeeNone_reti1_2 */
 #include <deemon/object.h>
 #include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMember_Type, DeeClsMethod_New, DeeClsMethod_Type, DeeClsProperty_New, DeeClsProperty_Type, DeeKwClsMethod_New, DeeKwClsMethod_Type, DeeKwObjMethod_CallFunc, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod* */
 #include <deemon/property.h>        /* DeeProperty_Type */
 #include <deemon/string.h>          /* DeeString_New, DeeString_STR */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero, memcpy, memset, strcmp, strcmpz */
+#include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero, memcpy, memset */
 #include <deemon/util/atomic.h>     /* atomic_* */
-#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_shared_rwlock_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_*, Dee_shared_rwlock_* */
 
 #include <hybrid/overflow.h>      /* OVERFLOW_USUB */
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */

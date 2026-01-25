@@ -37,7 +37,7 @@
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* false */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, intN_t, uintN_t */
+#include <stdint.h>  /* intN_t, uintN_t */
 
 #ifndef INT8_MIN
 #define INT8_MIN __INT8_MIN__

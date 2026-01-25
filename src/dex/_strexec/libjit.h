@@ -23,12 +23,12 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_FFree, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC */
-#include <deemon/class.h>           /* Dee_class_attribute, Dee_instance_desc */
+#include <deemon/class.h>           /*  */
 #include <deemon/module.h>          /* DeeModuleObject, Dee_module_symbol */
 #include <deemon/object.h>
-#include <deemon/string.h>          /* Dee_string_object, Dee_unicode_printer */
+#include <deemon/string.h>          /* Dee_unicode_printer */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, bzero */
-#include <deemon/util/objectlist.h> /* Dee_objectlist */
+#include <deemon/util/objectlist.h> /*  */
 #include <deemon/util/rlock.h>      /* Dee_rshared_lock_* */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */

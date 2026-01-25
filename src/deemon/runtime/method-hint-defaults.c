@@ -31,8 +31,7 @@
 #include <deemon/error.h>               /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>              /* PCKdSIZ, PCKuSIZ, PRFdSIZ, PRFuSIZ */
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_Track */
-#include <deemon/instancemethod.h>      /* DeeInstanceMethod_NewInherited */
-#include <deemon/int.h>                 /* DEFINE_*INT*, DeeIntObject, DeeInt_* */
+#include <deemon/int.h>                 /* DeeIntObject, DeeInt_* */
 #include <deemon/map.h>                 /* Dee_EmptyMapping */
 #include <deemon/method-hints.h>        /* DeeMH_map_operator_trygetitem_t, DeeMH_seq_append_t, DeeMH_seq_enumerate_index_reverse_t, DeeMH_seq_find_t, DeeMH_seq_find_with_key_t, DeeMH_seq_insert_t, DeeMH_seq_operator_bounditem_index_t, DeeMH_seq_operator_bounditem_t, DeeMH_seq_operator_delitem_index_t, DeeMH_seq_operator_foreach_t, DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_getitem_t, DeeMH_seq_operator_trygetitem_index_t, DeeMH_seq_operator_trygetitem_t, DeeMH_seq_pop_t, DeeMH_seq_remove_t, DeeMH_seq_remove_with_key_t, DeeObject_InvokeMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
 #include <deemon/module.h>              /* DeeModule_CallExternStringf */

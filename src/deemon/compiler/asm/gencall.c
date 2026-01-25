@@ -34,7 +34,6 @@
 #include <deemon/compiler/traits.h>
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
-#include <deemon/int.h>                /* DeeInt_Type */
 #include <deemon/kwds.h>               /* DeeObject_IsKw, DeeType_IsKw */
 #include <deemon/list.h>               /* DeeList_Type */
 #include <deemon/module.h>             /* DeeModule_GetDeemon, DeeModule_GetSymbol, Dee_MODSYM_FEXTERN, Dee_MODSYM_FPROPERTY, Dee_module_symbol, Dee_module_symbol_getindex */

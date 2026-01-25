@@ -37,11 +37,11 @@
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeDbgString_*, DeeString*, Dee_ASCII_PRINTER_INIT, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, Dee_empty_string_struct, Dee_string_fini_hook*, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_SIZEOF_WIDTH, STRING_WIDTH_COUNT, STRING_WIDTH_GETCHAR, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_ASCII_PRINTER_INIT, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer, Dee_ascii_printer_fini, Dee_charptr_const, Dee_empty_string_struct, Dee_string_fini_hook*, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_SIZEOF_WIDTH, STRING_WIDTH_COUNT, STRING_WIDTH_GETCHAR, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, bzero, memcmp, memcmpl, memcmpw, memcpy*, memmem, memmovedownc, memmoveupc, memset, strlen */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_*, bzero, memcmp, memcpy*, memmovedownc, memmoveupc, memset, strlen */
 #include <deemon/util/atomic.h>        /* atomic_* */
-#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
 #include <hybrid/limitcore.h>        /* __SSIZE_MAX__ */
 #include <hybrid/minmax.h>           /* MIN */
@@ -55,7 +55,7 @@
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #undef SSIZE_MAX

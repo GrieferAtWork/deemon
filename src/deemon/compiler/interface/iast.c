@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/bool.h>               /* DeeBool_For */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute, Dee_class_operator */
-#include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_EXCEPTION_HANDLER_FINTERPT, Dee_operator_t */
+#include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_EXCEPTION_HANDLER_FINTERPT */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>

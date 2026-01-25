@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/string.h>          /* DeeStringObject, Dee_UNICODE_FOLDED_MAX, Dee_charptr_const */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, _DeeSystem_DEFINE_memcasemem, _DeeSystem_DEFINE_memcasermem, bcmpb, bcmpl, bcmpw, memcasecmp, memcasemem, memcasermem, memchr*, memcmpl, memcmpw, memmem, memmeml, memmemw, mempsetl, mempsetw, memrchr, memrchrl, memrchrw, memrmem, memrmeml, memrmemw, memsetl, memsetw, tolower */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_*, _DeeSystem_DEFINE_memcasemem, _DeeSystem_DEFINE_memcasermem, bcmpb, bcmpl, bcmpw, tolower */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

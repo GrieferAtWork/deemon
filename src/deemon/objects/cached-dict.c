@@ -35,7 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcpyc, strcmp */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpyc */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */

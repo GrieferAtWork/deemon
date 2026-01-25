@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>  /* DeeObject_FMalloc */
 #include <deemon/object.h>
-#include <deemon/string.h> /* Dee_string_object */
+#include <deemon/string.h> /*  */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

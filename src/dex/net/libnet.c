@@ -30,7 +30,7 @@
 #include <deemon/error.h>           /* DeeError_Throwf */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD1 */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_signal, signal */
 
 #include <hybrid/byteswap.h>        /* BETOH*, HTOBE* */

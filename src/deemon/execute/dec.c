@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dec.h>    /* DBUILTINS_MAX, DECMAG*, DEC_BUILTINID_MAKE, DEC_BUILTINID_UNKNOWN, DFILE_LIMIT, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_NONE, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_BUILTIN_MAX, DTYPE_BUILTIN_MIN, DTYPE_BUILTIN_NUM, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_EXTENDED, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, DecTime_ClearCache, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_*, DeeModule_OpenDec, Dee_ALIGNOF_DEC_*, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_dec_*, _DeeDecWriter_Init */
+#include <deemon/dec.h>    /* DBUILTINS_MAX, DECMAG*, DEC_BUILTINID_MAKE, DEC_BUILTINID_UNKNOWN, DFILE_LIMIT, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_NONE, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_BUILTIN_MAX, DTYPE_BUILTIN_MIN, DTYPE_BUILTIN_NUM, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_EXTENDED, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_Ehdr, DeeDec_Ehdr_*, Dee_ALIGNOF_DEC_*, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_dec_* */
 #include <deemon/object.h>
 #include <deemon/serial.h> /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
 
@@ -33,11 +33,11 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/exec.h>            /* DeeExec_GetTimestamp */
 #include <deemon/format.h>          /* PRF* */
-#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_*, Dee_gc_head, Dee_gc_head_link */
+#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_Head, DeeGC_Track, Dee_gc_head, Dee_gc_head_link */
 #include <deemon/heap.h>            /* DeeHeap_GetRegionOf, Dee_HEAPCHUNK_*, Dee_heapchunk, Dee_heapregion, Dee_heaptail */
-#include <deemon/module.h>          /* DeeModule*, Dee_DEC_FLOADOUTDATED, Dee_DEC_FUNTRUSTED, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_compiler_options, Dee_module_* */
-#include <deemon/string.h>          /* DeeString*, Dee_EmptyString, Dee_string_object, STRING_ERROR_FSTRICT, WSTR_LENGTH */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, DeeSystem_DEFINE_memcasecmp, bcmp, bzero, link, memcasecmp, memcmp, memcpy*, memmoveupc, mempcpy*, memset, strlen */
+#include <deemon/module.h>          /* DeeModule*, Dee_DEC_FLOADOUTDATED, Dee_DEC_FUNTRUSTED, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_module_buildid, Dee_module_symbol */
+#include <deemon/string.h>          /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memcasecmp, bcmp, bzero, link, memcmp, memcpy*, memmoveupc, mempcpy*, memset, strlen */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/md5.h>        /* DeeMD5_* */
@@ -50,7 +50,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
-#include <stdint.h>  /* UINT32_MAX, int32_t, uintN_t, uintptr_t */
+#include <stdint.h>  /* int32_t, uintN_t, uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -2425,7 +2425,7 @@ DECL_END
 #include <deemon/callable.h> /* DeeCallable_Type */
 #include <deemon/cell.h>     /* DeeCell* */
 #include <deemon/class.h>    /* DeeClassDescriptorObject, DeeClassDescriptor_*, Dee_CLASS_ATTRIBUTE_FCLASSMEM, Dee_CLASS_ATTRIBUTE_FMASK, Dee_class_attribute, Dee_class_operator */
-#include <deemon/code.h>     /* DeeCodeObject, DeeCode_Malloc, DeeCode_Type, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_MAXSIZE, Dee_DDI_REGS_FMASK, Dee_EXCEPTION_HANDLER_FMASK, Dee_code_metrics_init, Dee_code_object, Dee_ddi_exdat, Dee_ddi_object, Dee_except_handler, Dee_hostasm_code_init, Dee_hostasm_function_init, Dee_operator_t, code_addr_t, instruction_t */
+#include <deemon/code.h>     /* DeeCodeObject, DeeCode_Malloc, DeeCode_Type, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_MAXSIZE, Dee_DDI_REGS_FMASK, Dee_EXCEPTION_HANDLER_FMASK, Dee_code_metrics_init, Dee_ddi_exdat, Dee_except_handler, Dee_hostasm_code_init, Dee_hostasm_function_init, code_addr_t, instruction_t */
 #include <deemon/dict.h>     /* DeeDict_New, DeeDict_Type */
 #include <deemon/error.h>
 #include <deemon/exec.h>

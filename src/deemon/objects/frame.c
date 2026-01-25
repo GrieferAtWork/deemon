@@ -44,7 +44,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* UINT16_MAX, int32_t, uint8_t, uint16_t */
+#include <stdint.h>  /* int32_t, uint8_t, uint16_t */
 
 #ifndef UINT16_MAX
 #include <hybrid/limitcore.h> /* __UINT16_MAX__ */

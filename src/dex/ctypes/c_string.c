@@ -32,8 +32,8 @@
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewSize, Dee_return_smallint */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, basename, bcmp, bzero, isalpha, memcasecmp, memcasemem, memcasermem, memccpy, memchr, memcmp, memcpy, memend, memfrob, memlen, memmem, memmove, memrchr, memrend, memrev, memrlen, memrmem, memrxchr, memrxend, memrxlen, memset, memxchr, memxend, memxlen, rawmemchr, rawmemlen, rawmemrchr, rawmemrlen, rawmemrxchr, rawmemrxlen, rawmemxchr, rawmemxlen, stpcpy, stpncpy, strcasecmp, strcasestr, strcat, strchr, strchrnul, strcmp, strcpy, strcspn, strend, stresep, strlen, strlwr, strncasestr, strncat, strnchr, strnchrnul, strncmp, strncpy, strnend, strnlen, strnlwr, strnrchr, strnrchrnul, strnrev, strnset, strnstr, strnupr, strpbrk, strrchr, strrchrnul, strrev, strsep, strset, strspn, strstr, strtok, strtok_r, strupr, strverscmp, to(lower|upper) */
+#include <deemon/objmethod.h>       /*  */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_*, bcmp, bzero, isalpha, memchr, memcmp, memcpy, memmove, memset, stpcpy, strcat, strchr, strcpy, strend, strlen, strncat, to(lower|upper) */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES, DeeSystem_IsSep */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UMUL */

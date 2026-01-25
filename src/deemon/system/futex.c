@@ -24,10 +24,10 @@
 
 #include <deemon/alloc.h>           /* DeeObject_* */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, bzero, cnd_broadcast, cnd_destroy, cnd_init, futex_timedwaitwhile, futex_timedwaitwhile64, futex_waitwhile, futex_wake, futex_wakeall, mtx_destroy, mtx_init, mtx_lock, mtx_unlock, pthread_cond_broadcast, pthread_cond_destroy, pthread_cond_init, pthread_mutex_destroy, pthread_mutex_init, pthread_mutex_lock, pthread_mutex_unlock, sem_destroy, sem_post, sem_post_multiple, syscall, thrd_success */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, bzero, cnd_broadcast, futex_timedwaitwhile, futex_timedwaitwhile64, futex_waitwhile, futex_wake, futex_wakeall, mtx_lock, mtx_unlock, pthread_cond_broadcast, pthread_mutex_lock, pthread_mutex_unlock, sem_destroy, sem_post, sem_post_multiple, syscall, thrd_success */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
-#include <deemon/util/lock.h>       /* Dee_ATOMIC_LOCK_INIT, Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 
 #include <hybrid/sched/atomic-once.h> /* atomic_once */
 #include <hybrid/sched/yield.h>       /* SCHED_YIELD */
@@ -35,7 +35,7 @@
 #include <hybrid/typecore.h>          /* __SIZEOF_INT__, __SIZEOF_POINTER__, __ULONGPTR_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* UINT32_C, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_LINUX_FUTEX_H

@@ -18,7 +18,6 @@
 
 #include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
-#include <deemon/float.h>           /* DeeFloat_Type */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_DIGIT_* */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzeroc, memcpyc, memset */

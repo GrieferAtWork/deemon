@@ -24,7 +24,7 @@
 
 #include <deemon/asm.h>                /* ASM16_*, ASM_*, instruction_t */
 #include <deemon/bool.h>               /* DeeBool_Type */
-#include <deemon/code.h>               /* Dee_CODE_FVARARGS, Dee_CODE_FYIELDING, Dee_operator_t, instruction_t */
+#include <deemon/code.h>               /* Dee_CODE_FVARARGS, Dee_CODE_FYIELDING, instruction_t */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>

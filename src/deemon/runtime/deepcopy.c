@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/deepcopy.h>        /* DeeDeepCopyContext, DeeDeepCopy_*, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem */
+#include <deemon/deepcopy.h>        /* DeeDeepCopyContext, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem */
 #include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
 #include <deemon/gc.h>              /* DeeGC_*, Dee_GC_HEAD_SIZE, Dee_gc_head */
 #include <deemon/object.h>

@@ -29,7 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FIGNORE */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8 */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, memmovedownc, qsort, strcasecmp, strcmp, strlen, to(lower|upper), wcslen */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, memmovedownc, strlen, to(lower|upper) */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewEmpty, Dee_tuple_builder* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */

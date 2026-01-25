@@ -35,7 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_string_fini_hook, Dee_string_fini_hook_decref, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_skipspaceutf8 */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, memcpy, memsetp */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, memcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_AddInterruptHook, DeeThread_DisableInterruptHooks, DeeThread_EnableInterruptHooks, DeeThread_RemoveInterruptHook, DeeThread_Self, DeeThread_WasInterrupted, Dee_thread_interrupt_hook, Dee_thread_interrupt_hook_decref */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
 #include <deemon/util/atomic.h>     /* atomic_* */

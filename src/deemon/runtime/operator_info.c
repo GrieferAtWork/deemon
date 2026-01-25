@@ -39,7 +39,7 @@
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/super.h>              /* DeeSuper* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmp, mempcpyc, memset, pow, strcmp */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmp, mempcpyc, memset, pow */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 

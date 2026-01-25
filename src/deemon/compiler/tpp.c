@@ -34,7 +34,7 @@
 #include <deemon/list.h>              /* DeeListObject, DeeList_* */
 #include <deemon/object.h>
 #include <deemon/string.h>            /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free */
-#include <deemon/system-features.h>   /* CONFIG_HAVE_memrchr, DeeSystem_DEFINE_memrchr, alloca, calloc, free, malloc, memcasecmp, memcpyc, mempcpyc, memrchr, realloc, tolower */
+#include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, mempcpyc */
 #include <deemon/system.h>            /* DeeSystem_* */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>             /* DeeTuple* */

@@ -29,7 +29,7 @@
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Freea */
 #include <deemon/asm.h>             /* ASM16_*, ASM_*, DeeAsm_NextInstr, Dee_instruction_t */
-#include <deemon/system-features.h> /* CONFIG_HAVE_qsort, DeeSystem_DEFINE_qsort, bzeroc, memmoveupc, memset, qsort */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_qsort, bzeroc, memmoveupc, memset */
 
 #include <hybrid/bitset.h>    /* BITSET_LENGTHOF, bitset_* */
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16 */

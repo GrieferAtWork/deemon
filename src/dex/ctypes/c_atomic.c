@@ -33,7 +33,7 @@
 #include <deemon/int.h>             /* DeeInt_Check */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/futex.h>      /* DeeFutex_* */

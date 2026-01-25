@@ -31,14 +31,14 @@
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_Type */
-#include <deemon/kwds.h>               /* DeeArg_TryGetKwNR*, DeeBlackListKw_New, DeeBlackListKwds*, DeeKwArgs*, DeeKwBlackList_Decref, DeeKwBlackList_New, DeeKwMapping_Decref, DeeKwMapping_New, DeeKw_*, DeeKwds*, DeeObject_IsKw, DeeType_IsKw, Dee_kwds_entry */
+#include <deemon/kwds.h>               /* DeeBlackListKw_New, DeeBlackListKwds*, DeeKwArgs, DeeKwds*, DeeObject_IsKw, DeeType_IsKw, Dee_kwds_entry */
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/object.h>
 #include <deemon/rodict.h>             /* DeeRoDict_NewEmpty, Dee_EmptyRoDict */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcpy*, strcmp */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy* */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

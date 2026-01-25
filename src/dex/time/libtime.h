@@ -25,7 +25,7 @@
 #include <deemon/object.h>
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/int128.h>    /* __HYBRID_INT128_INIT16N, __hybrid_int128_* */
+#include <hybrid/int128.h>    /* __hybrid_int128_* */
 
 #include <stdbool.h> /* bool */
 #include <stdint.h>  /* UINTn_C, int64_t, uintN_t */

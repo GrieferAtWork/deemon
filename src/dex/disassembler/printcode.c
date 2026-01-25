@@ -29,7 +29,7 @@
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea */
 #include <deemon/asm.h>             /* ASM16_*, ASM32_JMP, ASM_*, CASE_ASM_EXTENDED, DeeAsm_*, INSTRLEN_MAX, instruction_t */
 #include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute */
-#include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_Check, Dee_CODE_F*, Dee_DDI_*, Dee_EXCEPTION_HANDLER_F*, Dee_ddi_*, Dee_except_handler, Dee_operator_t, code_addr_t, instruction_t */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_Check, Dee_CODE_F*, Dee_DDI_*, Dee_EXCEPTION_HANDLER_F*, Dee_ddi_*, Dee_except_handler, code_addr_t, instruction_t */
 #include <deemon/format.h>          /* DeeFormat_*, PRF* */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeAscii_ItoaUpperDigit, DeeStringObject, Dee_EmptyString */

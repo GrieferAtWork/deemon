@@ -40,7 +40,7 @@
 #include <deemon/format.h>          /* PRF* */
 #include <deemon/int.h>             /* INT_SIGNED, INT_UNSIGNED, _DeeInt_NewS, _DeeInt_NewU */
 #include <deemon/object.h>
-#include <deemon/string.h>          /* DEFINE_STRING, DeeString_Newf */
+#include <deemon/string.h>          /* DeeString_Newf */
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
@@ -50,7 +50,7 @@
 #include <hybrid/unaligned.h> /* UNALIGNED_GET*, UNALIGNED_SET* */
 
 #include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* INTn_C, INTn_MAX, INTn_MIN, UINTn_C, UINTn_MAX, intN_t, uintN_t */
+#include <stdint.h> /* intN_t, uintN_t */
 
 DECL_BEGIN
 

@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/dex.h>    /* DeeDexObject, DeeDex_Check, DeeDex_Cleanup, DeeDex_Finalize, DeeDex_New, DeeDex_Type, Dee_dex, Dee_dex_symbol, dex_initialize, dex_load_handle */
+#include <deemon/dex.h>    /* DeeDexObject, DeeDex_Check, DeeDex_Type, Dee_dex, Dee_dex_symbol */
 #include <deemon/module.h> /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_FDIDLOAD, Dee_MODULE_HASHNX, Dee_module_symbol */
 #include <deemon/object.h>
 
@@ -36,7 +36,7 @@
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, dl_iterate_phdr, dladdr, dlgethandle, dlopen, memcpyc, strcmp, strlen */
 #include <deemon/system.h>             /* DeeSystem_DlClose, DeeSystem_DlSym */
-#include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>            /* __ARCH_PAGESIZE, __i386__, __pic__, __x86_64__ */

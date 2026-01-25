@@ -27,9 +27,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/dex.h>       /* DEX_BEGIN, DEX_MEMBER_F_NODOC, Dee_DEXSYM_READONLY */
 #include <deemon/object.h>
-#include <deemon/util/lock.h> /* Dee_SHARED_LOCK_INIT, Dee_shared_lock_* */
+#include <deemon/util/lock.h> /* Dee_shared_lock_* */
 
 #include "sqlite3-external.h"
 

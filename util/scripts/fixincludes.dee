@@ -43,8 +43,8 @@ function main() {
 		.fixFile(f"{ROOTDIR}/include/deemon/object.h")
 #else
 		.fixPaths(include: {
-//			f"{ROOTDIR}/src/deemon",
-//			f"{ROOTDIR}/src/dex",
+			f"{ROOTDIR}/src/deemon",
+			f"{ROOTDIR}/src/dex",
 			f"{ROOTDIR}/include/deemon",
 		}, exclude: {
 			f"{ROOTDIR}/include/deemon/kos-headers",

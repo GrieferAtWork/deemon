@@ -35,7 +35,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, memcpy, memset, strcmp */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy, memset */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__ */
 

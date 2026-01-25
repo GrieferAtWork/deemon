@@ -32,7 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/tuple.h>              /* DEFINE_TUPLE, Dee_EmptyTuple */
+#include <deemon/tuple.h>              /* Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 
 #include "../../runtime/method-hint-defaults.h"

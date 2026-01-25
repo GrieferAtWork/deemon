@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeMem_ClearCaches, Dee_BadAlloc, Dee_CollectMemory, Dee_Free, Dee_ReleaseSystemMemory, Dee_TryMalloc, Dee_TryReleaseSystemMemory, _Dee_MalloccBufsizeDbg, _Dee_MallococBufsizeDbg */
+#include <deemon/alloc.h>           /* Dee_BadAlloc, Dee_Free, Dee_TryMalloc */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, DeeFunction_Type, Dee_code_frame, code_addr_t */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>           /* DeeError_Handled, DeeError_UninstallKeyboardInterrupt, ERROR_HANDLED_RESTORE */
@@ -45,7 +45,7 @@
 #include <hybrid/unaligned.h>       /* UNALIGNED_GETLE32, UNALIGNED_GETLE64 */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* UINT16_C, UINT32_C, UINT64_C, uint8_t, uint16_t, uint32_t, uintptr_t */
 

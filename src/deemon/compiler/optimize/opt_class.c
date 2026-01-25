@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_Free, Dee_Freea */
 #include <deemon/class.h>             /* DeeClassDescriptorObject, DeeClassDescriptor_CLSOPNEXT, DeeClassDescriptor_Check, Dee_CLASS_OPERATOR_PRINT, Dee_CLASS_OPERATOR_PRINTREPR, Dee_class_operator */
-#include <deemon/code.h>              /* Dee_CODE_FTHISCALL, Dee_CODE_FYIELDING, Dee_operator_t */
+#include <deemon/code.h>              /* Dee_CODE_FTHISCALL, Dee_CODE_FYIELDING */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>

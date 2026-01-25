@@ -33,7 +33,7 @@
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_rets1_1 */
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqOne*, DeeSeqRange_Clamp, DeeSeq_*, Dee_seq_range */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqOneObject, DeeSeqOne_Type, DeeSeqRange_Clamp, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* remainder */
 #include <deemon/tuple.h>              /* DeeTuple* */

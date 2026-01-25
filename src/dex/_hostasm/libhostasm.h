@@ -30,9 +30,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Malloc, _Dee_MallococBufsize */
-#include <deemon/class.h>           /* Dee_class_attribute, Dee_class_descriptor_object */
-#include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, Dee_code_addr_t, Dee_code_object, Dee_instruction_t, Dee_operator_t */
-#include <deemon/module.h>          /* Dee_module_object, Dee_module_symbol */
+#include <deemon/class.h>           /*  */
+#include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, Dee_code_addr_t, Dee_instruction_t */
+#include <deemon/module.h>          /*  */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memcmp, memset */
@@ -40,7 +40,7 @@
 
 #include <hybrid/bitset.h>        /* BITSET_SIZEOF, bitset_t */
 #include <hybrid/byteorder.h>     /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-#include <hybrid/sequence/list.h> /* RINGQ_ENTRY, RINGQ_NEXT, TAILQ_* */
+#include <hybrid/sequence/list.h> /* RINGQ_ENTRY, RINGQ_NEXT, TAILQ_ENTRY, TAILQ_ISBOUND */
 #include <hybrid/typecore.h>      /* __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */

@@ -22,13 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/util/md5.h> /* DeeMD5_* */
+#include <deemon/util/md5.h> /* DeeMD5_Context */
 
 #include <hybrid/byteswap.h> /* HTOLE32, LETOH32 */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__, __UINT32_C */
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* UINT32_C, uint8_t, uint32_t, uint64_t */
+#include <stdint.h> /* uint8_t, uint32_t, uint64_t */
 
 #ifndef UINT32_C
 #define UINT32_C __UINT32_C

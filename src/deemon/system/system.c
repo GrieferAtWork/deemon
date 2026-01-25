@@ -31,8 +31,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_skipspaceutf8_n, Dee_unicode_skipspaceutf8_rev_n */
-#include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E4, MAP_ANONYMOUS, MAP_FIXED, MAP_PRIVATE, MAP_SHARED, PROT_READ, PROT_WRITE, RTLD_GLOBAL, RTLD_LAZY, RTLD_LOCAL, RTLD_NOW, bzero, clock_gettime, clock_gettime64, dlclose, dlopen, dlsym, fstat, fstat64, getcwd, getenv, getpagesize, gettimeofday, gettimeofday64, lseek, lseek64, memrchr, memrend, mmap, mmap64, munmap, pread, pread64, read, remove, stat, stat64, strlen, sysconf, time, time64, unlink, wcslen, wgetcwd, wremove, wunlink */
-#include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E4, MAP_ANONYMOUS, MAP_FIXED, MAP_PRIVATE, MAP_SHARED, PROT_READ, PROT_WRITE, RTLD_GLOBAL, RTLD_LAZY, RTLD_LOCAL, RTLD_NOW, bzero, clock_gettime, clock_gettime64, dlclose, dlopen, dlsym, fstat, fstat64, getcwd, getenv, gettimeofday, gettimeofday64, lseek, lseek64, mmap, mmap64, munmap, pread, pread64, read, remove, stat, stat64, strlen, sysconf, time, time64, unlink, wgetcwd, wremove, wunlink */
+#include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/util/atomic.h>     /* atomic_write */
 
@@ -43,7 +43,7 @@
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t, wchar_t */
+#include <stddef.h>  /* size_t, wchar_t */
 #include <stdint.h>  /* UINT64_C, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS

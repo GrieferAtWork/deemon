@@ -33,7 +33,7 @@
 #include <deemon/module.h>            /* DeeModuleObject */
 #include <deemon/object.h>
 #include <deemon/string.h>            /* DeeString* */
-#include <deemon/system-features.h>   /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_memmem, bzero, memcpy, memmem, mempcpyc, memset, strlen */
+#include <deemon/system-features.h>   /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_memmem, bzero, memcpy, mempcpyc, memset, strlen */
 #include <deemon/system.h>            /* DeeSystem_* */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */

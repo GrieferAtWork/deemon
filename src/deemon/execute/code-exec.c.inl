@@ -27,12 +27,11 @@
 #include <deemon/asm.h>             /* ASM16_*, ASM32_JMP, ASM_*, instruction_t */
 #include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_FalseTrue, Dee_True */
 #include <deemon/class.h>           /* DeeClassDescriptor_Type, DeeClass_*, DeeInstance_* */
-#include <deemon/code.h>            /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeFunction_*, Dee_CODE_F*, Dee_DDI_STATE_*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_PERIOD, Dee_TRIGGER_BREAKPOINT_*, Dee_code_frame, Dee_ddi_*, Dee_except_handler, code_addr_t, instruction_t */
+#include <deemon/code.h>            /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeFunction_*, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_PERIOD, Dee_TRIGGER_BREAKPOINT_*, Dee_code_frame, Dee_except_handler, code_addr_t, instruction_t */
 #include <deemon/dict.h>            /* DeeDict_FromSequenceInheritedOnSuccess, DeeDict_NewKeyValuesInherited */
 #include <deemon/error-rt.h>        /* DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>            /* DeeFile_*, Dee_STDOUT */
-#include <deemon/format.h>          /* PRFu16 */
 #include <deemon/hashset.h>         /* DeeHashSet_FromSequenceInheritedOnSuccess, DeeHashSet_NewItemsInherited */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/kwds.h>            /* DeeKwBlackList_Decref, DeeKwBlackList_New, DeeKw_WrapInheritedOnSuccess */

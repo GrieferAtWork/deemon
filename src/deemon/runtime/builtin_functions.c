@@ -26,7 +26,7 @@
 #include <deemon/bool.h>        /* return_bool, return_false, return_true */
 #include <deemon/bytes.h>       /* DeeBytes* */
 #include <deemon/callable.h>    /* DeeCallable_Check */
-#include <deemon/code.h>        /* DeeCodeObject, DeeCode_NAME, Dee_code_frame, Dee_operator_t */
+#include <deemon/code.h>        /* DeeCodeObject, DeeCode_NAME, Dee_code_frame */
 #include <deemon/error-rt.h>    /* DeeRT_ATTRIBUTE_ACCESS_BOUND, DeeRT_ErrUnknownAttr, DeeRT_ErrUnknownKey */
 #include <deemon/error.h>       /* DeeError_* */
 #include <deemon/exec.h>        /* DeeExec_RUNMODE_EXPR, DeeExec_RunMemory */
@@ -36,18 +36,18 @@
 #include <deemon/module.h>      /* DeeBuiltin_*, DeeModule* */
 #include <deemon/none.h>        /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>   /* DEFINE_*CMETHOD* */
+#include <deemon/objmethod.h>   /*  */
 #include <deemon/string.h>      /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/thread.h>      /* DeeThreadObject, DeeThread_Self */
 #include <deemon/util/atomic.h> /* atomic_read */
-#include <deemon/util/lock.h>   /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>   /* Dee_atomic_rwlock_* */
 
 #include "kwlist.h"
 #include "runtime_error.h"
 #include "strings.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t */
 
 DECL_BEGIN

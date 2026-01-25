@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_TryRealloc */
-#include <deemon/error.h>           /* DeeErrorObject, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_* */
+#include <deemon/error.h>           /* DeeErrorObject, DeeError_Error, DeeError_NoMemory_instance, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_* */
 #include <deemon/file.h>            /* DeeFile_GetStd, DeeFile_WriteAll, Dee_STDERR */
 #include <deemon/format.h>          /* DeeFormat_Printf, PRFu16 */
 #include <deemon/object.h>
@@ -36,7 +36,7 @@
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* uint8_t, uint32_t */
 
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT

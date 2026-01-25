@@ -26,7 +26,7 @@
 #include <deemon/int.h>             /* DeeInt_Type */
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>  /* DeeNO_*_t, _DeeType_RequireNativeOperator, maketyped__* */
-#include <deemon/super.h>           /* DeeObject_T* */
+#include <deemon/super.h>           /*  */
 #include <deemon/system-features.h> /* pow */
 #include <deemon/tuple.h>           /* DeeTuple* */
 

@@ -27,7 +27,7 @@
 #include <deemon/error.h>        /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/format.h>       /* PCKuSIZ, PRFuSIZ */
 #include <deemon/int.h>          /* DeeInt_* */
-#include <deemon/method-hints.h> /* DeeMA_*, DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
+#include <deemon/method-hints.h> /* DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
 #include <deemon/none.h>         /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
 #include <deemon/tuple.h>        /* DEFINE_TUPLE, DeeNullableTuple_Type, DeeTuple* */

@@ -32,7 +32,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>            /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>              /* DEFINE_KWLIST, DeeArg_Unpack*, UNPu64, UNPuPTR */
+#include <deemon/arg.h>              /* DeeArg_Unpack*, UNPu64, UNPuPTR */
 #include <deemon/bool.h>             /* return_bool, return_false, return_true */
 #include <deemon/format.h>           /* DeeFormat_PRINT, DeeFormat_Printf, PRFuPTR */
 #include <deemon/none.h>             /* return_none */

@@ -29,7 +29,7 @@
 
 #include <deemon/abi/ctypes.h>      /* DeeCTypes_CreateVoidPointer, DeeCTypes_GetPointer */
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_Freea, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw, UNP* */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw, UNP* */
 #include <deemon/bool.h>            /* return_false, return_true */
 #include <deemon/bytes.h>           /* DeeBytes* */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_* */
@@ -39,9 +39,9 @@
 #include <deemon/int.h>             /* DeeInt_*, INT_UNSIGNED */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeSeq_AsHeapVector */
-#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
 #include <deemon/system-features.h> /* mempcpyc, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
@@ -52,7 +52,7 @@
 #include <hybrid/typecore.h>        /* __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* int32_t, int64_t, uint32_t, uint64_t, uintptr_t */
 
 DECL_BEGIN

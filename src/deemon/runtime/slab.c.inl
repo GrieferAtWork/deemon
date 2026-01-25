@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_Free, DeeSlabStat, DeeSlab_*, Dee_*alloc*, Dee_Free, Dee_SLAB_COUNT */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, MAP_ANONYMOUS, MAP_FILE, MAP_PRIVATE, O_RDONLY, PROT_READ, PROT_WRITE, bzero, close, getenv, memcpy, memset, mmap, munmap, open */
+#include <deemon/alloc.h>           /* DeeObject_Free, DeeSlab*, Dee_*alloc*, Dee_Free, Dee_SLAB_COUNT */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, O_RDONLY, PROT_READ, PROT_WRITE, bzero, close, getenv, memcpy, memset, mmap, munmap, open */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_t */
 
 #include <hybrid/host.h> /* __ARCH_PAGESIZE, __i386__, __x86_64__ */

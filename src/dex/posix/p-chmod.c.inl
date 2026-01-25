@@ -27,15 +27,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_Catch, DeeError_NoSymlink */
 #include <deemon/int.h>             /* DeeInt_NewUInt */
 #include <deemon/none.h>            /* DeeNone_Check, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
-#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, chmod, creat, creat64, fchmod, fchmodat, lchmod, open, openat, openat64, open64, wchmod, wcreat, wcreat64, wlchmod, wopen, wopenat, wopenat64, wopen64 */
+#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, creat64, fchmod, fchmodat, openat64, open64, wcreat64, wopenat64, wopen64 */
 #include <deemon/system.h>          /* DeeUnixSystem_GetFD */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

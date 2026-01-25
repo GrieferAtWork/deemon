@@ -32,7 +32,7 @@
 #include <deemon/error.h>     /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/none.h>      /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/objmethod.h> /* DEFINE_CMETHOD */
+#include <deemon/objmethod.h> /*  */
 #include <deemon/tuple.h>     /* DeeTuple*, Dee_EmptyTuple */
 
 #include <stddef.h> /* NULL, size_t */

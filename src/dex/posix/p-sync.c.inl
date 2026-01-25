@@ -27,13 +27,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_FSError */
 #include <deemon/file.h>            /* DeeSystemFile_Type */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, fdatasync, fsync, sync */
 #include <deemon/system.h>          /* DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 

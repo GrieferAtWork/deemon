@@ -28,19 +28,13 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>              /* DeeDict_Check */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/float.h>             /* DeeFloat_*, Dee_FLOAT_PRINT_FNORMAL */
 #include <deemon/format.h>            /* PRFuSIZ */
-#include <deemon/hashset.h>           /* DeeHashSet_Check */
-#include <deemon/int.h>               /* DeeInt_Check, DeeInt_Print, Dee_INT_PRINT_DEC */
-#include <deemon/list.h>              /* DeeList_Check */
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>              /* DeeNone_Check, DeeNone_Type */
 #include <deemon/object.h>
 #include <deemon/string.h>            /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/system-features.h>   /* memcpy, strlen */
-#include <deemon/tuple.h>             /* DeeTuple_Check */
 
 #include "../../runtime/builtin.h"
 

@@ -30,14 +30,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER, DEX_MEMBER_F */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_KWCMETHOD */
-#include <deemon/string.h>          /* DEFINE_STRING, DEFINE_STRING_EX, DeeString*, DeeUni_IsSpace, DeeUni_ToUpper, Dee_EmptyString, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/objmethod.h>       /*  */
+#include <deemon/string.h>          /* DeeString*, DeeUni_IsSpace, DeeUni_ToUpper, Dee_EmptyString, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, Dee_unicode_* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memrchr, DeeSystem_DEFINE_memrchr, link, memchr, memcpyc, mempcpyc, memrchr */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrchr, link, memchr, memcpyc, mempcpyc */
 #include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeSystem_* */
 
 #include <hybrid/minmax.h> /* MIN */

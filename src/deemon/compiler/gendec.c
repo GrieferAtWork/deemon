@@ -26,7 +26,7 @@
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/cell.h>            /* DeeCell_TryGet, DeeCell_Type */
 #include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClassDescriptor_Type, Dee_CLASS_ATTRIBUTE_FCLASSMEM, Dee_CLASS_ATTRIBUTE_FMASK, Dee_class_attribute */
-#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeDDIObject, DeeFunctionObject, DeeFunction_Type, Dee_CODE_FDEC_8BIT, Dee_CODE_FMASK, Dee_DDI_EXDAT_*, Dee_ddi_exdat, Dee_except_handler, Dee_operator_t */
+#include <deemon/code.h>            /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeDDIObject, DeeFunctionObject, DeeFunction_Type, Dee_CODE_FDEC_8BIT, Dee_CODE_FMASK, Dee_DDI_EXDAT_*, Dee_ddi_exdat, Dee_except_handler */
 #include <deemon/compiler/dec.h>
 #include <deemon/dec.h>             /* DECMAG*, DEC_BUILTINID_IDOF, DEC_BUILTINID_SETOF, DEC_BUILTINID_UNKNOWN, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_* */
 #include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_*, _DeeDict_GetVirtVTab */
@@ -53,7 +53,7 @@
 #include <hybrid/unaligned.h> /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SET* */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* UINT8_MAX, UINT16_MAX, uintN_t */
 
 DECL_BEGIN

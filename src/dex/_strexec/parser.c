@@ -36,7 +36,7 @@
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type */
 #include <deemon/object.h>
-#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, DeeUni_IsSymCont, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
+#include <deemon/string.h>          /* DeeString*, DeeUni_IsSymCont, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
 #include <deemon/super.h>           /* DeeSuper_TYPE, DeeSuper_Type */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU */

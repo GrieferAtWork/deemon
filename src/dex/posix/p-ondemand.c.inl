@@ -215,12 +215,12 @@
 #include <deemon/util/once.h>       /* Dee_ONCE */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
-#include <hybrid/int128.h>          /* __HYBRID_INT128_INIT16N, __hybrid_int128_* */
+#include <hybrid/int128.h>          /* __hybrid_int128_* */
 #include <hybrid/overflow.h>        /* OVERFLOW_SCAST */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__ */
 
-#include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* UINT64_C, int64_t, uint32_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_sendfile

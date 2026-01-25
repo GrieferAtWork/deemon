@@ -27,18 +27,18 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_*, Dee_*alloc*, Dee_Freea, _Dee_MallococBufsize */
+#include <deemon/alloc.h>           /* DeeObject_*, Dee_Mallocac, _Dee_MallococBufsize */
 #include <deemon/bool.h>            /* DeeBool_For, DeeBool_Type, Dee_False, Dee_True */
 #include <deemon/bytes.h>           /* DeeBytes_Type */
 #include <deemon/cached-dict.h>     /* DeeCachedDict_Type */
 #include <deemon/cell.h>            /* DeeCellObject, DeeCell_Type */
 #include <deemon/class.h>           /* DeeClass_DESC, DeeInstanceMember_New, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_instance_desc */
-#include <deemon/code.h>            /* DeeFunction_Type, Dee_operator_t */
-#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_* */
+#include <deemon/code.h>            /* DeeFunction_Type */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_gethidx8, Dee_dict_sethidx8 */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>           /* CONFIG_HAVE_FPU, DeeFloat_Type */
 #include <deemon/gc.h>              /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_Track */
-#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
+#include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_* */
 #include <deemon/instancemethod.h>  /* DeeInstanceMethodObject, DeeInstanceMethod_New, DeeInstanceMethod_Type */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/kwds.h>            /* DeeKw_ForceWrap, DeeKw_Wrap, DeeKwdsObject, DeeKwds_Type, DeeType_IsKw */
@@ -53,12 +53,12 @@
 #include <deemon/operator-hints.h>  /* DeeNO_call_kw_t, DeeNO_call_t, DeeType_RequireNativeOperator */
 #include <deemon/property.h>        /* DeePropertyObject, DeeProperty_Type */
 #include <deemon/rodict.h>          /* DeeRoDict*, Dee_rodict_builder* */
-#include <deemon/roset.h>           /* DeeRoSet*, Dee_roset_item */
+#include <deemon/roset.h>           /* DeeRoSet* */
 #include <deemon/seq.h>             /* DeeSeq_Type, DeeSeq_Unpack, DeeSharedVector_* */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString*, DeeUni_IsSymCont, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/super.h>           /* DeeObject_T*, DeeSuper* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, CONFIG_HAVE_strchrnul, bzero, memchr, strchr, strchrnul, strcmp */
+#include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memchr, strchr, strcmp */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
 #include <deemon/weakref.h>         /* DeeWeakRefAbleObject, DeeWeakRefAble_Type */

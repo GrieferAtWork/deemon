@@ -24,7 +24,7 @@
 
 #include <deemon/compiler/assembler.h>
 
-#include <stddef.h> /* offsetof, size_t */
+#include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM

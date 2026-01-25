@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>            /* DeeObject_*, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/class.h>            /* DeeClassDescriptorObject, DeeClassDescriptor_*, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_operator */
-#include <deemon/code.h>             /* Dee_CODE_F*, Dee_operator_t */
+#include <deemon/code.h>             /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/doctext.h>
 #include <deemon/compiler/lexer.h>
@@ -34,7 +34,7 @@
 #include <deemon/none.h>             /* Dee_None */
 #include <deemon/object.h>
 #include <deemon/string.h>           /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer* */
-#include <deemon/system-features.h>  /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strcmp, strlen */
+#include <deemon/system-features.h>  /* DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strlen */
 #include <deemon/tuple.h>            /* Dee_EmptyTuple */
 
 #include "../../runtime/strings.h"

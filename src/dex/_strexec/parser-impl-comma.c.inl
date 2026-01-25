@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/list.h>            /* DeeList_* */
+#include <deemon/list.h>            /* DeeList_*, Dee_objectlist_packlist */
 #include <deemon/object.h>
 #include <deemon/seq.h>             /* DeeSeq_NewEmpty, DeeSeq_Unpack */
 #include <deemon/string.h>          /* DeeUni_IsSpace */

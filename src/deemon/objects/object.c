@@ -22,13 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FreeTracker, DeeSlab_ENUMERATE, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCalloc */
+#include <deemon/alloc.h>              /* DeeSlab_ENUMERATE, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCalloc */
 #include <deemon/arg.h>                /* DeeArg_BadArgc0, DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/attribute.h>          /* DeeEnumAttr_Type */
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_return_bool01, return_bool, return_bool01, return_false, return_true */
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/class.h>              /* DeeClassDesc_QueryInstanceAttributeStringHash, DeeClassDescriptorObject, DeeClass_DESC, DeeInstance_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_instance_desc, Dee_instance_desc_lock_endwrite, Dee_instance_desc_lock_write */
-#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_Check, DeeFunction_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_operator_t */
+#include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_Check, DeeFunction_Type, DeeYieldFunctionObject, DeeYieldFunction_Type */
 #include <deemon/computed-operators.h>
 #include <deemon/dict.h>               /* Dee_dict_item, Dee_dict_vidx_t */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_BOUND, DeeRT_Err* */
@@ -46,20 +46,20 @@
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>          /* Dee_DEFINE_CLSPROPERTY */
+#include <deemon/objmethod.h>          /*  */
 #include <deemon/operator-hints.h>     /* DeeType_GetNativeOperator, DeeType_GetNativeOperatorWithoutUnsupported, Dee_tno_id */
 #include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type */
 #include <deemon/roset.h>              /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
-#include <deemon/seq.h>                /* DeeSeqOne_GET, DeeSeqOne_Type, DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
+#include <deemon/seq.h>                /* DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
-#include <deemon/string.h>             /* DEFINE_STRING, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
+#include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, bzero*, memcpyc, memsetp, strlen */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, bzero*, memcpyc, strlen */
 #include <deemon/tuple.h>              /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
-#include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQ_REL, atomic_* */
-#include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_init */
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_*, Dee_atomic_rwlock_init */
 
 #include <hybrid/align.h>       /* IS_ALIGNED */
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
@@ -75,7 +75,7 @@
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* UINT32_C, UINT64_C, uint16_t, uintptr_t */
 
 #undef container_of

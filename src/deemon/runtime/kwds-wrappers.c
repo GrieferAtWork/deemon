@@ -36,7 +36,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, bcmpc, memcpyc, strcmp */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */

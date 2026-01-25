@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/bytes.h>           /* DeeBytes_DATA, DeeBytes_SIZE */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_FSError, DeeError_SystemError */
@@ -36,9 +36,9 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/notify.h>          /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0, DEFINE_KWCMETHOD */
-#include <deemon/string.h>          /* DEFINE_STRING, DEFINE_STRING_EX, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, chdir, fchdir, fchdirat, gethostname, strnlen, wchdir */
+#include <deemon/objmethod.h>       /*  */
+#include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FREPLAC */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, chdir, fchdir, fchdirat, gethostname, wchdir */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_HAVE_FS_DRIVES, DeeSystem_PrintPwd, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 

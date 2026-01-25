@@ -27,7 +27,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_*, Dee_appexit_object, Dee_threadexit_object, ERROR_HANDLED_NORMAL */
 #include <deemon/error_types.h>        /* DeeError_*_instance, DeeNoMemoryErrorObject, DeeSignalObject, DeeSystemErrorObject */
-#include <deemon/exec.h>               /* Dee_AtExit, Dee_Exit, Dee_RUNATEXIT_FDONTRUN, Dee_RunAtExit */
+#include <deemon/exec.h>               /* Dee_AtExit, Dee_RUNATEXIT_FDONTRUN, Dee_RunAtExit */
 #include <deemon/format.h>             /* DeeFormat_*, Dee_snprintf */
 #include <deemon/module.h>             /* DeeModule_CallExternStringf */
 #include <deemon/none-operator.h>      /* DeeNone_* */
@@ -35,7 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/struct.h>             /* DeeStructObject_* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, EXIT_SUCCESS, _Exit, exit */
+#include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, _Exit, exit */
 #include <deemon/system.h>             /* DeeNTSystem_*, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
 

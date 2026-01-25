@@ -40,11 +40,11 @@
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewUninitialized */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
-#include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_SHARED_LOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/lock.h>       /* Dee_SHARED_LOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_lock_* */
 #include <deemon/util/once.h>       /* Dee_ONCE */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS

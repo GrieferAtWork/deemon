@@ -33,8 +33,8 @@
 #include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowUMul */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
-#include <deemon/system-features.h> /* CONFIG_HAVE_strnlen, DeeSystem_DEFINE_strnlen, memcpyc, strnlen */
+#include <deemon/objmethod.h>       /*  */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strnlen, memcpyc */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UMUL */
 

@@ -34,7 +34,7 @@
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/operator-hints.h>  /* tdefault__*, tusrtype__*, usrtype__* */
+#include <deemon/operator-hints.h>  /* tdefault__compare__with__le__and__ge, tdefault__compare__with__lo__and__gr */
 #include <deemon/seq.h>             /* DeeIterator_Foreach, DeeIterator_ForeachPair, DeeSeq_Unpack */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/super.h>           /* DeeObject_T* */

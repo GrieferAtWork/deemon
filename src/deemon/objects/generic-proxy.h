@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/object.h>
-#include <deemon/serial.h> /* Dee_seraddr_t, Dee_serial */
+#include <deemon/serial.h> /* Dee_seraddr_t */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

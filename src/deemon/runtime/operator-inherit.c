@@ -25,7 +25,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy */
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL */
 
 /************************************************************************/

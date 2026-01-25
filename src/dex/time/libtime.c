@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_*, UNP* */
+#include <deemon/arg.h>             /* DeeArg_*, UNP* */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero */
@@ -39,7 +39,7 @@
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/numeric.h>         /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_*CMETHOD* */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/serial.h>          /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeUni_ToLower, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, strlen, time, time64, timezone, tzset */
@@ -49,12 +49,12 @@
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
-#include <hybrid/int128.h>          /* __HYBRID_UINT128_INIT16N, __hybrid_int128_*, __hybrid_uint128_* */
+#include <hybrid/int128.h>          /* __hybrid_int128_*, __hybrid_uint128_* */
 #include <hybrid/unaligned.h>       /* UNALIGNED_GET64 */
 
-#include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* INT32_MAX, INT32_MIN, INT64_C, UINT16_C, UINT32_C, UINT64_C, int8_t, int32_t, int64_t, uintN_t, uintptr_t */
+#include <stdbool.h> /* bool, true */
+#include <stddef.h>  /* size_t */
+#include <stdint.h>  /* INT64_C, UINT16_C, UINT32_C, UINT64_C, int8_t, int32_t, int64_t, uintN_t, uintptr_t */
 
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>

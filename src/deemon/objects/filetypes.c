@@ -29,7 +29,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/file.h>               /* DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t, GETC_EOF, GETC_ERR */
-#include <deemon/filetypes.h>          /* DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeFile_*, DeeMemoryFileObject, DeeMemoryFile_* */
+#include <deemon/filetypes.h>          /* DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/mapfile.h>            /* DeeMapFile* */

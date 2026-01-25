@@ -27,8 +27,8 @@
 
 #include <deemon/error.h>      /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/thread.h>     /* DeeThread_Sleep */
-#include <deemon/util/lock.h>  /* Dee_ATOMIC_LOCK_INIT, Dee_ATOMIC_LOCK_INIT_ACQUIRED, Dee_ATOMIC_RWLOCK_*, Dee_EVENT_INIT, Dee_EVENT_INIT_SET, Dee_SEMAPHORE_INIT, Dee_SHARED_LOCK_INIT, Dee_SHARED_LOCK_INIT_ACQUIRED, Dee_SHARED_RWLOCK_*, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_atomic_lock_release_NDEBUG, _Dee_atomic_rwlock_*, _Dee_shared_lock_release_NDEBUG, _Dee_shared_rwlock_* */
-#include <deemon/util/rlock.h> /* Dee_RATOMIC_LOCK_INIT, Dee_RATOMIC_RWLOCK_INIT, Dee_RSHARED_LOCK_INIT, Dee_RSHARED_RWLOCK_INIT, Dee_ratomic_lock_*, Dee_ratomic_rwlock_*, Dee_rshared_lock_*, Dee_rshared_rwlock_*, _Dee_ratomic_lock_release_NDEBUG, _Dee_ratomic_lock_release_ex_NDEBUG, _Dee_ratomic_rwlock_*, _Dee_rshared_lock_release_NDEBUG, _Dee_rshared_lock_release_ex_NDEBUG, _Dee_rshared_rwlock_* */
+#include <deemon/util/lock.h>  /* Dee_ATOMIC_LOCK_INIT, Dee_ATOMIC_LOCK_INIT_ACQUIRED, Dee_ATOMIC_RWLOCK_*, Dee_EVENT_INIT, Dee_EVENT_INIT_SET, Dee_SEMAPHORE_INIT, Dee_SHARED_LOCK_INIT, Dee_SHARED_LOCK_INIT_ACQUIRED, Dee_SHARED_RWLOCK_*, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_atomic_lock_release_NDEBUG, _Dee_atomic_rwlock_*, _Dee_shared_rwlock_upgrade_NDEBUG, _Dee_shared_rwlock_upgrade_noint_NDEBUG */
+#include <deemon/util/rlock.h> /* Dee_RATOMIC_LOCK_INIT, Dee_RATOMIC_RWLOCK_INIT, Dee_RSHARED_LOCK_INIT, Dee_RSHARED_RWLOCK_INIT, Dee_ratomic_lock_*, Dee_ratomic_rwlock_*, Dee_rshared_lock_*, Dee_rshared_rwlock_*, _Dee_ratomic_lock_release_NDEBUG, _Dee_ratomic_lock_release_ex_NDEBUG, _Dee_ratomic_rwlock_*, _Dee_rshared_lock_release_ex_NDEBUG, _Dee_rshared_rwlock_endwrite_ex_NDEBUG */
 
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */
 

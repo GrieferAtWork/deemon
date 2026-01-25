@@ -26,14 +26,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, DeeFunction_CODE, DeeFunction_Check */
-#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/dex.h>             /* DEX_BEGIN, DEX_MEMBER_F, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/file.h>            /* DeeFile_WriteAll */
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* bcmpc, strchr, strend */
 

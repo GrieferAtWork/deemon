@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/code.h>            /* Dee_function_object */
+#include <deemon/code.h>            /*  */
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, MAP_PRIVATE, PROT_EXEC, PROT_READ, PROT_WRITE, getpagesize, mmap, mmap64, mprotect, munmap, sysconf */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, MAP_PRIVATE, PROT_EXEC, PROT_READ, PROT_WRITE, mmap64, mprotect, munmap, sysconf */
 
 #include <hybrid/align.h>     /* CEIL_ALIGN */
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

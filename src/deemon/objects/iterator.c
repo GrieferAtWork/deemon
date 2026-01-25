@@ -30,13 +30,13 @@
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_ErrIntegerOverflowU, DeeRT_ErrUnknownAttr */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
-#include <deemon/int.h>                /* DEFINE_INT32, DEFINE_INT64, DeeIntObject, DeeInt_* */
+#include <deemon/int.h>                /* DeeIntObject, DeeInt_* */
 #include <deemon/mro.h>                /* DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_QueryAttributeHash */
 #include <deemon/none-operator.h>      /* DeeNone_*, _DeeNone_retsm1_1 */
 #include <deemon/none.h>               /* return_none */
 #include <deemon/object.h>
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeNO_nextpair_t, DeeType_RequireNativeOperator, maketyped__getattr */
-#include <deemon/seq.h>                /* DeeIterator_*, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
+#include <deemon/seq.h>                /* DeeIterator_EmptyInstance, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 

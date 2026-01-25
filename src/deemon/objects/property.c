@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackKw */
 #include <deemon/bool.h>               /* return_bool */
-#include <deemon/code.h>               /* DeeFunctionObject, DeeFunction_Check, DeeFunction_GetInfo, Dee_function_info, Dee_function_info_fini, Dee_operator_t */
+#include <deemon/code.h>               /* DeeFunctionObject, DeeFunction_Check, DeeFunction_GetInfo, Dee_function_info, Dee_function_info_fini */
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_AttributeError, DeeError_Catch */

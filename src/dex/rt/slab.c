@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_*, DeeSlab*, Dee_SLAB_COUNT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MalloccBufsize, _Dee_MallococBufsize */
+#include <deemon/alloc.h>           /* DeeObject_*, DeeSlab*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MalloccBufsize, _Dee_MallococBufsize */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_NewSize */

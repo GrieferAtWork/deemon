@@ -40,7 +40,7 @@
 #include <hybrid/typecore.h>        /* __SIZEOF_SIZE_T__ */
 
 #include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* UINT32_MAX, uint32_t */
+#include <stdint.h> /* uint32_t */
 
 #undef ipc_Pipe_USE_CreatePipe
 #undef ipc_Pipe_USE_pipe_OR_pipe2

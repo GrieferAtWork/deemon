@@ -26,12 +26,12 @@
 
 #include <deemon/arg.h>             /* DeeArg_*, Dee_keyword */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowU32, DeeRT_ErrUnpackErrorEx */
-#include <deemon/format.h>          /* Dee_PUnpackStruct, Dee_UnpackStruct, Dee_Unpackf, Dee_VPUnpackf, Dee_VUnpackf, Dee_va_list_struct */
+#include <deemon/format.h>          /* Dee_UnpackStruct, Dee_VPUnpackf, Dee_VUnpackf, Dee_va_list_struct */
 #include <deemon/kwds.h>            /* DeeKw_TryGetItemNRStringHash, DeeKwdsObject, DeeKwds_Check, Dee_kwds_entry */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar */
-#include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, strcmp */
+#include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp */
 
 #include <hybrid/host.h>      /* __i386__, __x86_64__ */
 #include <hybrid/int128.h>    /* __ALIGNOF_INT128__, __hybrid_uint128_set32 */
@@ -43,7 +43,7 @@
 #include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* INTn_MAX, INTn_MIN, UINTn_MAX, intN_t, uintN_t, uintptr_t */
+#include <stdint.h>  /* intN_t, uintN_t, uintptr_t */
 
 #if (defined(DEFINE_DeeArg_Unpack) + defined(DEFINE_DeeArg_UnpackStruct)) != 1
 #error "Must #define exactly one of these macros"

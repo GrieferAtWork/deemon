@@ -98,7 +98,7 @@
 #include <deemon/operator-hints.h>  /* maketyped__* */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/super.h>           /* DeeObject_T* */
-#include <deemon/system-features.h> /* CONFIG_HAVE_strcmp, DeeSystem_DEFINE_strcmp, access, strcmp, strlen */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, access, strlen */
 #include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE */
 /**/
 

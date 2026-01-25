@@ -27,8 +27,8 @@
 #include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
-#include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, CONFIG_HAVE_IEEE754_LE, DEFINE_FLOAT, DeeFloatObject, DeeFloat_*, Dee_Strtod */
-#include <deemon/int.h>                /* DEFINE_INT15, DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */
+#include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, CONFIG_HAVE_IEEE754_LE, DeeFloatObject, DeeFloat_PrintRepr, DeeFloat_Type, Dee_Strtod */
+#include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
@@ -41,7 +41,7 @@
 #include "../runtime/strings.h"
 
 #include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* INTPTR_MAX, INTPTR_MIN, UINT32_C, int32_t, int64_t, intptr_t, uintN_t */
+#include <stdint.h> /* UINT32_C, int32_t, int64_t, intptr_t, uintN_t */
 
 #ifdef CONFIG_HAVE_FPU
 #include "int_logic.h" /* `DeeInt_Alloc()' */

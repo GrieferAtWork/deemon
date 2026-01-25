@@ -63,21 +63,21 @@
 
 #include <deemon/api.h>
 
-#include <deemon/abi/time.h>        /* DEFINE_DeeTime_NewFILETIME, DEFINE_DeeTime_NewUnix */
+#include <deemon/abi/time.h>        /*  */
 #include <deemon/arg.h>             /* DeeArg_Unpack1X */
 #include <deemon/bool.h>            /* Dee_False, Dee_True, return_bool, return_false */
 #include <deemon/dex.h>             /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_* */
 #include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/set.h>             /* DeeSet_Type, Dee_EmptySet */
-#include <deemon/string.h>          /* DEFINE_STRING_EX, DeeString*, Dee_STRING_*, Dee_string_utf */
-#include <deemon/system-features.h> /* CONFIG_HAVE_errno, CONFIG_HAVE_memmem, DeeSystem_DEFINE_memmem, memmem */
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_*, Dee_string_utf */
+#include <deemon/system-features.h> /* CONFIG_HAVE_errno, DeeSystem_DEFINE_memmem */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES, DeeSystem_HAVE_FS_ICASE */
 
 #include <stdbool.h> /* true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 
 DECL_BEGIN
 

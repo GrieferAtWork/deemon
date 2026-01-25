@@ -41,7 +41,7 @@
 #include "../runtime/strings.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t */
 
 

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/accu.h>           /* Dee_ACCU_FLOAT_DEFINED, Dee_ACCU_INT64_DEFINED, Dee_accu, Dee_accu_* */
+#include <deemon/accu.h>           /* Dee_ACCU_FLOAT_DEFINED, Dee_ACCU_INT64_DEFINED, Dee_accu */
 #include <deemon/bytes.h>          /* DeeBytes*, Dee_bytes_printer_* */
 #include <deemon/float.h>          /* DeeFloatObject, DeeFloat_New, DeeFloat_VALUE */
 #include <deemon/int.h>            /* DeeInt_* */
@@ -39,7 +39,7 @@
 #include "../objects/int_logic.h"
 
 #include <stddef.h> /* size_t */
-#include <stdint.h> /* INT32_MAX, INT32_MIN, int32_t, int64_t */
+#include <stdint.h> /* int32_t, int64_t */
 
 #ifndef INT32_MIN
 #include <hybrid/limitcore.h> /* __INT32_MAX__, __INT32_MIN__ */

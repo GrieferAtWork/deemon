@@ -35,7 +35,7 @@
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeRange_New, DeeSeqRange_DoClamp, DeeSeqRange_DoClamp_n, DeeSeqSome_Type, DeeSeq_*, DeeType_GetSeqClass, Dee_SEQCLASS_*, Dee_seq_range */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeRange_New, DeeSeqSome_Type, DeeSeq_*, Dee_SEQCLASS_*, Dee_seq_range */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/super.h>              /* DeeSuper_New */

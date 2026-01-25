@@ -34,7 +34,7 @@
 #include <deemon/mro.h>                /* type_member_* */
 #include <deemon/none.h>               /* return_none */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>          /* DeeCMethod*_*, DeeCMethodObject, DeeClsMember*, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod*, DeeKwClsMethod*, DeeKwObjMethod_CallFunc, DeeKwObjMethod_CallFunc_d, DeeKwObjMethod_CallFuncf, DeeKwObjMethod_Check, DeeKwObjMethod_GetOrigin, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeKwObjMethod_VCallFuncf, DeeObjMethod*, Dee_clsproperty_origin, Dee_cmethod*, Dee_kwcmethod_t, Dee_objmethod_origin */
+#include <deemon/objmethod.h>          /* DeeCMethod*_*, DeeCMethodObject, DeeClsMemberObject, DeeClsMember_Type, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod*, DeeKwClsMethod*, DeeKwObjMethod_CallFunc, DeeKwObjMethod_Check, DeeKwObjMethod_GetOrigin, DeeKwObjMethod_Type, DeeObjMethod*, Dee_clsproperty_origin, Dee_cmethod*, Dee_kwcmethod_t, Dee_objmethod_origin */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FIGNORE */

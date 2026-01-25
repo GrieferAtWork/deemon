@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, DeeUni_Flags, DeeUni_IsSpace, Dee_UNICODE_ISSYMCONT, Dee_UNICODE_ISSYMSTRT, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, Dee_unicode_readutf8_n */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memrend, DeeSystem_DEFINE_memrend, bcmpc, memrend */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, bcmpc */
 #include <deemon/thread.h>          /* DeeThread_Self */
 #include <deemon/tuple.h>           /* DeeTuple_Type */
 

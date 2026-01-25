@@ -33,7 +33,7 @@
 #include <hybrid/sequence/list.h> /* SLIST_FIRST, SLIST_REMOVE_HEAD */
 
 #include <stddef.h> /* NULL */
-#include <stdint.h> /* INT32_MAX, uintptr_t */
+#include <stdint.h> /* uintptr_t */
 
 #ifndef INT32_MAX
 #include <hybrid/limitcore.h> /* __INT32_MAX__ */

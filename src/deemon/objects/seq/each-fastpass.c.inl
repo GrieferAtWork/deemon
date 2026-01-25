@@ -44,7 +44,7 @@
 #include "../generic-proxy.h"
 #include "each.h"
 
-#include <stdbool.h> /* bool */
+#include <stdbool.h> /*  */
 #include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uintptr_t */
 

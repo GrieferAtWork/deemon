@@ -37,7 +37,7 @@
 #include <deemon/format.h>    /* PRFuSIZ */
 #include <deemon/int.h>       /* DeeInt_NewSize */
 #include <deemon/object.h>
-#include <deemon/objmethod.h> /* DEFINE_CMETHOD, DEFINE_CMETHOD1 */
+#include <deemon/objmethod.h> /*  */
 #include <deemon/string.h>    /* DeeString_Type */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */

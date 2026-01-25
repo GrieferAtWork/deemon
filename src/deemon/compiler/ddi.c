@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DeeStringObject, Dee_ascii_printer* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_qsort, DeeSystem_DEFINE_qsort, bzero, memcpy, mempcpy, qsort */
+#include <deemon/system-features.h>    /* DeeSystem_DEFINE_qsort, bzero, memcpy, mempcpy */
 #include <deemon/system.h>             /* DeeSystem_BaseName */
 #include <deemon/util/bytewriter.h>    /* DEE_BYTEWRITER_INIT, Dee_bytewriter, Dee_bytewriter_*, bytewriter_fini */
 

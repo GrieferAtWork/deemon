@@ -27,15 +27,15 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_UnpackStructKw */
+#include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F, Dee_DEXSYM_CONSTEXPR, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/file.h>            /* Dee_OPEN_F*, OPEN_FCREAT, OPEN_FEXCL */
 #include <deemon/int.h>             /* DeeInt_NewUInt */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_KWCMETHOD */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_BINARY, O_CREAT, O_LARGEFILE, O_OBTAIN_DIR, O_RDWR, O_TRUNC, O_WRONLY, _O_APPEND, _O_RDONLY, creat, creat64, open, openat, openat64, open64, open_osfhandle, wcreat, wcreat64, wopen, wopenat, wopenat64, wopen64 */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_BINARY, O_CREAT, O_LARGEFILE, O_OBTAIN_DIR, O_RDWR, O_TRUNC, O_WRONLY, _O_APPEND, _O_RDONLY, creat64, openat64, open64, open_osfhandle, wcreat64, wopenat64, wopen64 */
 #include <deemon/system.h>          /* DeeNTSystem_OpenFile, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

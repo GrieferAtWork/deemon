@@ -22,12 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_Malloc, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
+#include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_Malloc, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack0Or1Or2, DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* DeeBool_Check, return_bool */
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_class_operator */
-#include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, DeeYieldFunction_Type, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, Dee_operator_t, code_addr_t */
+#include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_*, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, DeeYieldFunction_Type, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_frame, Dee_code_frame_kwds, Dee_except_handler, Dee_function_info, Dee_hostasm_function_data_destroy, Dee_hostasm_function_init, code_addr_t */
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */

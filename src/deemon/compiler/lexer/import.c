@@ -32,11 +32,11 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, DeeUni_Flags, Dee_UNICODE_*, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
-#include <deemon/system-features.h> /* CONFIG_HAVE_memrend, DeeSystem_DEFINE_memrend, memcpy, memrend, strlen */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, memcpy, strlen */
 #include <deemon/thread.h>          /* DeeThread_Self, Dee_import_frame */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
+#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t, uint32_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES

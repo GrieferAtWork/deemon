@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free, Dee_Freea, _Dee_MallococBufsize */
-#include <deemon/class.h>           /* DeeClassDesc_QueryInstanceAttribute, DeeClassDesc_QueryInstanceAttributeHash, DeeClassDescriptorObject, DeeClassDescriptor_CLSOPNEXT, DeeClassDescriptor_Type, DeeClass_*, DeeInstance_DESC, DeeInstance_SetBasicAttribute, Dee_CLASS_*, Dee_TP_FCLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_class_optable, Dee_instance_desc, Dee_instance_desc_*, instance_* */
+#include <deemon/class.h>           /* DeeClassDesc_QueryInstanceAttribute, DeeClassDesc_QueryInstanceAttributeHash, DeeClassDescriptorObject, DeeClassDescriptor_CLSOPNEXT, DeeClassDescriptor_Type, DeeClass_DESC, DeeInstance_DESC, DeeInstance_SetBasicAttribute, Dee_CLASS_*, Dee_TP_FCLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_class_optable, Dee_instance_desc, Dee_instance_desc_*, instance_* */
 #include <deemon/error-rt.h>        /* DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */

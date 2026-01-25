@@ -31,7 +31,7 @@
 #include <deemon/asm.h>     /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_*, Dee_instruction_t */
 #include <deemon/bool.h>    /* Dee_False, Dee_True */
 #include <deemon/class.h>   /* DeeClassDescriptorObject, DeeClassDescriptor_Type, DeeClass_New */
-#include <deemon/code.h>    /* DeeCodeObject, DeeCode_Type, DeeFunctionObject, DeeFunction_Type, Dee_code_addr_t, Dee_instruction_t, Dee_operator_t */
+#include <deemon/code.h>    /* DeeCodeObject, DeeCode_Type, DeeFunctionObject, DeeFunction_Type, Dee_code_addr_t, Dee_instruction_t */
 #include <deemon/dict.h>    /* DeeDict_Type */
 #include <deemon/error.h>   /* DeeError_Handled, DeeError_Throw, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>    /* DeeFile_*, FILE_OPERATOR_PUTC, FILE_OPERATOR_WRITE, GETC_ERR */

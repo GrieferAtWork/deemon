@@ -22,10 +22,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>           /* Dee_class_attribute, Dee_class_desc */
-#include <deemon/code.h>            /* Dee_code_frame, Dee_code_object, Dee_function_object, Dee_operator_t */
-#include <deemon/kwds.h>            /* Dee_kwds_object */
-#include <deemon/module.h>          /* Dee_module_object */
+#include <deemon/class.h>           /*  */
+#include <deemon/code.h>            /*  */
+#include <deemon/kwds.h>            /*  */
+#include <deemon/module.h>          /*  */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* access */
 

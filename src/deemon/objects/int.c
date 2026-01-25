@@ -39,7 +39,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Repeat */
-#include <deemon/int.h>                /* DEFINE_UINT32, DEFINE_UINT64, DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_ATOI_STRING_FSIGNED, Dee_Ato*, Dee_DIGIT_*, Dee_INT_PRINT*, Dee_INT_STRING*, INT_NEG_OVERFLOW, INT_POS_OVERFLOW, INT_SIGNED, INT_UNSIGNED, _Dee_int_1digit_object */
+#include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_ATOI_STRING_FSIGNED, Dee_DIGIT_*, Dee_INT_PRINT*, Dee_INT_STRING*, INT_NEG_OVERFLOW, INT_POS_OVERFLOW, INT_SIGNED, INT_UNSIGNED, _Dee_int_1digit_object */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
@@ -47,7 +47,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeAscii_ItoaDigits, DeeString*, DeeUni_*, Dee_ASCII_PRINTER_*, Dee_UNICODE_*, Dee_ascii_printer*, Dee_unicode_printer*, Dee_unitraits, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, memend, mempcpyc, memset */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_LIMITS_H, CONFIG_HAVE_MATH_H, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, mempcpyc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <hybrid/__byteswap.h> /* __hybrid_bswap* */
@@ -68,7 +68,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* INTn_MAX, INTn_MIN, SIZE_MAX, UINT16_C, UINT32_C, UINT64_C, UINTn_MAX, intN_t, uintN_t */
+#include <stdint.h>  /* UINT16_C, UINT32_C, UINT64_C, intN_t, uintN_t */
 
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
 #include <deemon/util/atomic.h> /* atomic_read */

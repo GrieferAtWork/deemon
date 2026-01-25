@@ -33,7 +33,7 @@
 #include <deemon/file.h>            /* DeeFile_OpenString, DeeFile_ReadLine, OPEN_FCLOEXEC, OPEN_FRDONLY */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>
-#include <deemon/objmethod.h>       /* DEFINE_CMETHOD0 */
+#include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CTL_HW, HW_AVAILCPU, HW_NCPU, MPC_GETNUMSPUS, _SC_NPROCESSORS_ONLN, _SC_NPROC_ONLN, bcmpc, get_nprocs, mpctl, sysconf, sysctl */
 
 #include <stdbool.h> /* false */

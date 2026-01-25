@@ -30,7 +30,7 @@
 #include <deemon/format.h>          /* Dee_VPPackf, Dee_VPPackf_Cleanup, Dee_VPackf, Dee_va_list_struct */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
-#include <deemon/mro.h>             /* Dee_ATTRINFO_*, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrperm_t, Dee_type_member_*, type_getset_*, type_member_get, type_member_iterattr, type_method_*, type_obmemb_*, type_obmeth_*, type_obprop_* */
+#include <deemon/mro.h>             /* Dee_ATTRINFO_*, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrperm_t, type_member_get, type_method_vcallf */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */

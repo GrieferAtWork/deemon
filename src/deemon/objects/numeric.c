@@ -26,12 +26,12 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>               /* DeeBool_NewFalse, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h>
-#include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, DeeFloatObject, DeeFloat_New, DeeFloat_Type, Dee_DEFINE_FLOAT */
-#include <deemon/int.h>                /* DEFINE_INT15, DeeIntObject, DeeInt_* */
+#include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, DeeFloatObject, DeeFloat_New, DeeFloat_Type */
+#include <deemon/int.h>                /* DeeIntObject, DeeInt_* */
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>
-#include <deemon/string.h>             /* DEFINE_STRING_EX, DeeString_STR */
+#include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, isgreater, isgreaterequal, isless, islessequal, islessgreater */
 #include <deemon/tuple.h>              /* DeeTuple* */
 

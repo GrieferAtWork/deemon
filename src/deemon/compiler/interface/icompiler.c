@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
-#include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_F*, Dee_operator_t */
+#include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_F* */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/error.h>

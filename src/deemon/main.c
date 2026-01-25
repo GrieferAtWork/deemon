@@ -47,7 +47,7 @@
 #include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DEFINE_STRING, DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, atoi, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strcmp, strend, strlen */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
 #include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 
@@ -60,7 +60,7 @@
 #include "runtime/runtime_error.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stddef.h>  /* offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES

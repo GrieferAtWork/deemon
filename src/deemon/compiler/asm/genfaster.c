@@ -33,7 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/rodict.h>             /* DeeRoDict_Type */
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
-#include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/tuple.h>              /* DeeTuple_Type */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */
