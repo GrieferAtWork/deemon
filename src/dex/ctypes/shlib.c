@@ -36,7 +36,7 @@
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString* */
-#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_STUB, open, system */
+#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_STUB */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewUninitialized */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */

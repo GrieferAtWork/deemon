@@ -20,8 +20,10 @@
 
 import c.fixincludes;
 import posix;
+import * from deemon;
 
 function main() {
+	Error.AppExit.atexit(() -> Error.AppExit.exit(0));
 	local final ROOTDIR = posix.resolvepath(
 		posix.joinpath(posix.headof(__FILE__), r"../.."));
 
@@ -37,6 +39,8 @@ function main() {
 #if 0
 //		.dumpExports()
 		.dumpHeaders()
+#elif 1
+		.fixFile(f"{ROOTDIR}/src/deemon/compiler/lexer/expression.c")
 #else
 		.fixPaths(include: {
 			f"{ROOTDIR}/src/deemon",

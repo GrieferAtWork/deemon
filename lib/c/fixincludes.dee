@@ -346,6 +346,36 @@ local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 }.frozen;
 
 
+class SrcIncludeInfo {
+	this = default;
+	public final member include: string;
+	public member includeStringOffset: int;
+	public member includeStringEndOffset: int;
+	public member commentStartOffset: int | none;
+	public member commentEndOffset: int | none;
+	public member comment: Bytes | string | none;
+
+	public property asDependentFile: DependentFile = {
+		get(): DependentFile {
+			return DependentFile.ofIncludeString(include);
+		}
+	}
+
+	public patchOffsets(deltaStart: int, deltaOffset: int) {
+		if (includeStringOffset >= deltaStart)
+			includeStringOffset += deltaOffset;
+		if (includeStringEndOffset >= deltaStart)
+			includeStringEndOffset += deltaOffset;
+		if (commentStartOffset !is none &&
+		    commentStartOffset >= deltaStart)
+			commentStartOffset += deltaOffset;
+		if (commentEndOffset !is none &&
+		    commentEndOffset >= deltaStart)
+			commentEndOffset += deltaOffset;
+	}
+};
+
+
 local class HeaderParser {
 	this = default;
 
@@ -354,7 +384,7 @@ local class HeaderParser {
 	public member data: Bytes;
 	public member pos: int = 0;
 	public member end: int;
-	public member allKeywords: {string...} = HashSet();
+	public member allPotentiallyExportedKeywords: {string...} = HashSet();
 	public member exportRegexes: {string...} = HashSet();
 	public member exportRegexesAfterExtraIncludes: {string: Set with Set with DependentFile} = Dict();
 	public member notExportedKeywords: {string...} = HashSet();
@@ -366,6 +396,14 @@ local class HeaderParser {
 	public member lastExportPos: int = 0;
 	public member lastIncludeString: Bytes | none = none;
 	public member lastIncludeStringPos: int = 0;
+
+	/* The following stuff is only used when parsing source files */
+	public member currentNoFormatRegionStart: int | none = none;
+	public member noFormatRegions: {(int, int)...} | none = none;
+	@@All keywords that potentially appear somewhere within the file
+	public member allKeywords: {string...} | none = none;
+	public member allIncludes: {string: SrcIncludeInfo} | none = none;
+
 
 	public lc(at: int): (int, int) {
 		local sol = data.rfind("\n", 0, at) + 1;
@@ -384,8 +422,8 @@ local class HeaderParser {
 		throw Error(warn(at, msg));
 	}
 
-	public addKeyword(kwd: string, pos: int) {
-		allKeywords.insert(kwd);
+	public addPotentiallyExportedKeyword(kwd: string, pos: int) {
+		allPotentiallyExportedKeywords.insert(kwd);
 		lastExport = kwd;
 		lastExportPos = pos;
 	}
@@ -430,7 +468,9 @@ local class HeaderParser {
 			do {
 				++pos;
 			} while (pos < end && (data.issymcont(pos) || (string.chr(data[pos]) in extraSymbolChars)));
-			return data[kwdStart:pos].decode("utf-8");
+			local keyword = data[kwdStart:pos].decode("utf-8");
+			allKeywords.insert(keyword);
+			return keyword;
 		}
 		++pos;
 		switch (result) {
@@ -440,9 +480,14 @@ local class HeaderParser {
 			local stop = result.ord();
 			local stringStart = pos;
 			local stringEnd = stringStart;
-			while (stringEnd < end &&
-			       (data[stringEnd] != stop || data[stringEnd - 1] == '\\'.ord()))
+			while (stringEnd < end) {
+				local ch = data[stringEnd];
+				if (ch == stop)
+					break;
+				if (ch == '\\'.ord())
+					++stringEnd;
 				++stringEnd;
+			}
 			pos = stringEnd + 1;
 			/* Normalize to double-quote to simplify processing by caller */
 			return f'"{data[stringStart:stringEnd].decode("utf-8")}"';
@@ -513,8 +558,19 @@ again:
 	}
 
 	public parseComment() {
-		if (!data.startswith("!", pos, end))
+		if (!data.startswith("!", pos, end)) {
+			local tok = nextRawNoComment("-");
+			if (tok == "clang-format") {
+				tok = nextRawNoComment("-");
+				if (tok == "off") {
+					currentNoFormatRegionStart = pos;
+				} else if (tok == "on" && currentNoFormatRegionStart !is none) {
+					noFormatRegions.append((currentNoFormatRegionStart, pos));
+					currentNoFormatRegionStart = none;
+				}
+			}
 			return;
+		}
 		local directiveStart = pos;
 		++pos;
 		local tok = nextRawNoComment();
@@ -713,11 +769,12 @@ again_export_directive:
 				err(directiveStart, f"Encountered garbage after '/*!export ...*/': {repr tok}");
 		}	break;
 
-		case "KEEPME":
-			/* Marker unrelated to fixincludes headers, used to annotate lines that should not be removed */
-			/* TODO: This annotation should cause the annotated line to
-			 *       be treated as "noFormatRegions" in "SrcFileInfo"! */
-			break;
+		case "KEEPME": {
+			/* Marker unrelated to fixincludes headers, used
+			 * to annotate lines that should not be removed */
+			local sol = data.rfind("\n", 0, pos) + 1;
+			noFormatRegions.append((sol, end));
+		}	break;
 
 		case "always_includes": {
 			local includeString = parseIncludeString();
@@ -749,8 +806,11 @@ again:
 			if (commentEnd < 0)
 				commentEnd = end;
 			local oldEnd = end;
+			local oldAllKeywords = allKeywords;
+			allKeywords = none;
 			end = commentEnd;
 			parseComment();
+			allKeywords = oldAllKeywords;
 			end = oldEnd;
 			pos = commentEnd + 2;
 			goto again;
@@ -759,8 +819,11 @@ again:
 		case "//": {
 			local eol = findEol(pos);
 			local oldEnd = end;
+			local oldAllKeywords = allKeywords;
+			allKeywords = none;
 			end = eol;
 			parseComment();
+			allKeywords = oldAllKeywords;
 			end = oldEnd;
 			pos = eol + 1;
 			goto again;
@@ -771,8 +834,74 @@ again:
 		return result;
 	}
 
+	private addAllIncludesEntry() {
+		local includeString: string = lastIncludeString.decode("utf-8");
+		if (includeString !in allIncludes) {
+			local includeStringEndOffset: int = pos;
+			local i = pos;
+			local len = end;
+
+			/* Check for include comments */
+			for (;;) {
+				while (i < len && data.isspacexlf(i))
+					++i;
+				if (!data.startswith("/*!", i, len))
+					break;
+				/* fixincludes directives are processed later */
+				local directiveEnd = data.find("*/", i + 3, len);
+				if (directiveEnd < 0)
+					directiveEnd = len;
+				i = directiveEnd;
+			}
+
+			local commentStartOffset: int | none = none;
+			local commentEndOffset: int | none = none;
+			if (data.startswith("/*", i, len)) {
+				i += 2;
+				commentStartOffset = i;
+				i = data.find("*/", i, len);
+				if (i < 0)
+					i = len;
+				commentEndOffset = i;
+				i += 2;
+			} else if (data.startswith("//!", i, len)) {
+				/* There is no include comment... */
+			} else if (data.startswith("//", i, len)) {
+				i += 2;
+				commentStartOffset = i;
+				i = data.find("\n", i, len);
+				if (i < 0)
+					i = len;
+				if (i > commentStartOffset && data[i - 1] == '\r'.ord())
+					--i;
+				commentEndOffset = i;
+				i += 1;
+			}
+
+			local comment: Bytes | none = none;
+			if (commentStartOffset !is none) {
+				while (commentStartOffset < commentEndOffset && data.isspace(commentStartOffset))
+					++commentStartOffset;
+				while (commentEndOffset > commentStartOffset && data.isspace(commentEndOffset - 1))
+					--commentEndOffset;
+				comment = data[commentStartOffset:commentEndOffset];
+			}
+			allIncludes[includeString] = SrcIncludeInfo(
+				include:                includeString,
+				includeStringOffset:    lastIncludeStringPos,
+				includeStringEndOffset: includeStringEndOffset,
+				commentStartOffset:     commentStartOffset,
+				commentEndOffset:       commentEndOffset,
+				comment:                comment,
+			);
+		}
+	}
+
 	public parseDirective() {
+		local oldAllKeywords = allKeywords;
+		allKeywords = none;
 		local cmd = nextRaw();
+		allKeywords = oldAllKeywords;
 		switch (cmd) {
 
 		case "define": {
@@ -780,12 +909,14 @@ again:
 			local kwd = nextRaw();
 			if (!kwd.issymbol())
 				err(kwdStart, f"Expected keyword after '#define', but got {repr kwd}");
-			addKeyword(kwd, kwdStart);
+			addPotentiallyExportedKeyword(kwd, kwdStart);
 		}	break;
 
 		case "include":
 			lastIncludeStringPos = pos;
 			lastIncludeString = parseIncludeString();
+			if (allIncludes !is none)
+				addAllIncludesEntry();
 			break;
 
 		/* TODO: "#if 0 ... #endif" -- skip block (parse //!comments, but don't scan for keyword definitions) */
@@ -863,7 +994,7 @@ skip_paren_block:
 			tok = next();
 			if (tok == "(" && keyword.issymbol()) {
 				/* This matches the "foo" in: "DECL int NOTHROW(LIBCCALL foo)(void);" */
-				addKeyword(keyword, keywordPos);
+				addPotentiallyExportedKeyword(keyword, keywordPos);
 				do {
 					skipParenBlock("(");
 					tok = next();
@@ -880,11 +1011,11 @@ skip_paren_block:
 			if (keyword.issymbol()) {
 				tok = next();
 				if (tok == "{") {
-					addKeyword(keyword, keywordPos);
+					addPotentiallyExportedKeyword(keyword, keywordPos);
 					goto skip_paren_block;
 				} else if (tok == ";") {
 #if 0 /* Incomplete struct shouldn't be considered an export */
-					addKeyword(keyword, keywordPos);
+					addPotentiallyExportedKeyword(keyword, keywordPos);
 #endif
 					goto again;
 				}
@@ -914,7 +1045,7 @@ skip_paren_block:
 		 *
 		 * Current, we'd actually match "__attribute__" as an export name! */
 		if (tok in ";") {
-			addKeyword(keyword, keywordPos);
+			addPotentiallyExportedKeyword(keyword, keywordPos);
 			goto again;
 		}
 
@@ -929,7 +1060,7 @@ skip_paren_block:
 					 * or: "DECL int (foo)();"
 					 * or: "DECL int (foo)() { ... }"
 					 */
-					addKeyword(keyword, keywordPos);
+					addPotentiallyExportedKeyword(keyword, keywordPos);
 					goto again_tok;
 				}
 				if (!lastKwdInParen.issymbol())
@@ -945,9 +1076,9 @@ skip_paren_block:
 		local exports: HashSet with string = header.exports;
 		/* Add exports that were specified via wildcards */
 		if (exportRegexes.remove(".*")) {
-			exports.insertall(allKeywords);
+			exports.insertall(allPotentiallyExportedKeywords);
 		} else {
-			for (local kwd: allKeywords) {
+			for (local kwd: allPotentiallyExportedKeywords) {
 				if (exportRegexes.any(kwd.rematches))
 					exports.insert(kwd);
 			}
@@ -964,7 +1095,7 @@ skip_paren_block:
 
 		/* Add extra-include-requirements that were specified via wildcards */
 		for (local rx, incGroups: exportRegexesAfterExtraIncludes) {
-			for (local kwd: allKeywords) {
+			for (local kwd: allPotentiallyExportedKeywords) {
 				if (kwd.rematches(rx)) {
 					header.exportsAfterExtraIncludes
 						.setdefault(kwd, HashSet())
@@ -996,35 +1127,6 @@ function loadHeader(filename: string): Header {
 
 
 
-
-class SrcIncludeInfo {
-	this = default;
-	public final member include: string;
-	public member includeStringOffset: int;
-	public member includeStringEndOffset: int;
-	public member commentStartOffset: int | none;
-	public member commentEndOffset: int | none;
-	public member comment: Bytes | string | none;
-
-	public property asDependentFile: DependentFile = {
-		get(): DependentFile {
-			return DependentFile.ofIncludeString(include);
-		}
-	}
-
-	public patchOffsets(deltaStart: int, deltaOffset: int) {
-		if (includeStringOffset >= deltaStart)
-			includeStringOffset += deltaOffset;
-		if (includeStringEndOffset >= deltaStart)
-			includeStringEndOffset += deltaOffset;
-		if (commentStartOffset !is none &&
-		    commentStartOffset >= deltaStart)
-			commentStartOffset += deltaOffset;
-		if (commentEndOffset !is none &&
-		    commentEndOffset >= deltaStart)
-			commentEndOffset += deltaOffset;
-	}
-};
 
 class SrcIncludeGroup {
 	this = default;
@@ -1100,6 +1202,9 @@ class SrcFileInfo {
 	public final member noFormatRegions: {(int, int)...};
 	public member data: Bytes;
 	public member dataChanged: bool = false;
+
+	@@Keywords that (appear to be) provided by the module itself
+	public final member selfProvidedKeyword: {string...};
 
 	/* TODO: selfProvidedKeyword: {string...}
 	 *
@@ -1249,6 +1354,8 @@ insert_first_include:
 		for (local kwd: keywords) {
 			if (kwd in keywordsFromIncludes)
 				continue; /* From known include... */
+			if (kwd in selfProvidedKeyword)
+				continue; /* From the file itself (potentially) */
 			local missingHeaderCombinations: Set with {Header...} = fixIncludes.getHeaderByExport(kwd);
 			if (!missingHeaderCombinations)
 				continue;
@@ -1441,6 +1548,41 @@ next_keyword:;
 				fp.write(data);
 		}
 	}
+
+	public dump() {
+		print(filename, ":");
+		if (includes) {
+			print("	includes:");
+			for (local name: includes.keys.sorted()) {
+				local info: SrcIncludeInfo = includes[name];
+				print("		- ", name, ":");
+				print("			includeStringOffset:    ", repr lc(info.includeStringOffset));
+				print("			includeStringEndOffset: ", repr lc(info.includeStringEndOffset));
+				if (info.commentStartOffset !is none)
+					print("			commentStartOffset:     ", repr lc(info.commentStartOffset));
+				if (info.commentEndOffset !is none)
+					print("			commentEndOffset:       ", repr lc(info.commentEndOffset));
+				if (info.comment !is none)
+					print("			comment:                ", info.comment);
+			}
+		}
+		if (keywords) {
+			print("	keywords:");
+			local longestKeywordLen = keywords.each.length > ...;
+			for (local k: keywords.sorted()) {
+				print("		- ", k),;
+				if (k in selfProvidedKeyword) {
+					print(" " * (longestKeywordLen - #k), " !self"),;
+				}
+				print;
+			}
+		}
+		if (noFormatRegions) {
+			print("	noFormatRegions:");
+			for (local start, end: noFormatRegions)
+				print("		- ", repr lc(start), " ... ", repr lc(end));
+		}
+	}
 }
 
 
@@ -1450,6 +1592,30 @@ function loadSrcFileInfo(filename: string): SrcFileInfo {
 	local data: Bytes;
 	with (local fp = File.open(filename, "rb"))
 		data = fp.readall();
+#if 1
+	local parser = HeaderParser(
+		data:            data,
+		end:             #data,
+		header:          Header(filename: filename),
+		filename:        filename,
+		noFormatRegions: List(),
+		allKeywords:     HashSet(),
+		allIncludes:     Dict(),
+	).parseAll();
+
+	local selfProvidedKeyword: {string...} = parser.allPotentiallyExportedKeywords;
+	local allKeywords: {string...} = parser.allKeywords;
+	selfProvidedKeyword.insertall(parser.header.exports);
+	allKeywords.insertall(selfProvidedKeyword);
+	return SrcFileInfo(
+		filename:            filename,
+		includes:            parser.allIncludes,
+		keywords:            allKeywords,
+		selfProvidedKeyword: selfProvidedKeyword,
+		data:                data,
+		noFormatRegions:     parser.noFormatRegions,
+	);
+#else
 	local i = 0, len = #data;
 	local includes: {string: SrcIncludeInfo} = Dict();
 	local keywords: {string...} = HashSet();
@@ -1575,6 +1741,7 @@ seek_eol:
 		data: data,
 		noFormatRegions: noFormatRegions,
 	);
+#endif
 }
 
 
