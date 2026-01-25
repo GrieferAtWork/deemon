@@ -86,6 +86,7 @@
 /*!export OPERATOR_**/
 /*!export STRUCT_**/
 /*!export TF_**/
+/*!export TP_F**/
 /*!export TYPE_GETSET**/
 /*!export TYPE_GETTER**/
 /*!export TYPE_*METHOD**/
