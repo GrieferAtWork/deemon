@@ -40,12 +40,12 @@ function main() {
 //		.dumpExports()
 		.dumpHeaders()
 #elif 0
-		.fixFile(f"{ROOTDIR}/src/deemon/compiler/lexer/expression.c")
+		.fixFile(f"{ROOTDIR}/include/deemon/object.h")
 #else
 		.fixPaths(include: {
-			f"{ROOTDIR}/src/deemon",
-			f"{ROOTDIR}/src/dex",
-//			f"{ROOTDIR}/include/deemon",
+//			f"{ROOTDIR}/src/deemon",
+//			f"{ROOTDIR}/src/dex",
+			f"{ROOTDIR}/include/deemon",
 		}, exclude: {
 			f"{ROOTDIR}/include/deemon/kos-headers",
 			f"{ROOTDIR}/src/dex/ctypes/ffi",

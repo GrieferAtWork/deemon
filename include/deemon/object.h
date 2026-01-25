@@ -92,6 +92,7 @@
 /*!export TYPE_MEMBER**/
 /*!export TYPE_OPERATOR_**/
 /*!export _DeeRefcnt_**/
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_**/
 /*!fixincludes no_include_comments*/ /* This header is so central to deemon, that comments don't really add anything here! */
 /*!always include "types.h"*/        /* This header always being included is guarantied by the ABI */
 #ifndef GUARD_DEEMON_OBJECT_H
@@ -104,7 +105,7 @@
 #include <hybrid/host.h>      /* __i386__, __pic__, __x86_64__ */
 #include <hybrid/typecore.h>  /* __*_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__, __UINT32_C, __UINT64_C */
 
-#include "types.h"
+#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_OFFSETOF_DATA, Dee_REQUIRES_OBJECT, Dee_SIZEOF_HASH_T, Dee_SIZEOF_REFCNT_T, Dee_TYPE, Dee_WEAKREF_SUPPORT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_int128_t, Dee_refcnt_t, Dee_ssize_t, Dee_uint128_t, Dee_unlockinfo */
 #include "util/lock.h" /* Dee_atomic_lock_t, Dee_atomic_rwlock_t */
 
 #include <stdarg.h>  /* va_list */
@@ -112,10 +113,13 @@
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* UINTn_C, intN_t, intptr_t, uintN_t, uintptr_t */
 
-
-#if 0 /* To satisfy "fixincludes" */
-#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeObject_Free, DeeObject_Malloc, DeeSlab_Invoke, Dee_TYPE_CONSTRUCTOR_INIT_* */
-#endif
+/* To satisfy "fixincludes" (these includes are intentionally missing) */
+/*!fixincludes fake_include "alloc.h"           // CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeObject_Free, DeeObject_Malloc, DeeSlab_Invoke, Dee_TYPE_CONSTRUCTOR_INIT_* */
+/*!fixincludes fake_include "gc.h"              // DeeGCObject_Free, DeeGCObject_Malloc */
+/*!fixincludes fake_include "none.h"            // DeeNone_Check, DeeNone_CheckExact */
+/*!fixincludes fake_include "string.h"          // DeeString_Hash, DeeString_STR */
+/*!fixincludes fake_include "system-features.h" // CONFIG_HAVE_*, CONFIG_NO_*, memset, memsetl, memsetp, memsetq, memsetw, strlen */
+/*!fixincludes fake_include "tuple.h"           // DeeTuple_ELEM, DeeTuple_SIZE */
 
 #ifndef __INTELLISENSE__
 #ifdef CONFIG_NO_STRING_H
@@ -168,6 +172,7 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
 #define Dee_type_callable    type_callable
 #define Dee_type_buffer      type_buffer
 #define Dee_type_operator    type_operator
+struct type_method_hint; /* Needed so fixincludes doesn't claim a dependency on "method-hints.h" */
 
 /* Explicitly export unescaped names, since "fixincludes" won't see these otherwise */
 /*!export type_method*/
@@ -1511,7 +1516,6 @@ typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon
 struct Dee_serial;
 
 #if 0
-/*!export -myob_**/
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myob_serialize(MyObject *__restrict self, DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 }
@@ -2407,8 +2411,6 @@ struct Dee_type_seq {
 };
 
 #if 0
-/*!export -MyObject*/
-/*!export -myob_**/
 typedef struct {
 	OBJECT_HEAD
 } MyObject;

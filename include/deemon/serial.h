@@ -33,10 +33,6 @@
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
 #endif /* !Dee_seraddr_t_DEFINED */
 
-#if 0 /* To satisfy fixincludes (at least until fixincludes understands "#if 0" blocks) */
-#include "alloc.h" /* _Dee_MallococBufsize */
-#endif
-
 /*
  * Object serialization is a general-purpose API to:
  * - Create (potentially deep) copies of objects
@@ -67,9 +63,6 @@ struct Dee_serial;
 typedef struct Dee_serial DeeSerial;
 
 #if 0
-/*!export -ADDROF*/
-/*!export -myobject_**/
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myobject_serialize(MyObject *__restrict self,
                    DeeSerial *__restrict writer,

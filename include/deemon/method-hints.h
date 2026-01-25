@@ -94,7 +94,6 @@ typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_seq_enumerate_t)(void *
 typedef WUNUSED_T Dee_ssize_t (DCALL *Dee_seq_enumerate_index_t)(void *arg, size_t index, /*nullable*/ DeeObject *value);
 
 #if 0
-/*!export -my_**/
 struct my_foreach_data {
 };
 

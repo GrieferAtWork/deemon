@@ -355,6 +355,9 @@ class SrcIncludeInfo {
 	public member commentEndOffset: int | none;
 	public member comment: Bytes | string | none;
 
+	@@Is this #include an instance of `/*!fixincludes fake_include ...*/`?
+	public member fake: bool = false;
+
 	public property asDependentFile: DependentFile = {
 		get(): DependentFile {
 			return DependentFile.ofIncludeString(include);
@@ -469,7 +472,8 @@ local class HeaderParser {
 				++pos;
 			} while (pos < end && (data.issymcont(pos) || (string.chr(data[pos]) in extraSymbolChars)));
 			local keyword = data[kwdStart:pos].decode("utf-8");
-			allKeywords.insert(keyword);
+			if (allKeywords !is none && keyword.issymbol())
+				allKeywords.insert(keyword);
 			return keyword;
 		}
 		++pos;
@@ -730,18 +734,33 @@ again_export_directive:
 				}	break;
 
 				default:
-					err(directiveStart, f"Unsupported regex command: '/*!fixinclude regex {regexCommand}...'");
+					err(directiveStart, f"Unsupported regex command: '/*!fixincludes regex {regexCommand}...'");
 					break;
 				}
 			}	break;
 
+			case "fake_include": {
+				/* Used to inject a fake #include directive.
+				 * For when you intentionally want to have a missing include */
+				lastIncludeStringPos = pos;
+				lastIncludeString = parseIncludeString();
+				if (allIncludes !is none)
+					addAllIncludesEntry(fake: true);
+				tok = nextRawNoComment();
+				if (tok != "//") {
+					err(directiveStart, f"Expected '//' after '/*!fixincludes fake_include {
+						lastIncludeString}', but got '{tok}'");
+				}
+				pos = end; /* Skip remainder (which is the generated include comment) */
+			}	break;
+
 			default:
-				err(directiveStart, f"Unsupported command: '/*!fixinclude {tok}...'");
+				err(directiveStart, f"Unsupported command: '/*!fixincludes {tok}...'");
 				break;
 			}
 			tok = nextRawNoComment();
 			if (tok)
-				err(directiveStart, f"Encountered garbage after '/*!fixinclude...*/': {repr tok}");
+				err(directiveStart, f"Encountered garbage after '/*!fixincludes...*/': '{tok}'");
 		}	break;
 
 		case "always": {
@@ -834,7 +853,7 @@ again:
 		return result;
 	}
 
-	private addAllIncludesEntry() {
+	private addAllIncludesEntry(fake: bool = false) {
 		local includeString: string = lastIncludeString.decode("utf-8");
 		if (includeString !in allIncludes) {
 			local includeStringEndOffset: int = pos;
@@ -893,11 +912,36 @@ again:
 				commentStartOffset:     commentStartOffset,
 				commentEndOffset:       commentEndOffset,
 				comment:                comment,
+				fake:                   fake,
 			);
 		}
 	}
 
-	public parseDirective() {
+	@@Place @pos after the keyword of the next preprocessor directive, and return the directive
+	private seekNextPPBlockDirective(): string {
+again:
+		local result = nextRaw();
+		if (result == "#") {
+			local sol = data.rfind("\n", 0, pos) + 1;
+			if (data.isspace(sol, pos - 1)) {
+				while (pos < end && data.isspacexlf(pos))
+					++pos;
+				if (pos < end && data.issymstrt(pos)) {
+					local directiveStart = pos;
+					do {
+						++pos;
+					} while (pos < end && data.issymcont(pos));
+					return data[directiveStart:pos].decode("utf-8");
+				}
+			}
+			goto again;
+		}
+		if (!result)
+			return result;
+		goto again;
+	}
+
+	public parseDirective(origEnd: int): int | none {
 		local oldAllKeywords = allKeywords;
 		allKeywords = none;
 		local cmd = nextRaw();
@@ -919,10 +963,46 @@ again:
 				addAllIncludesEntry();
 			break;
 
-		/* TODO: "#if 0 ... #endif" -- skip block (parse //!comments, but don't scan for keyword definitions) */
+		case "if": {
+			local exprEnd2 = data.find("/*", pos, end);
+			if (exprEnd2 < 0)
+				exprEnd2 = end;
+			local exprEnd = data.find("//", pos, exprEnd2);
+			if (exprEnd < 0)
+				exprEnd = exprEnd2;
+			while (pos < exprEnd && data.isspace(pos))
+				++pos;
+			while (exprEnd > pos && data.isspace(exprEnd - 1))
+				--exprEnd;
+			if (data[pos:exprEnd] == "0") {
+				/* "#if 0 ... #endif" -- skip block (parse //!comments, but don't scan for keyword definitions) */
+				local recursion = 1;
+				local oldAllKeywords = allKeywords;
+				allKeywords = none;
+				end = origEnd;
+				for (;;) {
+					local next = seekNextPPBlockDirective();
+					if (!next)
+						break;
+					if (next == "if") {
+						++recursion;
+					} else if (next in ["else", "elif"] && recursion <= 1) {
+						break;
+					} else if (next == "endif") {
+						if (recursion <= 1)
+							break;
+						--recursion;
+					}
+				}
+				allKeywords = oldAllKeywords;
+				return pos;
+			}
+		}	break;
+
 
 		default: break;
 		}
+		return none;
 	}
 
 	@@Parse and return the next token (handles comments + PP directives)
@@ -935,10 +1015,14 @@ again:
 				local eol = findEolWithBlockComments(pos);
 				local oldEnd = end;
 				end = eol;
-				parseDirective();
-				while (nextRaw()); /* Parse additional comments found within... */
+				local status: int | none = parseDirective(oldEnd);
+				if (status is none) {
+					while (nextRaw()); /* Parse additional comments found within... */
+					pos = eol + 1;
+				} else {
+					pos = status;
+				}
 				end = oldEnd;
-				pos = eol + 1;
 				goto again;
 			}
 		}
@@ -1014,9 +1098,15 @@ skip_paren_block:
 					addPotentiallyExportedKeyword(keyword, keywordPos);
 					goto skip_paren_block;
 				} else if (tok == ";") {
-#if 0 /* Incomplete struct shouldn't be considered an export */
-					addPotentiallyExportedKeyword(keyword, keywordPos);
+#if 1 /* Incomplete struct shouldn't be considered an export (except
+       * when parsing as a source file, in which case it must count
+       * as one since it can be used to prevent the necessity of an
+       * include) */
+					if (allKeywords !is none)
 #endif
+					{
+						addPotentiallyExportedKeyword(keyword, keywordPos);
+					}
 					goto again;
 				}
 				goto again_tok;
@@ -1168,10 +1258,20 @@ class SrcIncludeGroup {
 			local maxIncludeStringLength = includes.each.include.length > ...;
 			for (local include: includes) {
 				local includeString = include.include;
-				result << "#include " << includeString;
-				if (include.comment !is none) {
-					result << " " * (maxIncludeStringLength - #includeString);
-					result << " /* " << include.comment << " */";
+				if (include.fake) {
+					result << "/*!fixincludes fake_include " << includeString;
+					if (include.comment is none) {
+						result << " // */";
+					} else {
+						result << " " * (maxIncludeStringLength - #includeString);
+						result << " // " << include.comment << " */";
+					}
+				} else {
+					result << "#include " << includeString;
+					if (include.comment !is none) {
+						result << " " * (maxIncludeStringLength - #includeString);
+						result << " /* " << include.comment << " */";
+					}
 				}
 				result << "\n";
 			}

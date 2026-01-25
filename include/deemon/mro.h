@@ -405,7 +405,6 @@ struct Dee_attriter_type {
 };
 
 #if 0
-/*!export -myob_attriter_**/
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 myob_attriter_next(struct myob_attriter *__restrict self,
                    /*out*/ struct Dee_attrdesc *__restrict desc) {
