@@ -27,7 +27,7 @@
 #ifndef __INTELLISENSE__
 #include "object.h"
 #endif /* !__INTELLISENSE__ */
-#include "types.h"
+#include "types.h" /* DeeObject, DeeTypeObject */
 
 DECL_BEGIN
 

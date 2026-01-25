@@ -23,10 +23,10 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../format.h"
+#include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../seq.h"
-#include "../types.h"
+#include "../seq.h"    /* DeeRange_New, DeeRange_NewInt, DeeSeq_*, Dee_EmptySeq */
+#include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 
 #include <stdbool.h> /* bool */
@@ -37,6 +37,9 @@
 /*#include "set.h"*/      /* Don't include! */
 /*#include "tuple.h"*/    /* Don't include! */
 /*#include "type.h"*/     /* Don't include! */
+
+/* Not *that* "remove" */
+/*!fixincludes fake_include "../system-features.h" // remove */
 
 DEE_CXX_BEGIN
 

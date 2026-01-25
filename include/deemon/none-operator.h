@@ -25,9 +25,9 @@
 
 #include "api.h"
 
-#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
+#include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_SIZE_T__, __UINTPTR_TYPE__ */
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, Dee_funptr_t */
 
 #include <stddef.h> /* size_t */
 
@@ -35,7 +35,7 @@ DECL_BEGIN
 
 #ifdef DCALL_CALLER_CLEANUP
 DECL_END
-#include "none.h"
+#include "none.h" /* DeeNone_NewRef */
 DECL_BEGIN
 #define _DeeNone_NewRef1 (*(DREF DeeObject *(DCALL *)(void *))(Dee_funptr_t)&DeeNone_NewRef)
 #define _DeeNone_NewRef2 (*(DREF DeeObject *(DCALL *)(void *, void *))(Dee_funptr_t)&DeeNone_NewRef)
@@ -117,6 +117,13 @@ DFUNDEF int (DCALL _DeeNone_reti0_5)(void *, void *, void *, void *, void *);
 #endif /* !DCALL_RETURN_COMMON && __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 DFUNDEF int (DCALL _DeeNone_reti0_6)(void *, void *, void *, void *, void *, void *);
 #endif /* !DCALL_CALLER_CLEANUP */
+
+#ifndef Dee_seraddr_t_DEFINED
+#define Dee_seraddr_t_DEFINED           /*!export-*/
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+#endif /* !Dee_seraddr_t_DEFINED */
+
+struct Dee_serial;
 
 /* Default no-op constructor callbacks (these should be used by TP_FABSTRACT types) */
 #define DeeNone_OperatorCtor      (*(int (DCALL *)(DeeObject *__restrict))&_DeeNone_reti0_1)

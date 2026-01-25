@@ -24,8 +24,8 @@
 #include "api.h"
 
 #include "../object.h"
-#include "../set.h"
-#include "../types.h"
+#include "../set.h"    /* DeeSet_Type, Dee_EmptySet */
+#include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"
 
@@ -33,6 +33,9 @@
 #include <stddef.h>  /* NULL */
 
 /*#include "type.h"*/ /* Don't include! */
+
+/* Not *that* "remove" */
+/*!fixincludes fake_include "../system-features.h" // remove */
 
 DEE_CXX_BEGIN
 

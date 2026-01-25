@@ -27,8 +27,8 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include "serial.h"
-#include "types.h"
+#include "serial.h" /* Dee_SERIAL_HEAD */
+#include "types.h"  /* DREF, DeeObject */
 
 #include <stddef.h> /* size_t */
 
@@ -99,6 +99,7 @@ struct Dee_deepcopy_heap {
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 struct Dee_gc_head;
+struct Dee_weakref;
 
 /*
  * Context controller for creating deep copies of objects by use of "tp_serialize":

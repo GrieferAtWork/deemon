@@ -34,7 +34,7 @@
 
 #include <hybrid/typecore.h> /* __UINTPTR_HALF_TYPE__ */
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
@@ -42,6 +42,9 @@
 #if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
 #include "object.h" /* struct Dee_type_object::tp_mhcache */
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
+
+/* Not *that* "remove" */
+/*!fixincludes fake_include "system-features.h" // remove */
 
 DECL_BEGIN
 

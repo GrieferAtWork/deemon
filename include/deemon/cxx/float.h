@@ -23,15 +23,18 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../float.h"
-#include "../format.h"
+#include "../float.h"  /* CONFIG_HAVE_FPU, DeeFloat_* */
+#include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, Dee_ssize_t, _Dee_HashSelectC */
 #include "numeric.h"
 #include "object.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
+
+/* Not *those* functions */
+/*!fixincludes fake_include "../system-features.h" // CONFIG_HAVE_FPU, ceil, floor, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, nextafter, round, trunc */
 
 DEE_CXX_BEGIN
 

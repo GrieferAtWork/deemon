@@ -185,7 +185,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Track(DeeObject *__restrict ob) {
 	struct Dee_gc_head *head;
 	ASSERT_OBJECT_TYPE(ob->ob_type, &DeeType_Type);
-	ASSERT(DeeGC_Check(ob));
+	ASSERT(DeeType_IsGC(Dee_TYPE(ob)));
 	head = DeeGC_Head(ob);
 #ifdef GCHEAD_ISTRACKED
 	ASSERTF(!GCHEAD_ISTRACKED(head),
@@ -228,7 +228,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Untrack(DeeObject *__restrict ob) {
 	struct Dee_gc_head *head;
 	ASSERT_OBJECT_TYPE(ob->ob_type, &DeeType_Type);
-	ASSERT(DeeGC_Check(ob));
+	ASSERT(DeeType_IsGC(Dee_TYPE(ob)));
 	head = DeeGC_Head(ob);
 #ifdef GCHEAD_ISTRACKED
 	ASSERTF(GCHEAD_ISTRACKED(head),
@@ -1787,7 +1787,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_contains(DeeObject *__restrict UNUSED(self),
                 DeeObject *__restrict ob) {
-	if (!DeeGC_Check(ob))
+	if (!DeeType_IsGC(Dee_TYPE(ob)))
 		return_false;
 #if defined(GCHEAD_ISTRACKED)
 	return_bool(GCHEAD_ISTRACKED(DeeGC_Head(ob)));

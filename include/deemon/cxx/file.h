@@ -23,17 +23,19 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../file.h"
-#include "../format.h"
+#include "../file.h"   /* DeeFile_*, Dee_STD*, Dee_fd_INVALID, Dee_fd_t, Dee_ioflag_t, GETC_ERR */
+#include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../system-features.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, Dee_off_t, Dee_pos_t, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
+
+/* Not *those* functions */
+/*!fixincludes fake_include "../system-features.h" // close, fileno, getc, isatty, open, pread, putc, pwrite, read, readall, sync, trunc, ungetc, write, writeall */
 
 DEE_CXX_BEGIN
 

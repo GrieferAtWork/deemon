@@ -23,9 +23,9 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../format.h"
+#include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 
 #include <stdbool.h> /* bool */

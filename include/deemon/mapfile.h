@@ -26,8 +26,9 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
-#include "file.h"
+#include "file.h"            /* Dee_fd_* */
 #include "system-features.h" /* CONFIG_HAVE_* */
+#include "types.h"           /* DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_pos_t */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

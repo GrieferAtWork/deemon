@@ -23,20 +23,20 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include <hybrid/sequence/list.h> /* SLIST_ENTRY, SLIST_HEAD */
+#include <hybrid/sequence/list.h> /* SLIST_ENTRY */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_POINTER__, __UINTPTR_C */
 
-#include "../asm.h"
-#include "../code.h"
+#include "../asm.h"    /* ASM16_*, ASM_*, instruction_t */
+#include "../code.h"   /* DeeCodeObject, DeeDDIObject, Dee_except_handler, code_addr_t, instruction_t */
 #include "../object.h" /* Dee_operator_t */
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_ssize_t, OBJECT_HEAD */
 #include "ast.h"
 #include "symbol.h"
 #include "tpp.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* INT8_MAX, INT8_MIN, UINT8_MAX, UINT16_MAX, int8_t, int16_t, int32_t, uintN_t, uintptr_t */
+#include <stdint.h>  /* INT8_MIN, UINT16_MAX, int8_t, int16_t, int32_t, uintN_t, uintptr_t */
 
 DECL_BEGIN
 

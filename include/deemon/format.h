@@ -33,13 +33,28 @@
 #include <hybrid/__va_size.h> /* __VA_SIZE */
 #include <hybrid/typecore.h>  /* __SIZEOF_*__ */
 
-#include "types.h"
+#include "object.h"
+#include "types.h"  /* DREF, DeeObject, Dee_formatprinter_t, Dee_ssize_t */
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
+
+#ifndef __INTELLISENSE__
+#ifndef CONFIG_HAVE_strlen
+#define CONFIG_HAVE_strlen
+#undef strlen
+#define strlen dee_strlen /*!export-*/
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
+	size_t result;
+	for (result = 0; str[result]; ++result)
+		;
+	return result;
+}
+#endif /* !CONFIG_HAVE_strlen */
+#endif /* !__INTELLISENSE__ */
 
 /* General-purpose printing of formatted data to the given `printer'.
  * These functions implement c's `printf()' standard (except for the
@@ -243,8 +258,12 @@ DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
 
 
 
+#ifdef __INTELLISENSE__
+#define DeeFormat_PrintStr(printer, arg, str) (*printer)(arg, str, 42)
+#else /* __INTELLISENSE__ */
+#define DeeFormat_PrintStr(printer, arg, str) (*printer)(arg, str, strlen(str))
+#endif /* !__INTELLISENSE__ */
 #define DeeFormat_Print(printer, arg, str, len)     (*printer)(arg, str, len)
-#define DeeFormat_PrintStr(printer, arg, str)       (*printer)(arg, str, strlen(str))
 #define DeeFormat_PRINT(printer, arg, str)          (*printer)(arg, str, COMPILER_STRLEN(str))
 #define DeeFormat_PrintObject(printer, arg, ob)     DeeObject_Print(ob, printer, arg)
 #define DeeFormat_PrintObjectRepr(printer, arg, ob) DeeObject_PrintRepr(ob, printer, arg)

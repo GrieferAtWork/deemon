@@ -31,7 +31,8 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_SIZE_T__, __UINT*_C */
 
-#include "types.h"
+#include "object.h"
+#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
 #include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* size_t */
@@ -288,18 +289,18 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequenceInherited
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromRoDict(DeeObject *__restrict self);
 
 
-#define DeeDict_GetItemString(self, key)                              DeeDict_GetItemStringHash(self, key, Dee_HashStr(key))
-#define DeeDict_GetItemStringLen(self, key, keylen)                   DeeDict_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeDict_GetItemStringHash(self, key, hash)                    (*DeeDict_Type.tp_seq->tp_getitem_string_hash)(self, key, hash)
-#define DeeDict_GetItemStringLenHash(self, key, keylen, hash)         (*DeeDict_Type.tp_seq->tp_getitem_string_len_hash)(self, key, keylen, hash)
-#define DeeDict_DelItemString(self, key)                              DeeDict_DelItemStringHash(self, key, Dee_HashStr(key))
-#define DeeDict_DelItemStringLen(self, key, keylen)                   DeeDict_DelItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeDict_DelItemStringHash(self, key, hash)                    (*DeeDict_Type.tp_seq->tp_delitem_string_hash)(self, key, hash)
-#define DeeDict_DelItemStringLenHash(self, key, keylen, hash)         (*DeeDict_Type.tp_seq->tp_delitem_string_len_hash)(self, key, keylen, hash)
-#define DeeDict_SetItemString(self, key, value)                       DeeDict_SetItemStringHash(self, key, Dee_HashStr(key), value)
-#define DeeDict_SetItemStringLen(self, key, keylen, value)            DeeDict_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
-#define DeeDict_SetItemStringHash(self, key, hash, value)             (*DeeDict_Type.tp_seq->tp_setitem_string_hash)(self, key, hash, value)
-#define DeeDict_SetItemStringLenHash(self, key, keylen, hash, value)  (*DeeDict_Type.tp_seq->tp_setitem_string_len_hash)(self, key, keylen, hash, value)
+#define DeeDict_GetItemString(self, key)                             DeeDict_GetItemStringHash(self, key, Dee_HashStr(key))
+#define DeeDict_GetItemStringLen(self, key, keylen)                  DeeDict_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeDict_GetItemStringHash(self, key, hash)                   (*DeeDict_Type.tp_seq->tp_getitem_string_hash)(self, key, hash)
+#define DeeDict_GetItemStringLenHash(self, key, keylen, hash)        (*DeeDict_Type.tp_seq->tp_getitem_string_len_hash)(self, key, keylen, hash)
+#define DeeDict_DelItemString(self, key)                             DeeDict_DelItemStringHash(self, key, Dee_HashStr(key))
+#define DeeDict_DelItemStringLen(self, key, keylen)                  DeeDict_DelItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeDict_DelItemStringHash(self, key, hash)                   (*DeeDict_Type.tp_seq->tp_delitem_string_hash)(self, key, hash)
+#define DeeDict_DelItemStringLenHash(self, key, keylen, hash)        (*DeeDict_Type.tp_seq->tp_delitem_string_len_hash)(self, key, keylen, hash)
+#define DeeDict_SetItemString(self, key, value)                      DeeDict_SetItemStringHash(self, key, Dee_HashStr(key), value)
+#define DeeDict_SetItemStringLen(self, key, keylen, value)           DeeDict_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
+#define DeeDict_SetItemStringHash(self, key, hash, value)            (*DeeDict_Type.tp_seq->tp_setitem_string_hash)(self, key, hash, value)
+#define DeeDict_SetItemStringLenHash(self, key, keylen, hash, value) (*DeeDict_Type.tp_seq->tp_setitem_string_len_hash)(self, key, keylen, hash, value)
 
 #define DeeDict_GetItem(self, key)        (*DeeDict_Type.tp_seq->tp_getitem)(self, key)
 #define DeeDict_TryGetItem(self, key)     (*DeeDict_Type.tp_seq->tp_trygetitem)(self, key)

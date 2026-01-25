@@ -23,8 +23,8 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../callable.h"
-#include "../types.h"
+#include "../callable.h" /* DeeCallable_Type */
+#include "../types.h"    /* DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact */
 #include "object.h"
 
 #include <stdbool.h> /* bool */

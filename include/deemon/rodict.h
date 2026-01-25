@@ -28,8 +28,8 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include "dict.h"  /* struct Dee_dict_item */
-#include "types.h"
+#include "dict.h"  /* Dee_dict_*, __DeeDict_HashIdxAdvEx, __DeeDict_HashIdxInitEx */
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_hash_t, Dee_ssize_t */
 
 #include <stddef.h> /* NULL, size_t */
 

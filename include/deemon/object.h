@@ -114,11 +114,11 @@
 #include <stdint.h>  /* UINTn_C, intN_t, intptr_t, uintN_t, uintptr_t */
 
 /* To satisfy "fixincludes" (these includes are intentionally missing) */
-/*!fixincludes fake_include "alloc.h"           // CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeObject_Free, DeeObject_Malloc, DeeSlab_Invoke, Dee_TYPE_CONSTRUCTOR_INIT_* */
+/*!fixincludes fake_include "alloc.h"           // CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeObject_Free, DeeObject_Malloc, DeeSlab_Invoke */
 /*!fixincludes fake_include "gc.h"              // DeeGCObject_Free, DeeGCObject_Malloc */
 /*!fixincludes fake_include "none.h"            // DeeNone_Check, DeeNone_CheckExact */
 /*!fixincludes fake_include "string.h"          // DeeString_Hash, DeeString_STR */
-/*!fixincludes fake_include "system-features.h" // CONFIG_HAVE_*, CONFIG_NO_*, memset, memsetl, memsetp, memsetq, memsetw, strlen */
+/*!fixincludes fake_include "system-features.h" // CONFIG_HAVE_memsetp, memsetp */
 /*!fixincludes fake_include "tuple.h"           // DeeTuple_ELEM, DeeTuple_SIZE */
 
 #ifndef __INTELLISENSE__

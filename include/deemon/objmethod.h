@@ -35,7 +35,7 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
@@ -248,9 +248,10 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
  * deemon module which the compiler generates call to in some rare
  * corner cases. */
 struct Dee_module_object;
+struct Dee_module_symbol;
 struct Dee_cmethod_origin {
 	DREF struct Dee_module_object *cmo_module; /* [0..1] Module containing the C-method. */
-	struct Dee_module_symbol          *cmo_modsym; /* [0..1] Module symbol that exposes `func'. */
+	struct Dee_module_symbol      *cmo_modsym; /* [0..1] Module symbol that exposes `func'. */
 	DREF DeeTypeObject            *cmo_type;   /* [0..1] Type containing the C-method. */
 	struct type_member const      *cmo_member; /* [0..1] Member of `cmo_type' that exposes the C-method. */
 	char const                    *cmo_name;   /* [1..1] Function name. */

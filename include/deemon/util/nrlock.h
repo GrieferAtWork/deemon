@@ -102,7 +102,7 @@ DECL_END
 #define _Dee_NRLOCK_TID_INVALID_IS_ZERO
 #endif /* __HYBRID_GETTID_INVALID_IS_ZERO */
 #else /* __hybrid_tid_t_IS_NUMERIC && __HYBRID_SIZEOF_TID__ == ... */
-#include "../thread.h"
+#include "../thread.h" /* DeeThreadObject, DeeThread_Self */
 #define _Dee_SIZEOF_NRLOCK_TID_T __SIZEOF_POINTER__
 #define _Dee_nrlock_tid_t        DeeThreadObject *
 #define _Dee_nrlock_gettid       DeeThread_Self

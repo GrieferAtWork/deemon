@@ -24,7 +24,7 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "types.h" /* DeeTypeObject */
 
 DECL_BEGIN
 

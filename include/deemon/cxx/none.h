@@ -23,8 +23,8 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../none.h"
-#include "../types.h"
+#include "../none.h"  /* DeeNone*, Dee_None */
+#include "../types.h" /* DeeObject */
 #include "object.h"
 
 #include <stdbool.h> /* bool */

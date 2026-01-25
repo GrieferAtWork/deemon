@@ -22,7 +22,7 @@
 
 #include "../api.h"
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../types.h"
+#include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_refcnt_t */
 #include "ast.h"
 #include "symbol.h"
 

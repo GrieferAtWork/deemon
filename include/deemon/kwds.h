@@ -32,7 +32,8 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "object.h"
+#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD */
 #include "util/lock.h" /* Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool */
@@ -243,9 +244,8 @@ INTDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeKwds_AppendStringLenHash)(DREF DeeObject **__restrict p_self,
                                     char const *__restrict name,
                                     size_t name_len, Dee_hash_t hash);
-#define DeeKwds_AppendStringLen(p_self, name, name_len) DeeKwds_AppendStringLenHash(p_self, name, name_len, Dee_HashPtr(name, name_len))
-#define DeeKwds_AppendStringHash(p_self, name, hash)    DeeKwds_AppendStringLenHash(p_self, name, strlen(name), hash)
-#define DeeKwds_AppendString(p_self, name)              DeeKwds_AppendStringHash(p_self, name, Dee_HashStr(name))
+#define DeeKwds_AppendStringLen(p_self, name, name_len) \
+	DeeKwds_AppendStringLenHash(p_self, name, name_len, Dee_HashPtr(name, name_len))
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* Dee_foreach_t-compatible! */
 (DCALL DeeKwds_Append)(/*DREF DeeObject **p_self */ void *arg,

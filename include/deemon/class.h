@@ -48,7 +48,7 @@
 #ifndef __INTELLISENSE__
 #include "string.h" /* DeeString_Hash */
 #if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
-#include "tuple.h"  /* DeeTuple_ELEM, DeeTuple_SIZE */
+#include "tuple.h" /* DeeTuple_ELEM, DeeTuple_SIZE */
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
 #endif /* !__INTELLISENSE__ */
 #endif /* !_DEE_WITHOUT_INCLUDES */

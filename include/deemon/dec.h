@@ -36,8 +36,9 @@
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
 
-#include "serial.h"
-#include "types.h"
+#include "object.h"
+#include "serial.h" /* Dee_SERIAL_HEAD, Dee_seraddr_t */
+#include "types.h"  /* DREF, DeeObject */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* int32_t, uintN_t, uintptr_t */
@@ -47,8 +48,9 @@
 #include <hybrid/host.h>      /* __arm__, __i386__, __x86_64__ */
 
 #include "alloc.h"   /* Dee_Free */
-#include "heap.h"
-#include "mapfile.h"
+#include "gc.h"      /* Dee_gc_head */
+#include "heap.h"    /* Dee_HEAPCHUNK_ALIGN, Dee_heapregion */
+#include "mapfile.h" /* DeeMapFile, DeeMapFile_Fini, Dee_SIZEOF_DeeMapFile */
 #endif /* DEE_SOURCE */
 
 /*
@@ -379,10 +381,10 @@ typedef Dec_Ehdr DeeDec_Ehdr;
 
 /* Return a pointer to the `DeeModuleObject' that follow `Dec_Ehdr' */
 #define DeeDec_Ehdr_GetModule(self) \
-	((DeeModuleObject *)&((struct Dee_gc_head *)(&(self)->e_heap.hr_first + 1))->gc_object)
-#define DeeDec_Ehdr_FromModule(self)                                      \
-	((Dec_Ehdr *)((uintptr_t)Dee_REQUIRES_TYPE(DeeModuleObject *, self) - \
-	              (COMPILER_OFFSETAFTER(Dec_Ehdr, e_heap.hr_first) +      \
+	((struct Dee_module_object *)&((struct Dee_gc_head *)(&(self)->e_heap.hr_first + 1))->gc_object)
+#define DeeDec_Ehdr_FromModule(self)                                               \
+	((Dec_Ehdr *)((uintptr_t)Dee_REQUIRES_TYPE(struct Dee_module_object *, self) - \
+	              (COMPILER_OFFSETAFTER(Dec_Ehdr, e_heap.hr_first) +               \
 	               __builtin_offsetof(struct Dee_gc_head, gc_object))))
 
 #else /* DEE_SOURCE */

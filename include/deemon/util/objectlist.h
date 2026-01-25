@@ -26,10 +26,10 @@
 
 #include "../api.h"
 
-#include "../alloc.h" /* Dee_*alloc*, Dee_Free */
+#include "../alloc.h"  /* Dee_*alloc*, Dee_Free */
 #include "../object.h"
-#include "../seq.h"
-#include "../tuple.h"
+#include "../seq.h"    /* DeeSeq_* */
+#include "../tuple.h"  /* DeeTuple_NewVectorSymbolic */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
@@ -218,19 +218,6 @@ Dee_objectlist_extendseq(struct Dee_objectlist *__restrict self,
 	return more;
 }
 
-
-/* Pack the given Dee_objectlist into a List.
- * Upon success, `self' will have been finalized. */
-#ifdef __INTELLISENSE__
-extern WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_objectlist_packlist(struct Dee_objectlist *__restrict self);
-#elif defined(Dee_OBJECTLIST_HAVE_ELEMA)
-#define Dee_objectlist_packlist(self) \
-	DeeList_NewVectorInheritedHeap((self)->ol_elemv, (self)->ol_elemc, (self)->ol_elema)
-#else /* ... */
-#define Dee_objectlist_packlist(self) \
-	DeeList_NewVectorInheritedHeap2((self)->ol_elemv, (self)->ol_elemc)
-#endif /* !... */
 
 /* Pack the given objectlist into a Tuple.
  * Upon success, `self' will have been finalized. */

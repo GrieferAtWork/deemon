@@ -56,7 +56,7 @@
 #elif defined(CONFIG_HOST_UNIX)
 #define DeeSystem_FILE_USE_unix_fd
 #else /* ... */
-#include "system-features.h"
+#include "system-features.h" /* CONFIG_HAVE_*, close, fclose, readall */
 #if (defined(CONFIG_HAVE_read) || defined(CONFIG_HAVE_write) ||    \
      defined(CONFIG_HAVE_open) || defined(CONFIG_HAVE_open64) ||   \
      defined(CONFIG_HAVE_creat) || defined(CONFIG_HAVE_creat64) || \

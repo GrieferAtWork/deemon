@@ -31,8 +31,8 @@
 #include <hybrid/__byteswap.h> /* __hybrid_bswap16, __hybrid_bswap32 */
 #include <hybrid/byteorder.h>  /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 
-#include "string.h" /* DeeUni_IsSpace */
-#include "types.h"
+#include "string.h" /* DeeString_WIDTH, DeeString_WSTR, DeeUni_IsSpace, DeeUni_ToFolded, Dee_CASE_WIDTH_nBYTE, Dee_SWITCH_SIZEOF_WIDTH, Dee_UNICODE_FOLDED_MAX, Dee_charptr_const, WSTR_LENGTH */
+#include "types.h"  /* Dee_REQUIRES_OBJECT */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

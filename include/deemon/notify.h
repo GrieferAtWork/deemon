@@ -31,8 +31,7 @@
 #include <stdint.h>  /* uint16_t */
 
 #ifndef CONFIG_NO_NOTIFICATIONS
-#include "int.h"
-#include "string.h" /* DeeString_AsUtf8 */
+#include "string.h" /* Dee_EmptyString */
 #endif /* !CONFIG_NO_NOTIFICATIONS */
 
 DECL_BEGIN

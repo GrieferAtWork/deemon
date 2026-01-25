@@ -24,7 +24,7 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
 #if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
 #include "object.h"
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */

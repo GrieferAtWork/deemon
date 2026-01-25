@@ -23,7 +23,7 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../string.h"
+#include "../string.h" /* Dee_unicode_printer */
 
 DECL_BEGIN
 

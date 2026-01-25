@@ -23,10 +23,10 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../hashset.h"
+#include "../hashset.h"         /* DeeHashSet_* */
 #include "../object.h"
-#include "../system-features.h" /* strlen */
-#include "../types.h"
+#include "../system-features.h" /* remove, strlen */
+#include "../types.h"           /* DREF, DeeObject, _Dee_HashSelectC */
 #include "object.h"
 #include "set.h"
 

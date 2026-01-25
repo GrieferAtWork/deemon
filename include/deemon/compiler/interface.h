@@ -23,7 +23,7 @@
 #include "../api.h"
 
 #include "../object.h" /* struct type_member */
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_hash_t */
 #include "compiler.h"
 #include "symbol.h"
 #include "tpp.h"

@@ -23,14 +23,17 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../format.h"
-#include "../numeric.h"
+#include "../format.h"  /* Dee_PCKdSIZ, Dee_PCKuSIZ */
+#include "../numeric.h" /* DeeNumeric_Type */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"   /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
+
+/* Not *those* functions */
+/*!fixincludes fake_include "../system-features.h" // ceil, floor, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, nextafter, pow, round, trunc */
 
 DEE_CXX_BEGIN
 

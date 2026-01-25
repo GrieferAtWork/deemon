@@ -25,11 +25,11 @@
 
 #include <hybrid/typecore.h> /* __*_TYPE__ */
 
-#include "../format.h"
-#include "../int.h"
+#include "../format.h"          /* Dee_PCKdSIZ, Dee_PCKuSIZ */
+#include "../int.h"             /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
 #include "../object.h"
-#include "../system-features.h" /* strlen */
-#include "../types.h"
+#include "../system-features.h" /* ceil, floor, isgreater, isgreaterequal, isless, islessequal, islessgreater, isnormal, isunordered, nextafter, pow, round, strlen, trunc */
+#include "../types.h"           /* DREF, DeeObject, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, _Dee_HashSelectC */
 #include "numeric.h"
 #include "object.h"
 

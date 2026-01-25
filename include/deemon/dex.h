@@ -32,8 +32,8 @@
 #ifndef CONFIG_NO_DEX
 #include <hybrid/typecore.h> /* __*_TYPE__ */
 
-#include "gc.h"
-#include "module.h"
+#include "gc.h"     /* Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include "module.h" /* DeeModuleDex_Type, DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_module_object, Dee_module_symbol, _Dee_MODULE_INIT_mo_lock */
 #include "object.h"
 
 #include <stdbool.h> /* bool */

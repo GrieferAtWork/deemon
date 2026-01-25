@@ -23,11 +23,11 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../format.h"
+#include "../format.h"          /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../string.h"
-#include "../system-features.h" /* CONFIG_HAVE_wcslen */
-#include "../types.h"
+#include "../string.h"          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t */
+#include "../system-features.h" /* DeeSystem_DEFINE_wcslen, close, isalnum, isalpha, isdigit, islower, isupper, open, strlen */
+#include "../types.h"           /* DREF, DeeObject, Dee_hash_t, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"
 
@@ -36,7 +36,8 @@
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
-/*#include "bytes.h"*/ /* Don't include! */
+/* Don't include! */
+/*#include "bytes.h"*/
 
 #ifndef CONFIG_HAVE_wcslen
 #define CONFIG_HAVE_wcslen

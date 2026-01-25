@@ -30,7 +30,7 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_ssize_t */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */

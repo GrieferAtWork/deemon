@@ -50,7 +50,9 @@
 #include <hybrid/host.h>     /* __i386__, __x86_64__ */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
-#include "types.h"
+#include "gc.h"         /* Dee_gc_head_link */
+#include "object.h"
+#include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT */
 #include "util/lock.h"  /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 #include "util/rlock.h" /* Dee_rshared_rwlock_* */
 
@@ -59,6 +61,9 @@
 
 #ifndef __INTELLISENSE__
 #include "alloc.h" /* DeeObject_*alloc*, DeeObject_Free */
+#ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#include "tuple.h" /* DeeTuple_ELEM, DeeTuple_SIZE */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
@@ -1199,8 +1204,8 @@ DeeFunction_New(DeeCodeObject *code, size_t refc,
                 DeeObject *const *refv);
 
 #ifndef Dee_operator_t_DEFINED
-#define Dee_operator_t_DEFINED
-typedef uint16_t Dee_operator_t;
+#define Dee_operator_t_DEFINED   /*!export-*/
+typedef uint16_t Dee_operator_t; /*!export-*/
 #endif /* !Dee_operator_t_DEFINED */
 
 struct Dee_function_info {
@@ -1296,7 +1301,7 @@ DeeFunction_ThisCallKw(DeeFunctionObject *self, DeeObject *this_arg,
                        size_t argc, DeeObject *const *argv,
                        DeeObject *kw);
 
-#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#if defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) || defined(__INTELLISENSE__)
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeFunction_CallTuple(DeeFunctionObject *self,
                       DeeObject *args);
@@ -1313,7 +1318,7 @@ DeeFunction_ThisCallTupleKw(DeeFunctionObject *self,
                             DeeObject *this_arg,
                             DeeObject *args,
                             DeeObject *kw);
-#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS || __INTELLISENSE__ */
 #define DeeFunction_CallTuple(self, args) \
 	DeeFunction_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeFunction_CallTupleKw(self, args, kw) \
@@ -1322,7 +1327,7 @@ DeeFunction_ThisCallTupleKw(DeeFunctionObject *self,
 	DeeFunction_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw) \
 	DeeFunction_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

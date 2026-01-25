@@ -35,7 +35,7 @@
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __ULONG32_TYPE__ */
 
-#include "types.h"
+#include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_refcnt_t, ITER_DONE */
 #include "util/futex.h" /* DeeFutex_WakeAll */
 
 #include <stdbool.h> /* bool */
@@ -46,6 +46,8 @@
 #include "alloc.h"  /* DeeSlab_* */
 #include "object.h" /* DeeObject_NewPack */
 #endif /* !__INTELLISENSE__ */
+
+/*!fixincludes fake_include "system-features.h" // pid_t */
 
 #undef Dee_pid_t
 #ifdef CONFIG_HOST_WINDOWS

@@ -25,9 +25,9 @@
 
 #include "api.h"
 
-#include "error.h"
+#include "error.h"  /* Dee_ERROR_OBJECT_HEAD */
 #include "object.h" /* Dee_WEAKREF */
-#include "types.h"
+#include "types.h"  /* DREF, DeeObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_ssize_t */
 
 #include <stddef.h> /* size_t */
 #ifdef CONFIG_HOST_WINDOWS

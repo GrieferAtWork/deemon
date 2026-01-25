@@ -23,14 +23,17 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../map.h"
+#include "../map.h"    /* DeeMapping_Type, Dee_EmptyMapping */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
+
+/* Not *that* "remove" */
+/*!fixincludes fake_include "../system-features.h" // remove */
 
 DEE_CXX_BEGIN
 

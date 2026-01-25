@@ -30,7 +30,7 @@
 #include <hybrid/byteorder.h> /* __FLOAT_WORD_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_DOUBLE__ */
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_ssize_t */
 
 #include <stddef.h> /* size_t */
 

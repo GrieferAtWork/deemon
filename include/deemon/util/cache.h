@@ -23,8 +23,9 @@
 
 #include "../api.h"
 
-#include "../alloc.h" /* DeeDbgObject_Malloc, DeeDbg_Malloc, DeeObject_Free, DeeObject_Malloc, Dee_Free, Dee_Malloc, Dee_TryMalloc */
-#include "lock.h"     /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
+#include "../alloc.h"           /* DeeDbgObject_Malloc, DeeDbg_Malloc, DeeObject_Free, DeeObject_Malloc, Dee_Free, Dee_Malloc, Dee_TryMalloc */
+#include "../system-features.h" /* memset */
+#include "lock.h"               /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 
 #include <stddef.h> /* NULL, size_t */
 

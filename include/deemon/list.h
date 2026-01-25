@@ -24,7 +24,8 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "object.h"
+#include "types.h"           /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT, Dee_ssize_t */
 #include "util/atomic.h"     /* Dee_atomic_read */
 #include "util/lock.h"       /* Dee_atomic_rwlock_* */
 #include "util/objectlist.h" /* Dee_OBJECTLIST_HAVE_ELEMA, Dee_objectlist, Dee_objectlist_getalloc, _Dee_objectlist_setalloc */
@@ -181,6 +182,19 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_InsertVector(DeeObject *self, siz
 #define DeeList_InsertVector(self, index, objc, objv) __builtin_expect(DeeList_InsertVector(self, index, objc, objv), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
+
+/* Pack the given Dee_objectlist into a List.
+ * Upon success, `self' will have been finalized. */
+#ifdef __INTELLISENSE__
+extern WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+Dee_objectlist_packlist(struct Dee_objectlist *__restrict self);
+#elif defined(Dee_OBJECTLIST_HAVE_ELEMA)
+#define Dee_objectlist_packlist(self) \
+	DeeList_NewVectorInheritedHeap((self)->ol_elemv, (self)->ol_elemc, (self)->ol_elema)
+#else /* ... */
+#define Dee_objectlist_packlist(self) \
+	DeeList_NewVectorInheritedHeap2((self)->ol_elemv, (self)->ol_elemc)
+#endif /* !... */
 
 DECL_END
 

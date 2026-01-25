@@ -27,11 +27,14 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* int64_t, uint16_t, uint64_t */
+
+/* Not *that* access(2) */
+/*!fixincludes fake_include "system-features.h" // access */
 
 DECL_BEGIN
 
@@ -338,6 +341,9 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int
 #define Dee_type_method type_method /*!export-*/
 #define Dee_type_getset type_getset /*!export-*/
 #define Dee_type_member type_member /*!export-*/
+struct type_method;
+struct type_getset;
+struct type_member;
 #endif /* DEE_SOURCE */
 struct Dee_attrdesc;
 struct Dee_class_attribute;

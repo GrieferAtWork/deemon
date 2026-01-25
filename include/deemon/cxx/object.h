@@ -27,12 +27,11 @@
 
 #include <hybrid/compiler.h>
 
-#include "../error.h"
-#include "../none.h"
+#include "../error.h"           /* DeeError_* */
+#include "../none.h"            /* DeeNone_Check */
 #include "../object.h"
-#include "../super.h"
-#include "../system-features.h" /* strlen(), wcslen() */
-#include "../tuple.h"           /* DeeObject_CallAttrStringTuple -> DeeTuple_ELEM */
+#include "../super.h"           /* DeeSuper_New, DeeSuper_Of */
+#include "../system-features.h" /* pow, strlen */
 
 #include <exception>
 #include <initializer_list>

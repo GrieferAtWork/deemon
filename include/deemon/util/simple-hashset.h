@@ -27,9 +27,11 @@
 
 #include "../api.h"
 
+#include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
+
 #include "../alloc.h"           /* Dee_Free, Dee_Mallocc, Dee_TryMallocc */
 #include "../object.h"
-#include "../system-features.h"
+#include "../system-features.h" /* memcpyc */
 #include "lock.h"               /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 
 #include <stddef.h> /* NULL, size_t */
@@ -164,6 +166,11 @@ struct Dee_simple_hashset_with_lock {
 	 Dee_simple_hashset_with_lock_release(self))
 
 struct Dee_serial;
+#ifndef Dee_seraddr_t_DEFINED
+#define Dee_seraddr_t_DEFINED           /*!export-*/
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+#endif /* !Dee_seraddr_t_DEFINED */
+
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_simple_hashset_with_lock_serialize(struct Dee_simple_hashset_with_lock *__restrict self,
                                        struct Dee_serial *__restrict writer, Dee_seraddr_t addr);

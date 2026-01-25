@@ -35,14 +35,14 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, Dee_AsObject */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
 
 #ifndef __INTELLISENSE__
-#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeSlab_ENUMERATE, DeeSlab_Invoke, _Dee_Malloc*Bufsize* */
+#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeSlab_ENUMERATE, DeeSlab_Invoke */
 #else /* !__INTELLISENSE__ */
 DECL_BEGIN
 #define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))                             /*!export-*/
@@ -102,7 +102,6 @@ struct Dee_gc_head {
 #define Dee_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
 #define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_AsObject(ob) - Dee_GC_OBJECT_OFFSET))
 #define DeeGC_Object(ob)     (&(ob)->gc_object)
-#define DeeGC_Check(ob)      ((Dee_TYPE(ob)->tp_flags & TP_FGC) && (!DeeType_Check(ob) || (Dee_REQUIRES_OBJECT(DeeTypeObject, ob)->tp_flags & TP_FHEAP)))
 
 /* Begin/end tracking a given GC-allocated object.
  * `DeeGC_Track()' must be called explicitly when the object

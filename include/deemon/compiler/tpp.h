@@ -23,7 +23,7 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../alloc.h" /* Dee_BadAlloc, Dee_Free */
+#include "../alloc.h" /* Dee_Free */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, true */

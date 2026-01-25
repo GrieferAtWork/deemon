@@ -23,9 +23,9 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../cell.h"
+#include "../cell.h"   /* DeeCell* */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"
 

@@ -62,6 +62,8 @@ int ignore_me_10;  //!export-
 int include_me_11[];
 int include_me_12[1];
 
+ignore_me_13(ignore_me_14, ignore_me_15);
+
 enum my_enum {
 	VALUE_1, // TODO: These symbols should also appear as exports!
 	VALUE_2,
@@ -87,6 +89,7 @@ local expectedSymbols = Set.frozen({
 	"include_me_12",
 	"my_enum",
 	"DeeNO_assign_t",
+	"ignore_me_13", /* TODO: This one shouldn't be exported! */
 });
 
 assert hdr.exports == expectedSymbols, f"\n"

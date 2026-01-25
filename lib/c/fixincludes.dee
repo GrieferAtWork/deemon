@@ -1539,12 +1539,18 @@ next_keyword:;
 					includedSystemIncludes.insert(dep.include);
 			} else {
 				includedFilenames.insert(incHdr.filename);
-				local usedKwds = HashSet(
-					for (local k: incHdr.exports)
-						if (k in this.keywords)
-							k
-				);
-				if (!usedKwds) {
+				local usedKwds = HashSet();
+				local maybeUsedKwds = HashSet();
+				for (local k: incHdr.exports) {
+					if (k in keywords) {
+						if (k in selfProvidedKeyword) {
+							maybeUsedKwds.insert(k);
+						} else {
+							usedKwds.insert(k);
+						}
+					}
+				}
+				if (!usedKwds && !maybeUsedKwds) {
 					if (incHdr.exports && !incHdr.ignoreUnnecessaryInclude &&
 					    !isFormattingDisabledAt(inc.includeStringOffset)) {
 						printStderr(f"{filename}: Removing unnecessary include {inc.include}");
@@ -1567,6 +1573,14 @@ next_keyword:;
 							inc.commentStartOffset:
 							inc.commentEndOffset
 						].decode("utf-8");
+					}
+					if (!correctKwdsComment) {
+						local d = lc(inc.includeStringOffset);
+						local selfDefinedSymbols = ", ".join(maybeUsedKwds.sorted(
+							functools.predcmp2key(string.vercompare)
+						));
+						printStderr(f"{filename}({d[0]}, {d[1]}): Potentially unnecessary include {
+							inc.include}. All symbols '{selfDefinedSymbols}' are also defined by this file");
 					}
 					if (actualKwdsComment != correctKwdsComment &&
 					    !isFormattingDisabledAt(inc.commentStartOffset) &&
@@ -1618,12 +1632,16 @@ next_keyword:;
 			} else {
 				switch (config.missingIncludeFormat) {
 				case "shortest":
-					missingIncludeString = {systemIncludeString, relativeIncludePath} < ...;
+					missingIncludeString = #systemIncludeString < #relativeIncludePath
+						? systemIncludeString
+						: relativeIncludePath;
 					break;
 				case "shortestButNoUpRefs":
-					missingIncludeString = !relativeIncludePath.startswith("../")
-						? ({systemIncludeString, relativeIncludePath} < ...)
-						: systemIncludeString;
+					missingIncludeString = relativeIncludePath.startswith('"../')
+						? systemIncludeString
+						: (#systemIncludeString < #relativeIncludePath
+							? systemIncludeString
+							: relativeIncludePath);
 					break;
 				case "relative":
 					missingIncludeString = relativeIncludePath;
@@ -1632,7 +1650,7 @@ next_keyword:;
 					missingIncludeString = systemIncludeString;
 					break;
 				case "relativeIfNoUpRefs":
-					missingIncludeString = relativeIncludePath.startswith("../")
+					missingIncludeString = relativeIncludePath.startswith('"../')
 						? systemIncludeString
 						: relativeIncludePath;
 					break;

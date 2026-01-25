@@ -62,8 +62,10 @@
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __SIZEOF_POINTER__ */
 
-#include "types.h"
-#include "util/lock.h" /* Dee_shared_rwlock_t */
+#include "system-features.h" /* access, memcpy, strlen */
+#include "tuple.h"           /* DeeTuple_ELEM, DeeTuple_SIZE */
+#include "types.h"           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
+#include "util/lock.h"       /* Dee_shared_rwlock_t */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
@@ -71,16 +73,16 @@
 #include <stdint.h>  /* uint16_t, uintptr_t */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "error-rt.h"
+#include "error-rt.h" /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_Err* */
 #include "object.h"
 #ifndef __INTELLISENSE__
 #include "alloc.h" /* Dee_Free */
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */
 #ifndef __INTELLISENSE__
-#include "none.h"
-#include "string.h"
-#include "objmethod.h" /* DeeObjMethod_VCallFuncfDeeObjMethod_VCallFuncf */
+#include "none.h"      /* Dee_None */
+#include "objmethod.h" /* DeeClsMember_New, DeeClsMethod_New, DeeClsProperty_New, DeeKwClsMethod_New, DeeKwObjMethod_CallFunc, DeeKwObjMethod_New, DeeKwObjMethod_VCallFuncf, DeeObjMethod* */
+#include "string.h"    /* DeeString*, STRING_ERROR_FIGNORE */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

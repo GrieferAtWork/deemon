@@ -25,8 +25,8 @@
 #define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../system-features.h" /* bzero */
-#include "../types.h"
+#include "../system-features.h" /* bzero, memcpy */
+#include "../types.h"           /* DREF */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

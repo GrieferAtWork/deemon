@@ -22,9 +22,10 @@
 
 #include "../api.h"
 
+#include "../module.h" /* DeeModule_Deemon, Dee_module_symbol_getindex */
+#include "../none.h"   /* DeeNone_Check */
 #include "../object.h"
-#include "../types.h"
-#include "../none.h"
+#include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
 #include "symbol.h"
 
 #include <stddef.h> /* NULL, size_t */

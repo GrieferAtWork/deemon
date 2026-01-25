@@ -38,11 +38,12 @@
 
 #include "api.h"
 
-#include "none-operator.h"
-#include "types.h"
+#include "none-operator.h" /* _DeeNone_* */
+#include "object.h"
+#include "types.h"         /* DREF, DeeObject, DeeTypeObject, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stddef.h> /* NULL, size_t */
-#include <stdint.h> /* int32_t, int64_t, uint8_t */
+#include <stdint.h> /* int32_t, int64_t, uint8_t, uint16_t */
 
 DECL_BEGIN
 
@@ -561,6 +562,12 @@ typedef uint8_t Dee_compact_tno_id_t;
  * The caller must ensure that `op < Dee_OPERATOR_USERCOUNT' */
 INTDEF Dee_compact_tno_id_t const _DeeType_GetTnoOfOperator[Dee_OPERATOR_USERCOUNT];
 #define DeeType_GetTnoOfOperator(op) ((enum Dee_tno_id)_DeeType_GetTnoOfOperator[op])
+
+#ifndef Dee_operator_t_DEFINED
+#define Dee_operator_t_DEFINED   /*!export-*/
+typedef uint16_t Dee_operator_t; /*!export-*/
+#endif /* !Dee_operator_t_DEFINED */
+
 
 /* The inverse of `DeeType_GetTnoOfOperator' */
 INTDEF Dee_operator_t const _DeeType_GetOperatorOfTno[Dee_TNO_COUNT];

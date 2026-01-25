@@ -28,7 +28,6 @@
 #include <hybrid/typecore.h> /* __UINT64_TYPE__ */
 
 #include "../alloc.h" /* Dee_*alloc*, Dee_Free */
-#include "../object.h"
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

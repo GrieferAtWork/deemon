@@ -27,8 +27,8 @@
 
 #include "api.h"
 
-#include "code.h"       /* struct Dee_code_frame */
-#include "types.h"
+#include "code.h"       /* Dee_code_frame */
+#include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, ITER_DONE */
 #include "util/lock.h"  /* Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
 #include "util/rlock.h" /* Dee_ratomic_rwlock_*, Dee_rshared_rwlock_* */
 

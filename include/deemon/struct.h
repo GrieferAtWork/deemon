@@ -24,8 +24,10 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
+
 #include "object.h"
-#include "types.h"
+#include "types.h"  /* DeeObject, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stddef.h> /* size_t */
 
@@ -124,7 +126,14 @@ DECL_BEGIN
  * - "STRUCT_CSTR_EMPTY"  (owner wouldn't be reference; use "STRUCT_OBJECT" instead)
  * - "STRUCT_STRING"      (impossible to know max-length; use "STRUCT_OBJECT" instead)
  */
+
+#ifndef Dee_seraddr_t_DEFINED
+#define Dee_seraddr_t_DEFINED           /*!export-*/
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+#endif /* !Dee_seraddr_t_DEFINED */
+
 struct Dee_serial;
+
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_Ctor(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Copy(DeeObject *__restrict self, DeeObject *__restrict other);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Deep(DeeObject *__restrict self, DeeObject *__restrict other);

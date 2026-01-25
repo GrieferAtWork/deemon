@@ -27,7 +27,7 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include "types.h"
+#include "types.h" /* DeeObject, Dee_ssize_t */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint16_t */

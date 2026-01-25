@@ -23,12 +23,15 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../bool.h"
-#include "../types.h"
+#include "../bool.h"  /* DeeBool*, Dee_False, Dee_True */
+#include "../types.h" /* DeeObject */
 #include "numeric.h"
 #include "object.h"
 
 #include <stdbool.h> /* bool */
+
+/* Not *that* "pow" */
+/*!fixincludes fake_include "../system-features.h" // pow */
 
 DEE_CXX_BEGIN
 

@@ -23,10 +23,10 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../format.h"
+#include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../seq.h"
-#include "../types.h"
+#include "../seq.h"    /* DeeIterator_Type */
+#include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 
 #include <stdbool.h> /* bool */

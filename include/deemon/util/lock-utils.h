@@ -46,7 +46,7 @@
 #include <hybrid/__overflow.h>    /* __hybrid_overflow_uadd, __hybrid_overflow_usub */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 
-#include "../thread.h"
+#include "../thread.h" /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
 #include "lock.h"      /* Dee_atomic_lock_available, Dee_atomic_lock_tryacquire, Dee_atomic_rwlock_* */
 
 DECL_BEGIN

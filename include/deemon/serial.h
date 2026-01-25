@@ -25,9 +25,9 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, Dee_AsObject, Dee_funptr_t */
 
-#include <stddef.h> /* offsetof, ptrdiff_t, size_t */
+#include <stddef.h> /* ptrdiff_t, size_t */
 
 #ifndef Dee_seraddr_t_DEFINED
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
@@ -98,6 +98,7 @@ err:
 #endif
 
 
+struct Dee_weakref;
 #ifndef Dee_weakref_callback_t_DEFINED
 #define Dee_weakref_callback_t_DEFINED /*!export-*/
 /* Prototype for callbacks to-be invoked when a weakref'd object gets destroyed. */

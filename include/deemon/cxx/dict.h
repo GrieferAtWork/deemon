@@ -23,15 +23,18 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../dict.h"
-#include "../format.h"
+#include "../dict.h"   /* DeeDict_* */
+#include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, Dee_ssize_t, _Dee_HashSelectC */
 #include "mapping.h"
 #include "object.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
+
+/* Not *that* "remove" */
+/*!fixincludes fake_include "../system-features.h" // remove */
 
 DEE_CXX_BEGIN
 

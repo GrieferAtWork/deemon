@@ -52,8 +52,8 @@
 
 #include "api.h"
 
-/*!fixincludes fake_include "object.h" // */
-/*!fixincludes fake_include "system-features.h" // */
+/*!fixincludes fake_include "object.h"          //  */
+/*!fixincludes fake_include "system-features.h" // _alloca, _msize, malloc, malloc_usable_size */
 
 #ifdef __CC__
 #include <hybrid/__debug-alignment.h> /* __NO_hybrid_dbg_alignment, __hybrid_dbg_alignment_disable, __hybrid_dbg_alignment_enable */

@@ -29,12 +29,15 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __ULONG32_TYPE__ */
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_formatprinter_t, Dee_ssize_t */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint64_t, uintptr_t */
+
+/* We only need "memrend" if it is available, so we don't need "system-features.h" */
+/*!fixincludes fake_include "system-features.h" // memrend */
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H

@@ -26,6 +26,7 @@
 
 #include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __hybrid_atomic_load */
 
+#include "object.h"    /* DeeObject_HashGeneric */
 #include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD */
 #include "util/lock.h" /* Dee_atomic_rwlock_* */
 

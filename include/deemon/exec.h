@@ -29,11 +29,15 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "types.h" /* DREF, DeeObject, Dee_AsObject */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t, uint64_t */
+
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#include "list.h" /* DeeList_Clear, Dee_list_object */
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 DECL_BEGIN
 

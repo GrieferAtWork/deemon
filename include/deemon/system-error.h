@@ -25,7 +25,7 @@
 
 #include "api.h"
 
-#include "system-features.h"
+#include "system-features.h" /* CONFIG_HAVE_doserrno, CONFIG_HAVE_errno, DeeSystem_GetErrno, DeeSystem_SetErrno, doserrno */
 
 /* Helper macros for saving/restoring the current:
  *   - errno

@@ -27,8 +27,8 @@
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
-#include "../code.h"
-#include "../module.h"
+#include "../code.h"   /* DeeCodeObject */
+#include "../module.h" /* DeeModuleObject */
 #include "../object.h"
 
 #include <stddef.h> /* NULL, size_t */

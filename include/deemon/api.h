@@ -100,7 +100,7 @@
 #include <__stdinc.h> /* !always *//* __CC__ */
 
 #if defined(__CC__) && !defined(__INTELLISENSE__)
-#include <stddef.h> /* NULL, size_t */
+#include <stddef.h> /* size_t */
 #endif /* __CC__ && !__INTELLISENSE__ */
 #endif /* !__DEEMON__ */
 
@@ -129,7 +129,6 @@
 #define DEE_VERSION_REVISION 0
 
 #ifndef __DEEMON__
-#include <hybrid/__assert.h> /* __hybrid_assert, __hybrid_assertf, __hybrid_assertion_failed, __hybrid_assertion_failedf */
 #include <hybrid/compiler.h> /* TODO: Get rid of this include (<__stdinc.h> is fine, but this one
                               *       clobbers too much of the global namespace and can break compat
                               *       with 3rd party code that uses identifiers defined here) */

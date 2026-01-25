@@ -29,10 +29,10 @@
 
 #include <hybrid/__unaligned.h> /* __hybrid_unaligned_get*, __hybrid_unaligned_set32, __hybrid_unaligned_set64 */
 #include <hybrid/int128.h>      /* __ALIGNOF_INT128__, __hybrid_int128_getword8, __hybrid_int128_setword8, __hybrid_uint128_getword8, __hybrid_uint128_setword8 */
-#include <hybrid/typecore.h>    /* __ALIGNOF_*__, __BYTE_TYPE__, __SIZEOF_*__ */
+#include <hybrid/typecore.h>    /* __ALIGNOF_*__, __BYTE_TYPE__, __SIZEOF_*__, __UINTPTR_TYPE__ */
 
 #include "object.h"
-#include "types.h"
+#include "types.h"       /* DREF, DeeObject, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
 #include "util/atomic.h" /* Dee_atomic_read */
 
 #include <stdbool.h> /* bool */
@@ -253,6 +253,11 @@ Dee_variant_init_deepcopy(struct Dee_variant *__restrict self,
 DFUNDEF NONNULL((1, 2)) void DCALL
 Dee_variant_visit(struct Dee_variant *__restrict self,
                   Dee_visit_t proc, void *arg);
+
+#ifndef Dee_seraddr_t_DEFINED
+#define Dee_seraddr_t_DEFINED           /*!export-*/
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+#endif /* !Dee_seraddr_t_DEFINED */
 
 struct Dee_serial;
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL

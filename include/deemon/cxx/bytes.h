@@ -23,16 +23,19 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../bytes.h"
-#include "../format.h"
+#include "../bytes.h"  /* DeeBytes*, DeeObject_Bytes, Dee_EmptyBytes */
+#include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint8_t */
+
+/* Not *those* functions */
+/*!fixincludes fake_include "../system-features.h" // close, isalnum, isalpha, isdigit, islower, isupper, open, to(lower|upper) */
 
 DEE_CXX_BEGIN
 

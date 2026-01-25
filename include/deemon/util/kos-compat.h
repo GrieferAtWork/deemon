@@ -26,10 +26,11 @@
 #include <hybrid/typecore.h> /* __*_TYPE__ */
 
 #include "../alloc.h"           /* Dee_Free, Dee_Try*alloc* */
-#include "../format.h"
-#include "../string.h"
-#include "../stringutils.h"
-#include "../system-features.h"
+#include "../format.h"          /* DeeFormat_Printf, DeeFormat_VPrintf, PRF* */
+#include "../string.h"          /* DeeAscii_ItoaDigit, DeeAscii_ItoaDigits, DeeUni_*, Dee_UNICODE_FOLDED_MAX, Dee_UNICODE_IS*, Dee_unitraits, _DeeAscii_Itoa */
+#include "../stringutils.h"     /* Dee_UNICODE_UTF8_*LEN, Dee_unicode_* */
+#include "../system-features.h" /* CONFIG_HAVE_FPU, DeeSystem_DEFINE_*, bzero, isalnum, isalpha, memsetb */
+#include "../types.h"           /* Dee_formatprinter_t, Dee_ssize_t */
 
 #include <stdbool.h> /* false, true */
 #include <stdint.h>  /* uint8_t, uint32_t */

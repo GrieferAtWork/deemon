@@ -30,18 +30,19 @@
 
 #include "api.h"
 
-#include "types.h"
+#include "object.h"
+#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
 #include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* size_t */
 
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
-#include "dict.h" /* Dee_dict_vidx_t, Dee_dict_gethidx_t, Dee_dict_sethidx_t */
+#include "dict.h" /* Dee_DICT_HIDXIO_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_EmptyTab */
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 #ifndef __INTELLISENSE__
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
-#include "method-hints.h"
+#include "method-hints.h" /* DeeObject_InvokeMethodHint */
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 #endif /* !__INTELLISENSE__ */
 

@@ -23,9 +23,9 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../code.h"
+#include "../code.h"   /* DeeCodeObject, DeeFunction_* */
 #include "../object.h"
-#include "../types.h"
+#include "../types.h"  /* DREF, DeeObject, _Dee_HashSelectC */
 #include "callable.h"
 #include "object.h"
 

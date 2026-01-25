@@ -35,10 +35,10 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include "file.h"
+#include "file.h"       /* DeeFileTypeObject, DeeSystem_FILE_USE_*, Dee_FILE_OBJECT_HEAD */
 #include "object.h"     /* DeeBuffer */
-#include "string.h"     /* struct Dee_unicode_printer */
-#include "types.h"
+#include "string.h"     /* DeeStringObject, Dee_unicode_printer */
+#include "types.h"      /* DREF, DeeObject, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_pos_t */
 #include "util/lock.h"  /* Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
 #include "util/rlock.h" /* Dee_rshared_rwlock_* */
 
