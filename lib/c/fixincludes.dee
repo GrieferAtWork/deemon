@@ -269,7 +269,9 @@ class Header {
 @@Mapping of default headers
 local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 #define DEFAULT_HEADER(inc, ...) inc: Header(includes: Set.frozen{inc}, __VA_ARGS__)
-	DEFAULT_HEADER("stdarg.h", exports: Set.frozen { "va_list", "va_start", "va_arg", "va_end" }),
+	DEFAULT_HEADER("stdarg.h", exports: Set.frozen {
+		"va_list", "va_start", "va_arg", "va_copy", "va_end"
+	}),
 	DEFAULT_HEADER("stddef.h", exports: Set.frozen {
 		"NULL", "size_t", "ptrdiff_t", "offsetof",
 		"wchar_t", "max_align_t",
@@ -1465,6 +1467,16 @@ seek_eol:
 			do {
 				++i;
 			} while (i < len && data.issymcont(i));
+			/* XXX: in "struct foo;", "foo" must not be considered a dependency.
+			 *      so-long as no actual instance of "foo" is created, and none
+			 *      of "foo"'s fields are accessed:
+			 * >> struct foo;
+			 * >> extern void bar(struct foo *x);
+			 *    ^ This code **DOESN'T** need to depend on "foo"
+			 * >> struct foo;
+			 * >> extern void bar(struct foo x);
+			 *    ^ This code **DOES** need to depend on "foo"
+			 */
 			keywords.insert(data[kwdStart:i].decode("utf-8"));
 		} else {
 			++i;

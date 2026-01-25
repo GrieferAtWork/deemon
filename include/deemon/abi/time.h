@@ -17,6 +17,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export DeeTime_**/
+/*!export DECLARE_DeeTime_**/
+/*!export DEFINE_DeeTime_**/
 #ifndef GUARD_DEEMON_ABI_TIME_H
 #define GUARD_DEEMON_ABI_TIME_H 1
 

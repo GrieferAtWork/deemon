@@ -1444,8 +1444,6 @@
 #define unitraits                      Dee_unitraits
 #define weakref                        Dee_weakref
 #define weakref_list                   Dee_weakref_list
-#define weakref_object                 Dee_weakref_object
-#define weakrefable_object             Dee_weakrefable_object
 #define yield_function_iterator_object Dee_yield_function_iterator_object
 #define yield_function_object          Dee_yield_function_object
 #define keyword                        Dee_keyword

@@ -17,6 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export DeeWeakRef**/
+/*!export DeeWeakRefAble**/
 #ifndef GUARD_DEEMON_WEAKREF_H
 #define GUARD_DEEMON_WEAKREF_H 1
 
@@ -26,19 +28,11 @@
 
 DECL_BEGIN
 
-#ifdef DEE_SOURCE
-#define Dee_weakref_object     weakref_object
-#define Dee_weakrefable_object weakrefable_object
-#endif /* DEE_SOURCE */
-
-typedef struct Dee_weakref_object DeeWeakRefObject;
-typedef struct Dee_weakrefable_object DeeWeakRefAbleObject;
-
-struct Dee_weakref_object {
+typedef struct {
 	Dee_OBJECT_HEAD
 	struct Dee_weakref wr_ref; /* The weak reference pointer. */
 	DREF DeeObject    *wr_del; /* [0..1][const] Deletion callback. */
-};
+} DeeWeakRefObject;
 
 #define DeeWeakRef_Check(self)      DeeObject_InstanceOfExact(self, &DeeWeakRef_Type) /* `WeakRef' is final */
 #define DeeWeakRef_CheckExact(self) DeeObject_InstanceOfExact(self, &DeeWeakRef_Type)
@@ -47,10 +41,10 @@ DDATDEF DeeTypeObject DeeWeakRef_Type;
 
 /* Base class that should be used for user-defined classes
  * that are supposed to support being weakly referenced. */
-struct Dee_weakrefable_object {
+typedef struct {
 	Dee_OBJECT_HEAD
 	Dee_WEAKREF_SUPPORT
-};
+} DeeWeakRefAbleObject;
 
 DDATDEF DeeTypeObject DeeWeakRefAble_Type;
 

@@ -17,22 +17,40 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export DeeCTypes_**/
 #ifndef GUARD_DEEMON_ABI_CTYPES_H
 #define GUARD_DEEMON_ABI_CTYPES_H 1
 
 #include "../api.h"
 
+#include "../types.h"
+
+#ifndef __INTELLISENSE__
 #include "../format.h" /* Dee_PCKuPTR */
 #include "../module.h"
 #include "../object.h"
 
 #include <stdint.h> /* uintptr_t */
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
 /* Helpers for interfacing with pointer-like objects, as defined by the ctypes ABI */
 
+#ifdef __INTELLISENSE__
+/* Return the void type object. */
+LOCAL WUNUSED DREF DeeObject *DCALL DeeCTypes_GetVoid(void);
 
+/* Construct a new void-pointer pointing to the given `address'. */
+LOCAL WUNUSED DREF DeeObject *DCALL
+DeeCTypes_CreateVoidPointer(void *address);
+
+/* Extract the address of a given pointer-like object.
+ * @return:  0: Success.
+ * @return: -1: Error. */
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
+DeeCTypes_GetPointer(DeeObject *__restrict self, void **p_address);
+#else /* __INTELLISENSE__ */
 /* Return the void type object. */
 LOCAL WUNUSED DREF DeeObject *DCALL DeeCTypes_GetVoid(void) {
 	return DeeModule_GetExternString("ctypes", "void");
@@ -68,8 +86,7 @@ DeeCTypes_GetPointer(DeeObject *__restrict self, void **p_address) {
 err:
 	return -1;
 }
-
-
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 
