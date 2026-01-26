@@ -2612,29 +2612,9 @@ err:
 }
 
 
-/* Allocate a duplicate of `objv...+=objc' and put pointer to base of that vector
- * at `addr'. NULL-elements within `objv' are replicated within the duplicate.
- * @return: * : Address of duplicated vector
- * @return: 0 : An error was thrown. */
-DFUNDEF WUNUSED ATTR_INS(3, 4) NONNULL((1)) int
-(DCALL DeeSerial_XPutObjectVectorDup)(DeeSerial *__restrict writer, Dee_seraddr_t addr,
-                                      DeeObject *const *objv, size_t objc) {
-	size_t i;
-	Dee_seraddr_t md_addr = DeeSerial_Malloc(writer, objc * sizeof(DREF DeeObject *), (void *)objv);
-	if (!Dee_SERADDR_ISOK(md_addr))
-		goto err;
-	for (i = 0; i < objc; ++i) {
-		Dee_seraddr_t addrof_i = md_addr + i * sizeof(DREF DeeObject *);
-		if (DeeSerial_XPutObject(writer, addrof_i, objv[i]))
-			goto err;
-	}
-	return DeeSerial_PutAddr(writer, addr, md_addr);
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 code_serialize(DeeCodeObject *__restrict self, DeeSerial *__restrict writer) {
+#define ADDROF(field) (addr + offsetof(DeeCodeObject, field))
 	DeeCodeObject *out;
 	size_t sizeof_code = offsetof(DeeCodeObject, co_code) + self->co_codebytes;
 	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_code, self);
@@ -2663,21 +2643,20 @@ code_serialize(DeeCodeObject *__restrict self, DeeSerial *__restrict writer) {
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	memcpy(out->co_code, self->co_code, self->co_codebytes);
 	if (self->co_keywords) {
-		if unlikely(DeeSerial_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_keywords),
-		                                          (DeeObject *const *)self->co_keywords,
-		                                          self->co_argc_max))
+		if unlikely(DeeSerial_XPutMemdupObjectv(writer, ADDROF(co_keywords),
+		                                        (DeeObject *const *)self->co_keywords,
+		                                        self->co_argc_max))
 			goto err;
 	}
 	if (self->co_defaultv) {
-		if unlikely(DeeSerial_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_defaultv),
-		                                          (DeeObject *const *)self->co_defaultv,
-		                                          self->co_argc_max - self->co_argc_min))
+		if unlikely(DeeSerial_XPutMemdupObjectv(writer, ADDROF(co_defaultv),
+		                                        self->co_defaultv,
+		                                        self->co_argc_max - self->co_argc_min))
 			goto err;
 	}
 	if (self->co_constv) {
-		if unlikely(DeeSerial_XPutObjectVectorDup(writer, addr + offsetof(DeeCodeObject, co_constv),
-		                                          (DeeObject *const *)self->co_constv,
-		                                          self->co_constc))
+		if unlikely(DeeSerial_XPutMemdupObjectv(writer, ADDROF(co_constv),
+		                                        self->co_constv, self->co_constc))
 			goto err;
 	}
 	if (self->co_exceptv) {
@@ -2700,16 +2679,17 @@ code_serialize(DeeCodeObject *__restrict self, DeeSerial *__restrict writer) {
 				out_exceptv = DeeSerial_Addr2Mem(writer, addrof_out_exceptv, struct Dee_except_handler);
 			}
 		}
-		if (DeeSerial_PutAddr(writer, addr + offsetof(DeeCodeObject, co_exceptv), addrof_out_exceptv))
+		if (DeeSerial_PutAddr(writer, ADDROF(co_exceptv), addrof_out_exceptv))
 			goto err;
 	}
-	if (DeeSerial_PutObject(writer, addr + offsetof(DeeCodeObject, co_module), self->co_module))
+	if (DeeSerial_PutObject(writer, ADDROF(co_module), self->co_module))
 		goto err;
-	if (DeeSerial_PutObject(writer, addr + offsetof(DeeCodeObject, co_ddi), self->co_ddi))
+	if (DeeSerial_PutObject(writer, ADDROF(co_ddi), self->co_ddi))
 		goto err;
 	return addr;
 err:
 	return Dee_SERADDR_INVALID;
+#undef ADDROF
 }
 
 PUBLIC DeeTypeObject DeeCode_Type = {
@@ -2719,13 +2699,22 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "Return a singleton, stub code object that always returns ?N\n"
 	                         "\n"
 	                         "("
-	                         /**/ "text:?X2?DBytes?N=!N,module:?X2?DModule?N=!N,constants:?S?O=!N,"
-	                         /**/ "except:?S?X3?T4?Dint?Dint?Dint?Dint"
-	                         /**/ /*       */ "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
-	                         /**/ /*       */ "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType"
-	                         /**/ /*       */ "=!N,"
-	                         /**/ "nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,"
-	                         /**/ "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?X2?Ert:Ddi?N=!N"
+	                         /**/ "text:?X2?DBytes?N=!N,"
+	                         /**/ "module:?X2?DModule?N=!N,"
+	                         /**/ "constants:?S?O=!N,"
+	                         /**/ "except:?X2?S?X3?T4?Dint?Dint?Dint?Dint"
+	                         /**/ /*          */ "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
+	                         /**/ /*          */ "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType"
+	                         /**/ /*          */ "?N=!N,"
+	                         /**/ "nlocal=!0,"
+	                         /**/ "nstack=!0,"
+	                         /**/ "nref=!0,"
+	                         /**/ "nstatic=!0,"
+	                         /**/ "argc=!0,"
+	                         /**/ "keywords:?X2?S?Dstring?N=!N,"
+	                         /**/ "defaults:?X2?S?O?N=!N,"
+	                         /**/ "flags:?X2?Dstring?Dint=!P{},"
+	                         /**/ "ddi:?X2?Ert:DDI?N=!N"
 	                         ")\n"
 	                         "#tIntegerOverflow{One of the specified arguments exceeds its associated implementation limit (the "
 	                         /*                  */ "usual limit is $0xffff for most arguments, and $0xffffffff for the length of @text)}"
@@ -2733,7 +2722,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "#ptext{The bytecode that should be executed by the code}"
 	                         "#pmodule{The module to-be used as the declaring module}"
 	                         "#pconstants{An indexable sequence containing the constants that are to be made available to the code}"
-	                         "#pexcept{A sequence of ${(startpc#: int, endpc#: int, entrypc#: int, entrysp#: int, flags#: string #| int = \"\", mask#: Type = none)}-"
+	                         "#pexcept{A sequence of ${(startpc#: int, endpc#: int, entrypc#: int, entrysp#: int, flags#: string #| int = \"\", mask#: Type #| none = none)}-"
 	                         /*         */ "?D{Tuple}s, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"}"
 	                         "#pnlocal{The number of local variables to-be allocated for every frame}"
 	                         "#pnstack{The amount of stack space to be allocated for every frame}"

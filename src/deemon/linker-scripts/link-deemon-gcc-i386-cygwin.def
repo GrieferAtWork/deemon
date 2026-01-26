@@ -1301,7 +1301,6 @@ EXPORTS
 	_DeeSerial_XPutMemdupObjectv@16=DeeSerial_XPutMemdupObjectv@16
 	_DeeSerial_XPutObject@12=DeeSerial_XPutObject@12
 	_DeeSerial_XPutObjectInherited@12=DeeSerial_XPutObjectInherited@12
-	_DeeSerial_XPutObjectVectorDup@16=DeeSerial_XPutObjectVectorDup@16
 	_DeeSerial_XPutObjectv@16=DeeSerial_XPutObjectv@16
 	_DeeSerial_XPutPointer@12=DeeSerial_XPutPointer@12
 	_DeeSharedMap_Decref@4=DeeSharedMap_Decref@4

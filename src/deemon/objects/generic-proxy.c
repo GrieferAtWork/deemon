@@ -93,7 +93,9 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__serialize(ProxyObject *__restrict self,
                          DeeSerial *__restrict writer,
                          Dee_seraddr_t addr) {
-	return DeeSerial_PutObject(writer, addr + offsetof(ProxyObject, po_obj), self->po_obj);
+#define ADDROF(field) (addr + offsetof(ProxyObject, field))
+	return DeeSerial_PutObject(writer, ADDROF(po_obj), self->po_obj);
+#undef ADDROF
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -170,10 +172,12 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy2__serialize(ProxyObject2 *__restrict self,
                           DeeSerial *__restrict writer,
                           Dee_seraddr_t addr) {
-	int result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject2, po_obj1), self->po_obj1);
+#define ADDROF(field) (addr + offsetof(ProxyObject2, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(po_obj1), self->po_obj1);
 	if likely(result == 0)
-		result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject2, po_obj2), self->po_obj2);
+		result = DeeSerial_PutObject(writer, ADDROF(po_obj2), self->po_obj2);
 	return result;
+#undef ADDROF
 }
 
 
@@ -245,13 +249,14 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy3__serialize(ProxyObject3 *__restrict self,
                           DeeSerial *__restrict writer,
                           Dee_seraddr_t addr) {
-	int result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject3, po_obj1), self->po_obj1);
-	if likely(result == 0) {
-		result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject3, po_obj2), self->po_obj2);
-		if likely(result == 0)
-			result = DeeSerial_PutObject(writer, addr + offsetof(ProxyObject3, po_obj3), self->po_obj3);
-	}
+#define ADDROF(field) (addr + offsetof(ProxyObject3, field))
+	int result = DeeSerial_PutObject(writer, ADDROF(po_obj1), self->po_obj1);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(po_obj2), self->po_obj2);
+	if likely(result == 0)
+		result = DeeSerial_PutObject(writer, ADDROF(po_obj3), self->po_obj3);
 	return result;
+#undef ADDROF
 }
 
 INTERN NONNULL((1, 2)) void DCALL
