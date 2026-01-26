@@ -1007,6 +1007,7 @@ again:
 
 	@@Parse and return the next token (handles comments + PP directives)
 	public next(): string {
+		// TODO: Support for "cpp.hint"-style macros
 again:
 		local result = nextRaw();
 		if (result == "#") {

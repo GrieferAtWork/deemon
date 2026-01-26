@@ -99,6 +99,9 @@
 #ifndef GUARD_DEEMON_OBJECT_H
 #define GUARD_DEEMON_OBJECT_H 1 /*!export-*/
 
+/* TODO: This file is super-bloated: everything related to DeeTypeObject
+ *       should go into a separate file <deemon/type.h> */
+
 #include "api.h"
 
 #include <hybrid/__atomic.h>  /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */

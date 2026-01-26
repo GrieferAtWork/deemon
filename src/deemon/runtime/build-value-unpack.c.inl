@@ -329,7 +329,7 @@ again:
 		char const *fmt_start;
 		int temp;
 		/* Unpack a sequence. */
-		iterator = DeeObject_Iter(self);
+		iterator = DeeObject_Iter(self); /* TODO: use `DeeObject_Foreach()' */
 		if unlikely(!iterator)
 			goto err;
 		is_optional = false, fmt_start = format, argc = 0;
