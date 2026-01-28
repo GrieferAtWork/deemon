@@ -29,6 +29,7 @@
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, DeeObject_Mallocc, Dee_*alloc*, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/callable.h>        /* DeeCallable_Type */
+#include <deemon/class.h>           /* Dee_class_attribute */
 #include <deemon/dict.h>            /* DeeDictObject, DeeDict_* */
 #include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/none.h>            /* DeeNone_NewRef, return_none */
@@ -1323,8 +1324,9 @@ jf_getrefsbyname(JITFunction *__restrict self) {
 			 * >> "{}[.{}]".format({ ref->oe_namestr, ref->oe_attr.a_attr->ca_name }) */
 			char const *refname = ref->oe_namestr;
 			size_t /**/ refsize = ref->oe_namelen;
-			char const *attname = DeeString_STR(ref->oe_attr.a_attr->ca_name);
-			size_t /**/ attsize = DeeString_SIZE(ref->oe_attr.a_attr->ca_name);
+			struct Dee_class_attribute *cattr = ref->oe_attr.a_attr;
+			char const *attname = DeeString_STR(cattr->ca_name);
+			size_t /**/ attsize = DeeString_SIZE(cattr->ca_name);
 			size_t namelen = refsize + 2 + attsize + 1;
 			char *namestr  = (char *)Dee_Mallocc(namelen, sizeof(char));
 			char *iter;

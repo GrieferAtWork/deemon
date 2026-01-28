@@ -86,7 +86,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 
 
 /* Helper wrapper for encoding a pointer to the memdup of `data' at `addrof_pointer':
- * >> Dee_seraddr_t addrof_dup = DeeSerial_Malloc(self, num_bytes);
+ * >> Dee_seraddr_t addrof_dup = DeeSerial_Malloc(self, num_bytes, data);
  * >> memcpy(DeeSerial_Addr2Mem(self, addrof_dup, void), data, num_bytes);
  * >> return DeeSerial_PutAddr(self, addrof_pointer, addrof_dup); */
 PUBLIC WUNUSED NONNULL((1)) int

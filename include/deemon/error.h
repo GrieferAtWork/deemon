@@ -118,7 +118,7 @@ DDATDEF DeeTypeObject /*    */ DeeError_RestrictedAttribute;
 DDATDEF DeeTypeObject /**/ DeeError_CompilerError;
 DDATDEF DeeTypeObject /*    */ DeeError_SyntaxError;
 DDATDEF DeeTypeObject /*    */ DeeError_SymbolError;
-DDATDEF DeeTypeObject /**/ DeeError_ThreadCrash;
+DDATDEF DeeTypeObject /**/ DeeError_ThreadCrash; /* TODO: Should have a custom struct (and "operator str") that includes the error's traceback in its original thread -- Also should be moved into "RuntimeError" */
 DDATDEF DeeTypeObject /**/ DeeError_NoMemory;
 DDATDEF DeeTypeObject /**/ DeeError_RuntimeError;
 DDATDEF DeeTypeObject /*    */ DeeError_NotImplemented;
@@ -130,7 +130,7 @@ DDATDEF DeeTypeObject /*    */ DeeError_IllegalInstruction;
 DDATDEF DeeTypeObject /**/ DeeError_TypeError;
 //TODO:DDATDEF DeeTypeObject /*    */ DeeError_UnexpectedType;
 //TODO:DDATDEF DeeTypeObject /*    */ DeeError_ArgumentError;
-//TODO:DDATDEF DeeTypeObject /*        */ DeeError_InvalidArgc;
+//TODO:DDATDEF DeeTypeObject /*        */ DeeError_InvalidArgumentCount;
 DDATDEF DeeTypeObject /**/ DeeError_ValueError;
 DDATDEF DeeTypeObject /*    */ DeeError_ArithmeticError;
 DDATDEF DeeTypeObject /*        */ DeeError_IntegerOverflow;

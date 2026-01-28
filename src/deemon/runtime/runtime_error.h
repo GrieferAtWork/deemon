@@ -22,10 +22,6 @@
 
 #include <deemon/api.h>
 
-#include <deemon/class.h>           /*  */
-#include <deemon/code.h>            /*  */
-#include <deemon/kwds.h>            /*  */
-#include <deemon/module.h>          /*  */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* access */
 

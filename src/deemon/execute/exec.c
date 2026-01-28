@@ -30,6 +30,7 @@
 #include <deemon/file.h>            /* DeeFile_* */
 #include <deemon/filetypes.h>       /* DeeFile_OpenRoMemory, DeeFile_ReleaseMemory */
 #include <deemon/gc.h>              /* DeeGC_Collect, DeeGC_IsEmptyWithoutDex */
+#include <deemon/heap.h>            /* DeeHeap_Trim */
 #include <deemon/module.h>          /* DeeModule*, Dee_compiler_options, Dee_module_object */
 #include <deemon/notify.h>          /* DeeNotify_Shutdown */
 #include <deemon/object.h>
@@ -945,7 +946,10 @@ do_kill_user:
 	DeeSlab_Finalize();
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
-	/* TODO: Instruct our version of dlmalloc to release all heap segments still in-cache */
+	/* Instruct our version of dlmalloc to release all heap segments still in-cache */
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
+	DeeHeap_Trim(0);
+#endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 }
 
 

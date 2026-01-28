@@ -815,6 +815,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 
 
 /* Fallback instance when throwing no-memory errors with an unknown size. */
+DDATDEF DeeNoMemoryErrorObject DeeError_NoMemory_instance;
 PUBLIC DeeNoMemoryErrorObject DeeError_NoMemory_instance = {
 	OBJECT_HEAD_INIT(&DeeError_NoMemory),
 	/* .e_msg        = */ Dee_AsObject(&str_nomemory),
@@ -1004,10 +1005,12 @@ PUBLIC DeeTypeObject DeeError_Signal = {
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
+DDATDEF DeeSignalObject DeeError_StopIteration_instance;
 PUBLIC DeeSignalObject DeeError_StopIteration_instance = {
 	OBJECT_HEAD_INIT(&DeeError_StopIteration)
 };
 
+DDATDEF DeeSignalObject DeeError_Interrupt_instance;
 PUBLIC DeeSignalObject DeeError_Interrupt_instance = {
 	OBJECT_HEAD_INIT(&DeeError_Interrupt)
 };
