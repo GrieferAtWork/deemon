@@ -1,0 +1,103 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import posix;
+
+class FunctionMacro {
+	this = default;
+	public final member name: string;
+	public final member body: Bytes;
+	public final member argc: int;
+	public final member lastArgIsVarArgs: bool = false;
+	@@Dict (sorted by key) that is mapping `{offsetIntoBody: argumentIndex}`,
+	@@where `offsetIntoBody` are increasing offsets into @body, and `argumentIndex`
+	@@is either the positive index of an argument whose value should be inserted
+	@@at this offset, or a bit-inverted index (`~index`, and thus: negative) of an
+	@@argument, if that argument must be `.encode("c-escape")`d before being inserted
+	public final member argPositions: {int: int};
+
+	@@Invoke this macro function and return its expanded form
+	public function call(args: {Bytes...}): Bytes {
+		// TODO
+	}
+}
+
+
+local class CppHintParser {
+	this = default;
+	public member filename: string;
+	public member data: Bytes;
+	public member iter: int = 0;
+	public member end: int;
+	public member macros: {string: FunctionMacro} = Dict();
+
+	private lc(offset: int): (int, int) {
+		local sol = data.rfind("\n", 0, offset) + 1;
+		local lno = data.count("\n", 0, sol) + 1;
+		return (lno, 1 + offset - sol);
+	}
+
+	// TODO
+}
+
+#define CppHintSpecs {string: Bytes | FunctionMacro}
+
+@@Parse a `cpp.hint`-style file (or any C/C++ file for that matter) and
+@@return all macro definitions from that file. This parser ignores everything
+@@other than `#define` (and `#undef`) directives that may be found within the
+@@file, but does respect `//` and `/*...*/` comments.
+function parseCppHint(filename: string): CppHintSpecs {
+	local data: Bytes;
+	with (local fp = File.open(filename, "rb"))
+		data = fp.read();
+	CppHintParser(
+		filename: filename,
+		data:     data,
+		end:      #data,
+	);
+	// TODO
+}
+
+
+function getCppHint(dir: string): CppHintSpecs {
+	dir = posix.resolvepath(posix.abspath(dir));
+	local head = posix.headof(dir);
+	local base: CppHintSpecs | none = (head && head != dir) ? getCppHint(head) : none;
+	local absFilename = posix.joinpath(dir, "cpp.hint");
+	static local CACHE: {string: CppHintSpecs} = Dict();
+	local result: CppHintSpecs | none = CACHE.get(absFilename);
+	if (result is none) {
+		local overrides: CppHintSpecs | none;
+		try {
+			overrides = parseCppHint(absFilename);
+		} catch (FileNotFound) {
+			overrides = none;
+		}
+		result = Dict();
+		if (base !is none)
+			result.update(base);
+		if (overrides !is none)
+			result.update(overrides);
+		CACHE[absFilename] = result;
+	}
+	return result;
+}
