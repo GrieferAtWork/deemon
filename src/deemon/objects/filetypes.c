@@ -2494,6 +2494,109 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 #endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+/* @return: 1 : Try again (lock was released)
+ * @return: 0 : Success (lock is kept)
+ * @return: -1: Error (lock was released) */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+writer_bytes_set_allocated_or_unlock(DeeFileWriterObject *__restrict self,
+                                     size_t allocated) {
+	ASSERT(DeeFileWriter_LockWriting(self));
+	ASSERT(self->w_string == (DeeStringObject *)ITER_DONE);
+	DREF DeeBytesObject *bytes;
+	DREF DeeBytesObject *new_bytes;
+	size_t bytes_used, bytes_alloc, bytes_avail;
+	bytes = self->w_printer.wp_byt.bp_bytes;
+	if unlikely(!bytes) {
+		ASSERT(self->w_printer.wp_byt.bp_length == 0);
+		bytes = DeeBytes_TryNewBufferUninitialized(allocated);
+		if likely(bytes) {
+			self->w_printer.wp_byt.bp_bytes = bytes;
+			return 0;
+		}
+		DeeFileWriter_LockEndWrite(self);
+		bytes = DeeBytes_NewBufferUninitialized(allocated);
+		if unlikely(!bytes)
+			goto err;
+		DeeFileWriter_LockWrite(self);
+		if likely(self->w_string == (DeeStringObject *)ITER_DONE &&
+		          self->w_printer.wp_byt.bp_bytes == NULL) {
+			self->w_printer.wp_byt.bp_bytes = bytes;
+			DeeFileWriter_LockEndWrite(self);
+		} else {
+			DeeFileWriter_LockEndWrite(self);
+			DeeBytes_Destroy(bytes);
+		}
+		return 1;
+	}
+
+	/* Check if we need to unshare/copy "bytes" */
+	bytes_used = self->w_printer.wp_byt.bp_length;
+	if (bytes_used >= allocated)
+		return 0;
+	if (DeeObject_IsShared(bytes) || (bytes->b_orig != Dee_AsObject(bytes))) {
+		new_bytes = DeeBytes_TryNewBufferUninitialized(allocated);
+		if unlikely(!new_bytes) {
+			DeeFileWriter_LockEndWrite(self);
+			new_bytes = DeeBytes_NewBufferUninitialized(allocated);
+			if unlikely(!new_bytes)
+				goto err;
+			DeeFileWriter_LockWrite(self);
+			if unlikely(self->w_string != (DeeStringObject *)ITER_DONE) {
+unlock_and_destroy_new_bytes_and_try_again:
+				DeeFileWriter_LockEndWrite(self);
+				DeeBytes_Destroy(new_bytes);
+				return 1;
+			}
+			if unlikely(self->w_printer.wp_byt.bp_bytes != bytes)
+				goto unlock_and_destroy_new_bytes_and_try_again;
+			if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
+				goto unlock_and_destroy_new_bytes_and_try_again;
+		}
+		memcpy(new_bytes->b_data, DeeBytes_DATA(bytes), bytes_used);
+		ASSERT(self->w_printer.wp_byt.bp_bytes == bytes);
+		self->w_printer.wp_byt.bp_bytes = new_bytes;
+		if likely(Dee_DecrefIfNotOne(bytes))
+			return 0;
+		DeeFileWriter_LockEndWrite(self);
+		Dee_Decref(bytes);
+		return 1;
+	}
+
+	/* Check how much space is available in "bytes" right now */
+	bytes_alloc = DeeBytes_SIZE(bytes);
+	ASSERT(bytes_used <= bytes_alloc);
+	bytes_avail = bytes_alloc - bytes_used;
+	if (bytes_alloc >= allocated)
+		return 0; /* Already enough memory allocated! */
+
+	/* Resize to get more memory */
+	new_bytes = DeeBytes_TryResizeBuffer(bytes, allocated);
+	if unlikely(!new_bytes) {
+		DeeFileWriter_LockEndWrite(self);
+		new_bytes = DeeBytes_NewBufferUninitialized(allocated);
+		if unlikely(!new_bytes)
+			goto err;
+		DeeFileWriter_LockWrite(self);
+		if unlikely(self->w_string != (DeeStringObject *)ITER_DONE)
+			goto unlock_and_destroy_new_bytes_and_try_again;
+		if unlikely(self->w_printer.wp_byt.bp_bytes != bytes)
+			goto unlock_and_destroy_new_bytes_and_try_again;
+		if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
+			goto unlock_and_destroy_new_bytes_and_try_again;
+		memcpy(new_bytes->b_data, bytes->b_data, bytes_used);
+		DeeBytes_Destroy(bytes);
+	}
+	self->w_printer.wp_byt.bp_bytes = new_bytes;
+	bytes = new_bytes;
+	ASSERT(DeeBytes_SIZE(bytes) >= bytes_used);
+	ASSERT(DeeBytes_SIZE(bytes) >= allocated);
+	return 0;
+err:
+	return -1;
+}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 writer_write(DeeFileWriterObject *__restrict self,
              uint8_t const *__restrict buffer,
@@ -2520,6 +2623,7 @@ again_locked:
 					avail = bufsize;
 				if (avail < BYTES_PRINTER_INITIAL_BUFSIZE)
 					avail = BYTES_PRINTER_INITIAL_BUFSIZE;
+				ASSERT(self->w_printer.wp_byt.bp_length == 0);
 				bytes = DeeBytes_TryNewBufferUninitialized(avail);
 				if likely(bytes) {
 					memcpy(bytes->b_data, buffer, bufsize);
@@ -2891,6 +2995,72 @@ err:
 	return (size_t)-1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
+writer_pwrite(DeeFileWriterObject *self, void const *buffer,
+              size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	int status;
+	size_t old_length;
+	void *base;
+	(void)flags;
+
+#if Dee_SIZEOF_POS_T > __SIZEOF_SIZE_T__
+	if (pos >= (Dee_pos_t)(size_t)-1)
+		return 0;
+#endif /* Dee_SIZEOF_POS_T > __SIZEOF_SIZE_T__ */
+	if (pos != 0) {
+		size_t max_write = (size_t)0 - (size_t)pos;
+		if (bufsize > max_write)
+			bufsize = max_write;
+	}
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeFileWriter_Type);
+again:
+	DeeFileWriter_LockWrite(self);
+	if (!DeeFileWriter_IsBytes(self)) {
+		status = DeeFileWriter_String2BytesOrUnlock(self);
+		if (status != 0) {
+			if unlikely(status < 0)
+				goto err;
+			goto again;
+		}
+	}
+
+	/* Ensure that bytes have been allocated far enough along for us to be
+	 * able to perform the write!
+	 * If the caller's `pos' is something unreasonable, this will just OOM. */
+	status = writer_bytes_set_allocated_or_unlock(self, (size_t)pos + bufsize);
+	if (status != 0) {
+		if unlikely(status < 0)
+			goto err;
+		goto again;
+	}
+
+	/* bzero-initialize memory between the current (old) EOF and the caller-given `pos' */
+	old_length = self->w_printer.wp_byt.bp_length;
+	base = DeeBytes_DATA(self->w_printer.wp_byt.bp_bytes);
+	ASSERT(DeeBytes_SIZE(self->w_printer.wp_byt.bp_bytes) >= ((size_t)pos + bufsize));
+	if (old_length < (size_t)pos) {
+		size_t num_bzero = (size_t)pos - old_length;
+		bzero((byte_t *)base + old_length, num_bzero);
+	}
+
+	/* Copy the caller's intended data into the file. */
+	memcpy((byte_t *)base + (size_t)pos, buffer, bufsize);
+
+	DeeFileWriter_LockEndWrite(self);
+	return bufsize;
+err:
+	return (size_t)-1;
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	(void)self;
+	(void)buffer;
+	(void)bufsize;
+	(void)pos;
+	(void)flags;
+	return (size_t)DeeError_NOTIMPLEMENTED();
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+}
+
 #ifndef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 #define writer_deldata writer_delstring
 #endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
@@ -2964,7 +3134,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&writer_deldata,
 	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *, size_t, Dee_pos_t, Dee_ioflag_t))&writer_pread,
-	/* .ft_pwrite = */ NULL,
+	/* .ft_pwrite = */ (size_t (DCALL *)(DeeFileObject *__restrict, void const *, size_t, Dee_pos_t, Dee_ioflag_t))&writer_pwrite,
 	/* .ft_getc   = */ NULL,
 	/* .ft_ungetc = */ NULL,
 	/* .ft_putc   = */ NULL
