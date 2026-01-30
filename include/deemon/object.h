@@ -970,6 +970,42 @@ LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) bool
 #endif /* !CONFIG_NO_THREADS */
 #endif /* !__INTELLISENSE__ */
 
+/* General-purpose reference count control functions:
+ *
+ * ============================== INCREF ==============================
+ * Dee_Incref                        Increment reference count
+ *                                   - Illegal if "ob_refcnt == 0"
+ * Dee_Incref_n                      Increment reference count "n" times
+ *                                   - Illegal if "ob_refcnt == 0"
+ *                                   - no-op when "n == 0"
+ * Dee_IncrefIfNotZero               Increment reference count only if "ob_refcnt != 0"
+ *                                   - Returns true/false indicative of "ob_refcnt" having changed
+ * ============================== DECREF ==============================
+ * Dee_Decref                        Decrement reference count
+ *                                   - Invoke `DeeObject_Destroy()' if "ob_refcnt == 0" after decrement
+ *                                   - Illegal if "ob_refcnt == 0" at the start of the call
+ * Dee_Decref_n                      Decrement reference count "n" times
+ *                                   - Invoke `DeeObject_Destroy()' if "ob_refcnt == 0" after decrement
+ *                                   - no-op when "n == 0"
+ *                                   - Illegal if "ob_refcnt < n" at the start of the call
+ * Dee_DecrefDokill                  Assert that "ob_refcnt == 1", the call `DeeObject_Destroy()'
+ * Dee_DecrefNokill                  Decrement reference count
+ *                                   - Assert that "ob_refcnt >= 2" on entry
+ *                                   - Illegal if "ob_refcnt < 2" at the start of the call
+ *                                   - `DeeObject_Destroy()' is never called
+ * Dee_DecrefIfOne                   Decrement reference count only iff "ob_refcnt == 1"
+ *                                   - Illegal if "ob_refcnt == 0" at the start of the call
+ *                                   - Returns true/false indicative of "ob_refcnt" having changed
+ *                                   - When true is returned, `DeeObject_Destroy()' is also called
+ * Dee_DecrefIfNotOne                Decrement reference count only iff "ob_refcnt != 1"
+ *                                   - Illegal if "ob_refcnt == 0" at the start of the call
+ *                                   - Returns true/false indicative of "ob_refcnt" having changed
+ *                                   - `DeeObject_Destroy()' is never called
+ * Dee_DecrefAndFetch                Same as Dee_Decref, but also returns the new reference count
+ *                                   - When `0' is returned, `DeeObject_Destroy()' was called
+ * Dee_Decref_likely                 Same as Dee_Decref, but it is likely that "ob_refcnt == 0" after the decref
+ * Dee_Decref_unlikely               Same as Dee_Decref, but it is unlikely that "ob_refcnt == 0" after the decref
+ */
 #ifdef CONFIG_TRACE_REFCHANGES
 DFUNDEF NONNULL((1)) void DCALL Dee_Incref_traced(DeeObject *__restrict ob, char const *file, int line);
 DFUNDEF NONNULL((1)) void DCALL Dee_Incref_n_traced(DeeObject *__restrict ob, Dee_refcnt_t n, char const *file, int line);
