@@ -147,7 +147,7 @@ function getArchitectureForAsmFile(filename: string): Architecture | none {
 
 function createVsFile(filename: string, cb: Callable) {
 	print("Creating file: ", repr filename);
-	local newData = File.Writer();
+	local newData = File.Writer(hint: "bytes");
 	cb(newData);
 	newData = newData.bytes;
 	local oldData = try File.open(".vs/" + filename, "r").read() catch (...) none;

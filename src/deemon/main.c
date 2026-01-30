@@ -35,11 +35,12 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/bytes.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/error_types.h>        /* Dee_compiler_error_object */
 #include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, DeeModule_GetPath, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
 #include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
-#include <deemon/filetypes.h>          /* DeeFileWriter_GetString, DeeFile_OpenWriter */
+#include <deemon/filetypes.h>          /* DeeFileWriter_GetString, DeeFileWriter_New */
 #include <deemon/format.h>             /* DeeFormat_Printf, DeeFormat_Repeat */
 #include <deemon/heap.h>               /* DeeHeap_* */
 #include <deemon/int.h>                /* Dee_INT_STRING, Dee_INT_STRING_FTRY, Dee_TAtoi */
@@ -2039,9 +2040,9 @@ PRIVATE void DCALL clear_inner_tpp_state(void) {
 
 /* Just as the name says: execute a module's root-function
  * and capture stdout output, which is then returned. */
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
-	DREF DeeStringObject *result = NULL;
+	DREF DeeBytesObject *result = NULL;
 	DREF DeeFunctionObject *module_root;
 	DREF DeeObject *old_stdout;
 	DREF DeeObject *new_stdout;
@@ -2060,7 +2061,7 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
 		goto err;
 
 	/* Create a new writer and set it as target for STDOUT */
-	new_stdout = DeeFile_OpenWriter();
+	new_stdout = DeeFileWriter_New(Dee_FILE_WRITER_HINT_BYTES);
 	if unlikely(!new_stdout)
 		goto err_root;
 	old_stdout = DeeFile_SetStd(Dee_STDOUT, new_stdout);
@@ -2070,7 +2071,7 @@ exec_module_and_capture_stdout(DeeModuleObject *__restrict mod) {
 	temp = DeeObject_CallInherited((DeeObject *)module_root, 0, NULL);
 	if (temp) {
 		/* Pack together the printed string. */
-		result = (DREF DeeStringObject *)DeeFileWriter_GetString(new_stdout);
+		result = (DREF DeeBytesObject *)DeeFileWriter_GetBytes(new_stdout);
 		Dee_Decref(temp);
 	}
 	Dee_Decref(new_stdout);
@@ -2113,7 +2114,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	char *override_start_ptr;
 	char *override_end_ptr;
 	bool has_leading_linefeed;
-	DREF DeeStringObject *script_result;
+	DREF DeeBytesObject *script_result;
 	unsigned int scan_recursion;
 	ASSERT(tok == TOK_COMMENT);
 	override_start_ptr    = token.t_end;
@@ -2357,8 +2358,8 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	{
 		char const *result_start, *result_end;
 		size_t new_text_size;
-		result_start = DeeString_STR(script_result);
-		result_end   = result_start + DeeString_SIZE(script_result);
+		result_start = (char const *)DeeBytes_DATA(script_result);
+		result_end   = result_start + DeeBytes_SIZE(script_result);
 
 		/* Strip trailing whitespace. */
 		while (result_end > result_start &&

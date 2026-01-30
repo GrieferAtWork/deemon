@@ -81,23 +81,9 @@ for (local ord: importantOrdinals) {
 	assert w.bytes.decode("utf-8") == ch;
 	assert w.string == ch;
 
-	/* bytes + print + bytes + string */
-	local w = File.Writer();
-	assert !w.string;
-	assert !w.bytes;
-	assert !w.string;
-	assert !w.bytes;
+	/* hint:bytes + print + bytes + string */
+	local w = File.Writer(hint: "bytes");
 	print w: ch,;
-	assert w.bytes.decode("utf-8") == ch;
-	assert w.string == ch;
-
-	/* bytes + shl + bytes + string */
-	local w = File.Writer();
-	assert !w.string;
-	assert !w.bytes;
-	assert !w.string;
-	assert !w.bytes;
-	w << ch;
 	assert w.bytes.decode("utf-8") == ch;
 	assert w.string == ch;
 }

@@ -436,7 +436,7 @@ import * from deemon;
 @@>));
 @@>print fun(); /* "foobar" */
 function code(data: {int...}): Bytes {
-	File.Writer w;
+	local w = File.Writer(hint: "bytes");
 	for (local d: data) {
 		local b = d.tobytes(byteorder: "little", signed: false);
 		b.reverse();

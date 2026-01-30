@@ -319,7 +319,7 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
 /* Experimental feature switch: Use "tp_serialize" to implement "deepcopy" */
 #if (!defined(CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES) && \
      !defined(CONFIG_NO_EXPERIMENTAL_FILE_WRITER_BYTES))
-#if 1 /* TODO */
+#if 1
 #define CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 #else
 #define CONFIG_NO_EXPERIMENTAL_FILE_WRITER_BYTES
@@ -387,8 +387,11 @@ typedef struct Dee_file_writer_object {
 
 DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* File.Writer */
 
-/* Open a new file stream that writes all written data into a string. */
-DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
+/* Open a new file stream that writes all written data into a string.
+ * @param: hint: One of `Dee_FILE_WRITER_HINT_*' */
+DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL DeeFileWriter_New(unsigned int hint);
+#define Dee_FILE_WRITER_HINT_STRING 0x0000
+#define Dee_FILE_WRITER_HINT_BYTES  0x0001
 
 /* Returns the current string written by the writer. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*string*/ DeeObject *DCALL

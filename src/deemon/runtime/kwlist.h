@@ -139,6 +139,7 @@ local kw_lists = {
 	{"reason", "fp", "traceback"},
 	{"reason", "error", "fp", "traceback"},
 	{"to", "libname", "todir"},
+	{"data", "hint"},
 
 	// For runtime errors...
 	{"value", "minval", "maxval", "positive"},
@@ -185,6 +186,7 @@ DECLARE_KWLIST(kwlist__codec_errors, { KEX("codec", 0x91dfc790, 0x678d4474a4f585
 DECLARE_KWLIST(kwlist__combine_start_end_init, { KEX("combine", 0x6ee686b7, 0x2224a65df53ea995), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("init", 0x4179122, 0x8c337193ca26e208), KEND });
 DECLARE_KWLIST(kwlist__cond_next_loop_scope_loc, { KEX("cond", 0xd089ebf5, 0xe82f5d755b5a03e7), KEX("next", 0x7e5e1569, 0x2a31f6a650652d33), KEX("loop", 0xe44e70af, 0xadc137e48b7293ee), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
 DECLARE_KWLIST(kwlist__cond_tt_ff_flags_scope_loc, { KEX("cond", 0xd089ebf5, 0xe82f5d755b5a03e7), KEX("tt", 0xb3c7c4a6, 0xa7c060e25efbe4e5), KEX("ff", 0x83c00a2, 0xcba1f9680f16ea23), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("scope", 0x8b65b2f8, 0x52824a24d6447e5), KEX("loc", 0x4f1e6896, 0xc8a6c6e417ce00f9), KEND });
+DECLARE_KWLIST(kwlist__data_hint, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("hint", 0x4e2fff67, 0x53c7af87870bda8), KEND });
 DECLARE_KWLIST(kwlist__data_pos_writeall, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("pos", 0xb1aecbb4, 0x277b6d36f75741ae), KEX("writeall", 0x1b1ebbd8, 0x90da47dac64003d1), KEND });
 DECLARE_KWLIST(kwlist__data_start_end_pos, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("pos", 0xb1aecbb4, 0x277b6d36f75741ae), KEND });
 DECLARE_KWLIST(kwlist__data_writeall, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("writeall", 0x1b1ebbd8, 0x90da47dac64003d1), KEND });

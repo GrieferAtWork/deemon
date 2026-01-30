@@ -928,7 +928,7 @@ function clientThreadMain(con: socket) {
 					if (!msg)
 						break; /* The other end disconnected gracefully */
 					local command = msg.splitlines()[0];
-					local fp = File.Writer();
+					local fp = File.Writer(hint: "bytes");
 					local protocol = command[#command - 8:];
 					if (!command.startswith("GET") ||
 					     protocol !in ["HTTP/1.1", "HTTP/1.0"]) {
@@ -947,7 +947,7 @@ function clientThreadMain(con: socket) {
 						content = STYLE_CSS.encode("utf-8");
 						content_type = "text/css";
 					} else {
-						content = File.Writer();
+						content = File.Writer(hint: "bytes");
 						getPage(content, command);
 						content = content.bytes;
 					}
@@ -973,8 +973,8 @@ function clientThreadMain(con: socket) {
 				} else if ({ AttributeError, FileNotFound }.each.baseof(type(e)) || ...) {
 					errorCode = 404;
 				}
-				File.Writer outputFp;
-				File.Writer errorFp;
+				local outputFp = File.Writer(hint: "bytes");
+				local errorFp = File.Writer(hint: "bytes");
 				writePageHeader(errorFp, e);
 				errorFp << "<main>\r\n<h2>DOC Server crashed (" << errorCode << ")</h2><hr/>\r\n";
 				for (;;) {

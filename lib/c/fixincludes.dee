@@ -1253,7 +1253,7 @@ class SrcIncludeGroup {
 			for (local none, includes: includesByPriority)
 				includes.sort();
 		}
-		File.Writer result;
+		local result = File.Writer(hint: "bytes");
 		for (local prio: includesByPriority.keys.sorted()) {
 			local includes = includesByPriority[prio];
 			local maxIncludeStringLength = includes.each.include.length > ...;

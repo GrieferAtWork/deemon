@@ -1292,7 +1292,7 @@ function printComputedOperators(filename: string) {
 		if (declStart >= 0) {
 			declStart += #DECL_START;
 			local declEnd = oldBytes.index(DECL_END, declStart);
-			File.Writer out;
+			local out = File.Writer(hint: "bytes");
 			out.write(newBytes[:declStart]);
 			out.write("\n");
 			withStdout(out, () -> doPrintComputedOperators(false));
@@ -1303,7 +1303,7 @@ function printComputedOperators(filename: string) {
 		if (implStart >= 0) {
 			implStart += #IMPL_START;
 			local implEnd = oldBytes.index(IMPL_END, implStart);
-			File.Writer out;
+			local out = File.Writer(hint: "bytes");
 			out.write(newBytes[:implStart]);
 			out.write("\n");
 			withStdout(out, () -> doPrintComputedOperators(true));

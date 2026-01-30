@@ -37,6 +37,7 @@ EXPORTS
 	_DeeBytes_TruncateBuffer@8=DeeBytes_TruncateBuffer@8
 	_DeeBytes_TryNewBufferData@8=DeeBytes_TryNewBufferData@8
 	_DeeBytes_TryNewBufferUninitialized@4=DeeBytes_TryNewBufferUninitialized@4
+	_DeeBytes_TryResizeBuffer@8=DeeBytes_TryResizeBuffer@8
 	_DeeCMethod0_New@8=DeeCMethod0_New@8
 	_DeeCMethod1_New@8=DeeCMethod1_New@8
 	_DeeCMethod_New@8=DeeCMethod_New@8
@@ -211,7 +212,10 @@ EXPORTS
 	_DeeFileBuffer_New@12=DeeFileBuffer_New@12
 	_DeeFileBuffer_SetMode@12=DeeFileBuffer_SetMode@12
 	_DeeFileBuffer_SyncTTYs@4=DeeFileBuffer_SyncTTYs@4
+	_DeeFileWriter_GetBytes@4=DeeFileWriter_GetBytes@4
+	_DeeFileWriter_GetData@4=DeeFileWriter_GetData@4
 	_DeeFileWriter_GetString@4=DeeFileWriter_GetString@4
+	_DeeFileWriter_New@4=DeeFileWriter_New@4
 	_DeeFile_Close@4=DeeFile_Close@4
 	_DeeFile_ClosePrinter@4=DeeFile_ClosePrinter@4
 	_DeeFile_DefaultStd@4=DeeFile_DefaultStd@4
@@ -231,7 +235,6 @@ EXPORTS
 	_DeeFile_OpenPrinter@8=DeeFile_OpenPrinter@8
 	_DeeFile_OpenRoMemory@8=DeeFile_OpenRoMemory@8
 	_DeeFile_OpenString@12=DeeFile_OpenString@12
-	_DeeFile_OpenWriter@0=DeeFile_OpenWriter@0
 	_DeeFile_PRead@20=DeeFile_PRead@20
 	_DeeFile_PReadAll@20=DeeFile_PReadAll@20
 	_DeeFile_PReadBytes@20=DeeFile_PReadBytes@20
@@ -1723,6 +1726,7 @@ EXPORTS
 	_Dee_unicode_printer_tryresize_utf32@12=Dee_unicode_printer_tryresize_utf32@12
 	_Dee_unicode_printer_tryresize_utf8@12=Dee_unicode_printer_tryresize_utf8@12
 	_Dee_unicode_readutf8@4=Dee_unicode_readutf8@4
+	_Dee_unicode_readutf8_chk@4=Dee_unicode_readutf8_chk@4
 	_Dee_unicode_readutf8_n@8=Dee_unicode_readutf8_n@8
 	_Dee_unicode_readutf8_rev_n@8=Dee_unicode_readutf8_rev_n@8
 	_Dee_variant_cmpxch@12=Dee_variant_cmpxch@12

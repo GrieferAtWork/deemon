@@ -233,7 +233,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_call_with_file_writer(DeeObject *self, DeeObject *func) {
 	DREF DeeObject *result, *status;
-	DREF DeeObject *writer = DeeFile_OpenWriter();
+	DREF DeeObject *writer = DeeFileWriter_New(Dee_FILE_WRITER_HINT_STRING);
 	if unlikely(!writer)
 		goto err;
 	status = DeeObject_ThisCall(func, self, 1, &writer);
