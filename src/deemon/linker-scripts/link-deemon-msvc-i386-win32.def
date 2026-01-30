@@ -1513,6 +1513,8 @@ EXPORTS
 	Dee_Calloc@4=_Dee_Calloc@4
 	Dee_CollectMemory@4=_Dee_CollectMemory@4
 	Dee_Decref@4=_Dee_Decref@4
+	Dee_DecrefAndFetch@4=_Dee_DecrefAndFetch@4
+	Dee_DecrefAndFetch_traced@12=_Dee_DecrefAndFetch_traced@12
 	Dee_DecrefDokill@4=_Dee_DecrefDokill@4
 	Dee_DecrefDokill_traced@12=_Dee_DecrefDokill_traced@12
 	Dee_DecrefIfNotOne@4=_Dee_DecrefIfNotOne@4
@@ -1521,8 +1523,6 @@ EXPORTS
 	Dee_DecrefIfOne_traced@12=_Dee_DecrefIfOne_traced@12
 	Dee_DecrefNokill@4=_Dee_DecrefNokill@4
 	Dee_DecrefNokill_traced@12=_Dee_DecrefNokill_traced@12
-	Dee_DecrefWasOk@4=_Dee_DecrefWasOk@4
-	Dee_DecrefWasOk_traced@12=_Dee_DecrefWasOk_traced@12
 	Dee_Decref_traced@12=_Dee_Decref_traced@12
 	Dee_Decrefv@8=_Dee_Decrefv@8
 	Dee_Decrefv_traced@16=_Dee_Decrefv_traced@16

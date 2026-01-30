@@ -756,7 +756,7 @@ DFUNDEF NONNULL((1)) void (DCALL Dee_DecrefDokill)(DeeObject *__restrict ob);
 DFUNDEF NONNULL((1)) void (DCALL Dee_DecrefNokill)(DeeObject *__restrict ob);
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob);
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob);
-DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob);
+DFUNDEF WUNUSED NONNULL((1)) Dee_refcnt_t (DCALL Dee_DecrefAndFetch)(DeeObject *__restrict ob);
 
 #ifdef __INTELLISENSE__
 #define _DeeRefcnt_Inc(x)               (void)(++*(x))
@@ -780,7 +780,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict 
 #define Dee_DecrefNokill_untraced(x)    (void)(&(x)->ob_refcnt)
 #define Dee_DecrefIfOne_untraced(x)     (Dee_Decref(x), true)
 #define Dee_DecrefIfNotOne_untraced(x)  (Dee_Decref(x), true)
-#define Dee_DecrefWasOk_untraced(x)     (Dee_Decref(x), true)
+#define Dee_DecrefAndFetch_untraced(x)  (Dee_Decref(x), (x)->ob_refcnt)
 #else /* __INTELLISENSE__ */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadIncref(DeeObject *ob, char const *file, int line);
@@ -816,7 +816,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define Dee_Decref_untraced(x)          (void)((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchSub(&(x)->ob_refcnt, n) > (n) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    (void)(--(x)->ob_refcnt, DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefWasOk_untraced(x)     ((x)->ob_refcnt-- > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_DecrefAndFetch_untraced(x)  ((x)->ob_refcnt-- > 1 ? (x)->ob_refcnt : (DeeObject_Destroy((DeeObject *)(x)), 0))
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_Incref_untraced(x)          (void)(++(x)->ob_refcnt)
 #define Dee_Incref_n_untraced(x, n)     (void)((x)->ob_refcnt += (n))
@@ -826,7 +826,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define Dee_Decref_unlikely_untraced(x) (void)(likely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    (void)(DeeObject_Destroy((DeeObject *)(x)))
 #define Dee_DecrefNokill_untraced(x)    (void)(--(x)->ob_refcnt)
-#define Dee_DecrefWasOk_untraced(x)     (--(x)->ob_refcnt ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_DecrefAndFetch_untraced(x)  (--(x)->ob_refcnt ? ((x)->ob_refcnt) : (DeeObject_Destroy((DeeObject *)(x)), 0))
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_DecrefIfOne_untraced(x)     ((x)->ob_refcnt == 1 ? ((x)->ob_refcnt = 0, DeeObject_Destroy((DeeObject *)(x)), true) : false)
 #define Dee_DecrefIfNotOne_untraced(x)  ((x)->ob_refcnt > 1 ? (--(x)->ob_refcnt, true) : false)
@@ -888,8 +888,15 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_Decref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchSub(&(x)->ob_refcnt, n) > (n) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec(&(x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec(&(x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
+#define Dee_DecrefAndFetch_untraced(x)  Dee_DecrefAndFetch_untraced(x)
+LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) Dee_refcnt_t
+(DCALL Dee_DecrefAndFetch_untraced)(DeeObject *__restrict self) {
+	Dee_refcnt_t refcnt = _DeeRefcnt_FetchDec(&self->ob_refcnt);
+	if (refcnt <= 1)
+		DeeObject_Destroy(self);
+	return refcnt - 1;
+}
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_Incref_untraced(x)          _DeeRefcnt_Inc(&(x)->ob_refcnt)
 #define Dee_Incref_n_untraced(x, n)     _DeeRefcnt_Add(&(x)->ob_refcnt, n)
@@ -899,8 +906,15 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_DecFetch(&(x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    DeeObject_Destroy((DeeObject *)(x))
 #define Dee_DecrefNokill_untraced(x)    (void)_DeeRefcnt_DecFetch(&(x)->ob_refcnt)
-#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_DecFetch(&(x)->ob_refcnt) ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced((DeeObject *)(self))
+#define Dee_DecrefAndFetch_untraced(x)  Dee_DecrefAndFetch_untraced(x)
+LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) Dee_refcnt_t
+(DCALL Dee_DecrefAndFetch_untraced)(DeeObject *__restrict self) {
+	Dee_refcnt_t refcnt = _DeeRefcnt_DecFetch(&self->ob_refcnt);
+	if (refcnt == 0)
+		DeeObject_Destroy(self);
+	return refcnt;
+}
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_DecrefIfNotOne_untraced(self)  Dee_DecrefIfNotOne_untraced((DeeObject *)(self))
 #define Dee_IncrefIfNotZero_untraced(self) Dee_IncrefIfNotZero_untraced((DeeObject *)(self))
@@ -966,7 +980,7 @@ DFUNDEF NONNULL((1)) void DCALL Dee_DecrefDokill_traced(DeeObject *__restrict ob
 DFUNDEF NONNULL((1)) void DCALL Dee_DecrefNokill_traced(DeeObject *__restrict ob, char const *file, int line);
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefIfOne_traced(DeeObject *__restrict ob, char const *file, int line);
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) Dee_refcnt_t DCALL Dee_DecrefAndFetch_traced(DeeObject *__restrict ob, char const *file, int line);
 #define Dee_Decref_likely_traced(ob, file, line)   Dee_Decref_traced(ob, file, line)
 #define Dee_Decref_unlikely_traced(ob, file, line) Dee_Decref_traced(ob, file, line)
 #define Dee_Incref(x)           Dee_Incref_traced((DeeObject *)(x), __FILE__, __LINE__)
@@ -980,7 +994,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_DecrefNokill(x)     Dee_DecrefNokill_traced((DeeObject *)(x), __FILE__, __LINE__)
 #define Dee_DecrefIfOne(x)      Dee_DecrefIfOne_traced((DeeObject *)(x), __FILE__, __LINE__)
 #define Dee_DecrefIfNotOne(x)   Dee_DecrefIfNotOne_traced((DeeObject *)(x), __FILE__, __LINE__)
-#define Dee_DecrefWasOk(x)      Dee_DecrefWasOk_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_DecrefAndFetch(x)   Dee_DecrefAndFetch_traced((DeeObject *)(x), __FILE__, __LINE__)
 #else /* CONFIG_TRACE_REFCHANGES */
 #define Dee_Incref_traced(x, file, line)          Dee_Incref_untraced(x)
 #define Dee_Incref_n_traced(x, n, file, line)     Dee_Incref_n_untraced(x, n)
@@ -993,7 +1007,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_DecrefNokill_traced(x, file, line)    Dee_DecrefNokill_untraced(x)
 #define Dee_DecrefIfOne_traced(x, file, line)     Dee_DecrefIfOne_untraced(x)
 #define Dee_DecrefIfNotOne_traced(x, file, line)  Dee_DecrefIfNotOne_untraced(x)
-#define Dee_DecrefWasOk_traced(x, file, line)     Dee_DecrefWasOk_untraced(x)
+#define Dee_DecrefAndFetch_traced(x, file, line)  Dee_DecrefAndFetch_untraced(x)
 #define Dee_Incref(x)                             Dee_Incref_untraced(x)
 #define Dee_Incref_n(x, n)                        Dee_Incref_n_untraced(x, n)
 #define Dee_IncrefIfNotZero(x)                    Dee_IncrefIfNotZero_untraced(x)
@@ -1005,7 +1019,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_DecrefNokill(x)                       Dee_DecrefNokill_untraced(x)
 #define Dee_DecrefIfOne(x)                        Dee_DecrefIfOne_untraced(x)
 #define Dee_DecrefIfNotOne(x)                     Dee_DecrefIfNotOne_untraced(x)
-#define Dee_DecrefWasOk(x)                        Dee_DecrefWasOk_untraced(x)
+#define Dee_DecrefAndFetch(x)                     Dee_DecrefAndFetch_untraced(x)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 /* Optimization hints when the object actually

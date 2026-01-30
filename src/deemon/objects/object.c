@@ -5970,21 +5970,21 @@ Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob,
 	return true;
 }
 
-PUBLIC WUNUSED NONNULL((1)) bool DCALL
-Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
-                       char const *file, int line) {
-	Dee_refcnt_t newref;
-	newref = atomic_fetchdec(&ob->ob_refcnt);
+PUBLIC WUNUSED NONNULL((1)) Dee_refcnt_t DCALL
+Dee_DecrefAndFetch_traced(DeeObject *__restrict ob,
+                          char const *file, int line) {
+	Dee_refcnt_t old_refcnt;
+	old_refcnt = atomic_fetchdec(&ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if unlikely(newref == 0)
+	if unlikely(old_refcnt == 0)
 		DeeFatal_BadDecref(ob, file, line);
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
-	if unlikely(newref == 1) {
+	if unlikely(old_refcnt == 1) {
 		DeeObject_Destroy_d(ob, file, line);
-		return true;
+		return 0;
 	}
 	reftracker_addchange(ob, file, -line);
-	return false;
+	return old_refcnt - 1;
 }
 
 PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
@@ -6046,8 +6046,7 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_Incref_traced)(DeeObject *__restrict ob,
-                          char const *file,
-                          int line) {
+                          char const *file, int line) {
 	(void)file;
 	(void)line;
 	Dee_Incref(ob);
@@ -6055,8 +6054,7 @@ PUBLIC NONNULL((1)) void
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, Dee_refcnt_t n,
-                            char const *file,
-                            int line) {
+                            char const *file, int line) {
 	(void)file;
 	(void)line;
 	Dee_Incref_n(ob, n);
@@ -6064,8 +6062,7 @@ PUBLIC NONNULL((1)) void
 
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_IncrefIfNotZero_traced)(DeeObject *__restrict ob,
-                                   char const *file,
-                                   int line) {
+                                   char const *file, int line) {
 	(void)file;
 	(void)line;
 	return Dee_IncrefIfNotZero(ob);
@@ -6073,8 +6070,7 @@ PUBLIC WUNUSED NONNULL((1)) bool
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_Decref_traced)(DeeObject *__restrict ob,
-                          char const *file,
-                          int line) {
+                          char const *file, int line) {
 	(void)file;
 	(void)line;
 	Dee_Decref(ob);
@@ -6082,8 +6078,7 @@ PUBLIC NONNULL((1)) void
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_DecrefDokill_traced)(DeeObject *__restrict ob,
-                                char const *file,
-                                int line) {
+                                char const *file, int line) {
 	(void)file;
 	(void)line;
 	Dee_DecrefDokill(ob);
@@ -6091,8 +6086,7 @@ PUBLIC NONNULL((1)) void
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_DecrefNokill_traced)(DeeObject *__restrict ob,
-                                char const *file,
-                                int line) {
+                                char const *file, int line) {
 	(void)file;
 	(void)line;
 	Dee_DecrefNokill(ob);
@@ -6100,8 +6094,7 @@ PUBLIC NONNULL((1)) void
 
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfOne_traced)(DeeObject *__restrict ob,
-                               char const *file,
-                               int line) {
+                               char const *file, int line) {
 	(void)file;
 	(void)line;
 	return Dee_DecrefIfOne(ob);
@@ -6109,20 +6102,18 @@ PUBLIC WUNUSED NONNULL((1)) bool
 
 PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfNotOne_traced)(DeeObject *__restrict ob,
-                                  char const *file,
-                                  int line) {
+                                  char const *file, int line) {
 	(void)file;
 	(void)line;
 	return Dee_DecrefIfNotOne(ob);
 }
 
-PUBLIC WUNUSED NONNULL((1)) bool
-(DCALL Dee_DecrefWasOk_traced)(DeeObject *__restrict ob,
-                               char const *file,
-                               int line) {
+PUBLIC WUNUSED NONNULL((1)) Dee_refcnt_t
+(DCALL Dee_DecrefAndFetch_traced)(DeeObject *__restrict ob,
+                                  char const *file, int line) {
 	(void)file;
 	(void)line;
-	return Dee_DecrefWasOk(ob);
+	return Dee_DecrefAndFetch(ob);
 }
 
 PUBLIC ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
@@ -6258,9 +6249,9 @@ PUBLIC WUNUSED NONNULL((1)) bool
 	return Dee_DecrefIfNotOne_untraced(ob);
 }
 
-PUBLIC WUNUSED NONNULL((1)) bool
-(DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob) {
-	return Dee_DecrefWasOk_untraced(ob);
+PUBLIC WUNUSED NONNULL((1)) Dee_refcnt_t
+(DCALL Dee_DecrefAndFetch)(DeeObject *__restrict ob) {
+	return Dee_DecrefAndFetch_untraced(ob);
 }
 
 

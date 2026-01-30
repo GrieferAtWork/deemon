@@ -1028,7 +1028,7 @@ gc_trydestroy(struct Dee_gc_head *__restrict head,
 		/* Clear this object. */
 		DeeObject_Clear(ob);
 		/* Drop the reference that we were holding to this object. */
-		if (Dee_DecrefWasOk_untraced(ob))
+		if (Dee_DecrefAndFetch_untraced(ob) == 0)
 			++result;
 	}
 out:
