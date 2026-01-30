@@ -1278,7 +1278,7 @@ class SrcIncludeGroup {
 			}
 			result << "\n"; /* Group separator */
 		}
-		return result.string.encode("utf-8").rstrip(); /* Strip unnecessary, trailing linefeeds */
+		return result.bytes.rstrip(); /* Strip unnecessary, trailing linefeeds */
 	}
 
 	public function addInclude(include: string, comment: string) {

@@ -38,7 +38,7 @@
 #include "file.h"       /* DeeFileTypeObject, DeeSystem_FILE_USE_*, Dee_FILE_OBJECT_HEAD */
 #include "object.h"     /* DeeBuffer */
 #include "string.h"     /* DeeStringObject, Dee_unicode_printer */
-#include "types.h"      /* DREF, DeeObject, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_pos_t */
+#include "types.h"      /* DREF, DeeObject, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_pos_t, ITER_DONE */
 #include "util/lock.h"  /* Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
 #include "util/rlock.h" /* Dee_rshared_rwlock_* */
 

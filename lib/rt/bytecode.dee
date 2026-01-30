@@ -440,10 +440,7 @@ function code(data: {int...}): Bytes {
 	for (local d: data) {
 		local b = d.tobytes(byteorder: "little", signed: false);
 		b.reverse();
-		/* Really ugly hack
-		 * TODO: Add 2 new file types `File.BytesReader' and
-		 *      `File.BytesWriter' that operate on bytes objects! */
-		w.write(b.encode("utf-8"));
+		w.write(b);
 	}
-	return w.string.bytes();
+	return w.bytes;
 }

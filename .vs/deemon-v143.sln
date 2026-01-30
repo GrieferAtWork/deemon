@@ -171,6 +171,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "c", "c", "{2360741E-FB49-40D4-B684-000000060803}"
 	ProjectSection(SolutionItems) = preProject
 		..\lib\c\clangformat.dee = ..\lib\c\clangformat.dee
+		..\lib\c\cpphint.dee = ..\lib\c\cpphint.dee
 		..\lib\c\fixincludes.dee = ..\lib\c\fixincludes.dee
 	EndProjectSection
 EndProject
@@ -348,6 +349,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{2360
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-FB49-40D4-B684-00007A1732AC}"
 	ProjectSection(SolutionItems) = preProject
+		..\util\test\c-fixincludes-symbol-detection.dee = ..\util\test\c-fixincludes-symbol-detection.dee
 		..\util\test\collections-accu.dee = ..\util\test\collections-accu.dee
 		..\util\test\collections-bitset.dee = ..\util\test\collections-bitset.dee
 		..\util\test\collections-rbtree.dee = ..\util\test\collections-rbtree.dee
@@ -407,6 +409,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-error-restricted-attr.dee = ..\util\test\deemon-error-restricted-attr.dee
 		..\util\test\deemon-error-standard-ctor.dee = ..\util\test\deemon-error-standard-ctor.dee
 		..\util\test\deemon-error-unbound-attr.dee = ..\util\test\deemon-error-unbound-attr.dee
+		..\util\test\deemon-file-writer.dee = ..\util\test\deemon-file-writer.dee
 		..\util\test\deemon-float.dee = ..\util\test\deemon-float.dee
 		..\util\test\deemon-frame-ddi-manipulation.dee = ..\util\test\deemon-frame-ddi-manipulation.dee
 		..\util\test\deemon-hash.dee = ..\util\test\deemon-hash.dee

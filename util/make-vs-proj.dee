@@ -149,7 +149,7 @@ function createVsFile(filename: string, cb: Callable) {
 	print("Creating file: ", repr filename);
 	local newData = File.Writer();
 	cb(newData);
-	newData = newData.string.encode("utf-8");
+	newData = newData.bytes;
 	local oldData = try File.open(".vs/" + filename, "r").read() catch (...) none;
 	if (oldData is none || oldData != newData) {
 		local fp;

@@ -26,7 +26,7 @@
 #include "../bytes.h"  /* DeeBytes*, DeeObject_Bytes, Dee_EmptyBytes */
 #include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"
-#include "../types.h"  /* DREF, DeeObject, Dee_ssize_t, _Dee_HashSelectC */
+#include "../types.h"  /* DREF, DeeObject, Dee_AsObject, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"
 

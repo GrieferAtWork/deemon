@@ -1293,20 +1293,22 @@ function printComputedOperators(filename: string) {
 			declStart += #DECL_START;
 			local declEnd = oldBytes.index(DECL_END, declStart);
 			File.Writer out;
-			out << newBytes[:declStart].decode("utf-8") << "\n";
+			out.write(newBytes[:declStart]);
+			out.write("\n");
 			withStdout(out, () -> doPrintComputedOperators(false));
-			out << newBytes[declEnd:].decode("utf-8");
-			newBytes = out.string.encode("utf-8");
+			out.write(newBytes[declEnd:]);
+			newBytes = out.bytes;
 		}
 		local implStart = oldBytes.find(IMPL_START);
 		if (implStart >= 0) {
 			implStart += #IMPL_START;
 			local implEnd = oldBytes.index(IMPL_END, implStart);
 			File.Writer out;
-			out << newBytes[:implStart].decode("utf-8") << "\n";
+			out.write(newBytes[:implStart]);
+			out.write("\n");
 			withStdout(out, () -> doPrintComputedOperators(true));
-			out << newBytes[implEnd:].decode("utf-8");
-			newBytes = out.string.encode("utf-8");
+			out.write(newBytes[implEnd:]);
+			newBytes = out.bytes;
 		}
 		return newBytes;
 	});

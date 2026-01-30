@@ -29,7 +29,7 @@
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc */
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64 */
-#include <deemon/bytes.h>           /* DeeBytes_TryNewBufferData */
+#include <deemon/bytes.h>           /* DeeBytesObject, DeeBytes_TryNewBufferData */
 #include <deemon/format.h>          /* DeeFormat_Printf */
 #include <deemon/int.h>             /* DeeInt_NewUInt64 */
 #include <deemon/none.h>            /* DeeNone_NewRef */

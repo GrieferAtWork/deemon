@@ -937,7 +937,7 @@ function clientThreadMain(con: socket) {
 							"Content-Length: 0\r\n"
 							"Allow: GET\r\n"
 							"\r\n";
-						con.send(fp.string.encode("UTF-8"));
+						con.send(fp.bytes);
 						break;
 					}
 					command = command[3:#command - 8].strip();
@@ -949,14 +949,14 @@ function clientThreadMain(con: socket) {
 					} else {
 						content = File.Writer();
 						getPage(content, command);
-						content = content.string.encode("utf-8");
+						content = content.bytes;
 					}
 					fp << protocol << " 200 OK\r\n"
 						"Content-Length: " << #content << "\r\n"
 						"Content-Type: " << content_type << "; charset=UTF-8\r\n"
 						"\r\n";
 					fp.write(content);
-					con.send(fp.string.encode("UTF-8"));
+					con.send(fp.bytes);
 					if (protocol == "HTTP/1.0") {
 						/* Don't allow for connection re-use.
 						 * If the we didn't do this, the client wouldn't get the
@@ -1004,7 +1004,7 @@ function clientThreadMain(con: socket) {
 					<< escapeSpecialHtmlCharacters(str(Traceback.current))
 					<< "<hr/></main>\r\n";
 				writePageFooter(errorFp);
-				errorFp = errorFp.string.encode("utf-8");
+				errorFp = errorFp.bytes;
 				outputFp <<
 					"HTTP/1.1 " << errorCode << " " << {
 						400: "Bad Request",
