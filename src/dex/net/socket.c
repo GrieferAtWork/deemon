@@ -1835,7 +1835,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    uint64_t timeout_nanoseconds,
                    size_t max_bufsize, int flags,
                    SockAddr *source) {
-	DREF DeeObject *result;
+	DREF DeeBytesObject *result;
 	Dee_ssize_t recv_length;
 	if (max_bufsize == (size_t)-1) {
 		if (!source) {
@@ -1893,7 +1893,7 @@ err_printer:
 	}
 	if ((size_t)recv_length != max_bufsize)
 		result = DeeBytes_TruncateBuffer(result, (size_t)recv_length);
-	return result;
+	return Dee_AsObject(result);
 err:
 	return NULL;
 }

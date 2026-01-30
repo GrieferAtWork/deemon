@@ -70,13 +70,13 @@ public:
 		return inherit(DeeBytes_FromSequence(self));
 	}
 	static WUNUSED Ref<Bytes> ofdata(void const *__restrict data, size_t num_bytes) {
-		return inherit(DeeBytes_NewBufferData(data, num_bytes));
+		return inherit(Dee_AsObject(DeeBytes_NewBufferData(data, num_bytes)));
 	}
 	static WUNUSED Ref<Bytes> makebuffer(size_t num_bytes) {
-		return inherit(DeeBytes_NewBufferUninitialized(num_bytes));
+		return inherit(Dee_AsObject(DeeBytes_NewBufferUninitialized(num_bytes)));
 	}
 	static WUNUSED Ref<Bytes> makebuffer(size_t num_bytes, uint8_t init) {
-		return inherit(DeeBytes_NewBuffer(num_bytes, init));
+		return inherit(Dee_AsObject(DeeBytes_NewBuffer(num_bytes, init)));
 	}
 
 public:

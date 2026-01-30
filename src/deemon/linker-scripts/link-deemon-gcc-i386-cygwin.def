@@ -1725,7 +1725,6 @@ EXPORTS
 	_Dee_unicode_readutf8@4=Dee_unicode_readutf8@4
 	_Dee_unicode_readutf8_n@8=Dee_unicode_readutf8_n@8
 	_Dee_unicode_readutf8_rev_n@8=Dee_unicode_readutf8_rev_n@8
-	_Dee_unicode_writeutf8@8=Dee_unicode_writeutf8@8
 	_Dee_variant_cmpxch@12=Dee_variant_cmpxch@12
 	_Dee_variant_compare@8=Dee_variant_compare@8
 	_Dee_variant_compare_eq@8=Dee_variant_compare_eq@8

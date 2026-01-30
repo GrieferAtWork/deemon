@@ -874,7 +874,7 @@ unlock_and_collect_length_memory:
 			if unlikely(!blob)
 				goto unlock_and_collect_length_memory;
 		}
-		result = DeeBytes_TryNewBufferData(blob, data_length);
+		result = Dee_AsObject(DeeBytes_TryNewBufferData(blob, data_length));
 		if unlikely(!result)
 			goto unlock_and_collect_length_memory;
 		Query_UnlockDB(query);

@@ -391,7 +391,7 @@ unlock_and_collect_length_memory:
 			}	break;
 
 			case SQLITE_BLOB: {
-				DREF DeeObject *bytes;
+				DREF DeeBytesObject *bytes;
 				void const *blob = NULL;
 				length = (unsigned int)sqlite3_column_bytes(stmt, (int)i);
 				if (length) {
@@ -403,7 +403,7 @@ unlock_and_collect_length_memory:
 				if unlikely(!bytes)
 					goto unlock_and_collect_length_memory;
 				c->c_type = CELLTYPE_OBJECT;
-				c->c_data.d_obj = bytes; /* Inherit reference */
+				c->c_data.d_obj = Dee_AsObject(bytes); /* Inherit reference */
 			}	break;
 
 			default:

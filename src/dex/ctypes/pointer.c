@@ -608,7 +608,7 @@ lvalue_tobytes(struct lvalue_object *self, size_t argc, DeeObject *const *argv) 
 
 	/* When no explicit buffer was given, create a new one. */
 	if (args.data == NULL) {
-		args.data = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(type_size);
+		args.data = DeeBytes_NewBufferUninitialized(type_size);
 		if unlikely(!args.data)
 			goto err;
 		CTYPES_FAULTPROTECT(memcpy(DeeBytes_DATA(args.data),

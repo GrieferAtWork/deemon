@@ -189,25 +189,27 @@ DeeObject_TBytes(DeeTypeObject *tp_self,
                  size_t start, size_t end);
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeBytesObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, __BYTE_TYPE__ init);
 
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeBytesObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes);
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeBytesObject *DCALL
 DeeBytes_TryNewBufferUninitialized(size_t num_bytes);
 #define DeeBytes_Destroy(self) Dee_DecrefDokill(self)
 
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes);
 
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+DeeBytes_TryResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
 
-DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t num_bytes);
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
 
 /* Constructs a byte-view for data in `base...+=num_bytes' held by `owner'.
  * The given `flags' determines if the view is read-only, or can be modified.

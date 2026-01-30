@@ -313,7 +313,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 			goto err;
 		if (args.count <= POSIX_READ_BUFSIZE) {
 			/* Directly read into a Bytes object. */
-			result_bytes = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(args.count);
+			result_bytes = DeeBytes_NewBufferUninitialized(args.count);
 			if unlikely(!result_bytes)
 				goto err;
 			error = posix_read_f_impl(fd_fd,
@@ -323,7 +323,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject *const
 				Dee_Decref(result_bytes);
 				goto err;
 			}
-			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes, error);
+			result_bytes = DeeBytes_TruncateBuffer(result_bytes, error);
 		} else {
 			/* Construct a new buffer that is then read into. */
 			struct Dee_bytes_printer p = Dee_BYTES_PRINTER_INIT;
@@ -629,7 +629,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *cons
 			goto err;
 		if (count <= POSIX_READ_BUFSIZE) {
 			/* Directly read into a Bytes object. */
-			result_bytes = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(count);
+			result_bytes = DeeBytes_NewBufferUninitialized(count);
 			if unlikely(!result_bytes)
 				goto err;
 			error = posix_pread_f_impl(fd_fd,
@@ -640,7 +640,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject *cons
 				Dee_Decref(result_bytes);
 				goto err;
 			}
-			result_bytes = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result_bytes, error);
+			result_bytes = DeeBytes_TruncateBuffer(result_bytes, error);
 		} else {
 			/* Construct a new buffer that is then read into. */
 			struct Dee_bytes_printer p = Dee_BYTES_PRINTER_INIT;

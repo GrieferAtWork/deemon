@@ -1,0 +1,148 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+#define UTF8_1BYTE_MAX    ((1 << 7) - 1)
+#define UTF8_2BYTE_MAX    ((1 << 11) - 1)
+#define UTF8_3BYTE_MAX    ((1 << 16) - 1)
+#define UTF8_4BYTE_MAX    ((1 << 21) - 1)
+#define UTF8_5BYTE_MAX    ((1 << 26) - 1)
+#define UTF8_6BYTE_MAX    ((1 << 31) - 1)
+#if 1 /* Technically more (see below), but deemon only supports Unicode until 2^32 */
+#define UTF8_7BYTE_MAX    0xffffffff
+#else
+#define UTF8_7BYTE_MAX    ((1 << 36) - 1)
+#endif
+
+#define UTF8_1BYTE_MIN    0
+#define UTF8_2BYTE_MIN    (UTF8_1BYTE_MAX + 1)
+#define UTF8_3BYTE_MIN    (UTF8_2BYTE_MAX + 1)
+#define UTF8_4BYTE_MIN    (UTF8_3BYTE_MAX + 1)
+#define UTF8_5BYTE_MIN    (UTF8_4BYTE_MAX + 1)
+#define UTF8_6BYTE_MIN    (UTF8_5BYTE_MAX + 1)
+#define UTF8_7BYTE_MIN    (UTF8_6BYTE_MAX + 1)
+
+
+@@Unicode ordinals before/after edges where the utf-8 encoding changes
+local importantOrdinals: {int...} = {
+	UTF8_1BYTE_MIN, UTF8_1BYTE_MAX,
+	UTF8_2BYTE_MIN, UTF8_2BYTE_MAX,
+	UTF8_3BYTE_MIN, UTF8_3BYTE_MAX,
+	UTF8_4BYTE_MIN, UTF8_4BYTE_MAX,
+	UTF8_5BYTE_MIN, UTF8_5BYTE_MAX,
+	UTF8_6BYTE_MIN, UTF8_6BYTE_MAX,
+	UTF8_7BYTE_MIN, UTF8_7BYTE_MAX,
+};
+
+
+for (local ord: importantOrdinals) {
+	local ch = string.chr(ord);
+
+	/* print + string + bytes */
+	local w = File.Writer();
+	print w: ch,;
+	assert w.string == ch;
+	assert w.bytes.decode("utf-8") == ch;
+
+	/* shl + string + bytes */
+	local w = File.Writer();
+	w << ch;
+	assert w.string == ch;
+	assert w.bytes.decode("utf-8") == ch;
+
+	/* print + bytes + string */
+	local w = File.Writer();
+	print w: ch,;
+	assert w.bytes.decode("utf-8") == ch;
+	assert w.string == ch;
+
+	/* shl + bytes + string */
+	local w = File.Writer();
+	w << ch;
+	assert w.bytes.decode("utf-8") == ch;
+	assert w.string == ch;
+
+	/* bytes + print + bytes + string */
+	local w = File.Writer();
+	assert !w.string;
+	assert !w.bytes;
+	assert !w.string;
+	assert !w.bytes;
+	print w: ch,;
+	assert w.bytes.decode("utf-8") == ch;
+	assert w.string == ch;
+
+	/* bytes + shl + bytes + string */
+	local w = File.Writer();
+	assert !w.string;
+	assert !w.bytes;
+	assert !w.string;
+	assert !w.bytes;
+	w << ch;
+	assert w.bytes.decode("utf-8") == ch;
+	assert w.string == ch;
+}
+
+
+
+
+@@Bytes before/after edges where "Dee_unicode_utf8seqlen" changes
+local importantBytes: {int...} = {
+	0x00, 0x7f,
+	0x80, 0xbf,
+	0xc0, 0xdf,
+	0xe0, 0xef,
+	0xf0, 0xf7,
+	0xf8, 0xfb,
+	0xfc, 0xfd,
+	0xfe, 0xff,
+};
+
+function testBytes(data: {int...}) {
+	local expected = Bytes(data);
+
+	/* Test writing bytes one-at-a-time */
+	local w = File.Writer();
+	for (local b: data)
+		w.putc(b);
+	assert w.bytes == expected;
+
+	/* Test writing bytes all-at-once */
+	local w = File.Writer();
+	w.write(expected);
+	assert w.bytes == expected;
+}
+
+for (local b1: importantBytes) {
+	for (local b2: importantBytes) {
+		for (local b3: importantBytes) {
+#if 0 /* Takes a little too long for my liking */
+			for (local b4: importantBytes) {
+				testBytes({b1, b2, b3, b4});
+			}
+#endif
+			testBytes({b1, b2, b3});
+		}
+		testBytes({b1, b2});
+	}
+	testBytes({b1});
+}

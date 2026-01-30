@@ -84,12 +84,26 @@ ATTR_INOUT(1) char *DCALL Dee_unicode_skiputf8_c(unsigned char const *__restrict
 ATTR_INOUT(1) char *DCALL Dee_unicode_skiputf8_c(unsigned char *__restrict text, size_t count);
 ATTR_INOUT(1) char *DCALL Dee_unicode_skiputf8_c(char const *__restrict text, size_t count);
 ATTR_INOUT(1) char *DCALL Dee_unicode_skiputf8_c(char *__restrict text, size_t count);
+
+/* Same as above, but returns "0" and increments `*ptext' by 1 when:
+ * - `*IN(*ptext)' is a utf-8 continuation byte
+ * - `IN(*ptext)' is a followed by too few utf-8 continuation bytes
+ * - `IN(*ptext)' is an over-long utf-8 sequence
+ *
+ * Note however that `0' may also be returned when `*IN(*ptext)' was the NUL
+ * character. This you can easily by checking if `OUT(*ptext)[-1] == '\0''. */
+WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8_chk(unsigned char const **__restrict ptext);
+WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8_chk(unsigned char **__restrict ptext);
+WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8_chk(char const **__restrict ptext);
+WUNUSED ATTR_INOUT(1) uint32_t DCALL Dee_unicode_readutf8_chk(char **__restrict ptext);
 } /* extern "C++" */
 #else /* __INTELLISENSE__ */
 DFUNDEF WUNUSED ATTR_INOUT(1) uint32_t (DCALL Dee_unicode_readutf8)(char const **__restrict ptext);
+DFUNDEF WUNUSED ATTR_INOUT(1) uint32_t (DCALL Dee_unicode_readutf8_chk)(char const **__restrict ptext);
 DFUNDEF ATTR_INOUT(1) NONNULL((2)) uint32_t (DCALL Dee_unicode_readutf8_n)(char const **__restrict ptext, char const *text_end);
 DFUNDEF ATTR_INOUT(1) uint32_t (DCALL Dee_unicode_readutf8_rev_n)(char const **__restrict ptext, char const *text_start);
 #define Dee_unicode_readutf8(ptext)                   (Dee_unicode_readutf8)((char const **)(ptext))
+#define Dee_unicode_readutf8_chk(ptext)               (Dee_unicode_readutf8_chk)((char const **)(ptext))
 #define Dee_unicode_readutf8_n(ptext, text_end)       (Dee_unicode_readutf8_n)((char const **)(ptext), (char const *)(text_end))
 #define Dee_unicode_readutf8_rev(ptext)               (Dee_unicode_readutf8_rev_n)((char const **)(ptext), (char const *)0)
 #define Dee_unicode_readutf8_rev_n(ptext, text_start) (Dee_unicode_readutf8_rev_n)((char const **)(ptext), (char const *)(text_start))
@@ -105,7 +119,7 @@ LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
 
 /* Up to `Dee_UNICODE_UTF8_CURLEN' bytes may be used in `buffer' */
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
-(DCALL Dee_unicode_writeutf8)(char *__restrict buffer, uint32_t ch);
+(DFCALL Dee_unicode_writeutf8)(char *__restrict buffer, uint32_t ch);
 
 /* Determine the length of folded unicode text. */
 #ifdef __INTELLISENSE__

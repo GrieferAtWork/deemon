@@ -146,7 +146,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 #endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	} else if (DeeBytes_Check(ob)) {
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		self->n_inuse_p = ((DeeBytesObject *)ob)->b_inuse_p;
+		self->n_inuse_p = ((Bytes *)ob)->b_inuse_p;
 		_DeeRefcnt_Inc(self->n_inuse_p);
 #endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		self->n_data = DeeBytes_DATA(ob);
@@ -160,7 +160,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 		self->n_data = self->_n_buf;
 		self->n_size = 1;
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		self->n_inuse_p = ((DeeBytesObject *)ob)->b_inuse_p;
+		self->n_inuse_p = ((Bytes *)ob)->b_inuse_p;
 #endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
 	return 0;
@@ -1201,7 +1201,7 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		size_t old_size;
 		if (DeeObject_AsSize(argv[0], &new_size))
 			goto err;
-		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(new_size);
+		result = DeeBytes_NewBufferUninitialized(new_size);
 		if unlikely(!result)
 			goto err;
 		DeeBytes_IncUse(self);
@@ -1220,7 +1220,7 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 		if (DeeObject_AsByte(argv[1], &init))
 			goto err;
-		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(new_size);
+		result = DeeBytes_NewBufferUninitialized(new_size);
 		if unlikely(!result)
 			goto err;
 		DeeBytes_IncUse(self);
@@ -1264,7 +1264,7 @@ bytes_reversed(Bytes *self, size_t argc,
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, empty);
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(size);
+	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err_use;
 	data = DeeBytes_DATA(self);
@@ -1340,8 +1340,8 @@ bytes_makewritable(Bytes *self, size_t argc, DeeObject *const *argv) {
 		return_reference_(self);
 	/* Return a copy of `self' */
 	DeeBytes_IncUse(self);
-	result = (DREF Bytes *)DeeBytes_NewBufferData(DeeBytes_DATA(self),
-	                                              DeeBytes_SIZE(self));
+	result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
+	                                DeeBytes_SIZE(self));
 	DeeBytes_DecUse(self);
 	return result;
 err:
@@ -1826,7 +1826,7 @@ bytes_lower(Bytes *self, size_t argc,
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(size);
+	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err_use;
 	dst = DeeBytes_DATA(result);
@@ -1869,7 +1869,7 @@ bytes_upper(Bytes *self, size_t argc,
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(size);
+	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err_use;
 	dst = DeeBytes_DATA(result);
@@ -1913,7 +1913,7 @@ bytes_title(Bytes *self, size_t argc,
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(size);
+	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err_use;
 	dst = DeeBytes_DATA(result);
@@ -1959,7 +1959,7 @@ bytes_capitalize(Bytes *self, size_t argc,
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(size);
+	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err_use;
 	dst = DeeBytes_DATA(result);
@@ -2004,7 +2004,7 @@ bytes_swapcase(Bytes *self, size_t argc,
 	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(size);
+	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err_use;
 	dst = DeeBytes_DATA(result);
@@ -2273,7 +2273,7 @@ bytes_replace(Bytes *self, size_t argc,
 			goto return_self_use;
 		DeeBytes_DecUse(self);
 		release_needle(&find_needle);
-		result = (DREF Bytes *)DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
+		result = DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
 		release_needle(&replace_needle);
 		return result;
 	}
@@ -2368,7 +2368,7 @@ bytes_casereplace(Bytes *self, size_t argc,
 			goto return_self_use;
 		DeeBytes_DecUse(self);
 		release_needle(&find_needle);
-		result = (DREF Bytes *)DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
+		result = DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
 		release_needle(&replace_needle);
 		return result;
 	}
@@ -3262,7 +3262,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 		args->other = other = argv[0];
 		if (DeeBytes_Check(other)) {
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 			_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
@@ -3286,7 +3286,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 			if (DeeObject_AsSize(argv[1], &temp))
 				goto err_use;
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 			_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
@@ -3326,7 +3326,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 			args->other = other = argv[1];
 			if (DeeBytes_Check(other)) {
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-				args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+				args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 				_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 				args->rhs_ptr = DeeBytes_DATA(other);
@@ -3349,7 +3349,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 		if (DeeBytes_Check(argv[0])) {
 			args->other = other = argv[0];
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 			_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
@@ -3386,7 +3386,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 			}
 			args->other = other = argv[1];
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 			_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
@@ -3434,7 +3434,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 			args->other = other = argv[2];
 			if (DeeBytes_Check(other)) {
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-				args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+				args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 				_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 				args->rhs_ptr = DeeBytes_DATA(other);
@@ -3469,7 +3469,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 			if (DeeObject_AsSizeM1(argv[3], &temp2))
 				goto err_use;
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 			_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
@@ -3533,7 +3533,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 		args->other = other = argv[2];
 		if (DeeBytes_Check(other)) {
 #ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((DeeBytesObject *)other)->b_inuse_p;
+			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
 			_DeeRefcnt_Inc(args->rhs_inuse_p);
 #endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
@@ -3748,9 +3748,9 @@ PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {
 }
 #endif /* !DEFINED_err_empty_filler */
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
+	DREF Bytes *result;
 	Needle filler;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("center", params: "
 	size_t width;
@@ -3779,7 +3779,7 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = Dee_AsObject(self);
+		result = self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front, fill_back;
@@ -3808,9 +3808,9 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
+	DREF Bytes *result;
 	Needle filler;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("ljust", params: "
 	size_t width;
@@ -3839,7 +3839,7 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = Dee_AsObject(self);
+		result = self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_back;
@@ -3865,9 +3865,9 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
+	DREF Bytes *result;
 	Needle filler;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("rjust", params: "
 	size_t width;
@@ -3896,7 +3896,7 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = Dee_AsObject(self);
+		result = self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front;
@@ -3921,9 +3921,9 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result;
+	DREF Bytes *result;
 	Needle filler;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("zfill", params: "
 	size_t width;
@@ -3952,7 +3952,7 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 	}
 	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
-		result = Dee_AsObject(self);
+		result = self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front, src_len;

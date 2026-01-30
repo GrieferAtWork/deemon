@@ -4639,14 +4639,12 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeExact)(DeeObject 
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3)) int (DCALL DeeObject_TypeAssertFailed2)(DeeObject *self, DeeTypeObject *required_type1, DeeTypeObject *required_type2);
 DFUNDEF ATTR_COLD NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TypeAssertFailed3)(DeeObject *self, DeeTypeObject *required_type1, DeeTypeObject *required_type2, DeeTypeObject *required_type3);
-#ifndef Dee_ASSUMED_VALUE_IS_NOOP
 #define DeeObject_TypeAssertFailed(self, required_type) \
-	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(self, required_type), -1)
+	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(Dee_AsObject(self), required_type), -1)
 #define DeeObject_TypeAssertFailed2(self, required_type1, required_type2) \
-	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed2(self, required_type1, required_type2), -1)
+	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed2(Dee_AsObject(self), required_type1, required_type2), -1)
 #define DeeObject_TypeAssertFailed3(self, required_type1, required_type2, required_type3) \
-	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed3(self, required_type1, required_type2, required_type3), -1)
-#endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
+	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed3(Dee_AsObject(self), required_type1, required_type2, required_type3), -1)
 #define DeeObject_AssertTypeOrNone(self, required_type)      (DeeNone_Check(self) ? 0 : DeeObject_AssertType(self, required_type))
 #define DeeObject_AssertTypeExactOrNone(self, required_type) (DeeNone_CheckExact(self) ? 0 : DeeObject_AssertTypeExact(self, required_type))
 #define DeeObject_AssertType(self, required_type)            (unlikely((DeeObject_AssertType)(Dee_AsObject(self), required_type)))

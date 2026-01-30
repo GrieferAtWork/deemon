@@ -4695,11 +4695,11 @@ err_underflow:
 
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 int_tobytes(DeeIntObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	bool encode_little;
-	DREF DeeObject *result;
+	DREF DeeBytesObject *result;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("tobytes", params: """
 	size_t     length?:?.              = (size_t)-1;
 	DeeObject *byteorder:?X2?Dstring?N = Dee_None;

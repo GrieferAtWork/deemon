@@ -175,7 +175,7 @@ convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decod
 				err_invalid_ascii(data[i], is_decode);
 				goto err;
 			}
-			result = DeeBytes_NewBufferUninitialized(size);
+			result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size));
 			if unlikely(!result)
 				goto err;
 			memcpy(DeeBytes_DATA(result), data, i);
@@ -509,7 +509,7 @@ encode_utf16(DeeObject *__restrict self,
 		uint16_t *dst;
 		data   = DeeBytes_DATA(self);
 		size   = DeeBytes_SIZE(self);
-		result = DeeBytes_NewBufferUninitialized(size * 2);
+		result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size * 2));
 		if unlikely(!result)
 			goto err;
 		dst = (uint16_t *)DeeBytes_DATA(result);
@@ -538,7 +538,7 @@ encode_utf32(DeeObject *__restrict self) {
 		uint32_t *dst;
 		data   = DeeBytes_DATA(self);
 		size   = DeeBytes_SIZE(self);
-		result = DeeBytes_NewBufferUninitialized(size * 4);
+		result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size * 4));
 		if unlikely(!result)
 			goto err;
 		dst = (uint32_t *)DeeBytes_DATA(result);
@@ -568,7 +568,7 @@ encode_utf16_alt(DeeObject *__restrict self,
 		uint16_t *dst;
 		data   = DeeBytes_DATA(self);
 		size   = DeeBytes_SIZE(self);
-		result = DeeBytes_NewBufferUninitialized(size * 2);
+		result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size * 2));
 		if unlikely(!result)
 			goto err;
 		dst = (uint16_t *)DeeBytes_DATA(result);
@@ -585,7 +585,7 @@ encode_utf16_alt(DeeObject *__restrict self,
 		if unlikely(!data)
 			goto err;
 		size   = WSTR_LENGTH(data);
-		result = DeeBytes_NewBufferUninitialized(size * 2);
+		result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size * 2));
 		if unlikely(!result)
 			goto err;
 		dst = (uint16_t *)DeeBytes_DATA(result);
@@ -607,7 +607,7 @@ encode_utf32_alt(DeeObject *__restrict self) {
 		uint32_t *dst;
 		data   = DeeBytes_DATA(self);
 		size   = DeeBytes_SIZE(self);
-		result = DeeBytes_NewBufferUninitialized(size * 4);
+		result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size * 4));
 		if unlikely(!result)
 			goto err;
 		dst = (uint32_t *)DeeBytes_DATA(result);
@@ -624,7 +624,7 @@ encode_utf32_alt(DeeObject *__restrict self) {
 		if unlikely(!data)
 			goto err;
 		size   = WSTR_LENGTH(data);
-		result = DeeBytes_NewBufferUninitialized(size * 4);
+		result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size * 4));
 		if unlikely(!result)
 			goto err;
 		dst = (uint32_t *)DeeBytes_DATA(result);
@@ -669,7 +669,7 @@ encode_utf8(DeeObject *__restrict self) {
 		byte_t *dst;
 		data   = DeeBytes_DATA(self);
 		size   = DeeBytes_SIZE(self);
-		result = DeeBytes_NewBufferUninitialized(size * 2);
+		result = Dee_AsObject(DeeBytes_NewBufferUninitialized(size * 2));
 		if unlikely(!result)
 			goto err;
 		dst = DeeBytes_DATA(result);
@@ -685,7 +685,7 @@ encode_utf8(DeeObject *__restrict self) {
 		}
 		size = (size_t)(dst - DeeBytes_DATA(result));
 		ASSERT(size <= DeeBytes_SIZE(result));
-		return DeeBytes_TruncateBuffer(result, size);
+		return Dee_AsObject(DeeBytes_TruncateBuffer((DREF DeeBytesObject *)result, size));
 	}
 	if (DeeString_Check(self)) {
 		char const *data = DeeString_AsUtf8(self);

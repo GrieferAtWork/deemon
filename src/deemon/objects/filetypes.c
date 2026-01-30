@@ -55,10 +55,13 @@
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
-DECL_BEGIN
+#undef shift_t
+#define shift_t __SHIFT_TYPE__
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+
+DECL_BEGIN
 
 #define DO(err, expr)                    \
 	do {                                 \
@@ -929,7 +932,7 @@ err_r:
 PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 writer_ctor(DeeFileWriterObject *__restrict self) {
 	Dee_atomic_rwlock_init(&self->w_lock);
-	Dee_unicode_printer_init(&self->w_printer);
+	Dee_unicode_printer_init(&self->w_printer.wp_uni);
 	self->w_string = NULL;
 	return 0;
 }
@@ -937,28 +940,52 @@ writer_ctor(DeeFileWriterObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(DeeFileWriterObject *__restrict self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FileWriter", params: "
-	DeeStringObject *init
+	DeeObject *init:?X2?Dstring?DBytes
 ", docStringPrefix: "writer");]]]*/
-#define writer__FileWriter_params "init:?Dstring"
+#define writer__FileWriter_params "init:?X2?Dstring?DBytes"
 	struct {
-		DeeStringObject *init;
+		DeeObject *init;
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "_FileWriter", &args.init);
 /*[[[end]]]*/
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	if (DeeBytes_Check(args.init)) {
+		self->w_printer.wp_byt.bp_length = DeeBytes_SIZE(args.init);
+		self->w_printer.wp_byt.bp_bytes  = (DREF DeeBytesObject *)args.init;
+		self->w_string = (DREF DeeStringObject *)ITER_DONE;
+	} else if (DeeString_Check(args.init)) {
+		self->w_printer.wp_uni.up_flags = (uint8_t)DeeString_WIDTH(args.init);
+		if (self->w_printer.wp_uni.up_flags == STRING_WIDTH_1BYTE) {
+			self->w_string = NULL;
+			self->w_printer.wp_uni.up_buffer = (void *)DeeString_STR(args.init);
+			self->w_printer.wp_uni.up_length = DeeString_SIZE(args.init);
+		} else {
+			self->w_string = (DREF DeeStringObject *)args.init;
+			self->w_printer.wp_uni.up_buffer = (void *)DeeString_WSTR(args.init);
+			self->w_printer.wp_uni.up_length = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer);
+		}
+	} else {
+		DeeObject_TypeAssertFailed2(args.init, &DeeBytes_Type, &DeeString_Type);
+		goto err;
+	}
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+#undef writer__FileWriter_params
+#define writer__FileWriter_params "init:?Dstring"
 	if (DeeObject_AssertTypeExact(args.init, &DeeString_Type))
 		goto err;
-	Dee_atomic_rwlock_init(&self->w_lock);
-	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(args.init);
-	if (self->w_printer.up_flags == STRING_WIDTH_1BYTE) {
-		self->w_string            = NULL;
-		self->w_printer.up_buffer = (void *)DeeString_STR(args.init);
-		self->w_printer.up_length = DeeString_SIZE(args.init);
+	self->w_printer.wp_uni.up_flags = (uint8_t)DeeString_WIDTH(args.init);
+	if (self->w_printer.wp_uni.up_flags == STRING_WIDTH_1BYTE) {
+		self->w_string = NULL;
+		self->w_printer.wp_uni.up_buffer = (void *)DeeString_STR(args.init);
+		self->w_printer.wp_uni.up_length = DeeString_SIZE(args.init);
 	} else {
-		self->w_string            = args.init;
-		self->w_printer.up_buffer = (void *)DeeString_WSTR(args.init);
-		self->w_printer.up_length = WSTR_LENGTH(self->w_printer.up_buffer);
+		self->w_string = (DREF DeeStringObject *)args.init;
+		self->w_printer.wp_uni.up_buffer = (void *)DeeString_WSTR(args.init);
+		self->w_printer.wp_uni.up_length = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer);
 	}
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	Dee_Incref(args.init);
+	Dee_atomic_rwlock_init(&self->w_lock);
 	return 0;
 err:
 	return -1;
@@ -968,17 +995,59 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 writer_serialize(DeeFileWriterObject *__restrict self,
                  DeeSerial *__restrict writer,
                  Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DeeFileWriterObject, field))
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_length) ==
+	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_length));
+	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
+	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	DeeFileWriterObject *out;
 	size_t self__up_length;
 	void *self__up_buffer;
 	unsigned char self__up_flags;
-	unsigned char self__up_pend[COMPILER_LENOF(self->w_printer.up_pend)];
+	unsigned char self__up_pend[COMPILER_LENOF(self->w_printer.wp_uni.up_pend)];
 again:
 	DeeFileWriter_LockRead(self);
-	self__up_length = self->w_printer.up_length;
-	self__up_buffer = self->w_printer.up_buffer;
-	self__up_flags  = self->w_printer.up_flags;
-	memcpy(self__up_pend, self->w_printer.up_pend, sizeof(self__up_pend));
+	self__up_length = self->w_printer.wp_uni.up_length;
+	self__up_buffer = self->w_printer.wp_uni.up_buffer;
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	if (self->w_string == (DREF DeeStringObject *)ITER_DONE) {
+		size_t bytes_size;
+		DREF DeeBytesObject *bytes = (DREF DeeBytesObject *)self__up_buffer;
+		out = DeeSerial_Addr2Mem(writer, addr, DeeFileWriterObject);
+		Dee_atomic_rwlock_init(&out->w_lock);
+		out->w_string = (DREF DeeStringObject *)ITER_DONE;
+		out->w_printer.wp_byt.bp_length = self__up_length;
+		if unlikely(!bytes) {
+			out->w_printer.wp_byt.bp_bytes = NULL;
+			ASSERT(self__up_length == 0);
+			DeeFileWriter_LockEndRead(self);
+			return 0;
+		}
+		bytes_size = bytes->b_size;
+		ASSERT(self__up_length <= bytes_size);
+		if (DeeObject_IsShared(bytes)) {
+			ASSERT(self__up_length == bytes_size);
+		} else if (self__up_length < bytes_size) {
+			size_t needed = offsetof(DeeBytesObject, b_data) + self__up_length;
+			bytes = (DREF DeeBytesObject *)DeeObject_TryRealloc(bytes, needed);
+			if unlikely(!bytes) {
+				bytes = self->w_printer.wp_byt.bp_bytes;
+			} else {
+				self->w_printer.wp_byt.bp_bytes = bytes;
+			}
+			bytes->b_buffer.bb_base = bytes->b_base = bytes->b_data;
+			bytes->b_buffer.bb_size = bytes->b_size = self__up_length;
+			bytes->b_orig = Dee_AsObject(bytes);
+		}
+		Dee_Incref(bytes);
+		DeeFileWriter_LockEndRead(self);
+		return DeeSerial_PutObjectInherited(writer, ADDROF(w_printer.wp_byt.bp_bytes), bytes);
+	}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	self__up_flags = self->w_printer.wp_uni.up_flags;
+	memcpy(self__up_pend, self->w_printer.wp_uni.up_pend, sizeof(self__up_pend));
 	if (self__up_buffer) {
 		unsigned int width = self__up_flags & Dee_UNICODE_PRINTER_FWIDTH;
 		void *copy_base;
@@ -1012,54 +1081,61 @@ again:
 			if (!Dee_SERADDR_ISOK(copy_outaddr))
 				goto err;
 			DeeFileWriter_LockRead(self);
-			if unlikely(self__up_length != self->w_printer.up_length) {
+			if unlikely(self__up_length != self->w_printer.wp_uni.up_length) {
 free_copy_outaddr_and_again:
 				DeeFileWriter_LockEndRead(self);
 				DeeSerial_Free(writer, copy_outaddr, NULL);
 				goto again;
 			}
-			if unlikely(self__up_buffer != self->w_printer.up_buffer)
+			if unlikely(self__up_buffer != self->w_printer.wp_uni.up_buffer)
 				goto free_copy_outaddr_and_again;
-			if unlikely(self__up_flags != self->w_printer.up_flags)
+			if unlikely(self__up_flags != self->w_printer.wp_uni.up_flags)
 				goto free_copy_outaddr_and_again;
-			if unlikely(memcmp(self__up_pend, self->w_printer.up_pend, sizeof(self__up_pend)) != 0)
+			if unlikely(memcmp(self__up_pend, self->w_printer.wp_uni.up_pend, sizeof(self__up_pend)) != 0)
 				goto free_copy_outaddr_and_again;
 		}
 		copy_out = DeeSerial_Addr2Mem(writer, copy_outaddr, void *);
 		memcpy(copy_out, copy_base, copy_size);
 		((size_t *)((byte_t *)copy_out + copy_offset))[-1] = self__up_length;
 		DeeFileWriter_LockEndRead(self);
-		if (DeeSerial_PutAddr(writer, addr + offsetof(DeeFileWriterObject, w_printer.up_buffer),
-		                      copy_outaddr + copy_offset))
+		if (DeeSerial_PutAddr(writer, ADDROF(w_printer.wp_uni.up_buffer), copy_outaddr + copy_offset))
 			goto err;
 		out = DeeSerial_Addr2Mem(writer, addr, DeeFileWriterObject);
 	} else {
 		DeeFileWriter_LockEndRead(self);
 		out = DeeSerial_Addr2Mem(writer, addr, DeeFileWriterObject);
-		out->w_printer.up_buffer = NULL;
+		out->w_printer.wp_uni.up_buffer = NULL;
 	}
 	Dee_atomic_rwlock_init(&out->w_lock);
-	out->w_string            = NULL;
-	out->w_printer.up_length = self__up_length;
-	out->w_printer.up_flags  = self__up_flags;
-	memcpy(out->w_printer.up_pend, self__up_pend, sizeof(self__up_pend));
+	out->w_string = NULL;
+	out->w_printer.wp_uni.up_length = self__up_length;
+	out->w_printer.wp_uni.up_flags  = self__up_flags;
+	memcpy(out->w_printer.wp_uni.up_pend, self__up_pend, sizeof(self__up_pend));
 	return 0;
 err:
 	return -1;
+#undef ADDROF
 }
 
 PRIVATE NONNULL((1)) void DCALL
 writer_fini(DeeFileWriterObject *__restrict self) {
 	if (self->w_string) {
-		Dee_Decref(self->w_string);
-	} else if (!self->w_printer.up_buffer) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (self->w_string == (DREF DeeStringObject *)ITER_DONE) {
+			Dee_XDecref_likely(self->w_printer.wp_byt.bp_bytes);
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			Dee_Decref(self->w_string);
+		}
+	} else if (!self->w_printer.wp_uni.up_buffer) {
 		/* ... */
-	} else if ((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
-		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
+	} else if ((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 		                                 DeeStringObject,
 		                                 s_str));
 	} else {
-		Dee_unicode_printer_fini(&self->w_printer);
+		Dee_unicode_printer_fini(&self->w_printer.wp_uni);
 	}
 }
 
@@ -1067,11 +1143,23 @@ PRIVATE NONNULL((1, 2)) void DCALL
 writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeFileWriter_LockRead(self);
 	if (self->w_string) {
-		Dee_Visit(self->w_string);
-	} else if (!self->w_printer.up_buffer) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (self->w_string == (DREF DeeStringObject *)ITER_DONE) {
+			DeeBytesObject *bytes = self->w_printer.wp_byt.bp_bytes;
+			if (bytes) {
+				ASSERT(bytes->b_orig);
+				if (bytes->b_orig != Dee_AsObject(bytes))
+					Dee_Visit(bytes->b_orig);
+			}
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			Dee_Visit(self->w_string);
+		}
+	} else if (!self->w_printer.wp_uni.up_buffer) {
 		/* ... */
-	} else if ((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
-		Dee_Visit(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
+	} else if ((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		Dee_Visit(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 		                                DeeStringObject,
 		                                s_str));
 	} else {
@@ -1082,35 +1170,41 @@ writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) 
 
 PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
 writer_printrepr(DeeFileWriterObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
-	DREF DeeObject *str;
-	str = DeeFileWriter_GetString(Dee_AsObject(self));
-	if unlikely(!str)
+	DREF DeeObject *content;
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	content = DeeFileWriter_GetData(Dee_AsObject(self));
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	content = DeeFileWriter_GetString(Dee_AsObject(self));
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	if unlikely(!content)
 		goto err;
-	return DeeFormat_Printf(printer, arg, "File.Writer(%R)", str);
+	return DeeFormat_Printf(printer, arg, "File.Writer(%R)", content);
 err:
 	return -1;
 }
 
-/* Returns the current string written by the writer. */
-PUBLIC WUNUSED NONNULL((1)) /*string*/ DREF DeeObject *DCALL
-DeeFileWriter_GetString(DeeObject *__restrict self) {
-	DeeFileWriterObject *me = (DeeFileWriterObject *)self;
+/* @return: ITER_DONE: Try again */
+PRIVATE WUNUSED NONNULL((1)) DREF /*string*/ DeeStringObject *DCALL
+DeeFileWriter_PackStringOrUnlock(DeeFileWriterObject *__restrict me) {
 	DREF DeeStringObject *result;
-	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFileWriter_Type);
-again:
-	DeeFileWriter_LockRead(me);
-	if ((me->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	if unlikely(me->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FPENDING) {
+		DeeFileWriter_LockEndWrite(me);
+		DeeError_Throwf(&DeeError_UnicodeEncodeError,
+		                "Incomplete utf-8 sequence");
+		return NULL;
+	}
+	if ((me->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		/* Special case for 1-byte strings. */
 		ASSERT(!me->w_string);
-		if (!me->w_printer.up_buffer) {
-			DeeFileWriter_LockEndRead(me);
-			return DeeString_NewEmpty();
+		if (!me->w_printer.wp_uni.up_buffer) {
+			DeeFileWriter_LockEndWrite(me);
+			return (DREF DeeStringObject *)DeeString_NewEmpty();
 		}
-		result = COMPILER_CONTAINER_OF(me->w_printer.up_buffer,
+		result = COMPILER_CONTAINER_OF(me->w_printer.wp_uni.up_buffer,
 		                               DeeStringObject,
 		                               s_str);
 		if (!DeeObject_IsShared(result)) {
-			if (me->w_printer.up_length != result->s_len) {
+			if (me->w_printer.wp_uni.up_length != result->s_len) {
 				/* Flush the string buffer and deallocated unused memory. */
 				if (result->s_data) {
 					Dee_string_utf_fini(result->s_data, result);
@@ -1118,88 +1212,568 @@ again:
 					result->s_data = NULL;
 				}
 				result->s_hash = Dee_STRING_HASH_UNSET;
-				result->s_len  = me->w_printer.up_length;
+				result->s_len  = me->w_printer.wp_uni.up_length;
 				result = (DREF DeeStringObject *)DeeObject_TryReallocc(result, offsetof(DeeStringObject, s_str),
-				                                                       me->w_printer.up_length + 1, sizeof(char));
+				                                                       me->w_printer.wp_uni.up_length + 1, sizeof(char));
 				if unlikely(!result) {
-					result = COMPILER_CONTAINER_OF(me->w_printer.up_buffer,
+					result = COMPILER_CONTAINER_OF(me->w_printer.wp_uni.up_buffer,
 					                               DeeStringObject,
 					                               s_str);
 				}
-				me->w_printer.up_buffer = result->s_str;
+				me->w_printer.wp_uni.up_buffer = result->s_str;
 			}
 			result->s_str[result->s_len] = 0;
 		} else {
 			/* The string is already being shared, meaning that it must have already been flushed. */
-			ASSERT(me->w_printer.up_length == result->s_len);
+			ASSERT(me->w_printer.wp_uni.up_length == result->s_len);
 		}
 	} else if (me->w_string) {
 		/* A cached multi-byte string has already been set. */
 		result = me->w_string;
 	} else {
-#ifndef CONFIG_NO_THREADS
-		if (!DeeFileWriter_LockUpgrade(me) &&
-		    (result = me->w_string) != NULL) {
-			/* ... */
-		} else
-#endif /* !CONFIG_NO_THREADS */
-		{
-			/* Must pack together a multi-byte string. */
-			result = (DREF DeeStringObject *)Dee_unicode_printer_trypack(&me->w_printer);
-			if unlikely(!result)
-				goto err_collect;
-			me->w_string           = result;
-			me->w_printer.up_flags = (uint8_t)DeeString_WIDTH(result);
-			if (me->w_printer.up_flags == STRING_WIDTH_1BYTE) {
-				me->w_string            = NULL;
-				me->w_printer.up_buffer = (void *)DeeString_STR(result);
-				me->w_printer.up_length = DeeString_SIZE(result);
-			} else {
-				me->w_string            = result;
-				me->w_printer.up_buffer = (void *)DeeString_WSTR(result);
-				me->w_printer.up_length = WSTR_LENGTH(me->w_printer.up_buffer);
-			}
-			DeeFileWriter_LockDowngrade(me);
+		/* Must pack together a multi-byte string. */
+		result = (DREF DeeStringObject *)Dee_unicode_printer_trypack(&me->w_printer.wp_uni);
+		if unlikely(!result)
+			goto err_collect;
+		me->w_string = result;
+		me->w_printer.wp_uni.up_flags = (uint8_t)DeeString_WIDTH(result);
+		if (me->w_printer.wp_uni.up_flags == STRING_WIDTH_1BYTE) {
+			me->w_string = NULL;
+			me->w_printer.wp_uni.up_buffer = (void *)DeeString_STR(result);
+			me->w_printer.wp_uni.up_length = DeeString_SIZE(result);
+		} else {
+			me->w_string = result;
+			me->w_printer.wp_uni.up_buffer = (void *)DeeString_WSTR(result);
+			me->w_printer.wp_uni.up_length = WSTR_LENGTH(me->w_printer.wp_uni.up_buffer);
 		}
 	}
 	Dee_Incref(result);
-	DeeFileWriter_LockEndRead(me);
+	DeeFileWriter_LockEndWrite(me);
 	ASSERT(DeeString_STR(result)[DeeString_SIZE(result)] == 0);
-	return Dee_AsObject(result);
+	return result;
 err_collect:
-	DeeFileWriter_LockEndRead(me);
+	DeeFileWriter_LockEndWrite(me);
 	if (Dee_CollectMemory(512))
-		goto again;
+		return (DREF DeeStringObject *)ITER_DONE;
 	return NULL;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+PRIVATE WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFileWriter_PackBytesAndUnlock(DeeFileWriterObject *__restrict me) {
+	size_t bytes_used, bytes_size;
+	DREF DeeBytesObject *bytes = me->w_printer.wp_byt.bp_bytes;
+	if unlikely(!bytes) {
+		ASSERT(me->w_printer.wp_byt.bp_length == 0);
+		DeeFileWriter_LockEndWrite(me);
+		return DeeBytes_NewEmpty();
+	}
+	bytes_used = me->w_printer.wp_byt.bp_length;
+	bytes_size = bytes->b_size;
+	ASSERT(bytes_used <= bytes_size);
+	if (DeeObject_IsShared(bytes)) {
+		ASSERT(bytes_used == bytes_size);
+		Dee_Incref(bytes);
+		DeeFileWriter_LockEndWrite(me);
+		return Dee_AsObject(bytes);
+	}
+	if (bytes_used < bytes_size) {
+		bytes = DeeBytes_TruncateBuffer(bytes, bytes_used);
+		me->w_printer.wp_byt.bp_bytes = bytes;
+	}
+	Dee_Incref(bytes);
+	DeeFileWriter_LockEndWrite(me);
+	return Dee_AsObject(bytes);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*string|Bytes*/ DeeObject *DCALL
+DeeFileWriter_GetData(DeeObject *__restrict self) {
+	DREF DeeStringObject *string;
+	DeeFileWriterObject *me = (DeeFileWriterObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFileWriter_Type);
+again:
+	DeeFileWriter_LockWrite(me);
+	if (DeeFileWriter_IsBytes(me))
+		return DeeFileWriter_PackBytesAndUnlock(me);
+	string = DeeFileWriter_PackStringOrUnlock(me);
+	if (string != (DREF DeeStringObject *)ITER_DONE)
+		return Dee_AsObject(string);
+	goto again;
+}
+
+
+
+
+/* (Theoretical) utf-8 unicode sequence ranges:
+ *  - 1-byte    -- 7               = 7 bits
+ *  - 2-byte    -- 5+6             = 11 bits
+ *  - 3-byte    -- 4+6+6           = 16 bits
+ *  - 4-byte    -- 3+6+6+6         = 21 bits
+ *  - 5-byte    -- 2+6+6+6+6       = 26 bits (Not valid unicode characters)
+ *  - 6-byte    -- 1+6+6+6+6+6     = 31 bits (Not valid unicode characters)
+ *  - 7-byte    --   6+6+6+6+6+6   = 36 bits (Not valid unicode characters)
+ *  - 8-byte    --   6+6+6+6+6+6+6 = 42 bits (Not valid unicode characters)
+ */
+#define UTF8_1BYTE_MAX    (((uint32_t)1 << 7) - 1)
+#define UTF8_2BYTE_MAX    (((uint32_t)1 << 11) - 1)
+#define UTF8_3BYTE_MAX    (((uint32_t)1 << 16) - 1)
+#define UTF8_4BYTE_MAX    (((uint32_t)1 << 21) - 1)
+#define UTF8_5BYTE_MAX    (((uint32_t)1 << 26) - 1)
+#define UTF8_6BYTE_MAX    (((uint32_t)1 << 31) - 1)
+
+
+/* HINT: usc1 ->> U+0000 - U+00FF  (aka. latin-1) */
+PRIVATE ATTR_PURE WUNUSED size_t DCALL
+ucs1_as_utf8_length(uint8_t const *in, size_t in_chars) {
+	size_t result = in_chars;
+	while (in_chars--) {
+		uint8_t b = *in++;
+		if (b <= UTF8_1BYTE_MAX) {
+			/* ... */
+		} else {
+			++result;
+		}
+	}
+	return result;
+}
+
+PRIVATE byte_t *DCALL
+ucs1_to_utf8_convert(byte_t *out, uint8_t const *in, size_t in_chars) {
+	while (in_chars--) {
+		uint8_t b = *in++;
+		if (b <= UTF8_1BYTE_MAX) {
+			*out++ = b;
+		} else {
+			*out++ = 0xc0 | (byte_t)((b >> 6) /* & 0x1f*/);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		}
+	}
+	return out;
+}
+
+/* HINT: usc2 ->> U+0000 - U+FFFF */
+PRIVATE ATTR_PURE WUNUSED size_t DCALL
+ucs2_as_utf8_length(uint16_t const *in, size_t in_chars) {
+	size_t result = in_chars;
+	while (in_chars--) {
+		uint16_t b = *in++;
+		if (b <= UTF8_1BYTE_MAX) {
+			/* ... */
+		} else if (b <= UTF8_2BYTE_MAX) {
+			result += 1;
+		} else {
+			result += 2;
+		}
+	}
+	return result;
+}
+
+PRIVATE byte_t *DCALL
+ucs2_to_utf8_convert(byte_t *out, uint16_t const *in, size_t in_chars) {
+	while (in_chars--) {
+		uint16_t b = *in++;
+		if (b <= UTF8_1BYTE_MAX) {
+			*out++ = (byte_t)b;
+		} else if (b <= UTF8_2BYTE_MAX) {
+			*out++ = 0xc0 | (byte_t)((b >> 6) /* & 0x1f*/);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		} else {
+			*out++ = 0xe0 | (byte_t)((b >> 12) /* & 0x0f*/);
+			*out++ = 0x80 | (byte_t)((b >> 6) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		}
+	}
+	return out;
+}
+
+/* HINT: usc4 ->> U+00000000 - U+FFFFFFFF  (aka. utf-32) */
+PRIVATE ATTR_PURE WUNUSED size_t DCALL
+ucs4_as_utf8_length(uint32_t const *in, size_t in_chars) {
+	size_t result = in_chars;
+	while (in_chars--) {
+		uint32_t b = *in++;
+		if (b <= UTF8_1BYTE_MAX) {
+			/* ... */
+		} else if (b <= UTF8_2BYTE_MAX) {
+			result += 1;
+		} else if (b <= UTF8_3BYTE_MAX) {
+			result += 2;
+		} else if (b <= UTF8_4BYTE_MAX) {
+			result += 3;
+		} else if (b <= UTF8_5BYTE_MAX) {
+			result += 4;
+		} else if (b <= UTF8_6BYTE_MAX) {
+			result += 5;
+		} else {
+			result += 6;
+		}
+	}
+	return result;
+}
+
+PRIVATE byte_t *DCALL
+ucs4_to_utf8_convert(byte_t *out, uint32_t const *in, size_t in_chars) {
+	while (in_chars--) {
+		uint32_t b = *in++;
+		if (b <= UTF8_1BYTE_MAX) {
+			*out++ = (byte_t)b;
+		} else if (b <= UTF8_2BYTE_MAX) {
+			*out++ = 0xc0 | (byte_t)((b >> 6) /* & 0x1f*/);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		} else if (b <= UTF8_3BYTE_MAX) {
+			*out++ = 0xe0 | (byte_t)((b >> 12) /* & 0x0f*/);
+			*out++ = 0x80 | (byte_t)((b >> 6) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		} else if (b <= UTF8_4BYTE_MAX) {
+			*out++ = 0xf0 | (byte_t)((b >> 18) /* & 0x07*/);
+			*out++ = 0x80 | (byte_t)((b >> 12) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 6) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		} else if (b <= UTF8_5BYTE_MAX) {
+			*out++ = 0xf8 | (byte_t)((b >> 24) /* & 0x03*/);
+			*out++ = 0x80 | (byte_t)((b >> 18) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 12) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 6) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		} else if (b <= UTF8_6BYTE_MAX) {
+			*out++ = 0xfc | (byte_t)((b >> 30) /* & 0x01*/);
+			*out++ = 0x80 | (byte_t)((b >> 24) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 18) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 12) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 6) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		} else {
+			*out++ = 0xfe;
+			*out++ = 0x80 | (byte_t)((b >> 30) & 0x03 /* & 0x3f*/);
+			*out++ = 0x80 | (byte_t)((b >> 24) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 18) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 12) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b >> 6) & 0x3f);
+			*out++ = 0x80 | (byte_t)((b)&0x3f);
+		}
+	}
+	return out;
+}
+
+/* @return: 1 : Try again (unlocked)
+ * @return: 0 : Success (lock still held)
+ * @return: -1: Error (unlocked) */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-writer_delstring(DeeFileWriterObject *__restrict self) {
+DeeFileWriter_String2BytesOrUnlock(DeeFileWriterObject *__restrict me) {
+	/* Must do the equivalent of: `me.bytes = me.string.encode("utf-8")',
+	 * but also append "Dee_UNICODE_PRINTER_FPENDING" if that exists. */
+	size_t ucs_length, num_pending, num_bytes, ucs_chars;
+	DREF DeeBytesObject *bytes;
+	DREF DeeStringObject *string;
+	union Dee_charptr wstr;
+	shift_t width;
+	byte_t *out_iter;
+	ASSERT(DeeFileWriter_LockWriting(me));
+	ASSERT(DeeFileWriter_IsString(me));
+
+	/* Figure out */
+	num_pending = (size_t)((me->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FPENDING) >>
+	                       Dee_UNICODE_PRINTER_FPENDING_SHFT);
+
+	/* Special case for 1-byte strings. */
+	width = me->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH;
+	if (width == STRING_WIDTH_1BYTE) {
+		ASSERT(!me->w_string);
+		if (!me->w_printer.wp_uni.up_buffer) {
+			if (!num_pending) {
+				me->w_printer.wp_byt.bp_bytes  = NULL;
+				me->w_printer.wp_byt.bp_length = 0;
+				me->w_string = (DREF DeeStringObject *)ITER_DONE;
+				return 0;
+			}
+			bytes = DeeBytes_TryNewBufferData(me->w_printer.wp_uni.up_pend, num_pending);
+			if unlikely(!bytes) {
+				DeeFileWriter_LockEndWrite(me);
+				bytes = DeeBytes_NewBufferUninitialized(num_pending);
+				if unlikely(!bytes)
+					goto err;
+				DeeFileWriter_LockWrite(me);
+				if (DeeFileWriter_IsString(me) &&
+				    (me->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE &&
+				    (num_pending == (size_t)((me->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FPENDING) >>
+				                             Dee_UNICODE_PRINTER_FPENDING_SHFT)) &&
+				    !me->w_printer.wp_uni.up_buffer) {
+					/* continue... */
+					me->w_printer.wp_byt.bp_bytes  = bytes;
+					me->w_printer.wp_byt.bp_length = num_pending;
+					me->w_string = (DREF DeeStringObject *)ITER_DONE;
+					DeeFileWriter_LockEndWrite(me);
+				} else {
+					DeeFileWriter_LockEndWrite(me);
+					DeeBytes_Destroy(bytes);
+				}
+				return 1;
+			}
+			me->w_printer.wp_byt.bp_bytes  = bytes;
+			me->w_printer.wp_byt.bp_length = num_pending;
+			me->w_string = (DREF DeeStringObject *)ITER_DONE;
+			return 0;
+		}
+
+		/* Load string that was written until this point */
+		string = COMPILER_CONTAINER_OF(me->w_printer.wp_uni.up_buffer,
+		                               DeeStringObject,
+		                               s_str);
+
+		/* Determine length of utf-8 sequence contained within
+		 * string (since that's what had been decoded thus far) */
+		ucs_chars  = me->w_printer.wp_uni.up_length;
+		ucs_length = ucs1_as_utf8_length((uint8_t const *)string->s_str, ucs_chars);
+
+		/* Allocate bytes equivalent of string */
+		num_bytes = ucs_length + num_pending;
+		bytes = DeeBytes_TryNewBufferUninitialized(num_bytes);
+		if unlikely(!bytes)
+			goto unlock_and_collect_memory;
+
+		/* Convert ucs-1 (aka. latin-1) string to utf-8 bytes */
+		out_iter = bytes->b_data;
+		if (ucs_chars == ucs_length) {
+			out_iter = (byte_t *)mempcpy(out_iter, string->s_str, ucs_length);
+		} else {
+			out_iter = ucs1_to_utf8_convert(out_iter, (uint8_t const *)string->s_str, ucs_chars);
+		}
+		ASSERT(out_iter == bytes->b_data + ucs_length);
+
+		/* Append trailing, pending utf-8 characters */
+		memcpy(out_iter, me->w_printer.wp_uni.up_pend, num_pending);
+
+		/* Assign "bytes" */
+		me->w_printer.wp_byt.bp_bytes  = bytes;
+		me->w_printer.wp_byt.bp_length = num_bytes;
+		me->w_string = (DREF DeeStringObject *)ITER_DONE;
+
+		/* Destroy old string */
+		if (!string->s_data || !(string->s_data->u_flags & Dee_STRING_UTF_FFINIHOOK)) {
+			Dee_Decref_likely(string);
+			return 0;
+		}
+		if (Dee_DecrefIfNotOne(string))
+			return 0;
+
+		/* String is probably being destroyed, and has
+		 * a fini-hook -> must destroy without locks! */
+		DeeFileWriter_LockEndWrite(me);
+		Dee_Decref_likely(string);
+		return 1;
+	}
+
+	/* Deal with case where bytes until now were decoded into a multi-byte string. */
+	ASSERT(width == STRING_WIDTH_2BYTE ||
+	       width == STRING_WIDTH_4BYTE);
+	string   = me->w_string;
+	wstr.ptr = me->w_printer.wp_uni.up_buffer;
+	ASSERT(!string || (string->s_data));
+	ASSERT(!string || (DeeString_WIDTH(string) != STRING_WIDTH_1BYTE));
+	ASSERT(!string || (DeeString_WIDTH(string) == width));
+	ASSERT(!string || (me->w_printer.wp_uni.up_buffer == DeeString_WSTR(string)));
+	ASSERT(!string || (me->w_printer.wp_uni.up_length == DeeString_WLEN(string)));
+
+	/* Must pack together a multi-byte string. */
+	ucs_chars = me->w_printer.wp_uni.up_length;
+	if (width == STRING_WIDTH_2BYTE) {
+		ucs_length = ucs2_as_utf8_length(wstr.cp16, ucs_chars);
+	} else {
+		ucs_length = ucs4_as_utf8_length(wstr.cp32, ucs_chars);
+	}
+
+	/* Allocate bytes equivalent of string */
+	num_bytes = ucs_length + num_pending;
+	bytes = DeeBytes_TryNewBufferUninitialized(num_bytes);
+	if unlikely(!bytes)
+		goto unlock_and_collect_memory;
+
+	/* Convert ucs-2/4 string to utf-8 bytes */
+	out_iter = bytes->b_data;
+	if (width == STRING_WIDTH_2BYTE) {
+		out_iter = ucs2_to_utf8_convert(out_iter, wstr.cp16, ucs_chars);
+	} else {
+		out_iter = ucs4_to_utf8_convert(out_iter, wstr.cp32, ucs_chars);
+	}
+	ASSERT(out_iter == bytes->b_data + ucs_length);
+
+	/* Append trailing, pending utf-8 characters */
+	memcpy(out_iter, me->w_printer.wp_uni.up_pend, num_pending);
+
+	/* Assign "bytes" */
+	me->w_printer.wp_byt.bp_bytes  = bytes;
+	me->w_printer.wp_byt.bp_length = num_bytes;
+	me->w_string = (DREF DeeStringObject *)ITER_DONE;
+
+	/* Cleanup the old string/unicode-printer */
+	if (!string) {
+		DeeString_FreeWidthBuffer(wstr.ptr, width); /* Equivalent to 'Dee_unicode_printer_fini(&me->w_printer.wp_uni)' */
+		return 0;
+	}
+	ASSERT(string->s_data);
+	if (!(string->s_data->u_flags & Dee_STRING_UTF_FFINIHOOK)) {
+		Dee_Decref_likely(string);
+		return 0;
+	}
+	if (Dee_DecrefIfNotOne(string))
+		return 0;
+	DeeFileWriter_LockEndWrite(me);
+	return 1;
+unlock_and_collect_memory:
+	DeeFileWriter_LockEndWrite(me);
+	if (Dee_CollectMemory(offsetof(DeeBytesObject, b_data) + num_bytes))
+		return 1;
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFileWriter_GetBytes(DeeObject *__restrict self) {
+	DeeFileWriterObject *me = (DeeFileWriterObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFileWriter_Type);
+again:
+	DeeFileWriter_LockWrite(me);
+	if (!DeeFileWriter_IsBytes(me)) {
+		int status = DeeFileWriter_String2BytesOrUnlock(me);
+		if (status != 0) {
+			if unlikely(status < 0)
+				goto err;
+			goto again;
+		}
+	}
+	return DeeFileWriter_PackBytesAndUnlock(me);
+err:
+	return NULL;
+}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+
+/* Returns the current string written by the writer. */
+PUBLIC WUNUSED NONNULL((1)) /*string*/ DREF DeeObject *DCALL
+DeeFileWriter_GetString(DeeObject *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	DREF DeeObject *result;
+	DREF DeeObject *data = DeeFileWriter_GetData(self);
+	if likely(DeeString_Check(data))
+		return data;
+	ASSERT_OBJECT_TYPE_EXACT(data, &DeeBytes_Type);
+	result = DeeString_NewUtf8((char const *)DeeBytes_DATA(data),
+	                           DeeBytes_SIZE(data),
+	                           STRING_ERROR_FSTRICT);
+	Dee_Decref_unlikely(data);
+	return result;
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	DeeFileWriterObject *me = (DeeFileWriterObject *)self;
+	DREF DeeStringObject *result;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeFileWriter_Type);
+again:
+	DeeFileWriter_LockWrite(me);
+	result = DeeFileWriter_PackStringOrUnlock(me);
+	if (result != (DREF DeeStringObject *)ITER_DONE)
+		return Dee_AsObject(result);
+	goto again;
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+}
+
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+#define writer_delstring_or_bytes__keep       0
+#define writer_delstring_or_bytes__set_bytes  1
+#define writer_delstring_or_bytes__set_string 2
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+writer_delstring_or_bytes(DeeFileWriterObject *__restrict self, unsigned int how)
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+writer_delstring(DeeFileWriterObject *__restrict self)
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+{
 	DeeFileWriter_LockWrite(self);
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	if (DeeFileWriter_IsBytes(self)) {
+		DREF DeeBytesObject *bytes;
+		bytes = self->w_printer.wp_byt.bp_bytes;
+		self->w_printer.wp_byt.bp_bytes  = NULL;
+		self->w_printer.wp_byt.bp_length = 0;
+		ASSERT(self->w_string == (DREF DeeStringObject *)ITER_DONE);
+		if (how == writer_delstring_or_bytes__set_string)
+			self->w_string = NULL;
+		DeeFileWriter_LockEndWrite(self);
+		Dee_XDecref_likely(bytes);
+		return 0;
+	}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	if (self->w_string) {
-		DeeStringObject *old_string;
-		old_string     = self->w_string;
-		self->w_string = NULL;
-		Dee_unicode_printer_init(&self->w_printer);
+		DREF DeeStringObject *old_string;
+		old_string = self->w_string;
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (how == writer_delstring_or_bytes__set_bytes) {
+			self->w_string = (DREF DeeStringObject *)ITER_DONE;
+			self->w_printer.wp_byt.bp_bytes  = NULL;
+			self->w_printer.wp_byt.bp_length = 0;
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			self->w_string = NULL;
+			Dee_unicode_printer_init(&self->w_printer.wp_uni);
+		}
 		DeeFileWriter_LockEndWrite(self);
 		Dee_Decref(old_string);
-	} else if (!self->w_printer.up_buffer) {
-		ASSERT(self->w_printer.up_length == 0);
-		ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+	} else if (!self->w_printer.wp_uni.up_buffer) {
+		ASSERT(self->w_printer.wp_uni.up_length == 0);
+		ASSERT((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (how == writer_delstring_or_bytes__set_bytes) {
+			STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_length) ==
+			              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_length));
+			STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
+			              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
+			self->w_string = (DREF DeeStringObject *)ITER_DONE;
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			Dee_unicode_printer_init(&self->w_printer.wp_uni);
+		}
 		DeeFileWriter_LockEndWrite(self);
-	} else if ((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
-		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
+	} else if ((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		Dee_Decref(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 		                                 DeeStringObject,
 		                                 s_str));
-		Dee_unicode_printer_init(&self->w_printer);
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (how == writer_delstring_or_bytes__set_bytes) {
+			self->w_string = (DREF DeeStringObject *)ITER_DONE;
+			self->w_printer.wp_byt.bp_bytes  = NULL;
+			self->w_printer.wp_byt.bp_length = 0;
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			Dee_unicode_printer_init(&self->w_printer.wp_uni);
+		}
 		DeeFileWriter_LockEndWrite(self);
 	} else {
-		Dee_unicode_printer_fini(&self->w_printer);
-		Dee_unicode_printer_init(&self->w_printer);
+		struct Dee_unicode_printer old_printer;
+		memcpy(&old_printer, &self->w_printer.wp_uni, sizeof(old_printer));
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (how == writer_delstring_or_bytes__set_bytes) {
+			self->w_string = (DREF DeeStringObject *)ITER_DONE;
+			self->w_printer.wp_byt.bp_bytes  = NULL;
+			self->w_printer.wp_byt.bp_length = 0;
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			Dee_unicode_printer_init(&self->w_printer.wp_uni);
+		}
 		DeeFileWriter_LockEndWrite(self);
+		Dee_unicode_printer_fini(&old_printer);
 	}
 	return 0;
 }
+
+#define writer_getstring DeeFileWriter_GetString
+
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+writer_delstring(DeeFileWriterObject *__restrict self) {
+	return writer_delstring_or_bytes(self, writer_delstring_or_bytes__set_string);
+}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 writer_setstring(DeeFileWriterObject *__restrict self,
@@ -1214,21 +1788,32 @@ writer_setstring(DeeFileWriterObject *__restrict self,
 		goto do_del_string;
 	Dee_Incref(value);
 	DeeFileWriter_LockWrite(self);
-	memcpy(&old_printer, &self->w_printer, sizeof(struct Dee_unicode_printer));
-	old_string               = self->w_string;
-	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(value);
-	if (self->w_printer.up_flags == STRING_WIDTH_1BYTE) {
-		self->w_string            = NULL;
-		self->w_printer.up_buffer = (void *)DeeString_STR(value);
-		self->w_printer.up_length = DeeString_SIZE(value);
+	memcpy(&old_printer, &self->w_printer.wp_uni, sizeof(struct Dee_unicode_printer));
+	old_string = self->w_string;
+	self->w_printer.wp_uni.up_flags = (uint8_t)DeeString_WIDTH(value);
+	if (self->w_printer.wp_uni.up_flags == STRING_WIDTH_1BYTE) {
+		self->w_string = NULL;
+		self->w_printer.wp_uni.up_buffer = (void *)DeeString_STR(value);
+		self->w_printer.wp_uni.up_length = DeeString_SIZE(value);
 	} else {
-		self->w_string            = value;
-		self->w_printer.up_buffer = (void *)DeeString_WSTR(value);
-		self->w_printer.up_length = WSTR_LENGTH(self->w_printer.up_buffer);
+		self->w_string = value;
+		self->w_printer.wp_uni.up_buffer = (void *)DeeString_WSTR(value);
+		self->w_printer.wp_uni.up_length = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer);
 	}
 	DeeFileWriter_LockEndWrite(self);
 	if (old_string) {
-		Dee_Decref(old_string);
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (old_string == (DREF DeeStringObject *)ITER_DONE) {
+			DREF DeeBytesObject *old_bytes;
+			STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
+			              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
+			old_bytes = (DREF DeeBytesObject *)old_printer.up_buffer;
+			Dee_XDecref_likely(old_bytes);
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			Dee_Decref(old_string);
+		}
 	} else if (!old_printer.up_buffer) {
 		ASSERT(old_printer.up_length == 0);
 		ASSERT((old_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
@@ -1246,27 +1831,133 @@ err:
 	return -1;
 }
 
+
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+#define writer_getbytes DeeFileWriter_GetBytes
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+writer_delbytes(DeeFileWriterObject *__restrict self) {
+	return writer_delstring_or_bytes(self, writer_delstring_or_bytes__set_bytes);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+writer_setbytes(DeeFileWriterObject *__restrict self,
+                DeeBytesObject *__restrict value) {
+	DREF DeeStringObject *old_string;
+	struct Dee_unicode_printer old_printer;
+	if (DeeNone_Check(value))
+		goto do_del_bytes;
+	if (DeeObject_AssertTypeExact(value, &DeeBytes_Type))
+		goto err;
+	if (DeeBytes_IsEmpty(value))
+		goto do_del_bytes;
+	Dee_Incref(value);
+	DeeFileWriter_LockWrite(self);
+	memcpy(&old_printer, &self->w_printer.wp_uni, sizeof(struct Dee_unicode_printer));
+	old_string = self->w_string;
+	self->w_printer.wp_byt.bp_bytes = value;
+	self->w_printer.wp_byt.bp_length = DeeBytes_SIZE(value);
+	DeeFileWriter_LockEndWrite(self);
+	if (old_string) {
+		if (old_string == (DREF DeeStringObject *)ITER_DONE) {
+			DREF DeeBytesObject *old_bytes;
+			STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
+			              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
+			old_bytes = (DREF DeeBytesObject *)old_printer.up_buffer;
+			Dee_XDecref_likely(old_bytes);
+		} else {
+			Dee_Decref(old_string);
+		}
+	} else if (!old_printer.up_buffer) {
+		ASSERT(old_printer.up_length == 0);
+		ASSERT((old_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+	} else if ((old_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		Dee_Decref(COMPILER_CONTAINER_OF(old_printer.up_buffer,
+		                                 DeeStringObject,
+		                                 s_str));
+	} else {
+		Dee_unicode_printer_fini(&old_printer);
+	}
+	return 0;
+do_del_bytes:
+	return writer_delbytes(self);
+err:
+	return -1;
+}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+#define writer_getdata DeeFileWriter_GetData
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+writer_deldata(DeeFileWriterObject *__restrict self) {
+	return writer_delstring_or_bytes(self, writer_delstring_or_bytes__keep);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+writer_setdata(DeeFileWriterObject *__restrict self, DeeObject *data) {
+	if (DeeString_Check(data))
+		return writer_setstring(self, (DeeStringObject *)data);
+	if (DeeBytes_Check(data))
+		return writer_setbytes(self, (DeeBytesObject *)data);
+	if (DeeNone_Check(data))
+		return writer_deldata(self);
+	return DeeObject_TypeAssertFailed3(data, &DeeString_Type, &DeeBytes_Type, &DeeNone_Type);
+}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_sizeof(DeeFileWriterObject *self) {
 	size_t result;
 	DeeFileWriter_LockRead(self);
-	result = sizeof(DeeFileWriterObject) +
-	         (self->w_printer.up_buffer
-	          ? ((WSTR_LENGTH(self->w_printer.up_buffer) + 1) *
-	             STRING_SIZEOF_WIDTH(self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH))
-	          : 0);
+	result = sizeof(DeeFileWriterObject);
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	if (DeeFileWriter_IsBytes(self)) {
+		if (!self->w_printer.wp_byt.bp_bytes) {
+			ASSERT(self->w_printer.wp_byt.bp_length == 0);
+		} else if (DeeObject_IsShared(self->w_printer.wp_byt.bp_bytes)) {
+			/* Not exclusively our bytes! */
+		} else {
+			result += offsetof(DeeBytesObject, b_data);
+			result += self->w_printer.wp_byt.bp_length;
+		}
+	} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	if (self->w_printer.wp_uni.up_buffer) {
+		shift_t width = self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH;
+		size_t wsiz = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer) + 1;
+		result += Dee_STRING_MUL_SIZEOF_WIDTH(wsiz, width);
+	}
 	DeeFileWriter_LockEndRead(self);
 	return DeeInt_NewSize(result);
 }
 
 PRIVATE struct type_getset tpconst writer_getsets[] = {
 	TYPE_GETSET_AB_F(STR_string,
-	                 &DeeFileWriter_GetString,
+	                 &writer_getstring,
 	                 &writer_delstring,
 	                 &writer_setstring,
 	                 METHOD_FNOREFESCAPE,
 	                 "->?Dstring\n"
-	                 "Get/set the currently written text string"),
+	                 "Get/set the currently written (utf-8) text string"),
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	TYPE_GETSET_AB_F("bytes",
+	                 &writer_getbytes,
+	                 &writer_delbytes,
+	                 &writer_setbytes,
+	                 METHOD_FNOREFESCAPE,
+	                 "->?DBytes\n"
+	                 "Get/set the currently written data bytes"),
+
+	TYPE_GETSET_AB_F("data",
+	                 &writer_getdata,
+	                 &writer_deldata,
+	                 &writer_setdata,
+	                 METHOD_FNOREFESCAPE,
+	                 "->?X2?Dstring?DBytes\n"
+	                 "Get/set the currently written (utf-8) string/bytes"),
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	TYPE_GETTER_AB_F("__sizeof__", &writer_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
@@ -1283,11 +1974,15 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_size(DeeFileWriterObject *self, size_t argc, DeeObject *const *argv) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_length) ==
+	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_length));
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	size_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("size", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "size");
 /*[[[end]]]*/
-	result = Dee_atomic_read_with_atomic_rwlock(&self->w_printer.up_length,
+	result = Dee_atomic_read_with_atomic_rwlock(&self->w_printer.wp_uni.up_length,
 	                                            &self->w_lock);
 	return DeeInt_NewSize(result);
 err:
@@ -1296,14 +1991,27 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 writer_allocated(DeeFileWriterObject *self, size_t argc, DeeObject *const *argv) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	STATIC_ASSERT(offsetof(DeeFileWriterObject, w_printer.wp_uni.up_buffer) ==
+	              offsetof(DeeFileWriterObject, w_printer.wp_byt.bp_bytes));
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	size_t result;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("allocated", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "allocated");
 /*[[[end]]]*/
 	DeeFileWriter_LockRead(self);
-	result = self->w_printer.up_buffer
-	         ? WSTR_LENGTH(self->w_printer.up_buffer)
-	         : 0;
+	if (self->w_printer.wp_uni.up_buffer) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (DeeFileWriter_IsBytes(self)) {
+			result = DeeBytes_SIZE(self->w_printer.wp_byt.bp_bytes);
+		} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			result = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer);
+		}
+	} else {
+		result = 0;
+	}
 	DeeFileWriter_LockEndRead(self);
 	return DeeInt_NewSize(result);
 err:
@@ -1328,12 +2036,16 @@ PRIVATE struct type_method tpconst writer_methods[] = {
 
 #define UNICODE_PRINTER_INITIAL_BUFSIZE 64
 
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+#define BYTES_PRINTER_INITIAL_BUFSIZE UNICODE_PRINTER_INITIAL_BUFSIZE
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-writer_tryappend8(DeeFileWriterObject *__restrict self,
-                  uint8_t const *__restrict buffer,
-                  size_t bufsize) {
+writer_tryappend8_string_locked(DeeFileWriterObject *__restrict self,
+                                uint8_t const *__restrict buffer,
+                                size_t bufsize) {
 	size_t i, written, avail;
-	if (!self->w_printer.up_buffer) {
+	if (!self->w_printer.wp_uni.up_buffer) {
 		/* Allocate the initial buffer. */
 		size_t init_size = bufsize;
 		DeeStringObject *init_buffer;
@@ -1353,14 +2065,14 @@ writer_tryappend8(DeeFileWriterObject *__restrict self,
 		init_buffer->s_hash = Dee_STRING_HASH_UNSET;
 		init_buffer->s_len  = init_size;
 		memcpy(init_buffer->s_str, buffer, bufsize);
-		self->w_printer.up_buffer = init_buffer->s_str;
-		self->w_printer.up_length = bufsize;
+		self->w_printer.wp_uni.up_buffer = init_buffer->s_str;
+		self->w_printer.wp_uni.up_length = bufsize;
 		goto ok;
 	}
-	avail   = WSTR_LENGTH(self->w_printer.up_buffer);
-	written = self->w_printer.up_length;
+	avail   = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer);
+	written = self->w_printer.wp_uni.up_length;
 	ASSERT(avail >= written);
-	SWITCH_SIZEOF_WIDTH(self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
+	SWITCH_SIZEOF_WIDTH(self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
 		if (written + bufsize > avail) {
@@ -1370,22 +2082,22 @@ writer_tryappend8(DeeFileWriterObject *__restrict self,
 			do {
 				new_size *= 2;
 			} while (new_size < written + bufsize);
-			new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+			new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer, DeeStringObject, s_str),
 			                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 			if unlikely(!new_buffer) {
 				new_size   = written + bufsize;
-				new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+				new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer, DeeStringObject, s_str),
 				                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 				if unlikely(!new_buffer)
 					goto err;
 			}
-			new_buffer->s_len         = new_size;
-			self->w_printer.up_buffer = new_buffer->s_str;
+			new_buffer->s_len = new_size;
+			self->w_printer.wp_uni.up_buffer = new_buffer->s_str;
 		}
-		memcpy((uint8_t *)self->w_printer.up_buffer +
-		       self->w_printer.up_length,
+		memcpy((uint8_t *)self->w_printer.wp_uni.up_buffer +
+		       self->w_printer.wp_uni.up_length,
 		       buffer, bufsize);
-		self->w_printer.up_length += bufsize;
+		self->w_printer.wp_uni.up_length += bufsize;
 		break;
 
 	CASE_WIDTH_2BYTE: {
@@ -1397,17 +2109,17 @@ writer_tryappend8(DeeFileWriterObject *__restrict self,
 			do {
 				new_size *= 2;
 			} while (new_size < written + bufsize);
-			new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, new_size);
+			new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.wp_uni.up_buffer, new_size);
 			if unlikely(!new_buffer) {
-				new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, written + bufsize);
+				new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.wp_uni.up_buffer, written + bufsize);
 				if unlikely(!new_buffer)
 					goto err;
 			}
-			self->w_printer.up_buffer = new_buffer;
+			self->w_printer.wp_uni.up_buffer = new_buffer;
 		}
-		dst = (uint16_t *)self->w_printer.up_buffer;
-		dst += self->w_printer.up_length;
-		self->w_printer.up_length += bufsize;
+		dst = (uint16_t *)self->w_printer.wp_uni.up_buffer;
+		dst += self->w_printer.wp_uni.up_length;
+		self->w_printer.wp_uni.up_length += bufsize;
 		for (i = 0; i < bufsize; ++i)
 			*dst++ = buffer[i];
 	}	break;
@@ -1421,17 +2133,17 @@ writer_tryappend8(DeeFileWriterObject *__restrict self,
 			do {
 				new_size *= 2;
 			} while (new_size < written + bufsize);
-			new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, new_size);
+			new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.wp_uni.up_buffer, new_size);
 			if unlikely(!new_buffer) {
-				new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, written + bufsize);
+				new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.wp_uni.up_buffer, written + bufsize);
 				if unlikely(!new_buffer)
 					goto err;
 			}
-			self->w_printer.up_buffer = new_buffer;
+			self->w_printer.wp_uni.up_buffer = new_buffer;
 		}
-		dst = (uint32_t *)self->w_printer.up_buffer;
-		dst += self->w_printer.up_length;
-		self->w_printer.up_length += bufsize;
+		dst = (uint32_t *)self->w_printer.wp_uni.up_buffer;
+		dst += self->w_printer.wp_uni.up_length;
+		self->w_printer.wp_uni.up_length += bufsize;
 		for (i = 0; i < bufsize; ++i)
 			*dst++ = buffer[i];
 	}	break;
@@ -1443,9 +2155,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
-writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
+writer_tryappendch_string_locked(DeeFileWriterObject *__restrict self, uint32_t ch) {
 	size_t written, avail;
-	if (!self->w_printer.up_buffer) {
+	if (!self->w_printer.wp_uni.up_buffer) {
 		/* Allocate the initial buffer. */
 		if (ch <= 0xff) {
 			size_t init_size = UNICODE_PRINTER_INITIAL_BUFSIZE;
@@ -1464,9 +2176,9 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			init_buffer->s_hash   = Dee_STRING_HASH_UNSET;
 			init_buffer->s_len    = init_size;
 			init_buffer->s_str[0] = (char)(uint8_t)ch;
-			ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-			self->w_printer.up_buffer = init_buffer->s_str;
-			self->w_printer.up_length = 1;
+			ASSERT((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+			self->w_printer.wp_uni.up_buffer = init_buffer->s_str;
+			self->w_printer.wp_uni.up_length = 1;
 		} else if (ch <= 0xffff) {
 			uint16_t *init_buffer;
 			init_buffer = DeeString_TryNew2ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
@@ -1475,11 +2187,11 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 				if unlikely(!init_buffer)
 					goto err;
 			}
-			init_buffer[0]            = (uint16_t)ch;
-			self->w_printer.up_buffer = init_buffer;
-			self->w_printer.up_length = 1;
-			ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-			self->w_printer.up_flags |= STRING_WIDTH_2BYTE;
+			init_buffer[0] = (uint16_t)ch;
+			self->w_printer.wp_uni.up_buffer = init_buffer;
+			self->w_printer.wp_uni.up_length = 1;
+			ASSERT((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+			self->w_printer.wp_uni.up_flags |= STRING_WIDTH_2BYTE;
 		} else {
 			uint32_t *init_buffer;
 			init_buffer = DeeString_TryNew4ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
@@ -1488,20 +2200,20 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 				if unlikely(!init_buffer)
 					goto err;
 			}
-			init_buffer[0]            = ch;
-			self->w_printer.up_buffer = init_buffer;
-			self->w_printer.up_length = 1;
-			ASSERT((self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
-			self->w_printer.up_flags |= STRING_WIDTH_4BYTE;
+			init_buffer[0] = ch;
+			self->w_printer.wp_uni.up_buffer = init_buffer;
+			self->w_printer.wp_uni.up_length = 1;
+			ASSERT((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
+			self->w_printer.wp_uni.up_flags |= STRING_WIDTH_4BYTE;
 		}
 		goto ok;
 	}
 
 	/* Append to an existing buffer, possibly up-casting that buffer to a greater magnitude. */
-	avail   = WSTR_LENGTH(self->w_printer.up_buffer);
-	written = self->w_printer.up_length;
+	avail   = WSTR_LENGTH(self->w_printer.wp_uni.up_buffer);
+	written = self->w_printer.wp_uni.up_length;
 	ASSERT(avail >= written);
-	SWITCH_SIZEOF_WIDTH(self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
+	SWITCH_SIZEOF_WIDTH(self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) {
 
 	CASE_WIDTH_1BYTE:
 		if (ch <= 0xff) {
@@ -1512,64 +2224,64 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 				do {
 					new_size *= 2;
 				} while (new_size <= written);
-				new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+				new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer, DeeStringObject, s_str),
 				                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 				if unlikely(!new_buffer) {
 					new_size   = written + 1;
-					new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.up_buffer, DeeStringObject, s_str),
+					new_buffer = (DeeStringObject *)DeeObject_TryReallocc(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer, DeeStringObject, s_str),
 					                                                      offsetof(DeeStringObject, s_str), new_size + 1, sizeof(char));
 					if unlikely(!new_buffer)
 						goto err;
 				}
-				new_buffer->s_len         = new_size;
-				self->w_printer.up_buffer = new_buffer->s_str;
+				new_buffer->s_len = new_size;
+				self->w_printer.wp_uni.up_buffer = new_buffer->s_str;
 			}
-			((uint8_t *)self->w_printer.up_buffer)[self->w_printer.up_length] = (uint8_t)ch;
-			++self->w_printer.up_length;
+			((uint8_t *)self->w_printer.wp_uni.up_buffer)[self->w_printer.wp_uni.up_length] = (uint8_t)ch;
+			++self->w_printer.wp_uni.up_length;
 			break;
 		}
 		if (ch <= 0xffff) {
 			/* Must up-cast to 16-bit */
 			uint16_t *new_buffer;
 			size_t i, length;
-			length     = self->w_printer.up_length;
+			length     = self->w_printer.wp_uni.up_length;
 			new_buffer = DeeString_TryNew2ByteBuffer(length + 1);
 			if unlikely(!new_buffer)
 				goto err;
 			for (i = 0; i < length; ++i)
-				new_buffer[i] = ((uint8_t *)self->w_printer.up_buffer)[i];
+				new_buffer[i] = ((uint8_t *)self->w_printer.wp_uni.up_buffer)[i];
 			new_buffer[length] = (uint16_t)ch;
-			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
+			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 			                                     DeeStringObject,
 			                                     s_str));
 			Dee_DecrefNokill(&DeeString_Type);
-			self->w_printer.up_buffer = new_buffer;
+			self->w_printer.wp_uni.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
-			self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
+			self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
-			self->w_printer.up_flags |= STRING_WIDTH_2BYTE;
-			++self->w_printer.up_length;
+			self->w_printer.wp_uni.up_flags |= STRING_WIDTH_2BYTE;
+			++self->w_printer.wp_uni.up_length;
 		} else {
 			/* Must up-cast to 32-bit */
 			uint32_t *new_buffer;
 			size_t i, length;
-			length     = self->w_printer.up_length;
+			length     = self->w_printer.wp_uni.up_length;
 			new_buffer = DeeString_TryNew4ByteBuffer(length + 1);
 			if unlikely(!new_buffer)
 				goto err;
 			for (i = 0; i < length; ++i)
-				new_buffer[i] = ((uint8_t *)self->w_printer.up_buffer)[i];
+				new_buffer[i] = ((uint8_t *)self->w_printer.wp_uni.up_buffer)[i];
 			new_buffer[length] = (uint32_t)ch;
-			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
+			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 			                                     DeeStringObject,
 			                                     s_str));
 			Dee_DecrefNokill(&DeeString_Type);
-			self->w_printer.up_buffer = new_buffer;
+			self->w_printer.wp_uni.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
-			self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
+			self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
 #endif /* STRING_WIDTH_1BYTE != 0 */
-			self->w_printer.up_flags |= STRING_WIDTH_4BYTE;
-			++self->w_printer.up_length;
+			self->w_printer.wp_uni.up_flags |= STRING_WIDTH_4BYTE;
+			++self->w_printer.wp_uni.up_length;
 		}
 		break;
 
@@ -1579,18 +2291,18 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			uint32_t *new_buffer;
 			size_t i, length;
 			uint16_t *src;
-			length     = self->w_printer.up_length;
+			length     = self->w_printer.wp_uni.up_length;
 			new_buffer = DeeString_TryNew4ByteBuffer(length + 1);
 			if unlikely(!new_buffer)
 				goto err;
-			src = (uint16_t *)self->w_printer.up_buffer;
+			src = (uint16_t *)self->w_printer.wp_uni.up_buffer;
 			for (i = 0; i < length; ++i)
 				new_buffer[i] = src[i];
 			new_buffer[length]        = ch;
-			self->w_printer.up_buffer = new_buffer;
-			self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
-			self->w_printer.up_flags |= STRING_WIDTH_4BYTE;
-			++self->w_printer.up_length;
+			self->w_printer.wp_uni.up_buffer = new_buffer;
+			self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
+			self->w_printer.wp_uni.up_flags |= STRING_WIDTH_4BYTE;
+			++self->w_printer.wp_uni.up_length;
 			Dee_Free((size_t *)src - 1);
 			break;
 		}
@@ -1601,16 +2313,16 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			do {
 				new_size *= 2;
 			} while (new_size <= written);
-			new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, new_size);
+			new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.wp_uni.up_buffer, new_size);
 			if unlikely(!new_buffer) {
-				new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.up_buffer, written + 1);
+				new_buffer = DeeString_TryResize2ByteBuffer((uint16_t *)self->w_printer.wp_uni.up_buffer, written + 1);
 				if unlikely(!new_buffer)
 					goto err;
 			}
-			self->w_printer.up_buffer = new_buffer;
+			self->w_printer.wp_uni.up_buffer = new_buffer;
 		}
-		((uint16_t *)self->w_printer.up_buffer)[self->w_printer.up_length] = (uint16_t)ch;
-		++self->w_printer.up_length;
+		((uint16_t *)self->w_printer.wp_uni.up_buffer)[self->w_printer.wp_uni.up_length] = (uint16_t)ch;
+		++self->w_printer.wp_uni.up_length;
 		break;
 
 	CASE_WIDTH_4BYTE:
@@ -1621,16 +2333,16 @@ writer_tryappendch(DeeFileWriterObject *__restrict self, uint32_t ch) {
 			do {
 				new_size *= 2;
 			} while (new_size <= written);
-			new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, new_size);
+			new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.wp_uni.up_buffer, new_size);
 			if unlikely(!new_buffer) {
-				new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.up_buffer, written + 1);
+				new_buffer = DeeString_TryResize4ByteBuffer((uint32_t *)self->w_printer.wp_uni.up_buffer, written + 1);
 				if unlikely(!new_buffer)
 					goto err;
 			}
-			self->w_printer.up_buffer = new_buffer;
+			self->w_printer.wp_uni.up_buffer = new_buffer;
 		}
-		((uint32_t *)self->w_printer.up_buffer)[self->w_printer.up_length] = ch;
-		++self->w_printer.up_length;
+		((uint32_t *)self->w_printer.wp_uni.up_buffer)[self->w_printer.wp_uni.up_length] = ch;
+		++self->w_printer.wp_uni.up_length;
 		break;
 	}
 ok:
@@ -1639,51 +2351,175 @@ err:
 	return false;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 writer_write(DeeFileWriterObject *__restrict self,
              uint8_t const *__restrict buffer,
              size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
 	size_t result = bufsize;
+	uint8_t *flush_start, *iter, *end;
 again:
 	DeeFileWriter_LockWrite(self);
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+again_locked:
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	if (self->w_string) {
 		DeeStringObject *wstr = self->w_string;
-		unsigned int width    = self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH;
+		unsigned int width;
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (wstr == (DeeStringObject *)ITER_DONE) {
+			DREF DeeBytesObject *bytes;
+			DREF DeeBytesObject *new_bytes;
+			size_t bytes_used, bytes_alloc, bytes_avail;
+			bytes = self->w_printer.wp_byt.bp_bytes;
+			if unlikely(!bytes) {
+				size_t avail = bufsize * 2;
+				if (avail < bufsize)
+					avail = bufsize;
+				if (avail < BYTES_PRINTER_INITIAL_BUFSIZE)
+					avail = BYTES_PRINTER_INITIAL_BUFSIZE;
+				bytes = DeeBytes_TryNewBufferUninitialized(avail);
+				if likely(bytes) {
+					memcpy(bytes->b_data, buffer, bufsize);
+set_initial_bytes_and_unlock:
+					self->w_printer.wp_byt.bp_bytes  = bytes;
+					self->w_printer.wp_byt.bp_length = bufsize;
+					goto done_unlock;
+				}
+				bytes = DeeBytes_TryNewBufferData(buffer, bufsize);
+				if likely(bytes)
+					goto set_initial_bytes_and_unlock;
+				DeeFileWriter_LockEndWrite(self);
+				bytes = DeeBytes_NewBufferData(buffer, bufsize);
+				if unlikely(!bytes)
+					goto err;
+				DeeFileWriter_LockWrite(self);
+				if likely(self->w_string == (DeeStringObject *)ITER_DONE &&
+				          self->w_printer.wp_byt.bp_bytes == NULL)
+					goto set_initial_bytes_and_unlock;
+				DeeFileWriter_LockEndWrite(self);
+				DeeBytes_Destroy(bytes);
+				goto again;
+			}
+
+			/* Check if we need to unshare/copy "bytes" */
+			bytes_used = self->w_printer.wp_byt.bp_length;
+			if (DeeObject_IsShared(bytes) || (bytes->b_orig != Dee_AsObject(bytes))) {
+				size_t min_size, new_size;
+				min_size = bytes_used + bufsize;
+				new_size = bytes_used * 2;
+				if (new_size < min_size)
+					new_size = min_size;
+				if (new_size < BYTES_PRINTER_INITIAL_BUFSIZE)
+					new_size = BYTES_PRINTER_INITIAL_BUFSIZE;
+				new_bytes = DeeBytes_TryNewBufferUninitialized(new_size);
+				if unlikely(!new_bytes) {
+					new_size = min_size;
+					new_bytes = DeeBytes_TryNewBufferUninitialized(new_size);
+					if unlikely(!new_bytes) {
+						DeeFileWriter_LockEndWrite(self);
+						new_bytes = DeeBytes_NewBufferUninitialized(new_size);
+						if unlikely(!new_bytes)
+							goto err;
+						DeeFileWriter_LockWrite(self);
+						if unlikely(self->w_string != (DeeStringObject *)ITER_DONE) {
+unlock_and_destroy_new_bytes_and_try_again:
+							DeeFileWriter_LockEndWrite(self);
+							DeeBytes_Destroy(new_bytes);
+							goto again;
+						}
+						if unlikely(self->w_printer.wp_byt.bp_bytes != bytes)
+							goto unlock_and_destroy_new_bytes_and_try_again;
+						if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
+							goto unlock_and_destroy_new_bytes_and_try_again;
+					}
+				}
+				memcpy(mempcpy(new_bytes->b_data, DeeBytes_DATA(bytes), bytes_used),
+				       buffer, bufsize);
+				ASSERT(self->w_printer.wp_byt.bp_bytes == bytes);
+				self->w_printer.wp_byt.bp_bytes  = new_bytes;
+				self->w_printer.wp_byt.bp_length = min_size;
+				DeeFileWriter_LockEndWrite(self);
+				Dee_Decref(bytes);
+				goto done;
+			}
+
+			/* Check how much space is available in "bytes" right now */
+			bytes_alloc = DeeBytes_SIZE(bytes);
+			ASSERT(bytes_used <= bytes_alloc);
+			bytes_avail = bytes_alloc - bytes_used;
+			if (bytes_avail < bufsize) {
+				size_t new_alloc = bytes_alloc * 2;
+				size_t min_alloc = bytes_used + bufsize;
+				if (new_alloc < min_alloc)
+					new_alloc = min_alloc;
+				if (new_alloc < BYTES_PRINTER_INITIAL_BUFSIZE)
+					new_alloc = BYTES_PRINTER_INITIAL_BUFSIZE;
+				new_bytes = DeeBytes_TryResizeBuffer(bytes, new_alloc);
+				if unlikely(!new_bytes) {
+					new_alloc = min_alloc;
+					new_bytes = DeeBytes_TryResizeBuffer(bytes, new_alloc);
+					if unlikely(!new_bytes) {
+						DeeFileWriter_LockEndWrite(self);
+						new_bytes = DeeBytes_NewBufferUninitialized(new_alloc);
+						if unlikely(!new_bytes)
+							goto err;
+						DeeFileWriter_LockWrite(self);
+						if unlikely(self->w_string != (DeeStringObject *)ITER_DONE)
+							goto unlock_and_destroy_new_bytes_and_try_again;
+						if unlikely(self->w_printer.wp_byt.bp_bytes != bytes)
+							goto unlock_and_destroy_new_bytes_and_try_again;
+						if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
+							goto unlock_and_destroy_new_bytes_and_try_again;
+						memcpy(new_bytes->b_data, bytes->b_data, bytes_used);
+						DeeBytes_Destroy(bytes);
+					}
+				}
+				self->w_printer.wp_byt.bp_bytes = new_bytes;
+				bytes = new_bytes;
+			}
+			ASSERT(DeeBytes_SIZE(bytes) >= bytes_used);
+			ASSERT((DeeBytes_SIZE(bytes) - bytes_used) >= bufsize);
+
+			/* Append data to bytes buffer */
+			memcpy(bytes->b_data + bytes_used, buffer, bufsize);
+			self->w_printer.wp_byt.bp_length += bufsize;
+			goto done_unlock;
+		}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		width = self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH;
 		ASSERT(DeeString_WIDTH(wstr) != STRING_WIDTH_1BYTE);
 		ASSERT(DeeString_WIDTH(wstr) == width);
-		ASSERT(self->w_printer.up_buffer == DeeString_WSTR(wstr));
-		ASSERT(self->w_printer.up_length == DeeString_WLEN(wstr));
+		ASSERT(self->w_printer.wp_uni.up_buffer == DeeString_WSTR(wstr));
+		ASSERT(self->w_printer.wp_uni.up_length == DeeString_WLEN(wstr));
 		if (DeeObject_IsShared(wstr)) {
 			/* Unshare the pre-written multi-byte buffer. */
 			if (width == STRING_WIDTH_2BYTE) {
-				uint16_t *buffer_copy;
-				size_t length;
-				length      = self->w_printer.up_length;
-				buffer_copy = DeeString_TryNew2ByteBuffer(length + bufsize);
+				size_t length = self->w_printer.wp_uni.up_length;
+				uint16_t *buffer_copy = DeeString_TryNew2ByteBuffer(length + bufsize);
 				if unlikely(!buffer_copy) {
 					DeeFileWriter_LockEndWrite(self);
 					if (Dee_CollectMemoryoc(sizeof(size_t), length + bufsize + 1, 2))
 						goto again;
 					goto err;
 				}
-				memcpyw(buffer_copy, self->w_printer.up_buffer, length);
-				self->w_printer.up_buffer = buffer_copy; /* Inherit data */
+				memcpyw(buffer_copy, self->w_printer.wp_uni.up_buffer, length);
+				self->w_printer.wp_uni.up_buffer = buffer_copy; /* Inherit data */
 			} else {
-				uint32_t *buffer_copy;
-				size_t length;
-				length      = self->w_printer.up_length;
-				buffer_copy = DeeString_TryNew4ByteBuffer(length + bufsize);
+				size_t length = self->w_printer.wp_uni.up_length;
+				uint32_t *buffer_copy = DeeString_TryNew4ByteBuffer(length + bufsize);
 				if unlikely(!buffer_copy) {
 					DeeFileWriter_LockEndWrite(self);
 					if (Dee_CollectMemoryoc(sizeof(size_t), length + bufsize + 1, 4))
 						goto again;
 					goto err;
 				}
-				memcpyl(buffer_copy, self->w_printer.up_buffer, length);
-				self->w_printer.up_buffer = buffer_copy; /* Inherit data */
+				memcpyl(buffer_copy, self->w_printer.wp_uni.up_buffer, length);
+				self->w_printer.wp_uni.up_buffer = buffer_copy; /* Inherit data */
 			}
 
 			/* Drop our reference to the pre-packed string. */
@@ -1713,17 +2549,17 @@ again:
 			Dee_DecrefNokill(&DeeString_Type);
 		}
 		self->w_string = NULL;
-	} else if (self->w_printer.up_buffer &&
-	           (self->w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+	} else if (self->w_printer.wp_uni.up_buffer &&
+	           (self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
 		DeeStringObject *written_buffer;
-		written_buffer = COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
+		written_buffer = COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 		                                       DeeStringObject,
 		                                       s_str);
 		ASSERT(DeeString_WIDTH(written_buffer) == STRING_WIDTH_1BYTE);
 		if unlikely(DeeObject_IsShared(written_buffer)) {
 			/* Unshare the already written portion of the buffer. */
 			DeeStringObject *buffer_copy;
-			size_t buffer_length = self->w_printer.up_length;
+			size_t buffer_length = self->w_printer.wp_uni.up_length;
 			ASSERT(buffer_length == DeeString_SIZE(written_buffer));
 			buffer_copy = (DeeStringObject *)DeeObject_TryMallocc(offsetof(DeeStringObject, s_str),
 			                                                      buffer_length + bufsize + 1,
@@ -1740,8 +2576,8 @@ again:
 			buffer_copy->s_len  = buffer_length;
 			buffer_copy->s_data = NULL;
 			buffer_copy->s_hash = Dee_STRING_HASH_UNSET;
-			self->w_printer.up_buffer = (char *)memcpyc(buffer_copy->s_str, written_buffer->s_str,
-			                                            self->w_printer.up_length, sizeof(char));
+			self->w_printer.wp_uni.up_buffer = (char *)memcpyc(buffer_copy->s_str, written_buffer->s_str,
+			                                                   self->w_printer.wp_uni.up_length, sizeof(char));
 			DeeFileWriter_LockEndWrite(self);
 			Dee_Decref_unlikely(written_buffer);
 			goto again;
@@ -1751,90 +2587,147 @@ again:
 	/* At this point, we know that the buffer has been locked, and that
 	 * the pre-written string has been unshared. - Now we can actually
 	 * get to work and start appending the new content! */
-	if (self->w_printer.up_flags & Dee_UNICODE_PRINTER_FPENDING) {
+	if (self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FPENDING) {
 		/* Complete a UTF-8 sequence. */
-		uint8_t seqlen = Dee_unicode_utf8seqlen[self->w_printer.up_pend[0]];
-		uint8_t gotlen = (self->w_printer.up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
-		uint8_t missing, full_sequence[Dee_UNICODE_UTF8_CURLEN], *tempptr;
+		uint8_t seqlen = Dee_unicode_utf8seqlen[self->w_printer.wp_uni.up_pend[0]];
+		uint8_t gotlen = (self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FPENDING) >> Dee_UNICODE_PRINTER_FPENDING_SHFT;
+		uint8_t missing, full_sequence[Dee_UNICODE_UTF8_MAXLEN], *tempptr;
+		uint32_t ch32;
 		ASSERT(gotlen < seqlen);
 		missing = seqlen - gotlen;
 		if (missing > bufsize) {
 			/* Append what we got, but that won't be all of it... */
-			memcpy(self->w_printer.up_pend + gotlen, buffer, bufsize);
-			self->w_printer.up_flags += (uint8_t)bufsize << Dee_UNICODE_PRINTER_FPENDING_SHFT;
+			memcpy(self->w_printer.wp_uni.up_pend + gotlen, buffer, bufsize);
+			self->w_printer.wp_uni.up_flags += (uint8_t)bufsize << Dee_UNICODE_PRINTER_FPENDING_SHFT;
 			goto done_unlock;
 		}
 
 		/* Complete the sequence, and append the character. */
-		tempptr = (uint8_t *)mempcpy(full_sequence, self->w_printer.up_pend, gotlen);
+		tempptr = (uint8_t *)mempcpy(full_sequence, self->w_printer.wp_uni.up_pend, gotlen);
 		memcpy(tempptr, buffer, missing);
-		if (!writer_tryappendch(self, utf8_getchar(full_sequence, seqlen))) {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		tempptr = full_sequence;
+		ch32 = Dee_unicode_readutf8_chk(&tempptr);
+		if unlikely(!ch32)
+			goto convert_to_bytes;
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		ch32 = utf8_getchar(full_sequence, seqlen);
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		if (!writer_tryappendch_string_locked(self, ch32)) {
 			DeeFileWriter_LockEndWrite(self);
 			if (Dee_CollectMemory(4))
 				goto again;
 		}
-		self->w_printer.up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
+		self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FPENDING;
 		buffer += missing;
 		bufsize -= missing;
 	}
-	{
-		uint8_t *flush_start, *iter, *end;
-		end = (flush_start = iter = (uint8_t *)buffer) + bufsize;
-		while (iter < end) {
-			uint8_t seqlen;
 
-			/* Search for UTF-8 byte sequences */
-			if (*iter < 0xc0) {
-				++iter;
-				continue;
-			}
-			if (flush_start < iter &&
-			    !writer_tryappend8(self, flush_start, (size_t)(iter - flush_start))) {
-				DeeFileWriter_LockEndWrite(self);
-				buffer  = flush_start;
-				bufsize = (size_t)(end - flush_start);
-				if (Dee_CollectMemory((size_t)(iter - flush_start)))
-					goto again;
-				goto err;
-			}
+	flush_start = iter = (uint8_t *)buffer;
+	end = iter + bufsize;
+	while (iter < end) {
+		uint8_t seqlen;
+		uint32_t ch32;
 
-			/* Goto a multi-byte sequence. */
-			seqlen = Dee_unicode_utf8seqlen[*iter];
-			if (seqlen > (size_t)(end - iter)) {
-				/* Incomplete sequence (remember the portion already given) */
-				seqlen = (uint8_t)(end - iter);
-				self->w_printer.up_flags |= seqlen << Dee_UNICODE_PRINTER_FPENDING_SHFT;
-				memcpy(self->w_printer.up_pend, iter, seqlen);
-				goto done_unlock;
-			}
-
-			/* The full sequence has been given! */
-			if (!writer_tryappendch(self, utf8_getchar(iter, seqlen))) {
-				DeeFileWriter_LockEndWrite(self);
-				if (!Dee_CollectMemory(4))
-					goto err;
-				buffer  = iter;
-				bufsize = (size_t)(end - iter);
-				goto again;
-			}
-			iter += seqlen;
-			flush_start = iter;
+		/* Search for UTF-8 byte sequences */
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if (*iter < 0x80)
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		if (*iter < 0xc0)
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		{
+			++iter;
+			continue;
 		}
-
-		/* Flush the remainder. */
-		if (flush_start < end &&
-		    !writer_tryappend8(self, flush_start, (size_t)(end - flush_start))) {
+		if (flush_start < iter &&
+		    !writer_tryappend8_string_locked(self, flush_start, (size_t)(iter - flush_start))) {
 			DeeFileWriter_LockEndWrite(self);
 			buffer  = flush_start;
 			bufsize = (size_t)(end - flush_start);
-			if (Dee_CollectMemory(bufsize))
+			if (Dee_CollectMemory((size_t)(iter - flush_start)))
 				goto again;
 			goto err;
 		}
+
+		/* Goto a multi-byte sequence. */
+		seqlen = Dee_unicode_utf8seqlen[*iter];
+#ifndef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		ASSERT(seqlen);
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		if (seqlen > (size_t)(end - iter)) {
+			/* Incomplete sequence (remember the portion already given) */
+			seqlen = (uint8_t)(end - iter);
+			self->w_printer.wp_uni.up_flags |= seqlen << Dee_UNICODE_PRINTER_FPENDING_SHFT;
+			memcpy(self->w_printer.wp_uni.up_pend, iter, seqlen);
+			goto done_unlock;
+		}
+
+		/* The full sequence has been given! */
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		if unlikely(!seqlen) {
+convert_to_bytes_at_iter:
+			buffer  = iter;
+			bufsize = (size_t)(end - iter);
+			goto convert_to_bytes;
+		}
+		ch32 = Dee_unicode_readutf8_chk(&iter);
+		if unlikely(!ch32) {
+			--iter;
+			goto convert_to_bytes_at_iter;
+		}
+		if (!writer_tryappendch_string_locked(self, ch32)) {
+			DeeFileWriter_LockEndWrite(self);
+			if (!Dee_CollectMemory(4))
+				goto err;
+			iter -= seqlen;
+			buffer  = iter;
+			bufsize = (size_t)(end - iter);
+			goto again;
+		}
+		flush_start = iter;
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		ch32 = utf8_getchar(iter, seqlen);
+		if (!writer_tryappendch_string_locked(self, ch32)) {
+			DeeFileWriter_LockEndWrite(self);
+			if (!Dee_CollectMemory(4))
+				goto err;
+			buffer  = iter;
+			bufsize = (size_t)(end - iter);
+			goto again;
+		}
+		iter += seqlen;
+		flush_start = iter;
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	}
+
+	/* Flush the remainder. */
+	if (flush_start < end &&
+	    !writer_tryappend8_string_locked(self, flush_start, (size_t)(end - flush_start))) {
+		DeeFileWriter_LockEndWrite(self);
+		buffer  = flush_start;
+		bufsize = (size_t)(end - flush_start);
+		if (Dee_CollectMemory(bufsize))
+			goto again;
+		goto err;
 	}
 done_unlock:
 	DeeFileWriter_LockEndWrite(self);
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+done:
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	return result;
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	{
+		int status;
+convert_to_bytes:
+		status = DeeFileWriter_String2BytesOrUnlock(self);
+		if likely(status >= 0) {
+			if (status == 0)
+				goto again_locked;
+			goto again;
+		}
+	}
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 err:
 	return (size_t)-1;
 }
@@ -2050,7 +2943,7 @@ done:
 PUBLIC NONNULL((1)) size_t DCALL
 DeeFile_ClosePrinter(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self) {
 	DREF DeeFilePrinterObject *me = (DREF DeeFilePrinterObject *)self;
-	size_t result    = atomic_read(&me->fp_result); /* TODO: _with_shared_rwlock */
+	size_t result = atomic_read(&me->fp_result); /* TODO: _with_shared_rwlock */
 	ASSERT_OBJECT_TYPE_EXACT((DeeObject *)me, (DeeTypeObject *)&DeeFilePrinter_Type);
 	if (!Dee_DecrefIfOne(me)) {
 		DeeFilePrinter_LockWriteNoInt(me);

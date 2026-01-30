@@ -101,11 +101,11 @@ STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_4BYTE) == 4);
 		/* `0b1110????' */                                               \
 		_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3,_3, /* 0xe0-0xef */ \
 		/* `0b11110???' */                                               \
-		_4,_4,_4,_4,_4,_4,_4,_4,                                         \
-		_5,_5,_5,_5,                                                     \
-		_6,_6,                                                           \
-		_7,                                                              \
-		_8                                                               \
+		_4,_4,_4,_4,_4,_4,_4,_4,                         /* 0xf0-0xf7 */ \
+		_5,_5,_5,_5,                                     /* 0xf8-0xfb */ \
+		_6,_6,                                           /* 0xfc-0xfd */ \
+		_7,                                              /* 0xfe */      \
+		_8                                               /* 0xff */      \
 	}
 /* clang-format on */
 PUBLIC_CONST uint8_t const Dee_unicode_utf8seqlen[256] =
@@ -122,8 +122,8 @@ UTF8_SEQLEN_INIT(1, 1, 2, 3, 4, 5, 6, 7, 8);
  *  - 4-byte    -- 3+6+6+6         = 21 bits
  *  - 5-byte    -- 2+6+6+6+6       = 26 bits (Not valid unicode characters)
  *  - 6-byte    -- 1+6+6+6+6+6     = 31 bits (Not valid unicode characters)
- *  - 7-byte    --   6+6+6+6+6+6   = 36 bits (Not valid unicode characters)
- *  - 8-byte    --   6+6+6+6+6+6+6 = 42 bits (Not valid unicode characters)
+ *  - 7-byte    --   6+6+6+6+6+6   = 36 bits (Not valid unicode characters; not supported by deemon)
+ *  - 8-byte    --   6+6+6+6+6+6+6 = 42 bits (Not valid unicode characters; not supported by deemon)
  */
 #define UTF8_1BYTE_MAX    (((uint32_t)1 << 7) - 1)
 #define UTF8_2BYTE_MAX    (((uint32_t)1 << 11) - 1)
@@ -132,6 +132,14 @@ UTF8_SEQLEN_INIT(1, 1, 2, 3, 4, 5, 6, 7, 8);
 #define UTF8_5BYTE_MAX    (((uint32_t)1 << 26) - 1)
 #define UTF8_6BYTE_MAX    (((uint32_t)1 << 31) - 1)
 
+#define UTF8_2BYTE_MIN    (UTF8_1BYTE_MAX + 1)
+#define UTF8_3BYTE_MIN    (UTF8_2BYTE_MAX + 1)
+#define UTF8_4BYTE_MIN    (UTF8_3BYTE_MAX + 1)
+#define UTF8_5BYTE_MIN    (UTF8_4BYTE_MAX + 1)
+#define UTF8_6BYTE_MIN    (UTF8_5BYTE_MAX + 1)
+#define UTF8_7BYTE_MIN    (UTF8_6BYTE_MAX + 1)
+
+#define is_utf8_continuation_byte(b) (((b) & 0xc0) == 0x80)
 
 #define UTF16_HIGH_SURROGATE_MIN 0xd800
 #define UTF16_HIGH_SURROGATE_MAX 0xdbff
@@ -3214,7 +3222,10 @@ PUBLIC WUNUSED ATTR_INOUT(1) uint32_t
 (DCALL Dee_unicode_readutf8)(char const **__restrict ptext) {
 	char const *iter = *ptext;
 	uint32_t result = (uint32_t)(uint8_t)*iter++;
-	if (result >= 0xc0) {
+#if 0
+	if (result >= 0xc0)
+#endif
+	{
 		switch (Dee_unicode_utf8seqlen[result]) {
 
 		case 0:
@@ -3466,8 +3477,151 @@ PUBLIC ATTR_INOUT(1) uint32_t
 
 
 
+/* Same as above, but returns "0" and increments `*ptext' by 1 when:
+ * - `*IN(*ptext)' is a utf-8 continuation byte
+ * - `IN(*ptext)' is a followed by too few utf-8 continuation bytes
+ * - `IN(*ptext)' is an over-long utf-8 sequence
+ *
+ * Note however that `0' may also be returned when `*IN(*ptext)' was the NUL
+ * character. This you can easily by checking if `OUT(*ptext)[-1] == '\0''. */
+PUBLIC WUNUSED ATTR_INOUT(1) uint32_t
+(DCALL Dee_unicode_readutf8_chk)(char const **__restrict ptext) {
+	char const *iter = *ptext;
+	uint32_t result = (uint32_t)(uint8_t)*iter++;
+#define LOCAL_chk_continuation(b)      \
+	if (!is_utf8_continuation_byte(b)) \
+		goto bad_continuation_byte
+	switch (Dee_unicode_utf8seqlen[result]) {
+
+	case 0:
+		/* Bad utf-8 continuation byte */
+		result = 0;
+		break;
+
+	case 1:
+		break;
+
+	case 2:
+		result  = (result & 0x1f) << 6;
+		LOCAL_chk_continuation(iter[0]);
+		result |= (iter[0] & 0x3f);
+		if unlikely(result < UTF8_2BYTE_MIN)
+			goto overlong;
+		iter += 1;
+		break;
+
+	case 3:
+		result  = (result & 0x0f) << 12;
+		LOCAL_chk_continuation(iter[0]);
+		result |= (iter[0] & 0x3f) << 6;
+		LOCAL_chk_continuation(iter[1]);
+		result |= (iter[1] & 0x3f);
+		if unlikely(result < UTF8_3BYTE_MIN)
+			goto overlong;
+		iter += 2;
+		break;
+
+	case 4:
+		result  = (result & 0x07) << 18;
+		LOCAL_chk_continuation(iter[0]);
+		result |= (iter[0] & 0x3f) << 12;
+		LOCAL_chk_continuation(iter[1]);
+		result |= (iter[1] & 0x3f) << 6;
+		LOCAL_chk_continuation(iter[2]);
+		result |= (iter[2] & 0x3f);
+		if unlikely(result < UTF8_4BYTE_MIN)
+			goto overlong;
+		iter += 3;
+		break;
+
+	case 5:
+		result  = (result & 0x03) << 24;
+		LOCAL_chk_continuation(iter[0]);
+		result |= (iter[0] & 0x3f) << 18;
+		LOCAL_chk_continuation(iter[1]);
+		result |= (iter[1] & 0x3f) << 12;
+		LOCAL_chk_continuation(iter[2]);
+		result |= (iter[2] & 0x3f) << 6;
+		LOCAL_chk_continuation(iter[3]);
+		result |= (iter[3] & 0x3f);
+		if unlikely(result < UTF8_5BYTE_MIN)
+			goto overlong;
+		iter += 4;
+		break;
+
+	case 6:
+		result  = (result & 0x01) << 30;
+		LOCAL_chk_continuation(iter[0]);
+		result |= (iter[0] & 0x3f) << 24;
+		LOCAL_chk_continuation(iter[1]);
+		result |= (iter[1] & 0x3f) << 18;
+		LOCAL_chk_continuation(iter[2]);
+		result |= (iter[2] & 0x3f) << 12;
+		LOCAL_chk_continuation(iter[3]);
+		result |= (iter[3] & 0x3f) << 6;
+		LOCAL_chk_continuation(iter[4]);
+		result |= (iter[4] & 0x3f);
+		if unlikely(result < UTF8_6BYTE_MIN)
+			goto overlong;
+		iter += 5;
+		break;
+
+	case 7:
+		LOCAL_chk_continuation(iter[0]);
+		result  = (iter[0] & 0x03/*0x3f*/) << 30;
+		LOCAL_chk_continuation(iter[1]);
+		result |= (iter[1] & 0x3f) << 24;
+		LOCAL_chk_continuation(iter[2]);
+		result |= (iter[2] & 0x3f) << 18;
+		LOCAL_chk_continuation(iter[3]);
+		result |= (iter[3] & 0x3f) << 12;
+		LOCAL_chk_continuation(iter[4]);
+		result |= (iter[4] & 0x3f) << 6;
+		LOCAL_chk_continuation(iter[5]);
+		result |= (iter[5] & 0x3f);
+		if unlikely(result < UTF8_7BYTE_MIN)
+			goto overlong;
+		iter += 6;
+		break;
+
+	case 8:
+#if 0
+		LOCAL_chk_continuation(iter[0]);
+		/*result = (iter[0] & 0x3f) << 36;*/
+		LOCAL_chk_continuation(iter[1]);
+		result  = (iter[1] & 0x03/*0x3f*/) << 30;
+		LOCAL_chk_continuation(iter[2]);
+		result |= (iter[2] & 0x3f) << 24;
+		LOCAL_chk_continuation(iter[3]);
+		result |= (iter[3] & 0x3f) << 18;
+		LOCAL_chk_continuation(iter[4]);
+		result |= (iter[4] & 0x3f) << 12;
+		LOCAL_chk_continuation(iter[5]);
+		result |= (iter[5] & 0x3f) << 6;
+		LOCAL_chk_continuation(iter[6]);
+		result |= (iter[6] & 0x3f);
+		if unlikely(result < UTF8_8BYTE_MIN)
+			goto overlong;
+		iter += 7;
+		break;
+#else
+		goto overlong;
+#endif
+
+	default: __builtin_unreachable();
+	}
+	*ptext = iter;
+	return result;
+bad_continuation_byte:
+overlong:
+	ASSERT(iter == (*ptext + 1));
+	*ptext = iter;
+	return 0;
+}
+
+
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) char *
-(DCALL Dee_unicode_writeutf8)(char *__restrict buffer, uint32_t ch) {
+(DFCALL Dee_unicode_writeutf8)(char *__restrict buffer, uint32_t ch) {
 	uint8_t *dst = (uint8_t *)buffer;
 	if (ch <= UTF8_1BYTE_MAX) {
 		*dst++ = (uint8_t)ch;
@@ -6135,7 +6289,7 @@ again_flush:
 	/* Print ASCII text. */
 	if (flush_start < text) {
 		if unlikely(Dee_bytes_printer_append(me, (uint8_t const *)flush_start,
-		                                 (size_t)(text - flush_start)) < 0)
+		                                     (size_t)(text - flush_start)) < 0)
 			goto err;
 	}
 	if (textlen) {

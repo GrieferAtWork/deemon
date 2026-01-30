@@ -329,7 +329,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	DREF Bytes *result;
 	size_t bsize;
 	if (DeeBytes_Check(seq))
-		return DeeBytes_NewBufferData(DeeBytes_DATA(seq), DeeBytes_SIZE(seq));
+		return Dee_AsObject(DeeBytes_NewBufferData(DeeBytes_DATA(seq), DeeBytes_SIZE(seq)));
 
 	/* Fallback: use an iterator. */
 	bsize = DeeObject_SizeFast(seq);
@@ -434,11 +434,11 @@ err_r:
 }
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeBytesObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
-	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_MalloccSafe(offsetof(Bytes, b_data), /* TODO: b_inuse_p */
-	                                             num_bytes, sizeof(byte_t));
+	DREF DeeBytesObject *result;
+	result = (DREF DeeBytesObject *)DeeObject_MalloccSafe(offsetof(DeeBytesObject, b_data), /* TODO: b_inuse_p */
+	                                                      num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	memset(result->b_data, init, num_bytes);
@@ -450,14 +450,14 @@ DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
 	result->b_buffer.bb_size = num_bytes;
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
-	return Dee_AsObject(result);
+	return result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeBytesObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes) {
-	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_MalloccSafe(offsetof(Bytes, b_data), /* TODO: b_inuse_p */
-	                                             num_bytes, sizeof(byte_t));
+	DREF DeeBytesObject *result;
+	result = (DREF DeeBytesObject *)DeeObject_MalloccSafe(offsetof(DeeBytesObject, b_data), /* TODO: b_inuse_p */
+	                                                      num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	result->b_base           = result->b_data;
@@ -468,14 +468,14 @@ DeeBytes_NewBufferUninitialized(size_t num_bytes) {
 	result->b_buffer.bb_size = num_bytes;
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
-	return Dee_AsObject(result);
+	return result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeBytesObject *DCALL
 DeeBytes_TryNewBufferUninitialized(size_t num_bytes) {
-	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_TryMalloccSafe(offsetof(Bytes, b_data), /* TODO: b_inuse_p */
-	                                                num_bytes, sizeof(byte_t));
+	DREF DeeBytesObject *result;
+	result = (DREF DeeBytesObject *)DeeObject_TryMalloccSafe(offsetof(DeeBytesObject, b_data), /* TODO: b_inuse_p */
+	                                                         num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	result->b_base           = result->b_data;
@@ -486,14 +486,14 @@ DeeBytes_TryNewBufferUninitialized(size_t num_bytes) {
 	result->b_buffer.bb_size = num_bytes;
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
-	return Dee_AsObject(result);
+	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
-	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_Mallocc(offsetof(Bytes, b_data), /* TODO: b_inuse_p */
-	                                         num_bytes, sizeof(byte_t));
+	DREF DeeBytesObject *result;
+	result = (DREF DeeBytesObject *)DeeObject_Mallocc(offsetof(DeeBytesObject, b_data), /* TODO: b_inuse_p */
+	                                                  num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);
@@ -504,14 +504,14 @@ DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	result->b_buffer.bb_size = num_bytes;
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
-	return Dee_AsObject(result);
+	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes) {
-	DREF Bytes *result;
-	result = (DREF Bytes *)DeeObject_TryMallocc(offsetof(Bytes, b_data), /* TODO: b_inuse_p */
-	                                            num_bytes, sizeof(byte_t));
+	DREF DeeBytesObject *result;
+	result = (DREF DeeBytesObject *)DeeObject_TryMallocc(offsetof(DeeBytesObject, b_data), /* TODO: b_inuse_p */
+	                                                     num_bytes, sizeof(byte_t));
 	if unlikely(!result)
 		goto done;
 	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);
@@ -522,48 +522,78 @@ DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes) {
 	result->b_buffer.bb_size = num_bytes;
 	DeeObject_Init(result, &DeeBytes_Type);
 done:
-	return Dee_AsObject(result);
+	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self,
                       size_t num_bytes) {
 	size_t total_bytes;
-	DREF Bytes *result, *new_result;
+	DREF DeeBytesObject *result, *new_result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeBytes_Type);
 	ASSERT(!DeeObject_IsShared(self));
-	if unlikely(OVERFLOW_UADD(offsetof(Bytes, b_data), num_bytes, &total_bytes)) /* TODO: b_inuse_p */
+	if unlikely(OVERFLOW_UADD(offsetof(DeeBytesObject, b_data), num_bytes, &total_bytes)) /* TODO: b_inuse_p */
 		total_bytes = (size_t)-1;
-	result = (DREF Bytes *)self;
+	result = self;
 	ASSERT(result->b_base == result->b_data);
 	ASSERT(result->b_orig == Dee_AsObject(result));
 	ASSERT(result->b_flags == Dee_BUFFER_FWRITABLE);
 	ASSERT(result->b_buffer.bb_base == result->b_data);
 	ASSERT(result->b_buffer.bb_size == result->b_size);
 again:
-	new_result = (DREF Bytes *)DeeObject_TryRealloc(result, total_bytes);
+	new_result = (DREF DeeBytesObject *)DeeObject_TryRealloc(result, total_bytes);
 	if unlikely(!new_result) {
-		if (num_bytes <= result->b_size) {
+		if unlikely(num_bytes <= result->b_size) {
 			result->b_size = result->b_buffer.bb_size = num_bytes;
-			return Dee_AsObject(result);
+			return result;
 		}
 		if (Dee_CollectMemory(total_bytes))
 			goto again;
 		return NULL;
 	}
-	result->b_orig               = Dee_AsObject(result);
+	new_result->b_orig = Dee_AsObject(new_result);
 	new_result->b_buffer.bb_base = new_result->b_base = new_result->b_data;
 	new_result->b_buffer.bb_size = new_result->b_size = num_bytes;
-	return Dee_AsObject(new_result);
+	return new_result;
 }
 
-PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
-                        size_t num_bytes) {
-	DREF Bytes *result;
+PUBLIC WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+DeeBytes_TryResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self,
+                         size_t num_bytes) {
+	size_t total_bytes;
+	DREF DeeBytesObject *result, *new_result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeBytes_Type);
 	ASSERT(!DeeObject_IsShared(self));
-	result = (DREF Bytes *)self;
+	if unlikely(OVERFLOW_UADD(offsetof(DeeBytesObject, b_data), num_bytes, &total_bytes)) /* TODO: b_inuse_p */
+		total_bytes = (size_t)-1;
+	result = self;
+	ASSERT(result->b_base == result->b_data);
+	ASSERT(result->b_orig == Dee_AsObject(result));
+	ASSERT(result->b_flags == Dee_BUFFER_FWRITABLE);
+	ASSERT(result->b_buffer.bb_base == result->b_data);
+	ASSERT(result->b_buffer.bb_size == result->b_size);
+	new_result = (DREF DeeBytesObject *)DeeObject_TryRealloc(result, total_bytes);
+	if unlikely(!new_result) {
+		if unlikely(num_bytes <= result->b_size) {
+			result->b_size = result->b_buffer.bb_size = num_bytes;
+			return result;
+		}
+		return NULL;
+	}
+	new_result->b_orig = Dee_AsObject(new_result);
+	new_result->b_buffer.bb_base = new_result->b_base = new_result->b_data;
+	new_result->b_buffer.bb_size = new_result->b_size = num_bytes;
+	return new_result;
+}
+
+
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self,
+                        size_t num_bytes) {
+	DREF DeeBytesObject *result;
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeBytes_Type);
+	ASSERT(!DeeObject_IsShared(self));
+	result = self;
 	ASSERT(result->b_base == result->b_data);
 	ASSERT(result->b_orig == Dee_AsObject(result));
 	ASSERT(result->b_flags == Dee_BUFFER_FWRITABLE);
@@ -571,18 +601,18 @@ DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
 	ASSERT(result->b_buffer.bb_size == result->b_size);
 	ASSERT(num_bytes <= result->b_size);
 	if (num_bytes != result->b_size) {
-		result = (DREF Bytes *)DeeObject_TryReallocc(result, offsetof(Bytes, b_data), /* TODO: b_inuse_p */
-		                                             num_bytes, sizeof(byte_t));
+		result = (DREF DeeBytesObject *)DeeObject_TryReallocc(result, offsetof(DeeBytesObject, b_data), /* TODO: b_inuse_p */
+		                                                      num_bytes, sizeof(byte_t));
 		if unlikely(!result) {
-			result         = (DREF Bytes *)self;
+			result = self;
 			result->b_size = result->b_buffer.bb_size = num_bytes;
-			return Dee_AsObject(result);
+			return result;
 		}
-		result->b_orig           = Dee_AsObject(result);
+		result->b_orig = Dee_AsObject(result);
 		result->b_buffer.bb_base = result->b_base = result->b_data;
 		result->b_buffer.bb_size = result->b_size = num_bytes;
 	}
-	return Dee_AsObject(result);
+	return result;
 }
 
 
@@ -631,8 +661,8 @@ PRIVATE WUNUSED DREF Bytes *DCALL bytes_ctor(void) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_copy(Bytes *__restrict other) {
-	return (DREF Bytes *)DeeBytes_NewBufferData(DeeBytes_DATA(other),
-	                                            DeeBytes_SIZE(other));
+	return DeeBytes_NewBufferData(DeeBytes_DATA(other),
+	                              DeeBytes_SIZE(other));
 }
 
 PRIVATE WUNUSED DREF Bytes *DCALL
@@ -648,7 +678,7 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 				goto err;
 			if (DeeObject_AsByte(argv[1], &init))
 				goto err;
-			return (DREF Bytes *)DeeBytes_NewBuffer(start, init);
+			return DeeBytes_NewBuffer(start, init);
 		}
 		if (DeeString_Check(argv[1])) {
 			char const *str = DeeString_STR(argv[1]);
@@ -692,7 +722,7 @@ err_args:
 		if (DeeInt_Check(ob)) {
 			if (DeeObject_AsSize(ob, &start))
 				goto err;
-			return (DREF Bytes *)DeeBytes_NewBufferUninitialized(start);
+			return DeeBytes_NewBufferUninitialized(start);
 		}
 		tp_iter = Dee_TYPE(ob);
 		if (tp_iter == &DeeSuper_Type) {
@@ -1080,8 +1110,7 @@ bytes_add(Bytes *self, DeeObject *other) {
 	DeeBuffer buffer;
 	if (DeeObject_GetBuf(other, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self) +
-	                                                       buffer.bb_size);
+	result = DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self) + buffer.bb_size);
 	if likely(result) {
 		void *p = mempcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
 		memcpy(p, buffer.bb_base, buffer.bb_size);
@@ -1106,7 +1135,7 @@ bytes_mul(Bytes *self, DeeObject *other) {
 		goto err_overflow;
 	if unlikely(total_length == 0)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(total_length);
+	result = DeeBytes_NewBufferUninitialized(total_length);
 	if unlikely(!result)
 		goto err;
 	src = DeeBytes_DATA(self);
@@ -1692,7 +1721,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 	CASE_WIDTH_1BYTE:
 		iter.cp8 = DeeString_Get1Byte(hex_str);
 		length   = WSTR_LENGTH(iter.cp8);
-		result   = (DREF Bytes *)DeeBytes_NewBufferUninitialized(length / 2);
+		result   = DeeBytes_NewBufferUninitialized(length / 2);
 		if unlikely(!result)
 			goto err;
 		dst     = DeeBytes_DATA(result);
@@ -1725,7 +1754,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 	CASE_WIDTH_2BYTE:
 		iter.cp16 = DeeString_Get2Byte(hex_str);
 		length    = WSTR_LENGTH(iter.cp16);
-		result    = (DREF Bytes *)DeeBytes_NewBufferUninitialized(length / 2);
+		result    = DeeBytes_NewBufferUninitialized(length / 2);
 		if unlikely(!result)
 			goto err;
 		dst      = DeeBytes_DATA(result);
@@ -1758,7 +1787,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 	CASE_WIDTH_4BYTE:
 		iter.cp32 = DeeString_Get4Byte(hex_str);
 		length    = WSTR_LENGTH(iter.cp32);
-		result    = (DREF Bytes *)DeeBytes_NewBufferUninitialized(length / 2);
+		result    = DeeBytes_NewBufferUninitialized(length / 2);
 		if unlikely(!result)
 			goto err;
 		dst      = DeeBytes_DATA(result);
@@ -1793,9 +1822,8 @@ done:
 		size_t used;
 		used = (size_t)(dst - DeeBytes_DATA(result));
 		ASSERT(used <= DeeBytes_SIZE(result));
-		if unlikely(used != DeeBytes_SIZE(result)) {
-			result = (DREF Bytes *)DeeBytes_TruncateBuffer((DeeObject *)result, used);
-		}
+		if unlikely(used != DeeBytes_SIZE(result))
+			result = DeeBytes_TruncateBuffer(result, used);
 	}
 	return result;
 err_invalid:

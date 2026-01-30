@@ -4568,7 +4568,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f_im
 	                    (HANDLE ProcessHandle, /*PROCESSINFOCLASS*/ int ProcessInformationClass,
 	                     PVOID ProcessInformation, ULONG ProcessInformationLength,
 	                     PULONG ReturnLength))
-	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(ProcessInformationLength);
+	result = DeeBytes_NewBufferUninitialized(ProcessInformationLength);
 	if unlikely(!result)
 		goto err;
 again:
@@ -4605,15 +4605,13 @@ again:
 	if (ulReturnLength > DeeBytes_SIZE(result)) {
 		DREF DeeBytesObject *new_result;
 resize_buffer:
-		new_result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DeeObject *)result,
-		                                                          ulReturnLength);
+		new_result = DeeBytes_ResizeBuffer(result, ulReturnLength);
 		if unlikely(!new_result)
 			goto err_r;
 		result = new_result;
 		goto again;
 	} else if (ulReturnLength < DeeBytes_SIZE(result)) {
-		result = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result,
-		                                                        ulReturnLength);
+		result = DeeBytes_TruncateBuffer(result, ulReturnLength);
 	}
 	return Dee_AsObject(result);
 err_r:
@@ -4662,7 +4660,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess
 	                    (HANDLE ProcessHandle, /*PROCESSINFOCLASS*/ int ProcessInformationClass,
 	                     PVOID ProcessInformation, ULONG ProcessInformationLength,
 	                     PULONG ReturnLength))
-	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(ProcessInformationLength);
+	result = DeeBytes_NewBufferUninitialized(ProcessInformationLength);
 	if unlikely(!result)
 		goto err;
 again:
@@ -4699,15 +4697,13 @@ again:
 	if (ulReturnLength > DeeBytes_SIZE(result)) {
 		DREF DeeBytesObject *new_result;
 resize_buffer:
-		new_result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DeeObject *)result,
-		                                                          ulReturnLength);
+		new_result = DeeBytes_ResizeBuffer(result, ulReturnLength);
 		if unlikely(!new_result)
 			goto err_r;
 		result = new_result;
 		goto again;
 	} else if (ulReturnLength < DeeBytes_SIZE(result)) {
-		result = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result,
-		                                                        ulReturnLength);
+		result = DeeBytes_TruncateBuffer(result, ulReturnLength);
 	}
 	return Dee_AsObject(result);
 err_r:
@@ -4751,7 +4747,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f_impl(HANDL
 	SIZE_T szNumberOfBytesRead;
 	DREF DeeBytesObject *result;
 	BOOL bOk;
-	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(nSize);
+	result = DeeBytes_NewBufferUninitialized(nSize);
 	if unlikely(!result)
 		goto err;
 again:
@@ -4774,10 +4770,8 @@ again:
 		                      hProcess, (void *)lpBaseAddress, nSize);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(szNumberOfBytesRead < nSize) {
-		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer(Dee_AsObject(result),
-		                                                      szNumberOfBytesRead);
-	}
+	if unlikely(szNumberOfBytesRead < nSize)
+		result = DeeBytes_TruncateBuffer(result, szNumberOfBytesRead);
 	return Dee_AsObject(result);
 err_r:
 	Dee_Decref_likely(result);
@@ -4826,7 +4820,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f_i
 	LOAD_NTDLL_FUNCTION(err, NTSTATUS, NTAPI, NtWow64ReadVirtualMemory64,
 	                    (HANDLE ProcessHandle, PVOID64 BaseAddress,
 	                     PVOID Buffer, ULONG64 Size, PULONG64 NumberOfBytesRead))
-	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized((size_t)nSize);
+	result = DeeBytes_NewBufferUninitialized((size_t)nSize);
 	if unlikely(!result)
 		goto err;
 again:
@@ -4851,10 +4845,8 @@ again:
 		                      hProcess, (void *)lpBaseAddress, nSize);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(szNumberOfBytesRead < nSize) {
-		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer(Dee_AsObject(result),
-		                                                      (size_t)szNumberOfBytesRead);
-	}
+	if unlikely(szNumberOfBytesRead < nSize)
+		result = DeeBytes_TruncateBuffer(result, (size_t)szNumberOfBytesRead);
 	return Dee_AsObject(result);
 err_r:
 	Dee_Decref_likely(result);

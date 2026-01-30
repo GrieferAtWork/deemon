@@ -315,10 +315,53 @@ DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          size_t start, size_t end);
 
 
+
+/* Experimental feature switch: Use "tp_serialize" to implement "deepcopy" */
+#if (!defined(CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_FILE_WRITER_BYTES))
+#if 1 /* TODO */
+#define CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+#else
+#define CONFIG_NO_EXPERIMENTAL_FILE_WRITER_BYTES
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_FILE_WRITER_BYTES */
+
+struct Dee_bytes_object;
 typedef struct Dee_file_writer_object {
 	Dee_FILE_OBJECT_HEAD
-	struct Dee_unicode_printer w_printer; /* [lock(w_lock)][owned_if(!w_string)] The printer used to generate the string. */
-	DREF DeeStringObject      *w_string;  /* [lock(w_lock)][0..1][valid_if((w_printer.up_flags & Dee_UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
+	/* In addition to returning the string that is the result of decoding utf-8 data
+	 * written to the file, `DeeFileWriterObject' is also able to provide the bytes
+	 * that were originally written. For this purpose, whenever anything is written
+	 * to the file that doesn't conform with utf-8 requirements (e.g.: an over-long
+	 * utf-8 sequence, or a miss-placed utf-8 continuation byte), everything written
+	 * until that point is encoded as utf-8 and concat'd with non-encodeable data to
+	 * form the raw bytes. These bytes are then continued to be written to, allowing
+	 * the user to eventually query these bytes directly.
+	 *
+	 * Or in other words: the current "writer.string" is now an
+	 *                    alias for `writer.bytes.decode("utf-8")' */
+	union {
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+		struct {
+			size_t                        bp_length; /* # of bytes currently used within `bp_bytes' */
+			DREF struct Dee_bytes_object *bp_bytes;  /* [0..1][owned] The resulting Bytes object.
+			                                          * When the reference counter is greater than "1",
+			                                          * or the `Dee_BUFFER_FWRITABLE' flag isn't set,
+			                                          * or when `b_orig != bp_bytes', then the Bytes
+			                                          * object must be copied before it can be written
+			                                          * to. (iow: this may just be a fully initialized
+			                                          * bytes object) */
+		}                          wp_byt; /* [lock(w_lock)][valid_if(w_string == ITER_DONE)]
+		                                    * The printer used to generate bytes. */
+		struct Dee_unicode_printer wp_uni; /* [lock(w_lock)][owned_if(!w_string)][valid_if(w_string != ITER_DONE)]
+		                                    * The printer used to generate the string. */
+#define DeeFileWriter_IsBytes(self)  ((self)->w_string == (DREF DeeStringObject *)ITER_DONE)
+#define DeeFileWriter_IsString(self) ((self)->w_string != (DREF DeeStringObject *)ITER_DONE)
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+		struct Dee_unicode_printer wp_uni; /* [lock(w_lock)][owned_if(!w_string)] The printer used to generate the string. */
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	} w_printer;
+	DREF DeeStringObject      *w_string;  /* [lock(w_lock)][0..1][valid_if((w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) != STRING_WIDTH_1BYTE)]
 	                                       * Cached variant of the last-accessed, generated multi-byte string. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t        w_lock;    /* Lock for this file writer object. */
@@ -350,10 +393,10 @@ DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
 /* Returns the current string written by the writer. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*string*/ DeeObject *DCALL
 DeeFileWriter_GetString(DeeObject *__restrict self);
-/* TODO: DeeFileWriter_GetBytes  (returns raw bytes that have been written to the file)
- * Yes: that will require a full re-write of `File.Writer()', since currently some
- *      of the byte-information outside the ASCII range is lost during the act of
- *      interpreting input a UTF-8 */
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
+DeeFileWriter_GetBytes(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*string|Bytes*/ DeeObject *DCALL
+DeeFileWriter_GetData(DeeObject *__restrict self);
 
 
 
