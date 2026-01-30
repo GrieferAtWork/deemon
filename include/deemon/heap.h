@@ -165,7 +165,7 @@ DFUNDEF void DCALL DeeHeap_CheckMemory(void);
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
- * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
+ * @param: method: One of `DeeHeap_DumpMemoryLeaks_*'
  * @return: * : The total amount of memory leaked (in bytes) */
 DFUNDEF size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method);
 #define DeeHeap_DumpMemoryLeaks_ALL       0 /* Consider all allocated memory (except Dee_UntrackAlloc) as leaks */

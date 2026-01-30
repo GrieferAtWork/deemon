@@ -582,7 +582,6 @@ func("realloc_in_place", "defined(CONFIG_HAVE_MALLOC_H) && " + addparen(unix), t
 
 func("read", unix, test: 'char buf[7]; return (int)read(0, buf, 7);');
 func("_read", msvc, test: 'char buf[7]; return (int)_read(0, buf, 7);');
-func("readall", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS)", test: 'char buf[7]; return (int)readall(0, buf, 7);');
 
 func("write", unix, test: 'char const buf[] = "foo"; return (int)write(1, buf, 3);');
 func("_write", msvc, test: 'char const buf[] = "foo"; return (int)_write(1, buf, 3);');
@@ -4805,15 +4804,6 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE__read) && \
       (defined(_read) || defined(___read_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__read
-#endif
-
-/*!export readall*/
-#ifdef CONFIG_NO_readall
-#undef CONFIG_HAVE_readall
-#elif !defined(CONFIG_HAVE_readall) && \
-      (defined(readall) || defined(__readall_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
-       defined(__USE_KOS)))
-#define CONFIG_HAVE_readall
 #endif
 
 /*!export write*/

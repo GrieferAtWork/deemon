@@ -212,12 +212,15 @@ EXPORTS
 	DeeFileBuffer_New@12=_DeeFileBuffer_New@12
 	DeeFileBuffer_SetMode@12=_DeeFileBuffer_SetMode@12
 	DeeFileBuffer_SyncTTYs@4=_DeeFileBuffer_SyncTTYs@4
+	DeeFilePrinter_Close@4=_DeeFilePrinter_Close@4
+	DeeFilePrinter_New@8=_DeeFilePrinter_New@8
+	DeeFileReader_NewMemory@12=_DeeFileReader_NewMemory@12
+	DeeFileReader_NewObjectBuffer@12=_DeeFileReader_NewObjectBuffer@12
 	DeeFileWriter_GetBytes@4=_DeeFileWriter_GetBytes@4
 	DeeFileWriter_GetData@4=_DeeFileWriter_GetData@4
 	DeeFileWriter_GetString@4=_DeeFileWriter_GetString@4
 	DeeFileWriter_New@4=_DeeFileWriter_New@4
 	DeeFile_Close@4=_DeeFile_Close@4
-	DeeFile_ClosePrinter@4=_DeeFile_ClosePrinter@4
 	DeeFile_DefaultStd@4=_DeeFile_DefaultStd@4
 	DeeFile_Filename@4=_DeeFile_Filename@4
 	DeeFile_GetSize@4=_DeeFile_GetSize@4
@@ -230,10 +233,6 @@ EXPORTS
 	DeeFile_IsAtty@4=_DeeFile_IsAtty@4
 	DeeFile_Open@12=_DeeFile_Open@12
 	DeeFile_OpenFd@16=_DeeFile_OpenFd@16
-	DeeFile_OpenObjectBuffer@12=_DeeFile_OpenObjectBuffer@12
-	DeeFile_OpenObjectMemory@12=_DeeFile_OpenObjectMemory@12
-	DeeFile_OpenPrinter@8=_DeeFile_OpenPrinter@8
-	DeeFile_OpenRoMemory@8=_DeeFile_OpenRoMemory@8
 	DeeFile_OpenString@12=_DeeFile_OpenString@12
 	DeeFile_PRead@20=_DeeFile_PRead@20
 	DeeFile_PReadAll@20=_DeeFile_PReadAll@20
@@ -259,7 +258,6 @@ EXPORTS
 	DeeFile_ReadBytes@12=_DeeFile_ReadBytes@12
 	DeeFile_ReadLine@12=_DeeFile_ReadLine@12
 	DeeFile_Readf@16=_DeeFile_Readf@16
-	DeeFile_ReleaseMemory@4=_DeeFile_ReleaseMemory@4
 	DeeFile_ResetStd@0=_DeeFile_ResetStd@0
 	DeeFile_Seek@16=_DeeFile_Seek@16
 	DeeFile_SetStd@8=_DeeFile_SetStd@8
@@ -640,6 +638,8 @@ EXPORTS
 	DeeMapFile_TryTruncate@8=_DeeMapFile_TryTruncate@8
 	DeeMap_OperatorContainsAsBool@8=_DeeMap_OperatorContainsAsBool@8
 	DeeMem_ClearCaches@4=_DeeMem_ClearCaches@4
+	DeeMemoryFile_Close@4=_DeeMemoryFile_Close@4
+	DeeMemoryFile_New@8=_DeeMemoryFile_New@8
 	DeeMethodFlags_VerifyConstCallCondition@20=_DeeMethodFlags_VerifyConstCallCondition@20
 	DeeModule_AddLibPath@4=_DeeModule_AddLibPath@4
 	DeeModule_AddLibPathString@4=_DeeModule_AddLibPathString@4

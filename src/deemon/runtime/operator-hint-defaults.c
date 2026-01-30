@@ -28,7 +28,7 @@
 #include <deemon/error-rt.h>        /* DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>            /* DeeFile_WriteAll */
-#include <deemon/filetypes.h>       /* DeeFileWriter_GetString, DeeFile_* */
+#include <deemon/filetypes.h>       /* DeeFilePrinter_Close, DeeFilePrinter_New, DeeFileWriter_GetString, DeeFileWriter_New, Dee_FILE_WRITER_HINT_STRING */
 #include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
 #include <deemon/int.h>             /* DeeInt_*, Dee_INT_SIGNED, Dee_INT_UNSIGNED */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
@@ -373,14 +373,14 @@ instance_call_with_file_printer(DeeObject *self, DeeObject *func,
 		return 0;
 	}
 
-	printer_file = DeeFile_OpenPrinter(printer, arg);
+	printer_file = DeeFilePrinter_New(printer, arg);
 	if unlikely(!printer_file)
 		goto err;
 	status = DeeObject_ThisCall(func, self, 1, &printer_file);
 	if unlikely(!status)
 		goto err_printer_file;
 	Dee_Decref(status);
-	return (Dee_ssize_t)DeeFile_ClosePrinter(printer_file);
+	return (Dee_ssize_t)DeeFilePrinter_Close(printer_file);
 err_printer_file:
 	Dee_Decref(printer_file);
 err:

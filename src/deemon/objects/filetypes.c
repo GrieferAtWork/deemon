@@ -29,22 +29,22 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/file.h>               /* DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t, GETC_EOF, GETC_ERR */
-#include <deemon/filetypes.h>          /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES, DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_* */
+#include <deemon/filetypes.h>          /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES, DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_*, Dee_FILE_WRITER_HINT_BYTES */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/mapfile.h>            /* DeeMapFile* */
-#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_CASE_WIDTH_nBYTE, Dee_STRING_*, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_CASE_WIDTH_nBYTE, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_MAXLEN, Dee_unicode_readutf8_chk, Dee_unicode_utf8seqlen */
-#include <deemon/system-features.h>    /* memcmp, memcpy*, mempcpy, readall */
+#include <deemon/system-features.h>    /* bzero, memcmp, memcpy*, mempcpy, strcmp */
 #include <deemon/system.h>             /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
 #include <deemon/util/atomic.h>        /* atomic_add, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
-#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__ */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__, __SIZEOF_SIZE_T__ */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
@@ -81,7 +81,7 @@ mf_init(DeeMemoryFileObject *__restrict self) {
 
 PRIVATE NONNULL((1)) void DCALL
 mf_fini(DeeMemoryFileObject *__restrict self) {
-	/* We only get here if `DeeFile_ReleaseMemory()'
+	/* We only get here if `DeeMemoryFile_Close()'
 	 * was used to duplicate the memory block! */
 	Dee_Free((void *)self->mf_begin);
 }
@@ -315,15 +315,15 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 /* Open a read-only view for raw memory contained within the given data-block.
  * The returned file can be used to access said data in a read-only fashion,
  * however since the data isn't copied, before that data gets freed, you must
- * call `DeeFile_ReleaseMemory()' to inform the view of this happened, while
+ * call `DeeMemoryFile_Close()' to inform the view of this happened, while
  * simultaneously decrementing its reference counter by ONE.
- * `DeeFile_ReleaseMemory()' will automatically determine the proper course
+ * `DeeMemoryFile_Close()' will automatically determine the proper course
  * of action, dependent on whether the file is being shared with some other
  * part of deemon. If it is, it will replace the view's data with a heap-allocated
  * copy of that data, and if that isn't possible, modify the view to represent
  * an empty data set. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
-DeeFile_OpenRoMemory(void const *data, size_t data_size) {
+DeeMemoryFile_New(void const *data, size_t data_size) {
 	DREF DeeMemoryFileObject *result;
 	result = DeeObject_MALLOC(DeeMemoryFileObject);
 	if unlikely(!result)
@@ -338,7 +338,7 @@ done:
 }
 
 PUBLIC NONNULL((1)) void DCALL
-DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
+DeeMemoryFile_Close(DREF /*File*/ DeeObject *__restrict self) {
 	DeeMemoryFileObject *me = (DeeMemoryFileObject *)self;
 	ASSERT_OBJECT_TYPE_EXACT(self, (DeeTypeObject *)&DeeMemoryFile_Type);
 	if (!DeeObject_IsShared(me)) {
@@ -863,7 +863,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
  * This stream assumes that data is immutable, and owned by `data_owner'.
  *
  * The best example for a type that fits these requirements is `string'
- * This function greatly differs from `DeeFile_OpenRoMemory()', in that
+ * This function greatly differs from `DeeMemoryFile_New()', in that
  * the referenced data is shared with an explicit object, rather that
  * being held using a ticket-system, where the caller must manually
  * inform the memory stream when data is supposed to get released.
@@ -872,8 +872,8 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
  * stream indirectly references a given data-block, rather than having
  * to keep its own copy of some potentially humongous memory block. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*File*/ DeeObject *DCALL
-DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
-                         void const *data, size_t data_size) {
+DeeFileReader_NewMemory(DeeObject *__restrict data_owner,
+                              void const *data, size_t data_size) {
 	DREF DeeFileReaderObject *result;
 	result = DeeObject_MALLOC(DeeFileReaderObject);
 	if unlikely(!result)
@@ -889,11 +889,11 @@ done:
 	return Dee_AsObject(result);
 }
 
-/* Similar to `DeeFile_OpenObjectMemory()', but used
+/* Similar to `DeeFileReader_NewMemory()', but used
  * to open a generic object using the buffer-interface. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
-DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
-                         size_t start, size_t end) {
+DeeFileReader_NewObjectBuffer(DeeObject *__restrict data,
+                              size_t start, size_t end) {
 	DREF DeeFileReaderObject *result;
 	result = DeeObject_MALLOC(DeeFileReaderObject);
 	if unlikely(!result)
@@ -3231,7 +3231,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
-				/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFile_ClosePrinter()') */
+				/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFilePrinter_Close()') */
 			),
 			/* .tp_dtor        = */ NULL,
 			/* .tp_assign      = */ NULL,
@@ -3274,7 +3274,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 
 /* Construct a new printer-wrapper for `printer' and `arg' */
 PUBLIC WUNUSED NONNULL((1)) DREF /*FilePrinter*/ DeeObject *DCALL
-DeeFile_OpenPrinter(Dee_formatprinter_t printer, void *arg) {
+DeeFilePrinter_New(Dee_formatprinter_t printer, void *arg) {
 	DREF DeeFilePrinterObject *result;
 	result = DeeObject_MALLOC(DeeFilePrinterObject);
 	if unlikely(!result)
@@ -3297,7 +3297,7 @@ done:
  * 
  * @return: * : The total sum of return values of the underlying printer. */
 PUBLIC NONNULL((1)) size_t DCALL
-DeeFile_ClosePrinter(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self) {
+DeeFilePrinter_Close(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self) {
 	DREF DeeFilePrinterObject *me = (DREF DeeFilePrinterObject *)self;
 	size_t result = atomic_read(&me->fp_result); /* TODO: _with_shared_rwlock */
 	ASSERT_OBJECT_TYPE_EXACT((DeeObject *)me, (DeeTypeObject *)&DeeFilePrinter_Type);

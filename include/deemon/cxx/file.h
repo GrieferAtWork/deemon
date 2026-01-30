@@ -35,7 +35,7 @@
 #include <stddef.h>  /* NULL, size_t */
 
 /* Not *those* functions */
-/*!fixincludes fake_include "../system-features.h" // close, fileno, getc, isatty, open, pread, putc, pwrite, read, readall, sync, trunc, ungetc, write, writeall */
+/*!fixincludes fake_include "../system-features.h" // close, fileno, getc, isatty, open, pread, putc, pwrite, read, sync, trunc, ungetc, write, writeall */
 
 DEE_CXX_BEGIN
 

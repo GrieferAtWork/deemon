@@ -5030,7 +5030,7 @@ DECL_END
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
-#include <deemon/filetypes.h> /* DeeFile_OpenRoMemory, DeeFile_ReleaseMemory */
+#include <deemon/filetypes.h> /* DeeMemoryFile_Close, DeeMemoryFile_New */
 #include <deemon/gc.h>
 #include <deemon/list.h> /* DeeListObject, DeeList_* */
 #include <deemon/none.h>
@@ -6141,7 +6141,7 @@ DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_si
                            /*String*/ DeeObject *module_name) {
 	DREF DeeObject *source_stream;
 	DREF DeeModuleObject *result;
-	source_stream = DeeFile_OpenRoMemory(data, data_size);
+	source_stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!source_stream)
 		goto err;
 	result = DeeModule_OpenSourceStream(source_stream,
@@ -6150,7 +6150,7 @@ DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_si
 	                                    options,
 	                                    source_pathname,
 	                                    module_name);
-	DeeFile_ReleaseMemory(source_stream);
+	DeeMemoryFile_Close(source_stream);
 	return result;
 err:
 	return NULL;

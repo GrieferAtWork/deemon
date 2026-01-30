@@ -157,6 +157,9 @@
 #define EOF (-1)
 #endif /* !EOF */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
 
 typedef DeeSystemFileObject SystemFile;
@@ -1235,7 +1238,7 @@ err:
 
 LOCAL BOOL DCALL
 nt_write_all_file(HANDLE hFileHandle,
-                  unsigned char const *lpBuffer,
+                  byte_t const *lpBuffer,
                   size_t nNumberOfBytesToWrite) {
 	DWORD temp;
 	for (;;) {
@@ -1266,7 +1269,7 @@ err:
 
 LOCAL NONNULL((1, 2)) int DCALL
 nt_os_write_utf8_to_console(SystemFile *__restrict self,
-                            unsigned char const *__restrict buffer,
+                            byte_t const *__restrict buffer,
                             size_t bufsize) {
 	WCHAR stackBuffer[512];
 	DWORD num_widechars;
@@ -1355,14 +1358,14 @@ err:
 /* @return: * : The number UTF-8! bytes processed. */
 PRIVATE NONNULL((1, 2)) size_t DCALL
 nt_write_utf8_to_console(SystemFile *__restrict self,
-                         unsigned char const *__restrict buffer,
+                         byte_t const *__restrict buffer,
                          size_t bufsize) {
-	unsigned char const *iter;
-	unsigned char const *end;
+	byte_t const *iter;
+	byte_t const *end;
 	size_t result;
 	end = (iter = buffer) + bufsize;
 	while (iter < end) {
-		uint8_t chr = *iter;
+		byte_t chr = *iter;
 		uint8_t len = Dee_unicode_utf8seqlen_safe[chr];
 		ASSERT(len != 0);
 		if (len > (size_t)(end - iter))
@@ -1382,21 +1385,21 @@ nt_append_pending_utf8(SystemFile *__restrict self,
                        size_t bufsize) {
 	size_t pending_count;
 	ASSERTF(bufsize <= COMPILER_LENOF(self->sf_pending),
-	        "A non-encodable unicode sequence that is longer than 7 bytes? WTF?");
+	        "A non-encodeable unicode sequence that is longer than 7 bytes? WTF?");
 again:
 	pending_count = atomic_read(&self->sf_pendingc);
 	if unlikely(pending_count) {
 		size_t temp;
-		unsigned char with_pending[COMPILER_LENOF(self->sf_pending) * 2], *p;
+		byte_t with_pending[COMPILER_LENOF(self->sf_pending) * 2], *p;
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
-		p = (unsigned char *)mempcpyc(with_pending, self->sf_pending,
-		                              pending_count, sizeof(unsigned char));
-		memcpyc(p, buffer, bufsize, sizeof(unsigned char));
+		p = (byte_t *)mempcpyc(with_pending, self->sf_pending,
+		                       pending_count, sizeof(byte_t));
+		memcpyc(p, buffer, bufsize, sizeof(byte_t));
 		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, pending_count, 0))
 			goto again;
 		temp = nt_write_utf8_to_console(self, with_pending, pending_count + bufsize);
 		if unlikely(temp == (size_t)-1) {
-			atomic_cmpxch(&self->sf_pendingc, 0, (unsigned char)pending_count);
+			atomic_cmpxch(&self->sf_pendingc, 0, (byte_t)pending_count);
 			goto err;
 		}
 		pending_count += bufsize;
@@ -1406,8 +1409,8 @@ again:
 		if unlikely(pending_count)
 			return nt_append_pending_utf8(self, with_pending + temp, pending_count);
 	} else {
-		memcpyc(self->sf_pending, buffer, bufsize, sizeof(unsigned char));
-		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, 0, (unsigned char)bufsize))
+		memcpyc(self->sf_pending, buffer, bufsize, sizeof(byte_t));
+		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, 0, (byte_t)bufsize))
 			goto again;
 	}
 	return 0;
@@ -1420,26 +1423,24 @@ LOCAL NONNULL((1, 2)) int DCALL
 nt_write_to_console(SystemFile *__restrict self,
                     void const *__restrict buffer,
                     size_t bufsize) {
-	uint8_t pending_count;
+	byte_t pending_count;
 	size_t num_written;
 again:
 	if (!bufsize)
 		return 0;
 	pending_count = atomic_read(&self->sf_pendingc);
 	if (pending_count) {
-		unsigned char with_pending[64], *p;
+		byte_t with_pending[64], *p;
 		size_t total_length;
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
-		p = (unsigned char *)mempcpyc(with_pending, self->sf_pending, pending_count, sizeof(char));
+		p = (byte_t *)mempcpyc(with_pending, self->sf_pending, pending_count, sizeof(char));
 		total_length = pending_count + bufsize;
 		if (total_length > COMPILER_LENOF(with_pending))
 			total_length = COMPILER_LENOF(with_pending);
 		memcpyc(p, buffer, total_length - pending_count, sizeof(char));
 		if unlikely(!atomic_cmpxch_weak_or_write(&self->sf_pendingc, pending_count, 0))
 			goto again;
-		num_written = nt_write_utf8_to_console(self,
-		                                    with_pending,
-		                                    total_length);
+		num_written = nt_write_utf8_to_console(self, with_pending, total_length);
 		if unlikely(num_written == (size_t)-1) {
 			atomic_cmpxch(&self->sf_pendingc, 0, pending_count);
 			goto err;
@@ -1447,26 +1448,24 @@ again:
 		ASSERT(num_written <= total_length);
 		if (num_written < total_length) {
 			if (nt_append_pending_utf8(self,
-			                        with_pending + num_written,
-			                        total_length - num_written))
+			                           with_pending + num_written,
+			                           total_length - num_written))
 				goto err;
 		}
 		total_length -= pending_count;
 		ASSERT(total_length <= bufsize);
-		buffer = (void *)((uint8_t *)buffer + total_length);
+		buffer = (byte_t const *)buffer + total_length;
 		bufsize -= total_length;
 		goto again;
 	}
-	num_written = nt_write_utf8_to_console(self,
-	                                       (unsigned char *)buffer,
-	                                       bufsize);
+	num_written = nt_write_utf8_to_console(self, (byte_t const *)buffer, bufsize);
 	if unlikely(num_written == (size_t)-1)
 		goto err;
 	ASSERT(num_written <= bufsize);
 	if (num_written < bufsize) {
 		if (nt_append_pending_utf8(self,
-		                        (uint8_t *)buffer + num_written,
-		                        bufsize - num_written))
+		                           (byte_t const *)buffer + num_written,
+		                           bufsize - num_written))
 			goto err;
 	}
 	return 0;

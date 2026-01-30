@@ -28,6 +28,7 @@
 /**/
 
 #include <deemon/alloc.h>              /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
+#include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/compiler.h>
@@ -35,12 +36,11 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/bytes.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/error_types.h>        /* Dee_compiler_error_object */
 #include <deemon/exec.h>               /* DeeExec_CompileModuleMemory, DeeExec_RUNMODE_DEFAULT, DeeModule_AddLibPathString, DeeModule_GetPath, Dee_GetArgv, Dee_Initialize, Dee_RUNATEXIT_FRUNALL, Dee_RunAtExit, Dee_SHUTDOWN_F_FAST, Dee_SHUTDOWN_F_NORMAL, Dee_SetArgv, Dee_Shutdown */
 #include <deemon/file.h>               /* DeeFileObject, DeeFile_*, Dee_STD*, OPEN_F* */
-#include <deemon/filetypes.h>          /* DeeFileWriter_GetString, DeeFileWriter_New */
+#include <deemon/filetypes.h>          /* DeeFileWriter_GetBytes, DeeFileWriter_New, Dee_FILE_WRITER_HINT_BYTES */
 #include <deemon/format.h>             /* DeeFormat_Printf, DeeFormat_Repeat */
 #include <deemon/heap.h>               /* DeeHeap_* */
 #include <deemon/int.h>                /* Dee_INT_STRING, Dee_INT_STRING_FTRY, Dee_TAtoi */
@@ -48,7 +48,7 @@
 #include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>
 #include <deemon/string.h>             /* DEFINE_STRING, DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, bcmp, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
 #include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 

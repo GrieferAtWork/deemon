@@ -7535,7 +7535,7 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC(void) {
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
- * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
+ * @param: method: One of `DeeHeap_DumpMemoryLeaks_*'
  * @return: * : The total amount of memory leaked (in bytes) */
 #define DeeHeap_DumpMemoryLeaks_DEFINED
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
@@ -8115,7 +8115,7 @@ again:
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
- * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
+ * @param: method: One of `DeeHeap_DumpMemoryLeaks_*'
  * @return: * : The total amount of memory leaked (in bytes) */
 #define DeeHeap_DumpMemoryLeaks_DEFINED
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
@@ -8933,7 +8933,7 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
  * never Dee_Free()'d, nor untracked using `Dee_UntrackAlloc()'.
  * Information about leaks is printed using `Dee_DPRINTF()'.
  *
- * @param: method: How One of `DeeHeap_DumpMemoryLeaks_*'
+ * @param: method: One of `DeeHeap_DumpMemoryLeaks_*'
  * @return: * : The total amount of memory leaked (in bytes) */
 PUBLIC size_t DCALL DeeHeap_DumpMemoryLeaks(unsigned int method) {
 	(void)method;

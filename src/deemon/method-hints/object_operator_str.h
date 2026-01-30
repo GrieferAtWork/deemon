@@ -118,14 +118,14 @@ instance_call_with_file_printer(DeeObject *self, DeeObject *func,
 		return 0;
 	}
 
-	printer_file = DeeFile_OpenPrinter(printer, arg);
+	printer_file = DeeFilePrinter_New(printer, arg);
 	if unlikely(!printer_file)
 		goto err;
 	status = DeeObject_ThisCall(func, self, 1, &printer_file);
 	if unlikely(!status)
 		goto err_printer_file;
 	Dee_Decref(status);
-	return (Dee_ssize_t)DeeFile_ClosePrinter(printer_file);
+	return (Dee_ssize_t)DeeFilePrinter_Close(printer_file);
 err_printer_file:
 	Dee_Decref(printer_file);
 err:

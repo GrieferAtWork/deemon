@@ -28,7 +28,7 @@
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_PRINT_HANDLEINTR, ERROR_PRINT_HANDLEINTR */
 #include <deemon/exec.h>            /* DeeExec_*, DeeModule_ClearLibPath, Dee_RUNATEXIT_FDONTRUN, Dee_RUNATEXIT_FRUNALL, Dee_SHUTDOWN_F_FAST */
 #include <deemon/file.h>            /* DeeFile_* */
-#include <deemon/filetypes.h>       /* DeeFile_OpenRoMemory, DeeFile_ReleaseMemory */
+#include <deemon/filetypes.h>       /* DeeMemoryFile_Close, DeeMemoryFile_New */
 #include <deemon/gc.h>              /* DeeGC_Collect, DeeGC_IsEmptyWithoutDex */
 #include <deemon/heap.h>            /* DeeHeap_Trim */
 #include <deemon/module.h>          /* DeeModule*, Dee_compiler_options, Dee_module_object */
@@ -110,11 +110,11 @@ DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_s
                             struct Dee_compiler_options *options, DeeObject *default_symbols) {
 	DREF DeeModuleObject *result;
 	DREF DeeObject *stream;
-	stream = DeeFile_OpenRoMemory(data, data_size);
+	stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!stream)
 		goto err;
 	result = DeeExec_CompileModuleStream(stream, start_line, start_col, mode, options, default_symbols);
-	DeeFile_ReleaseMemory(stream);
+	DeeMemoryFile_Close(stream);
 	return result;
 err:
 	return NULL;
@@ -367,7 +367,7 @@ DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                   DeeObject *module_name) {
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
-	stream = DeeFile_OpenRoMemory(data, data_size);
+	stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!stream)
 		goto err;
 	result = DeeExec_RunStream(stream,
@@ -380,7 +380,7 @@ DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
 	                           default_symbols,
 	                           source_pathname,
 	                           module_name);
-	DeeFile_ReleaseMemory(stream);
+	DeeMemoryFile_Close(stream);
 	return result;
 err:
 	return NULL;
@@ -398,7 +398,7 @@ DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                         size_t module_namesize) {
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
-	stream = DeeFile_OpenRoMemory(data, data_size);
+	stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!stream)
 		goto err;
 	result = DeeExec_RunStreamString(stream,
@@ -413,7 +413,7 @@ DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
 	                                 source_pathsize,
 	                                 module_name,
 	                                 module_namesize);
-	DeeFile_ReleaseMemory(stream);
+	DeeMemoryFile_Close(stream);
 	return result;
 err:
 	return NULL;
@@ -428,7 +428,7 @@ DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_s
                             DeeObject *module_name) {
 	DREF DeeModuleObject *result;
 	DREF DeeObject *stream;
-	stream = DeeFile_OpenRoMemory(data, data_size);
+	stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!stream)
 		goto err;
 	result = DeeExec_CompileModuleStream(stream,
@@ -439,7 +439,7 @@ DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_s
 	                                     default_symbols,
 	                                     source_pathname,
 	                                     module_name);
-	DeeFile_ReleaseMemory(stream);
+	DeeMemoryFile_Close(stream);
 	return result;
 err:
 	return NULL;
@@ -454,7 +454,7 @@ DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data
                               DeeObject *module_name) {
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
-	stream = DeeFile_OpenRoMemory(data, data_size);
+	stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!stream)
 		goto err;
 	result = DeeExec_CompileFunctionStream(stream,
@@ -465,7 +465,7 @@ DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data
 	                                       default_symbols,
 	                                       source_pathname,
 	                                       module_name);
-	DeeFile_ReleaseMemory(stream);
+	DeeMemoryFile_Close(stream);
 	return result;
 err:
 	return NULL;
@@ -482,7 +482,7 @@ DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t 
                                   size_t module_namesize) {
 	DREF DeeModuleObject *result;
 	DREF DeeObject *stream;
-	stream = DeeFile_OpenRoMemory(data, data_size);
+	stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!stream)
 		goto err;
 	result = DeeExec_CompileModuleStreamString(stream,
@@ -495,7 +495,7 @@ DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t 
 	                                           source_pathsize,
 	                                           module_name,
 	                                           module_namesize);
-	DeeFile_ReleaseMemory(stream);
+	DeeMemoryFile_Close(stream);
 	return result;
 err:
 	return NULL;
@@ -512,7 +512,7 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_
                                     size_t module_namesize) {
 	DREF DeeObject *result;
 	DREF DeeObject *stream;
-	stream = DeeFile_OpenRoMemory(data, data_size);
+	stream = DeeMemoryFile_New(data, data_size);
 	if unlikely(!stream)
 		goto err;
 	result = DeeExec_CompileFunctionStreamString(stream,
@@ -525,7 +525,7 @@ DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_
 	                                             source_pathsize,
 	                                             module_name,
 	                                             module_namesize);
-	DeeFile_ReleaseMemory(stream);
+	DeeMemoryFile_Close(stream);
 	return result;
 err:
 	return NULL;

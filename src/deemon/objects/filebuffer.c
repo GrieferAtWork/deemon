@@ -298,7 +298,7 @@ err:
  * @param: file: The file that is meant to be buffered.
  *               NOTE: If this is another file buffer, its pointed-to
  *                     file is unwound, so-long at it hasn't been closed.
- * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with
+ * @param: mode: One of `Dee_FILE_BUFFER_MODE_*', optionally or'd with
  *                      `Dee_FILE_BUFFER_FREADONLY', `Dee_FILE_BUFFER_FSYNC' and
  *                      `Dee_FILE_BUFFER_FCLOFILE'
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
@@ -321,7 +321,7 @@ err_r:
 }
 
 /* Change the operations mode of a given buffer.
- * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with `Dee_FILE_BUFFER_FSYNC'
+ * @param: mode: One of `Dee_FILE_BUFFER_MODE_*', optionally or'd with `Dee_FILE_BUFFER_FSYNC'
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
@@ -329,12 +329,12 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 	int result = 0;
 	byte_t *new_buffer;
 	Buffer *me = (Buffer *)self;
+	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeFileBuffer_Type);
 	ASSERT((mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_NONE ||
 	       (mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_FULL ||
 	       (mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_LINE ||
 	       (mode & ~(Dee_FILE_BUFFER_FSYNC)) == Dee_FILE_BUFFER_MODE_AUTO ||
-	       mode == Dee_FILE_BUFFER_MODE_KEEP);
-	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeFileBuffer_Type);
+	       (mode /*                      */) == Dee_FILE_BUFFER_MODE_KEEP);
 	if (DeeFileBuffer_LockWrite(me))
 		return -1;
 	result = buffer_sync_nolock(me, BUFFER_SYNC_FERROR_IF_CLOSED);
@@ -401,7 +401,7 @@ err:
 /* Synchronize unwritten data of all interactive TTY devices.
  * NOTE: The first time a buffered TTY device is written to,
  *       this function is registered with `Dee_AtExit()'.
- * NOTE: This function can be called as `(File from deemon).buffer.sync()'
+ * NOTE: This function can be called as `import.deemon.File.Buffer.sync()'
  * @return: 1 : `or_unlock_me' was non-NULL, and had to be unlocked
  * @return: 0 : Success
  * @return: -1: Error */
