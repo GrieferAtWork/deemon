@@ -2167,6 +2167,8 @@ PRIVATE struct type_method tpconst writer_methods[] = {
 	TYPE_METHOD_F("allocated", &writer_allocated, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns the currently allocated buffer size (in bytes)"),
+	/* TODO: write()    -- same as File.write(), but automatically set `hint = "bytes"' */
+	/* TODO: writeall() -- same as File.writeall(), but automatically set `hint = "bytes"' */
 	TYPE_METHOD_END
 };
 
@@ -2869,6 +2871,26 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
+writer_pread(DeeFileWriterObject *self, void *buffer,
+             size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
+	size_t result = 0;
+	DREF DeeBytesObject *bytes;
+	(void)flags;
+	bytes = (DREF DeeBytesObject *)DeeFileWriter_GetBytes((DeeObject *)self);
+	if unlikely(!bytes)
+		goto err;
+	if (pos < (Dee_pos_t)DeeBytes_SIZE(bytes)) {
+		result = (size_t)((Dee_pos_t)DeeBytes_SIZE(bytes) - pos);
+		if (result > bufsize)
+			result = bufsize;
+		memcpy(buffer, DeeBytes_DATA(bytes) + (size_t)pos, result);
+	}
+	return result;
+err:
+	return (size_t)-1;
+}
+
 #ifndef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 #define writer_deldata writer_delstring
 #endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
@@ -2941,7 +2963,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 	/* .ft_sync   = */ NULL,
 	/* .ft_trunc  = */ NULL,
 	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *__restrict))&writer_deldata,
-	/* .ft_pread  = */ NULL,
+	/* .ft_pread  = */ (size_t (DCALL *)(DeeFileObject *__restrict, void *, size_t, Dee_pos_t, Dee_ioflag_t))&writer_pread,
 	/* .ft_pwrite = */ NULL,
 	/* .ft_getc   = */ NULL,
 	/* .ft_ungetc = */ NULL,
