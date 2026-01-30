@@ -1973,8 +1973,8 @@ compare_escaped_rev(char const *lf_escaped_text_end,
 #define COMMENT_TYPE_BLOCK_START 1 /* `[[[deemon*' */
 #define COMMENT_TYPE_BLOCK_END   2 /* `[[[end]]]' */
 PRIVATE WUNUSED int DCALL get_comment_type(void) {
-	char *comment_start;
-	char *comment_end;
+	char const *comment_start;
+	char const *comment_end;
 	if (tok != TOK_COMMENT)
 		goto is_other;
 	comment_start = token.t_begin + 1;
@@ -2147,12 +2147,26 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	/* Search for the block-end-token. */
 	scan_recursion = 0;
 	for (;;) {
-		tok_t next = yield();
+		tok_t next = TPPLexer_YieldRaw();
+		while (next == '#' && token.t_file->f_kind != TPPFILE_KIND_MACRO && TPPLexer_AtStartOfLine()) {
+			/* Skip preprocessor directive */
+			uint32_t old_flags = TPPLexer_Current->l_flags;
+			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
+			for (;;) {
+				next = TPPLexer_YieldRaw();
+				if (next == '\n' || next < 0 || next == TOK_EOF)
+					break;
+			}
+			TPPLexer_Current->l_flags = old_flags;
+			if (next == '\n')
+				next = TPPLexer_YieldRaw();
+		}
 		if (next < 0)
 			goto err;
 		if (next == TOK_EOF)
 			goto done; /* Block-end not found prior to end-of-file.
 			            * TODO: Emit a warning, telling the user that the end is missing. */
+
 		if (token.t_file == file) {
 			int type = get_comment_type();
 			if (type == COMMENT_TYPE_BLOCK_START) {
@@ -2352,12 +2366,9 @@ try_exec_format_impl(DeeObject *__restrict stream,
 	if unlikely(!script_result)
 		goto err;
 
-	/* TODO: Copy a backup of the file into
-	 *       some temporary-file-folder... */
-
 	{
 		char const *result_start, *result_end;
-		size_t new_text_size;
+		size_t new_text_size, old_text_size;
 		result_start = (char const *)DeeBytes_DATA(script_result);
 		result_end   = result_start + DeeBytes_SIZE(script_result);
 
@@ -2366,13 +2377,24 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		       DeeUni_IsSpace(result_end[-1]))
 			--result_end;
 
+		/* Check if the new file-data is equal to what's already within the file.
+		 * If the two are identical, then we can skip actually modifying the file,
+		 * and thus not changing it's `st_mtime' timestamp. */
+		new_text_size = (size_t)(result_end - result_start);
+		old_text_size = (size_t)(override_end_ptr - override_start_ptr);
+		if ((new_text_size + (has_leading_linefeed ? 1 : 0)) == old_text_size &&
+		    (has_leading_linefeed ? override_end_ptr[-1] == '\n' : true) &&
+		    (bcmp(result_start, override_start_ptr, new_text_size) == 0))
+			goto after_file_rewrite;
+
+		/* XXX: Copy a backup of the file into some temporary folder... */
+
 		/* Now comes the part that it's been all about:
 		 * This is where we override the original source file's contents! */
 		if unlikely(DeeFile_SetPos(stream, override_start_pos) == (Dee_pos_t)-1)
 			goto err_script_result;
 
 		/* Write data to the stream. */
-		new_text_size = (size_t)(result_end - result_start);
 		if (DeeFile_WriteAll(stream, result_start, new_text_size) == (size_t)-1)
 			goto err_script_result_restore;
 
@@ -2384,18 +2406,18 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		}
 
 		/* Write all data we weren't supposed to override. */
-		if (DeeFile_WriteAll(stream,
-		                     override_end_ptr,
+		if (DeeFile_WriteAll(stream, override_end_ptr,
 		                     (size_t)(file->f_end - override_end_ptr)) == (size_t)-1)
 			goto err_script_result_restore;
-		if (new_text_size < (size_t)(override_end_ptr - override_start_ptr)) {
+		if (new_text_size < old_text_size) {
 			/* Must truncate the file to its new size. */
 			if (DeeFile_TruncHere(stream, NULL))
 				goto err_script_result_restore;
 		}
-	}
 
-	/* XXX: Delete the backup? */
+		/* XXX: Delete the backup? */
+	}
+after_file_rewrite:
 
 	Dee_Decref(script_result);
 done:
