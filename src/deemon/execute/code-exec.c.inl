@@ -6885,9 +6885,8 @@ do_prefix_cmpxch_ub_c:
 								DISPATCH();
 							}
 #endif /* !__OPTIMIZE_SIZE__ */
-							if (ok) {
+							if (ok)
 								goto target_ASM_PUSH_TRUE;
-							}
 							goto target_ASM_PUSH_FALSE;
 						}
 

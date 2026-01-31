@@ -82,9 +82,9 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 	                          DeeModule_IMPORT_F_ERECUR,
 	                          inner_compiler_options);
 	if unlikely(!DeeModule_IMPORT_ISOK(result)) {
-		if unlikely(result == DeeModule_IMPORT_ERROR) {
+		if unlikely(result == DeeModule_IMPORT_ERROR)
 			goto err;
-		} else if (result == DeeModule_IMPORT_ENOENT) {
+		if (result == DeeModule_IMPORT_ENOENT) {
 			if (WARNAT(loc, W_MODULE_NOT_FOUND, module_name))
 				goto err;
 		} else if (result == DeeModule_IMPORT_ERECUR) {

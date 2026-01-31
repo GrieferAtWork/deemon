@@ -192,11 +192,9 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		Dee_ssize_t result;
 		Dee_bytes_printer_init(&self->acu_value.v_bytes);
 		self->acu_mode = Dee_ACCU_BYTES;
-		DeeBytes_IncUse(first);
 		result = Dee_bytes_printer_append(&self->acu_value.v_bytes,
 		                                  DeeBytes_DATA(first),
 		                                  DeeBytes_SIZE(first));
-		DeeBytes_DecUse(first);
 		Dee_Decref(first);
 		if unlikely(result < 0)
 			goto err;

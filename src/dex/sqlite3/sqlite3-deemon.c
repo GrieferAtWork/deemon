@@ -46,6 +46,9 @@
 #include <stddef.h> /* NULL, ptrdiff_t, size_t */
 #include <stdint.h> /* int64_t */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
 
 #if __SIZEOF_SIZE_T__ > 4
@@ -101,7 +104,7 @@ err:
 
 PRIVATE void _dee_sqlite3_bind_bytes_decref(void *blob) {
 	DREF DeeBytesObject *bytes;
-	bytes = COMPILER_CONTAINER_OF((__BYTE_TYPE__ *)blob, DeeBytesObject, b_data);
+	bytes = COMPILER_CONTAINER_OF((byte_t *)blob, DeeBytesObject, b_data);
 	Dee_Decref(bytes);
 }
 
@@ -109,12 +112,11 @@ INTERN WUNUSED NONNULL((1, 4)) int DCALL
 dee_sqlite3_bind_bytes(DB *__restrict db, sqlite3_stmt *stmt,
                        int index, DeeBytesObject *self) {
 	int rc;
-	__BYTE_TYPE__ *data;
+	byte_t *data;
 	size_t size;
 again:
 	if unlikely(DB_Lock(db))
 		goto err;
-	DeeBytes_IncUse(self);
 	data = DeeBytes_DATA(self);
 	size = DeeBytes_SIZE(self);
 	if (data == self->b_data) {
@@ -125,7 +127,6 @@ again:
 	} else {
 		rc = sqlite3_bind_blobSIZ(stmt, index, data, size, SQLITE_TRANSIENT);
 	}
-	DeeBytes_DecUse(self);
 	if unlikely(rc != SQLITE_OK)
 		goto err_rc;
 	DB_Unlock(db);

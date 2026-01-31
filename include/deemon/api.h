@@ -441,17 +441,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_ORDERED_HASHSET */
 
-/* Experimental feature switch: "Bytes" has an in-use counter that is
- * non-zero whenever some thread is accessing the pointed-to memory. */
-#if (!defined(CONFIG_EXPERIMENTAL_BYTES_INUSE) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_BYTES_INUSE))
-#if 0 /* TODO: Implementation is incomplete */
-#define CONFIG_EXPERIMENTAL_BYTES_INUSE
-#else
-#define CONFIG_NO_EXPERIMENTAL_BYTES_INUSE
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_BYTES_INUSE */
-
 /* Experimental feature switch: Use custom heap implementation based on
  * dlmalloc, rather than the host system's native malloc(3). (needed in
  * order to support `DeeHeap_RegionOf()') */

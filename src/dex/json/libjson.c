@@ -795,7 +795,7 @@ jseq_or_map_init_parser(DeeJsonSequenceObject *__restrict self,
 	if (DeeBytes_Check(data)) {
 		/* Parse raw bytes as JSON. */
 		void *start = DeeBytes_DATA(data);
-		void *end   = DeeBytes_END(data); /* TODO: CONFIG_EXPERIMENTAL_BYTES_INUSE */
+		void *end   = DeeBytes_END(data);
 		libjson_parser_init(&self->js_parser, start, end);
 		Dee_Incref(data);
 	} else if (DeeFile_Check(data)) {
@@ -803,7 +803,7 @@ jseq_or_map_init_parser(DeeJsonSequenceObject *__restrict self,
 		data = DeeFile_ReadBytes(data, (size_t)-1, true);
 		if unlikely(!data)
 			goto err;
-		start = DeeBytes_DATA(data); /* TODO: CONFIG_EXPERIMENTAL_BYTES_INUSE */
+		start = DeeBytes_DATA(data);
 		end   = DeeBytes_END(data);
 		libjson_parser_init(&self->js_parser, start, end);
 	} else {
@@ -3561,15 +3561,12 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjson_parse_f_impl(DeeOb
 	DeeJsonParser parser;
 	if (DeeBytes_Check(data)) {
 		/* Parse raw bytes as JSON. */
-		void *start, *end;
-		DeeBytes_IncUse(data);
-		start = DeeBytes_DATA(data);
-		end   = DeeBytes_END(data);
+		void *start = DeeBytes_DATA(data);
+		void *end   = DeeBytes_END(data);
 		libjson_parser_init(&parser.djp_parser, start, end);
 		parser.djp_owner = data;
 		result = json_parser_parse_maybe_into(&parser, into);
 		json_parser_fini(&parser.djp_parser);
-		DeeBytes_DecUse(data);
 	} else if (DeeString_Check(data)) {
 		/* Parse a given string as JSON. */
 		void const *start, *end;
@@ -3610,14 +3607,12 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjson_parse_f_impl(DeeOb
 		data = DeeFile_ReadBytes(data, (size_t)-1, true);
 		if unlikely(!data)
 			goto err;
-		DeeBytes_IncUse(data);
 		start = DeeBytes_DATA(data);
 		end   = DeeBytes_END(data);
 		libjson_parser_init(&parser.djp_parser, start, end);
 		parser.djp_owner = data;
 		result = json_parser_parse_maybe_into(&parser, into);
 		json_parser_fini(&parser.djp_parser);
-		DeeBytes_DecUse(data);
 		Dee_Decref_likely(data);
 	} else {
 		/* Convert mapping to DTO-like object. */

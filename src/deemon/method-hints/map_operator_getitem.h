@@ -354,13 +354,9 @@ string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) 
 	if (DeeString_Check(rhs))
 		return (DeeString_Hash(rhs) == lhs_hash && strcmp(lhs, DeeString_STR(rhs)) == 0);
 	if (DeeBytes_Check(rhs)) {
-		bool result;
 		size_t lhs_len = strlen(lhs);
-		DeeBytes_IncUse(rhs);
-		result = lhs_len == DeeBytes_SIZE(rhs) &&
-		         bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0;
-		DeeBytes_DecUse(rhs);
-		return result;
+		return lhs_len == DeeBytes_SIZE(rhs) &&
+		       bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0;
 	}
 	/* `string.operator ==' isn't implemented for any other types. */
 	return false;
@@ -509,12 +505,8 @@ string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_ha
 	if (DeeString_Check(rhs))
 		return (DeeString_Hash(rhs) == lhs_hash && DeeString_EqualsBuf(rhs, lhs, lhs_len));
 	if (DeeBytes_Check(rhs)) {
-		bool result;
-		DeeBytes_IncUse(rhs);
-		result = lhs_len == DeeBytes_SIZE(rhs) &&
-		         bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
-		DeeBytes_DecUse(rhs);
-		return result;
+		return lhs_len == DeeBytes_SIZE(rhs) &&
+		       bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
 	}
 	/* `string.operator ==' isn't implemented for any other types. */
 	return false;

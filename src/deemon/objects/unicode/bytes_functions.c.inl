@@ -105,12 +105,7 @@ err:
 typedef struct {
 	byte_t const *n_data;
 	size_t        n_size;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-	Dee_refcnt_t *n_inuse_p; /* [1..1] In-use counter that must be decremented when the needle is released */
-	byte_t       _n_buf[sizeof(size_t) > sizeof(Dee_refcnt_t) ? sizeof(size_t) : sizeof(Dee_refcnt_t)];
-#else /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	byte_t       _n_buf[sizeof(size_t)];
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 } Needle;
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -127,12 +122,6 @@ Needle_Serialize(Needle *__restrict self,
 #undef ADDROF
 }
 
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-#define release_needle(self) _DeeRefcnt_Dec((self)->n_inuse_p)
-#else /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
-#define release_needle(self) (void)0
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
-
 PRIVATE WUNUSED NONNULL((1, 2)) int
 (DCALL acquire_needle)(/*out*/ Needle *__restrict self,
                        /*in*/ DeeObject *__restrict ob) {
@@ -141,14 +130,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 		if unlikely(!self->n_data)
 			goto err;
 		self->n_size = WSTR_LENGTH(self->n_data) * sizeof(char);
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		self->n_inuse_p = (Dee_refcnt_t *)self->_n_buf;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	} else if (DeeBytes_Check(ob)) {
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		self->n_inuse_p = ((Bytes *)ob)->b_inuse_p;
-		_DeeRefcnt_Inc(self->n_inuse_p);
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		self->n_data = DeeBytes_DATA(ob);
 		self->n_size = DeeBytes_SIZE(ob);
 	} else {
@@ -159,9 +141,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 			goto err;
 		self->n_data = self->_n_buf;
 		self->n_size = 1;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		self->n_inuse_p = ((Bytes *)ob)->b_inuse_p;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
 	return 0;
 err:
@@ -178,7 +157,6 @@ bytes_contains(Bytes *self, DeeObject *needle_ob) {
 	                 DeeBytes_SIZE(self),
 	                 needle.n_data,
 	                 needle.n_size) != NULL;
-	release_needle(&needle);
 	return_bool(result);
 err:
 	return NULL;
@@ -205,23 +183,16 @@ bytes_find(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":find", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                           needle.n_data, needle.n_size);
-	release_needle(&needle);
-	if (result) {
-		DeeBytes_DecUse(self);
+	if (result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
-	}
 not_found:
-	DeeBytes_DecUse(self);
 	return DeeInt_NewMinusOne();
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -246,22 +217,16 @@ bytes_index(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":index", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                           needle.n_data, needle.n_size);
-	release_needle(&needle);
-	if likely(result) {
-		DeeBytes_DecUse(self);
+	if likely(result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
-	}
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needle, args.start, args.end);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -286,24 +251,18 @@ bytes_casefind(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casefind", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + args.start, mylen,
 	                                   needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if (result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
-		DeeBytes_DecUse(self);
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
-	DeeBytes_DecUse(self);
 	return DeeInt_NewMinusOne();
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -328,23 +287,18 @@ bytes_caseindex(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindex", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + args.start, mylen,
 	                                   needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if likely(result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
-		DeeBytes_DecUse(self);
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needle, args.start, args.end);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -369,23 +323,16 @@ bytes_rfind(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rfind", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                            needle.n_data, needle.n_size);
-	release_needle(&needle);
-	if (result) {
-		DeeBytes_DecUse(self);
+	if (result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
-	}
 not_found:
-	DeeBytes_DecUse(self);
 	return DeeInt_NewMinusOne();
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -410,22 +357,16 @@ bytes_rindex(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":rindex", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + args.start, mylen,
 	                            needle.n_data, needle.n_size);
-	release_needle(&needle);
-	if likely(result) {
-		DeeBytes_DecUse(self);
+	if likely(result)
 		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
-	}
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needle, args.start, args.end);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -450,24 +391,18 @@ bytes_caserfind(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfind", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + args.start, mylen,
 	                                    needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if (result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
-		DeeBytes_DecUse(self);
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
-	DeeBytes_DecUse(self);
 	return_none;
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -492,23 +427,18 @@ bytes_caserindex(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindex", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	mylen = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &mylen, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + args.start, mylen,
 	                                    needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if likely(result) {
 		size_t index = (size_t)(result - DeeBytes_DATA(self));
-		DeeBytes_DecUse(self);
 		return DeeTuple_NewII(index, index + needle.n_size);
 	}
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needle, args.start, args.end);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -533,7 +463,6 @@ bytes_findany_cb(void *arg, DeeObject *elem) {
 		search_size = data->bfad_size;
 	result = (byte_t *)memmemb(data->bfad_base, search_size,
 	                           needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if (result != NULL) {
 		size_t hit = (size_t)(result - data->bfad_base);
 		ASSERT(hit <= data->bfad_result);
@@ -565,21 +494,16 @@ bytes_findany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":findany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.bfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.bfad_size, not_found);
 	data.bfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bfad_result = data.bfad_size;
 	status = DeeObject_Foreach(args.needles, &bytes_findany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.bfad_result < data.bfad_size || status == -2)
 		return DeeInt_NewSize(args.start + data.bfad_result);
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	return_none;
 err:
 	return NULL;
@@ -604,21 +528,16 @@ bytes_indexany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":indexany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.bfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.bfad_size, not_found);
 	data.bfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bfad_result = data.bfad_size;
 	status = DeeObject_Foreach(args.needles, &bytes_findany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.bfad_result < data.bfad_size || status == -2)
 		return DeeInt_NewSize(args.start + data.bfad_result);
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needles, args.start, args.end);
 err:
 	return NULL;
@@ -644,7 +563,6 @@ bytes_casefindany_cb(void *arg, DeeObject *elem) {
 		search_size = data->bcfad_size;
 	result = (byte_t *)memasciicasemem(data->bcfad_base, search_size,
 	                                   needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if (result != NULL) {
 		size_t hit = (size_t)(result - data->bcfad_base);
 		ASSERT(hit <= data->bcfad_result);
@@ -677,24 +595,19 @@ bytes_casefindany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":casefindany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.bcfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.bcfad_size, not_found);
 	data.bcfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bcfad_result = data.bcfad_size;
 	data.bcfad_reslen = 0;
 	status = DeeObject_Foreach(args.needles, &bytes_casefindany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.bcfad_result < data.bcfad_size || status == -2) {
 		return DeeTuple_NewII(args.start + data.bcfad_result,
 		                      args.start + data.bcfad_result + data.bcfad_reslen);
 	}
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	return_none;
 err:
 	return NULL;
@@ -719,24 +632,19 @@ bytes_caseindexany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caseindexany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.bcfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.bcfad_size, not_found);
 	data.bcfad_base   = DeeBytes_DATA(self) + args.start;
 	data.bcfad_result = data.bcfad_size;
 	data.bcfad_reslen = 0;
 	status = DeeObject_Foreach(args.needles, &bytes_casefindany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.bcfad_result < data.bcfad_size || status == -2) {
 		return DeeTuple_NewII(args.start + data.bcfad_result,
 		                      args.start + data.bcfad_result + data.bcfad_reslen);
 	}
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needles, args.start, args.end);
 err:
 	return NULL;
@@ -756,7 +664,6 @@ bytes_rfindany_cb(void *arg, DeeObject *elem) {
 		goto err;
 	result = (byte_t *)memrmemb(data->brfad_base, data->brfad_size,
 	                            needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if (result != NULL) {
 		size_t hit = (size_t)(result - data->brfad_base) + 1;
 		ASSERT((hit - 1) <= data->brfad_size);
@@ -790,22 +697,17 @@ bytes_rfindany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rfindany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.brfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.brfad_size, not_found);
 	data.brfad_base = orig_base = DeeBytes_DATA(self) + args.start;
 	status = DeeObject_Foreach(args.needles, &bytes_rfindany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.brfad_base > orig_base || status == -2) {
 		size_t index = args.start + ((data.brfad_base - 1) - orig_base);
 		return DeeInt_NewSize(index);
 	}
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	return_none;
 err:
 	return NULL;
@@ -831,20 +733,15 @@ bytes_rindexany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":rindexany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.brfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.brfad_size, not_found);
 	data.brfad_base = orig_base = DeeBytes_DATA(self) + args.start;
 	status = DeeObject_Foreach(args.needles, &bytes_rfindany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.brfad_base > orig_base || status == -2)
 		return DeeInt_NewSize(args.start + ((data.brfad_base - 1) - orig_base));
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needles, args.start, args.end);
 err:
 	return NULL;
@@ -865,7 +762,6 @@ bytes_caserfindany_cb(void *arg, DeeObject *elem) {
 		goto err;
 	result = (byte_t *)memasciicasermem(data->bcrfad_base, data->bcrfad_size,
 	                                    needle.n_data, needle.n_size);
-	release_needle(&needle);
 	if (result != NULL) {
 		size_t hit = (size_t)(result - data->bcrfad_base) + 1;
 		ASSERT((hit - 1) <= data->bcrfad_size);
@@ -899,22 +795,17 @@ bytes_caserfindany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserfindany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.bcrfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.bcrfad_size, not_found);
 	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + args.start;
 	status = DeeObject_Foreach(args.needles, &bytes_caserfindany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.bcrfad_base > orig_base || status == -2) {
 		size_t index = args.start + ((data.bcrfad_base - 1) - orig_base);
 		return DeeTuple_NewII(index, index + data.bcrfad_reslen);
 	}
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	return_none;
 err:
 	return NULL;
@@ -941,22 +832,17 @@ bytes_caserindexany(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needles_start_end, "o|" UNPuSIZ UNPxSIZ ":caserindexany", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	data.bcrfad_size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &data.bcrfad_size, not_found);
 	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + args.start;
 	status = DeeObject_Foreach(args.needles, &bytes_caserfindany_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status == -1)
 		goto err;
 	if (data.bcrfad_base > orig_base || status == -2) {
 		size_t index = args.start + ((data.bcrfad_base - 1) - orig_base);
 		return DeeTuple_NewII(index, index + data.bcrfad_reslen);
 	}
-	__IF0 {
 not_found:
-		DeeBytes_DecUse(self);
-	}
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needles, args.start, args.end);
 err:
 	return NULL;
@@ -982,21 +868,15 @@ bytes_count(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":count", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = memcnt(DeeBytes_DATA(self) + args.start,
 	                size, needle.n_data, needle.n_size);
-	release_needle(&needle);
-	DeeBytes_DecUse(self);
 	return DeeInt_NewSize(result);
 not_found:
-	DeeBytes_DecUse(self);
 	return DeeInt_NewZero();
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1020,21 +900,15 @@ bytes_casecount(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casecount", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = memcasecnt(DeeBytes_DATA(self) + args.start,
 	                    size, needle.n_data, needle.n_size);
-	release_needle(&needle);
-	DeeBytes_DecUse(self);
 	return DeeInt_NewSize(result);
 not_found:
-	DeeBytes_DecUse(self);
 	return DeeInt_NewZero();
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1059,21 +933,15 @@ bytes_contains_f(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":contains", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = memmemb(DeeBytes_DATA(self) + args.start, size,
 	                 needle.n_data, needle.n_size) != NULL;
-	release_needle(&needle);
-	DeeBytes_DecUse(self);
 	return_bool(result);
 not_found:
-	DeeBytes_DecUse(self);
 	return_false;
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1098,21 +966,15 @@ bytes_casecontains_f(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__needle_start_end, "o|" UNPuSIZ UNPxSIZ ":casecontains", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, not_found);
 	if (acquire_needle(&needle, args.needle))
-		goto err_use;
+		goto err;
 	result = memasciicasemem(DeeBytes_DATA(self) + args.start, size,
 	                         needle.n_data, needle.n_size) != NULL;
-	release_needle(&needle);
-	DeeBytes_DecUse(self);
 	return_bool(result);
 not_found:
-	DeeBytes_DecUse(self);
 	return_false;
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1132,11 +994,9 @@ bytes_format(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1(err, argc, argv, "format", &args.args);
 /*[[[end]]]*/
 	Dee_bytes_printer_init(&printer);
-	DeeBytes_IncUse(self);
 	status = DeeString_FormatPrinter((char const *)DeeBytes_DATA(self), DeeBytes_SIZE(self), args.args,
 	                                 (Dee_formatprinter_t)&Dee_bytes_printer_append, &Dee_bytes_printer_print,
 	                                 &printer);
-	DeeBytes_DecUse(self);
 	if unlikely(status < 0)
 		goto err_printer;
 	return Dee_bytes_printer_pack(&printer);
@@ -1166,9 +1026,7 @@ bytes_getsubstr_locked(Bytes *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_getsubstr(Bytes *__restrict self, size_t start, size_t end) {
 	DREF Bytes *result;
-	DeeBytes_IncUse(self);
 	result = bytes_getsubstr_locked(self, start, end);
-	DeeBytes_DecUse(self);
 	return result;
 }
 
@@ -1204,7 +1062,6 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		result = DeeBytes_NewBufferUninitialized(new_size);
 		if unlikely(!result)
 			goto err;
-		DeeBytes_IncUse(self);
 		old_size = DeeBytes_SIZE(self);
 		if (new_size > old_size) {
 			void *p;
@@ -1213,7 +1070,6 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		} else {
 			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
 		}
-		DeeBytes_DecUse(self);
 	} else if (argc == 2) {
 		byte_t init;
 		if (DeeObject_AsSize(argv[0], &new_size))
@@ -1223,7 +1079,6 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		result = DeeBytes_NewBufferUninitialized(new_size);
 		if unlikely(!result)
 			goto err;
-		DeeBytes_IncUse(self);
 		if (new_size <= DeeBytes_SIZE(self)) {
 			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
 		} else {
@@ -1232,7 +1087,6 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 			endptr = mempcpy(result->b_data, DeeBytes_DATA(self), old_size);
 			memset(endptr, init, new_size - old_size);
 		}
-		DeeBytes_DecUse(self);
 	} else {
 		DeeArg_BadArgcEx("resized", argc, 1, 2);
 		goto err;
@@ -1261,25 +1115,20 @@ bytes_reversed(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reversed", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, empty);
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
-		goto err_use;
+		goto err;
 	data = DeeBytes_DATA(self);
 	dst  = DeeBytes_DATA(result);
 	data += size;
 	do {
 		*dst++ = *--data;
 	} while (--size);
-	DeeBytes_DecUse(self);
 	return result;
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1305,11 +1154,9 @@ bytes_reverse(Bytes *self, size_t argc,
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, done);
 	memrev(DeeBytes_DATA(self) + args.start, size);
-	DeeBytes_DecUse(self);
 done:
 	return_reference_(self);
 err:
@@ -1339,10 +1186,8 @@ bytes_makewritable(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (DeeBytes_WRITABLE(self))
 		return_reference_(self);
 	/* Return a copy of `self' */
-	DeeBytes_IncUse(self);
 	result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
 	                                DeeBytes_SIZE(self));
-	DeeBytes_DecUse(self);
 	return result;
 err:
 	return NULL;
@@ -1368,12 +1213,11 @@ bytes_hex(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":hex", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &size, empty);
 	result = (DREF DeeStringObject *)DeeString_NewBuffer(size * 2);
 	if unlikely(!result)
-		goto err_use;
+		goto err;
 	dst = DeeString_GetBuffer(result);
 	src = DeeBytes_DATA(self) + args.start;
 	do {
@@ -1385,13 +1229,9 @@ bytes_hex(Bytes *self, size_t argc,
 		*dst++ = DeeAscii_ItoaLowerDigit(byte & 0xf);
 	} while (--size);
 	ASSERT(dst == DeeString_END(result));
-	DeeBytes_DecUse(self);
 	return Dee_AsObject(result);
 empty:
-	DeeBytes_DecUse(self);
 	return DeeString_NewEmpty();
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1403,24 +1243,19 @@ bytes_ord(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t result;
 	if (argc) {
 		DeeArg_Unpack1X(err, argc, argv, "ord", &index, UNPuSIZ, DeeObject_AsSize);
-		DeeBytes_IncUse(self);
 		if (index >= DeeBytes_SIZE(self)) {
 			DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
 			                          DeeBytes_SIZE(self));
-			goto err_use;
+			goto err;
 		}
 	} else {
-		DeeBytes_IncUse(self);
 		if unlikely(DeeBytes_SIZE(self) != 1)
-			goto err_use_not_single;
+			goto err_not_single;
 	}
 	result = DeeBytes_DATA(self)[index];
-	DeeBytes_DecUse(self);
 	return DeeInt_NEWU(result);
-err_use_not_single:
+err_not_single:
 	err_expected_single_character_string(Dee_AsObject(self));
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1496,7 +1331,6 @@ DeeBytes_TestTrait(Bytes *__restrict self,
 	byte_t *data;
 	size_t size;
 	bool result = true;
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
@@ -1508,7 +1342,6 @@ DeeBytes_TestTrait(Bytes *__restrict self,
 		}
 	} while (--size);
 empty:
-	DeeBytes_DecUse(self);
 	return result;
 }
 
@@ -1518,7 +1351,6 @@ DeeBytes_IsAscii(Bytes *__restrict self,
 	byte_t *data;
 	size_t size;
 	bool result = true;
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
@@ -1530,7 +1362,6 @@ DeeBytes_IsAscii(Bytes *__restrict self,
 		}
 	} while (--size);
 empty:
-	DeeBytes_DecUse(self);
 	return result;
 }
 
@@ -1541,7 +1372,6 @@ DeeBytes_TestAnyTrait(Bytes *__restrict self,
 	byte_t *data;
 	size_t size;
 	bool result = false;
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
@@ -1553,7 +1383,6 @@ DeeBytes_TestAnyTrait(Bytes *__restrict self,
 		}
 	} while (--size);
 empty:
-	DeeBytes_DecUse(self);
 	return result;
 }
 
@@ -1563,7 +1392,6 @@ DeeBytes_IsAnyAscii(Bytes *__restrict self,
 	byte_t *data;
 	size_t size;
 	bool result = false;
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
@@ -1575,7 +1403,6 @@ DeeBytes_IsAnyAscii(Bytes *__restrict self,
 		}
 	} while (--size);
 empty:
-	DeeBytes_DecUse(self);
 	return result;
 }
 
@@ -1587,7 +1414,6 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 	size_t size;
 	bool result = true;
 	Dee_uniflag_t flags = (Dee_UNICODE_ISTITLE | Dee_UNICODE_ISUPPER | Dee_UNICODE_ISSPACE);
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
@@ -1602,7 +1428,6 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 		                              : (Dee_UNICODE_ISLOWER | Dee_UNICODE_ISSPACE);
 	} while (--size);
 empty:
-	DeeBytes_DecUse(self);
 	return result;
 }
 
@@ -1613,7 +1438,6 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 	size_t size;
 	bool result = true;
 	Dee_uniflag_t flags = Dee_UNICODE_ISSYMSTRT;
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&start, &end, &size, empty);
 	data = DeeBytes_DATA(self) + start;
@@ -1626,7 +1450,6 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 		flags = Dee_UNICODE_ISSYMCONT;
 	} while (--size);
 empty:
-	DeeBytes_DecUse(self);
 	return result;
 }
 
@@ -1639,16 +1462,13 @@ empty:
 			size_t size;                                               \
 			if unlikely(DeeObject_AsSize(argv[0], &start))             \
 				goto err_maybe_overflow;                               \
-			DeeBytes_IncUse(self);                                     \
 			size = DeeBytes_SIZE(self);                                \
 			if unlikely(start >= size) {                               \
-				DeeBytes_DecUse(self);                                 \
-				DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self),           \
+				DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self),          \
 				                          start, size);                \
 				goto err;                                              \
 			}                                                          \
 			ch = DeeBytes_DATA(self)[start];                           \
-			DeeBytes_DecUse(self);                                     \
 			return_bool(test_ch);                                      \
 		} else {                                                       \
 			DeeArg_Unpack0Or1XOr2X(err, argc, argv, #name,             \
@@ -1726,24 +1546,20 @@ bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t ch, digit;
 	DeeObject *defl = NULL;
 	if (argc == 0) {
-		DeeBytes_IncUse(self);
 		if unlikely(DeeBytes_SIZE(self) != 1)
-			goto err_use_not_single_char;
+			goto err_not_single_char;
 		ch = DeeBytes_DATA(self)[0];
-		DeeBytes_DecUse(self);
 	} else {
 		size_t index, size;
 		DeeArg_Unpack1XOr2X(err, argc, argv, "asdigit",
 		                    &index, UNPuSIZ, DeeObject_AsSize,
 		                    &defl, "o", _DeeArg_AsObject);
-		DeeBytes_IncUse(self);
 		size = DeeBytes_SIZE(self);
 		if unlikely(index >= size) {
 			DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, size);
-			goto err_use;
+			goto err;
 		}
 		ch = DeeBytes_DATA(self)[index];
-		DeeBytes_DecUse(self);
 	}
 	digit = DeeUni_AsDigitVal(ch);
 	if likely(digit < 10)
@@ -1754,10 +1570,8 @@ bytes_asdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                "Unicode character %I8C isn't a digit",
 	                ch);
 	goto err;
-err_use_not_single_char:
+err_not_single_char:
 	err_expected_single_character_string(Dee_AsObject(self));
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1767,24 +1581,20 @@ bytes_asxdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	byte_t ch, digit;
 	DeeObject *defl = NULL;
 	if (argc == 0) {
-		DeeBytes_IncUse(self);
 		if unlikely(DeeBytes_SIZE(self) != 1)
-			goto err_use_not_single_char;
+			goto err_not_single_char;
 		ch = DeeBytes_DATA(self)[0];
-		DeeBytes_DecUse(self);
 	} else {
 		size_t index, size;
 		DeeArg_Unpack1XOr2X(err, argc, argv, "asxdigit",
 		                    &index, UNPuSIZ, DeeObject_AsSize,
 		                    &defl, "o", _DeeArg_AsObject);
-		DeeBytes_IncUse(self);
 		size = DeeBytes_SIZE(self);
 		if unlikely(index >= size) {
 			DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, size);
-			goto err_use;
+			goto err;
 		}
 		ch = DeeBytes_DATA(self)[index];
-		DeeBytes_DecUse(self);
 	}
 	digit = DeeUni_AsDigitVal(ch);
 	if likely(digit != 0xff)
@@ -1795,10 +1605,8 @@ bytes_asxdigit(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                "Unicode character %I8C isn't a hex-digit",
 	                ch);
 	goto err;
-err_use_not_single_char:
+err_not_single_char:
 	err_expected_single_character_string(Dee_AsObject(self));
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1823,25 +1631,20 @@ bytes_lower(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":lower", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
-		goto err_use;
+		goto err;
 	dst = DeeBytes_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
 		*dst++ = (byte_t)DeeUni_ToLower(byte);
 	} while (--size);
-	DeeBytes_DecUse(self);
 	return result;
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1866,25 +1669,20 @@ bytes_upper(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":upper", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
-		goto err_use;
+		goto err;
 	dst = DeeBytes_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
 		*dst++ = (byte_t)DeeUni_ToUpper(byte);
 	} while (--size);
-	DeeBytes_DecUse(self);
 	return result;
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1910,12 +1708,11 @@ bytes_title(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":title", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
-		goto err_use;
+		goto err;
 	dst = DeeBytes_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
@@ -1925,13 +1722,9 @@ bytes_title(Bytes *self, size_t argc,
 		         : (byte_t)DeeUni_ToLower(byte);
 		kind = DeeUni_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 	} while (--size);
-	DeeBytes_DecUse(self);
 	return result;
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -1956,12 +1749,11 @@ bytes_capitalize(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":capitalize", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
-		goto err_use;
+		goto err;
 	dst = DeeBytes_DATA(result);
 	src = DeeBytes_DATA(self);
 	byte = *src++;
@@ -1970,13 +1762,9 @@ bytes_capitalize(Bytes *self, size_t argc,
 		byte = *src++;
 		*dst++ = (byte_t)DeeUni_ToLower(byte);
 	}
-	DeeBytes_DecUse(self);
 	return result;
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -2001,25 +1789,20 @@ bytes_swapcase(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":swapcase", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
-		goto err_use;
+		goto err;
 	dst = DeeBytes_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
 		*dst++ = (byte_t)DeeUni_SwapCase(byte);
 	} while (--size);
-	DeeBytes_DecUse(self);
 	return result;
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -2044,12 +1827,11 @@ bytes_tolower(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":tolower", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
-		goto err_use;
+		goto err;
 	}
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
@@ -2057,12 +1839,8 @@ bytes_tolower(Bytes *self, size_t argc,
 		*iter = (byte_t)DeeUni_ToLower(byte);
 		++iter;
 	} while (--size);
-	DeeBytes_DecUse(self);
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_(self);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -2085,12 +1863,11 @@ bytes_toupper(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":toupper", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
-		goto err_use;
+		goto err;
 	}
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
@@ -2098,12 +1875,8 @@ bytes_toupper(Bytes *self, size_t argc,
 		*iter = (byte_t)DeeUni_ToUpper(byte);
 		++iter;
 	} while (--size);
-	DeeBytes_DecUse(self);
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_(self);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -2127,12 +1900,11 @@ bytes_totitle(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":totitle", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
-		goto err_use;
+		goto err;
 	}
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
@@ -2143,12 +1915,8 @@ bytes_totitle(Bytes *self, size_t argc,
 		kind = DeeUni_IsSpace(byte) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
 		++iter;
 	} while (--size);
-	DeeBytes_DecUse(self);
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_(self);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -2171,12 +1939,11 @@ bytes_tocapitalize(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":tocapitalize", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
-		goto err_use;
+		goto err;
 	}
 	iter = DeeBytes_DATA(self) + args.start;
 	byte = *iter;
@@ -2187,12 +1954,8 @@ bytes_tocapitalize(Bytes *self, size_t argc,
 		*iter = (byte_t)DeeUni_ToLower(byte);
 		++iter;
 	}
-	DeeBytes_DecUse(self);
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_(self);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -2215,12 +1978,11 @@ bytes_toswapcase(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":toswapcase", &args))
 		goto err;
 /*[[[end]]]*/
-	DeeBytes_IncUse(self);
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
-		goto err_use;
+		goto err;
 	}
 	iter = DeeBytes_DATA(self) + args.start;
 	do {
@@ -2228,12 +1990,8 @@ bytes_toswapcase(Bytes *self, size_t argc,
 		*iter = (byte_t)DeeUni_SwapCase(byte);
 		++iter;
 	} while (--size);
-	DeeBytes_DecUse(self);
 empty:
-	DeeBytes_DecUse(self);
 	return_reference_(self);
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
@@ -2262,19 +2020,15 @@ bytes_replace(Bytes *self, size_t argc,
 	if (acquire_needle(&find_needle, args.find))
 		goto err;
 	if (acquire_needle(&replace_needle, args.replace))
-		goto err_find;
+		goto err;
 	/* Handle special cases. */
-	DeeBytes_IncUse(self);
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-		goto return_self_use;
+		goto return_self;
 	if unlikely(!find_needle.n_size) {
 		DREF Bytes *result;
 		if (DeeBytes_SIZE(self))
-			goto return_self_use;
-		DeeBytes_DecUse(self);
-		release_needle(&find_needle);
+			goto return_self;
 		result = DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
-		release_needle(&replace_needle);
 		return result;
 	}
 	Dee_bytes_printer_init(&printer);
@@ -2286,9 +2040,9 @@ bytes_replace(Bytes *self, size_t argc,
 			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
 				/* Found one */
 				if unlikely(Dee_bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
-					goto err_find_replace_use_printer;
+					goto err_printer;
 				if unlikely(Dee_bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
-					goto err_find_replace_use_printer;
+					goto err_printer;
 				begin += find_needle.n_size;
 				block_begin = begin;
 				if (begin >= end)
@@ -2305,31 +2059,19 @@ bytes_replace(Bytes *self, size_t argc,
 #ifndef __OPTIMIZE_SIZE__
 	if unlikely(block_begin == DeeBytes_DATA(self)) {
 		Dee_bytes_printer_fini(&printer);
-		goto return_self_use;
+		goto return_self;
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely(Dee_bytes_printer_append(&printer, block_begin,
 	                                 (size_t)(end - block_begin)) < 0)
-		goto err_find_replace_use_printer;
+		goto err_printer;
 	/* Pack together a Bytes object. */
-	DeeBytes_DecUse(self);
-	release_needle(&replace_needle);
-	release_needle(&find_needle);
 	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
-err_find_replace_use_printer:
+err_printer:
 	Dee_bytes_printer_fini(&printer);
-/*err_find_replace_use:*/
-	DeeBytes_DecUse(self);
-/*err_find_replace:*/
-	release_needle(&replace_needle);
-err_find:
-	release_needle(&find_needle);
 err:
 	return NULL;
-return_self_use:
-	DeeBytes_DecUse(self);
-	release_needle(&replace_needle);
-	release_needle(&find_needle);
+return_self:
 	return_reference_(self);
 }
 
@@ -2357,19 +2099,15 @@ bytes_casereplace(Bytes *self, size_t argc,
 	if (acquire_needle(&find_needle, args.find))
 		goto err;
 	if (acquire_needle(&replace_needle, args.replace))
-		goto err_find;
+		goto err;
 	/* Handle special cases. */
-	DeeBytes_IncUse(self);
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-		goto return_self_use;
+		goto return_self;
 	if unlikely(!find_needle.n_size) {
 		DREF Bytes *result;
 		if (DeeBytes_SIZE(self))
-			goto return_self_use;
-		DeeBytes_DecUse(self);
-		release_needle(&find_needle);
+			goto return_self;
 		result = DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
-		release_needle(&replace_needle);
 		return result;
 	}
 	Dee_bytes_printer_init(&printer);
@@ -2381,9 +2119,9 @@ bytes_casereplace(Bytes *self, size_t argc,
 			if (memcasecmp(begin, find_needle.n_data, find_needle.n_size) == 0) {
 				/* Found one */
 				if unlikely(Dee_bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0)
-					goto err_find_replace_use_printer;
+					goto err_printer;
 				if unlikely(Dee_bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0)
-					goto err_find_replace_use_printer;
+					goto err_printer;
 				begin += find_needle.n_size;
 				block_begin = begin;
 				if (begin >= end)
@@ -2400,31 +2138,19 @@ bytes_casereplace(Bytes *self, size_t argc,
 #ifndef __OPTIMIZE_SIZE__
 	if unlikely(block_begin == DeeBytes_DATA(self)) {
 		Dee_bytes_printer_fini(&printer);
-		goto return_self_use;
+		goto return_self;
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely(Dee_bytes_printer_append(&printer, block_begin,
 	                                 (size_t)(end - block_begin)) < 0)
-		goto err_find_replace_use_printer;
+		goto err_printer;
 	/* Pack together a Bytes object. */
-	DeeBytes_DecUse(self);
-	release_needle(&replace_needle);
-	release_needle(&find_needle);
 	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
-err_find_replace_use_printer:
+err_printer:
 	Dee_bytes_printer_fini(&printer);
-/*err_find_replace_use:*/
-	DeeBytes_DecUse(self);
-/*err_find_replace:*/
-	release_needle(&replace_needle);
-err_find:
-	release_needle(&find_needle);
 err:
 	return NULL;
-return_self_use:
-	DeeBytes_DecUse(self);
-	release_needle(&replace_needle);
-	release_needle(&find_needle);
+return_self:
 	return_reference_(self);
 }
 
@@ -2452,24 +2178,23 @@ bytes_toreplace(Bytes *self, size_t argc,
 	if (acquire_needle(&find_needle, args.find))
 		goto err;
 	if (acquire_needle(&replace_needle, args.replace))
-		goto err_find;
+		goto err;
 	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Find(%" PRFuSIZ ") and replace(%" PRFuSIZ ") needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
-		goto err_find_replace;
+		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
-		goto err_find_replace;
+		goto err;
 	}
 
 	/* Handle special cases. */
-	DeeBytes_IncUse(self);
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-		goto done_use;
+		goto done;
 	if unlikely(!find_needle.n_size)
-		goto done_use;
+		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	if likely(args.max_) {
@@ -2487,16 +2212,8 @@ bytes_toreplace(Bytes *self, size_t argc,
 			++begin;
 		}
 	}
-done_use:
-	DeeBytes_DecUse(self);
-/*done:*/
-	release_needle(&replace_needle);
-	release_needle(&find_needle);
+done:
 	return_reference_(self);
-err_find_replace:
-	release_needle(&replace_needle);
-err_find:
-	release_needle(&find_needle);
 err:
 	return NULL;
 }
@@ -2524,24 +2241,23 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 	if (acquire_needle(&find_needle, args.find))
 		goto err;
 	if (acquire_needle(&replace_needle, args.replace))
-		goto err_find;
+		goto err;
 	if unlikely(find_needle.n_size != replace_needle.n_size) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Find(%" PRFuSIZ ") and replace(%" PRFuSIZ ") needles have different sizes",
 		                find_needle.n_size, replace_needle.n_size);
-		goto err_find_replace;
+		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
-		goto err_find_replace;
+		goto err;
 	}
 
 	/* Handle special cases. */
-	DeeBytes_IncUse(self);
 	if unlikely(find_needle.n_size > DeeBytes_SIZE(self))
-		goto done_use;
+		goto done;
 	if unlikely(!find_needle.n_size)
-		goto done_use;
+		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	if likely(args.max_) {
@@ -2559,16 +2275,8 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 			++begin;
 		}
 	}
-done_use:
-	DeeBytes_DecUse(self);
-/*done:*/
-	release_needle(&replace_needle);
-	release_needle(&find_needle);
+done:
 	return_reference_(self);
-err_find_replace:
-	release_needle(&replace_needle);
-err_find:
-	release_needle(&find_needle);
 err:
 	return NULL;
 }
@@ -2687,9 +2395,7 @@ bytes_join(Bytes *self, size_t argc, DeeObject *const *argv) {
 	Dee_bytes_printer_init(&data.bjd_out);
 	data.bjd_sep   = self;
 	data.bjd_first = true;
-	DeeBytes_IncUse(self);
 	status = DeeObject_Foreach(args.seq, &bytes_join_cb, &data);
-	DeeBytes_DecUse(self);
 	if unlikely(status < 0)
 		goto err_printer;
 	return Dee_bytes_printer_pack(&data.bjd_out);
@@ -2779,7 +2485,6 @@ bytes_startswith(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start > args.end || (args.end - args.start) < needle.n_size) {
@@ -2788,8 +2493,6 @@ bytes_startswith(Bytes *self, size_t argc,
 		result = MEMEQB(DeeBytes_DATA(self) + args.start,
 		                needle.n_data, needle.n_size);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return_bool(result);
 err:
 	return NULL;
@@ -2816,7 +2519,6 @@ bytes_casestartswith(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start > args.end || (args.end - args.start) < needle.n_size) {
@@ -2825,8 +2527,6 @@ bytes_casestartswith(Bytes *self, size_t argc,
 		result = memasciicaseeq(DeeBytes_DATA(self) + args.start,
 		                        needle.n_data, needle.n_size);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return_bool(result);
 err:
 	return NULL;
@@ -2853,7 +2553,6 @@ bytes_endswith(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start > args.end || (args.end - args.start) < needle.n_size) {
@@ -2863,8 +2562,6 @@ bytes_endswith(Bytes *self, size_t argc,
 		                (args.end - needle.n_size),
 		                needle.n_data, needle.n_size);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return_bool(result);
 err:
 	return NULL;
@@ -2891,7 +2588,6 @@ bytes_caseendswith(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start > args.end || (args.end - args.start) < needle.n_size) {
@@ -2901,8 +2597,6 @@ bytes_caseendswith(Bytes *self, size_t argc,
 		                        (args.end - needle.n_size),
 		                        needle.n_data, needle.n_size);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return_bool(result);
 err:
 	return NULL;
@@ -2985,7 +2679,6 @@ bytes_partition(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start >= args.end) {
@@ -3002,8 +2695,6 @@ bytes_partition(Bytes *self, size_t argc,
 		                              needle.n_size,
 		                              false);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return result;
 err:
 	return NULL;
@@ -3030,7 +2721,6 @@ bytes_casepartition(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start >= args.end) {
@@ -3047,8 +2737,6 @@ bytes_casepartition(Bytes *self, size_t argc,
 		                              needle.n_size,
 		                              false);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return result;
 err:
 	return NULL;
@@ -3075,7 +2763,6 @@ bytes_rpartition(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start >= args.end) {
@@ -3092,8 +2779,6 @@ bytes_rpartition(Bytes *self, size_t argc,
 		                              needle.n_size,
 		                              true);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return result;
 err:
 	return NULL;
@@ -3120,7 +2805,6 @@ bytes_caserpartition(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	if (acquire_needle(&needle, args.needle))
 		goto err;
-	DeeBytes_IncUse(self);
 	if (args.end > DeeBytes_SIZE(self))
 		args.end = DeeBytes_SIZE(self);
 	if (args.start >= args.end) {
@@ -3137,8 +2821,6 @@ bytes_caserpartition(Bytes *self, size_t argc,
 		                              needle.n_size,
 		                              true);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&needle);
 	return result;
 err:
 	return NULL;
@@ -3230,17 +2912,8 @@ struct bcompare_args {
 	size_t        lhs_len; /* # of bytes in lhs. */
 	byte_t const *rhs_ptr; /* [0..my_len] Starting pointer of rhs. */
 	size_t        rhs_len; /* # of bytes in rhs. */
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-	Dee_refcnt_t *rhs_inuse_p; /* [1..1] In-use counter for "other" */
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 };
-
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-#define release_bcompare_args(self, args) \
-	(_DeeRefcnt_Dec((args)->rhs_inuse_p), DeeBytes_DecUse(self))
-#else /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 #define release_bcompare_args(self, args) (void)0
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 
 #define get_bcompare_decl(rhs_name, return_decl)                                                              \
 	"(" rhs_name ":?X2?.?Dstring," rhs_name "_start=!0," rhs_name "_end=!-1)" return_decl "\n"                \
@@ -3253,7 +2926,6 @@ acquire_bcompare_args(Bytes *__restrict self,
                       char const *__restrict funname) {
 	DeeObject *other;
 	size_t temp, temp2;
-	DeeBytes_IncUse(self);
 	args->lhs_ptr = DeeBytes_DATA(self);
 	args->lhs_len = DeeBytes_SIZE(self);
 	switch (argc) {
@@ -3261,22 +2933,15 @@ acquire_bcompare_args(Bytes *__restrict self,
 	case 1:
 		args->other = other = argv[0];
 		if (DeeBytes_Check(other)) {
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-			_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 		} else {
 			if unlikely(!DeeString_Check(other))
-				goto err_use_type_other;
+				goto err_type_other;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
-				goto err_use;
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		}
 		break;
 
@@ -3284,11 +2949,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 		if (DeeBytes_Check(argv[0])) {
 			args->other = other = argv[0];
 			if (DeeObject_AsSize(argv[1], &temp))
-				goto err_use;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-			_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
+				goto err;
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 			if unlikely(temp >= args->rhs_len) {
@@ -3300,10 +2961,10 @@ acquire_bcompare_args(Bytes *__restrict self,
 		} else if (DeeString_Check(argv[0])) {
 			args->other = other = argv[0];
 			if (DeeObject_AsSize(argv[1], &temp))
-				goto err_use;
+				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
-				goto err_use;
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
@@ -3311,12 +2972,9 @@ acquire_bcompare_args(Bytes *__restrict self,
 				args->rhs_ptr += temp;
 				args->rhs_len -= temp;
 			}
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		} else {
 			if (DeeObject_AsSize(argv[0], &temp))
-				goto err_use;
+				goto err;
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
@@ -3325,22 +2983,15 @@ acquire_bcompare_args(Bytes *__restrict self,
 			}
 			args->other = other = argv[1];
 			if (DeeBytes_Check(other)) {
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-				args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-				_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 				args->rhs_ptr = DeeBytes_DATA(other);
 				args->rhs_len = DeeBytes_SIZE(other);
 			} else {
 				if unlikely(!DeeString_Check(other))
-					goto err_use_type_other;
+					goto err_type_other;
 				args->rhs_ptr = DeeString_AsBytes(other, false);
 				if unlikely(!args->rhs_ptr)
-					goto err_use;
+					goto err;
 				args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-				args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			}
 		}
 		break;
@@ -3348,36 +2999,29 @@ acquire_bcompare_args(Bytes *__restrict self,
 	case 3:
 		if (DeeBytes_Check(argv[0])) {
 			args->other = other = argv[0];
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-			_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 			if (DeeObject_AsSize(argv[1], &temp))
-				goto err_use;
+				goto err;
 			if (DeeObject_AsSizeM1(argv[2], &temp2))
-				goto err_use;
+				goto err;
 			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
 			args->rhs_ptr += temp;
 		} else if (DeeString_Check(argv[0])) {
 			args->other = other = argv[0];
 			args->rhs_ptr = DeeString_AsBytes(other, true);
 			if unlikely(!args->rhs_ptr)
-				goto err_use;
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (DeeObject_AsSize(argv[1], &temp))
-				goto err_use;
+				goto err;
 			if (DeeObject_AsSizeM1(argv[2], &temp2))
-				goto err_use;
+				goto err;
 			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
 			args->rhs_ptr += temp;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		} else if (DeeBytes_Check(argv[1])) {
 			if (DeeObject_AsSize(argv[0], &temp))
-				goto err_use;
+				goto err;
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
@@ -3385,14 +3029,10 @@ acquire_bcompare_args(Bytes *__restrict self,
 				args->lhs_len -= temp;
 			}
 			args->other = other = argv[1];
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-			_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 			if (DeeObject_AsSize(argv[2], &temp))
-				goto err_use;
+				goto err;
 			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
@@ -3401,7 +3041,7 @@ acquire_bcompare_args(Bytes *__restrict self,
 			}
 		} else if (DeeString_Check(argv[1])) {
 			if (DeeObject_AsSize(argv[0], &temp))
-				goto err_use;
+				goto err;
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
 			} else {
@@ -3411,51 +3051,41 @@ acquire_bcompare_args(Bytes *__restrict self,
 			args->other = other = argv[1];
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
-				goto err_use;
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (DeeObject_AsSize(argv[2], &temp))
-				goto err_use;
+				goto err;
 			if unlikely(temp >= args->rhs_len) {
 				args->rhs_len = 0;
 			} else {
 				args->rhs_ptr += temp;
 				args->rhs_len -= temp;
 			}
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		} else {
 			if (DeeObject_AsSize(argv[0], &temp))
-				goto err_use;
+				goto err;
 			if (DeeObject_AsSizeM1(argv[1], &temp2))
-				goto err_use;
+				goto err;
 			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->lhs_len);
 			args->lhs_ptr += temp;
 			args->other = other = argv[2];
 			if (DeeBytes_Check(other)) {
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-				args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-				_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 				args->rhs_ptr = DeeBytes_DATA(other);
 				args->rhs_len = DeeBytes_SIZE(other);
 			} else {
 				if unlikely(!DeeString_Check(other))
-					goto err_use_type_other;
+					goto err_type_other;
 				args->rhs_ptr = DeeString_AsBytes(other, false);
 				if unlikely(!args->rhs_ptr)
-					goto err_use;
+					goto err;
 				args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-				args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			}
 		}
 		break;
 
 	case 4:
 		if (DeeObject_AsSize(argv[0], &temp))
-			goto err_use;
+			goto err;
 		if (DeeBytes_Check(argv[1])) {
 			if unlikely(temp >= args->lhs_len) {
 				args->lhs_len = 0;
@@ -3465,13 +3095,9 @@ acquire_bcompare_args(Bytes *__restrict self,
 			}
 			args->other = other = argv[1];
 			if (DeeObject_AsSize(argv[2], &temp))
-				goto err_use;
+				goto err;
 			if (DeeObject_AsSizeM1(argv[3], &temp2))
-				goto err_use;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-			_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
+				goto err;
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
@@ -3485,31 +3111,28 @@ acquire_bcompare_args(Bytes *__restrict self,
 			}
 			args->other = other = argv[1];
 			if (DeeObject_AsSize(argv[2], &temp))
-				goto err_use;
+				goto err;
 			if (DeeObject_AsSizeM1(argv[3], &temp2))
-				goto err_use;
+				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
-				goto err_use;
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
 			args->rhs_ptr += temp;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		} else {
 			if (DeeObject_AsSizeM1(argv[1], &temp2))
-				goto err_use;
+				goto err;
 			CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->lhs_len);
 			args->lhs_ptr += temp;
 			args->other = other = argv[2];
 			if unlikely(!DeeString_Check(other))
-				goto err_use_type_other;
+				goto err_type_other;
 			if (DeeObject_AsSize(argv[3], &temp))
-				goto err_use;
+				goto err;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
-				goto err_use;
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
 			if (temp >= args->rhs_len) {
 				args->rhs_len = 0;
@@ -3517,56 +3140,44 @@ acquire_bcompare_args(Bytes *__restrict self,
 				args->rhs_ptr += temp;
 				args->rhs_len -= temp;
 			}
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		}
 		break;
 
 	case 5:
 		if (DeeObject_AsSize(argv[0], &temp))
-			goto err_use;
+			goto err;
 		if (DeeObject_AsSizeM1(argv[1], &temp2))
-			goto err_use;
+			goto err;
 		CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->lhs_len);
 		args->lhs_ptr += temp;
 		args->other = other = argv[2];
 		if (DeeBytes_Check(other)) {
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = ((Bytes *)other)->b_inuse_p;
-			_DeeRefcnt_Inc(args->rhs_inuse_p);
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 			args->rhs_ptr = DeeBytes_DATA(other);
 			args->rhs_len = DeeBytes_SIZE(other);
 		} else {
 			if unlikely(!DeeString_Check(other))
-				goto err_use_type_other;
+				goto err_type_other;
 			args->rhs_ptr = DeeString_AsBytes(other, false);
 			if unlikely(!args->rhs_ptr)
-				goto err_use;
+				goto err;
 			args->rhs_len = WSTR_LENGTH(args->rhs_ptr);
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-			args->rhs_inuse_p = (Dee_refcnt_t *)&args->rhs_inuse_p;
-#endif /* !CONFIG_EXPERIMENTAL_BYTES_INUSE */
 		}
 		if (DeeObject_AsSize(argv[3], &temp))
-			goto err_use;
+			goto err;
 		if (DeeObject_AsSizeM1(argv[4], &temp2))
-			goto err_use;
+			goto err;
 		CLAMP_SUBSTR_IMPLICIT(&temp, &temp2, &args->rhs_len);
 		args->rhs_ptr += temp;
 		break;
 
 	default:
 		err_invalid_argc(funname, argc, 1, 5);
-		goto err_use;
+		goto err;
 	}
 	return 0;
-err_use_type_other:
+err_type_other:
 	DeeObject_TypeAssertFailed(other, &DeeBytes_Type);
-err_use:
-	DeeBytes_DecUse(self);
-/*err:*/
+err:
 	return -1;
 }
 
@@ -3773,21 +3384,15 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_SPACE;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		filler.n_inuse_p = (Dee_refcnt_t *)filler._n_buf;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
-	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
 		result = self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front, fill_back;
 		result = DeeBytes_NewBufferUninitialized(args.width);
-		if unlikely(!result) {
-			DeeBytes_DecUse(self);
-			goto err_filler;
-		}
+		if unlikely(!result)
+			goto err;
 		fill_front = (args.width - DeeBytes_SIZE(self));
 		fill_back  = fill_front / 2;
 		fill_front -= fill_back;
@@ -3797,13 +3402,9 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 		mempfilb(DeeBytes_DATA(result) + fill_front + DeeBytes_SIZE(self),
 		        fill_back, filler.n_data, filler.n_size);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&filler);
 	return result;
 empty_filler:
 	err_empty_filler();
-err_filler:
-	release_needle(&filler);
 err:
 	return NULL;
 }
@@ -3833,34 +3434,24 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_SPACE;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		filler.n_inuse_p = (Dee_refcnt_t *)filler._n_buf;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
-	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
 		result = self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_back;
 		result = DeeBytes_NewBufferUninitialized(args.width);
-		if unlikely(!result) {
-			DeeBytes_DecUse(self);
-			goto err_filler;
-		}
+		if unlikely(!result)
+			goto err;
 		fill_back = (args.width - DeeBytes_SIZE(self));
 		memcpyb(DeeBytes_DATA(result) + 0,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
 		mempfilb(DeeBytes_DATA(result) + DeeBytes_SIZE(self),
 		        fill_back, filler.n_data, filler.n_size);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&filler);
 	return result;
 empty_filler:
 	err_empty_filler();
-err_filler:
-	release_needle(&filler);
 err:
 	return NULL;
 }
@@ -3890,33 +3481,23 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_SPACE;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		filler.n_inuse_p = (Dee_refcnt_t *)filler._n_buf;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
-	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
 		result = self;
 		Dee_Incref(result);
 	} else {
 		size_t fill_front;
 		result = DeeBytes_NewBufferUninitialized(args.width);
-		if unlikely(!result) {
-			DeeBytes_DecUse(self);
-			goto err_filler;
-		}
+		if unlikely(!result)
+			goto err;
 		fill_front = (args.width - DeeBytes_SIZE(self));
 		mempfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
 		memcpyb(DeeBytes_DATA(result) + fill_front,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&filler);
 	return result;
 empty_filler:
 	err_empty_filler();
-err_filler:
-	release_needle(&filler);
 err:
 	return NULL;
 }
@@ -3946,11 +3527,7 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
 		filler._n_buf[0] = UNICODE_ZERO;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		filler.n_inuse_p = (Dee_refcnt_t *)filler._n_buf;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
-	DeeBytes_IncUse(self);
 	if (args.width <= DeeBytes_SIZE(self)) {
 		result = self;
 		Dee_Incref(result);
@@ -3958,10 +3535,8 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		size_t fill_front, src_len;
 		byte_t *dst, *src;
 		result = DeeBytes_NewBufferUninitialized(args.width);
-		if unlikely(!result) {
-			DeeBytes_DecUse(self);
-			goto err_filler;
-		}
+		if unlikely(!result)
+			goto err;
 		dst        = DeeBytes_DATA(result);
 		src        = DeeBytes_DATA(self);
 		src_len    = DeeBytes_SIZE(self);
@@ -3973,13 +3548,9 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		mempfilb(dst + 0, fill_front, filler.n_data, filler.n_size);
 		memcpyb(dst + fill_front, src, src_len);
 	}
-	DeeBytes_DecUse(self);
-	release_needle(&filler);
 	return result;
 empty_filler:
 	err_empty_filler();
-err_filler:
-	release_needle(&filler);
 err:
 	return NULL;
 }
@@ -4000,7 +3571,6 @@ bytes_expandtabs(Bytes *self, size_t argc, DeeObject *const *argv) {
 		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *iter, *end, *flush_start;
 		size_t line_inset;
-		DeeBytes_IncUse(self);
 		line_inset  = 0;
 		iter        = DeeBytes_DATA(self);
 		end         = iter + DeeBytes_SIZE(self);
@@ -4014,30 +3584,27 @@ bytes_expandtabs(Bytes *self, size_t argc, DeeObject *const *argv) {
 				continue;
 			}
 			if (Dee_bytes_printer_append(&printer, flush_start,
-			                         (size_t)(iter - flush_start)) < 0)
-				goto err_use_printer;
+			                             (size_t)(iter - flush_start)) < 0)
+				goto err_printer;
 			/* Replace with white-space. */
 			if likely(args.tabwidth) {
 				line_inset = args.tabwidth - (line_inset % args.tabwidth);
 				if (Dee_bytes_printer_repeat(&printer, ASCII_SPACE, line_inset) < 0)
-					goto err_use_printer;
+					goto err_printer;
 				line_inset = 0;
 			}
 			flush_start = iter + 1;
 		}
 		if (!Dee_BYTES_PRINTER_SIZE(&printer))
-			goto retself_use;
+			goto retself;
 		if (Dee_bytes_printer_append(&printer, flush_start,
 		                         (size_t)(iter - flush_start)) < 0)
-			goto err_use_printer;
-		DeeBytes_DecUse(self);
+			goto err_printer;
 		return Dee_bytes_printer_pack(&printer);
-retself_use:
-		DeeBytes_DecUse(self);
+retself:
 		Dee_bytes_printer_fini(&printer);
 		return_reference_(Dee_AsObject(self));
-err_use_printer:
-		DeeBytes_DecUse(self);
+err_printer:
 		Dee_bytes_printer_fini(&printer);
 	}
 err:
@@ -4064,14 +3631,10 @@ bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 		replace.n_data    = replace._n_buf;
 		replace.n_size    = 1;
 		replace._n_buf[0] = '\n';
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		replace.n_inuse_p = (Dee_refcnt_t *)replace._n_buf;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
 	{
 		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *iter, *end, *flush_start;
-		DeeBytes_IncUse(self);
 		iter        = DeeBytes_DATA(self);
 		end         = iter + DeeBytes_SIZE(self);
 		flush_start = iter;
@@ -4088,32 +3651,26 @@ bytes_unifylines(Bytes *self, size_t argc, DeeObject *const *argv) {
 					continue; /* Isn't CRLF */
 			}
 			if (Dee_bytes_printer_append(&printer, flush_start,
-			                         (size_t)(iter - flush_start)) < 0)
-				goto err_use_printer;
+			                             (size_t)(iter - flush_start)) < 0)
+				goto err_printer;
 			if (Dee_bytes_printer_append(&printer,
-			                         replace.n_data,
-			                         replace.n_size) < 0)
-				goto err_use_printer;
+			                             replace.n_data,
+			                             replace.n_size) < 0)
+				goto err_printer;
 			if (ch == ASCII_CR && iter + 1 < end && iter[1] == ASCII_LF)
 				++iter;
 			flush_start = iter + 1;
 		}
 		if (!Dee_BYTES_PRINTER_SIZE(&printer))
-			goto retself_use;
+			goto retself;
 		if (Dee_bytes_printer_append(&printer, flush_start,
-		                         (size_t)(iter - flush_start)) < 0)
-			goto err_use_printer;
-		DeeBytes_DecUse(self);
-		release_needle(&replace);
+		                             (size_t)(iter - flush_start)) < 0)
+			goto err_printer;
 		return Dee_bytes_printer_pack(&printer);
-retself_use:
-		DeeBytes_DecUse(self);
+retself:
 		Dee_bytes_printer_fini(&printer);
-		release_needle(&replace);
 		return_reference_(Dee_AsObject(self));
-err_use_printer:
-		DeeBytes_DecUse(self);
-		release_needle(&replace);
+err_printer:
 		Dee_bytes_printer_fini(&printer);
 	}
 err:
@@ -4137,24 +3694,20 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if (acquire_needle(&filler, args.filler))
 			goto err;
 		if unlikely(!filler.n_size)
-			goto retself_use;
+			goto retself;
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
 		filler._n_buf[0] = ASCII_TAB;
-#ifdef CONFIG_EXPERIMENTAL_BYTES_INUSE
-		filler.n_inuse_p = (Dee_refcnt_t *)filler._n_buf;
-#endif /* CONFIG_EXPERIMENTAL_BYTES_INUSE */
 	}
-	DeeBytes_IncUse(self);
 	if unlikely(DeeBytes_IsEmpty(self))
-		goto retself_use;
+		goto retself;
 	{
 		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *flush_start, *iter, *end;
 		/* Start by inserting the initial, unconditional indentation at the start. */
 		if (Dee_bytes_printer_append(&printer, filler.n_data, filler.n_size) < 0)
-			goto err_use_printer;
+			goto err_printer;
 		iter        = DeeBytes_DATA(self);
 		end         = iter + DeeBytes_SIZE(self);
 		flush_start = iter;
@@ -4167,12 +3720,12 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 					++iter;
 				/* Flush all unwritten data up to this point. */
 				if (Dee_bytes_printer_append(&printer, flush_start,
-				                         (size_t)(iter - flush_start)) < 0)
-					goto err_use_printer;
+				                             (size_t)(iter - flush_start)) < 0)
+					goto err_printer;
 				flush_start = iter;
 				/* Insert the filler just before the linefeed. */
 				if (Dee_bytes_printer_append(&printer, filler.n_data, filler.n_size) < 0)
-					goto err_use_printer;
+					goto err_printer;
 				continue;
 			}
 			++iter;
@@ -4187,22 +3740,16 @@ bytes_indent(Bytes *self, size_t argc, DeeObject *const *argv) {
 		} else {
 			/* Flush the remainder. */
 			if (Dee_bytes_printer_append(&printer, flush_start,
-			                         (size_t)(iter - flush_start)) < 0)
-				goto err_use_printer;
+			                             (size_t)(iter - flush_start)) < 0)
+				goto err_printer;
 		}
-		DeeBytes_DecUse(self);
-		release_needle(&filler);
 		return Dee_bytes_printer_pack(&printer);
-err_use_printer:
-		DeeBytes_DecUse(self);
-		release_needle(&filler);
+err_printer:
 		Dee_bytes_printer_fini(&printer);
 	}
 err:
 	return NULL;
-retself_use:
-	DeeBytes_DecUse(self);
-	release_needle(&filler);
+retself:
 	return_reference_(Dee_AsObject(self));
 }
 
@@ -4228,13 +3775,12 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 		struct Dee_bytes_printer printer = Dee_BYTES_PRINTER_INIT;
 		byte_t *flush_start, *iter, *end;
 		size_t i;
-		DeeBytes_IncUse(self);
 		iter = DeeBytes_DATA(self);
 		end  = iter + DeeBytes_SIZE(self);
 		if (args.mask) {
 			Needle mask;
 			if (acquire_needle(&mask, args.mask))
-				goto err_use_printer;
+				goto err_printer;
 
 			/* Remove leading characters. */
 			for (i = 0; i < args.max_ && memchr(mask.n_data, *iter, mask.n_size); ++i)
@@ -4249,11 +3795,8 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 
 					/* Flush all unwritten data up to this point. */
 					if (Dee_bytes_printer_append(&printer, flush_start,
-					                         (size_t)(iter - flush_start)) < 0) {
-err_printer_mask:
-						release_needle(&mask);
-						goto err_use_printer;
-					}
+					                             (size_t)(iter - flush_start)) < 0)
+						goto err_printer;
 
 					/* Skip up to `args.max_' characters after a linefeed. */
 					for (i = 0; i < args.max_ && memchr(mask.n_data, *iter, mask.n_size); ++i)
@@ -4266,8 +3809,8 @@ err_printer_mask:
 
 			/* Flush the remainder. */
 			if (Dee_bytes_printer_append(&printer, flush_start,
-			                         (size_t)(iter - flush_start)) < 0)
-				goto err_printer_mask;
+			                             (size_t)(iter - flush_start)) < 0)
+				goto err_printer;
 		} else {
 			/* Remove leading characters. */
 			for (i = 0; i < args.max_ && DeeUni_IsSpace(*iter); ++i)
@@ -4283,7 +3826,7 @@ err_printer_mask:
 					/* Flush all unwritten data up to this point. */
 					if (Dee_bytes_printer_append(&printer, flush_start,
 					                         (size_t)(iter - flush_start)) < 0)
-						goto err_use_printer;
+						goto err_printer;
 
 					/* Skip up to `args.max_' characters after a linefeed. */
 					for (i = 0; i < args.max_ && DeeUni_IsSpace(*iter); ++i)
@@ -4296,13 +3839,11 @@ err_printer_mask:
 
 			/* Flush the remainder. */
 			if (Dee_bytes_printer_append(&printer, flush_start,
-			                         (size_t)(iter - flush_start)) < 0)
-				goto err_use_printer;
+			                             (size_t)(iter - flush_start)) < 0)
+				goto err_printer;
 		}
-		DeeBytes_DecUse(self);
 		return Dee_bytes_printer_pack(&printer);
-err_use_printer:
-		DeeBytes_DecUse(self);
+err_printer:
 		Dee_bytes_printer_fini(&printer);
 	}
 err:
@@ -4434,8 +3975,7 @@ bytes_findmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4444,17 +3984,9 @@ bytes_findmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                      s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto not_found;
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeInt_NewMinusOne();
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4485,8 +4017,7 @@ bytes_rfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4495,17 +4026,9 @@ bytes_rfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                       s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto not_found;
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeInt_NewMinusOne();
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4536,8 +4059,7 @@ bytes_indexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4546,16 +4068,9 @@ bytes_indexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                      s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto not_found;
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.close, args.start, args.end);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4586,8 +4101,7 @@ bytes_rindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4596,16 +4110,9 @@ bytes_rindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                       s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto not_found;
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeInt_NewSize((size_t)(ptr - scan_str));
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.open, args.start, args.end);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4636,8 +4143,7 @@ bytes_casefindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4646,17 +4152,9 @@ bytes_casefindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                               s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto not_found;
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeTuple_NewII((size_t)(ptr - scan_str), s_clos.n_size);
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return_none;
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4687,8 +4185,7 @@ bytes_caserfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4698,17 +4195,9 @@ bytes_caserfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!ptr)
 		goto not_found;
 	result = (size_t)(ptr - scan_str);
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeTuple_NewII(result, result + s_open.n_size);
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return_none;
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4739,8 +4228,7 @@ bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4750,16 +4238,9 @@ bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!ptr)
 		goto not_found;
 	result = (size_t)(ptr - scan_str);
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeTuple_NewII(result, result + s_clos.n_size);
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.close, args.start, args.end);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4790,8 +4271,7 @@ bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -4801,16 +4281,9 @@ bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!ptr)
 		goto not_found;
 	result = (size_t)(ptr - scan_str);
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return DeeTuple_NewII(result, result + s_open.n_size);
 not_found:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.open, args.start, args.end);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4842,20 +4315,19 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
+		goto err;
 #define SET_BYTES(a, b, c)                                 \
 	do {                                                   \
 		if ((result->t_elem[0] = Dee_AsObject(a)) == NULL) \
-			goto err_open_clos_use_r_0;                    \
+			goto err_r_0;                                  \
 		if ((result->t_elem[1] = Dee_AsObject(b)) == NULL) \
-			goto err_open_clos_use_r_1;                    \
+			goto err_r_1;                                  \
 		if ((result->t_elem[2] = Dee_AsObject(c)) == NULL) \
-			goto err_open_clos_use_r_2;                    \
+			goto err_r_2;                                  \
 	}	__WHILE0
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
-		goto err_open_clos;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str    = DeeBytes_DATA(self);
@@ -4879,30 +4351,21 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return Dee_AsObject(result);
 not_found:
 	result->t_elem[0] = Dee_AsObject(bytes_getsubstr_locked(self, args.start, args.end));
 	if unlikely(!result->t_elem[0])
-		goto err_open_clos_use_r_0;
+		goto err_r_0;
 	result->t_elem[1] = Dee_EmptyBytes;
 	result->t_elem[2] = Dee_EmptyBytes;
 	Dee_Incref_n(Dee_EmptyBytes, 2);
 	goto done;
-err_open_clos_use_r_2:
+err_r_2:
 	Dee_Decref_likely(result->t_elem[1]);
-err_open_clos_use_r_1:
+err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
-err_open_clos_use_r_0:
+err_r_0:
 	DeeTuple_FreeUninitialized(result);
-/*err_open_clos_use:*/
-	DeeBytes_DecUse(self);
-err_open_clos:
-	release_needle(&s_clos);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -4934,20 +4397,19 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
+		goto err;
 #define SET_BYTES(a, b, c)                                 \
 	do {                                                   \
 		if ((result->t_elem[0] = Dee_AsObject(a)) == NULL) \
-			goto err_open_clos_use_r_0;                    \
+			goto err_r_0;                                  \
 		if ((result->t_elem[1] = Dee_AsObject(b)) == NULL) \
-			goto err_open_clos_use_r_1;                    \
+			goto err_r_1;                                  \
 		if ((result->t_elem[2] = Dee_AsObject(c)) == NULL) \
-			goto err_open_clos_use_r_2;                    \
+			goto err_r_2;                                  \
 	}	__WHILE0
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
-		goto err_open_clos;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str  = DeeBytes_DATA(self);
@@ -4971,30 +4433,21 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return Dee_AsObject(result);
 not_found:
 	result->t_elem[2] = Dee_AsObject(bytes_getsubstr_locked(self, args.start, args.end));
 	if unlikely(!result->t_elem[2])
-		goto err_open_clos_use_r_0;
+		goto err_r_0;
 	Dee_Incref_n(Dee_EmptyString, 2);
 	result->t_elem[0] = Dee_EmptyString;
 	result->t_elem[2] = Dee_EmptyString;
 	goto done;
-err_open_clos_use_r_2:
+err_r_2:
 	Dee_Decref_likely(result->t_elem[1]);
-err_open_clos_use_r_1:
+err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
-err_open_clos_use_r_0:
+err_r_0:
 	DeeTuple_FreeUninitialized(result);
-/*err_open_clos_use:*/
-	DeeBytes_DecUse(self);
-err_open_clos:
-	release_needle(&s_clos);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -5026,20 +4479,19 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
+		goto err;
 #define SET_BYTES(a, b, c)                                 \
 	do {                                                   \
 		if ((result->t_elem[0] = Dee_AsObject(a)) == NULL) \
-			goto err_open_clos_use_r_0;                    \
+			goto err_r_0;                                  \
 		if ((result->t_elem[1] = Dee_AsObject(b)) == NULL) \
-			goto err_open_clos_use_r_1;                    \
+			goto err_r_1;                                  \
 		if ((result->t_elem[2] = Dee_AsObject(c)) == NULL) \
-			goto err_open_clos_use_r_2;                    \
+			goto err_r_2;                                  \
 	}	__WHILE0
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
-		goto err_open_clos;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str = DeeBytes_DATA(self);
@@ -5063,30 +4515,21 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return Dee_AsObject(result);
 not_found:
 	result->t_elem[0] = Dee_AsObject(bytes_getsubstr_locked(self, args.start, args.end));
 	if unlikely(!result->t_elem[0])
-		goto err_open_clos_use_r_0;
+		goto err_r_0;
 	Dee_Incref_n(Dee_EmptyBytes, 2);
 	result->t_elem[1] = Dee_EmptyBytes;
 	result->t_elem[2] = Dee_EmptyBytes;
 	goto done;
-err_open_clos_use_r_2:
+err_r_2:
 	Dee_Decref_likely(result->t_elem[1]);
-err_open_clos_use_r_1:
+err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
-err_open_clos_use_r_0:
+err_r_0:
 	DeeTuple_FreeUninitialized(result);
-/*err_open_clos_use:*/
-	DeeBytes_DecUse(self);
-err_open_clos:
-	release_needle(&s_clos);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -5118,20 +4561,19 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_needle(&s_open, args.open))
 		goto err;
 	if (acquire_needle(&s_clos, args.close))
-		goto err_open;
+		goto err;
 #define SET_BYTES(a, b, c)                                 \
 	do {                                                   \
 		if ((result->t_elem[0] = Dee_AsObject(a)) == NULL) \
-			goto err_open_clos_use_r_0;                    \
+			goto err_r_0;                                  \
 		if ((result->t_elem[1] = Dee_AsObject(b)) == NULL) \
-			goto err_open_clos_use_r_1;                    \
+			goto err_r_1;                                  \
 		if ((result->t_elem[2] = Dee_AsObject(c)) == NULL) \
-			goto err_open_clos_use_r_2;                    \
+			goto err_r_2;                                  \
 	}	__WHILE0
 	result = DeeTuple_NewUninitialized(3);
 	if unlikely(!result)
-		goto err_open_clos;
-	DeeBytes_IncUse(self);
+		goto err;
 	scan_len = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR(&args.start, &args.end, &scan_len, not_found);
 	scan_str  = DeeBytes_DATA(self);
@@ -5155,30 +4597,21 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                              (size_t)(match_end + s_clos.n_size)));
 #undef SET_BYTES
 done:
-	DeeBytes_DecUse(self);
-	release_needle(&s_clos);
-	release_needle(&s_open);
 	return Dee_AsObject(result);
 not_found:
 	result->t_elem[2] = Dee_AsObject(bytes_getsubstr_locked(self, args.start, args.end));
 	if unlikely(!result->t_elem[2])
-		goto err_open_clos_use_r_0;
+		goto err_r_0;
 	Dee_Incref_n(Dee_EmptyString, 2);
 	result->t_elem[0] = Dee_EmptyString;
 	result->t_elem[1] = Dee_EmptyString;
 	goto done;
-err_open_clos_use_r_2:
+err_r_2:
 	Dee_Decref_likely(result->t_elem[1]);
-err_open_clos_use_r_1:
+err_r_1:
 	Dee_Decref_likely(result->t_elem[0]);
-err_open_clos_use_r_0:
+err_r_0:
 	DeeTuple_FreeUninitialized(result);
-/*err_open_clos_use:*/
-	DeeBytes_DecUse(self);
-err_open_clos:
-	release_needle(&s_clos);
-err_open:
-	release_needle(&s_open);
 err:
 	return NULL;
 }
@@ -5222,9 +4655,7 @@ bytes_distribute(Bytes *self, size_t argc, DeeObject *const *argv) {
 		err_invalid_distribution_count(args.substring_count);
 		goto err;
 	}
-	DeeBytes_IncUse(self);
 	substring_length = DeeBytes_SIZE(self);
-	DeeBytes_DecUse(self);
 	substring_length += args.substring_count - 1;
 	substring_length /= args.substring_count;
 	if unlikely(!substring_length)
@@ -5280,8 +4711,6 @@ bytes_re_split(DeeBytesObject *__restrict self,
 #define bytes_generic_regex_kwlist kwlist__pattern_start_end_rules
 #define bytes_search_regex_kwlist  kwlist__pattern_start_end_range_rules
 
-#define bytes_generic_regex_putargs(self) DeeBytes_DecUse(self)
-
 #define BYTES_GENERIC_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ "o:" name
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 bytes_generic_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
@@ -5302,7 +4731,6 @@ bytes_generic_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 	result->rx_nmatch = 0;
 	result->rx_pmatch = NULL;
 	result->rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
-	DeeBytes_IncUse(self);
 	result->rx_inbase = DeeBytes_DATA(self);
 	result->rx_insize = DeeBytes_SIZE(self);
 	if (result->rx_endoff > result->rx_insize)
@@ -5311,8 +4739,6 @@ bytes_generic_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 err:
 	return -1;
 }
-
-#define bytes_search_regex_putargs(self) DeeBytes_DecUse(self)
 
 #define BYTES_SEARCH_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:" name
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
@@ -5357,7 +4783,6 @@ bytes_rematch(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                                        &exec))
 		goto err;
 	result = DeeRegex_Match(&exec);
-	bytes_generic_regex_putargs(self);
 	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
 	if (result == Dee_RE_STATUS_NOMATCH)
@@ -5378,15 +4803,13 @@ bytes_regmatch(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rx_code->rc_ngrps);
 	if unlikely(!result) {
-		bytes_generic_regex_putargs(self);
 		goto err;
 	}
 	exec.rx_nmatch = exec.rx_code->rc_ngrps;
 	exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_Match(&exec);
-	bytes_generic_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
@@ -5395,7 +4818,7 @@ bytes_regmatch(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	result->rg_groups[0].rm_eo = (size_t)status;
 	ReGroups_Init(result, 1 + exec.rx_code->rc_ngrps);
 	return Dee_AsObject(result);
-err_g:
+err_r:
 	ReGroups_Free(result);
 err:
 	return NULL;
@@ -5410,7 +4833,6 @@ bytes_rematches(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	                                        &exec))
 		goto err;
 	status = DeeRegex_Match(&exec);
-	bytes_generic_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH)
@@ -5432,7 +4854,6 @@ bytes_refind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                                       &exec))
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH)
@@ -5453,7 +4874,6 @@ bytes_rerfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                                       &exec))
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH)
@@ -5475,15 +4895,13 @@ bytes_rescanf(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err;
 	result = ReSubBytes_Malloc(exec.rx_code->rc_ngrps);
 	if unlikely(!result) {
-		bytes_generic_regex_putargs(self);
 		goto err;
 	}
 	exec.rx_nmatch = exec.rx_code->rc_ngrps;
 	exec.rx_pmatch = result->rss_groups;
 	status = DeeRegex_Match(&exec);
-	bytes_generic_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReSubBytes_Free(result);
 		return DeeSeq_NewEmpty();
@@ -5492,7 +4910,7 @@ bytes_rescanf(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                     exec.rx_inbase,
 	                     exec.rx_code->rc_ngrps);
 	return Dee_AsObject(result);
-err_g:
+err_r:
 	ReSubBytes_Free(result);
 err:
 	return NULL;
@@ -5509,16 +4927,13 @@ bytes_regfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                                       &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!result) {
-		bytes_search_regex_putargs(self);
+	if unlikely(!result)
 		goto err;
-	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
@@ -5528,7 +4943,7 @@ bytes_regfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	result->rg_groups[0].rm_eo = match_size;
 	ReGroups_Init(result, 1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return Dee_AsObject(result);
-err_g:
+err_r:
 	ReGroups_Free(result);
 err:
 	return NULL;
@@ -5545,16 +4960,13 @@ bytes_regrfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                                       &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!result) {
-		bytes_search_regex_putargs(self);
+	if unlikely(!result)
 		goto err;
-	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
@@ -5564,7 +4976,7 @@ bytes_regrfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	result->rg_groups[0].rm_eo = match_size;
 	ReGroups_Init(result, 1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return Dee_AsObject(result);
-err_g:
+err_r:
 	ReGroups_Free(result);
 err:
 	return NULL;
@@ -5581,16 +4993,13 @@ bytes_reglocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	                                       &exec))
 		goto err;
 	result = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!result) {
-		bytes_search_regex_putargs(self);
+	if unlikely(!result)
 		goto err;
-	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
 	exec.rewr_exec.rx_pmatch = result->rss_groups + 1;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
@@ -5602,7 +5011,7 @@ bytes_reglocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	                     exec.rewr_exec.rx_inbase,
 	                     1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return Dee_AsObject(result);
-err_g:
+err_r:
 	ReGroups_Free(result);
 err:
 	return NULL;
@@ -5619,16 +5028,13 @@ bytes_regrlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	                                       &exec))
 		goto err;
 	result = ReSubBytes_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!result) {
-		bytes_search_regex_putargs(self);
+	if unlikely(!result)
 		goto err;
-	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
 	exec.rewr_exec.rx_pmatch = result->rss_groups + 1;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		ReGroups_Free(result);
 		return DeeSeq_NewEmpty();
@@ -5640,7 +5046,7 @@ bytes_regrlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	                     exec.rewr_exec.rx_inbase,
 	                     1 + exec.rewr_exec.rx_code->rc_ngrps);
 	return Dee_AsObject(result);
-err_g:
+err_r:
 	ReGroups_Free(result);
 err:
 	return NULL;
@@ -5667,7 +5073,6 @@ bytes_reindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                                       &exec))
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH)
@@ -5690,7 +5095,6 @@ bytes_rerindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                                       &exec))
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
 		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH)
@@ -5714,16 +5118,13 @@ bytes_regindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	                                       &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!result) {
-		bytes_search_regex_putargs(self);
+	if unlikely(!result)
 		goto err;
-	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH)
 		goto not_found;
 	match_size += (size_t)status;
@@ -5733,7 +5134,7 @@ bytes_regindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	return Dee_AsObject(result);
 not_found:
 	err_regex_not_found_in_bytes(self, &exec);
-err_g:
+err_r:
 	ReGroups_Free(result);
 err:
 	return NULL;
@@ -5750,16 +5151,13 @@ bytes_regrindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	                                       &exec))
 		goto err;
 	result = ReGroups_Malloc(1 + exec.rewr_exec.rx_code->rc_ngrps);
-	if unlikely(!result) {
-		bytes_search_regex_putargs(self);
+	if unlikely(!result)
 		goto err;
-	}
 	exec.rewr_exec.rx_nmatch = exec.rewr_exec.rx_code->rc_ngrps;
 	exec.rewr_exec.rx_pmatch = result->rg_groups + 1;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
-	bytes_search_regex_putargs(self);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_g;
+		goto err_r;
 	if (status == Dee_RE_STATUS_NOMATCH)
 		goto not_found;
 	match_size += (size_t)status;
@@ -5769,7 +5167,7 @@ bytes_regrindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	return Dee_AsObject(result);
 not_found:
 	err_regex_not_found_in_bytes(self, &exec);
-err_g:
+err_r:
 	ReGroups_Free(result);
 err:
 	return NULL;
@@ -5796,7 +5194,6 @@ bytes_relocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		                                      (size_t)status),
 		                             match_size);
 	}
-	bytes_search_regex_putargs(self);
 	return result;
 err:
 	return NULL;
@@ -5822,7 +5219,6 @@ bytes_rerlocate(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		                             (void *)((char const *)exec.rewr_exec.rx_inbase + (size_t)status),
 		                             match_size);
 	}
-	bytes_search_regex_putargs(self);
 	return result;
 err:
 	return NULL;
@@ -5911,7 +5307,7 @@ bytes_repartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		goto err;
 	status = DeeRegex_Search(&exec.rewr_exec, exec.rewr_range, &match_size);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_args;
+		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		result = bytes_pack_partition_not_found(self,
 		                                        (char const *)exec.rewr_exec.rx_inbase,
@@ -5928,10 +5324,7 @@ bytes_repartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		                                    (size_t)status + match_size,
 		                                    exec.rewr_exec.rx_endoff);
 	}
-	bytes_search_regex_putargs(self);
 	return result;
-err_args:
-	bytes_search_regex_putargs(self);
 err:
 	return NULL;
 }
@@ -5948,7 +5341,7 @@ bytes_rerpartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *
 		goto err;
 	status = DeeRegex_RSearch(&exec.rewr_exec, exec.rewr_range, &match_size);
 	if unlikely(status == Dee_RE_STATUS_ERROR)
-		goto err_args;
+		goto err;
 	if (status == Dee_RE_STATUS_NOMATCH) {
 		result = bytes_pack_partition_not_found(self,
 		                                        (char const *)exec.rewr_exec.rx_inbase,
@@ -5965,10 +5358,7 @@ bytes_rerpartition(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *
 		                                    (size_t)status + match_size,
 		                                    exec.rewr_exec.rx_endoff);
 	}
-	bytes_search_regex_putargs(self);
 	return result;
-err_args:
-	bytes_search_regex_putargs(self);
 err:
 	return NULL;
 }
@@ -6005,7 +5395,6 @@ bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	exec.rx_code = DeeString_GetRegex(pattern, Dee_RE_COMPILE_NOUTF8, rules);
 	if unlikely(!exec.rx_code)
 		goto err_printer;
-	DeeBytes_IncUse(self);
 	exec.rx_nmatch   = COMPILER_LENOF(groups);
 	exec.rx_pmatch   = groups;
 	exec.rx_inbase   = DeeBytes_DATA(self);
@@ -6019,15 +5408,15 @@ bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 		memsetp(groups, (void *)(uintptr_t)(size_t)-1, 2 * 9);
 		match_offset = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 		if unlikely(match_offset == Dee_RE_STATUS_ERROR)
-			goto err_printer_use;
+			goto err_printer;
 		if (match_offset == Dee_RE_STATUS_NOMATCH)
 			break;
 
 		/* Flush until start-of-match. */
 		if unlikely(Dee_bytes_printer_append(&printer,
-		                                 (byte_t const *)exec.rx_inbase + exec.rx_startoff,
-		                                 (size_t)match_offset - exec.rx_startoff) < 0)
-			goto err_printer_use;
+		                                     (byte_t const *)exec.rx_inbase + exec.rx_startoff,
+		                                     (size_t)match_offset - exec.rx_startoff) < 0)
+			goto err_printer;
 
 		/* Parse and print the replacement bytes. */
 		for (replace_iter = replace_flush = replace_start;
@@ -6043,11 +5432,11 @@ bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 do_insert_match:
 				if unlikely(Dee_bytes_printer_print(&printer, replace_flush,
 				                                (size_t)(replace_iter - replace_flush)) < 0)
-					goto err_printer_use;
+					goto err_printer;
 				if unlikely(Dee_bytes_printer_append(&printer,
-				                                 (byte_t const *)exec.rx_inbase + match.rm_so,
-				                                 (size_t)(match.rm_eo - match.rm_so)) < 0)
-					goto err_printer_use;
+				                                     (byte_t const *)exec.rx_inbase + match.rm_so,
+				                                     (size_t)(match.rm_eo - match.rm_so)) < 0)
+					goto err_printer;
 				++replace_iter;
 				if (ch != '&')
 					++replace_iter;
@@ -6059,8 +5448,8 @@ do_insert_match:
 				if (ch == '&' || ch == '\\') {
 					/* Insert literal '&' or '\' */
 					if unlikely(Dee_bytes_printer_print(&printer, replace_flush,
-					                                (size_t)(replace_iter - replace_flush)) < 0)
-						goto err_printer_use;
+					                                    (size_t)(replace_iter - replace_flush)) < 0)
+						goto err_printer;
 					++replace_iter;
 					replace_flush = replace_iter;
 					++replace_iter;
@@ -6084,8 +5473,8 @@ do_insert_match:
 		/* Flush remainder of replacement bytes. */
 		if (replace_flush < replace_end) {
 			if unlikely(Dee_bytes_printer_print(&printer, replace_flush,
-			                                (size_t)(replace_end - replace_flush)) < 0)
-				goto err_printer_use;
+			                                    (size_t)(replace_end - replace_flush)) < 0)
+				goto err_printer;
 		}
 
 		/* Keep on scanning after the matched area. */
@@ -6096,19 +5485,15 @@ do_insert_match:
 	/* Flush remainder */
 #ifndef __OPTIMIZE_SIZE__
 	if unlikely(exec.rx_startoff == 0) {
-		DeeBytes_DecUse(self);
 		Dee_bytes_printer_fini(&printer);
 		return_reference_(self);
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely(Dee_bytes_printer_append(&printer,
-	                                 (byte_t const *)exec.rx_inbase + exec.rx_startoff,
-	                                 exec.rx_endoff - exec.rx_startoff) < 0)
-		goto err_printer_use;
-	DeeBytes_DecUse(self);
+	                                     (byte_t const *)exec.rx_inbase + exec.rx_startoff,
+	                                     exec.rx_endoff - exec.rx_startoff) < 0)
+		goto err_printer;
 	return (DREF Bytes *)Dee_bytes_printer_pack(&printer);
-err_printer_use:
-	DeeBytes_DecUse(self);
 err_printer:
 	Dee_bytes_printer_fini(&printer);
 /*err:*/
@@ -6137,7 +5522,7 @@ bytes_base_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 	if unlikely(!result->rx_code)
 		goto err;
 	result->rx_eflags = 0; /* TODO: NOTBOL/NOTEOL */
-	result->rx_inbase = DeeBytes_DATA(self); /* TODO: b_inuse_p */
+	result->rx_inbase = DeeBytes_DATA(self);
 	result->rx_insize = DeeBytes_SIZE(self);
 	if (result->rx_endoff > result->rx_insize)
 		result->rx_endoff = result->rx_insize;
@@ -6215,7 +5600,6 @@ bytes_restartswith(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *
 	                                        &exec))
 		goto err;
 	result = DeeRegex_Match(&exec);
-	bytes_generic_regex_putargs(self);
 	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
 	return_bool(result != Dee_RE_STATUS_NOMATCH);
@@ -6233,7 +5617,6 @@ bytes_reendswith(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	                                        &exec))
 		goto err;
 	result = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
-	bytes_generic_regex_putargs(self);
 	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
 	if unlikely(result == Dee_RE_STATUS_NOMATCH)
@@ -6255,7 +5638,7 @@ bytes_relstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	for (;;) {
 		Dee_ssize_t status = DeeRegex_Match(&exec);
 		if unlikely(status == Dee_RE_STATUS_ERROR)
-			goto err_args;
+			goto err;
 		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (status == 0)
@@ -6274,10 +5657,7 @@ bytes_relstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		                                           (void *)((char const *)exec.rx_inbase + exec.rx_startoff),
 		                                           exec.rx_endoff - exec.rx_startoff);
 	}
-	bytes_generic_regex_putargs(self);
 	return result;
-err_args:
-	bytes_generic_regex_putargs(self);
 err:
 	return NULL;
 }
@@ -6294,7 +5674,7 @@ bytes_rerstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		size_t match_size;
 		Dee_ssize_t status = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
 		if unlikely(status == Dee_RE_STATUS_ERROR)
-			goto err_args;
+			goto err;
 		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (match_size == 0)
@@ -6316,10 +5696,7 @@ bytes_rerstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 		                                           (void *)((char const *)exec.rx_inbase + exec.rx_startoff),
 		                                           exec.rx_endoff - exec.rx_startoff);
 	}
-	bytes_generic_regex_putargs(self);
 	return result;
-err_args:
-	bytes_generic_regex_putargs(self);
 err:
 	return NULL;
 }
@@ -6336,7 +5713,7 @@ bytes_restrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	for (;;) {
 		Dee_ssize_t status = DeeRegex_Match(&exec);
 		if unlikely(status == Dee_RE_STATUS_ERROR)
-			goto err_args;
+			goto err;
 		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (status == 0)
@@ -6351,7 +5728,7 @@ bytes_restrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		size_t match_size;
 		Dee_ssize_t status = DeeRegex_RSearch(&exec, (size_t)-1, &match_size);
 		if unlikely(status == Dee_RE_STATUS_ERROR)
-			goto err_args;
+			goto err;
 		if (status == Dee_RE_STATUS_NOMATCH)
 			break;
 		if (match_size == 0)
@@ -6373,10 +5750,7 @@ bytes_restrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		                                           (void *)((char const *)exec.rx_inbase + exec.rx_startoff),
 		                                           exec.rx_endoff - exec.rx_startoff);
 	}
-	bytes_generic_regex_putargs(self);
 	return result;
-err_args:
-	bytes_generic_regex_putargs(self);
 err:
 	return NULL;
 }
@@ -6390,7 +5764,6 @@ bytes_recontains(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	                                        &exec))
 		goto err;
 	result = DeeRegex_Search(&exec, (size_t)-1, NULL);
-	bytes_generic_regex_putargs(self);
 	if unlikely(result == Dee_RE_STATUS_ERROR)
 		goto err;
 	return_bool(result != Dee_RE_STATUS_NOMATCH);
@@ -6412,7 +5785,7 @@ bytes_recount(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		size_t match_size;
 		result = DeeRegex_SearchNoEpsilon(&exec, (size_t)-1, &match_size);
 		if unlikely(result == Dee_RE_STATUS_ERROR)
-			goto err_args;
+			goto err;
 		if (result == Dee_RE_STATUS_NOMATCH)
 			break;
 		++count;
@@ -6420,10 +5793,7 @@ bytes_recount(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		if (exec.rx_startoff >= exec.rx_endoff)
 			break;
 	}
-	bytes_generic_regex_putargs(self);
 	return DeeInt_NewSize(count);
-err_args:
-	bytes_generic_regex_putargs(self);
 err:
 	return NULL;
 }
@@ -6434,21 +5804,17 @@ bytes_xchitem_index(Bytes *self, size_t index, DeeObject *value) {
 	byte_t val, result;
 	if (DeeObject_AsByte(value, &val))
 		goto err;
-	DeeBytes_IncUse(self);
 	if unlikely(index >= DeeBytes_SIZE(self)) {
 		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index,
 		                          DeeBytes_SIZE(self));
-		goto err_use;
+		goto err;
 	}
 	if unlikely(!DeeBytes_WRITABLE(self))
-		goto err_use_readonly;
+		goto err_readonly;
 	result = atomic_xch(&DeeBytes_DATA(self)[index], val);
-	DeeBytes_DecUse(self);
 	return DeeInt_NEWU(result);
-err_use_readonly:
+err_readonly:
 	err_bytes_not_writable(Dee_AsObject(self));
-err_use:
-	DeeBytes_DecUse(self);
 err:
 	return NULL;
 }
