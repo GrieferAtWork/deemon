@@ -81,14 +81,14 @@ public:
 
 public:
 	/* Bytes-specific functions (these assume that this is really a Bytes-object) */
-	ATTR_RETNONNULL WUNUSED uint8_t *cdata() const DEE_CXX_NOTHROW {
+	ATTR_RETNONNULL WUNUSED __BYTE_TYPE__ *cdata() const DEE_CXX_NOTHROW {
 		return DeeBytes_DATA(this);
 	}
 	WUNUSED size_t csize() const DEE_CXX_NOTHROW {
 		return DeeBytes_SIZE(this);
 	}
 	WUNUSED bool cwritable() const DEE_CXX_NOTHROW {
-		return DeeBytes_WRITABLE(this);
+		return DeeBytes_IsWritable(this);
 	}
 	WUNUSED bool cempty() const DEE_CXX_NOTHROW {
 		return DeeBytes_IsEmpty(this);

@@ -4751,7 +4751,7 @@ int_tobytes(DeeIntObject *self, size_t argc,
 	if unlikely(!result)
 		goto err;
 	if (DeeInt_AsBytes(Dee_AsObject(self),
-	                   DeeBytes_DATA(result),
+	                   DeeBytes_BUFFER_DATA(result),
 	                   args.length,
 	                   encode_little,
 	                   args.signed_))

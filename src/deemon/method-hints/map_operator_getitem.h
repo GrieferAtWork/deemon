@@ -356,7 +356,7 @@ string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) 
 	if (DeeBytes_Check(rhs)) {
 		size_t lhs_len = strlen(lhs);
 		return lhs_len == DeeBytes_SIZE(rhs) &&
-		       bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0;
+		       bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
 	}
 	/* `string.operator ==' isn't implemented for any other types. */
 	return false;

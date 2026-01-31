@@ -1646,13 +1646,13 @@ DeeFileWriter_String2BytesOrUnlock(DeeFileWriterObject *__restrict me) {
 			goto unlock_and_collect_memory;
 
 		/* Convert ucs-1 (aka. latin-1) string to utf-8 bytes */
-		out_iter = bytes->b_buffer;
+		out_iter = DeeBytes_BUFFER_DATA(bytes);
 		if (ucs_chars == ucs_length) {
 			out_iter = (byte_t *)mempcpy(out_iter, string->s_str, ucs_length);
 		} else {
 			out_iter = ucs1_to_utf8_convert(out_iter, (uint8_t const *)string->s_str, ucs_chars);
 		}
-		ASSERT(out_iter == bytes->b_buffer + ucs_length);
+		ASSERT(out_iter == DeeBytes_BUFFER_DATA(bytes) + ucs_length);
 
 		/* Append trailing, pending utf-8 characters */
 		memcpy(out_iter, me->w_printer.wp_uni.up_pend, num_pending);
@@ -1703,13 +1703,13 @@ DeeFileWriter_String2BytesOrUnlock(DeeFileWriterObject *__restrict me) {
 		goto unlock_and_collect_memory;
 
 	/* Convert ucs-2/4 string to utf-8 bytes */
-	out_iter = bytes->b_buffer;
+	out_iter = DeeBytes_BUFFER_DATA(bytes);
 	if (width == STRING_WIDTH_2BYTE) {
 		out_iter = ucs2_to_utf8_convert(out_iter, wstr.cp16, ucs_chars);
 	} else {
 		out_iter = ucs4_to_utf8_convert(out_iter, wstr.cp32, ucs_chars);
 	}
-	ASSERT(out_iter == bytes->b_buffer + ucs_length);
+	ASSERT(out_iter == DeeBytes_BUFFER_DATA(bytes) + ucs_length);
 
 	/* Append trailing, pending utf-8 characters */
 	memcpy(out_iter, me->w_printer.wp_uni.up_pend, num_pending);
@@ -2569,7 +2569,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 			if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
 				goto unlock_and_destroy_new_bytes_and_try_again;
 		}
-		memcpy(new_bytes->b_buffer, DeeBytes_DATA(bytes), bytes_used);
+		memcpy(DeeBytes_BUFFER_DATA(new_bytes), DeeBytes_DATA(bytes), bytes_used);
 		ASSERT(self->w_printer.wp_byt.bp_bytes == bytes);
 		self->w_printer.wp_byt.bp_bytes = new_bytes;
 		if likely(Dee_DecrefIfNotOne(bytes))
@@ -2599,7 +2599,8 @@ unlock_and_destroy_new_bytes_and_try_again:
 			goto unlock_and_destroy_new_bytes_and_try_again;
 		if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
 			goto unlock_and_destroy_new_bytes_and_try_again;
-		memcpy(new_bytes->b_buffer, bytes->b_buffer, bytes_used);
+		memcpy(DeeBytes_BUFFER_DATA(new_bytes),
+		       DeeBytes_BUFFER_DATA(bytes), bytes_used);
 		DeeBytes_Destroy(bytes);
 	}
 	self->w_printer.wp_byt.bp_bytes = new_bytes;
@@ -2641,7 +2642,7 @@ again_locked:
 				ASSERT(self->w_printer.wp_byt.bp_length == 0);
 				bytes = DeeBytes_TryNewBufferUninitialized(avail);
 				if likely(bytes) {
-					memcpy(bytes->b_buffer, buffer, bufsize);
+					memcpy(DeeBytes_BUFFER_DATA(bytes), buffer, bufsize);
 set_initial_bytes_and_unlock:
 					self->w_printer.wp_byt.bp_bytes  = bytes;
 					self->w_printer.wp_byt.bp_length = bufsize;
@@ -2695,7 +2696,8 @@ unlock_and_destroy_new_bytes_and_try_again:
 							goto unlock_and_destroy_new_bytes_and_try_again;
 					}
 				}
-				memcpy(mempcpy(new_bytes->b_buffer, DeeBytes_DATA(bytes), bytes_used),
+				memcpy(mempcpy(DeeBytes_BUFFER_DATA(new_bytes),
+				               DeeBytes_DATA(bytes), bytes_used),
 				       buffer, bufsize);
 				ASSERT(self->w_printer.wp_byt.bp_bytes == bytes);
 				self->w_printer.wp_byt.bp_bytes  = new_bytes;
@@ -2732,7 +2734,8 @@ unlock_and_destroy_new_bytes_and_try_again:
 							goto unlock_and_destroy_new_bytes_and_try_again;
 						if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
 							goto unlock_and_destroy_new_bytes_and_try_again;
-						memcpy(new_bytes->b_buffer, bytes->b_buffer, bytes_used);
+						memcpy(DeeBytes_BUFFER_DATA(new_bytes),
+						       DeeBytes_BUFFER_DATA(bytes), bytes_used);
 						DeeBytes_Destroy(bytes);
 					}
 				}
@@ -2743,7 +2746,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 			ASSERT((DeeBytes_SIZE(bytes) - bytes_used) >= bufsize);
 
 			/* Append data to bytes buffer */
-			memcpy(bytes->b_buffer + bytes_used, buffer, bufsize);
+			memcpy(DeeBytes_BUFFER_DATA(bytes) + bytes_used, buffer, bufsize);
 			self->w_printer.wp_byt.bp_length += bufsize;
 			goto done_unlock;
 		}
@@ -3052,7 +3055,7 @@ again:
 
 	/* bzero-initialize memory between the current (old) EOF and the caller-given `pos' */
 	old_length = self->w_printer.wp_byt.bp_length;
-	base = DeeBytes_DATA(self->w_printer.wp_byt.bp_bytes);
+	base = DeeBytes_BUFFER_DATA(self->w_printer.wp_byt.bp_bytes);
 	ASSERT(DeeBytes_SIZE(self->w_printer.wp_byt.bp_bytes) >= ((size_t)pos + bufsize));
 	if (old_length < (size_t)pos) {
 		size_t num_bzero = (size_t)pos - old_length;

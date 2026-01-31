@@ -2367,9 +2367,9 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		goto err;
 
 	{
-		char const *result_start, *result_end;
+		byte_t const *result_start, *result_end;
 		size_t new_text_size, old_text_size;
-		result_start = (char const *)DeeBytes_DATA(script_result);
+		result_start = DeeBytes_DATA(script_result);
 		result_end   = result_start + DeeBytes_SIZE(script_result);
 
 		/* Strip trailing whitespace. */

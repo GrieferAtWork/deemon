@@ -51,7 +51,8 @@ typedef struct Dee_bytes_object {
 	size_t                                 b_size;    /* [const] Size of the used portion of the buffer */
 	DREF DeeObject                        *b_orig;    /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
 	unsigned int                           b_flags;   /* [const] Buffer access flags (Set of `Dee_BUFFER_F*') */
-	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_buffer); /* [b_size][valid_if(DeeBytes_IsBuffer(self))] Inline buffer data */
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_buffer); /* [b_size + DeeBytes_GetBufferDataOffset(self)]
+	                                                   * [valid_if(DeeBytes_IsBuffer(self))] Inline buffer data */
 } DeeBytesObject;
 
 
@@ -78,22 +79,37 @@ typedef struct Dee_bytes_object {
 /* Access to the effect data-blob of some given "Bytes". */
 #define DeeBytes_DATA(x) Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_base
 #define DeeBytes_SIZE(x) Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_size
-#define DeeBytes_END(x)  (DeeBytes_DATA(x) + DeeBytes_SIZE(x))
+#define DeeBytes_END(x)  (DeeBytes_DATA(x) + ((DeeBytesObject const *)(x))->b_size)
 
-#define DeeBytes_WRITABLE(x)   (Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_flags & Dee_BUFFER_FWRITABLE)
-#define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes' is final. */
-#define DeeBytes_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBytes_Type)
+/* Helpers to get/set a specific byte */
+#ifdef __INTELLISENSE__
+#define DeeBytes_GetByte(x, i) (((__BYTE_TYPE__ const *)Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_base)[i])
+#else /* __INTELLISENSE__ */
+#define DeeBytes_GetByte(x, i) (Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_base[i])
+#endif /* !__INTELLISENSE__ */
+#define DeeBytes_SetByte(x, i, v) (void)(Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_base[i] = (v))
+
 #define DeeBytes_GetOrig(x)    Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_orig
 #define DeeBytes_IsBuffer(x)   (DeeBytes_GetOrig(x) == Dee_AsObject(x))
 #define DeeBytes_IsView(x)     (DeeBytes_GetOrig(x) != Dee_AsObject(x))
 #define DeeBytes_IsEmpty(x)    (DeeBytes_SIZE(x) == 0)
+#define DeeBytes_IsWritable(x) (Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_flags & Dee_BUFFER_FWRITABLE)
+#define DeeBytes_IsReadOnly(x) (!DeeBytes_IsWritable(x))
 
 /* The following may only be used when `DeeBytes_IsBuffer()' */
-#define DeeBytes_BufferData(x) Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_buffer
-#define DeeBytes_BufferSize(x) (DeeBytes_SIZE(x) + DeeBytes_BufferDataOffset(x))
-#define DeeBytes_BufferDataOffset(x) \
+#define DeeBytes_BUFFER_DATA(x)         Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_buffer
+#define DeeBytes_GetBufferByte(x, i)    (Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_buffer[i])
+#define DeeBytes_SetBufferByte(x, i, v) (void)(Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_buffer[i] = (v))
+#define DeeBytes_GetBufferDataOffset(x) \
 	((size_t)(Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_buffer - Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_base))
+#define _DeeBytes_InitBuffer(self, num_bytes)   \
+	(void)((self)->b_orig = Dee_AsObject(self), \
+	       (self)->b_base = (self)->b_buffer,   \
+	       (self)->b_size = (num_bytes))
 
+/* Check for bytes objects... */
+#define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes' is final. */
+#define DeeBytes_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBytes_Type)
 
 /* The builtin `Bytes' data type.
  * This type offers functionality identical to what can also be found in
@@ -140,25 +156,16 @@ DeeObject_TBytes(DeeTypeObject *tp_self,
                  size_t start, size_t end);
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
-DFUNDEF WUNUSED DREF DeeBytesObject *DCALL
-DeeBytes_NewBuffer(size_t num_bytes, __BYTE_TYPE__ init);
+DFUNDEF WUNUSED DREF DeeBytesObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, __BYTE_TYPE__ init);
 
-DFUNDEF WUNUSED DREF DeeBytesObject *DCALL
-DeeBytes_NewBufferUninitialized(size_t num_bytes);
-DFUNDEF WUNUSED DREF DeeBytesObject *DCALL
-DeeBytes_TryNewBufferUninitialized(size_t num_bytes);
+/* Byte buffer API -- these functions always return `DeeBytes_IsBuffer()' */
+DFUNDEF WUNUSED DREF DeeBytesObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
+DFUNDEF WUNUSED DREF DeeBytesObject *DCALL DeeBytes_TryNewBufferUninitialized(size_t num_bytes);
+DFUNDEF WUNUSED ATTR_INS(1, 2) DREF DeeBytesObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
+DFUNDEF WUNUSED ATTR_INS(1, 2) DREF DeeBytesObject *DCALL DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL DeeBytes_TryResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
 #define DeeBytes_Destroy(self) Dee_DecrefDokill(self)
-
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
-DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
-DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes);
-
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
-DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
-DeeBytes_TryResizeBuffer(/*inherit(on_success)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
-
 DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
 DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeBytesObject *__restrict self, size_t num_bytes);
 

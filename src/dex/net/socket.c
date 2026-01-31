@@ -1880,10 +1880,10 @@ err_printer:
 	if unlikely(!result)
 		goto err;
 	recv_length = source ? DeeSocket_RecvFrom(self, timeout_nanoseconds,
-	                                          DeeBytes_DATA(result),
+	                                          DeeBytes_BUFFER_DATA(result),
 	                                          max_bufsize, flags, source)
 	                     : DeeSocket_Recv(self, timeout_nanoseconds,
-	                                      DeeBytes_DATA(result),
+	                                      DeeBytes_BUFFER_DATA(result),
 	                                      max_bufsize, flags);
 	if unlikely(recv_length < 0) {
 		Dee_DecrefDokill(result);

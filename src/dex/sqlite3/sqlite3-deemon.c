@@ -119,11 +119,10 @@ again:
 		goto err;
 	data = DeeBytes_DATA(self);
 	size = DeeBytes_SIZE(self);
-	if (data == self->b_buffer) {
+	if (data == DeeBytes_BUFFER_DATA(self)) {
 		/* Simple case: can directly pass `data' */
 		Dee_Incref(self);
-		rc = sqlite3_bind_blobSIZ(stmt, index, data, size,
-		                          &_dee_sqlite3_bind_bytes_decref);
+		rc = sqlite3_bind_blobSIZ(stmt, index, data, size, &_dee_sqlite3_bind_bytes_decref);
 	} else {
 		rc = sqlite3_bind_blobSIZ(stmt, index, data, size, SQLITE_TRANSIENT);
 	}

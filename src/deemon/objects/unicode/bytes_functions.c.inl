@@ -1065,10 +1065,10 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		old_size = DeeBytes_SIZE(self);
 		if (new_size > old_size) {
 			void *p;
-			p = mempcpy(result->b_buffer, DeeBytes_DATA(self), old_size);
+			p = mempcpy(DeeBytes_BUFFER_DATA(result), DeeBytes_DATA(self), old_size);
 			bzero(p, new_size - old_size);
 		} else {
-			memcpy(result->b_buffer, DeeBytes_DATA(self), new_size);
+			memcpy(DeeBytes_BUFFER_DATA(result), DeeBytes_DATA(self), new_size);
 		}
 	} else if (argc == 2) {
 		byte_t init;
@@ -1080,11 +1080,11 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(!result)
 			goto err;
 		if (new_size <= DeeBytes_SIZE(self)) {
-			memcpy(result->b_buffer, DeeBytes_DATA(self), new_size);
+			memcpy(DeeBytes_BUFFER_DATA(result), DeeBytes_DATA(self), new_size);
 		} else {
 			void *endptr;
 			size_t old_size = DeeBytes_SIZE(self);
-			endptr = mempcpy(result->b_buffer, DeeBytes_DATA(self), old_size);
+			endptr = mempcpy(DeeBytes_BUFFER_DATA(result), DeeBytes_DATA(self), old_size);
 			memset(endptr, init, new_size - old_size);
 		}
 	} else {
@@ -1100,7 +1100,7 @@ PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_reversed(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DREF Bytes *result;
-	byte_t *data, *dst;
+	byte_t *src, *dst;
 	size_t size;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("reversed", params: "
 	size_t start = 0, size_t end = (size_t)-1
@@ -1120,11 +1120,11 @@ bytes_reversed(Bytes *self, size_t argc,
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err;
-	data = DeeBytes_DATA(self);
-	dst  = DeeBytes_DATA(result);
-	data += size;
+	dst = DeeBytes_BUFFER_DATA(result);
+	src = DeeBytes_DATA(self);
+	src += size;
 	do {
-		*dst++ = *--data;
+		*dst++ = *--src;
 	} while (--size);
 	return result;
 empty:
@@ -1150,7 +1150,7 @@ bytes_reverse(Bytes *self, size_t argc,
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":reverse", &args))
 		goto err;
 /*[[[end]]]*/
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -1168,7 +1168,7 @@ bytes_makereadonly(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("makereadonly", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "makereadonly");
 /*[[[end]]]*/
-	if (!DeeBytes_WRITABLE(self))
+	if (!DeeBytes_IsWritable(self))
 		return_reference_(self);
 	return (DREF Bytes *)DeeBytes_NewSubViewRo(self,
 	                                           DeeBytes_DATA(self),
@@ -1183,7 +1183,7 @@ bytes_makewritable(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("makewritable", params: "");]]]*/
 	DeeArg_Unpack0(err, argc, argv, "makewritable");
 /*[[[end]]]*/
-	if (DeeBytes_WRITABLE(self))
+	if (DeeBytes_IsWritable(self))
 		return_reference_(self);
 	/* Return a copy of `self' */
 	result = DeeBytes_NewBufferData(DeeBytes_DATA(self),
@@ -1636,7 +1636,7 @@ bytes_lower(Bytes *self, size_t argc,
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err;
-	dst = DeeBytes_DATA(result);
+	dst = DeeBytes_BUFFER_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
@@ -1674,7 +1674,7 @@ bytes_upper(Bytes *self, size_t argc,
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err;
-	dst = DeeBytes_DATA(result);
+	dst = DeeBytes_BUFFER_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
@@ -1713,7 +1713,7 @@ bytes_title(Bytes *self, size_t argc,
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err;
-	dst = DeeBytes_DATA(result);
+	dst = DeeBytes_BUFFER_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
@@ -1754,7 +1754,7 @@ bytes_capitalize(Bytes *self, size_t argc,
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err;
-	dst = DeeBytes_DATA(result);
+	dst = DeeBytes_BUFFER_DATA(result);
 	src = DeeBytes_DATA(self);
 	byte = *src++;
 	*dst++ = (byte_t)DeeUni_ToUpper(byte);
@@ -1794,7 +1794,7 @@ bytes_swapcase(Bytes *self, size_t argc,
 	result = DeeBytes_NewBufferUninitialized(size);
 	if unlikely(!result)
 		goto err;
-	dst = DeeBytes_DATA(result);
+	dst = DeeBytes_BUFFER_DATA(result);
 	src = DeeBytes_DATA(self);
 	do {
 		byte_t byte = *src++;
@@ -1829,7 +1829,7 @@ bytes_tolower(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -1865,7 +1865,7 @@ bytes_toupper(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -1902,7 +1902,7 @@ bytes_totitle(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -1941,7 +1941,7 @@ bytes_tocapitalize(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -1980,7 +1980,7 @@ bytes_toswapcase(Bytes *self, size_t argc,
 /*[[[end]]]*/
 	size = DeeBytes_SIZE(self);
 	CLAMP_SUBSTR_NONEMPTY(&args.start, &args.end, &size, empty);
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -2185,7 +2185,7 @@ bytes_toreplace(Bytes *self, size_t argc,
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -2248,7 +2248,7 @@ bytes_tocasereplace(Bytes *self, size_t argc,
 		                find_needle.n_size, replace_needle.n_size);
 		goto err;
 	}
-	if unlikely(!DeeBytes_WRITABLE(self)) {
+	if unlikely(!DeeBytes_IsWritable(self)) {
 		err_bytes_not_writable(Dee_AsObject(self));
 		goto err;
 	}
@@ -3396,10 +3396,10 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 		fill_front = (args.width - DeeBytes_SIZE(self));
 		fill_back  = fill_front / 2;
 		fill_front -= fill_back;
-		mempfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
-		memcpyb(DeeBytes_DATA(result) + fill_front,
+		mempfilb(DeeBytes_BUFFER_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
+		memcpyb(DeeBytes_BUFFER_DATA(result) + fill_front,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
-		mempfilb(DeeBytes_DATA(result) + fill_front + DeeBytes_SIZE(self),
+		mempfilb(DeeBytes_BUFFER_DATA(result) + fill_front + DeeBytes_SIZE(self),
 		        fill_back, filler.n_data, filler.n_size);
 	}
 	return result;
@@ -3444,9 +3444,9 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(!result)
 			goto err;
 		fill_back = (args.width - DeeBytes_SIZE(self));
-		memcpyb(DeeBytes_DATA(result) + 0,
+		memcpyb(DeeBytes_BUFFER_DATA(result) + 0,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
-		mempfilb(DeeBytes_DATA(result) + DeeBytes_SIZE(self),
+		mempfilb(DeeBytes_BUFFER_DATA(result) + DeeBytes_SIZE(self),
 		        fill_back, filler.n_data, filler.n_size);
 	}
 	return result;
@@ -3491,8 +3491,8 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(!result)
 			goto err;
 		fill_front = (args.width - DeeBytes_SIZE(self));
-		mempfilb(DeeBytes_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
-		memcpyb(DeeBytes_DATA(result) + fill_front,
+		mempfilb(DeeBytes_BUFFER_DATA(result) + 0, fill_front, filler.n_data, filler.n_size);
+		memcpyb(DeeBytes_BUFFER_DATA(result) + fill_front,
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
 	}
 	return result;
@@ -3537,8 +3537,8 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		result = DeeBytes_NewBufferUninitialized(args.width);
 		if unlikely(!result)
 			goto err;
-		dst        = DeeBytes_DATA(result);
-		src        = DeeBytes_DATA(self);
+		dst = DeeBytes_BUFFER_DATA(result);
+		src = DeeBytes_DATA(self);
 		src_len    = DeeBytes_SIZE(self);
 		fill_front = (args.width - src_len);
 		while (src_len && DeeUni_IsSign(src[0])) {
@@ -5809,7 +5809,7 @@ bytes_xchitem_index(Bytes *self, size_t index, DeeObject *value) {
 		                          DeeBytes_SIZE(self));
 		goto err;
 	}
-	if unlikely(!DeeBytes_WRITABLE(self))
+	if unlikely(!DeeBytes_IsWritable(self))
 		goto err_readonly;
 	result = atomic_xch(&DeeBytes_DATA(self)[index], val);
 	return DeeInt_NEWU(result);
@@ -5822,7 +5822,7 @@ err:
 INTDEF struct type_method tpconst bytes_methods[];
 INTDEF struct type_method_hint tpconst bytes_method_hints[];
 INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
-	/* TODO: Pretty much everything below is can be a constant expression when "!DeeBytes_WRITABLE(thisarg)" */
+	/* TODO: Pretty much everything below is can be a constant expression when "!DeeBytes_IsWritable(thisarg)" */
 	TYPE_KWMETHOD("decode", &string_decode,
 	              "(codec:?Dstring,errors=!Pstrict)->?X2?Dstring?O\n"
 	              "#tValueError{The given @codec or @errors wasn't recognized}"

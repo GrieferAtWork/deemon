@@ -702,7 +702,7 @@ ltype_frombytes(DeeLValueTypeObject *self, size_t argc, DeeObject *const *argv) 
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.data, &DeeBytes_Type))
 		goto err;
-	if (!DeeBytes_WRITABLE(args.data))
+	if (!DeeBytes_IsWritable(args.data))
 		goto err_not_writable;
 	type_size = DeeSType_Sizeof(self->lt_orig);
 	data_size = DeeBytes_SIZE(args.data);
@@ -1403,7 +1403,7 @@ struct_tobytes(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	/* Otherwise, copy bytes of `self' into the provided bytes-buffer at the specified offset. */
 	if (DeeObject_AssertTypeExact(args.data, &DeeBytes_Type))
 		goto err;
-	if unlikely(!DeeBytes_WRITABLE(args.data))
+	if unlikely(!DeeBytes_IsWritable(args.data))
 		goto err_not_writable;
 	data_size = DeeBytes_SIZE(args.data);
 	if unlikely(OVERFLOW_USUB(data_size, args.offset, &data_size))

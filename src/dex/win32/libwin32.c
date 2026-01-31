@@ -4576,7 +4576,7 @@ again:
 	ulReturnLength = 0;
 	nsResult = (*NtQueryInformationProcess)(ProcessHandle,
 	                                        (/*PROCESSINFOCLASS*/ int)ProcessInformationClass,
-	                                        DeeBytes_DATA(result), (ULONG)DeeBytes_SIZE(result),
+	                                        DeeBytes_BUFFER_DATA(result), (ULONG)DeeBytes_SIZE(result),
 	                                        &ulReturnLength);
 	DBG_ALIGNMENT_ENABLE();
 	if (NT_ERROR(nsResult)) {
@@ -4668,7 +4668,7 @@ again:
 	ulReturnLength = 0;
 	nsResult = (*NtWow64QueryInformationProcess64)(ProcessHandle,
 	                                               (/*PROCESSINFOCLASS*/ int)ProcessInformationClass,
-	                                               DeeBytes_DATA(result), (ULONG)DeeBytes_SIZE(result),
+	                                               DeeBytes_BUFFER_DATA(result), (ULONG)DeeBytes_SIZE(result),
 	                                               &ulReturnLength);
 	DBG_ALIGNMENT_ENABLE();
 	if (NT_ERROR(nsResult)) {
@@ -4753,7 +4753,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f_impl(HANDL
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = ReadProcessMemory(hProcess, (LPCVOID)lpBaseAddress,
-	                        DeeBytes_DATA(result), nSize,
+	                        DeeBytes_BUFFER_DATA(result), nSize,
 	                        &szNumberOfBytesRead);
 	if (!bOk) {
 		DWORD dwError;
@@ -4826,7 +4826,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f_i
 again:
 	DBG_ALIGNMENT_DISABLE();
 	nsResult = (*NtWow64ReadVirtualMemory64)(hProcess, (PVOID64)lpBaseAddress,
-	                                         DeeBytes_DATA(result), nSize,
+	                                         DeeBytes_BUFFER_DATA(result), nSize,
 	                                         &szNumberOfBytesRead);
 	if (NT_ERROR(nsResult)) {
 		DWORD dwError;

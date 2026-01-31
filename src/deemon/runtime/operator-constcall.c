@@ -189,7 +189,7 @@ PRIVATE ATTR_PURE WUNUSED bool DCALL
 ob_is_const_castable_or_robytes(DeeObject *ob) {
 	DeeTypeObject *tp = Dee_TYPE(ob);
 	if (tp == &DeeBytes_Type)
-		return !DeeBytes_WRITABLE(ob);
+		return !DeeBytes_IsWritable(ob);
 	return DeeType_IsConstCastable(tp);
 }
 
@@ -444,22 +444,22 @@ PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 	// TODO: case METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS:
 
 	case METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES:
-		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_WRITABLE(thisarg))
+		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_IsWritable(thisarg))
 			goto nope;
 		return check_foreach_args_kw(argc, argv, kw, &ob_is_elem_const_castable);
 
 	case METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES:
-		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_WRITABLE(thisarg))
+		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_IsWritable(thisarg))
 			goto nope;
 		return check_foreach_args_kw(argc, argv, kw, &ob_is_elem_const_str);
 
 	case METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES:
-		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_WRITABLE(thisarg))
+		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_IsWritable(thisarg))
 			goto nope;
 		return check_foreach_args_kw(argc, argv, kw, &ob_is_const_castable_or_robytes);
 
 	case METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES:
-		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_WRITABLE(thisarg))
+		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_IsWritable(thisarg))
 			goto nope;
 		return check_foreach_args_kw(argc, argv, kw, &ob_is_const_str);
 
