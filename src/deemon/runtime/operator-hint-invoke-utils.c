@@ -200,7 +200,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	int error = DeeObject_Get32Bit(self, result);
 	if (error == INT_UNSIGNED) {
 		if unlikely((int32_t)*result < 0) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				return DeeRT_ErrIntegerOverflowEx(self, 32,
 				                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
 				                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
@@ -228,7 +228,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	int error = DeeObject_Get32Bit(self, (int32_t *)result);
 	if (error == INT_SIGNED) {
 		if unlikely((int32_t)*result < 0) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				return DeeRT_ErrIntegerOverflowEx(self, 32,
 				                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
 				                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
@@ -256,7 +256,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	int error = DeeObject_Get64Bit(self, result);
 	if (error == INT_UNSIGNED) {
 		if unlikely((int64_t)*result < 0) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				return DeeRT_ErrIntegerOverflowEx(self, 64,
 				                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
 				                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
@@ -284,7 +284,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	int error = DeeObject_Get64Bit(self, (int64_t *)result);
 	if (error == INT_SIGNED) {
 		if unlikely((int64_t)*result < 0) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				return DeeRT_ErrIntegerOverflowEx(self, 64,
 				                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
 				                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
@@ -312,7 +312,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	int error = DeeObject_Get128Bit(self, result);
 	if (error == INT_UNSIGNED) {
 		if unlikely(__hybrid_int128_isneg(*result)) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				return DeeRT_ErrIntegerOverflowEx(self, 128,
 				                                  DeeRT_ErrIntegerOverflowEx_F_SIGNED |
 				                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
@@ -340,7 +340,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	int error = DeeObject_Get128Bit(self, (Dee_int128_t *)result);
 	if (error == INT_SIGNED) {
 		if unlikely(__hybrid_int128_isneg(*(Dee_int128_t const *)result)) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE)) {
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				return DeeRT_ErrIntegerOverflowEx(self, 128,
 				                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
 				                                  DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
@@ -371,7 +371,7 @@ DeeObject_Get8Bit(DeeObject *__restrict self,
 	switch (status) {
 	case INT_SIGNED:
 		if (val32 < INT8_MIN || val32 > INT8_MAX) {
-			if (Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) {
+			if (DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				*result = (int8_t)val32;
 				return (val32 <= UINT8_MAX) ? INT_UNSIGNED : INT_SIGNED;
 			}
@@ -385,7 +385,7 @@ DeeObject_Get8Bit(DeeObject *__restrict self,
 		break;
 	case INT_UNSIGNED:
 		if ((uint32_t)val32 > UINT8_MAX) {
-			if (Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) {
+			if (DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				*result = (uint8_t)val32;
 				return INT_UNSIGNED;
 			}
@@ -412,7 +412,7 @@ DeeObject_Get16Bit(DeeObject *__restrict self,
 	switch (status) {
 	case INT_SIGNED:
 		if unlikely(val32 < INT16_MIN || val32 > INT16_MAX) {
-			if (Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) {
+			if (DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				*result = (int16_t)val32;
 				return (val32 <= UINT16_MAX) ? INT_UNSIGNED : INT_SIGNED;
 			}
@@ -426,7 +426,7 @@ DeeObject_Get16Bit(DeeObject *__restrict self,
 		break;
 	case INT_UNSIGNED:
 		if unlikely((uint32_t)val32 > UINT16_MAX) {
-			if (Dee_TYPE(self)->tp_flags & TP_FTRUNCATE) {
+			if (DeeType_IsIntTruncated(Dee_TYPE(self))) {
 				*result = (uint16_t)val32;
 				return INT_UNSIGNED;
 			}
@@ -453,7 +453,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	if unlikely(DeeObject_AsInt32(self, &val32))
 		goto err_maybe_nest;
 	if unlikely(val32 < INT8_MIN || val32 > INT8_MAX) {
-		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+		if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 			return DeeRT_ErrIntegerOverflowS32(val32, INT8_MIN, INT8_MAX);
 	}
 	*result = (int8_t)val32;
@@ -470,7 +470,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	switch (status) {
 	case INT_SIGNED:
 		if unlikely(val32 < 0) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return DeeRT_ErrIntegerOverflowS32(val32, 0, UINT8_MAX);
 		}
 		break;
@@ -481,7 +481,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	default: __builtin_unreachable();
 	}
 	if unlikely((uint32_t)val32 > UINT8_MAX) {
-		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+		if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 			return DeeRT_ErrIntegerOverflowU32((uint32_t)val32, UINT8_MAX);
 	}
 	*result = (uint8_t)(uint32_t)val32;
@@ -497,7 +497,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	if unlikely(DeeObject_AsInt32(self, &val32))
 		goto err_maybe_nest;
 	if unlikely(val32 < INT16_MIN || val32 > INT16_MAX) {
-		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+		if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 			return DeeRT_ErrIntegerOverflowS32(val32, INT16_MIN, INT16_MAX);
 	}
 	*result = (int16_t)val32;
@@ -514,7 +514,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	switch (status) {
 	case INT_SIGNED:
 		if unlikely(val32 < 0) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return DeeRT_ErrIntegerOverflowS32(val32, 0, UINT16_MAX);
 		}
 		break;
@@ -525,7 +525,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	default: __builtin_unreachable();
 	}
 	if unlikely((uint32_t)val32 > UINT16_MAX) {
-		if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+		if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 			return DeeRT_ErrIntegerOverflowU32((uint32_t)val32, UINT16_MAX);
 	}
 	*result = (uint16_t)(uint32_t)val32;
@@ -545,13 +545,13 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	switch (status) {
 	case INT_SIGNED:
 		if unlikely(val32 < -1 || val32 > UINT8_MAX) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return DeeRT_ErrIntegerOverflowS32(val32, -1, UINT8_MAX);
 		}
 		break;
 	case INT_UNSIGNED:
 		if unlikely((uint32_t)val32 > UINT8_MAX) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return DeeRT_ErrIntegerOverflowS64((uint32_t)val32, -1, UINT8_MAX);
 		}
 		break;
@@ -573,13 +573,13 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	switch (status) {
 	case INT_SIGNED:
 		if unlikely(val32 < -1 || val32 > UINT16_MAX) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return DeeRT_ErrIntegerOverflowS32(val32, -1, UINT16_MAX);
 		}
 		break;
 	case INT_UNSIGNED:
 		if unlikely((uint32_t)val32 > UINT16_MAX) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return DeeRT_ErrIntegerOverflowS64((uint32_t)val32, -1, UINT16_MAX);
 		}
 		break;
@@ -601,7 +601,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	switch (status) {
 	case INT_SIGNED:
 		if unlikely(val32 < -1) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return DeeRT_ErrIntegerOverflowS32(val32, -1, UINT32_MAX);
 		}
 		break;
@@ -643,7 +643,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	switch (status) {
 	case INT_SIGNED:
 		if unlikely((int64_t)*result < -1) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return err_uint64m1_underflow_signed((int64_t)*result);
 		}
 		break;
@@ -678,7 +678,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	case INT_SIGNED:
 		if unlikely(__hybrid_int128_isneg(*(Dee_int128_t const *)result) &&
 		            !__hybrid_int128_isminusone(*(Dee_int128_t const *)result)) {
-			if (!(Dee_TYPE(self)->tp_flags & TP_FTRUNCATE))
+			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
 				return err_uint128m1_underflow_signed(self);
 		}
 		break;

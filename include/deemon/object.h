@@ -4327,6 +4327,7 @@ struct Dee_type_object {
 	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
 };
 #define DeeType_IsFinal(x)               (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FFINAL)
+#define DeeType_IsFinalOrVariable(x)     (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & (Dee_TP_FFINAL | Dee_TP_FVARIABLE))
 #define DeeType_IsInterrupt(x)           (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FINTERRUPT)
 #define DeeType_IsAbstract(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FABSTRACT)
 #define DeeType_IsVariable(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FVARIABLE)
@@ -4337,10 +4338,11 @@ struct Dee_type_object {
 #define DeeType_IsSequence(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_seq != NULL)
 #define DeeType_IsIntTruncated(x)        (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FTRUNCATE)
 #define DeeType_HasMoveAny(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FMOVEANY)
+#define DeeType_HasRevivingDestructor(x) (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FMAYREVIVE)
 #define DeeType_IsDeepImmutable(x)       (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FDEEPIMMUTABLE)
 #define DeeType_IsIterator(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_iter_next != NULL)
 #define DeeType_IsTypeType(x)            DeeType_Extends(Dee_REQUIRES_OBJECT(DeeTypeObject const, x), &DeeType_Type)
-#define DeeType_IsCustom(x)              (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
+#define DeeType_IsHeapType(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
 #define DeeType_IsSuperConstructible(x)  (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FINHERITCTOR)
 #define DeeType_IsNoArgConstructible(x)  (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_ctor != NULL)
 #define DeeType_IsVarArgConstructible(x) (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_any_ctor != NULL || ((DeeTypeObject const *)(x))->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
@@ -4377,13 +4379,13 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool
 #define DeeType_AllocInstance(tp_self)                                                      \
 	(((tp_self)->tp_init.tp_alloc.tp_free)                                                  \
 	 ? (DREF DeeObject *)(*(tp_self)->tp_init.tp_alloc.tp_alloc)()                          \
-	 : ((tp_self)->tp_flags & TP_FGC)                                                       \
+	 : DeeType_IsGC(tp_self)                                                                \
 	   ? (DREF DeeObject *)DeeGCObject_Malloc((tp_self)->tp_init.tp_alloc.tp_instance_size) \
 	   : (DREF DeeObject *)DeeObject_Malloc((tp_self)->tp_init.tp_alloc.tp_instance_size))
 #define DeeType_FreeInstance(tp_self, obj)         \
 	(((tp_self)->tp_init.tp_alloc.tp_free)         \
 	 ? (*(tp_self)->tp_init.tp_alloc.tp_free)(obj) \
-	 : ((tp_self)->tp_flags & TP_FGC)              \
+	 : DeeType_IsGC(tp_self)                       \
 	   ? DeeGCObject_Free(obj)                     \
 	   : DeeObject_Free(obj))
 

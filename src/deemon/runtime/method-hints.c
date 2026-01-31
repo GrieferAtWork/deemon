@@ -419,7 +419,7 @@ INTERN WUNUSED NONNULL((1)) struct Dee_type_mh_cache *
 		if likely(result) {
 			if likely(atomic_cmpxch(&self->tp_mhcache, NULL, result)) {
 #ifndef NDEBUG
-				if (!(self->tp_flags & TP_FHEAP))
+				if (!DeeType_IsHeapType(self))
 					Dee_UntrackAlloc(result);
 #endif /* !NDEBUG */
 			} else {
@@ -465,7 +465,7 @@ read_from_mhcache:
 		goto read_from_mhcache;
 	}
 #ifndef NDEBUG
-	if (!(self->tp_flags & TP_FHEAP))
+	if (!DeeType_IsHeapType(self))
 		Dee_UntrackAlloc(mhcache);
 #endif /* !NDEBUG */
 	result = DeeType_GetUncachedMethodHint(self, id);

@@ -413,7 +413,7 @@ DeeType_CheckStaticAndDecref(struct typexpr_parser *__restrict self,
                              /*inherit(on_success)*/ DREF DeeTypeObject *type) {
 	if unlikely(!DeeObject_IsShared(type))
 		return false;
-	if (!DeeType_IsCustom(type)) {
+	if (!DeeType_IsHeapType(type)) {
 		DREF DeeModuleObject *type_module;
 		if (type == self->txp_info->di_typ) {
 ok:
@@ -1655,8 +1655,8 @@ vcall_DeeType_AllocInstance(struct fungen *__restrict self,
 		instance_size = type->tp_init.tp_alloc.tp_instance_size;
 		DO(fg_vpush_immSIZ(self, instance_size));
 		DO(fg_vcallapi(self,
-		               (type->tp_flags & TP_FGC) ? (void const *)&DeeGCObject_Malloc
-		                                         : (void const *)&DeeObject_Malloc,
+		               DeeType_IsGC(type) ? (void const *)&DeeGCObject_Malloc
+		                                  : (void const *)&DeeObject_Malloc,
 		               VCALL_CC_OBJECT, 1));
 	}
 	DO(fg_vdirect1(self));
@@ -1675,8 +1675,8 @@ vcall_DeeType_FreeInstance(struct fungen *__restrict self,
 	fg_vtop_direct_clearref(self);
 	api_function = (void const *)type->tp_init.tp_alloc.tp_free;
 	if (!api_function) {
-		api_function = (type->tp_flags & TP_FGC) ? (void const *)&DeeGCObject_Free
-		                                         : (void const *)&DeeObject_Free;
+		api_function = DeeType_IsGC(type) ? (void const *)&DeeGCObject_Free
+		                                  : (void const *)&DeeObject_Free;
 	}
 	return fg_vcallapi(self, api_function, VCALL_CC_VOID_NX, 1);
 }
@@ -2073,7 +2073,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 
 			/* If the constructor type could be determined at compile-time, then hard-code it. */
 			if (ctor_type != CTOR_TYPE_UNKNOWN) {
-				if (type->tp_flags & TP_FVARIABLE) {
+				if (DeeType_IsVariable(type)) {
 					/* In case of TP_FVARIABLE types, we can simply inline the call to a var-constructor */
 					DO(fg_vnotoneref(self, true_argc + 1)); /* type, [args...], kw */
 					switch (ctor_type) {
@@ -2169,7 +2169,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 					 * >>     Dee_DecrefNokill(type);
 					 * >>     HANDLE_EXCEPT();
 					 * >> }
-					 * >> if (type->tp_flags & TP_FGC)
+					 * >> if (DeeType_IsGC(type))
 					 * >>     result = DeeGC_Track(result); */
 
 					/**/                                         /* type, [args...], kw */
@@ -2220,7 +2220,7 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 
 					/* Finalize the state of the produced object to indicate
 					 * that it's been checked and contains a proper reference. */
-					if (type->tp_flags & TP_FGC) {
+					if (DeeType_IsGC(type)) {
 						/* Emit code to start tracking the object. */
 						ASSERT(fg_vtop_direct_isref(self));
 						fg_vtop_direct_clearref(self);
@@ -4997,7 +4997,7 @@ vpack_map_or_set_at_runtime(struct fungen *__restrict self,
 	struct hashmap_template_item *result_d_elem_template;
 	struct memval *elemv;
 	bool asmap = (seq_type == &DeeDict_Type || seq_type == &DeeRoDict_Type);
-	bool is_ro = (seq_type->tp_flags & TP_FVARIABLE) != 0;
+	bool is_ro = !!DeeType_IsVariable(seq_type); /* Only the read-only types are variable-length */
 	bool use_calloc_for_d_elem;
 	size_t result_d_size, result_d_maxsize;
 	size_t result_d_mask, result_d_minmask;
@@ -5188,7 +5188,7 @@ next_key:
 	if (is_ro) {
 		size_t sz = soi->soi_offsetof_d_elem + ((result_d_mask + 1) * soi->soi_sizeof_dict_item);
 		ASSERT(seq_type == &DeeRoDict_Type || seq_type == &DeeRoSet_Type);
-		ASSERT(!(seq_type->tp_flags & TP_FGC));
+		ASSERT(!DeeType_IsGC(seq_type));
 		DO(fg_vcall_DeeObject_Malloc(self, sz, use_calloc_for_d_elem)); /* [elems...], d */
 		DO(fg_vdup(self));                                              /* [elems...], d, d */
 		DO(fg_vdelta(self, soi->soi_offsetof_d_elem));                  /* [elems...], d, d->d_elem */
@@ -5329,7 +5329,7 @@ next_key:
 	DO(fg_vcall_DeeObject_Init_c(self, seq_type));
 
 	/* If the sequence type is a GC object, emit code to start tracking it. */
-	if (seq_type->tp_flags & TP_FGC) {
+	if (DeeType_IsGC(seq_type)) {
 		ASSERT(!fg_vtop_direct_isref(self));
 		DO(fg_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR_NX, 1));
 		ASSERT(!fg_vtop_direct_isref(self));

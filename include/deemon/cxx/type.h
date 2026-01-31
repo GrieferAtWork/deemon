@@ -100,7 +100,7 @@ public:
 		return DeeType_IsTypeType(this);
 	}
 	WUNUSED bool ciscustom() const DEE_CXX_NOTHROW {
-		return DeeType_IsCustom(this);
+		return DeeType_IsHeapType(this);
 	}
 	WUNUSED bool cissuperconstructible() const DEE_CXX_NOTHROW {
 		return DeeType_IsSuperConstructible(this);

@@ -161,7 +161,7 @@ DeeObject_NewDefault(DeeTypeObject *__restrict object_type) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
-	if (object_type->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(object_type)) {
 		if (object_type->tp_init.tp_var.tp_ctor) {
 do_invoke_var_ctor:
 			return (*object_type->tp_init.tp_var.tp_ctor)();
@@ -184,7 +184,7 @@ do_invoke_var_any_ctor_kw:
 		}
 	} else {
 		int error;
-		ASSERT(!(object_type->tp_flags & TP_FVARIABLE));
+		ASSERT(!DeeType_IsVariable(object_type));
 		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
@@ -218,7 +218,7 @@ do_invoke_alloc_any_ctor_kw:
 		if unlikely(error)
 			goto err_object_type_r;
 		/* Begin tracking the returned object. */
-		if (object_type->tp_flags & TP_FGC)
+		if (DeeType_IsGC(object_type))
 			result = DeeGC_Track(result);
 		return result;
 	}
@@ -241,7 +241,7 @@ DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
-	if (object_type->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(object_type)) {
 		if (object_type->tp_init.tp_var.tp_ctor && !argc) {
 do_invoke_var_ctor:
 			return (*object_type->tp_init.tp_var.tp_ctor)();
@@ -272,7 +272,7 @@ do_invoke_var_copy:
 		}
 	} else {
 		int error;
-		ASSERT(!(object_type->tp_flags & TP_FVARIABLE));
+		ASSERT(!DeeType_IsVariable(object_type));
 		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
@@ -313,7 +313,7 @@ do_invoke_alloc_copy:
 		if unlikely(error)
 			goto err_r;
 		/* Begin tracking the returned object. */
-		if (object_type->tp_flags & TP_FGC)
+		if (DeeType_IsGC(object_type))
 			result = DeeGC_Track(result);
 		return result;
 	}
@@ -338,7 +338,7 @@ DeeObject_NewKw(DeeTypeObject *object_type, size_t argc,
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
 	ASSERT(!kw || DeeObject_IsKw(kw));
-	if (object_type->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(object_type)) {
 		if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
 do_invoke_var_any_ctor_kw:
 			return (*object_type->tp_init.tp_var.tp_any_ctor_kw)(argc, argv, kw);
@@ -408,7 +408,7 @@ do_invoke_var_copy:
 		}
 	} else {
 		int error;
-		ASSERT(!(object_type->tp_flags & TP_FVARIABLE));
+		ASSERT(!DeeType_IsVariable(object_type));
 		result = DeeType_AllocInstance(object_type);
 		if unlikely(!result)
 			goto err;
@@ -488,7 +488,7 @@ do_invoke_alloc_copy:
 		if unlikely(error)
 			goto err_r;
 		/* Begin tracking the returned object. */
-		if (object_type->tp_flags & TP_FGC)
+		if (DeeType_IsGC(object_type))
 			result = DeeGC_Track(result);
 		return result;
 	}
@@ -659,7 +659,7 @@ got_deep_copy:
 	deepcopy_begin(thread_self);
 
 	/* Allocate an to basic construction of the deepcopy object. */
-	if (tp_self->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(tp_self)) {
 		/* Variable-length object. */
 		result = tp_self->tp_init.tp_var.tp_deep_ctor
 		         ? (*tp_self->tp_init.tp_var.tp_deep_ctor)(self)
@@ -667,7 +667,7 @@ got_deep_copy:
 		if unlikely(!result)
 			goto done_endcopy;
 	} else {
-		ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
+		ASSERT(!DeeType_IsVariable(tp_self));
 
 		/* Static-length object. */
 		result = DeeType_AllocInstance(tp_self);
@@ -690,7 +690,7 @@ got_deep_copy:
 		}
 
 		/* Begin tracking the returned object if this is a GC type. */
-		if (tp_self->tp_flags & TP_FGC)
+		if (DeeType_IsGC(tp_self))
 			result = DeeGC_Track(result);
 	}
 
@@ -768,7 +768,7 @@ err_result:
 DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
-	if (tp_self->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(tp_self)) {
 		if (tp_self->tp_init.tp_var.tp_copy_ctor) {
 do_invoke_var_copy:
 			return (*tp_self->tp_init.tp_var.tp_copy_ctor)(self);
@@ -817,14 +817,14 @@ do_invoke_alloc_copy:
 			goto err_r;
 
 		/* Begin tracking the returned object. */
-		if (tp_self->tp_flags & TP_FGC)
+		if (DeeType_IsGC(tp_self))
 			result = DeeGC_Track(result);
 		return result;
 	} else if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
 		goto do_invoke_var_deep;
 	} else {
 		int error;
-		ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
+		ASSERT(!DeeType_IsVariable(tp_self));
 		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto err;
@@ -863,7 +863,7 @@ do_invoke_alloc_any_ctor_kw:
 		if unlikely(error)
 			goto err_r;
 		/* Begin tracking the returned object. */
-		if (tp_self->tp_flags & TP_FGC)
+		if (DeeType_IsGC(tp_self))
 			result = DeeGC_Track(result);
 		return result;
 	}
@@ -922,7 +922,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
-	if unlikely(tp_self->tp_flags & TP_FGC) {
+	if unlikely(DeeType_IsGC(tp_self)) {
 		struct Xrepr_frame opframe;
 		DeeThreadObject *this_thread = DeeThread_Self();
 
@@ -962,7 +962,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
-	if (tp_self->tp_flags & TP_FGC) {
+	if (DeeType_IsGC(tp_self)) {
 		struct Xrepr_frame opframe;
 		DeeThreadObject *this_thread = DeeThread_Self();
 
@@ -1003,7 +1003,7 @@ DEFINE_OPERATOR(Dee_ssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
-	if unlikely(tp_self->tp_flags & TP_FGC) {
+	if unlikely(DeeType_IsGC(tp_self)) {
 		struct Xrepr_frame opframe;
 		DeeThreadObject *this_thread = DeeThread_Self();
 
@@ -1042,7 +1042,7 @@ DEFINE_OPERATOR(Dee_ssize_t, PrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
-	if (tp_self->tp_flags & TP_FGC) {
+	if (DeeType_IsGC(tp_self)) {
 		struct Xrepr_frame opframe;
 		DeeThreadObject *this_thread = DeeThread_Self();
 
@@ -1087,7 +1087,7 @@ DEFINE_OPERATOR(Dee_hash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_cmp && tp_self->tp_cmp->tp_hash) ||
 	          (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_hash)) {
-		if likely(!(tp_self->tp_flags & TP_FGC)) {
+		if likely(!DeeType_IsGC(tp_self)) {
 			return DeeType_INVOKE_HASH(tp_self, self);
 		} else {
 			/* Handle hash recursion for GC objects. */
@@ -1144,7 +1144,7 @@ DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, Dee_visit_t proc, void
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 
 	/* Only visit heap-allocated types. */
-	if (Dee_TYPE(self)->tp_flags & TP_FHEAP)
+	if (DeeType_IsHeapType(Dee_TYPE(self)))
 		(*proc)((DeeObject *)Dee_TYPE(self), arg);
 }
 

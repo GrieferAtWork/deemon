@@ -81,7 +81,7 @@ tp_math->tp_int32([[nonnull]] DeeObject *__restrict self,
 	int64_t value;
 	int status = CALL_DEPENDENCY(tp_math->tp_int64, self, &value);
 	if (status == Dee_INT_UNSIGNED) {
-		if ((uint64_t)value > UINT32_MAX && !(THIS_TYPE->tp_flags & TP_FTRUNCATE)) {
+		if ((uint64_t)value > UINT32_MAX && !DeeType_IsIntTruncated(THIS_TYPE)) {
 			return DeeRT_ErrIntegerOverflowEx(self, 32,
 			                                  DeeRT_ErrIntegerOverflowEx_F_UNSIGNED |
 			                                  DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
@@ -89,7 +89,7 @@ tp_math->tp_int32([[nonnull]] DeeObject *__restrict self,
 		*p_result = (int32_t)(uint32_t)(uint64_t)value;
 	} else {
 		if ((value < INT32_MIN || value > INT32_MAX) && status == Dee_INT_SIGNED &&
-		    !(THIS_TYPE->tp_flags & TP_FTRUNCATE)) {
+		    !DeeType_IsIntTruncated(THIS_TYPE)) {
 			unsigned int flags = (value > INT32_MAX)
 			                     ? (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE)
 			                     : (DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
@@ -115,14 +115,14 @@ err:
 	int status = CALL_DEPENDENCY(tp_math->tp_double, self, &value);
 	if unlikely(status < 0)
 		goto err;
-	if (value < INT32_MIN && !(THIS_TYPE->tp_flags & TP_FTRUNCATE))
+	if (value < INT32_MIN && !DeeType_IsIntTruncated(THIS_TYPE))
 		return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT32_MAX) {
 		if (value <= UINT32_MAX) {
 			*p_result = (int32_t)(uint32_t)value;
 			return Dee_INT_UNSIGNED;
 		}
-		if (!(THIS_TYPE->tp_flags & TP_FTRUNCATE))
+		if (!DeeType_IsIntTruncated(THIS_TYPE))
 			return DeeRT_ErrIntegerOverflowEx(self, 32, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int32_t)value;
@@ -164,14 +164,14 @@ err:
 	int status = CALL_DEPENDENCY(tp_math->tp_double, self, &value);
 	if unlikely(status < 0)
 		goto err;
-	if (value < INT64_MIN && !(THIS_TYPE->tp_flags & TP_FTRUNCATE))
+	if (value < INT64_MIN && !DeeType_IsIntTruncated(THIS_TYPE))
 		return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_SIGNED | DeeRT_ErrIntegerOverflowEx_F_NEGATIVE);
 	if (value > INT64_MAX) {
 		if (value <= UINT64_MAX) {
 			*p_result = (int64_t)(uint64_t)value;
 			return Dee_INT_UNSIGNED;
 		}
-		if (!(THIS_TYPE->tp_flags & TP_FTRUNCATE))
+		if (!DeeType_IsIntTruncated(THIS_TYPE))
 			return DeeRT_ErrIntegerOverflowEx(self, 64, DeeRT_ErrIntegerOverflowEx_F_UNSIGNED | DeeRT_ErrIntegerOverflowEx_F_POSITIVE);
 	}
 	*p_result = (int64_t)value;

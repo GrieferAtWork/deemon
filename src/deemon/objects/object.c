@@ -1595,11 +1595,11 @@ DeeType_RequireDestroy_uncached_impl(DeeTypeObject *__restrict self) {
 	        DESTROY_TP_FLAGS_SHIFT_HINT;
 #else /* DESTROY_TP_FLAGS_SHIFT_HINT */
 	flags = 0;
-	if (self->tp_flags & TP_FGC)
+	if (DeeType_IsGC(self))
 		flags |= DESTROY_FGC;
-	if (self->tp_flags & TP_FMAYREVIVE)
+	if (DeeType_HasRevivingDestructor(self))
 		flags |= DESTROY_FREV;
-	if (self->tp_flags & TP_FHEAP)
+	if (DeeType_IsHeapType(self))
 		flags |= DESTROY_FHEAPTYPE;
 #endif /* !DESTROY_TP_FLAGS_SHIFT_HINT */
 	if (self->tp_init.tp_alloc.tp_free)
@@ -1607,7 +1607,7 @@ DeeType_RequireDestroy_uncached_impl(DeeTypeObject *__restrict self) {
 	if (self->tp_init.tp_dtor)
 		flags |= DESTROY_FDTOR1;
 	for (iter = self->tp_base; iter; iter = iter->tp_base) {
-		if (iter->tp_flags & TP_FMAYREVIVE)
+		if (DeeType_HasRevivingDestructor(iter))
 			flags |= DESTROY_FREV;
 		if (iter->tp_init.tp_dtor)
 			flags = (flags & ~DESTROY_FDTORX) | DESTROY_FDTORN;
@@ -1758,7 +1758,7 @@ object_sizeof(DeeObject *self) {
 	type = Dee_TYPE(self);
 
 	/* Variable types lack a standardized way of determining their size in bytes. */
-	if unlikely(type->tp_flags & TP_FVARIABLE)
+	if unlikely(DeeType_IsVariable(type))
 		goto err_isvar;
 	instance_size = DeeType_GetInstanceSize(type);
 	if unlikely(instance_size == 0)
@@ -2960,7 +2960,7 @@ type_fini(DeeTypeObject *__restrict self) {
 	/* Clear weak references and check for revival. */
 	Dee_weakref_fini(&self->tp_module);
 	Dee_weakref_support_fini(self);
-	ASSERTF(self->tp_flags & TP_FHEAP,
+	ASSERTF(DeeType_IsHeapType(self),
 	        "Non heap-allocated type %k is being destroyed (This shouldn't happen)",
 	        self);
 
@@ -3536,7 +3536,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_new_raw(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
 	DeeTypeObject *first_base;
-	if unlikely(self->tp_flags & TP_FVARIABLE) {
+	if unlikely(DeeType_IsVariable(self)) {
 		err_init_var_type(self);
 		goto err;
 	}
@@ -3562,7 +3562,7 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	/* Instantiate non-base types. */
 	if (!first_base || first_base == &DeeObject_Type) {
 done:
-		if (self->tp_flags & TP_FGC)
+		if (DeeType_IsGC(self))
 			result = DeeGC_Track(result);
 		return result;
 	}
@@ -3788,7 +3788,7 @@ type_new_extended(DeeTypeObject *self, DeeObject *initializer) {
 	int temp;
 	DREF DeeObject *init_fields, *init_args, *init_kw;
 	DeeTypeObject *first_base, *iter;
-	if unlikely(self->tp_flags & TP_FVARIABLE) {
+	if unlikely(DeeType_IsVariable(self)) {
 		err_init_var_type(self);
 		goto err;
 	}
@@ -3870,7 +3870,7 @@ done_fields:
 		if unlikely(temp)
 			goto err_r_firstbase;
 	} while ((iter = DeeType_Base(iter)) != NULL);
-	if (self->tp_flags & TP_FGC)
+	if (DeeType_IsGC(self))
 		result = DeeGC_Track(result);
 	return result;
 err_r_firstbase:
@@ -4285,7 +4285,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_heaptype(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "is_heaptype");
-	return_bool(DeeType_IsCustom(self));
+	return_bool(DeeType_IsHeapType(self));
 err:
 	return NULL;
 }
@@ -4885,7 +4885,10 @@ again:
 			Dee_weakref_set(&self->tp_module, Dee_AsObject(result));
 		return result;
 	}
-	if (!(self->tp_flags & TP_FHEAP)) {
+#ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
+	if (!DeeType_IsHeapType(self))
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+	{
 		/* Lookup the originating module of a statically allocated C-type. */
 		result = DeeModule_OfPointer(self);
 		if (result) {
@@ -4925,7 +4928,7 @@ DeeType_GetName(DeeTypeObject const *__restrict self) {
 INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetTpSerialize)(DeeTypeObject *__restrict self) {
 	Dee_funptr_t result = self->tp_init._tp_init_._tp_init5_;
-	if (!result && (self->tp_flags & TP_FINHERITCTOR) && self->tp_base) {
+	if (!result && DeeType_IsSuperConstructible(self) && self->tp_base) {
 		result = DeeType_GetTpSerialize(self->tp_base);
 		if (result)
 			self->tp_init._tp_init_._tp_init5_ = result;
@@ -4946,7 +4949,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 	if ((tp_free = self->tp_init.tp_alloc.tp_free) == NULL)
 		return self->tp_init.tp_alloc.tp_instance_size;
 #ifndef CONFIG_NO_OBJECT_SLABS
-	if (self->tp_flags & TP_FGC) {
+	if (DeeType_IsGC(self)) {
 #define CHECK_ALLOCATOR(index, size)                  \
 		if (tp_free == &DeeGCObject_SlabFree##size) { \
 			return size * sizeof(void *);             \
@@ -5043,7 +5046,7 @@ again:
 	} else if (tp == &DeeSuper_Type) {
 		self = DeeSuper_SELF(self);
 		goto again;
-	} else if (!(tp->tp_flags & TP_FVARIABLE)) {
+	} else if (!DeeType_IsVariable(tp)) {
 		/* Check if "tp" uses special, known copy-operator (this catches a bunch of sequence proxy types) */
 		if (tp->tp_init.tp_alloc.tp_copy_ctor == (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&generic_proxy__copy_alias) {
 			ProxyObject *me = (ProxyObject *)self;
@@ -5090,7 +5093,7 @@ type_bound_module(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_instancesize(DeeTypeObject *__restrict self) {
 	size_t instance_size;
-	if (self->tp_flags & TP_FVARIABLE)
+	if (DeeType_IsVariable(self))
 		goto unknown;
 	if (!self->tp_init.tp_alloc.tp_ctor &&
 	    !self->tp_init.tp_alloc.tp_copy_ctor &&
@@ -5109,7 +5112,7 @@ unknown:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_bound_instancesize(DeeTypeObject *__restrict self) {
-	if (self->tp_flags & TP_FVARIABLE)
+	if (DeeType_IsVariable(self))
 		goto unknown;
 	if (!self->tp_init.tp_alloc.tp_ctor &&
 	    !self->tp_init.tp_alloc.tp_copy_ctor &&

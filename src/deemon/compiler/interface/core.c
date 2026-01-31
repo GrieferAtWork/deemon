@@ -247,7 +247,7 @@ DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
                        DeeTypeObject *__restrict type) {
 	DREF CompilerWrapper *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
-	ASSERT(!(type->tp_flags & TP_FVARIABLE));
+	ASSERT(!DeeType_IsVariable(type));
 	result = DeeObject_MALLOC(CompilerWrapper);
 	if unlikely(!result)
 		goto done;
@@ -268,7 +268,7 @@ get_compiler_item_impl(DeeTypeObject *__restrict type,
 	DREF CompilerItem *result;
 	DeeCompilerObject *self = DeeCompiler_Current;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
-	ASSERT(!(type->tp_flags & TP_FVARIABLE));
+	ASSERT(!DeeType_IsVariable(type));
 	ASSERT(DeeCompiler_LockReading());
 again:
 	Dee_compiler_items_lock_read(&self->cp_items);

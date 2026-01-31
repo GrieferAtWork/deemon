@@ -1477,7 +1477,7 @@ type_tno_tryset(DeeTypeObject const *__restrict self,
 				 * then untrack it from the memory leak detector, since we
 				 * don't care that it (most definitely) won't be freed on
 				 * program exit. */
-				if (!(self->tp_flags & TP_FHEAP)) {
+				if (!DeeType_IsHeapType(self)) {
 					new_table = (byte_t *)Dee_UntrackAlloc(new_table);
 					/* TODO: This leaks memory when "self" is statically allocated within a DEX module.
 					 *       When the module gets unloaded, "new_table" won't get free'd.

@@ -2096,7 +2096,7 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 	Dee_funptr_t tp_serialize = DeeType_GetTpSerialize(tp);
 	if unlikely(!tp_serialize)
 		goto cannot_serialize;
-	if (tp->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(tp)) {
 		out_addr = (*(Dee_tp_serialize_var_t)tp_serialize)(obj, (DeeSerial *)self);
 		if (!Dee_SERADDR_ISOK(out_addr))
 			goto err;
@@ -2108,7 +2108,7 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 			goto cannot_serialize;
 
 		/* Allocate buffer for object. */
-		out_addr = tp->tp_flags & TP_FGC
+		out_addr = DeeType_IsGC(tp)
 		           ? decwriter_gcobject_malloc(self, instance_size, obj)
 		           : decwriter_object_malloc(self, instance_size, obj);
 		if unlikely(!Dee_SERADDR_ISOK(out_addr))

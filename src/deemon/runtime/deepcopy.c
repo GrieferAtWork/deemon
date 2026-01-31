@@ -669,7 +669,7 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 	tp_serialize = DeeType_GetTpSerialize(tp);
 	if unlikely(!tp_serialize)
 		goto cannot_serialize;
-	if (tp->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(tp)) {
 		out_addr = (*(Dee_tp_serialize_var_t)tp_serialize)(ob, (DeeSerial *)self);
 		if unlikely(!Dee_SERADDR_ISOK(out_addr))
 			goto err;
@@ -680,7 +680,7 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 			goto cannot_serialize;
 
 		/* Allocate buffer for object. */
-		out_addr = tp->tp_flags & TP_FGC
+		out_addr = DeeType_IsGC(tp)
 		           ? deepcopy_gcobject_malloc(self, instance_size, ob)
 		           : deepcopy_object_malloc(self, instance_size, ob);
 		if unlikely(!out_addr)

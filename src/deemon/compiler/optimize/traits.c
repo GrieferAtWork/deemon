@@ -96,7 +96,7 @@ filter_builtin_deemon_types(/*inherit(always)*/ DREF DeeObject *__restrict self)
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	if (!DeeType_Check(self))
 		goto err_decref_self;
-	if (DeeType_IsCustom(self))
+	if (DeeType_IsHeapType(self))
 		goto err_decref_self;
 	if (!DeeModule_ContainsPointer(&DeeModule_Deemon, self))
 		goto err_decref_self;
@@ -111,7 +111,7 @@ err_decref_self:
 	DREF DeeModuleObject *type_module;
 	if (!DeeType_Check(self))
 		goto err_decref_self;
-	if (DeeType_IsCustom(self))
+	if (DeeType_IsHeapType(self))
 		goto err_decref_self;
 	type_module = DeeType_GetModule((DeeTypeObject *)self);
 	if unlikely(!type_module) {

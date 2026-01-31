@@ -322,7 +322,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 		DeeTypeObject *type = orig_type;
 		do {
 			ASSERT(self->ob_refcnt == 0);
-			ASSERTF(type == orig_type || !(type->tp_flags & TP_FFINAL),
+			ASSERTF(type == orig_type || !DeeType_IsFinal(type),
 			        "Final type `%k' with sub-class `%k'",
 			        type, orig_type);
 			if (type->tp_init.tp_dtor) {
@@ -345,7 +345,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 				if unlikely(self->ob_refcnt != 0) {
 					/* Resume tracking of the object. */
 #if LOCAL_HAS_GC
-					ASSERTF(type->tp_flags & TP_FGC,
+					ASSERTF(DeeType_IsGC(type),
 					        "This runtime does not implementing reviving "
 					        "GC-allocated objects as non-GC objects.");
 					self = DeeGC_Track(self);

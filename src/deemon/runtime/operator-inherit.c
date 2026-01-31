@@ -68,16 +68,15 @@ DECL_BEGIN
 INTERN NONNULL((1)) bool DCALL
 DeeType_InheritConstructors(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
-	if (!(self->tp_flags & TP_FINHERITCTOR))
+	if (!DeeType_IsSuperConstructible(self))
 		return false;
 	base = self->tp_base;
 	if (base == NULL)
 		return false;
 	DeeType_InheritConstructors(base);
-	ASSERT((base->tp_flags & TP_FVARIABLE) ==
-	       (self->tp_flags & TP_FVARIABLE));
+	ASSERT(!!DeeType_IsVariable(base) == !!DeeType_IsVariable(self));
 	LOG_INHERIT(base, self, "operator constructor");
-	if (self->tp_flags & TP_FVARIABLE) {
+	if (DeeType_IsVariable(self)) {
 		self->tp_init.tp_var.tp_ctor        = base->tp_init.tp_var.tp_ctor;
 		self->tp_init.tp_var.tp_copy_ctor   = base->tp_init.tp_var.tp_copy_ctor;
 		self->tp_init.tp_var.tp_deep_ctor   = base->tp_init.tp_var.tp_deep_ctor;
@@ -88,9 +87,9 @@ DeeType_InheritConstructors(DeeTypeObject *__restrict self) {
 #if 0 /* Allocators should not be inheritable! */
 		if (base->tp_init.tp_alloc.tp_free) {
 #ifndef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
-			ASSERT((base->tp_flags & TP_FGC) == (self->tp_flags & TP_FGC));
+			ASSERT(!!DeeType_IsGC(base) == !!DeeType_IsGC(self));
 #else /* !CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
-			ASSERTF(!(base->tp_flags & TP_FGC) || (self->tp_flags & TP_FGC),
+			ASSERTF(!DeeType_IsGC(base) || DeeType_IsGC(self),
 			        "Non-GC object is inheriting its constructors for a GC-enabled object");
 #endif /* CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS */
 			self->tp_init.tp_alloc.tp_alloc = base->tp_init.tp_alloc.tp_alloc;

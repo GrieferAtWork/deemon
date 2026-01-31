@@ -707,7 +707,7 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 
 	/* Handle GC objects (which can appear if the user
 	 * their own creates sub-classes of types from ctypes) */
-	if unlikely(orig_type->st_base.tp_flags & TP_FGC)
+	if unlikely(DeeType_IsGC(DeeSType_AsType(orig_type)))
 		result = DeeGC_Track(result);
 done:
 	return result;

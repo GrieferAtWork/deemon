@@ -325,7 +325,7 @@ Dee_type_struct_cache_of(DeeTypeObject *__restrict self) {
 		result = Dee_type_struct_cache_alloc();
 		if likely(result) {
 			if likely(atomic_cmpxch(&mhc->mhc_structcache, NULL, result)) {
-				if (!(self->tp_flags & TP_FHEAP))
+				if (!DeeType_IsHeapType(self))
 					Dee_UntrackAlloc(result);
 			} else {
 				Dee_type_struct_cache_free(result);
@@ -353,7 +353,7 @@ Dee_type_struct_getallfields(DeeTypeObject *__restrict self) {
 			result = (struct Dee_type_struct_field *)Dee_UntrackAlloc(result);
 			if likely(atomic_cmpxch(&tsc->tsc_allfields, NULL, result)) {
 #ifndef NDEBUG
-				if (!(self->tp_flags & TP_FHEAP))
+				if (!DeeType_IsHeapType(self))
 					Dee_UntrackAlloc(result);
 #endif /* !NDEBUG */
 			} else {
@@ -382,7 +382,7 @@ Dee_type_struct_getlocfields(DeeTypeObject *__restrict self) {
 			result = (struct Dee_type_member const **)Dee_UntrackAlloc(result);
 			if likely(atomic_cmpxch(&tsc->tsc_locfields, NULL, result)) {
 #ifndef NDEBUG
-				if (!(self->tp_flags & TP_FHEAP))
+				if (!DeeType_IsHeapType(self))
 					Dee_UntrackAlloc(result);
 #endif /* !NDEBUG */
 			} else {

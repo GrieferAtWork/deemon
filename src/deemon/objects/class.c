@@ -958,7 +958,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
                              DeeObject *__restrict self, size_t argc,
                              DeeObject *const *argv, DeeObject *kw) {
-	ASSERT(!(tp_self->tp_flags & TP_FVARIABLE));
+	ASSERT(!DeeType_IsVariable(tp_self));
 	if (kw) {
 		if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
 			int (DCALL *func)(DeeObject *__restrict, size_t, DeeObject *const *, DeeObject *);
@@ -1009,13 +1009,12 @@ instance_initsuper_as_copy(DeeTypeObject *tp_super,
 	int result;
 
 	/* Handle constructor inheritance */
-	while (tp_super->tp_flags & TP_FINHERITCTOR) {
-		ASSERTF(!(tp_super->tp_flags & TP_FFINAL),
-		        "Type derived from final type");
+	while (DeeType_IsSuperConstructible(tp_super)) {
+		ASSERTF(!DeeType_IsFinal(tp_super), "Type derived from final type");
 		ASSERT(DeeType_Base(tp_super));
 		tp_super = DeeType_Base(tp_super);
 	}
-	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
+	ASSERTF(!DeeType_IsVariable(tp_super), "Type derived from variable type");
 
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_deep_ctor && deep_copy) {
@@ -1388,13 +1387,12 @@ instance_initsuper_as_ctor(DeeTypeObject *__restrict tp_super,
 	int result;
 
 	/* Handle constructor inheritance */
-	while (tp_super->tp_flags & TP_FINHERITCTOR) {
-		ASSERTF(!(tp_super->tp_flags & TP_FFINAL),
-		        "Type derived from final type");
+	while (DeeType_IsSuperConstructible(tp_super)) {
+		ASSERTF(!DeeType_IsFinal(tp_super), "Type derived from final type");
 		ASSERT(DeeType_Base(tp_super));
 		tp_super = DeeType_Base(tp_super);
 	}
-	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
+	ASSERTF(!DeeType_IsVariable(tp_super), "Type derived from variable type");
 
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_ctor) {
@@ -1422,13 +1420,12 @@ instance_initsuper_as_init(DeeTypeObject *tp_super,
 	int result;
 
 	/* Handle constructor inheritance */
-	while (tp_super->tp_flags & TP_FINHERITCTOR) {
-		ASSERTF(!(tp_super->tp_flags & TP_FFINAL),
-		        "Type derived from final type");
+	while (DeeType_IsSuperConstructible(tp_super)) {
+		ASSERTF(!DeeType_IsFinal(tp_super), "Type derived from final type");
 		ASSERT(DeeType_Base(tp_super));
 		tp_super = DeeType_Base(tp_super);
 	}
-	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
+	ASSERTF(!DeeType_IsVariable(tp_super), "Type derived from variable type");
 
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
@@ -1456,13 +1453,12 @@ instance_initsuper_as_initkw(DeeTypeObject *tp_super,
 	int result;
 
 	/* Handle constructor inheritance */
-	while (tp_super->tp_flags & TP_FINHERITCTOR) {
-		ASSERTF(!(tp_super->tp_flags & TP_FFINAL),
-		        "Type derived from final type");
+	while (DeeType_IsSuperConstructible(tp_super)) {
+		ASSERTF(!DeeType_IsFinal(tp_super), "Type derived from final type");
 		ASSERT(DeeType_Base(tp_super));
 		tp_super = DeeType_Base(tp_super);
 	}
-	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
+	ASSERTF(!DeeType_IsVariable(tp_super), "Type derived from variable type");
 
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
@@ -4080,7 +4076,7 @@ no_base:
 			DeeTypeObject *base = (DeeTypeObject *)bases_list.ol_elemv[mro_i];
 			if (DeeObject_AssertType(Dee_AsObject(base), &DeeType_Type))
 				goto err_bases_list;
-			if (base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
+			if (DeeType_IsFinalOrVariable(base)) {
 				err_cannot_use_final_type_as_base(base);
 				goto err_bases_list;
 			}
@@ -4205,10 +4201,10 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 		ASSERTF(DeeType_IsTypeType(result_type_type),
 		        "The type of type object '%r' isn't actually a type-type",
 		        cbases.cb_base);
-		ASSERTF(!(result_type_type->tp_flags & TP_FVARIABLE),
+		ASSERTF(!DeeType_IsVariable(result_type_type),
 		        "type-type objects must not have the variable-size flag, but %k has it set!",
 		        result_type_type);
-		if (cbases.cb_base->tp_flags & (TP_FFINAL | TP_FVARIABLE)) {
+		if (DeeType_IsFinalOrVariable(cbases.cb_base)) {
 			err_cannot_use_final_type_as_base(cbases.cb_base);
 			goto err_cbases;
 		}
@@ -4285,7 +4281,7 @@ err_custom_allocator:
 #if 0 /* `DeeObject_Type' has TP_FABSTRACT set, so no extra check needed */
 		    (cbases.cb_base == &DeeObject_Type) ||
 #endif
-		    (cbases.cb_base->tp_flags & TP_FABSTRACT)) {
+		    DeeType_IsAbstract(cbases.cb_base)) {
 			result->tp_flags |= TP_FABSTRACT;
 		}
 

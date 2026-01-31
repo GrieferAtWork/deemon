@@ -1006,6 +1006,30 @@ writer_init_string(DeeFileWriterObject *__restrict self,
 	Dee_Incref(string);
 }
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+writer_copy(DeeFileWriterObject *__restrict self,
+            DeeFileWriterObject *__restrict other) {
+	DREF DeeObject *data = DeeFileWriter_GetData((DeeObject *)other);
+	if unlikely(!data)
+		goto err;
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+	if (DeeBytes_Check(data)) {
+		writer_init_bytes(self, (DeeBytesObject *)data);
+	} else
+#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+	{
+		ASSERT_OBJECT_TYPE_EXACT(data, &DeeString_Type);
+		writer_init_string(self, (DeeStringObject *)data);
+	}
+	Dee_Decref_unlikely(data);
+	Dee_atomic_rwlock_init(&self->w_lock);
+	return 0;
+err:
+	return -1;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(DeeFileWriterObject *__restrict self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_FileWriter", params: "
@@ -3092,7 +3116,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ DeeFileWriterObject,
 				/* tp_ctor:        */ &writer_ctor,
-				/* tp_copy_ctor:   */ NULL, /* TODO */
+				/* tp_copy_ctor:   */ &writer_copy,
 				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ &writer_init,
 				/* tp_any_ctor_kw: */ &writer_init_kw,
