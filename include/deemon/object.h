@@ -1804,8 +1804,8 @@ struct Dee_type_constructor {
 			 *          were created using regular heap allocations (`DeeObject_Malloc'). */
 			NONNULL_T((1)) void (DCALL *tp_free)(void *__restrict ob);
 			union {
-				size_t tp_instance_size;       /* [valid_if(tp_free == NULL)] */
-				void *(DCALL *tp_alloc)(void); /* [valid_if(tp_free != NULL)] */
+				size_t tp_instance_size;       /*       [valid_if(tp_free == NULL)] */
+				void *(DCALL *tp_alloc)(void); /* [1..1][valid_if(tp_free != NULL)] */
 			}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 			_dee_aunion

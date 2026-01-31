@@ -32,6 +32,7 @@
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_TYPE, Dee_funptr_t, Dee_unlockinfo, OBJECT_HEAD */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
+#include <hybrid/overflow.h> /* __BYTE_TYPE__ */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
@@ -317,7 +318,8 @@ deepcopy_gcobject_malloc_impl(DeeDeepCopyContext *__restrict self,
 	struct Dee_gc_head *result_head, *next;
 	ASSERT_OBJECT(ref);
 	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use deepcopy_object_malloc_impl()");
-	num_bytes += Dee_GC_HEAD_SIZE;
+	if (OVERFLOW_UADD(num_bytes, Dee_GC_HEAD_SIZE, &num_bytes))
+		num_bytes = (size_t)-1;
 	result_head = (struct Dee_gc_head *)deepcopy_heap_malloc(&self->dcc_gcheap, num_bytes, do_try, do_bzero);
 	if unlikely(!result_head)
 		goto err;
@@ -466,6 +468,8 @@ deepcopy_putpointer(DeeDeepCopyContext *__restrict self,
 		}
 	}
 
+	/* TODO: Only allow this part for static pointers! */
+
 	/* Assign pointer... */
 	*deepcopy_ser2ptr(self, addrof_pointer, void const *) = pointer;
 	return 0;
@@ -519,6 +523,7 @@ DeeDeepCopy_Init(DeeDeepCopyContext *__restrict self) {
 	self->dcc_heap       = NULL;
 	self->dcc_obheap     = NULL;
 	self->dcc_gcheap     = NULL;
+	self->dcc_uheap      = NULL;
 	self->dcc_ptrmapv    = NULL;
 	self->dcc_ptrmapc    = 0;
 	self->dcc_ptrmapa    = 0;
@@ -552,6 +557,16 @@ destroy_obheap(Dee_deepcopy_heap_t *heap, ptrdiff_t offsetof_object) {
 	}
 }
 
+PRIVATE void DCALL
+destroy_uheap(struct Dee_deepcopy_uheap *heap) {
+	while (heap) {
+		struct Dee_deepcopy_uheap *next;
+		next = heap->ddcuh_next;
+		Dee_deepcopy_uheap_destroy(heap);
+		heap = next;
+	}
+}
+
 PUBLIC NONNULL((1)) void DCALL
 DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self) {
 	size_t i;
@@ -574,7 +589,9 @@ DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self) {
 	destroy_heap(self->dcc_heap);
 	destroy_obheap(self->dcc_obheap, 0);
 	destroy_obheap(self->dcc_gcheap, offsetof(struct Dee_gc_head, gc_object));
+	destroy_uheap(self->dcc_uheap);
 
+	/* For safety... */
 	DBG_memset(self, 0xcc, sizeof(*self));
 }
 
@@ -676,15 +693,66 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 	} else {
 		int status;
 		size_t instance_size = DeeType_GetInstanceSize(tp);
-		if unlikely(!instance_size)
-			goto cannot_serialize;
+		if unlikely(!instance_size) {
+			GenericObject *object_buffer;
+			struct Dee_deepcopy_uheap *uheap;
+			if (!tp->tp_init.tp_alloc.tp_free) {
+				/* tp_instance_size == 0 + tp_free == NULL
+				 * -> probably a singleton
+				 * -> cannot serialize */
+				goto cannot_serialize;
+			}
+			uheap = Dee_deepcopy_uheap_alloc();
+			if unlikely(!uheap)
+				goto err;
 
-		/* Allocate buffer for object. */
-		out_addr = DeeType_IsGC(tp)
-		           ? deepcopy_gcobject_malloc(self, instance_size, ob)
-		           : deepcopy_object_malloc(self, instance_size, ob);
-		if unlikely(!out_addr)
-			goto err;
+			/* Support custom allocators... */
+			ASSERT(tp->tp_init.tp_alloc.tp_alloc);
+			object_buffer = (GenericObject *)((*tp->tp_init.tp_alloc.tp_alloc)());
+			if unlikely(!object_buffer) {
+				Dee_deepcopy_uheap_free(uheap);
+				goto err;
+			}
+			uheap->ddcuh_base = Dee_AsObject(object_buffer);
+			uheap->ddcuh_free = tp->tp_init.tp_alloc.tp_free;
+			uheap->ddcuh_next = self->dcc_uheap;
+			self->dcc_uheap   = uheap;
+			DeeObject_Init(object_buffer, tp);
+
+			if (DeeType_IsGC(tp)) {
+				/* Insert GC head */
+				struct Dee_gc_head *result_head, *next;
+				result_head = DeeGC_Head(object_buffer);
+				result_head->gc_pself = NULL;
+				if ((next = self->dcc_gc_head) != NULL) {
+					ASSERT(self->dcc_gc_tail != NULL);
+					next->gc_pself = &result_head->gc_next;
+				} else {
+					ASSERT(self->dcc_gc_tail == NULL);
+					self->dcc_gc_tail = result_head;
+				}
+				result_head->gc_next = next;
+				self->dcc_gc_head = result_head;
+				/* Only able to map the object's basic header */
+				instance_size = Dee_GC_OBJECT_OFFSET + sizeof(DeeObject);
+				if unlikely(deepcopy_mappointer(self, DeeGC_Head(ob),
+				                                result_head, instance_size, false))
+					goto err;
+			} else {
+				/* Only able to map the object's basic header */
+				instance_size = sizeof(DeeObject);
+				if unlikely(deepcopy_mappointer(self, ob, object_buffer, instance_size, false))
+					goto err;
+			}
+			out_addr = deepcopy_ptr2ser(self, object_buffer);
+		} else {
+			/* Allocate buffer for object. */
+			out_addr = DeeType_IsGC(tp)
+			           ? deepcopy_gcobject_malloc(self, instance_size, ob)
+			           : deepcopy_object_malloc(self, instance_size, ob);
+			if unlikely(!Dee_SERADDR_ISOK(out_addr))
+				goto err;
+		}
 
 		/* NOTE: Standard fields have already been initialized by "deepcopy_[gc]object_malloc" */
 		status = (*(Dee_tp_serialize_obj_t)tp_serialize)(ob, (DeeSerial *)self, out_addr);
@@ -719,6 +787,16 @@ cleanup_heap(Dee_deepcopy_heap_t *heap) {
 }
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
+PRIVATE void DCALL
+cleanup_uheap(struct Dee_deepcopy_uheap *heap) {
+	while (heap) {
+		struct Dee_deepcopy_uheap *next;
+		next = heap->ddcuh_next;
+		Dee_deepcopy_uheap_free(heap);
+		heap = next;
+	}
+}
+
 /* Finalize "self" in the sense of doing a COMMIT.
  *
  * This function behaves similar to `DeeDeepCopy_Fini()', but will also
@@ -737,6 +815,7 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 	cleanup_heap(self->dcc_obheap);
 	cleanup_heap(self->dcc_gcheap);
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+	cleanup_uheap(self->dcc_uheap);
 
 	/* Free map tables. */
 	Dee_Free(self->dcc_ptrmapv);

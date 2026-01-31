@@ -4950,8 +4950,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 		return self->tp_init.tp_alloc.tp_instance_size;
 	/* FIXME: This right here doesn't work in DEX modules when PLT symbols are used.
 	 *
-	 * This currently breaks "deepcopy" for stuff like "collections.UniqueSet" when
-	 * deemon was built with "CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY".
+	 * This currently breaks serialization for stuff like "collections.UniqueSet".
 	 *
 	 * The only solution I can see here is to just always disable slab-based alloc
 	 * functions in DEX modules, but then the deemon core should be able to lazily
