@@ -27,13 +27,14 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
+#include "object.h"
 #include "serial.h" /* Dee_SERIAL_HEAD */
 #include "types.h"  /* DREF, DeeObject */
 
 #include <stddef.h> /* size_t */
 
 #ifndef __INTELLISENSE__
-#include "alloc.h" /* Dee_*alloc*, Dee_Free */
+#include "alloc.h" /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

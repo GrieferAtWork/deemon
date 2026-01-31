@@ -23,6 +23,8 @@
 #include "../api.h"
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
+
 #include "../bytes.h"  /* DeeBytes*, DeeObject_Bytes, Dee_EmptyBytes */
 #include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../object.h"

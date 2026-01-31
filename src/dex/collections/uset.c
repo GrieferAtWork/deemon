@@ -28,7 +28,6 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
-#include <deemon/serial.h>             /* DeeArg_Unpack1 */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dict.h>            /* DeeDict_Dummy */
 #include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence */
@@ -40,6 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/seq.h>             /* DeeIterator_Type */
+#include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* memcpyc */

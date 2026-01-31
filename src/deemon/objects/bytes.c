@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_CollectMemoryoc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
-#include <deemon/bytes.h>              /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_EmptyBytes, Dee_bytes_* */
+#include <deemon/bytes.h>              /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_EmptyBytes, Dee_bytes_*, _DeeBytes_InitBuffer */
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
