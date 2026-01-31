@@ -635,7 +635,6 @@ free_out__ud_elem_and_again:
 			} else {
 				out__ud_elem[i].di_value = NULL;
 			}
-			self__ud_elem[i].di_value;
 		}
 		UDict_LockEndRead(self);
 		if (DeeSerial_XInplacePutObjectv(writer, addrof_out__ud_elem, (self__ud_mask + 1) * 2))
