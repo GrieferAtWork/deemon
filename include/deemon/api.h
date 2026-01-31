@@ -505,7 +505,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 /* Experimental feature switch: Use "tp_serialize" to implement "deepcopy" */
 #if (!defined(CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY) && \
      !defined(CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY))
-#if 0 /* TODO: Doesn't work, yet */
+#if 1
 #define CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
 #else
 #define CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY
