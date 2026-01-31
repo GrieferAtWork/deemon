@@ -42,7 +42,6 @@
 DECL_BEGIN
 
 typedef struct Dee_compiler_object DeeCompilerObject;
-struct Dee_compiler_options;
 
 #ifdef CONFIG_BUILDING_DEEMON
 #define Dee_COMPILER_ITEM_OBJECT_HEAD(T)                                                                                    \
@@ -54,15 +53,15 @@ struct Dee_compiler_options;
 	                                                   * NOTE: For compiler items implemented as `DeeCompilerObjItem_Type', \
 	                                                   *       this field is [DREF][1..1][const] */
 
-typedef struct Dee_compiler_item_object DeeCompilerItemObject;
-typedef struct Dee_compiler_wrapper_object DeeCompilerWrapperObject;
-struct Dee_compiler_item_object {
+typedef struct Dee_compiler_item_object {
 	Dee_COMPILER_ITEM_OBJECT_HEAD(void)
-};
-struct Dee_compiler_wrapper_object {
+} DeeCompilerItemObject;
+
+typedef struct Dee_compiler_wrapper_object {
 	Dee_OBJECT_HEAD
 	DREF DeeCompilerObject *cw_compiler; /* [1..1][const] The compiler being wrapped. */
-};
+} DeeCompilerWrapperObject;
+
 #define Dee_COMPILER_ITEM_HASH(x) Dee_HashPointer((x)->ci_value)
 
 INTDEF DeeTypeObject DeeCompilerItem_Type;
@@ -124,6 +123,7 @@ struct Dee_compiler_items {
 #define Dee_compiler_items_lock_end(self)        Dee_atomic_rwlock_end(&(self)->cis_lock)
 #endif /* CONFIG_BUILDING_DEEMON */
 
+struct Dee_compiler_options;
 struct Dee_compiler_object {
 	/* >> Since the compiler is a fairly large system, divided into _a_ _lot_ of
 	 *    different functions all operating on the same objects, it proves to

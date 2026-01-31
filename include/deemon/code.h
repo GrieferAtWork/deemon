@@ -168,20 +168,14 @@ DECL_BEGIN
  *           of `a' is determined by `argc'
  */
 
-struct Dee_code_frame;
-struct Dee_function_object;
-struct Dee_tuple_object;
 struct Dee_string_object;
 struct Dee_module_object;
-typedef struct Dee_code_object DeeCodeObject;
-typedef struct Dee_function_object DeeFunctionObject;
-typedef struct Dee_yield_function_object DeeYieldFunctionObject;
-typedef struct Dee_yield_function_iterator_object DeeYieldFunctionIteratorObject;
-typedef struct Dee_ddi_object DeeDDIObject;
+
 #ifndef Dee_instruction_t_DEFINED
 #define Dee_instruction_t_DEFINED 1
 typedef __BYTE_TYPE__ Dee_instruction_t;
 #endif /* !Dee_instruction_t_DEFINED */
+
 #define Dee_SIZEOF_CODE_ADDR_T 4
 #define Dee_SIZEOF_CODE_SIZE_T 4
 typedef uint32_t Dee_code_addr_t;
@@ -389,7 +383,7 @@ struct Dee_ddi_exdat {
 	COMPILER_FLEXIBLE_ARRAY(uint8_t, dx_data); /* [dx_size] Extended DDI data. */
 };
 
-struct Dee_ddi_object {
+typedef struct Dee_ddi_object {
 	Dee_OBJECT_HEAD
 	uint32_t const                  *d_strings; /* [OFFSET(d_strtab->s_str)][0..d_nstring][owned][const] Vector of DDI string offsets. */
 	DREF struct Dee_string_object   *d_strtab;  /* [1..1][const] String table of NUL-terminated strings.
@@ -401,7 +395,7 @@ struct Dee_ddi_object {
 	uint16_t                         d_pad;     /* ... */
 	struct Dee_ddi_regs              d_start;   /* [const] The initial DDI register state. */
 	COMPILER_FLEXIBLE_ARRAY(uint8_t, d_ddi);    /* [d_ddisize][const] DDI bytecode (s.a.: `DDI_*') */
-};
+} DeeDDIObject;
 
 /* Define a statically allocated DDI object. */
 #define Dee_DEFINE_DDI(name, d_strings_, d_strtab_, d_exdat_, d_ddisize_, \
@@ -454,9 +448,8 @@ DeeCode_GetRSymbolName(DeeObject const *__restrict self, uint16_t rid); /* Refer
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
-#define DeeCode_NAME(x)                          \
-	DeeCode_GetDDIString((DeeObject const *)(x), \
-	                     Dee_REQUIRES_OBJECT(DeeCodeObject, x)->co_ddi->d_start.dr_name)
+#define DeeCode_NAME(x) \
+	DeeCode_GetDDIString((DeeObject const *)(x), Dee_REQUIRES_OBJECT(DeeCodeObject, x)->co_ddi->d_start.dr_name)
 
 #define DeeDDI_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeDDI_Type) /* `_DDI' is final. */
 #define DeeDDI_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeDDI_Type)
@@ -547,6 +540,7 @@ INTDEF NONNULL((1)) void DCALL Dee_hostasm_code_data_destroy(struct Dee_hostasm_
 INTDEF NONNULL((1)) void DCALL Dee_hostasm_function_data_destroy(struct Dee_hostasm_function_data *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
+struct Dee_function_object;
 struct Dee_hostasm_code {
 	/* [0..1][owned][lock(WRITE_ONCE)]
 	 * Data blob for holding extra meta-data referenced by compiled host assembly. */
@@ -555,21 +549,21 @@ struct Dee_hostasm_code {
 	/* [0..1][lock(WRITE_ONCE)]
 	 * Compiled callbacks for invocation with a function. */
 	union {
-		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv);
-		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+		DREF DeeObject *(DCALL *c_norm)(struct Dee_function_object *func, size_t argc, DeeObject *const *argv);
+		DREF DeeObject *(DCALL *c_this)(struct Dee_function_object *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
 	} haco_call;
 	union {
-		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv, DeeObject *kw);
-		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_norm)(struct Dee_function_object *func, size_t argc, DeeObject *const *argv, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_this)(struct Dee_function_object *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
 	} haco_call_kw;
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	union {
-		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, DeeObject *args);
-		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, DeeObject *args);
+		DREF DeeObject *(DCALL *c_norm)(struct Dee_function_object *func, DeeObject *args);
+		DREF DeeObject *(DCALL *c_this)(struct Dee_function_object *func, DeeObject *thisarg, DeeObject *args);
 	} haco_call_tuple;
 	union {
-		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, DeeObject *args, DeeObject *kw);
-		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_norm)(struct Dee_function_object *func, DeeObject *args, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_this)(struct Dee_function_object *func, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
 	} haco_call_tuple_kw;
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
@@ -635,7 +629,7 @@ struct Dee_hostasm_function {
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 
-struct Dee_code_object {
+typedef struct Dee_code_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD
 	uint16_t                 co_flags;       /* Code flags (Set of `CODE_F*') */
@@ -650,9 +644,19 @@ struct Dee_code_object {
 	                                          * Min amount of bytes of local storage required by assembly of this code object.
 	                                          * NOTE: `X' is the minimum stack depth required by this code object. */
 	Dee_code_size_t          co_codebytes;   /* [const] The total number of code bytes. */
+#ifdef Dee_WANT_CODE_OBJECT__co_next
 	union {
-		DREF struct Dee_module_object
-		                    *co_module;      /* [1..1] The module in which this code object was defined.
+		DREF struct Dee_module_object *co_module; /* ... (see below) */
+		DREF struct Dee_code_object   *co_next;   /* [0..1] Only used during compilation: Pointer to another code object. */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define co_module _dee_aunion.co_module /*!export-*/
+#define co_next   _dee_aunion.co_next   /*!export-*/
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+#else /* Dee_WANT_CODE_OBJECT__co_next */
+	DREF struct Dee_module_object *co_module;/* [1..1] The module in which this code object was defined.
 		                                      * NOTE: Running code may assume that this field is always non-NULL,
 		                                      *       yet during compilation it is NULL or some other object until
 		                                      *       the module object surrounding some code object has been defined.
@@ -662,14 +666,7 @@ struct Dee_code_object {
 		                                      *       been created.
 		                                      * TODO: This field should be [0..1] and allowed to be NULL if "co_code"
 		                                      *       doesn't need the current module in order to run. */
-		DREF DeeCodeObject  *co_next;        /* [0..1] Only used during compilation: Pointer to another code object. */
-	}
-#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
-	_dee_aunion
-#define co_module _dee_aunion.co_module /*!export-*/
-#define co_next   _dee_aunion.co_next   /*!export-*/
-#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
-	;
+#endif /* !Dee_WANT_CODE_OBJECT__co_next */
 	DREF struct Dee_string_object      *const *co_keywords; /* [1..1][const][0..co_argc_max || NULL][owned][const] Argument keywords (or NULL if not known). */
 	DREF DeeObject                     *const *co_defaultv; /* [0..1][const][0..(co_argc_max-co_argc_min)][owned][const] Vector of default argument values.
 	                                                         * NOTE: NULL entries refer to optional arguments, producing an error
@@ -692,7 +689,7 @@ struct Dee_code_object {
 	                                                         *          should be padded with `INSTRLEN_MAX' repeated `ASM_RET_NONE' instructions,
 	                                                         *          thereby ensuring that upon natural completion, at least one `ASM_RET_NONE'
 	                                                         *          instruction is always executed, no matter what. */
-};
+} DeeCodeObject;
 
 #ifdef __INTELLISENSE__
 #define DeeCode_Malloc(co_codebytes)          ((DREF DeeCodeObject *)(offsetof(DeeCodeObject, co_code) + (co_codebytes)))
@@ -863,40 +860,41 @@ struct Dee_code_frame_kwds {
 };
 
 
+struct Dee_tuple_object;
+struct Dee_function_object;
+
 #define Dee_CODE_FRAME_NOT_EXECUTING  ((struct Dee_code_frame *)(uintptr_t)-1)
 
 /* Execution frame of a deemon code object.
  * NOTE: This structure is usually allocated on the host's stack. */
 struct Dee_code_frame {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
-	struct Dee_code_frame    *cf_prev;    /* [0..1] Previous execution frame.
-	                                       * NOTE: Set to `Dee_CODE_FRAME_NOT_EXECUTING' while
-	                                       *       the frame is not being executed. */
-	DeeFunctionObject        *cf_func;    /* [1..1] The function running within in this frame. */
-	size_t                    cf_argc;    /* [const] Amount of input arguments. */
-	DREF DeeObject    *const *cf_argv;    /* [1..1][const][0..cf_argc][const] Vector of input arguments. */
-	struct Dee_code_frame_kwds
-	                         *cf_kw;      /* [0..1][const] Keyword argument extension data. */
-	DREF DeeObject          **cf_frame;   /* [0..1][cf_func->fo_code->co_framesize / sizeof(DeeObject *)][owned] Frame-local work-memory used during execution. */
-	DREF DeeObject          **cf_stack;   /* [?..1][(cf_func->fo_code->co_framesize - cf_func->fo_code->co_localc * sizeof(DeeObject *)) / sizeof(DeeObject *)] Base address for the stack.
-	                                       * NOTE: When `cf_stacksz != 0', then this vector is allocated on the heap. */
-	DeeObject               **cf_sp;      /* [?..1][1..1] Pointer to the location where the next-to-be pushed object is stored.
-	                                       * NOTE: The stack pointer grows UPWARDS, meaning that
-	                                       *       the used object-range is `[cf_stack, cf_sp)' */
-	Dee_instruction_t        *cf_ip;      /* [1..1][in(cf_func->fo_code->co_code)] Current instruction pointer. */
-	DREF struct Dee_tuple_object
-	                         *cf_vargs;   /* [0..1][lock(write_once)] Saved var-args object. */
-	DeeObject                *cf_this;    /* [1..1][valid_if(cf_func->fo_code->co_flags & Dee_CODE_FTHISCALL)][const]
-	                                       * The `this' argument passed for this-calls. */
-	DeeObject                *cf_result;  /* [0..1] Storage location of the frame's currently set return value.
-	                                       *        The caller of the frame should pre-initialize this field to NULL.
-	                                       * NOTE: May be set to ITER_DONE in yield functions! */
-	uint16_t                  cf_stacksz; /* [valid_if(DeeCode_ExecFrameSafe)] Size of the heap-allocated stack.
-	                                       * HINT: This field is not used by code running in fast mode
-	                                       *       (aka. Code without the `Dee_CODE_FASSEMBLY' flag set). */
-	uint16_t                  cf_flags;   /* Frame flags (Only used by yield-function-iterators; set of `CODE_F*') */
+	struct Dee_code_frame      *cf_prev;    /* [0..1] Previous execution frame.
+	                                         * NOTE: Set to `Dee_CODE_FRAME_NOT_EXECUTING' while
+	                                         *       the frame is not being executed. */
+	struct Dee_function_object *cf_func;    /* [1..1] The function running within in this frame. */
+	size_t                      cf_argc;    /* [const] Amount of input arguments. */
+	DREF DeeObject      *const *cf_argv;    /* [1..1][const][0..cf_argc][const] Vector of input arguments. */
+	struct Dee_code_frame_kwds *cf_kw;      /* [0..1][const] Keyword argument extension data. */
+	DREF DeeObject            **cf_frame;   /* [0..1][cf_func->fo_code->co_framesize / sizeof(DeeObject *)][owned] Frame-local work-memory used during execution. */
+	DREF DeeObject            **cf_stack;   /* [?..1][(cf_func->fo_code->co_framesize - cf_func->fo_code->co_localc * sizeof(DeeObject *)) / sizeof(DeeObject *)] Base address for the stack.
+	                                         * NOTE: When `cf_stacksz != 0', then this vector is allocated on the heap. */
+	DeeObject                 **cf_sp;      /* [?..1][1..1] Pointer to the location where the next-to-be pushed object is stored.
+	                                         * NOTE: The stack pointer grows UPWARDS, meaning that
+	                                         *       the used object-range is `[cf_stack, cf_sp)' */
+	Dee_instruction_t          *cf_ip;      /* [1..1][in(cf_func->fo_code->co_code)] Current instruction pointer. */
+	DREF struct Dee_tuple_object *cf_vargs; /* [0..1][lock(write_once)] Saved var-args object. */
+	DeeObject                  *cf_this;    /* [1..1][valid_if(cf_func->fo_code->co_flags & Dee_CODE_FTHISCALL)][const]
+	                                         * The `this' argument passed for this-calls. */
+	DeeObject                  *cf_result;  /* [0..1] Storage location of the frame's currently set return value.
+	                                         *        The caller of the frame should pre-initialize this field to NULL.
+	                                         * NOTE: May be set to ITER_DONE in yield functions! */
+	uint16_t                    cf_stacksz; /* [valid_if(DeeCode_ExecFrameSafe)] Size of the heap-allocated stack.
+	                                         * HINT: This field is not used by code running in fast mode
+	                                         *       (aka. Code without the `Dee_CODE_FASSEMBLY' flag set). */
+	uint16_t                    cf_flags;   /* Frame flags (Only used by yield-function-iterators; set of `CODE_F*') */
 #if __SIZEOF_POINTER__ > 4
-	uint16_t                  cf_padding[2]; /* ... */
+	uint16_t                    cf_padding[2]; /* ... */
 #endif /* __SIZEOF_POINTER__ > 4 */
 };
 
@@ -1023,7 +1021,7 @@ DeeCode_HandleBreakpoint(struct Dee_code_frame *__restrict frame);
 #endif /* DEE_SOURCE */
 
 
-struct Dee_function_object {
+typedef struct Dee_function_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC Object. */
 	DREF DeeCodeObject                       *fo_code;    /* [1..1][const] Associated code object. */
@@ -1038,7 +1036,7 @@ struct Dee_function_object {
 	                                                       * [fo_code->co_refstaticc]
 	                                                       * Vector of referenced objects & static variables
 	                                                       * Values may be set to ITER_DONE by `ASM_CMPXCH_UB_LOCK'. */
-};
+} DeeFunctionObject;
 
 #define DeeFunction_CODE(x) Dee_REQUIRES_OBJECT(DeeFunctionObject const, x)->fo_code
 #define DeeFunction_REFV(x) Dee_REQUIRES_OBJECT(DeeFunctionObject const, x)->fo_refv
@@ -1114,40 +1112,40 @@ struct Dee_function_object {
 
 
 
-struct Dee_yield_function_object {
+typedef struct Dee_yield_function_object {
 	Dee_OBJECT_HEAD 
-	DREF DeeFunctionObject                   *yf_func;  /* [1..1][const] The function we are derived from. */
+	DREF struct Dee_function_object          *yf_func;  /* [1..1][const] The function we are derived from. */
 	struct Dee_code_frame_kwds               *yf_kw;    /* [0..1][owned][const] Keyword arguments. */
 	DREF DeeObject                           *yf_this;  /* [0..1][const] 'this' object during callback. */
 	size_t                                    yf_pargc; /* [<= yf_argc][const] Positional argument count */
 	size_t                                    yf_argc;  /* [const] Argument count (including keyword values when `DeeKwds_Check(yf_kw->fk_kw)') */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, yf_argv); /* [1..1][const][yf_argc] Argument vector*/
-};
+} DeeYieldFunctionObject;
 
-#define Dee_DEFINE_YIELD_FUNCTION(name, yf_func_, yf_kw_, \
-                                  yf_this_, yf_pargc_,    \
-                                  yf_argc_, ...)          \
-	struct {                                              \
-		Dee_OBJECT_HEAD                                   \
-		DREF DeeFunctionObject     *yf_func;              \
-		struct Dee_code_frame_kwds *yf_kw;                \
-		DREF DeeObject             *yf_this;              \
-		size_t                      yf_pargc;             \
-		size_t                      yf_argc;              \
-		DREF DeeObject             *yf_argv[yf_argc_];    \
-	} name = {                                            \
-		Dee_OBJECT_HEAD_INIT(&DeeYieldFunction_Type),     \
-		yf_func_, yf_kw_, yf_this_, yf_pargc_, yf_argc_,  \
-		__VA_ARGS__                                       \
+#define Dee_DEFINE_YIELD_FUNCTION(name, yf_func_, yf_kw_,   \
+                                  yf_this_, yf_pargc_,      \
+                                  yf_argc_, ...)            \
+	struct {                                                \
+		Dee_OBJECT_HEAD                                     \
+		DREF struct Dee_function_object *yf_func;           \
+		struct Dee_code_frame_kwds      *yf_kw;             \
+		DREF DeeObject                  *yf_this;           \
+		size_t                           yf_pargc;          \
+		size_t                           yf_argc;           \
+		DREF DeeObject                  *yf_argv[yf_argc_]; \
+	} name = {                                              \
+		Dee_OBJECT_HEAD_INIT(&DeeYieldFunction_Type),       \
+		yf_func_, yf_kw_, yf_this_, yf_pargc_, yf_argc_,    \
+		__VA_ARGS__                                         \
 	}
 #define Dee_DEFINE_YIELD_FUNCTION_NOARGS(name, yf_func_, yf_kw_, yf_this_) \
 	struct {                                                               \
 		Dee_OBJECT_HEAD                                                    \
-		DREF DeeFunctionObject     *yf_func;                               \
-		struct Dee_code_frame_kwds *yf_kw;                                 \
-		DREF DeeObject             *yf_this;                               \
-		size_t                      yf_pargc;                              \
-		size_t                      yf_argc;                               \
+		DREF struct Dee_function_object *yf_func;                          \
+		struct Dee_code_frame_kwds      *yf_kw;                            \
+		DREF DeeObject                  *yf_this;                          \
+		size_t                           yf_pargc;                         \
+		size_t                           yf_argc;                          \
 	} name = {                                                             \
 		Dee_OBJECT_HEAD_INIT(&DeeYieldFunction_Type),                      \
 		yf_func_, yf_kw_, yf_this_, 0, 0                                   \
@@ -1158,7 +1156,7 @@ struct Dee_yield_function_object {
 #define DeeYieldFunction_Sizeof(argc) (offsetof(DeeYieldFunctionObject, yf_argv) + ((argc) * sizeof(DREF DeeObject *)))
 #endif /* CONFIG_BUILDING_DEEMON */
 
-struct Dee_yield_function_iterator_object {
+typedef struct Dee_yield_function_iterator_object {
 	Dee_OBJECT_HEAD /* GC Object. */
 	DREF DeeYieldFunctionObject *yi_func;  /* [0..1][lock(yi_lock)] The yield function instance that created us.
 	                                        * NOTE: May be set to `NULL' when the iterator is cleared by the GC. */
@@ -1178,7 +1176,7 @@ struct Dee_yield_function_iterator_object {
 	                                        * NOTE: This lock needs to be recursive to allow for
 	                                        *       GC-visit/frame-copy while the frame is executing. */
 #endif /* !CONFIG_NO_THREADS */
-};
+} DeeYieldFunctionIteratorObject;
 
 #define DeeYieldFunctionIterator_LockReading(self)        Dee_rshared_rwlock_reading(&(self)->yi_lock)
 #define DeeYieldFunctionIterator_LockWriting(self)        Dee_rshared_rwlock_writing(&(self)->yi_lock)

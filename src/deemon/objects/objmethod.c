@@ -107,8 +107,9 @@ typeobject_find_objmethod(DeeTypeObject *__restrict self, Dee_objmethod_t meth,
 	return false;
 }
 
-/* Lookup the origin of the function bound by
- * the given `_ObjMethod', or `NULL' if unknown. */
+/* Lookup the origin of the function bound by the given `_ObjMethod'.
+ * @return: true:  Success -- `*result' was populated with origin info on "self"
+ * @return: false: Failure -- original of "self" could not be determined */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
                        struct Dee_objmethod_origin *__restrict result) {

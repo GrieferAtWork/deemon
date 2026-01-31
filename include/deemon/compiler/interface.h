@@ -22,6 +22,7 @@
 
 #include "../api.h"
 
+#ifdef CONFIG_BUILDING_DEEMON
 #include "../object.h" /* struct type_member */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_hash_t */
 #include "compiler.h"
@@ -34,27 +35,25 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_BUILDING_DEEMON
-struct ast;
-struct scope_object;
-struct base_scope_object;
-struct root_scope_object;
-typedef struct compiler_keyword_object DeeCompilerKeywordObject;
-typedef struct compiler_symbol_object DeeCompilerSymbolObject;
-typedef struct compiler_ast_object DeeCompilerAstObject;
-typedef struct compiler_scope_object DeeCompilerScopeObject;
-struct compiler_keyword_object {
+struct TPPKeyword;
+typedef struct compiler_keyword_object {
 	Dee_COMPILER_ITEM_OBJECT_HEAD(struct TPPKeyword)
-};
-struct compiler_symbol_object {
+} DeeCompilerKeywordObject;
+
+struct symbol;
+typedef struct compiler_symbol_object {
 	Dee_COMPILER_ITEM_OBJECT_HEAD(struct symbol)
-};
-struct compiler_ast_object {
+} DeeCompilerSymbolObject;
+
+struct ast;
+typedef struct compiler_ast_object {
 	Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct ast)
-};
-struct compiler_scope_object {
+} DeeCompilerAstObject;
+
+struct scope_object;
+typedef struct compiler_scope_object {
 	Dee_COMPILER_ITEM_OBJECT_HEAD(DREF struct scope_object)
-};
+} DeeCompilerScopeObject;
 
 INTDEF DeeTypeObject DeeCompilerKeyword_Type;         /* item */
 INTDEF DeeTypeObject DeeCompilerSymbol_Type;          /* item */
@@ -113,7 +112,8 @@ INTDEF NONNULL((1)) void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject 
 #define DeeCompilerWrapper_Visit    DeeCompilerItem_Visit
 #define DeeCompilerWrapper_Members  DeeCompilerItem_Members
 
-struct symbol;
+struct base_scope_object;
+
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_invalid_ast_basescope)(DeeCompilerAstObject *__restrict obj, struct base_scope_object *__restrict base_scope);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_invalid_ast_compiler)(DeeCompilerAstObject *__restrict obj);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_invalid_file_compiler)(DeeCompilerItemObject *__restrict obj);
@@ -234,8 +234,7 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 #define DR_CBaseScope  "?ABaseScope" DR_Compiler /* DeeCompilerBaseScope_Type */
 #define DR_CRootScope  "?ARootScope" DR_Compiler /* DeeCompilerRootScope_Type */
 
-#endif /* CONFIG_BUILDING_DEEMON */
-
 DECL_END
+#endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* !GUARD_DEEMON_COMPILER_INTERFACE_H */

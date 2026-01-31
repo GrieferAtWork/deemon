@@ -1075,7 +1075,6 @@ INTDEF ATTR_COLD void DCALL err_no_cfunction(void);
 
 
 
-typedef struct struct_type_object DeeStructTypeObject;
 struct Dee_string_object;
 struct struct_field {
 	DREF struct Dee_string_object *sf_name;   /* [0..1] The name of this field (NULL is used as sentinel) */
@@ -1084,11 +1083,11 @@ struct struct_field {
 	DREF DeeLValueTypeObject      *sf_type;   /* [1..1][valid_if(sf_name)] The l-value variant of this field's type. */
 };
 
-struct struct_type_object {
+typedef struct struct_type_object {
 	DeeSTypeObject                               st_base;  /* The underlying type object. */
 	Dee_hash_t                                   st_fmsk;  /* [const] Field-vector mask. */
 	COMPILER_FLEXIBLE_ARRAY(struct struct_field, st_fvec); /* [1..st_fmsk+1][const] Hash-vector of field names. */
-};
+} DeeStructTypeObject;
 
 struct empty_struct_type_object {
 	DeeSTypeObject      st_base;    /* The underlying type object. */

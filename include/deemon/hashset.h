@@ -48,8 +48,6 @@
 
 DECL_BEGIN
 
-typedef struct Dee_hashset_object DeeHashSetObject;
-
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
 struct Dee_hashset_item {
 	Dee_hash_t      hsi_hash; /* [valis_if(hsi_key)] Hash of `hsi_key' (undefined, but readable when "di_key == NULL") */
@@ -59,7 +57,7 @@ struct Dee_hashset_item {
 /* Static initializer for `struct Dee_hashset_item' */
 #define Dee_HASHSET_ITEM_INIT(hash, key) { hash, key }
 
-struct Dee_hashset_object {
+typedef struct Dee_hashset_object {
 	Dee_OBJECT_HEAD /* GC Object */
 	/*real*/Dee_dict_vidx_t  hs_valloc;  /* [lock(hs_lock)][<= hs_hmask] Allocated size of "hs_vtab" (should be ~2/3rd of `hs_hmask + 1') */
 	/*real*/Dee_dict_vidx_t  hs_vsize;   /* [lock(hs_lock)][<= hs_valloc] 1+ the greatest index in "hs_vtab" that was ever initialized (and also the index of the next item in "hs_vtab" to-be populated). */
@@ -74,7 +72,7 @@ struct Dee_hashset_object {
 	Dee_atomic_rwlock_t      hs_lock;    /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
-};
+} DeeHashSetObject;
 
 #define DeeHashSet_EmptyVTab /*virt*/ ((struct Dee_hashset_item *)_DeeDict_EmptyTab - 1)
 #define DeeHashSet_EmptyHTab ((void *)_DeeDict_EmptyTab)
@@ -154,7 +152,7 @@ struct Dee_hashset_item {
 /* Static initializer for `struct Dee_hashset_item' */
 #define Dee_HASHSET_ITEM_INIT(hash, key) { key, hash }
 
-struct Dee_hashset_object {
+typedef struct Dee_hashset_object {
 	Dee_OBJECT_HEAD /* GC Object */
 	size_t                   hs_mask; /* [lock(hs_lock)][> hs_size || hs_mask == 0] Allocated set size minus 1. */
 	size_t                   hs_size; /* [lock(hs_lock)][< hs_mask || hs_mask == 0] Amount of non-NULL keys. */
@@ -166,7 +164,7 @@ struct Dee_hashset_object {
 	Dee_atomic_rwlock_t      hs_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
-};
+} DeeHashSetObject;
 
 /* The basic HashSet item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {

@@ -55,13 +55,6 @@ DECL_BEGIN
 #define DEFINE_KWCMETHOD Dee_DEFINE_KWCMETHOD
 #endif /* DEE_SOURCE */
 
-
-typedef struct Dee_objmethod_object DeeObjMethodObject;
-typedef struct Dee_clsmethod_object DeeClsMethodObject;
-typedef struct Dee_clsproperty_object DeeClsPropertyObject;
-typedef struct Dee_clsmember_object DeeClsMemberObject;
-typedef struct Dee_cmethod_object DeeCMethodObject;
-
 typedef WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *Dee_cmethod_t)(size_t argc, DeeObject *const *argv);
 typedef WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *Dee_kwcmethod_t)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 typedef WUNUSED_T                  DREF DeeObject *(DCALL *Dee_cmethod0_t)(void);
@@ -93,20 +86,14 @@ template<class _TReturn, class _TObject> Dee_cmethod1_t _Dee_RequiresCMethod1(WU
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 
-struct Dee_objmethod_origin {
-	DeeTypeObject                *omo_type;  /* [1..1] Declaring type. */
-	struct Dee_type_method const *omo_chain; /* [1..1] Method declaration chain (either `omo_type->tp_methods' or `omo_type->tp_class_methods'). */
-	struct Dee_type_method const *omo_decl;  /* [1..1] Method declaration in question. */
-};
-
-struct Dee_objmethod_object {
+typedef struct Dee_objmethod_object {
 	Dee_OBJECT_HEAD /* Object-bound member function. */
 	DREF DeeObject   *om_this;  /* [1..1][const] The `self' argument passed to `om_func'. */
 	union {
 		Dee_objmethod_t   omf_meth;   /* [1..1][valid_if(ob_type == &DeeObjMethod_Type)][const] Method pointer. */
 		Dee_kwobjmethod_t omf_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwObjMethod_Type)][const] Method pointer. */
 	} om_func;
-};
+} DeeObjMethodObject;
 
 DDATDEF DeeTypeObject DeeObjMethod_Type;
 DDATDEF DeeTypeObject DeeKwObjMethod_Type;
@@ -127,15 +114,22 @@ DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self);
 
-/* Lookup the origin of the function bound by
- * the given `_ObjMethod', or `NULL' if unknown. */
+struct Dee_objmethod_origin {
+	DeeTypeObject                *omo_type;  /* [1..1] Declaring type. */
+	struct Dee_type_method const *omo_chain; /* [1..1] Method declaration chain (either `omo_type->tp_methods' or `omo_type->tp_class_methods'). */
+	struct Dee_type_method const *omo_decl;  /* [1..1] Method declaration in question. */
+};
+
+/* Lookup the origin of the function bound by the given `_ObjMethod'.
+ * @return: true:  Success -- `*result' was populated with origin info on "self"
+ * @return: false: Failure -- original of "self" could not be determined */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
                        struct Dee_objmethod_origin *__restrict result);
 #define DeeKwObjMethod_GetOrigin(self, result) \
 	DeeObjMethod_GetOrigin(self, result)
 
-struct Dee_clsmethod_object {
+typedef struct Dee_clsmethod_object {
 	/* Unbound member function (`ClassMethod') (may be invoked as a thiscall object). */
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject *clm_type; /* [1..1] The type that this-arguments must match. */
@@ -143,7 +137,7 @@ struct Dee_clsmethod_object {
 		Dee_objmethod_t   clmf_meth;   /* [1..1][valid_if(ob_type == &DeeClsMethod_Type)][const] Method pointer. */
 		Dee_kwobjmethod_t clmf_kwmeth; /* [1..1][valid_if(ob_type == &DeeKwClsMethod_Type)][const] Method pointer. */
 	} clm_func;
-};
+} DeeClsMethodObject;
 
 DDATDEF DeeTypeObject DeeClsMethod_Type;
 DDATDEF DeeTypeObject DeeKwClsMethod_Type;
@@ -181,14 +175,14 @@ struct Dee_clsproperty_origin {
 	struct Dee_type_getset const *cpo_decl;  /* [1..1] Method declaration in question. */
 };
 
-struct Dee_clsproperty_object {
+typedef struct Dee_clsproperty_object {
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject *cp_type;  /* [1..1] The type that this-arguments must match. */
 	Dee_getmethod_t     cp_get;   /* [0..1] Getter callback. */
 	Dee_delmethod_t     cp_del;   /* [0..1] Delete callback. */
 	Dee_setmethod_t     cp_set;   /* [0..1] Setter callback. */
 	Dee_boundmethod_t   cp_bound; /* [0..1] Is-bound callback. */
-};
+} DeeClsPropertyObject;
 
 DDATDEF DeeTypeObject DeeClsProperty_Type;
 #define DeeClsProperty_TYPE(x)       Dee_REQUIRES_OBJECT(DeeClsPropertyObject, x)->cp_type
@@ -228,12 +222,13 @@ DeeClsProperty_GetOrigin(DeeObject const *__restrict self,
 
 
 
-struct Dee_clsmember_object {
+typedef struct Dee_clsmember_object {
 	/* Proxy descriptor for instance members to-be accessed like class properties. */
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject    *cmb_type; /* [1..1] The type that this-arguments must match. */
 	struct Dee_type_member cmb_memb; /* The member descriptor. */
-};
+} DeeClsMemberObject;
+
 DDATDEF DeeTypeObject DeeClsMember_Type;
 
 /* Create a new unbound class member object. */
@@ -273,7 +268,7 @@ Dee_cmethod_origin_fini(struct Dee_cmethod_origin *__restrict self);
 	 Dee_XDecref((self)->cmo_type))
 #endif /* !__INTELLISENSE__ */
 
-struct Dee_cmethod_object {
+typedef struct Dee_cmethod_object {
 	Dee_OBJECT_HEAD
 	uintptr_t cm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
 	union {
@@ -282,7 +277,7 @@ struct Dee_cmethod_object {
 		Dee_cmethod0_t  cmf_meth0;  /* [1..1][valid_if(ob_type == &DeeCMethod0_Type)][const] Method pointer. */
 		Dee_cmethod1_t  cmf_meth1;  /* [1..1][valid_if(ob_type == &DeeCMethod1_Type)][const] Method pointer. */
 	} cm_func;
-};
+} DeeCMethodObject;
 
 DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
@@ -379,7 +374,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeKwObjMethod_VCallFun
 #define DeeObjMethod_CallFunc(funptr, self, argc, argv)       (*funptr)(self, argc, argv)
 #define DeeKwObjMethod_CallFunc(funptr, self, argc, argv, kw) (*funptr)(self, argc, argv, kw)
 #endif /* !DeeCMethod_CallFunc */
-
 
 DECL_END
 

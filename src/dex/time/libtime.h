@@ -101,8 +101,7 @@ union u_time_repr_kind {
 };
 
 
-typedef struct time_object DeeTimeObject;
-struct time_object {
+typedef struct time_object {
 	Dee_OBJECT_HEAD
 	union {
 		/* Nanoseconds (1_000_000_000 / sec) since 01-01-0000T00:00:00 (Gregorian calender).
@@ -166,7 +165,7 @@ struct time_object {
 #define t_kind   _dee_astruct.t_kind
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 	;
-};
+} DeeTimeObject;
 
 #define DeeTime_IsTimestamp(self) ((self)->t_kind == TIME_KIND_TIMESTAMP)
 #define DeeTime_IsDelta(self)     ((self)->t_kind != TIME_KIND_TIMESTAMP)

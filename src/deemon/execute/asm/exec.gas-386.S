@@ -444,7 +444,6 @@ END(_impl_assert_failed)
 #define co_framesize   (Dee_OBJECT_OFFSETOF_DATA+16) /* uint32_t co_framesize; */
 #define co_codebytes   (Dee_OBJECT_OFFSETOF_DATA+20) /* code_size_t co_codebytes; */
 #define co_module      (Dee_OBJECT_OFFSETOF_DATA+24) /* DREF DeeModuleObject *co_module; */
-#define co_next        co_module      /* DREF DeeCodeObject *co_next; */
 #define co_keywords    (co_module+4)  /* DREF struct Dee_kwds_object *co_keywords; */
 #define co_defaultv    (co_module+8)  /* DREF DeeObject *const *co_defaultv; */
 #define co_constv     (co_module+12) /* DREF DeeObject **co_constv; */

@@ -603,8 +603,6 @@ SockAddr_FromArgv(SockAddr *__restrict self,
                   int family, int protocol, int type,
                   size_t argc, DeeObject *const *argv);
 
-typedef struct socket_object DeeSocketObject;
-typedef struct sockaddr_object DeeSockAddrObject;
 
 
 /* Address family / socket type / socket protocol database access. */
@@ -654,7 +652,7 @@ sock_getmsgflagsnameorid(int flags);
 #define SOCKET_HAVE_CONFIGURE_SENDRECV
 #endif
 
-struct socket_object {
+typedef struct socket_object {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t s_lock;     /* Lock for this socket. */
@@ -685,7 +683,8 @@ struct socket_object {
 #define SOCKET_FHASPEERADDR    0x2000 /* The socket's `s_peeraddr' field has been initialized. */
 #define SOCKET_FOPENED         0x4000 /* Socket hasn't been closed (yet). */
 #define SOCKET_FSHUTTINGDOWN   0x8000 /* Socket is being shut down. */
-};
+} DeeSocketObject;
+
 INTDEF DeeTypeObject DeeSocket_Type;
 
 #define socket_reading(x)       Dee_atomic_rwlock_reading(&(x)->s_lock)
@@ -802,10 +801,11 @@ get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict p_result);
 
 
 
-struct sockaddr_object {
+typedef struct sockaddr_object {
 	OBJECT_HEAD
-	SockAddr    sa_addr; /* [const] The associated socket address. */
-};
+	SockAddr sa_addr; /* [const] The associated socket address. */
+} DeeSockAddrObject;
+
 INTDEF DeeTypeObject DeeSockAddr_Type;
 
 

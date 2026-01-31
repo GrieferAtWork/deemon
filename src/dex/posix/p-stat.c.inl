@@ -521,8 +521,6 @@ DECL_BEGIN
 #endif /* posix_stat_USED_STRUCT_STAT */
 
 
-struct stat_object;
-typedef struct stat_object DeeStatObject;
 struct dee_stat {
 #ifdef posix_stat_USE_WINDOWS
 	BY_HANDLE_FILE_INFORMATION st_info;       /* [const] Windows-specific stat information. */
@@ -958,10 +956,10 @@ err:
 
 
 
-struct stat_object {
+typedef struct stat_object {
 	OBJECT_HEAD
 	struct dee_stat so_stat; /* Stat info */
-};
+} DeeStatObject;
 
 INTDEF DeeTypeObject DeeStat_Type;
 INTDEF DeeTypeObject DeeLStat_Type;

@@ -22,8 +22,10 @@
 
 #include "../api.h"
 
+#ifdef DEE_SOURCE
 #define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
 #define PARSE_FLFSTMT 0x0001 /* Parse line-feeds as statement terminators in certain places. */
+#endif /* DEE_SOURCE */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../object.h"          /* Dee_operator_t */

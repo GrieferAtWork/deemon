@@ -1040,7 +1040,7 @@ deepcopy_clear(struct Dee_thread_object *__restrict thread_self) {
 }
 
 
-struct os_thread_object {
+typedef struct os_thread_object {
 	DeeThreadObject ot_thread;     /* Underlying thread */
 #ifdef Dee_pid_t
 	Dee_pid_t       ot_tid;        /* [valid_if(Dee_THREAD_STATE_HASTID)] */
@@ -1060,9 +1060,8 @@ struct os_thread_object {
 	thrd_t          ot_thrd;       /* [valid_if(Dee_THREAD_STATE_HASTHREAD)] */
 #endif /* DeeThread_USE_thrd_create */
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-};
+} DeeOSThreadObject;
 
-typedef struct os_thread_object DeeOSThreadObject;
 LIST_HEAD(thread_object_list, Dee_thread_object);
 #define DeeThread_AsOSThread(self) COMPILER_CONTAINER_OF(self, DeeOSThreadObject, ot_thread)
 #ifndef DeeThread_USE_SINGLE_THREADED

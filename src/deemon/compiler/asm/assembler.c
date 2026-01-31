@@ -19,6 +19,7 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C
 #define GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C 1
+#define Dee_WANT_CODE_OBJECT__co_next
 
 #include <deemon/api.h>
 

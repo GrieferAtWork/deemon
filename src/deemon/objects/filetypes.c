@@ -3462,12 +3462,12 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapfile_get_ismmap(DeeMapFileObject *__restrict self) {
-#ifdef DeeMapFile_UsesMmap_IS_ALWAYS_ZERO
+#ifdef DeeMapFile_UsesMMap_IS_ALWAYS_ZERO
 	(void)self;
 	return_false;
-#else /* DeeMapFile_UsesMmap_IS_ALWAYS_ZERO */
-	return_bool(DeeMapFile_UsesMmap(&self->mf_map));
-#endif /* !DeeMapFile_UsesMmap_IS_ALWAYS_ZERO */
+#else /* DeeMapFile_UsesMMap_IS_ALWAYS_ZERO */
+	return_bool(DeeMapFile_UsesMMap(&self->mf_map));
+#endif /* !DeeMapFile_UsesMMap_IS_ALWAYS_ZERO */
 }
 
 

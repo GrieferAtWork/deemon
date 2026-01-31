@@ -22,6 +22,10 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define Dee_WANT_CODE_OBJECT__co_next
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Freea */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_Type, Dee_CODE_FVARARGS */
 #include <deemon/dec.h>             /* DFILE_LIMIT, Dec_Ehdr, DeeDecWriter, DeeDecWriter_*, DeeDec_*, DeeModule_OpenDec, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC */

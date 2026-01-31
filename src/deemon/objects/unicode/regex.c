@@ -104,7 +104,7 @@ DECL_BEGIN
 #define RE_SYNTAX_NO_UTF8                                      Dee_RE_COMPILE_NOUTF8
 #define LIBREGEX_CONSTANT__RE_SYNTAX_NO_KOS_OPS                0
 
-/* Prevent collisions with types declared by native system headers */
+/* Prevent conflicts with types declared by native system headers */
 #undef re_regmatch_t
 #undef re_regoff_t
 #undef re_sregoff_t

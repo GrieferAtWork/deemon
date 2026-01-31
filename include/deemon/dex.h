@@ -299,7 +299,6 @@ INTDEF void DCALL DeeModule_UnloadAllDexModules(void);
 
 
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-typedef struct Dee_dex_object DeeDexObject;
 
 struct Dee_dex_symbol {
 	char const           *ds_name;  /* [1..1][SENTINEL(NULL)] Name of this symbol. */
@@ -371,7 +370,7 @@ struct Dee_dex {
 	bool (DCALL *d_clear)(void);
 };
 
-struct Dee_dex_object {
+typedef struct Dee_dex_object {
 	DeeModuleObject    d_module;       /* The underlying module. */
 	struct Dee_dex    *d_dex;          /* [1..1][const_if(Dee_MODULE_FDIDLOAD)] The dex definition table exported by this extension.
 	                                    * NOTE: This pointer is apart of the extension's static address space. */
@@ -379,7 +378,7 @@ struct Dee_dex_object {
 	DeeDexObject     **d_pself;        /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
 	DREF DeeDexObject *d_next;         /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
 	                                    * During finalization, extensions are unloaded in reverse order. */
-};
+} DeeDexObject;
 
 DDATDEF DeeTypeObject DeeDex_Type;
 #define DeeDex_Check(ob)      DeeObject_InstanceOf(ob, &DeeDex_Type)

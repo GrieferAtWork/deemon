@@ -40,7 +40,6 @@
 DECL_BEGIN
 
 typedef struct string_fini_hook_object StringFiniHook;
-
 struct user_string_fini_hook {
 	struct Dee_string_fini_hook usfh_hook; /* Underlying hook interface */
 	Dee_WEAKREF(StringFiniHook) usfh_user; /* Weak reference to user-visible hook callback container */

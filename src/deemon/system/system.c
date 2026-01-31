@@ -2066,7 +2066,7 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 PUBLIC NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 #ifdef DeeMapFile_IS_CreateFileMapping
-	if (DeeMapFile_UsesMmap(self)) {
+	if (DeeMapFile_UsesMMap(self)) {
 		void *hmap = self->_dmf_hmap;
 		size_t psm = getpagesize() - 1;
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
@@ -2082,7 +2082,7 @@ DeeMapFile_Fini(struct DeeMapFile *__restrict self) {
 		(void)CloseHandle(hmap);
 	} else
 #elif defined(DeeMapFile_IS_mmap)
-	if (DeeMapFile_UsesMmap(self)) {
+	if (DeeMapFile_UsesMMap(self)) {
 		size_t psm    = getpagesize() - 1;
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);
 		(void)munmap(baseptr, self->_dmf_mapsize);
@@ -2114,13 +2114,13 @@ PUBLIC NONNULL((1)) bool DCALL
 DeeMapFile_TryTruncate(struct DeeMapFile *__restrict self,
                        size_t newsize) {
 #ifdef DeeMapFile_IS_CreateFileMapping
-	if (DeeMapFile_UsesMmap(self)) {
+	if (DeeMapFile_UsesMMap(self)) {
 		/* Not possible on windows :(
 		 * https://stackoverflow.com/q/3663911 */
 		return false;
 	} else
 #elif defined(DeeMapFile_IS_mmap)
-	if (DeeMapFile_UsesMmap(self)) {
+	if (DeeMapFile_UsesMMap(self)) {
 #ifdef CONFIG_HAVE_munmap
 		size_t psm    = getpagesize() - 1;
 		void *baseptr = (void *)((uintptr_t)self->dmf_addr & ~psm);

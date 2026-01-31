@@ -95,11 +95,11 @@ typedef void Dee_deepcopy_heap_t;
 #define Dee_deepcopy_heap_destroy(self)    Dee_Free(self)
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-typedef struct Dee_deepcopy_heap Dee_deepcopy_heap_t;
-struct Dee_deepcopy_heap {
-	Dee_deepcopy_heap_t *ddch_next; /* [0..1][owned] Next heap chunk */
-	void                *ddch_base; /* [1..1][owned] Heap item base address */
-};
+typedef struct Dee_deepcopy_heap {
+	struct Dee_deepcopy_heap *ddch_next; /* [0..1][owned] Next heap chunk */
+	void                     *ddch_base; /* [1..1][owned] Heap item base address */
+} Dee_deepcopy_heap_t;
+
 #ifdef __INTELLISENSE__
 #define Dee_deepcopy_heap_tryallocchunk() ((Dee_deepcopy_heap_t *)(sizeof(Dee_deepcopy_heap_t)))
 #define Dee_deepcopy_heap_allocchunk()    ((Dee_deepcopy_heap_t *)(sizeof(Dee_deepcopy_heap_t)))

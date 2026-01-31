@@ -68,21 +68,21 @@ struct DeeMapFile {
 	void  *_dmf_hmap;    /* [0..1] file mapping handle */
 	size_t _dmf_vfre;    /* [valid_if(_dmf_hmap != NULL)] When non-zero, must VirtualFree() this many bytes at `CEIL_ALIGN(dmf_addr + dmf_size, getpagesize())' */
 #define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_hmap = NULL)
-#define DeeMapFile_UsesMmap(self) ((self)->_dmf_hmap != NULL)
+#define DeeMapFile_UsesMMap(self) ((self)->_dmf_hmap != NULL)
 #elif defined(DeeMapFile_IS_mmap)
 #define Dee_SIZEOF_DeeMapFile (3 * __SIZEOF_POINTER__)
 	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t  dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 	size_t _dmf_mapsize; /* Used internally: the mmap'd file size, or `0' if `dmf_addr' was malloc'd */
 #define DeeMapFile_SETHEAP(self)  (void)((self)->_dmf_mapsize = 0)
-#define DeeMapFile_UsesMmap(self) ((self)->_dmf_mapsize != 0)
+#define DeeMapFile_UsesMMap(self) ((self)->_dmf_mapsize != 0)
 #else /* ... */
 #define Dee_SIZEOF_DeeMapFile (2 * __SIZEOF_POINTER__)
 	void   *dmf_addr;    /* [0..dmf_size][owned] Base address of the file mapping. */
 	size_t  dmf_size;    /* Mapping size (in bytes, excluding trailing NUL-bytes) */
 #define DeeMapFile_SETHEAP(self)  (void)0
-#define DeeMapFile_UsesMmap(self) 0
-#define DeeMapFile_UsesMmap_IS_ALWAYS_ZERO
+#define DeeMapFile_UsesMMap(self) 0
+#define DeeMapFile_UsesMMap_IS_ALWAYS_ZERO
 #endif /* !... */
 };
 

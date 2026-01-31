@@ -428,14 +428,6 @@ INTDEF DeeTypeObject FixedListIterator_Type;
 #define UHASH(ob)   DeeObject_HashGeneric(ob)
 #define USAME(a, b) ((a) == (b))
 
-typedef struct uset_object USet;
-typedef struct udict_object UDict;
-typedef struct uroset_object URoSet;
-typedef struct urodict_object URoDict;
-typedef struct uset_iterator_object USetIterator;
-typedef struct udict_iterator_object UDictIterator;
-typedef struct uroset_iterator_object URoSetIterator;
-typedef struct urodict_iterator_object URoDictIterator;
 
 /* UDICT */
 struct udict_item {
@@ -444,7 +436,7 @@ struct udict_item {
 	                           * [lock(:ud_lock)] Dictionary item value. */
 };
 
-struct udict_object {
+typedef struct udict_object {
 	OBJECT_HEAD /* GC Object */
 	size_t              ud_mask; /* [lock(ud_lock)][> ud_size || ud_mask == 0] Allocated dictionary size. */
 	size_t              ud_used; /* [lock(ud_lock)][<= ud_size] Amount of key-item pairs actually in use.
@@ -456,7 +448,7 @@ struct udict_object {
 	Dee_atomic_rwlock_t ud_lock; /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
-};
+} UDict;
 
 #define UDict_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(UDict, self)->ud_mask)
 #define UDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
@@ -479,19 +471,19 @@ struct udict_object {
 #define UDict_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->ud_lock)
 #define UDict_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->ud_lock)
 
-struct urodict_object {
+typedef struct urodict_object {
 	OBJECT_HEAD
 	size_t                                     urd_mask;  /* [const][!0] Allocated dictionary mask. */
 	size_t                                     urd_size;  /* [const][< urd_mask] Amount of non-NULL key-item pairs. */
 	COMPILER_FLEXIBLE_ARRAY(struct udict_item, urd_elem); /* [urd_mask+1] Dict key-item pairs. */
-};
+} URoDict;
 
 #define URoDict_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(URoDict, self)->urd_mask)
 #define URoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define URoDict_HashIt(self, i)     (Dee_REQUIRES_OBJECT(URoDict, self)->urd_elem + ((i) & ((URoDict *)(self))->urd_mask))
 
 
-struct udict_iterator_object {
+typedef struct udict_iterator_object {
 	OBJECT_HEAD
 	DREF UDict        *udi_dict; /* [1..1][const] The dict that is being iterated. */
 	struct udict_item *udi_next; /* [?..1][MAYBE(in(udi_dict->ud_elem))][atomic]
@@ -501,14 +493,14 @@ struct udict_iterator_object {
 	                              *       In the event that it is located at its end, `ITER_DONE'
 	                              *       is returned, though in the event that it is located
 	                              *       outside, an error is thrown (`err_changed_sequence()'). */
-};
+} UDictIterator;
 
-struct urodict_iterator_object {
+typedef struct urodict_iterator_object {
 	OBJECT_HEAD
 	DREF URoDict      *urdi_dict; /* [1..1][const] The dict that is being iterated. */
 	struct udict_item *urdi_next; /* [?..1][MAYBE(in(urdi_dict->urd_elem))][atomic]
 	                               * The first candidate for the next item. */
-};
+} URoDictIterator;
 
 
 
@@ -519,19 +511,7 @@ struct uset_item {
 	DREF DeeObject *usi_key; /* [0..1][lock(:us_lock)] Set item key. */
 };
 
-struct uset_iterator_object {
-	OBJECT_HEAD
-	DREF USet        *usi_set;  /* [1..1][const] The set that is being iterated. */
-	struct uset_item *usi_next; /* [?..1][MAYBE(in(usi_set->us_elem))][atomic]
-	                             * The first candidate for the next item.
-	                             * NOTE: Before being dereferenced, this pointer is checked
-	                             *       for being located inside the set's element vector.
-	                             *       In the event that it is located at its end, `ITER_DONE'
-	                             *       is returned, though in the event that it is located
-	                             *       outside, an error is thrown (`err_changed_sequence()'). */
-};
-
-struct uset_object {
+typedef struct uset_object {
 	OBJECT_HEAD /* GC Object */
 	size_t              us_mask; /* [lock(us_lock)][> us_size || us_mask == 0] Allocated set size. */
 	size_t              us_used; /* [lock(us_lock)][<= us_size] Amount of keys actually in use.
@@ -543,7 +523,19 @@ struct uset_object {
 	Dee_atomic_rwlock_t us_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
-};
+} USet;
+
+typedef struct uset_iterator_object {
+	OBJECT_HEAD
+	DREF USet        *usi_set;  /* [1..1][const] The set that is being iterated. */
+	struct uset_item *usi_next; /* [?..1][MAYBE(in(usi_set->us_elem))][atomic]
+	                             * The first candidate for the next item.
+	                             * NOTE: Before being dereferenced, this pointer is checked
+	                             *       for being located inside the set's element vector.
+	                             *       In the event that it is located at its end, `ITER_DONE'
+	                             *       is returned, though in the event that it is located
+	                             *       outside, an error is thrown (`err_changed_sequence()'). */
+} USetIterator;
 
 #define USet_HashSt(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(USet, self)->us_mask)
 #define USet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
@@ -567,19 +559,19 @@ struct uset_object {
 #define USet_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->us_lock)
 
 
-struct uroset_iterator_object {
-	OBJECT_HEAD
-	DREF URoSet      *ursi_set;  /* [1..1][const] The set that is being iterated. */
-	struct uset_item *ursi_next; /* [?..1][MAYBE(in(ursi_set->urs_elem))][atomic]
-	                              * The first candidate for the next item. */
-};
-
-struct uroset_object {
+typedef struct uroset_object {
 	OBJECT_HEAD
 	size_t                                    urs_mask;  /* [> urs_size] Allocated set size. */
 	size_t                                    urs_size;  /* [< urs_mask] Amount of non-NULL keys. */
 	COMPILER_FLEXIBLE_ARRAY(struct uset_item, urs_elem); /* [1..urs_mask+1] Set key hash-vector. */
-};
+} URoSet;
+
+typedef struct uroset_iterator_object {
+	OBJECT_HEAD
+	DREF URoSet      *ursi_set;  /* [1..1][const] The set that is being iterated. */
+	struct uset_item *ursi_next; /* [?..1][MAYBE(in(ursi_set->urs_elem))][atomic]
+	                              * The first candidate for the next item. */
+} URoSetIterator;
 
 
 

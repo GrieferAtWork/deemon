@@ -288,7 +288,6 @@ struct Dee_code_object;
 struct Dee_cmethod_object;
 struct Dee_thread_object;
 struct Dee_tuple_object;
-typedef struct Dee_module_object DeeModuleObject;
 
 #define Dee_MODSYM_FNORMAL         0x00 /* Normal symbol flags. */
 #define Dee_MODSYM_FREADONLY       0x01 /* Don't allow write-access to this symbol.
@@ -638,7 +637,7 @@ union Dee_module_moddata {
 	                                           * `DeeCode_Empty' in order to break reference loops via `co_module'. */
 };
 
-struct Dee_module_object {
+typedef struct Dee_module_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC Object. */
 	/*utf-8*/ char                *mo_absname;  /* [0..1][owned][const] Absolute, system-specific path to
@@ -700,12 +699,12 @@ struct Dee_module_object {
 	Dee_WEAKREF_SUPPORT
 	/* End of common data (the following fields don't exist for DeeModuleDir_Type-type modules) */
 	union Dee_module_moddata                  mo_moddata;  /* Module-type-specific data */
-	DREF DeeModuleObject              *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
+	DREF struct Dee_module_object     *const *mo_importv;  /* [1..1][const][0..mo_importc][const][owned] Vector of other modules imported by this one. */
 	__BYTE_TYPE__ const                      *mo_minaddr;  /* [const] Min address of memory mapped by this module */
 	__BYTE_TYPE__ const                      *mo_maxaddr;  /* [const] Max address of memory mapped by this module */
 	struct Dee_module_treenode                mo_adrnode;  /* [lock(INTERNAL(module_byaddr_lock))] Node in by-address tree */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, mo_globalv); /* [0..1][lock(mo_globalv)][mo_globalc] Globals of this module */
-};
+} DeeModuleObject;
 
 #ifndef CONFIG_NO_THREADS
 #define _Dee_MODULE_STRUCT_mo_lock Dee_atomic_rwlock_t mo_lock;
@@ -1131,7 +1130,7 @@ DeeModule_GetLibNameCount(DeeModuleObject *__restrict self);
                                              * NOTE: Once this flag has been set, it can be assumed that all imports
                                              *       of this module have also been initialized successfully. */
 
-struct Dee_module_object {
+typedef struct Dee_module_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC Object. */
 	DREF struct Dee_string_object *mo_name;      /* [1..1][const] Name of this module (e.g.: `foo'). */
@@ -1152,7 +1151,7 @@ struct Dee_module_object {
 #define Dee_MODULE_HASHST(self, hash)  ((hash) & Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketm)
 #define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_MODULE_HASHIT(self, i)     (Dee_REQUIRES_OBJECT(DeeModuleObject, self)->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
-	DREF DeeModuleObject   *const *mo_importv;   /* [1..1][const_if(Dee_MODULE_FDIDLOAD)][0..mo_importc][lock(Dee_MODULE_FLOADING)][const_if(Dee_MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
+	DREF struct Dee_module_object *const *mo_importv;   /* [1..1][const_if(Dee_MODULE_FDIDLOAD)][0..mo_importc][lock(Dee_MODULE_FLOADING)][const_if(Dee_MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
 	/* TO-DO: Make "Module" a variable-length object and inline "mo_globalv" (== one less indirection necessary for access to globals) */
 	DREF DeeObject               **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(Dee_MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */
 	DREF struct Dee_code_object   *mo_root;      /* [0..1][lock(mo_lock)][const_if(Dee_MODULE_FDIDLOAD)] Root code object (Also used as constructor).
@@ -1184,7 +1183,7 @@ struct Dee_module_object {
 	                                              * NOTE: Never equal to (uint64_t)-1 */
 #endif /* !CONFIG_NO_DEC */
 	Dee_WEAKREF_SUPPORT
-};
+} DeeModuleObject;
 
 #define DeeModule_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->mo_lock)
 #define DeeModule_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->mo_lock)

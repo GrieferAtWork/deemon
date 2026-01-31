@@ -502,11 +502,7 @@ DECL_BEGIN
  *       as long as the next entry has yet to be read from the directory stream.
  * As such, you must take special care and not do something like `List(opendir(...))',
  * which will produce a list of dirent objects, where  */
-typedef struct dir_iterator_object DeeDirIteratorObject;
-typedef struct dir_object DeeDirObject;
-
-
-struct dir_iterator_object {
+typedef struct dir_iterator_object {
 	OBJECT_HEAD
 	DREF DeeObject       *odi_path;     /* [1..1][const] String, File, or int */
 	DREF DeeStringObject *odi_pathstr;  /* [0..1][lock(WRITE_ONCE)] String */
@@ -543,7 +539,7 @@ struct dir_iterator_object {
 #endif /* !DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION */
 	DIR_struct_stat       odi_st;       /* [lock(odi_lock)] Additional stat information (lazily loaded). */
 #endif /* posix_opendir_NEED_STAT_EXTENSION */
-};
+} DeeDirIteratorObject;
 
 #ifdef dir_iterator_object_HAVE_odi_lock
 #define DeeDirIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->odi_lock)
@@ -581,7 +577,7 @@ struct dir_iterator_object {
 #define DeeDirIterator_LockEnd(self)        (void)0
 #endif /* !dir_iterator_object_HAVE_odi_lock */
 
-struct dir_object {
+typedef struct dir_object {
 	OBJECT_HEAD
 	DREF DeeObject *d_path;      /* [1..1][const] String, File, or int */
 	bool            d_skipdots;  /* [const] When true, skip '.' and '..' entries. */
@@ -591,7 +587,7 @@ struct dir_object {
 	                              * at some point during its lifetime).
 	                              * When this dir_object was created by `fdopendir()', then
 	                              * this option is enabled by default. */
-};
+} DeeDirObject;
 
 
 #ifdef posix_opendir_USE_FindFirstFileExW

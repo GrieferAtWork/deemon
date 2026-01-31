@@ -382,12 +382,11 @@ DFUNDEF ATTR_INS(2, 1) NONNULL((3)) void DCALL
 DeeKwMapping_Decref(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
 
 
-typedef struct Dee_kwargs DeeKwArgs;
-struct Dee_kwargs {
+typedef struct Dee_kwargs {
 	size_t            kwa_kwused; /* # of used keyword arguments (assuming that any argument is loaded 1 time at most) */
 	DeeObject *const *kwa_kwargv; /* [0..1] Positional arguments to supplement `kwa_kw' (or NULL if unused). */
 	DeeObject        *kwa_kw;     /* [0..1] Keyword arguments descriptor / mapping (supports `DeeObject_IsKw()') */
-};
+} DeeKwArgs;
 
 /* Check if there *may* still be more keyword arguments available in `self'. */
 #define DeeKwArgs_MaybeHaveMoreArgs(self) \

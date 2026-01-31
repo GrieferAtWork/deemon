@@ -1565,14 +1565,12 @@ posix_environ_getcount(void) {
 /************************************************************************/
 /* ENVIRON ITERATOR OBJECT                                              */
 /************************************************************************/
-struct environ_iterator_object;
-typedef struct environ_iterator_object EnvironIterator;
-struct environ_iterator_object {
+typedef struct environ_iterator_object {
 	OBJECT_HEAD
 #ifdef posix_enumenv_USE_GetEnvironmentStringsW
-	Dee_wchar_t  *ei_environment_iter;    /* [1..1][lock(ATOMIC)] Pointer to next environment string to yield */
-	LPWCH         ei_environment_strings; /* [1..1][owned] Environment strings */
-	DREF EnvironIterator *ei_owner;    /* [0..1][const] Owning iterator (for `operator copy') */
+	Dee_wchar_t                         *ei_environment_iter;    /* [1..1][lock(ATOMIC)] Pointer to next environment string to yield */
+	LPWCH                                ei_environment_strings; /* [1..1][owned] Environment strings */
+	DREF struct environ_iterator_object *ei_owner;               /* [0..1][const] Owning iterator (for `operator copy') */
 #define ENVIRON_ITERATOR_tchar                  WCHAR
 #define ENVIRON_ITERATOR_strchr                 wcschr
 #define ENVIRON_ITERATOR_strlen                 wcslen
@@ -1610,7 +1608,7 @@ struct environ_iterator_object {
 #define ENVIRON_ITERATOR_DeeString_FreeBuffer   DeeString_FreeWideBuffer
 #define ENVIRON_ITERATOR_DeeString_PackBuffer   DeeString_PackWideBuffer
 #endif /* posix_enumenv_USE_wenviron */
-};
+} EnvironIterator;
 
 PRIVATE int DCALL
 environ_iterator_init(EnvironIterator *__restrict self) {

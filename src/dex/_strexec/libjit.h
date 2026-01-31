@@ -170,8 +170,6 @@ typedef struct jit_lexer JITLexer;
 typedef struct jit_context JITContext;
 typedef struct jit_object_table JITObjectTable;
 typedef struct jit_function_object JITFunctionObject;
-typedef struct jit_yield_function_object JITYieldFunctionObject;
-typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject;
 
 
 /* Check if the given token qualifies for the associated operation parser function. */
@@ -210,7 +208,7 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 	((self)->jl_tok == TOK_LOR)
 #define TOKEN_IS_COND(self) \
 	((self)->jl_tok == '?')
-#define TOKEN_IS_ASSIGN(self)              \
+#define TOKEN_IS_ASSIGN(self)             \
 	((self)->jl_tok == TOK_COLON_EQUAL || \
 	 ((self)->jl_tok >= TOK_ADD_EQUAL && (self)->jl_tok <= TOK_POW_EQUAL))
 
@@ -257,7 +255,7 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 #define CASE_TOKEN_IS_COND \
 	case '?'
 #define CASE_TOKEN_IS_ASSIGN \
-	case TOK_COLON_EQUAL:   \
+	case TOK_COLON_EQUAL:    \
 	case TOK_ADD_EQUAL:      \
 	case TOK_SUB_EQUAL:      \
 	case TOK_MUL_EQUAL:      \
@@ -1514,13 +1512,13 @@ JITFunction_TrimSurroundingBraces(/*utf-8*/ char const **__restrict p_source_sta
 
 
 /* Yield-function support */
-struct jit_yield_function_object {
+typedef struct jit_yield_function_object {
 	OBJECT_HEAD
 	DREF JITFunctionObject                   *jy_func;  /* [1..1][const] The underlying regular function object. */
 	DREF DeeObject                           *jy_kw;    /* [0..1][const] Keyword arguments. */
 	size_t                                    jy_argc;  /* [const] Number of positional arguments passed. */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, jy_argv); /* [1..1][const][jy_argc] Vector of positional arguments. */
-};
+} JITYieldFunctionObject;
 
 
 
@@ -1606,7 +1604,7 @@ INTDEF NONNULL((1)) void DCALL jit_state_fini(struct jit_state *__restrict self)
 
 
 
-struct jit_yield_function_iterator_object {
+typedef struct jit_yield_function_iterator_object {
 	OBJECT_HEAD  /* GC OBJECT */
 #ifndef CONFIG_NO_THREADS
 	Dee_rshared_lock_t           ji_lock;  /* Lock held while executing code of this iterator. */
@@ -1629,7 +1627,7 @@ struct jit_yield_function_iterator_object {
 	struct jit_state            *ji_state; /* [lock(ji_lock)][1..1][owned_if(!= &ji_bstat)]
 	                                        * The current execution/syntax state. */
 	struct jit_state             ji_bstat; /* [const][.js_kind == JIT_STATE_KIND_SCOPE] The base-level execution state. */
-};
+} JITYieldFunctionIteratorObject;
 
 #define JITYieldFunctionIterator_Available(self)    Dee_rshared_lock_available(&(self)->ji_lock)
 #define JITYieldFunctionIterator_Acquired(self)     Dee_rshared_lock_acquired(&(self)->ji_lock)

@@ -179,17 +179,6 @@ DeeObject_Successor(DeeObject *__restrict self) {
 
 
 
-typedef struct rbtree_object RBTree;
-typedef struct {
-	OBJECT_HEAD
-	DREF RBTree        *rbti_tree;    /* [1..1][const] The tree being iterated. */
-	uintptr_t           rbti_version; /* [lock(rbti_tree->rbt_lock)] Expected tree version. */
-	struct rbtree_node *rbti_next;    /* [0..1][lock(ATOMIC)] Node to iterate next. */
-} RBTreeIterator;
-
-#define RBTreeIterator_GetNext(self)         atomic_read(&(self)->rbti_next)
-#define RBTreeIterator_VersionOK(self, tree) ((self)->rbti_version == (tree)->rbt_version)
-
 typedef struct rbtree_object {
 	OBJECT_HEAD
 	struct rbtree_node *rbt_root;      /* [0..1][lock(rbt_lock)] Tree root. */
@@ -198,6 +187,16 @@ typedef struct rbtree_object {
 	Dee_atomic_rwlock_t rbt_lock;      /* Lock for this tree. */
 #endif /* !CONFIG_NO_THREADS */
 } RBTree;
+
+typedef struct rbtree_iterator_object {
+	OBJECT_HEAD
+	DREF RBTree        *rbti_tree;    /* [1..1][const] The tree being iterated. */
+	uintptr_t           rbti_version; /* [lock(rbti_tree->rbt_lock)] Expected tree version. */
+	struct rbtree_node *rbti_next;    /* [0..1][lock(ATOMIC)] Node to iterate next. */
+} RBTreeIterator;
+
+#define RBTreeIterator_GetNext(self)         atomic_read(&(self)->rbti_next)
+#define RBTreeIterator_VersionOK(self, tree) ((self)->rbti_version == (tree)->rbt_version)
 
 #define RBTree_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->rbt_lock)
 #define RBTree_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->rbt_lock)

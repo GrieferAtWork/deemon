@@ -143,5 +143,4 @@ err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self) {
 
 DECL_END
 
-
 #endif /* !GUARD_DEX_SOCKET_ERROR_C */

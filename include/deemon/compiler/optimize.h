@@ -33,6 +33,7 @@
 
 DECL_BEGIN
 
+#ifdef DEE_SOURCE
 #define OPTIMIZE_FNORMAL    0x0000 /* Default optimizer flags. */
 #define OPTIMIZE_FDISABLED  0x0000 /* VALUE: AST-Optimization is disabled. */
 #define OPTIMIZE_FENABLED   0x0001 /* FLAG: AST-Optimization is enabled (May be or'd with other options below).
@@ -66,11 +67,10 @@ DECL_BEGIN
                                     *       `ast_get_boolean()' to always return `-1', as well as disable other
                                     *       internal ast analyzers that are only used for automatic optimizations
                                     *       during assembly to allow for smaller code generation. */
-
+#endif /* DEE_SOURCE */
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-
 
 #ifdef OPTIMIZE_FASSUME
 struct ast_symbol_assume {
@@ -433,7 +433,6 @@ ast_optimize_verbose(struct ast *__restrict self, char const *format, ...);
 #endif /* NDEBUG */
 
 #endif /* !CONFIG_BUILDING_DEEMON */
-
 
 DECL_END
 
