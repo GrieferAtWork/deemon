@@ -37,7 +37,25 @@ class FunctionMacro {
 
 	@@Invoke this macro function and return its expanded form
 	public function call(args: {Bytes...}): Bytes {
-		// TODO
+		if (!argPositions)
+			return body;
+		local fp = File.Writer(hint: "bytes");
+		local flushStart = 0;
+		local body = this.body;
+		for (local flushEnd, argIndex: argPositions) {
+			fp.write(body[flushStart:flushEnd]);
+			if (argIndex < 0) {
+				argIndex = -argIndex;
+				if (argIndex < #args)
+					fp.write(args[argIndex].encode("c-escape"));
+			} else {
+				if (argIndex < #args)
+					fp.write(args[argIndex]);
+			}
+			flushStart = flushEnd;
+		}
+		fp.write(body[flushStart:]);
+		return fp.bytes;
 	}
 }
 
@@ -56,7 +74,10 @@ local class CppHintParser {
 		return (lno, 1 + offset - sol);
 	}
 
-	// TODO
+	public parse(): CppHintParser {
+		// TODO
+		return this;
+	}
 }
 
 #define CppHintSpecs {string: Bytes | FunctionMacro}
@@ -69,12 +90,11 @@ function parseCppHint(filename: string): CppHintSpecs {
 	local data: Bytes;
 	with (local fp = File.open(filename, "rb"))
 		data = fp.read();
-	CppHintParser(
+	return CppHintParser(
 		filename: filename,
 		data:     data,
 		end:      #data,
-	);
-	// TODO
+	).parse().macros.frozen;
 }
 
 
