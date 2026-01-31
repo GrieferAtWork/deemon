@@ -1280,7 +1280,7 @@ again:
  *
  * @return: DeeSystem_GetFileType_T_NONE: `filename' does not exist
  * @return: DeeSystem_GetFileType_T_DIR:  `filename' is a directory
- * @return: DeeSystem_GetFileType_T_REG:  `filename' is a directory
+ * @return: DeeSystem_GetFileType_T_REG:  `filename' is a regular file
  * @return: DeeSystem_GetFileType_ERR:    An error was thrown */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSystem_GetFileType(/*String*/ DeeObject *__restrict filename) {
