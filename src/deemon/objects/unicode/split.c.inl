@@ -1131,8 +1131,9 @@ PRIVATE struct type_seq linesplit_seq = {
 };
 
 STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(ProxyObject, po_obj));
-#define linesplit_fini  generic_proxy__fini
-#define linesplit_visit generic_proxy__visit
+#define linesplit_fini      generic_proxy__fini
+#define linesplit_visit     generic_proxy__visit
+#define linesplit_serialize generic_proxy__serialize_and_memcpy
 
 STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(StringSplit, s_str));
 #define linesplit_bool split_bool
@@ -1190,7 +1191,7 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 			/* tp_deep_ctor:   */ &linesplit_copy,
 			/* tp_any_ctor:    */ &linesplit_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ &lineiter_serialize
+			/* tp_serialize:   */ &linesplit_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&linesplit_fini,
 		/* .tp_assign      = */ NULL,
