@@ -165,7 +165,7 @@ rss_serialize(ReSubStrings *__restrict self,
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, out_addr, ReSubStrings);
 	out->rss_ngroups = self->rss_ngroups;
-	memcpyc(out->rss_groups, self->rss_groups, self->rss_ngroups, sizeof(ReGroups));
+	memcpyc(out->rss_groups, self->rss_groups, self->rss_ngroups, sizeof(struct DeeRegexMatch));
 	return out_addr;
 err:
 	return Dee_SERADDR_INVALID;
