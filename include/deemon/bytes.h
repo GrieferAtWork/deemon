@@ -46,13 +46,12 @@ DECL_BEGIN
 
 typedef struct Dee_bytes_object {
 	Dee_OBJECT_HEAD
-	__BYTE_TYPE__                         *b_base;    /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
-	size_t                                 b_size;    /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
+	__BYTE_TYPE__                         *b_base;    /* [0..b_size][if(DeeBytes_IsBuffer(self), in(b_buffer))]
+	                                                   * [const] Base address of the used portion of the buffer. */
+	size_t                                 b_size;    /* [const] Size of the used portion of the buffer */
 	DREF DeeObject                        *b_orig;    /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
-	/* TODO: get rid of "b_buffer" -- no longer needed now that buffers no longer have to be released */
-	DeeBuffer                              b_buffer;  /* [const] The buffer being accessed. */
 	unsigned int                           b_flags;   /* [const] Buffer access flags (Set of `Dee_BUFFER_F*') */
-	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_data);   /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_buffer); /* [b_size][valid_if(DeeBytes_IsBuffer(self))] Inline buffer data */
 } DeeBytesObject;
 
 
@@ -62,32 +61,39 @@ typedef struct Dee_bytes_object {
 #define Dee_DEFINE_BYTES_EX(name, flags, Titem, num_items, ...) \
 	struct {                                                    \
 		Dee_OBJECT_HEAD                                         \
-		__BYTE_TYPE__ *b_base;                                  \
-		size_t b_size;                                          \
+		__BYTE_TYPE__  *b_base;                                 \
+		size_t          b_size;                                 \
 		DREF DeeObject *b_orig;                                 \
-		DeeBuffer b_buffer;                                     \
-		unsigned int b_flags;                                   \
-		Titem b_data[num_items];                                \
+		unsigned int    b_flags;                                \
+		Titem           b_buffer[num_items];                    \
 	} name = {                                                  \
 		Dee_OBJECT_HEAD_INIT(&DeeBytes_Type),                   \
-		(__BYTE_TYPE__ *)name.b_data,                           \
+		(__BYTE_TYPE__ *)name.b_buffer,                         \
 		(num_items) * sizeof(Titem),                            \
 		(DeeObject *)&name,                                     \
-		DeeBuffer_INIT((__BYTE_TYPE__ *)name.b_data,            \
-		               (num_items) * sizeof(Titem)),            \
 		flags,                                                  \
 		__VA_ARGS__                                             \
 	}
 
 /* Access to the effect data-blob of some given "Bytes". */
-#define DeeBytes_DATA(x) Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_base
-#define DeeBytes_SIZE(x) Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_size
+#define DeeBytes_DATA(x) Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_base
+#define DeeBytes_SIZE(x) Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_size
 #define DeeBytes_END(x)  (DeeBytes_DATA(x) + DeeBytes_SIZE(x))
 
-#define DeeBytes_WRITABLE(x)   (Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_flags & Dee_BUFFER_FWRITABLE)
+#define DeeBytes_WRITABLE(x)   (Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_flags & Dee_BUFFER_FWRITABLE)
 #define DeeBytes_Check(x)      DeeObject_InstanceOfExact(x, &DeeBytes_Type) /* `Bytes' is final. */
 #define DeeBytes_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBytes_Type)
-#define DeeBytes_IsEmpty(x)    (Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_size == 0)
+#define DeeBytes_GetOrig(x)    Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_orig
+#define DeeBytes_IsBuffer(x)   (DeeBytes_GetOrig(x) == Dee_AsObject(x))
+#define DeeBytes_IsView(x)     (DeeBytes_GetOrig(x) != Dee_AsObject(x))
+#define DeeBytes_IsEmpty(x)    (DeeBytes_SIZE(x) == 0)
+
+/* The following may only be used when `DeeBytes_IsBuffer()' */
+#define DeeBytes_BufferData(x) Dee_REQUIRES_OBJECT(DeeBytesObject, x)->b_buffer
+#define DeeBytes_BufferSize(x) (DeeBytes_SIZE(x) + DeeBytes_BufferDataOffset(x))
+#define DeeBytes_BufferDataOffset(x) \
+	((size_t)(Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_buffer - Dee_REQUIRES_OBJECT(DeeBytesObject const, x)->b_base))
+
 
 /* The builtin `Bytes' data type.
  * This type offers functionality identical to what can also be found in
@@ -108,9 +114,8 @@ struct _Dee_empty_bytes_struct {
 	__BYTE_TYPE__  *b_base;
 	size_t          b_size;
 	DREF DeeObject *b_orig;
-	DeeBuffer       b_buffer;
 	unsigned int    b_flags;
-	__BYTE_TYPE__   b_data[1];
+	__BYTE_TYPE__   b_buffer[1];
 };
 DDATDEF struct _Dee_empty_bytes_struct DeeBytes_Empty;
 #define Dee_EmptyBytes ((DeeObject *)&DeeBytes_Empty) /*!export*/
@@ -257,6 +262,12 @@ struct Dee_bytes_printer {
 #else /* __INTELLISENSE__ */
 #define Dee_bytes_printer_fini(self) DeeObject_Free((self)->bp_bytes)
 #endif /* !__INTELLISENSE__ */
+
+/* Same as `Dee_bytes_printer_init()', but try to pre-allocate memory for `hint' bytes. */
+DFUNDEF NONNULL((1)) void
+(DCALL Dee_bytes_printer_init_ex)(/*inherit(always)*/ struct Dee_bytes_printer *__restrict self,
+                                  size_t hint);
+
 
 /* _Always_ inherit all byte data (even upon error) saved in
  * `self', and construct a new Bytes object from all that data, before

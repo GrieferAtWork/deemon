@@ -1152,16 +1152,8 @@ again:
 		if (DeeObject_IsShared(bytes)) {
 			ASSERT(self__up_length == bytes_size);
 		} else if (self__up_length < bytes_size) {
-			size_t needed = offsetof(DeeBytesObject, b_data) + self__up_length;
-			bytes = (DREF DeeBytesObject *)DeeObject_TryRealloc(bytes, needed);
-			if unlikely(!bytes) {
-				bytes = self->w_printer.wp_byt.bp_bytes;
-			} else {
-				self->w_printer.wp_byt.bp_bytes = bytes;
-			}
-			bytes->b_buffer.bb_base = bytes->b_base = bytes->b_data;
-			bytes->b_buffer.bb_size = bytes->b_size = self__up_length;
-			bytes->b_orig = Dee_AsObject(bytes);
+			bytes = DeeBytes_TruncateBuffer(bytes, self__up_length);
+			self->w_printer.wp_byt.bp_bytes = bytes;
 		}
 		Dee_Incref(bytes);
 		DeeFileWriter_LockEndRead(self);
@@ -1654,13 +1646,13 @@ DeeFileWriter_String2BytesOrUnlock(DeeFileWriterObject *__restrict me) {
 			goto unlock_and_collect_memory;
 
 		/* Convert ucs-1 (aka. latin-1) string to utf-8 bytes */
-		out_iter = bytes->b_data;
+		out_iter = bytes->b_buffer;
 		if (ucs_chars == ucs_length) {
 			out_iter = (byte_t *)mempcpy(out_iter, string->s_str, ucs_length);
 		} else {
 			out_iter = ucs1_to_utf8_convert(out_iter, (uint8_t const *)string->s_str, ucs_chars);
 		}
-		ASSERT(out_iter == bytes->b_data + ucs_length);
+		ASSERT(out_iter == bytes->b_buffer + ucs_length);
 
 		/* Append trailing, pending utf-8 characters */
 		memcpy(out_iter, me->w_printer.wp_uni.up_pend, num_pending);
@@ -1711,13 +1703,13 @@ DeeFileWriter_String2BytesOrUnlock(DeeFileWriterObject *__restrict me) {
 		goto unlock_and_collect_memory;
 
 	/* Convert ucs-2/4 string to utf-8 bytes */
-	out_iter = bytes->b_data;
+	out_iter = bytes->b_buffer;
 	if (width == STRING_WIDTH_2BYTE) {
 		out_iter = ucs2_to_utf8_convert(out_iter, wstr.cp16, ucs_chars);
 	} else {
 		out_iter = ucs4_to_utf8_convert(out_iter, wstr.cp32, ucs_chars);
 	}
-	ASSERT(out_iter == bytes->b_data + ucs_length);
+	ASSERT(out_iter == bytes->b_buffer + ucs_length);
 
 	/* Append trailing, pending utf-8 characters */
 	memcpy(out_iter, me->w_printer.wp_uni.up_pend, num_pending);
@@ -1743,7 +1735,7 @@ DeeFileWriter_String2BytesOrUnlock(DeeFileWriterObject *__restrict me) {
 	return 1;
 unlock_and_collect_memory:
 	DeeFileWriter_LockEndWrite(me);
-	if (Dee_CollectMemory(offsetof(DeeBytesObject, b_data) + num_bytes))
+	if (Dee_CollectMemory(offsetof(DeeBytesObject, b_buffer) + num_bytes))
 		return 1;
 err:
 	return -1;
@@ -2069,7 +2061,7 @@ writer_sizeof(DeeFileWriterObject *self) {
 		} else if (DeeObject_IsShared(self->w_printer.wp_byt.bp_bytes)) {
 			/* Not exclusively our bytes! */
 		} else {
-			result += offsetof(DeeBytesObject, b_data);
+			result += offsetof(DeeBytesObject, b_buffer);
 			result += self->w_printer.wp_byt.bp_length;
 		}
 	} else
@@ -2577,7 +2569,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 			if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
 				goto unlock_and_destroy_new_bytes_and_try_again;
 		}
-		memcpy(new_bytes->b_data, DeeBytes_DATA(bytes), bytes_used);
+		memcpy(new_bytes->b_buffer, DeeBytes_DATA(bytes), bytes_used);
 		ASSERT(self->w_printer.wp_byt.bp_bytes == bytes);
 		self->w_printer.wp_byt.bp_bytes = new_bytes;
 		if likely(Dee_DecrefIfNotOne(bytes))
@@ -2607,7 +2599,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 			goto unlock_and_destroy_new_bytes_and_try_again;
 		if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
 			goto unlock_and_destroy_new_bytes_and_try_again;
-		memcpy(new_bytes->b_data, bytes->b_data, bytes_used);
+		memcpy(new_bytes->b_buffer, bytes->b_buffer, bytes_used);
 		DeeBytes_Destroy(bytes);
 	}
 	self->w_printer.wp_byt.bp_bytes = new_bytes;
@@ -2649,7 +2641,7 @@ again_locked:
 				ASSERT(self->w_printer.wp_byt.bp_length == 0);
 				bytes = DeeBytes_TryNewBufferUninitialized(avail);
 				if likely(bytes) {
-					memcpy(bytes->b_data, buffer, bufsize);
+					memcpy(bytes->b_buffer, buffer, bufsize);
 set_initial_bytes_and_unlock:
 					self->w_printer.wp_byt.bp_bytes  = bytes;
 					self->w_printer.wp_byt.bp_length = bufsize;
@@ -2703,7 +2695,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 							goto unlock_and_destroy_new_bytes_and_try_again;
 					}
 				}
-				memcpy(mempcpy(new_bytes->b_data, DeeBytes_DATA(bytes), bytes_used),
+				memcpy(mempcpy(new_bytes->b_buffer, DeeBytes_DATA(bytes), bytes_used),
 				       buffer, bufsize);
 				ASSERT(self->w_printer.wp_byt.bp_bytes == bytes);
 				self->w_printer.wp_byt.bp_bytes  = new_bytes;
@@ -2740,7 +2732,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 							goto unlock_and_destroy_new_bytes_and_try_again;
 						if unlikely(self->w_printer.wp_byt.bp_length != bytes_used)
 							goto unlock_and_destroy_new_bytes_and_try_again;
-						memcpy(new_bytes->b_data, bytes->b_data, bytes_used);
+						memcpy(new_bytes->b_buffer, bytes->b_buffer, bytes_used);
 						DeeBytes_Destroy(bytes);
 					}
 				}
@@ -2751,7 +2743,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 			ASSERT((DeeBytes_SIZE(bytes) - bytes_used) >= bufsize);
 
 			/* Append data to bytes buffer */
-			memcpy(bytes->b_data + bytes_used, buffer, bufsize);
+			memcpy(bytes->b_buffer + bytes_used, buffer, bufsize);
 			self->w_printer.wp_byt.bp_length += bufsize;
 			goto done_unlock;
 		}

@@ -104,7 +104,7 @@ err:
 
 PRIVATE void _dee_sqlite3_bind_bytes_decref(void *blob) {
 	DREF DeeBytesObject *bytes;
-	bytes = COMPILER_CONTAINER_OF((byte_t *)blob, DeeBytesObject, b_data);
+	bytes = COMPILER_CONTAINER_OF((byte_t *)blob, DeeBytesObject, b_buffer);
 	Dee_Decref(bytes);
 }
 
@@ -119,7 +119,7 @@ again:
 		goto err;
 	data = DeeBytes_DATA(self);
 	size = DeeBytes_SIZE(self);
-	if (data == self->b_data) {
+	if (data == self->b_buffer) {
 		/* Simple case: can directly pass `data' */
 		Dee_Incref(self);
 		rc = sqlite3_bind_blobSIZ(stmt, index, data, size,

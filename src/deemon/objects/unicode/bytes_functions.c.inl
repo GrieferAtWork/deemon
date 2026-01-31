@@ -1019,7 +1019,7 @@ bytes_getsubstr_locked(Bytes *__restrict self,
 	if (start >= end)
 		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	return (DREF Bytes *)DeeBytes_NewSubView(self,
-	                                         self->b_base + (size_t)start,
+	                                         (byte_t *)DeeBytes_DATA(self) + (size_t)start,
 	                                         (size_t)(end - start));
 }
 
@@ -1065,10 +1065,10 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		old_size = DeeBytes_SIZE(self);
 		if (new_size > old_size) {
 			void *p;
-			p = mempcpy(result->b_data, DeeBytes_DATA(self), old_size);
+			p = mempcpy(result->b_buffer, DeeBytes_DATA(self), old_size);
 			bzero(p, new_size - old_size);
 		} else {
-			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
+			memcpy(result->b_buffer, DeeBytes_DATA(self), new_size);
 		}
 	} else if (argc == 2) {
 		byte_t init;
@@ -1080,11 +1080,11 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 		if unlikely(!result)
 			goto err;
 		if (new_size <= DeeBytes_SIZE(self)) {
-			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
+			memcpy(result->b_buffer, DeeBytes_DATA(self), new_size);
 		} else {
 			void *endptr;
 			size_t old_size = DeeBytes_SIZE(self);
-			endptr = mempcpy(result->b_data, DeeBytes_DATA(self), old_size);
+			endptr = mempcpy(result->b_buffer, DeeBytes_DATA(self), old_size);
 			memset(endptr, init, new_size - old_size);
 		}
 	} else {

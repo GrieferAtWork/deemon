@@ -3091,7 +3091,6 @@ typedef struct {
 	                 * NOTE: Only writable if the buffer was acquired with `Dee_BUFFER_FWRITABLE' set. */
 	size_t bb_size; /* [const] Size of the buffer (in bytes) */
 } DeeBuffer;
-#define DeeBuffer_INIT(base, size) { base, size }
 #define DeeBuffer_Fini(self) (void)0
 
 
