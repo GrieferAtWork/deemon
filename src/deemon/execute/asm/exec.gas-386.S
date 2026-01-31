@@ -210,15 +210,9 @@ END(_impl_assert_failed)
 #define Dee_HAS_YES 1
 
 #define Dee_BOUND_ERR      Dee_HAS_ERR
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define Dee_BOUND_MISSING  Dee_HAS_NO
 #define Dee_BOUND_YES      Dee_HAS_YES
 #define Dee_BOUND_NO       2
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-#define Dee_BOUND_MISSING  (-2)
-#define Dee_BOUND_YES      1
-#define Dee_BOUND_NO       0
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 #define Dee_STDIN  0
 #define Dee_STDOUT 1

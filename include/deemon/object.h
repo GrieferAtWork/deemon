@@ -2219,16 +2219,10 @@ struct Dee_type_cmp {
 /* Possible values returned by C-API isbound checking functions.
  * These values have been intentionally chosen so-as to be binary-
  * compatible with `DeeObject_HasItem()' and `DeeObject_HasAttr()' */
-#define Dee_BOUND_ERR      Dee_HAS_ERR
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
-#define Dee_BOUND_MISSING  Dee_HAS_NO
-#define Dee_BOUND_YES      Dee_HAS_YES
+#define Dee_BOUND_ERR      Dee_HAS_ERR /* Guarantied to equal `Dee_HAS_ERR' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
+#define Dee_BOUND_MISSING  Dee_HAS_NO  /* Guarantied to equal `Dee_HAS_NO' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
+#define Dee_BOUND_YES      Dee_HAS_YES /* Guarantied to equal `Dee_HAS_YES' to allow (e.g.) `tp_hasitem' to alias `tp_bounditem' */
 #define Dee_BOUND_NO       2
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-#define Dee_BOUND_MISSING  (-2)
-#define Dee_BOUND_YES      1
-#define Dee_BOUND_NO       0
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 /* #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES) */
 #define Dee_BOUND_ISBOUND(x) ((x) == Dee_BOUND_YES)
@@ -2237,20 +2231,10 @@ struct Dee_type_cmp {
 #define Dee_BOUND_ISUNBOUND(x) ((x) == Dee_BOUND_NO)
 
 /* #define Dee_BOUND_ISMISSING(x) ((x) == Dee_BOUND_MISSING) */
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define Dee_BOUND_ISMISSING(x) Dee_HAS_ISNO(x)
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-#define Dee_BOUND_ISMISSING(x) ((x) == Dee_BOUND_MISSING)
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 /* #define Dee_BOUND_ISERR(x) ((x) == Dee_BOUND_ERR) */
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define Dee_BOUND_ISERR(x) Dee_HAS_ISERR(x)
-#elif Dee_BOUND_ERR < 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_MISSING >= 0
-#define Dee_BOUND_ISERR(x) ((x) < 0)
-#else /* Dee_BOUND_ERR < 0 && Dee_BOUND_NO >= 0 && Dee_BOUND_YES >= 0 && Dee_BOUND_MISSING >= 0 */
-#define Dee_BOUND_ISERR(x) ((x) == Dee_BOUND_ERR)
-#endif /* Dee_BOUND_ERR >= 0 || Dee_BOUND_NO < 0 || Dee_BOUND_YES < 0 || Dee_BOUND_MISSING < 0 */
 
 /* #define Dee_BOUND_ISPRESENT(x) ((x) == Dee_BOUND_YES || (x) == Dee_BOUND_NO) */
 #if Dee_BOUND_YES > 0 && Dee_BOUND_NO > 0 && Dee_BOUND_MISSING <= 0 && Dee_BOUND_ERR <= 0
@@ -2306,15 +2290,6 @@ struct Dee_type_cmp {
 #else /* Dee_BOUND_MISSING == 0 && Dee_BOUND_YES == 1 */
 #define Dee_BOUND_FROMPRESENT_UNBOUND(is_present) ((is_present) ? Dee_BOUND_YES : Dee_BOUND_MISSING)
 #endif /* Dee_BOUND_MISSING != 0 || Dee_BOUND_YES != 1 */
-
-/* Convert a Dee_BOUND_* value into the equivalent return value of hasattr/hasitem */
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
-#define Dee_BOUND_ASHAS(bound_status)          (bound_status)
-#define Dee_BOUND_ASHAS_NOEXCEPT(bound_status) (bound_status)
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-#define Dee_BOUND_ASHAS(bound_status)          (Dee_BOUND_ISERR(bound_status) ? -1 : !Dee_BOUND_ISMISSING(bound_status))
-#define Dee_BOUND_ASHAS_NOEXCEPT(bound_status) (!Dee_BOUND_ISMISSING(bound_status))
-#endif /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 /* Considers has_value == true as bound */
 #define Dee_BOUND_FROMHAS_BOUND(has_value) \

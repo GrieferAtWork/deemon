@@ -50,13 +50,17 @@
 #endif /* NDEBUG */
 
 DECL_BEGIN
+STATIC_ASSERT_MSG(Dee_BOUND_ERR == Dee_HAS_ERR &&
+                  Dee_BOUND_MISSING == Dee_HAS_NO &&
+                  Dee_BOUND_YES == Dee_HAS_YES,
+                  "These equivalences are required in order to allow type implementations to "
+                  "unconditionally implement (e.g.) `tp_hasitem' using the same function pointer "
+                  "as used to implement `tp_bounditem'");
 
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 STATIC_ASSERT_MSG(Dee_BOUND_ERR < 0, "Required for hasitem=bounditem aliasing");
 STATIC_ASSERT_MSG(Dee_BOUND_MISSING == 0, "Required for hasitem=bounditem aliasing");
 STATIC_ASSERT_MSG(Dee_BOUND_YES > 0, "Required for hasitem=bounditem aliasing");
 STATIC_ASSERT_MSG(Dee_BOUND_NO > 0, "Required for hasitem=bounditem aliasing");
-#endif /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
 
 
 struct oh_init_spec_class {

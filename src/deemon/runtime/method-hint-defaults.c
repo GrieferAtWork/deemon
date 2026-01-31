@@ -18426,7 +18426,7 @@ string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) 
 	if (DeeBytes_Check(rhs)) {
 		size_t lhs_len = strlen(lhs);
 		return lhs_len == DeeBytes_SIZE(rhs) &&
-		       bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0;
+		       bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0;
 	}
 	/* `string.operator ==' isn't implemented for any other types. */
 	return false;
@@ -18844,25 +18844,11 @@ default__map_operator_hasitem(DeeObject *self, DeeObject *key) {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hasitem))(self, key);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_hasitem__with__map_operator_bounditem(DeeObject *self, DeeObject *key) {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_bounditem))(self, key);
-	return Dee_BOUND_ASHAS(result);
-}
-
 
 /* map_operator_hasitem_index */
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__map_operator_hasitem_index(DeeObject *self, size_t key) {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hasitem_index))(self, key);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__map_operator_hasitem_index__with__map_operator_bounditem_index(DeeObject *self, size_t key) {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_bounditem_index))(self, key);
-	return Dee_BOUND_ASHAS(result);
 }
 
 
@@ -18872,25 +18858,11 @@ default__map_operator_hasitem_string_hash(DeeObject *self, char const *key, Dee_
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hasitem_string_hash))(self, key, hash);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__map_operator_hasitem_string_hash__with__map_operator_bounditem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash) {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_bounditem_string_hash))(self, key, hash);
-	return Dee_BOUND_ASHAS(result);
-}
-
 
 /* map_operator_hasitem_string_len_hash */
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__map_operator_hasitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hasitem_string_len_hash))(self, key, keylen, hash);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__map_operator_hasitem_string_len_hash__with__map_operator_bounditem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_bounditem_string_len_hash))(self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
 }
 
 

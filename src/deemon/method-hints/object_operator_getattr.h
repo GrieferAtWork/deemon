@@ -156,8 +156,7 @@ err:
 tp_attr->tp_hasattr([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *attr)
 %{using tp_attr->tp_boundattr: {
-	int result = CALL_DEPENDENCY(tp_attr->tp_boundattr, self, attr);
-	return Dee_BOUND_ASHAS(result);
+	return CALL_DEPENDENCY(tp_attr->tp_boundattr, self, attr);
 }} = OPERATOR_GETATTR;
 
 
@@ -166,8 +165,7 @@ tp_attr->tp_hasattr([[nonnull]] DeeObject *self,
 tp_attr->tp_hasattr_string_hash([[nonnull]] DeeObject *self,
                                 [[nonnull]] char const *key, Dee_hash_t hash)
 %{using tp_attr->tp_boundattr_string_hash: {
-	int result = CALL_DEPENDENCY(tp_attr->tp_boundattr_string_hash, self, key, hash);
-	return Dee_BOUND_ASHAS(result);
+	return CALL_DEPENDENCY(tp_attr->tp_boundattr_string_hash, self, key, hash);
 }} = OPERATOR_GETATTR;
 
 
@@ -177,8 +175,7 @@ tp_attr->tp_hasattr_string_len_hash([[nonnull]] DeeObject *self,
                                     [[nonnull]] char const *key,
                                     size_t keylen, Dee_hash_t hash)
 %{using tp_attr->tp_boundattr_string_len_hash: {
-	int result = CALL_DEPENDENCY(tp_attr->tp_boundattr_string_len_hash, self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
+	return CALL_DEPENDENCY(tp_attr->tp_boundattr_string_len_hash, self, key, keylen, hash);
 }} = OPERATOR_GETATTR;
 
 

@@ -900,23 +900,12 @@ __map_getitem__.map_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
 %{$none = 1}
 %{$empty = 0}
-%{using map_operator_bounditem: {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = CALL_DEPENDENCY(map_operator_bounditem, self, key);
-	return Dee_BOUND_ASHAS(result);
-}} = $with__map_operator_bounditem;
+= default__map_operator_bounditem__with__map_operator_getitem;
 
 map_operator_hasitem = {
 	DeeMH_map_operator_bounditem_t map_operator_bounditem = REQUIRE(map_operator_bounditem);
-	if (map_operator_bounditem) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem)
 		return map_operator_bounditem;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem == &default__map_operator_bounditem__empty)
-			return &$empty;
-		return &$with__map_operator_bounditem;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 };
 
 
@@ -926,23 +915,12 @@ map_operator_hasitem = {
 __map_getitem__.map_operator_hasitem_index([[nonnull]] DeeObject *self, size_t key)
 %{$none = 1}
 %{$empty = 0}
-%{using map_operator_bounditem_index: {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = CALL_DEPENDENCY(map_operator_bounditem_index, self, key);
-	return Dee_BOUND_ASHAS(result);
-}} = $with__map_operator_bounditem_index;
+= default__map_operator_bounditem_index__with__map_operator_getitem_index;
 
 map_operator_hasitem_index = {
 	DeeMH_map_operator_bounditem_index_t map_operator_bounditem_index = REQUIRE(map_operator_bounditem_index);
-	if (map_operator_bounditem_index) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem_index)
 		return map_operator_bounditem_index;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem_index == &default__map_operator_bounditem_index__empty)
-			return &$empty;
-		return &$with__map_operator_bounditem_index;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 };
 
 
@@ -954,23 +932,12 @@ __map_getitem__.map_operator_hasitem_string_hash([[nonnull]] DeeObject *self,
                                                  Dee_hash_t hash)
 %{$none = 1}
 %{$empty = 0}
-%{using map_operator_bounditem_string_hash: {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = CALL_DEPENDENCY(map_operator_bounditem_string_hash, self, key, hash);
-	return Dee_BOUND_ASHAS(result);
-}} = $with__map_operator_bounditem_string_hash;
+= default__map_operator_bounditem_string_hash__with__map_operator_getitem_string_hash;
 
 map_operator_hasitem_string_hash = {
 	DeeMH_map_operator_bounditem_string_hash_t map_operator_bounditem_string_hash = REQUIRE(map_operator_bounditem_string_hash);
-	if (map_operator_bounditem_string_hash) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem_string_hash)
 		return map_operator_bounditem_string_hash;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem_string_hash == &default__map_operator_bounditem_string_hash__empty)
-			return &$empty;
-		return &$with__map_operator_bounditem_string_hash;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 };
 
 
@@ -982,21 +949,10 @@ __map_getitem__.map_operator_hasitem_string_len_hash([[nonnull]] DeeObject *self
                                                      Dee_hash_t hash)
 %{$none = 1}
 %{$empty = 0}
-%{using map_operator_bounditem_string_len_hash: {
-	/* TODO: Only define when `#ifndef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS' */
-	int result = CALL_DEPENDENCY(map_operator_bounditem_string_len_hash, self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
-}} = $with__map_operator_bounditem_string_len_hash;
+= default__map_operator_bounditem_string_len_hash__with__map_operator_getitem_string_len_hash;
 
 map_operator_hasitem_string_len_hash = {
 	DeeMH_map_operator_bounditem_string_len_hash_t map_operator_bounditem_string_len_hash = REQUIRE(map_operator_bounditem_string_len_hash);
-	if (map_operator_bounditem_string_len_hash) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem_string_len_hash)
 		return map_operator_bounditem_string_len_hash;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem_string_len_hash == &default__map_operator_bounditem_string_len_hash__empty)
-			return &$empty;
-		return &$with__map_operator_bounditem_string_len_hash;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 };

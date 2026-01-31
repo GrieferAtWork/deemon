@@ -437,17 +437,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MY_FEATURE */
 #endif
 
-/* Experimental feature switch: use altered status codes for "boundattr" / "bounditem".
- * When enabled, "hasitem"/"hasattr" can be implemented by aliasing "bounditem"/"boundattr" */
-#if (!defined(CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS))
-#if 1
-#define CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
-#else
-#define CONFIG_NO_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-
 /* Experimental feature switch: HashSet remembers the order in which items are inserted. */
 #if (!defined(CONFIG_EXPERIMENTAL_ORDERED_HASHSET) && \
      !defined(CONFIG_NO_EXPERIMENTAL_ORDERED_HASHSET))

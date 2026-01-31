@@ -1359,43 +1359,13 @@ cswgi_bounditem_index(CachedSeq_WithGetItem *self, size_t index) {
 	return Dee_BOUND_YES;
 }
 
-#define cswsogi_hasitem cswgi_hasitem
-#define cswsgi_hasitem  cswgi_hasitem
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
-#define cswgi_hasitem cswgi_bounditem
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cswgi_hasitem(CachedSeq_WithGetItem *self, DeeObject *index) {
-	DREF DeeObject *result = cswgi_getitem_object_ex(self, index);
-	if (result == CSWGI_GETITEM_UNBOUND)
-		return Dee_HAS_NO;
-	if (result == CSWGI_GETITEM_OOB)
-		return Dee_HAS_NO;
-	if (result == CSWGI_GETITEM_ERROR)
-		return Dee_HAS_ERR;
-	Dee_Decref_unlikely(result);
-	return Dee_HAS_YES;
-}
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+#define cswsogi_hasitem cswsogi_bounditem
+#define cswsgi_hasitem  cswsgi_bounditem
+#define cswgi_hasitem   cswgi_bounditem
 
-#define cswsogi_hasitem_index cswgi_hasitem_index
-#define cswsgi_hasitem_index  cswgi_hasitem_index
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
-#define cswgi_hasitem_index cswgi_bounditem_index
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-cswgi_hasitem_index(CachedSeq_WithGetItem *self, size_t index) {
-	DREF DeeObject *result = cswgi_getitem_index_ex(self, index);
-	if (result == CSWGI_GETITEM_UNBOUND)
-		return Dee_HAS_NO;
-	if (result == CSWGI_GETITEM_OOB)
-		return Dee_HAS_NO;
-	if (result == CSWGI_GETITEM_ERROR)
-		return Dee_HAS_ERR;
-	Dee_Decref_unlikely(result);
-	return Dee_HAS_YES;
-}
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
+#define cswsogi_hasitem_index cswsogi_bounditem_index
+#define cswsgi_hasitem_index  cswsgi_bounditem_index
+#define cswgi_hasitem_index   cswgi_bounditem_index
 
 #define cswsogi_trygetitem cswgi_trygetitem
 #define cswsgi_trygetitem  cswgi_trygetitem

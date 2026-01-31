@@ -5464,8 +5464,7 @@ err:
 /* tp_seq->tp_hasitem */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasitem__with__bounditem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
-	int result = (*(tp_self->tp_seq->tp_bounditem == &default__bounditem__with__size__and__getitem_index_fast ? &tdefault__bounditem__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__getitem ? &tdefault__bounditem__with__getitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem__and__hasitem ? &tdefault__bounditem__with__trygetitem__and__hasitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index ? &tdefault__bounditem__with__bounditem_index : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem ? &tdefault__bounditem__with__trygetitem : &tdefault__bounditem))(tp_self, self, index);
-	return Dee_BOUND_ASHAS(result);
+	return (*(tp_self->tp_seq->tp_bounditem == &default__bounditem__with__size__and__getitem_index_fast ? &tdefault__bounditem__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__getitem ? &tdefault__bounditem__with__getitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem__and__hasitem ? &tdefault__bounditem__with__trygetitem__and__hasitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index ? &tdefault__bounditem__with__bounditem_index : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem ? &tdefault__bounditem__with__trygetitem : &tdefault__bounditem))(tp_self, self, index);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -5542,8 +5541,7 @@ default__hasitem__with__bounditem(DeeObject *self, DeeObject *index) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasitem__with__bounditem(Dee_TYPE(self), self, index);
 #else /* __OPTIMIZE_SIZE__ */
-	int result = (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, index);
-	return Dee_BOUND_ASHAS(result);
+	return (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, index);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -5638,8 +5636,7 @@ err:
 /* tp_seq->tp_hasitem_index */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__hasitem_index__with__bounditem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
-	int result = (*(tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__size__and__getitem_index_fast ? &tdefault__bounditem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__getitem_index ? &tdefault__bounditem_index__with__getitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__bounditem ? &tdefault__bounditem_index__with__bounditem : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index ? &tdefault__bounditem_index__with__trygetitem_index : &tdefault__bounditem_index))(tp_self, self, index);
-	return Dee_BOUND_ASHAS(result);
+	return (*(tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__size__and__getitem_index_fast ? &tdefault__bounditem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__getitem_index ? &tdefault__bounditem_index__with__getitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__bounditem ? &tdefault__bounditem_index__with__bounditem : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index ? &tdefault__bounditem_index__with__trygetitem_index : &tdefault__bounditem_index))(tp_self, self, index);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -5675,8 +5672,7 @@ default__hasitem_index__with__bounditem_index(DeeObject *self, size_t index) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasitem_index__with__bounditem_index(Dee_TYPE(self), self, index);
 #else /* __OPTIMIZE_SIZE__ */
-	int result = (*Dee_TYPE(self)->tp_seq->tp_bounditem_index)(self, index);
-	return Dee_BOUND_ASHAS(result);
+	return (*Dee_TYPE(self)->tp_seq->tp_bounditem_index)(self, index);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -5714,8 +5710,7 @@ err:
 /* tp_seq->tp_hasitem_string_hash */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasitem_string_hash__with__bounditem_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash) {
-	int result = (*(tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__getitem_string_hash ? &tdefault__bounditem_string_hash__with__getitem_string_hash : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__bounditem_string_len_hash ? &tdefault__bounditem_string_hash__with__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash ? &tdefault__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__bounditem ? &tdefault__bounditem_string_hash__with__bounditem : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__trygetitem_string_hash ? &tdefault__bounditem_string_hash__with__trygetitem_string_hash : &tdefault__bounditem_string_hash))(tp_self, self, key, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*(tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__getitem_string_hash ? &tdefault__bounditem_string_hash__with__getitem_string_hash : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__bounditem_string_len_hash ? &tdefault__bounditem_string_hash__with__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash ? &tdefault__bounditem_string_hash__with__trygetitem_string_hash__and__hasitem_string_hash : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__bounditem ? &tdefault__bounditem_string_hash__with__bounditem : tp_self->tp_seq->tp_bounditem_string_hash == &default__bounditem_string_hash__with__trygetitem_string_hash ? &tdefault__bounditem_string_hash__with__trygetitem_string_hash : &tdefault__bounditem_string_hash))(tp_self, self, key, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -5746,8 +5741,7 @@ default__hasitem_string_hash__with__bounditem_string_hash(DeeObject *self, char 
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasitem_string_hash__with__bounditem_string_hash(Dee_TYPE(self), self, key, hash);
 #else /* __OPTIMIZE_SIZE__ */
-	int result = (*Dee_TYPE(self)->tp_seq->tp_bounditem_string_hash)(self, key, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*Dee_TYPE(self)->tp_seq->tp_bounditem_string_hash)(self, key, hash);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -5780,8 +5774,7 @@ err:
 /* tp_seq->tp_hasitem_string_len_hash */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasitem_string_len_hash__with__bounditem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	int result = (*(tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__getitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__getitem_string_len_hash : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__bounditem_string_hash ? &tdefault__bounditem_string_len_hash__with__bounditem_string_hash : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__bounditem ? &tdefault__bounditem_string_len_hash__with__bounditem : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash : &tdefault__bounditem_string_len_hash))(tp_self, self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*(tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__getitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__getitem_string_len_hash : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash__and__hasitem_string_len_hash : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__bounditem_string_hash ? &tdefault__bounditem_string_len_hash__with__bounditem_string_hash : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__bounditem ? &tdefault__bounditem_string_len_hash__with__bounditem : tp_self->tp_seq->tp_bounditem_string_len_hash == &default__bounditem_string_len_hash__with__trygetitem_string_len_hash ? &tdefault__bounditem_string_len_hash__with__trygetitem_string_len_hash : &tdefault__bounditem_string_len_hash))(tp_self, self, key, keylen, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -5817,8 +5810,7 @@ default__hasitem_string_len_hash__with__bounditem_string_len_hash(DeeObject *sel
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasitem_string_len_hash__with__bounditem_string_len_hash(Dee_TYPE(self), self, key, keylen, hash);
 #else /* __OPTIMIZE_SIZE__ */
-	int result = (*Dee_TYPE(self)->tp_seq->tp_bounditem_string_len_hash)(self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*Dee_TYPE(self)->tp_seq->tp_bounditem_string_len_hash)(self, key, keylen, hash);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -8326,8 +8318,7 @@ err:
 /* tp_attr->tp_hasattr */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasattr__with__boundattr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) {
-	int result = (*(tp_self->tp_attr->tp_boundattr == &default__boundattr__with__getattr ? &tdefault__boundattr__with__getattr : &tdefault__boundattr))(tp_self, self, attr);
-	return Dee_BOUND_ASHAS(result);
+	return (*(tp_self->tp_attr->tp_boundattr == &default__boundattr__with__getattr ? &tdefault__boundattr__with__getattr : &tdefault__boundattr))(tp_self, self, attr);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -8340,16 +8331,14 @@ default__hasattr__with__boundattr(DeeObject *self, DeeObject *attr) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasattr__with__boundattr(Dee_TYPE(self), self, attr);
 #else /* __OPTIMIZE_SIZE__ */
-	int result = (*Dee_TYPE(self)->tp_attr->tp_boundattr)(self, attr);
-	return Dee_BOUND_ASHAS(result);
+	return (*Dee_TYPE(self)->tp_attr->tp_boundattr)(self, attr);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
 /* tp_attr->tp_hasattr_string_hash */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasattr_string_hash__with__boundattr_string_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash) {
-	int result = (*(tp_self->tp_attr->tp_boundattr_string_hash == &default__boundattr_string_hash__with__getattr_string_hash ? &tdefault__boundattr_string_hash__with__getattr_string_hash : tp_self->tp_attr->tp_boundattr_string_hash == &default__boundattr_string_hash__with__boundattr ? &tdefault__boundattr_string_hash__with__boundattr : &tdefault__boundattr_string_hash))(tp_self, self, key, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*(tp_self->tp_attr->tp_boundattr_string_hash == &default__boundattr_string_hash__with__getattr_string_hash ? &tdefault__boundattr_string_hash__with__getattr_string_hash : tp_self->tp_attr->tp_boundattr_string_hash == &default__boundattr_string_hash__with__boundattr ? &tdefault__boundattr_string_hash__with__boundattr : &tdefault__boundattr_string_hash))(tp_self, self, key, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -8362,16 +8351,14 @@ default__hasattr_string_hash__with__boundattr_string_hash(DeeObject *self, char 
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasattr_string_hash__with__boundattr_string_hash(Dee_TYPE(self), self, key, hash);
 #else /* __OPTIMIZE_SIZE__ */
-	int result = (*Dee_TYPE(self)->tp_attr->tp_boundattr_string_hash)(self, key, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*Dee_TYPE(self)->tp_attr->tp_boundattr_string_hash)(self, key, hash);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
 /* tp_attr->tp_hasattr_string_len_hash */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasattr_string_len_hash__with__boundattr_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash) {
-	int result = (*(tp_self->tp_attr->tp_boundattr_string_len_hash == &default__boundattr_string_len_hash__with__getattr_string_len_hash ? &tdefault__boundattr_string_len_hash__with__getattr_string_len_hash : tp_self->tp_attr->tp_boundattr_string_len_hash == &default__boundattr_string_len_hash__with__boundattr ? &tdefault__boundattr_string_len_hash__with__boundattr : &tdefault__boundattr_string_len_hash))(tp_self, self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*(tp_self->tp_attr->tp_boundattr_string_len_hash == &default__boundattr_string_len_hash__with__getattr_string_len_hash ? &tdefault__boundattr_string_len_hash__with__getattr_string_len_hash : tp_self->tp_attr->tp_boundattr_string_len_hash == &default__boundattr_string_len_hash__with__boundattr ? &tdefault__boundattr_string_len_hash__with__boundattr : &tdefault__boundattr_string_len_hash))(tp_self, self, key, keylen, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -8384,8 +8371,7 @@ default__hasattr_string_len_hash__with__boundattr_string_len_hash(DeeObject *sel
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasattr_string_len_hash__with__boundattr_string_len_hash(Dee_TYPE(self), self, key, keylen, hash);
 #else /* __OPTIMIZE_SIZE__ */
-	int result = (*Dee_TYPE(self)->tp_attr->tp_boundattr_string_len_hash)(self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
+	return (*Dee_TYPE(self)->tp_attr->tp_boundattr_string_len_hash)(self, key, keylen, hash);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 

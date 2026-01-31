@@ -3726,60 +3726,32 @@ mh_select_map_operator_bounditem_string_len_hash(DeeTypeObject *self, DeeTypeObj
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hasitem_t DCALL
 mh_select_map_operator_hasitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_bounditem_t map_operator_bounditem = (DeeMH_map_operator_bounditem_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_bounditem);
-	if (map_operator_bounditem) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem)
 		return map_operator_bounditem;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem == &default__map_operator_bounditem__empty)
-			return &default__map_operator_hasitem__empty;
-		return &default__map_operator_hasitem__with__map_operator_bounditem;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 	return NULL;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hasitem_index_t DCALL
 mh_select_map_operator_hasitem_index(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_bounditem_index_t map_operator_bounditem_index = (DeeMH_map_operator_bounditem_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_bounditem_index);
-	if (map_operator_bounditem_index) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem_index)
 		return map_operator_bounditem_index;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem_index == &default__map_operator_bounditem_index__empty)
-			return &default__map_operator_hasitem_index__empty;
-		return &default__map_operator_hasitem_index__with__map_operator_bounditem_index;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 	return NULL;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hasitem_string_hash_t DCALL
 mh_select_map_operator_hasitem_string_hash(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_bounditem_string_hash_t map_operator_bounditem_string_hash = (DeeMH_map_operator_bounditem_string_hash_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_bounditem_string_hash);
-	if (map_operator_bounditem_string_hash) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem_string_hash)
 		return map_operator_bounditem_string_hash;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem_string_hash == &default__map_operator_bounditem_string_hash__empty)
-			return &default__map_operator_hasitem_string_hash__empty;
-		return &default__map_operator_hasitem_string_hash__with__map_operator_bounditem_string_hash;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 	return NULL;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_operator_hasitem_string_len_hash_t DCALL
 mh_select_map_operator_hasitem_string_len_hash(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_map_operator_bounditem_string_len_hash_t map_operator_bounditem_string_len_hash = (DeeMH_map_operator_bounditem_string_len_hash_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_map_operator_bounditem_string_len_hash);
-	if (map_operator_bounditem_string_len_hash) {
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
+	if (map_operator_bounditem_string_len_hash)
 		return map_operator_bounditem_string_len_hash;
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-		if (map_operator_bounditem_string_len_hash == &default__map_operator_bounditem_string_len_hash__empty)
-			return &default__map_operator_hasitem_string_len_hash__empty;
-		return &default__map_operator_hasitem_string_len_hash__with__map_operator_bounditem_string_len_hash;
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-	}
 	return NULL;
 }
 

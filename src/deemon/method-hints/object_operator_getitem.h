@@ -804,8 +804,7 @@ err:
 tp_seq->tp_hasitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
 %{using tp_seq->tp_bounditem: {
-	int result = CALL_DEPENDENCY(tp_seq->tp_bounditem, self, index);
-	return Dee_BOUND_ASHAS(result);
+	return CALL_DEPENDENCY(tp_seq->tp_bounditem, self, index);
 }}
 %{using [tp_seq->tp_hasitem_index, tp_seq->tp_hasitem_string_len_hash]: {
 	size_t index_value;
@@ -876,8 +875,7 @@ err:
 [[wunused]] int
 tp_seq->tp_hasitem_index([[nonnull]] DeeObject *self, size_t index)
 %{using tp_seq->tp_bounditem_index: {
-	int result = CALL_DEPENDENCY(tp_seq->tp_bounditem_index, self, index);
-	return Dee_BOUND_ASHAS(result);
+	return CALL_DEPENDENCY(tp_seq->tp_bounditem_index, self, index);
 }}
 %{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
 	size_t size = CALL_DEPENDENCY(tp_seq->tp_size, self);
@@ -905,8 +903,7 @@ err:
 tp_seq->tp_hasitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash)
 %{using tp_seq->tp_bounditem_string_hash: {
-	int result = CALL_DEPENDENCY(tp_seq->tp_bounditem_string_hash, self, key, hash);
-	return Dee_BOUND_ASHAS(result);
+	return CALL_DEPENDENCY(tp_seq->tp_bounditem_string_hash, self, key, hash);
 }}
 %{using tp_seq->tp_hasitem_string_len_hash: {
 	return CALL_DEPENDENCY(tp_seq->tp_hasitem_string_len_hash, self, key, strlen(key), hash);
@@ -930,8 +927,7 @@ tp_seq->tp_hasitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
                                    size_t keylen, Dee_hash_t hash)
 %{using tp_seq->tp_bounditem_string_len_hash: {
-	int result = CALL_DEPENDENCY(tp_seq->tp_bounditem_string_len_hash, self, key, keylen, hash);
-	return Dee_BOUND_ASHAS(result);
+	return CALL_DEPENDENCY(tp_seq->tp_bounditem_string_len_hash, self, key, keylen, hash);
 }}
 %{using tp_seq->tp_hasitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {
 	int result;

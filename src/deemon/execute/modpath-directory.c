@@ -550,30 +550,9 @@ import_boundattr_string_hash(DeeObject *self, char const *attr, Dee_hash_t hash)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 import_boundattr_string_len_hash(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
 
-#ifdef CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS
 #define import_hasattr                 import_boundattr
 #define import_hasattr_string_hash     import_boundattr_string_hash
 #define import_hasattr_string_len_hash import_boundattr_string_len_hash
-#else /* CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-import_hasattr(DeeObject *self, DeeObject *attr) {
-	int result = import_boundattr(self, attr);
-	return Dee_BOUND_ASHAS(result);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-import_hasattr_string_hash(DeeObject *self, char const *attr, Dee_hash_t hash) {
-	int result = import_boundattr_string_hash(self, attr, hash);
-	return Dee_BOUND_ASHAS(result);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-import_hasattr_string_len_hash(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
-	int result = import_boundattr_string_len_hash(self, attr, attrlen, hash);
-	return Dee_BOUND_ASHAS(result);
-}
-#endif /* !CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS */
-
 
 PRIVATE struct type_attr import_attr = {
 	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&import_getattr,
