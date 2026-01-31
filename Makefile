@@ -435,12 +435,10 @@ $(foreach lib,$(_BIN_ALL),$(eval $(call LINK_RECIPE,$(lib))))
 .PHONY: all _print_optional_module_summary
 ifdef CONFIG_WITHOUT_DEX_SQLITE3
 all: $(BIN_ALL) _print_optional_module_summary
-elifeq (,$(DRYRUN))
+else
 # Put the sqlite amalgamation early so it has lots of time to build when called
 # as `make -j $(nproc)`, while the other CPUs can build the rest of deemon
 all: $(BLD_RELPATH)/src/dex/sqlite3/sqlite3-external.o $(BIN_ALL) _print_optional_module_summary
-else
-all: $(BIN_ALL) _print_optional_module_summary
 endif
 .DEFAULT_GOAL := all
 
