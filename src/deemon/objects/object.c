@@ -4948,6 +4948,14 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 	ASSERT(!DeeType_IsVariable(Dee_TYPE(self)));
 	if ((tp_free = self->tp_init.tp_alloc.tp_free) == NULL)
 		return self->tp_init.tp_alloc.tp_instance_size;
+	/* FIXME: This right here doesn't work in DEX modules when PLT symbols are used.
+	 *
+	 * This currently breaks "deepcopy" for stuff like "collections.UniqueSet" when
+	 * deemon was built with "CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY".
+	 *
+	 * The only solution I can see here is to just always disable slab-based alloc
+	 * functions in DEX modules, but then the deemon core should be able to lazily
+	 * assign slab allocators for DEX types, as those types are used. */
 #ifndef CONFIG_NO_OBJECT_SLABS
 	if (DeeType_IsGC(self)) {
 #define CHECK_ALLOCATOR(index, size)                  \
