@@ -68,33 +68,46 @@
 
 DECL_BEGIN
 
-/* Explanation: Global variables:
- *   Global variables are stored in the current module.
- *   They are addressed using the immediate operand as an
- *   index into the current module's `mo_globalv' vector.
+/* ==================================================================
+ * Explanations of semantics of different types of symbols
+ * accessible to deemon user-code.
+ * ==================================================================
+ *
+ * Explanation: Global variables:
+ *   Global variables are stored in the current module. They are addressed
+ *   using the immediate operand as an index into the current module's
+ *   `mo_globalv' vector.
  *    - Global variables can be used as l-values.
  *    - Global variables can either be bound, or unbound.
  *
  * Explanation: Extern variables:
- *   Extern variables are used to address the global
- *   variables of a different module than the current.
- *   They are addressed using a pair of immediate values,
- *   written as <immX>:<immX>, where the first immediate
- *   value acts as an index into the `mo_importv' vector
- *   of the current module, while the second acts the
- *   same way that a global immediate index acts by then
- *   indexing into `mo_globalv'.
+ *   Extern variables are used to address the global variables of a module
+ *   other than the current. They are addressed using a pair of immediate
+ *   values, written as <immX>:<immY>, where the first immediate value
+ *   (immX) acts as an index into the `mo_importv' vector of the current
+ *   module, while the second (immY) acts the same way that a global
+ *   immediate index acts by then indexing into `mo_globalv'.
  *    - Extern variables can be used as l-values.
  *    - Extern variables can either be bound, or unbound.
- * 
+ *
  * Explanation: Local variables:
- *   Local variables are stored in code frames and are
- *   unique during each execution of accompanying code.
+ *   Local variables are stored in code frames and are unique during each
+ *   execution of accompanying code.
  *    - Local variables can be used as l-values.
  *    - Local variables can either be bound, or unbound.
- *   
+ *
+ * Explanation: Stack variables:
+ *   Stack variables have the same storage duration as "local" variables,
+ *   but live directly on the stack, rather than having to be moved out-of
+ *   or on-to the stack as access is made.
+ *    - Stack variables can be used as l-values.
+ *    - Stack variables are always bound.
+ *   The last point ("always bound") may lead to situations where user-code
+ *   accesses a stack variable that has never been bound. When this happens
+ *   at run-time, the stack variable will appear pre-initialize to "Dee_None"
+ *
  * Explanation: Reference variables:
- *   Reference variables are stored in the associated function object (not code!)
+ *   Reference variables are stored in the associated function object (not the code!)
  *   and are created as fixed objects when the function is created by the surrounding
  *   scope. Their existence becomes important in lambda expression and local functions
  *   using variables from surrounding scopes that are not the global scope:
@@ -110,47 +123,49 @@ DECL_BEGIN
  *   NOTES:
  *    - Reference variables cannot be modified, or used as l-values.
  *    - Reference variables are always bound.
- *    - The originating scope can still use the referenced variable
- *      normally, however overwriting its storage location will not
- *      update the value referenced by lambda functions that were
- *      constructed prior to the variable changing.
+ *    - The originating scope can still use the referenced variable normally, however
+ *      overwriting its storage location will not update the value referenced by lambda
+ *      functions that were constructed prior to the variable changing.
  *
- * Explanation: Argument variables:
- *   Used to access arguments passed to a function.
- *   Access to such variables undergoes special transformations in
- *   order to pack varargs into tuples, extract the `this' argument,
- *   and substitute default parameters.
- *   WARNING: Argument variables cannot be modified, or used as l-values.
- *            User-code is able to (seemingly) write to argument variables,
- *            however the compiler will generate stubs to copy arguments
- *            into hidden locals, and it is those that are then used for
- *            the duration of the function call.
- *   WARNING: Argument variables are always bound (optional arguments
- *            that *appear* to be unbound are achived by clever use of
- *            default arguments (which can be unbound), and variable
- *            arguments (where an argument is bound based on the number
- *            of variable arguments passed to a function)).
- *      TLDR: - Don't pass NULL in `argv' vectors
- *            - `argv' vectors mustn't be modified by callees
- *            - `function foo(a?) {}' is compiler magic,
- *              and is-bound-ness is determined by `argc'
- *
- * Explanation: Static/const variables:
- *   Stored in the code object itself, static/const variables are
- *   intended as extension space for storing pre-defined constants,
- *   as well as variables to which changes remain consistent across
- *   multiple calls to the same function (or rather underlying code object).
- *   Special instructions are available for accessing static variables
- *   as constants, rather than variables.
+ * Explanation: Static variables:
+ *   Static variables are stores alongside reference variables, meaning their lifetime
+ *   matches that of the surrounding function (!not the code; iow: static variables in
+ *   lambda functions distinct between each instantiation of said lambda function).
+ *   Static variables are always pre-initialize as unbound upon function creation, and
+ *   the compiler generates some magic to ensure that the user-code initialize will
+ *   only be initialized once (and by a single thread):
+ *   >> function foo() {
+ *   >>     static local x = complexExpression();
+ *   >>     return x;
+ *   >> }
+ *   >> print foo(); // complexExpression() -> result
+ *   >> print foo(); // result  ("complexExpression()" is not evaluated again)
  *    - Static variables can be used as l-values.
- *    - Static variables can either be bound, or unbound.
+ *    - Static variables can either be bound, or unbound. (default is always unbound)
+ *
+ * Explanation: Constants:
+ *   Constants are stored in the code object itself and are always pre-initialized.
+ *   Various instructions directly take constants as operands (given their id, which
+ *   is an index into `co_constv'), rather than operating on stack symbols.
  *    - Constant variables must not be modified or contain mutable objects.
  *    - Constant variables are always bound.
- *   There is no way to determine if a slot in the static/const vector
- *   belongs to a constant or static variable, other than by inspecting
- *   how the associated code object uses the slot. (Note that for forward
- *   compatibility, don't rely on DDI information to determine if a slot
- *   has a name, and then assume that if it does, it's a static variable)
+ *
+ * Explanation: Argument variables:
+ *   Used to access arguments passed to a function. Access to such variables undergoes
+ *   special transformations in order to pack varargs into tuples, extract the `this'
+ *   argument, and substitute default parameters.
+ *   WARNING: Argument variables cannot be modified, or used as l-values. User-code is
+ *            able to (seemingly) write to argument variables, however the compiler will
+ *            generate stubs to copy arguments into hidden locals, and it is those that
+ *            are then used for the duration of the function call.
+ *   WARNING: Argument variables are always bound (optional arguments that *appear* to
+ *            be unbound are achieved by clever use of default arguments (which can be
+ *            unbound), and variable arguments (where an argument is bound based on the
+ *            number of variable arguments passed to a function)).
+ *   TLDR: - Don't pass NULL in `argv' vectors
+ *         - `argv' vectors mustn't be modified by callee-s
+ *         - `function foo(a?) -> a is bound' is compiler magic, and the is-bound-ness
+ *           of `a' is determined by `argc'
  */
 
 struct Dee_code_frame;
