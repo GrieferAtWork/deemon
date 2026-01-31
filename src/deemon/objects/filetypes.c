@@ -2498,14 +2498,14 @@ utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 /* @return: 1 : Try again (lock was released)
  * @return: 0 : Success (lock is kept)
  * @return: -1: Error (lock was released) */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_bytes_set_allocated_or_unlock(DeeFileWriterObject *__restrict self,
                                      size_t allocated) {
 	ASSERT(DeeFileWriter_LockWriting(self));
 	ASSERT(self->w_string == (DeeStringObject *)ITER_DONE);
 	DREF DeeBytesObject *bytes;
 	DREF DeeBytesObject *new_bytes;
-	size_t bytes_used, bytes_alloc, bytes_avail;
+	size_t bytes_used, bytes_alloc;
 	bytes = self->w_printer.wp_byt.bp_bytes;
 	if unlikely(!bytes) {
 		ASSERT(self->w_printer.wp_byt.bp_length == 0);
@@ -2566,7 +2566,6 @@ unlock_and_destroy_new_bytes_and_try_again:
 	/* Check how much space is available in "bytes" right now */
 	bytes_alloc = DeeBytes_SIZE(bytes);
 	ASSERT(bytes_used <= bytes_alloc);
-	bytes_avail = bytes_alloc - bytes_used;
 	if (bytes_alloc >= allocated)
 		return 0; /* Already enough memory allocated! */
 
@@ -2995,7 +2994,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 writer_pwrite(DeeFileWriterObject *self, void const *buffer,
               size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
 #ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
