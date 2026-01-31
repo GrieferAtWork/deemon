@@ -66,7 +66,7 @@ rg_serialize(ReGroups *__restrict self, DeeSerial *__restrict writer) {
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, out_addr, ReGroups);
 	out->rg_ngroups = self->rg_ngroups;
-	memcpyc(out->rg_groups, self->rg_groups, self->rg_ngroups, sizeof(ReGroups));
+	memcpyc(out->rg_groups, self->rg_groups, self->rg_ngroups, sizeof(struct DeeRegexMatch));
 	return out_addr;
 err:
 	return Dee_SERADDR_INVALID;
