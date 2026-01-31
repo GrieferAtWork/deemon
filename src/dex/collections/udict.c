@@ -586,6 +586,75 @@ err_items:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+udict_serialize(UDict *__restrict self,
+               DeeSerial *__restrict writer,
+               Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(UDict, field))
+	UDict *out;
+	size_t self__ud_mask;
+	size_t self__ud_used, self__ud_size;
+	struct udict_item *self__ud_elem;
+again:
+	UDict_LockRead(self);
+	self__ud_mask = self->ud_mask;
+	self__ud_used = self->ud_used;
+	self__ud_size = self->ud_size;
+	self__ud_elem = self->ud_elem;
+	if (self__ud_elem == empty_dict_items) {
+		UDict_LockEndRead(self);
+		if (DeeSerial_PutPointer(writer, ADDROF(ud_elem), empty_dict_items))
+			goto err;
+	} else {
+		size_t sizeof_elem, i;
+		Dee_seraddr_t addrof_out__ud_elem;
+		struct udict_item *out__ud_elem;
+		sizeof_elem   = (self__ud_mask + 1) * sizeof(struct udict_item);
+		addrof_out__ud_elem = DeeSerial_TryMalloc(writer, sizeof_elem, self__ud_elem);
+		if (!Dee_SERADDR_ISOK(addrof_out__ud_elem)) {
+			UDict_LockEndRead(self);
+			addrof_out__ud_elem = DeeSerial_Malloc(writer, sizeof_elem, self__ud_elem);
+			if (!Dee_SERADDR_ISOK(addrof_out__ud_elem))
+				goto err;
+			UDict_LockRead(self);
+			if unlikely(self__ud_mask != self->ud_mask) {
+free_out__ud_elem_and_again:
+				UDict_LockEndRead(self);
+				DeeSerial_Free(writer, addrof_out__ud_elem, self__ud_elem);
+				goto again;
+			}
+			if unlikely(self__ud_elem != self->ud_elem)
+				goto free_out__ud_elem_and_again;
+		}
+		out__ud_elem  = DeeSerial_Addr2Mem(writer, addrof_out__ud_elem, struct udict_item);
+		memcpyc(out__ud_elem, self__ud_elem, self__ud_mask + 1, sizeof(struct udict_item));
+		for (i = 0; i <= self__ud_mask; ++i) {
+			if (out__ud_elem[i].di_key) {
+				Dee_Incref(out__ud_elem[i].di_key);
+				Dee_XIncref(out__ud_elem[i].di_value);
+			} else {
+				out__ud_elem[i].di_value = NULL;
+			}
+			self__ud_elem[i].di_value;
+		}
+		UDict_LockEndRead(self);
+		if (DeeSerial_XInplacePutObjectv(writer, addrof_out__ud_elem, (self__ud_mask + 1) * 2))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(ud_elem), addrof_out__ud_elem))
+			goto err;
+	}
+	out = DeeSerial_Addr2Mem(writer, addr, UDict);
+	out->ud_used = self__ud_used;
+	out->ud_size = self__ud_size;
+	out->ud_mask = self__ud_mask;
+	Dee_atomic_rwlock_init(&out->ud_lock);
+	Dee_weakref_support_init(out);
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 udict_init(UDict *__restrict self,
            size_t argc, DeeObject *const *argv) {
@@ -1397,7 +1466,7 @@ INTERN DeeTypeObject UDict_Type = {
 			/* tp_deep_ctor:   */ &udict_copy,
 			/* tp_any_ctor:    */ &udict_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &udict_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&udict_fini,
 		/* .tp_assign      = */ NULL,
@@ -1841,6 +1910,46 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+urodict_serialize(URoDict *__restrict self,
+                  DeeSerial *__restrict writer) {
+	URoDict *out;
+	size_t i;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(URoDict, urd_elem),
+	                                          self->urd_mask + 1,
+	                                          sizeof(struct udict_item));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(URoDict, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, URoDict);
+	out->urd_mask = self->urd_mask;
+	out->urd_size = self->urd_size;
+	memcpyc(out->urd_elem, self->urd_elem, self->urd_mask + 1, sizeof(struct udict_item));
+	for (i = 0; i <= out->urd_mask; ++i) {
+		struct udict_item *item = &self->urd_elem[i];
+		if (item->di_key) {
+			Dee_seraddr_t addrof_out_item;
+			addrof_out_item = ADDROF(urd_elem);
+			addrof_out_item += (i * sizeof(struct udict_item));
+			if (DeeSerial_PutObject(writer,
+			                        addrof_out_item + offsetof(struct udict_item, di_key),
+			                        item->di_key))
+				goto err;
+			if (item->di_value) {
+				if (DeeSerial_PutObject(writer,
+				                        addrof_out_item + offsetof(struct udict_item, di_value),
+				                        item->di_value))
+					goto err;
+			}
+		}
+	}
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED DREF URoDict *DCALL
 urodict_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
@@ -2103,7 +2212,7 @@ INTERN DeeTypeObject URoDict_Type = {
 			/* tp_deep_ctor:   */ &urodict_deepcopy,
 			/* tp_any_ctor:    */ &urodict_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &urodict_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urodict_fini,

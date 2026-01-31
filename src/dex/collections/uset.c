@@ -1080,6 +1080,66 @@ uset_bool(USet *__restrict self) {
 	return atomic_read(&self->us_used) != 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+uset_serialize(USet *__restrict self,
+               DeeSerial *__restrict writer,
+               Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(USet, field))
+	USet *out;
+	size_t self__us_mask;
+	size_t self__us_used, self__us_size;
+	struct uset_item *self__us_elem;
+again:
+	USet_LockRead(self);
+	self__us_mask = self->us_mask;
+	self__us_used = self->us_used;
+	self__us_size = self->us_size;
+	self__us_elem = self->us_elem;
+	if (self__us_elem == empty_set_items) {
+		USet_LockEndRead(self);
+		if (DeeSerial_PutPointer(writer, ADDROF(us_elem), empty_set_items))
+			goto err;
+	} else {
+		struct uset_item *out__us_elem;
+		size_t sizeof_elem = (self__us_mask + 1) * sizeof(struct uset_item);
+		Dee_seraddr_t addrof_out__us_elem = DeeSerial_TryMalloc(writer, sizeof_elem, self__us_elem);
+		if (!Dee_SERADDR_ISOK(addrof_out__us_elem)) {
+			USet_LockEndRead(self);
+			addrof_out__us_elem = DeeSerial_Malloc(writer, sizeof_elem, self__us_elem);
+			if (!Dee_SERADDR_ISOK(addrof_out__us_elem))
+				goto err;
+			USet_LockRead(self);
+			if unlikely(self__us_mask != self->us_mask) {
+free_out__us_elem_and_again:
+				USet_LockEndRead(self);
+				DeeSerial_Free(writer, addrof_out__us_elem, self__us_elem);
+				goto again;
+			}
+			if unlikely(self__us_elem != self->us_elem)
+				goto free_out__us_elem_and_again;
+		}
+		out__us_elem  = DeeSerial_Addr2Mem(writer, addrof_out__us_elem, struct uset_item);
+		Dee_XMovrefv((DREF DeeObject **)out__us_elem,
+		             (DREF DeeObject **)self__us_elem,
+		             self__us_mask + 1);
+		USet_LockEndRead(self);
+		if (DeeSerial_XInplacePutObjectv(writer, addrof_out__us_elem, self__us_mask + 1))
+			goto err;
+		if (DeeSerial_PutAddr(writer, ADDROF(us_elem), addrof_out__us_elem))
+			goto err;
+	}
+	out = DeeSerial_Addr2Mem(writer, addr, USet);
+	out->us_used = self__us_used;
+	out->us_size = self__us_size;
+	out->us_mask = self__us_mask;
+	Dee_atomic_rwlock_init(&out->us_lock);
+	Dee_weakref_support_init(out);
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 uset_init(USet *__restrict self,
           size_t argc, DeeObject *const *argv) {
@@ -1311,7 +1371,7 @@ INTERN DeeTypeObject USet_Type = {
 			/* tp_deep_ctor:   */ &USet_InitCopy,
 			/* tp_any_ctor:    */ &uset_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &uset_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&USet_Fini,
 		/* .tp_assign      = */ NULL,
@@ -1960,6 +2020,30 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
+uroset_serialize(URoSet *__restrict self,
+                 DeeSerial *__restrict writer) {
+	URoSet *out;
+	size_t sizeof_self = _Dee_MallococBufsize(offsetof(URoSet, urs_elem),
+	                                          self->urs_mask + 1,
+	                                          sizeof(struct uset_item));
+	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+#define ADDROF(field) (out_addr + offsetof(URoSet, field))
+	if unlikely(!Dee_SERADDR_ISOK(out_addr))
+		goto err;
+	out = DeeSerial_Addr2Mem(writer, out_addr, URoSet);
+	out->urs_mask = self->urs_mask;
+	out->urs_size = self->urs_size;
+	if (DeeSerial_XPutObjectv(writer, ADDROF(urs_elem),
+	                          (DeeObject *const *)self->urs_elem,
+	                          self->urs_mask + 1))
+		goto err;
+	return out_addr;
+err:
+	return Dee_SERADDR_INVALID;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED DREF URoSet *DCALL
 uroset_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
@@ -2023,7 +2107,7 @@ INTERN DeeTypeObject URoSet_Type = {
 			/* tp_deep_ctor:   */ &uroset_deepcopy,
 			/* tp_any_ctor:    */ &uroset_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */,
+			/* tp_serialize:   */ &uroset_serialize,
 			/* tp_free:        */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uroset_fini,
