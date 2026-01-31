@@ -513,9 +513,11 @@ do_operator_gr:
 		result = OPERATOR_COPY;
 		goto done_y1;
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	case KWD_deepcopy:
 		result = OPERATOR_DEEPCOPY;
 		goto done_y1;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	case KWD_super:
 		if (!(features & P_OPERATOR_FCLASS))
@@ -741,6 +743,17 @@ default_case:
 			}
 			break;
 #endif /* !__OPTIMIZE_SIZE__ */
+
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+		case 9:
+			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'e', 'r', 'i') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('a', 'l', 'i', 'z') &&
+			    name_begin[8] == 'e') {
+				result = OPERATOR_SERIALIZE;
+				goto done_y1;
+			}
+			break;
+#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 		default: break;
 		}

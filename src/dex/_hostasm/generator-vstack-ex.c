@@ -5516,7 +5516,9 @@ struct host_operator_specs {
 PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_CONSTRUCTOR]  = */ { (void const *)NULL },
 	/* [OPERATOR_COPY]         = */ { (void const *)&DeeObject_Copy, (void const *)&DeeObject_TCopy, 1, VCALL_CC_OBJECT, false },
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+	/* [OPERATOR_SERIALIZE]    = */ { (void const *)NULL },
+#elif defined(CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY)
 	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, NULL, 1, VCALL_CC_OBJECT, false },
 #else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, (void const *)&DeeObject_TDeepCopy, 1, VCALL_CC_OBJECT, false },
@@ -5608,7 +5610,11 @@ vtype_get_operator_api_function(struct fungen *__restrict self,
 
 	case OPERATOR_CONSTRUCTOR:
 	case OPERATOR_DESTRUCTOR:
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+	case OPERATOR_SERIALIZE:
+#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case OPERATOR_DEEPCOPY:
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case OPERATOR_COPY:
 		goto nope;
 

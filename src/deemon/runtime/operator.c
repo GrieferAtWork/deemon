@@ -600,8 +600,10 @@ DeeObject_Newf(DeeTypeObject *object_type,
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 STATIC_ASSERT(offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor) ==
               offsetof(DeeTypeObject, tp_init.tp_var.tp_deep_ctor));
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 #ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
 #ifndef DEFINE_TYPED_OPERATORS
@@ -773,6 +775,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 do_invoke_var_copy:
 			return (*tp_self->tp_init.tp_var.tp_copy_ctor)(self);
 		}
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		if (tp_self->tp_init.tp_var.tp_deep_ctor) {
 do_invoke_var_deep:
 #ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
@@ -785,6 +788,7 @@ do_invoke_var_deep:
 #endif /* !DEFINE_TYPED_OPERATORS */
 #endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 		}
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		if (tp_self->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
 			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
@@ -798,8 +802,10 @@ do_invoke_var_any_ctor_kw:
 		if (DeeType_InheritConstructors(tp_self)) {
 			if (tp_self->tp_init.tp_var.tp_copy_ctor)
 				goto do_invoke_var_copy;
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 			if (tp_self->tp_init.tp_var.tp_deep_ctor)
 				goto do_invoke_var_deep;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			if (tp_self->tp_init.tp_var.tp_any_ctor)
 				goto do_invoke_var_any_ctor;
 			if (tp_self->tp_init.tp_var.tp_any_ctor_kw)
@@ -820,8 +826,10 @@ do_invoke_alloc_copy:
 		if (DeeType_IsGC(tp_self))
 			result = DeeGC_Track(result);
 		return result;
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	} else if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
 		goto do_invoke_var_deep;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	} else {
 		int error;
 		ASSERT(!DeeType_IsVariable(tp_self));
@@ -846,10 +854,12 @@ do_invoke_alloc_any_ctor_kw:
 				Dee_DecrefNokill(tp_self);
 				goto do_invoke_alloc_copy;
 			}
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 			if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
 				Dee_DecrefNokill(tp_self);
 				goto do_invoke_var_deep;
 			}
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			result = DeeType_AllocInstance(tp_self);
 			if unlikely(!result)
 				goto err_object_type;

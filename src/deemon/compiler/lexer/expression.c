@@ -880,11 +880,16 @@ mkconst:
 	case KWD_repr:
 		opid = OPERATOR_REPR;
 		goto do_unary_operator_kwd;
+	case KWD_deepcopy:
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+		opid = AST_FACTION_DEEPCOPY;
+		goto do_unary_action_kwd;
+#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
+		opid = OPERATOR_DEEPCOPY;
+		goto do_unary_operator_kwd;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case KWD_copy:
 		opid = OPERATOR_COPY;
-		goto do_unary_operator_kwd;
-	case KWD_deepcopy:
-		opid = OPERATOR_DEEPCOPY;
 do_unary_operator_kwd:
 		loc_here(&loc);
 		if unlikely(yield() < 0)
@@ -933,7 +938,12 @@ do_unary_operator:
 			goto err;
 		result = merge;
 		break;
+
 	case KWD_type:
+		opid = AST_FACTION_TYPEOF;
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+do_unary_action_kwd:
+#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;
@@ -945,7 +955,7 @@ do_unary_operator:
 		}
 		if unlikely(!result)
 			goto err;
-		merge = ast_setddi(ast_action1(AST_FACTION_TYPEOF, result), &loc);
+		merge = ast_setddi(ast_action1(opid, result), &loc);
 		ast_decref(result);
 		if unlikely(!merge)
 			goto err;

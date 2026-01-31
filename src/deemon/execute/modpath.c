@@ -1093,7 +1093,9 @@ dexrange_union_typeobject(DeeTypeObject *tp, struct dexrange *self) {
 		dexrange_union_object_r(Dee_AsObject(tp->tp_base), self);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_ctor);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_copy_ctor);
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_deep_ctor);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_any_ctor);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_any_ctor_kw);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_alloc.tp_serialize);
@@ -1104,7 +1106,9 @@ dexrange_union_typeobject(DeeTypeObject *tp, struct dexrange *self) {
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_dtor);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_assign);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_move_assign);
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_deepload);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_init.tp_destroy);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_cast.tp_str);
 	dexrange_union_funcptr_opt(self, (Dee_funptr_t)tp->tp_cast.tp_repr);

@@ -58,7 +58,11 @@ function bind(tp: Type, operator_function: Callable): Callable {
  * still something they're allowed to do. */
 varying function constructor(self, args...): none -> self.operator constructor(args...);
 varying function copy(self) -> copy self;
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+varying function serialize(self, args...) -> self.operator serialize(args...);
+#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 varying function deepcopy(self) -> deepcopy self;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 varying function destructor(self): none -> self.operator destructor();
 varying function assign(self, other) -> self := other;
 varying function moveassign(self, other) -> self.operator move := (other);

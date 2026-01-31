@@ -371,7 +371,9 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			return &DeeString_Type;
 
 		case OPERATOR_COPY:
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		case OPERATOR_DEEPCOPY:
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			return ast_predict_type_ex(self->a_operator.o_op0, flags);
 
 		case OPERATOR_DELITEM:

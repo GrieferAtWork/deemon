@@ -3960,9 +3960,11 @@ do_unary_operator:
 			PRINT(")");
 			break;
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		case OPERATOR_DEEPCOPY:
 			PRINT("deepcopy(");
 			goto do_unary_operator;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 		case OPERATOR_STR:
 			PRINT("str(");
@@ -4494,6 +4496,15 @@ operator_fallback:
 			DO(print_ast_code(self->a_action.a_act2, printer, arg, true, self->a_scope, indent));
 			PRINT(")");
 			break;
+
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+		ACTION(AST_FACTION_DEEPCOPY):
+			PRINT("deepcopy(");
+			DO(print_ast_code(self->a_action.a_act0, printer, arg, true, self->a_scope, indent));
+			PRINT(")");
+			break;
+#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
+
 #undef ACTION
 
 		default:

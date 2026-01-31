@@ -405,15 +405,18 @@ struct ast {
                                         *        >> --sym_read;
                                         *        >> ++sym_write;
                                         *        This way, symbols can track how often they are written to, or read from. */
-#   define AST_FACTION_ASSERT   0x1013 /* `assert <act0>'               - Assert that <act0> evaluates to true at runtime. */
-#   define AST_FACTION_ASSERT_M 0x2014 /* `assert <act0>, <act1>'       - Assert that <act0> evaluates to true at runtime,
-                                        *                                 <act1> is a message that is evaluated and added
-                                        *                                 to the error message when the assertion fails. */
+#   define AST_FACTION_ASSERT   0x1013 /* `assert <act0>'             - Assert that <act0> evaluates to true at runtime. */
+#   define AST_FACTION_ASSERT_M 0x2014 /* `assert <act0>, <act1>'     - Assert that <act0> evaluates to true at runtime,
+                                        *                               <act1> is a message that is evaluated and added
+                                        *                               to the error message when the assertion fails. */
 #   define AST_FACTION_BOUNDATTR 0x2015/* `<act0>.operator . (<act1>) is bound' - Check if the attribute `<act1>' of `<act0>' is currently bound. */
 #   define AST_FACTION_BOUNDITEM 0x2016/* `<act0>.operator [] (<act1>) is bound' - Check if the item `<act1>' of `<act0>' is currently bound. */
-#   define AST_FACTION_SAMEOBJ  0x2017 /* `<act0> === <act1>'           - Check if <act0> and <act1> are the same object */
-#   define AST_FACTION_DIFFOBJ  0x2018 /* `<act0> !== <act1>'           - Check if <act0> and <act1> are the different objects */
+#   define AST_FACTION_SAMEOBJ  0x2017 /* `<act0> === <act1>'         - Check if <act0> and <act1> are the same object */
+#   define AST_FACTION_DIFFOBJ  0x2018 /* `<act0> !== <act1>'         - Check if <act0> and <act1> are the different objects */
 #   define AST_FACTION_CALL_KW  0x3019 /* `<act0>(<act1>..., **<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+#   define AST_FACTION_DEEPCOPY 0x101a /* `deepcopy <act0>'           - Create a deep copy of `act0' */
+#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		struct {
 			DREF struct ast    *a_act0; /* [0..1] Primary action operand or NULL when not used. */
 			DREF struct ast    *a_act1; /* [0..1] Secondary action operand or NULL when not used. */
@@ -628,10 +631,16 @@ struct ast {
 
 /* Automatically generate moveassign operations when the
  * right-hand-size has been modulated using a copy/deepcopy operator. */
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+#define AST_SHOULD_MOVEASSIGN(x)                                      \
+	(((x)->a_type == AST_OPERATOR && (x)->a_flag == OPERATOR_COPY) || \
+	 ((x)->a_type == AST_ACTION && (x)->a_flag == AST_FACTION_DEEPCOPY))
+#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define AST_SHOULD_MOVEASSIGN(x)      \
 	((x)->a_type == AST_OPERATOR &&   \
 	 ((x)->a_flag == OPERATOR_COPY || \
 	  (x)->a_flag == OPERATOR_DEEPCOPY))
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define AST_ISNONE(x) ((x)->a_type == AST_CONSTEXPR && DeeNone_Check((x)->a_constexpr))
 #define AST_HASDDI(x) ((x)->ast_ddi.l_file != NULL)
 

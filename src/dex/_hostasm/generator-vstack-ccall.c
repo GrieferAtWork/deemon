@@ -112,7 +112,9 @@ err:
 /* Object                                                               */
 /************************************************************************/
 DEFINE_CCALL_OPERATOR(cca_Object___copy__, OPERATOR_COPY, 1)
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 DEFINE_CCALL_OPERATOR(cca_Object___deepcopy__, OPERATOR_DEEPCOPY, 1)
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 DEFINE_CCALL_OPERATOR(cca_Object___assign__, OPERATOR_ASSIGN, 2)
 DEFINE_CCALL_OPERATOR(cca_Object___moveassign__, OPERATOR_MOVEASSIGN, 2)
 DEFINE_CCALL_OPTIMIZATION(cca_Object___str__, fg_vopstr(self)) /* 1 */
@@ -174,7 +176,9 @@ PRIVATE struct ccall_optimization tpconst cca_Object[] = {
 	CCA_OPTIMIZATION("__callattr__", &cca_Object___callattr__, 2),
 	CCA_OPTIMIZATION("__contains__", &cca_Object___contains__, 1),
 	CCA_OPTIMIZATION("__copy__", &cca_Object___copy__, 0),
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	CCA_OPTIMIZATION("__deepcopy__", &cca_Object___deepcopy__, 0),
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	CCA_OPTIMIZATION("__delattr__", &cca_Object___delattr__, 1),
 	CCA_OPTIMIZATION("__delitem__", &cca_Object___delitem__, 1),
 	CCA_OPTIMIZATION("__delrange__", &cca_Object___delrange__, 2),
@@ -1082,7 +1086,9 @@ cco_None_cmp_ne(struct fungen *__restrict self, vstackaddr_t argc) {
 PRIVATE struct ccall_optimization tpconst cco_None[] = {
 	/* IMPORTANT: Keep sorted! */
 	CCO_OPTIMIZATION(OPERATOR_0001_COPY, &cco_None_return_none, CCALL_ARGC_ANY),
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	CCO_OPTIMIZATION(OPERATOR_0002_DEEPCOPY, &cco_None_return_none, CCALL_ARGC_ANY),
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	CCO_OPTIMIZATION(OPERATOR_0004_ASSIGN, &cco_None_popall, CCALL_ARGC_ANY),
 	CCO_OPTIMIZATION(OPERATOR_0005_MOVEASSIGN, &cco_None_popall, CCALL_ARGC_ANY),
 	CCO_OPTIMIZATION(OPERATOR_0006_STR, &cco_None_return_str_none, CCALL_ARGC_ANY),

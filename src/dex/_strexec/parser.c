@@ -596,12 +596,25 @@ err_rbrck_after_lbrck:
 				result = OPERATOR_CONTAINS;
 				goto done_y1;
 			}
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 'e', 'p') &&
 			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('c', 'o', 'p', 'y')) {
 				result = OPERATOR_DEEPCOPY;
 				goto done_y1;
 			}
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			break;
+
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+		case 9:
+			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'e', 'r', 'i') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('a', 'l', 'i', 'z') &&
+			    name_begin[9] == 'e') {
+				result = OPERATOR_SERIALIZE;
+				goto done_y1;
+			}
+			break;
+#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 		case 10:
 			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 's', 't') &&

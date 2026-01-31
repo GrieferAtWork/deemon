@@ -226,6 +226,7 @@ ob_is_const_hash(DeeObject *ob) {
 	       DeeMethodFlags_VerifyConstCallCondition(hash_flags, ob, 0, NULL, NULL);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 PRIVATE ATTR_PURE WUNUSED bool DCALL
 ob_is_const_deep(DeeObject *ob) {
 	DeeTypeObject *tp = Dee_TYPE(ob);
@@ -236,6 +237,7 @@ ob_is_const_deep(DeeObject *ob) {
 	return (deepcopy_flags & METHOD_FCONSTCALL) &&
 	       DeeMethodFlags_VerifyConstCallCondition(deepcopy_flags, ob, 0, NULL, NULL);
 }
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 PRIVATE ATTR_PURE WUNUSED bool DCALL
 ob_is_elem_const_castable(DeeObject *ob) {
@@ -433,8 +435,10 @@ PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 	case METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH:
 		return thisarg && check_foreach_elem(thisarg, &ob_is_const_hash);
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	case METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP:
 		return thisarg && check_foreach_elem(thisarg, &ob_is_const_deep);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ:
 	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCMP:

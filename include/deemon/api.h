@@ -420,6 +420,23 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 /* EXPERIMENTAL/WIP FEATURES                                            */
 /************************************************************************/
 
+/* NOTES:
+ * - All of these features will eventually become mandatory
+ * - Some features may prevent deemon from compiling when enabled/disabled
+ * - Deviate from the defaults encoded here at your own risk
+ */
+
+#if 0
+#if (!defined(CONFIG_EXPERIMENTAL_MY_FEATURE) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_MY_FEATURE))
+#if 1
+#define CONFIG_EXPERIMENTAL_MY_FEATURE
+#else
+#define CONFIG_NO_EXPERIMENTAL_MY_FEATURE
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_MY_FEATURE */
+#endif
+
 /* Experimental feature switch: use altered status codes for "boundattr" / "bounditem".
  * When enabled, "hasitem"/"hasattr" can be implemented by aliasing "bounditem"/"boundattr" */
 #if (!defined(CONFIG_EXPERIMENTAL_ALTERED_BOUND_CONSTANTS) && \
@@ -455,7 +472,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 
 /* Experimental feature switch: ST_ISDIR can be imported as a module, and modules
  * whose names match an equally named directory within the same containing directory
- * also expose all the symbols from that directory within themselves:
+ * also expose all the files from that directory as symbols:
  * Files:
  * - mylib/foo.dee          >> global final symbolFromFoo = 42;
  * - mylib/foo/bar.dee      >> global final symbolFromBar = "Wow!";
@@ -511,6 +528,18 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_SERIALIZED_DEEPCOPY */
+
+
+/* Experimental feature switch: Replace "OPERATOR_DEEPCOPY" with "OPERATOR_SERIALIZE"
+ * TODO: When this one becomes mandatory, "tp_deep_copy" and "tp_deepload" will be removed! */
+#if (!defined(CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_SERIALIZE_OPERATOR))
+#if defined(CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY) && 1
+#define CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+#else
+#define CONFIG_NO_EXPERIMENTAL_SERIALIZE_OPERATOR
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_SERIALIZE_OPERATOR */
 /************************************************************************/
 
 

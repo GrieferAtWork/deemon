@@ -76,7 +76,11 @@ STATIC_ASSERT((ASM_INCPOST & 0xff00) == (ASM_DECPOST & 0xff00));
 INTERN_CONST instruction_t const operator_instr_table[] = {
 	/* [OPERATOR_CONSTRUCTOR] = */ 0,
 	/* [OPERATOR_COPY]        = */ ASM_COPY,
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+	/* [OPERATOR_SERIALIZE]   = */ 0,
+#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	/* [OPERATOR_DEEPCOPY]    = */ ASM_DEEPCOPY,
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	/* [OPERATOR_DESTRUCTOR]  = */ 0,
 	/* [OPERATOR_ASSIGN]      = */ ASM_ASSIGN,
 	/* [OPERATOR_MOVEASSIGN]  = */ ASM_MOVE_ASSIGN,
@@ -1845,7 +1849,9 @@ push_a_if_used:
 		/* Use dedicated instructions for most operators. */
 		switch (operator_name) {
 		case OPERATOR_COPY:
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		case OPERATOR_DEEPCOPY:
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		case OPERATOR_STR:
 		case OPERATOR_REPR:
 		case OPERATOR_BOOL:
@@ -2315,6 +2321,15 @@ action_in_without_const:
 				}
 				goto pop_unused;
 			}
+
+#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
+			ACTION(AST_FACTION_DEEPCOPY) {
+				DO(ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES));
+				DO(asm_putddi(self));
+				DO(asm_gdeepcopy());
+				goto pop_unused;
+			}
+#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 			ACTION(AST_FACTION_MIN) {
 				DO(ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES));
