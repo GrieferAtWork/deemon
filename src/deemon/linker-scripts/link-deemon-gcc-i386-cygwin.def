@@ -1023,7 +1023,6 @@ EXPORTS
 	_DeeObject_TContains@12=DeeObject_TContains@12
 	_DeeObject_TCopy@8=DeeObject_TCopy@8
 	_DeeObject_TDec@8=DeeObject_TDec@8
-	_DeeObject_TDeepCopy@8=DeeObject_TDeepCopy@8
 	_DeeObject_TDelAttr@12=DeeObject_TDelAttr@12
 	_DeeObject_TDelAttrStringHash@16=DeeObject_TDelAttrStringHash@16
 	_DeeObject_TDelAttrStringLenHash@20=DeeObject_TDelAttrStringLenHash@20

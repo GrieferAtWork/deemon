@@ -28,6 +28,7 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
+#include <deemon/serial.h>             /* DeeArg_Unpack1 */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dict.h>            /* DeeDict_Dummy */
 #include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence */
@@ -156,6 +157,30 @@ usetiterator_visit(USetIterator *__restrict self,
 	Dee_Visit(self->usi_set);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+usetiterator_serialize(USetIterator *__restrict self,
+                       DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(USetIterator, field))
+	USetIterator *out;
+	USet *set = self->usi_set;
+	struct uset_item *next = READ_ITEM(self);
+	bool item_is_ok;
+	if (DeeSerial_PutObject(writer, ADDROF(usi_set), set))
+		goto err;
+	USet_LockRead(set);
+	item_is_ok = next >= set->us_elem &&
+	             next <= (set->us_elem + set->us_mask);
+	USet_LockEndRead(set);
+	if (item_is_ok)
+		return DeeSerial_PutPointer(writer, ADDROF(usi_next), next);
+	out = DeeSerial_Addr2Mem(writer, addr, USetIterator);
+	out->usi_next = NULL;
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 usetiterator_init(USetIterator *__restrict self,
                   size_t argc, DeeObject *const *argv) {
@@ -221,10 +246,10 @@ INTERN DeeTypeObject USetIterator_Type = {
 			/* T:              */ USetIterator,
 			/* tp_ctor:        */ &usetiterator_ctor,
 			/* tp_copy_ctor:   */ &usetiterator_copy,
-			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &usetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &usetiterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&usetiterator_fini,
 		/* .tp_assign      = */ NULL,
@@ -1380,6 +1405,29 @@ PRIVATE struct type_member tpconst urosetiterator_members[] = {
 };
 
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+urosetiterator_serialize(URoSetIterator *__restrict self,
+                          DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(URoSetIterator, field))
+	URoSetIterator *out;
+	URoSet *set = self->ursi_set;
+	struct uset_item *next = READ_ITEM(self);
+	bool next_is_ok;
+	if (DeeSerial_PutObject(writer, ADDROF(ursi_set), set))
+		goto err;
+	next_is_ok = next >= set->urs_elem &&
+	             next <= set->urs_elem + set->urs_mask;
+	if (next_is_ok)
+		return DeeSerial_PutPointer(writer, ADDROF(ursi_next), next);
+	out = DeeSerial_Addr2Mem(writer, addr, URoSetIterator);
+	out->ursi_next = NULL;
+	return 0;
+err:
+	return -1;
+#undef ADDROF
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 urosetiterator_init(URoSetIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
@@ -1419,10 +1467,10 @@ INTERN DeeTypeObject URoSetIterator_Type = {
 			/* T:              */ URoSetIterator,
 			/* tp_ctor:        */ &urosetiterator_ctor,
 			/* tp_copy_ctor:   */ &urosetiterator_copy,
-			/* tp_deep_ctor:   */ NULL, /* TODO */
+			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &urosetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* TODO */
+			/* tp_serialize:   */ &urosetiterator_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urosetiterator_fini,
 		/* .tp_assign      = */ NULL,
