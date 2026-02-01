@@ -2000,6 +2000,9 @@
 		<ClCompile Include="..\src\deemon\runtime\hash-io.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\hash.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\heap.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>

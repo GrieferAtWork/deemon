@@ -676,6 +676,7 @@
 		<ClCompile Include="..\src\deemon\runtime\format.c" />
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />
 		<ClCompile Include="..\src\deemon\runtime\hash-io.c" />
+		<ClCompile Include="..\src\deemon\runtime\hash.c" />
 		<ClCompile Include="..\src\deemon\runtime\heap.c">
 			<Optimization>MaxSpeed</Optimization>
 			<InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>

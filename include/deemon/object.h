@@ -1509,20 +1509,6 @@ typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon
 
 struct Dee_serial;
 
-#if 0
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-myob_serialize(MyObject *__restrict self, DeeSerial *__restrict writer, Dee_seraddr_t addr) {
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
-myob_serialize(MyObject *__restrict self, DeeSerial *__restrict writer) {
-}
-#endif
-
-
-
-
-
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 extern "C++" {namespace __intern {
 #define _Dee_PRIVATE_REQUIRE_VAR_tp_ctor(tp_ctor) ::__intern::__Dee_PRIVATE_REQUIRE_VAR_tp_ctor(tp_ctor)
