@@ -418,7 +418,7 @@ hmask_memcpy_and_maybe_downcast(union Dee_hash_htab *__restrict dst, Dee_hash_hi
                                 Dee_hash_hidx_t n_words) {
 	ASSERT(dst_hidxio <= src_hidxio);
 	if likely(dst_hidxio == src_hidxio) {
-		memcpy(dst, src, n_words << dst_hidxio);
+		(*Dee_hash_hidxio[dst_hidxio].hxio_cpy)(dst, src, n_words);
 	} else {
 		Dee_hash_hidx_t i;
 		Dee_hash_gethidx_t src_get = Dee_hash_hidxio[src_hidxio].hxio_get;

@@ -89,8 +89,19 @@ struct Dee_hash_hidxio_ops {
 	Dee_hash_gethidx_t hxio_get; /* Getter */
 	Dee_hash_sethidx_t hxio_set; /* Setter */
 
-	/* memmove */
+	/* bzero */
 	NONNULL_T((1)) void
+	(DCALL *hxio_zro)(union Dee_hash_htab *dst,
+	                  Dee_hash_hidx_t n_words);
+
+	/* memcpy */
+	NONNULL_T((1, 2)) void
+	(DCALL *hxio_cpy)(union Dee_hash_htab *dst,
+	                  union Dee_hash_htab const *src,
+	                  Dee_hash_hidx_t n_words);
+
+	/* memmove */
+	NONNULL_T((1, 2)) void
 	(DCALL *hxio_mov)(union Dee_hash_htab *dst,
 	                  union Dee_hash_htab const *src,
 	                  Dee_hash_hidx_t n_words);
@@ -109,12 +120,24 @@ struct Dee_hash_hidxio_ops {
 	                  union Dee_hash_htab const *src,
 	                  Dee_hash_hidx_t n_words);
 
-#if 0 /* TODO */
-	/* Insert  */
+	/* Insert `it_vidx' (whose associated object has a hash of `it_hash')
+	 * into "HTAB", and return the "htab_idx" where the item was inserted:
+	 * >> Dee_hash_t hs, perturb;
+	 * >> for (_DeeHash_HashIdxInit(&hs, &perturb, it_hash, hmask);;
+	 * >>      _DeeHash_HashIdxNext(&hs, &perturb, it_hash, hmask)) {
+	 * >>     Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, hmask);
+	 * >>     Dee_hash_vidx_t vtab_idx = (*hxio_get)(htab, htab_idx);
+	 * >>     if likely(vtab_idx == Dee_HASH_HTAB_EOF) {
+	 * >>         (*hxio_set)(htab, htab_idx, it_vidx);
+	 * >>         return htab_idx;
+	 * >>     }
+	 * >> }
+	 *
+	 * Caller is responsible to ensure that "htab" isn't fully in-use,
+	 * meaning it has at least 2 "Dee_HASH_HTAB_EOF" entries. */
 	NONNULL_T((1)) Dee_hash_hidx_t
 	(DCALL *hxio_insert)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	                     Dee_hash_t it_hash, /*virt*/Dee_hash_vidx_t it_vidx);
-#endif
 
 	/* Decrement all HTAB elements `>= vtab_threshold':
 	 * >> Dee_hash_t i;

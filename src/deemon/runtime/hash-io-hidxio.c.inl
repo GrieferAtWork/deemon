@@ -67,13 +67,21 @@ DECL_BEGIN
 #endif /* LOCAL_HIDXIO_NBITS != ... */
 
 #if LOCAL_HIDXIO_NBITS == 8
+#define LOCAL_memcpy  memcpyb
 #define LOCAL_memmove memmoveb
+#define LOCAL_bzero   bzerob
 #elif LOCAL_HIDXIO_NBITS == 16
+#define LOCAL_memcpy  memcpyw
 #define LOCAL_memmove memmovew
+#define LOCAL_bzero   bzerow
 #elif LOCAL_HIDXIO_NBITS == 32
+#define LOCAL_memcpy  memcpyl
 #define LOCAL_memmove memmovel
+#define LOCAL_bzero   bzerol
 #elif LOCAL_HIDXIO_NBITS == 64
+#define LOCAL_memcpy  memcpyq
 #define LOCAL_memmove memmoveq
+#define LOCAL_bzero   bzeroq
 #endif /* ... */
 
 #define Tlwr PP_CAT3(uint, LOCAL_HIDXIO_NBITS_DIV2, _t)
@@ -88,6 +96,22 @@ LOCAL_MAYBE_PUBLIC NONNULL((1)) void DFCALL
 F(Dee_hash_sethidx)(union Dee_hash_htab *__restrict htab, Dee_hash_hidx_t index, /*virt*/ Dee_hash_vidx_t value) {
 	((T *)htab)[index] = (T)value;
 }
+
+/* bzero */
+INTERN NONNULL((1)) void DCALL
+F(Dee_hash_zrohidx)(union Dee_hash_htab *dst,
+                    Dee_hash_hidx_t n_words) {
+	LOCAL_bzero(dst, n_words);
+}
+
+/* memcpy */
+INTERN NONNULL((1)) void DCALL
+F(Dee_hash_cpyhidx)(union Dee_hash_htab *dst,
+                    union Dee_hash_htab const *src,
+                    Dee_hash_hidx_t n_words) {
+	LOCAL_memcpy(dst, src, n_words);
+}
+
 
 INTERN NONNULL((1)) void DCALL
 F(Dee_hash_movhidx)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, Dee_hash_hidx_t n_words) {
@@ -120,6 +144,45 @@ F(Dee_hash_lwrhidx)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, De
 #endif /* LOCAL_HIDXIO_NBITS > (1 * __CHAR_BIT__) */
 
 
+/* Insert `it_vidx' (whose associated object has a hash of `it_hash')
+ * into "HTAB", and return the "htab_idx" where the item was inserted:
+ * >> Dee_hash_t hs, perturb;
+ * >> for (_DeeHash_HashIdxInit(&hs, &perturb, it_hash, hmask);;
+ * >>      _DeeHash_HashIdxNext(&hs, &perturb, it_hash, hmask)) {
+ * >>     Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, hmask);
+ * >>     Dee_hash_vidx_t vtab_idx = (*hxio_get)(htab, htab_idx);
+ * >>     if likely(vtab_idx == Dee_HASH_HTAB_EOF) {
+ * >>         (*hxio_set)(htab, htab_idx, it_vidx);
+ * >>         return htab_idx;
+ * >>     }
+ * >> }
+ *
+ * Caller is responsible to ensure that "htab" isn't fully in-use,
+ * meaning it has at least 2 "Dee_HASH_HTAB_EOF" entries. */
+INTERN NONNULL((1)) Dee_hash_hidx_t DCALL
+F(Dee_hash_insert)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+                   Dee_hash_t it_hash, /*virt*/Dee_hash_vidx_t it_vidx) {
+	Dee_hash_t hs, perturb;
+	T *typed_htab = (T *)htab;
+	for (_DeeHash_HashIdxInit(&hs, &perturb, it_hash, hmask);;
+	     _DeeHash_HashIdxNext(&hs, &perturb, it_hash, hmask)) {
+		Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, hmask);
+		if likely(typed_htab[htab_idx] == Dee_HASH_HTAB_EOF) {
+			typed_htab[htab_idx] = (T)it_vidx;
+			return htab_idx;
+		}
+	}
+}
+
+
+
+/* Decrement all HTAB elements `>= vtab_threshold':
+ * >> Dee_hash_t i;
+ * >> for (i = 0; i <= hmask; ++i) {
+ * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+ * >>     if (vtab_index >= vtab_threshold)
+ * >>         (*hxio_set)(htab, i, vtab_index - 1);
+ * >> } */
 INTERN NONNULL((1)) void DCALL
 F(Dee_hash_decafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
                      /*virt*/ Dee_hash_vidx_t vtab_threshold) {
@@ -131,6 +194,13 @@ F(Dee_hash_decafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
+/* Increment all HTAB elements `>= vtab_threshold':
+ * >> Dee_hash_t i;
+ * >> for (i = 0; i <= hmask; ++i) {
+ * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+ * >>     if (vtab_index >= vtab_threshold)
+ * >>         (*hxio_set)(htab, i, vtab_index + 1);
+ * >> } */
 INTERN NONNULL((1)) void DCALL
 F(Dee_hash_incafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
                      /*virt*/ Dee_hash_vidx_t vtab_threshold) {
@@ -142,6 +212,13 @@ F(Dee_hash_incafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
+/* Decrement all HTAB elements `>= vtab_min && <= vtab_max':
+ * >> Dee_hash_t i;
+ * >> for (i = 0; i <= hmask; ++i) {
+ * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+ * >>     if (vtab_index >= vtab_min && vtab_index <= vtab_max)
+ * >>         (*hxio_set)(htab, i, vtab_index - 1);
+ * >> } */
 INTERN NONNULL((1)) void DCALL
 F(Dee_hash_decrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
                      /*virt*/ Dee_hash_vidx_t vtab_min,
@@ -154,6 +231,13 @@ F(Dee_hash_decrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
+/* Increment all HTAB elements `>= vtab_min && <= vtab_max':
+ * >> Dee_hash_t i;
+ * >> for (i = 0; i <= hmask; ++i) {
+ * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+ * >>     if (vtab_index >= vtab_min && vtab_index <= vtab_max)
+ * >>         (*hxio_set)(htab, i, vtab_index + 1);
+ * >> } */
 INTERN NONNULL((1)) void DCALL
 F(Dee_hash_incrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
                      /*virt*/ Dee_hash_vidx_t vtab_min,
@@ -166,7 +250,9 @@ F(Dee_hash_incrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
+#undef LOCAL_memcpy
 #undef LOCAL_memmove
+#undef LOCAL_bzero
 #undef Tlwr
 #undef Tupr
 #undef LOCAL_HIDXIO_NBITS_DIV2

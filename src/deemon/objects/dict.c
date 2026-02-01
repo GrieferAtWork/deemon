@@ -571,111 +571,19 @@ DeeDict_NewWithWeakHint(size_t num_items) {
 	return dict_new_with_hint(num_items, false, true);
 }
 
-LOCAL NONNULL((1)) void DCALL
-dict_htab_insert8(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
-	Dee_hash_t hs, perturb;
-	uint8_t *htab = (uint8_t *)self->d_htab;
-	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
-	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
-		Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
-		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
-			htab[htab_idx] = (uint8_t)vidx;
-			break;
-		}
-	}
-}
-
-#if Dee_HASH_HIDXIO_COUNT >= 2
-LOCAL NONNULL((1)) void DCALL
-dict_htab_insert16(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
-	Dee_hash_t hs, perturb;
-	uint16_t *htab = (uint16_t *)self->d_htab;
-	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
-	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
-		Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
-		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
-			htab[htab_idx] = (uint16_t)vidx;
-			break;
-		}
-	}
-}
-#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
-
-#if Dee_HASH_HIDXIO_COUNT >= 3
-LOCAL NONNULL((1)) void DCALL
-dict_htab_insert32(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
-	Dee_hash_t hs, perturb;
-	uint32_t *htab = (uint32_t *)self->d_htab;
-	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
-	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
-		Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
-		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
-			htab[htab_idx] = (uint32_t)vidx;
-			break;
-		}
-	}
-}
-#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
-
-#if Dee_HASH_HIDXIO_COUNT >= 4
-LOCAL NONNULL((1)) void DCALL
-dict_htab_insert64(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
-	Dee_hash_t hs, perturb;
-	uint64_t *htab = (uint64_t *)self->d_htab;
-	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
-	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
-		Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
-		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
-			htab[htab_idx] = (uint64_t)vidx;
-			break;
-		}
-	}
-}
-#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
-
-
 /* Re-build the dict's "d_htab" (allowed to assume that "d_vtab" does not contain deleted keys) */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_htab_rebuild_after_optimize(Dict *__restrict self) {
-	Dee_hash_vidx_t i, vsize = self->d_vsize;
 	struct Dee_dict_item *vtab = _DeeDict_GetVirtVTab(self);
+	union Dee_hash_htab *htab  = self->d_htab;
+	Dee_hash_vidx_t i, vsize = self->d_vsize;
+	Dee_hash_t hmask = self->d_hmask;
+	struct Dee_hash_hidxio_ops const *ops = self->d_hidxops;
 	ASSERT(vsize == self->d_vused);
-	if (Dee_HASH_HIDXIO_IS8(self->d_valloc)) {
-		uint8_t *htab = (uint8_t *)self->d_htab;
-		bzerob(htab, self->d_hmask + 1);
-		for (i = Dee_hash_vidx_tovirt(0);
-		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
-			dict_htab_insert8(self, vtab[i].di_hash, i);
-	} else
-#if Dee_HASH_HIDXIO_COUNT >= 2
-	if (Dee_HASH_HIDXIO_IS16(self->d_valloc)) {
-		uint16_t *htab = (uint16_t *)self->d_htab;
-		bzerow(htab, self->d_hmask + 1);
-		for (i = Dee_hash_vidx_tovirt(0);
-		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
-			dict_htab_insert16(self, vtab[i].di_hash, i);
-	} else
-#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
-#if Dee_HASH_HIDXIO_COUNT >= 3
-	if (Dee_HASH_HIDXIO_IS32(self->d_valloc)) {
-		uint32_t *htab = (uint32_t *)self->d_htab;
-		bzerol(htab, self->d_hmask + 1);
-		for (i = Dee_hash_vidx_tovirt(0);
-		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
-			dict_htab_insert32(self, vtab[i].di_hash, i);
-	} else
-#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
-#if Dee_HASH_HIDXIO_COUNT >= 4
-	if (Dee_HASH_HIDXIO_IS64(self->d_valloc)) {
-		uint64_t *htab = (uint64_t *)self->d_htab;
-		bzeroq(htab, self->d_hmask + 1);
-		for (i = Dee_hash_vidx_tovirt(0);
-		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
-			dict_htab_insert64(self, vtab[i].di_hash, i);
-	} else
-#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
-	{
-		__builtin_unreachable();
+	(*ops->hxio_zro)(htab, hmask + 1);
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, vsize); ++i) {
+		(*ops->hxio_insert)(htab, hmask, vtab[i].di_hash, i);
 	}
 }
 
