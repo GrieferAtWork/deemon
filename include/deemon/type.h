@@ -1574,7 +1574,7 @@ struct Dee_type_callable {
 #endif /* ... */
 };
 
-
+struct Dee_buffer;
 struct Dee_type_buffer {
 	/* Low-level buffer interface. */
 
