@@ -32,12 +32,13 @@
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewUIntptr */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
 #include <deemon/stringutils.h>     /* Dee_unicode_utf8seqlen_safe */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_SetErrno, O_APPEND, O_BINARY, O_CLOEXEC, O_CREAT, O_DIRECT, O_EXCL, O_NOATIME, O_NOFOLLOW, O_NONBLOCK, O_OBTAIN_DIR, O_SYNC, O_TRUNC, _IOFBF, _IOLBF, _IONBF, __acrt_iob_func, __iob_func, bzero, close, dup, fclose, fdatasync, ferror, fflush, fftruncate64, fgetc, fileno, fisatty, fopen64, fputc, fseek, fseeko, fseeko64, fsync, ftello, ftello64, ftruncate, ftruncate64, isatty, lseek, lseek64, memcpyc, mempcpyc, open, open64, pread, pread64, pwrite, pwrite64, read, setvbuf, sync, truncate, truncate64, ungetc, wopen, wopen64, write */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>            /* Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

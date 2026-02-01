@@ -36,11 +36,12 @@
 #include <deemon/int.h>             /* DeeInt_*, Dee_Atou16, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
 #include <deemon/none.h>            /* DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/notify.h>          /* Dee_GetEnv */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_EmptyString, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* memcpy, select */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_SleepNoInt */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 

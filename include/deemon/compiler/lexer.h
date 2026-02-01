@@ -28,9 +28,10 @@
 #endif /* DEE_SOURCE */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../object.h"          /* Dee_operator_t */
+#include "../object.h"          /* Dee_Decref */
 #include "../string.h"          /* Dee_unicode_printer_fini */
 #include "../system-features.h" /* bzero, memcpy */
+#include "../type.h"            /* Dee_operator_t */
 #include "../types.h"           /* DREF, DeeObject, ITER_DONE */
 #include "ast.h"
 #include "symbol.h"

@@ -29,6 +29,7 @@
 
 #include "api.h"
 
+#include "type.h"  /* Dee_Visitv, Dee_XVisitv */
 #include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_ssize_t */
 
 #include <stdarg.h>  /* va_list */
@@ -37,7 +38,7 @@
 
 #ifndef __INTELLISENSE__
 #include "alloc.h"  /* _Dee_MallococBufsize, _Dee_MallococBufsizeSafe */
-#include "object.h"
+#include "object.h" /* Dee_Decrefv, Dee_Incref, Dee_XDecrefv */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

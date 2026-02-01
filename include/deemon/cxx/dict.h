@@ -25,7 +25,7 @@
 
 #include "../dict.h"   /* DeeDict_* */
 #include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
-#include "../object.h"
+#include "../object.h" /* DeeObject_* */
 #include "../types.h"  /* DREF, DeeObject, Dee_ssize_t, _Dee_HashSelectC */
 #include "mapping.h"
 #include "object.h"

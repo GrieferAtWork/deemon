@@ -31,9 +31,10 @@
 #include <deemon/dex.h>       /* DEX_BEGIN, DEX_MEMBER_F, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>     /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/int.h>       /* DeeInt_* */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, Dee_BUFFER_FREADONLY */
 #include <deemon/objmethod.h> /*  */
 #include <deemon/string.h>    /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
+#include <deemon/type.h>      /* METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

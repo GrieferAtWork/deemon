@@ -30,10 +30,11 @@
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_ERR, Dee_BOUND_FROMPRESENT_BOUND, Dee_Decref, Dee_Incref, Dee_foreach_pair_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type */
 #include <deemon/set.h>                /* DeeSet_NewEmpty, DeeSet_Type, Dee_EmptySet */
 #include <deemon/super.h>              /* DeeSuper_New */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

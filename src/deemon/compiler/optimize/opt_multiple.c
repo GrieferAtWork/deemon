@@ -33,7 +33,7 @@
 #include <deemon/list.h>              /* DeeListObject, DeeList_* */
 #include <deemon/map.h>               /* DeeMapping_NewEmpty */
 #include <deemon/none.h>              /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_SetItem, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref */
 #include <deemon/rodict.h>            /* Dee_rodict_builder* */
 #include <deemon/seq.h>               /* DeeSeq_* */
 #include <deemon/set.h>               /* DeeSet_NewEmpty, DeeSet_Type */

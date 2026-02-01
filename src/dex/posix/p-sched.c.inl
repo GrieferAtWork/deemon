@@ -32,11 +32,12 @@
 #include <deemon/error.h>           /* DeeError_SystemError */
 #include <deemon/int.h>             /* DeeInt_NewInt */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* Dee_wchar_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, _Exit, execv, getpid, system, vfork, waitpid, wexecv, wsystem */
 #include <deemon/system.h>          /* DeeUnixSystem_ThrowErrorf */
+#include <deemon/type.h>            /* METHOD_FNORMAL, METHOD_FPURECALL */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */

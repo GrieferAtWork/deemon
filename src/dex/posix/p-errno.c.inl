@@ -31,10 +31,11 @@
 #include <deemon/dex.h>             /* DEX, DEXSYM_READONLY, DEX_MEMBER_F, Dee_dex_symbol */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsInt */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString_New, DeeString_NewUtf8, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, isdigit, isupper, strerror, strerrordesc_np, strerrorname_np, strlen, sys_errlist, sys_nerr */
+#include <deemon/type.h>            /* METHOD_FNORMAL, METHOD_FPURECALL */
 
 #include <stddef.h> /* NULL, size_t */
 

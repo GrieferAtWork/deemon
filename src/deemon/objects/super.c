@@ -26,10 +26,11 @@
 #include <deemon/arg.h>    /* DeeArg_Unpack1, DeeArg_UnpackStruct1Or2 */
 #include <deemon/mro.h>    /* DeeObject_FindAttr, DeeObject_IterAttr, DeeObject_TFindAttrInfoStringLenHash, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attrspec */
 #include <deemon/none.h>   /* DeeNone_NewRef, DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h> /* ASSERT_OBJECT, DREF, DeeBuffer, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/serial.h> /* DeeSerial, DeeSerial_PutObject, Dee_seraddr_t */
 #include <deemon/string.h> /* DeeString_STR */
 #include <deemon/super.h>  /* DeeObject_T*, DeeSuper* */
+#include <deemon/type.h>   /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, TF_NONE, TP_F*, TYPE_METHOD, TYPE_METHOD_END, type_* */
 
 #include "../runtime/method-hint-super.h"
 #include "../runtime/runtime_error.h"

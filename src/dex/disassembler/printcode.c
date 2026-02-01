@@ -31,9 +31,10 @@
 #include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeFunction_Check, Dee_CODE_F*, Dee_DDI_*, Dee_EXCEPTION_HANDLER_F*, Dee_ddi_*, Dee_except_handler, code_addr_t, instruction_t */
 #include <deemon/format.h>          /* DeeFormat_*, PRF* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t */
 #include <deemon/string.h>          /* DeeAscii_ItoaUpperDigit, DeeStringObject, Dee_EmptyString */
 #include <deemon/system-features.h> /* bzero, memcpy, memmoveupc, memset, strlen */
+#include <deemon/type.h>            /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, TP_F* */
 
 #include <hybrid/byteswap.h>        /* UNALIGNED_GETLE* */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

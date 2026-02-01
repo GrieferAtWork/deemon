@@ -32,11 +32,12 @@
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>             /* PCKuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcasemem, memmem */
 #include <deemon/tuple.h>              /* DeeTuple_Newf */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 

@@ -206,11 +206,12 @@
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS */
 #include <deemon/mapfile.h>         /* DeeMapFile* */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_int128_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FREPLAC, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, WSTR_LENGTH */
 #include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, bcmp, bzero, memcpy, mempcpyc, sendfile, strchr, strlen, utimbuf, utimbuf32, utimbuf64 */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>            /* DeeObject_Init */
 #include <deemon/util/atomic.h>     /* atomic_and, atomic_read */
 #include <deemon/util/once.h>       /* Dee_ONCE */
 

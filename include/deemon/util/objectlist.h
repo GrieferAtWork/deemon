@@ -27,7 +27,7 @@
 #include "../api.h"
 
 #include "../alloc.h"  /* Dee_*alloc*, Dee_Free */
-#include "../object.h"
+#include "../object.h" /* DREF, DeeObject, Dee_Decrefv, Dee_Incref */
 #include "../seq.h"    /* DeeSeq_* */
 #include "../tuple.h"  /* DeeTuple_NewVectorSymbolic */
 

@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_PrintFormatString, Dee_Decref */
 #include <deemon/string.h>          /* DeeUniTrait_AsDigit, DeeUni_AsDigit, DeeUni_Descriptor, Dee_UNICODE_ISLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_unitraits */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
 #include <deemon/system-features.h> /* memchr */

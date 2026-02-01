@@ -23,7 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/file.h>   /* DeeFileObject, DeeFileTypeObject, Dee_ioflag_t, FILE_OPERATOR_COUNT */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DeeTypeObject, Dee_off_t, Dee_pos_t */
+#include <deemon/type.h>   /* Dee_opinfo, type_operator */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

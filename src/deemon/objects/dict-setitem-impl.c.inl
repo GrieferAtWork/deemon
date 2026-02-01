@@ -35,7 +35,7 @@
 
 #include <deemon/dict.h>            /* DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/int.h>             /* DeeInt_NewSize */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_hash_t, ITER_DONE */
 #include <deemon/string.h>          /* DeeString_NewSizedWithHash, DeeString_NewWithHash */
 #include <deemon/system-features.h> /* memmovedownc, memmoveupc */
 #include <deemon/util/hash-io.h>    /* Dee_HASH_HTAB_EOF, Dee_hash_* */

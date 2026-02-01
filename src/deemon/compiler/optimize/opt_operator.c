@@ -31,13 +31,14 @@
 #include <deemon/hashset.h>           /* DeeHashSet_Type */
 #include <deemon/list.h>              /* DeeList_Type */
 #include <deemon/module.h>            /* DeeModule_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_REQUIRES_OBJECT, Dee_TYPE, ITER_DONE */
 #include <deemon/objmethod.h>         /* DeeClsProperty_Check, DeeClsProperty_GET, DeeKwObjMethod_Check, DeeObjMethod* */
 #include <deemon/string.h>            /* DeeString*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h>   /* memmovedownp */
 #include <deemon/thread.h>            /* DeeThread_Type */
 #include <deemon/traceback.h>         /* DeeTraceback_Type */
 #include <deemon/tuple.h>             /* DeeTuple* */
+#include <deemon/type.h>              /* DeeObject_InvokeOperator, DeeObject_IsShared, DeeTypeType_GetOperatorById, Dee_getmethod_t, Dee_objmethod_t, Dee_opinfo, OPERATOR_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

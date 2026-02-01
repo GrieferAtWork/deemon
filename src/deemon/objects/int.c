@@ -42,13 +42,14 @@
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_ATOI_STRING_FSIGNED, Dee_DIGIT_*, Dee_INT_PRINT*, Dee_INT_STRING*, INT_NEG_OVERFLOW, INT_POS_OVERFLOW, INT_SIGNED, INT_UNSIGNED, _Dee_int_1digit_object */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_COMPARE_*, Dee_Compare*, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD_INIT, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_int_t, DeeType_RequireSupportedNativeOperator */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeAscii_ItoaDigits, DeeString*, DeeUni_*, Dee_ASCII_PRINTER_*, Dee_UNICODE_*, Dee_ascii_printer*, Dee_unicode_printer*, Dee_unitraits, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_LIMITS_H, CONFIG_HAVE_MATH_H, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, mempcpyc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_DATA, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/__byteswap.h> /* __hybrid_bswap* */
 #include <hybrid/align.h>      /* CEILDIV */

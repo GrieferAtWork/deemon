@@ -25,7 +25,7 @@
 
 #include "api.h"
 
-#include "object.h"
+#include "object.h" /* DREF, DeeObject */
 
 #include <stdbool.h> /* bool */
 #include <stdint.h>  /* uint16_t */

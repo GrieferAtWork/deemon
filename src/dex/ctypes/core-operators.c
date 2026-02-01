@@ -33,9 +33,10 @@
 #include <deemon/float.h>     /* DeeFloat_New */
 #include <deemon/int.h>       /* DeeInt_*, Dee_INT_SIGNED, Dee_INT_UNSIGNED */
 #include <deemon/none.h>      /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_New, DeeTypeObject, Dee_Decref_likely, ITER_DONE, return_reference_ */
 #include <deemon/string.h>    /* DeeString_Type */
 #include <deemon/tuple.h>     /* DeeTuple* */
+#include <deemon/type.h>      /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_GetName, Dee_OPERATOR_INVOKE_INIT, Dee_operator_invoke, Dee_operator_t, Dee_opinfo, OPCC_SPECIAL, OPCLASS_TYPE, TYPE_OPERATOR_DECL, type_operator */
 
 #include <hybrid/limitcore.h> /* __*_MAX__, __INT32_MIN__, __INT64_MIN__ */
 

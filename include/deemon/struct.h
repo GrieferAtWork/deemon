@@ -26,7 +26,8 @@
 
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
 
-#include "object.h"
+#include "object.h" /* Dee_visit_t */
+#include "type.h"   /* Dee_type_cmp, type_member */
 #include "types.h"  /* DeeObject, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stddef.h> /* size_t */

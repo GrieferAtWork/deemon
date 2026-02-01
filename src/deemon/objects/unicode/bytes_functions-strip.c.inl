@@ -49,7 +49,7 @@
 
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_SIZE, Dee_bytes_printer, Dee_bytes_printer_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, return_reference_ */
 #include <deemon/string.h>          /* DeeUni_IsSpace, DeeUni_IsSpaceNoLf */
 #include <deemon/system-features.h> /* memchr */
 

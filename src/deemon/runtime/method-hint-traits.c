@@ -27,7 +27,8 @@
 #include <deemon/int.h>          /* DeeInt_Check, DeeInt_IsZero */
 #include <deemon/method-hints.h> /* DeeMH_map_enumerate_range_t, DeeMH_map_enumerate_t, DeeMH_map_operator_getitem_t, DeeMH_seq_enumerate_index_t, DeeMH_seq_enumerate_t, DeeType_GetPrivateMethodHint, DeeType_RequireMethodHint, DeeType_TRAIT___map_getitem_always_bound__, DeeType_TRAIT___seq_getitem_always_bound__, Dee_type_trait_t */
 #include <deemon/mro.h>          /* DeeType_FindAttrInfoStringLenHash, Dee_ATTRINFO_ATTR, Dee_ATTRINFO_MEMBER, Dee_attrinfo */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* DeeObject, DeeTypeObject, Dee_Decref_unlikely, Dee_Incref, Dee_XIncref, Dee_hash_t, _Dee_HashSelectC */
+#include <deemon/type.h>         /* Dee_TYPE_MEMBER_ISCONST */
 #include <deemon/util/atomic.h>  /* atomic_or, atomic_read */
 
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */

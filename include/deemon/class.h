@@ -37,8 +37,9 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
-#include "object.h"
+#include "object.h"    /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t */
 #include "serial.h"    /* Dee_seraddr_t */
+#include "type.h"      /* DeeType_*, Dee_OPERATOR_USERCOUNT, Dee_TP_FGC, Dee_TP_FHEAP, Dee_TP_FVARIABLE, Dee_operator_t, type_gc */
 #include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h" /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 

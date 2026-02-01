@@ -25,7 +25,7 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref */
 #include <deemon/tuple.h>              /* DeeTuple* */
 
 #include <stddef.h> /* size_t */

@@ -39,13 +39,15 @@
 #include <deemon/map.h>             /* DeeMapping_Type */
 #include <deemon/method-hints.h>    /* DeeMH_map_setdefault_t, DeeType_RequireMethodHint */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DeeObject_Type, DeeTypeObject */
 #include <deemon/rodict.h>          /* DeeRoDictObject, DeeRoDict_Type */
 #include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/seq.h>             /* DeeSeq_* */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, strcmp */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_Type */
+#include <deemon/type.h>            /* Dee_operator_t, OPERATOR_* */
+#include <deemon/util/weakref.h>    /* Dee_weakref_bound, Dee_weakref_lock */
 #include <deemon/weakref.h>         /* DeeWeakRefObject, DeeWeakRef_Type */
 
 #include <stddef.h> /* NULL, offsetof, ptrdiff_t, size_t */

@@ -35,9 +35,10 @@
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeSeq_Unpack */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, WSTR_LENGTH */
+#include <deemon/type.h>               /* DeeType_Type, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/kwlist.h"
 #include "../../runtime/strings.h"

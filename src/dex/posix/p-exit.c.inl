@@ -31,10 +31,11 @@
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/exec.h>            /* Dee_AtExit, Dee_Exit */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* EXIT_FAILURE */
 #include <deemon/tuple.h>           /* DeeTuple_Type, Dee_EmptyTuple */
+#include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t */

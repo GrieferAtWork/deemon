@@ -29,9 +29,10 @@
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>           /* DeeError_Throwf */
 #include <deemon/int.h>             /* DeeInt_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_* */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_signal, signal */
+#include <deemon/type.h>            /* METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST */
 
 #include <hybrid/byteswap.h>        /* BETOH*, HTOBE* */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

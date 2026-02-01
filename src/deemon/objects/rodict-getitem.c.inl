@@ -164,7 +164,7 @@
 #include <deemon/dict.h>         /* Dee_dict_item */
 #include <deemon/error-rt.h>     /* DeeRT_Err* */
 #include <deemon/int.h>          /* DeeInt_Size_TryCompareEq */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_BOUND_*, Dee_COMPARE_ISERR, Dee_COMPARE_ISNE_OR_ERR, Dee_hash_t, ITER_DONE, return_reference_ */
 #include <deemon/rodict.h>       /* _DeeRoDict_* */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 

@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/error.h>       /* DeeError_Throwf, DeeError_ValueError */
-#include <deemon/object.h>
+#include <deemon/object.h>      /* DREF, DeeObject, DeeObject_*, Dee_Decref, Dee_formatprinter_t, Dee_ssize_t */
 #include <deemon/string.h>      /* DeeUni_*, Dee_UNICODE_IS*, Dee_unicode_printer*, Dee_uniflag_t */
 #include <deemon/stringutils.h> /* Dee_unicode_readutf8_n */
 #include <deemon/tuple.h>       /* DeeTupleObject */

@@ -35,7 +35,7 @@
 #include <stddef.h> /* NULL, size_t */
 
 #ifndef __INTELLISENSE__
-#include "object.h"
+#include "object.h" /* DeeObject_ForeachPair, Dee_Incref */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

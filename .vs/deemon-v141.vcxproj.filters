@@ -648,6 +648,9 @@
 		<ClInclude Include="..\include\deemon\tuple.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\type.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\types.h">
 			<Filter>include</Filter>
 		</ClInclude>

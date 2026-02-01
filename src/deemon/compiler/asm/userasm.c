@@ -31,7 +31,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeError_* */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DeeObject_Foreach, DeeObject_Size, Dee_Decref, Dee_Incref, Dee_XDecref */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memmovedownc, memmoveupc, memset, strlen */
 #include <deemon/types.h>              /* DREF, DeeObject, Dee_AsObject, Dee_ssize_t, ITER_DONE */
 #include <deemon/util/hash-io.h>       /* Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */

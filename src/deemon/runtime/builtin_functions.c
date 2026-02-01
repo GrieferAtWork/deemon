@@ -35,10 +35,11 @@
 #include <deemon/int.h>         /* DeeInt_FromCompare, DeeInt_NewHash */
 #include <deemon/module.h>      /* DeeBuiltin_*, DeeModule* */
 #include <deemon/none.h>        /* DeeNone_Check, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>      /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_ISERR, Dee_Incref, Dee_ssize_t, ITER_DONE, ITER_ISOK, return_reference_ */
 #include <deemon/objmethod.h>   /*  */
 #include <deemon/string.h>      /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/thread.h>      /* DeeThreadObject, DeeThread_Self */
+#include <deemon/type.h>        /* DeeType_Check, Dee_operator_t, METHOD_FNORETURN, METHOD_FNORMAL */
 #include <deemon/util/atomic.h> /* atomic_read */
 #include <deemon/util/lock.h>   /* Dee_atomic_rwlock_* */
 

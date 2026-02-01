@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/computed-operators.h>
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, OBJECT_HEAD */
 #include <deemon/tuple.h>              /* DeeTupleObject */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 

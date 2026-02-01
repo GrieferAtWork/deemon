@@ -30,9 +30,10 @@
 #include <deemon/format.h>          /* DeeFormat_PrintArgumentTypesKw, PRF* */
 #include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_object */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_object */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* access */
+#include <deemon/type.h>            /* DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_GetName, DeeType_Type, Dee_operator_t, Dee_opinfo */
 
 #include <hybrid/typecore.h> /* __SIZE_WIDTH__ */
 

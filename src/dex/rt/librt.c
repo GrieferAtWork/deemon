@@ -57,7 +57,7 @@
 #include <deemon/module.h>            /* DeeBuiltin_*, DeeInteractiveModule_Type, DeeModule* */
 #include <deemon/none.h>              /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
 #include <deemon/numeric.h>           /* DeeNumeric_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD, Dee_STATIC_REFCOUNT_INIT, Dee_TYPE, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference, return_reference_ */
 #include <deemon/objmethod.h>         /* DeeCMethod*_*, DeeClsMember_Type, DeeClsMethod_Type, DeeClsProperty_Type, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethod_Type */
 #include <deemon/property.h>          /* DeeProperty_Type */
 #include <deemon/rodict.h>            /* DeeRoDictObject, DeeRoDict_Type, Dee_EmptyRoDict */
@@ -69,6 +69,7 @@
 #include <deemon/thread.h>            /* DeeExec_StackLimit, DeeThread_Type, Dee_EXEC_DEFAULT_STACK_LIMIT */
 #include <deemon/traceback.h>         /* DeeFrameObject, DeeFrame_Type, DeeTraceback_Type, Dee_FRAME_F* */
 #include <deemon/tuple.h>             /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>              /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, METHOD_F*, TF_NONE, TP_FINHERITCTOR, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>       /* atomic_* */
 #include <deemon/util/hash-io.h>      /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 #include <deemon/util/lock.h>         /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_t */

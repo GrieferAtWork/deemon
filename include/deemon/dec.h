@@ -36,7 +36,7 @@
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
 
-#include "object.h"
+#include "object.h" /* Dee_Decref_unlikely, Dee_XDecref_likely */
 #include "serial.h" /* Dee_SERIAL_HEAD, Dee_seraddr_t */
 #include "types.h"  /* DREF, DeeObject */
 

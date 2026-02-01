@@ -32,7 +32,7 @@
 #include <deemon/module.h>          /* DeeModule_Type, Dee_module_object */
 #include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
 #include <deemon/none.h>            /* DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref_unlikely, Dee_XDecrefv, Dee_XMovrefv, Dee_formatprinter_t, Dee_funptr_t, Dee_refcnt_t, Dee_ssize_t, Dee_visit_t */
 #include <deemon/operator-hints.h>  /* usrtype__* */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString* */
@@ -40,9 +40,11 @@
 #include <deemon/system-features.h> /* bzero*, memcpyc, memmoveupc */
 #include <deemon/thread.h>          /* Dee_DeepCopyAddAssoc */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_GC_PRIORITY_INSTANCE, Dee_METHOD_FNORMAL, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_type_operator_isdecl, OPCC_SPECIAL, OPCLASS_CUSTOM, OPERATOR_*, TP_F*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 #include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_* */
+#include <deemon/util/weakref.h>    /* Dee_weakref_fini, Dee_weakref_init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

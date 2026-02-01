@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
-#include "../object.h"
+#include "../object.h" /* DeeObject_* */
 #include "../seq.h"    /* DeeRange_New, DeeRange_NewInt, DeeSeq_*, Dee_EmptySeq */
 #include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"

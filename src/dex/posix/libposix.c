@@ -69,12 +69,13 @@
 #include <deemon/dex.h>             /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_* */
 #include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_XDecref, Dee_hash_t, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/set.h>             /* DeeSet_Type, Dee_EmptySet */
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_*, Dee_string_utf */
 #include <deemon/system-features.h> /* CONFIG_HAVE_errno, DeeSystem_DEFINE_memmem */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES, DeeSystem_HAVE_FS_ICASE */
+#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <stdbool.h> /* true */
 #include <stddef.h>  /* size_t */

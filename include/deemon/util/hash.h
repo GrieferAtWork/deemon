@@ -28,10 +28,39 @@
 #include "../types.h" /* Dee_hash_t */
 
 #ifndef __INTELLISENSE__
-#include "../system-features.h" /* strlen */
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#elif (!defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__NO_has_include) || __has_include(<string.h>)))
+#define CONFIG_HAVE_STRING_H
+#endif
+
+#ifdef CONFIG_NO_strlen
+#undef CONFIG_HAVE_strlen
+#else /* CONFIG_NO_strlen */
+#define CONFIG_HAVE_strlen
+#endif /* !CONFIG_NO_strlen */
+
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h> /* strlen */
+#endif /* CONFIG_HAVE_STRING_H */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
+
+#ifndef __INTELLISENSE__
+#ifndef CONFIG_HAVE_strlen
+#define CONFIG_HAVE_strlen
+#undef strlen
+#define strlen dee_strlen /*!export-*/
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
+	size_t result;
+	for (result = 0; str[result]; ++result)
+		;
+	return result;
+}
+#endif /* !CONFIG_HAVE_strlen */
+#endif /* !__INTELLISENSE__ */
 
 /* Hashing helpers. */
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashPtr)(void const *__restrict ptr, size_t n_bytes);

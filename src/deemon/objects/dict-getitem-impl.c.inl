@@ -41,7 +41,7 @@
 
 #include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/error-rt.h>     /* DeeRT_Err* */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_BOUND_*, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref_unlikely, Dee_Incref, Dee_hash_t, ITER_DONE */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 
 #include <stddef.h> /* NULL, size_t */

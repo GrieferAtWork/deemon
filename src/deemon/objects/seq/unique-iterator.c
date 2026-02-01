@@ -28,13 +28,14 @@
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/map.h>                 /* DeeMapping_Type */
 #include <deemon/method-hints.h>        /* DeeObject_InvokeMethodHint */
-#include <deemon/object.h>
+#include <deemon/object.h>              /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>      /* DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>                 /* DeeIterator_Type */
 #include <deemon/serial.h>              /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                 /* DeeSet_Type */
 #include <deemon/super.h>               /* DeeSuper_New */
 #include <deemon/thread.h>              /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>                /* DeeObject_Init, DeeType_Type, Dee_Visit, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset_with_lock_* */
 
 #include "../../runtime/runtime_error.h"

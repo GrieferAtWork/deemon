@@ -25,7 +25,8 @@
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #include <deemon/dex.h>       /* DeeDexObject, DeeDex_Check, Dee_dex, Dee_dex_symbol */
 #include <deemon/module.h>    /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_FDIDLOAD, Dee_MODULE_HASHNX, Dee_module_symbol */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Check, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_DecrefIfNotOne, Dee_Incref, Dee_XClear, Dee_XIncref, Dee_hash_t, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/type.h>      /* DeeObject_Init, DeeType_Type, TF_NONE, TP_FGC, TP_FNORMAL */
 #include <deemon/util/hash.h> /* Dee_HashStr */
 
 #ifndef CONFIG_NO_DEX

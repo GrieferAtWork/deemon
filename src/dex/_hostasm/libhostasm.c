@@ -31,9 +31,10 @@
 #include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>     /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/none.h>      /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_AssertTypeExact */
 #include <deemon/objmethod.h> /*  */
 #include <deemon/tuple.h>     /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>      /* METHOD_FNORMAL */
 
 #include <stddef.h> /* NULL, size_t */
 

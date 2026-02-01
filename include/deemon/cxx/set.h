@@ -23,7 +23,7 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../object.h"
+#include "../object.h" /* DeeObject_* */
 #include "../set.h"    /* DeeSet_Type, Dee_EmptySet */
 #include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"

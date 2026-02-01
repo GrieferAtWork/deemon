@@ -32,10 +32,11 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>           /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>             /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>           /* DREF, DeeObject_Type, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XClear, Dee_XDecref_unlikely, Dee_hash_t, ITER_ISOK */
 #include <deemon/string.h>           /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer* */
 #include <deemon/system-features.h>  /* DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strlen */
 #include <deemon/tuple.h>            /* Dee_EmptyTuple */
+#include <deemon/type.h>             /* DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FFINAL, TP_FINHERITCTOR */
 
 #include "../../runtime/strings.h"
 

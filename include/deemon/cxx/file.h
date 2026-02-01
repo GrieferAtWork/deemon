@@ -25,7 +25,7 @@
 
 #include "../file.h"   /* DeeFile_*, Dee_STD*, Dee_fd_INVALID, Dee_fd_t, Dee_ioflag_t, GETC_ERR */
 #include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
-#include "../object.h"
+#include "../object.h" /* DeeObject_* */
 #include "../types.h"  /* DREF, DeeObject, Dee_off_t, Dee_pos_t, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"

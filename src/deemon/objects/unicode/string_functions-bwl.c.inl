@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* Dee_COMPARE_*, Dee_Compare, Dee_CompareNe */
 #include <deemon/string.h>          /* DeeUni_*, Dee_UNICODE_FOLDED_MAX, Dee_UNICODE_ISDIGIT, Dee_unitraits */
 #include <deemon/stringutils.h>     /* DeeUni_FoldedLength */
 #include <deemon/system-features.h> /* bcmpb, bcmpl, bcmpq, bcmpw, memcasecmp, memcasemem, memcasermem, memcmpb, memcmpl, memcmpq, memcmpw, memcpy*, memmeml, memmemq, memmemw, mempcpy*, mempsetb, mempsetl, mempsetq, mempsetw, memrmeml, memrmemq, memrmemw, memsetb, memsetl, memsetq, memsetw, tolower */

@@ -31,9 +31,10 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>               /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_Bool, DeeTypeObject, Dee_AsObject, Dee_Incref, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeStringObject, Dee_EmptyString */
 #include <deemon/thread.h>             /* DeeThread_Self */
+#include <deemon/type.h>               /* DeeType_Type, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/kwlist.h"
 

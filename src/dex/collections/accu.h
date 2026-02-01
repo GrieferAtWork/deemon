@@ -26,7 +26,7 @@
 #include <deemon/api.h>
 
 #include <deemon/accu.h>        /* Dee_accu */
-#include <deemon/object.h>
+#include <deemon/object.h>      /* DeeTypeObject, Dee_OBJECT_HEAD */
 #include <deemon/util/nrlock.h> /* Dee_nrshared_lock_t */
 
 DECL_BEGIN

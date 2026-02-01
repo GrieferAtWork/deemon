@@ -32,9 +32,10 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_Check */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeType_Extends, Dee_AsObject, Dee_TYPE */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* memcpy */
+#include <deemon/type.h>            /* DeeObject_Init, METHOD_FNORMAL */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/futex.h>      /* DeeFutex_* */
 

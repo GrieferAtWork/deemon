@@ -32,10 +32,11 @@
 #include <deemon/error.h>           /* DeeError_FSError */
 #include <deemon/file.h>            /* DeeSystemFile_Type */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_CallAttrString, Dee_AsObject */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, fdatasync, fsync, sync */
 #include <deemon/system.h>          /* DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
+#include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

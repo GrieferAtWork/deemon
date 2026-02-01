@@ -52,14 +52,16 @@
 
 #include "api.h"
 
-/*!fixincludes fake_include "object.h"          //  */
-/*!fixincludes fake_include "system-features.h" // _alloca, _msize, malloc, malloc_usable_size */
+#include "types.h" /* Dee_AsObject, Dee_funptr_t */
 
 #ifdef __CC__
 #include <hybrid/__debug-alignment.h> /* __NO_hybrid_dbg_alignment, __hybrid_dbg_alignment_disable, __hybrid_dbg_alignment_enable */
 #include <hybrid/__overflow.h>        /* __hybrid_overflow_uadd, __hybrid_overflow_umul */
 #include <hybrid/host.h>              /* __linux__, __pic__, __unix__ */
 #include <hybrid/typecore.h>          /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
+
+/*!fixincludes fake_include "system-features.h" // _alloca, _msize, malloc, malloc_usable_size */
+/*!fixincludes fake_include "type.h"            // Dee_TYPE_CONSTRUCTOR_INIT_* */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
@@ -1194,16 +1196,16 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #endif /* CONFIG_BUILDING_DEEMON && !__pic__ */
 
 
-#ifdef GUARD_DEEMON_OBJECT_H
+#ifdef GUARD_DEEMON_TYPE_H
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("object.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("object.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("object.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("object.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("object.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED   /*!export(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("type.h"))*/
 #else /* CONFIG_NO_OBJECT_SLABS */
 #define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
 	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                   \
@@ -1227,14 +1229,13 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
  * dedicated allocator functions when doing so would require the creation
  * of relocations that might cause loading times to become larger. */
 #ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("object.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("type.h"))*/
 #else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED      /*!export(include("object.h"))*/
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   /*!export(include("object.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED      /*!export(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   /*!export(include("type.h"))*/
 #endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-
-#endif /* GUARD_DEEMON_OBJECT_H */
+#endif /* GUARD_DEEMON_TYPE_H */
 
 /* Define the deemon api's alloca() function (if it can be implemented) */
 #if !defined(Dee_Alloca) && defined(CONFIG_HAVE_alloca)

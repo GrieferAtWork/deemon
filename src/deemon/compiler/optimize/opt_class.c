@@ -28,9 +28,10 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF */
 #include <deemon/string.h>            /* DeeString_STR */
 #include <deemon/system-features.h>   /* memcpy*, memset */
+#include <deemon/type.h>              /* Dee_operator_t, OPERATOR_REPR, OPERATOR_STR */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

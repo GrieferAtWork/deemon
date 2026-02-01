@@ -27,7 +27,7 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include "object.h"
+#include "object.h" /* Dee_Decref_unlikely */
 #include "serial.h" /* Dee_SERIAL_HEAD */
 #include "types.h"  /* DREF, DeeObject */
 

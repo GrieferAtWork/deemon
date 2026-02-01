@@ -26,7 +26,7 @@
 #include <deemon/bytes.h>           /* DeeBytes* */
 #include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_item */
 #include <deemon/int.h>             /* DeeInt_Check, DeeInt_TryAsSize */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_Int, Dee_COMPARE_ERR, Dee_Decref, Dee_hash_t, return_reference_ */
 #include <deemon/rodict.h>          /* DeeRoDictObject */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcmp, memmovedown, strlen */

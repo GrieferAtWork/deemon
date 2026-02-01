@@ -32,14 +32,16 @@
 #include <deemon/error.h>           /* DeeError_SyntaxError, DeeError_Throwf */
 #include <deemon/format.h>          /* DeeFormat_PRINT */
 #include <deemon/int.h>             /* DeeInt_NewSize, DeeInt_NewUInt64 */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_WEAKREF_SUPPORT_ADDR, Dee_formatprinter_t, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/string.h>          /* DeeString*, Dee_string_fini_hook, Dee_string_fini_hook_decref, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_skipspaceutf8 */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, memcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_AddInterruptHook, DeeThread_DisableInterruptHooks, DeeThread_EnableInterruptHooks, DeeThread_RemoveInterruptHook, DeeThread_Self, DeeThread_WasInterrupted, Dee_thread_interrupt_hook, Dee_thread_interrupt_hook_decref */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
+#include <deemon/type.h>            /* DeeObject_IsShared, DeeType_Type, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init, Dee_shared_lock_* */
+#include <deemon/util/weakref.h>    /* Dee_weakref_fini, Dee_weakref_init */
 
 #include <hybrid/sequence/list.h> /* TAILQ_* */
 #include <hybrid/typecore.h>      /* __UINTPTR_TYPE__ */

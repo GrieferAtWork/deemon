@@ -35,10 +35,11 @@
 #include <deemon/format.h>         /* PRF* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/module.h>         /* DeeModule* */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t */
 #include <deemon/operator-hints.h> /* DeeNO_shl_t, DeeType_RequireNativeOperator */
 #include <deemon/string.h>         /* DeeString* */
 #include <deemon/super.h>          /* DeeObject_TAsDouble */
+#include <deemon/type.h>           /* DeeType_IsClass, DeeType_Type */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

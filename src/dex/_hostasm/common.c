@@ -33,7 +33,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* PRF* */
 #include <deemon/module.h>          /* Dee_module_object */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_Decref*, Dee_XDecref, Dee_hash_t */
 #include <deemon/system-features.h> /* bzero, memcmp, memcpy*, memmovedownc, memmoveupc, memset */
 
 #include <hybrid/align.h>         /* CEILDIV */

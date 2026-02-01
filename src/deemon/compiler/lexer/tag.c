@@ -28,9 +28,10 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF */
 #include <deemon/string.h>          /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* bcmpc, bzero, memcpy, memmoveupc */
+#include <deemon/type.h>            /* DeeObject_IsShared, OPERATOR_CALL, TP_F* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

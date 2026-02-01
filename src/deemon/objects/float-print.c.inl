@@ -32,7 +32,7 @@
 
 #include <deemon/float.h>           /* DeeFloat_LPrint, Dee_FLOAT_PRINT_F* */
 #include <deemon/format.h>          /* DeeFormat_Repeat */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* Dee_formatprinter_t, Dee_ssize_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, isinf, isnan */
 
 #include <stdbool.h> /* bool, false, true */

@@ -29,13 +29,14 @@
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE, DeeObject_IsKw */
 #include <deemon/list.h>           /* DeeList_* */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeBuffer, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Increfv, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_Inherit*, DeeType_InvokeCastPrint, DeeType_InvokeCastPrintRepr, DeeType_InvokeCastRepr, DeeType_InvokeCastStr, DeeType_InvokeCmpHash */
 #include <deemon/seq.h>            /* DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>         /* DeeString_PrintAscii, DeeString_Type */
 #include <deemon/super.h>          /* DeeObject_TClear, DeeObject_TDeepCopy */
 #include <deemon/thread.h>         /* DeeThreadObject, DeeThread_Self, Dee_DeepCopyAddAssoc, Dee_repr_frame, Dee_trepr_frame, deepcopy_begin, deepcopy_clear, deepcopy_end, deepcopy_lookup */
 #include <deemon/tuple.h>          /* DeeTuple* */
+#include <deemon/type.h>           /* DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, Dee_GC_PRIORITY_LATE, OPERATOR_*, TF_TPVISIT */
 #include <deemon/util/hash.h>      /* DeeObject_HashGeneric, Dee_HASHOF_RECURSIVE_ITEM */
 #ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
 #include <deemon/deepcopy.h> /* DeeDeepCopyContext, DeeDeepCopy_* */

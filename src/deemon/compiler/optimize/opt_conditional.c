@@ -27,8 +27,9 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/none.h>              /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF, DeeObject, Dee_Decref */
 #include <deemon/tuple.h>             /* DeeTuple_Pack */
+#include <deemon/type.h>              /* OPERATOR_GETITEM */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

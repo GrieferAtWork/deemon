@@ -36,7 +36,7 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/module.h>             /* DeeModule_GetShortName */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8 */
 #include <deemon/system-error.h>       /* DeeSystemError_Pop, DeeSystemError_Push */
@@ -45,6 +45,7 @@
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_DEEPASSOC_HASHIT, Dee_DEEPASSOC_HASHNX, Dee_DEEPASSOC_HASHST, Dee_THREAD_STATE_DETACHING, Dee_THREAD_STATE_HASTHREAD, Dee_THREAD_STATE_HASTID, Dee_THREAD_STATE_INITIAL, Dee_THREAD_STATE_INTERRUPTED, Dee_THREAD_STATE_INTERRUPTING, Dee_THREAD_STATE_SHUTDOWNINTR, Dee_THREAD_STATE_STARTED, Dee_THREAD_STATE_STARTING, Dee_THREAD_STATE_SUSPENDED, Dee_THREAD_STATE_SUSPENDING, Dee_THREAD_STATE_TERMINATED, Dee_THREAD_STATE_TERMINATING, Dee_THREAD_STATE_UNMANAGED, Dee_THREAD_STATE_WAITING, Dee_deep_assoc_entry, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_object, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
 #include <deemon/traceback.h>          /* DeeTraceback*, Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple, Dee_tuple_object */
+#include <deemon/type.h>               /* DeeObject_GenericCmpByAddr, DeeObject_Init, DeeType_Type, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */

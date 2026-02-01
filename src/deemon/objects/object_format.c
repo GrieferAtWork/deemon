@@ -25,9 +25,10 @@
 #include <deemon/error-rt.h> /* DeeRT_ErrIntegerOverflowUAdd, DeeRT_ErrIntegerOverflowUMul */
 #include <deemon/error.h>    /* DeeError_* */
 #include <deemon/format.h>   /* DeeFormat_RepeatUtf8 */
-#include <deemon/object.h>
+#include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE */
 #include <deemon/string.h>   /* DeeString*, DeeUni_AsDigit, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/super.h>    /* DeeSuper* */
+#include <deemon/type.h>     /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
 

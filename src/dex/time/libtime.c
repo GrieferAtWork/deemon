@@ -38,13 +38,14 @@
 #include <deemon/kwds.h>            /* DeeKwArgs* */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/numeric.h>         /* DeeNumeric_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/serial.h>          /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeUni_ToLower, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, strlen, time, time64, timezone, tzset */
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>          /* DeeThread_GetTimeMicroSeconds */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_write */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 

@@ -29,10 +29,11 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_Decref, Dee_HAS_NO, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>     /* DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, METHOD_FNOREFESCAPE, OPERATOR_GETITEM, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/runtime_error.h"
 #include "default-reversed.h"

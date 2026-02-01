@@ -25,10 +25,11 @@
 #include <deemon/error-rt.h>       /* DeeRT_Err* */
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_*, INT_SIGNED, INT_UNSIGNED */
 #include <deemon/none.h>           /* DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
 #include <deemon/operator-hints.h> /* DeeNO_int_t, _DeeType_RequireNativeOperator */
 #include <deemon/super.h>          /* DeeObject_T* */
 #include <deemon/tuple.h>          /* DeeTuple* */
+#include <deemon/type.h>           /* DeeType_IsIntTruncated, INT_ERROR */
 #include <deemon/util/hash.h>      /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
 #include <deemon/util/lock.h>      /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 

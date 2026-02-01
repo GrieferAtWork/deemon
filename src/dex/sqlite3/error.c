@@ -31,12 +31,13 @@
 #include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeStringObject, DeeString_TryNewUtf8, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_memcasemem, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_TranslateErrno, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, STRUCT_*, TF_NONE, TP_FINHERITCTOR, TP_FNORMAL, TYPE_MEMBER*, type_member */
 
 #include "sqlite3-external.h"
 

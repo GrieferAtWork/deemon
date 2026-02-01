@@ -47,7 +47,8 @@
 #include <deemon/class.h>    /* DeeClass_*, Dee_class_attribute, class_attribute_mayaccess */
 #include <deemon/error-rt.h> /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
 #include <deemon/mro.h>      /* DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_Locate*Attr*, DeeType_QueryIInstanceAttributeStringHash, DeeType_QueryIInstanceAttributeStringLenHash, DeeType_Set*Attr*, DeeType_VCallCachedInstanceAttrStringHashf, Dee_attrdesc, Dee_attrspec, _DeeRT_MaybeErrRestricted* */
-#include <deemon/object.h>
+#include <deemon/object.h>   /* Dee_BOUND_* */
+#include <deemon/type.h>     /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass */
 #include <deemon/types.h>    /* DREF, DeeObject, DeeTypeObject, Dee_hash_t, ITER_DONE */
 /**/
 

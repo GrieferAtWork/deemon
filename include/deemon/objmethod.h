@@ -35,6 +35,7 @@
 
 #include "api.h"
 
+#include "type.h"  /* Dee_*method_t, Dee_REQUIRES_*, Dee_type_*, type_member */
 #include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT */
 
 #include <stdarg.h>  /* va_list */
@@ -43,7 +44,7 @@
 #include <stdint.h>  /* uintptr_t */
 
 #ifndef __INTELLISENSE__
-#include "object.h"
+#include "object.h" /* Dee_XDecref */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

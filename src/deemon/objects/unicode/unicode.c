@@ -26,10 +26,11 @@
 #include <deemon/bytes.h>           /* Dee_bytes_* */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_*, PRFX32, PRFuSIZ */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD_INIT, Dee_formatprinter_t, Dee_ssize_t, _Dee_HashSelectC, return_reference_ */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUniTrait_AsDigit, DeeUni_*, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_unitraits, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH, _Dee_string_utf_utf16_t */
 #include <deemon/stringutils.h>     /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_skiputf8, Dee_unicode_skiputf8_c */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetl, DeeSystem_DEFINE_memsetw, bzero, memcpy*, memmove, memmoveb, memmovec, memmovedown, memmovedownc, memmovedownw, memmovel, memmovew, mempcpy*, memset, memsetb */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 

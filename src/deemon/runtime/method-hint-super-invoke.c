@@ -23,9 +23,10 @@
 #include <deemon/api.h>
 
 #include <deemon/method-hints.h>   /* DeeType_GetMethodHint, Dee_super_method_hint, Dee_tmh_id */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* DeeObject, DeeTypeObject, Dee_TYPE, Dee_funptr_t */
 #include <deemon/operator-hints.h> /* tdefault__*, tusrtype__*, usrtype__* */
 #include <deemon/super.h>          /* DeeSuper_SELF, DeeSuper_TYPE, Dee_super_object */
+#include <deemon/type.h>           /* DeeType_IsAbstract */
 
 #include "method-hint-defaults.h"
 #include "method-hints.h"

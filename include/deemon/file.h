@@ -40,7 +40,8 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
 
-#include "object.h"
+#include "object.h" /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Incref, Dee_OBJECT_HEAD_EX, Dee_OBJECT_HEAD_INIT, Dee_off_t, Dee_pos_t, Dee_ssize_t */
+#include "type.h"   /* DeeObject_InitInherited, OPERATOR_EXTENDED */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */

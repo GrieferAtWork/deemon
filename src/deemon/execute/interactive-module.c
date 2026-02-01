@@ -35,13 +35,14 @@
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_hash_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* bzero*, memcpy*, memmoveupc, memset */
 #include <deemon/system.h>             /* DeeSystem_BaseName */
 #include <deemon/thread.h>             /* DeeThread_Self, except_frame_gettb */
 #include <deemon/traceback.h>          /* Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Base, DeeType_Type, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, TF_NONE, TP_FGC, TP_FNORMAL, type_gc, type_seq */
 #include <deemon/util/atomic.h>        /* atomic_inc, atomic_read */
 #include <deemon/util/cache.h>         /* DECLARE_STRUCT_CACHE */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

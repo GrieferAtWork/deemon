@@ -36,9 +36,10 @@
 #include <deemon/error.h>     /* DeeError_* */
 #include <deemon/format.h>    /* PRFuSIZ */
 #include <deemon/int.h>       /* DeeInt_NewSize */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, Dee_Incref, Dee_uint128_t */
 #include <deemon/objmethod.h> /*  */
 #include <deemon/string.h>    /* DeeString_Type */
+#include <deemon/type.h>      /* METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>  /* BSWAP* */

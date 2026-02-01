@@ -224,6 +224,7 @@
 		<ClInclude Include="..\include\deemon\thread.h" />
 		<ClInclude Include="..\include\deemon\traceback.h" />
 		<ClInclude Include="..\include\deemon\tuple.h" />
+		<ClInclude Include="..\include\deemon\type.h" />
 		<ClInclude Include="..\include\deemon\types.h" />
 		<ClInclude Include="..\include\deemon\util\atomic-ref.h" />
 		<ClInclude Include="..\include\deemon\util\atomic.h" />

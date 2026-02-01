@@ -28,10 +28,11 @@
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_Malloc, Dee_*alloc*, Dee_Alloca*, Dee_Free */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_*, DeeFunctionObject, DeeYieldFunctionObject, DeeYieldFunction_Sizeof, DeeYieldFunction_Type, Dee_CODE_F*, Dee_code_frame, Dee_code_frame_kwds */
 #include <deemon/kwds.h>            /* DeeKwBlackList_Decref, DeeKw_TryGetItemNR, DeeKwds* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Size, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_Movrefv, Dee_XDecref, ITER_ISOK */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* bzeroc */
 #include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE, Dee_tuple_object */
+#include <deemon/type.h>            /* DeeObject_Init */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

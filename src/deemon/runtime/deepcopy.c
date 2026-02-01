@@ -26,10 +26,12 @@
 #include <deemon/deepcopy.h>        /* DeeDeepCopyContext, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem, Dee_deepcopy_uheap, Dee_deepcopy_uheap_alloc, Dee_deepcopy_uheap_destroy, Dee_deepcopy_uheap_free */
 #include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
 #include <deemon/gc.h>              /* DeeGC_*, Dee_GC_HEAD_SIZE, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, Dee_Decref_unlikely, Dee_Decrefv_unlikely, Dee_Incref */
 #include <deemon/serial.h>          /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
 #include <deemon/system-features.h> /* memmovedownc, memmoveupc, memset */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsDeepImmutable, DeeType_* */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_funptr_t, Dee_unlockinfo, OBJECT_HEAD */
+#include <deemon/util/weakref.h>    /* Dee_weakref, Dee_weakref_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

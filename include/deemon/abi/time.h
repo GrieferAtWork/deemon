@@ -29,7 +29,7 @@
 
 #include "../format.h" /* Dee_PCK* */
 #include "../module.h" /* DeeModuleObject, DeeModule_GetNativeSymbol */
-#include "../object.h"
+#include "../object.h" /* DREF, DeeObject, DeeObject_CallAttrStringf, Dee_AsObject */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* int64_t, uint32_t */

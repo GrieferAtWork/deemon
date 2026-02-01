@@ -32,10 +32,11 @@
 #include <deemon/error.h>     /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>      /* DeeFile_ReadBytes */
 #include <deemon/module.h>    /* DeeModuleObject */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XClear */
 #include <deemon/objmethod.h> /*  */
 #include <deemon/string.h>    /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
 #include <deemon/thread.h>    /* DeeThreadObject, DeeThread_Self */
+#include <deemon/type.h>      /* METHOD_FNORMAL */
 
 #include <stdbool.h> /* true */
 #include <stddef.h>  /* NULL, size_t */

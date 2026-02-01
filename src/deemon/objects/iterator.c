@@ -34,11 +34,12 @@
 #include <deemon/mro.h>                /* DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_QueryAttributeHash */
 #include <deemon/none-operator.h>      /* DeeNone_*, _DeeNone_retsm1_1 */
 #include <deemon/none.h>               /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeNO_nextpair_t, DeeType_RequireNativeOperator, maketyped__getattr */
 #include <deemon/seq.h>                /* DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD */

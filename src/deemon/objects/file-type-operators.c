@@ -31,8 +31,9 @@
 #include <deemon/format.h>   /* PCK* */
 #include <deemon/int.h>      /* DeeInt_* */
 #include <deemon/none.h>     /* DeeNone_Check, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>   /* ASSERT_OBJECT_TYPE, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_DecrefNokill, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
 #include <deemon/super.h>    /* DeeSuperObject, DeeSuper_Type */
+#include <deemon/type.h>     /* Dee_OPERATOR_INVOKE_INIT, Dee_operator_invoke, Dee_operator_t, Dee_opinfo, OPCC_SPECIAL, OPCLASS_TYPE, TYPE_OPERATOR_DECL, type_operator */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

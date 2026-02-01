@@ -38,10 +38,11 @@
 #include <deemon/list.h>               /* DeeList_Type */
 #include <deemon/module.h>             /* DeeModule_GetDeemon, DeeModule_GetSymbol, Dee_MODSYM_FEXTERN, Dee_MODSYM_FPROPERTY, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref */
 #include <deemon/objmethod.h>          /* DeeKwObjMethod_Check, DeeObjMethod*, Dee_objmethod_origin */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>               /* OPERATOR_GETATTR */
 
 #include "../../runtime/builtin.h"
 

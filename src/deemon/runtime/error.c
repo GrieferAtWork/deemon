@@ -26,12 +26,13 @@
 #include <deemon/error.h>           /* DeeErrorObject, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_* */
 #include <deemon/file.h>            /* DeeFile_GetStd, DeeFile_WriteAll, Dee_STDERR */
 #include <deemon/format.h>          /* DeeFormat_Printf, PRFu16 */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/string.h>          /* DeeString_VNewf, DeeUni_IsLF */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h> /* memcpy, signal */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self, DeeThread_Wake, Dee_THREAD_STATE_INTERRUPTED, Dee_except_frame, Dee_except_frame_alloc, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_except_frame_xfree, Dee_thread_interrupt, _DeeThread_AcquireInterrupt, _DeeThread_ReleaseInterrupt, except_frame_gettb */
 #include <deemon/traceback.h>       /* DeeTracebackObject, DeeTraceback_Type */
+#include <deemon/type.h>            /* DeeType_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */

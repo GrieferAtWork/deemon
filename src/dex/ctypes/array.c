@@ -36,10 +36,11 @@
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ISEQ, Dee_COMPARE_ISERR, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_XDecref, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_Type, Dee_seq_range, _DeeSeqRange_Clamp */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* bzero */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_Visit, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_getset, type_member */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 

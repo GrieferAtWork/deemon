@@ -32,9 +32,10 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DeeObject_*, Dee_Decref, Dee_Incref, Dee_XDecref */
 #include <deemon/string.h>             /* DeeString*, DeeUni_ToLower */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bcmpc, memcasecmp, strcasecmp, strlen */
+#include <deemon/type.h>               /* DeeType_Type */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, Dee_AsObject */
 
 #include "../../runtime/strings.h"

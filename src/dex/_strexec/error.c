@@ -28,7 +28,7 @@
 
 #include <deemon/error.h>  /* DeeError_* */
 #include <deemon/format.h> /* PRFuSIZ */
-#include <deemon/object.h>
+#include <deemon/object.h> /* ASSERT_OBJECT, DeeObject */
 
 #include <stddef.h> /* size_t */
 

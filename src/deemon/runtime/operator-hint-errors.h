@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/computed-operators.h>
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 #include <deemon/operator-hints.h>     /* DeeNO_*_t */
 
 #include "method-hint-defaults.h"

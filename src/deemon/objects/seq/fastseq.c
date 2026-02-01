@@ -23,9 +23,10 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_BadAlloc, Dee_Free, Dee_MallocUsableSize */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_Decrefv, Dee_Incref, Dee_TYPE, Dee_ssize_t */
 #include <deemon/operator-hints.h>  /* DeeNO_foreach_t, DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>             /*  */
+#include <deemon/type.h>            /* OPERATOR_ITER */
 #include <deemon/util/objectlist.h> /* Dee_objectlist_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */

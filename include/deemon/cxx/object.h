@@ -29,10 +29,12 @@
 
 #include "../error.h"           /* DeeError_* */
 #include "../none.h"            /* DeeNone_Check */
-#include "../object.h"
+#include "../object.h"          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_Incref_traced, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK, _Dee_HashSelectC */
 #include "../super.h"           /* DeeSuper_New, DeeSuper_Of */
 #include "../system-features.h" /* pow, strlen */
+#include "../type.h"            /* DeeObject_* */
 #include "../util/hash.h"       /* Dee_HashStr */
+#include "../util/weakref.h"    /* Dee_weakref, Dee_weakref_* */
 
 #include <exception>
 #include <initializer_list>

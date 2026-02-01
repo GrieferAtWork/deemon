@@ -28,7 +28,7 @@
 
 #include <deemon/class.h>           /* DeeInstance_DESC */
 #include <deemon/module.h>          /* DeeModuleObject, DeeModule_Check, Dee_module_symbol */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeOrAbstract, Dee_Decref_unlikely, Dee_Incref, Dee_hash_t, ITER_DONE */
 #include <deemon/string.h>          /* DeeUni_IsSpace, DeeUni_IsSymCont */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcpy */

@@ -27,7 +27,7 @@
 #include <deemon/format.h>          /* Dee_va_list_struct */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/none.h>            /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_XDecref, Dee_int128_t, Dee_uint128_t */
 #include <deemon/string.h>          /* DeeString_NewUtf8, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strnlen, strlen */
 #include <deemon/tuple.h>           /* DeeTuple* */

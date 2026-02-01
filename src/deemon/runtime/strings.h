@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/file.h>   /* Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int */
-#include <deemon/object.h>
+#include <deemon/object.h> /* _Dee_HashSelectC */
 #include <deemon/string.h> /* DeeStringObject, DeeString_STR */
 
 

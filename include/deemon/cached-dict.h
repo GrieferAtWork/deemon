@@ -25,7 +25,7 @@
 
 #include "api.h"
 
-#include "object.h"
+#include "object.h"    /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_hash_t */
 #include "util/lock.h" /* Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* size_t */

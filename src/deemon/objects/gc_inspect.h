@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h>    /* Dee_Incref */
 #include <deemon/types.h>     /* DREF, DeeObject, DeeTypeObject, OBJECT_HEAD */
 #include <deemon/util/hash.h> /* Dee_HashPointer */
 

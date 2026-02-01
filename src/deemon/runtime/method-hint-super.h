@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/method-hints.h> /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* DREF, DeeObject, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t */
 #include <deemon/super.h>        /* DeeSuperObject */
 
 #include "method-hints.h"

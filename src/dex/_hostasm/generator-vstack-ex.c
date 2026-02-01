@@ -48,7 +48,7 @@
 #include <deemon/mro.h>             /* DeeObject_TFindAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo, Dee_type_member_* */
 #include <deemon/none-operator.h>   /* DeeNone_OperatorCopy, DeeNone_OperatorCtor */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, ITER_DONE, ITER_ISOK */
 #include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeClsMember*, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod_Type, DeeKwClsMethod*, DeeKwObjMethod_GetOrigin, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod*, Dee_clsproperty_origin, Dee_cmethod*, Dee_kwcmethod_t, Dee_objmethod_origin */
 #include <deemon/operator-hints.h>  /* DeeNO_call_kw_t, DeeNO_call_t, DeeType_RequireNativeOperator */
 #include <deemon/property.h>        /* DeePropertyObject, DeeProperty_Type */
@@ -60,9 +60,11 @@
 #include <deemon/super.h>           /* DeeObject_T*, DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memchr, strchr, strcmp */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>            /* DeeMethodFlags_VerifyConstCallCondition, DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_*method_t, Dee_STRUCT_*, Dee_TYPE_METHOD_FKWDS, Dee_operator_t, Dee_opinfo, Dee_type_member, METHOD_F*, OPCC_*, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, STRUCT_*, TP_FABSTRACT, TYPE_MEMBER_ISCONST, type_* */
 #include <deemon/util/hash-io.h>    /* Dee_hash_hidxio */
 #include <deemon/util/hash.h>       /* Dee_HASHOF_EMPTY_SEQUENCE */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
+#include <deemon/util/weakref.h>    /* Dee_weakref_bound */
 #include <deemon/weakref.h>         /* DeeWeakRefAbleObject, DeeWeakRefAble_Type */
 
 #include <stdbool.h> /* bool, false, true */

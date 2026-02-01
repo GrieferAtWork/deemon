@@ -26,7 +26,7 @@
 #include <deemon/dex.h>       /* Dee_module_dexdata, _Dee_MODULE_DEXDATA_INIT_LOADBOUNDS */
 #include <deemon/gc.h>        /* Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include <deemon/module.h>    /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_STRUCT, Dee_module_symbol, Dee_static_module_struct, _Dee_MODULE_FLIBALL, _Dee_MODULE_INIT_mo_lock */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, Dee_WEAKREF_SUPPORT_INIT, OBJECT_HEAD_INIT, _Dee_HashSelect */
 #include <deemon/string.h>    /* DeeStringObject, DeeString_STR */
 #include <deemon/system.h>    /* DeeSystem_HAVE_FS_ICASE */
 #include <deemon/tuple.h>     /* DeeTupleObject, Dee_EmptyTuple */

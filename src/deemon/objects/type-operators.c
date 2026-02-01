@@ -33,11 +33,12 @@
 #include <deemon/int.h>            /* DeeInt_NewHash */
 #include <deemon/kwds.h>           /* DeeKw_Wrap */
 #include <deemon/none.h>           /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, ITER_DONE, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutUnsupported, DeeType_GetTnoOfOperator, Dee_tno_id, usrtype__* */
 #include <deemon/string.h>         /* DeeStringObject, DeeString_Type */
 #include <deemon/super.h>          /* DeeObject_T* */
 #include <deemon/tuple.h>          /* DeeTuple_Type */
+#include <deemon/type.h>           /* DeeType_InheritBuffer, DeeType_InheritConstructors, Dee_OPERATOR_INVOKE_INIT, Dee_operator_invoke, Dee_operator_t, Dee_opinfo, OPCC_*, OPCLASS_TYPE, OPERATOR_*, TYPE_OPERATOR_DECL, type_* */
 
 #include "gc_inspect.h"
 #include "type-operators.h"

@@ -29,7 +29,7 @@
 #include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 
 #include "bytes.h"  /* Dee_bytes_printer */
-#include "object.h"
+#include "object.h" /* DREF, DeeObject, Dee_Incref, Dee_ssize_t, Dee_visit_t */
 #include "string.h" /* Dee_unicode_printer */
 #include "tuple.h"  /* Dee_tuple_builder */
 

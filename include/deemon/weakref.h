@@ -25,8 +25,8 @@
 
 #include "api.h"
 
-#include "object.h"
-#include "types.h"  /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
+#include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
+#include "util/weakref.h" /* Dee_weakref */
 
 DECL_BEGIN
 

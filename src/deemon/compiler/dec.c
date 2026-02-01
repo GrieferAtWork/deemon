@@ -31,7 +31,7 @@
 #include <deemon/file.h>              /* DeeFile_*, OPEN_F* */
 #include <deemon/format.h>            /* PRFuSIZ */
 #include <deemon/module.h>            /* DeeModuleObject */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_Decref, Dee_Incref */
 #include <deemon/string.h>            /* DeeString* */
 #include <deemon/system-features.h>   /* CONFIG_HAVE_memmem, DeeSystem_DEFINE_memmem, bzero, memcpy, mempcpyc, memset, strlen */
 #include <deemon/system.h>            /* DeeSystem_* */

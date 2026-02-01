@@ -32,7 +32,7 @@
 #include <deemon/int.h>                /* DeeInt_NewUInt16, DeeInt_Type */
 #include <deemon/kwds.h>               /* DeeKwds*, Dee_kwds_entry */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>     /* DeeType_GetNativeOperator*, DeeType_GetTnoOfOperator, Dee_tno_id */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
@@ -41,6 +41,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmp, mempcpyc, memset, pow */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeType_*, Dee_METHOD_FCONSTCALL, Dee_METHOD_FNORETURN, Dee_OPERATOR_USERCOUNT, Dee_TF_ISCONSTCASTABLE, Dee_TF_NOTCONSTCASTABLE, Dee_operator_t, Dee_opinfo, FAKE_OPERATOR_*, METHOD_F*, OPCC_ARGC, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

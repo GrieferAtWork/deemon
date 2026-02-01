@@ -39,7 +39,7 @@
 #include <deemon/list.h>               /* DeeListObject, DeeList_* */
 #include <deemon/module.h>             /* DeeModule_GetDeemon, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_* */
 #include <deemon/none.h>               /* DeeNoneObject, DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, Dee_seq_range */
@@ -47,6 +47,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* mempcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_Init */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_* */
 
 #include <hybrid/typecore.h> /* __SHIFT_TYPE__ */

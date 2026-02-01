@@ -34,13 +34,14 @@
 #include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_seq_frozen_t, DeeMH_seq_operator_foreach_t, DeeMH_seq_operator_iter_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, DeeType_HasTrait, DeeType_RequireMethodHint, DeeType_TRAIT___seq_getitem_always_bound__ */
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeRange_New, DeeSeqSome_Type, DeeSeq_NewEmpty, DeeSeq_Some, Dee_SEQCLASS_*, Dee_seq_range */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_Type, Dee_TF_SEQCLASS_MASK, Dee_TF_SEQCLASS_SHFT, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
 #include "../runtime/kwlist.h"

@@ -34,10 +34,11 @@
 #include <deemon/float.h>           /* DeeFloat_New */
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_TryAsInt, INT_NEG_OVERFLOW, INT_POS_OVERFLOW */
 #include <deemon/none.h>            /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_Decref */
 #include <deemon/objmethod.h>       /* DEFINE_CMETHOD1 */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, acos, acosh, asin, asincos, asincosh, asinh, atan, atan2, atanh, cbrt, ceil, copysign, cos, cosh, erf, erfc, exp, exp2, expm1, fdim, floor, fmod, frexp, hypot, ilogb, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, lgamma, log, log1p, log2, log10, logb, modf, nan, nextafter, pow, remainder, remquo, round, scalbln, scalbn, sin, sincos, sincosh, sinh, sqrt, tan, tanh, tgamma */
 #include <deemon/tuple.h>           /* DeeTuple_Newf, DeeTuple_PackSymbolic */
+#include <deemon/type.h>            /* METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST */
 
 #include <hybrid/limitcore.h> /* __INT_MAX__, __INT_MIN__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_LONG__ */

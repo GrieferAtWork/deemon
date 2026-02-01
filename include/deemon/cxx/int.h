@@ -27,7 +27,7 @@
 
 #include "../format.h"          /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../int.h"             /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
-#include "../object.h"
+#include "../object.h"          /* DeeObject_* */
 #include "../system-features.h" /* ceil, floor, isgreater, isgreaterequal, isless, islessequal, islessgreater, isnormal, isunordered, nextafter, pow, round, strlen, trunc */
 #include "../types.h"           /* DREF, DeeObject, Dee_[u]int128_t, Dee_ssize_t, _Dee_HashSelectC */
 #include "numeric.h"

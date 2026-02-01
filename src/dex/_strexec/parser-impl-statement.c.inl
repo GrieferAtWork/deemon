@@ -30,7 +30,7 @@
 #include <deemon/error-rt.h>        /* DeeRT_ErrNoActiveException */
 #include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED, DeeError_ThrowInherited */
 #include <deemon/none.h>            /* DeeNone_NewRef, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_Decref, Dee_XClear, Dee_XDecref */
 #include <deemon/string.h>          /* DeeString*, DeeUni_Flags, DeeUni_IsSpace, Dee_UNICODE_ISSYMCONT, Dee_UNICODE_ISSYMSTRT, Dee_unicode_printer*, Dee_uniflag_t, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, Dee_unicode_readutf8_n */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, bcmpc */

@@ -29,7 +29,7 @@
 
 #include "api.h"
 
-#include "object.h"
+#include "object.h"       /* DeeObject_NewDefault */
 #include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
 #include "util/hash-io.h" /* Dee_hash_*, _DeeHash_* */
 #include "util/hash.h"    /* Dee_HashPtr, Dee_HashStr */

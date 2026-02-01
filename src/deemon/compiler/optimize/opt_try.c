@@ -25,7 +25,7 @@
 #include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY */
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DeeObject_Type, Dee_AsObject */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

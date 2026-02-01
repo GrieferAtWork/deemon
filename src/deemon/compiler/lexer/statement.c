@@ -29,9 +29,10 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>            /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF */
 #include <deemon/system-features.h> /* memmoveupc */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
+#include <deemon/type.h>            /* OPERATOR_ITER */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

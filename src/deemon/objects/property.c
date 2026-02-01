@@ -32,10 +32,11 @@
 #include <deemon/format.h>             /* DeeFormat_* */
 #include <deemon/module.h>             /* DeeModuleObject */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/property.h>           /* DeePropertyObject */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
+#include <deemon/type.h>               /* DeeType_Type, Dee_XVisit, Dee_operator_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 
 #include "../runtime/kwlist.h"

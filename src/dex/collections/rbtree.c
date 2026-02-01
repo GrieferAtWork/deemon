@@ -35,13 +35,14 @@
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_NewSize, DeeInt_Type, Dee_DIGIT_MASK, Dee_digit_t */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ, Dee_COMPARE_ISERR, Dee_Clear, Dee_Decref*, Dee_Incref*, Dee_OBJECT_OFFSETOF_DATA, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeRange_New, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* DeeLock_Acquire2, Dee_atomic_rwlock_* */
 

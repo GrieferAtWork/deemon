@@ -22,7 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/type.h> /* OPERATOR_*, type_operator */
+
 
 DECL_BEGIN
 

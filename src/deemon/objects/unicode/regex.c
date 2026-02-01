@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_MallocUsableSize, Dee_TryCallocc, Dee_UntrackAlloc */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_hash_t, Dee_ssize_t */
 #include <deemon/regex.h>           /* DeeRegex*, Dee_RE_* */
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_UTF_FFINIHOOK, WSTR_LENGTH */
 #include <deemon/system-features.h> /* CONFIG_HAVE__msize, CONFIG_HAVE_malloc_usable_size, _msize, memcpy, memset */

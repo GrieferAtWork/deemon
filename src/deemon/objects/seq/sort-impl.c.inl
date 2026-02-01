@@ -39,7 +39,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_TryMallocc */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_Call, DeeObject_CmpLoAsBool, Dee_Decref, Dee_Decrefv, ITER_DONE */
 #include <deemon/system-features.h> /* memcpyc, memmoveupc */
 
 #include <stddef.h> /* NULL, size_t */

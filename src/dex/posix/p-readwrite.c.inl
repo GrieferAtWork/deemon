@@ -32,11 +32,12 @@
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/int.h>             /* DeeInt_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, bzero, get_osfhandle, lseek, lseek64, pread, pread64, pwrite, pwrite64, read, write */
 #include <deemon/system.h>          /* DeeNTSystem_IsIntr, DeeNTSystem_ThrowErrorf, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

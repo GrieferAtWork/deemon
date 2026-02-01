@@ -24,7 +24,8 @@
 
 #include "../module.h" /* DeeModule_Deemon, Dee_module_symbol_getindex */
 #include "../none.h"   /* DeeNone_Check */
-#include "../object.h"
+#include "../object.h" /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
+#include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY, OPERATOR_DEEPCOPY */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
 #include "symbol.h"
 

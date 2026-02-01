@@ -31,10 +31,11 @@
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/mro.h>                /* DeeObject_IterAttr, Dee_ATTRPERM_F_NAMEOBJ, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrdesc_nameobj, Dee_attrhint, Dee_attrhint_initall, Dee_attriter_*, _Dee_attrdesc_fini_WITHOUT_NAME */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DeeObject_*, Dee_BOUND_MISSING, Dee_Decref, Dee_Incref, Dee_visit_t */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* memset */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, ITER_DONE, OBJECT_HEAD_INIT */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

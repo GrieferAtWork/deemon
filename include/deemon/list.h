@@ -24,7 +24,7 @@
 
 #include "api.h"
 
-#include "object.h"
+#include "object.h"          /* DeeObject_NewDefault, Dee_DecrefDokill */
 #include "types.h"           /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT, Dee_ssize_t */
 #include "util/atomic.h"     /* Dee_atomic_read */
 #include "util/lock.h"       /* Dee_atomic_rwlock_* */

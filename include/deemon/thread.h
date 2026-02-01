@@ -44,7 +44,7 @@
 
 #ifndef __INTELLISENSE__
 #include "alloc.h"  /* DeeSlab_* */
-#include "object.h" /* DeeObject_NewPack */
+#include "object.h" /* DeeObject_NewPack, _DeeRefcnt_* */
 #endif /* !__INTELLISENSE__ */
 
 /*!fixincludes fake_include "system-features.h" // pid_t */

@@ -28,12 +28,13 @@
 
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/list.h>            /* DeeList_*, Dee_objectlist_packlist */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_CallTuple, DeeTypeObject, Dee_AsObject, Dee_Decref */
 #include <deemon/seq.h>             /* DeeSeq_NewEmpty, DeeSeq_Unpack */
 #include <deemon/string.h>          /* DeeUni_IsSpace */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* TP_FFINAL, TP_FNORMAL */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_INIT, Dee_objectlist, Dee_objectlist_* */
 
 #include <stdbool.h> /* bool, false, true */

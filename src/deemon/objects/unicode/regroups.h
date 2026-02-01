@@ -26,10 +26,11 @@
 #include <deemon/bytes.h>  /* DeeBytes_NewSubView */
 #include <deemon/format.h> /* PCKuSIZ */
 #include <deemon/none.h>   /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_Incref, OBJECT_HEAD */
 #include <deemon/regex.h>  /* DeeRegexMatch */
 #include <deemon/string.h> /* DeeString_NewUtf8, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/tuple.h>  /* DeeTuple_Newf */
+#include <deemon/type.h>   /* DeeObject_Init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

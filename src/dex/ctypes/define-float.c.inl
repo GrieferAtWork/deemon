@@ -41,8 +41,9 @@
 #include <deemon/bool.h>      /* return_bool */
 #include <deemon/error.h>     /* DeeError_NOTIMPLEMENTED */
 #include <deemon/int.h>       /* DeeInt_NewInt64, INT_SIGNED */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_AsDouble, Dee_AsObject, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/string.h>    /* DeeString_Newf */
+#include <deemon/type.h>      /* DeeObject_Init, TF_NONE, TP_F* */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stddef.h> /* NULL, size_t */

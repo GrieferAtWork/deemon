@@ -23,7 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/code.h>   /* DeeCodeObject, Dee_ddi_state, code_addr_t, instruction_t */
-#include <deemon/object.h>
+#include <deemon/object.h> /* Dee_formatprinter_t, Dee_ssize_t */
+#include <deemon/type.h>   /* Dee_operator_t */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

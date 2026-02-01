@@ -28,12 +28,13 @@
 #include <deemon/computed-operators.h>
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1 */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_Decref, OBJECT_HEAD_INIT */
 #include <deemon/regex.h>              /* DeeRegexMatch */
 #include <deemon/seq.h>                /* DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* Dee_EmptyString */
 #include <deemon/system-features.h>    /* memcpyc */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, type_member, type_seq */
 /**/
 
 #include "regroups.h"

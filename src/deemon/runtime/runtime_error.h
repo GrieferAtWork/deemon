@@ -22,8 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DeeObject, DeeTypeObject */
 #include <deemon/system-features.h> /* access */
+#include <deemon/type.h>            /* Dee_operator_t */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */

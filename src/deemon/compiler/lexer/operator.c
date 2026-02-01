@@ -30,9 +30,10 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/file.h>            /* DeeFileType_Type, FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetSymbol */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Incref */
 #include <deemon/string.h>          /* DeeStringObject, DeeString_STR */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeTypeType_GetOperatorByNameLen, Dee_operator_t, Dee_opinfo, OPERATOR_* */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

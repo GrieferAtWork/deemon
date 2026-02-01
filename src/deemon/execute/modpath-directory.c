@@ -26,12 +26,13 @@
 #include <deemon/arg.h>             /* DeeArg_UnpackStruct2, DeeArg_UnpackStructKw */
 #include <deemon/callable.h>        /* DeeCallable_Type */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FABSFILE */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_hash_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FIGNORE */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8 */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, memmovedownc, strlen, to(lower|upper) */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewEmpty, Dee_tuple_builder* */
+#include <deemon/type.h>            /* DeeObject_GenericCmpByAddr, DeeType_Type, TF_NONE, TP_F*, type_attr, type_callable */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

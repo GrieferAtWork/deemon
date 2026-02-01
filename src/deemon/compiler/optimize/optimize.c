@@ -30,7 +30,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 
 #include <stdarg.h>  /* va_end, va_list, va_start */

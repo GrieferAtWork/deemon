@@ -33,12 +33,14 @@
 #include <deemon/format.h>          /* DeeFormat_Printf */
 #include <deemon/int.h>             /* DeeInt_NewUInt64 */
 #include <deemon/none.h>            /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref_unlikely, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* strlen */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_type_iterator, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
+#include <deemon/util/weakref.h>    /* Dee_weakref_* */
 
 #include "sqlite3-external.h"
 

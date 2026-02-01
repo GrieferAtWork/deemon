@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/method-hints.h> /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* DREF, DeeObject, DeeTypeObject, Dee_ssize_t, OBJECT_HEAD */
 #include <deemon/util/rlock.h>   /* Dee_rshared_lock_t */
 
 #include <stddef.h> /* size_t */

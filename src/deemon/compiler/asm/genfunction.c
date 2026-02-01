@@ -29,7 +29,7 @@
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/module.h>             /* Dee_compiler_options */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, DREF, Dee_Decref */
 
 #include <stdbool.h> /* false */
 #include <stddef.h>  /* NULL */

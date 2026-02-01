@@ -31,7 +31,7 @@
 #include <deemon/int.h>       /* DeeInt_FromString, Dee_INT_STRING*, Dee_TAtoiu */
 #include <deemon/kwds.h>      /* DeeKw_ForceWrap */
 #include <deemon/none.h>      /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_hash_t */
 #include <deemon/string.h>    /* DeeString_FromBackslashEscaped, STRING_ERROR_FSTRICT */
 #include <deemon/super.h>     /* DeeSuper* */
 #include <deemon/tuple.h>     /* DeeTuple* */

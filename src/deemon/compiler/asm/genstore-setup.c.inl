@@ -31,8 +31,9 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DeeObject */
 #include <deemon/string.h>             /* DeeString_Check */
+#include <deemon/type.h>               /* OPERATOR_* */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* INT16_MAX, INT16_MIN, int16_t, int32_t, uint16_t */

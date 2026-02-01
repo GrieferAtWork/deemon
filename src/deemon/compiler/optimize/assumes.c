@@ -28,7 +28,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Clear, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t */
 #include <deemon/system-features.h>   /* bzero, memcpy */
 
 #include <stdbool.h> /* bool, false, true */

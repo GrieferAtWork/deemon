@@ -32,9 +32,11 @@
 #include <deemon/format.h>            /* PRFuSIZ */
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>              /* DeeNone_Check, DeeNone_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE */
 #include <deemon/string.h>            /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/system-features.h>   /* memcpy, strlen */
+#include <deemon/type.h>              /* DeeType_Check */
+#include <deemon/util/weakref.h>      /* Dee_weakref_copy, Dee_weakref_fini */
 
 #include "../../runtime/builtin.h"
 

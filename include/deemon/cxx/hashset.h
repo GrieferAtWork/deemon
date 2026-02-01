@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "../hashset.h"         /* DeeHashSet_* */
-#include "../object.h"
+#include "../object.h"          /* DeeObject_* */
 #include "../system-features.h" /* remove, strlen */
 #include "../types.h"           /* DREF, DeeObject, _Dee_HashSelectC */
 #include "object.h"

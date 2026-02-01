@@ -51,7 +51,7 @@
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include "gc.h"         /* Dee_gc_head_link */
-#include "object.h"
+#include "object.h"     /* DeeObject_*, Dee_XDecref */
 #include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT */
 #include "util/lock.h"  /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 #include "util/rlock.h" /* Dee_rshared_rwlock_* */

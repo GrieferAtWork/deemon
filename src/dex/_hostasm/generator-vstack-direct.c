@@ -31,7 +31,7 @@
 #include <deemon/error.h>  /* DeeError_IllegalInstruction, DeeError_Throwf */
 #include <deemon/format.h> /* PRFx8 */
 #include <deemon/int.h>    /* DeeInt_Type */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DeeTypeObject */
 #include <deemon/super.h>  /* DeeSuperObject, DeeSuper_Type */
 
 #include <stdbool.h> /* bool, false */

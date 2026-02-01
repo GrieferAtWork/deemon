@@ -33,7 +33,7 @@
 #include <deemon/int.h>             /* DeeInt_*, Dee_INT_SIGNED, Dee_INT_UNSIGNED */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/operator-hints.h>  /* tdefault__compare__with__le__and__ge, tdefault__compare__with__lo__and__gr */
 #include <deemon/seq.h>             /* DeeIterator_Foreach, DeeIterator_ForeachPair, DeeSeq_Unpack */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
@@ -41,6 +41,7 @@
 #include <deemon/system-features.h> /* memchr, memcpyc, mempcpyc, strlen */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeType_Base, DeeType_IsIntTruncated, OPERATOR_* */
 #include <deemon/util/hash.h>       /* DeeObject_HashGeneric, Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine */
 /**/
 

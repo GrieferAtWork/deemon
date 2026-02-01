@@ -32,11 +32,12 @@
 #include <deemon/file.h>            /* DeeFile_Check, DeeFile_GetSysFD, Dee_fd_*, OPEN_F* */
 #include <deemon/int.h>             /* DeeInt_AsInt, DeeInt_Check */
 #include <deemon/none.h>            /* DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_unicode_printer*, STRING_WIDTH_1BYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, _doserrno, get_osfhandle, memmovedownw, memmoveupc */
 #include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeNT_DWORD, DeeSystem_MakeNormalAndAbsolute, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_Check */
 #include <deemon/util/atomic.h>     /* atomic_write */
 
 #include <hybrid/align.h>           /* CEILDIV */

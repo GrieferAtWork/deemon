@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>               /* Dee_Callocc, Dee_CollectMemoryc, Dee_Free, Dee_TryCallocc */
-#include <deemon/object.h>
+#include <deemon/object.h>              /* DREF, DeeObject, DeeObject_Hash, DeeObject_TryCompareEq, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_hash_t */
 #include <deemon/serial.h>              /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
 #include <deemon/system-features.h>     /* memcpyc */
 #include <deemon/util/lock.h>           /* Dee_atomic_lock_init */

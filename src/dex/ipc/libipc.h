@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/file.h>   /* DeeFileTypeObject */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject */
 #include <deemon/string.h> /* DeeStringObject */
 
 DECL_BEGIN

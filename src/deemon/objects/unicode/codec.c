@@ -26,7 +26,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_*, PRFuSIZ */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_CallAttrPack, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Incref, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_IsUpper, DeeUni_ToLower, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, STRING_ERROR_F*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcpy*, memmovedownc, mempcpyc */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */

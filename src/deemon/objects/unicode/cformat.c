@@ -27,7 +27,7 @@
 #include <deemon/float.h>       /* DeeFloat_Print, Dee_FLOAT_PRINT_F* */
 #include <deemon/format.h>      /* DeeFormat_*, PRFuSIZ */
 #include <deemon/none.h>        /* DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>      /* DeeObject, DeeObject_*, Dee_AsObject, Dee_formatprinter_t, Dee_ssize_t */
 #include <deemon/string.h>      /* CASE_WIDTH_nBYTE, DeeAscii_ItoaDigits, DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_LENGTH, Dee_charptr_const, Dee_unicode_printer*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h> /* DeeString_GetChar */
 

@@ -1,2171 +1,2177 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<ItemGroup>
-		<Filter Include="include">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00000195F605}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\abi">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00195F60F339}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\compiler">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-E54B7E739EFF}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\cxx">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00195F60F378}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\kos-headers">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-AF4C3B9EA148}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\kos-headers\compiler">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-1D14ABCAE2A7}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\kos-headers\hybrid">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-4789B705866D}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\kos-headers\hybrid\pp">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-815D8B79A204}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\kos-headers\hybrid\sched">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-94ECAADB4187}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\kos-headers\hybrid\sequence">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-A873FE28831C}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\kos-headers\hybrid\sync">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-0AF0BF8D8393}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="include\util">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00CAFB07B424}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-000000001F33}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\compiler">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00F9C9ED4A5A}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\compiler\asm">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-855739EF538E}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\compiler\interface">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-B665F278FC77}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\compiler\lexer">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-09363B73029E}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\compiler\optimize">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-F89298B3D49A}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\execute">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-001F392E8885}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\execute\asm">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-0A5B9CCC8A6F}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\linker-scripts">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-0F28B9353A51}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\method-hints">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-85488C26C6F6}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\objects">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-001F390B7113}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\objects\seq">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-0A58EC995C55}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\objects\unicode">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-A1E329861DCC}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\objects\unicode\db">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-C0DDF0AC63F6}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\runtime">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-001F3974914D}</UniqueIdentifier>
-		</Filter>
-		<Filter Include="src\system">
-			<UniqueIdentifier>{372a956e-8c03-4d55-8939-0003E72EE845}</UniqueIdentifier>
-		</Filter>
-	</ItemGroup>
-	<ItemGroup>
-		<ClInclude Include="..\LICENSE" />
-		<ClInclude Include="..\Makefile" />
-		<ClInclude Include="..\configure" />
-		<ClInclude Include="..\include\deemon\abi\ctypes.h">
-			<Filter>include\abi</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\abi\time.h">
-			<Filter>include\abi</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\accu.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\alloc.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\api.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\arg.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\asm-table.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\asm.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\attribute.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\bool.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\bytes.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cached-dict.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\callable.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cell.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\class.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\code.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\assembler.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\ast.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\compiler.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\dec.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\doctext.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\error.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\interface.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\lexer.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\optimize.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\symbol.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\tpp.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\compiler\traits.h">
-			<Filter>include\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\computed-operators.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\api.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\bool.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\bytes.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\callable.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\cell.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\dict.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\file.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\float.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\function.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\hashset.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\int.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\iterator.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\list.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\mapping.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\none.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\numeric.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\object.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\sequence.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\set.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\string.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\tuple.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\cxx\type.h">
-			<Filter>include\cxx</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\dec.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\deepcopy.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\dex.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\dict.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\error-rt.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\error.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\error_types.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\exec.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\file.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\filetypes.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\float.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\format.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\gc.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\hashset.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\heap.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\instancemethod.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\int.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\__stdcxx.h">
-			<Filter>include\kos-headers</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\__stdinc.h">
-			<Filter>include\kos-headers</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\c++.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\c.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\checker.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\clang.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\docgen.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-builtins.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-warnings.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\gcc.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\generic.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\intellisense-common.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\intellisense-gcc.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\intellisense-msvc.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\msvc.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\other.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\compiler\pp-generic.h">
-			<Filter>include\kos-headers\compiler</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__alloca.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__altint.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__asm.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__assembly.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__assert.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-complete.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-gasm-x86.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-libatomic.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-msvc.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bit.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitfield.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitset.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__byteswap.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__debug-alignment.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__minmax.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__overflow.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__pointer-cxx-impl.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__pointer.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__rotate.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__string.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__unaligned.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__va_size.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__wordbits.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\align.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\alloca.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\altint.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\atomic.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\bit.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\bitset.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\byteorder.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\byteswap.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\compiler.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\debug-alignment.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\floatcore.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\host.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\int128.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\limitcore.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\minmax.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\overflow.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pointer.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\__bubble.h">
-			<Filter>include\kos-headers\hybrid\pp</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\__va_nargs.h">
-			<Filter>include\kos-headers\hybrid\pp</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\bubble.h">
-			<Filter>include\kos-headers\hybrid\pp</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-lock.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-rwlock.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__gettid.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__preemption.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__yield.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-lock.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-once.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-owner-rwlock.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-rwlock.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\preemption.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\yield.h">
-			<Filter>include\kos-headers\hybrid\sched</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\bitset.h">
-			<Filter>include\kos-headers\hybrid\sequence</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\bsearch.h">
-			<Filter>include\kos-headers\hybrid\sequence</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\list.h">
-			<Filter>include\kos-headers\hybrid\sequence</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\rbtree-abi.h">
-			<Filter>include\kos-headers\hybrid\sequence</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\rbtree.h">
-			<Filter>include\kos-headers\hybrid\sequence</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\vector.h">
-			<Filter>include\kos-headers\hybrid\sequence</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\spcall.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-lock.h">
-			<Filter>include\kos-headers\hybrid\sync</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-once.h">
-			<Filter>include\kos-headers\hybrid\sync</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-owner-rwlock.h">
-			<Filter>include\kos-headers\hybrid\sync</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-rwlock.h">
-			<Filter>include\kos-headers\hybrid\sync</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\typecore.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\unaligned.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kos-headers\hybrid\wordbits.h">
-			<Filter>include\kos-headers\hybrid</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\kwds.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\list.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\map.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\mapfile.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\method-hints.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\module.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\mro.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\none-operator.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\none.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\notify.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\numeric.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\object.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\objmethod.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\operator-hints.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\property.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\regex.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\rodict.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\roset.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\seq.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\serial.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\set.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\string.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\stringutils.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\struct.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\super.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\system-error.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\system-features.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\system.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\thread.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\traceback.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\tuple.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\types.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\atomic-ref.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\atomic.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\bytewriter.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\cache.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\futex.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\hash-io.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\hash.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\kos-compat.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\lock-utils.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\lock.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\md5.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\nrlock.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\objectlist.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\once.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\rlock-utils.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\rlock.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\simple-hashset.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\variant.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\include\deemon\weakref.h">
-			<Filter>include</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\cmdline.h">
-			<Filter>src</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\compiler\asm\genasm-yield.c.inl">
-			<Filter>src\compiler\asm</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\compiler\asm\genstore-setup.c.inl">
-			<Filter>src\compiler\asm</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl">
-			<Filter>src\compiler\lexer</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\execute\code-exec.c.inl">
-			<Filter>src\execute</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl">
-			<Filter>src\execute</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl">
-			<Filter>src\execute</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
-			<Filter>src\execute</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_enumerate_items.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_frozen.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_iterkeys.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_itervalues.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_keys.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_add.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_and.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_cmp.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_compare_eq.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_delitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_hash.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_add.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_and.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_sub.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_xor.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_iter.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_setitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_size.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_sub.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_operator_xor.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_pop.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_popitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_remove.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_removekeys.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_setdefault.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_setnew.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_setnew_ex.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_setold.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_setold_ex.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_update.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\map_values.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\method-hints.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_assign.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_bool.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_call.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_cmp.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_contains.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_delattr.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_delitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_delrange.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_float.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_getattr.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_getitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_getrange.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_hash.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_int.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_iter.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_misc.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_moveassign.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_next.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_repr.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_setattr.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_setitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_setrange.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_size.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\object_operator_str.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_all.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_any.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_append.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_bsearch.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_cached.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_clear.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_count.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_endswith.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_enumerate.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_enumerate_items.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_enumerate_reverse.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_erase.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_extend.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_fill.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_find.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_first.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_frozen.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_insert.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_insertall.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_last.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_locate.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_minmax.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_add.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_assign.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_cmp.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_compare.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_contains.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_delitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_delrange.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_getitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_getrange.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_hash.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_inplace_add.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_inplace_mul.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_iter.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_mul.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_setitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_setrange.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_operator_size.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_parity.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_pop.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_pushfront.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_reduce.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_remove.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_removeall.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_removeif.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_resize.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_reverse.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_reversed.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_rfind.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_rlocate.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_rremove.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_sort.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_sorted.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_startswith.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_sum.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_unpack.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_unpack_ub.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_first.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_frozen.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_insert.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_insertall.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_last.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_add.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_and.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_bool.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_cmp.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_compare_eq.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_hash.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_add.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_and.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_sub.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_xor.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_inv.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_iter.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_size.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_sub.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_operator_xor.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_pop.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_remove.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_removeall.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\method-hints\set_unify.h">
-			<Filter>src\method-hints</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\dict-firstlast-impl.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\dict-init-copyfrom.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\dict.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\file-operator.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\file-type-operators.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\float-parse.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\float-print.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\gc_inspect.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\generic-proxy.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\int-8bit.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\int_logic.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\object-destroy.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\byattr.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\cached-seq.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\combinations.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\concat.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-compare.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-enumerate.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-iterators.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-map-proxy.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-maps.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-reversed.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-sequences.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\default-sets.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\each-fastpass.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\each.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\enumerate-cb.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\filter.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\flat.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\hashfilter.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\map-fromattr.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\map-fromkeys.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\mapped.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\one.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\range.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\removeif-cb.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\repeat.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\segments.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\smap.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\sort-impl.c.inl">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\sort.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\svec.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\typemro.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\unique-iterator.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq_functions.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\type-operators.h">
-			<Filter>src\objects</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions-strip.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\bytes_segments.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\bytes_split.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\codec.h">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\db\Makefile">
-			<Filter>src\objects\unicode\db</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\finder.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\format-expr.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\format-impl.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\ordinals.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\regroups.h">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\reproxy.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\segments.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\split.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\string_functions-bwl.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\string_functions-strip.c.inl">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\unicode\string_functions.h">
-			<Filter>src\objects\unicode</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\attribute-access-generic.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\attribute-access-object.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\attribute-access-type-instance.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\attribute-access-type.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\build-value-unpack.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\builtin.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\kwlist.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\method-hint-select.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\method-hint-super.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\method-hints.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\runtime_error.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\slab.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\strings.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\futex-controller-new.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\futex-wait.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\futex-wake.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\system-nt.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\system\system-unix.c.inl">
-			<Filter>src\system</Filter>
-		</ClInclude>
-	</ItemGroup>
-	<ItemGroup>
-		<ClCompile Include="..\src\deemon\cmdline.c">
-			<Filter>src</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\assembler.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\directives.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genasm.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genassert.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\gencall.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genclass.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genfaster.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genfunction.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\geninplace.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genloop.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genoperator_func.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genprint.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genstore.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\genswitch.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\gentry.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\modgen.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\parseasm.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\peephole.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\scope.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\userasm.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\userdb.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\asm\util.c">
-			<Filter>src\compiler\asm</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\ast.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\compiler.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\ddi.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\dec.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\error.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\gendec.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\instrlen.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\core.c">
-			<Filter>src\compiler\interface</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\iast.c">
-			<Filter>src\compiler\interface</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\icompiler.c">
-			<Filter>src\compiler\interface</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\ilexer.c">
-			<Filter>src\compiler\interface</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\iparser.c">
-			<Filter>src\compiler\interface</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\iscope.c">
-			<Filter>src\compiler\interface</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\interface\isymbol.c">
-			<Filter>src\compiler\interface</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\asm.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\assert.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\brace.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\cast.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\class.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\comma.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\decl.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\del.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\doctext.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\expression.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\function.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\hybrid.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\import.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\kwlabel.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\loopexpr.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\operator.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\statement.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\tag.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\template-string.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\try.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\lexer\with.c">
-			<Filter>src\compiler\lexer</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\assign.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\assumes.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\constant_traits.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_action.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_class.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_conditional.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_loop.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_multiple.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_operator.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_switch.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_symbol.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\opt_try.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\optimize.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\optimize\traits.c">
-			<Filter>src\compiler\optimize</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\symbol.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\tpp.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\compiler\traits.c">
-			<Filter>src\compiler</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\buildid.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\code.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\ddi.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\dec.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\dex.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\exec.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\function-wrappers.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\function.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\interactive-module.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\modpath-directory.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\modpath.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\module-globals.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\execute\module.c">
-			<Filter>src\execute</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\main.c">
-			<Filter>src</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\attribute.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\bool.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\bytes.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\cached-dict.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\callable.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\cell.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\class.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\class_desc.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\dict.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\error_types.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\file-type-operators.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\file.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\filebuffer.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\filetypes.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\float.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\frame.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\gc_inspect.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\generic-proxy.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\hashset.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\instancemethod.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\int.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\int_logic.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\iterator.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\list.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\map.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\none.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\numeric.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\object.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\object_format.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\objmethod.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\property.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\rodict.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\roset.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\byattr.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\cached-seq.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\combinations.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\concat.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-compare.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-enumerate.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-map-proxy.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-maps.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-reversed.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-sequences.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\default-sets.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\each.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\enumerate-cb.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\fastseq.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\filter.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\flat.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\hashfilter.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\map-fromattr.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\map-fromkeys.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\mapped.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\one.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\range.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\removeif-cb.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\repeat.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\segments.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\smap.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\sort.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\svec.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\typemro.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\unique-iterator.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\set.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\string.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\super.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\traceback.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\tuple.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\type-operators.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\cformat.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\codec.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\cscanf.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\format.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\regex.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\regroups.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\string_functions.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\unicode.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\unicode\unicode_db.c">
-			<Filter>src\objects\unicode</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\weakref.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\accu.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\attribute.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\build-value.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\builtin.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\builtin_functions.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\computed-operators.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\deepcopy.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\error-rt-attribute.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\error-rt-compiler.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\error-rt.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\error.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\format.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\gc.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\hash-io.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\hash.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\heap.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\kwds.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\kwlist.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\lock.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\md5.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\method-hint-defaults.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\method-hint-select.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\method-hint-super-invoke.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\method-hint-super.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\method-hint-traits.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\method-hint-wrappers.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\method-hints.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\misc.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\mro.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\notify.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator-hint-defaults.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator-hint-errors.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator-hint-invoke-utils.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator-hint-invoke.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator-hints.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator-inherit.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\operator_info.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\runtime_error.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\serial.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\strings.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\struct.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\thread.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\type_member.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\variant.c">
-			<Filter>src\runtime</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\system\file.c">
-			<Filter>src\system</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\system\futex.c">
-			<Filter>src\system</Filter>
-		</ClCompile>
-		<ClCompile Include="..\src\deemon\system\system.c">
-			<Filter>src\system</Filter>
-		</ClCompile>
-	</ItemGroup>
-	<ItemGroup>
-		<None Include="..\.clang-format" />
-		<None Include="..\.editorconfig" />
-		<None Include="..\.gitattributes" />
-		<None Include="..\.gitignore" />
-		<None Include="..\.gitmodules" />
-		<None Include="..\README.md" />
-		<None Include="..\cpp.hint" />
-		<None Include="..\include\deemon\compiler\lexer.def">
-			<Filter>include\compiler</Filter>
-		</None>
-		<None Include="..\include\deemon\dec.md">
-			<Filter>include</Filter>
-		</None>
-		<None Include="..\src\deemon\compiler\asm\userdb.def">
-			<Filter>src\compiler\asm</Filter>
-		</None>
-		<None Include="..\src\deemon\execute\asm\exec.gas-386.S">
-			<Filter>src\execute\asm</Filter>
-		</None>
-		<None Include="..\src\deemon\linker-scripts\dex-build-id.ld">
-			<Filter>src\linker-scripts</Filter>
-		</None>
-		<None Include="..\src\deemon\linker-scripts\link-deemon-gcc-i386-cygwin.def">
-			<Filter>src\linker-scripts</Filter>
-		</None>
-		<None Include="..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def">
-			<Filter>src\linker-scripts</Filter>
-		</None>
-		<None Include="..\src\deemon\linker-scripts\link-deemon.dee">
-			<Filter>src\linker-scripts</Filter>
-		</None>
-		<None Include="..\src\deemon\method-hints\method-hints.dee">
-			<Filter>src\method-hints</Filter>
-		</None>
-		<None Include="..\src\deemon\objects\unicode\db\.gitignore">
-			<Filter>src\objects\unicode\db</Filter>
-		</None>
-		<None Include="..\src\deemon\objects\unicode\db\ctype.dee">
-			<Filter>src\objects\unicode\db</Filter>
-		</None>
-		<None Include="..\src\deemon\objects\unicode\db\db.dat">
-			<Filter>src\objects\unicode\db</Filter>
-		</None>
-		<None Include="..\src\deemon\runtime\builtins.def">
-			<Filter>src\runtime</Filter>
-		</None>
-		<None Include="..\src\deemon\runtime\caches.def">
-			<Filter>src\runtime</Filter>
-		</None>
-	</ItemGroup>
-	<ItemGroup>
-		<CustomBuild Include="..\src\deemon\execute\asm\altstack.ms-x64.S">
-			<Filter>src\execute\asm</Filter>
-		</CustomBuild>
-	</ItemGroup>
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-00000195F605}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\abi">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-00195F60F339}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\compiler">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-E54B7E739EFF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\cxx">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-00195F60F378}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\kos-headers">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-AF4C3B9EA148}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\kos-headers\compiler">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-1D14ABCAE2A7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\kos-headers\hybrid">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-4789B705866D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\kos-headers\hybrid\pp">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-815D8B79A204}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\kos-headers\hybrid\sched">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-94ECAADB4187}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\kos-headers\hybrid\sequence">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-A873FE28831C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\kos-headers\hybrid\sync">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-0AF0BF8D8393}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\util">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-00CAFB07B424}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-000000001F33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\compiler">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-00F9C9ED4A5A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\compiler\asm">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-855739EF538E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\compiler\interface">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-B665F278FC77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\compiler\lexer">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-09363B73029E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\compiler\optimize">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-F89298B3D49A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\execute">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-001F392E8885}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\execute\asm">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-0A5B9CCC8A6F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\linker-scripts">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-0F28B9353A51}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\method-hints">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-85488C26C6F6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\objects">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-001F390B7113}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\objects\seq">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-0A58EC995C55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\objects\unicode">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-A1E329861DCC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\objects\unicode\db">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-C0DDF0AC63F6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\runtime">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-001F3974914D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\system">
+      <UniqueIdentifier>{372a956e-8c03-4d55-8939-0003E72EE845}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\LICENSE" />
+    <ClInclude Include="..\Makefile" />
+    <ClInclude Include="..\configure" />
+    <ClInclude Include="..\include\deemon\abi\ctypes.h">
+      <Filter>include\abi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\abi\time.h">
+      <Filter>include\abi</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\accu.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\alloc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\api.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\arg.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\asm-table.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\asm.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\attribute.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\bool.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\bytes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cached-dict.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\callable.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cell.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\class.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\code.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\assembler.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\ast.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\compiler.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\dec.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\doctext.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\error.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\interface.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\lexer.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\optimize.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\symbol.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\tpp.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\compiler\traits.h">
+      <Filter>include\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\computed-operators.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\api.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\bool.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\bytes.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\callable.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\cell.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\dict.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\file.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\float.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\function.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\hashset.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\int.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\iterator.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\list.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\mapping.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\none.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\numeric.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\object.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\sequence.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\set.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\string.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\tuple.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\cxx\type.h">
+      <Filter>include\cxx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\dec.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\deepcopy.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\dex.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\dict.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\error-rt.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\error.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\error_types.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\exec.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\file.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\filetypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\float.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\format.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\gc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\hashset.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\heap.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\instancemethod.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\int.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\__stdcxx.h">
+      <Filter>include\kos-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\__stdinc.h">
+      <Filter>include\kos-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\c++.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\c.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\checker.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\clang.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\docgen.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-builtins.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\gcc-warnings.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\gcc.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\generic.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\intellisense-common.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\intellisense-gcc.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\intellisense-msvc.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\msvc.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\other.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\compiler\pp-generic.h">
+      <Filter>include\kos-headers\compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__alloca.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__altint.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__asm.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__assembly.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__assert.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-complete.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-gasm-x86.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-libatomic.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic-msvc.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__bit.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitfield.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitset.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__byteswap.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__debug-alignment.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__minmax.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__overflow.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__pointer-cxx-impl.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__pointer.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__rotate.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__string.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__unaligned.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__va_size.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\__wordbits.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\align.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\alloca.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\altint.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\atomic.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\bit.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\bitset.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\byteorder.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\byteswap.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\compiler.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\debug-alignment.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\floatcore.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\host.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\int128.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\limitcore.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\minmax.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\overflow.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\pointer.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\__bubble.h">
+      <Filter>include\kos-headers\hybrid\pp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\__va_nargs.h">
+      <Filter>include\kos-headers\hybrid\pp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\pp\bubble.h">
+      <Filter>include\kos-headers\hybrid\pp</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-lock.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__atomic-rwlock.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__gettid.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__preemption.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\__yield.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-lock.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-once.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-owner-rwlock.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\atomic-rwlock.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\preemption.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sched\yield.h">
+      <Filter>include\kos-headers\hybrid\sched</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\bitset.h">
+      <Filter>include\kos-headers\hybrid\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\bsearch.h">
+      <Filter>include\kos-headers\hybrid\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\list.h">
+      <Filter>include\kos-headers\hybrid\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\rbtree-abi.h">
+      <Filter>include\kos-headers\hybrid\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\rbtree.h">
+      <Filter>include\kos-headers\hybrid\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sequence\vector.h">
+      <Filter>include\kos-headers\hybrid\sequence</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\spcall.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-lock.h">
+      <Filter>include\kos-headers\hybrid\sync</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-once.h">
+      <Filter>include\kos-headers\hybrid\sync</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-owner-rwlock.h">
+      <Filter>include\kos-headers\hybrid\sync</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\sync\atomic-rwlock.h">
+      <Filter>include\kos-headers\hybrid\sync</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\typecore.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\unaligned.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kos-headers\hybrid\wordbits.h">
+      <Filter>include\kos-headers\hybrid</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\kwds.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\list.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\map.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\mapfile.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\method-hints.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\module.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\mro.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\none-operator.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\none.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\notify.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\numeric.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\object.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\objmethod.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\operator-hints.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\property.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\regex.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\rodict.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\roset.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\seq.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\serial.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\set.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\string.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\stringutils.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\struct.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\super.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\system-error.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\system-features.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\system.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\thread.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\traceback.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\tuple.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\type.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\types.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\atomic-ref.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\atomic.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\bytewriter.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\cache.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\futex.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\hash-io.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\hash.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\kos-compat.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\lock-utils.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\lock.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\md5.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\nrlock.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\objectlist.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\once.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\rlock-utils.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\rlock.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\simple-hashset.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\variant.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\weakref.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\cmdline.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\compiler\asm\genasm-yield.c.inl">
+      <Filter>src\compiler\asm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\compiler\asm\genstore-setup.c.inl">
+      <Filter>src\compiler\asm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl">
+      <Filter>src\compiler\lexer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\execute\code-exec.c.inl">
+      <Filter>src\execute</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl">
+      <Filter>src\execute</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\execute\code-invoke.c.inl">
+      <Filter>src\execute</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\execute\function-wrappers.h">
+      <Filter>src\execute</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_enumerate.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_enumerate_items.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_frozen.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_iterkeys.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_itervalues.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_keys.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_add.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_and.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_cmp.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_compare_eq.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_contains.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_delitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_getitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_hash.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_add.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_and.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_sub.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_inplace_xor.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_iter.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_setitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_size.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_sub.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_operator_xor.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_pop.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_popitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_remove.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_removekeys.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_setdefault.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_setnew.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_setnew_ex.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_setold.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_setold_ex.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_update.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\map_values.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\method-hints.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_assign.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_bool.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_call.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_cmp.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_contains.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_delattr.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_delitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_delrange.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_float.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_getattr.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_getitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_getrange.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_hash.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_int.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_iter.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_misc.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_moveassign.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_next.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_repr.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_setattr.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_setitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_setrange.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_size.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\object_operator_str.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_all.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_any.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_append.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_bsearch.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_cached.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_clear.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_count.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_endswith.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_enumerate.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_enumerate_items.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_enumerate_reverse.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_erase.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_extend.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_fill.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_find.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_first.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_frozen.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_insert.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_insertall.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_last.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_locate.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_minmax.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_add.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_assign.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_bool.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_cmp.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_compare.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_contains.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_delitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_delrange.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_getitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_getrange.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_hash.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_inplace_add.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_inplace_mul.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_iter.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_mul.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_setitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_setrange.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_operator_size.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_parity.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_pop.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_pushfront.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_reduce.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_remove.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_removeall.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_removeif.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_resize.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_reverse.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_reversed.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_rfind.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_rlocate.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_rremove.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_sort.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_sorted.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_startswith.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_sum.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_unpack.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_unpack_ub.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\seq_xchitem.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_first.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_frozen.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_insert.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_insertall.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_last.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_add.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_and.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_bool.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_cmp.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_compare_eq.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_hash.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_add.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_and.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_sub.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_inplace_xor.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_inv.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_iter.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_size.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_sub.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_operator_xor.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_pop.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_remove.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_removeall.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\method-hints\set_unify.h">
+      <Filter>src\method-hints</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\dict-firstlast-impl.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\dict-init-copyfrom.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\dict.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\file-operator.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\file-type-operators.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\float-parse.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\float-print.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\gc_inspect.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\generic-proxy.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\int-8bit.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\int_logic.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\object-destroy.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\byattr.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\cached-seq.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\combinations.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\concat.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-compare-impl.c.inl">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-compare.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-enumerate.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-iterators.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-map-proxy.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-maps.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-reversed.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-sequences.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\default-sets.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\each-fastpass.c.inl">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\each.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\enumerate-cb.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\filter.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\flat.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\hashfilter.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\map-fromattr.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\map-fromkeys.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\mapped.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\one.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\range.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\removeif-cb.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\repeat.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\segments.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\smap.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\sort-impl.c.inl">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\sort.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\svec.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\typemro.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\unique-iterator.h">
+      <Filter>src\objects\seq</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq_functions.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\type-operators.h">
+      <Filter>src\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\bytes_functions-strip.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\bytes_functions.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\bytes_segments.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\bytes_split.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\codec.h">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\db\Makefile">
+      <Filter>src\objects\unicode\db</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\finder.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\format-expr.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\format-impl.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\ordinals.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\regroups.h">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\reproxy.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\segments.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\split.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\string_functions-bwl.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\string_functions-strip.c.inl">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\unicode\string_functions.h">
+      <Filter>src\objects\unicode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\attribute-access-generic.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\attribute-access-object.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\attribute-access-type-instance.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\attribute-access-type.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\build-value-unpack.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\builtin.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\kwlist.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\method-hint-select.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\method-hint-super.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\method-hints.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\runtime_error.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\slab.c.inl">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\runtime\strings.h">
+      <Filter>src\runtime</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\system\futex-controller-new.c.inl">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\system\futex-wait.c.inl">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\system\futex-wake.c.inl">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\system\system-nt.c.inl">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\deemon\system\system-unix.c.inl">
+      <Filter>src\system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\deemon\util\weakref.h">
+      <Filter>include\util</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\deemon\cmdline.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\assembler.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\directives.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genasm.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genassert.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\gencall.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genclass.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genfaster.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genfunction.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\geninplace.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genloop.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genoperator_func.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genprint.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genstore.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\genswitch.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\gentry.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\modgen.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\parseasm.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\peephole.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\scope.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\userasm.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\userdb.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\asm\util.c">
+      <Filter>src\compiler\asm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\ast.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\compiler.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\ddi.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\dec.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\error.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\gendec.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\instrlen.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\core.c">
+      <Filter>src\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\iast.c">
+      <Filter>src\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\icompiler.c">
+      <Filter>src\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\ilexer.c">
+      <Filter>src\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\iparser.c">
+      <Filter>src\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\iscope.c">
+      <Filter>src\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\interface\isymbol.c">
+      <Filter>src\compiler\interface</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\asm.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\assert.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\brace.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\cast.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\class.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\comma.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\decl.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\del.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\doctext.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\expression.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\function.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\hybrid.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\import.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\kwlabel.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\loopexpr.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\operator.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\statement.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\tag.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\template-string.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\try.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\lexer\with.c">
+      <Filter>src\compiler\lexer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\assign.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\assumes.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\constant_traits.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_action.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_class.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_conditional.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_loop.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_multiple.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_operator.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_switch.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_symbol.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\opt_try.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\optimize.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\optimize\traits.c">
+      <Filter>src\compiler\optimize</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\symbol.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\tpp.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\compiler\traits.c">
+      <Filter>src\compiler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\buildid.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\code.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\ddi.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\dec.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\dex.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\exec.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\function-wrappers.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\function.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\interactive-module.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\modpath-directory.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\modpath.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\module-globals.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\execute\module.c">
+      <Filter>src\execute</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\main.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\attribute.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\bool.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\bytes.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\cached-dict.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\callable.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\cell.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\class.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\class_desc.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\dict.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\error_types.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\file-type-operators.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\file.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\filebuffer.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\filetypes.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\float.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\frame.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\gc_inspect.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\generic-proxy.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\hashset.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\instancemethod.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\int.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\int_logic.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\iterator.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\list.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\map.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\none.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\numeric.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\object.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\object_format.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\objmethod.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\property.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\rodict.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\roset.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\byattr.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\cached-seq.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\combinations.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\concat.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-compare.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-enumerate.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-iterators.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-map-proxy.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-maps.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-reversed.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-sequences.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\default-sets.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\each.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\enumerate-cb.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\fastseq.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\filter.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\flat.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\hashfilter.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\map-fromattr.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\map-fromkeys.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\mapped.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\one.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\range.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\removeif-cb.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\repeat.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\segments.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\simpleproxy.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\smap.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\sort.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\svec.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\typemro.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\unique-iterator.c">
+      <Filter>src\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\set.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\string.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\super.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\traceback.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\tuple.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\type-operators.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\cformat.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\codec.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\cscanf.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\format.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\regex.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\regroups.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\string_functions.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\unicode.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\unicode\unicode_db.c">
+      <Filter>src\objects\unicode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\weakref.c">
+      <Filter>src\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\accu.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\attribute.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\build-value.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\builtin.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\builtin_functions.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\computed-operators.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\deepcopy.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\error-rt-attribute.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\error-rt-compiler.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\error-rt.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\error.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\format.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\gc.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\hash-io.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\hash.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\heap.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\kwds.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\kwlist.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\lock.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\md5.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\method-hint-defaults.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\method-hint-select.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\method-hint-super-invoke.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\method-hint-super.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\method-hint-traits.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\method-hint-wrappers.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\method-hints.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\misc.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\mro.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\notify.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator-constcall.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator-hint-defaults.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator-hint-errors.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator-hint-invoke-utils.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator-hint-invoke.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator-hints.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator-inherit.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\operator_info.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\runtime_error.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\serial.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\simple-hashset.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\strings.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\struct.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\thread.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\type_member.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\runtime\variant.c">
+      <Filter>src\runtime</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\system\file.c">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\system\futex.c">
+      <Filter>src\system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\system\system.c">
+      <Filter>src\system</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.clang-format" />
+    <None Include="..\.editorconfig" />
+    <None Include="..\.gitattributes" />
+    <None Include="..\.gitignore" />
+    <None Include="..\.gitmodules" />
+    <None Include="..\README.md" />
+    <None Include="..\cpp.hint" />
+    <None Include="..\include\deemon\compiler\lexer.def">
+      <Filter>include\compiler</Filter>
+    </None>
+    <None Include="..\include\deemon\dec.md">
+      <Filter>include</Filter>
+    </None>
+    <None Include="..\src\deemon\compiler\asm\userdb.def">
+      <Filter>src\compiler\asm</Filter>
+    </None>
+    <None Include="..\src\deemon\execute\asm\exec.gas-386.S">
+      <Filter>src\execute\asm</Filter>
+    </None>
+    <None Include="..\src\deemon\linker-scripts\dex-build-id.ld">
+      <Filter>src\linker-scripts</Filter>
+    </None>
+    <None Include="..\src\deemon\linker-scripts\link-deemon-gcc-i386-cygwin.def">
+      <Filter>src\linker-scripts</Filter>
+    </None>
+    <None Include="..\src\deemon\linker-scripts\link-deemon-msvc-i386-win32.def">
+      <Filter>src\linker-scripts</Filter>
+    </None>
+    <None Include="..\src\deemon\linker-scripts\link-deemon.dee">
+      <Filter>src\linker-scripts</Filter>
+    </None>
+    <None Include="..\src\deemon\method-hints\method-hints.dee">
+      <Filter>src\method-hints</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\db\.gitignore">
+      <Filter>src\objects\unicode\db</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\db\ctype.dee">
+      <Filter>src\objects\unicode\db</Filter>
+    </None>
+    <None Include="..\src\deemon\objects\unicode\db\db.dat">
+      <Filter>src\objects\unicode\db</Filter>
+    </None>
+    <None Include="..\src\deemon\runtime\builtins.def">
+      <Filter>src\runtime</Filter>
+    </None>
+    <None Include="..\src\deemon\runtime\caches.def">
+      <Filter>src\runtime</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\src\deemon\execute\asm\altstack.ms-x64.S">
+      <Filter>src\execute\asm</Filter>
+    </CustomBuild>
+  </ItemGroup>
 </Project>

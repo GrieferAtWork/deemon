@@ -28,8 +28,9 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
+#include <deemon/type.h>            /* OPERATOR_CALL, OPERATOR_ITER */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL */

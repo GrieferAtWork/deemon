@@ -39,7 +39,7 @@
 #include "api.h"
 
 #include "none-operator.h" /* _DeeNone_* */
-#include "object.h"
+#include "type.h"          /* Dee_OPERATOR_USERCOUNT */
 #include "types.h"         /* DREF, DeeObject, DeeTypeObject, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stddef.h> /* NULL, size_t */

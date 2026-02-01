@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_hash_t */
 #include <deemon/super.h>           /* DeeObject_TCallAttr, DeeObject_TCallAttrKw */
 #include <deemon/system-features.h> /* mempcpyc */
 #include <deemon/tuple.h>           /* DeeTuple* */

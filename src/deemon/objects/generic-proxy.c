@@ -25,12 +25,13 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/map.h>             /* DeeMapping_Type */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, Dee_visit_t, return_reference */
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/super.h>           /* DeeSuper_New */
 #include <deemon/system-features.h> /* memcpy */
+#include <deemon/type.h>            /* DeeType_GetInstanceSize, DeeType_GetName, Dee_Visit, type_cmp */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashCombine */
 

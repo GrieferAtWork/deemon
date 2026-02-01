@@ -29,7 +29,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>             /* PRFu16 */
 #include <deemon/module.h>             /* DeeModuleObject */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* Dee_Decref */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* int16_t, int32_t, uint16_t */

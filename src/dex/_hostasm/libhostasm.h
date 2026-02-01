@@ -34,8 +34,9 @@
 #include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, Dee_code_addr_t, Dee_instruction_t */
 #include <deemon/module.h>          /*  */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_funptr_t, Dee_refcnt_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memcmp, memset */
+#include <deemon/type.h>            /* DeeType_GetOperatorFlags, Dee_operator_t, Dee_type_member, METHOD_FNOREFESCAPE */
 #include <deemon/util/hash.h>       /* DeeObject_HashGeneric */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 

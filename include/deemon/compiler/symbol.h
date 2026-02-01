@@ -24,9 +24,10 @@
 
 #include "../code.h"            /* DeeCodeObject */
 #include "../module.h"          /* Dee_module_symbol */
-#include "../object.h"          /* Dee_WEAKREF */
+#include "../object.h"          /* Dee_Incref */
 #include "../system-features.h" /* memcpy */
 #include "../types.h"           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT, Dee_refcnt_t */
+#include "../util/weakref.h"    /* Dee_WEAKREF, Dee_weakref_* */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "tpp.h"

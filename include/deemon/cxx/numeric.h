@@ -25,7 +25,7 @@
 
 #include "../format.h"  /* Dee_PCKdSIZ, Dee_PCKuSIZ */
 #include "../numeric.h" /* DeeNumeric_Type */
-#include "../object.h"
+#include "../object.h"  /* DeeObject_* */
 #include "../types.h"   /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"
 

@@ -29,10 +29,11 @@
 #include <deemon/list.h>           /* DeeListObject, DeeList_* */
 #include <deemon/none-operator.h>  /* _DeeNone_NewRef2 */
 #include <deemon/none.h>           /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_ssize_t, Dee_visit_t, ITER_DONE */
 #include <deemon/operator-hints.h> /* DeeNO_add_t, DeeType_RequireNativeOperator */
 #include <deemon/string.h>         /* DeeStringObject, Dee_unicode_printer* */
 #include <deemon/tuple.h>          /* DeeTuple*, Dee_tuple_builder* */
+#include <deemon/type.h>           /* DeeObject_IsShared, Dee_Visit */
 
 #include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_UADD */
 

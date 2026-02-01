@@ -28,10 +28,11 @@
 
 #include <deemon/dex.h>       /* DEX_* */
 #include <deemon/error.h>     /* DeeError_* */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, Dee_Incref */
 #include <deemon/objmethod.h> /*  */
 #include <deemon/string.h>    /* DeeStringObject, DeeString_Check */
 #include <deemon/system.h>    /* DeeNTSystem_GetFilenameOfHandle, DeeNTSystem_GetHandle, DeeSystem_GetFilenameOfFD, DeeUnixSystem_GetFD */
+#include <deemon/type.h>      /* METHOD_FPURECALL */
 
 #include <stddef.h> /* NULL */
 

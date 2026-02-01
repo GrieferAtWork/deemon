@@ -35,12 +35,13 @@
 #include <deemon/kwds.h>            /* DeeKw_Wrap, DeeKw_WrapInheritedOnSuccess */
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_XDecref, Dee_hash_t, _Dee_HashSelectC */
 #include <deemon/string.h>          /* DeeString*, DeeUni_IsSymCont, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
 #include <deemon/super.h>           /* DeeSuper_TYPE, DeeSuper_Type */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeTypeType_GetOperatorById, DeeTypeType_GetOperatorByNameLen, Dee_operator_t, Dee_opinfo, OPERATOR_* */
 #include <deemon/util/hash.h>       /* Dee_HashStr */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */

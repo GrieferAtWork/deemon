@@ -28,8 +28,9 @@
 #include <deemon/mro.h>           /* Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_initempty, Dee_attrspec */
 #include <deemon/none-operator.h> /*  */
 #include <deemon/none.h>          /* DeeNoneObject, DeeNone_Check, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>        /* DREF, DeeBuffer, DeeObject, DeeObject_Type, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>        /* DeeString_STR */
+#include <deemon/type.h>          /* DeeObject_DATA, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, METHOD_FCONSTCALL, METHOD_FNOTHROW, OPERATOR_*, TF_KW, TF_SINGLETON, TP_F*, TYPE_OPERATOR_CUSTOM, TYPE_OPERATOR_FLAGS, type_* */
 
 #include <hybrid/typecore.h> /* __SIZEOF_*__ */
 

@@ -32,12 +32,13 @@
 #include <deemon/module.h>             /* DeeModule_CallExternStringf */
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/struct.h>             /* DeeStructObject_* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, _Exit, exit */
 #include <deemon/system.h>             /* DeeNTSystem_*, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

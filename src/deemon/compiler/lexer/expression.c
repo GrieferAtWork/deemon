@@ -34,11 +34,12 @@
 #include <deemon/int.h>               /* DeeInt_FromString, DeeInt_NewInt64, Dee_INT_STRING* */
 #include <deemon/module.h>            /* DeeModule* */
 #include <deemon/none.h>              /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_AsUInt, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, ITER_DONE */
 #include <deemon/string.h>            /* DeeString_DecodeBackslashEscaped, DeeString_NewSized, DeeUni_IsLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT */
 #include <deemon/stringutils.h>       /* Dee_unicode_readutf8_n */
 #include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, memchr, memmoveupc */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
+#include <deemon/type.h>              /* Dee_operator_t, OPERATOR_*, TP_FFINAL, TP_FNORMAL */
 
 #include "../../runtime/strings.h"
 

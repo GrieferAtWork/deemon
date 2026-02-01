@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, bzero, cnd_broadcast, futex_timedwaitwhile, futex_timedwaitwhile64, futex_waitwhile, futex_wake, futex_wakeall, mtx_lock, mtx_unlock, pthread_cond_broadcast, pthread_mutex_lock, pthread_mutex_unlock, sem_destroy, sem_post, sem_post_multiple, syscall, thrd_success */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */

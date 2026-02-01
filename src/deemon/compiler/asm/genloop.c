@@ -25,7 +25,7 @@
 #include <deemon/asm.h>                /* ASM_* */
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
-#include <deemon/object.h>
+#include <deemon/type.h>               /* OPERATOR_ITER */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */

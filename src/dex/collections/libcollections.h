@@ -23,7 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_Malloc, Dee_TryMalloc, _Dee_MallococBufsize */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_WEAKREF_SUPPORT, Dee_ssize_t, OBJECT_HEAD */
+#include <deemon/type.h>      /* Dee_operator_t */
 #include <deemon/util/hash.h> /* DeeObject_HashGeneric */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 

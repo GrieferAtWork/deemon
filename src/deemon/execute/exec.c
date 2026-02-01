@@ -33,11 +33,12 @@
 #include <deemon/heap.h>            /* DeeHeap_Trim */
 #include <deemon/module.h>          /* DeeModule*, Dee_compiler_options, Dee_module_object */
 #include <deemon/notify.h>          /* DeeNotify_Shutdown */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Call, DeeObject_CallInherited, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_XDecref */
 #include <deemon/string.h>          /* DeeString_NewUtf8, STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit */
 #include <deemon/thread.h>          /* DeeThread_ClearTls, DeeThread_InterruptAndJoinAll, DeeThread_SubSystemFini, DeeThread_SubSystemInit */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* Dee_DumpReferenceLeaks */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 

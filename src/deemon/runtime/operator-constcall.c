@@ -26,11 +26,12 @@
 #include <deemon/dict.h>           /* Dee_dict_item */
 #include <deemon/instancemethod.h> /* DeeInstanceMethodObject, DeeInstanceMethod_Type */
 #include <deemon/kwds.h>           /* DeeKwds_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* DeeObject, DeeObject_Type, DeeTypeObject, Dee_TYPE */
 #include <deemon/objmethod.h>      /* DeeCMethod*_*, DeeCMethodObject, DeeClsMemberObject, DeeClsMember_Type, DeeClsMethod*, DeeClsProperty*, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethod*, Dee_clsproperty_origin, Dee_objmethod_origin */
 #include <deemon/rodict.h>         /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>          /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/tuple.h>          /* DeeTupleObject, DeeTuple_Type */
+#include <deemon/type.h>           /* DeeType_*, Dee_STRUCT_OBJECT, Dee_STRUCT_OBJECT_OPT, Dee_TYPE_MEMBER_ISFIELD, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, STRUCT_ATOMIC, STRUCT_CONST, TYPE_MEMBER_ISCONST, type_member */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

@@ -31,13 +31,14 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* DeeNone_NewRef, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_formatprinter_t, Dee_ssize_t, return_reference, return_reference_ */
 #include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
 #include <deemon/seq.h>             /* DeeSeq_NewEmpty */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeAscii_ItoaLowerDigit, DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_*, Dee_uniflag_t, WSTR_LENGTH */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memrev, DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, memcasecmp, memchr, memcmp, memcpy*, mempcpy, memset, open */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* METHOD_F*, TYPE_*METHOD*, type_method */
 #include <deemon/util/atomic.h>     /* atomic_xch */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_TYPE__ */

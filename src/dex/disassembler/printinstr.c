@@ -32,9 +32,10 @@
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRF* */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_INT_PRINT, Dee_INT_PRINT_FNUMSYS */
 #include <deemon/module.h>          /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_ISOK */
 #include <deemon/string.h>          /* DeeString_PrintUtf8, DeeString_STR */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcmp, strchr */
+#include <deemon/type.h>            /* DeeType_Check, DeeType_IsClass */
 
 #include <hybrid/byteswap.h>  /* UNALIGNED_GETLE16, UNALIGNED_GETLE32 */
 #include <hybrid/limitcore.h> /* __UINT16_MAX__ */

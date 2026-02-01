@@ -31,10 +31,11 @@
 #include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewSize, Dee_return_smallint */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsInt, DeeObject_AsSize */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_*, bcmp, bzero, isalpha, memchr, memcmp, memcpy, memmove, memset, stpcpy, strcat, strchr, strcpy, strend, strlen, strncat, to(lower|upper) */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_DRIVES, DeeSystem_IsSep */
+#include <deemon/type.h>            /* METHOD_FNORMAL, METHOD_FPURECALL */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UMUL */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

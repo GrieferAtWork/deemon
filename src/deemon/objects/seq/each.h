@@ -23,8 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>  /* DeeObject_FMalloc */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_hash_t */
 #include <deemon/string.h> /*  */
+#include <deemon/type.h>   /* Dee_operator_t */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

@@ -42,11 +42,12 @@
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/module.h>             /* Dee_MODULE_SYMBOL_EQUALS */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/seq.h>                /* DeeSeq_AsHeapVector, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* bcmpc, strlen */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset */
 #include <deemon/util/atomic.h>        /* atomic_read */
 
 #include "../../runtime/strings.h"

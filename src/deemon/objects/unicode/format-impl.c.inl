@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/error.h>  /* DeeError_Throwf, DeeError_UnpackError */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject, DeeObject_*, Dee_Decref, Dee_formatprinter_t, Dee_ssize_t, return_reference_ */
 #include <deemon/string.h> /* DeeString*, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */

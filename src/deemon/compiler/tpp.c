@@ -32,12 +32,13 @@
 #include <deemon/file.h>              /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */
 #include <deemon/format.h>            /* DeeFormat_Printf, Dee_sprintf, Dee_vsprintf */
 #include <deemon/list.h>              /* DeeListObject, DeeList_* */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DeeObject_Print, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref */
 #include <deemon/string.h>            /* DeeString*, Dee_string_utf_fini, Dee_string_utf_free */
 #include <deemon/system-features.h>   /* DeeSystem_DEFINE_memrchr, mempcpyc */
 #include <deemon/system.h>            /* DeeSystem_* */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>             /* DeeTuple* */
+#include <deemon/type.h>              /* DeeObject_InitInherited */
 #include <deemon/types.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */

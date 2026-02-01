@@ -26,7 +26,8 @@
 #include <deemon/compiler/compiler.h>
 #include <deemon/compiler/interface.h>
 #include <deemon/error.h>              /* DeeError_ReferenceError, DeeError_Throwf */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_InstanceOfExact, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_visit_t, OBJECT_HEAD_INIT */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_*, Dee_Visit, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 

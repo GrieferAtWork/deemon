@@ -27,7 +27,7 @@
 
 #include "../api.h"
 
-#include "../object.h"
+#include "../object.h" /* Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref */
 #include "../types.h"  /* DREF, DeeObject, Dee_AsObject, Dee_refcnt_t */
 
 #include <stddef.h> /* NULL */

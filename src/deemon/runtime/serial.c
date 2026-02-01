@@ -22,10 +22,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h>          /* Dee_Decref*, Dee_XDecrefv */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/types.h>           /* DREF, DeeObject */
+#include <deemon/util/weakref.h>    /* Dee_weakref, Dee_weakref_initempty, Dee_weakref_lock */
 
 #include <stddef.h> /* NULL, size_t */
 

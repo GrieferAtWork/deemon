@@ -33,7 +33,7 @@
 
 #include <deemon/int.h>    /* DeeInt_NewUIntptr, INT_UNSIGNED */
 #include <deemon/none.h>   /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject, DeeObject_AsPtrdiff, DeeObject_TypeAssertFailed, Dee_TYPE */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

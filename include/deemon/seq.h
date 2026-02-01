@@ -38,7 +38,7 @@
 #include "types.h"     /* DREF, DeeObject, DeeObject_Implements, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_ssize_t */
 #include "util/lock.h" /* Dee_atomic_rwlock_t */
 #ifndef __INTELLISENSE__
-#include "object.h"
+#include "object.h" /* DeeObject_NewPack, Dee_Incref */
 #endif /* !__INTELLISENSE__ */
 /**/
 

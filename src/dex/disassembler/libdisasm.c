@@ -32,10 +32,11 @@
 #include <deemon/error.h>           /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/file.h>            /* DeeFile_WriteAll */
 #include <deemon/int.h>             /* DeeInt_NewSize */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, Dee_formatprinter_t, Dee_ssize_t */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* bcmpc, strchr, strend */
+#include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_ENABLE */
 

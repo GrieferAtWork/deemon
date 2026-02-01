@@ -34,10 +34,11 @@
 #include <deemon/gc.h>                 /* DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_gc_head */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/module.h>             /* DeeModule* */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref*, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_refcnt_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* bzeroc, link, memcpy*, memmovedownc, memmoveupc, memset */
+#include <deemon/type.h>               /* DeeObject_GCPriority, DeeObject_Init, DeeType_IsGC, DeeType_Type, Dee_GC_PRIORITY_EARLY, Dee_GC_PRIORITY_LATE, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */

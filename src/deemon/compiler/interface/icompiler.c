@@ -39,11 +39,12 @@
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_New */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_ssize_t, Dee_weakref_support_init */
 #include <deemon/seq.h>                /* DeeSeq_* */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/system-features.h>    /* bcmp, bcmpc, bzero, strchr, strend */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TYPE_*, type_* */
 #include <deemon/util/cache.h>         /* DECLARE_OBJECT_CACHE, DECLARE_STRUCT_CACHE */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
 

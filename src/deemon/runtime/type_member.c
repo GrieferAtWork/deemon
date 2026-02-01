@@ -32,10 +32,12 @@
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/mro.h>             /* Dee_ATTRINFO_*, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrperm_t, type_member_get, type_method_vcallf */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_int128_t, Dee_uint128_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, strlen */
+#include <deemon/type.h>            /* Dee_kwobjmethod_t, STRUCT_*, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/weakref.h>    /* Dee_weakref, Dee_weakref_* */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 
 #include "../runtime/kwlist.h"

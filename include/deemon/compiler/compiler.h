@@ -22,10 +22,11 @@
 
 #include "../api.h"
 
-#include "../object.h"
-#include "../util/hash.h"  /* Dee_HashPointer */
-#include "../util/lock.h"  /* Dee_atomic_rwlock_* */
-#include "../util/rlock.h" /* Dee_rshared_rwlock_* */
+#include "../object.h"       /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
+#include "../util/hash.h"    /* Dee_HashPointer */
+#include "../util/lock.h"    /* Dee_atomic_rwlock_* */
+#include "../util/rlock.h"   /* Dee_rshared_rwlock_* */
+#include "../util/weakref.h" /* Dee_WEAKREF */
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "error.h"

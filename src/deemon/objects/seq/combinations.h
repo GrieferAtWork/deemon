@@ -23,8 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/method-hints.h> /* DeeMH_seq_operator_trygetitem_index_t */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* DREF, DeeObject, DeeTypeObject, Dee_WEAKREF_SUPPORT */
 #include <deemon/util/atomic.h>  /* atomic_cmpxch, atomic_read */
+#include <deemon/util/weakref.h> /* Dee_WEAKREF */
 
 #include "../generic-proxy.h"
 

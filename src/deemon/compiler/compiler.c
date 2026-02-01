@@ -37,11 +37,13 @@
 #include <deemon/exec.h>               /* DeeExec_RUNMODE_* */
 #include <deemon/gc.h>                 /* DeeGC_TRACK */
 #include <deemon/module.h>             /* DeeModule*, Dee_compiler_options, Dee_module_object */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XClear, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
 #include <deemon/string.h>             /* DeeString*, Dee_unicode_printer_fini */
 #include <deemon/system-features.h>    /* bzero, memcpy, memset */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_Visit, TF_NONE, TP_FNORMAL, type_* */
 #include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_t */
+#include <deemon/util/weakref.h>       /* Dee_WEAKREF, Dee_weakref_clear, Dee_weakref_set */
 
 #include <hybrid/typecore.h> /* __REGISTER_TYPE__ */
 

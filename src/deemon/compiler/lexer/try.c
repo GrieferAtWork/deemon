@@ -28,7 +28,8 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF */
+#include <deemon/type.h>            /* TP_FINTERRUPT */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

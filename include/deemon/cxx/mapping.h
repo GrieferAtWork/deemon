@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "../map.h"    /* DeeMapping_Type, Dee_EmptyMapping */
-#include "../object.h"
+#include "../object.h" /* DeeObject_* */
 #include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"
 #include "sequence.h"

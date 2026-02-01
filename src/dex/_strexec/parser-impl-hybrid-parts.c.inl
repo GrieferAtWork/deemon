@@ -29,8 +29,9 @@
 
 #include <deemon/error.h>     /* DeeError_*, ERROR_HANDLED_INTERRUPT */
 #include <deemon/none.h>      /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, Dee_Decref, Dee_XClear, Dee_XDecref, ITER_ISOK */
 #include <deemon/thread.h>    /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
+#include <deemon/type.h>      /* DeeObject_IsInterrupt */
 #include <deemon/util/hash.h> /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */

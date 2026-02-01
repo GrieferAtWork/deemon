@@ -34,7 +34,7 @@
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_GetShortName, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>               /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref, Dee_Incref, Dee_XDecref */
 #include <deemon/string.h>             /* DeeUni_* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_memcasecmp, CONFIG_HAVE_strcasecmp, bcmp, bzero, memcasecmp, memchr, strcasecmp */
 

@@ -22,8 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DeeTypeObject */
 #include <deemon/system-features.h> /* memcpy */
+#include <deemon/type.h>            /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_*, type_buffer */
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL */

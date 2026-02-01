@@ -39,11 +39,12 @@
 #include <deemon/list.h>            /* DeeListObject */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_FPROPERTY, Dee_MODSYM_FREADONLY, Dee_module_* */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XIncref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/super.h>           /* DeeSuperObject */
 #include <deemon/system-features.h> /* bzero, memmoveupc, memset */
 #include <deemon/thread.h>          /* DeeThreadObject, Dee_except_frame */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewVector, Dee_EmptyTuple */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, OPERATOR_*, TF_NONE, TP_F* */
 #include <deemon/util/atomic.h>     /* atomic_read */
 
 #include <hybrid/align.h>    /* CEILDIV */

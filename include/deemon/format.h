@@ -33,7 +33,7 @@
 #include <hybrid/__va_size.h> /* __VA_SIZE */
 #include <hybrid/typecore.h>  /* __SIZEOF_*__ */
 
-#include "object.h"
+#include "object.h" /* DeeObject_Print, DeeObject_PrintRepr */
 #include "types.h"  /* DREF, DeeObject, Dee_formatprinter_t, Dee_ssize_t */
 
 #include <stdarg.h> /* va_list */

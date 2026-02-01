@@ -37,11 +37,12 @@
 #include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_Track, DeeGC_Untrack */
 #include <deemon/list.h>            /* DeeList_FromSequence, DeeList_NewUninitialized */
 #include <deemon/map.h>             /* DeeSharedMap_Decref, DeeSharedMap_NewShared */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DeeObject, DeeObject_*, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_refcnt_t */
 #include <deemon/seq.h>             /* DeeRange_New, DeeRange_NewInt, DeeSeq_Unpack, DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/super.h>           /* DeeSuper_New, DeeSuper_Of */
 #include <deemon/system-features.h> /* bzero */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeType_Type */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 
 #include <hybrid/align.h>         /* CEIL_ALIGN, IS_ALIGNED */

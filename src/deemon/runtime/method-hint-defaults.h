@@ -25,7 +25,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
 #include <deemon/none-operator.h>      /* _DeeNone_* */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t */
 #include <deemon/rodict.h>             /* DeeRoDict_FromSequence */
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence */
 

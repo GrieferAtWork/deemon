@@ -50,7 +50,8 @@
 
 
 #ifndef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
-#include "object.h"
+#include "object.h" /* DREF, DeeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
+#include "type.h"   /* type_* */
 
 /* Have a deemon program that:
  * - scans the deemon source code for type declarations

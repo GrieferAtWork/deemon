@@ -33,11 +33,12 @@
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/mro.h>             /* DeeObject_IterAttr, Dee_ALIGNOF_ATTRITER, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_MEMBERCACHE_*, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrdesc_nameobj, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo, Dee_attriter, Dee_attriter_*, Dee_attriterchain, Dee_attriterchain_builder, Dee_attriterchain_builder_getbufsize, Dee_attriterchain_item, Dee_attriterchain_item_fromiter, Dee_attrspec, Dee_enumattr_t, Dee_membercache_*, Dee_type_member_* */
 #include <deemon/none-operator.h>   /* _DeeNone_reti1_2 */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, Dee_visit_t */
 #include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMember_Type, DeeClsMethod_New, DeeClsMethod_Type, DeeClsProperty_New, DeeClsProperty_Type, DeeKwClsMethod_New, DeeKwClsMethod_Type, DeeKwObjMethod_CallFunc, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod* */
 #include <deemon/property.h>        /* DeeProperty_Type */
 #include <deemon/string.h>          /* DeeString_New, DeeString_STR */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero, memcpy, memset */
+#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_METHOD_FKWDS, Dee_kwobjmethod_t, Dee_membercache, STRUCT_CONST, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/hash.h>       /* Dee_HashStr */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_*, Dee_shared_rwlock_* */

@@ -29,7 +29,7 @@
 #include <deemon/int.h>          /* DeeInt_* */
 #include <deemon/method-hints.h> /* DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
 #include <deemon/none.h>         /* DeeNone_Check, Dee_None, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, ITER_DONE, return_reference */
 #include <deemon/tuple.h>        /* DEFINE_TUPLE, DeeNullableTuple_Type, DeeTuple* */
 /**/
 

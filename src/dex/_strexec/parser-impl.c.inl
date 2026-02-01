@@ -40,13 +40,14 @@
 #include <deemon/list.h>            /* DeeList_* */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
 #include <deemon/none.h>            /* DeeNone*, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_hash_t */
 #include <deemon/seq.h>             /* DeeRange_New, DeeSeq_* */
 #include <deemon/string.h>          /* DeeString_FromBackslashEscaped, DeeString_NewUtf8, DeeUni_IsSpace, STRING_ERROR_FSTRICT */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_rev_n */
 #include <deemon/super.h>           /* DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, memcpy* */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>            /* DeeTypeType_GetOperatorById, DeeType_*, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FFINAL, TP_FNORMAL */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <hybrid/compiler.h>

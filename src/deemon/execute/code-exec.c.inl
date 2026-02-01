@@ -39,7 +39,7 @@
 #include <deemon/map.h>             /* DeeSharedItem, DeeSharedMap_Decref, DeeSharedMap_NewShared */
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_NewRef, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/operator-hints.h>  /* DeeNO_shl_t, DeeType_RequireNativeOperator */
 #include <deemon/rodict.h>          /* Dee_EmptyRoDict */
 #include <deemon/seq.h>             /* DeeRange_New, DeeRange_NewInt, DeeSeq_*, DeeSharedVector_Decref, DeeSharedVector_NewShared */
@@ -49,6 +49,7 @@
 #include <deemon/thread.h>          /* DeeExec_StackLimit, DeeThreadObject, DeeThread_CheckInterruptSelf, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
 #include <deemon/traceback.h>       /* DeeTraceback* */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeObject_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_val */
 #include <deemon/util/futex.h>      /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
 

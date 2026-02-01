@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "../format.h" /* Dee_PCKdSIZ, Dee_PCKuSIZ */
-#include "../object.h"
+#include "../object.h" /* DeeObject_* */
 #include "../tuple.h"  /* DeeTuple* */
 #include "../types.h"  /* DREF, DeeObject, Dee_ssize_t, _Dee_HashSelectC */
 #include "object.h"

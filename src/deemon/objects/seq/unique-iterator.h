@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h>              /* DREF, DeeObject, DeeTypeObject, OBJECT_HEAD */
 #include <deemon/operator-hints.h>      /* DeeNO_iter_next_t, DeeNO_nextpair_t */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset_with_lock */
 

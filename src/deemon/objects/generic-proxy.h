@@ -22,8 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD */
 #include <deemon/serial.h> /* Dee_seraddr_t */
+#include <deemon/type.h>   /* type_cmp */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 

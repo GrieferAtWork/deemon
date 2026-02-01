@@ -31,7 +31,7 @@
 #include <hybrid/int128.h>      /* __ALIGNOF_INT128__, __hybrid_int128_getword8, __hybrid_int128_setword8, __hybrid_uint128_getword8, __hybrid_uint128_setword8 */
 #include <hybrid/typecore.h>    /* __ALIGNOF_*__, __BYTE_TYPE__, __SIZEOF_*__, __UINTPTR_TYPE__ */
 
-#include "object.h"
+#include "object.h"      /* Dee_Decref, Dee_Incref, Dee_visit_t */
 #include "types.h"       /* DREF, DeeObject, DeeTypeObject, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 #include "util/atomic.h" /* Dee_atomic_read */
 

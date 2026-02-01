@@ -30,8 +30,9 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Print, DeeFormat_Printf */
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE */
+#include <deemon/type.h>               /* DeeType_Type, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_getset, type_method */
 
 #include "../../runtime/strings.h"
 

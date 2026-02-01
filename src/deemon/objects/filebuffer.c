@@ -30,10 +30,11 @@
 #include <deemon/filetypes.h>       /* DeeFileBufferObject, DeeFileBuffer_*, Dee_FILE_BUFFER_F*, Dee_FILE_BUFFER_MODE_*, Dee_FILE_BUFSIZ_MAX, Dee_FILE_BUFSIZ_MIN, Dee_file_buffer_object */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_IncrefIfNotZero, Dee_SIZEOF_POS_T, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeUni_ToLower */
 #include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit, fflush, memchr, memcpy, mempcpy, stpcpy */
+#include <deemon/type.h>            /* Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>      /* Dee_rshared_rwlock_init */

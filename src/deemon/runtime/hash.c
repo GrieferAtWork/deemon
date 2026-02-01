@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h>          /* Dee_SIZEOF_HASH_T, Dee_hash_t, _Dee_HashSelect */
 #include <deemon/string.h>          /* DeeUni_ToLower */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
 #include <deemon/system-features.h> /* strlen */

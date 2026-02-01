@@ -24,7 +24,8 @@
 
 #include <deemon/gc.h>              /* DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>             /* DeeIntObject */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_Decref_likely, Dee_XDecref, Dee_XIncref, OBJECT_HEAD */
+#include <deemon/type.h>            /* DeeObject_Init */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 #include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_init */
 

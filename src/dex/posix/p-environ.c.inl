@@ -35,12 +35,13 @@
 #include <deemon/map.h>             /* DeeMapping_Type */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/notify.h>          /* DeeNotify_Broadcast, Dee_NOTIFICATION_CLASS_ENVIRON */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeIterator_Type */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FREPLAC, STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_IF_E1, ENV_LOCK, ENV_UNLOCK, bcmpc, calloc, clearenv, environ, getenv, memcpyc, memmovedownc, mempcpyc, putenv, putenv_s, setenv, strchr, strend, strlen, unsetenv, wenviron, wgetenv, wputenv, wputenv_s, wsetenv, wunsetenv */
 #include <deemon/system.h>          /* DeeNTSystem_IsBadAllocError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
+#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_*, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 

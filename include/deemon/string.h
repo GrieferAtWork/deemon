@@ -56,6 +56,7 @@
 #include <hybrid/host.h>       /* __ARCH_PAGESIZE, __linux__, __unix__ */
 #include <hybrid/typecore.h>   /* __*_TYPE__, __SIZEOF_WCHAR_T__ */
 
+#include "type.h"  /* DeeObject_Init */
 #include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t, _Dee_HashSelectC */
 
 #include <stdarg.h>  /* va_list */
@@ -66,7 +67,7 @@
 #ifndef __INTELLISENSE__
 #include "alloc.h"  /* DeeDbgObject_*, DeeDbg_*, DeeObject_*, Dee_*alloc*, Dee_Free, Dee_UntrackAlloc */
 #include "format.h" /* DeeFormat_Printf, DeeFormat_VPrintf */
-#include "object.h"
+#include "object.h" /* DeeObject_*, Dee_Incref, _DeeRefcnt_DecFetch, _DeeRefcnt_Inc */
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_NO_STRING_H

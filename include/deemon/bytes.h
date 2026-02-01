@@ -39,7 +39,7 @@
 #ifndef __INTELLISENSE__
 #include "alloc.h"  /* DeeObject_Free */
 #include "format.h" /* DeeFormat_Printf, DeeFormat_VPrintf */
-#include "object.h"
+#include "object.h" /* DeeObject_Print, DeeObject_PrintRepr, Dee_BUFFER_F*, Dee_DecrefDokill, Dee_Incref */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

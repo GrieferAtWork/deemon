@@ -23,8 +23,9 @@
 #include <deemon/file.h>     /* DeeFileObject, DeeFileTypeObject, DeeFileType_*, DeeFile_*, DeeType_AsFileType, Dee_FILEIO_FNORMAL, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR */
 #include <deemon/format.h>   /* PCK* */
 #include <deemon/none.h>     /* DeeNone_Check, DeeNone_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
 #include <deemon/super.h>    /* DeeSuper* */
+#include <deemon/type.h>     /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_GetName */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

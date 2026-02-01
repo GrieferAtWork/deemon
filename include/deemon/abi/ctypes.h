@@ -28,7 +28,7 @@
 #ifndef __INTELLISENSE__
 #include "../format.h" /* Dee_PCKuPTR */
 #include "../module.h" /* DeeModule_GetExternString */
-#include "../object.h"
+#include "../object.h" /* DeeObject_*, Dee_Decref */
 
 #include <stdint.h> /* uintptr_t */
 #endif /* !__INTELLISENSE__ */

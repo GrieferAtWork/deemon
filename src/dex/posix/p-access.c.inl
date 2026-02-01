@@ -31,11 +31,12 @@
 #include <deemon/bool.h>            /* return_false, return_true */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_SystemError */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_Decref */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString_AsUtf8, DeeString_AsWide, Dee_wchar_t */
 #include <deemon/system-features.h> /* AT_EACCESS, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, DeeSystem_IF_E2, access, euidaccess, faccessat, waccess */
 #include <deemon/system.h>          /* DeeUnixSystem_ThrowErrorf */
+#include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

@@ -28,9 +28,10 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/symbol.h>
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeTypeObject, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_XIncref */
 #include <deemon/system-features.h>    /* bzero, memmovedownc */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeType_Check */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

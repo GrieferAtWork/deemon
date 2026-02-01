@@ -30,7 +30,7 @@
 #include <stddef.h> /* size_t */
 
 #ifndef __INTELLISENSE__
-#include "object.h"
+#include "object.h" /* Dee_Incref */
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN

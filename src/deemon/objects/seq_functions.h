@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject */
 
 #include <stddef.h> /* size_t */
 

@@ -31,10 +31,11 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/map.h>               /* Dee_EmptyMapping */
 #include <deemon/none.h>              /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>               /* Dee_EmptySeq */
 #include <deemon/set.h>               /* Dee_EmptySet */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
+#include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC, Dee_Visit, Dee_operator_t, OPERATOR_ISINPLACE, TF_NONE, TP_FNORMAL */
 #include <deemon/util/cache.h>        /* DECLARE_STRUCT_CACHE, DEFINE_OBJECT_CACHE, DEFINE_STRUCT_CACHE */
 
 #include <stddef.h> /* NULL, size_t */

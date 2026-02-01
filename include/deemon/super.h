@@ -25,7 +25,7 @@
 
 #include "api.h"
 
-#include "object.h"
+#include "object.h" /* DeeBuffer, Dee_visit_t */
 #include "types.h"  /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stdarg.h> /* va_list */

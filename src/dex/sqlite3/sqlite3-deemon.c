@@ -34,7 +34,7 @@
 #include <deemon/int.h>             /* DeeInt_Type */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>            /* DeeNone_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsInt64, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_ssize_t */
 #include <deemon/string.h>          /* DeeString*, WSTR_LENGTH */
 #include <deemon/super.h>           /* DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU */

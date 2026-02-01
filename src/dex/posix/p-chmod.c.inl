@@ -32,11 +32,12 @@
 #include <deemon/error.h>           /* DeeError_Catch, DeeError_NoSymlink */
 #include <deemon/int.h>             /* DeeInt_NewUInt */
 #include <deemon/none.h>            /* DeeNone_Check, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsUInt, DeeObject_AssertTypeExact, Dee_AsObject, Dee_Decref */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
 #include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, creat64, fchmod, fchmodat, openat64, open64, wcreat64, wopenat64, wopen64 */
 #include <deemon/system.h>          /* DeeUnixSystem_GetFD */
+#include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 

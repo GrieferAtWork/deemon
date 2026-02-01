@@ -39,7 +39,7 @@
 #include <deemon/list.h>            /* DeeListObject, DeeList_* */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FHASCTIME, Dee_MODULE_SYMBOL_GETDOCLEN, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE */
 #include <deemon/rodict.h>          /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/seq.h>             /* DeeSeqOneObject, DeeSeqOne_Type */
@@ -47,6 +47,7 @@
 #include <deemon/system-features.h> /* memcpy, memmovedownc, memmoveup, memset, strlen */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_ICASE, DeeSystem_SEP */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* Dee_operator_t */
 #include <deemon/util/hash-io.h>    /* Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

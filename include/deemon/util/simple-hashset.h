@@ -30,8 +30,9 @@
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
 
 #include "../alloc.h"           /* Dee_Free, Dee_Mallocc, Dee_TryMallocc */
-#include "../object.h"
+#include "../object.h"          /* DREF, DeeObject, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_visit_t */
 #include "../system-features.h" /* memcpyc */
+#include "../type.h"            /* Dee_XVisit */
 #include "lock.h"               /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_* */
 
 #include <stddef.h> /* NULL, size_t */

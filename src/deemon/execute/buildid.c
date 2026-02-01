@@ -25,7 +25,7 @@
 #include <deemon/dex.h>             /* Dee_module_dexdata */
 #include <deemon/exec.h>            /*  */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_buildid */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* Dee_Decref_likely */
 #include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LoadLibrary, memcpy, strlen */
 #include <deemon/system.h>          /* DeeSystem_DlOpen_FAILED, DeeSystem_GetLastModified */
 #include <deemon/types.h>           /* DREF, DeeObject, Dee_TYPE, ITER_ISOK */

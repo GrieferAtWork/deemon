@@ -34,9 +34,10 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Incref, Dee_TYPE */
 #include <deemon/string.h>          /* DeeString_STR, DeeString_Type */
 #include <deemon/system-features.h> /* memcpy, mempcpyc */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_AllocInstance */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_INT__ */
 

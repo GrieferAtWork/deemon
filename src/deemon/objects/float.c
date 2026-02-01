@@ -30,10 +30,11 @@
 #include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, CONFIG_HAVE_IEEE754_LE, DeeFloatObject, DeeFloat_PrintRepr, Dee_Strtod */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AsDouble, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_DecrefNokill, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, DBL_RADIX, DBL_ROUNDS, ceil, exp, fabs, floor, frexp, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, nan, nextafter, nexttoward, round, trunc */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/limitcore.h> /* __INTPTR_MAX__, __INTPTR_MIN__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_DOUBLE__, __UINT32_C */

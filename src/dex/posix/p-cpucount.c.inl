@@ -32,9 +32,10 @@
 #include <deemon/error.h>           /* DeeError_Handled, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>            /* DeeFile_OpenString, DeeFile_ReadLine, OPEN_FCLOEXEC, OPEN_FRDONLY */
 #include <deemon/int.h>             /* DeeInt_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_Decref, Dee_Decref_likely, ITER_ISOK, return_reference */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CTL_HW, HW_AVAILCPU, HW_NCPU, MPC_GETNUMSPUS, _SC_NPROCESSORS_ONLN, _SC_NPROC_ONLN, bcmpc, get_nprocs, mpctl, sysconf, sysctl */
+#include <deemon/type.h>            /* METHOD_FPURECALL */
 
 #include <stdbool.h> /* false */
 #include <stddef.h>  /* NULL, size_t */

@@ -28,7 +28,8 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/kwds.h>               /* DeeType_IsKw */
 #include <deemon/module.h>             /* DeeModule_GetDeemon */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DeeTypeObject */
+#include <deemon/type.h>               /* Dee_operator_t, FAKE_OPERATOR_*, OPERATOR_* */
 
 #include "../../runtime/builtin.h"
 

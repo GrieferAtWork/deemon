@@ -33,13 +33,14 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINTREF, TYPE_METHOD_HINTREF_DOC */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_formatprinter_t, Dee_ssize_t, return_reference, return_reference_ */
 #include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
 #include <deemon/seq.h>             /* DeeSeqSome*, DeeSeq_NewEmpty */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeCodec_Decode, DeeCodec_Encode, DeeDbgString_New2ByteBuffer, DeeDbgString_New4ByteBuffer, DeeString*, DeeUni_*, Dee_EmptyString, Dee_STRING_HASH_UNSET, Dee_STRING_UTF_FASCII, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_uniflag_t, Dee_unitraits, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_COMMON3, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_Foreach, DeeString_GetChar, Dee_unicode_utf8seqlen_safe */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, memchr*, memcmp, memcmpb, memcmpl, memcmpw, memcpy*, memmeml, memmemw, memmoveb, memmovel, memmovew, mempcpy*, mempsetb, mempsetl, mempsetw, memrchrl, memrchrw, memrmeml, memrmemw, memsetb, memsetl, memsetw, open */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeObject_Init, METHOD_F*, TYPE_*METHOD*, type_math, type_method */
 
 #include <hybrid/byteswap.h> /* BSWAP16, BSWAP32 */
 #include <hybrid/minmax.h>   /* MIN */

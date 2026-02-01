@@ -23,7 +23,8 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "../object.h" /* struct type_member */
+#include "../object.h" /* Dee_visit_t */
+#include "../type.h"   /* type_member */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_hash_t */
 #include "compiler.h"
 #include "symbol.h"

@@ -19,9 +19,10 @@
 #include <deemon/error-rt.h>        /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_*, Dee_*digit*_t, Dee_DIGIT_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeObject_Int, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_ssize_t, return_reference_ */
 #include <deemon/system-features.h> /* bzeroc, memcpyc, memset */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/type.h>            /* DeeObject_IsShared */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/bit.h>      /* PDEP, PEXT, POPCOUNT */

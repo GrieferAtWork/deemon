@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>  /* DeeSlabInfo, DeeSlabStat */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeTypeObject, OBJECT_HEAD */
 
 DECL_BEGIN
 

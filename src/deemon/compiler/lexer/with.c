@@ -27,7 +27,8 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF */
+#include <deemon/type.h>            /* OPERATOR_ENTER, OPERATOR_LEAVE */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */

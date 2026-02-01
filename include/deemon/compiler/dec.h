@@ -29,7 +29,7 @@
 
 #include "../code.h"   /* DeeCodeObject */
 #include "../module.h" /* DeeModuleObject */
-#include "../object.h"
+#include "../object.h" /* DeeObject */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

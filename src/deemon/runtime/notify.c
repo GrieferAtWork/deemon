@@ -26,7 +26,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/module.h>          /* DeeModule_GetExtern */
 #include <deemon/notify.h>          /* Dee_NOTIFICATION_CLASS_FNOCASE, Dee_notify_t */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_TryGetItem, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_hash_t, ITER_DONE */
 #include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
 #include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, strlen */
 #include <deemon/util/hash.h>       /* Dee_HashCasePtr, Dee_HashPtr */

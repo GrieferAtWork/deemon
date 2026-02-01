@@ -30,10 +30,11 @@
 #include <deemon/list.h>               /* DeeList_Type */
 #include <deemon/map.h>                /* DeeMapping_Check */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, Dee_AsObject, Dee_Decref_likely */
 #include <deemon/rodict.h>             /* DeeRoDict_Type */
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
+#include <deemon/type.h>               /* OPERATOR_CALL */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

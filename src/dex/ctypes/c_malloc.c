@@ -32,9 +32,10 @@
 #include <deemon/arg.h>             /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct2X, UNPuSIZ, UNPxSIZ, _DeeArg_AsObject */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowUMul */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeObject_AsSizeM1, Dee_DecrefDokill */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strnlen, memcpyc */
+#include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UMUL */
 

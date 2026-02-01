@@ -26,10 +26,10 @@
 #include <hybrid/sequence/list.h> /* SLIST_ENTRY */
 #include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SIZEOF_POINTER__, __UINTPTR_C */
 
-#include "../asm.h"    /* ASM16_*, ASM_*, instruction_t */
-#include "../code.h"   /* DeeCodeObject, DeeDDIObject, Dee_except_handler, code_addr_t, instruction_t */
-#include "../object.h" /* Dee_operator_t */
-#include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_ssize_t, OBJECT_HEAD */
+#include "../asm.h"   /* ASM16_*, ASM_*, instruction_t */
+#include "../code.h"  /* DeeCodeObject, DeeDDIObject, Dee_except_handler, code_addr_t, instruction_t */
+#include "../type.h"  /* Dee_operator_t */
+#include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_ssize_t, OBJECT_HEAD */
 #include "ast.h"
 #include "symbol.h"
 #include "tpp.h"

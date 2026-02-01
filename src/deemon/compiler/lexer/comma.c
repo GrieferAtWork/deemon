@@ -28,10 +28,11 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/object.h>
+#include <deemon/object.h>           /* DREF, Dee_Incref */
 #include <deemon/string.h>           /* DeeStringObject */
 #include <deemon/system-features.h>  /* memcpyc */
 #include <deemon/tuple.h>            /* Dee_EmptyTuple */
+#include <deemon/type.h>             /* OPERATOR_CALL, TP_FFINAL */
 
 #include "../../runtime/strings.h"
 

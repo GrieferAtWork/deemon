@@ -31,7 +31,7 @@
 #include "api.h"
 
 #include "gc.h"        /* Dee_gc_head_link */
-#include "object.h"
+#include "object.h"    /* DeeObject_NewRef */
 #include "string.h"    /* DeeString*, Dee_STRING_ERROR_FIGNORE */
 #include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 #include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */

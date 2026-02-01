@@ -30,7 +30,7 @@
 #include <deemon/format.h>          /* DeeFormat_VPrintf, Dee_vsnprintf, PRFuSIZ, PRFxSIZ */
 #include <deemon/gc.h>              /* DeeGC_Collect */
 #include <deemon/heap.h>            /* DeeHeap_Trim */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DeeObject_Check, Dee_TYPE, Dee_formatprinter_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, getenv, mempcpy, strlen */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
 

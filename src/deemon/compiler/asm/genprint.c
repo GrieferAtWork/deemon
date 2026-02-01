@@ -29,11 +29,12 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref */
 #include <deemon/objmethod.h>          /* DeeObjMethod* */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* memcpyc, memset */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/type.h>               /* Dee_objmethod_t, OPERATOR_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

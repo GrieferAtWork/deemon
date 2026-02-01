@@ -53,7 +53,7 @@
 #include <hybrid/limitcore.h> /* __INTMAX_MIN__, __UINTMAX_MAX__ */
 #include <hybrid/typecore.h>  /* __BYTE_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__ */
 
-#include "object.h"
+#include "object.h" /* Dee_COMPARE_*, Dee_Incref */
 #include "types.h"  /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stdbool.h> /* bool, false, true */

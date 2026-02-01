@@ -31,11 +31,12 @@
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/none-operator.h>      /* _DeeNone_retsm1_1 */
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Compare, Dee_CompareNe, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>     /* DeeNO_nextkey_t, DeeNO_nextpair_t, DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_Visit, OPERATOR_GETITEM, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */

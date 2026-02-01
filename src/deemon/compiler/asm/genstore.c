@@ -36,8 +36,9 @@
 #include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsInt16 */
 #include <deemon/module.h>             /* DeeModule_GetSymbol, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>               /* DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DeeObject, Dee_AsObject */
 #include <deemon/string.h>             /* DeeString* */
+#include <deemon/type.h>               /* OPERATOR_* */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

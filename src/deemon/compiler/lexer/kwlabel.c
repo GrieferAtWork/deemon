@@ -28,7 +28,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/kwds.h>            /* DeeKwds_AppendStringLen, DeeKwds_NewWithHint */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, Dee_DecrefNokill, Dee_Decref_unlikely */
 #include <deemon/string.h>          /* DeeUni_IsSymCont */
 #include <deemon/tuple.h>           /* DeeTuple_Empty, Dee_EmptyTuple */
 

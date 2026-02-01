@@ -32,7 +32,7 @@
 #include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab */
 #include <deemon/error-rt.h>     /* DeeRT_ErrEmptySequence, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/none.h>         /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>       /* Dee_Decref, Dee_Incref, Dee_XDecref */
 #include <deemon/seq.h>          /* DeeSeq_Unpack */
 #include <deemon/tuple.h>        /* DeeTuple* */
 #include <deemon/types.h>        /* DREF, DeeObject, Dee_AsObject, ITER_DONE */

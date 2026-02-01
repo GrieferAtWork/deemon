@@ -27,7 +27,7 @@
 #include <deemon/api.h>
 
 #include <deemon/list.h>   /* DeeList_NewVectorInherited */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject, Dee_Decref, Dee_Incref */
 #include <deemon/seq.h>    /* DeeSeq_NewEmpty */
 #include <deemon/tuple.h>  /* DeeTuple* */
 

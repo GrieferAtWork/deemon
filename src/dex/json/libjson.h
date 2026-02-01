@@ -24,7 +24,8 @@
 
 #include <deemon/float.h>       /* CONFIG_HAVE_FPU */
 #include <deemon/hashset.h>     /* DeeHashSetObject, DeeHashSet_* */
-#include <deemon/object.h>
+#include <deemon/object.h>      /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, OBJECT_HEAD */
+#include <deemon/type.h>        /* DeeObject_InitInherited */
 #include <deemon/util/atomic.h> /* atomic_read */
 #include <deemon/util/lock.h>   /* Dee_atomic_rwlock_* */
 

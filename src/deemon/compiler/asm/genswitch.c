@@ -31,7 +31,7 @@
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_NotImplemented, DeeError_TypeError */
 #include <deemon/int.h>                /* DeeInt_Check, DeeInt_TryAsUInt32 */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_InstanceOfExact, Dee_AsObject, Dee_DecrefDokill, Dee_Decref_likely, Dee_Incref */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, Dee_rodict_builder*, _DeeRoDict_GetRealVTab */
 #include <deemon/tuple.h>              /* DeeTuple* */
 

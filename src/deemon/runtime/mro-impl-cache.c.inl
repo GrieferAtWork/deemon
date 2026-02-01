@@ -174,11 +174,12 @@
 #include <deemon/format.h>          /* Dee_VPPackf, Dee_VPPackf_Cleanup, Dee_VPackf, Dee_va_list_struct */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/mro.h>             /* DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_Find*Attr*, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_Set*Attr*, DeeType_VCall*Attr*f, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_MEMBERCACHE_*, Dee_attrdesc, Dee_attrinfo, Dee_attrspec, Dee_membercache_*, type_member_* */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_*, Dee_Decref, Dee_Incref, Dee_hash_t, ITER_DONE */
 #include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMethod_New, DeeClsProperty_NewEx, DeeKwClsMethod_New, DeeKwObjMethod_New, DeeKwObjMethod_VCallFuncf, DeeObjMethod_New, DeeObjMethod_VCallFuncf */
 #include <deemon/string.h>          /* DeeStringObject, DeeString_STR */
 #include <deemon/system-features.h> /* memcmp, memcpy */
 #include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE */
+#include <deemon/type.h>            /* Dee_*method_t, Dee_type_*, STRUCT_CONST, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_member */
 #include <deemon/util/atomic.h>     /* atomic_read */
 
 #include "kwlist.h"        /* kwlist__thisarg */

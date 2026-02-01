@@ -36,13 +36,14 @@
 #include <deemon/int.h>                /* DeeInt_NewInt64 */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_HASHNX, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_hash_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /* DeeCMethod_Check, DeeKwCMethod_Check */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Check, _DeeRoDict_GetRealVTab */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h>    /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_*, DeeType_Check, DeeType_Type, TF_NONE, TP_FFINAL, TP_FNORMAL, type_cmp */
 #include <deemon/util/hash.h>          /* Dee_HashPtr */
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */

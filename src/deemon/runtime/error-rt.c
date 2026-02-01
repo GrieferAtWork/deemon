@@ -35,7 +35,7 @@
 #include <deemon/kwds.h>               /* DeeKwArgs* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DeeObject_*, Dee_BOUND_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_visit_t, return_reference, return_reference_ */
 #include <deemon/seq.h>                /* DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
@@ -44,6 +44,7 @@
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATED, Dee_except_frame */
 #include <deemon/traceback.h>          /* DeeTracebackObject, DeeTraceback_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_GetName, DeeType_Type, Dee_XVisit, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/variant.h>            /* Dee_variant, Dee_variant_* */

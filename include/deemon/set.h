@@ -25,7 +25,7 @@
 #include "api.h"
 
 #ifndef __INTELLISENSE__
-#include "object.h"
+#include "object.h" /* Dee_Incref */
 #endif /* !__INTELLISENSE__ */
 #include "types.h" /* DeeObject, DeeTypeObject */
 

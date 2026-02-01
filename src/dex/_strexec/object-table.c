@@ -28,8 +28,9 @@
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_HasAttrStringLenHash, Dee_Decrefv, Dee_HAS_ISERR, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_visit_t, ITER_DONE, ITER_ISOK, return_reference_ */
 #include <deemon/system-features.h> /* memcpy */
+#include <deemon/type.h>            /* Dee_Visitv */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

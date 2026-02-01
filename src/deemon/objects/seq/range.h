@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeTypeObject, Dee_ssize_t, OBJECT_HEAD */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool */

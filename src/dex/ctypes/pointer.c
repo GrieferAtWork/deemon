@@ -36,9 +36,10 @@
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeBuffer, DeeObject, DeeObject_AsUIntptr, DeeObject_AssertTypeExact, Dee_AsObject, Dee_DecrefDokill, Dee_TYPE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FREPLAC */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_wcslen, memcpy, memmove, strlen */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, METHOD_FNOREFESCAPE, OPERATOR_CONSTRUCTOR, STRUCT_UINTPTR_T, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */

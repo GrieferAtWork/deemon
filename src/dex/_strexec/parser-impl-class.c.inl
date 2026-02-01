@@ -27,7 +27,8 @@
 #include <deemon/api.h>
 
 #include <deemon/error.h>  /* DeeError_NOTIMPLEMENTED */
-#include <deemon/object.h>
+#include <deemon/object.h> /* DREF, DeeObject_AssertType, DeeTypeObject, Dee_XDecref */
+#include <deemon/type.h>   /* DeeType_Type */
 
 #include <stddef.h> /* NULL */
 #include <stdint.h> /* uint16_t */

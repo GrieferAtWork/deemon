@@ -38,7 +38,7 @@
 #include <deemon/format.h>          /* DeeFormat_Printf, PCKu32, PCKu64, PRF* */
 #include <deemon/int.h>             /* DeeInt_*, INT_UNSIGNED */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_ERR, Dee_Decref*, Dee_OBJECT_HEAD_INIT, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeSeq_AsHeapVector */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
@@ -46,6 +46,7 @@
 #include <deemon/system.h>          /* DeeNTSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_UINTPTR_T, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_* */
 #include <deemon/util/atomic.h>     /* atomic_read, atomic_write */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 

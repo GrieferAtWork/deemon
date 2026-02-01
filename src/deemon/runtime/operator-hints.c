@@ -26,10 +26,11 @@
 #include <deemon/class.h>           /* DeeClass_TryGetPrivateOperatorPtr, Dee_CLASS_OPERATOR_PRINT, Dee_CLASS_OPERATOR_PRINTREPR */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/method-hints.h>    /* DeeType_*MethodHint*, Dee_tmh_id */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DeeTypeObject, DeeType_Implements, Dee_BOUND_*, Dee_HAS_*, Dee_TYPE, Dee_funptr_t */
 #include <deemon/operator-hints.h>  /* DeeType_GetNativeOperatorOOM, DeeType_GetNativeOperatorUnsupported, DeeType_GetOperatorOfTno, Dee_compact_tno_id_t, Dee_tno_id, usrtype__* */
 #include <deemon/seq.h>             /* DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/system-features.h> /* memcpyc, memmovedownc, memset */
+#include <deemon/type.h>            /* DeeTypeMRO, DeeTypeMRO_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_OPERATOR_USERCOUNT, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FTRUNCATE, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __CHAR_BIT__, __UINTPTR_HALF_TYPE__ */

@@ -37,7 +37,7 @@
 #include <deemon/method-hints.h>    /* type_method_hint */
 #include <deemon/module.h>          /* DeeModule*, Dee_DEC_FDISABLE, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_compiler_options, Dee_module_*, _Dee_MODULE_* */
 #include <deemon/none.h>            /* DeeNone_Check */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_*, DeeObject_*, Dee_BOUND_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_Incref*, Dee_Movrefv, Dee_XClear, Dee_XDecref*, Dee_XIncrefv, return_reference, return_reference_ */
 #include <deemon/objmethod.h>       /* DeeCMethod*_*, DeeCMethodObject, DeeKwCMethod_Type */
 #include <deemon/serial.h>          /* DeeSerial */
 #include <deemon/string.h>          /* DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_IS*, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
@@ -46,6 +46,7 @@
 #include <deemon/system.h>          /* DeeNTSystem_IsBufferTooSmall, DeeNTSystem_IsIntr, DeeSystem_*, DeeUnixSystem_PrintLinkString */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_import_frame */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_TYPE_MEMBER_ISCONST, type_* */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_REF, Dee_atomic_ref_* */
 #include <deemon/util/atomic.h>     /* atomic_* */

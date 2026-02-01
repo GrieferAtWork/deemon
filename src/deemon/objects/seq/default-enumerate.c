@@ -27,10 +27,11 @@
 #include <deemon/gc.h>             /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>            /* DeeInt_NewZero, _DeeInt_Zero */
 #include <deemon/method-hints.h>   /* DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h> /* DeeType_RequireNativeOperator */
 #include <deemon/seq.h>            /* DeeSeq_NewEmpty, DeeSeq_Type */
 #include <deemon/serial.h>         /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
+#include <deemon/type.h>           /* DeeObject_Init, DeeType_GetName, DeeType_Type, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_member, type_seq */
 #include <deemon/util/lock.h>      /* Dee_atomic_lock_init */
 
 #include "../../runtime/runtime_error.h"

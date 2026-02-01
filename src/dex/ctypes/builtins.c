@@ -28,8 +28,9 @@
 
 #include <deemon/alloc.h>     /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/numeric.h>   /* DeeNumeric_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>    /* DeeString_STR */
+#include <deemon/type.h>      /* TF_NONE, TP_F* */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stddef.h> /* NULL, size_t */

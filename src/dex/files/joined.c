@@ -27,7 +27,8 @@
 #include <deemon/api.h>
 
 #include <deemon/file.h>   /* DeeFileTypeObject, DeeFileType_Type, DeeFile_Type */
-#include <deemon/object.h>
+#include <deemon/object.h> /* OBJECT_HEAD_INIT */
+#include <deemon/type.h>   /* Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
 
 #include <stddef.h> /* NULL */
 

@@ -29,11 +29,12 @@
 #include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_set_frozen_t, DeeMH_set_operator_iter_t, DeeType_RequireMethodHint */
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/none.h>               /* DeeNone_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_SEQCLASS_SET */
 #include <deemon/set.h>                /*  */
 #include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TF_SEQCLASS_SHFT, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"

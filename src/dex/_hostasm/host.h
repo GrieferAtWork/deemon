@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/code.h>            /*  */
-#include <deemon/object.h>
+#include <deemon/object.h>          /* DREF, DeeObject */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, MAP_PRIVATE, PROT_EXEC, PROT_READ, PROT_WRITE, mmap64, mprotect, munmap, sysconf */
 
 #include <hybrid/align.h>     /* CEIL_ALIGN */

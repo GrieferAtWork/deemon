@@ -29,8 +29,9 @@
 #include <deemon/cached-dict.h> /* DeeCachedDict_Type */
 #include <deemon/dex.h>         /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>       /* DeeError_* */
-#include <deemon/object.h>
+#include <deemon/object.h>      /* ASSERT_OBJECT, DeeObject, DeeTypeObject, Dee_TYPE */
 #include <deemon/seq.h>         /* DeeSeq_Type */
+#include <deemon/type.h>        /* DeeTypeType_GetOperatorById, Dee_operator_t, Dee_opinfo */
 
 #include "accu.h"
 

@@ -42,10 +42,11 @@
 #include <deemon/list.h>    /* DeeList_Type */
 #include <deemon/module.h>  /* DeeModuleObject */
 #include <deemon/none.h>    /* Dee_None */
-#include <deemon/object.h>
+#include <deemon/object.h>  /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_TYPE */
 #include <deemon/seq.h>     /* DeeRange_New, DeeRange_NewInt, DeeSeq_* */
 #include <deemon/string.h>  /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
 #include <deemon/tuple.h>   /* DeeTuple_Type */
+#include <deemon/type.h>    /* DeeType_GetOperatorFlags, DeeType_InheritOperator, Dee_operator_t, METHOD_FCONSTCALL, OPERATOR_* */
 
 #include <hybrid/align.h>     /* CEILDIV */
 #include <hybrid/bitset.h>    /* bitset_test */

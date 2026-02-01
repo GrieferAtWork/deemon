@@ -31,11 +31,12 @@
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/mro.h>                /* DeeObject_FindAttr, DeeObject_IterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_SIZEOF_ATTRPERM_T, Dee_attrdesc, Dee_attrdesc_*, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo_typeof, Dee_attriter_*, Dee_attrperm_t, Dee_attrspec */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_COMPARE_*, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_DeeObject_TryCompareEq_if_ne, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy, memset */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_STRUCT_INTEGER, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashStr */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__ */

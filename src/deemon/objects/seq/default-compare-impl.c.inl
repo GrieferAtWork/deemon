@@ -27,7 +27,7 @@
 
 #include <deemon/error.h>          /* DeeError_* */
 #include <deemon/int.h>            /* DeeInt_* */
-#include <deemon/object.h>
+#include <deemon/object.h>         /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_TYPE, Dee_XDecref, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/operator-hints.h> /* DeeNO_foreach_t, DeeType_RequireNativeOperator */
 #include <deemon/thread.h>         /* DeeThread_CheckInterrupt */
 

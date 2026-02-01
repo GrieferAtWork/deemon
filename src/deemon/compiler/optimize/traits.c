@@ -39,7 +39,7 @@
 #include <deemon/map.h>               /* DeeMapping_Type */
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_F* */
 #include <deemon/none.h>              /* DeeNone_Type */
-#include <deemon/object.h>
+#include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_DecrefNokill, Dee_TYPE, Dee_refcnt_t */
 #include <deemon/rodict.h>            /* DeeRoDict_Type */
 #include <deemon/roset.h>             /* DeeRoSet_Type */
 #include <deemon/seq.h>               /* DeeSeq_Type */
@@ -47,6 +47,7 @@
 #include <deemon/super.h>             /* DeeSuper_Type */
 #include <deemon/system-features.h>   /* CONFIG_HAVE_FPU */
 #include <deemon/tuple.h>             /* DeeTuple_Type */
+#include <deemon/type.h>              /* DeeType_*, OPERATOR_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

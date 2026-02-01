@@ -30,11 +30,12 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free */
 #include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_object, Dee_module_symbol */
-#include <deemon/object.h>
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
 #include <deemon/string.h>             /* DeeStringObject */
 #include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/system.h>             /* DeeSystem_GetWalltime */
+#include <deemon/type.h>               /* DeeObject_Init */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
 #include <hybrid/int128.h> /* __hybrid_uint128_set64 */
