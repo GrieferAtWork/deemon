@@ -393,6 +393,7 @@ typedef struct {
 	unsigned int        srw_waiting; /* non-zero if threads may be waiting on `srw_lock' */
 } Dee_shared_rwlock_t;
 
+/* FIXME: "_Dee_shared_rwlock_mark_waiting" doesn't work -- see TODO in `Dee_rshared_rwlock_write()' */
 #define _Dee_shared_rwlock_mark_waiting(self) \
 	__hybrid_atomic_store(&(self)->srw_waiting, 1, __ATOMIC_RELEASE)
 #define _Dee_shared_rwlock_wake(self)                                     \

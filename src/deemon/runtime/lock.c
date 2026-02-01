@@ -1038,6 +1038,83 @@ again_lockword_zero:
 	}
 	do {
 		int result;
+		/* FIXME: This way of marking the presence of waiters is racy:
+		 *
+		 * Test code:
+		 *
+		 * ```
+		 * 	import * from deemon;
+		 * 	import * from threading;
+		 * 	import * from time;
+		 * 	import posix;
+		 *
+		 * 	local file = File.Buffer(File.Writer());
+		 *
+		 * 	// FIXME: This here is able to (consistently) reproduce a bug where one thread dies
+		 * 	local threadEvents: {(int, Event)...} = [];
+		 * 	for (local i: [:2]) {
+		 * 		local event = Event();
+		 * 		local thread = Thread(() -> {
+		 * 			for (;;) {
+		 * 				file.write("");
+		 * 				event.set();
+		 * 			}
+		 * 		});
+		 * 		thread.start();
+		 * 		threadEvents.append((i, event));
+		 * 	}
+		 *
+		 * 	for (;;) {
+		 * 		for (local id, e: threadEvents)
+		 * 			e.clear();
+		 * 		for (local id, e: threadEvents) {
+		 * 			if (!e.timedwaitfor(100000000)) {
+		 * 				print File.stderr: f"Thread {id} appears dead!";
+		 * 			}
+		 * 		}
+		 * 	}
+		 * ```
+		 *
+		 * Explanation:
+		 *
+		 * Thread #1: LOCK:   read "self->rsrw_lock.rarw_lock.arw_lock" -> 0xffffffff
+		 * Thread #1: LOCK:   _Dee_rshared_rwlock_mark_waiting(self) -> rsrw_waiting=1
+		 * Thread #2: UNLOCK: write "self->rsrw_lock.rarw_lock.arw_lock = 0"
+		 * Thread #2: UNLOCK: _Dee_rshared_rwlock_wake(self) -> rsrw_waiting=0
+		 * Thread #2: UNLOCK: DeeFutex_WakeAll(&self->rsrw_lock.rarw_lock.arw_lock)   (doesn't do anything; Thread #1 isn't waiting, yet)
+		 * Thread #2: LOCK:   write "self->rsrw_lock.rarw_lock.arw_lock = 0xffffffff"
+		 * Thread #1: LOCK:   DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, 0xffffffff)
+		 * Thread #1: LOCK:   Is now blocking
+		 * Thread #2: UNLOCK: write "self->rsrw_lock.rarw_lock.arw_lock = 0"
+		 * Thread #2: UNLOCK: _Dee_rshared_rwlock_wake(self)  (noop: doesn't wake sleeping threads because "rsrw_waiting==0")
+		 *
+		 * -> Lock is now available, but "Thread #1" continues to sleep
+		 *
+		 * Solution:
+		 * - "rsrw_waiting" mustn't be a flag, but rather a counter
+		 * - Waiting thread must atomic_inc/atomic_dec "rsrw_waiting" as they start/finish waiting
+		 * - "_Dee_rshared_rwlock_wake()" should still check "rsrw_waiting", but mustn't modify it
+		 *
+		 * TODO: Also split "rsrw_waiting" into 2 words (also do this for "Dee_shared_rwlock_t"):
+		 * - "rsrw_rwaiting"  (# of waiting reader threads)
+		 * - "rsrw_wwaiting"  (# of waiting writer threads)
+		 * Then "_Dee_rshared_rwlock_wake" is implemented as:
+		 * >> _Dee_rshared_rwlock_wake(Dee_rshared_rwlock_t *self) {
+		 * >>     if (atomic_read(&self->rsrw_rwaiting) != 0) {
+		 * >>         DeeFutex_WakeAll(&self->rsrw_lock.rarw_lock.arw_lock);
+		 * >>     } else if (atomic_read(&self->rsrw_wwaiting) != 0) {
+		 * >>         DeeFutex_WakeOne(&self->rsrw_lock.rarw_lock.arw_lock);
+		 * >>         // Do another check for read-lock consumers, in case some were added
+		 * >>         // after the check above, and the "DeeFutex_WakeOne" chose one of
+		 * >>         // them, rather than one of the waiting write-lock consumers.
+		 * >>         if unlikely(atomic_read(&self->rsrw_rwaiting) != 0)
+		 * >>             DeeFutex_WakeAll(&self->rsrw_lock.rarw_lock.arw_lock);
+		 * >>     }
+		 * >> }
+		 */
+
+		/* FIXME: The same bug also affects "Dee_shared_rwlock_t" (though
+		 * "Dee_shared_lock_t" / "Dee_rshared_lock_t" don't appear affected) */
 		_Dee_rshared_rwlock_mark_waiting(self);
 		result = DeeFutex_WaitPtr(&self->rsrw_lock.rarw_lock.arw_lock, lockword);
 		if unlikely(result != 0)
