@@ -29,13 +29,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dict.h>     /* DeeDict_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_GetRealVTab */
-#include <deemon/error-rt.h> /* DeeRT_ErrEmptySequence, DeeRT_ErrTUnboundAttrCStr */
-#include <deemon/none.h>     /* Dee_None */
+#include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab */
+#include <deemon/error-rt.h>     /* DeeRT_ErrEmptySequence, DeeRT_ErrTUnboundAttrCStr */
+#include <deemon/none.h>         /* Dee_None */
 #include <deemon/object.h>
-#include <deemon/seq.h>      /* DeeSeq_Unpack */
-#include <deemon/tuple.h>    /* DeeTuple* */
-#include <deemon/types.h>    /* DREF, DeeObject, Dee_AsObject, ITER_DONE */
+#include <deemon/seq.h>          /* DeeSeq_Unpack */
+#include <deemon/tuple.h>        /* DeeTuple* */
+#include <deemon/types.h>        /* DREF, DeeObject, Dee_AsObject, ITER_DONE */
+#include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_vidx_real2virt, Dee_hash_vidx_t */
 
 #include <stddef.h> /* NULL */
 
@@ -273,16 +274,16 @@ LOCAL_dict_delspecial(Dict *__restrict self) {
 #ifdef LOCAL_dict_setspecial
 
 #ifdef LOCAL_dict_setspecial_pair
-PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_dict_vidx_t DCALL
+PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL
 LOCAL_dict_setspecial_pair_getindex(void *arg, Dict *self,
-                                    /*virt*/ Dee_dict_vidx_t overwrite_index,
+                                    /*virt*/ Dee_hash_vidx_t overwrite_index,
                                     DeeObject **p_value) {
 	struct dict_mh_seq_setitem_index_impl_data *data;
 	data = (struct dict_mh_seq_setitem_index_impl_data *)arg;
 	if unlikely(!self->d_vused) {
 		DeeDict_LockEndWrite(self);
 		DeeRT_ErrEmptySequence(self);
-		return Dee_DICT_HTAB_EOF;
+		return Dee_HASH_HTAB_EOF;
 	}
 #ifdef LOCAL_IS_FIRST
 	data->dsqsii_index = 0;
@@ -315,23 +316,23 @@ struct dict_setspecial_key_old_data {
 };
 #endif /* !DICT_SETSPECIAL_PAIR_OLDKEY_DATA_DEFINED */
 
-PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_dict_vidx_t DCALL
+PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL
 LOCAL_dict_setspecial_key_getindex(void *arg, Dict *self,
-                                   /*virt*/ Dee_dict_vidx_t overwrite_index,
+                                   /*virt*/ Dee_hash_vidx_t overwrite_index,
                                    DeeObject **p_value) {
 	struct dict_setspecial_key_old_data *data;
-	/*real*/ Dee_dict_vidx_t result;
+	/*real*/ Dee_hash_vidx_t result;
 	struct Dee_dict_item *item;
 	(void)overwrite_index;
 	data = (struct dict_setspecial_key_old_data *)arg;
 	if unlikely(!self->d_vused) {
 		DeeDict_LockEndWrite(self);
 		DeeRT_ErrEmptySequence(self);
-		return Dee_DICT_HTAB_EOF;
+		return Dee_HASH_HTAB_EOF;
 	}
 	LOCAL_dict_loaditem(self, item);
-	result = (Dee_dict_vidx_t)(item - _DeeDict_GetRealVTab(self));
-	Dee_dict_vidx_real2virt(&result);
+	result = (Dee_hash_vidx_t)(item - _DeeDict_GetRealVTab(self));
+	Dee_hash_vidx_real2virt(&result);
 	if (overwrite_index == result) {
 		data->sskod_key   = NULL;
 		data->sskod_value = item->di_value;

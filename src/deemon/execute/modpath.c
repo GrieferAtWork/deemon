@@ -602,10 +602,14 @@ DeeModule_InitDexBounds(DeeModuleObject *__restrict self) {
 		                                    self->mo_moddata.mo_dexdata->mdx_handle,
 		                                    &modinfo, sizeof(modinfo));
 		if (!bOk) {
+#ifndef Dee_DPRINT_IS_NOOP
 			DWORD dwError = GetLastError();
+#endif /* !Dee_DPRINT_IS_NOOP */
 			DBG_ALIGNMENT_ENABLE();
+#ifndef Dee_DPRINT_IS_NOOP
 			Dee_DPRINTF("[RT][dex] Warning: Failed to GetModuleInformation() for module %q: %u",
 			            self->mo_absname, (unsigned int)dwError);
+#endif /* !Dee_DPRINT_IS_NOOP */
 		} else {
 			DBG_ALIGNMENT_ENABLE();
 			self->mo_minaddr = (byte_t const *)modinfo.lpBaseOfDll;

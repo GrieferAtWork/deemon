@@ -25,9 +25,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dict.h>            /* DeeDict_LockEndRead, Dee_DICT_HIDXIO_FROMALLOC, Dee_dict_hidxio, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_SetRealVTab */
+#include <deemon/dict.h>            /* DeeDict_LockEndRead, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_SetRealVTab */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy* */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_hidxio, Dee_hash_htab */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
 #include <stdbool.h> /* false, true */
@@ -58,7 +59,7 @@ LOCAL_dict_init_fromcopy(Dict *__restrict self, Dict *__restrict other) {
 	void *copy_tabs;
 	size_t copy_tabssz;
 	struct Dee_dict_item *copy_vtab;
-	void *copy_htab;
+	union Dee_hash_htab *copy_htab;
 again:
 	DeeDict_LockReadAndOptimize(other);
 
@@ -73,7 +74,7 @@ again:
 		if unlikely(copy_valloc > other->d_valloc)
 			copy_valloc = other->d_valloc;
 	}
-	copy_hidxio = Dee_DICT_HIDXIO_FROMALLOC(copy_valloc);
+	copy_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(copy_valloc);
 	copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
 	copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
 
@@ -82,7 +83,7 @@ again:
 		copy_valloc = dict_valloc_from_hmask_and_count(copy_hmask, copy_vsize, false);
 		if unlikely(copy_valloc > other->d_valloc)
 			copy_valloc = other->d_valloc;
-		copy_hidxio = Dee_DICT_HIDXIO_FROMALLOC(copy_valloc);
+		copy_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(copy_valloc);
 		copy_tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(copy_hmask, copy_valloc, copy_hidxio);
 		copy_tabs   = _DeeDict_TabsTryMalloc(copy_tabssz);
 		if unlikely(!copy_tabs) {
@@ -101,7 +102,7 @@ again:
 
 	/* Copy data into copy's tables. */
 	copy_vtab = (struct Dee_dict_item *)copy_tabs;
-	copy_htab = (struct Dee_dict_item *)copy_tabs + copy_valloc;
+	copy_htab = (union Dee_hash_htab *)(copy_vtab + copy_valloc);
 #ifdef LOCAL_IS_KEYSONLY
 	/* Create reference to copied objects. */
 	{
@@ -140,22 +141,22 @@ again:
 	self->d_vused   = other->d_vused;
 	_DeeDict_SetRealVTab(self, copy_vtab);
 	self->d_hmask   = copy_hmask;
-	self->d_hidxget = Dee_dict_hidxio[copy_hidxio].dhxio_get;
-	self->d_hidxset = Dee_dict_hidxio[copy_hidxio].dhxio_set;
+	self->d_hidxget = Dee_hash_hidxio[copy_hidxio].hxio_get;
+	self->d_hidxset = Dee_hash_hidxio[copy_hidxio].hxio_set;
 	self->d_htab    = copy_htab;
 
 	if (copy_hmask == other->d_hmask) {
 		/* No need to re-build the hash table. Can instead copy is verbatim. */
-		shift_t orig_hidxio = Dee_DICT_HIDXIO_FROMALLOC(other->d_valloc);
+		shift_t orig_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(other->d_valloc);
 		size_t htab_words = copy_hmask + 1;
 		ASSERT(copy_hidxio <= orig_hidxio || (copy_hidxio + 1) == orig_hidxio);
 		if (orig_hidxio == copy_hidxio) {
 			size_t sizeof_htab = htab_words << copy_hidxio;
 			(void)memcpy(copy_htab, other->d_htab, sizeof_htab);
 		} else if (copy_hidxio > orig_hidxio) {
-			(*Dee_dict_hidxio[copy_hidxio].dhxio_upr)(copy_htab, other->d_htab, htab_words);
+			(*Dee_hash_hidxio[copy_hidxio].hxio_upr)(copy_htab, other->d_htab, htab_words);
 		} else if (copy_hidxio == orig_hidxio - 1) {
-			(*Dee_dict_hidxio[copy_hidxio].dhxio_dwn)(copy_htab, other->d_htab, htab_words);
+			(*Dee_hash_hidxio[copy_hidxio].hxio_lwr)(copy_htab, other->d_htab, htab_words);
 		} else {
 			size_t i;
 			ASSERT(copy_hidxio < orig_hidxio);

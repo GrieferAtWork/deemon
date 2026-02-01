@@ -34,7 +34,7 @@
 #include <deemon/cell.h>            /* DeeCellObject, DeeCell_Type */
 #include <deemon/class.h>           /* DeeClass_DESC, DeeInstanceMember_New, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_instance_desc */
 #include <deemon/code.h>            /* DeeFunction_Type */
-#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_gethidx8, Dee_dict_sethidx8 */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_* */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>           /* CONFIG_HAVE_FPU, DeeFloat_Type */
 #include <deemon/gc.h>              /* DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_Track */
@@ -60,6 +60,7 @@
 #include <deemon/super.h>           /* DeeObject_T*, DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memchr, strchr, strcmp */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/util/hash-io.h>    /* Dee_hash_gethidx8, Dee_hash_sethidx8 */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
 #include <deemon/weakref.h>         /* DeeWeakRefAbleObject, DeeWeakRefAble_Type */
 
@@ -1492,9 +1493,9 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_vtab)));   /* instance */
 		DO(fg_vpush_immSIZ(self, 0));                            /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hmask)));  /* instance */
-		DO(fg_vpush_funptr(self, &Dee_dict_gethidx8));           /* instance, &Dee_dict_gethidx8 */
+		DO(fg_vpush_funptr(self, &Dee_hash_gethidx8));           /* instance, &Dee_hash_gethidx8 */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hidxget)));/* instance */
-		DO(fg_vpush_funptr(self, &Dee_dict_sethidx8));           /* instance, &Dee_dict_sethidx8 */
+		DO(fg_vpush_funptr(self, &Dee_hash_sethidx8));           /* instance, &Dee_hash_sethidx8 */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hidxset)));/* instance */
 		DO(fg_vpush_addr(self, DeeDict_EmptyHTab));              /* instance, DeeDict_EmptyHTab */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_htab)));   /* instance */

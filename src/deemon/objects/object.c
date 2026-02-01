@@ -30,7 +30,7 @@
 #include <deemon/class.h>              /* DeeClassDesc_QueryInstanceAttributeStringHash, DeeClassDescriptorObject, DeeClass_DESC, DeeInstance_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_instance_desc, Dee_instance_desc_lock_endwrite, Dee_instance_desc_lock_write */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_Check, DeeFunction_Type, DeeYieldFunctionObject, DeeYieldFunction_Type */
 #include <deemon/computed-operators.h>
-#include <deemon/dict.h>               /* Dee_dict_item, Dee_dict_vidx_t */
+#include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_BOUND, DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>               /* DeeFileType_Type */
@@ -59,6 +59,7 @@
 #include <deemon/system-features.h>    /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, bzero*, memcpyc, strlen */
 #include <deemon/tuple.h>              /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/hash-io.h>       /* Dee_hash_vidx_t */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_*, Dee_atomic_rwlock_init */
 
 #include <hybrid/align.h>       /* IS_ALIGNED */
@@ -5014,7 +5015,7 @@ again:
 		return true;
 	} else if (tp == &DeeRoDict_Type) {
 		DeeRoDictObject *me = (DeeRoDictObject *)self;
-		Dee_dict_vidx_t i;
+		Dee_hash_vidx_t i;
 		for (i = 0; i < me->rd_vsize; ++i) {
 			struct Dee_dict_item *it = &me->rd_vtab[i];
 			if (it->di_key) {

@@ -32,7 +32,7 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
-#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_DICT_HIDXIO_FROMALLOC, Dee_dict_*, _DeeDict_GetRealVTab, _DeeDict_GetVirtVTab */
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_GetVirtVTab */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
 #include <deemon/int.h>                /* DeeInt_* */
@@ -47,6 +47,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* mempcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_hidxio, Dee_hash_htab, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
 
 #include <hybrid/typecore.h> /* __SHIFT_TYPE__ */
 
@@ -89,6 +90,7 @@ asm_gadjstack(int16_t offset) {
 	case -1: return asm_gpop();
 	case 0: return 0;
 	case 1: return asm_gpush_none();
+	default: break;
 	}
 	return _asm_gadjstack(offset);
 }
@@ -201,8 +203,8 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	DeeDict_LockReadAndOptimize(self);
 	vsize         = self->d_vused;
 	hmask         = self->d_hmask;
-	src_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	dst_hidxio    = Dee_DICT_HIDXIO_FROMALLOC(vsize);
+	src_hidxio    = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
+	dst_hidxio    = Dee_HASH_HIDXIO_FROM_VALLOC(vsize);
 	sizeof_result = _RoDict_SizeOf3(vsize, hmask, dst_hidxio);
 	result = _RoDict_TryMalloc(sizeof_result);
 	if unlikely(!result) {
@@ -213,9 +215,9 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	}
 
 	/* Copy over data as-is from the dict (no need to rehash or anything). */
-	result->rd_htab = mempcpyc(_DeeRoDict_GetRealVTab(result),
-	                           _DeeDict_GetRealVTab(self), vsize,
-	                           sizeof(struct Dee_dict_item));
+	result->rd_htab = (union Dee_hash_htab *)mempcpyc(_DeeRoDict_GetRealVTab(result),
+	                                                  _DeeDict_GetRealVTab(self), vsize,
+	                                                  sizeof(struct Dee_dict_item));
 	hmask_memcpy_and_maybe_downcast(result->rd_htab, dst_hidxio,
 	                                self->d_htab, src_hidxio,
 	                                hmask + 1);
@@ -228,7 +230,7 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	}
 	result->rd_vsize   = vsize;
 	result->rd_hmask   = hmask;
-	result->rd_hidxget = Dee_dict_hidxio[dst_hidxio].dhxio_get;
+	result->rd_hidxget = Dee_hash_hidxio[dst_hidxio].hxio_get;
 	DeeObject_Init(result, &DeeRoDict_Type);
 	return result;
 }
@@ -517,8 +519,8 @@ unlock_and_push_empty_dict:
 	}
 
 	/* Verify constants */
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, value->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, value->d_vsize); ++i) {
 		struct Dee_dict_item *item;
 		item = &_DeeDict_GetVirtVTab(value)[i];
 		if (!asm_allowconst(item->di_key) ||
@@ -554,8 +556,8 @@ push_dict_parts:
 	/* Construct a Dict by pushing its individual parts. */
 	num_items = 0;
 	DeeDict_LockRead(value);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, value->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, value->d_vsize); ++i) {
 		int error;
 		struct Dee_dict_item *item;
 		DREF DeeObject *item_key, *item_value;

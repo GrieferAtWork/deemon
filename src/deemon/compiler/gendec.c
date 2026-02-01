@@ -29,7 +29,7 @@
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_Empty, DeeCode_Type, DeeDDIObject, DeeFunctionObject, DeeFunction_Type, Dee_CODE_FDEC_8BIT, Dee_CODE_FMASK, Dee_DDI_EXDAT_*, Dee_ddi_exdat, Dee_except_handler */
 #include <deemon/compiler/dec.h>
 #include <deemon/dec.h>             /* DECMAG*, DEC_BUILTINID_IDOF, DEC_BUILTINID_SETOF, DEC_BUILTINID_UNKNOWN, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_* */
-#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_*, _DeeDict_GetVirtVTab */
+#include <deemon/dict.h>            /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetVirtVTab */
 #include <deemon/error.h>           /* DeeError_NotImplemented, DeeError_Throwf */
 #include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
 #include <deemon/format.h>          /* PRFuSIZ */
@@ -47,6 +47,7 @@
 #include <deemon/system-features.h> /* memcpy, memmovedownc, memmoveup, memset, strlen */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_ICASE, DeeSystem_SEP */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/util/hash-io.h>    /* Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>  /* HTOLE16, HTOLE32, UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE16, UNALIGNED_SETLE32 */
@@ -1069,8 +1070,8 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 		/* Encode all of the Dict's elements. */
 		written = 0;
 		DeeDict_LockRead(me);
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, me->d_vsize); ++i) {
+		for (i = Dee_hash_vidx_tovirt(0);
+		     Dee_hash_vidx_virt_lt_real(i, me->d_vsize); ++i) {
 			struct Dee_dict_item *item;
 			DREF DeeObject *key, *value;
 			int error;

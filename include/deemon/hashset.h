@@ -31,13 +31,13 @@
 #include "api.h"
 
 #include "object.h"
-#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
-#include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
+#include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
+#include "util/hash-io.h" /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HIDXIO_IS8, Dee_HASH_HIDXIO_IS16, Dee_HASH_HIDXIO_IS32, Dee_HASH_HTAB_EOF, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_hidxio, Dee_hash_sethidx8, Dee_hash_sethidx_t, Dee_hash_vidx_real2virt, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, _DeeHash_EmptyTab */
+#include "util/lock.h"    /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* size_t */
 
 #ifdef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
-#include "dict.h" /* Dee_DICT_HIDXIO_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_EmptyTab */
 #endif /* CONFIG_EXPERIMENTAL_ORDERED_HASHSET */
 
 #ifndef __INTELLISENSE__
@@ -59,23 +59,23 @@ struct Dee_hashset_item {
 
 typedef struct Dee_hashset_object {
 	Dee_OBJECT_HEAD /* GC Object */
-	/*real*/Dee_dict_vidx_t  hs_valloc;  /* [lock(hs_lock)][<= hs_hmask] Allocated size of "hs_vtab" (should be ~2/3rd of `hs_hmask + 1') */
-	/*real*/Dee_dict_vidx_t  hs_vsize;   /* [lock(hs_lock)][<= hs_valloc] 1+ the greatest index in "hs_vtab" that was ever initialized (and also the index of the next item in "hs_vtab" to-be populated). */
+	/*real*/Dee_hash_vidx_t  hs_valloc;  /* [lock(hs_lock)][<= hs_hmask] Allocated size of "hs_vtab" (should be ~2/3rd of `hs_hmask + 1') */
+	/*real*/Dee_hash_vidx_t  hs_vsize;   /* [lock(hs_lock)][<= hs_valloc] 1+ the greatest index in "hs_vtab" that was ever initialized (and also the index of the next item in "hs_vtab" to-be populated). */
 	size_t                   hs_vused;   /* [lock(hs_lock)][<= hs_vsize] # of non-NULL keys in "hs_vtab". */
 	struct Dee_hashset_item *hs_vtab;    /* [lock(hs_lock)][0..hs_vsize][ownehs_if(!= INTERNAL(DeeDict_EmptyTab))]
-	                                      * [OWNED_AT(. + 1)] Value-table (offset by 1 to account for special meaning of index==Dee_DICT_HTAB_EOF) */
+	                                      * [OWNED_AT(. + 1)] Value-table (offset by 1 to account for special meaning of index==Dee_HASH_HTAB_EOF) */
 	Dee_hash_t               hs_hmask;   /* [lock(hs_lock)] Hash mask (allocated hash-map size, minus 1). */
-	Dee_dict_gethidx_t       hs_hidxget; /* [lock(hs_lock)][1..1] Getter for "hs_htab" (always depends on "hs_valloc") */
-	Dee_dict_sethidx_t       hs_hidxset; /* [lock(hs_lock)][1..1] Setter for "hs_htab" (always depends on "hs_valloc") */
-	void                    *hs_htab;    /* [lock(hs_lock)][== (byte_t *)(_DeeDict_GetRealVTab(this) + hs_valloc)] Hash-table (contains indices into "hs_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+	Dee_hash_gethidx_t       hs_hidxget; /* [lock(hs_lock)][1..1] Getter for "hs_htab" (always depends on "hs_valloc") */
+	Dee_hash_sethidx_t       hs_hidxset; /* [lock(hs_lock)][1..1] Setter for "hs_htab" (always depends on "hs_valloc") */
+	void                    *hs_htab;    /* [lock(hs_lock)][== (byte_t *)(_DeeDict_GetRealVTab(this) + hs_valloc)] Hash-table (contains indices into "hs_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t      hs_lock;    /* Lock used for accessing this Dict. */
 #endif /* !CONFIG_NO_THREADS */
 	Dee_WEAKREF_SUPPORT
 } DeeHashSetObject;
 
-#define DeeHashSet_EmptyVTab /*virt*/ ((struct Dee_hashset_item *)_DeeDict_EmptyTab - 1)
-#define DeeHashSet_EmptyHTab ((void *)_DeeDict_EmptyTab)
+#define DeeHashSet_EmptyVTab /*virt*/ ((struct Dee_hashset_item *)_DeeHash_EmptyTab - 1)
+#define DeeHashSet_EmptyHTab ((void *)_DeeHash_EmptyTab)
 
 #ifdef CONFIG_NO_THREADS
 #define _Dee_HASHSET_INIT_LOCK /* nothing */
@@ -90,8 +90,8 @@ typedef struct Dee_hashset_object {
 		/* .hs_vused   = */ 0,                    \
 		/* .hs_vtab    = */ DeeHashSet_EmptyVTab, \
 		/* .hs_hmask   = */ 0,                    \
-		/* .hs_hidxget = */ &Dee_dict_gethidx8,   \
-		/* .hs_hidxset = */ &Dee_dict_sethidx8,   \
+		/* .hs_hidxget = */ &Dee_hash_gethidx8,   \
+		/* .hs_hidxset = */ &Dee_hash_sethidx8,   \
 		/* .hs_htab    = */ DeeHashSet_EmptyHTab  \
 		_Dee_HASHSET_INIT_LOCK,                   \
 		Dee_WEAKREF_SUPPORT_INIT                  \
@@ -100,23 +100,23 @@ typedef struct Dee_hashset_object {
 #ifdef DEE_SOURCE
 
 /* Helper macros for converting between "virt" and "real" hashset VIDX indices. */
-#define Dee_hashset_vidx_virt2real    Dee_dict_vidx_virt2real
-#define Dee_hashset_vidx_real2virt    Dee_dict_vidx_real2virt
-#define Dee_hashset_vidx_toreal       Dee_dict_vidx_toreal
-#define Dee_hashset_vidx_tovirt       Dee_dict_vidx_tovirt
-#define Dee_hashset_vidx_virt_lt_real Dee_dict_vidx_virt_lt_real
+#define Dee_hashset_vidx_virt2real    Dee_hash_vidx_virt2real
+#define Dee_hashset_vidx_real2virt    Dee_hash_vidx_real2virt
+#define Dee_hashset_vidx_toreal       Dee_hash_vidx_toreal
+#define Dee_hashset_vidx_tovirt       Dee_hash_vidx_tovirt
+#define Dee_hashset_vidx_virt_lt_real Dee_hash_vidx_virt_lt_real
 
 /* NOTE: HIDXIO indices can also used as <<shifts to multiply some value by the size of an index:
  * >> size_t htab_size = (hs_hmask + 1) << Dee_HASHSET_HIDXIO_FROMALLOC(...); */
-#define Dee_HASHSET_HIDXIO_COUNT     Dee_DICT_HIDXIO_COUNT
-#define Dee_HASHSET_HIDXIO_IS8       Dee_DICT_HIDXIO_IS8
-#define Dee_HASHSET_HIDXIO_IS16      Dee_DICT_HIDXIO_IS16
-#define Dee_HASHSET_HIDXIO_IS32      Dee_DICT_HIDXIO_IS32
-#define Dee_HASHSET_HIDXIO_FROMALLOC Dee_DICT_HIDXIO_FROMALLOC
-#define Dee_hashset_hidxio           Dee_dict_hidxio
+#define Dee_HASHSET_HIDXIO_COUNT     Dee_HASH_HIDXIO_COUNT
+#define Dee_HASHSET_HIDXIO_IS8       Dee_HASH_HIDXIO_IS8
+#define Dee_HASHSET_HIDXIO_IS16      Dee_HASH_HIDXIO_IS16
+#define Dee_HASHSET_HIDXIO_IS32      Dee_HASH_HIDXIO_IS32
+#define Dee_HASHSET_HIDXIO_FROMALLOC Dee_HASH_HIDXIO_FROM_VALLOC
+#define Dee_hashset_hidxio           Dee_hash_hidxio
 
 /* Index value found in "hs_htab" when end-of-chain is encountered. */
-#define Dee_HASHSET_HTAB_EOF Dee_DICT_HTAB_EOF
+#define Dee_HASHSET_HTAB_EOF Dee_HASH_HTAB_EOF
 
 /* Get/set "hs_vtab" in both its:
  * - virt[ual] (index starts at 1), and

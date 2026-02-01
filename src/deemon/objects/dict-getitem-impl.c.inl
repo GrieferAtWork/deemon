@@ -18,10 +18,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include <deemon/dict.h>     /* DeeDict_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_* */
-#include <deemon/error-rt.h> /* DeeRT_Err* */
-#include <deemon/object.h>
-
 #include "dict.c"
 //#define DEFINE_dict_trygetitem
 //#define DEFINE_dict_trygetitem_string_hash
@@ -42,6 +38,11 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
+#include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_* */
+#include <deemon/error-rt.h>     /* DeeRT_Err* */
+#include <deemon/object.h>
+#include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_vidx_t, Dee_hash_vidx_virt_lt_real */
 
 #include <stddef.h> /* NULL, size_t */
 
@@ -203,8 +204,8 @@ LOCAL_dict_getitem(Dict *self, LOCAL_KEY_PARAMS) {
 #ifndef LOCAL_boolcmp
 LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* !LOCAL_boolcmp */
-	_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);
-	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+	for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+	     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		DREF DeeObject *item_key;
 #ifndef LOCAL_boolcmp
 		int item_key_cmp_caller_key;
@@ -214,18 +215,18 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* LOCAL_PRESENT */
 		struct Dee_dict_item *item;
 		size_t htab_idx;          /* hash-index in "d_htab" */
-		Dee_dict_vidx_t vtab_idx; /* hash-index in "d_vtab" */
+		Dee_hash_vidx_t vtab_idx; /* hash-index in "d_vtab" */
 
 		/* Load hash indices */
 		htab_idx = hs & self->d_hmask;
 		vtab_idx = (*self->d_hidxget)(self->d_htab, htab_idx);
 
 		/* Check for end-of-hash-chain */
-		if (vtab_idx == Dee_DICT_HTAB_EOF)
+		if (vtab_idx == Dee_HASH_HTAB_EOF)
 			break;
 
 		/* Load referenced item in "d_vtab" */
-		ASSERT(Dee_dict_vidx_virt_lt_real(vtab_idx, self->d_vsize));
+		ASSERT(Dee_hash_vidx_virt_lt_real(vtab_idx, self->d_vsize));
 		item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
 
 		/* Check for deleted items... */

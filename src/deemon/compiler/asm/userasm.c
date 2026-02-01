@@ -34,6 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memmovedownc, memmoveupc, memset, strlen */
 #include <deemon/types.h>              /* DREF, DeeObject, Dee_AsObject, Dee_ssize_t, ITER_DONE */
+#include <deemon/util/hash-io.h>       /* Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
 
@@ -44,7 +45,7 @@
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/asm.h>         /* ASM_*, DeeAsm_NextInstrEf, instruction_t */
 #include <deemon/bool.h>        /* DeeBool_Type, Dee_False, Dee_True */
-#include <deemon/dict.h>        /* DeeDictObject, DeeDict_*, Dee_dict_vidx_tovirt, Dee_dict_vidx_virt_lt_real, _DeeDict_GetVirtVTab */
+#include <deemon/dict.h>        /* DeeDictObject, DeeDict_*, _DeeDict_GetVirtVTab */
 #include <deemon/format.h>      /* Dee_sprintf, PRF* */
 #include <deemon/hashset.h>     /* DeeHashSet_Type */
 #include <deemon/int.h>         /* DeeInt_* */
@@ -1785,8 +1786,8 @@ write_regular_local:
 				DeeDict_LockEndRead(d);
 				goto next_option;
 			}
-			for (i = Dee_dict_vidx_tovirt(0);
-			     Dee_dict_vidx_virt_lt_real(i, d->d_vsize); ++i) {
+			for (i = Dee_hash_vidx_tovirt(0);
+			     Dee_hash_vidx_virt_lt_real(i, d->d_vsize); ++i) {
 				int error;
 				DREF DeeObject *key, *value;
 				key = _DeeDict_GetVirtVTab(d)[i].di_key;

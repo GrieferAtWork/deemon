@@ -18,12 +18,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include <deemon/dict.h>            /* DeeDict_*, Dee_DICT_HTAB_EOF, Dee_dict_*, _DeeDict_* */
-#include <deemon/int.h>             /* DeeInt_NewSize */
-#include <deemon/object.h>
-#include <deemon/string.h>          /* DeeString_NewSizedWithHash, DeeString_NewWithHash */
-#include <deemon/system-features.h> /* memmovedownc, memmoveupc */
-
 #include "dict.c"
 //#define DEFINE_dict_setitem
 //#define DEFINE_dict_setitem_at
@@ -38,6 +32,13 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
+#include <deemon/dict.h>            /* DeeDict_*, Dee_dict_item, _DeeDict_* */
+#include <deemon/int.h>             /* DeeInt_NewSize */
+#include <deemon/object.h>
+#include <deemon/string.h>          /* DeeString_NewSizedWithHash, DeeString_NewWithHash */
+#include <deemon/system-features.h> /* memmovedownc, memmoveupc */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HTAB_EOF, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
@@ -166,8 +167,8 @@ LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
                    , DeeObject *value
 #endif /* !LOCAL_IS_INHERITED */
 #ifdef LOCAL_HAS_getindex
-                   , /*virt*/Dee_dict_vidx_t (DCALL *getindex)(void *cookie, Dict *self,
-                                                               /*virt*/Dee_dict_vidx_t overwrite_index,
+                   , /*virt*/Dee_hash_vidx_t (DCALL *getindex)(void *cookie, Dict *self,
+                                                               /*virt*/Dee_hash_vidx_t overwrite_index,
                                                                DREF DeeObject **p_value)
                    , void *getindex_cookie
 #endif /* LOCAL_HAS_getindex */
@@ -235,8 +236,8 @@ LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
 	LOCAL_DeeDict_LockRead(self);
 LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 	result_htab_idx = (size_t)-1;
-	_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);
-	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+	for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+	     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		DREF DeeObject *item_key;
 #ifdef LOCAL_IS_SETNEW
 		DREF DeeObject *item_value;
@@ -246,14 +247,14 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* !LOCAL_boolcmp */
 		struct Dee_dict_item *item;
 		size_t htab_idx;          /* hash-index in "d_htab" */
-		Dee_dict_vidx_t vtab_idx; /* hash-index in "d_vtab" */
+		Dee_hash_vidx_t vtab_idx; /* hash-index in "d_vtab" */
 
 		/* Load hash indices */
 		htab_idx = hs & self->d_hmask;
 		vtab_idx = (*self->d_hidxget)(self->d_htab, htab_idx);
 
 		/* Check for end-of-hash-chain */
-		if (vtab_idx == Dee_DICT_HTAB_EOF) {
+		if (vtab_idx == Dee_HASH_HTAB_EOF) {
 #ifdef LOCAL_IS_SETOLD
 			LOCAL_DeeDict_LockEnd(self);
 			LOCAL_cleanup_data_for_noop_return();
@@ -266,7 +267,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 		}
 
 		/* Load referenced item in "d_vtab" */
-		ASSERT(Dee_dict_vidx_virt_lt_real(vtab_idx, self->d_vsize));
+		ASSERT(Dee_hash_vidx_virt_lt_real(vtab_idx, self->d_vsize));
 		item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
 
 		/* Check for deleted items... */
@@ -297,9 +298,9 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 		if unlikely(item->di_hash != LOCAL_hash)                                        \
 			goto goto_if_changed;                                                       \
 		if (result_htab_idx != (size_t)-1) {                                            \
-			/*virt*/ Dee_dict_vidx_t first_deleted_vtab_idx;                            \
+			/*virt*/ Dee_hash_vidx_t first_deleted_vtab_idx;                            \
 			first_deleted_vtab_idx = (*self->d_hidxget)(self->d_htab, result_htab_idx); \
-			if unlikely(first_deleted_vtab_idx == Dee_DICT_HTAB_EOF ||                  \
+			if unlikely(first_deleted_vtab_idx == Dee_HASH_HTAB_EOF ||                  \
 			            _DeeDict_GetVirtVTab(self)[first_deleted_vtab_idx].di_key)      \
 				result_htab_idx = (size_t)-1;                                           \
 		}                                                                               \
@@ -396,7 +397,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 			return item_value;
 #else /* LOCAL_IS_SETNEW */
 			DREF DeeObject *old_value;
-			/*virt*/Dee_dict_vidx_t result_vidx;
+			/*virt*/Dee_hash_vidx_t result_vidx;
 
 #ifdef LOCAL_boolcmp
 			/* At this point we're still holding a read-lock.
@@ -466,7 +467,7 @@ override_item_after_consistency_check:
 
 #ifdef LOCAL_HAS_getindex
 			result_vidx = (*getindex)(getindex_cookie, self, vtab_idx, &value);
-			if unlikely(result_vidx == Dee_DICT_HTAB_EOF)
+			if unlikely(result_vidx == Dee_HASH_HTAB_EOF)
 				goto err;
 #endif /* LOCAL_HAS_getindex */
 
@@ -478,7 +479,7 @@ override_item_after_consistency_check:
 #ifdef LOCAL_HAS_getindex
 			if (vtab_idx == result_vidx)
 #else /* LOCAL_HAS_getindex */
-			if (Dee_dict_vidx_toreal(vtab_idx) == self->d_vsize - 1)
+			if (Dee_hash_vidx_toreal(vtab_idx) == self->d_vsize - 1)
 #endif /* !LOCAL_HAS_getindex */
 			{
 				/* Simple case: the item being overwritten already *is* at the last position,
@@ -491,8 +492,8 @@ override_item_after_consistency_check:
 			} else {
 #ifndef LOCAL_HAS_getindex
 				/* Append at the end */
-				result_vidx = Dee_dict_vidx_tovirt(self->d_vsize);
-				ASSERT(result_vidx != Dee_DICT_HTAB_EOF);
+				result_vidx = Dee_hash_vidx_tovirt(self->d_vsize);
+				ASSERT(result_vidx != Dee_HASH_HTAB_EOF);
 #endif /* !LOCAL_HAS_getindex */
 
 #ifdef LOCAL_IS_FAST
@@ -505,7 +506,7 @@ override_item_after_consistency_check:
 					struct Dee_dict_item *new_item;
 					item->di_key = NULL; /* Deleted! */
 #ifdef LOCAL_HAS_getindex
-					dict_makespace_at(self, Dee_dict_vidx_toreal(result_vidx));
+					dict_makespace_at(self, Dee_hash_vidx_toreal(result_vidx));
 #endif /* LOCAL_HAS_getindex */
 					new_item = &_DeeDict_GetVirtVTab(self)[result_vidx];
 					++self->d_vsize;
@@ -522,7 +523,7 @@ override_item_after_consistency_check:
 					if (result_vidx < vtab_idx) {
 						new_item = &_DeeDict_GetVirtVTab(self)[result_vidx];
 						memmoveupc(new_item + 1, new_item, /* HINT: This also deletes "item" */
-						           (/*Dee_dict_vidx_toreal*/(vtab_idx) - 1) - /*Dee_dict_vidx_toreal*/(result_vidx),
+						           (/*Dee_hash_vidx_toreal*/(vtab_idx) - 1) - /*Dee_hash_vidx_toreal*/(result_vidx),
 						           sizeof(struct Dee_dict_item));
 						/* What would also work: "dict_htab_incrange(self, result_vidx, vtab_idx + 1);" */
 						dict_htab_incrange(self, result_vidx, vtab_idx);
@@ -531,7 +532,7 @@ override_item_after_consistency_check:
 					{
 						ASSERTF(result_vidx > vtab_idx, "case 'result_vidx == vtab_idx' was already handled above");
 						memmovedownc(item, item + 1, /* HINT: This also deletes "item" */
-						             (/*Dee_dict_vidx_toreal*/(result_vidx) - 1) - /*Dee_dict_vidx_toreal*/(vtab_idx),
+						             (/*Dee_hash_vidx_toreal*/(result_vidx) - 1) - /*Dee_hash_vidx_toreal*/(vtab_idx),
 						             sizeof(struct Dee_dict_item));
 #ifdef LOCAL_HAS_getindex
 						/* What would also work: "dict_htab_decrange(self, vtab_idx + 1, result_vidx);" */
@@ -549,10 +550,10 @@ override_item_after_consistency_check:
 					/* Optimization: if we discovered another deleted key before "item",
 					 *               then swap htab indices such that our key is found first. */
 					if (result_htab_idx != (size_t)-1) {
-						/*virt*/Dee_dict_vidx_t known_deleted_vidx;
+						/*virt*/Dee_hash_vidx_t known_deleted_vidx;
 						known_deleted_vidx = (*self->d_hidxget)(self->d_htab, result_htab_idx);
-						ASSERT(known_deleted_vidx != Dee_DICT_HTAB_EOF);
-						ASSERT(Dee_dict_vidx_virt_lt_real(known_deleted_vidx, self->d_vsize));
+						ASSERT(known_deleted_vidx != Dee_HASH_HTAB_EOF);
+						ASSERT(Dee_hash_vidx_virt_lt_real(known_deleted_vidx, self->d_vsize));
 						ASSERT(_DeeDict_GetVirtVTab(self)[known_deleted_vidx].di_key == NULL);
 						(*self->d_hidxset)(self->d_htab, htab_idx, known_deleted_vidx);
 						(*self->d_hidxset)(self->d_htab, result_htab_idx, result_vidx);
@@ -578,10 +579,10 @@ override_item_after_consistency_check:
 			/* Optimization: if we discovered another deleted key before "item",
 			 *               then swap htab indices such that our key is found first. */
 			if (result_htab_idx != (size_t)-1) {
-				/*virt*/Dee_dict_vidx_t known_deleted_vidx;
+				/*virt*/Dee_hash_vidx_t known_deleted_vidx;
 				known_deleted_vidx = (*self->d_hidxget)(self->d_htab, result_htab_idx);
-				ASSERT(known_deleted_vidx != Dee_DICT_HTAB_EOF);
-				ASSERT(Dee_dict_vidx_virt_lt_real(known_deleted_vidx, self->d_vsize));
+				ASSERT(known_deleted_vidx != Dee_HASH_HTAB_EOF);
+				ASSERT(Dee_hash_vidx_virt_lt_real(known_deleted_vidx, self->d_vsize));
 				ASSERT(_DeeDict_GetVirtVTab(self)[known_deleted_vidx].di_key == NULL);
 				(*self->d_hidxset)(self->d_htab, htab_idx, known_deleted_vidx);
 				(*self->d_hidxset)(self->d_htab, result_htab_idx, result_vidx);
@@ -709,11 +710,11 @@ force_grow_without_locks:
 			ASSERT(old_hmask <= self->d_hmask);
 			if (old_hmask != self->d_hmask) {
 				/* Must re-discover "result_htab_idx" in d_htab (it'll be at the end of the hash-chain) */
-				_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);
-				for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+				for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+				     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 					size_t htab_idx = hs & self->d_hmask;
-					Dee_dict_vidx_t vtab_idx = (*self->d_hidxget)(self->d_htab, htab_idx);
-					if (vtab_idx == Dee_DICT_HTAB_EOF) {
+					Dee_hash_vidx_t vtab_idx = (*self->d_hidxget)(self->d_htab, htab_idx);
+					if (vtab_idx == Dee_HASH_HTAB_EOF) {
 						result_htab_idx = htab_idx;
 						break;
 					}
@@ -736,18 +737,18 @@ force_grow_without_locks:
 	/************************************************************************/
 	ASSERT(!_DeeDict_MustGrowVTab(self));
 	{
-		/*virt*/Dee_dict_vidx_t result_vidx;
+		/*virt*/Dee_hash_vidx_t result_vidx;
 		struct Dee_dict_item *result_item;
 
 		/* Figure out where the result item should be insert */
 #ifdef LOCAL_HAS_getindex
-		result_vidx = (*getindex)(getindex_cookie, self, Dee_DICT_HTAB_EOF, &value);
-		if unlikely(result_vidx == Dee_DICT_HTAB_EOF)
+		result_vidx = (*getindex)(getindex_cookie, self, Dee_HASH_HTAB_EOF, &value);
+		if unlikely(result_vidx == Dee_HASH_HTAB_EOF)
 			goto err;
-		dict_makespace_at(self, Dee_dict_vidx_toreal(result_vidx));
+		dict_makespace_at(self, Dee_hash_vidx_toreal(result_vidx));
 #else /* LOCAL_HAS_getindex */
-		result_vidx = Dee_dict_vidx_tovirt(self->d_vsize);
-		ASSERT(result_vidx != Dee_DICT_HTAB_EOF);
+		result_vidx = Dee_hash_vidx_tovirt(self->d_vsize);
+		ASSERT(result_vidx != Dee_HASH_HTAB_EOF);
 #endif /* !LOCAL_HAS_getindex */
 
 		/* Link in the result item. */

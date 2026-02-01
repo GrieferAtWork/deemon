@@ -18,8 +18,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include <deemon/dict.h> /* Dee_DICT_HIDXIO_*, Dee_dict_vidx_t */
-
 #include "dict.c"
 //#define DEFINE_dict_htab_decafter
 //#define DEFINE_dict_htab_incafter
@@ -28,6 +26,8 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
+#include <deemon/util/hash-io.h> /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_IS8, Dee_HASH_HIDXIO_IS16, Dee_HASH_HIDXIO_IS32, Dee_HASH_HIDXIO_IS64, Dee_hash_vidx_t */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintN_t */
@@ -87,7 +87,7 @@ LOCAL_dict_htab_modify8(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint
 	}
 }
 
-#if Dee_DICT_HIDXIO_COUNT >= 2
+#if Dee_HASH_HIDXIO_COUNT >= 2
 LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify16(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint16_t)) {
 	size_t i;
@@ -96,9 +96,9 @@ LOCAL_dict_htab_modify16(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 		LOCAL_modify(htab[i]);
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
 
-#if Dee_DICT_HIDXIO_COUNT >= 3
+#if Dee_HASH_HIDXIO_COUNT >= 3
 LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify32(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint32_t)) {
 	size_t i;
@@ -107,9 +107,9 @@ LOCAL_dict_htab_modify32(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 		LOCAL_modify(htab[i]);
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
 
-#if Dee_DICT_HIDXIO_COUNT >= 4
+#if Dee_HASH_HIDXIO_COUNT >= 4
 LOCAL NONNULL((1)) void DCALL
 LOCAL_dict_htab_modify64(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uint64_t)) {
 	size_t i;
@@ -118,28 +118,28 @@ LOCAL_dict_htab_modify64(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(uin
 		LOCAL_modify(htab[i]);
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
 
 INTERN ATTR_NOINLINE NONNULL((1)) void DCALL
-LOCAL_dict_htab_modify(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(Dee_dict_vidx_t)) {
-	if (Dee_DICT_HIDXIO_IS8(self->d_valloc)) {
+LOCAL_dict_htab_modify(Dict *__restrict self LOCAL_dict_htab_modify__PARAM(Dee_hash_vidx_t)) {
+	if (Dee_HASH_HIDXIO_IS8(self->d_valloc)) {
 		LOCAL_dict_htab_modify8(self LOCAL_dict_htab_modify__ARGS(uint8_t));
 	} else
-#if Dee_DICT_HIDXIO_COUNT >= 2
-	if (Dee_DICT_HIDXIO_IS16(self->d_valloc)) {
+#if Dee_HASH_HIDXIO_COUNT >= 2
+	if (Dee_HASH_HIDXIO_IS16(self->d_valloc)) {
 		LOCAL_dict_htab_modify16(self LOCAL_dict_htab_modify__ARGS(uint16_t));
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
-#if Dee_DICT_HIDXIO_COUNT >= 3
-	if (Dee_DICT_HIDXIO_IS32(self->d_valloc)) {
+#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
+#if Dee_HASH_HIDXIO_COUNT >= 3
+	if (Dee_HASH_HIDXIO_IS32(self->d_valloc)) {
 		LOCAL_dict_htab_modify32(self LOCAL_dict_htab_modify__ARGS(uint32_t));
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
-#if Dee_DICT_HIDXIO_COUNT >= 4
-	if (Dee_DICT_HIDXIO_IS64(self->d_valloc)) {
+#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
+#if Dee_HASH_HIDXIO_COUNT >= 4
+	if (Dee_HASH_HIDXIO_IS64(self->d_valloc)) {
 		LOCAL_dict_htab_modify64(self LOCAL_dict_htab_modify__ARGS(uint64_t));
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
 	{
 		__builtin_unreachable();
 	}

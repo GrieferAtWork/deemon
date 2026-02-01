@@ -28,7 +28,7 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/dec.h>                /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
-#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_*, _DeeDict_GetVirtVTab */
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetVirtVTab */
 #include <deemon/float.h>              /* DeeFloat_Type */
 #include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_* */
 #include <deemon/int.h>                /* DeeInt_Type */
@@ -44,6 +44,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/thread.h>             /* DeeThread_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/util/hash-io.h>       /* Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
 
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/callable.h>  /* DeeCallable_Type */
@@ -424,8 +425,8 @@ again0:
 			size_t i;
 			DeeDictObject *me = (DeeDictObject *)self;
 			DeeDict_LockRead(me);
-			for (i = Dee_dict_vidx_tovirt(0);
-			     Dee_dict_vidx_virt_lt_real(i, me->d_vsize); ++i) {
+			for (i = Dee_hash_vidx_tovirt(0);
+			     Dee_hash_vidx_virt_lt_real(i, me->d_vsize); ++i) {
 				int temp;
 				DeeObject *key;
 				struct Dee_dict_item *item;

@@ -18,14 +18,14 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include <deemon/dict.h>            /* Dee_DICT_HIDXIO_COUNT */
-#include <deemon/system-features.h> /* memmoveb, memmovel, memmoveq, memmovew */
-
-#include "dict.c"
+#include "hash-io.c"
 #define LOCAL_HIDXIO_NBITS 16
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
+
+#include <deemon/system-features.h> /* memmoveb, memmovel, memmoveq, memmovew */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_COUNT, Dee_hash_htab */
 
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */
 
@@ -79,23 +79,23 @@ DECL_BEGIN
 #define Tupr PP_CAT3(uint, LOCAL_HIDXIO_NBITS_MUL2, _t)
 
 LOCAL_MAYBE_PUBLIC WUNUSED NONNULL((1)) size_t DCALL
-F(Dee_dict_gethidx)(void const *__restrict htab, size_t index) {
+F(Dee_hash_gethidx)(union Dee_hash_htab const *__restrict htab, size_t index) {
 	return ((T const *)htab)[index];
 }
 
 LOCAL_MAYBE_PUBLIC NONNULL((1)) void DCALL
-F(Dee_dict_sethidx)(void *__restrict htab, size_t index, size_t value) {
+F(Dee_hash_sethidx)(union Dee_hash_htab *__restrict htab, size_t index, size_t value) {
 	((T *)htab)[index] = (T)value;
 }
 
 INTERN NONNULL((1)) void DCALL
-F(Dee_dict_movhidx)(void *dst, void const *src, size_t n_words) {
+F(Dee_hash_movhidx)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, size_t n_words) {
 	LOCAL_memmove(dst, src, n_words);
 }
 
-#if LOCAL_HIDXIO_NBITS < ((1 << (Dee_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__)
+#if LOCAL_HIDXIO_NBITS < ((1 << (Dee_HASH_HIDXIO_COUNT - 1)) * __CHAR_BIT__)
 INTERN NONNULL((1)) void DCALL
-F(Dee_dict_uprhidx)(void *dst, void const *src, size_t n_words) {
+F(Dee_hash_uprhidx)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, size_t n_words) {
 	Tupr *tdst = (Tupr *)dst;
 	T *tsrc = (T *)src;
 	ASSERT(dst >= src);
@@ -104,11 +104,11 @@ F(Dee_dict_uprhidx)(void *dst, void const *src, size_t n_words) {
 		tdst[n_words] = (Tupr)tsrc[n_words];
 	}
 }
-#endif /* LOCAL_HIDXIO_NBITS < ((1 << (Dee_DICT_HIDXIO_COUNT - 1)) * __CHAR_BIT__) */
+#endif /* LOCAL_HIDXIO_NBITS < ((1 << (Dee_HASH_HIDXIO_COUNT - 1)) * __CHAR_BIT__) */
 
 #if LOCAL_HIDXIO_NBITS > (1 * __CHAR_BIT__)
 INTERN NONNULL((1)) void DCALL
-F(Dee_dict_dwnhidx)(void *dst, void const *src, size_t n_words) {
+F(Dee_hash_lwrhidx)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, size_t n_words) {
 	size_t i;
 	Tlwr *tdst = (Tlwr *)dst;
 	T *tsrc = (T *)src;

@@ -160,12 +160,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>     /* return_false, return_true */
-#include <deemon/dict.h>     /* Dee_DICT_HTAB_EOF, Dee_dict_* */
-#include <deemon/error-rt.h> /* DeeRT_Err* */
-#include <deemon/int.h>      /* DeeInt_Size_TryCompareEq */
+#include <deemon/bool.h>         /* return_false, return_true */
+#include <deemon/dict.h>         /* Dee_dict_item */
+#include <deemon/error-rt.h>     /* DeeRT_Err* */
+#include <deemon/int.h>          /* DeeInt_Size_TryCompareEq */
 #include <deemon/object.h>
-#include <deemon/rodict.h>   /* _DeeRoDict_* */
+#include <deemon/rodict.h>       /* _DeeRoDict_* */
+#include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_vidx_t, Dee_hash_vidx_virt_lt_real */
 
 #include <stddef.h> /* NULL, size_t */
 
@@ -230,18 +231,18 @@ LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
 #endif /* !... */
 	Dee_hash_t hs, perturb;
 
-	_DeeRoDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);
-	for (;; _DeeRoDict_HashIdxAdv(self, &hs, &perturb)) {
+	for (_DeeRoDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
+	     _DeeRoDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		struct Dee_dict_item *item;
-		/*virt*/Dee_dict_vidx_t vtab_idx;
+		/*virt*/Dee_hash_vidx_t vtab_idx;
 		vtab_idx = _DeeRoDict_HTabGet(self, hs);
 
 		/* Check for end-of-hash-chain */
-		if (vtab_idx == Dee_DICT_HTAB_EOF)
+		if (vtab_idx == Dee_HASH_HTAB_EOF)
 			break;
 
 		/* Load referenced item in "rd_vtab" */
-		ASSERT(Dee_dict_vidx_virt_lt_real(vtab_idx, self->rd_vsize));
+		ASSERT(Dee_hash_vidx_virt_lt_real(vtab_idx, self->rd_vsize));
 		item = &_DeeRoDict_GetVirtVTab(self)[vtab_idx];
 
 		/* Check if hash really matches. */

@@ -28,8 +28,9 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
-#include "dict.h"  /* Dee_dict_*, __DeeDict_HashIdxAdvEx, __DeeDict_HashIdxInitEx */
-#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_hash_t, Dee_ssize_t */
+#include "dict.h"         /* Dee_dict_item */
+#include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_hash_t, Dee_ssize_t */
+#include "util/hash-io.h" /* Dee_hash_gethidx_t, Dee_hash_htab, Dee_hash_sethidx_t, Dee_hash_vidx_t, _DeeHash_HTabGet, _DeeHash_HashIdxInit, _DeeHash_HashIdxNext, _DeeHash_REAL_GetRealVTab, _DeeHash_REAL_GetVirtVTab */
 
 #include <stddef.h> /* NULL, size_t */
 
@@ -56,10 +57,10 @@ DECL_BEGIN
 
 typedef struct Dee_rodict_object {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
-	/*real*/Dee_dict_vidx_t                       rd_vsize;      /* # of key-value pairs in the dict. */
+	/*real*/Dee_hash_vidx_t                       rd_vsize;      /* # of key-value pairs in the dict. */
 	Dee_hash_t                                    rd_hmask;      /* [>= rd_vsize] Hash-mask */
-	Dee_dict_gethidx_t                            rd_hidxget;    /* [1..1] Getter for "rd_htab" */
-	void                                         *rd_htab;       /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+	Dee_hash_gethidx_t                            rd_hidxget;    /* [1..1] Getter for "rd_htab" */
+	union Dee_hash_htab                          *rd_htab;       /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_dict_item, rd_vtab);      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
 //	COMPILER_FLEXIBLE_ARRAY(byte_t,               rd_htab_data); /* Dict hash-table. */
 } DeeRoDictObject;
@@ -79,12 +80,12 @@ DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self);
  * NOTE: This is _NOT_ a singleton! */
 struct Dee_empty_rodict_object {
 	Dee_OBJECT_HEAD
-	size_t                                        rd_vsize;        /* # of key-value pairs in the dict. */
-	size_t                                        rd_hmask;        /* [>= rd_vsize] Hash-mask */
-	Dee_dict_gethidx_t                            rd_hidxget;      /* [1..1] Getter for "rd_htab" */
-	void                                         *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
-//	struct Dee_dict_item                          rd_vtab[0];      /* [rd_vsize] Dict key-item pairs. */
-	__BYTE_TYPE__                                 rd_htab_data[1]; /* Dict key-item pairs. */
+	size_t               rd_vsize;        /* # of key-value pairs in the dict. */
+	size_t               rd_hmask;        /* [>= rd_vsize] Hash-mask */
+	Dee_hash_gethidx_t   rd_hidxget;      /* [1..1] Getter for "rd_htab" */
+	union Dee_hash_htab *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
+//	struct Dee_dict_item rd_vtab[0];      /* [rd_vsize] Dict key-item pairs. */
+	__BYTE_TYPE__        rd_htab_data[1]; /* Dict key-item pairs. */
 };
 DDATDEF struct Dee_empty_rodict_object DeeRoDict_EmptyInstance;
 #define Dee_EmptyRoDict ((DeeObject *)&DeeRoDict_EmptyInstance)
@@ -105,10 +106,10 @@ struct Dee_rodict_builder {
 	 * - rdb_dict->ob_type:    [UNDEFINED]
 	 * - rdb_dict->rd_vtab:    [0..rdb_dict->rd_vsize|ALLOC(rdb_valloc)] (out-of-bound keys are undefined)
 	 * - rdb_dict->rd_htab:    [== _DeeRoDict_GetRealVTab(rdb_dict) + rdb_valloc]
-	 * - rdb_dict->rd_hidxget: [== Dee_dict_hidxio[Dee_DICT_HIDXIO_FROMALLOC(rdb_valloc)].dhxio_get] */
+	 * - rdb_dict->rd_hidxget: [== Dee_hash_hidxio[Dee_HASH_HIDXIO_FROM_VALLOC(rdb_valloc)].hxio_get] */
 	DeeRoDictObject   *rdb_dict;    /* [0..1][owned] The dict being built. */
 	size_t             rdb_valloc;  /* Allocated size of `rdb_dict' (or 0 when `rdb_dict' is `NULL') */
-	Dee_dict_sethidx_t rdb_hidxset; /* [?..1][valid_if(rdb_dict)] Setter for `rdb_dict->rd_htab' */
+	Dee_hash_sethidx_t rdb_hidxset; /* [?..1][valid_if(rdb_dict)] Setter for `rdb_dict->rd_htab' */
 };
 
 #define Dee_RODICT_BUILDER_INIT { NULL, 0, NULL }
@@ -146,19 +147,17 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
 #ifdef DEE_SOURCE
 
 /* Advance hash-index */
-#define _DeeRoDict_HashIdxInit(self, p_hs, p_perturb, hash) \
-	__DeeDict_HashIdxInitEx(p_hs, p_perturb, hash, (self)->rd_hmask)
-#define _DeeRoDict_HashIdxAdv(self, p_hs, p_perturb) \
-	__DeeDict_HashIdxAdvEx(p_hs, p_perturb)
+#define _DeeRoDict_HashIdxInit(self, p_hs, p_perturb, hash) _DeeHash_HashIdxInit(p_hs, p_perturb, hash, (self)->rd_hmask)
+#define _DeeRoDict_HashIdxNext(self, p_hs, p_perturb, hash) _DeeHash_HashIdxNext(p_hs, p_perturb, hash, (self)->rd_hmask)
 
 /* Get/set vtab-index "i" of htab at a given "hs" */
-#define /*virt*/_DeeRoDict_HTabGet(self, hs) (*(self)->rd_hidxget)((self)->rd_htab, (hs) & (self)->rd_hmask)
+#define /*virt*/_DeeRoDict_HTabGet(self, hs) _DeeHash_HTabGet((*(self)->rd_hidxget), (self)->rd_htab, (self)->rd_hmask, hs)
 
 /* Get "rd_vtab" in both its:
  * - virt[ual] (index starts at 1), and
  * - real (index starts at 0) form */
-#define _DeeRoDict_GetVirtVTab(self) ((self)->rd_vtab - 1)
-#define _DeeRoDict_GetRealVTab(self) ((self)->rd_vtab)
+#define _DeeRoDict_GetVirtVTab(self) _DeeHash_REAL_GetVirtVTab((self)->rd_vtab)
+#define _DeeRoDict_GetRealVTab(self) _DeeHash_REAL_GetRealVTab((self)->rd_vtab)
 #endif /* DEE_SOURCE */
 
 DECL_END

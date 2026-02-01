@@ -39,7 +39,7 @@
 #include <deemon/code.h>              /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING */
 #include <deemon/compiler/compiler.h>
 #include <deemon/dex.h>               /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_*, DeeDex_Type */
-#include <deemon/dict.h>              /* DeeDict_Type, Dee_DICT_HTAB_EOF, Dee_DICT_ITEM_INIT, Dee_dict_* */
+#include <deemon/dict.h>              /* DeeDict_Type, Dee_DICT_ITEM_INIT, Dee_dict_item */
 #include <deemon/error.h>             /* DeeError_* */
 #include <deemon/exec.h>              /* Dee_GetArgv, Dee_SetArgv */
 #include <deemon/file.h>              /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
@@ -70,6 +70,7 @@
 #include <deemon/traceback.h>         /* DeeFrameObject, DeeFrame_Type, DeeTraceback_Type, Dee_FRAME_F* */
 #include <deemon/tuple.h>             /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>       /* atomic_* */
+#include <deemon/util/hash-io.h>      /* Dee_HASH_HTAB_EOF, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_vidx_t, Dee_hash_vidx_tovirt */
 #include <deemon/util/lock.h>         /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_t */
 #include <deemon/util/rlock.h>        /* Dee_RSHARED_RWLOCK_INIT */
 #include <deemon/weakref.h>           /* DeeWeakRef_Type */
@@ -465,20 +466,20 @@ STATIC_ASSERT(offsetof(struct nonempty_roset_instance_struct, rs_elem) == offset
 
 PRIVATE struct nonempty_rodict_instance_struct {
 	Dee_OBJECT_HEAD /* All of the below fields are [const] */
-	/*real*/Dee_dict_vidx_t rd_vsize;        /* # of key-value pairs in the dict. */
+	/*real*/Dee_hash_vidx_t rd_vsize;        /* # of key-value pairs in the dict. */
 	Dee_hash_t              rd_hmask;        /* [>= rd_vsize] Hash-mask */
-	Dee_dict_gethidx_t      rd_hidxget;      /* [1..1] Getter for "rd_htab" */
-	void                   *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_DICT_HTAB_EOF means END-OF-CHAIN) */
+	Dee_hash_gethidx_t      rd_hidxget;      /* [1..1] Getter for "rd_htab" */
+	void                   *rd_htab;         /* [== (byte_t *)(_DeeRoDict_GetRealVTab(this) + rd_vsize)] Hash-table (contains indices into "rd_vtab", index==Dee_HASH_HTAB_EOF means END-OF-CHAIN) */
 	struct Dee_dict_item    rd_vtab[1];      /* [rd_vsize] Dict key-item pairs (never contains deleted keys). */
 	byte_t                  rd_htab_data[2]; /* Dict hash-table. */
 } nonempty_rodict_instance = {
 	OBJECT_HEAD_INIT(&DeeRoDict_Type),
 	/* .rd_vsize     = */ 1,
 	/* .rd_hmask     = */ 1,
-	/* .rd_hidxget   = */ &Dee_dict_gethidx8,
+	/* .rd_hidxget   = */ &Dee_hash_gethidx8,
 	/* .rd_htab      = */ nonempty_rodict_instance.rd_htab_data,
 	/* .rd_vtab      = */ { Dee_DICT_ITEM_INIT(0, DeeInt_Zero, DeeInt_Zero) }, /* hash(int(0)) == 0 */
-	/* .rd_htab_data = */ { Dee_dict_vidx_tovirt(0), Dee_DICT_HTAB_EOF },
+	/* .rd_htab_data = */ { Dee_hash_vidx_tovirt(0), Dee_HASH_HTAB_EOF },
 };
 
 STATIC_ASSERT(offsetof(struct nonempty_rodict_instance_struct, rd_vsize) == offsetof(DeeRoDictObject, rd_vsize));

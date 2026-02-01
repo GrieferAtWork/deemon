@@ -1613,8 +1613,6 @@ EXPORTS
 	_Dee_ddi_next_state@12=Dee_ddi_next_state@12
 	_Dee_ddi_state_fini@4=Dee_ddi_state_fini@4
 	_Dee_ddi_state_init@12=Dee_ddi_state_init@12
-	_Dee_dict_gethidx8@8=Dee_dict_gethidx8@8
-	_Dee_dict_sethidx8@12=Dee_dict_sethidx8@12
 	_Dee_event_waitfor@4=Dee_event_waitfor@4
 	_Dee_event_waitfor_timed@12=Dee_event_waitfor_timed@12
 	_Dee_nullable_tuple_builder_pack@4=Dee_nullable_tuple_builder_pack@4

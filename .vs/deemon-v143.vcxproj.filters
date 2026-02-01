@@ -666,6 +666,9 @@
 		<ClInclude Include="..\include\deemon\util\futex.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\hash-io.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\kos-compat.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
@@ -1164,9 +1167,6 @@
 		<ClInclude Include="..\src\deemon\objects\dict-getitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\dict-hidxio.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-htabmod.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -1387,6 +1387,9 @@
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\builtin.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h">
@@ -1992,6 +1995,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\gc.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\hash-io.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\heap.c">

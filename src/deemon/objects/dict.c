@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw, UNPuSIZ */
 #include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h>
-#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_DICT_HIDXIO_*, Dee_DICT_HTAB_EOF, Dee_SIZEOF_DICT_VIDX_T, Dee_dict_*, _DeeDict_* */
+#include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK */
@@ -46,6 +46,7 @@
 #include <deemon/system-features.h>    /* bzero*, memcpy*, memmovedownc, memmoveupc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HIDXIO_IS8, Dee_HASH_HIDXIO_IS16, Dee_HASH_HIDXIO_IS32, Dee_HASH_HIDXIO_IS64, Dee_HASH_HTAB_EOF, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_hidxio, Dee_hash_htab, Dee_hash_sethidx8, Dee_hash_sethidx_t, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, IF_Dee_HASH_HIDXIO_COUNT_GE_2, IF_Dee_HASH_HIDXIO_COUNT_GE_3, IF_Dee_HASH_HIDXIO_COUNT_GE_4 */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 #include <deemon/util/objectlist.h>    /* Dee_objectlist, Dee_objectlist_* */
 
@@ -90,7 +91,7 @@ typedef DeeDictObject Dict;
 /************************************************************************/
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(Dict, di_dict) /* [1..1][const] The Dict being iterated. */
-	/*virt*/ Dee_dict_vidx_t   di_vidx; /* [!0][lock(ATOMIC)] Lower bound for next item to read from "d_vtab" (starts at 1 because "d_vtab" is offset by -1) */
+	/*virt*/ Dee_hash_vidx_t   di_vidx; /* [!0][lock(ATOMIC)] Lower bound for next item to read from "d_vtab" (starts at 1 because "d_vtab" is offset by -1) */
 } DictIterator;
 
 INTDEF DeeTypeObject DictIterator_Type;
@@ -98,14 +99,14 @@ INTDEF DeeTypeObject DictIterator_Type;
 STATIC_ASSERT(offsetof(DictIterator, di_dict) == offsetof(ProxyObject, po_obj));
 #define diter_fini      generic_proxy__fini
 #define diter_visit     generic_proxy__visit
-#define diter_serialize generic_proxy__serialize_and_wordcopy_atomic(Dee_SIZEOF_DICT_VIDX_T)
+#define diter_serialize generic_proxy__serialize_and_wordcopy_atomic(Dee_SIZEOF_HASH_VIDX_T)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_ctor(DictIterator *__restrict self) {
 	self->di_dict = (DREF Dict *)DeeDict_New();
 	if unlikely(!self->di_dict)
 		goto err;
-	self->di_vidx = Dee_dict_vidx_tovirt(0);
+	self->di_vidx = Dee_hash_vidx_tovirt(0);
 	return 0;
 err:
 	return -1;
@@ -148,7 +149,7 @@ diter_init(DictIterator *__restrict self,
 		goto err;
 	self->di_dict = args.dict;
 	Dee_Incref(args.dict);
-	self->di_vidx = Dee_dict_vidx_tovirt(0);
+	self->di_vidx = Dee_hash_vidx_tovirt(0);
 	return 0;
 err:
 	return -1;
@@ -160,8 +161,8 @@ diter_nextkey(DictIterator *__restrict self) {
 	DREF DeeObject *result;
 	Dict *dict = self->di_dict;
 	for (;;) {
-		/*virt*/ Dee_dict_vidx_t old_vidx = atomic_read(&self->di_vidx);
-		/*virt*/ Dee_dict_vidx_t new_vidx = old_vidx;
+		/*virt*/ Dee_hash_vidx_t old_vidx = atomic_read(&self->di_vidx);
+		/*virt*/ Dee_hash_vidx_t new_vidx = old_vidx;
 		DeeDict_LockRead(dict);
 		do {
 			if unlikely(new_vidx > dict->d_vsize) {
@@ -186,8 +187,8 @@ diter_nextvalue(DictIterator *__restrict self) {
 	Dict *dict = self->di_dict;
 	for (;;) {
 		DeeObject *key;
-		/*virt*/ Dee_dict_vidx_t old_vidx = atomic_read(&self->di_vidx);
-		/*virt*/ Dee_dict_vidx_t new_vidx = old_vidx;
+		/*virt*/ Dee_hash_vidx_t old_vidx = atomic_read(&self->di_vidx);
+		/*virt*/ Dee_hash_vidx_t new_vidx = old_vidx;
 		struct Dee_dict_item *virt_vtab;
 		DeeDict_LockRead(dict);
 		virt_vtab = _DeeDict_GetVirtVTab(dict);
@@ -214,8 +215,8 @@ diter_nextpair(DictIterator *__restrict self,
                DREF DeeObject *key_and_value[2]) {
 	Dict *dict = self->di_dict;
 	for (;;) {
-		/*virt*/ Dee_dict_vidx_t old_vidx = atomic_read(&self->di_vidx);
-		/*virt*/ Dee_dict_vidx_t new_vidx = old_vidx;
+		/*virt*/ Dee_hash_vidx_t old_vidx = atomic_read(&self->di_vidx);
+		/*virt*/ Dee_hash_vidx_t new_vidx = old_vidx;
 		struct Dee_dict_item *virt_vtab;
 		DeeDict_LockRead(dict);
 		virt_vtab = _DeeDict_GetVirtVTab(dict);
@@ -241,7 +242,7 @@ diter_nextpair(DictIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 diter_advance(DictIterator *__restrict self, size_t skip) {
-	/*virt*/ Dee_dict_vidx_t old_vidx, new_vidx;
+	/*virt*/ Dee_hash_vidx_t old_vidx, new_vidx;
 	Dict *dict = self->di_dict;
 	for (;;) {
 		old_vidx = atomic_read(&self->di_vidx);
@@ -252,13 +253,13 @@ diter_advance(DictIterator *__restrict self, size_t skip) {
 			/* Dict is optimized -> can just increment "new_vidx" */
 			if (OVERFLOW_UADD(new_vidx, skip, &new_vidx))
 				new_vidx = (size_t)-1;
-			if (new_vidx > Dee_dict_vidx_tovirt(dict->d_vsize))
-				new_vidx = Dee_dict_vidx_tovirt(dict->d_vsize);
+			if (new_vidx > Dee_hash_vidx_tovirt(dict->d_vsize))
+				new_vidx = Dee_hash_vidx_tovirt(dict->d_vsize);
 		} else {
 			/* Only keys that haven't been deleted count. */
 			size_t n_skip = skip;
 			struct Dee_dict_item *virt_vtab = _DeeDict_GetVirtVTab(dict);
-			for (; Dee_dict_vidx_virt_lt_real(new_vidx, dict->d_vsize) && n_skip; ++new_vidx) {
+			for (; Dee_hash_vidx_virt_lt_real(new_vidx, dict->d_vsize) && n_skip; ++new_vidx) {
 				if (virt_vtab[new_vidx].di_key)
 					--n_skip;
 			}
@@ -280,12 +281,12 @@ PRIVATE struct type_iterator diter_iterator = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_bool(DictIterator *__restrict self) {
 	Dict *dict = self->di_dict;
-	/*virt*/Dee_dict_vidx_t vidx = atomic_read(&self->di_vidx);
+	/*virt*/Dee_hash_vidx_t vidx = atomic_read(&self->di_vidx);
 	struct Dee_dict_item *virt_vtab;
-	ASSERT(vidx >= Dee_dict_vidx_tovirt(0));
+	ASSERT(vidx >= Dee_hash_vidx_tovirt(0));
 	DeeDict_LockRead(dict);
 	virt_vtab = _DeeDict_GetVirtVTab(dict);
-	for (; Dee_dict_vidx_virt_lt_real(vidx, dict->d_vsize); ++vidx) {
+	for (; Dee_hash_vidx_virt_lt_real(vidx, dict->d_vsize); ++vidx) {
 		if (virt_vtab[vidx].di_key) {
 			DeeDict_LockEndRead(dict);
 			return 1;
@@ -404,7 +405,7 @@ PUBLIC DeeObject DeeDict_Dummy = { /* DEPRECATED */
 	OBJECT_HEAD_INIT(&DeeObject_Type)
 };
 
-PUBLIC_CONST byte_t const _DeeDict_EmptyTab[] = { 0 };
+PUBLIC_CONST byte_t const _DeeHash_EmptyTab[] = { 0 };
 
 /* Heap functions for allocating/freeing dict tables (d_vtab + d_htab) */
 #define _DeeDict_TabsMalloc(n_bytes)          Dee_Malloc(n_bytes)
@@ -415,47 +416,8 @@ PUBLIC_CONST byte_t const _DeeDict_EmptyTab[] = { 0 };
 #define _DeeDict_TabsTryRealloc(ptr, n_bytes) Dee_TryRealloc(ptr, n_bytes)
 #define _DeeDict_TabsFree(ptr)                Dee_Free(ptr)
 
-#ifndef Dee_dict_uprhidx8_PTR
-#define Dee_dict_uprhidx8_PTR NULL
-#endif /* !Dee_dict_uprhidx8_PTR */
-#ifndef Dee_dict_uprhidx16_PTR
-#define Dee_dict_uprhidx16_PTR NULL
-#endif /* !Dee_dict_uprhidx16_PTR */
-#ifndef Dee_dict_uprhidx32_PTR
-#define Dee_dict_uprhidx32_PTR NULL
-#endif /* !Dee_dict_uprhidx32_PTR */
-
-#ifndef __INTELLISENSE__
-DECL_END
-#define LOCAL_HIDXIO_NBITS 8
-#include "dict-hidxio.c.inl"
-
-#if Dee_DICT_HIDXIO_COUNT >= 2
-#define LOCAL_HIDXIO_NBITS 16
-#include "dict-hidxio.c.inl"
-#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
-
-#if Dee_DICT_HIDXIO_COUNT >= 3
-#define LOCAL_HIDXIO_NBITS 32
-#include "dict-hidxio.c.inl"
-#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
-
-#if Dee_DICT_HIDXIO_COUNT >= 4
-#define LOCAL_HIDXIO_NBITS 64
-#include "dict-hidxio.c.inl"
-#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
-DECL_BEGIN
-#endif /* !__INTELLISENSE__ */
-
-PUBLIC_TPCONST struct Dee_dict_hidxio_struct tpconst Dee_dict_hidxio[Dee_DICT_HIDXIO_COUNT] = {
-	/* [0] = */ { &Dee_dict_gethidx8, &Dee_dict_sethidx8, &Dee_dict_movhidx8, Dee_dict_uprhidx8_PTR, NULL },
-	/* [1] = */ IF_Dee_DICT_HIDXIO_COUNT_GE_2({ &Dee_dict_gethidx16, &Dee_dict_sethidx16, &Dee_dict_movhidx16, Dee_dict_uprhidx16_PTR, &Dee_dict_dwnhidx16 },)
-	/* [2] = */ IF_Dee_DICT_HIDXIO_COUNT_GE_3({ &Dee_dict_gethidx32, &Dee_dict_sethidx32, &Dee_dict_movhidx32, Dee_dict_uprhidx32_PTR, &Dee_dict_dwnhidx32 },)
-	/* [3] = */ IF_Dee_DICT_HIDXIO_COUNT_GE_4({ &Dee_dict_gethidx64, &Dee_dict_sethidx64, &Dee_dict_movhidx64, NULL, &Dee_dict_dwnhidx64 },)
-};
-
-#define NULL_IF__DeeDict_EmptyTab(/*real*/ p) \
-	((p) == (struct Dee_dict_item *)_DeeDict_EmptyTab ? NULL : (p))
+#define NULL_IF__DeeDict_EmptyVTab_REAL(/*real*/ p) \
+	((p) == (struct Dee_dict_item *)_DeeHash_EmptyTab ? NULL : (p))
 
 #define HAVE_dict_setitem_unlocked
 #ifdef __OPTIMIZE_SIZE__
@@ -474,15 +436,15 @@ dict_verify(Dict *__restrict self) {
 	ASSERT(self->d_vsize <= self->d_valloc);
 	ASSERT(self->d_valloc <= self->d_hmask);
 	ASSERT(IS_POWER_OF_TWO(self->d_hmask + 1));
-	ASSERT(self->d_htab == _DeeDict_GetRealVTab(self) + self->d_valloc);
-	hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	ASSERT(/*hidxio >= 0 &&*/ hidxio < Dee_DICT_HIDXIO_COUNT);
+	ASSERT(self->d_htab == (union Dee_hash_htab *)(_DeeDict_GetRealVTab(self) + self->d_valloc));
+	hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
+	ASSERT(/*hidxio >= 0 &&*/ hidxio < Dee_HASH_HIDXIO_COUNT);
 	/* hidxio==0 may differ if "self" was statically initialized in a dex module,
 	 * in which case `self->rd_hidxget' might point into that module's PLT/GOT. */
-	ASSERT(self->d_hidxget == Dee_dict_hidxio[hidxio].dhxio_get || hidxio == 0);
-	ASSERT(self->d_hidxset == Dee_dict_hidxio[hidxio].dhxio_set || hidxio == 0);
-	for (i = Dee_dict_vidx_tovirt(0), real_vused = 0;
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+	ASSERT(self->d_hidxget == Dee_hash_hidxio[hidxio].hxio_get || hidxio == 0);
+	ASSERT(self->d_hidxset == Dee_hash_hidxio[hidxio].hxio_set || hidxio == 0);
+	for (i = Dee_hash_vidx_tovirt(0), real_vused = 0;
+	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		struct Dee_dict_item *item = &_DeeDict_GetVirtVTab(self)[i];
 		if (item->di_key) {
 			ASSERT_OBJECT(item->di_key);
@@ -494,36 +456,36 @@ dict_verify(Dict *__restrict self) {
 	        "vtab key count=%" PRFuSIZ " differs from d_vused=%" PRFuSIZ,
 	        real_vused, self->d_vused);
 	for (i = 0; i <= self->d_hmask; ++i) {
-		Dee_dict_vidx_t vidx;
+		Dee_hash_vidx_t vidx;
 		vidx = (*self->d_hidxget)(self->d_htab, i);
-		if (vidx == Dee_DICT_HTAB_EOF)
+		if (vidx == Dee_HASH_HTAB_EOF)
 			continue;
-		Dee_dict_vidx_virt2real(&vidx);
+		Dee_hash_vidx_virt2real(&vidx);
 		ASSERTF(vidx < self->d_vsize,
 		        "htab[%" PRFuSIZ "] points out-of-bounds: %" PRFuSIZ " >= %" PRFuSIZ,
 		        i, vidx, self->d_vsize);
 	}
 	for (i = 0;; ++i) {
-		Dee_dict_vidx_t vidx;
+		Dee_hash_vidx_t vidx;
 		ASSERTF(i <= self->d_hmask, "htab contains no EOF pointers (infinite loop would occur on non-present item lookup)");
 		vidx = (*self->d_hidxget)(self->d_htab, i);
-		if (vidx == Dee_DICT_HTAB_EOF)
+		if (vidx == Dee_HASH_HTAB_EOF)
 			break;
 	}
-	for (i = Dee_dict_vidx_tovirt(0), real_vused = 0;
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0), real_vused = 0;
+	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		Dee_hash_t hs, perturb;
 		struct Dee_dict_item *item = &_DeeDict_GetVirtVTab(self)[i];
 		if (!item->di_key)
 			continue;
-		_DeeDict_HashIdxInit(self, &hs, &perturb, item->di_hash);
-		for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
-			Dee_dict_vidx_t vidx;
+		for (_DeeDict_HashIdxInit(self, &hs, &perturb, item->di_hash);;
+		     _DeeDict_HashIdxNext(self, &hs, &perturb, item->di_hash)) {
+			Dee_hash_vidx_t vidx;
 			struct Dee_dict_item *hitem;
 			vidx = _DeeDict_HTabGet(self, hs);
-			ASSERTF(vidx != Dee_DICT_HTAB_EOF,
+			ASSERTF(vidx != Dee_HASH_HTAB_EOF,
 			        "End-of-hash-chain[hash:%#" PRFxSIZ "] before item idx=%" PRFuSIZ ",count=%" PRFuSIZ " <%r:%r> was found",
-			        item->di_hash, Dee_dict_vidx_toreal(i), self->d_vsize,
+			        item->di_hash, Dee_hash_vidx_toreal(i), self->d_vsize,
 			        item->di_key, item->di_value);
 			hitem = &_DeeDict_GetVirtVTab(self)[vidx];
 			if (hitem == item)
@@ -553,12 +515,12 @@ dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 		hmask  = 0;
 		valloc = 0;
 		hidxio = 0;
-		tabs   = (void *)_DeeDict_EmptyTab;
+		tabs   = (void *)_DeeHash_EmptyTab;
 	} else {
 		size_t tabssz;
 		hmask  = dict_hmask_from_count(num_items);
 		valloc = dict_valloc_from_hmask_and_count(hmask, num_items, allow_overalloc);
-		hidxio = Dee_DICT_HIDXIO_FROMALLOC(valloc);
+		hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(valloc);
 		tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, hidxio);
 		tabs   = tryalloc ? _DeeDict_TabsTryCalloc(tabssz)
 		                  : _DeeDict_TabsCalloc(tabssz);
@@ -574,9 +536,9 @@ dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 	result->d_vused   = 0;
 	_DeeDict_SetRealVTab(result, (struct Dee_dict_item *)tabs);
 	result->d_hmask   = hmask;
-	result->d_hidxget = Dee_dict_hidxio[hidxio].dhxio_get;
-	result->d_hidxset = Dee_dict_hidxio[hidxio].dhxio_set;
-	result->d_htab    = (struct Dee_dict_item *)tabs + valloc;
+	result->d_hidxget = Dee_hash_hidxio[hidxio].hxio_get;
+	result->d_hidxset = Dee_hash_hidxio[hidxio].hxio_set;
+	result->d_htab    = (union Dee_hash_htab *)((struct Dee_dict_item *)tabs + valloc);
 	Dee_atomic_rwlock_init(&result->d_lock);
 	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &DeeDict_Type);
@@ -610,66 +572,66 @@ DeeDict_NewWithWeakHint(size_t num_items) {
 }
 
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert8(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
+dict_htab_insert8(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint8_t *htab = (uint8_t *)self->d_htab;
-	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
+	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
 		size_t htab_idx = hs & self->d_hmask;
-		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
 			htab[htab_idx] = (uint8_t)vidx;
 			break;
 		}
 	}
 }
 
-#if Dee_DICT_HIDXIO_COUNT >= 2
+#if Dee_HASH_HIDXIO_COUNT >= 2
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert16(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
+dict_htab_insert16(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint16_t *htab = (uint16_t *)self->d_htab;
-	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
+	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
 		size_t htab_idx = hs & self->d_hmask;
-		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
 			htab[htab_idx] = (uint16_t)vidx;
 			break;
 		}
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
 
-#if Dee_DICT_HIDXIO_COUNT >= 3
+#if Dee_HASH_HIDXIO_COUNT >= 3
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert32(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
+dict_htab_insert32(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint32_t *htab = (uint32_t *)self->d_htab;
-	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
+	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
 		size_t htab_idx = hs & self->d_hmask;
-		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
 			htab[htab_idx] = (uint32_t)vidx;
 			break;
 		}
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
 
-#if Dee_DICT_HIDXIO_COUNT >= 4
+#if Dee_HASH_HIDXIO_COUNT >= 4
 LOCAL NONNULL((1)) void DCALL
-dict_htab_insert64(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_dict_vidx_t vidx) {
+dict_htab_insert64(Dict *__restrict self, Dee_hash_t hash, /*virt*/Dee_hash_vidx_t vidx) {
 	Dee_hash_t hs, perturb;
 	uint64_t *htab = (uint64_t *)self->d_htab;
-	_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-	for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+	for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
+	     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
 		size_t htab_idx = hs & self->d_hmask;
-		if likely(htab[htab_idx] == Dee_DICT_HTAB_EOF) {
+		if likely(htab[htab_idx] == Dee_HASH_HTAB_EOF) {
 			htab[htab_idx] = (uint64_t)vidx;
 			break;
 		}
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
 
 
 /* Re-build the dict's "d_htab" (allowed to assume that "d_vtab" does not contain deleted keys) */
@@ -678,40 +640,40 @@ dict_htab_rebuild_after_optimize(Dict *__restrict self) {
 	size_t i, vsize = self->d_vsize;
 	struct Dee_dict_item *vtab = _DeeDict_GetVirtVTab(self);
 	ASSERT(vsize == self->d_vused);
-	if (Dee_DICT_HIDXIO_IS8(self->d_valloc)) {
+	if (Dee_HASH_HIDXIO_IS8(self->d_valloc)) {
 		uint8_t *htab = (uint8_t *)self->d_htab;
 		bzerob(htab, self->d_hmask + 1);
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, vsize); ++i)
+		for (i = Dee_hash_vidx_tovirt(0);
+		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
 			dict_htab_insert8(self, vtab[i].di_hash, i);
 	} else
-#if Dee_DICT_HIDXIO_COUNT >= 2
-	if (Dee_DICT_HIDXIO_IS16(self->d_valloc)) {
+#if Dee_HASH_HIDXIO_COUNT >= 2
+	if (Dee_HASH_HIDXIO_IS16(self->d_valloc)) {
 		uint16_t *htab = (uint16_t *)self->d_htab;
 		bzerow(htab, self->d_hmask + 1);
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, vsize); ++i)
+		for (i = Dee_hash_vidx_tovirt(0);
+		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
 			dict_htab_insert16(self, vtab[i].di_hash, i);
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
-#if Dee_DICT_HIDXIO_COUNT >= 3
-	if (Dee_DICT_HIDXIO_IS32(self->d_valloc)) {
+#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
+#if Dee_HASH_HIDXIO_COUNT >= 3
+	if (Dee_HASH_HIDXIO_IS32(self->d_valloc)) {
 		uint32_t *htab = (uint32_t *)self->d_htab;
 		bzerol(htab, self->d_hmask + 1);
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, vsize); ++i)
+		for (i = Dee_hash_vidx_tovirt(0);
+		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
 			dict_htab_insert32(self, vtab[i].di_hash, i);
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
-#if Dee_DICT_HIDXIO_COUNT >= 4
-	if (Dee_DICT_HIDXIO_IS64(self->d_valloc)) {
+#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
+#if Dee_HASH_HIDXIO_COUNT >= 4
+	if (Dee_HASH_HIDXIO_IS64(self->d_valloc)) {
 		uint64_t *htab = (uint64_t *)self->d_htab;
 		bzeroq(htab, self->d_hmask + 1);
-		for (i = Dee_dict_vidx_tovirt(0);
-		     Dee_dict_vidx_virt_lt_real(i, vsize); ++i)
+		for (i = Dee_hash_vidx_tovirt(0);
+		     Dee_hash_vidx_virt_lt_real(i, vsize); ++i)
 			dict_htab_insert64(self, vtab[i].di_hash, i);
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
 	{
 		__builtin_unreachable();
 	}
@@ -719,11 +681,11 @@ dict_htab_rebuild_after_optimize(Dict *__restrict self) {
 
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_do_optimize_vtab_without_rebuild(Dict *__restrict self) {
-	/*real*/ Dee_dict_vidx_t i;
+	/*real*/ Dee_hash_vidx_t i;
 	struct Dee_dict_item *vtab;
 	vtab = _DeeDict_GetRealVTab(self);
 	for (i = 0; i < self->d_vsize;) {
-		/*real*/ Dee_dict_vidx_t j;
+		/*real*/ Dee_hash_vidx_t j;
 		size_t delta;
 		if (vtab[i].di_key) {
 			++i;
@@ -782,37 +744,37 @@ dict_trygrow_vtab(Dict *__restrict self) {
 	shift_t new_hidxio;
 	struct Dee_dict_item *old_vtab;
 	struct Dee_dict_item *new_vtab;
-	void *old_htab;
-	void *new_htab;
+	union Dee_hash_htab *old_htab;
+	union Dee_hash_htab *new_htab;
 
 	/* Must truly allocate a new, larger v-table */
 	ASSERT(_DeeDict_CanGrowVTab(self));
 	new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, true);
-	old_hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
+	old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
+	new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, new_hidxio);
 	old_vtab = _DeeDict_GetRealVTab(self);
-	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
+	old_vtab = NULL_IF__DeeDict_EmptyVTab_REAL(old_vtab);
 	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 	if unlikely(!new_vtab) {
 		new_valloc = dict_valloc_from_hmask_and_count(self->d_hmask, self->d_vsize + 1, false);
-		old_hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-		new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
+		old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
+		new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, new_hidxio);
 		new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 		if unlikely(!new_vtab)
 			return false;
 	}
-	old_htab = new_vtab + self->d_valloc;
-	new_htab = new_vtab + new_valloc;
+	old_htab = (union Dee_hash_htab *)(new_vtab + self->d_valloc);
+	new_htab = (union Dee_hash_htab *)(new_vtab + new_valloc);
 	if likely(old_hidxio == new_hidxio) {
-		(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, self->d_hmask + 1);
+		(*Dee_hash_hidxio[old_hidxio].hxio_movup)(new_htab, old_htab, self->d_hmask + 1);
 	} else {
-		(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, self->d_hmask + 1);
-		self->d_hidxget = Dee_dict_hidxio[old_hidxio].dhxio_get;
-		self->d_hidxset = Dee_dict_hidxio[old_hidxio].dhxio_set;
+		(*Dee_hash_hidxio[old_hidxio].hxio_upr)(new_htab, old_htab, self->d_hmask + 1);
+		self->d_hidxget = Dee_hash_hidxio[old_hidxio].hxio_get;
+		self->d_hidxset = Dee_hash_hidxio[old_hidxio].hxio_set;
 	}
 	bzeroc(new_vtab + self->d_valloc, new_valloc - self->d_valloc, sizeof(struct Dee_dict_item));
 	_DeeDict_SetRealVTab(self, new_vtab);
@@ -841,8 +803,8 @@ dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
 	shift_t new_hidxio;
 	struct Dee_dict_item *old_vtab;
 	struct Dee_dict_item *new_vtab;
-	void *old_htab;
-	void *new_htab;
+	union Dee_hash_htab *old_htab;
+	union Dee_hash_htab *new_htab;
 	ASSERT(min_valloc > self->d_valloc);
 
 	/* Must truly allocate a new, larger v-table */
@@ -853,17 +815,17 @@ dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
 	if (new_hmask <= old_hmask && _DeeDict_ShouldGrowHTab(self))
 		new_hmask = (new_hmask << 1) | 1;
 	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, allow_overalloc);
-	old_hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
+	old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
+	new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 	ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
 	old_vtab = _DeeDict_GetRealVTab(self);
-	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
+	old_vtab = NULL_IF__DeeDict_EmptyVTab_REAL(old_vtab);
 	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 	if unlikely(!new_vtab) {
 		new_hmask  = dict_tiny_hmask_from_count(min_valloc);
 		new_valloc = dict_valloc_from_hmask_and_count(new_hmask, min_valloc, false);
-		new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
+		new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 		new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
 		new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
@@ -871,8 +833,8 @@ dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
 			return false;
 	}
 	ASSERT(new_valloc >= min_valloc);
-	old_htab = new_vtab + self->d_valloc;
-	new_htab = new_vtab + new_valloc;
+	old_htab = (union Dee_hash_htab *)(new_vtab + self->d_valloc);
+	new_htab = (union Dee_hash_htab *)(new_vtab + new_valloc);
 	_DeeDict_SetRealVTab(self, new_vtab);
 #ifndef NDEBUG
 	old_valloc = self->d_valloc;
@@ -881,17 +843,17 @@ dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
 	self->d_htab   = new_htab;
 	if (old_hmask == new_hmask) {
 		if likely(old_hidxio == new_hidxio) {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, old_htab, old_hmask + 1);
+			(*Dee_hash_hidxio[old_hidxio].hxio_movup)(new_htab, old_htab, old_hmask + 1);
 		} else {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, old_htab, old_hmask + 1);
-			self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-			self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+			(*Dee_hash_hidxio[old_hidxio].hxio_upr)(new_htab, old_htab, old_hmask + 1);
+			self->d_hidxget = Dee_hash_hidxio[new_hidxio].hxio_get;
+			self->d_hidxset = Dee_hash_hidxio[new_hidxio].hxio_set;
 		}
 	} else {
 		/* Must rebuild d_htab */
 		self->d_hmask   = new_hmask;
-		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+		self->d_hidxget = Dee_hash_hidxio[new_hidxio].hxio_get;
+		self->d_hidxset = Dee_hash_hidxio[new_hidxio].hxio_set;
 		dict_htab_rebuild(self);
 	}
 #ifndef NDEBUG
@@ -924,7 +886,7 @@ dict_trygrow_htab_and_maybe_vtab(Dict *__restrict self) {
 	size_t new_hmask, new_tabsize;
 	size_t old_valloc = self->d_valloc;
 	size_t new_valloc;
-	shift_t hidxio = Dee_DICT_HIDXIO_FROMALLOC(old_valloc);
+	shift_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(old_valloc);
 	ASSERTF(self->d_hmask != (size_t)-1, "How? This should have been an OOM");
 	new_hmask  = (self->d_hmask << 1) | 1;
 	new_valloc = (new_hmask / DICT_VTAB_HTAB_RATIO_H) * DICT_VTAB_HTAB_RATIO_V;
@@ -933,7 +895,7 @@ dict_trygrow_htab_and_maybe_vtab(Dict *__restrict self) {
 	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, new_valloc, hidxio);
 
 	old_vtab = _DeeDict_GetRealVTab(self);
-	old_vtab = NULL_IF__DeeDict_EmptyTab(old_vtab);
+	old_vtab = NULL_IF__DeeDict_EmptyVTab_REAL(old_vtab);
 	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 	if unlikely(!new_vtab) {
 		/* Fine... We won't grow the vtab if you wanna be that way... */
@@ -946,7 +908,7 @@ dict_trygrow_htab_and_maybe_vtab(Dict *__restrict self) {
 	self->d_valloc = new_valloc;
 	self->d_hmask  = new_hmask;
 	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab = new_vtab + new_valloc;
+	self->d_htab = (union Dee_hash_htab *)(new_vtab + new_valloc);
 	dict_htab_rebuild(self);
 	return true;
 err:
@@ -997,7 +959,7 @@ again:
 		ASSERT(new_hmask > old_hmask);
 	}
 	new_valloc = dict_valloc_from_hmask_and_count(new_hmask, self->d_vsize + 1, false);
-	new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
+	new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
 
 	/* Release dict lock */
@@ -1027,7 +989,7 @@ free_buffer_and_try_again:
 		goto free_buffer_and_try_again;
 	if unlikely(old_hmask != self->d_hmask)
 		goto free_buffer_and_try_again;
-	ASSERT(new_hidxio >= Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc));
+	ASSERT(new_hidxio >= Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc));
 
 	/* Everything checks out: the buffer can be installed like this! */
 
@@ -1035,34 +997,34 @@ free_buffer_and_try_again:
 	old_vtab = _DeeDict_GetRealVTab(self);
 	if likely(old_hmask == new_hmask) {
 		shift_t old_hidxio;
-		void *new_htab = new_vtab + new_valloc;
+		union Dee_hash_htab *new_htab = (union Dee_hash_htab *)(new_vtab + new_valloc);
 		new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
 		                                           sizeof(struct Dee_dict_item));
-		old_hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
+		old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
 		ASSERT(old_hidxio == new_hidxio || (old_hidxio + 1) == new_hidxio);
 		if likely(old_hidxio == new_hidxio) {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_movup)(new_htab, self->d_htab, new_hmask + 1);
+			(*Dee_hash_hidxio[old_hidxio].hxio_movup)(new_htab, self->d_htab, new_hmask + 1);
 		} else {
-			(*Dee_dict_hidxio[old_hidxio].dhxio_upr)(new_htab, self->d_htab, new_hmask + 1);
-			self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-			self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+			(*Dee_hash_hidxio[old_hidxio].hxio_upr)(new_htab, self->d_htab, new_hmask + 1);
+			self->d_hidxget = Dee_hash_hidxio[new_hidxio].hxio_get;
+			self->d_hidxset = Dee_hash_hidxio[new_hidxio].hxio_set;
 		}
 
 		/* Update dict control elements to use the new tables. */
 		self->d_valloc = new_valloc;
 		_DeeDict_SetRealVTab(self, new_vtab);
-		self->d_htab   = new_htab;
+		self->d_htab = new_htab;
 	} else {
 		/* Must rebuild htab */
 		if (_DeeDict_CanOptimizeVTab(self))
 			dict_do_optimize_vtab_without_rebuild(self);
 		new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
 		                                           sizeof(struct Dee_dict_item));
-		self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-		self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+		self->d_hidxget = Dee_hash_hidxio[new_hidxio].hxio_get;
+		self->d_hidxset = Dee_hash_hidxio[new_hidxio].hxio_set;
 		self->d_valloc = new_valloc;
 		_DeeDict_SetRealVTab(self, new_vtab);
-		self->d_htab = new_vtab + new_valloc;
+		self->d_htab = (union Dee_hash_htab *)(new_vtab + new_valloc);
 		dict_htab_rebuild_after_optimize(self);
 	}
 
@@ -1095,7 +1057,7 @@ again:
 	ASSERT(_DeeDict_MustGrowHTab(self));
 	ASSERTF(self->d_hmask != (size_t)-1, "How? This should have been an OOM");
 	valloc = self->d_valloc;
-	hidxio = Dee_DICT_HIDXIO_FROMALLOC(valloc);
+	hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(valloc);
 
 	/* Figure out the size for the new table. */
 	new_hmask   = (self->d_hmask << 1) | 1;
@@ -1133,7 +1095,7 @@ free_buffer_and_try_again:
 	                                           sizeof(struct Dee_dict_item));
 	self->d_hmask = new_hmask;
 	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab  = new_vtab + valloc;
+	self->d_htab = (union Dee_hash_htab *)(new_vtab + valloc);
 	dict_htab_rebuild_after_optimize(self);
 
 	/* Free the old tables. */
@@ -1179,7 +1141,7 @@ dict_shrink_htab(Dict *__restrict self, bool fully_shrink) {
 	ASSERT(new_hmask > 0);
 	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc(new_hmask, self->d_valloc);
 	old_vtab = _DeeDict_GetRealVTab(self);
-	ASSERT(old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab);
+	ASSERT(old_vtab != (struct Dee_dict_item *)_DeeHash_EmptyTab);
 	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 	if unlikely(!new_vtab)
 		new_vtab = old_vtab;
@@ -1216,10 +1178,10 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 		self->d_vsize   = 0;
 		_DeeDict_SetVirtVTab(self, DeeDict_EmptyVTab);
 		self->d_hmask   = 0;
-		self->d_hidxget = &Dee_dict_gethidx8;
-		self->d_hidxset = &Dee_dict_sethidx8;
+		self->d_hidxget = &Dee_hash_gethidx8;
+		self->d_hidxset = &Dee_hash_sethidx8;
 		self->d_htab    = DeeDict_EmptyHTab;
-		if (old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab)
+		if (old_vtab != (struct Dee_dict_item *)_DeeHash_EmptyTab)
 			_DeeDict_TabsFree(old_vtab);
 		return;
 	}
@@ -1236,8 +1198,8 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 	old_valloc = self->d_valloc;
 	new_valloc = fully_shrink ? self->d_vsize : _DeeDict_ShouldShrinkVTab_NEWALLOC(self);
 	ASSERT(new_valloc >= self->d_vsize);
-	old_hidxio = Dee_DICT_HIDXIO_FROMALLOC(old_valloc);
-	new_hidxio = Dee_DICT_HIDXIO_FROMALLOC(new_valloc);
+	old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(old_valloc);
+	new_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(new_valloc);
 	ASSERT(new_hidxio <= old_hidxio);
 	old_hmask = self->d_hmask;
 	new_hmask = old_hmask;
@@ -1254,16 +1216,16 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 	/* Shrink dict hash-table in-place (so we can then inplace-realloc-trunc the table heap area) */
 	if (old_hmask == new_hmask) {
 		if (!must_rebuild_htab) {
-			void *old_htab = old_vtab + old_valloc;
-			void *new_htab = old_vtab + new_valloc;
+			union Dee_hash_htab *old_htab = (union Dee_hash_htab *)(old_vtab + old_valloc);
+			union Dee_hash_htab *new_htab = (union Dee_hash_htab *)(old_vtab + new_valloc);
 			if (new_hidxio == old_hidxio) {
-				(*Dee_dict_hidxio[new_hidxio].dhxio_movdown)(new_htab, old_htab, self->d_hmask + 1);
+				(*Dee_hash_hidxio[new_hidxio].hxio_movdown)(new_htab, old_htab, self->d_hmask + 1);
 			} else {
 				shift_t current_hidxio;
-				(*Dee_dict_hidxio[old_hidxio].dhxio_dwn)(new_htab, old_htab, self->d_hmask + 1);
+				(*Dee_hash_hidxio[old_hidxio].hxio_lwr)(new_htab, old_htab, self->d_hmask + 1);
 				current_hidxio = old_hidxio - 1;
 				while (current_hidxio > new_hidxio) {
-					(*Dee_dict_hidxio[current_hidxio].dhxio_dwn)(new_htab, new_htab, self->d_hmask + 1);
+					(*Dee_hash_hidxio[current_hidxio].hxio_lwr)(new_htab, new_htab, self->d_hmask + 1);
 					--current_hidxio;
 				}
 			}
@@ -1276,7 +1238,7 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 	new_tabsize = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(new_hmask, new_valloc, new_hidxio);
 	ASSERT(new_valloc < old_valloc);
 	ASSERT(new_valloc >= self->d_vsize);
-	ASSERTF(old_vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab,
+	ASSERTF(old_vtab != (struct Dee_dict_item *)_DeeHash_EmptyTab,
 	        "The empty table should have been handled by '!self->d_vused'");
 	new_vtab = (struct Dee_dict_item *)_DeeDict_TabsTryRealloc(old_vtab, new_tabsize);
 	if unlikely(!new_vtab)
@@ -1285,10 +1247,10 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 	/* Assign new tables / control values. */
 	self->d_valloc  = new_valloc;
 	_DeeDict_SetRealVTab(self, new_vtab);
-	self->d_htab    = new_vtab + new_valloc;
+	self->d_htab    = (union Dee_hash_htab *)(new_vtab + new_valloc);
 	self->d_hmask   = new_hmask;
-	self->d_hidxget = Dee_dict_hidxio[new_hidxio].dhxio_get;
-	self->d_hidxset = Dee_dict_hidxio[new_hidxio].dhxio_set;
+	self->d_hidxget = Dee_hash_hidxio[new_hidxio].hxio_get;
+	self->d_hidxset = Dee_hash_hidxio[new_hidxio].hxio_set;
 
 	/* Re-build the hash-table if necessary. */
 	if (must_rebuild_htab)
@@ -1308,13 +1270,13 @@ dict_autoshrink(Dict *__restrict self) {
 
 
 /* Decrement all vtab indices appearing the htab that are ">= vtab_threshold" */
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_decafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold);
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_decafter(Dict *__restrict self, /*virt*/Dee_hash_vidx_t vtab_threshold);
 
 /* Increment all vtab indices appearing the htab that are ">= vtab_threshold" */
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_incafter(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_threshold);
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_incafter(Dict *__restrict self, /*virt*/Dee_hash_vidx_t vtab_threshold);
 
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_decrange(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_min, /*virt*/Dee_dict_vidx_t vtab_max);
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_incrange(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vtab_min, /*virt*/Dee_dict_vidx_t vtab_max);
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_decrange(Dict *__restrict self, /*virt*/Dee_hash_vidx_t vtab_min, /*virt*/Dee_hash_vidx_t vtab_max);
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL dict_htab_incrange(Dict *__restrict self, /*virt*/Dee_hash_vidx_t vtab_min, /*virt*/Dee_hash_vidx_t vtab_max);
 
 #ifndef __INTELLISENSE__
 DECL_END
@@ -1332,16 +1294,16 @@ DECL_BEGIN
 
 
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
-dict_makespace_at_impl(Dict *__restrict self, /*real*/ Dee_dict_vidx_t vtab_idx) {
+dict_makespace_at_impl(Dict *__restrict self, /*real*/ Dee_hash_vidx_t vtab_idx) {
 	struct Dee_dict_item *vtab = _DeeDict_GetRealVTab(self);
 	ASSERT(vtab_idx < self->d_vsize);
 	memmoveupc(&vtab[vtab_idx + 1], &vtab[vtab_idx],
 	           self->d_vsize - vtab_idx, sizeof(struct Dee_dict_item));
-	dict_htab_incafter(self, Dee_dict_vidx_tovirt(vtab_idx));
+	dict_htab_incafter(self, Dee_hash_vidx_tovirt(vtab_idx));
 }
 
 LOCAL NONNULL((1)) void DCALL
-dict_makespace_at(Dict *__restrict self, /*real*/ Dee_dict_vidx_t vtab_idx) {
+dict_makespace_at(Dict *__restrict self, /*real*/ Dee_hash_vidx_t vtab_idx) {
 	ASSERT(vtab_idx <= self->d_vsize);
 	if (vtab_idx < self->d_vsize)
 		dict_makespace_at_impl(self, vtab_idx);
@@ -1380,7 +1342,7 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL dict_mh_setdefault(Dict
  *                   "d_vtab", which is the same as this callback returning "d_vsize"
  *                   @param: overwrite_index: When "key" already exists, the index of
  *                                            the item that will be deleted. Else, set
- *                                            to `Dee_DICT_HTAB_EOF' when "key" is new.
+ *                                            to `Dee_HASH_HTAB_EOF' when "key" is new.
  *                   @param: p_value: Pointer to the value that will be written to the key
  *                                    May be changed here to some other value already within
  *                                    the dict, in order to allow atomically assigning some
@@ -1388,8 +1350,8 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL dict_mh_setdefault(Dict
  *                   - To throw an error, the callback should:
  *                     >> DeeDict_LockEndWrite(self)
  *                     >> DeeError_Throw(...);
- *                     >> return Dee_DICT_HTAB_EOF; */
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL dict_setitem_at(Dict *self, DeeObject *key, DeeObject *value, /*virt*/ Dee_dict_vidx_t (DCALL *getindex)(void *cookie, Dict *self, /*virt*/ Dee_dict_vidx_t overwrite_index, DeeObject **p_value), void *getindex_cookie);
+ *                     >> return Dee_HASH_HTAB_EOF; */
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL dict_setitem_at(Dict *self, DeeObject *key, DeeObject *value, /*virt*/ Dee_hash_vidx_t (DCALL *getindex)(void *cookie, Dict *self, /*virt*/ Dee_hash_vidx_t overwrite_index, DeeObject **p_value), void *getindex_cookie);
 #ifndef HAVE_dict_setitem_unlocked
 #define dict_setitem_unlocked dict_setitem
 #else /* !HAVE_dict_setitem_unlocked */
@@ -1657,9 +1619,9 @@ dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict
 	self->d_hmask   = other->rd_hmask;
 	self->d_hidxget = other->rd_hidxget;
 	ASSERT(self->d_valloc <= self->d_hmask);
-	hidxio = Dee_DICT_HIDXIO_FROMALLOC(self->d_valloc);
-	ASSERT(self->d_hidxget == Dee_dict_hidxio[hidxio].dhxio_get);
-	self->d_hidxset = Dee_dict_hidxio[hidxio].dhxio_set;
+	hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->d_valloc);
+	ASSERT(self->d_hidxget == Dee_hash_hidxio[hidxio].hxio_get);
+	self->d_hidxset = Dee_hash_hidxio[hidxio].hxio_set;
 	tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(self->d_hmask, self->d_valloc, hidxio);
 	vtab   = (struct Dee_dict_item *)_DeeDict_TabsMalloc(tabssz);
 	if unlikely(!vtab)
@@ -1669,7 +1631,7 @@ dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict
 	 * This will duplicate both the vtab, as well as the htab! */
 	vtab = (struct Dee_dict_item *)memcpy(vtab, other->rd_vtab, tabssz);
 	_DeeDict_SetRealVTab(self, vtab);
-	self->d_htab = vtab + self->d_valloc;
+	self->d_htab = (union Dee_hash_htab *)(vtab + self->d_valloc);
 #ifdef DICT_INITFROM_NEEDSLOCK
 	Dee_atomic_rwlock_init(&self->d_lock);
 #endif /* DICT_INITFROM_NEEDSLOCK */
@@ -1803,7 +1765,7 @@ PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) int DCALL
 dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_item *item,
                                                   Dee_hash_t htab_idx, size_t num_items,
                                                   /*inherit(on_success)*/ DREF DeeObject **key_values) {
-	/*virt*/Dee_dict_vidx_t vtab_idx;
+	/*virt*/Dee_hash_vidx_t vtab_idx;
 	DREF DeeObject **dups;
 	Dee_hash_t hash;
 	struct Dee_objectlist duplicates;
@@ -1818,7 +1780,7 @@ dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_it
 	DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
 	hash = item->di_hash;
 	ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
-	vtab_idx = Dee_dict_vidx_tovirt(self->d_vsize);
+	vtab_idx = Dee_hash_vidx_tovirt(self->d_vsize);
 	/*++self->d_vused;*/ /* We're replacing a key, so this isn't being incremented! */
 	++self->d_vsize;
 	item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
@@ -1835,12 +1797,12 @@ dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_it
 		DREF DeeObject *key   = *key_values++;
 		DREF DeeObject *value = *key_values++;
 		hash = DeeObject_Hash(key);
-		_DeeDict_HashIdxInit(self, &hs, &perturb, hash);
-		for (;; _DeeDict_HashIdxAdv(self, &hs, &perturb)) {
+		for (_DeeDict_HashIdxInit(self, &hs, &perturb, hash);;
+		     _DeeDict_HashIdxNext(self, &hs, &perturb, hash)) {
 			int key_cmp;
 			htab_idx = hs & self->d_hmask;
 			vtab_idx = (*self->d_hidxget)(self->d_htab, htab_idx);
-			if likely(vtab_idx == Dee_DICT_HTAB_EOF)
+			if likely(vtab_idx == Dee_HASH_HTAB_EOF)
 				break;
 			item = &_DeeDict_GetVirtVTab(self)[vtab_idx];
 			if likely(item->di_hash != hash)
@@ -1863,14 +1825,14 @@ dict_insert_items_inherited_after_first_duplicate(Dict *self, struct Dee_dict_it
 			DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
 
 			ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
-			vtab_idx = Dee_dict_vidx_tovirt(self->d_vsize);
+			vtab_idx = Dee_hash_vidx_tovirt(self->d_vsize);
 			/*++self->d_vused;*/ /* We're replacing a key, so this isn't being incremented! */
 			goto account_size_and_append_item;
 		}
 
 		/* Append key/value-pair at the end of the vtab. */
 		ASSERTF(self->d_vsize < self->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
-		vtab_idx = Dee_dict_vidx_tovirt(self->d_vsize);
+		vtab_idx = Dee_hash_vidx_tovirt(self->d_vsize);
 		++self->d_vused;
 account_size_and_append_item:
 		++self->d_vsize;
@@ -1908,14 +1870,14 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 		DREF DeeObject *value = key_values[(i * 2) + 1];
 		Dee_hash_t hs, perturb, hash = DeeObject_Hash(key);
 		Dee_hash_t htab_idx;
-		/*virt*/Dee_dict_vidx_t vtab_idx;
+		/*virt*/Dee_hash_vidx_t vtab_idx;
 
-		_DeeDict_HashIdxInit(result, &hs, &perturb, hash);
-		for (;; _DeeDict_HashIdxAdv(result, &hs, &perturb)) {
+		for (_DeeDict_HashIdxInit(result, &hs, &perturb, hash);;
+		     _DeeDict_HashIdxNext(result, &hs, &perturb, hash)) {
 			int key_cmp;
 			htab_idx = hs & result->d_hmask;
 			vtab_idx = (*result->d_hidxget)(result->d_htab, htab_idx);
-			if likely(vtab_idx == Dee_DICT_HTAB_EOF)
+			if likely(vtab_idx == Dee_HASH_HTAB_EOF)
 				break;
 			item = &_DeeDict_GetVirtVTab(result)[vtab_idx];
 			if likely(item->di_hash != hash)
@@ -1942,7 +1904,7 @@ DeeDict_NewKeyValuesInherited(size_t num_items,
 		/* Append key/value-pair at the end of the vtab. */
 		ASSERTF(result->d_vsize < result->d_valloc, "DeeDict_NewWithHint() should have allocated enough space!");
 		ASSERT(result->d_vused == result->d_vsize);
-		vtab_idx = Dee_dict_vidx_tovirt(result->d_vsize);
+		vtab_idx = Dee_hash_vidx_tovirt(result->d_vsize);
 		++result->d_vused;
 		++result->d_vsize;
 		item = &_DeeDict_GetVirtVTab(result)[vtab_idx];
@@ -1969,7 +1931,7 @@ err:
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_fini(Dict *__restrict self) {
 	if (_DeeDict_GetVirtVTab(self) != DeeDict_EmptyVTab) {
-		Dee_dict_vidx_t i;
+		Dee_hash_vidx_t i;
 		struct Dee_dict_item *vtab = _DeeDict_GetRealVTab(self);
 		for (i = 0; i < self->d_vsize; ++i) {
 			if (vtab[i].di_key) {
@@ -1983,12 +1945,12 @@ dict_fini(Dict *__restrict self) {
 
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_visit(Dict *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_dict_vidx_t i;
+	Dee_hash_vidx_t i;
 	struct Dee_dict_item *vtab;
 	DeeDict_LockRead(self);
 	vtab = _DeeDict_GetVirtVTab(self);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		if (vtab[i].di_key) {
 			Dee_Visit(vtab[i].di_key);
 			Dee_Visit(vtab[i].di_value);
@@ -2005,8 +1967,8 @@ dict_initfrom_empty(Dict *__restrict self) {
 	self->d_vused   = 0;
 	_DeeDict_SetVirtVTab(self, DeeDict_EmptyVTab);
 	self->d_hmask   = 0;
-	self->d_hidxget = &Dee_dict_gethidx8;
-	self->d_hidxset = &Dee_dict_sethidx8;
+	self->d_hidxget = &Dee_hash_gethidx8;
+	self->d_hidxset = &Dee_hash_sethidx8;
 	self->d_htab    = DeeDict_EmptyHTab;
 #ifdef DICT_INITFROM_NEEDSLOCK
 	Dee_atomic_rwlock_init(&self->d_lock);
@@ -2023,12 +1985,12 @@ init_empty:
 		hmask  = 0;
 		valloc = 0;
 		hidxio = 0;
-		tabs   = (void *)_DeeDict_EmptyTab;
+		tabs   = (void *)_DeeHash_EmptyTab;
 	} else {
 		size_t tabssz;
 		hmask  = dict_hmask_from_count(num_items);
 		valloc = dict_valloc_from_hmask_and_count(hmask, num_items, allow_overalloc);
-		hidxio = Dee_DICT_HIDXIO_FROMALLOC(valloc);
+		hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(valloc);
 		tabssz = dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, hidxio);
 		tabs   = _DeeDict_TabsTryCalloc(tabssz);
 		if unlikely(!tabs)
@@ -2039,9 +2001,9 @@ init_empty:
 	self->d_vused   = 0;
 	_DeeDict_SetRealVTab(self, (struct Dee_dict_item *)tabs);
 	self->d_hmask   = hmask;
-	self->d_hidxget = Dee_dict_hidxio[hidxio].dhxio_get;
-	self->d_hidxset = Dee_dict_hidxio[hidxio].dhxio_set;
-	self->d_htab    = (struct Dee_dict_item *)tabs + valloc;
+	self->d_hidxget = Dee_hash_hidxio[hidxio].hxio_get;
+	self->d_hidxset = Dee_hash_hidxio[hidxio].hxio_set;
+	self->d_htab    = (union Dee_hash_htab *)((struct Dee_dict_item *)tabs + valloc);
 #ifdef DICT_INITFROM_NEEDSLOCK
 	Dee_atomic_rwlock_init(&self->d_lock);
 #endif /* DICT_INITFROM_NEEDSLOCK */
@@ -2214,10 +2176,10 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_deepload(Dict *__restrict self) {
 	int result = 0;
 	bool must_rebuild_htab = false;
-	/*virt*/ Dee_dict_vidx_t i;
+	/*virt*/ Dee_hash_vidx_t i;
 	DeeDict_LockRead(self);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		struct Dee_dict_item *item;
 		DREF DeeObject *old_item_key;
 		DREF DeeObject *old_item_value;
@@ -2290,9 +2252,9 @@ dict_serialize(Dict *__restrict self,
                Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(Dict, field))
 	Dict *out;
-	Dee_dict_gethidx_t out__d_hidxget;
-	Dee_dict_sethidx_t out__d_hidxset;
-	Dee_dict_vidx_t self__d_valloc;
+	Dee_hash_gethidx_t out__d_hidxget;
+	Dee_hash_sethidx_t out__d_hidxset;
+	Dee_hash_vidx_t self__d_valloc;
 again:
 	out = DeeSerial_Addr2Mem(writer, addr, Dict);
 	DeeDict_LockRead(self);
@@ -2316,7 +2278,7 @@ again:
 		size_t i, sizeof_out__d_vtab;
 		struct Dee_dict_item *out__d_vtab;
 		struct Dee_dict_item *in__d_vtab;
-		shift_t hidxio = Dee_DICT_HIDXIO_FROMALLOC(self__d_valloc);
+		shift_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self__d_valloc);
 		sizeof_out__d_vtab = self__d_valloc * sizeof(struct Dee_dict_item);
 		sizeof_out__d_vtab += (self->d_hmask + 1) << hidxio;
 		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab, NULL);
@@ -2401,7 +2363,7 @@ dict_printrepr(Dict *__restrict self,
                Dee_formatprinter_t printer, void *arg) {
 	Dee_ssize_t temp, result;
 	/*virt*/ struct Dee_dict_item *vtab;
-	/*virt*/ Dee_dict_vidx_t i;
+	/*virt*/ Dee_hash_vidx_t i;
 	bool is_first;
 	result = DeeFormat_PRINT(printer, arg, "Dict({ ");
 	if unlikely(result < 0)
@@ -2409,8 +2371,8 @@ dict_printrepr(Dict *__restrict self,
 	is_first = true;
 	DeeDict_LockRead(self);
 	vtab = _DeeDict_GetVirtVTab(self);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		DREF DeeObject *key, *value;
 		key = vtab[i].di_key;
 		if (key == NULL)
@@ -2454,11 +2416,11 @@ dict_mh_clear(Dict *__restrict self) {
 	self->d_vused   = 0;
 	_DeeDict_SetVirtVTab(self, DeeDict_EmptyVTab);
 	self->d_hmask   = 0;
-	self->d_hidxget = &Dee_dict_gethidx8;
-	self->d_hidxset = &Dee_dict_sethidx8;
+	self->d_hidxget = &Dee_hash_gethidx8;
+	self->d_hidxset = &Dee_hash_sethidx8;
 	self->d_htab    = DeeDict_EmptyHTab;
 	DeeDict_LockEndWrite(self);
-	ASSERTF(vtab != (struct Dee_dict_item *)_DeeDict_EmptyTab,
+	ASSERTF(vtab != (struct Dee_dict_item *)_DeeHash_EmptyTab,
 	        "Should have been handled by '!self->d_vsize' above");
 	for (i = 0; i < vsize; ++i) {
 		if (vtab[i].di_key) {
@@ -2497,7 +2459,7 @@ dict_iter(Dict *__restrict self) {
 		goto err;
 	Dee_Incref(self);
 	result->di_dict = self;
-	result->di_vidx = Dee_dict_vidx_tovirt(0);
+	result->di_vidx = Dee_hash_vidx_tovirt(0);
 	DeeObject_Init(result, &DictIterator_Type);
 	return result;
 err:
@@ -2516,11 +2478,11 @@ dict_sizeob(Dict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_foreach_pair(Dict *__restrict self, Dee_foreach_pair_t cb, void *arg) {
-	Dee_dict_vidx_t i;
+	Dee_hash_vidx_t i;
 	Dee_ssize_t temp, result = 0;
 	DeeDict_LockRead(self);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		DREF DeeObject *key, *value;
 		struct Dee_dict_item *item;
 		item = &_DeeDict_GetVirtVTab(self)[i];
@@ -2637,7 +2599,7 @@ err:
 /* Given an "index" in range `[0,d_used)', return a value
  * in range `[0,d_size)' that points to the index'th non-
  * deleted key in "d_vtab" */
-PRIVATE WUNUSED NONNULL((1)) /*real*/ Dee_dict_vidx_t DCALL
+PRIVATE WUNUSED NONNULL((1)) /*real*/ Dee_hash_vidx_t DCALL
 dict_unoptimize_vtab_index(Dict *self, size_t index) {
 	size_t result;
 	ASSERT(self->d_vused <= self->d_vsize);
@@ -2662,11 +2624,11 @@ struct dict_mh_seq_setitem_index_impl_data {
 	DREF DeeObject *dsqsii_deleted_value; /* out[1..1] */
 };
 
-PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_dict_vidx_t DCALL
+PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL
 dict_mh_seq_setitem_index_impl_cb(void *arg, Dict *self,
-                                  /*virt*/ Dee_dict_vidx_t overwrite_index,
+                                  /*virt*/ Dee_hash_vidx_t overwrite_index,
                                   DeeObject **p_value) {
-	/*real*/ Dee_dict_vidx_t result;
+	/*real*/ Dee_hash_vidx_t result;
 	struct dict_mh_seq_setitem_index_impl_data *data;
 	struct Dee_dict_item *real_vtab;
 	(void)p_value;
@@ -2675,7 +2637,7 @@ dict_mh_seq_setitem_index_impl_cb(void *arg, Dict *self,
 		size_t used = self->d_vused;
 		DeeDict_LockEndWrite(self);
 		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), data->dsqsii_index, used);
-		return Dee_DICT_HTAB_EOF;
+		return Dee_HASH_HTAB_EOF;
 	}
 	result = dict_unoptimize_vtab_index(self, data->dsqsii_index);
 	real_vtab = _DeeDict_GetRealVTab(self);
@@ -2687,7 +2649,7 @@ dict_mh_seq_setitem_index_impl_cb(void *arg, Dict *self,
 	}
 	ASSERT(real_vtab[result].di_key);
 	ASSERT(real_vtab[result].di_value);
-	if (result != Dee_dict_vidx_toreal(overwrite_index)) {
+	if (result != Dee_hash_vidx_toreal(overwrite_index)) {
 		/* Delete item that used to exist at this index (sequence setitem acts as an overwrite operation) */
 		data->dsqsii_deleted_key   = real_vtab[result].di_key;
 		data->dsqsii_deleted_value = real_vtab[result].di_value;
@@ -2701,7 +2663,7 @@ dict_mh_seq_setitem_index_impl_cb(void *arg, Dict *self,
 		Dee_Incref(data->dsqsii_deleted_key);
 		Dee_Incref(data->dsqsii_deleted_value);
 	}
-	return Dee_dict_vidx_tovirt(result);
+	return Dee_hash_vidx_tovirt(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
@@ -2746,22 +2708,22 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_dict_vidx_t DCALL
+PRIVATE WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL
 dict_mh_seq_insert_impl_cb(void *arg, Dict *self,
-                           /*virt*/ Dee_dict_vidx_t overwrite_index,
+                           /*virt*/ Dee_hash_vidx_t overwrite_index,
                            DeeObject **p_value) {
-	/*real*/ Dee_dict_vidx_t result;
+	/*real*/ Dee_hash_vidx_t result;
 	(void)overwrite_index;
 	(void)p_value;
-	result = (/*real*/ Dee_dict_vidx_t)(size_t)(uintptr_t)arg;
+	result = (/*real*/ Dee_hash_vidx_t)(size_t)(uintptr_t)arg;
 	if unlikely(result >= self->d_vused) {
 		size_t used = self->d_vused;
 		DeeDict_LockEndWrite(self);
 		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), result, used);
-		return Dee_DICT_HTAB_EOF;
+		return Dee_HASH_HTAB_EOF;
 	}
 	result = dict_unoptimize_vtab_index(self, result);
-	return Dee_dict_vidx_tovirt(result);
+	return Dee_hash_vidx_tovirt(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
@@ -3069,7 +3031,7 @@ dict_htab_reverse8(Dict *__restrict self, uint8_t vmin, uint8_t vmax) {
 	}
 }
 
-#if Dee_DICT_HIDXIO_COUNT >= 2
+#if Dee_HASH_HIDXIO_COUNT >= 2
 LOCAL NONNULL((1)) void DCALL
 dict_htab_reverse16(Dict *__restrict self, uint16_t vmin, uint16_t vmax) {
 	size_t i;
@@ -3081,9 +3043,9 @@ dict_htab_reverse16(Dict *__restrict self, uint16_t vmin, uint16_t vmax) {
 			htab[i] = upper - idx;
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
 
-#if Dee_DICT_HIDXIO_COUNT >= 3
+#if Dee_HASH_HIDXIO_COUNT >= 3
 LOCAL NONNULL((1)) void DCALL
 dict_htab_reverse32(Dict *__restrict self, uint32_t vmin, uint32_t vmax) {
 	size_t i;
@@ -3095,9 +3057,9 @@ dict_htab_reverse32(Dict *__restrict self, uint32_t vmin, uint32_t vmax) {
 			htab[i] = upper - idx;
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
 
-#if Dee_DICT_HIDXIO_COUNT >= 4
+#if Dee_HASH_HIDXIO_COUNT >= 4
 LOCAL NONNULL((1)) void DCALL
 dict_htab_reverse64(Dict *__restrict self, uint64_t vmin, uint64_t vmax) {
 	size_t i;
@@ -3109,28 +3071,28 @@ dict_htab_reverse64(Dict *__restrict self, uint64_t vmin, uint64_t vmax) {
 			htab[i] = upper - idx;
 	}
 }
-#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
 
 PRIVATE NONNULL((1)) void DCALL
-dict_htab_reverse(Dict *__restrict self, /*virt*/Dee_dict_vidx_t vmin, /*virt*/Dee_dict_vidx_t vmax) {
-	if (Dee_DICT_HIDXIO_IS8(self->d_valloc)) {
+dict_htab_reverse(Dict *__restrict self, /*virt*/Dee_hash_vidx_t vmin, /*virt*/Dee_hash_vidx_t vmax) {
+	if (Dee_HASH_HIDXIO_IS8(self->d_valloc)) {
 		dict_htab_reverse8(self, (uint8_t)vmin, (uint8_t)vmax);
 	} else
-#if Dee_DICT_HIDXIO_COUNT >= 2
-	if (Dee_DICT_HIDXIO_IS16(self->d_valloc)) {
+#if Dee_HASH_HIDXIO_COUNT >= 2
+	if (Dee_HASH_HIDXIO_IS16(self->d_valloc)) {
 		dict_htab_reverse16(self, (uint16_t)vmin, (uint16_t)vmax);
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 2 */
-#if Dee_DICT_HIDXIO_COUNT >= 3
-	if (Dee_DICT_HIDXIO_IS32(self->d_valloc)) {
+#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
+#if Dee_HASH_HIDXIO_COUNT >= 3
+	if (Dee_HASH_HIDXIO_IS32(self->d_valloc)) {
 		dict_htab_reverse32(self, (uint32_t)vmin, (uint32_t)vmax);
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 3 */
-#if Dee_DICT_HIDXIO_COUNT >= 4
-	if (Dee_DICT_HIDXIO_IS64(self->d_valloc)) {
+#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
+#if Dee_HASH_HIDXIO_COUNT >= 4
+	if (Dee_HASH_HIDXIO_IS64(self->d_valloc)) {
 		dict_htab_reverse64(self, (uint64_t)vmin, (uint64_t)vmax);
 	} else
-#endif /* Dee_DICT_HIDXIO_COUNT >= 4 */
+#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
 	{
 		__builtin_unreachable();
 	}
@@ -3142,15 +3104,15 @@ dict_mh_seq_reverse(Dict *self, size_t start, size_t end) {
 	if (end > self->d_vused)
 		end = self->d_vused;
 	if (start < end) {
-		/*virt*/Dee_dict_vidx_t vstart;
-		/*virt*/Dee_dict_vidx_t vend;
+		/*virt*/Dee_hash_vidx_t vstart;
+		/*virt*/Dee_hash_vidx_t vend;
 		if (_DeeDict_CanOptimizeVTab(self))
 			dict_optimize_vtab(self);
-		vstart = Dee_dict_vidx_tovirt(start);
-		vend   = Dee_dict_vidx_tovirt(end);
+		vstart = Dee_hash_vidx_tovirt(start);
+		vend   = Dee_hash_vidx_tovirt(end);
 		dict_items_reverse(_DeeDict_GetVirtVTab(self) + vstart, vend - vstart);
 		/* Also reverse all index references in "htab" */
-		ASSERT(vstart != Dee_DICT_HTAB_EOF);
+		ASSERT(vstart != Dee_HASH_HTAB_EOF);
 		dict_htab_reverse(self, vstart, vend - 1);
 	}
 	DeeDict_LockEndWrite(self);
@@ -3242,14 +3204,14 @@ dict_cc(Dict *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_mh_seq_foreach(Dict *__restrict self, Dee_foreach_t cb, void *arg) {
 	DREF DeeTupleObject *key_and_value;
-	Dee_dict_vidx_t i;
+	Dee_hash_vidx_t i;
 	Dee_ssize_t temp, result = 0;
 	key_and_value = DeeTuple_NewUninitializedPair();
 	if unlikely(!key_and_value)
 		goto err;
 	DeeDict_LockRead(self);
-	for (i = Dee_dict_vidx_tovirt(0);
-	     Dee_dict_vidx_virt_lt_real(i, self->d_vsize); ++i) {
+	for (i = Dee_hash_vidx_tovirt(0);
+	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
 		DREF DeeObject *item_key, *item_value;
 		struct Dee_dict_item *item;
 		item = &_DeeDict_GetVirtVTab(self)[i];
@@ -3294,14 +3256,14 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_mh_seq_foreach_reverse(Dict *__restrict self, Dee_foreach_t cb, void *arg) {
 	DREF DeeTupleObject *key_and_value;
-	Dee_dict_vidx_t i;
+	Dee_hash_vidx_t i;
 	Dee_ssize_t temp, result = 0;
 	key_and_value = DeeTuple_NewUninitializedPair();
 	if unlikely(!key_and_value)
 		goto err;
 	DeeDict_LockRead(self);
-	i = Dee_dict_vidx_tovirt(self->d_vsize);
-	while (i > Dee_dict_vidx_tovirt(0)) {
+	i = Dee_hash_vidx_tovirt(self->d_vsize);
+	while (i > Dee_hash_vidx_tovirt(0)) {
 		DREF DeeObject *item_key, *item_value;
 		struct Dee_dict_item *item;
 		--i;
@@ -3333,8 +3295,8 @@ dict_mh_seq_foreach_reverse(Dict *__restrict self, Dee_foreach_t cb, void *arg) 
 			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
 		}
 		DeeDict_LockRead(self);
-		if unlikely(i > Dee_dict_vidx_tovirt(self->d_vsize))
-			i = Dee_dict_vidx_tovirt(self->d_vsize);
+		if unlikely(i > Dee_hash_vidx_tovirt(self->d_vsize))
+			i = Dee_hash_vidx_tovirt(self->d_vsize);
 	}
 	DeeDict_LockEndRead(self);
 	DeeTuple_FreeUninitializedPair(key_and_value);
@@ -3576,7 +3538,7 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict___hidxio__(Dict *__restrict self) {
 	size_t valloc = Dee_atomic_read_with_atomic_rwlock(&self->d_valloc, &self->d_lock);
-	shift_t hidxio = Dee_DICT_HIDXIO_FROMALLOC(valloc);
+	shift_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(valloc);
 	return DeeInt_NEWU(hidxio);
 }
 
@@ -3812,7 +3774,7 @@ err:
 
 struct dict_compare_seq_foreach_data {
 	Dict                   *dcsfd_lhs;   /* [1..1] lhs-dict. */
-	/*real*/Dee_dict_vidx_t dcsfd_index; /* Next index into "dcsfd_lhs" to compare against. */
+	/*real*/Dee_hash_vidx_t dcsfd_index; /* Next index into "dcsfd_lhs" to compare against. */
 };
 #define DICT_COMPARE_SEQ_FOREACH_ERROR    (-1)
 #define DICT_COMPARE_SEQ_FOREACH_EQUAL    (0)
@@ -3997,9 +3959,9 @@ PRIVATE struct type_getset tpconst dict_getsets[] = {
 	                 "Size shift-multipler for htab words (word size is ${1 << __hidxio__})\n"
 	                 "#T{?#__hidxio__|htab word type~"
 	                 /**/ "$0|?Ectypes:uint8_t"
-	                 /**/ IF_Dee_DICT_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
-	                 /**/ IF_Dee_DICT_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
-	                 /**/ IF_Dee_DICT_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
+	                 /**/ IF_Dee_HASH_HIDXIO_COUNT_GE_2("&" "$1|?Ectypes:uint16_t")
+	                 /**/ IF_Dee_HASH_HIDXIO_COUNT_GE_3("&" "$2|?Ectypes:uint32_t")
+	                 /**/ IF_Dee_HASH_HIDXIO_COUNT_GE_4("&" "$3|?Ectypes:uint64_t")
 	                 "}"),
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
