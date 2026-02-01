@@ -268,7 +268,7 @@ again_futex_wait:
 #ifdef LOCAL_HAVE_timeout_nanoseconds
 #define LOCAL_dwTimeout dwTimeout
 	DWORD dwTimeout;
-	if (OVERFLOW_UCAST(timeout_nanoseconds / 1000, &dwTimeout))
+	if (OVERFLOW_UCAST(timeout_nanoseconds / 1000000, &dwTimeout))
 		dwTimeout = INFINITE;
 #else /* LOCAL_HAVE_timeout_nanoseconds */
 #define LOCAL_dwTimeout INFINITE
@@ -295,7 +295,7 @@ again_futex_wait:
 				return -1;
 			}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
-		
+
 			bOK = WaitOnAddress(addr, &expected, LOCAL_sizeof_expected, LOCAL_dwTimeout);
 		}
 		os_futex_wait_end();
