@@ -68,8 +68,9 @@ DFUNDEF WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DFCALL Dee_hash_gethidx8(u
 DFUNDEF NONNULL((1)) void DFCALL Dee_hash_sethidx8(union Dee_hash_htab *__restrict htab, Dee_hash_hidx_t index, /*virt*/ Dee_hash_vidx_t value);
 
 DDATDEF __BYTE_TYPE__ const _DeeHash_EmptyTab[];
-#define DeeHash_EmptyVTab(VTAB_ITEM) /*virt*/ ((VTAB_ITEM *)_DeeHash_EmptyTab - 1)
-#define DeeHash_EmptyHTab            ((union Dee_hash_htab *)_DeeHash_EmptyTab)
+#define _DeeHash_VIRT_EmptyVTab(VTAB_ITEM) /*virt*/ ((VTAB_ITEM *)_DeeHash_EmptyTab - 1) /* Assuming that VTAB is stored as virtual */
+#define _DeeHash_REAL_EmptyVTab(VTAB_ITEM) /*virt*/ ((VTAB_ITEM *)_DeeHash_EmptyTab)     /* Assuming that VTAB is stored as real */
+#define _DeeHash_EmptyHTab                 ((union Dee_hash_htab *)_DeeHash_EmptyTab)
 
 #ifdef DEE_SOURCE
 
@@ -246,7 +247,7 @@ struct Dee_hash_hidxio_ops {
 #define Dee_HASH_HIDXIO_COUNT 1
 #define Dee_HASH_HIDXIO_IS8(VALLOC) 1
 #define Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC) 0
-#endif /* Dee_SIZEOF_HASH_VIDX_T < 1 */
+#endif /* Dee_SIZEOF_HASH_VIDX_T >= 1 */
 
 /* This is the typing of HTAB elements */
 union Dee_hash_htab {

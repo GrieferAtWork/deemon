@@ -551,22 +551,22 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 DeeDict_TryNewWithHint(size_t num_items) {
 	return dict_new_with_hint(num_items, true, false);
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 DeeDict_TryNewWithWeakHint(size_t num_items) {
 	return dict_new_with_hint(num_items, true, true);
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 DeeDict_NewWithHint(size_t num_items) {
 	return dict_new_with_hint(num_items, false, false);
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF /*Dict*/ DeeObject *DCALL
 DeeDict_NewWithWeakHint(size_t num_items) {
 	return dict_new_with_hint(num_items, false, true);
 }
@@ -1585,7 +1585,7 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
 DeeDict_FromSequence(DeeObject *__restrict self) {
 	Dee_ssize_t foreach_status;
 	DREF Dict *result;
@@ -1621,7 +1621,7 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
 DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	if (DeeDict_CheckExact(self) && !DeeObject_IsShared(self))
@@ -1632,8 +1632,8 @@ DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *_
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeDict_FromRoDict(DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL
+DeeDict_FromRoDict(/*RoDict*/ DeeObject *__restrict self) {
 	DREF Dict *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeRoDict_Type);
 	result = DeeGCObject_MALLOC(Dict);

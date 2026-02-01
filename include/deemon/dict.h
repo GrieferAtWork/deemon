@@ -31,7 +31,7 @@
 
 #include "object.h"
 #include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
-#include "util/hash-io.h" /* DeeHash_EmptyHTab, DeeHash_EmptyVTab, Dee_hash_hidxio, Dee_hash_hidxio_ops, Dee_hash_htab, Dee_hash_vidx_t, _DeeHash_HashIdxInit, _DeeHash_HashIdxNext, _DeeHash_VIRT_GetRealVTab, _DeeHash_VIRT_GetVirtVTab, _DeeHash_VIRT_SetRealVTab, _DeeHash_VIRT_SetVirtVTab */
+#include "util/hash-io.h" /* _DeeHash_EmptyHTab, _DeeHash_VIRT_EmptyVTab, Dee_hash_hidxio, Dee_hash_hidxio_ops, Dee_hash_htab, Dee_hash_vidx_t, _DeeHash_HashIdxInit, _DeeHash_HashIdxNext, _DeeHash_VIRT_GetRealVTab, _DeeHash_VIRT_GetVirtVTab, _DeeHash_VIRT_SetRealVTab, _DeeHash_VIRT_SetVirtVTab */
 #include "util/lock.h"    /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* size_t */
@@ -76,7 +76,9 @@ DECL_BEGIN
  *       >>     ("y", int),
  *       >> };
  *
- * Also implement this for HashSet
+ * #ifndef CONFIG_EXPERIMENTAL_ORDERED_HASHSET
+ * TODO: Also implement this for HashSet
+ * #endif // !CONFIG_EXPERIMENTAL_ORDERED_HASHSET
  */
 struct Dee_dict_item {
 	Dee_hash_t      di_hash;  /* [valid_if(di_key)] Hash of `di_key' (undefined, but readable when "di_key == NULL") */
@@ -128,8 +130,8 @@ typedef struct Dee_dict_object {
 	Dee_WEAKREF_SUPPORT
 } DeeDictObject;
 
-#define DeeDict_EmptyVTab DeeHash_EmptyVTab(struct Dee_dict_item)
-#define DeeDict_EmptyHTab DeeHash_EmptyHTab
+#define DeeDict_EmptyVTab _DeeHash_VIRT_EmptyVTab(struct Dee_dict_item)
+#define DeeDict_EmptyHTab _DeeHash_EmptyHTab
 
 #ifdef CONFIG_NO_THREADS
 #define _Dee_DICT_INIT_LOCK /* nothing */
@@ -171,27 +173,28 @@ DDATDEF DeeTypeObject DeeDict_Type;
 #define DeeDict_Check(ob)         DeeObject_InstanceOf(ob, &DeeDict_Type)
 #define DeeDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeDict_Type)
 
+/* Create a new, empty Dict */
 #define DeeDict_New() DeeObject_NewDefault(&DeeDict_Type)
+
 /* "weak" hint:
  *    hint represents a lower bound for the # of items.
- *    returned dict will have space for at least this many
+ *    returned Dict will have space for at least this many
  *    items, but probably quite a bit more, depending on how
  *    extra items can be addressed by the required hash-mask
  * non-"weak" hint:
- *    hint represents an exact # of items that the dict has
+ *    hint represents an exact # of items that the Dict has
  *    space for. No extra space is pre-allocated, even if the
  *    required hash-mask could address many more items.
  * Note that in the end, it doesn't matter which function is
  * used. Correct use of these functions merely means that the
- * returned dict won't have to be resized too often.
- */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_TryNewWithHint(size_t num_items);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_TryNewWithWeakHint(size_t num_items);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_NewWithHint(size_t num_items);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_NewWithWeakHint(size_t num_items);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromRoDict(DeeObject *__restrict self);
+ * returned Dict won't have to be resized too often. */
+DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_TryNewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_TryNewWithWeakHint(size_t num_items);
+DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF /*Dict*/ DeeObject *DCALL DeeDict_NewWithWeakHint(size_t num_items);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromSequenceInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Dict*/ DeeObject *DCALL DeeDict_FromRoDict(/*RoDict*/ DeeObject *__restrict self);
 
 
 #define DeeDict_GetItemString(self, key)                             DeeDict_GetItemStringHash(self, key, Dee_HashStr(key))
