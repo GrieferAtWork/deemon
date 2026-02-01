@@ -55,7 +55,7 @@ LOCAL_dict_init_fromcopy(Dict *__restrict self, Dict *__restrict other) {
 	Dee_hash_t copy_hmask;
 	Dee_hash_vidx_t copy_valloc;
 	Dee_hash_vidx_t copy_vsize;
-	shift_t copy_hidxio;
+	Dee_hash_hidxio_t copy_hidxio;
 	void *copy_tabs;
 	size_t copy_tabssz;
 	struct Dee_dict_item *copy_vtab;
@@ -146,7 +146,7 @@ again:
 
 	if (copy_hmask == other->d_hmask) {
 		/* No need to re-build the hash table. Can instead copy is verbatim. */
-		shift_t orig_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(other->d_valloc);
+		Dee_hash_hidxio_t orig_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(other->d_valloc);
 		Dee_hash_hidx_t htab_words = copy_hmask + 1;
 		ASSERT(copy_hidxio <= orig_hidxio || (copy_hidxio + 1) == orig_hidxio);
 		if (orig_hidxio == copy_hidxio) {

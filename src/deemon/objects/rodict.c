@@ -93,7 +93,7 @@ typedef DeeRoDictObject RoDict;
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 rodict_verify(RoDict *__restrict self) {
 	size_t i, real_vused;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	ASSERT(self->rd_vsize <= self->rd_hmask);
 	ASSERT(IS_POWER_OF_TWO(self->rd_hmask + 1));
 	ASSERT(self->rd_htab == (union Dee_hash_htab *)(_DeeRoDict_GetRealVTab(self) + self->rd_vsize));
@@ -221,7 +221,7 @@ Dee_rodict_builder_init_with_hint(struct Dee_rodict_builder *__restrict self,
 	RoDict *dict;
 	size_t sizeof_dict;
 	size_t hmask;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	hidxio      = Dee_HASH_HIDXIO_FROM_VALLOC(num_items);
 	hmask       = dict_hmask_from_count(num_items);
 	sizeof_dict = _RoDict_SafeSizeOf3(num_items, hmask, hidxio);
@@ -254,7 +254,7 @@ PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) RoDict *DCALL
 rodict_trunc_vtab(RoDict *__restrict self, size_t old_valloc, size_t new_valloc) {
 	RoDict *result;
 	union Dee_hash_htab *old_htab, *new_htab;
-	shift_t old_hidxio, new_hidxio;
+	Dee_hash_hidxio_t old_hidxio, new_hidxio;
 	size_t new_sizeof;
 	ASSERT(new_valloc < old_valloc);
 	old_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(old_valloc);
@@ -339,7 +339,7 @@ rodict_builder_grow(struct Dee_rodict_builder *__restrict me) {
 	RoDict *old_dict, *new_dict;
 	size_t old_hmask, new_hmask;
 	size_t old_valloc, new_valloc;
-	shift_t old_hidxio, new_hidxio;
+	Dee_hash_hidxio_t old_hidxio, new_hidxio;
 
 	/* Calculate desired change in buffer size (s.a. `dict_trygrow_vtab_and_htab_with()') */
 	old_dict = me->rdb_dict;
@@ -529,8 +529,8 @@ DeeRoDict_FromDict(/*Dict*/ DeeObject *__restrict self) {
 	size_t sizeof_result;
 	size_t vsize;
 	size_t i, hmask;
-	shift_t src_hidxio;
-	shift_t dst_hidxio;
+	Dee_hash_hidxio_t src_hidxio;
+	Dee_hash_hidxio_t dst_hidxio;
 	DeeDictObject *me = (DeeDictObject *)self;
 	ASSERT_OBJECT_TYPE(me, &DeeDict_Type);
 again:
@@ -842,7 +842,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
 rodict_deepcopy(RoDict *__restrict self) {
 	size_t sizeof_result, i;
 	DREF RoDict *result;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	hidxio        = Dee_HASH_HIDXIO_FROM_VALLOC(self->rd_vsize);
 	sizeof_result = _RoDict_SizeOf3(self->rd_vsize, self->rd_hmask, hidxio);
 	result        = _RoDict_Malloc(sizeof_result);
@@ -930,7 +930,7 @@ rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 	size_t sizeof__rd_htab;
 	Dee_seraddr_t addrof_out;
 	byte_t *out__rd_htab;
-	shift_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->rd_vsize);
+	Dee_hash_hidxio_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->rd_vsize);
 	sizeof__rd_htab = (self->rd_hmask + 1) << hidxio;
 	sizeof_dict = _RoDict_SizeOf3(self->rd_vsize, self->rd_hmask, hidxio);
 	addrof_out  = DeeSerial_ObjectMalloc(writer, sizeof_dict, self);
@@ -1445,7 +1445,7 @@ rodict_sizeof(RoDict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict___hidxio__(RoDict *__restrict self) {
-	shift_t result = Dee_HASH_HIDXIO_FROM_VALLOC(self->rd_vsize);
+	Dee_hash_hidxio_t result = Dee_HASH_HIDXIO_FROM_VALLOC(self->rd_vsize);
 	return DeeInt_NEWU(result);
 }
 
@@ -1856,8 +1856,8 @@ rodict_from_dict_keys(DeeDictObject *dict_keys, DeeObject *value, DeeObject *val
 	size_t sizeof_result;
 	size_t vsize;
 	size_t i, hmask;
-	shift_t src_hidxio;
-	shift_t dst_hidxio;
+	Dee_hash_hidxio_t src_hidxio;
+	Dee_hash_hidxio_t dst_hidxio;
 again:
 	DeeDict_LockReadAndOptimize(dict_keys);
 	vsize         = dict_keys->d_vused;
@@ -1913,7 +1913,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF RoDict *DCALL
 rodict_from_rodict_keys(DeeRoDictObject *dict_keys, DeeObject *value, DeeObject *valuefor) {
 	DREF RoDict *result;
 	size_t i, sizeof_result;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	union Dee_hash_htab *final_htab;
 	hidxio        = Dee_HASH_HIDXIO_FROM_VALLOC(dict_keys->rd_vsize);
 	sizeof_result = _RoDict_SizeOf3(dict_keys->rd_vsize, dict_keys->rd_hmask, hidxio);

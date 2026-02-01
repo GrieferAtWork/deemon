@@ -431,7 +431,7 @@ PUBLIC_CONST byte_t const _DeeHash_EmptyTab[] = { 0 };
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 dict_verify(Dict *__restrict self) {
 	Dee_hash_vidx_t i, real_vused;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	struct Dee_hash_hidxio_ops const *ops;
 	ASSERT(self->d_vused <= self->d_vsize);
 	ASSERT(self->d_vsize <= self->d_valloc);
@@ -510,7 +510,7 @@ dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 	DREF Dict *result;
 	Dee_hash_t hmask;
 	Dee_hash_vidx_t valloc;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	void *tabs;
 	if unlikely(!num_items) {
 		hmask  = 0;
@@ -648,8 +648,8 @@ PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) bool DCALL
 dict_trygrow_vtab(Dict *__restrict self) {
 	Dee_hash_vidx_t new_valloc;
 	size_t new_tabsize;
-	shift_t old_hidxio;
-	shift_t new_hidxio;
+	Dee_hash_hidxio_t old_hidxio;
+	Dee_hash_hidxio_t new_hidxio;
 	struct Dee_dict_item *old_vtab;
 	struct Dee_dict_item *new_vtab;
 	union Dee_hash_htab *old_htab;
@@ -707,8 +707,8 @@ dict_trygrow_vtab_and_htab_with(Dict *__restrict self,
 #endif /* !NDEBUG */
 	Dee_hash_vidx_t new_valloc;
 	size_t new_tabsize;
-	shift_t old_hidxio;
-	shift_t new_hidxio;
+	Dee_hash_hidxio_t old_hidxio;
+	Dee_hash_hidxio_t new_hidxio;
 	struct Dee_dict_item *old_vtab;
 	struct Dee_dict_item *new_vtab;
 	union Dee_hash_htab *old_htab;
@@ -794,7 +794,7 @@ dict_trygrow_htab_and_maybe_vtab(Dict *__restrict self) {
 	Dee_hash_t new_hmask;
 	Dee_hash_vidx_t old_valloc = self->d_valloc;
 	Dee_hash_vidx_t new_valloc;
-	shift_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(old_valloc);
+	Dee_hash_hidxio_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(old_valloc);
 	ASSERTF(self->d_hmask != (Dee_hash_t)-1, "How? This should have been an OOM");
 	new_hmask  = (self->d_hmask << 1) | 1;
 	new_valloc = (new_hmask / DICT_VTAB_HTAB_RATIO_H) * DICT_VTAB_HTAB_RATIO_V;
@@ -848,7 +848,7 @@ dict_grow_vtab_and_htab_and_relock_impl(Dict *__restrict self)
 	Dee_hash_t old_hmask;
 	Dee_hash_t new_hmask;
 	size_t new_tabsize;
-	shift_t new_hidxio;
+	Dee_hash_hidxio_t new_hidxio;
 	struct Dee_dict_item *old_vtab;
 	struct Dee_dict_item *new_vtab;
 again:
@@ -904,7 +904,7 @@ free_buffer_and_try_again:
 	/* Copy over the contents of the old vtab */
 	old_vtab = _DeeDict_GetRealVTab(self);
 	if likely(old_hmask == new_hmask) {
-		shift_t old_hidxio;
+		Dee_hash_hidxio_t old_hidxio;
 		union Dee_hash_htab *new_htab = (union Dee_hash_htab *)(new_vtab + new_valloc);
 		new_vtab = (struct Dee_dict_item *)memcpyc(new_vtab, old_vtab, self->d_vsize,
 		                                           sizeof(struct Dee_dict_item));
@@ -959,7 +959,7 @@ dict_grow_htab_and_relock(Dict *__restrict self) {
 	size_t new_tabsize;
 	Dee_hash_t new_hmask;
 	Dee_hash_vidx_t valloc;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 again:
 	ASSERT(DeeDict_LockWriting(self));
 	ASSERT(_DeeDict_MustGrowHTab(self));
@@ -1074,8 +1074,8 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 	Dee_hash_t old_hmask;
 	Dee_hash_t new_hmask;
 	size_t new_tabsize;
-	shift_t old_hidxio;
-	shift_t new_hidxio;
+	Dee_hash_hidxio_t old_hidxio;
+	Dee_hash_hidxio_t new_hidxio;
 	ASSERT(DeeDict_LockWriting(self));
 	ASSERT(_DeeDict_CanShrinkVTab(self));
 	ASSERT(_DeeDict_ShouldShrinkVTab(self) || fully_shrink);
@@ -1129,7 +1129,7 @@ dict_shrink_vtab_and_htab(Dict *__restrict self, bool fully_shrink) {
 			if (new_hidxio == old_hidxio) {
 				(*self->d_hidxops->hxio_movdown)(new_htab, old_htab, self->d_hmask + 1);
 			} else {
-				shift_t current_hidxio;
+				Dee_hash_hidxio_t current_hidxio;
 				(*self->d_hidxops->hxio_lwr)(new_htab, old_htab, self->d_hmask + 1);
 				current_hidxio = old_hidxio - 1;
 				while (current_hidxio > new_hidxio) {
@@ -1503,7 +1503,7 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_fromrodict_noincref(Dict *__restrict self, DeeRoDictObject *__restrict other) {
 	size_t tabssz;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	struct Dee_dict_item *vtab;
 	self->d_valloc  = other->rd_vsize;
 	self->d_vsize   = other->rd_vsize;
@@ -1871,7 +1871,7 @@ LOCAL NONNULL((1)) void DCALL
 dict_initfrom_hint(Dict *__restrict self, size_t num_items, bool allow_overalloc) {
 	Dee_hash_t hmask;
 	Dee_hash_vidx_t valloc;
-	shift_t hidxio;
+	Dee_hash_hidxio_t hidxio;
 	void *tabs;
 	if unlikely(!num_items) {
 init_empty:
@@ -2168,7 +2168,7 @@ again:
 		size_t sizeof_out__d_vtab;
 		struct Dee_dict_item *out__d_vtab;
 		struct Dee_dict_item *in__d_vtab;
-		shift_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self__d_valloc);
+		Dee_hash_hidxio_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self__d_valloc);
 		sizeof_out__d_vtab = self__d_valloc * sizeof(struct Dee_dict_item);
 		sizeof_out__d_vtab += (self->d_hmask + 1) << hidxio;
 		addrof_out__d_vtab = DeeSerial_TryMalloc(writer, sizeof_out__d_vtab, NULL);
@@ -3423,7 +3423,7 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict___hidxio__(Dict *__restrict self) {
 	Dee_hash_vidx_t valloc = Dee_atomic_read_with_atomic_rwlock(&self->d_valloc, &self->d_lock);
-	shift_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(valloc);
+	Dee_hash_hidxio_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(valloc);
 	return DeeInt_NEWU(hidxio);
 }
 
