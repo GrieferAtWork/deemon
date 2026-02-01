@@ -187,6 +187,15 @@ DECL_BEGIN
 
 PRIVATE WUNUSED LOCAL_NONNULL LOCAL_return_type DCALL
 LOCAL_dict_getitem(Dict *self, LOCAL_KEY_PARAMS) {
+	Dee_hash_gethidx_t htab_get;
+#ifndef DICT_NDEBUG
+#define LOCAL_htab_get (ASSERT(htab_get == self->d_hidxops->hxio_get), htab_get)
+#elif defined(__NO_builtin_assume)
+#define LOCAL_htab_get htab_get
+#else /* !__NO_builtin_assume */
+#define LOCAL_htab_get (__builtin_assume(htab_get == self->d_hidxops->hxio_get), htab_get)
+#endif /* __NO_builtin_assume */
+
 #ifndef LOCAL_HAS_PARAM_HASH
 #ifdef LOCAL_HAS_KEY_IS_INDEX
 #define LOCAL_hash index
@@ -204,6 +213,7 @@ LOCAL_dict_getitem(Dict *self, LOCAL_KEY_PARAMS) {
 #ifndef LOCAL_boolcmp
 LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #endif /* !LOCAL_boolcmp */
+	htab_get = self->d_hidxops->hxio_get;
 	for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
 	     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		DREF DeeObject *item_key;
@@ -219,7 +229,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 
 		/* Load hash indices */
 		htab_idx = hs & self->d_hmask;
-		vtab_idx = (*self->d_hidxget)(self->d_htab, htab_idx);
+		vtab_idx = (*LOCAL_htab_get)(self->d_htab, htab_idx);
 
 		/* Check for end-of-hash-chain */
 		if (vtab_idx == Dee_HASH_HTAB_EOF)
@@ -242,18 +252,18 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #ifdef LOCAL_IS_UNLOCKED
 #define LOCAL_verify_unchanged_after_unlock(goto_if_changed) (void)0
 #else /* LOCAL_IS_UNLOCKED */
-#define LOCAL_verify_unchanged_after_unlock(goto_if_changed)                \
-	do {                                                                    \
-		if unlikely(htab_idx != (hs & self->d_hmask))                       \
-			goto goto_if_changed;                                           \
-		if unlikely(vtab_idx != (*self->d_hidxget)(self->d_htab, htab_idx)) \
-			goto goto_if_changed;                                           \
-		if unlikely(item != &_DeeDict_GetVirtVTab(self)[vtab_idx])          \
-			goto goto_if_changed;                                           \
-		if unlikely(item->di_key != item_key)                               \
-			goto goto_if_changed;                                           \
-		if unlikely(item->di_hash != LOCAL_hash)                            \
-			goto goto_if_changed;                                           \
+#define LOCAL_verify_unchanged_after_unlock(goto_if_changed)               \
+	do {                                                                   \
+		if unlikely(htab_idx != (hs & self->d_hmask))                      \
+			goto goto_if_changed;                                          \
+		if unlikely(vtab_idx != (*LOCAL_htab_get)(self->d_htab, htab_idx)) \
+			goto goto_if_changed;                                          \
+		if unlikely(item != &_DeeDict_GetVirtVTab(self)[vtab_idx])         \
+			goto goto_if_changed;                                          \
+		if unlikely(item->di_key != item_key)                              \
+			goto goto_if_changed;                                          \
+		if unlikely(item->di_hash != LOCAL_hash)                           \
+			goto goto_if_changed;                                          \
 	}	__WHILE0
 #endif /* !LOCAL_IS_UNLOCKED */
 
@@ -368,6 +378,7 @@ err:
 #endif /* NEED_err_fallthru */
 
 #undef LOCAL_hash
+#undef LOCAL_htab_get
 }
 
 #undef LOCAL_boolcmp

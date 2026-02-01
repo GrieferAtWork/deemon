@@ -1493,10 +1493,8 @@ vcall_Type_tp_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject *type
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_vtab)));   /* instance */
 		DO(fg_vpush_immSIZ(self, 0));                            /* instance, 0 */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hmask)));  /* instance */
-		DO(fg_vpush_funptr(self, &Dee_hash_gethidx8));           /* instance, &Dee_hash_gethidx8 */
-		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hidxget)));/* instance */
-		DO(fg_vpush_funptr(self, &Dee_hash_sethidx8));           /* instance, &Dee_hash_sethidx8 */
-		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hidxset)));/* instance */
+		DO(fg_vpush_funptr(self, &Dee_hash_hidxio[0]));          /* instance, &Dee_hash_hidxio[0] */
+		DO(fg_vpopind(self, offsetof(DeeDictObject, d_hidxops)));/* instance */
 		DO(fg_vpush_addr(self, DeeDict_EmptyHTab));              /* instance, DeeDict_EmptyHTab */
 		DO(fg_vpopind(self, offsetof(DeeDictObject, d_htab)));   /* instance */
 #ifndef CONFIG_NO_THREADS

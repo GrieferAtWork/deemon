@@ -141,8 +141,7 @@ again:
 	self->d_vused   = other->d_vused;
 	_DeeDict_SetRealVTab(self, copy_vtab);
 	self->d_hmask   = copy_hmask;
-	self->d_hidxget = Dee_hash_hidxio[copy_hidxio].hxio_get;
-	self->d_hidxset = Dee_hash_hidxio[copy_hidxio].hxio_set;
+	self->d_hidxops = &Dee_hash_hidxio[copy_hidxio];
 	self->d_htab    = copy_htab;
 
 	if (copy_hmask == other->d_hmask) {
@@ -154,14 +153,16 @@ again:
 			size_t sizeof_htab = htab_words << copy_hidxio;
 			(void)memcpy(copy_htab, other->d_htab, sizeof_htab);
 		} else if (copy_hidxio > orig_hidxio) {
-			(*Dee_hash_hidxio[copy_hidxio].hxio_upr)(copy_htab, other->d_htab, htab_words);
+			(*self->d_hidxops->hxio_upr)(copy_htab, other->d_htab, htab_words);
 		} else if (copy_hidxio == orig_hidxio - 1) {
-			(*Dee_hash_hidxio[copy_hidxio].hxio_lwr)(copy_htab, other->d_htab, htab_words);
+			(*self->d_hidxops->hxio_lwr)(copy_htab, other->d_htab, htab_words);
 		} else {
 			size_t i;
+			Dee_hash_sethidx_t setter = self->d_hidxops->hxio_set;
+			Dee_hash_gethidx_t getter = other->d_hidxops->hxio_get;
 			ASSERT(copy_hidxio < orig_hidxio);
 			for (i = 0; i < htab_words; ++i)
-				(*self->d_hidxset)(copy_htab, i, (*other->d_hidxget)(other->d_htab, i));
+				(*setter)(copy_htab, i, (*getter)(other->d_htab, i));
 		}
 	} else {
 		/* Copy has a different hash-mask -> hash table cannot be copied and needs to be re-build! */

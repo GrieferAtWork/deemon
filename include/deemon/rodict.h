@@ -150,9 +150,6 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
 #define _DeeRoDict_HashIdxInit(self, p_hs, p_perturb, hash) _DeeHash_HashIdxInit(p_hs, p_perturb, hash, (self)->rd_hmask)
 #define _DeeRoDict_HashIdxNext(self, p_hs, p_perturb, hash) _DeeHash_HashIdxNext(p_hs, p_perturb, hash, (self)->rd_hmask)
 
-/* Get/set vtab-index "i" of htab at a given "hs" */
-#define /*virt*/_DeeRoDict_HTabGet(self, hs) _DeeHash_HTabGet((*(self)->rd_hidxget), (self)->rd_htab, (self)->rd_hmask, hs)
-
 /* Get "rd_vtab" in both its:
  * - virt[ual] (index starts at 1), and
  * - real (index starts at 0) form */

@@ -141,7 +141,7 @@ rodict_verify(RoDict *__restrict self) {
 		     _DeeRoDict_HashIdxNext(self, &hs, &perturb, item->di_hash)) {
 			Dee_hash_vidx_t vidx;
 			struct Dee_dict_item *hitem;
-			vidx = _DeeRoDict_HTabGet(self, hs);
+			vidx = (*self->rd_hidxget)(self->rd_htab, hs & self->rd_hmask);
 			ASSERTF(vidx != Dee_HASH_HTAB_EOF,
 			        "RODICT: End-of-hash-chain[hash:%#" PRFxSIZ "] before item idx=%" PRFuSIZ ",count=%" PRFuSIZ " <%r:%r> was found",
 			        item->di_hash, Dee_hash_vidx_toreal(i), self->rd_vsize,

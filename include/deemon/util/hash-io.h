@@ -22,6 +22,7 @@
 #define GUARD_DEEMON_UTIL_HASH_IO_H 1 /*!export-*/
 
 #include "../api.h"
+#include "../types.h"
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__, __SIZEOF_SIZE_T__, __UINT*_C */
 
@@ -42,10 +43,8 @@ DECL_BEGIN
  * HMASK      Dee_hash_t           DeeDictObject.d_hmask    Hash mask. == size of HTAB (in elements) -1.
  *                                                          +1 is always a power-of-two. Used to &-mask
  *                                                          hash values to convert them into HTAB indices.
- * GETHIDX    Dee_hash_gethidx_t   DeeDictObject.d_hidxget  Getter for HTAB. Must always be equal to:
- *                                                          >> Dee_hash_hidxio[Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC)].hxio_get
- * SETHIDX    Dee_hash_sethidx_t   DeeDictObject.d_hidxset  Setter for HTAB. Must always be equal to:
- *                                                          >> Dee_hash_hidxio[Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC)].hxio_set
+ * OPS        Dee_hash_hidxio_ops  DeeDictObject.d_hidxops  Operators for HTAB. Must always be equal to:
+ *                                                          >> &Dee_hash_hidxio[Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC)]
  */
 
 
@@ -81,17 +80,75 @@ DDATDEF __BYTE_TYPE__ const _DeeHash_EmptyTab[];
 
 typedef __SHIFT_TYPE__ Dee_hash_hidxio_t;
 
-typedef NONNULL_T((1)) void (DCALL *Dee_hash_movhidx_t)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, size_t n_words);
-typedef NONNULL_T((1)) void (DCALL *Dee_hash_uprhidx_t)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, size_t n_words);
-typedef NONNULL_T((1)) void (DCALL *Dee_hash_lwrhidx_t)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, size_t n_words);
-struct Dee_hash_hidxio_struct {
+struct Dee_hash_hidxio_ops {
 	Dee_hash_gethidx_t hxio_get; /* Getter */
 	Dee_hash_sethidx_t hxio_set; /* Setter */
-	Dee_hash_movhidx_t hxio_mov; /* memmove */
+
+	/* memmove */
+	NONNULL_T((1)) void
+	(DCALL *hxio_mov)(union Dee_hash_htab *dst,
+	                  union Dee_hash_htab const *src,
+	                  size_t n_words);
 #define hxio_movup     hxio_mov  /* memmoveup */   /*!export-*/
 #define hxio_movdown   hxio_mov  /* memmovedown */ /*!export-*/
-	Dee_hash_uprhidx_t hxio_upr; /* Upsize ("dst" is Dee_hash_hidxio_t+1; assume that "dst >= src") */
-	Dee_hash_lwrhidx_t hxio_lwr; /* Downsize ("dst" is Dee_hash_hidxio_t-1; assume that "dst <= src") */
+
+	/* Upsize ("dst" is Dee_hash_hidxio_t+1; assume that "dst >= src") */
+	NONNULL_T((1)) void
+	(DCALL *hxio_upr)(union Dee_hash_htab *dst,
+	                  union Dee_hash_htab const *src,
+	                  size_t n_words);
+
+	/* Downsize ("dst" is Dee_hash_hidxio_t-1; assume that "dst <= src") */
+	NONNULL_T((1)) void
+	(DCALL *hxio_lwr)(union Dee_hash_htab *dst,
+	                  union Dee_hash_htab const *src,
+	                  size_t n_words);
+
+	/* Decrement all HTAB elements `>= vtab_threshold':
+	 * >> Dee_hash_t i;
+	 * >> for (i = 0; i <= hmask; ++i) {
+	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+	 * >>     if (vtab_index >= vtab_threshold)
+	 * >>         (*hxio_set)(htab, i, vtab_index - 1);
+	 * >> } */
+	NONNULL_T((1)) void
+	(DCALL *hxio_decafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+	                       /*virt*/ Dee_hash_vidx_t vtab_threshold);
+
+	/* Increment all HTAB elements `>= vtab_threshold':
+	 * >> Dee_hash_t i;
+	 * >> for (i = 0; i <= hmask; ++i) {
+	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+	 * >>     if (vtab_index >= vtab_threshold)
+	 * >>         (*hxio_set)(htab, i, vtab_index + 1);
+	 * >> } */
+	NONNULL_T((1)) void
+	(DCALL *hxio_incafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+	                       /*virt*/ Dee_hash_vidx_t vtab_threshold);
+
+	/* Decrement all HTAB elements `>= vtab_min && <= vtab_max':
+	 * >> Dee_hash_t i;
+	 * >> for (i = 0; i <= hmask; ++i) {
+	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+	 * >>     if (vtab_index >= vtab_min && vtab_index <= vtab_max)
+	 * >>         (*hxio_set)(htab, i, vtab_index - 1);
+	 * >> } */
+	NONNULL_T((1)) void
+	(DCALL *hxio_decrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+	                       /*virt*/ Dee_hash_vidx_t vtab_min,
+	                       /*virt*/ Dee_hash_vidx_t vtab_max);
+
+	/* Increment all HTAB elements `>= vtab_min && <= vtab_max':
+	 * >> Dee_hash_t i;
+	 * >> for (i = 0; i <= hmask; ++i) {
+	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+	 * >>     if (vtab_index >= vtab_min && vtab_index <= vtab_max)
+	 * >>         (*hxio_set)(htab, i, vtab_index + 1);
+	 * >> } */
+	NONNULL_T((1)) void
+	(DCALL *hxio_incrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+	                       /*virt*/ Dee_hash_vidx_t vtab_min,
+	                       /*virt*/ Dee_hash_vidx_t vtab_max);
 };
 
 /* NOTE: HIDXIO indices can also used as <<shifts to multiply some value by the size of an index:
@@ -158,7 +215,7 @@ union Dee_hash_htab {
 
 /* Dynamic hash I/O functions:
  * >> vtab = &Dee_hash_hidxio[Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC)]; */
-DDATDEF struct Dee_hash_hidxio_struct Dee_tpconst Dee_hash_hidxio[Dee_HASH_HIDXIO_COUNT];
+DDATDEF struct Dee_hash_hidxio_ops Dee_tpconst Dee_hash_hidxio[Dee_HASH_HIDXIO_COUNT];
 
 /* Index value found in the HTAB table when end-of-chain is encountered. */
 #define Dee_HASH_HTAB_EOF 0
@@ -194,7 +251,7 @@ DDATDEF struct Dee_hash_hidxio_struct Dee_tpconst Dee_hash_hidxio[Dee_HASH_HIDXI
  * >>      _DeeHash_HashIdxNext(&hs, &perturb, hash, self->HMASK)) {
  * >>     int cmp;
  * >>     VTAB_ITEM *item;
- * >>     Dee_hash_vidx_t idx = _DeeHash_HTabGet(self->GETHIDX, self->HTAB, self->HMASK, hs);
+ * >>     Dee_hash_vidx_t idx = (*OPS->hxio_get)(self->HTAB, hs & self->HMASK);
  * >>     if (idx == Dee_HASH_HTAB_EOF) {
  * >>         ...   Key not found
  * >>     }
@@ -211,10 +268,6 @@ DDATDEF struct Dee_hash_hidxio_struct Dee_tpconst Dee_hash_hidxio[Dee_HASH_HIDXI
 	(void)(*(p_hs) = (*(p_perturb) = (hash)) & (HMASK))
 #define _DeeHash_HashIdxNext(p_hs, p_perturb, hash, HMASK) \
 	(void)(*(p_hs) = (*(p_hs) << 2) + *(p_hs) + *(p_perturb) + 1, *(p_perturb) >>= 5)
-
-/* Get/set VTAB-index "i" of htab at a given "hs" */
-#define /*virt*/_DeeHash_HTabGet(GETHIDX, HTAB, HMASK, hs)    GETHIDX(HTAB, (hs) & (HMASK))
-#define _DeeHash_HTabSet(SETHIDX, HTAB, HMASK, hs, /*virt*/i) SETHIDX(HTAB, (hs) & (HMASK), i)
 
 
 

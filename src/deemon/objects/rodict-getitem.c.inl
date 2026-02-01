@@ -235,7 +235,7 @@ LOCAL_rodict_getitem(RoDict *self, LOCAL_KEY_PARAMS) {
 	     _DeeRoDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		struct Dee_dict_item *item;
 		/*virt*/Dee_hash_vidx_t vtab_idx;
-		vtab_idx = _DeeRoDict_HTabGet(self, hs);
+		vtab_idx = (*self->rd_hidxget)(self->rd_htab, hs & self->rd_hmask);
 
 		/* Check for end-of-hash-chain */
 		if (vtab_idx == Dee_HASH_HTAB_EOF)

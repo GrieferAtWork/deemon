@@ -25,7 +25,8 @@
 #include <deemon/api.h>
 
 #include <deemon/system-features.h> /* memmoveb, memmovel, memmoveq, memmovew */
-#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_COUNT, Dee_hash_htab */
+#include <deemon/types.h>
+#include <deemon/util/hash-io.h> /* Dee_HASH_HIDXIO_COUNT, Dee_hash_htab */
 
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */
 
@@ -118,6 +119,53 @@ F(Dee_hash_lwrhidx)(union Dee_hash_htab *dst, union Dee_hash_htab const *src, si
 	}
 }
 #endif /* LOCAL_HIDXIO_NBITS > (1 * __CHAR_BIT__) */
+
+
+INTERN NONNULL((1)) void DCALL
+F(Dee_hash_decafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+                     /*virt*/ Dee_hash_vidx_t vtab_threshold) {
+	Dee_hash_t i;
+	T *typed_htab = (T *)htab;
+	for (i = 0; i <= hmask; ++i) {
+		if (typed_htab[i] >= (T)vtab_threshold)
+			--typed_htab[i];
+	}
+}
+
+INTERN NONNULL((1)) void DCALL
+F(Dee_hash_incafter)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+                     /*virt*/ Dee_hash_vidx_t vtab_threshold) {
+	Dee_hash_t i;
+	T *typed_htab = (T *)htab;
+	for (i = 0; i <= hmask; ++i) {
+		if (typed_htab[i] >= (T)vtab_threshold)
+			++typed_htab[i];
+	}
+}
+
+INTERN NONNULL((1)) void DCALL
+F(Dee_hash_decrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+                     /*virt*/ Dee_hash_vidx_t vtab_min,
+                     /*virt*/ Dee_hash_vidx_t vtab_max) {
+	Dee_hash_t i;
+	T *typed_htab = (T *)htab;
+	for (i = 0; i <= hmask; ++i) {
+		if (typed_htab[i] >= (T)vtab_min && typed_htab[i] <= (T)vtab_max)
+			--typed_htab[i];
+	}
+}
+
+INTERN NONNULL((1)) void DCALL
+F(Dee_hash_incrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+                     /*virt*/ Dee_hash_vidx_t vtab_min,
+                     /*virt*/ Dee_hash_vidx_t vtab_max) {
+	Dee_hash_t i;
+	T *typed_htab = (T *)htab;
+	for (i = 0; i <= hmask; ++i) {
+		if (typed_htab[i] >= (T)vtab_min && typed_htab[i] <= (T)vtab_max)
+			++typed_htab[i];
+	}
+}
 
 #undef LOCAL_memmove
 #undef Tlwr
