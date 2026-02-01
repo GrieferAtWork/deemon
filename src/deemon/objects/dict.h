@@ -143,25 +143,25 @@ STATIC_ASSERT(DICT_VTAB_HTAB_RATIO_H > DICT_VTAB_HTAB_RATIO_V);
 #endif /* !DICT_FROMSEQ_DEFAULT_HINT */
 
 
-LOCAL ATTR_CONST size_t DCALL
+LOCAL ATTR_CONST Dee_hash_vidx_t DCALL
 dict_suggested_max_valloc_from_count(size_t num_item) {
 	shift_t items_nbits;
-	size_t result;
+	Dee_hash_vidx_t result;
 	ASSERT(num_item > 0);
 	items_nbits = CLZ(num_item);
 	if unlikely(!items_nbits)
-		return (size_t)-1;
+		return (Dee_hash_vidx_t)-1;
 	items_nbits = (sizeof(size_t) * __CHAR_BIT__) - items_nbits;
-	result = ((size_t)1 << (items_nbits)) |
-	         ((size_t)1 << (items_nbits + 1));
+	result = ((Dee_hash_vidx_t)1 << (items_nbits)) |
+	         ((Dee_hash_vidx_t)1 << (items_nbits + 1));
 	ASSERT(result >= num_item);
 	return result;
 }
 
 /* Calculate what would be a good "d_valloc" for a given "d_hmask" and "d_vsize" */
-LOCAL ATTR_CONST size_t DCALL
-dict_valloc_from_hmask_and_count(size_t hmask, size_t num_item, bool allow_overalloc) {
-	size_t result, max_valloc;
+LOCAL ATTR_CONST Dee_hash_vidx_t DCALL
+dict_valloc_from_hmask_and_count(Dee_hash_t hmask, size_t num_item, bool allow_overalloc) {
+	Dee_hash_vidx_t result, max_valloc;
 	ASSERT(num_item <= hmask);
 	if (!allow_overalloc)
 		return num_item;
@@ -180,9 +180,9 @@ dict_valloc_from_hmask_and_count(size_t hmask, size_t num_item, bool allow_overa
 }
 
 
-LOCAL ATTR_CONST size_t DCALL
+LOCAL ATTR_CONST Dee_hash_t DCALL
 dict_hmask_from_count(size_t num_item) {
-	size_t result;
+	Dee_hash_t result;
 	shift_t mask_nbits;
 	if unlikely(!num_item)
 		return 0;
@@ -197,7 +197,7 @@ dict_hmask_from_count(size_t num_item) {
 #endif /* DICT_VTAB_HTAB_RATIO_V != 2 */
 	ASSERT(result);
 	mask_nbits = CLZ(result);
-	mask_nbits = (sizeof(size_t) * __CHAR_BIT__) - mask_nbits;
+	mask_nbits = (sizeof(Dee_hash_t) * __CHAR_BIT__) - mask_nbits;
 	result = 1;
 	result <<= mask_nbits;
 	--result;
@@ -209,14 +209,14 @@ fallback:
 	return SIZE_MAX;
 }
 
-LOCAL ATTR_CONST size_t DCALL
+LOCAL ATTR_CONST Dee_hash_t DCALL
 dict_tiny_hmask_from_count(size_t num_item) {
-	size_t result;
+	Dee_hash_t result;
 	shift_t mask_nbits;
 	if unlikely(!num_item)
 		return 0;
 	mask_nbits = CLZ(num_item);
-	mask_nbits = (sizeof(size_t) * __CHAR_BIT__) - mask_nbits;
+	mask_nbits = (sizeof(Dee_hash_t) * __CHAR_BIT__) - mask_nbits;
 	result = 1;
 	result <<= mask_nbits;
 	--result;
@@ -229,7 +229,9 @@ dict_tiny_hmask_from_count(size_t num_item) {
 #define dict_sizeoftabs_from_hmask_and_valloc(hmask, valloc) \
 	dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(hmask, valloc, Dee_HASH_HIDXIO_FROM_VALLOC(valloc))
 LOCAL ATTR_CONST size_t DCALL
-dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(size_t hmask, size_t valloc, Dee_hash_hidxio_t hidxio) {
+dict_sizeoftabs_from_hmask_and_valloc_and_hidxio(Dee_hash_t hmask,
+                                                 Dee_hash_vidx_t valloc,
+                                                 Dee_hash_hidxio_t hidxio) {
 	size_t result, hmask_size;
 	if (OVERFLOW_UMUL(valloc, sizeof(struct Dee_dict_item), &result))
 		goto toobig;
@@ -389,10 +391,10 @@ DeeDict_LockReadAndOptimize(DeeDictObject *__restrict self) {
 	_RoDict_SafeSizeOf3(valloc, hmask, Dee_HASH_HIDXIO_FROM_VALLOC(valloc))
 #define _RoDict_SizeOf3(valloc, hmask, hidxio)           \
 	(offsetof(DeeRoDictObject, rd_vtab) +                \
-	 ((size_t)(valloc) * sizeof(struct Dee_dict_item)) + \
-	 (((size_t)(hmask) + 1) << hidxio))
+	 ((Dee_hash_vidx_t)(valloc) * sizeof(struct Dee_dict_item)) + \
+	 (((Dee_hash_t)(hmask) + 1) << hidxio))
 LOCAL ATTR_CONST size_t DCALL
-_RoDict_SafeSizeOf3(size_t valloc, size_t hmask, Dee_hash_hidxio_t hidxio) {
+_RoDict_SafeSizeOf3(Dee_hash_vidx_t valloc, Dee_hash_t hmask, Dee_hash_hidxio_t hidxio) {
 	size_t result, hmask_size;
 	if (OVERFLOW_UMUL(valloc, sizeof(struct Dee_dict_item), &result))
 		goto toobig;
@@ -413,12 +415,12 @@ toobig:
 LOCAL NONNULL((1, 3)) void DCALL
 hmask_memcpy_and_maybe_downcast(union Dee_hash_htab *__restrict dst, Dee_hash_hidxio_t dst_hidxio,
                                 union Dee_hash_htab const *__restrict src, Dee_hash_hidxio_t src_hidxio,
-                                size_t n_words) {
+                                Dee_hash_hidx_t n_words) {
 	ASSERT(dst_hidxio <= src_hidxio);
 	if likely(dst_hidxio == src_hidxio) {
 		memcpy(dst, src, n_words << dst_hidxio);
 	} else {
-		size_t i;
+		Dee_hash_hidx_t i;
 		Dee_hash_gethidx_t src_get = Dee_hash_hidxio[src_hidxio].hxio_get;
 		Dee_hash_sethidx_t dst_set = Dee_hash_hidxio[dst_hidxio].hxio_set;
 		for (i = 0; i < n_words; ++i) {
@@ -432,14 +434,14 @@ hmask_memcpy_and_maybe_downcast(union Dee_hash_htab *__restrict dst, Dee_hash_hi
 LOCAL NONNULL((1, 3)) void DCALL
 hmask_memmovedown_and_maybe_downcast(union Dee_hash_htab *dst, Dee_hash_hidxio_t dst_hidxio,
                                      union Dee_hash_htab const *src, Dee_hash_hidxio_t src_hidxio,
-                                     size_t n_words) {
+                                     Dee_hash_hidx_t n_words) {
 	ASSERT(dst_hidxio <= src_hidxio);
 	if likely(dst_hidxio == src_hidxio) {
 		memmovedown(dst, src, n_words << dst_hidxio);
 	} else {
 		Dee_hash_gethidx_t src_get = Dee_hash_hidxio[src_hidxio].hxio_get;
 		Dee_hash_sethidx_t dst_set = Dee_hash_hidxio[dst_hidxio].hxio_set;
-		size_t i;
+		Dee_hash_hidx_t i;
 		for (i = 0; i < n_words; ++i) {
 			/*virt*/Dee_hash_vidx_t word;
 			word = (*src_get)(src, i);

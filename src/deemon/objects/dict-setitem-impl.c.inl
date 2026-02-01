@@ -234,7 +234,7 @@ LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
 
 
 	Dee_hash_t hs, perturb;
-	size_t result_htab_idx; /* index in "d_htab" of first deleted item ever encountered. */
+	Dee_hash_hidx_t result_htab_idx; /* index in "d_htab" of first deleted item ever encountered. */
 
 #ifndef LOCAL_IS_SETOLD
 	LOCAL_IF_NOT_UNLOCKED(bool use_write_lock = false);
@@ -246,7 +246,7 @@ LOCAL_dict_setitem(Dict *self, LOCAL_KEY_PARAMS
 	LOCAL_DeeDict_LockRead(self);
 LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 	ops = self->d_hidxops;
-	result_htab_idx = (size_t)-1;
+	result_htab_idx = (Dee_hash_hidx_t)-1;
 	for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
 	     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
 		DREF DeeObject *item_key;
@@ -257,11 +257,11 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 		int item_key_cmp_caller_key;
 #endif /* !LOCAL_boolcmp */
 		struct Dee_dict_item *item;
-		size_t htab_idx;          /* hash-index in "d_htab" */
-		Dee_hash_vidx_t vtab_idx; /* hash-index in "d_vtab" */
+		Dee_hash_hidx_t htab_idx; /* index in "d_htab" */
+		Dee_hash_vidx_t vtab_idx; /* index in "d_vtab" */
 
 		/* Load hash indices */
-		htab_idx = hs & self->d_hmask;
+		htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
 		vtab_idx = (*LOCAL_htab_get)(self->d_htab, htab_idx);
 
 		/* Check for end-of-hash-chain */
@@ -271,7 +271,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 			LOCAL_cleanup_data_for_noop_return();
 			return ITER_DONE;
 #else /* LOCAL_IS_SETOLD */
-			if (result_htab_idx == (size_t)-1)
+			if (result_htab_idx == (Dee_hash_hidx_t)-1)
 				result_htab_idx = htab_idx;
 			break;
 #endif /* !LOCAL_IS_SETOLD */
@@ -298,7 +298,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #else /* LOCAL_IS_UNLOCKED */
 #define LOCAL_verify_unchanged_after_unlock(goto_if_changed)                           \
 	do {                                                                               \
-		if unlikely(htab_idx != (hs & self->d_hmask))                                  \
+		if unlikely(htab_idx != Dee_hash_hidx_ofhash(hs, self->d_hmask))               \
 			goto goto_if_changed;                                                      \
 		if unlikely(vtab_idx != (*LOCAL_htab_get)(self->d_htab, htab_idx))             \
 			goto goto_if_changed;                                                      \
@@ -308,12 +308,12 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 			goto goto_if_changed;                                                      \
 		if unlikely(item->di_hash != LOCAL_hash)                                       \
 			goto goto_if_changed;                                                      \
-		if (result_htab_idx != (size_t)-1) {                                           \
+		if (result_htab_idx != (Dee_hash_hidx_t)-1) {                                  \
 			/*virt*/ Dee_hash_vidx_t first_deleted_vtab_idx;                           \
 			first_deleted_vtab_idx = (*LOCAL_htab_get)(self->d_htab, result_htab_idx); \
 			if unlikely(first_deleted_vtab_idx == Dee_HASH_HTAB_EOF ||                 \
 			            _DeeDict_GetVirtVTab(self)[first_deleted_vtab_idx].di_key)     \
-				result_htab_idx = (size_t)-1;                                          \
+				result_htab_idx = (Dee_hash_hidx_t)-1;                                 \
 		}                                                                              \
 	}	__WHILE0
 #endif /* !LOCAL_IS_UNLOCKED */
@@ -560,7 +560,7 @@ override_item_after_consistency_check:
 
 					/* Optimization: if we discovered another deleted key before "item",
 					 *               then swap htab indices such that our key is found first. */
-					if (result_htab_idx != (size_t)-1) {
+					if (result_htab_idx != (Dee_hash_hidx_t)-1) {
 						/*virt*/Dee_hash_vidx_t known_deleted_vidx;
 						known_deleted_vidx = (*LOCAL_htab_get)(self->d_htab, result_htab_idx);
 						ASSERT(known_deleted_vidx != Dee_HASH_HTAB_EOF);
@@ -589,7 +589,7 @@ override_item_after_consistency_check:
 
 			/* Optimization: if we discovered another deleted key before "item",
 			 *               then swap htab indices such that our key is found first. */
-			if (result_htab_idx != (size_t)-1) {
+			if (result_htab_idx != (Dee_hash_hidx_t)-1) {
 				/*virt*/Dee_hash_vidx_t known_deleted_vidx;
 				known_deleted_vidx = (*LOCAL_htab_get)(self->d_htab, result_htab_idx);
 				ASSERT(known_deleted_vidx != Dee_HASH_HTAB_EOF);
@@ -695,14 +695,14 @@ done_overwrite_unlock_dict:
 	}
 #endif /* !LOCAL_IS_UNLOCKED */
 
-	ASSERTF(result_htab_idx != (size_t)-1, "Should have been set by for-block above");
+	ASSERTF(result_htab_idx != (Dee_hash_hidx_t)-1, "Should have been set by for-block above");
 
 	/* Check if the size of the vtab needs to increase.
 	 * NOTE: We don't need to check if the htab needs to grow, because
 	 *       the vtab can never be so large that the htab would be unable
 	 *       to handle a fully populated vtab. */
 	if unlikely(_DeeDict_MustGrowVTab(self)) {
-		size_t old_hmask;
+		Dee_hash_t old_hmask;
 		if (_DeeDict_ShouldGrowHTab(self)) {
 do_dict_trygrow_vtab_and_htab:
 			old_hmask = self->d_hmask;
@@ -724,7 +724,7 @@ force_grow_without_locks:
 				/* Must re-discover "result_htab_idx" in d_htab (it'll be at the end of the hash-chain) */
 				for (_DeeDict_HashIdxInit(self, &hs, &perturb, LOCAL_hash);;
 				     _DeeDict_HashIdxNext(self, &hs, &perturb, LOCAL_hash)) {
-					size_t htab_idx = hs & self->d_hmask;
+					Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
 					Dee_hash_vidx_t vtab_idx = (*LOCAL_htab_get)(self->d_htab, htab_idx);
 					if (vtab_idx == Dee_HASH_HTAB_EOF) {
 						result_htab_idx = htab_idx;

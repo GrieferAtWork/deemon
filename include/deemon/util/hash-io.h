@@ -52,14 +52,19 @@ DECL_BEGIN
 #define Dee_SIZEOF_HASH_VIDX_T __SIZEOF_SIZE_T__
 typedef size_t Dee_hash_vidx_t;
 
+/* Index for HTAB */
+#define Dee_SIZEOF_HASH_HIDX_T Dee_SIZEOF_HASH_T
+typedef Dee_hash_t Dee_hash_hidx_t;
+#define Dee_hash_hidx_ofhash(hs, HMASK) ((hs) & (HMASK))
+
 union Dee_hash_htab;
 
-typedef WUNUSED_T NONNULL_T((1)) /*virt*/ Dee_hash_vidx_t (DCALL *Dee_hash_gethidx_t)(union Dee_hash_htab const *__restrict htab, size_t index);
-typedef NONNULL_T((1)) void (DCALL *Dee_hash_sethidx_t)(union Dee_hash_htab *__restrict htab, size_t index, /*virt*/ Dee_hash_vidx_t value);
+typedef WUNUSED_T NONNULL_T((1)) /*virt*/ Dee_hash_vidx_t (DFCALL *Dee_hash_gethidx_t)(union Dee_hash_htab const *__restrict htab, Dee_hash_hidx_t index);
+typedef NONNULL_T((1)) void (DFCALL *Dee_hash_sethidx_t)(union Dee_hash_htab *__restrict htab, Dee_hash_hidx_t index, /*virt*/ Dee_hash_vidx_t value);
 
 /* 8-bit HTAB operators (here for static initialization) */
-DFUNDEF WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DCALL Dee_hash_gethidx8(union Dee_hash_htab const *__restrict htab, size_t index);
-DFUNDEF NONNULL((1)) void DCALL Dee_hash_sethidx8(union Dee_hash_htab *__restrict htab, size_t index, /*virt*/ Dee_hash_vidx_t value);
+DFUNDEF WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DFCALL Dee_hash_gethidx8(union Dee_hash_htab const *__restrict htab, Dee_hash_hidx_t index);
+DFUNDEF NONNULL((1)) void DFCALL Dee_hash_sethidx8(union Dee_hash_htab *__restrict htab, Dee_hash_hidx_t index, /*virt*/ Dee_hash_vidx_t value);
 
 DDATDEF __BYTE_TYPE__ const _DeeHash_EmptyTab[];
 #define DeeHash_EmptyVTab(VTAB_ITEM) /*virt*/ ((VTAB_ITEM *)_DeeHash_EmptyTab - 1)
@@ -88,7 +93,7 @@ struct Dee_hash_hidxio_ops {
 	NONNULL_T((1)) void
 	(DCALL *hxio_mov)(union Dee_hash_htab *dst,
 	                  union Dee_hash_htab const *src,
-	                  size_t n_words);
+	                  Dee_hash_hidx_t n_words);
 #define hxio_movup     hxio_mov  /* memmoveup */   /*!export-*/
 #define hxio_movdown   hxio_mov  /* memmovedown */ /*!export-*/
 
@@ -96,13 +101,20 @@ struct Dee_hash_hidxio_ops {
 	NONNULL_T((1)) void
 	(DCALL *hxio_upr)(union Dee_hash_htab *dst,
 	                  union Dee_hash_htab const *src,
-	                  size_t n_words);
+	                  Dee_hash_hidx_t n_words);
 
 	/* Downsize ("dst" is Dee_hash_hidxio_t-1; assume that "dst <= src") */
 	NONNULL_T((1)) void
 	(DCALL *hxio_lwr)(union Dee_hash_htab *dst,
 	                  union Dee_hash_htab const *src,
-	                  size_t n_words);
+	                  Dee_hash_hidx_t n_words);
+
+#if 0 /* TODO */
+	/* Insert  */
+	NONNULL_T((1)) Dee_hash_hidx_t
+	(DCALL *hxio_insert)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+	                     Dee_hash_t it_hash, /*virt*/Dee_hash_vidx_t it_vidx);
+#endif
 
 	/* Decrement all HTAB elements `>= vtab_threshold':
 	 * >> Dee_hash_t i;
@@ -152,7 +164,7 @@ struct Dee_hash_hidxio_ops {
 };
 
 /* NOTE: HIDXIO indices can also used as <<shifts to multiply some value by the size of an index:
- * >> size_t htab_size = (HMASK + 1) << Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC); */
+ * >> Dee_hash_hidx_t htab_size = (HMASK + 1) << Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC); */
 #if __SIZEOF_SIZE_T__ >= 8
 #define Dee_HASH_HIDXIO_COUNT 4
 #define Dee_HASH_HIDXIO_IS8(VALLOC)  likely((VALLOC) <= __UINT8_C(0xff))
@@ -251,11 +263,12 @@ DDATDEF struct Dee_hash_hidxio_ops Dee_tpconst Dee_hash_hidxio[Dee_HASH_HIDXIO_C
  * >>      _DeeHash_HashIdxNext(&hs, &perturb, hash, self->HMASK)) {
  * >>     int cmp;
  * >>     VTAB_ITEM *item;
- * >>     Dee_hash_vidx_t idx = (*OPS->hxio_get)(self->HTAB, hs & self->HMASK);
- * >>     if (idx == Dee_HASH_HTAB_EOF) {
+ * >>     Dee_hash_hidx_t hidx = Dee_hash_hidx_ofhash(hs, self->HMASK);
+ * >>     Dee_hash_vidx_t vidx = (*OPS->hxio_get)(self->HTAB, hidx);
+ * >>     if (vidx == Dee_HASH_HTAB_EOF) {
  * >>         ...   Key not found
  * >>     }
- * >>     item = _DeeHash_GetVirtVTab(self->VTAB)[idx];
+ * >>     item = _DeeHash_[VIRT|REAL]_GetVirtVTab(self->VTAB)[vidx];
  * >>     cmp = DeeObject_TryCompareEq(item->vti_key, key);
  * >>     if (Dee_COMPARE_ISERR(cmp))
  * >>         goto err;

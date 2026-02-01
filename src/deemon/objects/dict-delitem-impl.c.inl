@@ -170,11 +170,11 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 		int item_key_cmp_caller_key;
 #endif /* !LOCAL_boolcmp */
 		struct Dee_dict_item *item;
-		size_t htab_idx;          /* hash-index in "d_htab" */
-		Dee_hash_vidx_t vtab_idx; /* hash-index in "d_vtab" */
+		Dee_hash_hidx_t htab_idx; /* index in "d_htab" */
+		Dee_hash_vidx_t vtab_idx; /* index in "d_vtab" */
 
 		/* Load hash indices */
-		htab_idx = hs & self->d_hmask;
+		htab_idx = Dee_hash_hidx_ofhash(hs, self->d_hmask);
 		vtab_idx = (*LOCAL_htab_get)(self->d_htab, htab_idx);
 
 		/* Check for end-of-hash-chain */
@@ -200,7 +200,7 @@ LOCAL_IF_NOT_UNLOCKED(again_with_lock:)
 #else /* LOCAL_IS_UNLOCKED */
 #define LOCAL_verify_unchanged_after_unlock(goto_if_changed)               \
 	do {                                                                   \
-		if unlikely(htab_idx != (hs & self->d_hmask))                      \
+		if unlikely(htab_idx != Dee_hash_hidx_ofhash(hs, self->d_hmask))   \
 			goto goto_if_changed;                                          \
 		if unlikely(vtab_idx != (*LOCAL_htab_get)(self->d_htab, htab_idx)) \
 			goto goto_if_changed;                                          \

@@ -125,10 +125,10 @@ rodict_verify(RoDict *__restrict self) {
 		        i, vidx, self->rd_vsize);
 	}
 	for (i = 0;; ++i) {
-		Dee_hash_vidx_t vidx;
+		Dee_hash_vidx_t vtab_idx;
 		ASSERTF(i <= self->rd_hmask, "RODICT: htab contains no EOF pointers (infinite loop would occur on non-present item lookup)");
-		vidx = (*self->rd_hidxget)(self->rd_htab, i);
-		if (vidx == Dee_HASH_HTAB_EOF)
+		vtab_idx = (*self->rd_hidxget)(self->rd_htab, i);
+		if (vtab_idx == Dee_HASH_HTAB_EOF)
 			break;
 	}
 	for (i = Dee_hash_vidx_tovirt(0), real_vused = 0;
@@ -139,14 +139,14 @@ rodict_verify(RoDict *__restrict self) {
 			continue;
 		for (_DeeRoDict_HashIdxInit(self, &hs, &perturb, item->di_hash);;
 		     _DeeRoDict_HashIdxNext(self, &hs, &perturb, item->di_hash)) {
-			Dee_hash_vidx_t vidx;
 			struct Dee_dict_item *hitem;
-			vidx = (*self->rd_hidxget)(self->rd_htab, hs & self->rd_hmask);
-			ASSERTF(vidx != Dee_HASH_HTAB_EOF,
+			Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, self->rd_hmask);
+			Dee_hash_vidx_t vtab_idx = (*self->rd_hidxget)(self->rd_htab, htab_idx); /*virt*/
+			ASSERTF(vtab_idx != Dee_HASH_HTAB_EOF,
 			        "RODICT: End-of-hash-chain[hash:%#" PRFxSIZ "] before item idx=%" PRFuSIZ ",count=%" PRFuSIZ " <%r:%r> was found",
 			        item->di_hash, Dee_hash_vidx_toreal(i), self->rd_vsize,
 			        item->di_key, item->di_value);
-			hitem = &_DeeRoDict_GetVirtVTab(self)[vidx];
+			hitem = &_DeeRoDict_GetVirtVTab(self)[vtab_idx];
 			if (hitem == item)
 				break;
 		}
@@ -180,9 +180,8 @@ rodict_htab_rebuild(RoDict *__restrict me, Dee_hash_sethidx_t hidxset) {
 		struct Dee_dict_item *item = &_DeeRoDict_GetRealVTab(me)[i];
 		for (_DeeRoDict_HashIdxInit(me, &hs, &perturb, item->di_hash);;
 		     _DeeRoDict_HashIdxNext(me, &hs, &perturb, item->di_hash)) {
-			/*virt*/Dee_hash_vidx_t vtab_idx;
-			size_t htab_idx = hs & me->rd_hmask;
-			vtab_idx = (*hidxget)(me->rd_htab, htab_idx);
+			Dee_hash_hidx_t htab_idx = Dee_hash_hidx_ofhash(hs, me->rd_hmask);
+			Dee_hash_vidx_t vtab_idx = (*hidxget)(me->rd_htab, htab_idx); /*virt*/
 			if unlikely(vtab_idx != Dee_HASH_HTAB_EOF)
 				continue;
 			(*hidxset)(me->rd_htab, htab_idx, Dee_hash_vidx_tovirt(i));
@@ -407,7 +406,7 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
                                      /*inherit(always)*/ DREF DeeObject *key,
                                      /*inherit(always)*/ DREF DeeObject *value) {
 	RoDict *dict;
-	size_t result_htab_idx;
+	Dee_hash_hidx_t result_htab_idx;
 	struct Dee_dict_item *item;
 	Dee_hash_t hash, hs, perturb;
 	struct Dee_rodict_builder *me;
@@ -422,8 +421,8 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
 	for (_DeeRoDict_HashIdxInit(dict, &hs, &perturb, hash);;
 	     _DeeRoDict_HashIdxNext(dict, &hs, &perturb, hash)) {
 		int key_cmp;
-		/*virt*/Dee_hash_vidx_t vtab_idx;
-		result_htab_idx = hs & dict->rd_hmask;
+		Dee_hash_vidx_t vtab_idx; /*virt*/
+		result_htab_idx = Dee_hash_hidx_ofhash(hs, dict->rd_hmask);
 		vtab_idx = (*dict->rd_hidxget)(dict->rd_htab, result_htab_idx);
 		if (vtab_idx == Dee_HASH_HTAB_EOF)
 			break; /* EOF */
@@ -465,7 +464,7 @@ Dee_rodict_builder_setitem_inherited(/*struct Dee_rodict_builder*/ void *__restr
 			/* Must re-discover the end of the relevant hash-chain */
 			for (_DeeRoDict_HashIdxInit(dict, &hs, &perturb, hash);;
 			     _DeeRoDict_HashIdxNext(dict, &hs, &perturb, hash)) {
-				result_htab_idx = hs & dict->rd_hmask;
+				result_htab_idx = Dee_hash_hidx_ofhash(hs, dict->rd_hmask);
 				if ((*dict->rd_hidxget)(dict->rd_htab, result_htab_idx) == Dee_HASH_HTAB_EOF)
 					break; /* EOF */
 			}

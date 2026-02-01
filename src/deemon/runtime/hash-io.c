@@ -26,51 +26,51 @@
 
 DECL_BEGIN
 
-/*DFUNDEF WUNUSED NONNULL((1)) size_t DCALL Dee_hash_gethidx8(void *__restrict htab, size_t index);*/
-/*DFUNDEF NONNULL((1)) void DCALL Dee_hash_sethidx8(void *__restrict htab, size_t index, size_t value);*/
-INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx8(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, size_t n_words);
+/*DFUNDEF WUNUSED NONNULL((1)) Dee_hash_vidx_t DFCALL Dee_hash_gethidx8(void *__restrict htab, Dee_hash_hidx_t index);*/
+/*DFUNDEF NONNULL((1)) void DFCALL Dee_hash_sethidx8(void *__restrict htab, Dee_hash_hidx_t index, Dee_hash_vidx_t value);*/
+INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx8(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, Dee_hash_hidx_t n_words);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decafter8(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incafter8(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decrange8(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incrange8(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 
 #if Dee_HASH_HIDXIO_COUNT >= 2
-INTDEF WUNUSED NONNULL((1)) size_t DCALL Dee_hash_gethidx16(union Dee_hash_htab const *__restrict htab, size_t index);
-INTDEF NONNULL((1)) void DCALL Dee_hash_sethidx16(union Dee_hash_htab *__restrict htab, size_t index, size_t value);
-INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx16(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, size_t n_words);
+INTDEF WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DFCALL Dee_hash_gethidx16(union Dee_hash_htab const *__restrict htab, Dee_hash_hidx_t index);
+INTDEF NONNULL((1)) void DFCALL Dee_hash_sethidx16(union Dee_hash_htab *__restrict htab, Dee_hash_hidx_t index, /*virt*/ Dee_hash_vidx_t value);
+INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx16(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, Dee_hash_hidx_t n_words);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decafter16(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incafter16(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decrange16(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incrange16(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 #define Dee_hash_uprhidx8_PTR &Dee_hash_uprhidx8
-INTDEF NONNULL((1)) void DCALL Dee_hash_uprhidx8(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, size_t n_words);
-INTDEF NONNULL((1)) void DCALL Dee_hash_lwrhidx16(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, size_t n_words);
+INTDEF NONNULL((1)) void DCALL Dee_hash_uprhidx8(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, Dee_hash_hidx_t n_words);
+INTDEF NONNULL((1)) void DCALL Dee_hash_lwrhidx16(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, Dee_hash_hidx_t n_words);
 #endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
 
 #if Dee_HASH_HIDXIO_COUNT >= 3
-INTDEF WUNUSED NONNULL((1)) size_t DCALL Dee_hash_gethidx32(union Dee_hash_htab const *__restrict htab, size_t index);
-INTDEF NONNULL((1)) void DCALL Dee_hash_sethidx32(union Dee_hash_htab *__restrict htab, size_t index, size_t value);
-INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx32(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, size_t n_words);
+INTDEF WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DFCALL Dee_hash_gethidx32(union Dee_hash_htab const *__restrict htab, Dee_hash_hidx_t index);
+INTDEF NONNULL((1)) void DFCALL Dee_hash_sethidx32(union Dee_hash_htab *__restrict htab, Dee_hash_hidx_t index, /*virt*/ Dee_hash_vidx_t value);
+INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx32(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, Dee_hash_hidx_t n_words);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decafter32(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incafter32(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decrange32(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incrange32(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 #define Dee_hash_uprhidx16_PTR &Dee_hash_uprhidx16
-INTDEF NONNULL((1)) void DCALL Dee_hash_uprhidx16(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, size_t n_words);
-INTDEF NONNULL((1)) void DCALL Dee_hash_lwrhidx32(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, size_t n_words);
+INTDEF NONNULL((1)) void DCALL Dee_hash_uprhidx16(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, Dee_hash_hidx_t n_words);
+INTDEF NONNULL((1)) void DCALL Dee_hash_lwrhidx32(union Dee_hash_htab *__restrict dst, union Dee_hash_htab const *__restrict src, Dee_hash_hidx_t n_words);
 #endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
 
 #if Dee_HASH_HIDXIO_COUNT >= 4
-INTDEF WUNUSED NONNULL((1)) size_t DCALL Dee_hash_gethidx64(void const *__restrict htab, size_t index);
-INTDEF NONNULL((1)) void DCALL Dee_hash_sethidx64(void *__restrict htab, size_t index, size_t value);
-INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx64(void *__restrict dst, void const *__restrict src, size_t n_words);
+INTDEF WUNUSED NONNULL((1)) /*virt*/ Dee_hash_vidx_t DFCALL Dee_hash_gethidx64(void const *__restrict htab, Dee_hash_hidx_t index);
+INTDEF NONNULL((1)) void DFCALL Dee_hash_sethidx64(void *__restrict htab, Dee_hash_hidx_t index, /*virt*/ Dee_hash_vidx_t value);
+INTDEF NONNULL((1)) void DCALL Dee_hash_movhidx64(void *__restrict dst, void const *__restrict src, Dee_hash_hidx_t n_words);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decafter64(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incafter64(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_threshold);
 INTDEF NONNULL((1)) void DCALL Dee_hash_decrange64(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 INTDEF NONNULL((1)) void DCALL Dee_hash_incrange64(union Dee_hash_htab *htab, Dee_hash_t hmask, /*virt*/ Dee_hash_vidx_t vtab_min, /*virt*/ Dee_hash_vidx_t vtab_max);
 #define Dee_hash_uprhidx32_PTR &Dee_hash_uprhidx32
-INTDEF NONNULL((1)) void DCALL Dee_hash_uprhidx32(void *__restrict dst, void const *__restrict src, size_t n_words);
-INTDEF NONNULL((1)) void DCALL Dee_hash_lwrhidx64(void *__restrict dst, void const *__restrict src, size_t n_words);
+INTDEF NONNULL((1)) void DCALL Dee_hash_uprhidx32(void *__restrict dst, void const *__restrict src, Dee_hash_hidx_t n_words);
+INTDEF NONNULL((1)) void DCALL Dee_hash_lwrhidx64(void *__restrict dst, void const *__restrict src, Dee_hash_hidx_t n_words);
 #endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
 
 #ifndef Dee_hash_uprhidx8_PTR

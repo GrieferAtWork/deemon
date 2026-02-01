@@ -52,9 +52,9 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 LOCAL_dict_init_fromcopy(Dict *__restrict self, Dict *__restrict other) {
-	size_t copy_hmask;
-	size_t copy_valloc;
-	size_t copy_vsize;
+	Dee_hash_t copy_hmask;
+	Dee_hash_vidx_t copy_valloc;
+	Dee_hash_vidx_t copy_vsize;
 	shift_t copy_hidxio;
 	void *copy_tabs;
 	size_t copy_tabssz;
@@ -106,7 +106,7 @@ again:
 #ifdef LOCAL_IS_KEYSONLY
 	/* Create reference to copied objects. */
 	{
-		size_t i, vsize = other->d_vsize;
+		Dee_hash_vidx_t i, vsize = other->d_vsize;
 		struct Dee_dict_item *orig_vtab;
 		orig_vtab = _DeeDict_GetRealVTab(other);
 		for (i = 0; i < vsize; ++i) {
@@ -124,7 +124,7 @@ again:
 	                                            sizeof(struct Dee_dict_item));
 	/* Create reference to copied objects. */
 	{
-		size_t i;
+		Dee_hash_vidx_t i;
 		for (i = 0; i < copy_vsize; ++i) {
 			struct Dee_dict_item *item;
 			item = &copy_vtab[i];
@@ -147,7 +147,7 @@ again:
 	if (copy_hmask == other->d_hmask) {
 		/* No need to re-build the hash table. Can instead copy is verbatim. */
 		shift_t orig_hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(other->d_valloc);
-		size_t htab_words = copy_hmask + 1;
+		Dee_hash_hidx_t htab_words = copy_hmask + 1;
 		ASSERT(copy_hidxio <= orig_hidxio || (copy_hidxio + 1) == orig_hidxio);
 		if (orig_hidxio == copy_hidxio) {
 			size_t sizeof_htab = htab_words << copy_hidxio;
@@ -157,7 +157,7 @@ again:
 		} else if (copy_hidxio == orig_hidxio - 1) {
 			(*self->d_hidxops->hxio_lwr)(copy_htab, other->d_htab, htab_words);
 		} else {
-			size_t i;
+			Dee_hash_hidx_t i;
 			Dee_hash_sethidx_t setter = self->d_hidxops->hxio_set;
 			Dee_hash_gethidx_t getter = other->d_hidxops->hxio_get;
 			ASSERT(copy_hidxio < orig_hidxio);

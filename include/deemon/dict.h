@@ -116,7 +116,7 @@ typedef struct Dee_dict_object {
 	Dee_OBJECT_HEAD /* GC Object */
 	/*real*/Dee_hash_vidx_t           d_valloc;  /* [lock(d_lock)][<= d_hmask] Allocated size of "d_vtab" (should be ~2/3rd of `d_hmask + 1') */
 	/*real*/Dee_hash_vidx_t           d_vsize;   /* [lock(d_lock)][<= d_valloc] 1+ the greatest index in "d_vtab" that was ever initialized (and also the index of the next item in "d_vtab" to-be populated). */
-	size_t                            d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in "d_vtab". */
+	Dee_hash_vidx_t                   d_vused;   /* [lock(d_lock)][<= d_vsize] # of non-NULL keys in "d_vtab". */
 	struct Dee_dict_item             *d_vtab;    /* [lock(d_lock)][0..d_vsize][owned_if(!= INTERNAL(DeeDict_EmptyTab))]
 	                                              * [OWNED_AT(. + 1)] Value-table (offset by 1 to account for special meaning of index==Dee_HASH_HTAB_EOF) */
 	Dee_hash_t                        d_hmask;   /* [lock(d_lock)] Hash mask (allocated hash-map size, minus 1). */
