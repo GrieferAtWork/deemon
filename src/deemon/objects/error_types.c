@@ -366,7 +366,11 @@ PRIVATE struct type_member tpconst systemerror_members[] = {
 PUBLIC DeeTypeObject DeeError_SystemError = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "SystemError",
-	/* .tp_doc      = */ DOC("(" SystemError_init_params ")"),
+	/* .tp_doc      = */ DOC("(" SystemError_init_params ")\n"
+	                         "\n"
+	                         "str->\n"
+	                         "Returns the ?Amsg?DError of this system error, followed by "
+	                         /**/ "os-specific information about system error's code"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

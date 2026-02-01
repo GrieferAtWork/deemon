@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_TryRealloc */
-#include <deemon/error.h>           /* DeeErrorObject, DeeError_Error, DeeError_NoMemory_instance, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_* */
+#include <deemon/error.h>           /* DeeErrorObject, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_* */
 #include <deemon/file.h>            /* DeeFile_GetStd, DeeFile_WriteAll, Dee_STDERR */
 #include <deemon/format.h>          /* DeeFormat_Printf, PRFu16 */
 #include <deemon/object.h>
@@ -216,7 +216,8 @@ DeeError_DisplayImpl(char const *reason, DeeObject *error, DeeObject *traceback,
 		 * - If the error has a custom "cause", print that afterwards */
 		is_error = DeeObject_InstanceOf(error, &DeeError_Error);
 		message_obj = error;
-		if (is_error && ((DeeErrorObject *)error)->e_msg)
+		if (is_error && ((DeeErrorObject *)error)->e_msg &&
+		    !DeeObject_InstanceOf(error, &DeeError_SystemError))
 			message_obj = ((DeeErrorObject *)error)->e_msg;
 		prefixed.pp_printer = printer;
 		prefixed.pp_arg     = arg;
@@ -382,7 +383,7 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 		}
 		memcpy(pend, &ts->t_interrupt, sizeof(struct Dee_thread_interrupt));
 		ts->t_interrupt.ti_next = pend;
-		frame                   = NULL; /* Indicate that the frame is being re-used. */
+		frame = NULL; /* Indicate that the frame is being re-used. */
 	}
 
 	/* Set the new interrupt to-be delivered next

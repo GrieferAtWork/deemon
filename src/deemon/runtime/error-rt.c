@@ -540,6 +540,8 @@ PRIVATE struct type_getset tpconst error_getsets[] = {
 	               "${"
 	               /**/ "property message: string = {\n"
 	               /**/ "	get(): string {\n"
+	               /**/ "		if (this is SystemError)\n"
+	               /**/ "			return str this;\n"
 	               /**/ "		local msg;\n"
 	               /**/ "		try {\n"
 	               /**/ "			msg = Error.msg(this);\n"
