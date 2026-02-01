@@ -25,6 +25,8 @@
 #include <deemon/types.h>        /* Dee_hash_t */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HIDXIO_COUNT, Dee_hash_* */
 
+#include <stddef.h> /* NULL */
+
 DECL_BEGIN
 
 /*DFUNDEF WUNUSED NONNULL((1)) Dee_hash_vidx_t DFCALL Dee_hash_gethidx8(union Dee_hash_htab *__restrict htab, Dee_hash_hidx_t index);*/

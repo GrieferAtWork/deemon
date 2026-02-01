@@ -345,6 +345,18 @@ local final DEFAULT_HEADERS_BY_INCLUDE: {string: Header} = {
 #undef DEFAULT_HEADER
 }.frozen;
 
+local final DEFAULT_HEADERS_BY_EXPORT: {string: Set with {Header...}} = (() -> {
+	local byExport: {string: Set with {Header...}} = Dict();
+	for (local hdr: DEFAULT_HEADERS_BY_INCLUDE.values) {
+		for (local export: hdr.exports) {
+			local exp = byExport.get(export);
+			if (exp is none)
+				byExport[export] = exp = HashSet();
+			exp.insert({hdr});
+		}
+	}
+	return byExport.frozen;
+})();
 
 class SrcIncludeInfo {
 	this = default;
@@ -1475,7 +1487,8 @@ insert_first_include:
 				if (combination.any(e -> e.filename == filename))
 					goto next_keyword; /* Symbol is defined by the file we're trying to fix -> ignore */
 				if (combination.all(e -> (
-					(e.filename in includedFilenames)
+					(e.filename in includedFilenames) ||
+					(e.includes.any(includedSystemIncludes.operator contains))
 				))) {
 					goto next_keyword; /* Symbol is defined by the file we're trying to fix -> ignore */
 				}
@@ -1489,7 +1502,8 @@ insert_first_include:
 				for (local hdr: combination) {
 					local hdrFilename = hdr.filename;
 					if (hdrFilename !in includedFilenames &&
-					    hdrFilename !in missingByFilename)
+					    !hdr.includes.any(includedSystemIncludes.operator contains) &&
+					    (hdr.filename ?? hdr.shortestInclude) !in missingByFilename)
 						stillMissingIncludes += 2;
 					if (kwd in hdr.exportsFromAlwaysIncludes)
 						stillMissingIncludes += 1; /* Discourage this inclusion over the original header */
@@ -1502,10 +1516,10 @@ insert_first_include:
 			}
 			assert usedCombination !is none;
 			for (local hdr: usedCombination) {
-				local hdrFilename = hdr.filename;
-				local importedKeywords: (Set with string) | none = missingByFilename.get(hdrFilename);
+				local hdrIdent = hdr.filename ?? hdr.shortestInclude;
+				local importedKeywords: (Set with string) | none = missingByFilename.get(hdrIdent);
 				if (importedKeywords is none) {
-					missingByFilename[hdrFilename] = importedKeywords = HashSet();
+					missingByFilename[hdrIdent] = importedKeywords = HashSet();
 					missingHeaders.append(hdr);
 				}
 				importedKeywords.insert(kwd);
@@ -1514,7 +1528,7 @@ next_keyword:;
 		}
 		return (
 			for (local hdr: missingHeaders)
-				(hdr, missingByFilename[hdr.filename])
+				(hdr, missingByFilename[hdr.filename ?? hdr.shortestInclude])
 		);
 	}
 
@@ -1980,7 +1994,10 @@ class FixIncludes {
 	@@always included by other headers are replace with those other headers
 	@@in the returned sequence.
 	public function getHeaderByExport(keyword: string): Set with {Header...} {
-		return headersByExport.get(keyword, {});
+		local result: (Set with {Header...}) | none = headersByExport.get(keyword);
+		if (result is none)
+			result = DEFAULT_HEADERS_BY_EXPORT.get(keyword, Set());
+		return result;
 	}
 
 	@@Return the header specified by @dep and included by @base

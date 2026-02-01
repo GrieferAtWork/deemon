@@ -30,8 +30,9 @@
 
 #include "../types.h" /* DREF, DeeObject, Dee_unlockinfo */
 
-#include <stdbool.h>
-#include <stddef.h>
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 DECL_BEGIN
 

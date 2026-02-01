@@ -81,7 +81,7 @@
 /* To satisfy "fixincludes" (these includes are intentionally missing) */
 /*!fixincludes fake_include "alloc.h"  // CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeObject_Free, DeeObject_Malloc, DeeSlab_Invoke */
 /*!fixincludes fake_include "gc.h"     // DeeGCObject_Free, DeeGCObject_Malloc */
-/*!fixincludes fake_include "object.h" // DeeAssert_BadObjectType, DeeAssert_BadObjectTypeOpt, DeeObject_Check, Dee_Incref, Dee_buffer */
+/*!fixincludes fake_include "object.h" // DeeAssert_BadObjectType, DeeAssert_BadObjectTypeOpt, DeeObject_Check, Dee_Incref */
 /*!fixincludes fake_include "string.h" // DeeString_Hash, DeeString_STR */
 /*!fixincludes fake_include "tuple.h"  // DeeTuple_ELEM, DeeTuple_SIZE */
 

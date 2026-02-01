@@ -545,7 +545,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #if (defined(__INTELLISENSE__) || defined(__VASSISTX_INSPECT__)) && defined(__cplusplus)
 /* Highlight invalid usage of `NULL' in functions returning `int' */
 #undef NULL
-#define NULL __NULLPTR
+#define NULL __NULLPTR /*!export-*/
 #endif /* __INTELLISENSE__ && __cplusplus */
 
 #ifndef Dee_BREAKPOINT

@@ -27,6 +27,9 @@
 
 #include "../types.h" /* Dee_hash_t */
 
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t, uintptr_t */
+
 #ifndef __INTELLISENSE__
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
