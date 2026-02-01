@@ -250,6 +250,35 @@ F(Dee_hash_incrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	}
 }
 
+/* Reverse the order of all references to VTAB elements in [vtab_min,vtab_max],
+ * such that a reference to 'vtab_min' becomes one to 'vtab_max', as well as the
+ * inverse:
+ * >> Dee_hash_hidx_t i;
+ * >> Dee_hash_vidx_t ceiling = vmin + vmax;
+ * >> for (i = 0; i <= hmask; ++i) {
+ * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+ * >>     if (vtab_index >= vtab_min && vtab_index <= vtab_max) {
+ * >>         vtab_index = ceiling - vtab_index;
+ * >>         (*hxio_set)(htab, i, vtab_index);
+ * >>     }
+ * >> } */
+INTERN NONNULL((1)) void DCALL
+F(Dee_hash_revrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+                     /*virt*/ Dee_hash_vidx_t vtab_min,
+                     /*virt*/ Dee_hash_vidx_t vtab_max) {
+	Dee_hash_t i;
+	T *typed_htab = (T *)htab;
+	T ceiling = (T)vtab_min + (T)vtab_max;
+	for (i = 0; i <= hmask; ++i) {
+		T vtab_index = typed_htab[i];
+		if (vtab_index >= (T)vtab_min &&
+		    vtab_index <= (T)vtab_max) {
+			vtab_index = ceiling - vtab_index;
+			typed_htab[i] = vtab_index;
+		}
+	}
+}
+
 #undef LOCAL_memcpy
 #undef LOCAL_memmove
 #undef LOCAL_bzero

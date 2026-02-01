@@ -184,6 +184,23 @@ struct Dee_hash_hidxio_ops {
 	(DCALL *hxio_incrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
 	                       /*virt*/ Dee_hash_vidx_t vtab_min,
 	                       /*virt*/ Dee_hash_vidx_t vtab_max);
+
+	/* Reverse the order of all references to VTAB elements in [vtab_min,vtab_max],
+	 * such that a reference to 'vtab_min' becomes one to 'vtab_max', as well as the
+	 * inverse:
+	 * >> Dee_hash_hidx_t i;
+	 * >> Dee_hash_vidx_t ceiling = vmin + vmax;
+	 * >> for (i = 0; i <= hmask; ++i) {
+	 * >>     Dee_hash_vidx_t vtab_index = (*hxio_get)(htab, i);
+	 * >>     if (vtab_index >= vtab_min && vtab_index <= vtab_max) {
+	 * >>         vtab_index = ceiling - vtab_index;
+	 * >>         (*hxio_set)(htab, i, vtab_index);
+	 * >>     }
+	 * >> } */
+	NONNULL_T((1)) void
+	(DCALL *hxio_revrange)(union Dee_hash_htab *htab, Dee_hash_t hmask,
+	                       /*virt*/ Dee_hash_vidx_t vtab_min,
+	                       /*virt*/ Dee_hash_vidx_t vtab_max);
 };
 
 /* NOTE: HIDXIO indices can also used as <<shifts to multiply some value by the size of an index:

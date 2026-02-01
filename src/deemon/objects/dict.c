@@ -2902,84 +2902,8 @@ dict_items_reverse(struct Dee_dict_item *items, size_t count) {
 	}
 }
 
-LOCAL NONNULL((1)) void DCALL
-dict_htab_reverse8(Dict *__restrict self, uint8_t vmin, uint8_t vmax) {
-	Dee_hash_hidx_t i;
-	uint8_t *htab = (uint8_t *)self->d_htab;
-	uint8_t upper = vmin + vmax;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		uint8_t idx = htab[i];
-		if (idx >= vmin && idx <= vmax)
-			htab[i] = upper - idx;
-	}
-}
-
-#if Dee_HASH_HIDXIO_COUNT >= 2
-LOCAL NONNULL((1)) void DCALL
-dict_htab_reverse16(Dict *__restrict self, uint16_t vmin, uint16_t vmax) {
-	Dee_hash_hidx_t i;
-	uint16_t *htab = (uint16_t *)self->d_htab;
-	uint16_t upper = vmin + vmax;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		uint16_t idx = htab[i];
-		if (idx >= vmin && idx <= vmax)
-			htab[i] = upper - idx;
-	}
-}
-#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
-
-#if Dee_HASH_HIDXIO_COUNT >= 3
-LOCAL NONNULL((1)) void DCALL
-dict_htab_reverse32(Dict *__restrict self, uint32_t vmin, uint32_t vmax) {
-	Dee_hash_hidx_t i;
-	uint32_t *htab = (uint32_t *)self->d_htab;
-	uint32_t upper = vmin + vmax;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		uint32_t idx = htab[i];
-		if (idx >= vmin && idx <= vmax)
-			htab[i] = upper - idx;
-	}
-}
-#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
-
-#if Dee_HASH_HIDXIO_COUNT >= 4
-LOCAL NONNULL((1)) void DCALL
-dict_htab_reverse64(Dict *__restrict self, uint64_t vmin, uint64_t vmax) {
-	Dee_hash_hidx_t i;
-	uint64_t *htab = (uint64_t *)self->d_htab;
-	uint64_t upper = vmin + vmax;
-	for (i = 0; i <= self->d_hmask; ++i) {
-		uint64_t idx = htab[i];
-		if (idx >= vmin && idx <= vmax)
-			htab[i] = upper - idx;
-	}
-}
-#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
-
-PRIVATE NONNULL((1)) void DCALL
-dict_htab_reverse(Dict *__restrict self, /*virt*/Dee_hash_vidx_t vmin, /*virt*/Dee_hash_vidx_t vmax) {
-	if (Dee_HASH_HIDXIO_IS8(self->d_valloc)) {
-		dict_htab_reverse8(self, (uint8_t)vmin, (uint8_t)vmax);
-	} else
-#if Dee_HASH_HIDXIO_COUNT >= 2
-	if (Dee_HASH_HIDXIO_IS16(self->d_valloc)) {
-		dict_htab_reverse16(self, (uint16_t)vmin, (uint16_t)vmax);
-	} else
-#endif /* Dee_HASH_HIDXIO_COUNT >= 2 */
-#if Dee_HASH_HIDXIO_COUNT >= 3
-	if (Dee_HASH_HIDXIO_IS32(self->d_valloc)) {
-		dict_htab_reverse32(self, (uint32_t)vmin, (uint32_t)vmax);
-	} else
-#endif /* Dee_HASH_HIDXIO_COUNT >= 3 */
-#if Dee_HASH_HIDXIO_COUNT >= 4
-	if (Dee_HASH_HIDXIO_IS64(self->d_valloc)) {
-		dict_htab_reverse64(self, (uint64_t)vmin, (uint64_t)vmax);
-	} else
-#endif /* Dee_HASH_HIDXIO_COUNT >= 4 */
-	{
-		__builtin_unreachable();
-	}
-}
+#define dict_htab_reverse(self, /*virt*/ vmin, /*virt*/ vmax) \
+	(*(self)->d_hidxops->hxio_revrange)((self)->d_htab, (self)->d_hmask, vmin, vmax)
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_mh_seq_reverse(Dict *self, size_t start, size_t end) {
