@@ -65,6 +65,7 @@
 #include "system-features.h" /* access, memcpy, strlen */
 #include "tuple.h"           /* DeeTuple_ELEM, DeeTuple_SIZE */
 #include "types.h"           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
+#include "util/hash.h"       /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h"       /* Dee_shared_rwlock_t */
 
 #include <stdarg.h>  /* va_list */

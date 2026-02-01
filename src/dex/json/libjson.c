@@ -55,6 +55,7 @@
 #include <deemon/system-features.h> /* bcmpc, memchr, strchr, strlen */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
+#include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 #include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_* */
 

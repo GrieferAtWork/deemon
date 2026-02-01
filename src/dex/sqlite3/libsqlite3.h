@@ -31,6 +31,7 @@
 #include <deemon/thread.h>          /* DeeThreadObject, Dee_thread_interrupt_hook */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_WEAKREF_SUPPORT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD */
 #include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_*, Dee_shared_lock_t, Dee_shared_lock_waitfor */
 
 #include <hybrid/sequence/list.h> /* TAILQ_* */

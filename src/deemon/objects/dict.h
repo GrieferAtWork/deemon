@@ -30,7 +30,7 @@
 #include <deemon/rodict.h>          /* DeeRoDictObject */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcmp, memmovedown, strlen */
-#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_gethidx_t, Dee_hash_hidx_t, Dee_hash_hidxio, Dee_hash_hidxio_t, Dee_hash_htab, Dee_hash_sethidx_t, Dee_hash_vidx_t */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_* */
 
 #include <hybrid/bit.h>      /* CLZ */
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */

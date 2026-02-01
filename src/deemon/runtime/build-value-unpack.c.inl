@@ -32,6 +32,7 @@
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp */
+#include <deemon/util/hash.h>       /* Dee_HashStr */
 
 #include <hybrid/host.h>      /* __i386__, __x86_64__ */
 #include <hybrid/int128.h>    /* __ALIGNOF_INT128__, __hybrid_uint128_set32 */

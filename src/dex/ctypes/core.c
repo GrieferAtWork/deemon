@@ -42,6 +42,7 @@
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
 #include <deemon/system-features.h> /* bcmp, bzero, memcmp, memcpy */
+#include <deemon/util/hash.h>       /* Dee_HashPtr */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <hybrid/overflow.h>      /* OVERFLOW_UADD, OVERFLOW_USUB */

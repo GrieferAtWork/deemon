@@ -28,6 +28,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_*, Dee_EmptySeq */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
+#include <deemon/util/hash.h>          /* Dee_HashCombine */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

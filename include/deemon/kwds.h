@@ -34,6 +34,7 @@
 
 #include "object.h"
 #include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD */
+#include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h" /* Dee_atomic_rwlock_* */
 
 #include <stdbool.h> /* bool */

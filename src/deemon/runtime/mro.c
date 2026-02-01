@@ -39,6 +39,7 @@
 #include <deemon/string.h>          /* DeeString_New, DeeString_STR */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero, memcpy, memset */
 #include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/hash.h>       /* Dee_HashStr */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_*, Dee_shared_rwlock_* */
 
 #include <hybrid/overflow.h>      /* OVERFLOW_USUB */

@@ -669,6 +669,9 @@
 		<ClInclude Include="..\include\deemon\util\hash-io.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\hash.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\kos-compat.h">
 			<Filter>include\util</Filter>
 		</ClInclude>

@@ -37,6 +37,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include "../../runtime/runtime_error.h"

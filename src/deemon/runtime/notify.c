@@ -29,6 +29,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
 #include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, strlen */
+#include <deemon/util/hash.h>       /* Dee_HashCasePtr, Dee_HashPtr */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
 #include "strings.h"

@@ -34,6 +34,7 @@
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcmp, memcpy */
+#include <deemon/util/hash.h>       /* Dee_HashPtr */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 

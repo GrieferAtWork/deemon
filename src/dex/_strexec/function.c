@@ -39,6 +39,7 @@
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcmp, memcpy*, mempcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */

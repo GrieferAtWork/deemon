@@ -36,6 +36,7 @@
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* bzeroc */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATING */
+#include <deemon/util/hash.h>       /* DeeObject_HashGeneric */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 
 #include <stddef.h> /* offsetof, size_t */

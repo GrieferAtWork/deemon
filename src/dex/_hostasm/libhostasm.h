@@ -36,6 +36,7 @@
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memcmp, memset */
+#include <deemon/util/hash.h>       /* DeeObject_HashGeneric */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_t */
 
 #include <hybrid/bitset.h>        /* BITSET_SIZEOF, bitset_t */

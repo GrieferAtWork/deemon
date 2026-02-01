@@ -32,6 +32,7 @@
 #include "../object.h"
 #include "../super.h"           /* DeeSuper_New, DeeSuper_Of */
 #include "../system-features.h" /* pow, strlen */
+#include "../util/hash.h"       /* Dee_HashStr */
 
 #include <exception>
 #include <initializer_list>

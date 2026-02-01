@@ -29,6 +29,7 @@
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/util/hash.h>          /* DeeObject_HashGeneric, Dee_HashCombine */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/strings.h"

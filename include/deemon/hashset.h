@@ -32,7 +32,7 @@
 
 #include "object.h"
 #include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
-#include "util/hash-io.h" /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HIDXIO_IS8, Dee_HASH_HIDXIO_IS16, Dee_HASH_HIDXIO_IS32, Dee_HASH_HTAB_EOF, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_hidxio, Dee_hash_sethidx8, Dee_hash_sethidx_t, Dee_hash_vidx_real2virt, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, _DeeHash_EmptyTab */
+#include "util/hash-io.h" /* Dee_HASH_*, Dee_hash_*, _DeeHash_EmptyTab */
 #include "util/lock.h"    /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* size_t */

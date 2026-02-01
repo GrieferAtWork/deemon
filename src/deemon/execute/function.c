@@ -46,6 +46,7 @@
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_inc */
 #include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
+#include <deemon/util/hash.h>          /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 #include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_init */
 

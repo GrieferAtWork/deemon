@@ -39,6 +39,7 @@
 
 #include "object.h"
 #include "serial.h"    /* Dee_seraddr_t */
+#include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h" /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stdarg.h>  /* va_list */

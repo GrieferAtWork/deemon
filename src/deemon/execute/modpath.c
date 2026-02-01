@@ -49,6 +49,7 @@
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_REF, Dee_atomic_ref_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/hash.h>       /* Dee_Hash* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 #include <deemon/util/nrlock.h>     /* Dee_NRLOCK_OK, Dee_nrshared_lock_* */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_INIT */

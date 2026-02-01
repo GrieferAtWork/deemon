@@ -23,6 +23,7 @@
 #include "../api.h"
 
 #include "../object.h"
+#include "../util/hash.h"  /* Dee_HashPointer */
 #include "../util/lock.h"  /* Dee_atomic_rwlock_* */
 #include "../util/rlock.h" /* Dee_rshared_rwlock_* */
 

@@ -18,6 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export **/
+/*!export Dee_hash_**/
+/*!export _DeeHash_**/
+/*!export Dee_HASH_**/
+/*!export IF_Dee_HASH_HIDXIO_COUNT_GE_**/
 #ifndef GUARD_DEEMON_UTIL_HASH_IO_H
 #define GUARD_DEEMON_UTIL_HASH_IO_H 1 /*!export-*/
 

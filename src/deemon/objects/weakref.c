@@ -32,8 +32,8 @@
 #include <deemon/object.h>
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/weakref.h>            /* DeeWeakRef* */
-/**/
 
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"

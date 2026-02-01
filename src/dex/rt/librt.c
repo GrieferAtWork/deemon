@@ -70,7 +70,7 @@
 #include <deemon/traceback.h>         /* DeeFrameObject, DeeFrame_Type, DeeTraceback_Type, Dee_FRAME_F* */
 #include <deemon/tuple.h>             /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>       /* atomic_* */
-#include <deemon/util/hash-io.h>      /* Dee_HASH_HTAB_EOF, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_vidx_t, Dee_hash_vidx_tovirt */
+#include <deemon/util/hash-io.h>      /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 #include <deemon/util/lock.h>         /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_t */
 #include <deemon/util/rlock.h>        /* Dee_RSHARED_RWLOCK_INIT */
 #include <deemon/weakref.h>           /* DeeWeakRef_Type */

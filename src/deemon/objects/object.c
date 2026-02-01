@@ -60,6 +60,7 @@
 #include <deemon/tuple.h>              /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash-io.h>       /* Dee_hash_vidx_t */
+#include <deemon/util/hash.h>          /* DeeObject_Id */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_*, Dee_atomic_rwlock_init */
 
 #include <hybrid/align.h>       /* IS_ALIGNED */

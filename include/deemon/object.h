@@ -21,7 +21,6 @@
 /*!export ASSERT_OBJECT_**/
 /*!export ASSERT_OBJECT_TYPE_**/
 /*!export -CONFIG_HAVE_**/
-/*!export Dee_HASHOF_***/
 /*!export DeeAssert_BadObject**/
 /*!export DeeBuffer_**/
 /*!export DeeFatal_Bad**/
@@ -43,7 +42,6 @@
 /*!export Dee_Decprefv**/
 /*!export Dee_GC_PRIORITY_**/
 /*!export Dee_HAS_**/
-/*!export Dee_Hash**/
 /*!export Dee_INT_**/
 /*!export Dee_METHOD_FCONSTCALL_**/
 /*!export Dee_Movrefv**/
@@ -110,6 +108,7 @@
 #include <hybrid/typecore.h>  /* __*_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__, __UINT32_C, __UINT64_C */
 
 #include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_OFFSETOF_DATA, Dee_REQUIRES_OBJECT, Dee_SIZEOF_HASH_T, Dee_SIZEOF_REFCNT_T, Dee_TYPE, Dee_WEAKREF_SUPPORT, Dee_[u]int128_t, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t, Dee_unlockinfo */
+#include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h" /* Dee_atomic_lock_t, Dee_atomic_rwlock_t */
 
 #include <stdarg.h>  /* va_list */
@@ -194,65 +193,6 @@ struct type_method_hint; /* Needed so fixincludes doesn't claim a dependency on 
 /*!export type_buffer*/
 /*!export type_operator*/
 #endif /* DEE_SOURCE */
-
-/* Hashing helpers. */
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashPtr)(void const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCasePtr)(void const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashStr)(char const *__restrict str);
-#ifdef __INTELLISENSE__
-DFUNDEF ATTR_PURE WUNUSED ATTR_IN(1) Dee_hash_t (DCALL Dee_HashCaseStr)(char const *__restrict str);
-#else /* __INTELLISENSE__ */
-#define Dee_HashCaseStr(str) Dee_HashCasePtr(str, strlen(str))
-#endif /* !__INTELLISENSE__ */
-
-/* Combine 2 hash values into 1, while losing as little entropy
- * from either as possible. Note that this function tries to
- * include the order of arguments in the result, meaning that:
- * >> Dee_HashCombine(a, b) != Dee_HashCombine(b, a) */
-DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
-(DFCALL Dee_HashCombine)(Dee_hash_t a, Dee_hash_t b);
-
-/* This is the special hash we assign to empty sequences.
- *
- * It doesn't *have* to be zero; it could be anything. But
- * thinking about it, only zero *really* makes sense... */
-#define Dee_HASHOF_EMPTY_SEQUENCE 0
-#define Dee_HASHOF_UNBOUND_ITEM   0
-#define Dee_HASHOF_RECURSIVE_ITEM 0
-
-
-
-/* Hash a utf-8 encoded string.
- * You can think of these as hashing the ordinal values of the given string,
- * thus allowing this hashing function to return the same value for a string
- * encoded in utf-8, as `Dee_Hash2Byte()' would for a 2-byte, and Dee_Hash4Byte()
- * for a 4-byte string. */
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashUtf8)(char const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCaseUtf8)(char const *__restrict ptr, size_t n_bytes);
-
-/* Same as the regular hashing function, but with the guaranty that
- * for integer arrays where all items contain values `<= 0xff', the
- * return value is identical to a call to `Dee_HashPtr()' with the
- * array contents down-casted to the fitting data type. */
-#ifdef __INTELLISENSE__
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_Hash1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase1Byte)(uint8_t const *__restrict ptr, size_t n_bytes);
-#else /* __INTELLISENSE__ */
-#define Dee_Hash1Byte(ptr, n_bytes)     Dee_HashPtr(ptr, n_bytes)
-#define Dee_HashCase1Byte(ptr, n_bytes) Dee_HashCasePtr(ptr, n_bytes)
-#endif /* !__INTELLISENSE__ */
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_Hash2Byte)(uint16_t const *__restrict ptr, size_t n_words);
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_Hash4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase2Byte)(uint16_t const *__restrict ptr, size_t n_words);
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(uint32_t const *__restrict ptr, size_t n_dwords);
-
-/* Generic object hashing: Use the address of the object.
- * HINT: We ignore the lower 6 bits because they're
- *       often just ZERO(0) due to alignment. */
-#define DeeObject_HashGeneric(ob) Dee_HashPointer(ob)
-#define Dee_HashPointer(ptr)      ((Dee_hash_t)(ptr) >> 6)
-#define DeeObject_Id(ob)          ((uintptr_t)(ob))
-
 
 /* Return value for compare "tp_compare_eq", "tp_compare" and "tp_trycompare_eq". */
 #define Dee_COMPARE_ERR (-2)

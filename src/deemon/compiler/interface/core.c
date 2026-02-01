@@ -28,6 +28,7 @@
 #include <deemon/error.h>              /* DeeError_ReferenceError, DeeError_Throwf */
 #include <deemon/object.h>
 #include <deemon/util/atomic.h>        /* atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
 

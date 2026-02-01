@@ -31,7 +31,8 @@
 
 #include "object.h"
 #include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_INIT, Dee_hash_t */
-#include "util/hash-io.h" /* _DeeHash_EmptyHTab, _DeeHash_VIRT_EmptyVTab, Dee_hash_hidxio, Dee_hash_hidxio_ops, Dee_hash_htab, Dee_hash_vidx_t, _DeeHash_HashIdxInit, _DeeHash_HashIdxNext, _DeeHash_VIRT_GetRealVTab, _DeeHash_VIRT_GetVirtVTab, _DeeHash_VIRT_SetRealVTab, _DeeHash_VIRT_SetVirtVTab */
+#include "util/hash-io.h" /* Dee_hash_*, _DeeHash_* */
+#include "util/hash.h"    /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h"    /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stddef.h> /* size_t */

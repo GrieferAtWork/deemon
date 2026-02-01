@@ -27,10 +27,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/error.h>  /* DeeError_*, ERROR_HANDLED_INTERRUPT */
-#include <deemon/none.h>   /* DeeNone_NewRef */
+#include <deemon/error.h>     /* DeeError_*, ERROR_HANDLED_INTERRUPT */
+#include <deemon/none.h>      /* DeeNone_NewRef */
 #include <deemon/object.h>
-#include <deemon/thread.h> /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
+#include <deemon/thread.h>    /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
+#include <deemon/util/hash.h> /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

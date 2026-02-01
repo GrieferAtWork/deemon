@@ -47,6 +47,7 @@
 #include <deemon/super.h>           /* DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, memcpy* */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
+#include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <hybrid/compiler.h>
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */

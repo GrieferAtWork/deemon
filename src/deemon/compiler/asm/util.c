@@ -47,7 +47,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* mempcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_hidxio, Dee_hash_htab, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_* */
 
 #include <hybrid/typecore.h> /* __SHIFT_TYPE__ */
 

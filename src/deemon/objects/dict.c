@@ -46,7 +46,7 @@
 #include <deemon/system-features.h>    /* bzeroc, memcpy*, memmovedownc, memmoveupc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
-#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HTAB_EOF, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_hidx_ofhash, Dee_hash_hidx_t, Dee_hash_hidxio, Dee_hash_hidxio_ops, Dee_hash_hidxio_t, Dee_hash_htab, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, IF_Dee_HASH_HIDXIO_COUNT_GE_2, IF_Dee_HASH_HIDXIO_COUNT_GE_3, IF_Dee_HASH_HIDXIO_COUNT_GE_4 */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 #include <deemon/util/objectlist.h>    /* Dee_objectlist, Dee_objectlist_* */
 

@@ -38,6 +38,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly, DeeSeq_* */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
+#include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPtr */
 #include <deemon/seq.h>
 #include <deemon/string.h>          /* DeeString*, Dee_EmptyString */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANONYMOUS, O_RDONLY, bcmp, bcmpc, bzero, close, memcpy*, mempcpyc, memset, mmap64, munmap, open, strchr, strlen */

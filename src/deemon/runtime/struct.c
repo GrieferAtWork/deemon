@@ -35,6 +35,7 @@
 #include <deemon/system-features.h> /* bzero, memcpy */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
+#include <deemon/util/hash.h>       /* DeeObject_HashGeneric, Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine, Dee_HashPtr */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 
 #include <hybrid/host.h>      /* __pic__ */

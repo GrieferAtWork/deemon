@@ -33,6 +33,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpy */
 #include <deemon/util/atomic.h>        /* atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include "../../runtime/strings.h"

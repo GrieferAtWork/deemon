@@ -38,6 +38,7 @@
 #include <deemon/system-features.h>    /* memcasemem, memmem */
 #include <deemon/tuple.h>              /* DeeTuple_Newf */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

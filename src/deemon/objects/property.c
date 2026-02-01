@@ -36,6 +36,7 @@
 #include <deemon/property.h>           /* DeePropertyObject */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
+#include <deemon/util/hash.h>          /* Dee_HashCombine */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

@@ -29,6 +29,7 @@
 #include <deemon/operator-hints.h> /* DeeNO_int_t, _DeeType_RequireNativeOperator */
 #include <deemon/super.h>          /* DeeObject_T* */
 #include <deemon/tuple.h>          /* DeeTuple* */
+#include <deemon/util/hash.h>      /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
 #include <deemon/util/lock.h>      /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_set64 */

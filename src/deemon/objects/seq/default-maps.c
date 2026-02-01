@@ -36,6 +36,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_NewEmpty */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
+#include <deemon/util/hash.h>          /* Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MIN__ */

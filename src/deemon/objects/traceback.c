@@ -39,6 +39,7 @@
 #include <deemon/traceback.h>          /* DeeFrame_NewReferenceWithLock, DeeFrame_Type, DeeTraceback*, Dee_FRAME_FREADONLY, empty_traceback_object */
 #include <deemon/tuple.h>              /* DeeTupleObject */
 #include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */
 
 #include "../runtime/strings.h"

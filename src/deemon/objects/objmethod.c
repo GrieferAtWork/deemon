@@ -42,6 +42,7 @@
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

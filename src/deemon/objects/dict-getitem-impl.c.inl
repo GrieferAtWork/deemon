@@ -42,7 +42,7 @@
 #include <deemon/dict.h>         /* DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/error-rt.h>     /* DeeRT_Err* */
 #include <deemon/object.h>
-#include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_gethidx_t, Dee_hash_hidx_ofhash, Dee_hash_hidx_t, Dee_hash_vidx_t, Dee_hash_vidx_virt_lt_real */
+#include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 
 #include <stddef.h> /* NULL, size_t */
 

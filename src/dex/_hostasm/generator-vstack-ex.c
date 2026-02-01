@@ -61,6 +61,7 @@
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memchr, strchr, strcmp */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/util/hash-io.h>    /* Dee_hash_hidxio */
+#include <deemon/util/hash.h>       /* Dee_HASHOF_EMPTY_SEQUENCE */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
 #include <deemon/weakref.h>         /* DeeWeakRefAbleObject, DeeWeakRefAble_Type */
 

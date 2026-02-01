@@ -32,6 +32,7 @@
 #include <deemon/super.h>           /* DeeSuper_New */
 #include <deemon/system-features.h> /* memcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/hash.h>       /* Dee_HashCombine */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 

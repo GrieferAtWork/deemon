@@ -46,6 +46,7 @@
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>          /* DeeThread_GetTimeMicroSeconds */
 #include <deemon/util/atomic.h>     /* atomic_write */
+#include <deemon/util/hash.h>       /* Dee_HashPtr */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

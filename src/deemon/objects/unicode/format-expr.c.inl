@@ -25,16 +25,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>   /* DeeBool_For, Dee_False, Dee_True */
-#include <deemon/dict.h>   /* DeeDict_New, DeeDict_SetItemStringLen */
-#include <deemon/error.h>  /* DeeError_NOTIMPLEMENTED */
-#include <deemon/int.h>    /* DeeInt_FromString, Dee_INT_STRING*, Dee_TAtoiu */
-#include <deemon/kwds.h>   /* DeeKw_ForceWrap */
-#include <deemon/none.h>   /* DeeNone_Check, Dee_None */
+#include <deemon/bool.h>      /* DeeBool_For, Dee_False, Dee_True */
+#include <deemon/dict.h>      /* DeeDict_New, DeeDict_SetItemStringLen */
+#include <deemon/error.h>     /* DeeError_NOTIMPLEMENTED */
+#include <deemon/int.h>       /* DeeInt_FromString, Dee_INT_STRING*, Dee_TAtoiu */
+#include <deemon/kwds.h>      /* DeeKw_ForceWrap */
+#include <deemon/none.h>      /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>
-#include <deemon/string.h> /* DeeString_FromBackslashEscaped, STRING_ERROR_FSTRICT */
-#include <deemon/super.h>  /* DeeSuper* */
-#include <deemon/tuple.h>  /* DeeTuple* */
+#include <deemon/string.h>    /* DeeString_FromBackslashEscaped, STRING_ERROR_FSTRICT */
+#include <deemon/super.h>     /* DeeSuper* */
+#include <deemon/tuple.h>     /* DeeTuple* */
+#include <deemon/util/hash.h> /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

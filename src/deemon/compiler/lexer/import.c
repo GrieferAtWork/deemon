@@ -34,6 +34,7 @@
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memrend, memcpy, strlen */
 #include <deemon/thread.h>          /* DeeThread_Self, Dee_import_frame */
+#include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */

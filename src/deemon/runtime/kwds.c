@@ -41,6 +41,7 @@
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy* */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include "../objects/generic-proxy.h"

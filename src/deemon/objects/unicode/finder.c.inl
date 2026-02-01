@@ -32,6 +32,7 @@
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_EmptyString, Dee_STRING_DIV_SIZEOF_WIDTH, Dee_charptr_const, STRING_WIDTH_1BYTE, STRING_WIDTH_COMMON, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* memmeml, memmemw */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */
 

@@ -41,6 +41,7 @@
 #include <deemon/super.h>           /* DeeSuper_TYPE, DeeSuper_Type */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/util/hash.h>       /* Dee_HashStr */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */
 #include <hybrid/wordbits.h>  /* ENCODE_INT16, ENCODE_INT32 */

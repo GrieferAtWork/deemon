@@ -37,6 +37,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcpy* */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
+#include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 #include <deemon/util/rlock.h>      /* Dee_rshared_lock_init */
 
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */

@@ -42,6 +42,7 @@
 #include <deemon/string.h>          /* DeeString_Check, DeeString_STR, WSTR_LENGTH */
 #include <deemon/system-features.h> /* memcpy* */
 #include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/hash.h>       /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine */
 
 #include <hybrid/__atomic.h>  /*  */
 #include <hybrid/__bitset.h>  /*  */

@@ -43,6 +43,7 @@
 #include <deemon/system-features.h>    /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/util/hash.h>          /* Dee_HashPtr */
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */
 #include <hybrid/sequence/list.h> /* SLIST_* */

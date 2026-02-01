@@ -30,6 +30,7 @@
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
+#include <deemon/util/hash.h>          /* DeeObject_Id */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

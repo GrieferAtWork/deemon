@@ -28,6 +28,7 @@
 #include <deemon/regex.h>           /* DeeRegex*, Dee_RE_* */
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_UTF_FFINIHOOK, WSTR_LENGTH */
 #include <deemon/system-features.h> /* CONFIG_HAVE__msize, CONFIG_HAVE_malloc_usable_size, _msize, memcpy, memset */
+#include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
 /* Includes for libregex... */

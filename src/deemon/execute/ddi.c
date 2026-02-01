@@ -31,6 +31,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/system-features.h>    /* bcmp, bcmpc, memcpy* */
+#include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPtr */
 
 #include <hybrid/minmax.h>   /* MIN */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

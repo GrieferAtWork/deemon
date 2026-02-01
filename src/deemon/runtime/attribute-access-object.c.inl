@@ -100,7 +100,7 @@
 #include <deemon/super.h>           /* DeeObject_T* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, access, strlen */
 #include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE */
-/**/
+#include <deemon/util/hash.h>       /* Dee_HashPtr, Dee_HashStr */
 
 #include "runtime_error.h"
 

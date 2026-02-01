@@ -30,7 +30,7 @@
 
 #include "dict.h"         /* Dee_dict_item */
 #include "types.h"        /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_hash_t, Dee_ssize_t */
-#include "util/hash-io.h" /* Dee_hash_gethidx_t, Dee_hash_htab, Dee_hash_sethidx_t, Dee_hash_vidx_t, _DeeHash_HashIdxInit, _DeeHash_HashIdxNext, _DeeHash_REAL_GetRealVTab, _DeeHash_REAL_GetVirtVTab */
+#include "util/hash-io.h" /* Dee_hash_*, _DeeHash_* */
 
 #include <stddef.h> /* NULL, size_t */
 

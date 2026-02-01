@@ -41,6 +41,7 @@
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_*, bzero, memcmp, memcpy*, memmovedownc, memmoveupc, memset, strlen */
 #include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/hash.h>          /* Dee_Hash* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
 #include <hybrid/limitcore.h>        /* __SSIZE_MAX__ */

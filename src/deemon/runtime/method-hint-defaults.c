@@ -45,6 +45,7 @@
 #include <deemon/system-features.h>     /* bcmp, memcpyc, memmovedownc, memset, remainder, strcmp, strlen */
 #include <deemon/thread.h>              /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>               /* DeeNullableTuple_Type, DeeTuple*, Dee_nullable_tuple_builder*, Dee_tuple_builder* */
+#include <deemon/util/hash.h>           /* DeeObject_HashGeneric, Dee_HASHOF_**, Dee_HashCombine */
 #include <deemon/util/lock.h>           /* Dee_atomic_lock_init */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset, Dee_simple_hashset_* */
 

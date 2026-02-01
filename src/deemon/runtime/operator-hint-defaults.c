@@ -41,6 +41,7 @@
 #include <deemon/system-features.h> /* memchr, memcpyc, mempcpyc, strlen */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/util/hash.h>       /* DeeObject_HashGeneric, Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine */
 /**/
 
 #include "runtime_error.h"

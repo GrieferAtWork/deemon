@@ -35,6 +35,7 @@
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/system-features.h>    /* memcpy */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 

@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/types.h>        /* Dee_hash_t */
-#include <deemon/util/hash-io.h> /* Dee_HASH_HIDXIO_COUNT, Dee_hash_gethidx8, Dee_hash_hidx_t, Dee_hash_hidxio_ops, Dee_hash_htab, Dee_hash_sethidx8, Dee_hash_vidx_t */
+#include <deemon/util/hash-io.h> /* Dee_HASH_HIDXIO_COUNT, Dee_hash_* */
 
 DECL_BEGIN
 

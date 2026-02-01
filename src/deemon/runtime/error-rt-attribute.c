@@ -41,6 +41,7 @@
 #include <deemon/system-features.h>    /* access, memcmp, memset, stpcpy, strlen */
 #include <deemon/system.h>             /* DeeSystem_IsStaticPointer */
 #include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_Hash* */
 
 #include <hybrid/host.h>        /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h>      /* MIN, MIN_C */

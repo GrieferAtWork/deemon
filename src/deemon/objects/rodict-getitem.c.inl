@@ -166,7 +166,7 @@
 #include <deemon/int.h>          /* DeeInt_Size_TryCompareEq */
 #include <deemon/object.h>
 #include <deemon/rodict.h>       /* _DeeRoDict_* */
-#include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_hidx_ofhash, Dee_hash_hidx_t, Dee_hash_vidx_t, Dee_hash_vidx_virt_lt_real */
+#include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 
 #include <stddef.h> /* NULL, size_t */
 

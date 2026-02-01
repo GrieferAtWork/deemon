@@ -27,6 +27,7 @@
 #include <deemon/super.h>           /* DeeObject_TCallAttr, DeeObject_TCallAttrKw */
 #include <deemon/system-features.h> /* mempcpyc */
 #include <deemon/tuple.h>           /* DeeTuple* */
+#include <deemon/util/hash.h>       /* Dee_HashStr */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 /**/

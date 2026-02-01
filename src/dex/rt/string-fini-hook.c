@@ -26,13 +26,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/arg.h>    /* DeeArg_Unpack1 */
-#include <deemon/error.h>  /* DeeError_Print, Dee_ERROR_PRINT_DOHANDLE */
-#include <deemon/format.h> /* DeeFormat_Printf */
-#include <deemon/int.h>    /* DeeInt_NewUIntptr */
+#include <deemon/alloc.h>     /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>       /* DeeArg_Unpack1 */
+#include <deemon/error.h>     /* DeeError_Print, Dee_ERROR_PRINT_DOHANDLE */
+#include <deemon/format.h>    /* DeeFormat_Printf */
+#include <deemon/int.h>       /* DeeInt_NewUIntptr */
 #include <deemon/object.h>
-#include <deemon/string.h> /* DeeString*, Dee_string_fini_hook, Dee_string_fini_hook_decref */
+#include <deemon/string.h>    /* DeeString*, Dee_string_fini_hook, Dee_string_fini_hook_decref */
+#include <deemon/util/hash.h> /* DeeObject_Id */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */

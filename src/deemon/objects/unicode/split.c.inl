@@ -33,6 +33,7 @@
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memmeml, memmemw */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
+#include <deemon/util/hash.h>          /* Dee_HashPointer */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 

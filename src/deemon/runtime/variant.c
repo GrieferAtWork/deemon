@@ -32,6 +32,7 @@
 #include <deemon/system.h>          /* DeeSystem_IsStaticPointer */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_write, atomic_xch */
+#include <deemon/util/hash.h>       /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashPtr, Dee_HashStr */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_*, _Dee_variant_* */
 
 #include <hybrid/int128.h>      /* __hybrid_int128_gr128, __hybrid_int128_lo128, __hybrid_uint128_* */

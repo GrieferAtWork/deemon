@@ -32,6 +32,7 @@
 #include <deemon/string.h>          /* DeeUni_IsSpace, DeeUni_IsSymCont */
 #include <deemon/stringutils.h>     /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcpy */
+#include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <hybrid/minmax.h>    /* MAX_C */
 #include <hybrid/unaligned.h> /* UNALIGNED_GET* */

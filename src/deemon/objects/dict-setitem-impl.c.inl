@@ -38,7 +38,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>          /* DeeString_NewSizedWithHash, DeeString_NewWithHash */
 #include <deemon/system-features.h> /* memmovedownc, memmoveupc */
-#include <deemon/util/hash-io.h>    /* Dee_HASH_HTAB_EOF, Dee_hash_hidx_ofhash, Dee_hash_hidx_t, Dee_hash_hidxio_ops, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt_lt_real */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HTAB_EOF, Dee_hash_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */

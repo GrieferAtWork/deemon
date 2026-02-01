@@ -39,6 +39,7 @@
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h> /* bcmpc, memcpy */
 #include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 #include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_alloc */
 
 #include <stdbool.h> /* bool, false, true */
