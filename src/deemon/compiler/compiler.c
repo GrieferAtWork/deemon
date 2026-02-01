@@ -231,19 +231,19 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 
 
 /* -------- Compiler Object Implementation -------- */
-/* Construct a new compiler for generating the source for the given `module'.
+/* Construct a new compiler for generating the source for the given `mod'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PUBLIC WUNUSED DREF DeeCompilerObject *DCALL
 DeeCompiler_New(uint16_t flags)
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
-DeeCompiler_New(DeeObject *__restrict module, uint16_t flags)
+DeeCompiler_New(DeeObject *__restrict mod, uint16_t flags)
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 {
 	DREF DeeCompilerObject *result;
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
+	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERTF(!(flags & ~COMPILER_FMASK), "Invalid compiler flags in %x", flags);
 	result = DeeObject_MALLOC(DeeCompilerObject);
@@ -254,7 +254,7 @@ DeeCompiler_New(DeeObject *__restrict module, uint16_t flags)
 	result->cp_scope = (DREF DeeScopeObject *)DeeObject_NewDefault(&DeeRootScope_Type);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result->cp_scope = (DREF DeeScopeObject *)DeeObject_New(&DeeRootScope_Type, 1,
-	                                                        (DeeObject **)&module);
+	                                                        (DeeObject **)&mod);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if unlikely(!result->cp_scope)
 		goto err_r;
@@ -349,10 +349,16 @@ compiler_init(DeeCompilerObject *__restrict self,
               size_t argc, DeeObject *const *argv,
               DeeObject *kw);
 
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+#define compiler__tp_doc NULL
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#define compiler__tp_doc "(module:?X3?N?Dstring?DModule)"
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+
 PUBLIC DeeTypeObject DeeCompiler_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Compiler",
-	/* .tp_doc      = */ DOC("(module:?X3?N?Dstring?DModule)"),
+	/* .tp_doc      = */ DOC(compiler__tp_doc),
 	/* TODO: This must be a GC object, because user-code may create const-symbols
 	 *       that re-reference the compiler, creating a reference loop:
 	 * >> import Compiler from rt;

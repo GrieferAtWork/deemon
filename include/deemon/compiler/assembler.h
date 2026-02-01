@@ -451,9 +451,9 @@ asm_invoke_operand_print(struct asm_invoke_operand const *__restrict self,
 struct asm_invocation {
 #define INVOKE_FNORMAL    0x0000      /* Normal invocation flags. */
 #define INVOKE_FPUSH      0x0010      /* Push the result (instruction is prefixed with `push')
-	                                   * NOTE: The raw `push' instruction does not have this flag
-	                                   *       set, as otherwise that would mean that `push' was
-	                                   *       prefixed by another `push'. */
+                                       * NOTE: The raw `push' instruction does not have this flag
+                                       *       set, as otherwise that would mean that `push' was
+                                       *       prefixed by another `push'. */
 #define INVOKE_FPREFIX    0x0020      /* The instruction is prefixed by a symbol. */
 	uint16_t           ai_flags;      /* Invocation flags (Set of `INVOKE_F*') */
 	uint8_t            ai_opcount;    /* [<= ASM_MAX_INSTRUCTION_OPERANDS] The total number of operands. */
@@ -500,7 +500,7 @@ struct ATTR_PACKED asm_overload {
 #define ASM_OVERLOAD_FPREFIX     0x0020      /* The overload must be used with a prefix. */
 #define ASM_OVERLOAD_F16BIT      0x0040      /* Same as `ASM_OVERLOAD_FF0', however no prefix is written. */
 #define ASM_OVERLOAD_FF0         0x0080      /* When set, `ao_instr' may be prefixed by `0xf0' to
-	                                          * double the bit-limits of io_symid-related operands. */
+                                              * double the bit-limits of io_symid-related operands. */
 #define ASM_OVERLOAD_FF0_IMM     0x0100      /* An extension to `ASM_OVERLOAD_FF0': Immediate operands are also extended. */
 #define ASM_OVERLOAD_FRET        0x0200      /* The overload is only available in non-yielding functions. */
 #define ASM_OVERLOAD_FYLD        0x0400      /* The overload is only available in yielding functions. */

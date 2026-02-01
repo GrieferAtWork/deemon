@@ -185,13 +185,13 @@ DDATDEF DeeTypeObject DeeCompiler_Type; /* Compiler from rt */
 #define DeeCompiler_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeCompiler_Type)
 
 
-/* Construct a new compiler for generating the source for the given `module'.
+/* Construct a new compiler for generating the source for the given `mod'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 DFUNDEF WUNUSED DREF DeeCompilerObject *DCALL DeeCompiler_New(uint16_t flags);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
-DeeCompiler_New(DeeObject *__restrict module, uint16_t flags);
+DeeCompiler_New(DeeObject *__restrict mod, uint16_t flags);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 

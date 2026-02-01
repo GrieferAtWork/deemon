@@ -468,7 +468,11 @@ deepcopy_putpointer(DeeDeepCopyContext *__restrict self,
 		}
 	}
 
-	/* TODO: Only allow this part for static pointers! */
+	/* XXX: Only allow this part for static pointers!
+	 * XXX: Nope: that wouldn't work. E.g. "DeeBlackListKwdsObject::blkd_ckwv"
+	 *            points at the keywords of a code object, and code objects don't
+	 *            get copied during deepcopy (since they are deep immutable), so
+	 *            we wouldn't be able to encode those pointers here... */
 
 	/* Assign pointer... */
 	*deepcopy_ser2ptr(self, addrof_pointer, void const *) = pointer;

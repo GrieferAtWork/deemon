@@ -196,9 +196,9 @@ byattr_findattr(DeeTypeObject *UNUSED(tp_self), MapByAttr *self,
 	int has = DeeObject_InvokeMethodHint(map_operator_hasitem_string_hash,
 	                                     self->mba_map, specs->as_name,
 	                                     specs->as_hash);
-	if unlikely(has < 0)
-		goto err;
-	if (has) {
+	if (!Dee_HAS_ISNO(has)) {
+		if unlikely(Dee_HAS_ISERR(has))
+			goto err;
 		result->ad_name = specs->as_name;
 		result->ad_doc  = NULL;
 		result->ad_perm = Dee_ATTRPERM_F_CANGET | Dee_ATTRPERM_F_CANDEL | Dee_ATTRPERM_F_CANSET |
