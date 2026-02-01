@@ -872,18 +872,27 @@ directory_open(DeeDirIteratorObject *__restrict self,
 	/* Append a match-all wildcard. */
 	wpattern[wname_length++] = '*';
 	wpattern[wname_length]   = 0;
+again_FindFirstFileExW:
 	DBG_ALIGNMENT_DISABLE();
 	self->odi_hnd = FindFirstFileExW(wpattern, FindExInfoBasic, &self->odi_data,
 	                                 FindExSearchNameMatch, NULL, 0);
 	DBG_ALIGNMENT_ENABLE();
-	Dee_Freea(wpattern);
-	self->odi_first = true;
 	if unlikely(self->odi_hnd == INVALID_HANDLE_VALUE) {
 		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError != ERROR_NO_MORE_FILES) {
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt() == 0)
+					goto again_FindFirstFileExW;
+				goto err;
+			} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+				if (Dee_ReleaseSystemMemory() != 0)
+					goto again_FindFirstFileExW;
+				goto err;
+			}
+			Dee_Freea(wpattern);
 			if (DeeNTSystem_IsFileNotFoundError(dwError)) {
 				DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
 				                        "Path %r could not be found",
@@ -905,43 +914,51 @@ directory_open(DeeDirIteratorObject *__restrict self,
 		}
 
 		/* Empty directory? ok... */
+		Dee_Freea(wpattern);
 		self->odi_first = false;
-	} else if (skipdots) {
-		while (self->odi_data.cFileName[0] == '.' &&
-		       (self->odi_data.cFileName[1] == 0 ||
-		        (self->odi_data.cFileName[1] == '.' &&
-		         self->odi_data.cFileName[2] == 0))) {
-			/* Skip this one... */
+	} else {
+		self->odi_first = true;
+		Dee_Freea(wpattern);
+		if (skipdots) {
+			while (self->odi_data.cFileName[0] == '.' &&
+			       (self->odi_data.cFileName[1] == 0 ||
+			        (self->odi_data.cFileName[1] == '.' &&
+			         self->odi_data.cFileName[2] == 0))) {
+				/* Skip this one... */
 again_skipdots:
-			DBG_ALIGNMENT_DISABLE();
-			if (!FindNextFileW(self->odi_hnd, &self->odi_data)) {
-				HANDLE hnd;
-				DWORD dwError = GetLastError();
-				DBG_ALIGNMENT_ENABLE();
-				if unlikely(dwError != ERROR_NO_MORE_FILES) {
-					if (DeeNTSystem_IsBadAllocError(dwError)) {
-						if (Dee_ReleaseSystemMemory())
-							goto again_skipdots;
-					} else {
-						DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
-						                        "Failed to read entries from directory %r",
-						                        path);
-					}
-					DBG_ALIGNMENT_DISABLE();
-					(void)FindClose(self->odi_hnd);
-					DBG_ALIGNMENT_ENABLE();
-					goto err;
-				}
-				hnd          = self->odi_hnd;
-				self->odi_hnd = INVALID_HANDLE_VALUE;
 				DBG_ALIGNMENT_DISABLE();
-				(void)FindClose(hnd);
+				if (!FindNextFileW(self->odi_hnd, &self->odi_data)) {
+					HANDLE hnd;
+					DWORD dwError = GetLastError();
+					DBG_ALIGNMENT_ENABLE();
+					if unlikely(dwError != ERROR_NO_MORE_FILES) {
+						if (DeeNTSystem_IsBadAllocError(dwError)) {
+							if (Dee_ReleaseSystemMemory() != 0)
+								goto again_skipdots;
+						} else if (DeeNTSystem_IsIntr(dwError)) {
+							if (DeeThread_CheckInterrupt() == 0)
+								goto again_skipdots;
+						} else {
+							DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+							                        "Failed to read entries from directory %r",
+							                        path);
+						}
+						DBG_ALIGNMENT_DISABLE();
+						(void)FindClose(self->odi_hnd);
+						DBG_ALIGNMENT_ENABLE();
+						goto err;
+					}
+					hnd          = self->odi_hnd;
+					self->odi_hnd = INVALID_HANDLE_VALUE;
+					DBG_ALIGNMENT_DISABLE();
+					(void)FindClose(hnd);
+					DBG_ALIGNMENT_ENABLE();
+					/* Directory only contains "." and ".." */
+					self->odi_first = false;
+					break;
+				}
 				DBG_ALIGNMENT_ENABLE();
-				/* Directory only contains "." and ".." */
-				self->odi_first = false;
-				break;
 			}
-			DBG_ALIGNMENT_ENABLE();
 		}
 	}
 	Dee_atomic_rwlock_init(&self->odi_lock);
@@ -1003,6 +1020,7 @@ EINTR_LABEL(again)
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		EINTR_HANDLE(error, again, err)
+		ENOMEM_HANDLE(error, again, err)
 		HANDLE_ENOENT(error, err, "Path %r could not be found", path)
 		HANDLE_ENOTDIR(error, err, "Path %r could not be found", path)
 		HANDLE_EACCES(error, err, "Some part of the path %r is not a directory", path)
@@ -1053,7 +1071,10 @@ again:
 			if unlikely(dwError != ERROR_NO_MORE_FILES) {
 				DeeDirIterator_LockEndWrite(self);
 				if (DeeNTSystem_IsBadAllocError(dwError)) {
-					if (Dee_ReleaseSystemMemory())
+					if (Dee_ReleaseSystemMemory() != 0)
+						goto again;
+				} else if (DeeNTSystem_IsIntr(dwError)) {
+					if (DeeThread_CheckInterrupt() == 0)
 						goto again;
 				} else {
 					DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
@@ -1114,6 +1135,7 @@ again:
 		if (error == 0)
 			return (DREF DeeDirIteratorObject *)ITER_DONE; /* End of directory. */
 		EINTR_HANDLE(error, again, err)
+		ENOMEM_HANDLE(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
 		                          "Failed to read entries from directory %r",
 		                          self->odi_path);
@@ -1328,6 +1350,7 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 #ifdef DIR_struct_stat_IS_BY_HANDLE_FILE_INFORMATION
 		DREF DeeStringObject *fullname;
 		HANDLE hFile;
+		DWORD dwError;
 		fullname = diriter_get_d_fullname(self);
 		if unlikely(!fullname)
 			goto err;
@@ -1343,7 +1366,10 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 		}
 
 		/* Actually retrieve stat information. */
+again_GetFileInformationByHandle:
+		DBG_ALIGNMENT_DISABLE();
 		if (GetFileInformationByHandle(hFile, &self->odi_st)) {
+			DBG_ALIGNMENT_ENABLE();
 			/* Don't leak handles if another thread allocated another handle in the mean time. */
 			DeeDirIterator_LockWrite(self);
 			if unlikely(self->odi_stHandle != INVALID_HANDLE_VALUE) {
@@ -1356,7 +1382,17 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 			Dee_Decref(fullname);
 			return 0;
 		}
-		DeeNTSystem_ThrowLastErrorf(NULL, "Failed to stat %r in %k", fullname, self);
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt() == 0)
+				goto again_GetFileInformationByHandle;
+		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_ReleaseSystemMemory() != 0)
+				goto again_GetFileInformationByHandle;
+		} else {
+			DeeNTSystem_ThrowErrorf(NULL, dwError, "Failed to stat %r in %k", fullname, self);
+		}
 		(void)CloseHandle(hFile);
 err_fullname:
 		Dee_Decref(fullname);
@@ -1391,6 +1427,7 @@ again:
 		Dee_Decref(fullname);
 #endif /* !DIR_lstatat || !CONFIG_HAVE_dirfd */
 		EINTR_HANDLE(error, again, err)
+		ENOMEM_HANDLE(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
 		                          "Failed to stat %R in %k",
 		                          diriter_get_d_fullname(self),
