@@ -40,7 +40,7 @@ function main() {
 //		.dumpExports()
 		.dumpHeaders()
 #elif 0
-		.fixFile(f"{ROOTDIR}/src/dex/win32/libwin32.c")
+		.fixFile(f"{ROOTDIR}/include/deemon/util/weakref.h")
 #else
 		.fixPaths(include: {
 			f"{ROOTDIR}/src/deemon",

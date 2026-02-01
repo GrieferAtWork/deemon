@@ -1465,16 +1465,15 @@ insert_first_include:
 		return (lno, 1 + offset - sol);
 	}
 
-	@@Returns sequence {(missingHeader, {usedKeywordFromheader...})...}
+	@@Returns headers that must be included, but aren't
 	@@@param keywordsFromIncludes Keywords that belong to known includes
-	private function getMissingHeadersAndKeywords(
+	private function getMissingHeaders(
 			fixIncludes: FixIncludes,
 			keywordsFromIncludes: {string...},
 			includedFilenames: {string...},
 			includedSystemIncludes: {string...},
-	): {(Header, Set with string)...} {
-		local missingHeaders: {Header...} = [];
-		local missingByFilename: {string: Set with string} = Dict();
+	): {Header...} {
+		local missingHeaders: Set with Header = HashSet();
 		for (local kwd: keywords) {
 			if (kwd in keywordsFromIncludes)
 				continue; /* From known include... */
@@ -1503,7 +1502,7 @@ insert_first_include:
 					local hdrFilename = hdr.filename;
 					if (hdrFilename !in includedFilenames &&
 					    !hdr.includes.any(includedSystemIncludes.operator contains) &&
-					    (hdr.filename ?? hdr.shortestInclude) !in missingByFilename)
+					    hdr !in missingHeaders)
 						stillMissingIncludes += 2;
 					if (kwd in hdr.exportsFromAlwaysIncludes)
 						stillMissingIncludes += 1; /* Discourage this inclusion over the original header */
@@ -1515,21 +1514,10 @@ insert_first_include:
 				}
 			}
 			assert usedCombination !is none;
-			for (local hdr: usedCombination) {
-				local hdrIdent = hdr.filename ?? hdr.shortestInclude;
-				local importedKeywords: (Set with string) | none = missingByFilename.get(hdrIdent);
-				if (importedKeywords is none) {
-					missingByFilename[hdrIdent] = importedKeywords = HashSet();
-					missingHeaders.append(hdr);
-				}
-				importedKeywords.insert(kwd);
-			}
+			missingHeaders.insertall(usedCombination);
 next_keyword:;
 		}
-		return (
-			for (local hdr: missingHeaders)
-				(hdr, missingByFilename[hdr.filename ?? hdr.shortestInclude])
-		);
+		return missingHeaders;
 	}
 
 	@@Check if @dep (relative to @base) is included by @this file in the context of @fixIncludes
@@ -1661,19 +1649,19 @@ next_keyword:;
 			del includes[x];
 
 		/* Check for missing includes, insert into groups, and re-format groups */
-		local missing = getMissingHeadersAndKeywords(
+		local missingHeaders = getMissingHeaders(
 				fixIncludes: fixIncludes,
 				keywordsFromIncludes: keywordsFromIncludes,
 				includedFilenames: includedFilenames,
 				includedSystemIncludes: includedSystemIncludes,
 		);
 		local includeGroups = this.includeGroups;
-		for (local hdr, keywords: missing) {
-			local systemIncludeString: string | none = hdr.shortestInclude;
+		for (local missingHeader: missingHeaders) {
+			local systemIncludeString: string | none = missingHeader.shortestInclude;
 			if (systemIncludeString !is none)
 				systemIncludeString = f"<{systemIncludeString}>";
-			local relativeIncludePath: string | none = hdr.filename !is none
-				? posix.relpath(hdr.filename, posix.headof(filename)).replace(posix.FS_SEP, "/")
+			local relativeIncludePath: string | none = missingHeader.filename !is none
+				? posix.relpath(missingHeader.filename, posix.headof(filename)).replace(posix.FS_SEP, "/")
 				: none;
 			if (relativeIncludePath !is none)
 				relativeIncludePath = f'"{relativeIncludePath}"';
@@ -1712,10 +1700,20 @@ next_keyword:;
 				}
 			}
 			local comment: string | none = none;
-			if (!hdr.noIncludeComments) {
-				keywords = HashSet(keywords);
-				hdr.simplifyKeywordUseList(keywords);
-				comment = ", ".join(keywords.sorted(
+			if (!missingHeader.noIncludeComments) {
+				local usedKwds = HashSet();
+//				local maybeUsedKwds = HashSet();
+				for (local k: missingHeader.exports) {
+					if (k in keywords) {
+						if (k in selfProvidedKeyword) {
+//							maybeUsedKwds.insert(k);
+						} else {
+							usedKwds.insert(k);
+						}
+					}
+				}
+				missingHeader.simplifyKeywordUseList(usedKwds);
+				comment = ", ".join(usedKwds.sorted(
 					functools.predcmp2key(string.vercompare)
 				));
 			}
