@@ -42,7 +42,7 @@
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* DeeLock_Acquire2, Dee_atomic_rwlock_* */
 

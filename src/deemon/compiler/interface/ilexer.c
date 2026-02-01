@@ -43,7 +43,7 @@
 #include <deemon/system-features.h>    /* memcpyc, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple_Newf */
-#include <deemon/type.h>               /* DeeType_Type, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashPtr, Dee_HashUtf8 */
 
 #include <hybrid/limitcore.h> /* __INT_MAX__ */

@@ -31,7 +31,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_EmptyString, Dee_STRING_DIV_SIZEOF_WIDTH, Dee_charptr_const, STRING_WIDTH_1BYTE, STRING_WIDTH_COMMON, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* memmeml, memmemw */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 

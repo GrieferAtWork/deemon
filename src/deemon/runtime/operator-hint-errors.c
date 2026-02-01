@@ -28,7 +28,6 @@
 #include <deemon/operator-hints.h>     /*  */
 #include <deemon/type.h>               /* OPERATOR_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric */
-/**/
 
 #include "operator-hint-errors.h"
 #include "runtime_error.h"

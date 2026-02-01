@@ -42,7 +42,7 @@
 #include <deemon/set.h>           /* DeeSet_Type */
 #include <deemon/thread.h>        /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>         /* DeeTuple_NewVectorSymbolic, DeeTuple_PackSymbolic */
-#include <deemon/type.h>          /* DeeObject_Init, DeeType_Type, Dee_Visit, METHOD_FNOREFESCAPE, OPERATOR_ITER, STRUCT_OBJECT, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>          /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_FNOREFESCAPE, OPERATOR_ITER, STRUCT_OBJECT, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/lock.h>     /* Dee_atomic_lock_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */

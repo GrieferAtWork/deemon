@@ -35,7 +35,7 @@
 #include <deemon/set.h>                 /* DeeSet_Type */
 #include <deemon/super.h>               /* DeeSuper_New */
 #include <deemon/thread.h>              /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>                /* DeeObject_Init, DeeType_Type, Dee_Visit, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>                /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset_with_lock_* */
 
 #include "../../runtime/runtime_error.h"

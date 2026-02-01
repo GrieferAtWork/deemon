@@ -59,7 +59,6 @@
 /*!export TYPE_OPERATOR_**/
 /*!export TYPE_**/
 /*!export Dee_TYPE_CONSTRUCTOR_INIT_**/
-/*!always include "types.h"*/        /* This header always being included is guarantied by the ABI */
 #ifndef GUARD_DEEMON_TYPE_H
 #define GUARD_DEEMON_TYPE_H 1 /*!export-*/
 
@@ -2715,8 +2714,8 @@ struct Dee_type_operator {
 #endif /* DEE_SOURCE */
 
 #ifndef Dee_visit_t_DEFINED
-#define Dee_visit_t_DEFINED
-typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
+#define Dee_visit_t_DEFINED /*!export-*/
+typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
 #endif /* !Dee_visit_t_DEFINED */
 
 struct Dee_class_desc;

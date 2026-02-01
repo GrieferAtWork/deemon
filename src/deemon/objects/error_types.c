@@ -38,7 +38,7 @@
 #include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, _Exit, exit */
 #include <deemon/system.h>             /* DeeNTSystem_*, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

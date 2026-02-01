@@ -34,7 +34,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_Bool, DeeTypeObject, Dee_AsObject, Dee_Incref, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeStringObject, Dee_EmptyString */
 #include <deemon/thread.h>             /* DeeThread_Self */
-#include <deemon/type.h>               /* DeeType_Type, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/kwlist.h"
 

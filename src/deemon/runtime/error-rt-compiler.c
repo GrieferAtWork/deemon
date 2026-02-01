@@ -31,7 +31,7 @@
 #include <deemon/operator-hints.h>     /* DeeNO_print_t */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
 #include <deemon/struct.h>             /* DeeStructObject_Cmp, DeeStructObject_PrintRepr */
-#include <deemon/type.h>               /* DeeType_Type, Dee_Visit, TF_NONE, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, TF_NONE, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
 #include <deemon/util/weakref.h>       /* Dee_weakref_fini, Dee_weakref_initempty */
 
 #include <stddef.h> /* NULL, size_t */

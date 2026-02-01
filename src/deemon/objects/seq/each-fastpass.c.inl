@@ -39,7 +39,7 @@
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* mempcpyc, strlen */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, OPERATOR_CALL, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, OPERATOR_CALL, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

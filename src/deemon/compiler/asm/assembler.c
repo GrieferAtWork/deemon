@@ -43,7 +43,7 @@
 #include <deemon/system-features.h>    /* bcmpc, bzero, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, trunc */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_*, DeeType_Check, DeeType_Type, TF_NONE, TP_FFINAL, TP_FNORMAL, type_cmp */
+#include <deemon/type.h>               /* DeeObject_*, DeeType_Check, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, type_cmp */
 #include <deemon/util/hash.h>          /* Dee_HashPtr */
 
 #include <hybrid/byteswap.h>      /* UNALIGNED_GETLE16, UNALIGNED_GETLE32, UNALIGNED_SETLE* */

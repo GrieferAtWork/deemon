@@ -35,7 +35,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/tuple.h>              /* DeeTuple_PackSymbolic */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include "../objects/generic-proxy.h"

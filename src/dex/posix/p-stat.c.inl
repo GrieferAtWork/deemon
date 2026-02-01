@@ -42,7 +42,7 @@
 #include <deemon/system-features.h> /* AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, bzero, clearerr, fclose, ferror, fopen, fopen64, fseek, fseeko, fseeko64, fstat, fstatat, fstatat64, fstat64, ftell, ftello, ftello64, lstat, lstat64, memcasecmp, stat, stat64, strchr, strend, wlstat, wlstat64, wstat, wstat64 */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_IsSep, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_val */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

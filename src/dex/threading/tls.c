@@ -36,7 +36,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_Decref, Dee_Incref, Dee_Incref_n, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/system-features.h> /* bzeroc */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATING */
-#include <deemon/type.h>            /* DeeObject_GenericCmpByAddr, DeeType_Type, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
+#include <deemon/type.h>            /* DeeObject_GenericCmpByAddr, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
 #include <deemon/util/hash.h>       /* DeeObject_HashGeneric */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 

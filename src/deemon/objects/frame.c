@@ -36,7 +36,7 @@
 #include <deemon/system.h>             /* DeeSystem_* */
 #include <deemon/traceback.h>          /* DeeFrameObject, DeeFrame_CanWrite, Dee_CODE_FRAME_DEAD, Dee_FRAME_F*, _DeeFrame_* */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_XVisit, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_getset, type_member */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_getset, type_member */
 #include <deemon/util/atomic.h>        /* atomic_or, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_atomic_rwlock_t */
 

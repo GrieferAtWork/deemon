@@ -33,7 +33,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSomeObject, DeeSeq_*, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, OPERATOR_*, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, OPERATOR_*, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"

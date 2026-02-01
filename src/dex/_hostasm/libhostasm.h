@@ -24,7 +24,6 @@
 #endif /* DEE_SOURCE */
 
 #include "host.h"
-#include "unwind.h"
 /**/
 
 #include <deemon/api.h>
@@ -44,6 +43,8 @@
 #include <hybrid/byteorder.h>     /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/sequence/list.h> /* RINGQ_ENTRY, RINGQ_NEXT, TAILQ_ENTRY, TAILQ_ISBOUND */
 #include <hybrid/typecore.h>      /* __SIZEOF_POINTER__ */
+
+#include "unwind.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */

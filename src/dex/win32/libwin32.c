@@ -46,7 +46,7 @@
 #include <deemon/system.h>          /* DeeNTSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_UINTPTR_T, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_UNSIGNED, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_UINTPTR_T, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_* */
 #include <deemon/util/atomic.h>     /* atomic_read, atomic_write */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 

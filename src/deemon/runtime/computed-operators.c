@@ -27,7 +27,6 @@
 
 #ifndef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
 #include <deemon/object.h> /* DREF, DeeObject, DeeObject_NewKw */
-/**/
 
 #include "../objects/seq/concat.h"
 #include "method-hint-defaults.h"

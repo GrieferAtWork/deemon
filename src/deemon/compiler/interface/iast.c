@@ -47,7 +47,7 @@
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* bcmpc, strlen */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset */
+#include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_operator_t, Dee_opinfo, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset */
 #include <deemon/util/atomic.h>        /* atomic_read */
 
 #include "../../runtime/strings.h"

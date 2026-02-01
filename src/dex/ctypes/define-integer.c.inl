@@ -42,7 +42,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_int128_t, Dee_uint128_t, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>          /* DeeString_Newf */
 #include <deemon/system-features.h> /* memcpy */
-#include <deemon/type.h>            /* DeeObject_Init, TF_NONE, TP_F*, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
+#include <deemon/type.h>            /* DeeObject_Init, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_SIGNED, INT_UNSIGNED, TF_NONE, TP_F*, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 

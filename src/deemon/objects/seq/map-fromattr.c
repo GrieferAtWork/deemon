@@ -35,7 +35,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* memset */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, ITER_DONE, OBJECT_HEAD_INIT */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

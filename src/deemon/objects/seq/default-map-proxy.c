@@ -30,7 +30,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_foreach_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeSeq_Type, DeeSeq_Unpack */
 #include <deemon/set.h>                /* DeeSet_Type */
-#include <deemon/type.h>               /* DeeType_Type, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../generic-proxy.h"
 #include "default-map-proxy.h"

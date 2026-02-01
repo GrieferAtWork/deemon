@@ -37,7 +37,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcpy* */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsInterrupt, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsInterrupt, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 #include <deemon/util/rlock.h>      /* Dee_rshared_lock_init */
 

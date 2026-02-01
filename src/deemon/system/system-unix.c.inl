@@ -37,7 +37,6 @@
 
 #include <stdarg.h> /* va_end, va_list, va_start */
 #include <stddef.h> /* NULL, size_t */
-/**/
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>

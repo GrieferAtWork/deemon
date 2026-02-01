@@ -30,7 +30,7 @@
 #include <deemon/error.h>       /* DeeError_FileClosed, DeeError_SystemError */
 #include <deemon/error_types.h> /* DeeSystemErrorObject */
 #include <deemon/object.h>      /* DeeTypeObject, OBJECT_HEAD_INIT */
-#include <deemon/type.h>        /* DeeType_Type, TF_NONE, TP_FINHERITCTOR, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
+#include <deemon/type.h>        /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FINHERITCTOR, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
 
 #include <stddef.h> /* NULL */
 

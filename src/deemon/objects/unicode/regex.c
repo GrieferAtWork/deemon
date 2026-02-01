@@ -31,6 +31,9 @@
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, size_t */
+
 /* Includes for libregex... */
 /* clang-format off */
 #include <hybrid/align.h>
@@ -40,10 +43,6 @@
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
 /* clang-format on */
-
-#include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, size_t */
-/**/
 
 DECL_BEGIN
 

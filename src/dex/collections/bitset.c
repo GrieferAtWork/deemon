@@ -41,7 +41,7 @@
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString_Check, DeeString_STR, WSTR_LENGTH */
 #include <deemon/system-features.h> /* memcpy* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Base, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Base, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/hash.h>       /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine */
 

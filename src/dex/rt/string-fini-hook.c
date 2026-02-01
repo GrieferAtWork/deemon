@@ -33,7 +33,7 @@
 #include <deemon/int.h>          /* DeeInt_NewUIntptr */
 #include <deemon/object.h>       /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_WEAKREF_SUPPORT, Dee_WEAKREF_SUPPORT_ADDR, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/string.h>       /* DeeString*, Dee_string_fini_hook, Dee_string_fini_hook_decref */
-#include <deemon/type.h>         /* DeeType_Type, Dee_Visit, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
+#include <deemon/type.h>         /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
 #include <deemon/util/hash.h>    /* DeeObject_Id */
 #include <deemon/util/weakref.h> /* Dee_WEAKREF, Dee_weakref_* */
 

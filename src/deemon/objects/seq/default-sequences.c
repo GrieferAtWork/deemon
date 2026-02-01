@@ -36,7 +36,7 @@
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */

@@ -29,11 +29,10 @@
 #include <deemon/rodict.h>             /* DeeRoDict_FromSequence */
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence */
 
-#include <stddef.h> /* size_t */
-/**/
-
 #include "../objects/generic-proxy.h" /* generic_obj__asmap */
 #include "../objects/seq/concat.h"    /* DeeSeq_Concat */
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

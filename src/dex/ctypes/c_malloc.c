@@ -25,7 +25,6 @@
 #include "libctypes.h"
 /**/
 
-
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */

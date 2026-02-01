@@ -27,7 +27,6 @@
 
 #include <hybrid/overflow.h> /* OVERFLOW_USUB */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
-/**/
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */

@@ -41,7 +41,7 @@
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FREPLAC, STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_IF_E1, ENV_LOCK, ENV_UNLOCK, bcmpc, calloc, clearenv, environ, getenv, memcpyc, memmovedownc, mempcpyc, putenv, putenv_s, setenv, strchr, strend, strlen, unsetenv, wenviron, wgetenv, wputenv, wputenv_s, wsetenv, wunsetenv */
 #include <deemon/system.h>          /* DeeNTSystem_IsBadAllocError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_*, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_*, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 

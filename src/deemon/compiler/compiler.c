@@ -41,7 +41,7 @@
 #include <deemon/serial.h>             /* DeeSerial, Dee_serial */
 #include <deemon/string.h>             /* DeeString*, Dee_unicode_printer_fini */
 #include <deemon/system-features.h>    /* bzero, memcpy, memset */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_Visit, TF_NONE, TP_FNORMAL, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, TF_NONE, TP_FNORMAL, type_* */
 #include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_t */
 #include <deemon/util/weakref.h>       /* Dee_WEAKREF, Dee_weakref_clear, Dee_weakref_set */
 

@@ -34,7 +34,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTupleObject, DeeTuple_FromSequence */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 

@@ -32,7 +32,6 @@
 #include <deemon/stringutils.h> /* DeeString_GetChar */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
-/**/
 
 #include "../../runtime/runtime_error.h"
 

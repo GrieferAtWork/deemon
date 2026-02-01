@@ -38,7 +38,7 @@
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, memcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_AddInterruptHook, DeeThread_DisableInterruptHooks, DeeThread_EnableInterruptHooks, DeeThread_RemoveInterruptHook, DeeThread_Self, DeeThread_WasInterrupted, Dee_thread_interrupt_hook, Dee_thread_interrupt_hook_decref */
 #include <deemon/tuple.h>           /* Dee_EmptyTuple */
-#include <deemon/type.h>            /* DeeObject_IsShared, DeeType_Type, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init, Dee_shared_lock_* */
 #include <deemon/util/weakref.h>    /* Dee_weakref_fini, Dee_weakref_init */

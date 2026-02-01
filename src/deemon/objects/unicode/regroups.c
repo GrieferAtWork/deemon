@@ -35,7 +35,6 @@
 #include <deemon/string.h>             /* Dee_EmptyString */
 #include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, type_member, type_seq */
-/**/
 
 #include "regroups.h"
 

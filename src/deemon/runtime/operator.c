@@ -36,7 +36,7 @@
 #include <deemon/super.h>          /* DeeObject_TClear, DeeObject_TDeepCopy */
 #include <deemon/thread.h>         /* DeeThreadObject, DeeThread_Self, Dee_DeepCopyAddAssoc, Dee_repr_frame, Dee_trepr_frame, deepcopy_begin, deepcopy_clear, deepcopy_end, deepcopy_lookup */
 #include <deemon/tuple.h>          /* DeeTuple* */
-#include <deemon/type.h>           /* DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, Dee_GC_PRIORITY_LATE, OPERATOR_*, TF_TPVISIT */
+#include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, Dee_GC_PRIORITY_LATE, OPERATOR_*, TF_TPVISIT */
 #include <deemon/util/hash.h>      /* DeeObject_HashGeneric, Dee_HASHOF_RECURSIVE_ITEM */
 #ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
 #include <deemon/deepcopy.h> /* DeeDeepCopyContext, DeeDeepCopy_* */

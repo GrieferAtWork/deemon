@@ -100,7 +100,7 @@
 #include <deemon/super.h>           /* DeeObject_T* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, access, strlen */
 #include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE */
-#include <deemon/type.h>            /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type */
+#include <deemon/type.h>            /* ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_A_OPT, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type */
 #include <deemon/util/hash.h>       /* Dee_HashPtr, Dee_HashStr */
 
 #include "runtime_error.h"

@@ -48,14 +48,11 @@
 
 #include "../runtime/strings.h"
 
+#include <Windows.h>
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* UINT32_C, uint8_t, uint16_t, uint32_t, uintptr_t */
-/**/
-
-#include <Windows.h>
-/**/
 
 #ifndef PATH_MAX
 #ifdef PATHMAX

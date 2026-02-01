@@ -1277,7 +1277,7 @@ DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_XHashv)
 #define DeeObject_HashInherited(self) DeeObject_HashInherited(Dee_AsObject(self))
 
 #ifndef Dee_visit_t_DEFINED
-#define Dee_visit_t_DEFINED
+#define Dee_visit_t_DEFINED /*!export-*/
 typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
 #endif /* !Dee_visit_t_DEFINED */
 

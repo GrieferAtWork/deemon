@@ -41,7 +41,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmp, mempcpyc, memset, pow */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeType_*, Dee_METHOD_FCONSTCALL, Dee_METHOD_FNORETURN, Dee_OPERATOR_USERCOUNT, Dee_TF_ISCONSTCASTABLE, Dee_TF_NOTCONSTCASTABLE, Dee_operator_t, Dee_opinfo, FAKE_OPERATOR_*, METHOD_F*, OPCC_ARGC, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeType_*, Dee_METHOD_FCONSTCALL, Dee_METHOD_FNORETURN, Dee_OPERATOR_USERCOUNT, Dee_TF_ISCONSTCASTABLE, Dee_TF_NOTCONSTCASTABLE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_operator_t, Dee_opinfo, FAKE_OPERATOR_*, METHOD_F*, OPCC_ARGC, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

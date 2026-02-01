@@ -34,7 +34,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_SEQCLASS_SET */
 #include <deemon/set.h>                /*  */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TF_SEQCLASS_SHFT, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TF_SEQCLASS_SHFT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"

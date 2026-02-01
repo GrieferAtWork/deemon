@@ -43,7 +43,7 @@
 #include <deemon/system-features.h> /* memset */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
 #include <deemon/util/futex.h>      /* DeeFutex_WakeAll, DeeFutex_WakeOne */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t */
@@ -3009,7 +3009,6 @@ DECL_END
 #include "lock.c.inl"
 #define DEFINE_RDeeSharedLock_Type__AND__DeeRSharedRWLock_Type
 #include "lock.c.inl"
-/**/
 
 #define DEFINE_DeeAtomicLock_Type__AND__DeeAtomicRWLock_Type
 #include "lock.c.inl"

@@ -34,7 +34,7 @@
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type */
 #include <deemon/set.h>                /* DeeSet_NewEmpty, DeeSet_Type, Dee_EmptySet */
 #include <deemon/super.h>              /* DeeSuper_New */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

@@ -40,7 +40,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* access, memcmp, memset, stpcpy, strlen */
 #include <deemon/system.h>             /* DeeSystem_IsStaticPointer */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_Visit, Dee_XVisit, Dee_type_member, Dee_type_member_desc, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_type_member, Dee_type_member_desc, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_Hash* */
 

@@ -47,7 +47,7 @@
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, strchr, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock */

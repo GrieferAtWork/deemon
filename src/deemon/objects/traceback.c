@@ -38,7 +38,7 @@
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_except_frame, Dee_thread_object, except_frame_gettb */
 #include <deemon/traceback.h>          /* DeeFrame_NewReferenceWithLock, DeeFrame_Type, DeeTraceback*, Dee_FRAME_FREADONLY, empty_traceback_object */
 #include <deemon/tuple.h>              /* DeeTupleObject */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */

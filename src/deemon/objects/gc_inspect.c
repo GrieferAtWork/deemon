@@ -31,7 +31,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/super.h>              /* DeeObject_TVisit, DeeSuper* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_IsGC, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_XVisitv, STRUCT_OBJECT, STRUCT_SIZE_T, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_IsGC, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_XVisitv, STRUCT_OBJECT, STRUCT_SIZE_T, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */

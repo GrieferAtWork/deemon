@@ -34,7 +34,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeUni_ToLower */
 #include <deemon/system-features.h> /* CONFIG_HAVE_atexit, atexit, fflush, memchr, memcpy, mempcpy, stpcpy */
-#include <deemon/type.h>            /* Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
+#include <deemon/type.h>            /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>      /* Dee_rshared_rwlock_init */

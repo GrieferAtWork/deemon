@@ -50,7 +50,6 @@
 #include <deemon/object.h>   /* Dee_BOUND_* */
 #include <deemon/type.h>     /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass */
 #include <deemon/types.h>    /* DREF, DeeObject, DeeTypeObject, Dee_hash_t, ITER_DONE */
-/**/
 
 #include "runtime_error.h"
 

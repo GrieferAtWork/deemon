@@ -28,7 +28,7 @@
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/object.h>             /* DeeObject, DeeObject_Type, DeeTypeObject, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/type.h>               /* DeeType_Type, TF_NONE, TP_FABSTRACT, TP_FNORMAL */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, TF_NONE, TP_FABSTRACT, TP_FNORMAL */
 
 #include "../runtime/strings.h"
 

@@ -47,7 +47,7 @@
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_Sleep */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeType_Type, Dee_XVisit, Dee_XVisitv, METHOD_FNOREFESCAPE, STRUCT_CONST, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_XVisitv, METHOD_FNOREFESCAPE, STRUCT_CONST, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
 

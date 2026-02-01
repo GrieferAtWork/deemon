@@ -40,7 +40,7 @@
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_ASCII_PRINTER_INIT, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer, Dee_ascii_printer_fini, Dee_charptr_const, Dee_empty_string_struct, Dee_string_fini_hook*, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_SIZEOF_WIDTH, STRING_WIDTH_COUNT, STRING_WIDTH_GETCHAR, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_*, bzero, memcmp, memcpy*, memmovedownc, memmoveupc, memset, strlen */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_Hash* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */

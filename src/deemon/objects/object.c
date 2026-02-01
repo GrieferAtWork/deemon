@@ -58,7 +58,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, bzero*, memcpyc, strlen */
 #include <deemon/tuple.h>              /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeTypeType_GetOperatorByName, DeeType_*, Dee_GC_PRIORITY_CLASS, Dee_TP_FGC, Dee_TP_FHEAP, Dee_TP_FMAYREVIVE, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_refchange, Dee_refchanges, Dee_reftracker, Dee_tp_destroy_t, Dee_type_*, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_*, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeTypeType_GetOperatorByName, DeeType_*, Dee_GC_PRIORITY_CLASS, Dee_TP_FGC, Dee_TP_FHEAP, Dee_TP_FMAYREVIVE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_refchange, Dee_refchanges, Dee_reftracker, Dee_tp_destroy_t, Dee_type_*, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash-io.h>       /* Dee_hash_vidx_t */
 #include <deemon/util/hash.h>          /* DeeObject_Id */

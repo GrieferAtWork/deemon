@@ -41,7 +41,7 @@
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, bzero, stpcpy, strcpy */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_MEMBER_ISCONST, Dee_type_getset, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_FDEEPIMMUTABLE, TP_FFINAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_MEMBER_ISCONST, Dee_type_getset, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_FDEEPIMMUTABLE, TP_FFINAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 

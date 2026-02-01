@@ -60,7 +60,7 @@
 #include <deemon/super.h>           /* DeeObject_T*, DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memchr, strchr, strcmp */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>            /* DeeMethodFlags_VerifyConstCallCondition, DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_*method_t, Dee_STRUCT_*, Dee_TYPE_METHOD_FKWDS, Dee_operator_t, Dee_opinfo, Dee_type_member, METHOD_F*, OPCC_*, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, STRUCT_*, TP_FABSTRACT, TYPE_MEMBER_ISCONST, type_* */
+#include <deemon/type.h>            /* ASSERT_OBJECT_TYPE_A, DeeMethodFlags_VerifyConstCallCondition, DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_*method_t, Dee_STRUCT_*, Dee_TYPE_METHOD_FKWDS, Dee_operator_t, Dee_opinfo, Dee_type_member, METHOD_F*, OPCC_*, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, STRUCT_*, TP_FABSTRACT, TYPE_MEMBER_ISCONST, type_* */
 #include <deemon/util/hash-io.h>    /* Dee_hash_hidxio */
 #include <deemon/util/hash.h>       /* Dee_HASHOF_EMPTY_SEQUENCE */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */

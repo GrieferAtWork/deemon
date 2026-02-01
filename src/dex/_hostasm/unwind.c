@@ -21,15 +21,14 @@
 #define GUARD_DEX_HOSTASM_UNWIND_C 1
 #define DEE_SOURCE
 
-#include "unwind.h"
+#include "libhostasm.h"
 /**/
 
-#include <deemon/api.h>
+#include "unwind.h"
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #ifndef CONFIG_host_unwind_USES_NOOP
-#include "libhostasm.h"
-/**/
+#include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/error.h>           /* DeeError_IllegalInstruction, DeeError_Throwf */

@@ -38,7 +38,7 @@
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsUInt64, DeeObject_Type, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, RENAME_NOREPLACE */
-#include <deemon/type.h>            /* DeeType_Type, Dee_Visit, METHOD_FNOREFESCAPE, METHOD_FNORMAL, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_member */
+#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_FNOREFESCAPE, METHOD_FNORMAL, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_member */
 #include <deemon/object.h>
 #include <deemon/objmethod.h> /*  */
 #include <deemon/serial.h>    /* DeeSerial*, Dee_seraddr_t */

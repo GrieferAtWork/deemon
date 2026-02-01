@@ -40,7 +40,7 @@
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* memcpyc, memmovec, memmovedownc, memmoveupc, mempcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_Visitv, METHOD_FNOREFESCAPE, METHOD_FNOTHROW, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visitv, METHOD_FNOREFESCAPE, METHOD_FNOTHROW, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

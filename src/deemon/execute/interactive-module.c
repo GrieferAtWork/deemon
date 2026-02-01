@@ -42,7 +42,7 @@
 #include <deemon/thread.h>             /* DeeThread_Self, except_frame_gettb */
 #include <deemon/traceback.h>          /* Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Base, DeeType_Type, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, TF_NONE, TP_FGC, TP_FNORMAL, type_gc, type_seq */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, TF_NONE, TP_FGC, TP_FNORMAL, type_gc, type_seq */
 #include <deemon/util/atomic.h>        /* atomic_inc, atomic_read */
 #include <deemon/util/cache.h>         /* DECLARE_STRUCT_CACHE */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

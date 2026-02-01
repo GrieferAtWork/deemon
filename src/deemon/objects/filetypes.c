@@ -40,7 +40,7 @@
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_MAXLEN, Dee_unicode_readutf8_chk, Dee_unicode_utf8seqlen */
 #include <deemon/system-features.h>    /* bzero, memcmp, memcpy*, mempcpy, strcmp */
 #include <deemon/system.h>             /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_add, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */
 

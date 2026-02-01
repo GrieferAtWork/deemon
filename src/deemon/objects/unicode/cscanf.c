@@ -33,7 +33,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, DeeUni_*, Dee_EmptyString, STRING_ERROR_FNORMAL, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8, Dee_unicode_readutf8_n */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, STRUCT_OBJECT, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */

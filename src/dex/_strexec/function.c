@@ -39,7 +39,7 @@
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcmp, memcpy*, mempcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_Visit, Dee_XVisit, METHOD_F*, STRUCT_*, TF_NONE, TP_FFINAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, METHOD_F*, STRUCT_*, TF_NONE, TP_FFINAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */

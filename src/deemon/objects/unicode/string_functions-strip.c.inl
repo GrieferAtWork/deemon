@@ -55,7 +55,6 @@
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, return_reference_ */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_ISEMPTY, Dee_charptr_const, Dee_unicode_printer*, STRING_WIDTH_1BYTE, STRING_WIDTH_2BYTE, STRING_WIDTH_COMMON, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h> /* memchr* */
-/**/
 
 #include "string_functions.h"
 

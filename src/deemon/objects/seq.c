@@ -41,7 +41,7 @@
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_Type, Dee_TF_SEQCLASS_MASK, Dee_TF_SEQCLASS_SHFT, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_Type, Dee_TF_SEQCLASS_MASK, Dee_TF_SEQCLASS_SHFT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
 #include "../runtime/kwlist.h"

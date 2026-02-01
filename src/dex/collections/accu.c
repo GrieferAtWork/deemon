@@ -33,7 +33,7 @@
 #include <deemon/error.h>       /* DeeError_RuntimeError, DeeError_Throwf */
 #include <deemon/format.h>      /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/object.h>      /* DeeObject_*, Dee_BOUND_ERR, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Decref, Dee_visit_t, return_reference_ */
-#include <deemon/type.h>        /* DeeType_Type, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>        /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/types.h>       /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/util/nrlock.h> /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_OK, Dee_nrshared_lock_* */
 

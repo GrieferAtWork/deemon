@@ -36,7 +36,7 @@
 #include <deemon/property.h>           /* DeePropertyObject */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutObject, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeStringObject, DeeString_STR */
-#include <deemon/type.h>               /* DeeType_Type, Dee_XVisit, Dee_operator_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_operator_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 
 #include "../runtime/kwlist.h"

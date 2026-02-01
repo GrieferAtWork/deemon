@@ -30,7 +30,6 @@
 #include <deemon/util/hash.h>       /* Dee_HashStr */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
-/**/
 
 #include <stdarg.h> /* va_end, va_list, va_start */
 #include <stddef.h> /* NULL, size_t */

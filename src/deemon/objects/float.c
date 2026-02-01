@@ -34,7 +34,7 @@
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, DBL_RADIX, DBL_ROUNDS, ceil, exp, fabs, floor, frexp, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, nan, nextafter, nexttoward, round, trunc */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/limitcore.h> /* __INTPTR_MAX__, __INTPTR_MIN__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_DOUBLE__, __UINT32_C */

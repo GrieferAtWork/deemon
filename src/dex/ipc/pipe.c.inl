@@ -35,7 +35,7 @@
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, FD_CLOEXEC, FIOCLEX, F_GETFD, F_SETFD, O_CLOEXEC, fcntl, ioctl, pipe, pipe2 */
 #include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* TF_NONE, TP_FNORMAL, TYPE_*, type_member, type_method */
+#include <deemon/type.h>            /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FNORMAL, TYPE_*, type_member, type_method */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/typecore.h>        /* __SIZEOF_SIZE_T__ */

@@ -40,7 +40,7 @@
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_Type, Dee_seq_range, _DeeSeqRange_Clamp */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* bzero */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_Visit, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_getset, type_member */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_Visit, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_getset, type_member */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 

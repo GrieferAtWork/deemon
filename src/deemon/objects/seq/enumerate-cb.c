@@ -32,7 +32,7 @@
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_XVisit, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_member */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_XVisit, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_member */
 #include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */

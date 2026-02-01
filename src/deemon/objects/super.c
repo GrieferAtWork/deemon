@@ -30,7 +30,7 @@
 #include <deemon/serial.h> /* DeeSerial, DeeSerial_PutObject, Dee_seraddr_t */
 #include <deemon/string.h> /* DeeString_STR */
 #include <deemon/super.h>  /* DeeObject_T*, DeeSuper* */
-#include <deemon/type.h>   /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, TF_NONE, TP_F*, TYPE_METHOD, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>   /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_F*, TYPE_METHOD, TYPE_METHOD_END, type_* */
 
 #include "../runtime/method-hint-super.h"
 #include "../runtime/runtime_error.h"
