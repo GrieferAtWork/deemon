@@ -206,7 +206,7 @@ struct Dee_hash_hidxio_ops {
 
 /* NOTE: HIDXIO indices can also used as <<shifts to multiply some value by the size of an index:
  * >> Dee_hash_hidx_t htab_size = (HMASK + 1) << Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC); */
-#if __SIZEOF_SIZE_T__ >= 8
+#if Dee_SIZEOF_HASH_VIDX_T >= 8
 #define Dee_HASH_HIDXIO_COUNT 4
 #define Dee_HASH_HIDXIO_IS8(VALLOC)  likely((VALLOC) <= __UINT8_C(0xff))
 #define Dee_HASH_HIDXIO_IS16(VALLOC) likely((VALLOC) <= __UINT16_C(0xffff))
@@ -219,7 +219,7 @@ struct Dee_hash_hidxio_ops {
 #define Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC) \
 	(Dee_HASH_HIDXIO_IS8(VALLOC) ? 0 : Dee_HASH_HIDXIO_IS16(VALLOC) ? 1 : Dee_HASH_HIDXIO_IS32(VALLOC) ? 2 : 3)
 #endif
-#elif __SIZEOF_SIZE_T__ >= 4
+#elif Dee_SIZEOF_HASH_VIDX_T >= 4
 #define Dee_HASH_HIDXIO_COUNT 3
 #define Dee_HASH_HIDXIO_IS8(VALLOC)  likely((VALLOC) <= __UINT8_C(0xff))
 #define Dee_HASH_HIDXIO_IS16(VALLOC) likely((VALLOC) <= __UINT16_C(0xffff))
@@ -231,7 +231,7 @@ struct Dee_hash_hidxio_ops {
 #define Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC) \
 	(Dee_HASH_HIDXIO_IS8(VALLOC) ? 0 : Dee_HASH_HIDXIO_IS16(VALLOC) ? 1 : 2)
 #endif
-#elif __SIZEOF_SIZE_T__ >= 2
+#elif Dee_SIZEOF_HASH_VIDX_T >= 2
 #define Dee_HASH_HIDXIO_COUNT 2
 #define Dee_HASH_HIDXIO_IS8(VALLOC)  likely((VALLOC) <= __UINT8_C(0xff))
 #define Dee_HASH_HIDXIO_IS16(VALLOC) 1
@@ -242,11 +242,11 @@ struct Dee_hash_hidxio_ops {
 #define Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC) \
 	(Dee_HASH_HIDXIO_IS8(VALLOC) ? 0 : 1)
 #endif
-#else /* __SIZEOF_SIZE_T__ >= 1 */
+#else /* Dee_SIZEOF_HASH_VIDX_T >= 1 */
 #define Dee_HASH_HIDXIO_COUNT 1
 #define Dee_HASH_HIDXIO_IS8(VALLOC) 1
 #define Dee_HASH_HIDXIO_FROM_VALLOC(VALLOC) 0
-#endif /* __SIZEOF_SIZE_T__ < 1 */
+#endif /* Dee_SIZEOF_HASH_VIDX_T < 1 */
 
 /* This is the typing of HTAB elements */
 union Dee_hash_htab {
