@@ -1525,7 +1525,6 @@ EXPORTS
 	Dee_Decref_traced@12=_Dee_Decref_traced@12
 	Dee_Decrefv@8=_Dee_Decrefv@8
 	Dee_Decrefv_traced@16=_Dee_Decrefv_traced@16
-	Dee_DeepCopyAddAssoc@8=_Dee_DeepCopyAddAssoc@8
 	Dee_DumpReferenceLeaks@0=_Dee_DumpReferenceLeaks@0
 	Dee_Exit@8=_Dee_Exit@8
 	Dee_Free@4=_Dee_Free@4
@@ -1601,6 +1600,7 @@ EXPORTS
 	Dee_attriterchain_builder_init@12=_Dee_attriterchain_builder_init@12
 	Dee_bytes_printer_alloc@8=_Dee_bytes_printer_alloc@8
 	Dee_bytes_printer_append@12=_Dee_bytes_printer_append@12
+	Dee_bytes_printer_init_ex@8=_Dee_bytes_printer_init_ex@8
 	Dee_bytes_printer_pack@4=_Dee_bytes_printer_pack@4
 	Dee_bytes_printer_print@12=_Dee_bytes_printer_print@12
 	Dee_bytes_printer_putb@8=_Dee_bytes_printer_putb@8

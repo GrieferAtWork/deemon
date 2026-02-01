@@ -2243,7 +2243,7 @@ again:
 		if (memcasecmp(filename_str, pipe_prefix, COMPILER_STRLEN(pipe_prefix) * sizeof(char)) == 0) {
 			DBG_ALIGNMENT_DISABLE();
 			if (GetFileType(hFile) == FILE_TYPE_PIPE) {
-				DWORD new_mode = /*!(oflags & OPEN_FNONBLOCK) ? PIPE_WAIT :*/ PIPE_NOWAIT;
+				DWORD new_mode = /* !(oflags & OPEN_FNONBLOCK) ? PIPE_WAIT : */ PIPE_NOWAIT;
 				(void)SetNamedPipeHandleState(hFile, &new_mode, NULL, NULL);
 			}
 			DBG_ALIGNMENT_ENABLE();

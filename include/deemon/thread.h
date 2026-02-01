@@ -140,6 +140,7 @@ struct Dee_trepr_frame {
 	DeeTypeObject          *rf_type; /* [1..1][const] The type of object that is being converted to a string. */
 };
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 struct Dee_deep_assoc_entry {
 	DREF DeeObject *de_old; /* [0..1] The old object that is being copied.
 	                         * NOTE: NULL is used to indicate a sentinel entry.
@@ -214,6 +215,7 @@ struct Dee_deep_assoc {
 DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 Dee_DeepCopyAddAssoc(DeeObject *new_object,
                      DeeObject *old_object);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -351,9 +353,11 @@ typedef struct Dee_thread_object {
 	struct Dee_repr_frame         *t_hash_curr;  /* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Chain of GC objects currently invoking the `__hash__' operator. */
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	struct Dee_deep_assoc          t_deepassoc;  /* [lock(PRIVATE(DeeThread_Self()))]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Deepcopy association map. */
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	struct Dee_code_frame         *t_exec;       /* [lock(PRIVATE(DeeThread_Self()))][0..1][(!= NULL) == (t_execsz != 0)]
 	                                              * [if(!Dee_THREAD_STATE_STARTED || Dee_THREAD_STATE_TERMINATED, [0..0])]
 	                                              * [const_if(Dee_THREAD_STATE_TERMINATED)]
@@ -734,7 +738,7 @@ DeeThread_RemoveInterruptHook(struct Dee_thread_interrupt_hook *__restrict hook)
 
 
 /* The max stack-depth during execution before a stack-overflow is raised. */
-DDATDEF uint16_t DeeExec_StackLimit;
+DDATDEF uint16_t DeeExec_StackLimit; /* TODO: Change this to uint32_t (we want to allow the user to set stack limits > 2**16, plus 32-bit arithmetic is probably faster than 16-bit!) */
 
 #ifndef Dee_EXEC_DEFAULT_STACK_LIMIT
 #define Dee_EXEC_DEFAULT_STACK_LIMIT 1024

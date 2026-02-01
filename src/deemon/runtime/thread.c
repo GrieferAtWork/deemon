@@ -863,6 +863,7 @@ PRIVATE DEFINE_STRING(main_thread_name, "MainThread");
 PUBLIC uint16_t DeeExec_StackLimit = Dee_EXEC_DEFAULT_STACK_LIMIT;
 
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 PRIVATE struct Dee_deep_assoc_entry empty_deep_assoc[] = {
 	{ NULL, NULL }
 };
@@ -1040,6 +1041,7 @@ deepcopy_clear(struct Dee_thread_object *__restrict thread_self) {
 		Dee_Free(begin);
 	}
 }
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 
 typedef struct os_thread_object {
@@ -1158,7 +1160,9 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 		/* .t_str_curr   = */ NULL,
 		/* .t_repr_curr  = */ NULL,
 		/* .t_hash_curr  = */ NULL,
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		/* .t_deepassoc  = */ { 0, 0, empty_deep_assoc, 0 },
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		/* .t_exec       = */ NULL,
 		/* .t_except     = */ NULL,
 		/* .t_execsz     = */ 0,
@@ -1793,7 +1797,9 @@ DeeThread_AllocateCurrentThread(void) {
 	if unlikely(result == NULL)
 		return NULL;
 	DeeObject_Init(&result->at_os_thread.ot_thread, &DeeThread_Type);
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	result->at_os_thread.ot_thread.t_deepassoc.da_list = empty_deep_assoc;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	/* Set expected thread flags. */
 	result->at_os_thread.ot_thread.t_state = 0 |
@@ -1962,9 +1968,11 @@ DeeThread_Secede(DREF DeeObject *thread_result) {
 	ASSERTF(self->t_str_curr == NULL, "Calling thread still has active calls to `DeeObject_Str'");
 	ASSERTF(self->t_repr_curr == NULL, "Calling thread still has active calls to `DeeObject_Repr'");
 	ASSERTF(self->t_hash_curr == NULL, "Calling thread still has active calls to `DeeObject_Hash'");
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	ASSERTF(self->t_deepassoc.da_used == 0, "Calling thread still has active calls to `DeeObject_DeepCopy'");
 	ASSERT((self->t_deepassoc.da_mask != 0) ==
 	       (self->t_deepassoc.da_list != empty_deep_assoc));
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	ASSERT(!self->t_threadname || DeeString_Check(self->t_threadname));
 
 	/* Set the TERMINATING flag to prevent further interrupts from being scheduled. */
@@ -2199,12 +2207,14 @@ INTERN void DCALL DeeThread_SubSystemFini(void) {
 	/* Finalize the main-thread object */
 	_DeeThread_FiniMainThread();
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	/* Do some cleanup on the main-thread object */
 	if (DeeThread_Main.ot_thread.t_deepassoc.da_list != empty_deep_assoc)
 		Dee_Free(DeeThread_Main.ot_thread.t_deepassoc.da_list);
 	DeeThread_Main.ot_thread.t_deepassoc.da_used = 0;
 	DeeThread_Main.ot_thread.t_deepassoc.da_mask = 0;
 	DeeThread_Main.ot_thread.t_deepassoc.da_list = empty_deep_assoc;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	DBG_ALIGNMENT_ENABLE();
 }
@@ -3578,9 +3588,11 @@ thread_fini(DeeThreadObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(!LIST_ISBOUND(self, t_global));
 #endif /* !CONFIG_NO_THREADS */
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	ASSERT(self->t_deepassoc.da_used == 0);
 	ASSERT(self->t_deepassoc.da_mask == 0);
 	ASSERT(self->t_deepassoc.da_list == empty_deep_assoc);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #ifndef CONFIG_NO_THREADS
 	ASSERT(self->t_threadname == NULL);
 #endif /* !CONFIG_NO_THREADS */
@@ -3605,11 +3617,13 @@ thread_fini(DeeThreadObject *__restrict self) {
 #endif /* !... */
 	}
 
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	ASSERT(!self->t_deepassoc.da_used);
 	ASSERT((self->t_deepassoc.da_mask != 0) ==
 	       (self->t_deepassoc.da_list != empty_deep_assoc));
 	if (self->t_deepassoc.da_list != empty_deep_assoc)
 		Dee_Free(self->t_deepassoc.da_list);
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	Dee_XDecref(self->t_threadname);
 	if (self->t_state & Dee_THREAD_STATE_STARTED) {
 		if (self->t_state & Dee_THREAD_STATE_TERMINATED) {
@@ -3653,7 +3667,9 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	                            Dee_THREAD_STATE_HASTID |
 	                            Dee_THREAD_STATE_UNMANAGED;
 	result->ot_tid = tid;
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	result->ot_thread.t_deepassoc.da_list = empty_deep_assoc;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	DeeObject_Init(&result->ot_thread, &DeeThread_Type);
 	return DeeGC_Track(Dee_AsObject(&result->ot_thread));
 err:
@@ -3851,10 +3867,12 @@ thread_init(DeeThreadObject *__restrict self,
 		me->ot_thread.t_str_curr               = NULL;
 		me->ot_thread.t_repr_curr              = NULL;
 		me->ot_thread.t_hash_curr              = NULL;
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		me->ot_thread.t_deepassoc.da_used      = 0;
 		me->ot_thread.t_deepassoc.da_mask      = 0;
 		me->ot_thread.t_deepassoc.da_list      = empty_deep_assoc;
 		me->ot_thread.t_deepassoc.da_recursion = 0;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		me->ot_thread.t_exec                   = NULL;
 		me->ot_thread.t_except                 = NULL;
 		me->ot_thread.t_execsz                 = 0;
@@ -3938,10 +3956,12 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_interrupt.ti_args = NULL;
 	self->t_global.le_prev    = NULL;
 	DBG_memset(&self->t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
+#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	self->t_deepassoc.da_used      = 0;
 	self->t_deepassoc.da_mask      = 0;
 	self->t_deepassoc.da_list      = empty_deep_assoc;
 	self->t_deepassoc.da_recursion = 0;
+#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	self->t_heap = NULL;
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
