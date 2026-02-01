@@ -20,7 +20,7 @@
 /*!export **/
 /*!export -CONFIG_HAVE_**/
 /*!export DeeThread*/
-/*!export Dee_THREAD_STATE_*/
+/*!export Dee_THREAD_STATE_**/
 /*!export Dee_except_frame*/
 /*!export Dee_pid_t_IS_**/
 /*!export Dee_thread_interrupt**/
