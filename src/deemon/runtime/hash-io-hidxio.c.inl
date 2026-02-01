@@ -24,13 +24,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/system-features.h> /* memmoveb, memmovel, memmoveq, memmovew */
-#include <deemon/types.h>
-#include <deemon/util/hash-io.h> /* Dee_HASH_HIDXIO_COUNT, Dee_hash_htab */
+#include <deemon/system-features.h> /* bzero*, memcpy*, memmoveb, memmovel, memmoveq, memmovew */
+#include <deemon/types.h>           /* Dee_hash_t */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HTAB_EOF, Dee_hash_hidx_ofhash, Dee_hash_hidx_t, Dee_hash_htab, Dee_hash_vidx_t, _DeeHash_HashIdxInit, _DeeHash_HashIdxNext */
 
 #include <hybrid/typecore.h> /* __CHAR_BIT__ */
-
-#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

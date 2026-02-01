@@ -43,7 +43,7 @@
 #include <deemon/system-features.h>    /* bzero*, memcpy, memmovedownc, mempcpyc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
-#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HTAB_EOF, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_hidxio, Dee_hash_htab, Dee_hash_sethidx8, Dee_hash_sethidx_t, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, IF_Dee_HASH_HIDXIO_COUNT_GE_2, IF_Dee_HASH_HIDXIO_COUNT_GE_3, IF_Dee_HASH_HIDXIO_COUNT_GE_4 */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HTAB_EOF, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_hidx_ofhash, Dee_hash_hidx_t, Dee_hash_hidxio, Dee_hash_hidxio_t, Dee_hash_htab, Dee_hash_sethidx8, Dee_hash_sethidx_t, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, IF_Dee_HASH_HIDXIO_COUNT_GE_2, IF_Dee_HASH_HIDXIO_COUNT_GE_3, IF_Dee_HASH_HIDXIO_COUNT_GE_4 */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */

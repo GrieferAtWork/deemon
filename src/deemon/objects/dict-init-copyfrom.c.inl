@@ -28,7 +28,7 @@
 #include <deemon/dict.h>            /* DeeDict_LockEndRead, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_SetRealVTab */
 #include <deemon/object.h>
 #include <deemon/system-features.h> /* memcpy* */
-#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_hidxio, Dee_hash_htab */
+#include <deemon/util/hash-io.h>    /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_gethidx_t, Dee_hash_hidx_t, Dee_hash_hidxio, Dee_hash_hidxio_t, Dee_hash_htab, Dee_hash_sethidx_t, Dee_hash_vidx_t */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
 #include <stdbool.h> /* false, true */

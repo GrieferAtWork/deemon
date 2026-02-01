@@ -43,10 +43,10 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/system-features.h>    /* bzero*, memcpy*, memmovedownc, memmoveupc, memset */
+#include <deemon/system-features.h>    /* bzeroc, memcpy*, memmovedownc, memmoveupc, memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
-#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HIDXIO_IS8, Dee_HASH_HIDXIO_IS16, Dee_HASH_HIDXIO_IS32, Dee_HASH_HIDXIO_IS64, Dee_HASH_HTAB_EOF, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_gethidx8, Dee_hash_gethidx_t, Dee_hash_hidxio, Dee_hash_htab, Dee_hash_sethidx8, Dee_hash_sethidx_t, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, IF_Dee_HASH_HIDXIO_COUNT_GE_2, IF_Dee_HASH_HIDXIO_COUNT_GE_3, IF_Dee_HASH_HIDXIO_COUNT_GE_4 */
+#include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_COUNT, Dee_HASH_HIDXIO_FROM_VALLOC, Dee_HASH_HTAB_EOF, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_hidx_ofhash, Dee_hash_hidx_t, Dee_hash_hidxio, Dee_hash_hidxio_ops, Dee_hash_hidxio_t, Dee_hash_htab, Dee_hash_vidx_t, Dee_hash_vidx_toreal, Dee_hash_vidx_tovirt, Dee_hash_vidx_virt2real, Dee_hash_vidx_virt_lt_real, IF_Dee_HASH_HIDXIO_COUNT_GE_2, IF_Dee_HASH_HIDXIO_COUNT_GE_3, IF_Dee_HASH_HIDXIO_COUNT_GE_4 */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 #include <deemon/util/objectlist.h>    /* Dee_objectlist, Dee_objectlist_* */
 
@@ -65,7 +65,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* uintN_t, uintptr_t */
+#include <stdint.h>  /* uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

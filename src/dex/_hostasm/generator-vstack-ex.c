@@ -60,7 +60,7 @@
 #include <deemon/super.h>           /* DeeObject_T*, DeeSuper* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bzero, memchr, strchr, strcmp */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/util/hash-io.h>    /* Dee_hash_gethidx8, Dee_hash_sethidx8 */
+#include <deemon/util/hash-io.h>    /* Dee_hash_hidxio */
 #include <deemon/util/objectlist.h> /* Dee_OBJECTLIST_HAVE_ELEMA */
 #include <deemon/weakref.h>         /* DeeWeakRefAbleObject, DeeWeakRefAble_Type */
 

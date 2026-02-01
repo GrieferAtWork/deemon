@@ -22,9 +22,10 @@
 #define GUARD_DEEMON_UTIL_HASH_IO_H 1 /*!export-*/
 
 #include "../api.h"
-#include "../types.h"
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__, __SIZEOF_SIZE_T__, __UINT*_C */
+
+#include "../types.h" /* Dee_SIZEOF_HASH_T, Dee_hash_t */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintN_t */
