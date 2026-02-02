@@ -45,8 +45,7 @@
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
-#include <deemon/util/futex.h>      /* DeeFutex_WakeAll, DeeFutex_WakeOne */
-#include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t */
+#include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t, _Dee_semaphore_waiting_wakemany */
 #include <deemon/util/rlock.h>      /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_t, Dee_rshared_lock_t, Dee_rshared_rwlock_t */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UADD, OVERFLOW_USUB */
@@ -1730,15 +1729,7 @@ semaphore_do_release(DeeSemaphoreObject *__restrict self, size_t count) {
 		                                Dee_ATOMIC_SEQ_CST, Dee_ATOMIC_RELAXED))
 			break;
 	}
-	if (Dee_semaphore_haswaiting(&self->sem_semaphore)) {
-		if (count == 1) {
-			DeeFutex_WakeOne(&self->sem_semaphore.se_tickets);
-		} else {
-			/* Technically, it'd be enough to only wake `count'
-			 * threads, but that can't be done portably... */
-			DeeFutex_WakeAll(&self->sem_semaphore.se_tickets);
-		}
-	}
+	_Dee_semaphore_waiting_wakemany(&self->sem_semaphore, count);
 	return 0;
 err_overflow:
 	return DeeError_Throwf(&DeeError_IntegerOverflow,
@@ -1863,16 +1854,8 @@ semaphore_tickets_set(DeeSemaphoreObject *self, DeeObject *value) {
 		goto err;
 	old_tickets = atomic_xch(&self->sem_semaphore.se_tickets, new_tickets);
 	if (new_tickets > old_tickets) {
-		if (Dee_semaphore_haswaiting(&self->sem_semaphore)) {
-			size_t extra = new_tickets - old_tickets;
-			if (extra == 1) {
-				DeeFutex_WakeOne(&self->sem_semaphore.se_tickets);
-			} else {
-				/* Technically, it'd be enough to only wake `extra'
-				 * threads, but that can't be done portably... */
-				DeeFutex_WakeAll(&self->sem_semaphore.se_tickets);
-			}
-		}
+		size_t extra = new_tickets - old_tickets;
+		_Dee_semaphore_waiting_wakemany(&self->sem_semaphore, extra);
 	}
 	return 0;
 err:

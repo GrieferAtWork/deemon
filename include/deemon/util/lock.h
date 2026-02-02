@@ -36,6 +36,8 @@
 /*!export Dee_shared_rwlock_**/
 /*!export _Dee_shared_rwlock_**/
 /*!export Dee_atomic_read_with_**/
+/*!export _Dee_SHARED_WAITWORD**/
+/*!export _Dee_shared_waitword_**/
 #ifndef GUARD_DEEMON_UTIL_LOCK_H
 #define GUARD_DEEMON_UTIL_LOCK_H 1 /*!export-*/
 
@@ -110,6 +112,15 @@ typedef char Dee_atomic_rwlock_t;
 #define _Dee_atomic_rwlock_endread_ex_NDEBUG(self) 1
 #define _Dee_atomic_rwlock_end_ex_NDEBUG(self)     1
 #define Dee_atomic_read_with_atomic_rwlock(p, self) (*(p))
+
+#define _Dee_SHARED_WAITWORD_IS_NOOP
+#define _Dee_SHARED_WAITWORD(v)          /* nothing */
+#define _Dee_SHARED_WAITWORD__INIT       /* nothing */
+#define _Dee_shared_waitword_init(self)  (void)0
+#define _Dee_shared_waitword_cinit(self) (void)0
+#define _Dee_shared_waitword_start(self) (void)0
+#define _Dee_shared_waitword_end(self)   (void)0
+#define _Dee_shared_waitword_test(self)  1
 
 typedef char Dee_shared_lock_t;
 #define Dee_SHARED_LOCK_INIT                                     0
@@ -229,7 +240,7 @@ DECL_END
 #include <hybrid/__atomic.h>              /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
 #include <hybrid/sched/__atomic-lock.h>   /* __HYBRID_ATOMIC_LOCK_INIT, __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED, __SIZEOF_HYBRID_ATOMIC_LOCK, ___hybrid_atomic_lock_release_NDEBUG, __hybrid_atomic_load_with_atomic_lock, __hybrid_atomic_lock, __hybrid_atomic_lock_* */
 #include <hybrid/sched/__atomic-rwlock.h> /* __HYBRID_ATOMIC_RWLOCK*, __SIZEOF_HYBRID_ATOMIC_RWLOCK, ___hybrid_atomic_rwlock_*, __hybrid_atomic_load_with_atomic_rwlock, __hybrid_atomic_rwlock, __hybrid_atomic_rwlock_* */
-#include <hybrid/typecore.h>              /* __SIZEOF_CHAR__ */
+#include <hybrid/typecore.h>              /* __SIZEOF_CHAR__, __UINT_LEAST32_TYPE__ */
 
 #include "futex.h" /* DeeFutex_* */
 
@@ -302,27 +313,108 @@ typedef struct __hybrid_atomic_rwlock Dee_atomic_rwlock_t;
 	__hybrid_atomic_load_with_atomic_rwlock(p, __ATOMIC_ACQUIRE, self)
 
 
+
+/* Helpers for detecting the presence of waiting threads */
+#if 0
+/* This (having a waiting-threads-are-present flag) doesn't work, but
+ * the code for it is kept here to explain **why** it doesn't work:
+ *
+ * [1] Thread #2: ACQUIRE: LOCK_WORD=0 ->  OK  -> LOCK_WORD=1
+ * [2] Thread #1: ACQUIRE: Lock is already held -> set WAITING=1
+ * [3] Thread #2: RELEASE: LOCK_WORD=0
+ * [4] Thread #2: RELEASE: WAITING=1 -> WAITING=0 && DeeFutex_WakeAll(&LOCK_WORD)  // doesn't do anything; Thread #1 isn't *actually* waiting, yet
+ * [5] Thread #2: ACQUIRE: LOCK_WORD=0 ->  OK  -> LOCK_WORD=1
+ * [6] Thread #1: ACQUIRE: DeeFutex_Wait(&LOCK_WORD, 1);                           // Only now does Thread #1 start blocking
+ * [7] Thread #2: RELEASE: LOCK_WORD=0
+ * [8] Thread #2: RELEASE: WAITING=0 -> return;                                    // Release won't wake Thread #1 here
+ *
+ * Test code to demonstrate this dead-lock when this implementation is enabled:
+ *
+ * ```
+import * from deemon;
+import * from threading;
+import * from time;
+
+local lock = RSharedRWLock();
+// Just have 2 threads that constantly acquire/release the
+// same lock, while also constantly indicating their presence
+// by setting an is-alive event
+local threadEvents: {(int, Event)...} = [:2].map(i -> {
+	local event = Event();
+	Thread(() -> {
+		for (;;) {
+			lock.write();
+			lock.endwrite();
+			event.set();
+		}
+	}).start();
+	return (i, event);
+}).frozen;
+
+// Scan threads for being alive
+for (;;) {
+	for (local id, e: threadEvents) {
+		e.clear();
+		if (!e.timedwaitfor(milliseconds(100))) {
+			print File.stderr: f"Thread {id} appears dead!";
+		}
+	}
+}
+ * ```
+ */
+#define _Dee_SHARED_WAITWORD(v)          unsigned int v;
+#define _Dee_SHARED_WAITWORD__INIT       , 0
+#define _Dee_shared_waitword_init(self)  (void)(*(self) = 0)
+#define _Dee_shared_waitword_cinit(self) Dee_ASSERT(*(self) == 0)
+#define _Dee_shared_waitword_start(self) __hybrid_atomic_store(self, 1, __ATOMIC_RELEASE)
+#define _Dee_shared_waitword_end(self)   (void)0
+#if 1
+#define _Dee_shared_waitword_test(self)              \
+	(__hybrid_atomic_load(self, __ATOMIC_ACQUIRE) && \
+	 (__hybrid_atomic_store(self, 0, __ATOMIC_RELEASE), 1))
+#else
+#define _Dee_shared_waitword_test(self) \
+	__hybrid_atomic_xch(self, 0, __ATOMIC_ACQUIRE)
+#endif
+#elif 1
+#define _Dee_SHARED_WAITWORD(v)          __UINT_LEAST32_TYPE__ v; /* 32-bit should be enough when it comes to the # of threads waiting in parallel */
+#define _Dee_SHARED_WAITWORD__INIT       , 0
+#define _Dee_shared_waitword_init(self)  (void)(*(self) = 0)
+#define _Dee_shared_waitword_cinit(self) Dee_ASSERT(*(self) == 0)
+#define _Dee_shared_waitword_start(self) __hybrid_atomic_inc(self, __ATOMIC_ACQUIRE)
+#define _Dee_shared_waitword_end(self)   __hybrid_atomic_dec(self, __ATOMIC_RELEASE)
+#define _Dee_shared_waitword_test(self)  (__hybrid_atomic_load(self, __ATOMIC_ACQUIRE) != 0)
+#else
+#define _Dee_SHARED_WAITWORD_IS_NOOP
+#define _Dee_SHARED_WAITWORD(v)          /* nothing */
+#define _Dee_SHARED_WAITWORD__INIT       /* nothing */
+#define _Dee_shared_waitword_init(self)  (void)0
+#define _Dee_shared_waitword_cinit(self) (void)0
+#define _Dee_shared_waitword_start(self) (void)0
+#define _Dee_shared_waitword_end(self)   (void)0
+#define _Dee_shared_waitword_test(self)  1
+#endif
+
+
 /************************************************************************/
 /* Shared lock (scheduler-level blocking lock)                          */
 /************************************************************************/
 typedef struct {
-	Dee_atomic_lock_t s_lock;    /* Lock word (== 0: available, != 0: held) */
-	unsigned int      s_waiting; /* # of threads waiting for `s_lock' (controlled by the waiting threads themselves) */
+	Dee_atomic_lock_t    s_lock;    /* Lock word (== 0: available, != 0: held) */
+	_Dee_SHARED_WAITWORD(s_waiting) /* # of threads waiting for `s_lock' (controlled by the waiting threads themselves) */
 } Dee_shared_lock_t;
 
-#define _Dee_shared_lock_waiting_start(self) __hybrid_atomic_inc(&(self)->s_waiting, __ATOMIC_ACQUIRE)
-#define _Dee_shared_lock_waiting_end(self)   __hybrid_atomic_dec(&(self)->s_waiting, __ATOMIC_RELEASE)
-#define _Dee_shared_lock_wake(self)                             \
-	(__hybrid_atomic_load(&(self)->s_waiting, __ATOMIC_ACQUIRE) \
-	 ? DeeFutex_WakeOne(&(self)->s_lock)                        \
-	 : (void)0)
+#define _Dee_shared_lock_waiting_start(self) _Dee_shared_waitword_start(&(self)->s_waiting)
+#define _Dee_shared_lock_waiting_end(self)   _Dee_shared_waitword_end(&(self)->s_waiting)
+#define _Dee_shared_lock_waiting_test(self)  _Dee_shared_waitword_test(&(self)->s_waiting)
+#define _Dee_shared_lock_wake(self)          (_Dee_shared_lock_waiting_test(self) && (DeeFutex_WakeOne(&(self)->s_lock), 1))
 
-#define Dee_SHARED_LOCK_INIT                 { Dee_ATOMIC_LOCK_INIT, 0 }
-#define Dee_SHARED_LOCK_INIT_ACQUIRED        { Dee_ATOMIC_LOCK_INIT_ACQUIRED, 0 }
-#define Dee_shared_lock_cinit(self)          (void)(Dee_atomic_lock_cinit(&(self)->s_lock), Dee_ASSERT((self)->s_waiting == 0))
-#define Dee_shared_lock_init(self)           (void)(Dee_atomic_lock_init(&(self)->s_lock), (self)->s_waiting = 0)
-#define Dee_shared_lock_cinit_acquired(self) (void)(Dee_atomic_lock_cinit_acquired(&(self)->s_lock), Dee_ASSERT((self)->s_waiting == 0))
-#define Dee_shared_lock_init_acquired(self)  (void)(Dee_atomic_lock_init_acquired(&(self)->s_lock), (self)->s_waiting = 0)
+#define Dee_SHARED_LOCK_INIT                 { Dee_ATOMIC_LOCK_INIT _Dee_SHARED_WAITWORD__INIT }
+#define Dee_SHARED_LOCK_INIT_ACQUIRED        { Dee_ATOMIC_LOCK_INIT_ACQUIRED _Dee_SHARED_WAITWORD__INIT }
+#define Dee_shared_lock_init(self)           (Dee_atomic_lock_init(&(self)->s_lock), _Dee_shared_waitword_init(&(self)->s_waiting))
+#define Dee_shared_lock_init_acquired(self)  (Dee_atomic_lock_init_acquired(&(self)->s_lock), _Dee_shared_waitword_init(&(self)->s_waiting))
+#define Dee_shared_lock_cinit(self)          (Dee_atomic_lock_cinit(&(self)->s_lock), _Dee_shared_waitword_cinit(&(self)->s_waiting))
+#define Dee_shared_lock_cinit_acquired(self) (Dee_atomic_lock_cinit_acquired(&(self)->s_lock), _Dee_shared_waitword_cinit(&(self)->s_waiting))
 #define Dee_shared_lock_available(self)      Dee_atomic_lock_available(&(self)->s_lock)
 #define Dee_shared_lock_acquired(self)       Dee_atomic_lock_acquired(&(self)->s_lock)
 #define Dee_shared_lock_tryacquire(self)     Dee_atomic_lock_tryacquire(&(self)->s_lock)
@@ -389,29 +481,67 @@ Dee_shared_lock_waitfor_noint(Dee_shared_lock_t *__restrict self) {
 /* Shared r/w-lock (scheduler-level blocking lock)                      */
 /************************************************************************/
 typedef struct {
-	Dee_atomic_rwlock_t srw_lock;    /* Underlying R/W-lock */
-	unsigned int        srw_waiting; /* non-zero if threads may be waiting on `srw_lock' */
+	Dee_atomic_rwlock_t  srw_lock;     /* Underlying R/W-lock */
+#ifdef _Dee_SHARED_WAITWORD_IS_NOOP
+#define _Dee_SHARED_RWLOCK_WAITING__INIT        /* nothing */
+#define _Dee_shared_rwlock_waiting_init(self)   (void)0
+#define _Dee_shared_rwlock_waiting_cinit(self)  (void)0
+#define _Dee_shared_rwlock_rwaiting_start(self) (void)0
+#define _Dee_shared_rwlock_rwaiting_end(self)   (void)0
+#define _Dee_shared_rwlock_wwaiting_start(self) (void)0
+#define _Dee_shared_rwlock_wwaiting_end(self)   (void)0
+#define _Dee_shared_rwlock_wake(self)           (DeeFutex_WakeAll(&(self)->srw_lock.arw_lock), 1)
+#elif 1
+	_Dee_SHARED_WAITWORD(srw_rwaiting) /* # of threads waiting for read-locks to `srw_lock' */
+	_Dee_SHARED_WAITWORD(srw_wwaiting) /* # of threads waiting for write-locks to `srw_lock' */
+#define _Dee_SHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT _Dee_SHARED_WAITWORD__INIT
+#define _Dee_shared_rwlock_waiting_init(self)   (_Dee_shared_waitword_init(&(self)->srw_rwaiting), _Dee_shared_waitword_init(&(self)->srw_wwaiting))
+#define _Dee_shared_rwlock_waiting_cinit(self)  (_Dee_shared_waitword_cinit(&(self)->srw_rwaiting), _Dee_shared_waitword_cinit(&(self)->srw_wwaiting))
+#define _Dee_shared_rwlock_rwaiting_start(self) _Dee_shared_waitword_start(&(self)->srw_rwaiting)
+#define _Dee_shared_rwlock_rwaiting_end(self)   _Dee_shared_waitword_end(&(self)->srw_rwaiting)
+#define _Dee_shared_rwlock_wwaiting_start(self) _Dee_shared_waitword_start(&(self)->srw_wwaiting)
+#define _Dee_shared_rwlock_wwaiting_end(self)   _Dee_shared_waitword_end(&(self)->srw_wwaiting)
+#define _Dee_shared_rwlock_wakeread(self)                \
+	(_Dee_shared_waitword_test(&(self)->srw_rwaiting) && \
+	 (DeeFutex_WakeAll(&(self)->srw_lock.arw_lock), 1))
+#define _Dee_shared_rwlock_wake(self)                    \
+	(_Dee_shared_waitword_test(&(self)->srw_rwaiting)    \
+	 ? (DeeFutex_WakeAll(&(self)->srw_lock.arw_lock), 1) \
+	 : _Dee_shared_waitword_test(&(self)->srw_wwaiting)  \
+	   ? (DeeFutex_WakeOne(&(self)->srw_lock.arw_lock),  \
+	      /* Check for more readers in case some were    \
+	       * added, and WakeOne woke one of them, rather \
+	       * than a writer */                            \
+	      _Dee_shared_rwlock_wakeread(self), 1)          \
+	   : 0)
+#else /* ... */
+	_Dee_SHARED_WAITWORD(srw_waiting)  /* # of threads waiting for to `srw_lock' */
+#define _Dee_SHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT
+#define _Dee_shared_rwlock_waiting_init(self)   _Dee_shared_waitword_init(&(self)->srw_waiting)
+#define _Dee_shared_rwlock_waiting_cinit(self)  _Dee_shared_waitword_cinit(&(self)->srw_waiting)
+#define _Dee_shared_rwlock_rwaiting_start(self) _Dee_shared_waitword_start(&(self)->srw_waiting)
+#define _Dee_shared_rwlock_rwaiting_end(self)   _Dee_shared_waitword_end(&(self)->srw_waiting)
+#define _Dee_shared_rwlock_wwaiting_start(self) _Dee_shared_waitword_start(&(self)->srw_waiting)
+#define _Dee_shared_rwlock_wwaiting_end(self)   _Dee_shared_waitword_end(&(self)->srw_waiting)
+#define _Dee_shared_rwlock_wake(self)                   \
+	(_Dee_shared_waitword_test(&(self)->srw_waiting) && \
+	 (DeeFutex_WakeAll(&(self)->srw_lock.arw_lock), 1))
+#endif /* ... */
+#ifndef _Dee_shared_rwlock_wakeread
+#define _Dee_shared_rwlock_wakeread(self) _Dee_shared_rwlock_wake(self)
+#endif /* !_Dee_shared_rwlock_wakeread */
 } Dee_shared_rwlock_t;
 
-/* FIXME: "_Dee_shared_rwlock_mark_waiting" doesn't work -- see TODO in `Dee_rshared_rwlock_write()' */
-#define _Dee_shared_rwlock_mark_waiting(self) \
-	__hybrid_atomic_store(&(self)->srw_waiting, 1, __ATOMIC_RELEASE)
-#define _Dee_shared_rwlock_wake(self)                                     \
-	(__hybrid_atomic_load(&(self)->srw_waiting, __ATOMIC_ACQUIRE)         \
-	 ? (__hybrid_atomic_store(&(self)->srw_waiting, 0, __ATOMIC_RELEASE), \
-	    DeeFutex_WakeAll(&(self)->srw_lock.arw_lock))                     \
-	 : (void)0)
-
 #define Dee_SHARED_RWLOCK_MAX_READERS        Dee_ATOMIC_RWLOCK_MAX_READERS
-#define Dee_SHARED_RWLOCK_INIT               { Dee_ATOMIC_RWLOCK_INIT, 0 }
-#define Dee_SHARED_RWLOCK_INIT_READ(n)       { Dee_ATOMIC_RWLOCK_INIT_READ(n), 0 }
-#define Dee_SHARED_RWLOCK_INIT_WRITE         { Dee_ATOMIC_RWLOCK_INIT_WRITE, 0 }
-#define Dee_shared_rwlock_init(self)         (void)(Dee_atomic_rwlock_init(&(self)->srw_lock), (self)->srw_waiting = 0)
-#define Dee_shared_rwlock_init_read(self, n) (void)(Dee_atomic_rwlock_init_read(&(self)->srw_lock, n), (self)->srw_waiting = 0)
-#define Dee_shared_rwlock_init_write(self)   (void)(Dee_atomic_rwlock_init_write(&(self)->srw_lock), (self)->srw_waiting = 0)
-#define Dee_shared_rwlock_cinit(self)        (void)(Dee_atomic_rwlock_cinit(&(self)->srw_lock), Dee_ASSERT((self)->srw_waiting == 0))
-#define Dee_shared_rwlock_cinit_read(self)   (void)(Dee_atomic_rwlock_cinit_read(&(self)->srw_lock, n), Dee_ASSERT((self)->srw_waiting == 0))
-#define Dee_shared_rwlock_cinit_write(self)  (void)(Dee_atomic_rwlock_cinit_write(&(self)->srw_lock), Dee_ASSERT((self)->srw_waiting == 0))
+#define Dee_SHARED_RWLOCK_INIT               { Dee_ATOMIC_RWLOCK_INIT _Dee_SHARED_RWLOCK_WAITING__INIT }
+#define Dee_SHARED_RWLOCK_INIT_READ(n)       { Dee_ATOMIC_RWLOCK_INIT_READ(n) _Dee_SHARED_RWLOCK_WAITING__INIT }
+#define Dee_SHARED_RWLOCK_INIT_WRITE         { Dee_ATOMIC_RWLOCK_INIT_WRITE _Dee_SHARED_RWLOCK_WAITING__INIT }
+#define Dee_shared_rwlock_init(self)         (Dee_atomic_rwlock_init(&(self)->srw_lock), _Dee_shared_rwlock_waiting_init(self))
+#define Dee_shared_rwlock_init_read(self, n) (Dee_atomic_rwlock_init_read(&(self)->srw_lock, n), _Dee_shared_rwlock_waiting_init(self))
+#define Dee_shared_rwlock_init_write(self)   (Dee_atomic_rwlock_init_write(&(self)->srw_lock), _Dee_shared_rwlock_waiting_init(self))
+#define Dee_shared_rwlock_cinit(self)        (Dee_atomic_rwlock_cinit(&(self)->srw_lock), _Dee_shared_rwlock_waiting_cinit(self))
+#define Dee_shared_rwlock_cinit_read(self)   (Dee_atomic_rwlock_cinit_read(&(self)->srw_lock, n), _Dee_shared_rwlock_waiting_cinit(self))
+#define Dee_shared_rwlock_cinit_write(self)  (Dee_atomic_rwlock_cinit_write(&(self)->srw_lock), _Dee_shared_rwlock_waiting_cinit(self))
 #define Dee_shared_rwlock_reading(self)      Dee_atomic_rwlock_reading(&(self)->srw_lock)
 #define Dee_shared_rwlock_writing(self)      Dee_atomic_rwlock_writing(&(self)->srw_lock)
 #define Dee_shared_rwlock_canread(self)      Dee_atomic_rwlock_canread(&(self)->srw_lock)
@@ -424,10 +554,10 @@ typedef struct {
 #define Dee_shared_rwlock_tryread(self)      Dee_atomic_rwlock_tryread(&(self)->srw_lock)
 #define _Dee_shared_rwlock_downgrade_NDEBUG(self)                  \
 	(void)(_Dee_atomic_rwlock_downgrade_NDEBUG(&(self)->srw_lock), \
-	       _Dee_shared_rwlock_wake(self)) /* Allow for more readers. */
+	       _Dee_shared_rwlock_wakeread(self)) /* Allow for more readers. */
 #define Dee_shared_rwlock_downgrade(self)                  \
 	(void)(Dee_atomic_rwlock_downgrade(&(self)->srw_lock), \
-	       _Dee_shared_rwlock_wake(self)) /* Allow for more readers. */
+	       _Dee_shared_rwlock_wakeread(self)) /* Allow for more readers. */
 
 /* Upgrade from a read- to a write-lock.
  * @return: 1 : Success.
@@ -500,8 +630,9 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL Dee_shared_rwlock_waitwrite_timed)(Dee_s
 LOCAL NONNULL((1)) void
 (DCALL Dee_shared_rwlock_read_noint)(Dee_shared_rwlock_t *__restrict self) {
 	while (!Dee_shared_rwlock_tryread(self)) {
-		_Dee_shared_rwlock_mark_waiting(self);
+		_Dee_shared_rwlock_rwaiting_start(self);
 		DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, (uintptr_t)-1);
+		_Dee_shared_rwlock_rwaiting_end(self);
 	}
 }
 
@@ -514,8 +645,9 @@ LOCAL NONNULL((1)) void
 			                           __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
 				break;
 		} else {
-			_Dee_shared_rwlock_mark_waiting(self);
+			_Dee_shared_rwlock_wwaiting_start(self);
 			DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, lockword);
+			_Dee_shared_rwlock_wwaiting_end(self);
 		}
 	}
 }
@@ -523,8 +655,9 @@ LOCAL NONNULL((1)) void
 LOCAL NONNULL((1)) void
 (DCALL Dee_shared_rwlock_waitread_noint)(Dee_shared_rwlock_t *__restrict self) {
 	while (!Dee_shared_rwlock_canread(self)) {
-		_Dee_shared_rwlock_mark_waiting(self);
+		_Dee_shared_rwlock_rwaiting_start(self);
 		DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, (uintptr_t)-1);
+		_Dee_shared_rwlock_rwaiting_end(self);
 	}
 }
 
@@ -534,8 +667,9 @@ LOCAL NONNULL((1)) void
 		uintptr_t lockword = __hybrid_atomic_load(&self->srw_lock.arw_lock, __ATOMIC_ACQUIRE);
 		if (lockword == 0)
 			break;
-		_Dee_shared_rwlock_mark_waiting(self);
+		_Dee_shared_rwlock_wwaiting_start(self);
 		DeeFutex_WaitPtrNoInt(&self->srw_lock.arw_lock, lockword);
+		_Dee_shared_rwlock_wwaiting_end(self);
 	}
 }
 
@@ -546,21 +680,32 @@ LOCAL NONNULL((1)) void
 /* Shared semaphore (scheduler-level blocking)                          */
 /************************************************************************/
 typedef struct {
-	size_t se_tickets; /* # of tickets currently available (atomic + futex word) */
-	size_t se_waiting; /* # of threads waiting for tickets to become available. */
+	size_t               se_tickets; /* # of tickets currently available (atomic + futex word) */
+	_Dee_SHARED_WAITWORD(se_waiting) /* # of threads waiting for tickets to become available. */
 } Dee_semaphore_t;
-#define _Dee_semaphore_waiting_start(self) __hybrid_atomic_inc(&(self)->se_waiting, __ATOMIC_ACQUIRE)
-#define _Dee_semaphore_waiting_end(self)   __hybrid_atomic_dec(&(self)->se_waiting, __ATOMIC_RELEASE)
-
-#define Dee_SEMAPHORE_INIT(n_tickets)        { n_tickets, 0 }
-#define Dee_semaphore_init(self, n_tickets)  (void)((self)->se_tickets = n_tickets, (self)->se_waiting = 0)
-#define Dee_semaphore_cinit(self, n_tickets) (void)((self)->se_tickets = n_tickets, Dee_ASSERT((self)->se_waiting == 0))
+#define _Dee_semaphore_waiting_start(self)       _Dee_shared_waitword_start(&(self)->se_waiting)
+#define _Dee_semaphore_waiting_end(self)         _Dee_shared_waitword_end(&(self)->se_waiting)
+#define _Dee_semaphore_waiting_wakeone(self)     (_Dee_shared_waitword_test(&(self)->se_waiting) && (DeeFutex_WakeOne(&(self)->se_tickets), 1))
+#define _Dee_semaphore_waiting_wakeall(self)     (_Dee_shared_waitword_test(&(self)->se_waiting) && (DeeFutex_WakeAll(&(self)->se_tickets), 1))
+#define _Dee_semaphore_waiting_wakemany(self, n)         \
+	(_Dee_shared_waitword_test(&(self)->se_waiting) &&   \
+	 ((n) <= 1 ? DeeFutex_WakeOne(&(self)->se_tickets)   \
+	           : /* Technically, it'd be enough to only  \
+	              * wake `count' threads, but that can't \
+	              * be done portably... */               \
+	             DeeFutex_WakeAll(&(self)->se_tickets),  \
+	  1))
+#define Dee_SEMAPHORE_INIT(n_tickets)        { n_tickets _Dee_SHARED_WAITWORD__INIT }
+#define Dee_semaphore_init(self, n_tickets)  ((self)->se_tickets = n_tickets, _Dee_shared_waitword_init(&(self)->se_waiting))
+#define Dee_semaphore_cinit(self, n_tickets) ((self)->se_tickets = n_tickets, _Dee_shared_waitword_cinit(&(self)->se_waiting))
 #define Dee_semaphore_haswaiting(self)       (__hybrid_atomic_load(&(self)->se_waiting, __ATOMIC_ACQUIRE) != 0)
 #define Dee_semaphore_hastickets(self)       (__hybrid_atomic_load(&(self)->se_tickets, __ATOMIC_ACQUIRE) != 0)
 #define Dee_semaphore_gettickets(self)       __hybrid_atomic_load(&(self)->se_tickets, __ATOMIC_ACQUIRE)
-#define Dee_semaphore_release(self)                                         \
-	(void)(__hybrid_atomic_fetchinc(&(self)->se_tickets, __ATOMIC_RELEASE), \
-	       Dee_semaphore_haswaiting(self) && (DeeFutex_WakeOne(&(self)->se_tickets), 0))
+#define Dee_semaphore_release_ex(self)       (__hybrid_atomic_inc(&(self)->se_tickets, __ATOMIC_RELEASE), _Dee_semaphore_waiting_wakeone(self))
+#define Dee_semaphore_release_ex_n(self, n)  (__hybrid_atomic_add(&(self)->se_tickets, n, __ATOMIC_RELEASE), _Dee_semaphore_waiting_wakemany(self, n))
+#define Dee_semaphore_release(self)          (void)Dee_semaphore_release_ex(self)
+#define Dee_semaphore_release_n(self, n)     (void)Dee_semaphore_release_ex_n(self, n)
+
 #define Dee_semaphore_tryacquire Dee_semaphore_tryacquire
 LOCAL WUNUSED ATTR_INOUT(1) bool
 (DCALL Dee_semaphore_tryacquire)(Dee_semaphore_t *__restrict self) {
@@ -623,6 +768,12 @@ again_read_tickets:
 /* Shared event (scheduler-level blocking)                              */
 /************************************************************************/
 typedef struct {
+	/* NOTE: Having an extra state for there being waiting threads here is actually safe and doesn't
+	 *       result in a potential missing wakeup, as it would for the disabled "_Dee_SHARED_WAITWORD"
+	 *       implementation. Reason is that in step [6], Thread #1 won't start sleeping since the futex
+	 *       call will notice that the lock-word (here: "ev_state") would no longer be "2" following
+	 *       the other thread having 
+	 */
 	unsigned int ev_state; /* 0: event has been triggered
 	                        * 1: event has NOT been triggered
 	                        * 2: event has NOT been triggered, and there may be waiting threads */

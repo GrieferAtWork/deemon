@@ -1029,6 +1029,7 @@
 
 #define Dee_ONCE(...) __VA_ARGS__
 #define Dee_ATOMIC_REF(T) Dee_atomic_ref_t
+#define _Dee_SHARED_WAITWORD(v) unsigned int v;
 
 #define Dee_CASE_WIDTH_1BYTE case 1
 #define CASE_WIDTH_1BYTE case 1
