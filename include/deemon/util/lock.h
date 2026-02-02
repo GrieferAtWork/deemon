@@ -319,14 +319,31 @@ typedef struct __hybrid_atomic_rwlock Dee_atomic_rwlock_t;
 /* This (having a waiting-threads-are-present flag) doesn't work, but
  * the code for it is kept here to explain **why** it doesn't work:
  *
- * [1] Thread #2: ACQUIRE: LOCK_WORD=0 ->  OK  -> LOCK_WORD=1
- * [2] Thread #1: ACQUIRE: Lock is already held -> set WAITING=1
- * [3] Thread #2: RELEASE: LOCK_WORD=0
- * [4] Thread #2: RELEASE: WAITING=1 -> WAITING=0 && DeeFutex_WakeAll(&LOCK_WORD)  // doesn't do anything; Thread #1 isn't *actually* waiting, yet
- * [5] Thread #2: ACQUIRE: LOCK_WORD=0 ->  OK  -> LOCK_WORD=1
- * [6] Thread #1: ACQUIRE: DeeFutex_Wait(&LOCK_WORD, 1);                           // Only now does Thread #1 start blocking
- * [7] Thread #2: RELEASE: LOCK_WORD=0
- * [8] Thread #2: RELEASE: WAITING=0 -> return;                                    // Release won't wake Thread #1 here
+ * Assuming some generic futex-based lock struct like:
+ * >> typedef struct {
+ * >>     int LOCK_WORD; // Futex word (0=unlocked, 1=locked)
+ * >>     int WAITING;   // Threads-are-waiting flag (0=no waiting, 1=waiting)
+ * >> } LOCK;
+ *
+ * [1] Thread #2: ACQUIRE: LOCK_WORD=0 ->  OK  -> LOCK_WORD=1                   // Thread #2 acquires lock
+ * [2] Thread #1: ACQUIRE: Lock is already held -> set WAITING=1                // Thread #1 is preempted before it can DeeFutex_Wait()
+ * [3] Thread #2: RELEASE: LOCK_WORD=0                                          // Thread #2 releases lock
+ * [4] Thread #2: RELEASE: WAITING=1 -> WAITING=0 && DeeFutex_Wake(&LOCK_WORD)  // doesn't do anything; Thread #1 isn't *actually* waiting, yet
+ * [5] Thread #2: ACQUIRE: LOCK_WORD=0 ->  OK  -> LOCK_WORD=1                   // Thread #2 quickly re-acquires lock before Thread #1 notices
+ * [6] Thread #1: ACQUIRE: DeeFutex_Wait(&LOCK_WORD, 1);                        // Only now does Thread #1 start blocking
+ * [7] Thread #2: RELEASE: LOCK_WORD=0                                          // Thread #2 releases lock
+ * [8] Thread #2: RELEASE: WAITING=0 -> return;                                 // Release won't wake Thread #1 because WAITING=0
+ *
+ * -> Thread #1 will continue to wait for the lock to be released,
+ *    even though the lock is actually available now.
+ * -> The problem lies in the fact that Thread #1 can be preempted
+ *    between setting WAITING=1 and calling DeeFutex_Wait()
+ * -> Since it's another thread that clear the WAITING=0, followed
+ *    by doing a futex wake, that wake can happen before Thread #1
+ *    starts sleeping, meaning:
+ *    -> no-one gets woken
+ *    -> the WAITING flag is clear
+ *    -> Thread #1 starts sleeping, but no-one will ever wake it
  *
  * Test code to demonstrate this dead-lock when this implementation is enabled:
  *
