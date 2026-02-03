@@ -243,6 +243,7 @@
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\rlock.h" />
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h" />
+		<ClInclude Include="..\include\deemon\util\weakref.h" />
 		<ClInclude Include="..\include\deemon\variant.h" />
 		<ClInclude Include="..\include\deemon\weakref.h" />
 		<ClInclude Include="..\src\deemon\cmdline.h" />
@@ -410,7 +411,6 @@
 		<ClInclude Include="..\src\deemon\objects\generic-proxy.h" />
 		<ClInclude Include="..\src\deemon\objects\int-8bit.h" />
 		<ClInclude Include="..\src\deemon\objects\int_logic.h" />
-		<ClInclude Include="..\src\deemon\objects\object-destroy.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\cached-seq.h" />
@@ -481,6 +481,7 @@
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h" />
+		<ClInclude Include="..\src\deemon\runtime\refcnt-destroy.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h" />
 		<ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab.c.inl" />
@@ -653,6 +654,7 @@
 		<ClCompile Include="..\src\deemon\objects\traceback.c" />
 		<ClCompile Include="..\src\deemon\objects\tuple.c" />
 		<ClCompile Include="..\src\deemon\objects\type-operators.c" />
+		<ClCompile Include="..\src\deemon\objects\type.c" />
 		<ClCompile Include="..\src\deemon\objects\unicode\cformat.c" />
 		<ClCompile Include="..\src\deemon\objects\unicode\codec.c" />
 		<ClCompile Include="..\src\deemon\objects\unicode\cscanf.c" />
@@ -709,6 +711,7 @@
 		<ClCompile Include="..\src\deemon\runtime\operator-inherit.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator_info.c" />
+		<ClCompile Include="..\src\deemon\runtime\refcnt.c" />
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />
 		<ClCompile Include="..\src\deemon\runtime\serial.c" />
 		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c" />
@@ -717,6 +720,7 @@
 		<ClCompile Include="..\src\deemon\runtime\thread.c" />
 		<ClCompile Include="..\src\deemon\runtime\type_member.c" />
 		<ClCompile Include="..\src\deemon\runtime\variant.c" />
+		<ClCompile Include="..\src\deemon\runtime\weakref.c" />
 		<ClCompile Include="..\src\deemon\system\file.c" />
 		<ClCompile Include="..\src\deemon\system\futex.c" />
 		<ClCompile Include="..\src\deemon\system\system.c" />

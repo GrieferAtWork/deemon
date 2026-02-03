@@ -26,7 +26,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/file.h>            /* Dee_OPEN_F* */
 #include <deemon/int.h>             /* DeeInt_FromBytes */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, OBJECT_HEAD */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_OBJECT_HEAD */
 #include <deemon/string.h>          /* DeeStringObject */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, _O_APPEND, close */
 #include <deemon/system.h>          /* DeeUnixSystem_ThrowErrorf */

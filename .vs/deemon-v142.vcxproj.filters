@@ -705,6 +705,9 @@
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\weakref.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\variant.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -1206,9 +1209,6 @@
 		<ClInclude Include="..\src\deemon\objects\int_logic.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\object-destroy.c.inl">
-			<Filter>src\objects</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -1417,6 +1417,9 @@
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\refcnt-destroy.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h">
@@ -1931,6 +1934,9 @@
 		<ClCompile Include="..\src\deemon\objects\type-operators.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\type.c">
+			<Filter>src\objects</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\unicode\cformat.c">
 			<Filter>src\objects\unicode</Filter>
 		</ClCompile>
@@ -2081,6 +2087,9 @@
 		<ClCompile Include="..\src\deemon\runtime\operator_info.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\refcnt.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
@@ -2103,6 +2112,9 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\variant.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\weakref.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\system\file.c">
