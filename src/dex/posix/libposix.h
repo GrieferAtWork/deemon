@@ -776,7 +776,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL posix_utime_unix_object_to_timespec64(D
 /* DTO that is passed to the progress-callback of `copyfile()'
  * The type of this object is exposed as `posix.CopyFileProgress' */
 typedef struct {
-	OBJECT_HEAD
+	Dee_OBJECT_HEAD
 	DREF DeeObject *cfp_srcfile; /* [1..1][const] Source file */
 	DREF DeeObject *cfp_dstfile; /* [1..1][const] Destination file */
 	uint64_t        cfp_copied;  /* [lock(WEAK(ATOMIC))] Number of bytes that have been copied */

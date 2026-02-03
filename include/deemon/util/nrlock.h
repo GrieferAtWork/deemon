@@ -187,7 +187,7 @@ Dee_nratomic_lock_acquire(Dee_nratomic_lock_t *__restrict self) {
 /************************************************************************/
 typedef struct {
 	Dee_nratomic_lock_t  nrs_lock;    /* Lock owner and futex word (`_Dee_NRLOCK_TID_INVALID' if not held) */
-	_Dee_SHARED_WAITWORD(nrs_waiting) /* # of threads may be waiting on `nrs_lock.nra_tid' */
+	_Dee_SHARED_WAITWORD(nrs_waiting) /* Waiting-threads control word for `nrs_lock' */
 } Dee_nrshared_lock_t;
 
 #define _Dee_nrshared_lock_waiting_start(self) _Dee_shared_waitword_start(&(self)->nrs_waiting)

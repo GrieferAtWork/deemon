@@ -418,7 +418,7 @@ for (;;) {
 /************************************************************************/
 typedef struct {
 	Dee_atomic_lock_t    s_lock;    /* Lock word (== 0: available, != 0: held) */
-	_Dee_SHARED_WAITWORD(s_waiting) /* # of threads waiting for `s_lock' (controlled by the waiting threads themselves) */
+	_Dee_SHARED_WAITWORD(s_waiting) /* Waiting-threads control word for `s_lock' */
 } Dee_shared_lock_t;
 
 #define _Dee_shared_lock_waiting_start(self) _Dee_shared_waitword_start(&(self)->s_waiting)
@@ -509,8 +509,8 @@ typedef struct {
 #define _Dee_shared_rwlock_wwaiting_end(self)   (void)0
 #define _Dee_shared_rwlock_wake(self)           (DeeFutex_WakeAll(&(self)->srw_lock.arw_lock), 1)
 #elif 1
-	_Dee_SHARED_WAITWORD(srw_rwaiting) /* # of threads waiting for read-locks to `srw_lock' */
-	_Dee_SHARED_WAITWORD(srw_wwaiting) /* # of threads waiting for write-locks to `srw_lock' */
+	_Dee_SHARED_WAITWORD(srw_rwaiting) /* Waiting-read-threads control word for `srw_lock' */
+	_Dee_SHARED_WAITWORD(srw_wwaiting) /* Waiting-write-threads control word for `srw_lock' */
 #define _Dee_SHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT _Dee_SHARED_WAITWORD__INIT
 #define _Dee_shared_rwlock_waiting_init(self)   (_Dee_shared_waitword_init(&(self)->srw_rwaiting), _Dee_shared_waitword_init(&(self)->srw_wwaiting))
 #define _Dee_shared_rwlock_waiting_cinit(self)  (_Dee_shared_waitword_cinit(&(self)->srw_rwaiting), _Dee_shared_waitword_cinit(&(self)->srw_wwaiting))
@@ -532,7 +532,7 @@ typedef struct {
 	      _Dee_shared_rwlock_wakeread(self), 1)          \
 	   : 0)
 #else /* ... */
-	_Dee_SHARED_WAITWORD(srw_waiting)  /* # of threads waiting for to `srw_lock' */
+	_Dee_SHARED_WAITWORD(srw_waiting)  /* Waiting-threads control word for `srw_lock' */
 #define _Dee_SHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT
 #define _Dee_shared_rwlock_waiting_init(self)   _Dee_shared_waitword_init(&(self)->srw_waiting)
 #define _Dee_shared_rwlock_waiting_cinit(self)  _Dee_shared_waitword_cinit(&(self)->srw_waiting)
@@ -698,7 +698,7 @@ LOCAL NONNULL((1)) void
 /************************************************************************/
 typedef struct {
 	size_t               se_tickets; /* # of tickets currently available (atomic + futex word) */
-	_Dee_SHARED_WAITWORD(se_waiting) /* # of threads waiting for tickets to become available. */
+	_Dee_SHARED_WAITWORD(se_waiting) /* Waiting-threads control word for `se_tickets' */
 } Dee_semaphore_t;
 #define _Dee_semaphore_waiting_start(self)       _Dee_shared_waitword_start(&(self)->se_waiting)
 #define _Dee_semaphore_waiting_end(self)         _Dee_shared_waitword_end(&(self)->se_waiting)

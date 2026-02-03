@@ -265,6 +265,24 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 #undef DeeFutex_USE_cnd_t_AND_mtx_t
 #undef DeeFutex_USE_sem_t
 #undef DeeFutex_USE_yield
+/* XXX: DeeFutex_USE_cxx_atomic_wait -- But only if "std::atomic<uint(32|64)_t>" is a
+ *      wrapper around "uint(32|64)_t" -- iow: can't be used if futex data is stored
+ *      in-band alongside the actual atomic word. -- C++ allows something like:
+ * >> template<class T> class atomic {
+ * >> private:
+ * >>     T                      m_value;
+ * >>     MAGIC_OS_FUTEX_CONTEXT m_futex; // Ooops :(
+ * >> };
+ *
+ * Or even this, which we can't even detect with "sizeof(std::atomic<T>) != sizeof(T)"
+ * >> template<class T> class atomic;
+ * >> template<> class atomic<uint32_t> {
+ * >> private:
+ * >>     uint16_t m_value_index; // Index into some magic table to store atomic value
+ * >>     uint16_t m_futex_index; // again: futex is somehow part of atomic<T>
+ * >> };
+ */
+/*#undef DeeFutex_USE_cxx_atomic_wait*/
 #undef DeeFutex_USE_STUB
 #ifdef CONFIG_NO_THREADS
 #define DeeFutex_USE_STUB

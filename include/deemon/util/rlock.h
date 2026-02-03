@@ -268,7 +268,7 @@ Dee_ratomic_lock_waitfor(Dee_ratomic_lock_t *__restrict self) {
 /************************************************************************/
 typedef struct {
 	Dee_ratomic_lock_t   rs_lock;    /* Underlying atomic lock */
-	_Dee_SHARED_WAITWORD(rs_waiting) /* # of threads waiting for `rs_lock' (controlled by the waiting threads themselves) */
+	_Dee_SHARED_WAITWORD(rs_waiting) /* Waiting-threads control word for `rs_lock' */
 } Dee_rshared_lock_t;
 
 #define _Dee_rshared_lock_waiting_start(self) _Dee_shared_waitword_start(&(self)->rs_waiting)
@@ -752,8 +752,8 @@ typedef struct {
 #define _Dee_rshared_rwlock_wwaiting_end(self)   (void)0
 #define _Dee_rshared_rwlock_wake(self)           (DeeFutex_WakeAll(&(self)->rsrw_lock.rarw_lock.arw_lock), 1)
 #elif 1
-	_Dee_SHARED_WAITWORD(rsrw_rwaiting) /* # of threads waiting for read-locks to `rsrw_lock' */
-	_Dee_SHARED_WAITWORD(rsrw_wwaiting) /* # of threads waiting for write-locks to `rsrw_lock' */
+	_Dee_SHARED_WAITWORD(rsrw_rwaiting) /* Waiting-read-threads control word for `rsrw_lock' */
+	_Dee_SHARED_WAITWORD(rsrw_wwaiting) /* Waiting-write-threads control word for `rsrw_lock' */
 #define _Dee_RSHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT _Dee_SHARED_WAITWORD__INIT
 #define _Dee_rshared_rwlock_waiting_init(self)   (_Dee_shared_waitword_init(&(self)->rsrw_rwaiting), _Dee_shared_waitword_init(&(self)->rsrw_wwaiting))
 #define _Dee_rshared_rwlock_waiting_cinit(self)  (_Dee_shared_waitword_cinit(&(self)->rsrw_rwaiting), _Dee_shared_waitword_cinit(&(self)->rsrw_wwaiting))
@@ -774,7 +774,7 @@ typedef struct {
 	      _Dee_rshared_rwlock_wakeread(self), 1)                    \
 	   : 0)
 #else /* ... */
-	_Dee_SHARED_WAITWORD(rsrw_waiting)  /* # of threads waiting for to `rsrw_lock' */
+	_Dee_SHARED_WAITWORD(rsrw_waiting)  /* Waiting-threads control word for `rsrw_lock' */
 #define _Dee_RSHARED_RWLOCK_WAITING__INIT        _Dee_SHARED_WAITWORD__INIT
 #define _Dee_rshared_rwlock_waiting_init(self)   _Dee_shared_waitword_init(&(self)->rsrw_waiting)
 #define _Dee_rshared_rwlock_waiting_cinit(self)  _Dee_shared_waitword_cinit(&(self)->rsrw_waiting)
