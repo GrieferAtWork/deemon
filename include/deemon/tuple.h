@@ -155,6 +155,8 @@ DFUNDEF WUNUSED DREF DeeObject *DeeTuple_Pack(size_t n, ...);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPack(size_t n, va_list args);
 DFUNDEF WUNUSED DREF DeeObject *DeeTuple_PackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ ...);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args);
+DFUNDEF WUNUSED DREF DeeObject *DeeTuple_PackInherited(size_t n, /*inherit(always)*/ /*DREF*/ ...);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPackInherited(size_t n, /*inherit(always)*/ /*DREF*/ va_list args);
 DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPack(size_t n, ...);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPack(size_t n, va_list args);
 DFUNDEF WUNUSED DREF DeeObject *DeeTuple_TryPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ ...);
@@ -163,6 +165,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VTryPackSymbolic(size_t n, /*inhe
 /* Create a new tuple from a given vector. */
 DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
 DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_NewVectorInherited(size_t objc, /*inherit(always)*/ DREF DeeObject *const *__restrict objv);
 DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv);
 DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL DeeTuple_TryNewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
 
@@ -199,15 +202,35 @@ DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
                          /*inherit(always)*/ DREF DeeObject *const *argv);
 
 /* Helpers for pairs. */
-#define DeeTuple_NewUninitializedPair()      DeeTuple_NewUninitialized(2)
-#define DeeTuple_TryNewUninitializedPair()   DeeTuple_TryNewUninitialized(2)
-#define DeeTuple_FreeUninitializedPair(self) DeeTuple_FreeUninitialized(self)
-#define DeeTuple_PackPair(a, b)              DeeTuple_Pack(2, a, b)
-#define DeeTuple_TryPackPair(a, b)           DeeTuple_TryPack(2, a, b)
-#define DeeTuple_PackPairSymbolic(a, b)      DeeTuple_PackSymbolic(2, a, b)
-#define DeeTuple_TryPackPairSymbolic(a, b)   DeeTuple_TryPackSymbolic(2, a, b)
+#define DeeTuple_NewUninitializedPair()        DeeTuple_NewUninitialized(2)
+#define DeeTuple_TryNewUninitializedPair()     DeeTuple_TryNewUninitialized(2)
+#define DeeTuple_FreeUninitializedPair(self)   DeeTuple_FreeUninitialized(self)
+#define DeeTuple_InitPairInherited(self, a, b) (DeeTuple_SET(self, 0, a), DeeTuple_SET(self, 1, b))
+#ifdef __INTELLISENSE__
+#define DeeTuple_InitPair(self, a, b)          DeeTuple_InitPairInherited(self, a, b)
+#else /* __INTELLISENSE__ */
+#define DeeTuple_InitPair(self, a, b)          (Dee_Incref(a), DeeTuple_SET(self, 0, a), Dee_Incref(b), DeeTuple_SET(self, 1, b))
+#endif /* !__INTELLISENSE__ */
+#define DeeTuple_InitPairInheritedv(self, v)   DeeTuple_InitPairInherited(self, (v)[0], (v)[1])
+#define DeeTuple_InitPairv(self, v)            DeeTuple_InitPair(self, (v)[0], (v)[1])
+#define DeeTuple_DecrefPairSymbolic(self)      DeeTuple_DecrefSymbolic(self)
+#define DeeTuple_NewPair(a, b)                 DeeTuple_Pack(2, a, b)
+#define DeeTuple_TryNewPair(a, b)              DeeTuple_TryPack(2, a, b)
+#define DeeTuple_NewPairSymbolic(a, b)         DeeTuple_PackSymbolic(2, a, b)
+#define DeeTuple_TryNewPairSymbolic(a, b)      DeeTuple_TryPackSymbolic(2, a, b)
+#define DeeTuple_NewPairInherited(a, b)        DeeTuple_PackInherited(2, a, b)
+#define DeeTuple_NewPairv(v)                   DeeTuple_NewVector(2, v)
+#define DeeTuple_TryNewPairv(v)                DeeTuple_TryNewVector(2, v)
+#define DeeTuple_NewPairvSymbolic(v)           DeeTuple_NewVectorSymbolic(2, v)
+#define DeeTuple_TryNewPairvSymbolic(v)        DeeTuple_TryNewVectorSymbolic(2, v)
+#define DeeTuple_NewPairvInherited(v)          DeeTuple_NewVectorInherited(2, v)
 
 
+
+
+/************************************************************************/
+/* TUPLE BUILDER                                                        */
+/************************************************************************/
 struct Dee_tuple_builder {
 	size_t               tb_size;  /* Used size (allocated size is stored in `tb_tuple->t_size') */
 	DREF DeeTupleObject *tb_tuple; /* [0..1][owned] Result tuple (guarantied to not be shared) */

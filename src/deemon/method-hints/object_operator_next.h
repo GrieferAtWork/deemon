@@ -49,25 +49,17 @@ err:
 }}
 %{using tp_iterator->tp_nextpair: {
 	int error;
-	DREF DeeObject *key_and_value[2];
-	error = CALL_DEPENDENCY(tp_iterator->tp_nextpair, self, key_and_value);
-	if (error == 0) {
-		DREF DeeTupleObject *result;
-		result = DeeTuple_NewUninitializedPair();
-		if unlikely(!result)
-			goto err_key_and_value;
-		result->t_elem[0] = key_and_value[0]; /* Inherit reference */
-		result->t_elem[1] = key_and_value[1]; /* Inherit reference */
+	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
+		goto err;
+	error = CALL_DEPENDENCY(tp_iterator->tp_nextpair, self, DeeTuple_ELEM(result));
+	if (error == 0)
 		return Dee_AsObject(result);
-	}
+	DeeTuple_FreeUninitializedPair(result);
 	if likely(error > 0)
 		return ITER_DONE;
 err:
 	return NULL;
-err_key_and_value:
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-	goto err;
 }} = OPERATOR_ITERNEXT;
 
 

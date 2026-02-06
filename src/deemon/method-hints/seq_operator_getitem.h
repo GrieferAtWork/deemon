@@ -108,15 +108,10 @@ default_seq_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeOb
 	data = (struct default_seq_getitem_index_with_map_enumerate_data *)arg;
 	if (data->dsgiiwme_nskip == 0) {
 		if (value) {
-			DREF DeeTupleObject *pair;
-			pair = DeeTuple_NewUninitializedPair();
-			if unlikely(!pair)
+			DREF DeeObject *pair = DeeTuple_NewPair(key, value);
+			if (pair == NULL)
 				goto err;
-			Dee_Incref(key);
-			pair->t_elem[0] = key;                      /* Inherit reference */
-			Dee_Incref(value);
-			pair->t_elem[1] = value;                    /* Inherit reference */
-			data->dsgiiwme_result = Dee_AsObject(pair); /* Inherit reference */
+			data->dsgiiwme_result = pair;
 		} else {
 			data->dsgiiwme_result = NULL;
 		}

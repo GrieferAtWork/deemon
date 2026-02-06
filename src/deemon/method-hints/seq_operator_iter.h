@@ -246,18 +246,16 @@ struct default_foreach_with_map_enumerate_data {
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_foreach_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
 	Dee_ssize_t result;
-	DREF DeeTupleObject *pair;
+	DREF DeeObject *pair;
 	struct default_foreach_with_map_enumerate_data *data;
 	data = (struct default_foreach_with_map_enumerate_data *)arg;
 	if unlikely(!value)
 		return 0;
-	pair = DeeTuple_NewUninitializedPair();
+	pair = DeeTuple_NewPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
-	pair->t_elem[0] = key;
-	pair->t_elem[1] = value;
-	result = (*data->dfwme_cb)(data->dfwme_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
+	result = (*data->dfwme_cb)(data->dfwme_arg, pair);
+	DeeTuple_DecrefSymbolic(pair);
 	return result;
 err:
 	return -1;

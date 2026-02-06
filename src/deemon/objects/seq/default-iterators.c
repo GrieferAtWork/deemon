@@ -1206,7 +1206,7 @@ again:
 	self->dig_index = new_index; /* Inherit (x2) */
 	DefaultIterator_WithGetItem_LockRelease(self);
 	Dee_Decref(old_index);
-	return DeeTuple_Newf("OO", new_index, result);
+	return DeeTuple_NewPairInherited(new_index, result);
 err_new_index_result:
 	Dee_Decref(result);
 err_new_index:
@@ -1589,7 +1589,7 @@ again:
 	self->disg_index = new_index; /* Inherit (x2) */
 	DefaultIterator_WithSizeAndGetItem_LockRelease(self);
 	Dee_Decref(old_index);
-	return DeeTuple_Newf("OO", result_index, result);
+	return DeeTuple_NewPairInherited(result_index, result);
 err_new_index_result_result_index:
 	Dee_Decref(result_index);
 err_new_index_result:

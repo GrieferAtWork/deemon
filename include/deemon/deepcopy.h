@@ -136,7 +136,7 @@ struct Dee_weakref;
  * >>    if unlikely(!copy2)
  * >>        goto err;
  * >>    DeeDeepCopy_Pack(&ctx);
- * >>    return DeeTuple_Newf("OO", copy1, copy2);
+ * >>    return DeeTuple_NewPairInherited(copy1, copy2);
  * >>err:
  * >>    DeeDeepCopy_Fini(&ctx);
  * >>    return -1;

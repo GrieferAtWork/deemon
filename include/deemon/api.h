@@ -508,7 +508,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MMAP_DEC */
 
 
-/* Experimental feature switch: Use "tp_serialize" to implement "deepcopy" */
+/* Experimental feature switch: Use "tp_serialize" to implement "DeeObject_DeepCopy" */
 #if (!defined(CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY) && \
      !defined(CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY))
 #if 1

@@ -175,10 +175,7 @@ LOCAL_dict_getspecial(Dict *__restrict self) {
 		goto err_maybe_r_unbound_unlock;
 	LOCAL_dict_loaditem(self, item);
 #ifdef LOCAL_IS_PAIR
-	result->t_elem[0] = item->di_key;
-	result->t_elem[1] = item->di_value;
-	Dee_Incref(result->t_elem[0]);
-	Dee_Incref(result->t_elem[1]);
+	DeeTuple_InitPairv(result, item->di_key_and_value);
 #else /* LOCAL_IS_PAIR */
 	result = LOCAL_Dee_dict_item_getspecial(item);
 	Dee_Incref(result);
@@ -211,10 +208,7 @@ LOCAL_dict_trygetspecial(Dict *__restrict self) {
 		goto err_maybe_r_unbound_unlock;
 	LOCAL_dict_loaditem(self, item);
 #ifdef LOCAL_IS_PAIR
-	result->t_elem[0] = item->di_key;
-	result->t_elem[1] = item->di_value;
-	Dee_Incref(result->t_elem[0]);
-	Dee_Incref(result->t_elem[1]);
+	DeeTuple_InitPairv(result, item->di_key_and_value);
 #else /* LOCAL_IS_PAIR */
 	result = LOCAL_Dee_dict_item_getspecial(item);
 	Dee_Incref(result);

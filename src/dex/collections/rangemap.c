@@ -1491,7 +1491,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_asmap_get_last(RangeMapProxy *__restrict self) {
 	int error;
-	DREF DeeObject *triple, *result;
+	DREF DeeObject *triple;
 	DREF DeeObject *item[3];
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "last", Dee_HashStr__last);
 	if unlikely(!triple)
@@ -1501,13 +1501,7 @@ proxy_asmap_get_last(RangeMapProxy *__restrict self) {
 	if unlikely(error)
 		goto err;
 	Dee_Decref(item[0]);
-	result = DeeTuple_NewVectorSymbolic(2, item + 1);
-	if unlikely(!result)
-		goto err_item_1_2;
-	return result;
-err_item_1_2:
-	Dee_Decref(item[2]);
-	Dee_Decref(item[1]);
+	return DeeTuple_NewPairvInherited(item + 1);
 err:
 	return NULL;
 }
@@ -1601,7 +1595,7 @@ proxy_items_get_last(RangeMapProxy *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_ranges_get_first(RangeMapProxy *__restrict self) {
 	int error;
-	DREF DeeObject *triple, *result;
+	DREF DeeObject *triple;
 	DREF DeeObject *item[3];
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "first", Dee_HashStr__first);
 	if unlikely(!triple)
@@ -1611,13 +1605,7 @@ proxy_ranges_get_first(RangeMapProxy *__restrict self) {
 	if unlikely(error)
 		goto err;
 	Dee_Decref(item[2]);
-	result = DeeTuple_NewVectorSymbolic(2, item);
-	if unlikely(!result)
-		goto err_item_0_1;
-	return result;
-err_item_0_1:
-	Dee_Decref(item[1]);
-	Dee_Decref(item[0]);
+	return DeeTuple_NewPairvInherited(item);
 err:
 	return NULL;
 }
@@ -1625,7 +1613,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_ranges_get_last(RangeMapProxy *__restrict self) {
 	int error;
-	DREF DeeObject *triple, *result;
+	DREF DeeObject *triple;
 	DREF DeeObject *item[3];
 	triple = DeeObject_GetAttrStringHash(self->rmp_rmap, "last", Dee_HashStr__last);
 	if unlikely(!triple)
@@ -1635,13 +1623,7 @@ proxy_ranges_get_last(RangeMapProxy *__restrict self) {
 	if unlikely(error)
 		goto err;
 	Dee_Decref(item[2]);
-	result = DeeTuple_NewVectorSymbolic(2, item);
-	if unlikely(!result)
-		goto err_item_0_1;
-	return result;
-err_item_0_1:
-	Dee_Decref(item[1]);
-	Dee_Decref(item[0]);
+	return DeeTuple_NewPairvInherited(item);
 err:
 	return NULL;
 }
@@ -2350,7 +2332,7 @@ PRIVATE struct type_member tpconst proxy_iterator_members[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_items_iterator_next_range(RangeMapProxyItemsIterator *__restrict self) {
 	int error;
-	DREF DeeObject *tuple, *result;
+	DREF DeeObject *tuple;
 	DREF DeeObject *item[3];
 	tuple = DeeObject_IterNext(self->rmpii_base.rmpi_iter);
 	if (!ITER_ISOK(tuple))
@@ -2359,13 +2341,8 @@ proxy_items_iterator_next_range(RangeMapProxyItemsIterator *__restrict self) {
 	Dee_Decref(tuple);
 	if unlikely(error)
 		goto err;
-	result = DeeTuple_NewVectorSymbolic(2, item);
-	if unlikely(!result)
-		goto err_item;
 	Dee_Decref(item[2]);
-	return result;
-err_item:
-	Dee_Decrefv(item, 3);
+	return DeeTuple_NewPairvInherited(item);
 err:
 	return NULL;
 }

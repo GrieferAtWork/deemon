@@ -360,6 +360,7 @@ gen86_addrname(void const *addr) {
 	CASE(DeeList_NewUninitialized, 4);
 	CASE(DeeTuple_NewUninitialized, 4);
 	CASE(DeeTuple_NewVector, 4);
+	CASE(DeeTuple_NewVectorInherited, 4);
 	CASE(DeeTuple_NewVectorSymbolic, 4);
 	CASE(DeeTuple_DecrefSymbolic, 4);
 	CASE(DeeInstance_GetMember, 12);

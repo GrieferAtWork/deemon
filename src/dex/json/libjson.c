@@ -226,7 +226,7 @@ jseqiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jmapiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
-	DREF DeeObject *key_and_value[2], *result;
+	DREF DeeObject *key_and_value[2];
 	DeeJsonParser parser;
 	DeeJsonIterator_GetParserEx(self, &parser);
 	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
@@ -239,13 +239,7 @@ jmapiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
 	key_and_value[1] = DeeJson_ParseObject(&parser, false);
 	if unlikely(!key_and_value[1])
 		goto err_key;
-	result = DeeTuple_NewVectorSymbolic(2, key_and_value);
-	if unlikely(!result)
-		goto err_key_value;
-	return result;
-err_key_value:
-	Dee_Decref(key_and_value[1]);
-	goto err_key;
+	return DeeTuple_NewPairvInherited(key_and_value);
 err_key_syntax:
 	err_json_syntax();
 err_key:

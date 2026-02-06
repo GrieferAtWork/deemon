@@ -24,22 +24,23 @@
 [[alias(Mapping.setold_ex)]]
 __map_setold_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
-	DREF DeeTupleObject *result;
-	DREF DeeObject *old_value = CALL_DEPENDENCY(map_setold_ex, self, key, value);
-	if unlikely(!old_value)
+	DREF DeeObject *old_value;
+	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
 		goto err;
+	old_value = CALL_DEPENDENCY(map_setold_ex, self, key, value);
+	if unlikely(!old_value)
+		goto err_r;
 	if (old_value == ITER_DONE) {
+		DeeTuple_FreeUninitializedPair(result);
 		Dee_Incref(&setold_failed_result);
 		return Dee_AsObject(&setold_failed_result);
 	}
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_old_value;
 	result->t_elem[0] = DeeBool_NewTrue();
 	result->t_elem[1] = old_value; /* Inherit reference */
 	return Dee_AsObject(result);
-err_old_value:
-	Dee_Decref(old_value);
+err_r:
+	DeeTuple_FreeUninitializedPair(result);
 err:
 	return NULL;
 }
@@ -71,7 +72,7 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewVector(2, data->msoxwse_key_and_value);
+			new_pair = DeeTuple_NewPairv(data->msoxwse_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem, data->msoxwse_seq, index, new_pair);
@@ -118,7 +119,7 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewVector(2, data->msoxwsei_key_and_value);
+			new_pair = DeeTuple_NewPairv(data->msoxwsei_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem_index, data->msoxwsei_seq, index, new_pair);

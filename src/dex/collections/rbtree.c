@@ -418,7 +418,7 @@ err_changed_unlock:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtreeiter_nii_peek(RBTreeIterator *__restrict self) {
-	DREF DeeObject *result, *item[3];
+	DREF DeeObject *item[3];
 	RBTree *tree = self->rbti_tree;
 	struct rbtree_node *node;
 	RBTree_LockRead(tree);
@@ -436,10 +436,7 @@ rbtreeiter_nii_peek(RBTreeIterator *__restrict self) {
 	Dee_Incref(item[1]);
 	Dee_Incref(item[2]);
 	RBTree_LockEndRead(tree);
-	result = DeeTuple_NewVectorSymbolic(3, item);
-	if unlikely(!result)
-		Dee_Decrefv_unlikely(item, 3);
-	return result;
+	return DeeTuple_NewVectorInherited(3, item);
 err_changed_unlock:
 	RBTree_LockEndRead(tree);
 /*err_changed:*/
@@ -449,7 +446,7 @@ err_changed_unlock:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rbtreeiter_next(RBTreeIterator *__restrict self) {
-	DREF DeeObject *result, *item[3];
+	DREF DeeObject *item[3];
 	RBTree *tree = self->rbti_tree;
 	struct rbtree_node *node, *old_node;
 again_old_node:
@@ -478,10 +475,7 @@ again_old_node:
 	 * - Behaves like a 3-element tuple
 	 * - But can also be unpacked to 2 elements, in which case those are:
 	 *   >> (DeeRange_New(this[0], this[1], NULL), this[2]) */
-	result = DeeTuple_NewVectorSymbolic(3, item);
-	if unlikely(!result)
-		Dee_Decrefv_unlikely(item, 3);
-	return result;
+	return DeeTuple_NewVectorInherited(3, item);
 err_changed_unlock:
 	RBTree_LockEndRead(tree);
 /*err_changed:*/

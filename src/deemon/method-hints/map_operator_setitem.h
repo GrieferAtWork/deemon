@@ -113,7 +113,7 @@ err:
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewVector(2, data.msoxwse_key_and_value);
+	new_pair = DeeTuple_NewPairv(data.msoxwse_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = CALL_DEPENDENCY(seq_append, self, new_pair);
@@ -138,7 +138,7 @@ err:
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewVector(2, data.msoxwsei_key_and_value);
+	new_pair = DeeTuple_NewPairv(data.msoxwsei_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = CALL_DEPENDENCY(seq_append, self, new_pair);

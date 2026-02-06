@@ -544,6 +544,19 @@ done:
 }
 
 PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
+DeeTuple_NewVectorInherited(size_t objc, /*inherit(always)*/ DREF DeeObject *const *__restrict objv) {
+	DREF Tuple *result;
+	result = DeeTuple_NewUninitialized(objc);
+	if unlikely(!result)
+		goto err;
+	memcpyc(DeeTuple_ELEM(result), objv, objc, sizeof(DREF DeeObject *));
+	return Dee_AsObject(result);
+err:
+	Dee_Decrefv(objv, objc);
+	return NULL;
+}
+
+PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
 DeeTuple_TryNewVector(size_t objc, DeeObject *const *__restrict objv) {
 	DREF Tuple *result;
 	result = DeeTuple_TryNewUninitialized(objc);
@@ -651,6 +664,8 @@ DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VPack, 8),
                     DCALL_ASSEMBLY_NAME(DeeTuple_NewVector, 8));
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VPackSymbolic, 8),
                     DCALL_ASSEMBLY_NAME(DeeTuple_NewVectorSymbolic, 8));
+DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VPackInherited, 8),
+                    DCALL_ASSEMBLY_NAME(DeeTuple_NewVectorInherited, 8));
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VTryPack, 8),
                     DCALL_ASSEMBLY_NAME(DeeTuple_TryNewVector, 8));
 DEFINE_PUBLIC_ALIAS(DCALL_ASSEMBLY_NAME(DeeTuple_VTryPackSymbolic, 8),
@@ -664,6 +679,11 @@ DeeTuple_VPack(size_t n, va_list args) {
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeTuple_VPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args) {
 	return DeeTuple_NewVectorSymbolic(n, (DeeObject **)args);
+}
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeTuple_VPackInherited(size_t n, /*inherit(always)*/ /*DREF*/ va_list args) {
+	return DeeTuple_NewVectorInherited(n, (DeeObject **)args);
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -708,6 +728,27 @@ DeeTuple_VPackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ va_list args) 
 	}
 done:
 	return Dee_AsObject(result);
+}
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeTuple_VPackInherited(size_t n, /*inherit(always)*/ /*DREF*/ va_list args) {
+	size_t i;
+	DREF Tuple *result;
+	result = DeeTuple_NewUninitialized(n);
+	if unlikely(!result)
+		goto err;
+	for (i = 0; i < n; ++i) {
+		DREF DeeObject *elem;
+		elem = va_arg(args, DeeObject *);
+		DeeTuple_SET(result, i, elem);
+	}
+	return Dee_AsObject(result);
+err:
+	while (n--) {
+		DREF DeeObject *elem = va_arg(args, DeeObject *);
+		Dee_Decref(elem);
+	}
+	return NULL;
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -771,6 +812,16 @@ DeeTuple_PackSymbolic(size_t n, /*inherit(on_success)*/ /*DREF*/ ...) {
 	va_list args;
 	va_start(args, n);
 	result = DeeTuple_VPackSymbolic(n, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED DREF DeeObject *
+DeeTuple_PackInherited(size_t n, /*inherit(always)*/ /*DREF*/ ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, n);
+	result = DeeTuple_VPackInherited(n, args);
 	va_end(args);
 	return result;
 }

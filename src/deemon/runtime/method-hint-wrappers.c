@@ -2216,22 +2216,23 @@ DeeMA___map_setold_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	DeeArg_UnpackStruct2(err, argc, argv, "__map_setold_ex__", &args, &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
-	DREF DeeTupleObject *result;
-	DREF DeeObject *old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold_ex))(self, args.key, args.value);
-	if unlikely(!old_value)
+	DREF DeeObject *old_value;
+	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
 		goto err;
+	old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold_ex))(self, args.key, args.value);
+	if unlikely(!old_value)
+		goto err_r;
 	if (old_value == ITER_DONE) {
+		DeeTuple_FreeUninitializedPair(result);
 		Dee_Incref(&setold_failed_result);
 		return Dee_AsObject(&setold_failed_result);
 	}
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_old_value;
 	result->t_elem[0] = DeeBool_NewTrue();
 	result->t_elem[1] = old_value; /* Inherit reference */
 	return Dee_AsObject(result);
-err_old_value:
-	Dee_Decref(old_value);
+err_r:
+	DeeTuple_FreeUninitializedPair(result);
 err:
 	return NULL;
 }}
@@ -2261,22 +2262,23 @@ DeeMA___map_setnew_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	DeeArg_UnpackStruct2(err, argc, argv, "__map_setnew_ex__", &args, &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
-	DREF DeeTupleObject *result;
-	DREF DeeObject *old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew_ex))(self, args.key, args.value);
-	if unlikely(!old_value)
+	DREF DeeObject *old_value;
+	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
 		goto err;
+	old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew_ex))(self, args.key, args.value);
+	if unlikely(!old_value)
+		goto err_r;
 	if (old_value == ITER_DONE) {
+		DeeTuple_FreeUninitializedPair(result);
 		Dee_Incref(&setnew_success_result);
 		return Dee_AsObject(&setnew_success_result);
 	}
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_old_value;
 	result->t_elem[0] = DeeBool_NewFalse();
 	result->t_elem[1] = old_value; /* Inherit reference */
 	return Dee_AsObject(result);
-err_old_value:
-	Dee_Decref(old_value);
+err_r:
+	DeeTuple_FreeUninitializedPair(result);
 err:
 	return NULL;
 }}

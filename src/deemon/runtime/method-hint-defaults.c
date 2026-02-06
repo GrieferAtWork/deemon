@@ -937,15 +937,13 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	struct default_foreach_with_foreach_pair_data *data;
 	Dee_ssize_t result;
-	DREF DeeTupleObject *pair;
+	DREF DeeObject *pair;
 	data = (struct default_foreach_with_foreach_pair_data *)arg;
-	pair = DeeTuple_NewUninitializedPair();
+	pair = DeeTuple_NewPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
-	pair->t_elem[0] = key;   /* Symbolic reference */
-	pair->t_elem[1] = value; /* Symbolic reference */
-	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
+	result = (*data->dfwfp_cb)(data->dfwfp_arg, pair);
+	DeeTuple_DecrefPairSymbolic(pair);
 	return result;
 err:
 	return -1;
@@ -1206,18 +1204,16 @@ struct default_foreach_with_map_enumerate_data {
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_foreach_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *value) {
 	Dee_ssize_t result;
-	DREF DeeTupleObject *pair;
+	DREF DeeObject *pair;
 	struct default_foreach_with_map_enumerate_data *data;
 	data = (struct default_foreach_with_map_enumerate_data *)arg;
 	if unlikely(!value)
 		return 0;
-	pair = DeeTuple_NewUninitializedPair();
+	pair = DeeTuple_NewPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
-	pair->t_elem[0] = key;
-	pair->t_elem[1] = value;
-	result = (*data->dfwme_cb)(data->dfwme_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
+	result = (*data->dfwme_cb)(data->dfwme_arg, pair);
+	DeeTuple_DecrefSymbolic(pair);
 	return result;
 err:
 	return -1;
@@ -1510,15 +1506,10 @@ default_seq_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeOb
 	data = (struct default_seq_getitem_index_with_map_enumerate_data *)arg;
 	if (data->dsgiiwme_nskip == 0) {
 		if (value) {
-			DREF DeeTupleObject *pair;
-			pair = DeeTuple_NewUninitializedPair();
-			if unlikely(!pair)
+			DREF DeeObject *pair = DeeTuple_NewPair(key, value);
+			if (pair == NULL)
 				goto err;
-			Dee_Incref(key);
-			pair->t_elem[0] = key;                      /* Inherit reference */
-			Dee_Incref(value);
-			pair->t_elem[1] = value;                    /* Inherit reference */
-			data->dsgiiwme_result = Dee_AsObject(pair); /* Inherit reference */
+			data->dsgiiwme_result = pair;
 		} else {
 			data->dsgiiwme_result = NULL;
 		}
@@ -19201,7 +19192,7 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewVector(2, data->msoxwse_key_and_value);
+			new_pair = DeeTuple_NewPairv(data->msoxwse_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem, data->msoxwse_seq, index, new_pair);
@@ -19237,7 +19228,7 @@ default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__a
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewVector(2, data.msoxwse_key_and_value);
+	new_pair = DeeTuple_NewPairv(data.msoxwse_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
@@ -19271,7 +19262,7 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewVector(2, data->msoxwsei_key_and_value);
+			new_pair = DeeTuple_NewPairv(data->msoxwsei_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem_index, data->msoxwsei_seq, index, new_pair);
@@ -19307,7 +19298,7 @@ default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_seti
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewVector(2, data.msoxwsei_key_and_value);
+	new_pair = DeeTuple_NewPairv(data.msoxwsei_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
@@ -21400,7 +21391,7 @@ default__map_setnew_ex__with__map_operator_trygetitem__and__seq_append(DeeObject
 		goto err;
 	if (old_value != ITER_DONE)
 		return old_value;
-	new_pair = DeeTuple_PackPair(key, value);
+	new_pair = DeeTuple_NewPair(key, value);
 	if unlikely(!new_pair)
 		goto err;
 	append_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);

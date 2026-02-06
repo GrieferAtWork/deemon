@@ -1058,25 +1058,17 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__iter_next__with__nextpair(DeeTypeObject *tp_self, DeeObject *self) {
 	int error;
-	DREF DeeObject *key_and_value[2];
-	error = (*tp_self->tp_iterator->tp_nextpair)(self, key_and_value);
-	if (error == 0) {
-		DREF DeeTupleObject *result;
-		result = DeeTuple_NewUninitializedPair();
-		if unlikely(!result)
-			goto err_key_and_value;
-		result->t_elem[0] = key_and_value[0]; /* Inherit reference */
-		result->t_elem[1] = key_and_value[1]; /* Inherit reference */
+	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
+		goto err;
+	error = (*tp_self->tp_iterator->tp_nextpair)(self, DeeTuple_ELEM(result));
+	if (error == 0)
 		return Dee_AsObject(result);
-	}
+	DeeTuple_FreeUninitializedPair(result);
 	if likely(error > 0)
 		return ITER_DONE;
 err:
 	return NULL;
-err_key_and_value:
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-	goto err;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1116,25 +1108,17 @@ default__iter_next__with__nextpair(DeeObject *__restrict self) {
 	return tdefault__iter_next__with__nextpair(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	int error;
-	DREF DeeObject *key_and_value[2];
-	error = (*Dee_TYPE(self)->tp_iterator->tp_nextpair)(self, key_and_value);
-	if (error == 0) {
-		DREF DeeTupleObject *result;
-		result = DeeTuple_NewUninitializedPair();
-		if unlikely(!result)
-			goto err_key_and_value;
-		result->t_elem[0] = key_and_value[0]; /* Inherit reference */
-		result->t_elem[1] = key_and_value[1]; /* Inherit reference */
+	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
+		goto err;
+	error = (*Dee_TYPE(self)->tp_iterator->tp_nextpair)(self, DeeTuple_ELEM(result));
+	if (error == 0)
 		return Dee_AsObject(result);
-	}
+	DeeTuple_FreeUninitializedPair(result);
 	if likely(error > 0)
 		return ITER_DONE;
 err:
 	return NULL;
-err_key_and_value:
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-	goto err;
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -3450,15 +3434,13 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	struct default_foreach_with_foreach_pair_data *data;
 	Dee_ssize_t result;
-	DREF DeeTupleObject *pair;
+	DREF DeeObject *pair;
 	data = (struct default_foreach_with_foreach_pair_data *)arg;
-	pair = DeeTuple_NewUninitializedPair();
+	pair = DeeTuple_NewPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
-	pair->t_elem[0] = key;   /* Symbolic reference */
-	pair->t_elem[1] = value; /* Symbolic reference */
-	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
+	result = (*data->dfwfp_cb)(data->dfwfp_arg, pair);
+	DeeTuple_DecrefPairSymbolic(pair);
 	return result;
 err:
 	return -1;

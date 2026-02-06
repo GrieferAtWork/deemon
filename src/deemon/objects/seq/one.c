@@ -549,7 +549,7 @@ so_mh_seq_enumerate_index(SeqOne *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF SeqOne *DCALL
 so_mh_seq_makeenumeration(SeqOne *__restrict self) {
 	DREF DeeObject *item;
-	item = DeeTuple_PackPair(DeeInt_Zero, self->so_item);
+	item = DeeTuple_NewPair(DeeInt_Zero, self->so_item);
 	if unlikely(!item)
 		goto err;
 	return (DREF SeqOne *)DeeSeq_PackOneInherited(item);

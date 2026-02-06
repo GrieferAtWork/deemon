@@ -60,15 +60,13 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	struct default_foreach_with_foreach_pair_data *data;
 	Dee_ssize_t result;
-	DREF DeeTupleObject *pair;
+	DREF DeeObject *pair;
 	data = (struct default_foreach_with_foreach_pair_data *)arg;
-	pair = DeeTuple_NewUninitializedPair();
+	pair = DeeTuple_NewPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
-	pair->t_elem[0] = key;   /* Symbolic reference */
-	pair->t_elem[1] = value; /* Symbolic reference */
-	result = (*data->dfwfp_cb)(data->dfwfp_arg, (DeeObject *)pair);
-	DeeTuple_DecrefSymbolic(Dee_AsObject(pair));
+	result = (*data->dfwfp_cb)(data->dfwfp_arg, pair);
+	DeeTuple_DecrefPairSymbolic(pair);
 	return result;
 err:
 	return -1;

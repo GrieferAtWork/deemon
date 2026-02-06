@@ -2411,8 +2411,7 @@ dict_mh_popitem(Dict *__restrict self) {
 		ASSERT(item > _DeeDict_GetRealVTab(self));
 		--item;
 	}
-	result->t_elem[0] = item->di_key;   /* Inherit reference. */
-	result->t_elem[1] = item->di_value; /* Inherit reference. */
+	DeeTuple_InitPairInheritedv(result, item->di_key_and_value);
 	item->di_key = NULL;
 	DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
 	--self->d_vused;
@@ -2442,10 +2441,7 @@ dict_mh_seq_getitem_index_impl(Dict *__restrict self, size_t index, bool tryget)
 		goto err;
 	}
 	item = &_DeeDict_GetRealVTab(self)[index];
-	result->t_elem[0] = item->di_key;
-	result->t_elem[1] = item->di_value;
-	Dee_Incref(result->t_elem[0]);
-	Dee_Incref(result->t_elem[1]);
+	DeeTuple_InitPairv(result, item->di_key_and_value);
 	DeeDict_LockEndRead(self);
 	return result;
 err:
@@ -2570,24 +2566,25 @@ dict_mh_seq_xchitem_index_impl(Dict *self, size_t index,
                                DeeObject *key, DeeObject *value) {
 	DREF DeeTupleObject *result;
 	struct dict_mh_seq_setitem_index_impl_data data;
+	result = DeeTuple_NewUninitializedPair();
+	if unlikely(!result)
+		goto err;
 	data.dsqsii_index = index;
 	data.dsqsii_deleted_key = NULL;
 	if unlikely(dict_setitem_at(self, key, value, &dict_mh_seq_setitem_index_impl_cb, &data)) {
 		if (data.dsqsii_deleted_key)
-			goto err_kv;
-		goto err;
+			goto err_r_kv;
+		goto err_r;
 	}
 	ASSERT(data.dsqsii_deleted_key);
 	ASSERT(data.dsqsii_deleted_value);
-	result = DeeTuple_NewUninitializedPair(); /* TODO: Alloc above (so OOM doesn't result in missing items) */
-	if unlikely(!result)
-		goto err_kv;
-	result->t_elem[0] = data.dsqsii_deleted_key;   /* Inherit reference */
-	result->t_elem[1] = data.dsqsii_deleted_value; /* Inherit reference */
+	DeeTuple_InitPairInherited(result, data.dsqsii_deleted_key, data.dsqsii_deleted_value);
 	return result;
-err_kv:
+err_r_kv:
 	Dee_Decref(data.dsqsii_deleted_key);
 	Dee_Decref(data.dsqsii_deleted_value);
+err_r:
+	DeeTuple_FreeUninitializedPair(result);
 err:
 	return NULL;
 }
@@ -2783,8 +2780,7 @@ dict_mh_seq_pop(Dict *self, Dee_ssize_t index) {
 	if (_DeeDict_CanOptimizeVTab(self))
 		dict_optimize_vtab(self);
 	item = &_DeeDict_GetRealVTab(self)[index];
-	result->t_elem[0] = item->di_key;   /* Inherit reference */
-	result->t_elem[1] = item->di_value; /* Inherit reference */
+	DeeTuple_InitPairInheritedv(result, item->di_key_and_value);
 	item->di_key = NULL; /* Delete item */
 	DBG_memset(&item->di_value, 0xcc, sizeof(item->di_value));
 	--self->d_vused;
