@@ -390,7 +390,7 @@ DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
 {
 	DREF List *result;
 #ifndef Dee_OBJECTLIST_HAVE_ELEMA
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	ASSERT(objc <= Dee_objectlist_elemv_usable_size(objv));
 #endif /* Dee_MallocUsableSize */
 	ASSERT(objv || !objc);
@@ -405,7 +405,7 @@ DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
 	result->l_list.ol_elemc = objc;
 #ifdef Dee_OBJECTLIST_HAVE_ELEMA
 	_DeeList_SetAlloc(result, obja);
-#elif defined(Dee_MallocUsableSize)
+#elif defined(Dee_MallocUsableSize) /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	_DeeList_SetAlloc(result, Dee_objectlist_elemv_usable_size(objv));
 #else /* ... */
 	_DeeList_SetAlloc(result, objc);

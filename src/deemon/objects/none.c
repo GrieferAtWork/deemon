@@ -926,7 +926,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	                         /**/ "causing :{UnpackError}s to be thrown.\n"
 
 	                         "\n"
-	                         "(args!)\n"
+	                         "(args!,kwds!!)\n"
 	                         "Taking any number of arguments, return the none-singleton\n"
 
 	                         "\n"

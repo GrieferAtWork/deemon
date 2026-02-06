@@ -71,7 +71,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 INTERN_CONST struct query_cache_empty_list_struct const
 query_cache_empty_list_ = {
 	0
-#ifndef Dee_MallocUsableSizeNonNull
+#ifndef Dee_MallocUsableSizeNonNull /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	, 0
 #endif /* !Dee_MallocUsableSizeNonNull */
 };

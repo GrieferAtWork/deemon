@@ -1270,7 +1270,7 @@ do_move_section:
 		/* Must generate a jump */
 		{
 			function_assembler_DEFINE_host_symbol_section(self, err, Lnext_dst, want_next, 0);
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 			sect->hs_alend = sect->hs_start + Dee_MallocUsableSize(sect->hs_start);
 			ASSERT(sect->hs_alend >= sect->hs_end);
 #else /* Dee_MallocUsableSize */

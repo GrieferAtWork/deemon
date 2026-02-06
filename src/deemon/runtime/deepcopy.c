@@ -156,7 +156,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deepcopy_addweakref(DeeDeepCopyContext *__restrict self,
                     struct Dee_weakref *__restrict wref) {
 	size_t old_alloc;
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	old_alloc = Dee_MallocUsableSize(self->dcc_weakrefv) / sizeof(struct Dee_weakref *);
 #else /* Dee_MallocUsableSize */
 	old_alloc = self->dcc_weakrefc;
@@ -616,7 +616,7 @@ DeeDeepCopy_AddImmutable(DeeDeepCopyContext *__restrict self, DeeObject *ob) {
 		self->dcc_immutablec = 2;
 	} else {
 		size_t old_alloc;
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 		old_alloc = Dee_MallocUsableSize(self->dcc_immutablev) / sizeof(DREF DeeObject *);
 #else /* Dee_MallocUsableSize */
 		old_alloc = self->dcc_immutablec;

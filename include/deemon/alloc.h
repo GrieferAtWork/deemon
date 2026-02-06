@@ -267,7 +267,7 @@ DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCAL
 DFUNDEF ATTR_PURE WUNUSED size_t (DCALL Dee_MallocUsableSize)(void *ptr);
 
 #define DeeDbg_TryReallocInPlace(ptr, n_bytes, file, line) Dee_TryReallocInPlace(ptr, n_bytes)
-#define Dee_MallocUsableSize(ptr)        Dee_MallocUsableSize(ptr)
+#define Dee_MallocUsableSize(ptr)        Dee_MallocUsableSize(ptr) /* TODO: remove "#ifdef Dee_MallocUsableSize" after CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #define Dee_MallocUsableSizeNonNull(ptr) Dee_MallocUsableSize(ptr)
 #else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 /* If supported by the OS, provide a way to determine the allocated size of an malloc-pointer. */

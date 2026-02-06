@@ -618,7 +618,7 @@ DECL_END
  *                  iow: any additional arguments to functions are silently ignored, and will not
  *                       cause any problems because the ABI specifies that any CLEANUP is done by
  *                       the CALLER of a function (and argument registers/locations are allocated
- *                       left-to-right).
+ *                       left-to-right, meaning that *trailing* arguments are ignored).
  * DCALL_RETURN_COMMON:  When defined, a function:
  *                       >> size_t DCALL foo(int a, int b);
  *                       can safely be called like (so-long as the return value fits into an "int"):

@@ -2579,7 +2579,7 @@ dict_mh_seq_xchitem_index_impl(Dict *self, size_t index,
 	}
 	ASSERT(data.dsqsii_deleted_key);
 	ASSERT(data.dsqsii_deleted_value);
-	result = DeeTuple_NewUninitializedPair();
+	result = DeeTuple_NewUninitializedPair(); /* TODO: Alloc above (so OOM doesn't result in missing items) */
 	if unlikely(!result)
 		goto err_kv;
 	result->t_elem[0] = data.dsqsii_deleted_key;   /* Inherit reference */

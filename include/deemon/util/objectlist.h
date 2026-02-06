@@ -55,7 +55,7 @@ DECL_BEGIN
 #define Dee_objectlist_elemv_calloc_safe(elemc)            ((DREF DeeObject **)Dee_CalloccSafe(elemc, sizeof(DREF DeeObject *)))
 #define Dee_objectlist_elemv_realloc_safe(elemv, elemc)    ((DREF DeeObject **)Dee_RealloccSafe(elemv, elemc, sizeof(DREF DeeObject *)))
 #define Dee_objectlist_elemv_free(elemv)                   Dee_Free(elemv)
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #define Dee_objectlist_elemv_usable_size(elemv) (Dee_MallocUsableSize(elemv) / sizeof(DREF DeeObject *))
 #endif /* Dee_MallocUsableSize */
 
@@ -65,7 +65,7 @@ DECL_BEGIN
 struct Dee_objectlist {
 	DREF DeeObject **ol_elemv; /* [1..1][0..ol_elemc|ALLOC(ol_elema)][owned] Vector of objects. */
 	size_t           ol_elemc; /* Number of used entries. */
-#ifndef Dee_MallocUsableSize
+#ifndef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 #define Dee_OBJECTLIST_HAVE_ELEMA
 	size_t           ol_elema; /* Number of allocated entries. */
 #define Dee_objectlist_getalloc(self)     ((self)->ol_elema)

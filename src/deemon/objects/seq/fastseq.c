@@ -160,7 +160,7 @@ err:
 	return NULL;
 }
 
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              /*[out]*/ size_t *__restrict p_length,
@@ -237,7 +237,7 @@ again_asvector:
 
 	/* Save the resulting length. */
 done:
-#ifndef Dee_MallocUsableSize
+#ifndef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
 	*p_length = data.sahvd_size;
@@ -269,7 +269,7 @@ err:
  * @return: (size_t)-1: An error occurred. Note that both `*p_vector' and `*p_allocated'
  *                      may have been modified since entry, with their original values
  *                      no longer being valid! */
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
@@ -306,7 +306,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 	}
 
 	data.sahvd_vector = *p_vector;
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	data.sahvd_alloc = Dee_objectlist_elemv_usable_size(data.sahvd_vector);
 #else /* Dee_MallocUsableSize */
 	data.sahvd_alloc = *p_allocated;
@@ -354,7 +354,7 @@ again_asvector:
 
 done:
 	*p_vector = data.sahvd_vector;
-#ifndef Dee_MallocUsableSize
+#ifndef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
 	return data.sahvd_size;
@@ -374,7 +374,7 @@ err:
  * sequence element at `(*p_vector)[offset]', rather than `(*p_vector)[0]'
  * -> This function can be used to efficiently append elements to a
  *    vector which may already contain other objects upon entry. */
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 PUBLIC WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
@@ -415,7 +415,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 	}
 
 	data.sahvd_vector = *p_vector;
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	data.sahvd_alloc = Dee_objectlist_elemv_usable_size(data.sahvd_vector);
 #else /* Dee_MallocUsableSize */
 	data.sahvd_alloc = *p_allocated;
@@ -477,7 +477,7 @@ again_asvector:
 
 done:
 	*p_vector = data.sahvd_vector;
-#ifndef Dee_MallocUsableSize
+#ifndef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
 	return data.sahvd_size - offset;

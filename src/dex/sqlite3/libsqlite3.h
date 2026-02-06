@@ -74,7 +74,7 @@ INTDEF DeeTypeObject DB_Type;
 
 struct query_cache_list {
 	size_t                           qcl_count;    /* [lock(:db_querycache_lock)] # of queries (only `0' for `query_cache_empty_list_PTR') */
-#ifndef Dee_MallocUsableSizeNonNull
+#ifndef Dee_MallocUsableSizeNonNull /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	size_t                           qcl_alloc;    /* [const] Allocated space */
 #define query_cache_list_getalloc(self)    ((self)->qcl_alloc)
 #define query_cache_list_setalloc(self, v) ((self)->qcl_alloc = (v))
@@ -108,7 +108,7 @@ struct query_cache_list {
 
 struct query_cache_empty_list_struct {
 	size_t qcl_count;
-#ifndef Dee_MallocUsableSizeNonNull
+#ifndef Dee_MallocUsableSizeNonNull /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	size_t qcl_alloc;
 #endif /* !Dee_MallocUsableSizeNonNull */
 };

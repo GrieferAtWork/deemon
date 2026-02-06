@@ -415,7 +415,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              /*[out]*/ size_t *__restrict p_length,
                              /*[out]*/ size_t *__restrict p_allocated);
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc2(DeeObject *__restrict self,
                               /*[out]*/ size_t *__restrict p_length);
@@ -443,7 +443,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
                                   /*in-out*/ size_t *__restrict p_allocated);
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse2(DeeObject *__restrict self,
                                    /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector);
@@ -460,7 +460,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,
                                         /*in-out*/ size_t *__restrict p_allocated,
                                         /*in*/ size_t offset);
-#ifdef Dee_MallocUsableSize
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 DFUNDEF WUNUSED NONNULL((1, 2)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
                                          /*in-out, owned(Dee_Free)*/ DREF DeeObject ***__restrict p_vector,

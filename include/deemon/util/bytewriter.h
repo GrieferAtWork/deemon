@@ -37,7 +37,7 @@ DECL_BEGIN
 struct Dee_bytewriter {
 	uint8_t *bw_base;  /* [0..1][owned] Base address. */
 	size_t   bw_size;  /* used size */
-#ifndef Dee_MallocUsableSize
+#ifndef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	size_t   bw_alloc; /* allocated size */
 #define Dee_bytewriter_getalloc(self)     ((self)->bw_alloc)
 #define _Dee_bytewriter_setalloc(self, v) (void)((self)->bw_alloc = (v))
@@ -46,8 +46,8 @@ struct Dee_bytewriter {
 #define _Dee_bytewriter_setalloc(self, v) (void)0
 #endif /* Dee_MallocUsableSize */
 };
-#ifdef Dee_MallocUsableSize
-#define DEE_BYTEWRITER_INIT { NULL, 0 }
+#ifdef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+#define Dee_BYTEWRITER_INIT { NULL, 0 }
 #define Dee_bytewriter_init(x)  \
 	(void)((x)->bw_base = NULL, \
 	       (x)->bw_size = 0)
@@ -55,7 +55,7 @@ struct Dee_bytewriter {
 	(void)(Dee_ASSERT((x)->bw_base == NULL), \
 	       Dee_ASSERT((x)->bw_size == 0))
 #else /* Dee_MallocUsableSize */
-#define DEE_BYTEWRITER_INIT { NULL, 0, 0 }
+#define Dee_BYTEWRITER_INIT { NULL, 0, 0 }
 #define Dee_bytewriter_init(x)  \
 	(void)((x)->bw_base = NULL, \
 	       (x)->bw_size = (x)->bw_alloc = 0)
@@ -136,7 +136,7 @@ _Dee_PRIVATE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putq, __UINT64_TYPE__, qword)
  * as this function will never throw any. */
 LOCAL NONNULL((1)) uint8_t *DCALL
 Dee_bytewriter_flush(struct Dee_bytewriter *__restrict self) {
-#ifndef Dee_MallocUsableSize
+#ifndef Dee_MallocUsableSize /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	Dee_ASSERT(self->bw_alloc >= self->bw_size);
 	if (self->bw_alloc > self->bw_size)
 #endif /* !Dee_MallocUsableSize */

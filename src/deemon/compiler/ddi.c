@@ -33,7 +33,7 @@
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_qsort, bzero, memcpy, mempcpy */
 #include <deemon/system.h>             /* DeeSystem_BaseName */
 #include <deemon/type.h>               /* DeeObject_Init */
-#include <deemon/util/bytewriter.h>    /* DEE_BYTEWRITER_INIT, Dee_bytewriter, Dee_bytewriter_*, bytewriter_fini */
+#include <deemon/util/bytewriter.h>    /* Dee_BYTEWRITER_INIT, Dee_bytewriter, Dee_bytewriter_*, bytewriter_fini */
 
 #include <hybrid/byteswap.h> /* HTOLE16, HTOLE32 */
 #include <hybrid/typecore.h> /* __SIZEOF_INT__ */
@@ -622,7 +622,7 @@ do_realloc:
 	if (!(current_assembler.a_flag & ASM_FNODDIXDAT)) {
 		uint16_t i, offset;
 		struct symbol *sym;
-		struct Dee_bytewriter writer = DEE_BYTEWRITER_INIT;
+		struct Dee_bytewriter writer = Dee_BYTEWRITER_INIT;
 		if unlikely(!Dee_bytewriter_alloc(&writer, 4))
 			goto err_xwriter; /* `dx_size' */
 		/* Generate debug information for references and static variables. */
