@@ -72,7 +72,7 @@ __seq_setitem__.seq_operator_setitem_index([[nonnull]] DeeObject *self,
 %{$empty = DeeRT_ErrIndexOutOfBounds(self, index, 0)}
 %{$with__seq_operator_setrange_index = {
 	int result;
-	DREF DeeObject *values = DeeSeq_PackOneSymbolic(value);
+	DREF DeeObject *values = DeeSeq_OfOneSymbolic(value);
 	if unlikely(!values)
 		goto err;
 	result = CALL_DEPENDENCY(seq_operator_setrange_index, self,

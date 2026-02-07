@@ -50,7 +50,7 @@ err:
 }}
 %{$with__map_removekeys = {
 	int result;
-	DREF DeeObject *keys = DeeSeq_PackOneSymbolic(key);
+	DREF DeeObject *keys = DeeSeq_OfOneSymbolic(key);
 	if unlikely(!keys)
 		goto err;
 	result = CALL_DEPENDENCY(map_removekeys, self, keys);

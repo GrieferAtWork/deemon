@@ -40,7 +40,7 @@ int __seq_append__.seq_append([[nonnull]] DeeObject *self,
 %{$empty = "default__seq_append__unsupported"}
 %{$with__seq_extend = {
 	int result;
-	DREF DeeObject *items = DeeSeq_PackOneSymbolic(item);
+	DREF DeeObject *items = DeeSeq_OfOneSymbolic(item);
 	if unlikely(!items)
 		goto err;
 	result = CALL_DEPENDENCY(seq_extend, self, items);

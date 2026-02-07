@@ -60,7 +60,7 @@ err:
 	old_size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(old_size == (size_t)-1)
 		goto err;
-	keys = DeeSeq_PackOneSymbolic(key);
+	keys = DeeSeq_OfOneSymbolic(key);
 	if unlikely(!keys)
 		goto err;
 	temp = CALL_DEPENDENCY(set_insertall, self, keys);

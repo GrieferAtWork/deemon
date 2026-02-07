@@ -220,7 +220,7 @@ struct seqops {
 	uint16_t       so_cas;    /* Cast */
 };
 
-INTDEF struct seqops seqops_info[4];
+INTDEF struct seqops tpconst seqops_info[4];
 
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.

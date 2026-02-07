@@ -41,6 +41,7 @@
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/operator-hints.h>  /* DeeNO_shl_t, DeeType_RequireNativeOperator */
+#include <deemon/pair.h>            /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeq_OfOneInheritedOnSuccess, DeeSeq_OfPairInheritedOnSuccess */
 #include <deemon/rodict.h>          /* Dee_EmptyRoDict */
 #include <deemon/seq.h>             /* DeeRange_New, DeeRange_NewInt, DeeSeq_*, DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>          /* DeeString* */
@@ -2041,14 +2042,16 @@ do_pack_list:
 			DISPATCH();
 		}
 
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 		TARGET(ASM_PACK_ONE, -1, +1) {
 			DREF DeeObject *sequence;
-			sequence = DeeSeq_PackOneInheritedOnSuccess(TOP); /* Inherit references. */
+			sequence = DeeSeq_OfOneInheritedOnSuccess(TOP); /* Inherit references. */
 			if unlikely(!sequence)
 				HANDLE_EXCEPT();
 			TOP = sequence; /* Inherit references. */
 			DISPATCH();
 		}
+#endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 
 		RAW_TARGET(ASM_UNPACK) {
 			int error;
@@ -5260,6 +5263,18 @@ do_pack_dict:
 					TOP = set_cast; /* Inherit reference */
 					DISPATCH();
 				}
+
+#ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+				TARGET(ASM_PACK_TWO, -2, +1) {
+					DREF DeeObject *pair;
+					pair = DeeSeq_OfPairInheritedOnSuccess(SECOND, FIRST);
+					if unlikely(!pair)
+						HANDLE_EXCEPT();
+					sp -= 1;
+					TOP = pair;
+					DISPATCH();
+				}
+#endif /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 
 				TARGET(ASM_ITERNEXT, -1, +1) {
 					DREF DeeObject *iter_res;

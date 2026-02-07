@@ -1286,9 +1286,9 @@ EXPORTS
 	_DeeSeq_ItemsToBytes@12=DeeSeq_ItemsToBytes@12
 	_DeeSeq_Max@4=DeeSeq_Max@4
 	_DeeSeq_Min@4=DeeSeq_Min@4
-	_DeeSeq_PackOne@4=DeeSeq_PackOne@4
-	_DeeSeq_PackOneInherited@4=DeeSeq_PackOneInherited@4
-	_DeeSeq_PackOneInheritedOnSuccess@4=DeeSeq_PackOneInheritedOnSuccess@4
+	_DeeSeq_OfOne@4=DeeSeq_OfOne@4
+	_DeeSeq_OfOneInherited@4=DeeSeq_OfOneInherited@4
+	_DeeSeq_OfOneInheritedOnSuccess@4=DeeSeq_OfOneInheritedOnSuccess@4
 	_DeeSeq_Sum@4=DeeSeq_Sum@4
 	_DeeSeq_Unpack@12=DeeSeq_Unpack@12
 	_DeeSerial_InplacePutObject@8=DeeSerial_InplacePutObject@8

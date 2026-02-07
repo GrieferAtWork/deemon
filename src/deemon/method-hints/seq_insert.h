@@ -39,7 +39,7 @@ int __seq_insert__.seq_insert([[nonnull]] DeeObject *self, size_t index,
 %{$empty = "default__seq_insert__unsupported"}
 %{$with__seq_insertall = {
 	int result;
-	DREF DeeObject *items = DeeSeq_PackOneSymbolic(item);
+	DREF DeeObject *items = DeeSeq_OfOneSymbolic(item);
 	if unlikely(!items)
 		goto err;
 	result = CALL_DEPENDENCY(seq_insertall, self, index, items);

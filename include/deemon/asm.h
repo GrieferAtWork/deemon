@@ -640,8 +640,14 @@
                                     * >> PUSH(List(POP(IMM8))); */
 #define ASM_CAST_VARKWDS      0x44 /* [1][-1,+1]   `cast top, varkwds'                  - Ensure that the object in stack-top supports `DeeObject_IsKw()'.
                                     * >> PUSH(DeeKw_Wrap(POP())); */
+//#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 #define ASM_PACK_ONE          0x45 /* [1][-1,+1]   `push pack Sequence, #1'             - Wrap the top stack element as a sequence
-                                    * >> PUSH({ POP() }); */
+                                    * >> #ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
+                                    * >> PUSH({ POP() });
+                                    * >> #else
+                                    * >> THROW(IllegalInstruction());
+                                    * >> #endif */
+//#endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 #define ASM_UNPACK            0x46 /* [2][-1,+n]   `unpack pop, #<imm8>'                - Pop a sequence and unpack it into <imm8> elements then pushed onto the stack.
                                     * [2][-0,+n]   `unpack PREFIX, #<imm8>', `PREFIX: unpack #<imm8>'
                                     * >> int n = IMM8;
@@ -1250,6 +1256,14 @@
                                       * >> PUSH(Tuple({ POP(IMM16)... })); */
 #define ASM16_PACK_LIST       0xf043 /* [4][-n,+1]   `push pack List, #<imm16>'           - Pop <imm16> elements and pack them into a List.
                                       * >> PUSH(List({ POP(IMM16)... })); */
+//#ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+#define ASM_PACK_TWO          0xf045 /* [2][-2,+1]   `push pack Sequence, #2'             - Wrap the top two stack elements as a 2-element sequence
+                                      * >> #ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+                                      * >> PUSH({ POP(), POP() });
+                                      * >> #else
+                                      * >> THROW(IllegalInstruction());
+                                      * >> #endif */
+//#endif /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 /*      ASM_                  0xf044  *               --------                            - ------------------ */
 /*      ASM_                  0xf045  *               --------                            - ------------------ */
 #define ASM16_UNPACK          0xf046 /* [4][-1,+n]   `unpack pop, #<imm16>'               - Pop a sequence and unpack it into <imm16> elements then pushed onto the stack.

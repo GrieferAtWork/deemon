@@ -23,6 +23,8 @@
 #define INSTR(name, ...)
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/pair.h>
+
 #ifndef INSTR
 #ifndef __DEEMON__
 #error "Must `#define INSTR(name, ...)' before including this file"
@@ -565,6 +567,19 @@ INSTR("cast", (
 	O2(ASM_CAST_VARKWDS, FNORMAL, (TOP)(VARKWDS)) /* `cast top, varkwds' */
 ))
 
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
+#define LOCAL__O2_ASM_PACK_ONE \
+	O2(ASM_PACK_ONE,       FPUSH | FSTKABS, (SEQUENCE)(FSTACKFLAG | DISP_EQ_1)) /* `push pack Sequence, #1' */
+#else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+#define LOCAL__O2_ASM_PACK_ONE /* nothing */
+#endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE */
+#ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+#define LOCAL__O2_ASM_PACK_TWO \
+	O2(ASM_PACK_TWO,       FPUSH | FSTKABS, (SEQUENCE)(FSTACKFLAG | DISP_EQ_2)) /* `push pack Sequence, #2' */
+#else /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
+#define LOCAL__O2_ASM_PACK_TWO /* nothing */
+#endif /* !CONFIG_ENABLE_SEQ_PAIR_TYPE */
+
 /* CONSTRAINTS: `pack ..., ...' */
 INSTR("pack", (
 	O2(ASM_PACK_TUPLE,     FPUSH | FSTKABS, (TUPLE)(SPIMM8))                    /* `push pack Tuple, #<imm8>' */
@@ -575,8 +590,12 @@ INSTR("pack", (
 	O2(ASM16_PACK_HASHSET, FPUSH | FSTKABS, (HASHSET)(SPIMM16))                 /* `push pack HashSet, #<imm16>' */
 	O2(ASM_PACK_DICT,      FPUSH | FSTKABS, (DICT)(FSTACKFLAG | DISP8_HALF))    /* `push pack Dict, #<imm8> * 2' */
 	O2(ASM16_PACK_DICT,    FPUSH | FSTKABS, (DICT)(FSTACKFLAG | DISP16_HALF))   /* `push pack Dict, #<imm16> * 2' */
-	O2(ASM_PACK_ONE,       FPUSH | FSTKABS, (SEQUENCE)(FSTACKFLAG | DISP_EQ_1)) /* `push pack Sequence, #1' */
+	LOCAL__O2_ASM_PACK_ONE                                                      /* `push pack Sequence, #1' */
+	LOCAL__O2_ASM_PACK_TWO                                                      /* `push pack Sequence, #2' */
+	O2(ASM_PACK_TUPLE,     FPUSH | FSTKABS, (SEQUENCE)(SPIMM8))                 /* `push pack Sequence, #<imm8>' */
+	O2(ASM16_PACK_TUPLE,   FPUSH | FSTKABS, (SEQUENCE)(SPIMM16))                /* `push pack Sequence, #<imm16>' */
 ))
+#undef LOCAL__O2_ASM_PACK_ONE
 
 /* CONSTRAINTS: `unpack <ps>, ...' */
 INSTR("unpack", (

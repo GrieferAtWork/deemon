@@ -2357,9 +2357,14 @@ again:
 				return false;
 		}
 		return true;
-#if 0 /* Already handled by "ProxyObject" below */
-	} else if (tp == &DeeSeqOne_Type) {
+#if 0
+	} else if (tp == &DeeSeqOne_Type) { /* Already handled by "ProxyObject" below */
 		self = DeeSeqOne_GET(self);
+		goto again;
+	} else if (tp == &DeeSeqPair_Type) { /* Already handled by "ProxyObject2" below */
+		if (!DeeObject_IsDeepImmutable(DeeSeqPair_ELEM(self)[0]))
+			return false;
+		self = DeeSeqPair_ELEM(self)[1];
 		goto again;
 #endif
 	} else if (tp == &DeeFunction_Type) {

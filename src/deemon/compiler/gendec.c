@@ -40,9 +40,9 @@
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FHASCTIME, Dee_MODULE_SYMBOL_GETDOCLEN, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE */
+#include <deemon/pair.h>            /* CONFIG_ENABLE_SEQ_ONE_TYPE, DeeSeqOne_GET, DeeSeqOne_Type */
 #include <deemon/rodict.h>          /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
-#include <deemon/seq.h>             /* DeeSeqOneObject, DeeSeqOne_Type */
 #include <deemon/string.h>          /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
 #include <deemon/system-features.h> /* memcpy, memmovedownc, memmoveup, memset, strlen */
 #include <deemon/system.h>          /* DeeSystem_HAVE_FS_ICASE, DeeSystem_SEP */
@@ -1229,13 +1229,15 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 	}
 
 	/* Emit a one-element sequence object (as a tuple) */
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 	if (tp_self == &DeeSeqOne_Type) {
 		if (dec_putb(DTYPE_TUPLE))
 			goto err;
 		if (dec_putptr(1))
 			goto err;
-		return dec_putobj(((DeeSeqOneObject *)self)->so_item);
+		return dec_putobj(DeeSeqOne_GET(self));
 	}
+#endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 
 	/* Fallback: try to encode a builtin object. */
 	builtin_id = Dec_BuiltinID(self);

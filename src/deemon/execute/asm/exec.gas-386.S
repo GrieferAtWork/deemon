@@ -3414,7 +3414,7 @@ target_pack_list:
 target_pack_one:
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeSeq_PackOneInheritedOnSuccess,4)
+	call   fSYM(DeeSeq_OfOneInheritedOnSuccess,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except   /* Check for errors. */
@@ -9959,6 +9959,9 @@ prefix_target16_pack_tuple = prefix_invop
 .ifndef prefix_target16_pack_list
 prefix_target16_pack_list = prefix_invop
 .endif
+.ifndef prefix_target_pack_two
+prefix_target_pack_two = prefix_invop
+.endif
 .ifndef prefix_target16_unpack
 prefix_target16_unpack = prefix_invop
 .endif
@@ -11262,7 +11265,7 @@ inst_table_f0:
 	.long target16_pack_tuple            /* 0x42 : `push pack Tuple, #<imm16>' */
 	.long target16_pack_list             /* 0x43 : `push pack List, #<imm16>' */
 	.long invop
-	.long invop
+	.long target_pack_two                /* 0x45 : `push pack Sequence, #2' */
 	.long target16_unpack                /* 0x46 : `unpack pop, #<imm16>' */
 	.long invop
 	.long invop
@@ -11778,7 +11781,7 @@ prefix_inst_table_f0:
 	.long prefix_target16_pack_tuple            /* 0x42 : `push pack Tuple, #<imm16>' */
 	.long prefix_target16_pack_list             /* 0x43 : `push pack List, #<imm16>' */
 	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_pack_two                /* 0x45 : `push pack Sequence, #2' */
 	.long prefix_target16_unpack                /* 0x46 : `unpack pop, #<imm16>' */
 	.long prefix_invop
 	.long prefix_invop

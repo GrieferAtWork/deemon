@@ -38,7 +38,8 @@
 #include <deemon/none.h>                /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>              /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, return_reference_ */
 #include <deemon/operator-hints.h>      /* DeeNO_*_t, DeeType_RequireNativeOperator */
-#include <deemon/seq.h>                 /* DeeIterator_*, DeeSeqOne_DecrefSymbolic, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
+#include <deemon/pair.h>                /* DeeSeqOne_DecrefSymbolic, DeeSeq_OfOneSymbolic */
+#include <deemon/seq.h>                 /* DeeIterator_*, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/set.h>                 /* DeeSet_NewUniversal, DeeSet_Type, Dee_EmptySet */
 #include <deemon/string.h>              /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/super.h>               /* DeeSuper_New */
@@ -2192,7 +2193,7 @@ default__seq_operator_setitem_index__empty(DeeObject *self, size_t index, DeeObj
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 default__seq_operator_setitem_index__with__seq_operator_setrange_index(DeeObject *self, size_t index, DeeObject *value) {
 	int result;
-	DREF DeeObject *values = DeeSeq_PackOneSymbolic(value);
+	DREF DeeObject *values = DeeSeq_OfOneSymbolic(value);
 	if unlikely(!values)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_setrange_index))(self, (Dee_ssize_t)index, (Dee_ssize_t)index + 1, values);
@@ -12091,7 +12092,7 @@ default__seq_insert__unsupported(DeeObject *self, size_t index, DeeObject *item)
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 default__seq_insert__with__seq_insertall(DeeObject *self, size_t index, DeeObject *item) {
 	int result;
-	DREF DeeObject *items = DeeSeq_PackOneSymbolic(item);
+	DREF DeeObject *items = DeeSeq_OfOneSymbolic(item);
 	if unlikely(!items)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_insertall))(self, index, items);
@@ -12303,7 +12304,7 @@ default__seq_append__unsupported(DeeObject *self, DeeObject *item) {
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_append__with__seq_extend(DeeObject *self, DeeObject *item) {
 	int result;
-	DREF DeeObject *items = DeeSeq_PackOneSymbolic(item);
+	DREF DeeObject *items = DeeSeq_OfOneSymbolic(item);
 	if unlikely(!items)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_extend))(self, items);
@@ -16781,7 +16782,7 @@ default__set_insert__with__seq_operator_size__and__set_insertall(DeeObject *self
 	old_size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(old_size == (size_t)-1)
 		goto err;
-	keys = DeeSeq_PackOneSymbolic(key);
+	keys = DeeSeq_OfOneSymbolic(key);
 	if unlikely(!keys)
 		goto err;
 	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_insertall))(self, keys);
@@ -16972,7 +16973,7 @@ default__set_remove__with__seq_operator_size__and__set_removeall(DeeObject *self
 	old_size = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
 	if unlikely(old_size == (size_t)-1)
 		goto err;
-	keys = DeeSeq_PackOneSymbolic(key);
+	keys = DeeSeq_OfOneSymbolic(key);
 	if unlikely(!keys)
 		goto err;
 	temp = (*DeeType_RequireMethodHint(Dee_TYPE(self), set_removeall))(self, keys);
@@ -18974,7 +18975,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__map_operator_delitem__with__map_removekeys(DeeObject *self, DeeObject *key) {
 	int result;
-	DREF DeeObject *keys = DeeSeq_PackOneSymbolic(key);
+	DREF DeeObject *keys = DeeSeq_OfOneSymbolic(key);
 	if unlikely(!keys)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_removekeys))(self, keys);

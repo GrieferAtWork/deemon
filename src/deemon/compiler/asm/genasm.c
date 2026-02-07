@@ -40,6 +40,7 @@
 #include <deemon/module.h>             /* DeeModule_GetDeemon */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref_likely, Dee_Incref */
+#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #include <deemon/seq.h>                /* Dee_EmptySeq */
 #include <deemon/set.h>                /* Dee_EmptySet */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
@@ -232,8 +233,8 @@ struct seqops {
 STATIC_ASSERT((AST_FMULTIPLE_GENERIC & 3) <= 1);
 STATIC_ASSERT((AST_FMULTIPLE_GENERIC_MAP & 3) == (AST_FMULTIPLE_DICT & 3));
 
-INTDEF struct seqops seqops_info[4];
-INTERN struct seqops seqops_info[4] = {
+INTDEF struct seqops tpconst seqops_info[4];
+INTERN_TPCONST struct seqops tpconst seqops_info[4] = {
 	/* [AST_FMULTIPLE_TUPLE   & 3] = */ { &DeeTuple_Type,   { ASM_PACK_TUPLE,   ASM16_PACK_TUPLE   }, ASM_CAST_TUPLE   },
 	/* [AST_FMULTIPLE_LIST    & 3] = */ { &DeeList_Type,    { ASM_PACK_LIST,    ASM16_PACK_LIST    }, ASM_CAST_LIST    },
 	/* [AST_FMULTIPLE_HASHSET & 3] = */ { &DeeHashSet_Type, { ASM_PACK_HASHSET, ASM16_PACK_HASHSET }, ASM_CAST_HASHSET },
@@ -242,10 +243,19 @@ INTERN struct seqops seqops_info[4] = {
 
 /* @param: type: One of `AST_FMULTIPLE_*' */
 PRIVATE int DCALL pack_sequence(uint16_t type, uint16_t num_args) {
-	uint16_t (*p_opcode)[2], op;
+	uint16_t const (*p_opcode)[2];
+	uint16_t op;
 	ASSERT(type != AST_FMULTIPLE_KEEPLAST);
-	if (type == AST_FMULTIPLE_GENERIC && num_args == 1)
-		return asm_gpack_one();
+	if (type == AST_FMULTIPLE_GENERIC) {
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
+		if (num_args == 1)
+			return asm_gpack_one();
+#endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+#ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+		if (num_args == 2)
+			return asm_gpack_two();
+#endif /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
+	}
 	if (num_args == 0) {
 		switch (type) {
 		case AST_FMULTIPLE_GENERIC:

@@ -21,7 +21,6 @@
 /*!export DeeIterator_**/
 /*!export DeeRange_**/
 /*!export DeeRefVector_**/
-/*!export DeeSeqOne**/
 /*!export DeeSeqRange**/
 /*!export DeeSeqSome**/
 /*!export DeeSeq_**/
@@ -37,13 +36,13 @@
 #include "alloc.h"     /* Dee_MallocUsableSize */
 #include "types.h"     /* DREF, DeeObject, DeeObject_Implements, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_ssize_t */
 #include "util/lock.h" /* Dee_atomic_rwlock_t */
-#ifndef __INTELLISENSE__
-#include "object.h" /* DeeObject_NewPack, Dee_Incref */
-#endif /* !__INTELLISENSE__ */
-/**/
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */
+
+#ifndef __INTELLISENSE__
+#include "object.h" /* DeeObject_NewPack, Dee_Incref */
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -491,27 +490,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Some(DeeObject *__restr
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 
-/************************************************************************/
-/* Type for `{ item }'                                                  */
-/************************************************************************/
-typedef struct {
-	Dee_OBJECT_HEAD
-	DREF DeeObject *so_item; /* [1..1][const] The sequence's first and only item. */
-} DeeSeqOneObject;
-
-DDATDEF DeeTypeObject DeeSeqOne_Type;
-#define DeeSeqOne_Check(self)      DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
-#define DeeSeqOne_CheckExact(self) DeeObject_InstanceOfExact(self, &DeeSeqSome_Type)
-#define DeeSeqOne_GET(self)        Dee_REQUIRES_OBJECT(DeeSeqOneObject, self)->so_item
-
-/* Construct a some-wrapper for `self' */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOne(DeeObject *__restrict item);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOneInherited(/*inherit(always)*/ DREF DeeObject *__restrict item);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PackOneInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict item);
-
-/* Pack a single-item sequence using a symbolic reference */
-#define DeeSeq_PackOneSymbolic(item) DeeSeq_PackOneInheritedOnSuccess(item)
-DFUNDEF NONNULL((1)) void DCALL DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self);
 
 
 #ifndef __INTELLISENSE__

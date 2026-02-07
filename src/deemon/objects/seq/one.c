@@ -31,9 +31,10 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_rets1_1 */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqOneObject, DeeSeqRange_Clamp, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
+#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, DeeSeqOneObject */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* remainder */
 #include <deemon/tuple.h>              /* DeeTuple* */
@@ -48,7 +49,6 @@
 #include "../generic-proxy.h"
 #include "concat.h"
 #include "default-compare.h"
-#include "one.h"
 #include "repeat.h"
 
 #include <stdbool.h> /* bool */
@@ -56,12 +56,22 @@
 
 DECL_BEGIN
 
-typedef DeeSeqOneObject SeqOne;
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 
+typedef DeeSeqOneObject SeqOne;
 
 /************************************************************************/
 /* SeqOneIterator                                                       */
 /************************************************************************/
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *soi_item; /* [0..1][lock(ATOMIC && CLEAR_ONCE)]
+	                           * The item to yield (or "ITER_DONE" if that already
+	                           * happened, or "NULL" if temporarily locked) */
+} SeqOneIterator;
+
+INTDEF DeeTypeObject SeqOneIterator_Type;
 
 /* Try to get a reference to the stored item without
  * (returns "ITER_DONE" if already consumed) */
@@ -237,7 +247,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF SeqOne *DCALL
 soi_getseq(SeqOneIterator *__restrict self) {
 	DREF DeeObject *result = soi_trygetitemref(self);
 	if likely(result != ITER_DONE)
-		return (DREF SeqOne *)DeeSeq_PackOneInherited(result);
+		return (DREF SeqOne *)DeeSeq_OfOneInherited(result);
 	return (DREF SeqOne *)DeeRT_ErrUnboundAttr(self, &str_seq);
 }
 
@@ -552,7 +562,7 @@ so_mh_seq_makeenumeration(SeqOne *__restrict self) {
 	item = DeeTuple_NewPair(DeeInt_Zero, self->so_item);
 	if unlikely(!item)
 		goto err;
-	return (DREF SeqOne *)DeeSeq_PackOneInherited(item);
+	return (DREF SeqOne *)DeeSeq_OfOneInherited(item);
 err:
 	return NULL;
 }
@@ -1216,7 +1226,7 @@ PRIVATE struct type_member tpconst so_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PUBLIC DeeTypeObject DeeSeqOne_Type = {
+INTERN DeeTypeObject DeeSeqOne_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqOne",
 	/* .tp_doc      = */ DOC("Specialized sequence type that always contains exactly 1 item\n"
@@ -1269,42 +1279,90 @@ PUBLIC DeeTypeObject DeeSeqOne_Type = {
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
 };
 
+#endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 
-/* Construct a some-wrapper for `self' */
+
+
+PUBLIC WUNUSED DREF DeeSeqOneObject *
+(DCALL DeeSeq_NewOneUninitialized)(void) {
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
+	return DeeObject_MALLOC(DeeSeqOneObject);
+#else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+	return (DREF DeeSeqOneObject *)DeeTuple_NewUninitialized(1);
+#endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE */
+}
+
+PUBLIC NONNULL((1)) void
+(DCALL DeeSeq_FreeOneUninitialized)(DREF DeeSeqOneObject *__restrict self) {
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
+	DeeObject_FREE(self);
+#else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+	DeeTuple_FreeUninitialized((DREF DeeTupleObject *)self);
+#endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE */
+}
+
+PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSeq_InitOneUninitialized)(/*inherit(always)*/ DREF DeeSeqOneObject *__restrict self,
+                                    DeeObject *__restrict item) {
+	ASSERT(item != Dee_AsObject(self));
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
+	Dee_Incref(item);
+	self->so_item = item;
+	DeeObject_Init(self, &DeeSeqOne_Type);
+#else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
+	ASSERT(DeeTuple_SIZE(self) == 1);
+	Dee_Incref(item);
+	DeeTuple_SET(self, 0, item);
+#endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE */
+	return Dee_AsObject(self);
+}
+
+PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeSeq_InitOneUninitializedInherited)(/*inherit(always)*/ DREF DeeSeqOneObject *__restrict self,
+                                             /*inherit(always)*/ DREF DeeObject *__restrict item) {
+	ASSERT(item != Dee_AsObject(self));
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
+	self->so_item = item; /* Inherited */
+	DeeObject_Init(self, &DeeSeqOne_Type);
+#else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
+	ASSERT(DeeTuple_SIZE(self) == 1);
+	DeeTuple_SET(self, 0, item); /* Inherited */
+#endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE */
+	return Dee_AsObject(self);
+}
+
+
+
+/* Construct a new 1-element sequence */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_PackOne(DeeObject *__restrict item) {
-	DREF DeeSeqOneObject *result = DeeObject_MALLOC(DeeSeqOneObject);
+DeeSeq_OfOne(DeeObject *__restrict item) {
+	DREF DeeSeqOneObject *result = DeeSeq_NewOneUninitialized();
 	if unlikely(!result)
 		goto err;
-	Dee_Incref(item);
-	result->so_item = item;
-	DeeObject_Init(result, &DeeSeqOne_Type);
-	return Dee_AsObject(result);
+	return DeeSeq_InitOneUninitialized(result, item);
 err:
 	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_PackOneInherited(/*inherit(always)*/ DREF DeeObject *__restrict item) {
-	DREF DeeSeqOneObject *result = DeeObject_MALLOC(DeeSeqOneObject);
+DeeSeq_OfOneInherited(/*inherit(always)*/ DREF DeeObject *__restrict item) {
+	DREF DeeSeqOneObject *result = DeeSeq_NewOneUninitialized();
 	if unlikely(!result)
 		goto err;
-	result->so_item = item; /* Inherited */
-	DeeObject_Init(result, &DeeSeqOne_Type);
-	return Dee_AsObject(result);
+	return DeeSeq_InitOneUninitializedInherited(result, item);
 err:
 	Dee_Decref(item); /* Inherited */
 	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_PackOneInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict item) {
-	DREF DeeSeqOneObject *result = DeeObject_MALLOC(DeeSeqOneObject);
+DeeSeq_OfOneInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict item) {
+	DREF DeeSeqOneObject *result = DeeSeq_NewOneUninitialized();
 	if unlikely(!result)
 		goto err;
-	result->so_item = item; /* Inherited */
-	DeeObject_Init(result, &DeeSeqOne_Type);
-	return Dee_AsObject(result);
+	return DeeSeq_InitOneUninitializedInherited(result, item);
 err:
 	return NULL;
 }
@@ -1313,6 +1371,7 @@ err:
 /* Pack a single-item sequence using a symbolic reference */
 PUBLIC NONNULL((1)) void DCALL
 DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self) {
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 	SeqOne *me = (SeqOne *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqOne_Type);
 	if (!DeeObject_IsShared(me)) {
@@ -1322,7 +1381,13 @@ DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self) {
 		Dee_Incref(me->so_item);
 		Dee_Decref_unlikely(me);
 	}
+#else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
+	ASSERT(DeeTuple_SIZE(self) == 1);
+	DeeTuple_DecrefSymbolic(self);
+#endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE */
 }
+
 
 
 DECL_END

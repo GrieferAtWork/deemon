@@ -28,6 +28,7 @@
 
 #include "../asm.h"   /* ASM16_*, ASM_*, instruction_t */
 #include "../code.h"  /* DeeCodeObject, DeeDDIObject, Dee_except_handler, code_addr_t, instruction_t */
+#include "../pair.h"  /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #include "../type.h"  /* Dee_operator_t */
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_ssize_t, OBJECT_HEAD */
 #include "ast.h"
@@ -1276,7 +1277,12 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_gpack_list(n)             (asm_subsp(n), asm_incsp(), asm_put816(ASM_PACK_LIST, n))
 #define asm_gpack_hashset(n)          (asm_subsp(n), asm_incsp(), asm_put((ASM_PACK_HASHSET & 0xff00) >> 8) || ((n) <= UINT8_MAX ? asm_putimm8((ASM_PACK_HASHSET & 0xff), (uint8_t)(n)) : asm_putimm16((ASM16_PACK_HASHSET & 0xff), (uint16_t)(n))))
 #define asm_gpack_dict(n)             (asm_subsp((n)*2), asm_incsp(), asm_put((ASM_PACK_DICT & 0xff00) >> 8) || ((n) <= UINT8_MAX ? asm_putimm8((ASM_PACK_DICT & 0xff), (uint8_t)(n)) : asm_putimm16((ASM16_PACK_DICT & 0xff), (uint16_t)(n))))
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 #define asm_gpack_one()               (asm_dicsp(), asm_put(ASM_PACK_ONE))
+#endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+#ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+#define asm_gpack_two()               (asm_ddicsp(), asm_put16(ASM_PACK_TWO))
+#endif /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #define asm_gunpack(n)                (asm_decsp(), asm_addsp(n), asm_put816(ASM_UNPACK, n))
 #define asm_gunpack_p(n)              (asm_addsp(n), asm_put816(ASM_UNPACK, n))
 #define asm_gvarargs_unpack(n)        (asm_addsp(n), asm_put((ASM_VARARGS_UNPACK & 0xff00) >> 8) || asm_putimm8(ASM_VARARGS_UNPACK & 0xff, (uint8_t)(n)))

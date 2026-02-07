@@ -123,8 +123,10 @@ assertRtTypeName("SeqWithSizeObAndGetItem");
 assertRtTypeName("SeqWithIter");
 assertRtTypeName("SeqWithIterAndLimit");
 
-assertRtTypeName("SeqOne");
-assertRtTypeName("SeqOneIterator");
+assertRtTypeName("SeqOne", { "_SeqOne", "Tuple" });
+assertRtTypeName("SeqOneIterator", { "_SeqOneIterator", "_TupleIterator" });
+assertRtTypeName("SeqPair", { "_SeqPair", "Tuple" });
+assertRtTypeName("SeqPairIterator", { "_SeqPairIterator", "_TupleIterator" });
 
 assertRtTypeName("SeqEnumerateWrapper");
 assertRtTypeName("SeqEnumerateIndexWrapper");

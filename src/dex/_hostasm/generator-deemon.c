@@ -43,6 +43,7 @@
 #include <deemon/module.h>  /* DeeModuleObject */
 #include <deemon/none.h>    /* Dee_None */
 #include <deemon/object.h>  /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_TYPE */
+#include <deemon/pair.h>    /* DeeSeq_OfOne, DeeSeq_OfPair */
 #include <deemon/seq.h>     /* DeeRange_New, DeeRange_NewInt, DeeSeq_* */
 #include <deemon/string.h>  /* DeeString_AsUtf8, DeeString_Check, WSTR_LENGTH */
 #include <deemon/tuple.h>   /* DeeTuple_Type */
@@ -1134,7 +1135,10 @@ do_jcc:
 
 	TARGET(ASM_PACK_ONE)
 		/* TODO: Optimizations */
-		return fg_vcallapi(self, &DeeSeq_PackOne, VCALL_CC_OBJECT, 1);
+		return fg_vcallapi(self, &DeeSeq_OfOne, VCALL_CC_OBJECT, 1);
+
+	TARGET(ASM_PACK_TWO)
+		return fg_vcallapi(self, &DeeSeq_OfPair, VCALL_CC_OBJECT, 2);
 
 	TARGET(ASM_UNPACK)
 		return fg_vopunpack(self, instr[1]);

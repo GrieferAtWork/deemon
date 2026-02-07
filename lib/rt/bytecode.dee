@@ -310,6 +310,7 @@ final global ASM_CAST_HASHSET = 0xf040;
 final global ASM_CAST_DICT = 0xf041;
 final global ASM16_PACK_TUPLE = 0xf042;
 final global ASM16_PACK_LIST = 0xf043;
+final global ASM_PACK_TWO = 0xf045;
 final global ASM16_UNPACK = 0xf046;
 final global ASM_PUSH_TRUE = 0xf050;
 final global ASM_PUSH_FALSE = 0xf051;

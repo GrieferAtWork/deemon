@@ -59,10 +59,11 @@
 #include <deemon/numeric.h>           /* DeeNumeric_Type */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD, Dee_STATIC_REFCOUNT_INIT, Dee_TYPE, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference, return_reference_ */
 #include <deemon/objmethod.h>         /* DeeCMethod*_*, DeeClsMember_Type, DeeClsMethod_Type, DeeClsProperty_Type, DeeKwCMethod_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethod_Type */
+#include <deemon/pair.h>              /* DeeSeq_OfOne, DeeSeq_OfPair */
 #include <deemon/property.h>          /* DeeProperty_Type */
 #include <deemon/rodict.h>            /* DeeRoDictObject, DeeRoDict_Type, Dee_EmptyRoDict */
 #include <deemon/roset.h>             /* DeeRoSetObject, DeeRoSet_Type, Dee_roset_item */
-#include <deemon/seq.h>               /* DeeIterator_Type, DeeRange_New, DeeRange_NewInt, DeeRefVector_NewReadonly, DeeSeqOne_Type, DeeSeqSomeObject, DeeSeqSome_Type, DeeSeq_Type, DeeSharedVector_Type, Dee_EmptySeq */
+#include <deemon/seq.h>               /* DeeIterator_Type, DeeRange_New, DeeRange_NewInt, DeeRefVector_NewReadonly, DeeSeqSomeObject, DeeSeqSome_Type, DeeSeq_Type, DeeSharedVector_Type, Dee_EmptySeq */
 #include <deemon/set.h>               /* DeeSet_Type, Dee_EmptySet, Dee_UniversalSet */
 #include <deemon/string.h>            /* DeeStringObject, DeeString_Type, Dee_EmptyString */
 #include <deemon/super.h>             /* DeeSuper_Type */
@@ -2063,9 +2064,23 @@ librt_get_MapDifferenceIterator_f(void) {
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqOne_Type_f(void) {
+	return_cached(get_type_of(DeeSeq_OfOne(Dee_None)));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqOneIterator_Type_f(void) {
-	return_cached(DeeObject_GetAttr(Dee_AsObject(&DeeSeqOne_Type),
-	                                Dee_AsObject(&str_Iterator)));
+	return_cached(get_Iterator_of(librt_get_SeqOne_Type_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqPair_Type_f(void) {
+	return_cached(get_type_of(DeeSeq_OfPair(Dee_None, Dee_None)));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqPairIterator_Type_f(void) {
+	return_cached(get_Iterator_of(librt_get_SeqPair_Type_f()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2905,7 +2920,10 @@ PRIVATE DEFINE_CMETHOD0(librt_get_MapIntersection, &librt_get_MapIntersection_f,
 PRIVATE DEFINE_CMETHOD0(librt_get_MapIntersectionIterator, &librt_get_MapIntersectionIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_MapDifference, &librt_get_MapDifference_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_MapDifferenceIterator, &librt_get_MapDifferenceIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD0(librt_get_SeqOne, &librt_get_SeqOne_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_SeqOneIterator, &librt_get_SeqOneIterator_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD0(librt_get_SeqPair, &librt_get_SeqPair_Type_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD0(librt_get_SeqPairIterator, &librt_get_SeqPairIterator_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ClassOperatorTable, &librt_get_ClassOperatorTable_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ClassOperatorTableIterator, &librt_get_ClassOperatorTableIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ClassAttribute, &librt_get_ClassAttribute_f, METHOD_FCONSTCALL);
@@ -3243,8 +3261,10 @@ DEX_GETTER_F_NODOC("SeqWithIter", &librt_get_SeqWithIter, DEXSYM_CONSTEXPR),    
 DEX_GETTER_F_NODOC("SeqWithIterAndLimit", &librt_get_SeqWithIterAndLimit, DEXSYM_CONSTEXPR),                       /* DefaultSequence_WithIterAndLimit_Type */
 
 /* Special sequence types */
-DEX_MEMBER_F_NODOC("SeqOne", &DeeSeqOne_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),
-DEX_GETTER_F_NODOC("SeqOneIterator", &librt_get_SeqOneIterator, DEXSYM_CONSTEXPR), /* SeqOneIterator_Type */
+DEX_GETTER_F_NODOC("SeqOne", &librt_get_SeqOne, DEXSYM_CONSTEXPR),                   /* SeqOne_Type */
+DEX_GETTER_F_NODOC("SeqOneIterator", &librt_get_SeqOneIterator, DEXSYM_CONSTEXPR),   /* SeqOneIterator_Type */
+DEX_GETTER_F_NODOC("SeqPair", &librt_get_SeqPair, DEXSYM_CONSTEXPR),                 /* SeqPair_Type */
+DEX_GETTER_F_NODOC("SeqPairIterator", &librt_get_SeqPairIterator, DEXSYM_CONSTEXPR), /* SeqPairIterator_Type */
 
 /* Misc. helper types for sequences */
 DEX_GETTER_F_NODOC("SeqEnumerateWrapper", &librt_get_EnumerateWrapper, DEXSYM_CONSTEXPR),           /* SeqEnumerateWrapper_Type */

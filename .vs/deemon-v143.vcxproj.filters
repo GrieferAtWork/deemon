@@ -597,6 +597,9 @@
 		<ClInclude Include="..\include\deemon\operator-hints.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\pair.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\property.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -1278,9 +1281,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\mapped.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\one.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\range.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -1884,6 +1884,9 @@
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\one.c">
+			<Filter>src\objects\seq</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\seq\pair.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq\range.c">

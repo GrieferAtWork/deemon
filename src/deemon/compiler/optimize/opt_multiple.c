@@ -34,6 +34,7 @@
 #include <deemon/map.h>               /* DeeMapping_NewEmpty */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_SetItem, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref */
+#include <deemon/pair.h>              /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeq_OfOne, DeeSeq_OfPair */
 #include <deemon/rodict.h>            /* Dee_rodict_builder* */
 #include <deemon/seq.h>               /* DeeSeq_* */
 #include <deemon/set.h>               /* DeeSet_NewEmpty, DeeSet_Type */
@@ -159,14 +160,28 @@ multiple_continue_at_iter:
 		} else if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
 			if unlikely(ast_graft_onto(self, self->a_multiple.m_astv[self->a_multiple.m_astc - 1]))
 				goto err;
+#ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 		} else if (self->a_flag == AST_FMULTIPLE_GENERIC && self->a_multiple.m_astc == 1) {
 			DREF DeeObject *seqone;
-			seqone = DeeSeq_PackOne(self->a_multiple.m_astv[0]->a_constexpr);
+			seqone = DeeSeq_OfOne(self->a_multiple.m_astv[0]->a_constexpr);
 			if unlikely(!seqone)
 				goto err;
 			ast_decref(self->a_multiple.m_astv[0]);
 			Dee_Free(self->a_multiple.m_astv);
 			self->a_constexpr = seqone; /* Inherit reference. */
+#endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+#ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+		} else if (self->a_flag == AST_FMULTIPLE_GENERIC && self->a_multiple.m_astc == 2) {
+			DREF DeeObject *pair;
+			pair = DeeSeq_OfPair(self->a_multiple.m_astv[0]->a_constexpr,
+			                      self->a_multiple.m_astv[1]->a_constexpr);
+			if unlikely(!pair)
+				goto err;
+			ast_decref(self->a_multiple.m_astv[1]);
+			ast_decref(self->a_multiple.m_astv[0]);
+			Dee_Free(self->a_multiple.m_astv);
+			self->a_constexpr = pair; /* Inherit reference. */
+#endif /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 		} else if (self->a_flag == AST_FMULTIPLE_TUPLE ||
 		           self->a_flag == AST_FMULTIPLE_GENERIC) {
 			DREF DeeTupleObject *new_tuple;
