@@ -37,12 +37,12 @@
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_BOUND_YES, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/pair.h>            /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* memcpy*, memmovedownc */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
@@ -1148,16 +1148,16 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 udict_mh_popitem(UDict *__restrict self) {
-	DREF DeeTupleObject *result;
+	DREF DeeSeqPairObject *result;
 	struct udict_item *iter;
 	/* Allocate a tuple which we're going to fill with some key-value pair. */
-	result = DeeTuple_NewUninitializedPair();
+	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 	UDict_LockWrite(self);
 	if unlikely(!self->ud_used) {
 		UDict_LockEndWrite(self);
-		DeeTuple_FreeUninitializedPair(result);
+		DeeSeq_FreePairUninitialized(result);
 		DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
@@ -1166,8 +1166,7 @@ udict_mh_popitem(UDict *__restrict self) {
 		ASSERT(iter != self->ud_elem + self->ud_mask);
 		++iter;
 	}
-	DeeTuple_SET(result, 0, iter->di_key);   /* Inherit reference. */
-	DeeTuple_SET(result, 1, iter->di_value); /* Inherit reference. */
+	DeeSeq_InitPairInherited(result, iter->di_key, iter->di_value);
 	Dee_Incref(dummy);
 	iter->di_key   = dummy;
 	iter->di_value = NULL;

@@ -49,13 +49,15 @@ err:
 }}
 %{using tp_iterator->tp_nextpair: {
 	int error;
-	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
-	error = CALL_DEPENDENCY(tp_iterator->tp_nextpair, self, DeeTuple_ELEM(result));
-	if (error == 0)
+	error = CALL_DEPENDENCY(tp_iterator->tp_nextpair, self, DeeSeqPair_ELEM(result));
+	if (error == 0) {
+		DeeSeq_InitPair_inplace(result);
 		return Dee_AsObject(result);
-	DeeTuple_FreeUninitializedPair(result);
+	}
+	DeeSeq_FreePairUninitialized(result);
 	if likely(error > 0)
 		return ITER_DONE;
 err:

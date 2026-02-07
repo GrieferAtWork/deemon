@@ -33,9 +33,10 @@
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Compare, Dee_CompareNe, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>     /* DeeNO_nextkey_t, DeeNO_nextpair_t, DeeType_RequireSupportedNativeOperator */
+#include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/tuple.h>              /* DeeTuple_Newf */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, OPERATOR_GETITEM, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_HashCombine */
@@ -1172,7 +1173,10 @@ err_new_index:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_gp_iter_next(DefaultIterator_WithGetItem *__restrict self) {
 	DeeObject *old_index;
-	DREF DeeObject *new_index, *result;
+	DREF DeeObject *new_index, *value;
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
+	if unlikely(!result)
+		goto err;
 again:
 	DefaultIterator_WithGetItem_LockAcquire(self);
 	old_index = self->dig_index;
@@ -1180,37 +1184,41 @@ again:
 	DefaultIterator_WithGetItem_LockRelease(self);
 	new_index = old_index; /* Inherit reference */
 	for (;;) {
-		result = (*self->dig_tp_getitem)(self->dig_seq, new_index);
-		if (result)
+		value = (*self->dig_tp_getitem)(self->dig_seq, new_index);
+		if (value)
 			break;
 		if (DeeError_Catch(&DeeError_UnboundItem)) {
 			if (DeeObject_Inc(&new_index))
-				goto err_new_index;
+				goto err_r_new_index;
 		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
+			DeeSeq_FreePairUninitialized(result);
 			return ITER_DONE;
 		} else {
-			goto err_new_index;
+			goto err_r_new_index;
 		}
 	}
 	if (DeeObject_Inc(&new_index))
-		goto err_new_index_result;
+		goto err_r_new_index_value;
 	DefaultIterator_WithGetItem_LockAcquire(self);
 	if unlikely(self->dig_index != old_index) {
 		DefaultIterator_WithGetItem_LockRelease(self);
 		Dee_Decref(new_index);
-		Dee_Decref(result);
+		Dee_Decref(value);
 		goto again;
 	}
 	Dee_Incref(new_index);
 	self->dig_index = new_index; /* Inherit (x2) */
 	DefaultIterator_WithGetItem_LockRelease(self);
 	Dee_Decref(old_index);
-	return DeeTuple_NewPairInherited(new_index, result);
-err_new_index_result:
-	Dee_Decref(result);
-err_new_index:
+	return DeeSeq_InitPairInherited(result, new_index, value);
+err_r_new_index_value:
+	Dee_Decref(value);
+err_r_new_index:
 	Dee_Decref(new_index);
+/*err_r:*/
+	DeeSeq_FreePairUninitialized(result);
+err:
 	return NULL;
 }
 
@@ -1545,7 +1553,10 @@ err_new_index:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_sgp_iter_next(DefaultIterator_WithSizeObAndGetItem *__restrict self) {
 	DeeObject *old_index;
-	DREF DeeObject *new_index, *result_index, *result;
+	DREF DeeObject *new_index, *result_index, *value;
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
+	if unlikely(!result)
+		goto err;
 again:
 	DefaultIterator_WithSizeAndGetItem_LockAcquire(self);
 	old_index = self->disg_index;
@@ -1556,46 +1567,51 @@ again:
 		int temp = DeeObject_CmpGeAsBool(new_index, self->disg_end);
 		if (temp != 0) {
 			if unlikely(temp < 0)
-				goto err_new_index;
+				goto err_r_new_index;
 			Dee_Decref(new_index);
+			DeeSeq_FreePairUninitialized(result);
 			return ITER_DONE;
 		}
-		result = (*self->disg_tp_getitem)(self->disg_seq, new_index);
-		if (result)
+		value = (*self->disg_tp_getitem)(self->disg_seq, new_index);
+		if (value)
 			break;
 		if (DeeError_Catch(&DeeError_UnboundItem)) {
 			if (DeeObject_Inc(&new_index))
-				goto err_new_index;
+				goto err_r_new_index;
 		} else if (DeeError_Catch(&DeeError_IndexError)) {
 			Dee_Decref(new_index);
+			DeeSeq_FreePairUninitialized(result);
 			return ITER_DONE;
 		} else {
-			goto err_new_index;
+			goto err_r_new_index;
 		}
 	}
 	result_index = DeeObject_Copy(new_index);
 	if unlikely(!result_index)
-		goto err_new_index_result;
+		goto err_r_new_index_result;
 	if (DeeObject_Inc(&new_index))
-		goto err_new_index_result_result_index;
+		goto err_r_new_index_result_result_index;
 	DefaultIterator_WithSizeAndGetItem_LockAcquire(self);
 	if unlikely(self->disg_index != old_index) {
 		DefaultIterator_WithSizeAndGetItem_LockRelease(self);
 		Dee_Decref(result_index);
 		Dee_Decref(new_index);
-		Dee_Decref(result);
+		Dee_Decref(value);
 		goto again;
 	}
 	self->disg_index = new_index; /* Inherit (x2) */
 	DefaultIterator_WithSizeAndGetItem_LockRelease(self);
 	Dee_Decref(old_index);
-	return DeeTuple_NewPairInherited(result_index, result);
-err_new_index_result_result_index:
+	return DeeSeq_InitPairInherited(result, result_index, value);
+err_r_new_index_result_result_index:
 	Dee_Decref(result_index);
-err_new_index_result:
-	Dee_Decref(result);
-err_new_index:
+err_r_new_index_result:
+	Dee_Decref(value);
+err_r_new_index:
 	Dee_Decref(new_index);
+/*err_r:*/
+	DeeSeq_FreePairUninitialized(result);
+err:
 	return NULL;
 }
 
@@ -2102,66 +2118,60 @@ PRIVATE struct type_member tpconst di_ikgim_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_ikgim_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
-	DREF DeeTupleObject *result;
-	DREF DeeObject *value;
-	DREF DeeObject *key;
+	DREF DeeObject *key_and_value[2];
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
+	if unlikely(!result)
+		goto err;
 nextkey:
-	key = (*self->diikgi_tp_next)(self->diikgi_iter);
-	if unlikely(!ITER_ISOK(key))
-		return (DREF DeeTupleObject *)key;
-	value = (*self->diikgi_tp_getitem)(self->diikgi_seq, key);
-	if unlikely(!value) {
-		Dee_Decref(key);
+	key_and_value[0] = (*self->diikgi_tp_next)(self->diikgi_iter);
+	if unlikely(!ITER_ISOK(key_and_value[0])) {
+		DeeSeq_FreePairUninitialized(result);
+		return key_and_value[0];
+	}
+	key_and_value[1] = (*self->diikgi_tp_getitem)(self->diikgi_seq, key_and_value[0]);
+	if unlikely(!key_and_value[1]) {
+		Dee_Decref(key_and_value[0]);
 		if (DeeError_Catch(&DeeError_UnboundItem))
 			goto nextkey;
 		if (DeeError_Catch(&DeeError_IndexError))
 			goto nextkey;
 		if (DeeError_Catch(&DeeError_KeyError))
 			goto nextkey;
-		goto err;
+		goto err_r;
 	}
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_key_value;
-	DeeTuple_SET(result, 0, key);
-	DeeTuple_SET(result, 1, value);
-	return result;
-err_key_value:
-	Dee_Decref(value);
-/*err_key:*/
-	Dee_Decref(key);
+	return DeeSeq_InitPairvInherited(result, key_and_value);
+err_r:
+	DeeSeq_FreePairUninitialized(result);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_iktrgim_iter_next(DefaultIterator_WithIterKeysAndGetItem *__restrict self) {
-	DREF DeeTupleObject *result;
-	DREF DeeObject *value;
-	DREF DeeObject *key;
+	DREF DeeObject *key_and_value[2];
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
+	if unlikely(!result)
+		goto err;
 nextkey:
-	key = (*self->diikgi_tp_next)(self->diikgi_iter);
-	if unlikely(!ITER_ISOK(key))
-		return (DREF DeeTupleObject *)key;
-	value = (*self->diikgi_tp_getitem)(self->diikgi_seq, key);
-	if (!ITER_ISOK(value)) {
-		if unlikely(!value)
-			goto err_key;
+	key_and_value[0] = (*self->diikgi_tp_next)(self->diikgi_iter);
+	if unlikely(!ITER_ISOK(key_and_value[0])) {
+		DeeSeq_FreePairUninitialized(result);
+		return key_and_value[0];
+	}
+	key_and_value[1] = (*self->diikgi_tp_getitem)(self->diikgi_seq, key_and_value[0]);
+	if (!ITER_ISOK(key_and_value[1])) {
+		if unlikely(!key_and_value[1])
+			goto err_r_key;
 		goto nextkey;
 	}
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_key_value;
-	DeeTuple_SET(result, 0, key);
-	DeeTuple_SET(result, 1, value);
-	return result;
-err_key_value:
-	Dee_Decref(value);
-err_key:
-	Dee_Decref(key);
-/*err:*/
+	return DeeSeq_InitPairvInherited(result, key_and_value);
+err_r_key:
+	Dee_Decref(key_and_value[0]);
+/*err_r:*/
+	DeeSeq_FreePairUninitialized(result);
+err:
 	return NULL;
 }
 

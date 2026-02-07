@@ -44,11 +44,11 @@
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_COMPARE_*, Dee_Compare*, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD_INIT, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_int_t, DeeType_RequireSupportedNativeOperator */
+#include <deemon/pair.h>               /* DeeSeq_OfPairInherited */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeAscii_ItoaDigits, DeeString*, DeeUni_*, Dee_ASCII_PRINTER_*, Dee_UNICODE_*, Dee_ascii_printer*, Dee_unicode_printer*, Dee_unitraits, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_LIMITS_H, CONFIG_HAVE_MATH_H, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, mempcpyc, memset */
-#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_DATA, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_SIGNED, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/__byteswap.h> /* __hybrid_bswap* */
@@ -4889,29 +4889,21 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_divmod_f(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeTupleObject *result;
 	DREF DeeIntObject *div, *rem;
 	DREF DeeIntObject *y;
 	int error;
 	DeeArg_Unpack1(err, argc, argv, "o:divmod", &y);
-	y = (DeeIntObject *)DeeObject_Int((DeeObject *)y);
+	y = (DeeIntObject *)DeeObject_Int(Dee_AsObject(y));
 	if unlikely(!y)
 		goto err;
 	error = int_divmod(self, y, &div, &rem);
 	Dee_Decref(y);
 	if unlikely(error)
 		goto err;
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_divrem;
-	DeeTuple_SET(result, 0, div); /* Inherit reference */
-	DeeTuple_SET(result, 1, rem); /* Inherit reference */
-	return result;
-err_divrem:
-	Dee_Decref_likely(div);
-	Dee_Decref_likely(rem);
+	return DeeSeq_OfPairInherited(Dee_AsObject(div),
+	                              Dee_AsObject(rem));
 err:
 	return NULL;
 }
@@ -4921,7 +4913,7 @@ int_nextafter(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *y;
 	Dee_ssize_t diff;
 	DeeArg_Unpack1(err, argc, argv, "o:nextafter", &y);
-	y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);
+	y = (DREF DeeIntObject *)DeeObject_Int(Dee_AsObject(y));
 	if unlikely(!y)
 		goto err;
 	diff = int_compareint(self, y);
@@ -4946,8 +4938,8 @@ err:
 	int_##name(DeeIntObject *self, size_t argc, DeeObject *const *argv) { \
 		DREF DeeIntObject *y;                                             \
 		Dee_ssize_t diff;                                                 \
-		DeeArg_Unpack1(err, argc, argv, #name, &y);                      \
-		y = (DREF DeeIntObject *)DeeObject_Int((DeeObject *)y);           \
+		DeeArg_Unpack1(err, argc, argv, #name, &y);                       \
+		y = (DREF DeeIntObject *)DeeObject_Int(Dee_AsObject(y));          \
 		if unlikely(!y)                                                   \
 			goto err;                                                     \
 		diff = int_compareint(self, y);                                   \

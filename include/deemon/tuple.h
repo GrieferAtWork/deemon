@@ -203,27 +203,6 @@ DeeTuple_ExtendInherited(/*inherit(always)*/ DREF DeeObject *self, size_t argc,
 
 /* Helpers for pairs. */
 #define DeeTuple_NewUninitializedPair()        DeeTuple_NewUninitialized(2)
-#define DeeTuple_TryNewUninitializedPair()     DeeTuple_TryNewUninitialized(2)
-#define DeeTuple_FreeUninitializedPair(self)   DeeTuple_FreeUninitialized(self)
-#define DeeTuple_InitPairInherited(self, a, b) (DeeTuple_SET(self, 0, a), DeeTuple_SET(self, 1, b))
-#ifdef __INTELLISENSE__
-#define DeeTuple_InitPair(self, a, b)          DeeTuple_InitPairInherited(self, a, b)
-#else /* __INTELLISENSE__ */
-#define DeeTuple_InitPair(self, a, b)          (Dee_Incref(a), DeeTuple_SET(self, 0, a), Dee_Incref(b), DeeTuple_SET(self, 1, b))
-#endif /* !__INTELLISENSE__ */
-#define DeeTuple_InitPairInheritedv(self, v)   DeeTuple_InitPairInherited(self, (v)[0], (v)[1])
-#define DeeTuple_InitPairv(self, v)            DeeTuple_InitPair(self, (v)[0], (v)[1])
-#define DeeTuple_DecrefPairSymbolic(self)      DeeTuple_DecrefSymbolic(self)
-#define DeeTuple_NewPair(a, b)                 DeeTuple_Pack(2, a, b)
-#define DeeTuple_TryNewPair(a, b)              DeeTuple_TryPack(2, a, b)
-#define DeeTuple_NewPairSymbolic(a, b)         DeeTuple_PackSymbolic(2, a, b)
-#define DeeTuple_TryNewPairSymbolic(a, b)      DeeTuple_TryPackSymbolic(2, a, b)
-#define DeeTuple_NewPairInherited(a, b)        DeeTuple_PackInherited(2, a, b)
-#define DeeTuple_NewPairv(v)                   DeeTuple_NewVector(2, v)
-#define DeeTuple_TryNewPairv(v)                DeeTuple_TryNewVector(2, v)
-#define DeeTuple_NewPairvSymbolic(v)           DeeTuple_NewVectorSymbolic(2, v)
-#define DeeTuple_TryNewPairvSymbolic(v)        DeeTuple_TryNewVectorSymbolic(2, v)
-#define DeeTuple_NewPairvInherited(v)          DeeTuple_NewVectorInherited(2, v)
 
 
 

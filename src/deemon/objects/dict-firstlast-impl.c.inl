@@ -33,8 +33,8 @@
 #include <deemon/error-rt.h>     /* DeeRT_ErrEmptySequence, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/none.h>         /* Dee_None */
 #include <deemon/object.h>       /* Dee_Decref, Dee_Incref, Dee_XDecref */
+#include <deemon/pair.h>         /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>          /* DeeSeq_Unpack */
-#include <deemon/tuple.h>        /* DeeTuple* */
 #include <deemon/types.h>        /* DREF, DeeObject, Dee_AsObject, ITER_DONE */
 #include <deemon/util/hash-io.h> /* Dee_HASH_HTAB_EOF, Dee_hash_vidx_real2virt, Dee_hash_vidx_t */
 
@@ -155,7 +155,7 @@ DECL_BEGIN
 /* dict_getlast, dict_getlastkey, dict_getlastvalue                     */
 /************************************************************************/
 #ifdef LOCAL_IS_PAIR
-#define LOCAL_value_type DeeTupleObject
+#define LOCAL_value_type DeeSeqPairObject
 #else /* LOCAL_IS_PAIR */
 #define LOCAL_value_type DeeObject
 #endif /* !LOCAL_IS_PAIR */
@@ -166,7 +166,7 @@ LOCAL_dict_getspecial(Dict *__restrict self) {
 	DREF LOCAL_value_type *result;
 	struct Dee_dict_item *item;
 #ifdef LOCAL_IS_PAIR
-	result = DeeTuple_NewUninitializedPair();
+	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 #endif /* LOCAL_IS_PAIR */
@@ -175,7 +175,7 @@ LOCAL_dict_getspecial(Dict *__restrict self) {
 		goto err_maybe_r_unbound_unlock;
 	LOCAL_dict_loaditem(self, item);
 #ifdef LOCAL_IS_PAIR
-	DeeTuple_InitPairv(result, item->di_key_and_value);
+	DeeSeq_InitPairv(result, item->di_key_and_value);
 #else /* LOCAL_IS_PAIR */
 	result = LOCAL_Dee_dict_item_getspecial(item);
 	Dee_Incref(result);
@@ -186,7 +186,7 @@ err_maybe_r_unbound_unlock:
 	DeeDict_LockEndRead(self);
 	DeeRT_ErrTUnboundAttrCStr(&DeeDict_Type, Dee_AsObject(self), LOCAL_STR_getset);
 #ifdef LOCAL_IS_PAIR
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 err:
 #endif /* LOCAL_IS_PAIR */
 	return NULL;
@@ -199,7 +199,7 @@ LOCAL_dict_trygetspecial(Dict *__restrict self) {
 	DREF LOCAL_value_type *result;
 	struct Dee_dict_item *item;
 #ifdef LOCAL_IS_PAIR
-	result = DeeTuple_NewUninitializedPair();
+	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 #endif /* LOCAL_IS_PAIR */
@@ -208,7 +208,7 @@ LOCAL_dict_trygetspecial(Dict *__restrict self) {
 		goto err_maybe_r_unbound_unlock;
 	LOCAL_dict_loaditem(self, item);
 #ifdef LOCAL_IS_PAIR
-	DeeTuple_InitPairv(result, item->di_key_and_value);
+	DeeSeq_InitPairv(result, item->di_key_and_value);
 #else /* LOCAL_IS_PAIR */
 	result = LOCAL_Dee_dict_item_getspecial(item);
 	Dee_Incref(result);
@@ -218,7 +218,7 @@ LOCAL_dict_trygetspecial(Dict *__restrict self) {
 err_maybe_r_unbound_unlock:
 	DeeDict_LockEndRead(self);
 #ifdef LOCAL_IS_PAIR
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 #endif /* LOCAL_IS_PAIR */
 	return (DREF LOCAL_value_type *)ITER_DONE;
 #ifdef LOCAL_IS_PAIR

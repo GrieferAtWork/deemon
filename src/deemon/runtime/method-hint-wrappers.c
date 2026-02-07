@@ -30,6 +30,7 @@
 #include <deemon/method-hints.h> /* DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
 #include <deemon/none.h>         /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>       /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, ITER_DONE, return_reference */
+#include <deemon/pair.h>         /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/tuple.h>        /* DEFINE_TUPLE, DeeNullableTuple_Type, DeeTuple* */
 
 #include "../objects/seq/enumerate-cb.h"
@@ -2216,23 +2217,22 @@ DeeMA___map_setold_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	DeeArg_UnpackStruct2(err, argc, argv, "__map_setold_ex__", &args, &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
-	DREF DeeObject *old_value;
-	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	DREF DeeObject *old_value, *true_;
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 	old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setold_ex))(self, args.key, args.value);
 	if unlikely(!old_value)
 		goto err_r;
 	if (old_value == ITER_DONE) {
-		DeeTuple_FreeUninitializedPair(result);
+		DeeSeq_FreePairUninitialized(result);
 		Dee_Incref(&setold_failed_result);
 		return Dee_AsObject(&setold_failed_result);
 	}
-	result->t_elem[0] = DeeBool_NewTrue();
-	result->t_elem[1] = old_value; /* Inherit reference */
-	return Dee_AsObject(result);
+	true_ = DeeBool_NewTrue();
+	return DeeSeq_InitPairInherited(result, true_, old_value);
 err_r:
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 err:
 	return NULL;
 }}
@@ -2262,23 +2262,22 @@ DeeMA___map_setnew_ex__(DeeObject *__restrict self, size_t argc, DeeObject *cons
 	DeeArg_UnpackStruct2(err, argc, argv, "__map_setnew_ex__", &args, &args.key, &args.value);
 {
 	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
-	DREF DeeObject *old_value;
-	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	DREF DeeObject *old_value, *false_;
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 	old_value = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_setnew_ex))(self, args.key, args.value);
 	if unlikely(!old_value)
 		goto err_r;
 	if (old_value == ITER_DONE) {
-		DeeTuple_FreeUninitializedPair(result);
+		DeeSeq_FreePairUninitialized(result);
 		Dee_Incref(&setnew_success_result);
 		return Dee_AsObject(&setnew_success_result);
 	}
-	result->t_elem[0] = DeeBool_NewFalse();
-	result->t_elem[1] = old_value; /* Inherit reference */
-	return Dee_AsObject(result);
+	false_ = DeeBool_NewFalse();
+	return DeeSeq_InitPairInherited(result, false_, old_value);
 err_r:
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 err:
 	return NULL;
 }}

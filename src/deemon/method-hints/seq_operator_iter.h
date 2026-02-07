@@ -251,11 +251,11 @@ default_foreach_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *valu
 	data = (struct default_foreach_with_map_enumerate_data *)arg;
 	if unlikely(!value)
 		return 0;
-	pair = DeeTuple_NewPairSymbolic(key, value);
+	pair = DeeSeq_OfPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
 	result = (*data->dfwme_cb)(data->dfwme_arg, pair);
-	DeeTuple_DecrefSymbolic(pair);
+	DeeSeqPair_DecrefSymbolic(pair);
 	return result;
 err:
 	return -1;

@@ -48,6 +48,7 @@
 #include <deemon/numeric.h>         /* DeeNumeric_Type */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
+#include <deemon/pair.h>            /* DeeSeq_OfPairvInherited */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, DeeSharedVector_Decref, DeeSharedVector_NewShared, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
@@ -239,7 +240,7 @@ jmapiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
 	key_and_value[1] = DeeJson_ParseObject(&parser, false);
 	if unlikely(!key_and_value[1])
 		goto err_key;
-	return DeeTuple_NewPairvInherited(key_and_value);
+	return DeeSeq_OfPairvInherited(key_and_value);
 err_key_syntax:
 	err_json_syntax();
 err_key:

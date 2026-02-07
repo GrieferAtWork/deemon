@@ -37,6 +37,7 @@
 #include <deemon/none.h>            /* DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/notify.h>          /* Dee_GetEnv */
 #include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/pair.h>            /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_EmptyString, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* memcpy, select */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_SleepNoInt */
@@ -2147,10 +2148,10 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeSockAddrObject *result_addr;
-	DREF DeeTupleObject *result;
+	DREF DeeSeqPairObject *result;
 	DREF DeeObject *result_text;
 	size_t max_size;
 	uint64_t timeout;
@@ -2216,45 +2217,45 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result_addr)
 		goto err;
 
+	/* Create a new pair to package the 2 objects. */
+	result = DeeSeq_NewPairUninitialized();
+	if unlikely(!result)
+		goto err_addr;
+
 	/* Actually receive the data. */
 	result_text = DeeSocket_RecvData(self, timeout, max_size, flags,
 	                                 &result_addr->sa_addr);
 	if unlikely(!result_text)
-		goto err_addr;
+		goto err_addr_r;
 
-	/* Create a new tuple to package the 2 objects. */
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_text;
 	if (result_text == ITER_DONE) {
-		/* A somewhat different story: must return (none, "") */
+		/* A somewhat different story: must return (none, Bytes()) */
 		DeeObject_FREE(result_addr);
-		result->t_elem[0] = DeeNone_NewRef();
-		result->t_elem[1] = DeeString_NewEmpty();
+		result_addr = (DREF DeeSockAddrObject *)DeeNone_NewRef();
+		result_text = DeeBytes_NewEmpty();
 	} else {
 		DeeObject_Init(result_addr, &DeeSockAddr_Type);
-		/* Fill the result tuple with the socket address and text. */
-		result->t_elem[0] = (DeeObject *)result_addr; /* Inherit */
-		result->t_elem[1] = (DeeObject *)result_text; /* Inherit */
 	}
-	return result;
-err_text:
-	if (result_text != ITER_DONE)
-		Dee_Decref(result_text);
+
+	/* Fill the result pair with the socket address and text. */
+	return DeeSeq_InitPairInherited(result, Dee_AsObject(result_addr), result_text);
+err_addr_r:
+	DeeSeq_FreePairUninitialized(result);
 err_addr:
 	DeeObject_FREE(result_addr);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
 	uint64_t timeout;
 	int flags;
 	Dee_ssize_t result_size;
 	DREF DeeSockAddrObject *result_addr;
-	DREF DeeTupleObject *result;
+	DREF DeeSeqPairObject *result;
+	DREF DeeObject *result_size_ob;
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("recvfrominto", params: """
 	DeeObject *data;
 	DeeObject *arg1 = NULL;
@@ -2300,6 +2301,13 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeObject_GetBuf(args.data, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err_addr;
+
+	/* Create a new pair to package the 2 objects. */
+	result = DeeSeq_NewPairUninitialized();
+	if unlikely(!result) {
+		DeeBuffer_Fini(&buffer);
+		goto err_addr;
+	}
 	result_size = DeeSocket_RecvFrom(self,
 	                                 timeout,
 	                                 buffer.bb_base,
@@ -2308,30 +2316,24 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	                                 &result_addr->sa_addr);
 	DeeBuffer_Fini(&buffer);
 	if unlikely(result_size < 0)
-		goto err_addr;
+		goto err_addr_r;
 
-	/* Create a new tuple to package the 2 objects. */
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_addr;
 	if (result_size == 0) {
 		/* A somewhat different story: must return (none, "") */
 		DeeObject_FREE(result_addr);
-		result->t_elem[0] = DeeNone_NewRef();
-		result->t_elem[1] = DeeInt_NewZero();
+		result_addr    = (DREF DeeSockAddrObject *)DeeNone_NewRef();
+		result_size_ob = DeeInt_NewZero();
 	} else {
-		DREF DeeObject *result_size_ob;
 		result_size_ob = DeeInt_NewSize((size_t)result_size);
-		if unlikely(!result_size_ob) {
-			DeeTuple_FreeUninitializedPair(result);
-			goto err_addr;
-		}
+		if unlikely(!result_size_ob)
+			goto err_addr_r;
 		DeeObject_Init(result_addr, &DeeSockAddr_Type);
-		/* Fill the result tuple with the socket address and result-size. */
-		DeeTuple_SET(result, 0, (DeeObject *)result_addr); /* Inherit */
-		DeeTuple_SET(result, 1, result_size_ob);           /* Inherit */
 	}
-	return result;
+
+	/* Fill the result pair with the socket address and result-size. */
+	return DeeSeq_InitPairInherited(result, Dee_AsObject(result_addr), result_size_ob);
+err_addr_r:
+	DeeSeq_FreePairUninitialized(result);
 err_addr:
 	DeeObject_FREE(result_addr);
 err:

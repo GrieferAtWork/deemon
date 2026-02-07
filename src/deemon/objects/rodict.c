@@ -36,12 +36,12 @@
 #include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_neT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/pair.h>               /* DeeSeqPair*, DeeSeq_* */
 #include <deemon/rodict.h>             /* DeeRoDict*, Dee_EmptyRoDict, Dee_empty_rodict_object, Dee_rodict_builder*, _DeeRoDict_* */
 #include <deemon/roset.h>              /* DeeRoSet_Type */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* bzero*, memcpy, memmovedownc, mempcpyc, memset */
-#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_F*, OPERATOR_*, STRUCT_*, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
@@ -1345,61 +1345,46 @@ rodict_nonempty_as_bound(RoDict *__restrict self) {
 	return Dee_BOUND_FROMBOOL(self->rd_vsize != 0);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_getfirst(RoDict *__restrict self) {
-	DREF DeeTupleObject *result;
 	struct Dee_dict_item *item;
 	if unlikely(!self->rd_vsize)
 		goto err_unbound;
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err;
 	item = _DeeRoDict_GetRealVTab(self);
-	result->t_elem[0] = item->di_key;
-	Dee_Incref(result->t_elem[0]);
-	result->t_elem[1] = item->di_value;
-	Dee_Incref(result->t_elem[1]);
-	return result;
+	return DeeSeq_OfPairv(item->di_key_and_value);
 err_unbound:
-	DeeRT_ErrUnboundAttr(self, &str_first);
-err:
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str_first);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_getlast(RoDict *__restrict self) {
-	DREF DeeTupleObject *result;
 	struct Dee_dict_item *item;
 	if unlikely(!self->rd_vsize)
 		goto err_unbound;
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err;
 	item = _DeeRoDict_GetRealVTab(self);
 	item += self->rd_vsize - 1;
-	result->t_elem[0] = item->di_key;
-	Dee_Incref(result->t_elem[0]);
-	result->t_elem[1] = item->di_value;
-	Dee_Incref(result->t_elem[1]);
-	return result;
+	return DeeSeq_OfPairv(item->di_key_and_value);
 err_unbound:
-	DeeRT_ErrUnboundAttr(self, &str_last);
-err:
-	return NULL;
+	return DeeRT_ErrUnboundAttr(self, &str_last);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_trygetfirst(RoDict *__restrict self) {
-	if (!self->rd_vsize)
-		return (DREF DeeTupleObject *)ITER_DONE;
-	return rodict_getfirst(self);
+	struct Dee_dict_item *item;
+	if unlikely(!self->rd_vsize)
+		return ITER_DONE;
+	item = _DeeRoDict_GetRealVTab(self);
+	return DeeSeq_OfPairv(item->di_key_and_value);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_trygetlast(RoDict *__restrict self) {
-	if (!self->rd_vsize)
-		return (DREF DeeTupleObject *)ITER_DONE;
-	return rodict_getlast(self);
+	struct Dee_dict_item *item;
+	if unlikely(!self->rd_vsize)
+		return ITER_DONE;
+	item = _DeeRoDict_GetRealVTab(self);
+	item += self->rd_vsize - 1;
+	return DeeSeq_OfPairv(item->di_key_and_value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1453,41 +1438,40 @@ rodict___hidxio__(RoDict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rodict_mh_seq_foreach(RoDict *__restrict self, Dee_foreach_t cb, void *arg) {
-	DREF DeeTupleObject *key_and_value;
+	DREF DeeSeqPairObject *key_and_value;
 	Dee_hash_vidx_t i;
 	Dee_ssize_t temp, result = 0;
-	key_and_value = DeeTuple_NewUninitializedPair();
+	key_and_value = DeeSeq_NewPairUninitialized();
 	if unlikely(!key_and_value)
 		goto err;
+	DeeSeq_InitPair_inplace(key_and_value);
 	for (i = 0; i < self->rd_vsize; ++i) {
 		struct Dee_dict_item *item;
 		item = &_DeeRoDict_GetRealVTab(self)[i];
-		key_and_value->t_elem[0] = item->di_key;   /* Inherit reference (shared) */
-		key_and_value->t_elem[1] = item->di_value; /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[0] = item->di_key;   /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[1] = item->di_value; /* Inherit reference (shared) */
 		temp = (*cb)(arg, (DeeObject *)key_and_value);
 		if unlikely(temp < 0)
 			goto err_temp_key_and_value;
 		result += temp;
-		ASSERT(key_and_value->t_elem[0] == item->di_key);
-		ASSERT(key_and_value->t_elem[1] == item->di_value);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[0] == item->di_key);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[1] == item->di_value);
 		/* Reset "key_and_value" for another iteration */
 		if unlikely(DeeObject_IsShared(key_and_value)) {
-			Dee_Incref(key_and_value->t_elem[1]);
-			Dee_Incref(key_and_value->t_elem[0]);
-			Dee_Decref_unlikely(key_and_value);
-			key_and_value = DeeTuple_NewUninitializedPair();
+			DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
+			key_and_value = DeeSeq_NewPairUninitialized();
 			if unlikely(!key_and_value)
 				goto err;
+			DeeSeq_InitPair_inplace(key_and_value);
 		} else {
-			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+			DBG_memset(DeeSeqPair_ELEM(key_and_value), 0xcc, 2 * sizeof(DREF DeeObject *));
 		}
 	}
-	DeeTuple_FreeUninitializedPair(key_and_value);
+	DeeSeq_FiniPair_inplace(key_and_value);
+	DeeSeq_FreePairUninitialized(key_and_value);
 	return result;
 err_temp_key_and_value:
-	Dee_Incref(key_and_value->t_elem[1]);
-	Dee_Incref(key_and_value->t_elem[0]);
-	Dee_Decref_likely(key_and_value);
+	DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
 	return temp;
 err:
 	return -1;
@@ -1495,43 +1479,42 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rodict_mh_seq_foreach_reverse(RoDict *__restrict self, Dee_foreach_t cb, void *arg) {
-	DREF DeeTupleObject *key_and_value;
+	DREF DeeSeqPairObject *key_and_value;
 	Dee_hash_vidx_t i;
 	Dee_ssize_t temp, result = 0;
-	key_and_value = DeeTuple_NewUninitializedPair();
+	key_and_value = DeeSeq_NewPairUninitialized();
 	if unlikely(!key_and_value)
 		goto err;
+	DeeSeq_InitPair_inplace(key_and_value);
 	i = self->rd_vsize;
 	while (i) {
 		struct Dee_dict_item *item;
 		--i;
 		item = &_DeeRoDict_GetRealVTab(self)[i];
-		key_and_value->t_elem[0] = item->di_key;   /* Inherit reference (shared) */
-		key_and_value->t_elem[1] = item->di_value; /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[0] = item->di_key;   /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[1] = item->di_value; /* Inherit reference (shared) */
 		temp = (*cb)(arg, (DeeObject *)key_and_value);
 		if unlikely(temp < 0)
 			goto err_temp_key_and_value;
 		result += temp;
-		ASSERT(key_and_value->t_elem[0] == item->di_key);
-		ASSERT(key_and_value->t_elem[1] == item->di_value);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[0] == item->di_key);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[1] == item->di_value);
 		/* Reset "key_and_value" for another iteration */
 		if unlikely(DeeObject_IsShared(key_and_value)) {
-			Dee_Incref(key_and_value->t_elem[1]);
-			Dee_Incref(key_and_value->t_elem[0]);
-			Dee_Decref_unlikely(key_and_value);
-			key_and_value = DeeTuple_NewUninitializedPair();
+			DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
+			key_and_value = DeeSeq_NewPairUninitialized();
 			if unlikely(!key_and_value)
 				goto err;
+			DeeSeq_InitPair_inplace(key_and_value);
 		} else {
-			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+			DBG_memset(DeeSeqPair_ELEM(key_and_value), 0xcc, 2 * sizeof(DREF DeeObject *));
 		}
 	}
-	DeeTuple_FreeUninitializedPair(key_and_value);
+	DeeSeq_FiniPair_inplace(key_and_value);
+	DeeSeq_FreePairUninitialized(key_and_value);
 	return result;
 err_temp_key_and_value:
-	Dee_Incref(key_and_value->t_elem[1]);
-	Dee_Incref(key_and_value->t_elem[0]);
-	Dee_Decref_likely(key_and_value);
+	DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
 	return temp;
 err:
 	return -1;
@@ -1540,43 +1523,42 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rodict_mh_seq_enumerate_index(RoDict *__restrict self, Dee_seq_enumerate_index_t cb,
                               void *arg, size_t start, size_t end) {
-	DREF DeeTupleObject *key_and_value;
+	DREF DeeSeqPairObject *key_and_value;
 	Dee_ssize_t temp, result = 0;
-	key_and_value = DeeTuple_NewUninitializedPair();
+	key_and_value = DeeSeq_NewPairUninitialized();
 	if unlikely(!key_and_value)
 		goto err;
+	DeeSeq_InitPair_inplace(key_and_value);
 	if (end > self->rd_vsize)
 		end = self->rd_vsize;
 	while (start < end) {
 		struct Dee_dict_item *item;
 		item = &_DeeRoDict_GetRealVTab(self)[start];
-		key_and_value->t_elem[0] = item->di_key;   /* Inherit reference (shared) */
-		key_and_value->t_elem[1] = item->di_value; /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[0] = item->di_key;   /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[1] = item->di_value; /* Inherit reference (shared) */
 		temp = (*cb)(arg, start, (DeeObject *)key_and_value);
 		if unlikely(temp < 0)
 			goto err_temp_key_and_value;
 		result += temp;
-		ASSERT(key_and_value->t_elem[0] == item->di_key);
-		ASSERT(key_and_value->t_elem[1] == item->di_value);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[0] == item->di_key);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[1] == item->di_value);
 		/* Reset "key_and_value" for another iteration */
 		if unlikely(DeeObject_IsShared(key_and_value)) {
-			Dee_Incref(key_and_value->t_elem[1]);
-			Dee_Incref(key_and_value->t_elem[0]);
-			Dee_Decref_unlikely(key_and_value);
-			key_and_value = DeeTuple_NewUninitializedPair();
+			DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
+			key_and_value = DeeSeq_NewPairUninitialized();
 			if unlikely(!key_and_value)
 				goto err;
+			DeeSeq_InitPair_inplace(key_and_value);
 		} else {
-			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+			DBG_memset(DeeSeqPair_ELEM(key_and_value), 0xcc, 2 * sizeof(DREF DeeObject *));
 		}
 		++start;
 	}
-	DeeTuple_FreeUninitializedPair(key_and_value);
+	DeeSeq_FiniPair_inplace(key_and_value);
+	DeeSeq_FreePairUninitialized(key_and_value);
 	return result;
 err_temp_key_and_value:
-	Dee_Incref(key_and_value->t_elem[1]);
-	Dee_Incref(key_and_value->t_elem[0]);
-	Dee_Decref_likely(key_and_value);
+	DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
 	return temp;
 err:
 	return -1;
@@ -1585,73 +1567,63 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rodict_mh_seq_enumerate_index_reverse(RoDict *__restrict self, Dee_seq_enumerate_index_t cb,
                                       void *arg, size_t start, size_t end) {
-	DREF DeeTupleObject *key_and_value;
+	DREF DeeSeqPairObject *key_and_value;
 	Dee_ssize_t temp, result = 0;
-	key_and_value = DeeTuple_NewUninitializedPair();
+	key_and_value = DeeSeq_NewPairUninitialized();
 	if unlikely(!key_and_value)
 		goto err;
+	DeeSeq_InitPair_inplace(key_and_value);
 	if (end > self->rd_vsize)
 		end = self->rd_vsize;
 	while (start < end) {
 		struct Dee_dict_item *item;
 		--end;
 		item = &_DeeRoDict_GetRealVTab(self)[end];
-		key_and_value->t_elem[0] = item->di_key;   /* Inherit reference (shared) */
-		key_and_value->t_elem[1] = item->di_value; /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[0] = item->di_key;   /* Inherit reference (shared) */
+		DeeSeqPair_ELEM(key_and_value)[1] = item->di_value; /* Inherit reference (shared) */
 		temp = (*cb)(arg, end, (DeeObject *)key_and_value);
 		if unlikely(temp < 0)
 			goto err_temp_key_and_value;
 		result += temp;
-		ASSERT(key_and_value->t_elem[0] == item->di_key);
-		ASSERT(key_and_value->t_elem[1] == item->di_value);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[0] == item->di_key);
+		ASSERT(DeeSeqPair_ELEM(key_and_value)[1] == item->di_value);
 		/* Reset "key_and_value" for another iteration */
 		if unlikely(DeeObject_IsShared(key_and_value)) {
-			Dee_Incref(key_and_value->t_elem[1]);
-			Dee_Incref(key_and_value->t_elem[0]);
-			Dee_Decref_unlikely(key_and_value);
-			key_and_value = DeeTuple_NewUninitializedPair();
+			DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
+			key_and_value = DeeSeq_NewPairUninitialized();
 			if unlikely(!key_and_value)
 				goto err;
+			DeeSeq_InitPair_inplace(key_and_value);
 		} else {
-			DBG_memset(key_and_value->t_elem, 0xcc, 2 * sizeof(DREF DeeObject *));
+			DBG_memset(DeeSeqPair_ELEM(key_and_value), 0xcc, 2 * sizeof(DREF DeeObject *));
 		}
 	}
-	DeeTuple_FreeUninitializedPair(key_and_value);
+	DeeSeq_FiniPair_inplace(key_and_value);
+	DeeSeq_FreePairUninitialized(key_and_value);
 	return result;
 err_temp_key_and_value:
-	Dee_Incref(key_and_value->t_elem[1]);
-	Dee_Incref(key_and_value->t_elem[0]);
-	Dee_Decref_likely(key_and_value);
+	DeeSeqPair_DecrefSymbolic(Dee_AsObject(key_and_value));
 	return temp;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_mh_seq_getitem_index(RoDict *__restrict self, size_t index) {
-	DREF DeeTupleObject *result;
 	struct Dee_dict_item *item;
 	if unlikely(index >= self->rd_vsize)
 		goto err_oob;
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err;
 	item = &_DeeRoDict_GetRealVTab(self)[index];
-	result->t_elem[0] = item->di_key;
-	Dee_Incref(result->t_elem[0]);
-	result->t_elem[1] = item->di_value;
-	Dee_Incref(result->t_elem[1]);
-	return result;
+	return DeeSeq_OfPairv(item->di_key_and_value);
 err_oob:
 	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->rd_vsize);
-err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_mh_seq_trygetitem_index(RoDict *__restrict self, size_t index) {
 	if (index >= self->rd_vsize)
-		return (DREF DeeTupleObject *)ITER_DONE;
+		return ITER_DONE;
 	return rodict_mh_seq_getitem_index(self, index);
 }
 

@@ -28,11 +28,11 @@
 #include <deemon/computed-operators.h>
 #include <deemon/map.h>                /* DeeMapping_Type, DeeSharedItem */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_foreach_pair_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* memcpyc, strcmp */
-#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visitv, STRUCT_OBJECT, STRUCT_SIZE_T, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
@@ -122,45 +122,40 @@ smapiter_nextvalue(SharedMapIterator *__restrict self) {
 	return result_value;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smapiter_next(SharedMapIterator *__restrict self) {
-	DREF DeeTupleObject *result;
-	DREF DeeObject *result_key, *result_value;
 	SharedMap *map = self->smi_seq;
+	DREF DeeObject *result_key_and_value[2];
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
+	if unlikely(!result)
+		goto err;
 	for (;;) {
 		size_t index;
 		SharedMap_LockRead(map);
 		index = atomic_read(&self->smi_index);
 		if (self->smi_index >= map->sm_length) {
 			SharedMap_LockEndRead(map);
-			return (DREF DeeTupleObject *)ITER_DONE;
+			DeeSeq_FreePairUninitialized(result);
+			return ITER_DONE;
 		}
-		result_key   = map->sm_vector[index].si_key;
-		result_value = map->sm_vector[index].si_value;
-
 		/* Acquire a reference to keep the item alive. */
-		Dee_Incref(result_key);
-		Dee_Incref(result_value);
+		result_key_and_value[0] = map->sm_vector[index].si_key;
+		Dee_Incref(result_key_and_value[0]);
+		result_key_and_value[1] = map->sm_vector[index].si_value;
+		Dee_Incref(result_key_and_value[1]);
 		SharedMap_LockEndRead(map);
 		if (atomic_cmpxch_weak_or_write(&self->smi_index, index, index + 1))
 			break;
 
 		/* If some other thread stole the index, drop their value. */
-		Dee_Decref(result_value);
-		Dee_Decref(result_key);
+		Dee_Decref(result_key_and_value[1]);
+		Dee_Decref(result_key_and_value[0]);
 	}
 
-	/* Got the key+value. Now pack them together into a tuple. */
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result) {
-		Dee_Decref(result_value);
-		Dee_Decref(result_key);
-		goto done;
-	}
-	DeeTuple_SET(result, 0, result_key);   /* Inherit reference. */
-	DeeTuple_SET(result, 1, result_value); /* Inherit reference. */
-done:
-	return result;
+	/* Got the key+value. Now pack them together into a pair. */
+	return DeeSeq_InitPairvInherited(result, result_key_and_value);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

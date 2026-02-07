@@ -24,23 +24,22 @@
 [[alias(Mapping.setnew_ex)]]
 __map_setnew_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setnew_success_result, 2, { Dee_True, Dee_None });
-	DREF DeeObject *old_value;
-	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	DREF DeeObject *old_value, *false_;
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 	old_value = CALL_DEPENDENCY(map_setnew_ex, self, key, value);
 	if unlikely(!old_value)
 		goto err_r;
 	if (old_value == ITER_DONE) {
-		DeeTuple_FreeUninitializedPair(result);
+		DeeSeq_FreePairUninitialized(result);
 		Dee_Incref(&setnew_success_result);
 		return Dee_AsObject(&setnew_success_result);
 	}
-	result->t_elem[0] = DeeBool_NewFalse();
-	result->t_elem[1] = old_value; /* Inherit reference */
-	return Dee_AsObject(result);
+	false_ = DeeBool_NewFalse();
+	return DeeSeq_InitPairInherited(result, false_, old_value);
 err_r:
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 err:
 	return NULL;
 }
@@ -103,11 +102,11 @@ err:
 		goto err;
 	if (old_value != ITER_DONE)
 		return old_value;
-	new_pair = DeeTuple_NewPair(key, value);
+	new_pair = DeeSeq_OfPairSymbolic(key, value);
 	if unlikely(!new_pair)
 		goto err;
 	append_status = CALL_DEPENDENCY(seq_append, self, new_pair);
-	Dee_Decref_unlikely(new_pair);
+	DeeSeqPair_DecrefSymbolic(new_pair);
 	if unlikely(append_status)
 		goto err;
 	return ITER_DONE;

@@ -34,6 +34,7 @@
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINTREF, TYPE_METHOD_HINTREF_DOC */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_formatprinter_t, Dee_ssize_t, return_reference, return_reference_ */
+#include <deemon/pair.h>            /* DeeSeq_OfPairInherited */
 #include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
 #include <deemon/seq.h>             /* DeeSeqSome*, DeeSeq_NewEmpty */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeCodec_Decode, DeeCodec_Encode, DeeDbgString_New2ByteBuffer, DeeDbgString_New4ByteBuffer, DeeString*, DeeUni_*, Dee_EmptyString, Dee_STRING_HASH_UNSET, Dee_STRING_UTF_FASCII, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_uniflag_t, Dee_unitraits, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_COMMON3, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
@@ -1991,36 +1992,28 @@ err:
 	return NULL;
 }
 
-#ifndef DeeTuple_NewII_DEFINED
-#define DeeTuple_NewII_DEFINED
+#ifndef DeeSeq_OfPairII_DEFINED
+#define DeeSeq_OfPairII_DEFINED
 #ifdef __OPTIMIZE_SIZE__
-#define DeeTuple_NewII(a, b) DeeTuple_Newf(PCKuSIZ PCKuSIZ, a, b)
+#define DeeSeq_OfPairII(a, b) DeeTuple_Newf(PCKuSIZ PCKuSIZ, a, b)
 #else /* __OPTIMIZE_SIZE__ */
 PRIVATE WUNUSED DREF DeeObject *DCALL
-DeeTuple_NewII(size_t a, size_t b) {
+DeeSeq_OfPairII(size_t a, size_t b) {
 	DREF DeeObject *aval, *bval;
-	DREF DeeTupleObject *result;
 	aval = DeeInt_NewSize(a);
 	if unlikely(!aval)
 		goto err;
 	bval = DeeInt_NewSize(b);
 	if unlikely(!bval)
 		goto err_aval;
-	result = DeeTuple_NewUninitializedPair();
-	if unlikely(!result)
-		goto err_aval_bval;
-	DeeTuple_SET(result, 0, aval); /* Inherit reference */
-	DeeTuple_SET(result, 1, bval); /* Inherit reference */
-	return Dee_AsObject(result);
-err_aval_bval:
-	Dee_Decref(bval);
+	return DeeSeq_OfPairInherited(aval, bval);
 err_aval:
 	Dee_Decref(aval);
 err:
 	return NULL;
 }
 #endif /* !__OPTIMIZE_SIZE__ */
-#endif /* !DeeTuple_NewII_DEFINED */
+#endif /* !DeeSeq_OfPairII_DEFINED */
 
 
 
@@ -2936,7 +2929,7 @@ string_casefind(String *self, size_t argc,
 	if unlikely(status < 0)
 		goto err;
 	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
+		return DeeSeq_OfPairII(match_start_and_end[0],
 		                      match_start_and_end[1]);
 	}
 	return_none;
@@ -2968,7 +2961,7 @@ string_caseindex(String *self, size_t argc,
 		goto err;
 	if unlikely(status != 0)
 		goto not_found;
-	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+	return DeeSeq_OfPairII(match_start_and_end[0], match_start_and_end[1]);
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needle, args.start, args.end);
 err:
@@ -2998,7 +2991,7 @@ string_caserfind(String *self, size_t argc,
 	if unlikely(status < 0)
 		goto err;
 	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
+		return DeeSeq_OfPairII(match_start_and_end[0],
 		                      match_start_and_end[1]);
 	}
 	return_none;
@@ -3030,7 +3023,7 @@ string_caserindex(String *self, size_t argc,
 		goto err;
 	if unlikely(status != 0)
 		goto not_found;
-	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+	return DeeSeq_OfPairII(match_start_and_end[0], match_start_and_end[1]);
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needle, args.start, args.end);
 err:
@@ -3120,7 +3113,7 @@ string_casefindany(String *self, size_t argc,
 	if unlikely(status < 0)
 		goto err;
 	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
+		return DeeSeq_OfPairII(match_start_and_end[0],
 		                      match_start_and_end[1]);
 	}
 	return_none;
@@ -3152,7 +3145,7 @@ string_caseindexany(String *self, size_t argc,
 		goto err;
 	if unlikely(status != 0)
 		goto not_found;
-	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+	return DeeSeq_OfPairII(match_start_and_end[0], match_start_and_end[1]);
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needles, args.start, args.end);
 err:
@@ -3243,7 +3236,7 @@ string_caserfindany(String *self, size_t argc,
 	if unlikely(status < 0)
 		goto err;
 	if (status == 0) {
-		return DeeTuple_NewII(match_start_and_end[0],
+		return DeeSeq_OfPairII(match_start_and_end[0],
 		                      match_start_and_end[1]);
 	}
 	return_none;
@@ -3275,7 +3268,7 @@ string_caserindexany(String *self, size_t argc,
 		goto err;
 	if unlikely(status != 0)
 		goto not_found;
-	return DeeTuple_NewII(match_start_and_end[0], match_start_and_end[1]);
+	return DeeSeq_OfPairII(match_start_and_end[0], match_start_and_end[1]);
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self), args.needles, args.start, args.end);
 err:
@@ -7913,7 +7906,7 @@ string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_NewII(result, result + match_length);
+	return DeeSeq_OfPairII(result, result + match_length);
 not_found:
 	return_none;
 err:
@@ -8014,7 +8007,7 @@ string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_NewII(result, result + match_length);
+	return DeeSeq_OfPairII(result, result + match_length);
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self),
 	                           (DeeObject *)args.close,
@@ -8317,7 +8310,7 @@ string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_NewII(result, result + match_length);
+	return DeeSeq_OfPairII(result, result + match_length);
 not_found:
 	return_none;
 err:
@@ -8418,7 +8411,7 @@ string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 		result = (size_t)(ptr.cp32 - scan_str.cp32);
 		break;
 	}
-	return DeeTuple_NewII(result, result + match_length);
+	return DeeSeq_OfPairII(result, result + match_length);
 not_found:
 	DeeRT_ErrSubstringNotFound(Dee_AsObject(self),
 	                           (DeeObject *)args.open,
@@ -9324,7 +9317,7 @@ string_refind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)status);
 	status     = string_bytecnt2charcnt(self, (size_t)status, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)status;
-	return DeeTuple_NewII((size_t)status, (size_t)match_size);
+	return DeeSeq_OfPairII((size_t)status, (size_t)match_size);
 err:
 	return NULL;
 }
@@ -9344,7 +9337,7 @@ string_rerfind(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)status);
 	status     = string_bytecnt2charcnt(self, (size_t)status, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)status;
-	return DeeTuple_NewII((size_t)status, (size_t)match_size);
+	return DeeSeq_OfPairII((size_t)status, (size_t)match_size);
 err:
 	return NULL;
 }
@@ -9544,7 +9537,7 @@ string_reindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)status);
 	status     = string_bytecnt2charcnt(self, (size_t)status, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)status;
-	return DeeTuple_NewII((size_t)status, (size_t)match_size);
+	return DeeSeq_OfPairII((size_t)status, (size_t)match_size);
 err_not_found:
 	err_regex_not_found_in_string(self, &exec);
 err:
@@ -9566,7 +9559,7 @@ string_rerindex(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	match_size = string_bytecnt2charcnt(self, (size_t)match_size, (char const *)exec.rewr_exec.rx_inbase + (size_t)status);
 	status     = string_bytecnt2charcnt(self, (size_t)status, (char const *)exec.rewr_exec.rx_inbase);
 	match_size += (size_t)status;
-	return DeeTuple_NewII((size_t)status, (size_t)match_size);
+	return DeeSeq_OfPairII((size_t)status, (size_t)match_size);
 err_not_found:
 	err_regex_not_found_in_string(self, &exec);
 err:

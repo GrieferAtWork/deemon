@@ -31,10 +31,10 @@
 #include <deemon/file.h>            /* DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeSystemFile_Type, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd */
 #include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
 #include <deemon/format.h>          /* PRFu32 */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeTypeObject, OBJECT_HEAD_INIT */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeTypeObject, Dee_AsObject, OBJECT_HEAD_INIT */
+#include <deemon/pair.h>            /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, FD_CLOEXEC, FIOCLEX, F_GETFD, F_SETFD, O_CLOEXEC, fcntl, ioctl, pipe, pipe2 */
 #include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FNORMAL, TYPE_*, type_member, type_method */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -77,7 +77,7 @@
 DECL_BEGIN
 
 
-PRIVATE WUNUSED DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 pipe_new_impl(size_t pipe_size) {
 #ifdef ipc_Pipe_USE_STUB
 	(void)pipe_size;
@@ -87,7 +87,7 @@ pipe_new_impl(size_t pipe_size) {
 #else /* ipc_Pipe_USE_STUB */
 	DREF DeeSystemFileObject *reader_file;
 	DREF DeeSystemFileObject *writer_file;
-	DREF DeeTupleObject *result;
+	DREF DeeSeqPairObject *result;
 	(void)pipe_size;
 
 	/* Allocate file objects and the tuple we want to return later. */
@@ -97,7 +97,7 @@ pipe_new_impl(size_t pipe_size) {
 	writer_file = DeeObject_MALLOC(DeeSystemFileObject);
 	if unlikely(!reader_file)
 		goto err_reader_file;
-	result = DeeTuple_NewUninitializedPair();
+	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err_reader_file_writer_file;
 
@@ -175,11 +175,11 @@ pipe_new_impl(size_t pipe_size) {
 #endif /* DeeSystemFile_HAVE_sf_filename */
 	DeeFileObject_Init(reader_file, &DeePipeReader_Type);
 	DeeFileObject_Init(writer_file, &DeePipeWriter_Type);
-	DeeTuple_SET(result, 0, (DeeObject *)reader_file); /* Inherit reference */
-	DeeTuple_SET(result, 1, (DeeObject *)writer_file); /* Inherit reference */
-	return result;
+	return DeeSeq_InitPairInherited(result,
+	                                Dee_AsObject(reader_file),
+	                                Dee_AsObject(writer_file));
 err_reader_file_writer_file_result:
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 err_reader_file_writer_file:
 	DeeObject_FREE(writer_file);
 err_reader_file:
@@ -190,7 +190,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pipe_class_new(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("new", params: "
 	size_t size_hint = 0;

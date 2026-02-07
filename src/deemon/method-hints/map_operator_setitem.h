@@ -113,11 +113,11 @@ err:
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewPairv(data.msoxwse_key_and_value);
+	new_pair = DeeSeq_OfPairvSymbolic(data.msoxwse_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = CALL_DEPENDENCY(seq_append, self, new_pair);
-	Dee_Decref_unlikely(new_pair);
+	DeeSeqPair_DecrefSymbolic(new_pair);
 	return result;
 err:
 	return -1;
@@ -138,11 +138,11 @@ err:
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewPairv(data.msoxwsei_key_and_value);
+	new_pair = DeeSeq_OfPairvSymbolic(data.msoxwsei_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = CALL_DEPENDENCY(seq_append, self, new_pair);
-	Dee_Decref_unlikely(new_pair);
+	DeeSeqPair_DecrefSymbolic(new_pair);
 	return result;
 err:
 	return -1;

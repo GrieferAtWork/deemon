@@ -37,11 +37,12 @@
 #include <deemon/none-operator.h> /* DeeNone_* */
 #include <deemon/none.h>          /* return_none */
 #include <deemon/object.h>        /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_OBJECT_HEAD_INIT, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
+#include <deemon/pair.h>          /* DeeSeq_OfPairvInherited */
 #include <deemon/seq.h>           /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>        /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>           /* DeeSet_Type */
 #include <deemon/thread.h>        /* DeeThread_CheckInterrupt */
-#include <deemon/tuple.h>         /* DeeTuple_NewPairvInherited, DeeTuple_PackSymbolic */
+#include <deemon/tuple.h>         /* DeeTuple_PackSymbolic */
 #include <deemon/type.h>          /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_FNOREFESCAPE, OPERATOR_ITER, STRUCT_OBJECT, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/lock.h>     /* Dee_atomic_lock_* */
 
@@ -1501,7 +1502,7 @@ proxy_asmap_get_last(RangeMapProxy *__restrict self) {
 	if unlikely(error)
 		goto err;
 	Dee_Decref(item[0]);
-	return DeeTuple_NewPairvInherited(item + 1);
+	return DeeSeq_OfPairvInherited(item + 1);
 err:
 	return NULL;
 }
@@ -1605,7 +1606,7 @@ proxy_ranges_get_first(RangeMapProxy *__restrict self) {
 	if unlikely(error)
 		goto err;
 	Dee_Decref(item[2]);
-	return DeeTuple_NewPairvInherited(item);
+	return DeeSeq_OfPairvInherited(item);
 err:
 	return NULL;
 }
@@ -1623,7 +1624,7 @@ proxy_ranges_get_last(RangeMapProxy *__restrict self) {
 	if unlikely(error)
 		goto err;
 	Dee_Decref(item[2]);
-	return DeeTuple_NewPairvInherited(item);
+	return DeeSeq_OfPairvInherited(item);
 err:
 	return NULL;
 }
@@ -2342,7 +2343,7 @@ proxy_items_iterator_next_range(RangeMapProxyItemsIterator *__restrict self) {
 	if unlikely(error)
 		goto err;
 	Dee_Decref(item[2]);
-	return DeeTuple_NewPairvInherited(item);
+	return DeeSeq_OfPairvInherited(item);
 err:
 	return NULL;
 }

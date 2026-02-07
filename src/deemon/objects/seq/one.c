@@ -33,7 +33,7 @@
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_rets1_1 */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
-#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, DeeSeqOneObject */
+#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, DeeSeqOneObject, DeeSeq_OfPair */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* remainder */
@@ -559,7 +559,7 @@ so_mh_seq_enumerate_index(SeqOne *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF SeqOne *DCALL
 so_mh_seq_makeenumeration(SeqOne *__restrict self) {
 	DREF DeeObject *item;
-	item = DeeTuple_NewPair(DeeInt_Zero, self->so_item);
+	item = DeeSeq_OfPair(DeeInt_Zero, self->so_item);
 	if unlikely(!item)
 		goto err;
 	return (DREF SeqOne *)DeeSeq_OfOneInherited(item);
@@ -1200,8 +1200,6 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 };
 
 PRIVATE struct type_getset tpconst so_getsets[] = {
-	TYPE_GETTER_AB_F_NODOC(STR_first, &so_getfirst, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
-	TYPE_GETTER_AB_F_NODOC(STR_last, &so_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_GETTER_AB_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR___set_frozen__, &generic_obj__asset, METHOD_FCONSTCALL, "->?DSet"),
@@ -1215,6 +1213,8 @@ PRIVATE struct type_getset tpconst so_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst so_members[] = {
+	TYPE_MEMBER_FIELD(STR_first, STRUCT_OBJECT, offsetof(SeqOne, so_item)),
+	TYPE_MEMBER_FIELD(STR_last, STRUCT_OBJECT, offsetof(SeqOne, so_item)),
 	TYPE_MEMBER_CONST("length", DeeInt_One),
 	TYPE_MEMBER_FIELD("__item__", STRUCT_OBJECT, offsetof(SeqOne, so_item)),
 	TYPE_MEMBER_END
@@ -1302,8 +1302,8 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeSeq_InitOneUninitialized)(/*inherit(always)*/ DREF DeeSeqOneObject *__restrict self,
-                                    DeeObject *__restrict item) {
+(DCALL DeeSeq_InitOne)(/*inherit(always)*/ DREF DeeSeqOneObject *__restrict self,
+                       DeeObject *__restrict item) {
 	ASSERT(item != Dee_AsObject(self));
 #ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 	Dee_Incref(item);
@@ -1319,8 +1319,8 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
 }
 
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeSeq_InitOneUninitializedInherited)(/*inherit(always)*/ DREF DeeSeqOneObject *__restrict self,
-                                             /*inherit(always)*/ DREF DeeObject *__restrict item) {
+(DCALL DeeSeq_InitOneInherited)(/*inherit(always)*/ DREF DeeSeqOneObject *__restrict self,
+                                /*inherit(always)*/ DREF DeeObject *__restrict item) {
 	ASSERT(item != Dee_AsObject(self));
 #ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 	self->so_item = item; /* Inherited */
@@ -1341,7 +1341,7 @@ DeeSeq_OfOne(DeeObject *__restrict item) {
 	DREF DeeSeqOneObject *result = DeeSeq_NewOneUninitialized();
 	if unlikely(!result)
 		goto err;
-	return DeeSeq_InitOneUninitialized(result, item);
+	return DeeSeq_InitOne(result, item);
 err:
 	return NULL;
 }
@@ -1351,7 +1351,7 @@ DeeSeq_OfOneInherited(/*inherit(always)*/ DREF DeeObject *__restrict item) {
 	DREF DeeSeqOneObject *result = DeeSeq_NewOneUninitialized();
 	if unlikely(!result)
 		goto err;
-	return DeeSeq_InitOneUninitializedInherited(result, item);
+	return DeeSeq_InitOneInherited(result, item);
 err:
 	Dee_Decref(item); /* Inherited */
 	return NULL;
@@ -1362,7 +1362,7 @@ DeeSeq_OfOneInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restric
 	DREF DeeSeqOneObject *result = DeeSeq_NewOneUninitialized();
 	if unlikely(!result)
 		goto err;
-	return DeeSeq_InitOneUninitializedInherited(result, item);
+	return DeeSeq_InitOneInherited(result, item);
 err:
 	return NULL;
 }
@@ -1375,7 +1375,7 @@ DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self) {
 	SeqOne *me = (SeqOne *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqOne_Type);
 	if (!DeeObject_IsShared(me)) {
-		DeeObject_FREE(me);
+		DeeSeq_FreeOneUninitialized(me);
 		Dee_DecrefNokill(&DeeSeqOne_Type);
 	} else {
 		Dee_Incref(me->so_item);

@@ -35,6 +35,7 @@
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/operator-hints.h>  /* tdefault__compare__with__le__and__ge, tdefault__compare__with__lo__and__gr */
+#include <deemon/pair.h>            /* DeeSeqPair*, DeeSeq_* */
 #include <deemon/seq.h>             /* DeeIterator_Foreach, DeeIterator_ForeachPair, DeeSeq_Unpack */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/super.h>           /* DeeObject_T* */
@@ -1058,13 +1059,15 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__iter_next__with__nextpair(DeeTypeObject *tp_self, DeeObject *self) {
 	int error;
-	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
-	error = (*tp_self->tp_iterator->tp_nextpair)(self, DeeTuple_ELEM(result));
-	if (error == 0)
+	error = (*tp_self->tp_iterator->tp_nextpair)(self, DeeSeqPair_ELEM(result));
+	if (error == 0) {
+		DeeSeq_InitPair_inplace(result);
 		return Dee_AsObject(result);
-	DeeTuple_FreeUninitializedPair(result);
+	}
+	DeeSeq_FreePairUninitialized(result);
 	if likely(error > 0)
 		return ITER_DONE;
 err:
@@ -1108,13 +1111,15 @@ default__iter_next__with__nextpair(DeeObject *__restrict self) {
 	return tdefault__iter_next__with__nextpair(Dee_TYPE(self), self);
 #else /* __OPTIMIZE_SIZE__ */
 	int error;
-	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
-	error = (*Dee_TYPE(self)->tp_iterator->tp_nextpair)(self, DeeTuple_ELEM(result));
-	if (error == 0)
+	error = (*Dee_TYPE(self)->tp_iterator->tp_nextpair)(self, DeeSeqPair_ELEM(result));
+	if (error == 0) {
+		DeeSeq_InitPair_inplace(result);
 		return Dee_AsObject(result);
-	DeeTuple_FreeUninitializedPair(result);
+	}
+	DeeSeq_FreePairUninitialized(result);
 	if likely(error > 0)
 		return ITER_DONE;
 err:
@@ -3436,11 +3441,11 @@ default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value
 	Dee_ssize_t result;
 	DREF DeeObject *pair;
 	data = (struct default_foreach_with_foreach_pair_data *)arg;
-	pair = DeeTuple_NewPairSymbolic(key, value);
+	pair = DeeSeq_OfPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
 	result = (*data->dfwfp_cb)(data->dfwfp_arg, pair);
-	DeeTuple_DecrefPairSymbolic(pair);
+	DeeSeqPair_DecrefSymbolic(pair);
 	return result;
 err:
 	return -1;

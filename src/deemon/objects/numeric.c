@@ -31,9 +31,9 @@
 #include <deemon/none-operator.h>      /* DeeNone_* */
 #include <deemon/numeric.h>            /*  */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_int128_t, Dee_uint128_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, isgreater, isgreaterequal, isless, islessequal, islessgreater */
-#include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_HasPrivateOperator, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, OPERATOR_FLOAT, OPERATOR_INT, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_getset, type_method */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
@@ -1678,13 +1678,13 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_divmod(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DREF DeeTupleObject *result;
+	DREF DeeSeqPairObject *result;
 	DREF DeeObject *d, *m;
 	DeeObject *y;
 	DeeArg_Unpack1(err, argc, argv, "divmod", &y);
-	result = DeeTuple_NewUninitializedPair();
+	result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 	d = DeeObject_Div(self, y);
@@ -1693,13 +1693,11 @@ numeric_divmod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	m = DeeObject_Mod(self, y);
 	if unlikely(!m)
 		goto err_r_d;
-	DeeTuple_SET(result, 0, d); /* Inherit reference */
-	DeeTuple_SET(result, 1, m); /* Inherit reference */
-	return result;
+	return DeeSeq_InitPairInherited(result, d, m);
 err_r_d:
 	Dee_Decref(d);
 err_r:
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 err:
 	return NULL;
 }

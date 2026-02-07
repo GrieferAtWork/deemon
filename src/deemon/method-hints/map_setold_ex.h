@@ -24,23 +24,22 @@
 [[alias(Mapping.setold_ex)]]
 __map_setold_ex__(key,value)->?T2?Dbool?X2?O?N {
 	PRIVATE DEFINE_TUPLE(setold_failed_result, 2, { Dee_False, Dee_None });
-	DREF DeeObject *old_value;
-	DREF DeeTupleObject *result = DeeTuple_NewUninitializedPair();
+	DREF DeeObject *old_value, *true_;
+	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
 	old_value = CALL_DEPENDENCY(map_setold_ex, self, key, value);
 	if unlikely(!old_value)
 		goto err_r;
 	if (old_value == ITER_DONE) {
-		DeeTuple_FreeUninitializedPair(result);
+		DeeSeq_FreePairUninitialized(result);
 		Dee_Incref(&setold_failed_result);
 		return Dee_AsObject(&setold_failed_result);
 	}
-	result->t_elem[0] = DeeBool_NewTrue();
-	result->t_elem[1] = old_value; /* Inherit reference */
-	return Dee_AsObject(result);
+	true_ = DeeBool_NewTrue();
+	return DeeSeq_InitPairInherited(result, true_, old_value);
 err_r:
-	DeeTuple_FreeUninitializedPair(result);
+	DeeSeq_FreePairUninitialized(result);
 err:
 	return NULL;
 }
@@ -72,11 +71,11 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewPairv(data->msoxwse_key_and_value);
+			new_pair = DeeSeq_OfPairvSymbolic(data->msoxwse_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem, data->msoxwse_seq, index, new_pair);
-			Dee_Decref_unlikely(new_pair);
+			DeeSeqPair_DecrefSymbolic(new_pair);
 			if unlikely(status)
 				goto err_this_value;
 			data->msoxwse_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
@@ -119,11 +118,11 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewPairv(data->msoxwsei_key_and_value);
+			new_pair = DeeSeq_OfPairvSymbolic(data->msoxwsei_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem_index, data->msoxwsei_seq, index, new_pair);
-			Dee_Decref_unlikely(new_pair);
+			DeeSeqPair_DecrefSymbolic(new_pair);
 			if unlikely(status)
 				goto err_this_value;
 			data->msoxwsei_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */

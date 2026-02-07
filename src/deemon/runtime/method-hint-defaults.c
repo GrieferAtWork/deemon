@@ -38,7 +38,7 @@
 #include <deemon/none.h>                /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>              /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, return_reference_ */
 #include <deemon/operator-hints.h>      /* DeeNO_*_t, DeeType_RequireNativeOperator */
-#include <deemon/pair.h>                /* DeeSeqOne_DecrefSymbolic, DeeSeq_OfOneSymbolic */
+#include <deemon/pair.h>                /* DeeSeqOne_DecrefSymbolic, DeeSeqPair_DecrefSymbolic, DeeSeq_Of* */
 #include <deemon/seq.h>                 /* DeeIterator_*, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/set.h>                 /* DeeSet_NewUniversal, DeeSet_Type, Dee_EmptySet */
 #include <deemon/string.h>              /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
@@ -940,11 +940,11 @@ default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value
 	Dee_ssize_t result;
 	DREF DeeObject *pair;
 	data = (struct default_foreach_with_foreach_pair_data *)arg;
-	pair = DeeTuple_NewPairSymbolic(key, value);
+	pair = DeeSeq_OfPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
 	result = (*data->dfwfp_cb)(data->dfwfp_arg, pair);
-	DeeTuple_DecrefPairSymbolic(pair);
+	DeeSeqPair_DecrefSymbolic(pair);
 	return result;
 err:
 	return -1;
@@ -1210,11 +1210,11 @@ default_foreach_with_map_enumerate_cb(void *arg, DeeObject *key, DeeObject *valu
 	data = (struct default_foreach_with_map_enumerate_data *)arg;
 	if unlikely(!value)
 		return 0;
-	pair = DeeTuple_NewPairSymbolic(key, value);
+	pair = DeeSeq_OfPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
 	result = (*data->dfwme_cb)(data->dfwme_arg, pair);
-	DeeTuple_DecrefSymbolic(pair);
+	DeeSeqPair_DecrefSymbolic(pair);
 	return result;
 err:
 	return -1;
@@ -1507,7 +1507,7 @@ default_seq_getitem_index_with_map_enumerate_cb(void *arg, DeeObject *key, DeeOb
 	data = (struct default_seq_getitem_index_with_map_enumerate_data *)arg;
 	if (data->dsgiiwme_nskip == 0) {
 		if (value) {
-			DREF DeeObject *pair = DeeTuple_NewPair(key, value);
+			DREF DeeObject *pair = DeeSeq_OfPair(key, value);
 			if (pair == NULL)
 				goto err;
 			data->dsgiiwme_result = pair;
@@ -19193,11 +19193,11 @@ map_setold_ex_with_seq_enumerate_cb(void *arg, DeeObject *index, DeeObject *valu
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewPairv(data->msoxwse_key_and_value);
+			new_pair = DeeSeq_OfPairvSymbolic(data->msoxwse_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem, data->msoxwse_seq, index, new_pair);
-			Dee_Decref_unlikely(new_pair);
+			DeeSeqPair_DecrefSymbolic(new_pair);
 			if unlikely(status)
 				goto err_this_value;
 			data->msoxwse_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
@@ -19229,11 +19229,11 @@ default__map_operator_setitem__with__seq_enumerate__and__seq_operator_setitem__a
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewPairv(data.msoxwse_key_and_value);
+	new_pair = DeeSeq_OfPairvSymbolic(data.msoxwse_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
-	Dee_Decref_unlikely(new_pair);
+	DeeSeqPair_DecrefSymbolic(new_pair);
 	return result;
 err:
 	return -1;
@@ -19263,11 +19263,11 @@ map_setold_ex_with_seq_enumerate_index_cb(void *arg, size_t index, DeeObject *va
 		if (Dee_COMPARE_ISEQ(status)) {
 			/* Found it! (now to override it) */
 			DREF DeeObject *new_pair;
-			new_pair = DeeTuple_NewPairv(data->msoxwsei_key_and_value);
+			new_pair = DeeSeq_OfPairvSymbolic(data->msoxwsei_key_and_value);
 			if unlikely(!new_pair)
 				goto err_this_value;
 			status = DeeObject_InvokeMethodHint(seq_operator_setitem_index, data->msoxwsei_seq, index, new_pair);
-			Dee_Decref_unlikely(new_pair);
+			DeeSeqPair_DecrefSymbolic(new_pair);
 			if unlikely(status)
 				goto err_this_value;
 			data->msoxwsei_key_and_value[1] = this_key_and_value[1]; /* Inherit reference */
@@ -19299,11 +19299,11 @@ default__map_operator_setitem__with__seq_enumerate_index__and__seq_operator_seti
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status < 0)
 		goto err;
-	new_pair = DeeTuple_NewPairv(data.msoxwsei_key_and_value);
+	new_pair = DeeSeq_OfPairvSymbolic(data.msoxwsei_key_and_value);
 	if unlikely(!new_pair)
 		goto err;
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
-	Dee_Decref_unlikely(new_pair);
+	DeeSeqPair_DecrefSymbolic(new_pair);
 	return result;
 err:
 	return -1;
@@ -21392,11 +21392,11 @@ default__map_setnew_ex__with__map_operator_trygetitem__and__seq_append(DeeObject
 		goto err;
 	if (old_value != ITER_DONE)
 		return old_value;
-	new_pair = DeeTuple_NewPair(key, value);
+	new_pair = DeeSeq_OfPairSymbolic(key, value);
 	if unlikely(!new_pair)
 		goto err;
 	append_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_append))(self, new_pair);
-	Dee_Decref_unlikely(new_pair);
+	DeeSeqPair_DecrefSymbolic(new_pair);
 	if unlikely(append_status)
 		goto err;
 	return ITER_DONE;

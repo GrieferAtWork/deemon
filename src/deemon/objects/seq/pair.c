@@ -67,8 +67,8 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3)) DREF DeeObject *
-(DCALL DeeSeq_InitPairUninitialized)(/*inherit(always)*/ DREF DeeSeqPairObject *__restrict self,
-                                     DeeObject *a, DeeObject *b) {
+(DCALL DeeSeq_InitPair)(/*inherit(always)*/ DREF DeeSeqPairObject *__restrict self,
+                        DeeObject *a, DeeObject *b) {
 	ASSERT(a != Dee_AsObject(self));
 	ASSERT(b != Dee_AsObject(self));
 #ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
@@ -89,9 +89,9 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3)) DREF DeeObject *
 }
 
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3)) DREF DeeObject *
-(DCALL DeeSeq_InitPairUninitializedInherited)(/*inherit(always)*/ DREF DeeSeqPairObject *__restrict self,
-                                              /*inherit(always)*/ DREF DeeObject *a,
-                                              /*inherit(always)*/ DREF DeeObject *b) {
+(DCALL DeeSeq_InitPairInherited)(/*inherit(always)*/ DREF DeeSeqPairObject *__restrict self,
+                                 /*inherit(always)*/ DREF DeeObject *a,
+                                 /*inherit(always)*/ DREF DeeObject *b) {
 	ASSERT(a != Dee_AsObject(self));
 	ASSERT(b != Dee_AsObject(self));
 #ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
@@ -111,23 +111,23 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3)) DREF DeeObject *
 
 /* Construct a new 2-element sequence */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_OfPair(DeeObject *__restrict a,
-              DeeObject *__restrict b) {
+DeeSeq_OfPair(DeeObject *a,
+              DeeObject *b) {
 	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
-	return DeeSeq_InitPairUninitialized(result, a, b);
+	return DeeSeq_InitPair(result, a, b);
 err:
 	return NULL;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_OfPairInherited(/*inherit(always)*/ DREF DeeObject *__restrict a,
-                       /*inherit(always)*/ DREF DeeObject *__restrict b) {
+DeeSeq_OfPairInherited(/*inherit(always)*/ DREF DeeObject *a,
+                       /*inherit(always)*/ DREF DeeObject *b) {
 	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
-	return DeeSeq_InitPairUninitializedInherited(result, a, b);
+	return DeeSeq_InitPairInherited(result, a, b);
 err:
 	Dee_Decref(b); /* Inherited */
 	Dee_Decref(a); /* Inherited */
@@ -135,12 +135,12 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_OfPairInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restrict a,
-                                /*inherit(on_success)*/ DREF DeeObject *__restrict b) {
+DeeSeq_OfPairInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *a,
+                                /*inherit(on_success)*/ DREF DeeObject *b) {
 	DREF DeeSeqPairObject *result = DeeSeq_NewPairUninitialized();
 	if unlikely(!result)
 		goto err;
-	return DeeSeq_InitPairUninitializedInherited(result, a, b);
+	return DeeSeq_InitPairInherited(result, a, b);
 err:
 	return NULL;
 }
@@ -153,7 +153,7 @@ DeeSeqPair_DecrefSymbolic(DREF DeeObject *__restrict self) {
 	SeqPair *me = (SeqPair *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqPair_Type);
 	if (!DeeObject_IsShared(me)) {
-		DeeObject_FREE(me);
+		DeeSeq_FreePairUninitialized(me);
 		Dee_DecrefNokill(&DeeSeqPair_Type);
 	} else {
 		Dee_Incref(me->sp_items[1]);

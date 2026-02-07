@@ -62,11 +62,11 @@ default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value
 	Dee_ssize_t result;
 	DREF DeeObject *pair;
 	data = (struct default_foreach_with_foreach_pair_data *)arg;
-	pair = DeeTuple_NewPairSymbolic(key, value);
+	pair = DeeSeq_OfPairSymbolic(key, value);
 	if unlikely(!pair)
 		goto err;
 	result = (*data->dfwfp_cb)(data->dfwfp_arg, pair);
-	DeeTuple_DecrefPairSymbolic(pair);
+	DeeSeqPair_DecrefSymbolic(pair);
 	return result;
 err:
 	return -1;
