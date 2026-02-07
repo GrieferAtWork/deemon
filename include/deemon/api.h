@@ -559,7 +559,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * >> }; */
 #if (!defined(CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM) && \
      !defined(CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM))
-#if 0
+#if 1
 #define CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 #else
 #define CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
