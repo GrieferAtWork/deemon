@@ -22,28 +22,31 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC */
+#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>                /* DeeArg_Unpack1 */
+#include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/computed-operators.h> /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeqPair_Type */
-#include <deemon/format.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/arg.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/bool.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/error-rt.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/util/atomic.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/int.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/method-hints.h>       /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/none-operator.h>      /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeqPair_Type */
-#include <deemon/seq.h>                /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
+#include <deemon/format.h>             /* DeeFormat_Printf */
+#include <deemon/int.h>                /*  */
+#include <deemon/method-hints.h>       /* TYPE_METHOD_HINT_END, TYPE_METHOD_HINT_F, type_method_hint */
+#include <deemon/none-operator.h>      /* _DeeNone_reti1_1 */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
+#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeq_OfOne */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+
+#include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "default-compare.h"
 #include "../int-8bit.h"
+#include "default-compare.h"
 
-#include <stddef.h> /* NULL */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

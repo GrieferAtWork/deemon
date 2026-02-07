@@ -326,6 +326,10 @@ again:
 			LOG_SLAB("[SLAB] Alloc: %p (%" PRFuSIZ " bytes)\n", &page->sp_items[indexj], (size_t)ITEMSIZE);
 			return &page->sp_items[index];
 		}
+		/* FIXME: Some kind of race condition can result in all "page = s_free" being
+		 *        fully allocated, but somehow still within the s_free-list. This has
+		 *        been observed once, and resulted in all threads entering an infinite
+		 *        loop. */
 		SCHED_YIELD();
 		goto again;
 	}
