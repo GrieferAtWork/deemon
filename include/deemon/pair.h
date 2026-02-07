@@ -44,7 +44,7 @@
 
 #if (!defined(CONFIG_ENABLE_SEQ_PAIR_TYPE) && \
      !defined(CONFIG_DISABLE_SEQ_PAIR_TYPE))
-#if !defined(__OPTIMIZE_SIZE__) && 0 /* TODO: Not fully implemented */
+#if !defined(__OPTIMIZE_SIZE__) && 1
 #define CONFIG_ENABLE_SEQ_PAIR_TYPE /* Use dedicated type for `{a, b}' */
 #else /* ... */
 #define CONFIG_DISABLE_SEQ_PAIR_TYPE /* Use Tuple for `{a, b}' */

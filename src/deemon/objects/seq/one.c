@@ -209,9 +209,9 @@ err:
 }
 
 PRIVATE struct type_cmp soi_cmp = {
-	/* .tp_hash       = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
-	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&soi_compare,
+	/* .tp_hash          = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
+	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&soi_compare,
 	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
 	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
 	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
@@ -392,16 +392,11 @@ so_trygetitem_index(SeqOne *__restrict self, size_t index) {
 	return_reference(self->so_item);
 }
 
+#define so_hasitem_index so_bounditem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 so_bounditem_index(SeqOne *__restrict self, size_t index) {
 	(void)self;
 	return Dee_BOUND_FROMPRESENT_BOUND(index == 0);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-so_hasitem_index(SeqOne *__restrict self, size_t index) {
-	(void)self;
-	return index == 0 ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1200,6 +1195,9 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 };
 
 PRIVATE struct type_getset tpconst so_getsets[] = {
+	/* These must be in "so_getsets" since that's where method hints are expected to find them. */
+	TYPE_GETTER_AB_F_NODOC(STR_first, &so_getfirst, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_GETTER_AB_F_NODOC(STR_last, &so_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_GETTER_AB_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR___set_frozen__, &generic_obj__asset, METHOD_FCONSTCALL, "->?DSet"),
@@ -1213,8 +1211,6 @@ PRIVATE struct type_getset tpconst so_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst so_members[] = {
-	TYPE_MEMBER_FIELD(STR_first, STRUCT_OBJECT, offsetof(SeqOne, so_item)),
-	TYPE_MEMBER_FIELD(STR_last, STRUCT_OBJECT, offsetof(SeqOne, so_item)),
 	TYPE_MEMBER_CONST("length", DeeInt_One),
 	TYPE_MEMBER_FIELD("__item__", STRUCT_OBJECT, offsetof(SeqOne, so_item)),
 	TYPE_MEMBER_END

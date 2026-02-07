@@ -629,16 +629,18 @@ PRIVATE WUNUSED DREF DeeObject *DCALL f_rt_assert(size_t argc, DeeObject *const 
 		if unlikely(!repr)
 			goto err;
 		if (DeeString_IsEmpty(message)) {
+			Dee_Decref_unlikely(message);
 			message = DeeString_Newf("Assertion failed: %k", repr);
 		} else {
-			message = DeeString_Newf("Assertion failed: %k - %k", repr, message);
+			message = DeeString_Newf("Assertion failed: %k - %K", repr, message);
 		}
 		Dee_Decref(repr);
 	} else {
 		if (DeeString_IsEmpty(message)) {
+			Dee_Decref_unlikely(message);
 			message = DeeString_New("Assertion failed");
 		} else {
-			message = DeeString_Newf("Assertion failed - %k", message);
+			message = DeeString_Newf("Assertion failed - %K", message);
 		}
 	}
 	if unlikely(!message)

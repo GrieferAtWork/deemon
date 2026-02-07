@@ -24,6 +24,16 @@ import * from errors;
 import .common.test;
 
 function assertFindAnyImpl2(expected: none | int | (int, int), s: string, method: string, needles: {string...}) {
+	function seqToTuple(x) {
+		return x is Sequence ? Tuple(x) : x;
+	}
+	function assertEqualsTuple(expected, actual) {
+		test.assertEqualsTyped(expected, seqToTuple(actual));
+	}
+	function assertNotEqualsTuple(expected, actual) {
+		test.assertNotEqualsTyped(expected, seqToTuple(actual));
+	}
+
 	local b = s.bytes();
 	local indexMethod = {
 		"findany": "indexany",
@@ -31,45 +41,45 @@ function assertFindAnyImpl2(expected: none | int | (int, int), s: string, method
 		"casefindany": "caseindexany",
 		"caserfindany": "caserindexany",
 	}[method];
-	test.assertEqualsTyped(expected, s.operator . (method)(needles));
-	test.assertEqualsTyped(expected, b.operator . (method)(needles));
-	test.assertEqualsTyped(expected, b.operator . (method)(needles.each.bytes()));
-	test.assertEqualsTyped(expected, try s.operator . (indexMethod)(needles) catch (ItemNotFound) none);
-	test.assertEqualsTyped(expected, try b.operator . (indexMethod)(needles) catch (ItemNotFound) none);
-	test.assertEqualsTyped(expected, try b.operator . (indexMethod)(needles.each.bytes()) catch (ItemNotFound) none);
+	assertEqualsTuple(expected, s.operator . (method)(needles));
+	assertEqualsTuple(expected, b.operator . (method)(needles));
+	assertEqualsTuple(expected, b.operator . (method)(needles.each.bytes()));
+	assertEqualsTuple(expected, try s.operator . (indexMethod)(needles) catch (ItemNotFound) none);
+	assertEqualsTuple(expected, try b.operator . (indexMethod)(needles) catch (ItemNotFound) none);
+	assertEqualsTuple(expected, try b.operator . (indexMethod)(needles.each.bytes()) catch (ItemNotFound) none);
 	if ((expected is int && expected >= 1) ||
 	    (expected is Sequence && #expected == 2 && expected[0] >= 1)) {
-		test.assertEqualsTyped(expected, s.operator . (method)(needles, 1));
-		test.assertEqualsTyped(expected, b.operator . (method)(needles, 1));
-		test.assertEqualsTyped(expected, b.operator . (method)(needles.each.bytes(), 1));
-		test.assertEqualsTyped(expected, try s.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
-		test.assertEqualsTyped(expected, try b.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
-		test.assertEqualsTyped(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (ItemNotFound) none);
+		assertEqualsTuple(expected, s.operator . (method)(needles, 1));
+		assertEqualsTuple(expected, b.operator . (method)(needles, 1));
+		assertEqualsTuple(expected, b.operator . (method)(needles.each.bytes(), 1));
+		assertEqualsTuple(expected, try s.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		assertEqualsTuple(expected, try b.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		assertEqualsTuple(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (ItemNotFound) none);
 	} else if ((expected is int && expected < 1) ||
 	           (expected is Sequence && #expected == 2 && expected[0] < 1)) {
-		test.assertNotEqualsTyped(expected, s.operator . (method)(needles, 1));
-		test.assertNotEqualsTyped(expected, b.operator . (method)(needles, 1));
-		test.assertNotEqualsTyped(expected, b.operator . (method)(needles.each.bytes(), 1));
-		test.assertNotEqualsTyped(expected, try s.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
-		test.assertNotEqualsTyped(expected, try b.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
-		test.assertNotEqualsTyped(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (ItemNotFound) none);
+		assertNotEqualsTuple(expected, s.operator . (method)(needles, 1));
+		assertNotEqualsTuple(expected, b.operator . (method)(needles, 1));
+		assertNotEqualsTuple(expected, b.operator . (method)(needles.each.bytes(), 1));
+		assertNotEqualsTuple(expected, try s.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		assertNotEqualsTuple(expected, try b.operator . (indexMethod)(needles, 1) catch (ItemNotFound) none);
+		assertNotEqualsTuple(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (ItemNotFound) none);
 	}
 	if (s) {
 		local lenMinusOne = #s - 1;
 		if (expected is Sequence && #expected == 2 && expected[1] <= lenMinusOne) {
-			test.assertEqualsTyped(expected, s.operator . (method)(needles, 0, lenMinusOne));
-			test.assertEqualsTyped(expected, b.operator . (method)(needles, 0, lenMinusOne));
-			test.assertEqualsTyped(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
-			test.assertEqualsTyped(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
-			test.assertEqualsTyped(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
-			test.assertEqualsTyped(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (ItemNotFound) none);
+			assertEqualsTuple(expected, s.operator . (method)(needles, 0, lenMinusOne));
+			assertEqualsTuple(expected, b.operator . (method)(needles, 0, lenMinusOne));
+			assertEqualsTuple(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
+			assertEqualsTuple(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			assertEqualsTuple(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			assertEqualsTuple(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (ItemNotFound) none);
 		} else if (expected is Sequence && #expected == 2 && expected[1] > lenMinusOne) {
-			test.assertNotEqualsTyped(expected, s.operator . (method)(needles, 0, lenMinusOne));
-			test.assertNotEqualsTyped(expected, b.operator . (method)(needles, 0, lenMinusOne));
-			test.assertNotEqualsTyped(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
-			test.assertNotEqualsTyped(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
-			test.assertNotEqualsTyped(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
-			test.assertNotEqualsTyped(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (ItemNotFound) none);
+			assertNotEqualsTuple(expected, s.operator . (method)(needles, 0, lenMinusOne));
+			assertNotEqualsTuple(expected, b.operator . (method)(needles, 0, lenMinusOne));
+			assertNotEqualsTuple(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
+			assertNotEqualsTuple(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			assertNotEqualsTuple(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (ItemNotFound) none);
+			assertNotEqualsTuple(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (ItemNotFound) none);
 		}
 	}
 }

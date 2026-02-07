@@ -22,17 +22,26 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* DeeObject_FREE, DeeObject_MALLOC */
-#include <deemon/object.h> /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
-#include <deemon/pair.h>   /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeqPair_Type */
-#include <deemon/tuple.h>  /* DeeTuple* */
-#include <deemon/type.h>   /* DeeObject_Init, DeeObject_IsShared */
+#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC */
+#include <deemon/computed-operators.h> /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeqPair_Type */
+#include <deemon/format.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/arg.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/bool.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/error-rt.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/util/atomic.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/int.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/method-hints.h>       /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/none-operator.h>      /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeqPair_Type */
+#include <deemon/seq.h>                /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref */
+#include <deemon/tuple.h>              /* DeeTuple* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "concat.h"
 #include "default-compare.h"
-#include "repeat.h"
+#include "../int-8bit.h"
 
 #include <stddef.h> /* NULL */
 
@@ -42,7 +51,629 @@ DECL_BEGIN
 
 typedef DeeSeqPairObject SeqPair;
 
-/* TODO */
+/************************************************************************/
+/* SeqPairIterator                                                      */
+/************************************************************************/
+
+typedef struct {
+	OBJECT_HEAD
+	DREF SeqPair *spi_pair;  /* [1..1][const] Underlying pair */
+	size_t        spi_index; /* [lock(ATOMIC)] Index of next item to yield */
+} SeqPairIterator;
+
+INTDEF DeeTypeObject SeqPairIterator_Type;
+
+STATIC_ASSERT(offsetof(SeqPairIterator, spi_pair) == offsetof(ProxyObject, po_obj));
+#define spi_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
+#define spi_fini      generic_proxy__fini
+#define spi_visit     generic_proxy__visit
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+spi_copy(SeqPairIterator *__restrict self,
+         SeqPairIterator *__restrict other) {
+	self->spi_pair = other->spi_pair;
+	Dee_Incref(self->spi_pair);
+	self->spi_index = atomic_read(&other->spi_index);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+spi_init(SeqPairIterator *__restrict self,
+         size_t argc, DeeObject *const *argv) {
+	SeqPair *sp;
+	DeeArg_Unpack1(err, argc, argv, "_SeqPairIterator", &sp);
+	if (DeeObject_AssertTypeExact(sp, &DeeSeqPair_Type))
+		goto err;
+	Dee_Incref(sp);
+	self->spi_pair  = sp;
+	self->spi_index = 0;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+spi_bool(SeqPairIterator *__restrict self) {
+	return atomic_read(&self->spi_index) < 2 ? 1 : 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+spi_compare(SeqPairIterator *lhs, SeqPairIterator *rhs) {
+	size_t lhs_index, rhs_index;
+	if (DeeObject_AssertTypeExact(rhs, &SeqPairIterator_Type))
+		goto err;
+	lhs_index = atomic_read(&lhs->spi_index);
+	rhs_index = atomic_read(&rhs->spi_index);
+	Dee_return_compare(lhs_index, rhs_index);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+spi_next(SeqPairIterator *__restrict self) {
+	size_t index;
+	do {
+		index = atomic_read(&self->spi_index);
+		if (index >= 2)
+			return ITER_DONE;
+	} while (!atomic_cmpxch_weak_or_write(&self->spi_index, index, index + 1));
+	return_reference(self->spi_pair->sp_items[index]);
+}
+
+PRIVATE struct type_cmp spi_cmp = {
+	/* .tp_hash          = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
+	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&spi_compare,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
+};
+
+PRIVATE struct type_member tpconst spi_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqPairIterator, spi_pair), "->?Ert:SeqPair"),
+	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(SeqPairIterator, spi_index)),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject SeqPairIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqPairIterator",
+	/* .tp_doc      = */ DOC("(seq:?Ert:SeqPair)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqPairIterator,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &spi_copy,
+			/* tp_deep_ctor:   */ NULL, /* Intentionally not implemented (even though it should be) because redundant after CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
+			/* tp_any_ctor:    */ &spi_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &spi_serialize
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&spi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&spi_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&spi_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
+	/* .tp_cmp           = */ &spi_cmp,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&spi_next,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ spi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
+};
+
+
+
+
+
+/************************************************************************/
+/* SeqPair                                                              */
+/************************************************************************/
+
+#ifdef DeeInt_8bit
+#define DeeInt_Two DeeInt_8bit[2]
+#else /* DeeInt_8bit */
+#define DeeInt_Two dee_int_two
+PRIVATE DEFINE_INT15(dee_int_two, 2);
+#endif /* !DeeInt_8bit */
+
+
+STATIC_ASSERT(sizeof(SeqPair) == sizeof(ProxyObject2));
+STATIC_ASSERT((offsetof(SeqPair, sp_items) + (0 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj1) ||
+              (offsetof(SeqPair, sp_items) + (0 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj2));
+STATIC_ASSERT((offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj1) ||
+              (offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj2));
+#define sp_copy      generic_proxy2__copy_alias12
+#define sp_deep      generic_proxy2__deepcopy
+#define sp_serialize generic_proxy2__serialize
+#define sp_fini      generic_proxy2__fini
+#define sp_bool      _DeeNone_reti1_1
+#define sp_visit     generic_proxy2__visit
+
+STATIC_ASSERT((offsetof(SeqPair, sp_items) + (0 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj1));
+STATIC_ASSERT((offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj2));
+#define sp_init generic_proxy2__init
+#define sp_hash generic_proxy2__hash_recursive_ordered
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sp_printrepr(SeqPair *__restrict self, Dee_formatprinter_t printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "{ %r, %r }",
+	                        self->sp_items[0],
+	                        self->sp_items[1]);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sp_compare_eq(SeqPair *lhs, DeeObject *rhs) {
+	return seq_docompareeq__lhs_vector(lhs->sp_items, 2, rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sp_compare(SeqPair *lhs, DeeObject *rhs) {
+	return seq_docompare__lhs_vector(lhs->sp_items, 2, rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sp_trycompare_eq(SeqPair *lhs, DeeObject *rhs) {
+	if (!DeeType_HasNativeOperator(Dee_TYPE(rhs), foreach))
+		return Dee_COMPARE_NE;
+	return sp_compare_eq(lhs, rhs);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF SeqPairIterator *DCALL
+sp_iter(SeqPair *__restrict self) {
+	DREF SeqPairIterator *result = DeeObject_MALLOC(SeqPairIterator);
+	if likely(result) {
+		Dee_Incref(self);
+		result->spi_pair  = self;
+		result->spi_index = 0;
+		DeeObject_Init(result, &SeqPairIterator_Type);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_sizeob(SeqPair *__restrict self) {
+	(void)self;
+	return_reference(&DeeInt_Two);
+}
+
+#define sp_size_fast sp_size
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+sp_size(SeqPair *__restrict self) {
+	(void)self;
+	return 2;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sp_contains(SeqPair *self, DeeObject *value) {
+	int cmp = DeeObject_TryCompareEq(value, self->sp_items[0]);
+	if (Dee_COMPARE_ISERR(cmp))
+		goto err;
+	if (Dee_COMPARE_ISNE(cmp))
+		cmp = DeeObject_TryCompareEq(value, self->sp_items[1]);
+	if (Dee_COMPARE_ISERR(cmp))
+		goto err;
+	return_bool(Dee_COMPARE_ISEQ(cmp));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sp_foreach(SeqPair *__restrict self, Dee_foreach_t cb, void *arg) {
+	Dee_ssize_t result = (*cb)(arg, self->sp_items[0]);
+	if likely(result >= 0) {
+		Dee_ssize_t temp = (*cb)(arg, self->sp_items[1]);
+		result = unlikely(temp < 0) ? temp : result + temp;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sp_mh_seq_foreach_reverse(SeqPair *__restrict self, Dee_foreach_t cb, void *arg) {
+	Dee_ssize_t result = (*cb)(arg, self->sp_items[1]);
+	if likely(result >= 0) {
+		Dee_ssize_t temp = (*cb)(arg, self->sp_items[0]);
+		result = unlikely(temp < 0) ? temp : result + temp;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_getitem_index(SeqPair *__restrict self, size_t index) {
+	if unlikely(index >= 2)
+		goto err_index;
+	return_reference(self->sp_items[index]);
+err_index:
+	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, 2);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_trygetitem_index(SeqPair *__restrict self, size_t index) {
+	if unlikely(index >= 2)
+		return ITER_DONE;
+	return_reference(self->sp_items[index]);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_getitem_index_fast(SeqPair *__restrict self, size_t index) {
+	ASSERT(index < 2);
+	return_reference(self->sp_items[index]);
+}
+
+#define sp_hasitem_index sp_bounditem_index
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sp_bounditem_index(SeqPair *__restrict self, size_t index) {
+	(void)self;
+	return Dee_BOUND_FROMPRESENT_BOUND(index < 2);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_getrange_index(SeqPair *__restrict self, Dee_ssize_t start, Dee_ssize_t end) {
+	struct Dee_seq_range range;
+	DeeSeqRange_Clamp(&range, start, end, 1);
+	ASSERT(range.sr_start <= range.sr_end);
+	ASSERT(range.sr_end <= 2);
+	switch (range.sr_start) {
+	case 0: break;
+	case 1:
+		ASSERT(range.sr_end == 1 || range.sr_end == 2);
+		if (range.sr_end > 1)
+			return DeeSeq_OfOne(self->sp_items[1]);
+		ATTR_FALLTHROUGH
+	case 2: return DeeSeq_NewEmpty();
+	default: __builtin_unreachable();
+	}
+	switch (range.sr_end) {
+	case 0: return DeeSeq_NewEmpty();
+	case 1: return DeeSeq_OfOne(self->sp_items[0]);
+	case 2: return_reference(self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_getrange_index_n(SeqPair *__restrict self, Dee_ssize_t start) {
+	size_t start_index = DeeSeqRange_Clamp_n(start, 2);
+	switch (start_index) {
+	case 0: return_reference(self);
+	case 1: return DeeSeq_OfOne(self->sp_items[1]);
+	case 2: return DeeSeq_NewEmpty();
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+#define sp_asvector_nothrow sp_asvector
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+sp_asvector(SeqPair *__restrict self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
+	if likely(dst_length >= 2)
+		Dee_Movrefv(dst, self->sp_items, 2);
+	return 2;
+}
+
+#define sp_mh_seq_trygetfirst sp_getfirst
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_getfirst(SeqPair *__restrict self) {
+	return_reference(self->sp_items[0]);
+}
+
+#define sp_mh_seq_trygetlast sp_getlast
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sp_getlast(SeqPair *__restrict self) {
+	return_reference(self->sp_items[1]);
+}
+
+
+PRIVATE struct type_cmp sp_cmp = {
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&sp_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sp_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&sp_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&sp_trycompare_eq,
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
+};
+
+PRIVATE struct type_seq sp_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sp_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sp_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sp_contains,
+	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
+	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange                   = */ DEFIMPL(&default__getrange__with__getrange_index__and__getrange_index_n),
+	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sp_foreach,
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__hasitem_index),
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sp_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&sp_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sp_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sp_getitem_index_fast,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&sp_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&sp_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&sp_getrange_index,
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&sp_getrange_index_n,
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__trygetitem__with__trygetitem_index),
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sp_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
+	/* .tp_asvector                   = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&sp_asvector,
+	/* .tp_asvector_nothrow           = */ (size_t (DCALL *)(DeeObject *, size_t, DREF DeeObject **))&sp_asvector_nothrow,
+};
+
+PRIVATE struct type_method tpconst sp_methods[] = {
+//TODO:	TYPE_METHOD_HINTREF(__seq_enumerate__),
+//TODO:	TYPE_METHOD_HINTREF(__seq_enumerate_items__),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_unpack),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_unpackub),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_any),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_all),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_parity),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_reduce),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_min),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_max),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_sum),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_count),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_contains),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_locate),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_rlocate),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_startswith),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_endswith),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_find),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_rfind),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_reversed),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_sorted),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_bfind),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_bposition),
+//TODO:	TYPE_METHOD_HINTREF(Sequence_brange),
+//TODO:
+//TODO:	TYPE_METHOD_HINTREF(__set_iter__),
+//TODO:	TYPE_METHOD_HINTREF(__set_size__),
+//TODO:	TYPE_METHOD_HINTREF(__set_hash__),
+//TODO://	TYPE_METHOD_HINTREF(__set_compare_eq__),
+//TODO:	TYPE_METHOD_HINTREF(__map_iter__),
+//TODO:	TYPE_METHOD_HINTREF(__map_size__),
+//TODO:	TYPE_METHOD_HINTREF(__map_hash__),
+//TODO://	TYPE_METHOD_HINTREF(__map_getitem__),
+//TODO://	TYPE_METHOD_HINTREF(__map_contains__),
+//TODO://	TYPE_METHOD_HINTREF(__map_enumerate__),
+//TODO://	TYPE_METHOD_HINTREF(__map_enumerate_items__),
+//TODO://	TYPE_METHOD_HINTREF(__map_compare_eq__),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst sp_method_hints[] = {
+//TODO:	TYPE_METHOD_HINT_F(seq_enumerate, &sp_mh_seq_enumerate, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_enumerate_index, &sp_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_makeenumeration, &sp_mh_seq_makeenumeration, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_makeenumeration_with_intrange, &sp_mh_seq_makeenumeration_with_intrange, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &sp_mh_seq_foreach_reverse, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &sp_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_unpack, &sp_mh_seq_unpack, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_unpack_ex, &sp_mh_seq_unpack_ex, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_unpack_ub, &sp_mh_seq_unpack_ub, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_trygetfirst, &sp_mh_seq_trygetfirst, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_trygetlast, &sp_mh_seq_trygetlast, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_any, &sp_mh_seq_any, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_any_with_key, &sp_mh_seq_any_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_any_with_range, &sp_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &sp_mh_seq_any_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_all, &sp_mh_seq_all, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_all_with_key, &sp_mh_seq_all_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_all_with_range, &sp_mh_seq_all_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &sp_mh_seq_all_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_parity, &sp_mh_seq_parity, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_parity_with_key, &sp_mh_seq_parity_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_parity_with_range, &sp_mh_seq_parity_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &sp_mh_seq_parity_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_reduce, &sp_mh_seq_reduce, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_reduce_with_init, &sp_mh_seq_reduce_with_init, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_reduce_with_range, &sp_mh_seq_reduce_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_reduce_with_range_and_init, &sp_mh_seq_reduce_with_range_and_init, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_min, &sp_mh_seq_min, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_min_with_key, &sp_mh_seq_min_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_min_with_range, &sp_mh_seq_min_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_min_with_range_and_key, &sp_mh_seq_min_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_max, &sp_mh_seq_max, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_max_with_key, &sp_mh_seq_max_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_max_with_range, &sp_mh_seq_max_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &sp_mh_seq_max_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_sum, &sp_mh_seq_sum, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_sum_with_range, &sp_mh_seq_sum_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_count, &sp_mh_seq_count, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_count_with_key, &sp_mh_seq_count_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_count_with_range, &sp_mh_seq_count_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &sp_mh_seq_count_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_contains, &sp_mh_seq_contains, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_contains_with_key, &sp_mh_seq_contains_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_contains_with_range, &sp_mh_seq_contains_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &sp_mh_seq_contains_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_locate, &sp_mh_seq_locate, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_locate_with_range, &sp_mh_seq_locate_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_rlocate, &sp_mh_seq_rlocate, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_rlocate_with_range, &sp_mh_seq_rlocate_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_startswith, &sp_mh_seq_startswith, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_startswith_with_key, &sp_mh_seq_startswith_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_startswith_with_range, &sp_mh_seq_startswith_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &sp_mh_seq_startswith_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_endswith, &sp_mh_seq_endswith, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_endswith_with_key, &sp_mh_seq_endswith_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_endswith_with_range, &sp_mh_seq_endswith_with_range, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &sp_mh_seq_endswith_with_range_and_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_find, &sp_mh_seq_find, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_find_with_key, &sp_mh_seq_find_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_rfind, &sp_mh_seq_rfind, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_rfind_with_key, &sp_mh_seq_rfind_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_reversed, &sp_mh_seq_reversed, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_sorted, &sp_mh_seq_sorted, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_sorted_with_key, &sp_mh_seq_sorted_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_bfind, &sp_mh_seq_bfind, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_bfind_with_key, &sp_mh_seq_bfind_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_bposition, &sp_mh_seq_bposition, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_bposition_with_key, &sp_mh_seq_bposition_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_brange, &sp_mh_seq_brange, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(seq_brange_with_key, &sp_mh_seq_brange_with_key, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(set_operator_iter, &sp_mh_set_operator_iter, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(set_operator_foreach, &sp_mh_set_operator_foreach, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(set_operator_sizeob, &sp_mh_set_operator_sizeob, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(set_operator_size, &sp_mh_set_operator_size, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(set_operator_hash, &sp_mh_set_operator_hash, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetfirst, &sp_mh_seq_trygetfirst, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(set_trygetlast, &sp_mh_seq_trygetlast, METHOD_FNOREFESCAPE),
+//TODO:	/* TODO: */
+//TODO://	TYPE_METHOD_HINT_F(set_operator_compare_eq, &sp_mh_set_operator_compare_eq, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(set_operator_trycompare_eq, &sp_mh_set_operator_trycompare_eq, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(map_operator_iter, &sp_mh_map_operator_iter, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_foreach_pair, &sp_mh_map_operator_foreach_pair, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(map_operator_sizeob, &sp_mh_map_operator_sizeob, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(map_operator_size, &sp_mh_map_operator_size, METHOD_FNOREFESCAPE),
+//TODO:	TYPE_METHOD_HINT_F(map_operator_hash, &sp_mh_map_operator_hash, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_getitem, &sp_mh_map_operator_getitem, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_trygetitem, &sp_mh_map_operator_trygetitem, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_bounditem, &sp_mh_map_operator_bounditem, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_hasitem, &sp_mh_map_operator_hasitem, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_contains, &sp_mh_map_operator_contains, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_enumerate, &sp_mh_map_enumerate, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_makeenumeration, &sp_mh_map_makeenumeration, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_compare_eq, &sp_mh_map_operator_compare_eq, METHOD_FNOREFESCAPE),
+//TODO://	TYPE_METHOD_HINT_F(map_operator_trycompare_eq, &sp_mh_map_operator_trycompare_eq, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_getset tpconst sp_getsets[] = {
+	/* These must be in "so_getsets" since that's where method hints are expected to find them. */
+	TYPE_GETTER_AB_F_NODOC(STR_first, &sp_getfirst, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_GETTER_AB_F_NODOC(STR_last, &sp_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_GETTER_AB_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+	TYPE_GETTER_AB_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
+//TODO:	TYPE_GETTER_AB_F(STR___set_frozen__, &sp_mh_set_frozen, METHOD_FCONSTCALL, "->?DSet"),
+//TODO:	TYPE_GETTER_AB_F(STR___map_frozen__, &sp_mh_map_frozen, METHOD_FCONSTCALL, "->?DMapping"),
+	/* TODO: */
+//	TYPE_GETTER_AB_F_NODOC(STR___map_keys__, &sp_mh_map_keys, METHOD_FNOREFESCAPE),
+//	TYPE_GETTER_AB_F_NODOC(STR___map_iterkeys__, &sp_mh_map_iterkeys, METHOD_FNOREFESCAPE),
+//	TYPE_GETTER_AB_F_NODOC(STR___map_values__, &sp_mh_map_values, METHOD_FNOREFESCAPE),
+//	TYPE_GETTER_AB_F_NODOC(STR___map_itervalues__, &sp_mh_map_itervalues, METHOD_FNOREFESCAPE),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst sp_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__first__", STRUCT_OBJECT, offsetof(SeqPair, sp_items[0]), "Alias for ?#first"),
+	TYPE_MEMBER_FIELD_DOC("__last__", STRUCT_OBJECT, offsetof(SeqPair, sp_items[1]), "Alias for ?#last"),
+	TYPE_MEMBER_CONST("length", &DeeInt_Two),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_member tpconst sp_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &SeqPairIterator_Type),
+	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject DeeSeqPair_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqPair",
+	/* .tp_doc      = */ DOC("Specialized sequence type that always contains exactly 2 items\n"
+	                         "\n"
+	                         "(a,b)\n"
+	                         "#pa{First item that goes into ?#first}"
+	                         "#pb{Second item that goes into ?#last}"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ SeqPair,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &sp_copy,
+			/* tp_deep_ctor:   */ &sp_deep,
+			/* tp_any_ctor:    */ &sp_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &sp_serialize
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sp_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ DEFIMPL(&object_str),
+		/* .tp_repr      = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&sp_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&sp_printrepr,
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sp_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
+	/* .tp_cmp           = */ &sp_cmp,
+	/* .tp_seq           = */ &sp_seq,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__1806D264FE42CE33),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ sp_methods,
+	/* .tp_getsets       = */ sp_getsets,
+	/* .tp_members       = */ sp_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ sp_class_members,
+	/* .tp_method_hints  = */ sp_method_hints,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
+};
 
 #endif /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 
