@@ -546,7 +546,17 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * >> // possible in the case of "find", but for "__seq_remove__")
  * >> local index = mySeq.map(e -> e.length).find(item: findMe);
  * >> local index = mySeq.find(item: findMe, key: e -> e === findMe ? e : e.length);
- * >> #endif */
+ * >> #endif
+ *
+ * If deemon had type generics, think of it like this:
+ * >> class Sequence<T: Object> {
+ * >>     public find(item: T, start: int = 0, end: int = -1): int;
+ * >> #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+ * >>     public find<S: Object>(item: S, start: int = 0, end: int = -1, key: (arg: T): S): int;
+ * >> #else
+ * >>     public find(item: T, start: int = 0, end: int = -1, key: (arg: T): Object): int;
+ * >> #endif
+ * >> }; */
 #if (!defined(CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM) && \
      !defined(CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM))
 #if 0

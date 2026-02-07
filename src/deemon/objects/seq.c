@@ -812,9 +812,40 @@ seq_binsert(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__item_start_end_key, "o|" UNPuSIZ UNPxSIZ "o:binsert", &args))
 		goto err;
 /*[[[end]]]*/
-	index = !DeeNone_Check(args.key)
-	        ? DeeObject_InvokeMethodHint(seq_bposition_with_key, self, args.item, args.start, args.end, args.key)
-	        : DeeObject_InvokeMethodHint(seq_bposition, self, args.item, args.start, args.end);
+	if (!DeeNone_Check(args.key)) {
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+		/* Apply "key" to "item" before trying to discover the insert-position.
+		 * ---
+		 * Since the caller wants to insert **item** into the sequence, but
+		 * want its position to be determined by modulating the sequence via
+		 * a custom "key" function, the given "item" should match the typing
+		 * as already present within the sequence.
+		 * However, the "bposition" call will compare its "item" argument
+		 * against the "key"'ed elements of "self", meaning that in order
+		 * to have that compare happen properly, we must key the item here.
+		 *
+		 * Recall:
+		 * >> class Sequence<T: Object> {
+		 * >>     public find(item: T, start: int = 0, end: int = -1): int;
+		 * >>     public find<S: Object>(item: S, start: int = 0, end: int = -1, key: (arg: T): S): int;
+		 * >>
+		 * >>     // Since we're supposed to **insert** the item, we must take "T", meaning
+		 * >>     // that when calling "find" (which takes "S"), we must pass "key(item)",
+		 * >>     // which has said "S" typing.
+		 * >>     public binsert(item: T, start: int = 0, end: int = -1): int;
+		 * >>     public binsert<S: Object>(item: T, start: int = 0, end: int = -1, key: (arg: T): S): int;
+		 * >> }; */
+		DREF DeeObject *keyed_item = DeeObject_Call(args.key, 1, &args.item);
+		if unlikely(!keyed_item)
+			goto err;
+		index = DeeObject_InvokeMethodHint(seq_bposition_with_key, self, keyed_item, args.start, args.end, args.key);
+		Dee_Decref_unlikely(keyed_item);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+		index = DeeObject_InvokeMethodHint(seq_bposition_with_key, self, args.item, args.start, args.end, args.key);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	} else {
+		index = DeeObject_InvokeMethodHint(seq_bposition, self, args.item, args.start, args.end);
+	}
 	if unlikely(index == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(DeeObject_InvokeMethodHint(seq_insert, self, index, args.item))
@@ -1060,8 +1091,13 @@ err:
 	"#tValueError{The specified range does not contain an element matching @item}"
 #define DOC_param_item \
 	"#pitem{The item to search for}"
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+#define DOC_param_key \
+	"#pkey{A key function to transform the items of @this}"
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 #define DOC_param_key \
 	"#pkey{A key function to transform item values}"
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 
 INTDEF struct type_method tpconst seq_methods[];
 INTERN_TPCONST struct type_method tpconst seq_methods[] = {
@@ -2691,13 +2727,18 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "for (local l: lines.blocateall(prefix, s -#> s.substr(0, ##prefix)))\n"
 	              /**/ "	print l;\n"
 	              "}"),
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+#define seq_binsert_key_blurb " (for this purpose, ${key(item)} is passed to ?#bposition, but @item itself will be inserted)"
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+#define seq_binsert_key_blurb ""
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	TYPE_KWMETHOD("binsert", &seq_binsert,
 	              "(" seq_binsert_params ")\n"
 	              "Helper wrapper for ?#insert and ?#bposition that automatically determines "
 	              /**/ "the index where a given @item should be inserted to ensure that @this sequence "
-	              /**/ "remains sorted according to @key. Note that this function makes virtual calls as "
-	              /**/ "seen in the following template, meaning it usually doesn't need to be overwritten "
-	              /**/ "by sub-classes.\n"
+	              /**/ "remains sorted according to @key" seq_binsert_key_blurb ". Note that this function "
+	              /**/ "makes virtual calls as seen in the following template, meaning it usually doesn't "
+	              /**/ "need to be overwritten by sub-classes.\n"
 	              "${"
 	              /**/ "local index = this.bposition(item, key);\n"
 	              /**/ "return this.insert(index, item);"
