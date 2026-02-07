@@ -9902,14 +9902,21 @@ default__seq_count_with_key__with__seq_operator_foreach(DeeObject *self, DeeObje
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.gscwk_kelem = item;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_count_with_key_foreach_cb, &data);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_count_with_key_foreach_cb, &data);
 	Dee_Decref(data.gscwk_kelem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)foreach_status;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err:
 	return (size_t)-1;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) size_t DCALL
@@ -10083,14 +10090,21 @@ default__seq_count_with_range_and_key__with__seq_enumerate_index(DeeObject *self
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.gscwk_kelem = item;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_count_with_key_enumerate_cb, &data, start, end);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_count_with_key_enumerate_cb, &data, start, end);
 	Dee_Decref(data.gscwk_kelem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)foreach_status;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err:
 	return (size_t)-1;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
@@ -10318,19 +10332,26 @@ default__seq_contains_with_key__with__seq_operator_foreach(DeeObject *self, DeeO
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.gscwk_kelem = item;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_contains_with_key_foreach_cb, &data);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_contains_with_key_foreach_cb, &data);
 	Dee_Decref(data.gscwk_kelem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(foreach_status == 0 ||
 	       foreach_status == -1 ||
 	       foreach_status == -2);
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -10514,19 +10535,26 @@ default__seq_contains_with_range_and_key__with__seq_enumerate_index(DeeObject *s
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.gscwk_kelem = item;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_contains_with_key_enumerate_cb, &data, start, end);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.gscwk_kelem)
 		goto err;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_contains_with_key_enumerate_cb, &data, start, end);
 	Dee_Decref(data.gscwk_kelem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(foreach_status == 0 ||
 	       foreach_status == -1 ||
 	       foreach_status == -2);
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
@@ -11022,17 +11050,23 @@ default__seq_startswith_with_key__with__seq_trygetfirst(DeeObject *self, DeeObje
 		goto err;
 	if (first == ITER_DONE)
 		return 0;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	result = DeeObject_TryCompareKeyEq(item, first, key);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err_first;
 	result = DeeObject_TryCompareKeyEq(item, first, key);
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Decref(first);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err_first:
 	Dee_Decref(first);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }
@@ -11156,17 +11190,23 @@ default__seq_startswith_with_range_and_key__with__seq_operator_trygetitem_index(
 		goto err;
 	if (selfitem == ITER_DONE)
 		return 0;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err_selfitem;
 	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Decref(selfitem);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err_selfitem:
 	Dee_Decref(selfitem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }
@@ -11300,17 +11340,23 @@ default__seq_endswith_with_key__with__seq_trygetlast(DeeObject *self, DeeObject 
 		goto err;
 	if (last == ITER_DONE)
 		return 0;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	result = DeeObject_TryCompareKeyEq(item, last, key);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err_last;
 	result = DeeObject_TryCompareKeyEq(item, last, key);
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Decref(last);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err_last:
 	Dee_Decref(last);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }
@@ -11448,17 +11494,23 @@ default__seq_endswith_with_range_and_key__with__seq_operator_size__and__operator
 		goto err;
 	if (selfitem == ITER_DONE)
 		return 0;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err_selfitem;
 	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Decref(selfitem);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err_selfitem:
 	Dee_Decref(selfitem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }
@@ -11677,12 +11729,18 @@ INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_find_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct default_seq_find_with_key_foreach_data data;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.dsfwkf_base.dsff_elem = item;
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsfwkf_base.dsff_elem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.dsfwkf_base.dsff_elem)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsfwkf_key = key;
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_find_with_key_foreach_cb, &data, start, end);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(data.dsfwkf_base.dsff_elem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
 			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
@@ -11901,14 +11959,20 @@ default__seq_rfind_with_key__with__seq_enumerate_index_reverse(DeeObject *self, 
 	Dee_ssize_t status;
 	struct default_seq_find_with_key_foreach_data data;
 	DeeMH_seq_enumerate_index_reverse_t renum;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.dsfwkf_base.dsff_elem = item;
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsfwkf_base.dsff_elem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.dsfwkf_base.dsff_elem)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsfwkf_key = key;
 	renum = DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index_reverse);
 	ASSERT(renum);
 	status = (*renum)(self, &default_seq_find_with_key_foreach_cb, &data, start, end);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(data.dsfwkf_base.dsff_elem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
 			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
@@ -11951,12 +12015,20 @@ INTERN WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 default__seq_rfind_with_key__with__seq_enumerate_index(DeeObject *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
 	struct default_seq_rfind_with_key_foreach_data data;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.dsrfwk_kelem = item;
+	data.dsrfwk_key   = key;
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsrfwk_kelem = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.dsrfwk_kelem)
 		goto err;
+	data.dsrfwk_key = key;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsrfwk_result = (size_t)-1;
 	status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_seq_rfind_with_key_foreach_cb, &data, start, end);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(data.dsrfwk_kelem);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status == -1)
 		goto err;
@@ -12773,12 +12845,18 @@ default__seq_remove_with_key__with__seq_enumerate_index__and__seq_operator_delit
 	Dee_ssize_t foreach_status;
 	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
 	data.drwkweiadiid_self = self;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.drwkweiadiid_item = item;
+	data.drwkweiadiid_key  = key;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_remove_with_key_with_enumerate_index_and_delitem_index_cb, &data, start, end);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.drwkweiadiid_item = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.drwkweiadiid_item)
 		goto err;
 	data.drwkweiadiid_key = key;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &default_remove_with_key_with_enumerate_index_and_delitem_index_cb, &data, start, end);
 	Dee_Decref(data.drwkweiadiid_item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if unlikely(foreach_status == -1)
 		goto err;
@@ -12927,12 +13005,18 @@ default__seq_rremove_with_key__with__seq_enumerate_index_reverse__and__seq_opera
 	Dee_ssize_t foreach_status;
 	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
 	data.drwkweiadiid_self = self;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	data.drwkweiadiid_item = item;
+	data.drwkweiadiid_key  = key;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index_reverse))(self, &default_remove_with_key_with_enumerate_index_and_delitem_index_cb, &data, start, end);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.drwkweiadiid_item = DeeObject_Call(key, 1, &item);
 	if unlikely(!data.drwkweiadiid_item)
 		goto err;
 	data.drwkweiadiid_key = key;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index_reverse))(self, &default_remove_with_key_with_enumerate_index_and_delitem_index_cb, &data, start, end);
 	Dee_Decref(data.drwkweiadiid_item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if unlikely(foreach_status == -1)
 		goto err;
@@ -13168,24 +13252,35 @@ default__seq_removeall_with_key__unsupported(DeeObject *self, DeeObject *item, s
 
 INTERN WUNUSED NONNULL((1, 2, 6)) size_t DCALL
 default__seq_removeall_with_key__with__seq_removeif(DeeObject *self, DeeObject *item, size_t start, size_t end, size_t max, DeeObject *key) {
-	/* >> local keyedElem = key(item);
-	 * >> return !!self.removeallif(x -> deemon.equals(keyedElem, key(x)), start, end, max); */
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	/* >> return !!self.removeif(x -> deemon.equals(item, key(x)), start, end, max); */
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	/* >> local keyedItem = key(item);
+	 * >> return !!self.removeif(x -> deemon.equals(keyedItem, key(x)), start, end, max); */
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	size_t result;
 	DREF SeqRemoveWithRemoveIfPredicateWithKey *pred;
 	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicateWithKey);
 	if unlikely(!pred)
 		goto err;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	Dee_Incref(item);
+	pred->srwripwk_item = item;
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	pred->srwripwk_item = DeeObject_Call(key, 1, &item);
 	if unlikely(!pred->srwripwk_item)
 		goto err_pred;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Incref(key);
 	pred->srwripwk_key = key;
 	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicateWithKey_Type);
 	result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_removeif))(self, (DeeObject *)pred, start, end, max);
 	Dee_Decref_likely(pred);
 	return result;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err_pred:
 	DeeObject_FREE(pred);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)-1;
 }
@@ -13253,9 +13348,11 @@ default__seq_removeall_with_key__with__seq_operator_size__and__seq_operator_tryg
 		end = selfsize;
 	if unlikely(start >= end)
 		return 0;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	do {
 		DREF DeeObject *elem;
 		elem = (*cached_seq_operator_trygetitem_index)(self, start);
@@ -13293,10 +13390,14 @@ check_interrupt:
 		if (DeeThread_CheckInterrupt())
 			goto err_item;
 	} while (start < end);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return result;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)-1;
 }
@@ -14560,9 +14661,11 @@ default__seq_bfind_with_key__with__seq_operator_size__and__seq_operator_trygetit
 	if (end > selfsize)
 		end = selfsize;
 	if likely(start < end) {
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 		item = DeeObject_Call(key, 1, &item);
 		if unlikely(!item)
 			goto err;
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		do {
 			int cmp_result;
 			size_t mid = overflowsafe_mid(start, end);
@@ -14588,19 +14691,25 @@ default__seq_bfind_with_key__with__seq_operator_size__and__seq_operator_trygetit
 					end = mid;
 					goto err_item_overflow;
 				}
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 				Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
 		} while (start < end);
 	}
 	ASSERT(start >= end);
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 err_item_overflow:
 	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err_item:
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -14807,9 +14916,11 @@ default__seq_bposition_with_key__with__seq_operator_size__and__seq_operator_tryg
 	if (end > selfsize)
 		end = selfsize;
 	if likely(start < end) {
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 		item = DeeObject_Call(key, 1, &item);
 		if unlikely(!item)
 			goto err;
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		do {
 			int cmp_result;
 			size_t mid = overflowsafe_mid(start, end);
@@ -14835,21 +14946,27 @@ default__seq_bposition_with_key__with__seq_operator_size__and__seq_operator_tryg
 					end = mid;
 					goto err_item_overflow;
 				}
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 				Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
 		} while (start < end);
 	}
 	ASSERT(start >= end);
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if unlikely(end == (size_t)-1 || end == (size_t)Dee_COMPARE_ERR)
 		goto err_item_overflow;
 	return end;
 err_item_overflow:
 	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
 err_item:
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }
@@ -15151,9 +15268,11 @@ default__seq_brange_with_key__with__seq_operator_size__and__seq_operator_trygeti
 	if (end > selfsize)
 		end = selfsize;
 	if likely(start < end) {
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 		item = DeeObject_Call(key, 1, &item);
 		if unlikely(!item)
 			goto err;
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		do {
 			int cmp_result;
 			size_t mid = overflowsafe_mid(start, end);
@@ -15228,19 +15347,25 @@ default__seq_brange_with_key__with__seq_operator_size__and__seq_operator_trygeti
 				/* Write-back the result range bounds */
 				result_range[0] = result_range_start;
 				result_range[1] = result_range_end;
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 				Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 				return 0;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
 		} while (start < end);
 	}
 	ASSERT(start >= end);
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	result_range[0] = start;
 	result_range[1] = end;
 	return 0;
 err_item:
+#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }

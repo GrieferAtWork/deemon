@@ -180,24 +180,35 @@ __seq_removeall__.seq_removeall_with_key([[nonnull]] DeeObject *self,
 %{$none = 0}
 %{$empty = 0}
 %{$with__seq_removeif = {
-	/* >> local keyedElem = key(item);
-	 * >> return !!self.removeallif(x -> deemon.equals(keyedElem, key(x)), start, end, max); */
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	/* >> return !!self.removeif(x -> deemon.equals(item, key(x)), start, end, max); */
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	/* >> local keyedItem = key(item);
+	 * >> return !!self.removeif(x -> deemon.equals(keyedItem, key(x)), start, end, max); */
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	size_t result;
 	DREF SeqRemoveWithRemoveIfPredicateWithKey *pred;
 	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicateWithKey);
 	if unlikely(!pred)
 		goto err;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	Dee_Incref(item);
+	pred->srwripwk_item = item;
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	pred->srwripwk_item = DeeObject_Call(key, 1, &item);
 	if unlikely(!pred->srwripwk_item)
 		goto err_pred;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Incref(key);
 	pred->srwripwk_key = key;
 	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicateWithKey_Type);
 	result = CALL_DEPENDENCY(seq_removeif, self, (DeeObject *)pred, start, end, max);
 	Dee_Decref_likely(pred);
 	return result;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 err_pred:
 	DeeObject_FREE(pred);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)-1;
 }}
@@ -259,9 +270,11 @@ err:
 		end = selfsize;
 	if unlikely(start >= end)
 		return 0;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	do {
 		DREF DeeObject *elem;
 		elem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, start);
@@ -299,10 +312,14 @@ check_interrupt:
 		if (DeeThread_CheckInterrupt())
 			goto err_item;
 	} while (start < end);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return result;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)-1;
 }} {

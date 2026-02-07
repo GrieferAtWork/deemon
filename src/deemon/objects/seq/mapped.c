@@ -652,6 +652,9 @@ PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_parity_with_range, &mapped_mh_seq_parity_with_range),
 	TYPE_METHOD_HINT(seq_sort, &mapped_mh_seq_sort),
 	TYPE_METHOD_HINT(seq_sorted, &mapped_mh_seq_sorted),
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	/* TODO: Can implement pretty much all find(), remove(), etc. functions by injecting "sm_mapper" as an (additional) key */
+#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	TYPE_METHOD_HINT_END
 };
 

@@ -704,12 +704,16 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 so_mh_seq_count_with_key(SeqOne *self, DeeObject *item, DeeObject *key) {
 	int cmp;
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	cmp = DeeObject_TryCompareKeyEq(item, self->so_item, key);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	DREF DeeObject *keyed_item;
 	keyed_item = DeeObject_Call(key, 1, &item);
 	if unlikely(!keyed_item)
 		goto err;
 	cmp = DeeObject_TryCompareKeyEq(keyed_item, self->so_item, key);
 	Dee_Decref(keyed_item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (Dee_COMPARE_ISERR(cmp))
 		goto err;
 	return Dee_COMPARE_ISEQ(cmp) ? 1 : 0;
@@ -851,6 +855,7 @@ so_mh_seq_sorted_with_key(SeqOne *self, size_t start, size_t end, DeeObject *key
 #define so_mh_seq_bfind          so_mh_seq_find
 #define so_mh_seq_bfind_with_key so_mh_seq_find_with_key
 
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_CompareKey2(DeeObject *lhs, DeeObject *rhs, DeeObject *key) {
 	int result;
@@ -863,6 +868,7 @@ DeeObject_CompareKey2(DeeObject *lhs, DeeObject *rhs, DeeObject *key) {
 err:
 	return Dee_COMPARE_ERR;
 }
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
@@ -884,7 +890,11 @@ PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 so_mh_seq_bposition_with_key(SeqOne *self, DeeObject *item,
                              size_t start, size_t end, DeeObject *key) {
 	if (start == 0 && end >= 1) {
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+		int cmp = DeeObject_CompareKey(item, self->so_item, key);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		int cmp = DeeObject_CompareKey2(item, self->so_item, key);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
 		if (Dee_COMPARE_ISLE(cmp))
@@ -929,7 +939,11 @@ so_mh_seq_brange_with_key(SeqOne *self, DeeObject *item,
                           size_t start, size_t end, DeeObject *key,
                           size_t result_range[2]) {
 	if (start == 0 && end >= 1) {
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+		int cmp = DeeObject_CompareKey(item, self->so_item, key);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		int cmp = DeeObject_CompareKey2(item, self->so_item, key);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		if (Dee_COMPARE_ISERR(cmp))
 			goto err;
 		if (Dee_COMPARE_ISLO(cmp)) {

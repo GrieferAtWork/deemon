@@ -94,10 +94,20 @@ assert seq.blocateall(33) == [33];
 function div10(x: int): int -> x / 10;
 
 /* Assert the use of `key' to alter object grouping. */
-assert seq.blocateall(10, key: div10) == [11, 12, 13];
-assert seq.blocateall(20, key: div10) == [21, 22, 22, 22, 23];
-assert seq.blocateall(30, key: div10) == [31, 32, 33];
-assert seq.blocateall(item: 10, key: div10) == [11, 12, 13];
-assert seq.blocateall(item: 20, key: div10) == [21, 22, 22, 22, 23];
-assert seq.blocateall(item: 30, key: div10) == [31, 32, 33];
+local CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM = !seq.blocateall(10, key: div10);
+if (CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM) {
+	assert seq.blocateall(1, key: div10) == [11, 12, 13];
+	assert seq.blocateall(2, key: div10) == [21, 22, 22, 22, 23];
+	assert seq.blocateall(3, key: div10) == [31, 32, 33];
+	assert seq.blocateall(item: 1, key: div10) == [11, 12, 13];
+	assert seq.blocateall(item: 2, key: div10) == [21, 22, 22, 22, 23];
+	assert seq.blocateall(item: 3, key: div10) == [31, 32, 33];
+} else {
+	assert seq.blocateall(10, key: div10) == [11, 12, 13];
+	assert seq.blocateall(20, key: div10) == [21, 22, 22, 22, 23];
+	assert seq.blocateall(30, key: div10) == [31, 32, 33];
+	assert seq.blocateall(item: 10, key: div10) == [11, 12, 13];
+	assert seq.blocateall(item: 20, key: div10) == [21, 22, 22, 22, 23];
+	assert seq.blocateall(item: 30, key: div10) == [31, 32, 33];
+}
 

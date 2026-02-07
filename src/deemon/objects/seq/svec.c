@@ -1171,9 +1171,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 svec_mh_find_with_key(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	size_t i = start;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	SharedVector_LockRead(self);
 	for (; i < end && i < self->sv_length; ++i) {
 		DREF DeeObject *myitem;
@@ -1185,16 +1187,24 @@ svec_mh_find_with_key(SharedVector *self, DeeObject *item, size_t start, size_t 
 		Dee_Decref(myitem);
 		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (Dee_COMPARE_ISEQ(temp))
+		if (Dee_COMPARE_ISEQ(temp)) {
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+			Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return i;
+		}
 		SharedVector_LockRead(self);
 	}
 	SharedVector_LockEndRead(self);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
 err:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 
@@ -1230,9 +1240,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 svec_mh_rfind_with_key(SharedVector *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	size_t i = end;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	SharedVector_LockRead(self);
 	for (;;) {
 		DREF DeeObject *myitem;
@@ -1249,16 +1261,24 @@ svec_mh_rfind_with_key(SharedVector *self, DeeObject *item, size_t start, size_t
 		Dee_Decref(myitem);
 		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (Dee_COMPARE_ISEQ(temp))
+		if (Dee_COMPARE_ISEQ(temp)) {
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+			Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return i;
+		}
 		SharedVector_LockRead(self);
 	}
 	SharedVector_LockEndRead(self);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
 err:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 

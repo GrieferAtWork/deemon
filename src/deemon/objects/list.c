@@ -2641,11 +2641,13 @@ list_mh_remove_with_key(List *me, DeeObject *item, size_t start, size_t end, Dee
 	DeeObject **vector;
 	size_t i, length;
 	ASSERT_OBJECT(item);
-	DeeList_LockRead(me);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
-again:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	DeeList_LockRead(me);
+again_locked:
 	vector = me->l_list.ol_elemv;
 	length = me->l_list.ol_elemc;
 	for (i = start; i < length && i < end; ++i) {
@@ -2667,7 +2669,7 @@ again:
 			    me->l_list.ol_elemc != length ||
 			    DeeList_GET(me, i) != this_elem) {
 				DeeList_LockDowngrade(me);
-				goto again;
+				goto again_locked;
 			}
 
 			/* Override the element with its successors. */
@@ -2681,7 +2683,9 @@ again:
 
 			/* Drop the reference previously held by the list. */
 			Dee_Decref(this_elem);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 			Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return 1;
 		}
 
@@ -2691,14 +2695,18 @@ again:
 		/* Check if the list was changed. */
 		if (me->l_list.ol_elemv != vector ||
 		    me->l_list.ol_elemc != length)
-			goto again;
+			goto again_locked;
 	}
 	DeeList_LockEndRead(me);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return 0;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
 err:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return -1;
 }
 
@@ -2770,9 +2778,11 @@ PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 list_mh_rremove_with_key(List *me, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	DeeObject **vector;
 	size_t i, length;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	DeeList_LockRead(me);
 again:
 	vector = me->l_list.ol_elemv;
@@ -2816,7 +2826,9 @@ again:
 
 			/* Drop the reference previously held by the list. */
 			Dee_Decref(this_elem);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 			Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return 1;
 		}
 
@@ -2829,11 +2841,15 @@ again:
 			goto again;
 	}
 	DeeList_LockEndRead(me);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return 0;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
 err:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return -1;
 }
 
@@ -2909,9 +2925,11 @@ list_mh_removeall_with_key(List *me, DeeObject *item, size_t start,
 	size_t i, length, result = 0;
 	if unlikely(!max)
 		return 0;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	DeeList_LockRead(me);
 again:
 	vector = me->l_list.ol_elemv;
@@ -2966,11 +2984,15 @@ again:
 	DeeList_LockEndRead(me);
 done:
 	ASSERT(result != (size_t)-1);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return result;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
 err:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 }
 
@@ -3055,9 +3077,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 list_mh_find_with_key(List *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	size_t i = start;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	DeeList_LockRead(self);
 	for (; i < end && i < self->l_list.ol_elemc; ++i) {
 		DREF DeeObject *myitem;
@@ -3069,16 +3093,24 @@ list_mh_find_with_key(List *self, DeeObject *item, size_t start, size_t end, Dee
 		Dee_Decref(myitem);
 		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (Dee_COMPARE_ISEQ(temp))
+		if (Dee_COMPARE_ISEQ(temp)) {
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+			Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return i;
+		}
 		DeeList_LockRead(self);
 	}
 	DeeList_LockEndRead(self);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
 err:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 
@@ -3114,9 +3146,11 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 list_mh_rfind_with_key(List *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	size_t i = end;
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	item = DeeObject_Call(key, 1, &item);
 	if unlikely(!item)
 		goto err;
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	DeeList_LockRead(self);
 	for (;;) {
 		DREF DeeObject *myitem;
@@ -3133,16 +3167,24 @@ list_mh_rfind_with_key(List *self, DeeObject *item, size_t start, size_t end, De
 		Dee_Decref(myitem);
 		if (Dee_COMPARE_ISERR(temp))
 			goto err_item;
-		if (Dee_COMPARE_ISEQ(temp))
+		if (Dee_COMPARE_ISEQ(temp)) {
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+			Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return i;
+		}
 		DeeList_LockRead(self);
 	}
 	DeeList_LockEndRead(self);
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 err_item:
+#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	Dee_Decref(item);
 err:
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 
