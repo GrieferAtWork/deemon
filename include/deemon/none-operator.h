@@ -20,6 +20,7 @@
 /*!export **/
 /*!export DeeNone_**/
 /*!export _DeeNone_**/
+/*!export DeeNone_Operator**/
 #ifndef GUARD_DEEMON_NONE_OPERATOR_H
 #define GUARD_DEEMON_NONE_OPERATOR_H 1 /*!export-*/
 

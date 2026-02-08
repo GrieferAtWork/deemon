@@ -34,7 +34,7 @@
 #include <deemon/format.h>        /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/int.h>           /* _DeeInt_Zero */
 #include <deemon/map.h>           /* DeeMapping_Type */
-#include <deemon/none-operator.h> /* DeeNone_* */
+#include <deemon/none-operator.h> /* DeeNone_Operator* */
 #include <deemon/none.h>          /* return_none */
 #include <deemon/object.h>        /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_OBJECT_HEAD_INIT, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
 #include <deemon/pair.h>          /* DeeSeq_OfPairInherited, DeeSeq_OfPairvInherited */

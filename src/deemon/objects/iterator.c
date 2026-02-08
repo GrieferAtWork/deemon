@@ -32,7 +32,7 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_* */
 #include <deemon/mro.h>                /* DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_QueryAttributeHash */
-#include <deemon/none-operator.h>      /* DeeNone_*, _DeeNone_retsm1_1 */
+#include <deemon/none-operator.h>      /* DeeNone_Operator*, _DeeNone_retsm1_1 */
 #include <deemon/none.h>               /* return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeNO_nextpair_t, DeeType_RequireNativeOperator, maketyped__getattr */

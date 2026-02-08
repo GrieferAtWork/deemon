@@ -28,7 +28,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, DeeFloatObject, DeeFloat_New, DeeFloat_Type */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_* */
-#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/numeric.h>            /*  */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_int128_t, Dee_uint128_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */

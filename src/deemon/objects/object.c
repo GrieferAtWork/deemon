@@ -33,7 +33,7 @@
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/module.h>             /* DeeModule* */
-#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Check, return_none */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_NO, Dee_BOUND_YES, Dee_Decref*, Dee_HAS_ISERR, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */

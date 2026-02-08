@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/computed-operators.h>
 #include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_set_frozen_t, DeeMH_set_operator_iter_t, DeeType_RequireMethodHint */
-#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Type */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */

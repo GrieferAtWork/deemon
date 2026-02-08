@@ -30,7 +30,7 @@
 #include <deemon/exec.h>               /* Dee_AtExit, Dee_RUNATEXIT_FDONTRUN, Dee_RunAtExit */
 #include <deemon/format.h>             /* DeeFormat_*, Dee_snprintf */
 #include <deemon/module.h>             /* DeeModule_CallExternStringf */
-#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, return_none */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeString* */

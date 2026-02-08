@@ -27,7 +27,7 @@
 #include <deemon/callable.h>           /*  */
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
-#include <deemon/none-operator.h>      /* DeeNone_* */
+#include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref, Dee_Movprefv, Dee_OBJECT_HEAD, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
