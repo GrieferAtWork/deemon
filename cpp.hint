@@ -1492,7 +1492,7 @@
 
 #define DEFINE_FILETYPE_INHERIT_HOOK(x,...) bool x(DeeFileTypeObject*self,DeeTypeObject*type_type,struct Dee_opinfo const*info){}
 #define DEFINE_TYPE_INHERIT_HOOK(x,...) bool x(DeeTypeObject*self,DeeTypeObject*type_type,struct Dee_opinfo const*info){}
-#define DEFINE_TYPE_INHERIT_FUNCTION(n,...) bool n(DeeFileTypeObject*__restrict self){}
+#define DEFINE_TYPE_INHERIT_FUNCTION(n,...) bool n(DeeFileTypeObject*self){}
 
 #define CTYPES_INT_DEFINE_COMPARE_OPERATOR(n,...) static DeeObject*int_##n(DeeSTypeObject*tp_self,T*self,DeeObject*some_object){}
 #define CYTYPES_DEFINE_ATOMIC_BINOP(n,...) DeeObject*n(size_t argc,DeeObject*const*argv){}
@@ -1517,6 +1517,7 @@
 #define LOCAL_seXi(x) seXi_##x
 #define DEFINE_SEA_BINARY_INPLACE(n,...) static int n(LOCAL_SeqEach**p_self,DeeObject*other){}
 
+#define DEFINE_NUMERIC_FIXED_BIT_WRAPPER(name)DeeObject*numeric_##name(DeeObject*self){}
 
 #define memstate_foreach(...) for(;;)
 #define memstate_foreach_end

@@ -5381,6 +5381,43 @@ err_printer:
 #endif /* !DeeInt_Print_USES_UNICODE */
 }
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed8(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed16(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed32(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed64(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed128(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned8(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned16(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned32(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned64(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned128(DeeIntObject *__restrict self);
+#ifndef __INTELLISENSE__
+DECL_END
+#define DEFINE_int_get_signed8
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_signed16
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_signed32
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_signed64
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_signed128
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_unsigned8
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_unsigned16
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_unsigned32
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_unsigned64
+#include "int-fixedbit.c.inl"
+#define DEFINE_int_get_unsigned128
+#include "int-fixedbit.c.inl"
+DECL_BEGIN
+#endif /* !__INTELLISENSE__ */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
+
 
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
@@ -5459,6 +5496,46 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	TYPE_GETTER_AB_F(STR_int, &DeeObject_NewRef, METHOD_FCONSTCALL,
 	                 "->?Dint\n"
 	                 "Always re-return @this"),
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+#define DECLARE_SIGNEDn(n, xff, x80, xfe)                                             \
+	TYPE_GETTER_AB_F("signed" #n, &int_get_signed##n, METHOD_FCONSTCALL,              \
+	                 "->?.\n"                                                         \
+	                 "Do the equivalent of the C-expression #C{(int" #n "_t)this}:\n" \
+	                 "${"                                                             \
+	                 /**/ "property signed" #n ": int = {\n"                          \
+	                 /**/ "	get(): int {\n"                                           \
+	                 /**/ "		local result = this & " xff ";\n"                     \
+	                 /**/ "		if (result & " x80 ")\n"                              \
+	                 /**/ "			result = " xfe " - result;\n"                     \
+	                 /**/ "		return result;\n"                                     \
+	                 /**/ "	}\n"                                                      \
+	                 /**/ "}"                                                         \
+	                 "}")
+	DECLARE_SIGNEDn(8, "0xff", "0x80", "0xfe"),
+	DECLARE_SIGNEDn(16, "0xffff", "0x8000", "0xfffe"),
+	DECLARE_SIGNEDn(32, "0xffffffff", "0x80000000", "0xfffffffe"),
+	DECLARE_SIGNEDn(64, "0xffffffffffffffff", "0x8000000000000000", "0xfffffffffffffffe"),
+	DECLARE_SIGNEDn(128, "128 .bitmask", "(127 .bitmask + 1)", "128 .bitmask - 1"),
+#undef DECLARE_SIGNEDn
+#define DECLARE_UNSIGNEDn(n, xff)                                                      \
+	TYPE_GETTER_AB_F("unsigned" #n, &int_get_unsigned##n, METHOD_FCONSTCALL,           \
+	                 "->?.\n"                                                          \
+	                 "Do the equivalent of the C-expression #C{(uint" #n "_t)this}:\n" \
+	                 "${"                                                              \
+	                 /**/ "property unsigned" #n ": int = {\n"                         \
+	                 /**/ "	get(): int {\n"                                            \
+	                 /**/ "		return this & " xff ";\n"                              \
+	                 /**/ "	}\n"                                                       \
+	                 /**/ "}"                                                          \
+	                 "}")
+	DECLARE_UNSIGNEDn(8, "0xff"),
+	DECLARE_UNSIGNEDn(16, "0xffff"),
+	DECLARE_UNSIGNEDn(32, "0xffffffff"),
+	DECLARE_UNSIGNEDn(64, "0xffffffffffffffff"),
+	DECLARE_UNSIGNEDn(128, "128 .bitmask"),
+#undef DECLARE_UNSIGNEDn
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 	TYPE_GETSET_END
 };
 

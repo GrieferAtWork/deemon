@@ -35,7 +35,7 @@
  * (and which should just be implemented using "Tuple") */
 #if (!defined(CONFIG_ENABLE_SEQ_ONE_TYPE) && \
      !defined(CONFIG_DISABLE_SEQ_ONE_TYPE))
-#if !defined(__OPTIMIZE_SIZE__) && 1
+#if 1
 #define CONFIG_ENABLE_SEQ_ONE_TYPE /* Use dedicated type for `{item}' */
 #else /* ... */
 #define CONFIG_DISABLE_SEQ_ONE_TYPE /* Use Tuple for `{item}' */
@@ -44,7 +44,7 @@
 
 #if (!defined(CONFIG_ENABLE_SEQ_PAIR_TYPE) && \
      !defined(CONFIG_DISABLE_SEQ_PAIR_TYPE))
-#if !defined(__OPTIMIZE_SIZE__) && 1
+#if 1
 #define CONFIG_ENABLE_SEQ_PAIR_TYPE /* Use dedicated type for `{a, b}' */
 #else /* ... */
 #define CONFIG_DISABLE_SEQ_PAIR_TYPE /* Use Tuple for `{a, b}' */

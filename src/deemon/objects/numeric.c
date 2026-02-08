@@ -64,6 +64,44 @@ err:
 	return NULL;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed8(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed16(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed32(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed64(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_signed128(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned8(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned16(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned32(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned64(DeeIntObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL int_get_unsigned128(DeeIntObject *__restrict self);
+
+#define DEFINE_NUMERIC_FIXED_BIT_WRAPPER(name)             \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL     \
+	numeric_##name(DeeObject *__restrict self) {           \
+		DREF DeeObject *result;                            \
+		DREF DeeIntObject *intval;                         \
+		intval = (DREF DeeIntObject *)DeeObject_Int(self); \
+		if unlikely(!intval)                               \
+			goto err;                                      \
+		result = int_get_##name(intval);                   \
+		Dee_Decref(intval);                                \
+		return result;                                     \
+	err:                                                   \
+		return NULL;                                       \
+	}
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(signed8)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(signed16)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(signed32)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(signed64)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(signed128)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(unsigned8)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(unsigned16)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(unsigned32)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(unsigned64)
+DEFINE_NUMERIC_FIXED_BIT_WRAPPER(unsigned128)
+#undef DEFINE_NUMERIC_FIXED_BIT_WRAPPER
+#else /* CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_ass8(DeeObject *__restrict self) {
 	int8_t result;
@@ -345,6 +383,7 @@ numeric_sswap128(DeeObject *__restrict self) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_get_popcount(DeeIntObject *__restrict self);
@@ -949,7 +988,23 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "->?Dfloat\n"
 	            "#tNotImplemented{@this number does not implement ${operator float}}"
 	            "Return @this number as a floating point value"),
-#if 1 /* TODO: Replace all of these with functions like "property u8 = { get() -> this.operator int() & 0xff; }" */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+#define DECLARE_SIGNEDn_AND_UNSIGNEDn(n)                                       \
+	TYPE_GETTER_AB_F("signed" #n, &numeric_signed##n, METHOD_FCONSTCALL,       \
+	                 "->?.\n"                                                  \
+	                 "Do the equivalent of the C-expression "                  \
+	                 /**/ "#C{(int" #n "_t)this} (s.a. ?Asigned" #n "?Dint)"), \
+	TYPE_GETTER_AB_F("unsigned" #n, &numeric_unsigned##n, METHOD_FCONSTCALL,   \
+	                 "->?.\n"                                                  \
+	                 "Do the equivalent of the C-expression "                  \
+	                 /**/ "#C{(uint" #n "_t)this} (s.a. ?Aunsigned" #n "?Dint)")
+	DECLARE_SIGNEDn_AND_UNSIGNEDn(8),
+	DECLARE_SIGNEDn_AND_UNSIGNEDn(16),
+	DECLARE_SIGNEDn_AND_UNSIGNEDn(32),
+	DECLARE_SIGNEDn_AND_UNSIGNEDn(64),
+	DECLARE_SIGNEDn_AND_UNSIGNEDn(128),
+#undef DECLARE_SIGNEDn_AND_UNSIGNEDn
+#else /* CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 	TYPE_GETTER("s8", &numeric_ass8,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
@@ -1080,7 +1135,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "Otherwise, an integer in the range ${-170141183460469231731687303715884105728 ... -1} is returned as ${340282366920938463463374607431768211456 + this}\n"
 	            "This is the same behavior as casting an 128-bit integer to becoming unsigned, by "
 	            /**/ "ignoring the most significant bit from potentially being a sign-bit"),
-#endif
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 
 	TYPE_GETTER("swap16", &numeric_swap16,
 	            "->?Dint\n"
@@ -1817,7 +1872,7 @@ err:
 	numeric_##name(DeeObject *self, size_t argc, DeeObject *const *argv) { \
 		DeeObject *y;                                                      \
 		int error;                                                         \
-		DeeArg_Unpack1(err, argc, argv, #name, &y);                       \
+		DeeArg_Unpack1(err, argc, argv, #name, &y);                        \
 		/* >> if (this.isfloat)                                            \
 		 * >>     return this.operator float().name(y); */                 \
 		error = DeeObject_IsFloat(self);                                   \

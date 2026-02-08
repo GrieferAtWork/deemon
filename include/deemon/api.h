@@ -565,6 +565,36 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+
+
+/* Remove/re-define some of the members of "Numeric":
+ * - Remove s8/s16/s32/s64/s128 u8/u16/u32/u64/u128
+ * - Replace signedN/unsignedN
+ *   with:
+ *   >> property unsignedN: int = {
+ *   >>     get(): int {
+ *   >>         return this.operator int() & N.bitmask;
+ *   >>     }
+ *   >> };
+ *   >> property signedN: int = {
+ *   >>     get(): int {
+ *   >>         local result = this.operator int() & N.bitmask;
+ *   >>         if (result & (1 << (N - 1)))
+ *   >>             result = (N.bitmask - 1) - result; // 0xff -> -1
+ *   >>         return result;
+ *   >>     }
+ *   >> };
+ *   iow: instead of asserting range-fitting and throwing
+ *        "IntegerOverflow" if the range doesn't fit, just
+ *        truncate bits such that the number *does* fit. */
+#if (!defined(CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT))
+#if 0 /* TODO: Incomplete... */
+#define CONFIG_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+#else
+#define CONFIG_NO_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 /************************************************************************/
 
 

@@ -1209,6 +1209,9 @@
 		<ClInclude Include="..\src\deemon\objects\int-8bit.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\int-fixedbit.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\int_logic.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>

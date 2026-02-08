@@ -411,6 +411,7 @@
 		<ClInclude Include="..\src\deemon\objects\gc_inspect.h" />
 		<ClInclude Include="..\src\deemon\objects\generic-proxy.h" />
 		<ClInclude Include="..\src\deemon\objects\int-8bit.h" />
+		<ClInclude Include="..\src\deemon\objects\int-fixedbit.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\int_logic.h" />
 		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
