@@ -349,6 +349,8 @@ assertRtTypeName("DictIterator");
 /* Stuff related to composition of callable objects */
 assertRtTypeName("FunctionComposition");
 test.assertSame(deemon.Callable.identity, rt.FunctionComposition_identity);
+
+/* Assert that special singleton objects are what they should be */
 test.assertSequence(rt.Sequence_empty, deemon.Sequence());
 test.assertSame(deemon.Sequence, type rt.Sequence_empty);
 test.assertSet(rt.Set_empty, deemon.Set());

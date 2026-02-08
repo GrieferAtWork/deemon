@@ -236,6 +236,12 @@ LOCAL __ULONGLONG throw_if_minusone(__ULONGLONG x) {
 	return x;
 }
 #endif /* __COMPILER_HAVE_LONGLONG */
+LOCAL int throw_if_bounderr(int x) {
+	if unlikely(Dee_BOUND_ISERR(x))
+		throw_last_deemon_exception();
+	return x;
+}
+
 
 class Exception: public std::exception {
 public:
@@ -1479,7 +1485,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttr(m_ptr, m_str)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttr(m_ptr, m_str));
+		return throw_if_bounderr(DeeObject_BoundAttr(m_ptr, m_str));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttr(m_ptr, m_str));
@@ -1519,7 +1525,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrString(m_ptr, m_str)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrString(m_ptr, m_str));
+		return throw_if_bounderr(DeeObject_BoundAttrString(m_ptr, m_str));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrString(m_ptr, m_str));
@@ -1563,7 +1569,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrStringHash(m_ptr, m_str, m_hsh)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrStringHash(m_ptr, m_str, m_hsh));
+		return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_ptr, m_str, m_hsh));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrStringHash(m_ptr, m_str, m_hsh));
@@ -1609,7 +1615,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrStringLenHash(m_ptr, m_str, m_len, m_hsh)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrStringLenHash(m_ptr, m_str, m_len, m_hsh));
+		return throw_if_bounderr(DeeObject_BoundAttrStringLenHash(m_ptr, m_str, m_len, m_hsh));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrStringLenHash(m_ptr, m_str, m_len, m_hsh));
@@ -1652,7 +1658,7 @@ public:
 		return throw_if_negative(DeeObject_HasAttrStringLen(m_ptr, m_str, m_len)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundAttrStringLen(m_ptr, m_str, m_len));
+		return throw_if_bounderr(DeeObject_BoundAttrStringLen(m_ptr, m_str, m_len));
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelAttrStringLen(m_ptr, m_str, m_len));
@@ -1942,7 +1948,7 @@ public:
 		return throw_if_negative(DeeObject_HasItem(m_ptr, m_idx)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundItem(m_ptr, m_idx)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItem(m_ptr, m_idx)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItem(m_ptr, m_idx));
@@ -1973,7 +1979,7 @@ public:
 		return throw_if_negative(DeeObject_HasItemIndex(m_ptr, m_idx)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundItemIndex(m_ptr, m_idx)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItemIndex(m_ptr, m_idx)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItemIndex(m_ptr, m_idx));
@@ -2007,7 +2013,7 @@ public:
 		return throw_if_negative(DeeObject_HasItemStringHash(m_ptr, m_key, m_hsh)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundItemStringHash(m_ptr, m_key, m_hsh)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItemStringHash(m_ptr, m_key, m_hsh)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItemStringHash(m_ptr, m_key, m_hsh));
@@ -2044,7 +2050,7 @@ public:
 		return throw_if_negative(DeeObject_HasItemStringLenHash(m_ptr, m_key, m_len, m_hsh)) != 0;
 	}
 	bool bound() const {
-		return throw_if_minusone(DeeObject_BoundItemStringLenHash(m_ptr, m_key, m_len, m_hsh)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItemStringLenHash(m_ptr, m_key, m_len, m_hsh)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItemStringLenHash(m_ptr, m_key, m_len, m_hsh));
@@ -2297,16 +2303,16 @@ public:
 		return throw_if_negative(DeeObject_HasAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash)) != 0;
 	}
 	NONNULL_CXX((1)) bool boundattr(string *name) {
-		return throw_if_minusone(DeeObject_BoundAttr(((ProxyType *)this)->ptr(), name));
+		return throw_if_bounderr(DeeObject_BoundAttr(((ProxyType *)this)->ptr(), name));
 	}
 	NONNULL_CXX((1)) bool boundattr(char const *__restrict name) {
-		return throw_if_minusone(DeeObject_BoundAttrString(((ProxyType *)this)->ptr(), name));
+		return throw_if_bounderr(DeeObject_BoundAttrString(((ProxyType *)this)->ptr(), name));
 	}
 	NONNULL_CXX((1)) bool boundattr(char const *__restrict name, Dee_hash_t hash) {
-		return throw_if_minusone(DeeObject_BoundAttrStringHash(((ProxyType *)this)->ptr(), name, hash));
+		return throw_if_bounderr(DeeObject_BoundAttrStringHash(((ProxyType *)this)->ptr(), name, hash));
 	}
 	NONNULL_CXX((1)) bool boundattr(char const *__restrict name, size_t namelen, Dee_hash_t hash) {
-		return throw_if_minusone(DeeObject_BoundAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash));
+		return throw_if_bounderr(DeeObject_BoundAttrStringLenHash(((ProxyType *)this)->ptr(), name, namelen, hash));
 	}
 	NONNULL_CXX((1)) void delattr(string *name) {
 		throw_if_negative(DeeObject_DelAttr(((ProxyType *)this)->ptr(), name));
@@ -2674,19 +2680,19 @@ public:
 	}
 
 	NONNULL_CXX((1)) bool bounditem(DeeObject *index_or_key) {
-		return throw_if_minusone(DeeObject_BoundItem(((ProxyType *)this)->ptr(), index_or_key)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItem(((ProxyType *)this)->ptr(), index_or_key)) > 0;
 	}
 	bool bounditem(size_t index) {
-		return throw_if_minusone(DeeObject_BoundItemIndex(((ProxyType *)this)->ptr(), index)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItemIndex(((ProxyType *)this)->ptr(), index)) > 0;
 	}
 	NONNULL_CXX((1)) bool bounditem(char const *key) {
-		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key)) > 0;
 	}
 	NONNULL_CXX((1)) bool bounditem(char const *key, Dee_hash_t hash) {
-		return throw_if_minusone(DeeObject_BoundItemStringHash(((ProxyType *)this)->ptr(), key, hash)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItemStringHash(((ProxyType *)this)->ptr(), key, hash)) > 0;
 	}
 	NONNULL_CXX((1)) bool bounditem(char const *key, size_t keylen, Dee_hash_t hash) {
-		return throw_if_minusone(DeeObject_BoundItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash)) > 0;
+		return throw_if_bounderr(DeeObject_BoundItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash)) > 0;
 	}
 
 	NONNULL_CXX((1)) bool hasitem(DeeObject *index_or_key) {
@@ -3674,10 +3680,27 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "__itable__", _Dee_HashSelectC(0xb7ec355a, 0xbcabfd5c3d01dac0));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__itable__", _Dee_HashSelectC(0xb7ec355a, 0xbcabfd5c3d01dac0)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__itable__", _Dee_HashSelectC(0xb7ec355a, 0xbcabfd5c3d01dac0)));
 		}
 	};
 	WUNUSED _Wrap___itable__ (__itable__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___deep_immutable__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___deep_immutable__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___deep_immutable__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__deep_immutable__", _Dee_HashSelectC(0x8bb37fc8, 0x365646f4548fcb8c));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__deep_immutable__", _Dee_HashSelectC(0x8bb37fc8, 0x365646f4548fcb8c)));
+		}
+	};
+	WUNUSED _Wrap___deep_immutable__ (__deep_immutable__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___module__
@@ -3691,7 +3714,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb)));
 		}
 	};
 	WUNUSED _Wrap___module__ (__module__)() DEE_CXX_NOTHROW {
@@ -3708,7 +3731,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "__true_module__", _Dee_HashSelectC(0xca437364, 0x7a345f9bcf4328b6));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__true_module__", _Dee_HashSelectC(0xca437364, 0x7a345f9bcf4328b6)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__true_module__", _Dee_HashSelectC(0xca437364, 0x7a345f9bcf4328b6)));
 		}
 	};
 	WUNUSED _Wrap___true_module__ (__true_module__)() DEE_CXX_NOTHROW {
@@ -3725,7 +3748,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "id", _Dee_HashSelectC(0x98768be1, 0x828b9fe0c4522be2));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "id", _Dee_HashSelectC(0x98768be1, 0x828b9fe0c4522be2)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "id", _Dee_HashSelectC(0x98768be1, 0x828b9fe0c4522be2)));
 		}
 	};
 	WUNUSED _Wrap_id (id)() DEE_CXX_NOTHROW {
@@ -3742,7 +3765,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
 	WUNUSED _Wrap___sizeof__ (__sizeof__)() DEE_CXX_NOTHROW {

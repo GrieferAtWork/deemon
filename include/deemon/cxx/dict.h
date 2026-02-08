@@ -610,7 +610,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
@@ -635,7 +635,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
@@ -660,7 +660,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "firstkey", _Dee_HashSelectC(0x145fac13, 0x610ea85f4f5a0074));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "firstkey", _Dee_HashSelectC(0x145fac13, 0x610ea85f4f5a0074)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "firstkey", _Dee_HashSelectC(0x145fac13, 0x610ea85f4f5a0074)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "firstkey", _Dee_HashSelectC(0x145fac13, 0x610ea85f4f5a0074)));
@@ -685,7 +685,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "lastkey", _Dee_HashSelectC(0x6dab3145, 0xecff85dd1d641efb));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "lastkey", _Dee_HashSelectC(0x6dab3145, 0xecff85dd1d641efb)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "lastkey", _Dee_HashSelectC(0x6dab3145, 0xecff85dd1d641efb)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "lastkey", _Dee_HashSelectC(0x6dab3145, 0xecff85dd1d641efb)));
@@ -710,7 +710,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "firstvalue", _Dee_HashSelectC(0xaade1c33, 0x8dd327b182158e40));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "firstvalue", _Dee_HashSelectC(0xaade1c33, 0x8dd327b182158e40)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "firstvalue", _Dee_HashSelectC(0xaade1c33, 0x8dd327b182158e40)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "firstvalue", _Dee_HashSelectC(0xaade1c33, 0x8dd327b182158e40)));
@@ -735,7 +735,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "lastvalue", _Dee_HashSelectC(0xf5e15f5, 0x2e2e12173695c5e7));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "lastvalue", _Dee_HashSelectC(0xf5e15f5, 0x2e2e12173695c5e7)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "lastvalue", _Dee_HashSelectC(0xf5e15f5, 0x2e2e12173695c5e7)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "lastvalue", _Dee_HashSelectC(0xf5e15f5, 0x2e2e12173695c5e7)));
@@ -758,7 +758,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "cached", _Dee_HashSelectC(0x915e175e, 0xddfd408a14eae4b4));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "cached", _Dee_HashSelectC(0x915e175e, 0xddfd408a14eae4b4)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "cached", _Dee_HashSelectC(0x915e175e, 0xddfd408a14eae4b4)));
 		}
 	};
 	WUNUSED _Wrap_cached (cached)() DEE_CXX_NOTHROW {
@@ -775,7 +775,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
 	WUNUSED _Wrap_frozen (frozen)() DEE_CXX_NOTHROW {
@@ -792,7 +792,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
 	WUNUSED _Wrap___sizeof__ (__sizeof__)() DEE_CXX_NOTHROW {
@@ -809,7 +809,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "__hidxio__", _Dee_HashSelectC(0xd8034a31, 0xf03b231c814923af));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__hidxio__", _Dee_HashSelectC(0xd8034a31, 0xf03b231c814923af)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__hidxio__", _Dee_HashSelectC(0xd8034a31, 0xf03b231c814923af)));
 		}
 	};
 	WUNUSED _Wrap___hidxio__ (__hidxio__)() DEE_CXX_NOTHROW {
@@ -828,7 +828,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f)));

@@ -595,7 +595,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae)));
@@ -618,7 +618,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251)));
 		}
 	};
 	WUNUSED _Wrap_seq (seq)() DEE_CXX_NOTHROW {

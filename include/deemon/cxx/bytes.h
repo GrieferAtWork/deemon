@@ -41197,7 +41197,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "isreadonly", _Dee_HashSelectC(0xe9d0357c, 0x3643caa50258521e));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isreadonly", _Dee_HashSelectC(0xe9d0357c, 0x3643caa50258521e)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "isreadonly", _Dee_HashSelectC(0xe9d0357c, 0x3643caa50258521e)));
 		}
 	};
 	WUNUSED _Wrap_isreadonly (isreadonly)() DEE_CXX_NOTHROW {
@@ -41216,7 +41216,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
@@ -41241,7 +41241,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
@@ -41264,7 +41264,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
 	WUNUSED _Wrap___sizeof__ (__sizeof__)() DEE_CXX_NOTHROW {

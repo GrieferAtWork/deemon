@@ -487,7 +487,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "int", _Dee_HashSelectC(0xce831ddf, 0xb7ad4ebe928a1ef0));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "int", _Dee_HashSelectC(0xce831ddf, 0xb7ad4ebe928a1ef0)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "int", _Dee_HashSelectC(0xce831ddf, 0xb7ad4ebe928a1ef0)));
 		}
 	};
 	WUNUSED _Wrap_int_ (int_)() DEE_CXX_NOTHROW {
@@ -504,7 +504,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "float", _Dee_HashSelectC(0x95fb9fe8, 0x19ab2ca7919bffe4));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "float", _Dee_HashSelectC(0x95fb9fe8, 0x19ab2ca7919bffe4)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "float", _Dee_HashSelectC(0x95fb9fe8, 0x19ab2ca7919bffe4)));
 		}
 	};
 	WUNUSED _Wrap_float_ (float_)() DEE_CXX_NOTHROW {
@@ -521,7 +521,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "s8", _Dee_HashSelectC(0x8e91d8aa, 0x2c22b46392684555));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "s8", _Dee_HashSelectC(0x8e91d8aa, 0x2c22b46392684555)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "s8", _Dee_HashSelectC(0x8e91d8aa, 0x2c22b46392684555)));
 		}
 	};
 	WUNUSED _Wrap_s8 (s8)() DEE_CXX_NOTHROW {
@@ -538,7 +538,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "s16", _Dee_HashSelectC(0xdb5b7281, 0x93349818f68f2f79));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "s16", _Dee_HashSelectC(0xdb5b7281, 0x93349818f68f2f79)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "s16", _Dee_HashSelectC(0xdb5b7281, 0x93349818f68f2f79)));
 		}
 	};
 	WUNUSED _Wrap_s16 (s16)() DEE_CXX_NOTHROW {
@@ -555,7 +555,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "s32", _Dee_HashSelectC(0x86be9ab2, 0x113edb000463b661));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "s32", _Dee_HashSelectC(0x86be9ab2, 0x113edb000463b661)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "s32", _Dee_HashSelectC(0x86be9ab2, 0x113edb000463b661)));
 		}
 	};
 	WUNUSED _Wrap_s32 (s32)() DEE_CXX_NOTHROW {
@@ -572,7 +572,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "s64", _Dee_HashSelectC(0x8c789c8a, 0xc14d2d01ad1298ff));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "s64", _Dee_HashSelectC(0x8c789c8a, 0xc14d2d01ad1298ff)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "s64", _Dee_HashSelectC(0x8c789c8a, 0xc14d2d01ad1298ff)));
 		}
 	};
 	WUNUSED _Wrap_s64 (s64)() DEE_CXX_NOTHROW {
@@ -589,7 +589,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "s128", _Dee_HashSelectC(0xc961f8bf, 0xd26700f831122265));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "s128", _Dee_HashSelectC(0xc961f8bf, 0xd26700f831122265)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "s128", _Dee_HashSelectC(0xc961f8bf, 0xd26700f831122265)));
 		}
 	};
 	WUNUSED _Wrap_s128 (s128)() DEE_CXX_NOTHROW {
@@ -606,7 +606,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "u8", _Dee_HashSelectC(0x655c23a2, 0x98b4b9518f3f5701));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "u8", _Dee_HashSelectC(0x655c23a2, 0x98b4b9518f3f5701)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "u8", _Dee_HashSelectC(0x655c23a2, 0x98b4b9518f3f5701)));
 		}
 	};
 	WUNUSED _Wrap_u8 (u8)() DEE_CXX_NOTHROW {
@@ -623,7 +623,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "u16", _Dee_HashSelectC(0x4b025b59, 0x14d56899210e228d));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "u16", _Dee_HashSelectC(0x4b025b59, 0x14d56899210e228d)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "u16", _Dee_HashSelectC(0x4b025b59, 0x14d56899210e228d)));
 		}
 	};
 	WUNUSED _Wrap_u16 (u16)() DEE_CXX_NOTHROW {
@@ -640,7 +640,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "u32", _Dee_HashSelectC(0x102d3993, 0x3864575086dc2c74));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "u32", _Dee_HashSelectC(0x102d3993, 0x3864575086dc2c74)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "u32", _Dee_HashSelectC(0x102d3993, 0x3864575086dc2c74)));
 		}
 	};
 	WUNUSED _Wrap_u32 (u32)() DEE_CXX_NOTHROW {
@@ -657,7 +657,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "u64", _Dee_HashSelectC(0x76d7d162, 0x427ddf7b27d8d4c6));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "u64", _Dee_HashSelectC(0x76d7d162, 0x427ddf7b27d8d4c6)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "u64", _Dee_HashSelectC(0x76d7d162, 0x427ddf7b27d8d4c6)));
 		}
 	};
 	WUNUSED _Wrap_u64 (u64)() DEE_CXX_NOTHROW {
@@ -674,7 +674,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "u128", _Dee_HashSelectC(0x9d0ba7ea, 0x963f3f15e92b1b7c));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "u128", _Dee_HashSelectC(0x9d0ba7ea, 0x963f3f15e92b1b7c)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "u128", _Dee_HashSelectC(0x9d0ba7ea, 0x963f3f15e92b1b7c)));
 		}
 	};
 	WUNUSED _Wrap_u128 (u128)() DEE_CXX_NOTHROW {
@@ -691,7 +691,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "signed8", _Dee_HashSelectC(0x539183ff, 0x630818c691a604db));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "signed8", _Dee_HashSelectC(0x539183ff, 0x630818c691a604db)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "signed8", _Dee_HashSelectC(0x539183ff, 0x630818c691a604db)));
 		}
 	};
 	WUNUSED _Wrap_signed8 (signed8)() DEE_CXX_NOTHROW {
@@ -708,7 +708,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "signed16", _Dee_HashSelectC(0x39a8ee85, 0xc9dba3957529c8e6));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "signed16", _Dee_HashSelectC(0x39a8ee85, 0xc9dba3957529c8e6)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "signed16", _Dee_HashSelectC(0x39a8ee85, 0xc9dba3957529c8e6)));
 		}
 	};
 	WUNUSED _Wrap_signed16 (signed16)() DEE_CXX_NOTHROW {
@@ -725,7 +725,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "signed32", _Dee_HashSelectC(0x401ad7d8, 0x8ecce67a523a26b6));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "signed32", _Dee_HashSelectC(0x401ad7d8, 0x8ecce67a523a26b6)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "signed32", _Dee_HashSelectC(0x401ad7d8, 0x8ecce67a523a26b6)));
 		}
 	};
 	WUNUSED _Wrap_signed32 (signed32)() DEE_CXX_NOTHROW {
@@ -742,7 +742,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "signed64", _Dee_HashSelectC(0xd31a2a48, 0x657452d59b772de9));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "signed64", _Dee_HashSelectC(0xd31a2a48, 0x657452d59b772de9)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "signed64", _Dee_HashSelectC(0xd31a2a48, 0x657452d59b772de9)));
 		}
 	};
 	WUNUSED _Wrap_signed64 (signed64)() DEE_CXX_NOTHROW {
@@ -759,7 +759,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "signed128", _Dee_HashSelectC(0xfd8c1f06, 0x9bbd99d8421a094d));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "signed128", _Dee_HashSelectC(0xfd8c1f06, 0x9bbd99d8421a094d)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "signed128", _Dee_HashSelectC(0xfd8c1f06, 0x9bbd99d8421a094d)));
 		}
 	};
 	WUNUSED _Wrap_signed128 (signed128)() DEE_CXX_NOTHROW {
@@ -776,7 +776,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "unsigned8", _Dee_HashSelectC(0xaef1bad7, 0x9e8b78fba41919c5));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "unsigned8", _Dee_HashSelectC(0xaef1bad7, 0x9e8b78fba41919c5)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "unsigned8", _Dee_HashSelectC(0xaef1bad7, 0x9e8b78fba41919c5)));
 		}
 	};
 	WUNUSED _Wrap_unsigned8 (unsigned8)() DEE_CXX_NOTHROW {
@@ -793,7 +793,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "unsigned16", _Dee_HashSelectC(0xa8fca18e, 0xea7c13aabc6570c));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "unsigned16", _Dee_HashSelectC(0xa8fca18e, 0xea7c13aabc6570c)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "unsigned16", _Dee_HashSelectC(0xa8fca18e, 0xea7c13aabc6570c)));
 		}
 	};
 	WUNUSED _Wrap_unsigned16 (unsigned16)() DEE_CXX_NOTHROW {
@@ -810,7 +810,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "unsigned32", _Dee_HashSelectC(0xc023b118, 0x2864fa6210c799af));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "unsigned32", _Dee_HashSelectC(0xc023b118, 0x2864fa6210c799af)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "unsigned32", _Dee_HashSelectC(0xc023b118, 0x2864fa6210c799af)));
 		}
 	};
 	WUNUSED _Wrap_unsigned32 (unsigned32)() DEE_CXX_NOTHROW {
@@ -827,7 +827,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "unsigned64", _Dee_HashSelectC(0x1d42967f, 0x5ee69a5d04e815db));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "unsigned64", _Dee_HashSelectC(0x1d42967f, 0x5ee69a5d04e815db)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "unsigned64", _Dee_HashSelectC(0x1d42967f, 0x5ee69a5d04e815db)));
 		}
 	};
 	WUNUSED _Wrap_unsigned64 (unsigned64)() DEE_CXX_NOTHROW {
@@ -844,7 +844,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "unsigned128", _Dee_HashSelectC(0x493baf7d, 0xd7193bca5b808b24));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "unsigned128", _Dee_HashSelectC(0x493baf7d, 0xd7193bca5b808b24)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "unsigned128", _Dee_HashSelectC(0x493baf7d, 0xd7193bca5b808b24)));
 		}
 	};
 	WUNUSED _Wrap_unsigned128 (unsigned128)() DEE_CXX_NOTHROW {
@@ -861,7 +861,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "swap16", _Dee_HashSelectC(0x2f6792b, 0x7b6d7b73549438e6));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "swap16", _Dee_HashSelectC(0x2f6792b, 0x7b6d7b73549438e6)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "swap16", _Dee_HashSelectC(0x2f6792b, 0x7b6d7b73549438e6)));
 		}
 	};
 	WUNUSED _Wrap_swap16 (swap16)() DEE_CXX_NOTHROW {
@@ -878,7 +878,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "swap32", _Dee_HashSelectC(0x57c6852f, 0x1451b87dc0b31866));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "swap32", _Dee_HashSelectC(0x57c6852f, 0x1451b87dc0b31866)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "swap32", _Dee_HashSelectC(0x57c6852f, 0x1451b87dc0b31866)));
 		}
 	};
 	WUNUSED _Wrap_swap32 (swap32)() DEE_CXX_NOTHROW {
@@ -895,7 +895,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "swap64", _Dee_HashSelectC(0x8208c247, 0xadc0d9b179945b41));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "swap64", _Dee_HashSelectC(0x8208c247, 0xadc0d9b179945b41)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "swap64", _Dee_HashSelectC(0x8208c247, 0xadc0d9b179945b41)));
 		}
 	};
 	WUNUSED _Wrap_swap64 (swap64)() DEE_CXX_NOTHROW {
@@ -912,7 +912,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "swap128", _Dee_HashSelectC(0x5e498c0e, 0x68da9a8bb7f4ffa8));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "swap128", _Dee_HashSelectC(0x5e498c0e, 0x68da9a8bb7f4ffa8)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "swap128", _Dee_HashSelectC(0x5e498c0e, 0x68da9a8bb7f4ffa8)));
 		}
 	};
 	WUNUSED _Wrap_swap128 (swap128)() DEE_CXX_NOTHROW {
@@ -929,7 +929,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "sswap16", _Dee_HashSelectC(0xfe35af66, 0xc653941ca804b260));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "sswap16", _Dee_HashSelectC(0xfe35af66, 0xc653941ca804b260)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "sswap16", _Dee_HashSelectC(0xfe35af66, 0xc653941ca804b260)));
 		}
 	};
 	WUNUSED _Wrap_sswap16 (sswap16)() DEE_CXX_NOTHROW {
@@ -946,7 +946,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "sswap32", _Dee_HashSelectC(0x5ea6d95a, 0xd2c67c37993fd04));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "sswap32", _Dee_HashSelectC(0x5ea6d95a, 0xd2c67c37993fd04)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "sswap32", _Dee_HashSelectC(0x5ea6d95a, 0xd2c67c37993fd04)));
 		}
 	};
 	WUNUSED _Wrap_sswap32 (sswap32)() DEE_CXX_NOTHROW {
@@ -963,7 +963,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "sswap64", _Dee_HashSelectC(0x8367b75d, 0x6154dad8a5a4d002));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "sswap64", _Dee_HashSelectC(0x8367b75d, 0x6154dad8a5a4d002)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "sswap64", _Dee_HashSelectC(0x8367b75d, 0x6154dad8a5a4d002)));
 		}
 	};
 	WUNUSED _Wrap_sswap64 (sswap64)() DEE_CXX_NOTHROW {
@@ -980,7 +980,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "sswap128", _Dee_HashSelectC(0x99599142, 0x542a3a988d3d57c0));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "sswap128", _Dee_HashSelectC(0x99599142, 0x542a3a988d3d57c0)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "sswap128", _Dee_HashSelectC(0x99599142, 0x542a3a988d3d57c0)));
 		}
 	};
 	WUNUSED _Wrap_sswap128 (sswap128)() DEE_CXX_NOTHROW {
@@ -997,7 +997,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "leswap16", _Dee_HashSelectC(0x487e8219, 0xd0682b67be9aa983));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "leswap16", _Dee_HashSelectC(0x487e8219, 0xd0682b67be9aa983)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "leswap16", _Dee_HashSelectC(0x487e8219, 0xd0682b67be9aa983)));
 		}
 	};
 	WUNUSED _Wrap_leswap16 (leswap16)() DEE_CXX_NOTHROW {
@@ -1014,7 +1014,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "leswap32", _Dee_HashSelectC(0x3c086c2d, 0xf0151857d7ce0991));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "leswap32", _Dee_HashSelectC(0x3c086c2d, 0xf0151857d7ce0991)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "leswap32", _Dee_HashSelectC(0x3c086c2d, 0xf0151857d7ce0991)));
 		}
 	};
 	WUNUSED _Wrap_leswap32 (leswap32)() DEE_CXX_NOTHROW {
@@ -1031,7 +1031,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "leswap64", _Dee_HashSelectC(0x40aa150e, 0xfd67edaf1f992f3f));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "leswap64", _Dee_HashSelectC(0x40aa150e, 0xfd67edaf1f992f3f)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "leswap64", _Dee_HashSelectC(0x40aa150e, 0xfd67edaf1f992f3f)));
 		}
 	};
 	WUNUSED _Wrap_leswap64 (leswap64)() DEE_CXX_NOTHROW {
@@ -1048,7 +1048,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "leswap128", _Dee_HashSelectC(0x98fe10ba, 0xdfa667bb8a2a91f5));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "leswap128", _Dee_HashSelectC(0x98fe10ba, 0xdfa667bb8a2a91f5)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "leswap128", _Dee_HashSelectC(0x98fe10ba, 0xdfa667bb8a2a91f5)));
 		}
 	};
 	WUNUSED _Wrap_leswap128 (leswap128)() DEE_CXX_NOTHROW {
@@ -1065,7 +1065,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "beswap16", _Dee_HashSelectC(0x32de9fb3, 0x305251e9958a4fd6));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "beswap16", _Dee_HashSelectC(0x32de9fb3, 0x305251e9958a4fd6)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "beswap16", _Dee_HashSelectC(0x32de9fb3, 0x305251e9958a4fd6)));
 		}
 	};
 	WUNUSED _Wrap_beswap16 (beswap16)() DEE_CXX_NOTHROW {
@@ -1082,7 +1082,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "beswap32", _Dee_HashSelectC(0x8c523765, 0xd715948923e8ba9a));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "beswap32", _Dee_HashSelectC(0x8c523765, 0xd715948923e8ba9a)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "beswap32", _Dee_HashSelectC(0x8c523765, 0xd715948923e8ba9a)));
 		}
 	};
 	WUNUSED _Wrap_beswap32 (beswap32)() DEE_CXX_NOTHROW {
@@ -1099,7 +1099,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "beswap64", _Dee_HashSelectC(0xc9db181, 0xbe05bbffa5c0b071));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "beswap64", _Dee_HashSelectC(0xc9db181, 0xbe05bbffa5c0b071)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "beswap64", _Dee_HashSelectC(0xc9db181, 0xbe05bbffa5c0b071)));
 		}
 	};
 	WUNUSED _Wrap_beswap64 (beswap64)() DEE_CXX_NOTHROW {
@@ -1116,7 +1116,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "beswap128", _Dee_HashSelectC(0x11b2e1b9, 0x7ecdfc744007590f));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "beswap128", _Dee_HashSelectC(0x11b2e1b9, 0x7ecdfc744007590f)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "beswap128", _Dee_HashSelectC(0x11b2e1b9, 0x7ecdfc744007590f)));
 		}
 	};
 	WUNUSED _Wrap_beswap128 (beswap128)() DEE_CXX_NOTHROW {
@@ -1133,7 +1133,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "lesswap16", _Dee_HashSelectC(0xa1df15ab, 0x48dc0636cf758a46));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "lesswap16", _Dee_HashSelectC(0xa1df15ab, 0x48dc0636cf758a46)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "lesswap16", _Dee_HashSelectC(0xa1df15ab, 0x48dc0636cf758a46)));
 		}
 	};
 	WUNUSED _Wrap_lesswap16 (lesswap16)() DEE_CXX_NOTHROW {
@@ -1150,7 +1150,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "lesswap32", _Dee_HashSelectC(0x493ea22f, 0xd085578fbf82d3f3));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "lesswap32", _Dee_HashSelectC(0x493ea22f, 0xd085578fbf82d3f3)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "lesswap32", _Dee_HashSelectC(0x493ea22f, 0xd085578fbf82d3f3)));
 		}
 	};
 	WUNUSED _Wrap_lesswap32 (lesswap32)() DEE_CXX_NOTHROW {
@@ -1167,7 +1167,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "lesswap64", _Dee_HashSelectC(0xb10fb0c, 0xd8c8f5f899351128));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "lesswap64", _Dee_HashSelectC(0xb10fb0c, 0xd8c8f5f899351128)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "lesswap64", _Dee_HashSelectC(0xb10fb0c, 0xd8c8f5f899351128)));
 		}
 	};
 	WUNUSED _Wrap_lesswap64 (lesswap64)() DEE_CXX_NOTHROW {
@@ -1184,7 +1184,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "lesswap128", _Dee_HashSelectC(0x40bfea55, 0xe7e285d29d8821fc));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "lesswap128", _Dee_HashSelectC(0x40bfea55, 0xe7e285d29d8821fc)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "lesswap128", _Dee_HashSelectC(0x40bfea55, 0xe7e285d29d8821fc)));
 		}
 	};
 	WUNUSED _Wrap_lesswap128 (lesswap128)() DEE_CXX_NOTHROW {
@@ -1201,7 +1201,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "besswap16", _Dee_HashSelectC(0x3ec1365f, 0x674f6476ae2fbd81));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "besswap16", _Dee_HashSelectC(0x3ec1365f, 0x674f6476ae2fbd81)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "besswap16", _Dee_HashSelectC(0x3ec1365f, 0x674f6476ae2fbd81)));
 		}
 	};
 	WUNUSED _Wrap_besswap16 (besswap16)() DEE_CXX_NOTHROW {
@@ -1218,7 +1218,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "besswap32", _Dee_HashSelectC(0xa712a30c, 0xd83215dce3846b09));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "besswap32", _Dee_HashSelectC(0xa712a30c, 0xd83215dce3846b09)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "besswap32", _Dee_HashSelectC(0xa712a30c, 0xd83215dce3846b09)));
 		}
 	};
 	WUNUSED _Wrap_besswap32 (besswap32)() DEE_CXX_NOTHROW {
@@ -1235,7 +1235,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "besswap64", _Dee_HashSelectC(0xc816d1cb, 0xf0d5e2e4170ed996));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "besswap64", _Dee_HashSelectC(0xc816d1cb, 0xf0d5e2e4170ed996)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "besswap64", _Dee_HashSelectC(0xc816d1cb, 0xf0d5e2e4170ed996)));
 		}
 	};
 	WUNUSED _Wrap_besswap64 (besswap64)() DEE_CXX_NOTHROW {
@@ -1252,7 +1252,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "besswap128", _Dee_HashSelectC(0xc0a57da0, 0xc0932a5134b479f0));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "besswap128", _Dee_HashSelectC(0xc0a57da0, 0xc0932a5134b479f0)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "besswap128", _Dee_HashSelectC(0xc0a57da0, 0xc0932a5134b479f0)));
 		}
 	};
 	WUNUSED _Wrap_besswap128 (besswap128)() DEE_CXX_NOTHROW {
@@ -1269,7 +1269,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "popcount", _Dee_HashSelectC(0x9fb087f4, 0x1da7fbc6c1dd86dd));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "popcount", _Dee_HashSelectC(0x9fb087f4, 0x1da7fbc6c1dd86dd)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "popcount", _Dee_HashSelectC(0x9fb087f4, 0x1da7fbc6c1dd86dd)));
 		}
 	};
 	WUNUSED _Wrap_popcount (popcount)() DEE_CXX_NOTHROW {
@@ -1286,7 +1286,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "ffs", _Dee_HashSelectC(0xee0da7ec, 0xb86fa72e64f49d1e));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ffs", _Dee_HashSelectC(0xee0da7ec, 0xb86fa72e64f49d1e)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "ffs", _Dee_HashSelectC(0xee0da7ec, 0xb86fa72e64f49d1e)));
 		}
 	};
 	WUNUSED _Wrap_ffs (ffs)() DEE_CXX_NOTHROW {
@@ -1303,7 +1303,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "fls", _Dee_HashSelectC(0xc5cbbf7c, 0x60b5b1e4954fc54b));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "fls", _Dee_HashSelectC(0xc5cbbf7c, 0x60b5b1e4954fc54b)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "fls", _Dee_HashSelectC(0xc5cbbf7c, 0x60b5b1e4954fc54b)));
 		}
 	};
 	WUNUSED _Wrap_fls (fls)() DEE_CXX_NOTHROW {
@@ -1320,7 +1320,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "parity", _Dee_HashSelectC(0x92f3da0a, 0x254564db48674f28));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "parity", _Dee_HashSelectC(0x92f3da0a, 0x254564db48674f28)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "parity", _Dee_HashSelectC(0x92f3da0a, 0x254564db48674f28)));
 		}
 	};
 	WUNUSED _Wrap_parity (parity)() DEE_CXX_NOTHROW {
@@ -1337,7 +1337,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "ctz", _Dee_HashSelectC(0xfc21ef39, 0xefcd17594063dd43));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ctz", _Dee_HashSelectC(0xfc21ef39, 0xefcd17594063dd43)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "ctz", _Dee_HashSelectC(0xfc21ef39, 0xefcd17594063dd43)));
 		}
 	};
 	WUNUSED _Wrap_ctz (ctz)() DEE_CXX_NOTHROW {
@@ -1354,7 +1354,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "ct1", _Dee_HashSelectC(0x528dd1f6, 0x829b7dd417cecd9d));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ct1", _Dee_HashSelectC(0x528dd1f6, 0x829b7dd417cecd9d)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "ct1", _Dee_HashSelectC(0x528dd1f6, 0x829b7dd417cecd9d)));
 		}
 	};
 	WUNUSED _Wrap_ct1 (ct1)() DEE_CXX_NOTHROW {
@@ -1371,7 +1371,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "msb", _Dee_HashSelectC(0xbe7ab876, 0xa4211b762e65939c));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "msb", _Dee_HashSelectC(0xbe7ab876, 0xa4211b762e65939c)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "msb", _Dee_HashSelectC(0xbe7ab876, 0xa4211b762e65939c)));
 		}
 	};
 	WUNUSED _Wrap_msb (msb)() DEE_CXX_NOTHROW {
@@ -1388,7 +1388,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "bitmask", _Dee_HashSelectC(0x3a160ebf, 0x96033f145c3d0b94));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "bitmask", _Dee_HashSelectC(0x3a160ebf, 0x96033f145c3d0b94)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "bitmask", _Dee_HashSelectC(0x3a160ebf, 0x96033f145c3d0b94)));
 		}
 	};
 	WUNUSED _Wrap_bitmask (bitmask)() DEE_CXX_NOTHROW {
@@ -1405,7 +1405,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "abs", _Dee_HashSelectC(0x62947f9, 0x7ce68cbaf722015c));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "abs", _Dee_HashSelectC(0x62947f9, 0x7ce68cbaf722015c)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "abs", _Dee_HashSelectC(0x62947f9, 0x7ce68cbaf722015c)));
 		}
 	};
 	WUNUSED _Wrap_abs (abs)() DEE_CXX_NOTHROW {
@@ -1422,7 +1422,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "isfloat", _Dee_HashSelectC(0xe3da5546, 0x96c4dbe16a19d65d));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isfloat", _Dee_HashSelectC(0xe3da5546, 0x96c4dbe16a19d65d)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "isfloat", _Dee_HashSelectC(0xe3da5546, 0x96c4dbe16a19d65d)));
 		}
 	};
 	WUNUSED _Wrap_isfloat (isfloat)() DEE_CXX_NOTHROW {
@@ -1439,7 +1439,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "trunc", _Dee_HashSelectC(0xbdb1d95d, 0x55dde3e4f51201b3));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "trunc", _Dee_HashSelectC(0xbdb1d95d, 0x55dde3e4f51201b3)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "trunc", _Dee_HashSelectC(0xbdb1d95d, 0x55dde3e4f51201b3)));
 		}
 	};
 	WUNUSED _Wrap_trunc (trunc)() DEE_CXX_NOTHROW {
@@ -1456,7 +1456,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "floor", _Dee_HashSelectC(0x7819c83c, 0x213bace42059b42a));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "floor", _Dee_HashSelectC(0x7819c83c, 0x213bace42059b42a)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "floor", _Dee_HashSelectC(0x7819c83c, 0x213bace42059b42a)));
 		}
 	};
 	WUNUSED _Wrap_floor (floor)() DEE_CXX_NOTHROW {
@@ -1473,7 +1473,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "ceil", _Dee_HashSelectC(0x7ed4e8b7, 0x4ea23d981c754581));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ceil", _Dee_HashSelectC(0x7ed4e8b7, 0x4ea23d981c754581)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "ceil", _Dee_HashSelectC(0x7ed4e8b7, 0x4ea23d981c754581)));
 		}
 	};
 	WUNUSED _Wrap_ceil (ceil)() DEE_CXX_NOTHROW {
@@ -1490,7 +1490,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "round", _Dee_HashSelectC(0xa33127a2, 0x973d8304b01a5682));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "round", _Dee_HashSelectC(0xa33127a2, 0x973d8304b01a5682)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "round", _Dee_HashSelectC(0xa33127a2, 0x973d8304b01a5682)));
 		}
 	};
 	WUNUSED _Wrap_round (round)() DEE_CXX_NOTHROW {
@@ -1507,7 +1507,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "isnan", _Dee_HashSelectC(0x36d136ac, 0x428ff2e9a35f402a));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isnan", _Dee_HashSelectC(0x36d136ac, 0x428ff2e9a35f402a)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "isnan", _Dee_HashSelectC(0x36d136ac, 0x428ff2e9a35f402a)));
 		}
 	};
 	WUNUSED _Wrap_isnan (isnan)() DEE_CXX_NOTHROW {
@@ -1524,7 +1524,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "isinf", _Dee_HashSelectC(0xc8a63b33, 0xf5f86dfadcc14b6a));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isinf", _Dee_HashSelectC(0xc8a63b33, 0xf5f86dfadcc14b6a)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "isinf", _Dee_HashSelectC(0xc8a63b33, 0xf5f86dfadcc14b6a)));
 		}
 	};
 	WUNUSED _Wrap_isinf (isinf)() DEE_CXX_NOTHROW {
@@ -1541,7 +1541,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "isfinite", _Dee_HashSelectC(0x797c83cf, 0x9838bbd14d676c85));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isfinite", _Dee_HashSelectC(0x797c83cf, 0x9838bbd14d676c85)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "isfinite", _Dee_HashSelectC(0x797c83cf, 0x9838bbd14d676c85)));
 		}
 	};
 	WUNUSED _Wrap_isfinite (isfinite)() DEE_CXX_NOTHROW {
@@ -1558,7 +1558,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "isnormal", _Dee_HashSelectC(0x6a066cc5, 0x112aae54ed86881f));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isnormal", _Dee_HashSelectC(0x6a066cc5, 0x112aae54ed86881f)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "isnormal", _Dee_HashSelectC(0x6a066cc5, 0x112aae54ed86881f)));
 		}
 	};
 	WUNUSED _Wrap_isnormal (isnormal)() DEE_CXX_NOTHROW {
@@ -1575,7 +1575,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "nth", _Dee_HashSelectC(0x8e4eb0c, 0x3c51c11b465d5ad5));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "nth", _Dee_HashSelectC(0x8e4eb0c, 0x3c51c11b465d5ad5)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "nth", _Dee_HashSelectC(0x8e4eb0c, 0x3c51c11b465d5ad5)));
 		}
 	};
 	WUNUSED _Wrap_nth (nth)() DEE_CXX_NOTHROW {

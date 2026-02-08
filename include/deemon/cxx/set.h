@@ -249,7 +249,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
@@ -274,7 +274,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
@@ -297,7 +297,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
 	WUNUSED _Wrap_frozen (frozen)() DEE_CXX_NOTHROW {
@@ -314,7 +314,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "asseq", _Dee_HashSelectC(0x8141f943, 0x32fdf88783293653));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "asseq", _Dee_HashSelectC(0x8141f943, 0x32fdf88783293653)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "asseq", _Dee_HashSelectC(0x8141f943, 0x32fdf88783293653)));
 		}
 	};
 	WUNUSED _Wrap_asseq (asseq)() DEE_CXX_NOTHROW {
@@ -331,7 +331,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "asset", _Dee_HashSelectC(0xc73352c6, 0x2f5e4e95dc2238f0));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "asset", _Dee_HashSelectC(0xc73352c6, 0x2f5e4e95dc2238f0)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "asset", _Dee_HashSelectC(0xc73352c6, 0x2f5e4e95dc2238f0)));
 		}
 	};
 	WUNUSED _Wrap_asset (asset)() DEE_CXX_NOTHROW {
@@ -348,7 +348,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "asmap", _Dee_HashSelectC(0x9f7b392, 0xdf8e0a44ad057842));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "asmap", _Dee_HashSelectC(0x9f7b392, 0xdf8e0a44ad057842)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "asmap", _Dee_HashSelectC(0x9f7b392, 0xdf8e0a44ad057842)));
 		}
 	};
 	WUNUSED _Wrap_asmap (asmap)() DEE_CXX_NOTHROW {
@@ -365,7 +365,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21)));
 		}
 	};
 	WUNUSED _Wrap_length (length)() DEE_CXX_NOTHROW {

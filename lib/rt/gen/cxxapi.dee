@@ -584,7 +584,7 @@ final class CxxType {
 						"m_self, ", repr name, ", ", nameHashSelect, ");");
 					print("		}");
 					print("		WUNUSED bool bound() const {");
-					print("			return throw_if_minusone(DeeObject_BoundAttrStringHash("
+					print("			return throw_if_bounderr(DeeObject_BoundAttrStringHash("
 						"m_self, ", repr name, ", ", nameHashSelect, "));");
 					print("		}");
 				}

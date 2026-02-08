@@ -51,7 +51,11 @@ public:
 
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(Callable from deemon).printCxxApi();]]]*/
-
+	WUNUSED NONNULL_CXX((1)) Ref<Object> (compose)(DeeObject *before) {
+		DeeObject *args[1];
+		args[0] = before;
+		return inherit(DeeObject_CallAttrStringHash(this, "compose", _Dee_HashSelectC(0xcf4f7642, 0xdf765e13ceb0315e), 1, args));
+	}
 /*[[[end]]]*/
 };
 

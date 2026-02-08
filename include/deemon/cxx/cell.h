@@ -180,7 +180,7 @@ public:
 			return DeeObject_GetAttrStringHash(m_self, "value", _Dee_HashSelectC(0xd9093f6e, 0x69e7413ae0c88471));
 		}
 		WUNUSED bool bound() const {
-			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "value", _Dee_HashSelectC(0xd9093f6e, 0x69e7413ae0c88471)));
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "value", _Dee_HashSelectC(0xd9093f6e, 0x69e7413ae0c88471)));
 		}
 		void del() const {
 			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "value", _Dee_HashSelectC(0xd9093f6e, 0x69e7413ae0c88471)));
