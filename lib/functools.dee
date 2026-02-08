@@ -81,15 +81,35 @@ function predeq2key(pred_eq: Callable): Callable {
 @@An identity key function that simply re-returns the given @ob
 @@Since key functions are usually optional, this function may be used as a
 @@default binding by implementations not designed to be used without any key function
+#if 1
+global final identity = Callable.identity;
+#else
 final function identity(ob: Object): Object {
 	return ob;
 }
+#endif
 
-@@@return A key function that is the combination of all given @keys
 @@Construct and return a key function which, when executed, transforms the
 @@given object using all of the given @keys functions in reverse order,
 @@meaning that the last function is executed first, while the return value
 @@of the first function is eventually propagated as the actual key value
+@@
+@@Note that this API is deprecated in favor of @Callable.compose
+@@
+@@> function intToString(x: int): string { ... }
+@@> function stringToBytes(x: string): Bytes { ... }
+@@> local intToStringToBytes = keycombine(stringToBytes, intToString);
+@@> print intToStringToBytes(10);         /* "10".bytes() */
+@@> print stringToBytes(intToString(10)); /* "10".bytes() */
+@@>
+@@> /* Same as: */
+@@> local intToStringToBytes = stringToBytes.compose(intToString);
+@@> print intToStringToBytes(10); /* "10".bytes() */
+@@
+@@@return A key function that is the combination of all given @keys
+#if 1
+global final keycombine = Callable.compose;
+#else
 function keycombine(keys...: Callable): Callable {
 	if (#keys == 1)
 		return keys[0];
@@ -100,3 +120,4 @@ function keycombine(keys...: Callable): Callable {
 		return x;
 	};
 }
+#endif

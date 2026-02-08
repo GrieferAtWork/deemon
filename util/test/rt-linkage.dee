@@ -345,6 +345,39 @@ assertRtTypeName("HashSetIterator");
 assertRtTypeName("TracebackIterator");
 assertRtTypeName("DictIterator");
 
+/* Stuff related to composition of callable objects */
+assertRtTypeName("FunctionComposition");
+test.assertSame(deemon.Callable.identity, rt.FunctionComposition_identity);
+test.assertSequence(rt.Sequence_empty, deemon.Sequence());
+test.assertSame(deemon.Sequence, type rt.Sequence_empty);
+test.assertSet(rt.Set_empty, deemon.Set());
+test.assertSame(deemon.Set, type rt.Set_empty);
+test.assertEqualsTyped(~deemon.Set(), rt.Set_universal);
+test.assertMapping(rt.Mapping_empty, deemon.Mapping());
+test.assertSame(deemon.Mapping, type rt.Mapping_empty);
+test.assertSame(deemon.Dict.Frozen(), rt.RoDict_empty);
+test.assertSame((), rt.Tuple_empty);
+test.assertSame("", rt.String_empty);
+test.assertEqualsTyped("".bytes(), rt.Bytes_empty);
+test.assertEqualsTyped(0, rt.Int_0);
+test.assertEqualsTyped(1, rt.Int_1);
+test.assertEqualsTyped(-1, rt.Int_m1);
+test.assertSame(rt.NullableTuple(), rt.NullableTuple_empty);
+test.assertSame(rt.Code(), rt.Code_empty);
+test.assertSame(rt.GCSet(), rt.GCSet_empty);
+test.assertSame(rt.GCEnum, type rt.GCEnum_singleton);
+test.assertSame(rt.Traceback, type rt.Traceback_empty);
+test.assertSame(deemon, rt.Module_deemon);
+test.assertSame(rt.ModuleExports().__module__, rt.Module_empty);
+test.assertSame(rt.ModuleExportsIterator().__module__, rt.Module_empty);
+test.assertSame(rt.ModuleGlobals().__module__, rt.Module_empty);
+test.assertSame(rt.ModuleLibNames().__module__, rt.Module_empty);
+
+//DEX_GETTER_F("Module_empty", &librt_get_Module_empty, DEXSYM_CONSTEXPR,
+//             "->?GModule\n"
+//             "The fallback #Iempty module"), /* DeeModule_Empty */
+
+
 assertRtTypeName("Attribute", "Attribute");
 assertRtTypeName("EnumAttr", "enumattr");
 assertRtTypeName("EnumAttrIterator");

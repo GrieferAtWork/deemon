@@ -2208,7 +2208,7 @@ PRIVATE struct type_math tuple_math = {
 	/* .tp_inplace_pow = */ DEFIMPL_UNSUPPORTED(&default__inplace_pow__unsupported),
 };
 
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 tuple_hash(Tuple *__restrict self) {
 	return DeeObject_Hashv(DeeTuple_ELEM(self),
 	                       DeeTuple_SIZE(self));

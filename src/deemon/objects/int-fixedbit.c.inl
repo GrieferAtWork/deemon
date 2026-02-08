@@ -33,6 +33,11 @@
 
 #include <deemon/api.h>
 
+#include <deemon/int.h>   /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS */
+#include <deemon/types.h> /* DREF, DeeObject, Dee_ssize_t */
+
+#include <hybrid/align.h> /* CEILDIV */
+
 #if (defined(DEFINE_int_get_signed8) +    \
      defined(DEFINE_int_get_signed16) +   \
      defined(DEFINE_int_get_signed32) +   \

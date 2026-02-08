@@ -172,6 +172,7 @@ read_symbol:
 	goto read_symbol;
 }
 
+/* TODO: modexportsiter_nextkey */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 modexportsiter_next(ModuleExportsIterator *__restrict self) {
 	DREF DeeObject *result, *result_name, *result_value;
@@ -241,6 +242,14 @@ PRIVATE struct type_getset tpconst modexportsiter_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_member tpconst modexportsiter_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT,
+	                      offsetof(ModuleExportsIterator, mei_module),
+	                      "->?DModule"),
+	TYPE_MEMBER_END
+};
+
+/* TODO: ModuleExportsKeysIterator_Type */
 INTERN DeeTypeObject ModuleExportsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleExportsIterator",
@@ -282,7 +291,7 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ modexportsiter_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ modexportsiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
@@ -306,7 +315,7 @@ modexports_init(ModuleExports *__restrict self,
 	DeeArg_Unpack1(err, argc, argv, "_ModuleExports", &self->me_module);
 	if (DeeObject_AssertType(self->me_module, &DeeModule_Type))
 		goto err;
-	Dee_Incref(&DeeModule_Empty);
+	Dee_Incref(self->me_module);
 	return 0;
 err:
 	return -1;
