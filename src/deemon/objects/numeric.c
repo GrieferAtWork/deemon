@@ -167,7 +167,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed8(DeeObject *__restrict self) {
 	int8_t result;
-	if unlikely(DeeObject_Get8Bit(self, &result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get8Bit(self, &result)))
 		goto err;
 	return DeeInt_NewInt8(result);
 err:
@@ -177,7 +177,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned8(DeeObject *__restrict self) {
 	uint8_t result;
-	if unlikely(DeeObject_Get8Bit(self, (int8_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get8Bit(self, (int8_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt8(result);
 err:
@@ -187,7 +187,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed16(DeeObject *__restrict self) {
 	int16_t result;
-	if unlikely(DeeObject_Get16Bit(self, &result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get16Bit(self, &result)))
 		goto err;
 	return DeeInt_NewInt16(result);
 err:
@@ -197,7 +197,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned16(DeeObject *__restrict self) {
 	uint16_t result;
-	if unlikely(DeeObject_Get16Bit(self, (int16_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get16Bit(self, (int16_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt16(result);
 err:
@@ -207,7 +207,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed32(DeeObject *__restrict self) {
 	int32_t result;
-	if unlikely(DeeObject_Get32Bit(self, &result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get32Bit(self, &result)))
 		goto err;
 	return DeeInt_NewInt32(result);
 err:
@@ -217,7 +217,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned32(DeeObject *__restrict self) {
 	uint32_t result;
-	if unlikely(DeeObject_Get32Bit(self, (int32_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get32Bit(self, (int32_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt32(result);
 err:
@@ -227,7 +227,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed64(DeeObject *__restrict self) {
 	int64_t result;
-	if unlikely(DeeObject_Get64Bit(self, &result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get64Bit(self, &result)))
 		goto err;
 	return DeeInt_NewInt64(result);
 err:
@@ -237,7 +237,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned64(DeeObject *__restrict self) {
 	uint64_t result;
-	if unlikely(DeeObject_Get64Bit(self, (int64_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get64Bit(self, (int64_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt64(result);
 err:
@@ -247,7 +247,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed128(DeeObject *__restrict self) {
 	Dee_int128_t result;
-	if unlikely(DeeObject_Get128Bit(self, &result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get128Bit(self, &result)))
 		goto err;
 	return DeeInt_NewInt128(result);
 err:
@@ -257,7 +257,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned128(DeeObject *__restrict self) {
 	Dee_uint128_t result;
-	if unlikely(DeeObject_Get128Bit(self, (Dee_int128_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get128Bit(self, (Dee_int128_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt128(result);
 err:
@@ -267,7 +267,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap16(DeeObject *__restrict self) {
 	uint16_t result;
-	if unlikely(DeeObject_Get16Bit(self, (int16_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get16Bit(self, (int16_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt16(BSWAP16(result));
 err:
@@ -277,7 +277,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap32(DeeObject *__restrict self) {
 	uint32_t result;
-	if unlikely(DeeObject_Get32Bit(self, (int32_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get32Bit(self, (int32_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt32(BSWAP32(result));
 err:
@@ -287,7 +287,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap64(DeeObject *__restrict self) {
 	uint64_t result;
-	if unlikely(DeeObject_Get64Bit(self, (int64_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get64Bit(self, (int64_t *)&result)))
 		goto err;
 	return DeeInt_NewUInt64(BSWAP64(result));
 err:
@@ -297,7 +297,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap128(DeeObject *__restrict self) {
 	Dee_uint128_t result;
-	if unlikely(DeeObject_Get128Bit(self, (Dee_int128_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get128Bit(self, (Dee_int128_t *)&result)))
 		goto err;
 	__hybrid_uint128_bswap(result);
 	return DeeInt_NewUInt128(result);
@@ -308,7 +308,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap16(DeeObject *__restrict self) {
 	uint16_t result;
-	if unlikely(DeeObject_Get16Bit(self, (int16_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get16Bit(self, (int16_t *)&result)))
 		goto err;
 	return DeeInt_NewInt16((int16_t)BSWAP16(result));
 err:
@@ -318,7 +318,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap32(DeeObject *__restrict self) {
 	uint32_t result;
-	if unlikely(DeeObject_Get32Bit(self, (int32_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get32Bit(self, (int32_t *)&result)))
 		goto err;
 	return DeeInt_NewInt32((int64_t)BSWAP32(result));
 err:
@@ -328,7 +328,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap64(DeeObject *__restrict self) {
 	uint64_t result;
-	if unlikely(DeeObject_Get64Bit(self, (int64_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get64Bit(self, (int64_t *)&result)))
 		goto err;
 	return DeeInt_NewInt64((int64_t)BSWAP64(result));
 err:
@@ -338,7 +338,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap128(DeeObject *__restrict self) {
 	Dee_int128_t result;
-	if unlikely(DeeObject_Get128Bit(self, (Dee_int128_t *)&result) < 0)
+	if unlikely(Dee_INT_ISERR(DeeObject_Get128Bit(self, (Dee_int128_t *)&result)))
 		goto err;
 	__hybrid_int128_bswap(result);
 	return DeeInt_NewInt128(result);
@@ -949,6 +949,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "->?Dfloat\n"
 	            "#tNotImplemented{@this number does not implement ${operator float}}"
 	            "Return @this number as a floating point value"),
+#if 1 /* TODO: Replace all of these with functions like "property u8 = { get() -> this.operator int() & 0xff; }" */
 	TYPE_GETTER("s8", &numeric_ass8,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
@@ -1079,6 +1080,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "Otherwise, an integer in the range ${-170141183460469231731687303715884105728 ... -1} is returned as ${340282366920938463463374607431768211456 + this}\n"
 	            "This is the same behavior as casting an 128-bit integer to becoming unsigned, by "
 	            /**/ "ignoring the most significant bit from potentially being a sign-bit"),
+#endif
 
 	TYPE_GETTER("swap16", &numeric_swap16,
 	            "->?Dint\n"
@@ -1100,6 +1102,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "Similar to ?#swap16, but ?#u128 is taken as input, and the 8-bit tuples $abcdefghijklmnop are re-arranged as $ponmlkjihgfedcba"),
+#if 1 /* TODO: Get rid of these functions */
 	TYPE_GETTER("sswap16", &numeric_sswap16,
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
@@ -1120,6 +1123,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "Same as ${this.swap128.signed128}"),
+#endif
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define LE_SEL(cast, swap) cast
@@ -1176,6 +1180,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "Similar to ?#swap128, but a big-endian encoded integer is converted to host-endian\n"
 	            "When the host already is big-endian, this is identical to ?#unsigned128"),
+#if 1 /* TODO: Get rid of these functions */
 	TYPE_GETTER("lesswap16", &LE_SEL(numeric_signed16, numeric_sswap16),
 	            "->?Dint\n"
 	            "#tNotImplemented{@this number does not implement ${operator int}}"
@@ -1224,6 +1229,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "#tIntegerOverflow{The value of @this number is outside the requested range}"
 	            "Similar to ?#sswap128, but a big-endian encoded integer is converted to host-endian\n"
 	            "When the host already is big-endian, this is identical to ?#signed128"),
+#endif
 #undef LE_SEL
 #undef BE_SEL
 
@@ -1235,7 +1241,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property popcount: int {\n"
 	            /**/ "	get(): int {\n"
-	            /**/ "		return ((int)this).popcount;\n"
+	            /**/ "		return this.operator int().popcount;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1245,7 +1251,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property ffs: int {\n"
 	            /**/ "	get(): int {\n"
-	            /**/ "		return ((int)this).ffs;\n"
+	            /**/ "		return this.operator int().ffs;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1256,7 +1262,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property fls: int {\n"
 	            /**/ "	get(): int {\n"
-	            /**/ "		return ((int)this).fls;\n"
+	            /**/ "		return this.operator int().fls;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1267,7 +1273,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property parity: int {\n"
 	            /**/ "	get(): int {\n"
-	            /**/ "		return ((int)this).parity;\n"
+	            /**/ "		return this.operator int().parity;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1283,7 +1289,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property ctz: int {\n"
 	            /**/ "	get(): int {\n"
-	            /**/ "		return ((int)this).ctz;\n"
+	            /**/ "		return this.operator int().ctz;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1299,7 +1305,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property ct1: int {\n"
 	            /**/ "	get(): int {\n"
-	            /**/ "		return ((int)this).ct1;\n"
+	            /**/ "		return this.operator int().ct1;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1314,7 +1320,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property msb: int {\n"
 	            /**/ "	get(): int {\n"
-	            /**/ "		return ((int)this).msb;\n"
+	            /**/ "		return this.operator int().msb;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
 	            "}"),
@@ -1340,7 +1346,7 @@ PRIVATE struct type_getset tpconst numeric_getsets[] = {
 	            "${"
 	            /**/ "property isfloat: bool {\n"
 	            /**/ "	get(): bool {\n"
-	            /**/ "		for (local tp = type(this).__mro__) {\n"
+	            /**/ "		for (local tp: type(this).__mro__) {\n"
 	            /**/ "			local hasFloat = tp.hasprivateoperator(\"float\"));\n"
 	            /**/ "			local hasInt   = tp.hasprivateoperator(\"int\"));\n"
 	            /**/ "			if (hasFloat || hasInt) {\n"
@@ -1533,7 +1539,7 @@ DOC_DEF(numeric_oct_doc,
         "Short-hand alias for ${this.tostr(radix: 8, precision: precision, mode: \"##\")} (s.a. ?#tostr)");
 DOC_DEF(numeric_divmod_doc,
         "(y:?.)->?T2?.?.\n"
-        "Devide+modulo. Alias for ${(this / y, this % y)}");
+        "Divide+modulo. Alias for ${(this / y, this % y)}");
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeIntObject *self, size_t argc,

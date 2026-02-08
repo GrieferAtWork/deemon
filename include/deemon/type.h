@@ -689,6 +689,7 @@ struct Dee_type_gc {
 #define Dee_INT_SIGNED   0    /* The saved integer value is signed. */
 #define Dee_INT_UNSIGNED 1    /* The saved integer value is unsigned. */
 #define Dee_INT_ERROR    (-1) /* An error was thrown */
+#define Dee_INT_ISERR(x) ((x) < 0)
 
 #ifdef DEE_SOURCE
 #define INT_SIGNED   Dee_INT_SIGNED   /* The saved integer value is signed. */

@@ -19,8 +19,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "slab.c.inl"
-#define SIZE 6
-#define NEXT_LARGER  7
+#define SIZE 4
+#define NEXT_LARGER  5
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -326,11 +326,25 @@ again:
 			LOG_SLAB("[SLAB] Alloc: %p (%" PRFuSIZ " bytes)\n", &page->sp_items[indexj], (size_t)ITEMSIZE);
 			return &page->sp_items[index];
 		}
-		/* FIXME: Some kind of race condition can result in all "page = s_free" being
-		 *        fully allocated, but somehow still within the s_free-list. This has
-		 *        been observed once, and resulted in all threads entering an infinite
-		 *        loop. */
 		SCHED_YIELD();
+#if 1 /* XXX: This shouldn't be necessary, but seems to prevent a race condition */
+		if (atomic_read(&page->sp_free) == 0) {
+			/* Try to remove this page from the set of available pages. */
+			Dee_atomic_lock_acquire(&FUNC(slab).s_lock);
+			COMPILER_READ_BARRIER();
+			if (atomic_read(&page->sp_free) == 0) {
+				if ((*page->sp_pself = page->sp_next) != SLAB_PAGE_INVALID)
+					page->sp_next->sp_pself = page->sp_pself;
+				if ((page->sp_next = FUNC(slab).s_full) != SLAB_PAGE_INVALID)
+					FUNC(slab).s_full->sp_pself = &page->sp_next;
+				page->sp_pself    = &FUNC(slab).s_full;
+				FUNC(slab).s_full = page;
+				DEC_MAXPAIR(FUNC(slab).s_num_freepages, FUNC(slab).s_max_freepages);
+				INC_MAXPAIR(FUNC(slab).s_num_fullpages, FUNC(slab).s_max_fullpages);
+			}
+			Dee_atomic_lock_release(&FUNC(slab).s_lock);
+		}
+#endif
 		goto again;
 	}
 

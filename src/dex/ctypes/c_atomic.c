@@ -110,30 +110,16 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 
 	/* Always accept signed/unsigned integers */
 	switch (ob_ptr_orig->st_sizeof) {
-
-	case 1:
-		error = DeeObject_Get8Bit(value, &result->ao_s8);
-		break;
-
-	case 2:
-		error = DeeObject_Get16Bit(value, &result->ao_s16);
-		break;
-
-	case 4:
-		error = DeeObject_Get32Bit(value, &result->ao_s32);
-		break;
-
-	case 8:
-		error = DeeObject_Get64Bit(value, &result->ao_s64);
-		break;
-
+	case 1: error = DeeObject_Get8Bit(value, &result->ao_s8); break;
+	case 2: error = DeeObject_Get16Bit(value, &result->ao_s16); break;
+	case 4: error = DeeObject_Get32Bit(value, &result->ao_s32); break;
+	case 8: error = DeeObject_Get64Bit(value, &result->ao_s64); break;
 	default:
 		err_bad_atomic_size(ob_ptr_orig->st_sizeof);
 		goto err;
 	}
-	if likely(error != -1)
+	if likely(!Dee_INT_ISERR(error))
 		return 0;
-	DeeObject_TypeAssertFailed(value, DeeSType_AsType(ob_ptr_orig));
 err:
 	return -1;
 }

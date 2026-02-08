@@ -1099,6 +1099,12 @@ err:
 	"#pkey{A key function to transform item values}"
 #endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+#define IFELSE_KNATI(tt, ff) tt
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+#define IFELSE_KNATI(tt, ff) ff
+#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+
 INTDEF struct type_method tpconst seq_methods[];
 INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
@@ -1867,9 +1873,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "}&"
 	              /**/ "?#{op:iter}" /*                                                          */ "|${"
 	              /**/ /**/ "local result = 0;\n"
-	              /**/ /**/ "local keyedItem = key(item);\n"
+	              /**/ /**/ IFELSE_KNATI("", "local keyedItem = key(item);\n")
 	              /**/ /**/ "foreach (local thisItem: Sequence.__iter__(this)) {\n"
-	              /**/ /**/ "	if (deemon.equals(keyedItem, key(thisItem)))\n"
+	              /**/ /**/ "	if (deemon.equals(" IFELSE_KNATI("", "keyedItem") ", key(thisItem)))\n"
 	              /**/ /**/ "		++result;\n"
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "return result;"
@@ -1919,9 +1925,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "}&"
 	              /**/ "?#__enumerate__" /*                                                      */ "|${"
 	              /**/ /**/ "local result = Cell(0);\n"
-	              /**/ /**/ "local keyedItem = key(item);\n"
+	              /**/ /**/ IFELSE_KNATI("", "local keyedItem = key(item);\n")
 	              /**/ /**/ "Sequence.__enumerate__(this, (i, thisItem?) -\\> {\n"
-	              /**/ /**/ "	if (thisItem is bound && deemon.equals(keyedItem, key(thisItem)))\n"
+	              /**/ /**/ "	if (thisItem is bound && deemon.equals(" IFELSE_KNATI("", "keyedItem") ", key(thisItem)))\n"
 	              /**/ /**/ "		++result.value;\n"
 	              /**/ /**/ "	return none;\n"
 	              /**/ /**/ "}, start, end);\n"
@@ -1967,9 +1973,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "${function contains(item: Object, start: int = 0, end: int = -1, key: Callable | none = none): bool} (?A__seqclass__?DType is ?.)" /**/ "|${return this.contains(item, 0, int.SIZE_MAX, key);}&"
 	              /**/ "?#find" /*                                                               */ "|${return Sequence.find(this, item, 0, int.SIZE_MAX, key) != -1;}&"
 	              /**/ "?#{op:iter}" /*                                                          */ "|${"
-	              /**/ /**/ "local keyedItem = key(item);\n"
+	              /**/ /**/ IFELSE_KNATI("", "local keyedItem = key(item);\n")
 	              /**/ /**/ "foreach (local thisItem: Sequence.__iter__(this)) {\n"
-	              /**/ /**/ "	if (deemon.equals(keyedItem, key(thisItem)))\n"
+	              /**/ /**/ "	if (deemon.equals(" IFELSE_KNATI("", "keyedItem") ", key(thisItem)))\n"
 	              /**/ /**/ "		return true;\n"
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "return false;"
@@ -1996,9 +2002,9 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "${function contains(item: Object, start: int = 0, end: int = -1, key: Callable | none = none): bool} (?A__seqclass__?DType is ?.)" /**/ "|${return this.contains(item, start, end, key);}&"
 	              /**/ "?#find" /*                                                               */ "|${return Sequence.find(this, item, start, end, key) != -1;}&"
 	              /**/ "?#__enumerate__" /*                                                      */ "|${"
-	              /**/ /**/ "local keyedItem = key(item);\n"
+	              /**/ /**/ IFELSE_KNATI("", "local keyedItem = key(item);\n")
 	              /**/ /**/ "return this.__enumerate__((i, thisItem?) -\\> {\n"
-	              /**/ /**/ "	if (thisItem is bound && deemon.equals(keyedItem, key(thisItem)))\n"
+	              /**/ /**/ "	if (thisItem is bound && deemon.equals(" IFELSE_KNATI("", "keyedItem") ", key(thisItem)))\n"
 	              /**/ /**/ "		return true;\n"
 	              /**/ /**/ "	return none;\n"
 	              /**/ /**/ "}, start, end) ?? false;"
@@ -2101,7 +2107,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              DOC_param_key
 	              "Returns ?t / ?f indicative of @this Sequence's first element matching :item\n"
 	              "The implementation of this is derived from #first, where the found is then compared "
-	              /**/ "against @item, potentially through use of @{key}: ${key(first) == key(item)} or ${first == item}, "
+	              /**/ "against @item, potentially through use of @{key}: ${" IFELSE_KNATI("item", "key(item)") " == key(first)} or ${item == first}, "
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned\n"
 
 	              "When ${start == 0 && end == -1}:"
@@ -2117,7 +2123,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "if (key is none)\n"
 	              /**/ /**/ "	key = x -\\> x;\n"
-	              /**/ /**/ "return key(item) == key(first);\n"
+	              /**/ /**/ "return " IFELSE_KNATI("item", "key(item)") " == key(first);\n"
 	              /**/ "}"
 	              "}\n"
 
@@ -2136,7 +2142,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "if (key is none)\n"
 	              /**/ /**/ "	key = x -\\> x;\n"
-	              /**/ /**/ "return key(item) == key(first);\n"
+	              /**/ /**/ "return " IFELSE_KNATI("item", "key(item)") " == key(first);\n"
 	              /**/ "}"
 	              "}"),
 
@@ -2147,7 +2153,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              DOC_param_key
 	              "Returns ?t / ?f indicative of @this Sequence's last element matching :item\n"
 	              "The implementation of this is derived from #last, where the found is then compared "
-	              /**/ "against @item, potentially through use of @{key}: ${key(last) == key(item)} or ${last == item}, "
+	              /**/ "against @item, potentially through use of @{key}: ${" IFELSE_KNATI("item", "key(item)") " == key(last)} or ${item == last}, "
 	              /**/ "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned\n"
 
 	              "When ${start == 0 && end == -1}:"
@@ -2163,7 +2169,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "if (key is none)\n"
 	              /**/ /**/ "	key = x -\\> x;\n"
-	              /**/ /**/ "return key(item) == key(last);\n"
+	              /**/ /**/ "return " IFELSE_KNATI("item", "key(item)") " == key(last);\n"
 	              /**/ "}"
 	              "}\n"
 
@@ -2188,7 +2194,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "}\n"
 	              /**/ /**/ "if (key is none)\n"
 	              /**/ /**/ "	key = x -\\> x;\n"
-	              /**/ /**/ "return key(item) == key(last);\n"
+	              /**/ /**/ "return " IFELSE_KNATI("item", "key(item)") " == key(last);\n"
 	              /**/ "}"
 	              "}"),
 
@@ -2508,8 +2514,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ "		return this as Set;\n"
 	              /**/ "	local encountered = HashSet();\n"
 	              /**/ "	for (local item: this) {\n"
-	              /**/ "		local keyedItem = key(item);\n"
-	              /**/ "		if (encountered.insert(keyedItem))\n"
+	              /**/ "		if (encountered.insert(key(item)))\n"
 	              /**/ "			yield item;\n"
 	              /**/ "	}\n"
 	              /**/ "}"

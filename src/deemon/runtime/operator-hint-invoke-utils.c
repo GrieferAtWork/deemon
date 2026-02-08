@@ -604,7 +604,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	case INT_SIGNED:
 		if unlikely(val32 < -1) {
 			if (!DeeType_IsIntTruncated(Dee_TYPE(self)))
-				return DeeRT_ErrIntegerOverflowS32(val32, -1, UINT32_MAX);
+				return DeeRT_ErrIntegerOverflowS64(val32, -1, UINT32_MAX);
 		}
 		break;
 	case INT_UNSIGNED:

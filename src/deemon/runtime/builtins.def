@@ -165,9 +165,9 @@ BUILTIN_DOC(hasitem, &DeeBuiltin_HasItem, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCON
  * >> boundattr(ob: Object, attr: string, allow_missing: bool = true): bool; */
 BUILTIN_DOC(boundattr, &DeeBuiltin_BoundAttr, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring,allow_missing=!t)->?Dbool\n"
-            "#tAttributeError{The attribute doesn't exist, and @allow_missing is ?f}"
+            "#tUnknownAttribute{The attribute doesn't exist, and @allow_missing is ?f}"
             "#r{Indicative of attribute @attr of @ob currently being bound}"
-            "If the attribute doesn't exist, return ?f, or throw an :AttributeError, "
+            "If the attribute doesn't exist, return ?f, or throw an :UnknownAttribute, "
             /**/ "depending on the given @allow_missing\n"
             "${"
             /**/ "import boundattr from deemon;\n"
@@ -180,9 +180,9 @@ BUILTIN_DOC(boundattr, &DeeBuiltin_BoundAttr, Dee_MODSYM_FREADONLY | Dee_MODSYM_
 BUILTIN_DOC(bounditem, &DeeBuiltin_BoundItem, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR,
             "(ob,index:?Dint,allow_missing=!t)->?Dbool\n"
             "(ob,key:?O,allow_missing=!t)->?Dbool\n"
-            "#tKeyError{The given @key doesn't exist, and @allow_missing is ?f}"
+            "#tUnknownKey{The given @key doesn't exist, and @allow_missing is ?f}"
             "#r{Indicative of item @index or @key of @ob currently being bound}"
-            "If the item doesn't exist, return ?f, or throw :KeyError (or :IndexError), "
+            "If the item doesn't exist, return ?f, or throw :UnknownKey, "
             /**/ "depending on the given @allow_missing\n"
             "${"
             /**/ "import bounditem from deemon;\n"
@@ -248,7 +248,7 @@ BUILTIN_DOC(hash, &DeeBuiltin_Hash, Dee_MODSYM_FREADONLY | Dee_MODSYM_FCONSTEXPR
             "For example, ${hash(\"foo\", \"bar\")} may return a different hash "
             /**/ "value than ${hash(\"bar\", \"foo\")}.\n"
             "If you wish to combine hashes such that element ordering doesn't play any "
-            /**/ "role, you can just do ${\"bar\".operator hash() ^ \"foo\".operator hash()}")
+            /**/ "role, you can just do ${hash(\"bar\") ^ hash(\"foo\")}")
 
 
 /* TODO: Add more options to this function */
