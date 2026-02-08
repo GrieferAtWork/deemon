@@ -30,6 +30,7 @@
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref, Dee_Movprefv, Dee_OBJECT_HEAD, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /*  */
+#include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/tuple.h>              /* DeeTuple* */
@@ -234,6 +235,10 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+composition_get_callbacks(DeeTupleObject *__restrict self) {
+	return DeeRefVector_NewReadonly(Dee_AsObject(self), self->t_size, self->t_elem);
+}
 
 PRIVATE struct type_cmp composition_cmp = {
 	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&composition_hash,
@@ -248,6 +253,15 @@ PRIVATE struct type_cmp composition_cmp = {
 	/* .tp_ge            = */ DEFIMPL_UNSUPPORTED(&default__ge__unsupported),
 };
 
+PRIVATE struct type_getset tpconst composition_getsets[] = {
+	TYPE_GETTER_AB("__callbacks__", &composition_get_callbacks,
+	               "->?S?DCallable\n"
+	               "The callbacks that are part of this composition (in reverse order of "
+	               /**/ "execution, but that when @this is invoked, ${__callbacks__.last} "
+	               /**/ "is invoked first). When ?#__callbacks__ is empty, then @this composition "
+	               /**/ "is the identity composition (i.e. ?Ert:FunctionComposition_identity) "),
+	TYPE_GETSET_END
+};
 
 INTERN DeeTypeObject FunctionComposition_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -289,7 +303,7 @@ INTERN DeeTypeObject FunctionComposition_Type = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ composition_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
