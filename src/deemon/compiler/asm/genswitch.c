@@ -127,19 +127,14 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pack_target_tuple(struct asm_sym *__restrict sym) {
 	DREF DeeObject *ri_ip;
 	DREF DeeObject *ri_sp;
-	DREF DeeObject *result;
 	ri_ip = DeeRelInt_New(sym, 0, RELINT_MODE_FADDR);
 	if unlikely(!ri_ip)
 		goto err;
 	ri_sp = DeeRelInt_New(sym, 0, RELINT_MODE_FSTCK);
 	if unlikely(!ri_sp)
 		goto err_ip;
-	result = DeeTuple_PackSymbolic(2, ri_ip, ri_sp); /* Inherit references. */
-	if unlikely(!result)
-		goto err_ip_sp;
-	return result;
-err_ip_sp:
-	Dee_DecrefDokill(ri_sp);
+	/* TODO: Add support for using `DeeSeq_OfPairInherited()' here */
+	return DeeTuple_PackInherited(2, ri_ip, ri_sp); /* Inherit references. */
 err_ip:
 	Dee_DecrefDokill(ri_ip);
 err:

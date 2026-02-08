@@ -36,8 +36,9 @@
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_Decref */
 #include <deemon/objmethod.h>       /* DEFINE_CMETHOD1 */
+#include <deemon/pair.h>            /* DeeSeq_OfPairInherited */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, EOK, acos, acosh, asin, asincos, asincosh, asinh, atan, atan2, atanh, cbrt, ceil, copysign, cos, cosh, erf, erfc, exp, exp2, expm1, fdim, floor, fmod, frexp, hypot, ilogb, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, lgamma, log, log1p, log2, log10, logb, modf, nan, nextafter, pow, remainder, remquo, round, scalbln, scalbn, sin, sincos, sincosh, sinh, sqrt, tan, tanh, tgamma */
-#include <deemon/tuple.h>           /* DeeTuple_Newf, DeeTuple_PackSymbolic */
+#include <deemon/tuple.h>           /* DeeTuple_Newf */
 #include <deemon/type.h>            /* METHOD_FCONSTCALL, METHOD_FCONSTCALL_IF_ARGS_CONSTCAST */
 
 #include <hybrid/limitcore.h> /* __INT_MAX__, __INT_MIN__ */
@@ -523,7 +524,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_frexp(size_t argc, DeeObject *const *argv) {
 	double x, y, mat;
 	int ex;
-	DREF DeeObject *result, *a, *b;
+	DREF DeeObject *a, *b;
 	DeeArg_Unpack_DD(err, argc, argv, "frexp", &x, &y);
 	SET_OK();
 	mat = frexp(x, &ex);
@@ -535,12 +536,7 @@ f_math_frexp(size_t argc, DeeObject *const *argv) {
 	b = DeeInt_NewInt(ex);
 	if unlikely(!b)
 		goto err_a;
-	result = DeeTuple_PackSymbolic(2, a, b);
-	if unlikely(!result)
-		goto err_b;
-	return result;
-err_b:
-	Dee_Decref(b);
+	return DeeSeq_OfPairInherited(a, b);
 err_a:
 	Dee_Decref(a);
 err:
@@ -554,7 +550,7 @@ PRIVATE DEFINE_CMETHOD(math_frexp, &f_math_frexp, METHOD_FCONSTCALL | METHOD_FCO
 #define MATH_HAVE_modf
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_math_modf(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result, *a, *b;
+	DREF DeeObject *a, *b;
 	double x, y;
 	DeeArg_Unpack_D(err, argc, argv, "modf", &x);
 	x = modf(x, &y);
@@ -564,12 +560,7 @@ f_math_modf(size_t argc, DeeObject *const *argv) {
 	b = DeeFloat_New(y);
 	if unlikely(!b)
 		goto err_a;
-	result = DeeTuple_PackSymbolic(2, a, b);
-	if unlikely(!result)
-		goto err_b;
-	return result;
-err_b:
-	Dee_Decref(b);
+	return DeeSeq_OfPairInherited(a, b);
 err_a:
 	Dee_Decref(a);
 err:
