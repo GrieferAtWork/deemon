@@ -2136,6 +2136,11 @@ librt_get_ModuleExportsIterator_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_ModuleExportsKeysIterator_f(void) {
+	return_cached(get_KeysIterator_of(librt_get_ModuleExports_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ModuleGlobals_f(void) {
 	return_cached(get_type_of(DeeObject_GetAttrStringHash((DeeObject *)DeeModule_GetDeemon(), STR_AND_HASH(__globals__))));
 }
@@ -2999,6 +3004,7 @@ PRIVATE DEFINE_CMETHOD0(librt_get_TypeOperators, &librt_get_TypeOperators_f, MET
 PRIVATE DEFINE_CMETHOD0(librt_get_TypeOperatorsIterator, &librt_get_TypeOperatorsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExports, &librt_get_ModuleExports_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExportsIterator, &librt_get_ModuleExportsIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExportsKeysIterator, &librt_get_ModuleExportsKeysIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleGlobals, &librt_get_ModuleGlobals_f, METHOD_FCONSTCALL);
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleLibNames, &librt_get_ModuleLibNames_f, METHOD_FCONSTCALL);
@@ -3438,11 +3444,12 @@ DEX_GETTER_F_NODOC("ReBytesSplit", &librt_get_ReBytesSplit, DEXSYM_CONSTEXPR),  
 DEX_GETTER_F_NODOC("ReBytesSplitIterator", &librt_get_ReBytesSplitIterator, DEXSYM_CONSTEXPR),           /* ReBytesSplitIterator_Type */
 
 /* Internal types used to drive module symbol table inspection */
-DEX_GETTER_F_NODOC("ModuleExports", &librt_get_ModuleExports, DEXSYM_CONSTEXPR),                 /* ModuleExports_Type */
-DEX_GETTER_F_NODOC("ModuleExportsIterator", &librt_get_ModuleExportsIterator, DEXSYM_CONSTEXPR), /* ModuleExportsIterator_Type */
-DEX_GETTER_F_NODOC("ModuleGlobals", &librt_get_ModuleGlobals, DEXSYM_CONSTEXPR),                 /* ModuleGlobals_Type */
+DEX_GETTER_F_NODOC("ModuleExports", &librt_get_ModuleExports, DEXSYM_CONSTEXPR),                         /* ModuleExports_Type */
+DEX_GETTER_F_NODOC("ModuleExportsIterator", &librt_get_ModuleExportsIterator, DEXSYM_CONSTEXPR),         /* ModuleExportsIterator_Type */
+DEX_GETTER_F_NODOC("ModuleExportsKeysIterator", &librt_get_ModuleExportsKeysIterator, DEXSYM_CONSTEXPR), /* ModuleExportsKeysIterator_Type */
+DEX_GETTER_F_NODOC("ModuleGlobals", &librt_get_ModuleGlobals, DEXSYM_CONSTEXPR),                         /* ModuleGlobals_Type */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-DEX_GETTER_F_NODOC("ModuleLibNames", &librt_get_ModuleLibNames, DEXSYM_CONSTEXPR),               /* ModuleLibNames_Type */
+DEX_GETTER_F_NODOC("ModuleLibNames", &librt_get_ModuleLibNames, DEXSYM_CONSTEXPR),                       /* ModuleLibNames_Type */
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 /* Internal types used to drive user-defined classes */

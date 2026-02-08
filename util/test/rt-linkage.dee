@@ -270,6 +270,7 @@ assertRtTypeName("ReBytesSplitIterator");
 
 assertRtTypeName("ModuleExports");
 assertRtTypeName("ModuleExportsIterator");
+assertRtTypeName("ModuleExportsKeysIterator");
 assertRtTypeName("ModuleGlobals");
 if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES)
 	assertRtTypeName("ModuleLibNames");
@@ -370,6 +371,7 @@ test.assertSame(rt.Traceback, type rt.Traceback_empty);
 test.assertSame(deemon, rt.Module_deemon);
 test.assertSame(rt.ModuleExports().__module__, rt.Module_empty);
 test.assertSame(rt.ModuleExportsIterator().__module__, rt.Module_empty);
+test.assertSame(rt.ModuleExportsKeysIterator().__module__, rt.Module_empty);
 test.assertSame(rt.ModuleGlobals().__module__, rt.Module_empty);
 test.assertSame(rt.ModuleLibNames().__module__, rt.Module_empty);
 

@@ -32,9 +32,9 @@
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_module_* */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/pair.h>               /* DeeSeq_OfPairInherited */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/tuple.h>              /* DeeTuple_PackSymbolic */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
@@ -71,6 +71,7 @@ typedef struct {
 
 INTDEF DeeTypeObject ModuleExports_Type;
 INTDEF DeeTypeObject ModuleExportsIterator_Type;
+INTDEF DeeTypeObject ModuleExportsKeysIterator_Type;
 INTDEF DeeTypeObject ModuleGlobals_Type;
 INTDEF WUNUSED NONNULL((1)) DREF ModuleExports *DCALL
 DeeModule_ViewExports(DeeModuleObject *__restrict self);
@@ -172,10 +173,9 @@ read_symbol:
 	goto read_symbol;
 }
 
-/* TODO: modexportsiter_nextkey */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 modexportsiter_next(ModuleExportsIterator *__restrict self) {
-	DREF DeeObject *result, *result_name, *result_value;
+	DREF DeeObject *result_name, *result_value;
 	DeeModuleObject *mod = self->mei_module;
 	uint16_t old_index, new_index;
 	do_DeeModule_LockSymbols(err, mod);
@@ -220,14 +220,48 @@ continue_symbol_search:
 	}
 	Dee_Incref(result_name);
 	do_DeeModule_UnlockSymbols(mod);
-	result = DeeTuple_PackSymbolic(2, result_name, result_value);
-	if unlikely(!result) {
-		Dee_Decref_unlikely(result_name);
-		Dee_Decref_unlikely(result_value);
-	}
-	return result;
+	return DeeSeq_OfPairInherited(result_name, result_value);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+modexportsiter_nextkey(ModuleExportsIterator *__restrict self) {
+	DREF DeeObject *result_name;
+	DeeModuleObject *mod = self->mei_module;
+	uint16_t old_index, new_index;
+	do_DeeModule_LockSymbols(err, mod);
+again:
+	old_index = atomic_read(&self->mei_index);
+	if (old_index > mod->mo_bucketm) {
+		do_DeeModule_UnlockSymbols(mod);
+		return ITER_DONE;
+	}
+	new_index = old_index;
+	for (;;) {
+		struct Dee_module_symbol *symbol;
+		symbol = &mod->mo_bucketv[new_index];
+		if (symbol->ss_name) {
+			result_name = Dee_AsObject(Dee_module_symbol_getnameobj(symbol));
+			if unlikely(!result_name) {
+				do_DeeModule_UnlockSymbols(mod);
+				return NULL;
+			}
+			break;
+		}
+		++new_index;
+		if (new_index > mod->mo_bucketm) {
+			if (!atomic_cmpxch_weak(&self->mei_index, old_index, new_index))
+				goto again;
+			do_DeeModule_UnlockSymbols(mod);
+			return ITER_DONE;
+		}
+	}
+	if (!atomic_cmpxch_weak(&self->mei_index, old_index, new_index + 1))
+		goto again;
+	Dee_Incref(result_name);
+	do_DeeModule_UnlockSymbols(mod);
+	return result_name;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ModuleExports *DCALL
@@ -249,7 +283,6 @@ PRIVATE struct type_member tpconst modexportsiter_members[] = {
 	TYPE_MEMBER_END
 };
 
-/* TODO: ModuleExportsKeysIterator_Type */
 INTERN DeeTypeObject ModuleExportsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ModuleExportsIterator",
@@ -285,6 +318,56 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 	/* .tp_cmp           = */ &modexportsiter_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexportsiter_next,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ modexportsiter_getsets,
+	/* .tp_members       = */ modexportsiter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
+};
+
+INTERN DeeTypeObject ModuleExportsKeysIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_ModuleExportsKeysIterator",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ ModuleExportsIterator,
+			/* tp_ctor:        */ &modexportsiter_ctor,
+			/* tp_copy_ctor:   */ &modexportsiter_copy,
+			/* tp_deep_ctor:   */ &modexportsiter_deep,
+			/* tp_any_ctor:    */ &modexportsiter_init,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &modexportsiter_serialize
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&modexportsiter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&modexportsiter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
+	/* .tp_cmp           = */ &modexportsiter_cmp,
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexportsiter_nextkey,
 	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
@@ -343,6 +426,20 @@ modexports_iter(ModuleExports *__restrict self) {
 	result->mei_index  = 0;
 	Dee_Incref(result->mei_module);
 	DeeObject_Init(result, &ModuleExportsIterator_Type);
+done:
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF ModuleExportsIterator *DCALL
+modexports_iterkeys(ModuleExports *__restrict self) {
+	DREF ModuleExportsIterator *result;
+	result = DeeObject_MALLOC(ModuleExportsIterator);
+	if unlikely(!result)
+		goto done;
+	result->mei_module = self->me_module;
+	result->mei_index  = 0;
+	Dee_Incref(result->mei_module);
+	DeeObject_Init(result, &ModuleExportsKeysIterator_Type);
 done:
 	return result;
 }
@@ -1155,6 +1252,12 @@ PRIVATE struct type_seq modexports_seq = {
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&modexports_hasitem_string_len_hash,
 };
 
+PRIVATE struct type_getset tpconst modexports_getsets[] = {
+	TYPE_GETTER_AB_F(STR___map_iterkeys__, &modexports_iterkeys, METHOD_FNOREFESCAPE,
+	                 "->?Ert:MapFromAttrKeysIterator"),
+	TYPE_GETSET_END
+};
+
 PRIVATE struct type_member tpconst modexports_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT, offsetof(ModuleExports, me_module), "->?DModule"),
 	TYPE_MEMBER_END
@@ -1162,6 +1265,7 @@ PRIVATE struct type_member tpconst modexports_members[] = {
 
 PRIVATE struct type_member tpconst modexports_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &ModuleExportsIterator_Type),
+	TYPE_MEMBER_CONST(STR_KeysIterator, &ModuleExportsKeysIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1208,7 +1312,7 @@ INTERN DeeTypeObject ModuleExports_Type = {
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ modexports_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ modexports_getsets,
 	/* .tp_members       = */ modexports_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
