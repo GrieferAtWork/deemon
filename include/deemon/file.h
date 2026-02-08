@@ -40,8 +40,9 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
 
-#include "object.h" /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Incref, Dee_OBJECT_HEAD_EX, Dee_OBJECT_HEAD_INIT, Dee_off_t, Dee_pos_t, Dee_ssize_t */
+#include "object.h" /* DeeObject_AsXInt, DeeObject_AsXUInt, Dee_Incref */
 #include "type.h"   /* DeeObject_InitInherited, OPERATOR_EXTENDED */
+#include "types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD_EX, Dee_OBJECT_HEAD_INIT, Dee_off_t, Dee_pos_t, Dee_ssize_t */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
@@ -196,9 +197,9 @@ typedef void *Dee_fd_t; /* FILE * */
 
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 #ifdef Dee_fd_t_ISSIGNED
-#define DeeObject_AsFd(self, result) DeeObject_AsXUInt(Dee_fd_t_SIZE, self, result)
-#else /* Dee_fd_t_ISSIGNED */
 #define DeeObject_AsFd(self, result) DeeObject_AsXInt(Dee_fd_t_SIZE, self, result)
+#else /* Dee_fd_t_ISSIGNED */
+#define DeeObject_AsFd(self, result) DeeObject_AsXUInt(Dee_fd_t_SIZE, self, result)
 #endif /* !Dee_fd_t_ISSIGNED */
 #endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 

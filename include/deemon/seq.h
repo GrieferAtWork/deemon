@@ -29,6 +29,8 @@
 #ifndef GUARD_DEEMON_SEQ_H
 #define GUARD_DEEMON_SEQ_H 1 /*!export-*/
 
+/* TODO: CONFIG_EXPERIMENTAL_CUSTOM_HEAP -- once mandatory, can remove `#include "alloc.h"' */
+
 #include "api.h"
 
 #include <hybrid/typecore.h> /* __UINTPTR_HALF_TYPE__ */

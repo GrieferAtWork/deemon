@@ -28,9 +28,9 @@
 
 #include "api.h"
 
+#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
-#ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <stddef.h> /* size_t */
 
 DECL_BEGIN

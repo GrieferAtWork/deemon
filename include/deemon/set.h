@@ -24,10 +24,11 @@
 
 #include "api.h"
 
+#include "types.h" /* DeeObject, DeeTypeObject */
+
 #ifndef __INTELLISENSE__
 #include "object.h" /* Dee_Incref */
 #endif /* !__INTELLISENSE__ */
-#include "types.h" /* DeeObject, DeeTypeObject */
 
 DECL_BEGIN
 

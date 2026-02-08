@@ -31,13 +31,16 @@
 #include <hybrid/int128.h>      /* __ALIGNOF_INT128__, __hybrid_int128_getword8, __hybrid_int128_setword8, __hybrid_uint128_getword8, __hybrid_uint128_setword8 */
 #include <hybrid/typecore.h>    /* __ALIGNOF_*__, __BYTE_TYPE__, __SIZEOF_*__, __UINTPTR_TYPE__ */
 
-#include "object.h"      /* Dee_Decref, Dee_Incref, Dee_visit_t */
-#include "types.h"       /* DREF, DeeObject, DeeTypeObject, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
-#include "util/atomic.h" /* Dee_atomic_read */
+#include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
 #include <stdint.h>  /* int32_t, int64_t, uint32_t, uint64_t */
+
+#ifndef __INTELLISENSE__
+#include "object.h"      /* Dee_Decref, Dee_Incref */
+#include "util/atomic.h" /* Dee_atomic_read */
+#endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -218,9 +221,17 @@ LOCAL WUNUSED NONNULL((1)) double (DCALL _Dee_variant_get_float)(struct Dee_vari
 
 
 /* Helpers for working with "struct Dee_variant" */
-#define Dee_variant_init_unbound(self)    (void)((self)->var_type = Dee_VARIANT_UNBOUND)
-#define Dee_variant_init_object(self, v)  ((self)->var_type = Dee_VARIANT_OBJECT, (self)->var_data.d_object = (v), Dee_Incref((self)->var_data.d_object))
-#define Dee_variant_init_object_inherited(self, v)  ((self)->var_type = Dee_VARIANT_OBJECT, (self)->var_data.d_object = (v))
+#define Dee_variant_init_unbound(self) (void)((self)->var_type = Dee_VARIANT_UNBOUND)
+#ifdef __INTELLISENSE__
+#define Dee_variant_init_object(self, v) Dee_variant_init_object_inherited(self, v)
+#else /* __INTELLISENSE__ */
+#define Dee_variant_init_object(self, v)             \
+	((self)->var_type          = Dee_VARIANT_OBJECT, \
+	 (self)->var_data.d_object = (v),                \
+	 Dee_Incref((self)->var_data.d_object))
+#endif /* !__INTELLISENSE__ */
+#define Dee_variant_init_object_inherited(self, v) \
+	(void)((self)->var_type = Dee_VARIANT_OBJECT, (self)->var_data.d_object = (v))
 #define Dee_variant_init_int32(self, v)   (void)((self)->var_type = Dee_VARIANT_INT32, _Dee_variant_set_int32(self, v))
 #define Dee_variant_init_uint32(self, v)  (void)((self)->var_type = Dee_VARIANT_UINT32, _Dee_variant_set_uint32(self, v))
 #define Dee_variant_init_int64(self, v)   (void)((self)->var_type = Dee_VARIANT_INT64, _Dee_variant_set_int64(self, v))
@@ -235,13 +246,22 @@ LOCAL WUNUSED NONNULL((1)) double (DCALL _Dee_variant_get_float)(struct Dee_vari
 #define Dee_variant_init_object_inherited_or_unbound(self, v) \
 	((v) ? Dee_variant_init_object_inherited(self, v) : Dee_variant_init_unbound(self))
 
+#ifdef __INTELLISENSE__
+#define Dee_variant_fini(self) (void)((self)->var_type)
+#else /* __INTELLISENSE__ */
 #define Dee_variant_fini(self)                       \
 	(void)((self)->var_type != Dee_VARIANT_OBJECT || \
 	       (Dee_Decref((self)->var_data.d_object), 0))
+#endif /* !__INTELLISENSE__ */
 #define Dee_variant_gettype(self)           ((enum Dee_variant_type)Dee_atomic_read((int *)&(self)->var_type))
 #define Dee_variant_isbound(self)           (Dee_variant_gettype(self) != Dee_VARIANT_UNBOUND)
 #define Dee_variant_gettype_nonatomic(self) (self)->var_type
 #define Dee_variant_isbound_nonatomic(self) (Dee_variant_gettype_nonatomic(self) != Dee_VARIANT_UNBOUND)
+
+#ifndef Dee_visit_t_DEFINED
+#define Dee_visit_t_DEFINED /*!export-*/
+typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
+#endif /* !Dee_visit_t_DEFINED */
 
 /* Initialize "self" as a copy of "other" */
 DFUNDEF NONNULL((1, 2)) void DCALL

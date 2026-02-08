@@ -30,12 +30,13 @@
 
 #include "api.h"
 
-#include "gc.h"        /* Dee_gc_head_link */
-#include "object.h"    /* DeeObject_NewRef */
-#include "string.h"    /* DeeString*, Dee_STRING_ERROR_FIGNORE */
-#include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
-#include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
-#include "util/lock.h" /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include "gc.h"              /* Dee_gc_head_link */
+#include "object.h"          /* DeeObject_NewRef */
+#include "string.h"          /* DeeString*, Dee_STRING_ERROR_FIGNORE */
+#include "system-features.h" /* bcmp, strlen */
+#include "types.h"           /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_WEAKREF_SUPPORT, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
+#include "util/hash.h"       /* Dee_HashPtr, Dee_HashStr */
+#include "util/lock.h"       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
@@ -50,8 +51,7 @@
 #include <hybrid/sequence/list.h> /* LIST_ENTRY, LIST_ISBOUND */
 #include <hybrid/typecore.h>      /* __*_TYPE__, __SIZEOF_SIZE_T__ */
 
-#include "system-features.h" /* bcmp, strlen */
-#include "system.h"          /* DeeSystem_HAVE_FS_ICASE */
+#include "system.h" /* DeeSystem_HAVE_FS_ICASE */
 
 #ifdef GUARD_DEEMON_EXECUTE_MODPATH_C
 #include "list.h" /*!KEEPME*/

@@ -35,10 +35,9 @@
 #ifndef _DEE_WITHOUT_INCLUDES
 #include "api.h"
 
-#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__, __UINTPTR_TYPE__ */
 
 #include "object.h"    /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t */
-#include "serial.h"    /* Dee_seraddr_t */
 #include "type.h"      /* DeeType_*, Dee_OPERATOR_USERCOUNT, Dee_TP_FGC, Dee_TP_FHEAP, Dee_TP_FVARIABLE, Dee_operator_t, type_gc */
 #include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h" /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
@@ -957,6 +956,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_assign(DeeObject *self
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tmoveassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_moveassign(DeeObject *self, DeeObject *other);
 struct Dee_serial;
+#ifndef Dee_seraddr_t_DEFINED
+#define Dee_seraddr_t_DEFINED           /*!export-*/
+typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon/serial.h>' for this one... */
+#endif /* !Dee_seraddr_t_DEFINED */
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_serialize(DeeObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 
 #ifdef Dee_TP_FCLASS_AUTOINIT

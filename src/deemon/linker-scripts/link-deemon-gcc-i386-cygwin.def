@@ -1272,6 +1272,7 @@ EXPORTS
 	_DeeRoSet_New@0=DeeRoSet_New@0
 	_DeeRoSet_NewWithHint@4=DeeRoSet_NewWithHint@4
 	_DeeSeqOne_DecrefSymbolic@4=DeeSeqOne_DecrefSymbolic@4
+	_DeeSeqPair_DecrefSymbolic@4=DeeSeqPair_DecrefSymbolic@4
 	_DeeSeqRange_DoClamp@8=DeeSeqRange_DoClamp@8
 	_DeeSeqRange_DoClamp_n@8=DeeSeqRange_DoClamp_n@8
 	_DeeSeq_All@4=DeeSeq_All@4
@@ -1283,12 +1284,23 @@ EXPORTS
 	_DeeSeq_AsHeapVectorWithAllocReuse@12=DeeSeq_AsHeapVectorWithAllocReuse@12
 	_DeeSeq_AsHeapVectorWithAllocReuseOffset2@12=DeeSeq_AsHeapVectorWithAllocReuseOffset2@12
 	_DeeSeq_AsHeapVectorWithAllocReuseOffset@16=DeeSeq_AsHeapVectorWithAllocReuseOffset@16
+	_DeeSeq_FreeOneUninitialized@4=DeeSeq_FreeOneUninitialized@4
+	_DeeSeq_FreePairUninitialized@4=DeeSeq_FreePairUninitialized@4
+	_DeeSeq_InitOne@8=DeeSeq_InitOne@8
+	_DeeSeq_InitOneInherited@8=DeeSeq_InitOneInherited@8
+	_DeeSeq_InitPair@12=DeeSeq_InitPair@12
+	_DeeSeq_InitPairInherited@12=DeeSeq_InitPairInherited@12
 	_DeeSeq_ItemsToBytes@12=DeeSeq_ItemsToBytes@12
 	_DeeSeq_Max@4=DeeSeq_Max@4
 	_DeeSeq_Min@4=DeeSeq_Min@4
+	_DeeSeq_NewOneUninitialized@0=DeeSeq_NewOneUninitialized@0
+	_DeeSeq_NewPairUninitialized@0=DeeSeq_NewPairUninitialized@0
 	_DeeSeq_OfOne@4=DeeSeq_OfOne@4
 	_DeeSeq_OfOneInherited@4=DeeSeq_OfOneInherited@4
 	_DeeSeq_OfOneInheritedOnSuccess@4=DeeSeq_OfOneInheritedOnSuccess@4
+	_DeeSeq_OfPair@8=DeeSeq_OfPair@8
+	_DeeSeq_OfPairInherited@8=DeeSeq_OfPairInherited@8
+	_DeeSeq_OfPairInheritedOnSuccess@8=DeeSeq_OfPairInheritedOnSuccess@8
 	_DeeSeq_Sum@4=DeeSeq_Sum@4
 	_DeeSeq_Unpack@12=DeeSeq_Unpack@12
 	_DeeSerial_InplacePutObject@8=DeeSerial_InplacePutObject@8
@@ -1448,6 +1460,7 @@ EXPORTS
 	_DeeTuple_FromSequence@4=DeeTuple_FromSequence@4
 	_DeeTuple_NewUninitialized@4=DeeTuple_NewUninitialized@4
 	_DeeTuple_NewVector@8=DeeTuple_NewVector@8
+	_DeeTuple_NewVectorInherited@8=DeeTuple_NewVectorInherited@8
 	_DeeTuple_NewVectorSymbolic@8=DeeTuple_NewVectorSymbolic@8
 	_DeeTuple_ResizeUninitialized@8=DeeTuple_ResizeUninitialized@8
 	_DeeTuple_TruncateUninitialized@8=DeeTuple_TruncateUninitialized@8
@@ -1458,6 +1471,7 @@ EXPORTS
 	_DeeTuple_Types@4=DeeTuple_Types@4
 	_DeeTuple_VNewf@8=DeeTuple_VNewf@8
 	_DeeTuple_VPack@8=DeeTuple_VPack@8
+	_DeeTuple_VPackInherited@8=DeeTuple_VPackInherited@8
 	_DeeTuple_VPackSymbolic@8=DeeTuple_VPackSymbolic@8
 	_DeeTuple_VTryPack@8=DeeTuple_VTryPack@8
 	_DeeTuple_VTryPackSymbolic@8=DeeTuple_VTryPackSymbolic@8

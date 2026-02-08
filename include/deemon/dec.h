@@ -36,6 +36,7 @@
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__ */
 
+#include "alloc.h"  /* Dee_Free */
 #include "object.h" /* Dee_Decref_unlikely, Dee_XDecref_likely */
 #include "serial.h" /* Dee_SERIAL_HEAD, Dee_seraddr_t */
 #include "types.h"  /* DREF, DeeObject */
@@ -47,10 +48,9 @@
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __FLOAT_WORD_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */
 #include <hybrid/host.h>      /* __arm__, __i386__, __x86_64__ */
 
-#include "alloc.h"   /* Dee_Free */
 #include "gc.h"      /* Dee_gc_head */
 #include "heap.h"    /* Dee_HEAPCHUNK_ALIGN, Dee_heapregion */
-#include "mapfile.h" /* DeeMapFile, DeeMapFile_Fini, Dee_SIZEOF_DeeMapFile */
+#include "mapfile.h" /* DeeMapFile_Fini, Dee_SIZEOF_DeeMapFile */
 #endif /* DEE_SOURCE */
 
 /*
@@ -621,6 +621,8 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self);
 /* Destroy a module and all contained objects prior to `DeeDec_Track()' having been called. */
 DFUNDEF NONNULL((1)) void DCALL
 DeeDec_DestroyUntracked(DREF /*untracked*/ struct Dee_module_object *__restrict self);
+
+struct DeeMapFile;
 
 /* Validate the contents of `fmap' and relocate them. Once all locks have been
  * acquired to register the module globally, the caller must call `DeeDec_Track()'

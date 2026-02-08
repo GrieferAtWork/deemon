@@ -101,7 +101,7 @@ typedef struct Dee_atomic_ref {
 #define _Dee_private_atomic_ref_cinit_common_(self) Dee_ASSERT((self)->ar_use == 0),
 #define _Dee_private_atomic_ref_incuse(self)        __hybrid_atomic_inc(&(self)->ar_use, __ATOMIC_ACQUIRE)
 #define _Dee_private_atomic_ref_decuse(self)        __hybrid_atomic_dec(&(self)->ar_use, __ATOMIC_RELEASE)
-#define _Dee_private_atomic_ref_await(self)                                     \
+#define _Dee_private_atomic_ref_await(self)                             \
 	do {                                                                \
 		while (__hybrid_atomic_load(&(self)->ar_use, __ATOMIC_ACQUIRE)) \
 			__hybrid_yield();                                           \

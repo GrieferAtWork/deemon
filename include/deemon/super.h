@@ -25,8 +25,7 @@
 
 #include "api.h"
 
-#include "object.h" /* DeeBuffer, Dee_visit_t */
-#include "types.h"  /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stdarg.h> /* va_list */
 #include <stddef.h> /* size_t */
@@ -242,8 +241,15 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttrStringLenHash)
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TEnter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TLeave)(DeeTypeObject *tp_self, DeeObject *self);
 
+struct Dee_buffer;
+
 /* Buffer operators */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *tp_self, DeeObject *self, DeeBuffer *__restrict info, unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *tp_self, DeeObject *self, struct Dee_buffer *__restrict info, unsigned int flags);
+
+#ifndef Dee_visit_t_DEFINED
+#define Dee_visit_t_DEFINED /*!export-*/
+typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
+#endif /* !Dee_visit_t_DEFINED */
 
 /* GC operators */
 DFUNDEF NONNULL((1, 2, 3)) void (DCALL DeeObject_TVisit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);

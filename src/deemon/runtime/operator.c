@@ -29,7 +29,7 @@
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE, DeeObject_IsKw */
 #include <deemon/list.h>           /* DeeList_* */
-#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeBuffer, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Increfv, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, return_reference_ */
+#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_Inherit*, DeeType_InvokeCastPrint, DeeType_InvokeCastPrintRepr, DeeType_InvokeCastRepr, DeeType_InvokeCastStr, DeeType_InvokeCmpHash */
 #include <deemon/seq.h>            /* DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>         /* DeeString_PrintAscii, DeeString_Type */
@@ -1498,7 +1498,7 @@ err:
 
 
 DEFINE_OPERATOR(int, GetBuf, (DeeObject *RESTRICT_IF_NOTYPE self,
-                              DeeBuffer *__restrict info, unsigned int flags)) {
+                              struct Dee_buffer *__restrict info, unsigned int flags)) {
 	ASSERTF(!(flags & ~(Dee_BUFFER_FWRITABLE)),
 	        "Unknown buffers flags in %x", flags);
 	LOAD_TP_SELF;

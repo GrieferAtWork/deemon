@@ -33,7 +33,7 @@
 #include <deemon/operator-hints.h> /* DeeNO_add_t, DeeType_RequireNativeOperator */
 #include <deemon/string.h>         /* DeeStringObject, Dee_unicode_printer* */
 #include <deemon/tuple.h>          /* DeeTuple*, Dee_tuple_builder* */
-#include <deemon/type.h>           /* DeeObject_IsShared, Dee_Visit */
+#include <deemon/type.h>           /* DeeObject_IsShared, Dee_Visit, Dee_tuple_builder_visit */
 
 #include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_UADD */
 

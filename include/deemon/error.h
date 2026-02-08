@@ -207,6 +207,8 @@ struct Dee_threadexit_object {
 	Dee_OBJECT_HEAD                                                    \
 	DREF DeeObject *e_msg;   /* [0..1][const] Error message string. */ \
 	DREF DeeObject *e_cause; /* [0..1][const] Causal error object. */
+	/* TODO: DREF DeeObject *e_causetb; // [0..1][const] Traceback for "e_cause" */
+
 typedef struct Dee_error_object {
 	Dee_ERROR_OBJECT_HEAD
 } DeeErrorObject;

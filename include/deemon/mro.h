@@ -62,7 +62,7 @@
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __SIZEOF_POINTER__ */
 
-#include "system-features.h" /* access, memcpy, strlen */
+#include "system-features.h" /* access, memcpy */
 #include "tuple.h"           /* DeeTuple_ELEM, DeeTuple_SIZE */
 #include "type.h"            /* Dee_kwobjmethod_t, Dee_membercache, TYPE_METHOD_FKWDS, type_* */
 #include "types.h"           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
@@ -87,7 +87,40 @@
 #include "string.h"    /* DeeString*, STRING_ERROR_FIGNORE */
 #endif /* !__INTELLISENSE__ */
 
+#ifndef __INTELLISENSE__
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#elif (!defined(CONFIG_HAVE_STRING_H) && \
+       (defined(__NO_has_include) || __has_include(<string.h>)))
+#define CONFIG_HAVE_STRING_H
+#endif
+
+#ifdef CONFIG_NO_strlen
+#undef CONFIG_HAVE_strlen
+#else /* CONFIG_NO_strlen */
+#define CONFIG_HAVE_strlen
+#endif /* !CONFIG_NO_strlen */
+
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h> /* strlen */
+#endif /* CONFIG_HAVE_STRING_H */
+#endif /* !__INTELLISENSE__ */
+
 DECL_BEGIN
+
+#ifndef __INTELLISENSE__
+#ifndef CONFIG_HAVE_strlen
+#define CONFIG_HAVE_strlen
+#undef strlen
+#define strlen dee_strlen /*!export-*/
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) { /*!export-*/
+	size_t result;
+	for (result = 0; str[result]; ++result)
+		;
+	return result;
+}
+#endif /* !CONFIG_HAVE_strlen */
+#endif /* !__INTELLISENSE__ */
 
 /* MRO -- Method (or rather Attribute) Resolution Order.
  *

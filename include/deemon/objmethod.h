@@ -35,7 +35,7 @@
 
 #include "api.h"
 
-#include "type.h"  /* Dee_*method_t, Dee_REQUIRES_*, Dee_type_*, type_member */
+#include "type.h"  /* Dee_*method_t, Dee_REQUIRES_* */
 #include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT */
 
 #include <stdarg.h>  /* va_list */
@@ -48,6 +48,18 @@
 #endif /* !__INTELLISENSE__ */
 
 DECL_BEGIN
+
+#ifdef DEE_SOURCE
+#define Dee_type_member type_member /*!export-*/
+#define Dee_type_getset type_getset /*!export-*/
+#define Dee_type_method type_method /*!export-*/
+struct type_member;                 /*!export-*/
+struct type_getset;                 /*!export-*/
+struct type_method;                 /*!export-*/
+#endif /* DEE_SOURCE */
+struct Dee_type_member; /*!export-*/
+struct Dee_type_getset; /*!export-*/
+struct Dee_type_method; /*!export-*/
 
 #ifdef DEE_SOURCE
 #define DEFINE_CMETHOD   Dee_DEFINE_CMETHOD
@@ -249,7 +261,7 @@ struct Dee_cmethod_origin {
 	DREF struct Dee_module_object *cmo_module; /* [0..1] Module containing the C-method. */
 	struct Dee_module_symbol      *cmo_modsym; /* [0..1] Module symbol that exposes `func'. */
 	DREF DeeTypeObject            *cmo_type;   /* [0..1] Type containing the C-method. */
-	struct type_member const      *cmo_member; /* [0..1] Member of `cmo_type' that exposes the C-method. */
+	struct Dee_type_member const  *cmo_member; /* [0..1] Member of `cmo_type' that exposes the C-method. */
 	char const                    *cmo_name;   /* [1..1] Function name. */
 	char const                    *cmo_doc;    /* [0..1] Function doc string. */
 };

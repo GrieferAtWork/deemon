@@ -19,7 +19,8 @@
  */
 /*!export **/
 /*!export Dee_Hash**/
-/*!export Dee_HASHOF_***/
+/*!export Dee_HASHOF_**/
+/*!export -CONFIG_**/
 #ifndef GUARD_DEEMON_UTIL_HASH_H
 #define GUARD_DEEMON_UTIL_HASH_H 1 /*!export-*/
 

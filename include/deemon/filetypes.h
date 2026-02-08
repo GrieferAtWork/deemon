@@ -268,6 +268,7 @@ typedef struct Dee_file_reader_object {
 	__BYTE_TYPE__ const *r_ptr;    /* [0..1][>= r_begin][lock(r_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
 	__BYTE_TYPE__ const *r_end;    /* [0..1][<= r_buffer.bb_base + r_buffer.bb_size][>= r_begin][lock(r_lock)] The effective end position within `r_owner'. */
 	DREF DeeObject      *r_owner;  /* [0..1][lock(r_lock)] The owner for the data. NOTE: Set to NULL when the file is closed. */
+	/* TODO: "r_buffer" can be gotten rid of here (r_begin/r_end are all that's needed) */
 	DeeBuffer            r_buffer; /* [valid_if(r_owner)][lock(r_lock)] The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t  r_lock;   /* Lock for this file reader object. */

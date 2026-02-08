@@ -26,9 +26,7 @@
 
 #include <hybrid/typecore.h> /* __UINTPTR_TYPE__ */
 
-#include "object.h" /* Dee_visit_t */
-#include "type.h"   /* Dee_type_cmp, type_member */
-#include "types.h"  /* DeeObject, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
+#include "types.h" /* DeeObject, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stddef.h> /* size_t */
 
@@ -135,6 +133,20 @@ typedef __UINTPTR_TYPE__ Dee_seraddr_t; /*!export-*/ /* Should `#include <deemon
 
 struct Dee_serial;
 
+#ifndef Dee_visit_t_DEFINED
+#define Dee_visit_t_DEFINED /*!export-*/
+typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
+#endif /* !Dee_visit_t_DEFINED */
+
+#ifdef DEE_SOURCE
+#define Dee_type_cmp    type_cmp    /*!export-*/
+#define Dee_type_member type_member /*!export-*/
+struct type_cmp;                    /*!export-*/
+struct type_member;                 /*!export-*/
+#endif /* DEE_SOURCE */
+struct Dee_type_cmp;    /*!export-*/
+struct Dee_type_member; /*!export-*/
+
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_Ctor(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Copy(DeeObject *__restrict self, DeeObject *__restrict other);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Deep(DeeObject *__restrict self, DeeObject *__restrict other);
@@ -150,11 +162,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_CompareEq(DeeObject *l
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_TryCompareEq(DeeObject *lhs, DeeObject *rhs);
 DDATDEF struct Dee_type_cmp DeeStructObject_Cmp;
 
-
-#ifdef DEE_SOURCE
-#define Dee_type_member type_member /*!export-*/
-#endif /* DEE_SOURCE */
-struct Dee_type_member;
 
 /* Enumerate struct object fields in order as they should be accepted
  * by constructors, and are printed by "DeeStructObject_PrintRepr()".

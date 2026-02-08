@@ -29,7 +29,6 @@
 
 #include "api.h"
 
-#include "type.h"  /* Dee_Visitv, Dee_XVisitv */
 #include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT, Dee_ssize_t */
 
 #include <stdarg.h>  /* va_list */
@@ -231,11 +230,6 @@ struct Dee_tuple_builder {
 	(void)(!(self)->tb_tuple ||                                     \
 	       (Dee_Decrefv((self)->tb_tuple->t_elem, (self)->tb_size), \
 	        DeeTuple_FreeUninitialized((self)->tb_tuple), 0))
-#define Dee_tuple_builder_visit(self)                              \
-	do {                                                           \
-		if ((self)->tb_tuple)                                      \
-			Dee_Visitv((self)->tb_tuple->t_elem, (self)->tb_size); \
-	}	__WHILE0
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF /*Tuple*/DeeObject *DCALL
 Dee_tuple_builder_pack(struct Dee_tuple_builder *__restrict self);
 DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -293,11 +287,6 @@ Dee_tuple_builder_reserve(struct Dee_tuple_builder *__restrict self, size_t n);
 	(void)(!(self)->tb_tuple ||                                      \
 	       (Dee_XDecrefv((self)->tb_tuple->t_elem, (self)->tb_size), \
 	        DeeTuple_FreeUninitialized((self)->tb_tuple), 0))
-#define Dee_nullable_tuple_builder_visit(self)                      \
-	do {                                                            \
-		if ((self)->tb_tuple)                                       \
-			Dee_XVisitv((self)->tb_tuple->t_elem, (self)->tb_size); \
-	}	__WHILE0
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF /*NullableTuple*/DeeObject *DCALL
 Dee_nullable_tuple_builder_pack(struct Dee_tuple_builder *__restrict self);
 
@@ -325,6 +314,22 @@ Dee_nullable_tuple_builder_setitem_index(/*struct Dee_nullable_tuple_builder **/
  * Returns indicate of that much space now being pre-allocated. */
 #define Dee_nullable_tuple_builder_reserve Dee_tuple_builder_reserve
 
+
+#ifdef GUARD_DEEMON_TYPE_H
+/*!fixincludes fake_include "type.h" // Dee_Visitv, Dee_XVisitv */
+/*!export Dee_tuple_builder_visit(include("type.h"))*/
+/*!export Dee_nullable_tuple_builder_visit(include("type.h"))*/
+#define Dee_tuple_builder_visit(self)                              \
+	do {                                                           \
+		if ((self)->tb_tuple)                                      \
+			Dee_Visitv((self)->tb_tuple->t_elem, (self)->tb_size); \
+	}	__WHILE0
+#define Dee_nullable_tuple_builder_visit(self)                      \
+	do {                                                            \
+		if ((self)->tb_tuple)                                       \
+			Dee_XVisitv((self)->tb_tuple->t_elem, (self)->tb_size); \
+	}	__WHILE0
+#endif /* GUARD_DEEMON_TYPE_H */
 
 DECL_END
 

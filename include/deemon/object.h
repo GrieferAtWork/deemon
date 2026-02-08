@@ -64,7 +64,7 @@
 #include <hybrid/typecore.h> /* __*_TYPE__, __CHAR_UNSIGNED__, __SIZEOF_*__ */
 
 #include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_SIZEOF_REFCNT_T, Dee_TYPE, Dee_[u]int128_t, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
-#include "util/hash.h" /* CONFIG_HAVE_STRING_H, Dee_HashPtr, Dee_HashStr */
+#include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h" /* Dee_atomic_lock_t, Dee_atomic_rwlock_t */
 
 #include <stdarg.h>  /* va_list */
@@ -1992,7 +1992,7 @@ typedef struct Dee_buffer {
  * @throw: Error.ValueError.BufferError:      The object is an atomic buffer, or cannot be written to. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_GetBuf)(DeeObject *__restrict self,
-                         DeeBuffer *__restrict info,
+                         struct Dee_buffer *__restrict info,
                          unsigned int flags);
 
 
