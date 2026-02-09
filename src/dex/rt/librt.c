@@ -170,7 +170,6 @@ print define_Dee_HashStr("__IterWithEnumerateIndexSeq__");
 print define_Dee_HashStr("__IterWithEnumerateSeq__");
 print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 print define_Dee_HashStr("Composition");
-print define_Dee_HashStr("identity");
 ]]]*/
 #define Dee_HashStr__enumerate _Dee_HashSelectC(0x990a48c9, 0x8514809a12261fe3)
 #define Dee_HashStr__itervalues _Dee_HashSelectC(0xcb00bab3, 0xe9a89082a994930a)
@@ -237,7 +236,6 @@ print define_Dee_HashStr("identity");
 #define Dee_HashStr____IterWithEnumerateSeq__ _Dee_HashSelectC(0x9f86b78c, 0x4fe8bf8aafe855be)
 #define Dee_HashStr____IterWithEnumerateIndexMap__ _Dee_HashSelectC(0xf2e455a4, 0x4693cf704005698)
 #define Dee_HashStr__Composition _Dee_HashSelectC(0x53eb3c96, 0x996cbb266132dfaa)
-#define Dee_HashStr__identity _Dee_HashSelectC(0x1802c742, 0xc3c4b1894ebd7505)
 /*[[[end]]]*/
 
 #define STR_AND_HASH(s) #s, Dee_HashStr__##s
@@ -643,7 +641,7 @@ librt_get_FunctionComposition_f(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionComposition_identity_f(void) {
-	return_cached(DeeObject_GetAttrStringHash(Dee_AsObject(&DeeCallable_Type), STR_AND_HASH(identity)));
+	return_cached(DeeFunctionComposition_Of(0, NULL));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

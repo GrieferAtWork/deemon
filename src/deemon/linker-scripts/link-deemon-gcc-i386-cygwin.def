@@ -296,6 +296,7 @@ EXPORTS
 	_DeeFrame_LockWriteAssembly@4=DeeFrame_LockWriteAssembly@4
 	_DeeFrame_LockWriteIfNotDead@4=DeeFrame_LockWriteIfNotDead@4
 	_DeeFrame_NewReferenceWithLock@16=DeeFrame_NewReferenceWithLock@16
+	_DeeFunctionComposition_Of@8=DeeFunctionComposition_Of@8
 	_DeeFunction_GetInfo@8=DeeFunction_GetInfo@8
 	_DeeFunction_New@12=DeeFunction_New@12
 	_DeeFutex_Wait32@8=DeeFutex_Wait32@8

@@ -24,6 +24,7 @@
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
+#include <deemon/callable.h>                /* DeeArg_Unpack1 */
 #include <deemon/computed-operators.h>
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
@@ -230,12 +231,12 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
 #define mapped_delitem          generic_proxy__seq_operator_delitem
 #define mapped_delrange         generic_proxy__seq_operator_delrange
 #define mapped_bounditem        generic_proxy__seq_operator_bounditem
+#define mapped_bounditem_index  generic_proxy__seq_operator_bounditem_index
 #define mapped_hasitem          generic_proxy__seq_operator_hasitem
+#define mapped_hasitem_index    generic_proxy__seq_operator_hasitem_index
 #define mapped_delitem_index    generic_proxy__seq_operator_delitem_index
 #define mapped_delrange_index   generic_proxy__seq_operator_delrange_index
 #define mapped_delrange_index_n generic_proxy__seq_operator_delrange_index_n
-#define mapped_bounditem_index  generic_proxy__seq_operator_bounditem_index
-#define mapped_hasitem_index    generic_proxy__seq_operator_hasitem_index
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -263,7 +264,7 @@ err:
 
 PRIVATE struct type_member tpconst mapped_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqMapped, sm_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(SeqMapped, sm_mapper), "->?DCallable"),
+	TYPE_MEMBER_FIELD_DOC("__mapper__", STRUCT_OBJECT, offsetof(SeqMapped, sm_mapper), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
@@ -522,8 +523,47 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
 #define mapped_init generic_proxy2__init
 
+/* Return the composition of "key" being applied on-top of "self" */
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mapped_compose(SeqMapped *self, DeeObject *key) {
+	DeeObject *mappers[2];
+	mappers[0] = key;
+	mappers[1] = self->sm_seq;
+	return DeeFunctionComposition_Of(2, mappers);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF SeqMapped *DCALL
+mapped_map(SeqMapped *self, size_t argc, DeeObject *const *argv) {
+	DREF SeqMapped *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("map", params: "
+	mapper:?DCallable
+", docStringPrefix: "mapped");]]]*/
+#define mapped_map_params "mapper:?DCallable"
+	struct {
+		DeeObject *mapper;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "map", &args.mapper);
+/*[[[end]]]*/
+	result = DeeObject_MALLOC(SeqMapped);
+	if unlikely(!result)
+		goto err;
+	result->sm_mapper = mapped_compose(self, args.mapper); /* Inherit reference */
+	if unlikely(!result->sm_mapper)
+		goto err_r;
+	result->sm_seq = self->sm_seq;
+	Dee_Incref(result->sm_seq);
+	DeeObject_Init(result, &SeqMapped_Type);
+	return result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mapped_getfirst(SeqMapped *__restrict self) {
+mapped_seq_getfirst(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
 	result = DeeObject_InvokeMethodHint(seq_getfirst, self->sm_seq);
 	if unlikely(!result)
@@ -536,7 +576,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mapped_getlast(SeqMapped *__restrict self) {
+mapped_seq_getlast(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
 	result = DeeObject_InvokeMethodHint(seq_getlast, self->sm_seq);
 	if unlikely(!result)
@@ -549,7 +589,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mapped_trygetfirst(SeqMapped *__restrict self) {
+mapped_seq_trygetfirst(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
 	result = DeeObject_InvokeMethodHint(seq_trygetfirst, self->sm_seq);
 	if unlikely(!ITER_ISOK(result))
@@ -560,7 +600,7 @@ mapped_trygetfirst(SeqMapped *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mapped_trygetlast(SeqMapped *__restrict self) {
+mapped_seq_trygetlast(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
 	result = DeeObject_InvokeMethodHint(seq_trygetlast, self->sm_seq);
 	if unlikely(!ITER_ISOK(result))
@@ -570,15 +610,77 @@ mapped_trygetlast(SeqMapped *__restrict self) {
 	return mapped;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_set_getfirst(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(set_getfirst, self->sm_seq);
+	if unlikely(!result)
+		goto err;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_set_getlast(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(set_getlast, self->sm_seq);
+	if unlikely(!result)
+		goto err;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_set_trygetfirst(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(set_trygetfirst, self->sm_seq);
+	if unlikely(!ITER_ISOK(result))
+		return result;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_set_trygetlast(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(set_trygetlast, self->sm_seq);
+	if unlikely(!ITER_ISOK(result))
+		return result;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+}
+
 STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
-#define mapped_boundfirst generic_proxy__seq_boundfirst
-#define mapped_delfirst   generic_proxy__seq_delfirst
-#define mapped_boundlast  generic_proxy__seq_boundlast
-#define mapped_dellast    generic_proxy__seq_dellast
+#define mapped_seq_boundfirst         generic_proxy__seq_boundfirst
+#define mapped_seq_delfirst           generic_proxy__seq_delfirst
+#define mapped_seq_boundlast          generic_proxy__seq_boundlast
+#define mapped_seq_dellast            generic_proxy__seq_dellast
+#define mapped_set_boundfirst         generic_proxy__set_boundfirst
+#define mapped_set_delfirst           generic_proxy__set_delfirst
+#define mapped_set_boundlast          generic_proxy__set_boundlast
+#define mapped_set_dellast            generic_proxy__set_dellast
+#define mapped_mh_seq_erase           generic_proxy__seq_erase
+#define mapped_mh_seq_clear           generic_proxy__seq_clear
+#define mapped_mh_seq_reverse         generic_proxy__seq_reverse
+#define mapped_mh_set_operator_bool   generic_proxy__set_operator_bool
+#define mapped_mh_set_operator_size   generic_proxy__set_operator_size
+#define mapped_mh_set_operator_sizeob generic_proxy__set_operator_sizeob
+#define mapped_mh_map_operator_size   generic_proxy__map_operator_size
+#define mapped_mh_map_operator_sizeob generic_proxy__map_operator_sizeob
 
 PRIVATE struct type_getset tpconst mapped_getsets[] = {
-	TYPE_GETSET_BOUND_NODOC(STR_first, &mapped_getfirst, &mapped_delfirst, NULL, &mapped_boundfirst),
-	TYPE_GETSET_BOUND_NODOC(STR_last, &mapped_getlast, &mapped_dellast, NULL, &mapped_boundlast),
+	TYPE_GETSET_BOUND_NODOC(STR_first, &mapped_seq_getfirst, &mapped_seq_delfirst, NULL, &mapped_seq_boundfirst),
+	TYPE_GETSET_BOUND_NODOC(STR_last, &mapped_seq_getlast, &mapped_seq_dellast, NULL, &mapped_seq_boundlast),
+	TYPE_GETSET_BOUND_NODOC(STR___set_first__, &mapped_set_getfirst, &mapped_set_delfirst, NULL, &mapped_set_boundfirst),
+	TYPE_GETSET_BOUND_NODOC(STR___set_last__, &mapped_set_getlast, &mapped_set_dellast, NULL, &mapped_set_boundlast),
 	TYPE_GETSET_END
 };
 
@@ -593,6 +695,33 @@ mapped_mh_seq_any_with_range(SeqMapped *__restrict self, size_t start, size_t en
 	                                  start, end, self->sm_mapper);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_any_with_key(SeqMapped *self, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_any_with_key, self->sm_seq, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+mapped_mh_seq_any_with_range_and_key(SeqMapped *self, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_any_with_range_and_key, self->sm_seq,
+	                                    start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_all(SeqMapped *__restrict self) {
 	return DeeObject_InvokeMethodHint(seq_all_with_key, self->sm_seq, self->sm_mapper);
@@ -602,6 +731,33 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_all_with_range(SeqMapped *__restrict self, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_all_with_range_and_key, self->sm_seq,
 	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_all_with_key(SeqMapped *self, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_all_with_key, self->sm_seq, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+mapped_mh_seq_all_with_range_and_key(SeqMapped *self, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_all_with_range_and_key, self->sm_seq,
+	                                    start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -615,10 +771,50 @@ mapped_mh_seq_parity_with_range(SeqMapped *__restrict self, size_t start, size_t
 	                                  start, end, self->sm_mapper);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_parity_with_key(SeqMapped *self, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_parity_with_key, self->sm_seq, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+mapped_mh_seq_parity_with_range_and_key(SeqMapped *self, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_parity_with_range_and_key, self->sm_seq,
+	                                    start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_sort(SeqMapped *__restrict self, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_sort_with_key, self->sm_seq,
 	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+mapped_mh_seq_sort_with_key(SeqMapped *self, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_sort_with_key, self->sm_seq, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -627,34 +823,799 @@ mapped_mh_seq_sorted(SeqMapped *__restrict self, size_t start, size_t end) {
 	                                  start, end, self->sm_mapper);
 }
 
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+mapped_mh_seq_sorted_with_key(SeqMapped *self, size_t start, size_t end, DeeObject *key) {
+	DREF DeeObject *result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_sorted_with_key, self->sm_seq, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_seq_pop(SeqMapped *self, Dee_ssize_t index) {
+	DREF DeeObject *item, *result;
+	item = DeeObject_InvokeMethodHint(seq_pop, self->sm_seq, index);
+	if unlikely(!item)
+		goto err;
+	result = DeeObject_Call(self->sm_mapper, 1, &item);
+	Dee_Decref(item);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF SeqMapped *DCALL
+mapped_mh_seq_reversed(SeqMapped *__restrict self, size_t start, size_t end) {
+	DREF DeeObject *seq;
+	DREF SeqMapped *result = DeeObject_MALLOC(SeqMapped);
+	if unlikely(!result)
+		goto err;
+	seq = DeeObject_InvokeMethodHint(seq_reversed, self->sm_seq, start, end);
+	if unlikely(!seq)
+		goto err_r;
+	result->sm_mapper = self->sm_mapper;
+	Dee_Incref(result->sm_mapper);
+	result->sm_seq = seq; /* Inherit reference */
+	DeeObject_Init(result, &SeqMapped_Type);
+	return result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+mapped_mapv_inherited(SeqMapped *__restrict self, size_t count,
+                      /*inherit(on_failure)*/ DREF DeeObject *result[]) {
+	size_t i;
+	for (i = 0; i < count; ++i) {
+		DREF DeeObject *mapped;
+		mapped = DeeObject_Call(self->sm_mapper, 1, &result[i]);
+		if unlikely(!mapped)
+			goto err_r;
+		Dee_Decref(result[i]);
+		result[i] = mapped; /* Inherit reference */
+	}
+	return 0;
+err_r:
+	Dee_Decrefv(result, count);
+/*err:*/
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+mapped_mh_seq_unpack(SeqMapped *__restrict self, size_t count,
+                     DREF DeeObject *result[]) {
+	if unlikely(DeeObject_InvokeMethodHint(seq_unpack, self->sm_seq, count, result))
+		goto err;
+	return mapped_mapv_inherited(self, count, result);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+mapped_mh_seq_unpack_ex(SeqMapped *__restrict self, size_t min_count,
+                        size_t max_count, DREF DeeObject *result[]) {
+	size_t count;
+	count = DeeObject_InvokeMethodHint(seq_unpack_ex, self->sm_seq, min_count, max_count, result);
+	if likely(count != (size_t)-1) {
+		if unlikely(mapped_mapv_inherited(self, count, result))
+			count = (size_t)-1;
+	}
+	return count;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+mapped_mh_seq_unpack_ub(SeqMapped *__restrict self, size_t min_count,
+                        size_t max_count, DREF DeeObject *result[]) {
+	size_t i, count;
+	count = DeeObject_InvokeMethodHint(seq_unpack_ub, self->sm_seq, min_count, max_count, result);
+	if unlikely(count == (size_t)-1)
+		goto err;
+	for (i = 0; i < count; ++i) {
+		if (result[i]) {
+			DREF DeeObject *mapped;
+			mapped = DeeObject_Call(self->sm_mapper, 1, &result[i]);
+			if unlikely(!mapped)
+				goto err_r;
+			Dee_Decref(result[i]);
+			result[i] = mapped; /* Inherit reference */
+		}
+	}
+	return count;
+err_r:
+	Dee_Decrefv(result, count);
+err:
+	return (size_t)-1;
+}
+
+
+
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_set_pop(SeqMapped *__restrict self) {
+	DREF DeeObject *item, *result;
+	item = DeeObject_InvokeMethodHint(set_pop, self->sm_seq);
+	if unlikely(!item)
+		goto err;
+	result = DeeObject_Call(self->sm_mapper, 1, &item);
+	Dee_Decref(item);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE DeeObject mapped_mh_set_pop_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mapped_mh_set_pop_with_default(SeqMapped *self, DeeObject *default_) {
+	DREF DeeObject *item, *result;
+	item = DeeObject_InvokeMethodHint(set_pop_with_default, self->sm_seq, &mapped_mh_set_pop_dummy);
+	if unlikely(!item)
+		goto err;
+	if (item == &mapped_mh_set_pop_dummy) {
+		Dee_DecrefNokill(&mapped_mh_set_pop_dummy);
+		return_reference(default_);
+	}
+	result = DeeObject_Call(self->sm_mapper, 1, &item);
+	Dee_Decref(item);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_map_popitem(SeqMapped *__restrict self) {
+	DREF DeeObject *item, *result;
+	item = DeeObject_InvokeMethodHint(map_popitem, self->sm_seq);
+	if unlikely(!item)
+		goto err;
+	result = DeeObject_Call(self->sm_mapper, 1, &item);
+	Dee_Decref(item);
+	return result;
+err:
+	return NULL;
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_seq_min(SeqMapped *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_min_with_key, self->sm_seq, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_seq_min_with_range(SeqMapped *__restrict self, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_min_with_range_and_key, self->sm_seq,
+	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mapped_mh_seq_min_with_key(SeqMapped *self, DeeObject *key) {
+	DREF DeeObject *result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_min_with_key, self->sm_seq, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+mapped_mh_seq_min_with_range_and_key(SeqMapped *self, size_t start, size_t end, DeeObject *key) {
+	DREF DeeObject *result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_min_with_range_and_key, self->sm_seq,
+	                                    start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_seq_max(SeqMapped *__restrict self) {
+	return DeeObject_InvokeMethodHint(seq_max_with_key, self->sm_seq, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_mh_seq_max_with_range(SeqMapped *__restrict self, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_max_with_range_and_key, self->sm_seq,
+	                                  start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mapped_mh_seq_max_with_key(SeqMapped *self, DeeObject *key) {
+	DREF DeeObject *result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_max_with_key, self->sm_seq, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+mapped_mh_seq_max_with_range_and_key(SeqMapped *self, size_t start, size_t end, DeeObject *key) {
+	DREF DeeObject *result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_max_with_range_and_key, self->sm_seq,
+	                                    start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return NULL;
+}
+
+
+#define mapped_mh_seq_locate_dummy mapped_mh_set_pop_dummy
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+mapped_mh_seq_locate(SeqMapped *self, DeeObject *match, DeeObject *def) {
+	DREF DeeObject *result, *mapped;
+	DREF DeeObject *composition = mapped_compose(self, match);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_locate, self->sm_seq, composition,
+	                                    &mapped_mh_seq_locate_dummy);
+	Dee_Decref_likely(composition);
+	if unlikely(!result)
+		goto err;
+	if (result == &mapped_mh_seq_locate_dummy) {
+		Dee_DecrefNokill(&mapped_mh_seq_locate_dummy);
+		return_reference(def);
+	}
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+mapped_mh_seq_locate_with_range(SeqMapped *self, DeeObject *match,
+                                size_t start, size_t end, DeeObject *def) {
+	DREF DeeObject *result, *mapped;
+	DREF DeeObject *composition = mapped_compose(self, match);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_locate_with_range, self->sm_seq, composition,
+	                                    start, end, &mapped_mh_seq_locate_dummy);
+	Dee_Decref_likely(composition);
+	if unlikely(!result)
+		goto err;
+	if (result == &mapped_mh_seq_locate_dummy) {
+		Dee_DecrefNokill(&mapped_mh_seq_locate_dummy);
+		return_reference(def);
+	}
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+
+#define mapped_mh_seq_rlocate_dummy mapped_mh_set_pop_dummy
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+mapped_mh_seq_rlocate(SeqMapped *self, DeeObject *match, DeeObject *def) {
+	DREF DeeObject *result, *mapped;
+	DREF DeeObject *composition = mapped_compose(self, match);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_rlocate, self->sm_seq, composition,
+	                                    &mapped_mh_seq_rlocate_dummy);
+	Dee_Decref_likely(composition);
+	if unlikely(!result)
+		goto err;
+	if (result == &mapped_mh_seq_rlocate_dummy) {
+		Dee_DecrefNokill(&mapped_mh_seq_rlocate_dummy);
+		return_reference(def);
+	}
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+mapped_mh_seq_rlocate_with_range(SeqMapped *self, DeeObject *match,
+                                 size_t start, size_t end, DeeObject *def) {
+	DREF DeeObject *result, *mapped;
+	DREF DeeObject *composition = mapped_compose(self, match);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_rlocate_with_range, self->sm_seq, composition,
+	                                    start, end, &mapped_mh_seq_rlocate_dummy);
+	Dee_Decref_likely(composition);
+	if unlikely(!result)
+		goto err;
+	if (result == &mapped_mh_seq_rlocate_dummy) {
+		Dee_DecrefNokill(&mapped_mh_seq_rlocate_dummy);
+		return_reference(def);
+	}
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_removeif(SeqMapped *self, DeeObject *should, size_t start, size_t end, size_t max) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, should);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_removeif, self->sm_seq, composition, start, end, max);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+/* Can implement pretty much all find(), remove(), etc.
+ * functions by injecting "sm_mapper" as an (additional) key */
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_count(SeqMapped *self, DeeObject *item) {
+	return DeeObject_InvokeMethodHint(seq_count_with_key, self->sm_seq, item, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) size_t DCALL
+mapped_mh_seq_count_with_key(SeqMapped *self, DeeObject *item, DeeObject *key) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_count_with_key, self->sm_seq, item, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_count_with_range(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_count_with_range_and_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+mapped_mh_seq_count_with_range_and_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_count_with_range_and_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_contains(SeqMapped *self, DeeObject *item) {
+	return DeeObject_InvokeMethodHint(seq_contains_with_key, self->sm_seq, item, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+mapped_mh_seq_contains_with_key(SeqMapped *self, DeeObject *item, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_contains_with_key, self->sm_seq, item, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_contains_with_range(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_contains_with_range_and_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+mapped_mh_seq_contains_with_range_and_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_contains_with_range_and_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_startswith(SeqMapped *self, DeeObject *item) {
+	return DeeObject_InvokeMethodHint(seq_startswith_with_key, self->sm_seq, item, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+mapped_mh_seq_startswith_with_key(SeqMapped *self, DeeObject *item, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_startswith_with_key, self->sm_seq, item, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_startswith_with_range(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_startswith_with_range_and_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+mapped_mh_seq_startswith_with_range_and_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_startswith_with_range_and_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_endswith(SeqMapped *self, DeeObject *item) {
+	return DeeObject_InvokeMethodHint(seq_endswith_with_key, self->sm_seq, item, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+mapped_mh_seq_endswith_with_key(SeqMapped *self, DeeObject *item, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_endswith_with_key, self->sm_seq, item, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_endswith_with_range(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_endswith_with_range_and_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+mapped_mh_seq_endswith_with_range_and_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_endswith_with_range_and_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_find(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_find_with_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+mapped_mh_seq_find_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_find_with_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_rfind(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_rfind_with_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+mapped_mh_seq_rfind_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_rfind_with_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_remove(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_remove_with_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+mapped_mh_seq_remove_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_remove_with_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+mapped_mh_seq_rremove(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_rremove_with_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+mapped_mh_seq_rremove_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_rremove_with_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_removeall(SeqMapped *self, DeeObject *item, size_t start, size_t end, size_t max) {
+	return DeeObject_InvokeMethodHint(seq_removeall_with_key, self->sm_seq, item, start, end, max, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 6)) size_t DCALL
+mapped_mh_seq_removeall_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, size_t max, DeeObject *key) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_removeall_with_key, self->sm_seq, item, start, end, max, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_bfind(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_bfind_with_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+mapped_mh_seq_bfind_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_bfind_with_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+mapped_mh_seq_bposition(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
+	return DeeObject_InvokeMethodHint(seq_bposition_with_key, self->sm_seq, item, start, end, self->sm_mapper);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+mapped_mh_seq_bposition_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	size_t result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_bposition_with_key, self->sm_seq, item, start, end, composition);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+mapped_mh_seq_brange(SeqMapped *self, DeeObject *item, size_t start, size_t end, size_t result_range[2]) {
+	return DeeObject_InvokeMethodHint(seq_brange_with_key, self->sm_seq, item, start, end, self->sm_mapper, result_range);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5, 6)) int DCALL
+mapped_mh_seq_brange_with_key(SeqMapped *self, DeeObject *item, size_t start, size_t end, DeeObject *key, size_t result_range[2]) {
+	int result;
+	DREF DeeObject *composition = mapped_compose(self, key);
+	if unlikely(!composition)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_brange_with_key, self->sm_seq, item, start, end, composition, result_range);
+	Dee_Decref_likely(composition);
+	return result;
+err:
+	return -1;
+}
+#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+
+
 PRIVATE struct type_method tpconst mapped_methods[] = {
+	/* Override "Sequence.map()" such that instead of having 2 nested "SeqMapped" objects,
+	 * there is only one whose callback is an instance of "FunctionComposition_Type". */
+	TYPE_METHOD("map", &mapped_map,
+	            "(" mapped_map_params ")->?.\n"
+	            "#pmapper{A key function invoked to map members of @this Sequence}"
+	            "Same as ?Amap?DSequence, but instead of chaining sequences on-top "
+	            /**/ "of more sequences, simply ?Acompose?DCallable @mapper with "
+	            /**/ "?#__mapper__ and return the result as a new ?."),
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_HINTREF(Sequence_any),
 	TYPE_METHOD_HINTREF(Sequence_all),
 	TYPE_METHOD_HINTREF(Sequence_parity),
 	TYPE_METHOD_HINTREF(Sequence_sort),
 	TYPE_METHOD_HINTREF(Sequence_sorted),
+	TYPE_METHOD_HINTREF(Sequence_erase),
+	TYPE_METHOD_HINTREF(Sequence_clear),
+	TYPE_METHOD_HINTREF(Sequence_pop),
+	TYPE_METHOD_HINTREF(Sequence_reverse),
+	TYPE_METHOD_HINTREF(Sequence_reversed),
+	TYPE_METHOD_HINTREF(Sequence_unpack),
+	TYPE_METHOD_HINTREF(Sequence_unpackub),
+	TYPE_METHOD_HINTREF(Sequence_min),
+	TYPE_METHOD_HINTREF(Sequence_max),
+	TYPE_METHOD_HINTREF(Sequence_locate),
+	TYPE_METHOD_HINTREF(Sequence_rlocate),
+	TYPE_METHOD_HINTREF(Sequence_removeif),
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	TYPE_METHOD_HINTREF(Sequence_count),
+	TYPE_METHOD_HINTREF(Sequence_contains),
+	TYPE_METHOD_HINTREF(Sequence_startswith),
+	TYPE_METHOD_HINTREF(Sequence_endswith),
+	TYPE_METHOD_HINTREF(Sequence_find),
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+	TYPE_METHOD_HINTREF(Sequence_remove),
+	TYPE_METHOD_HINTREF(Sequence_rremove),
+	TYPE_METHOD_HINTREF(Sequence_removeall),
+	TYPE_METHOD_HINTREF(Sequence_bfind),
+	TYPE_METHOD_HINTREF(Sequence_bposition),
+	TYPE_METHOD_HINTREF(Sequence_brange),
+#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	TYPE_METHOD_HINTREF(__set_pop__),
+	TYPE_METHOD_HINTREF(__map_popitem__),
+	TYPE_METHOD_HINTREF(__set_bool__),
+	TYPE_METHOD_HINTREF(__set_size__),
+	TYPE_METHOD_HINTREF(__map_size__),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &mapped_mh_seq_enumerate),
 	TYPE_METHOD_HINT(seq_enumerate_index, &mapped_mh_seq_enumerate_index),
-	TYPE_METHOD_HINT(seq_trygetfirst, &mapped_trygetfirst),
-	TYPE_METHOD_HINT(seq_trygetlast, &mapped_trygetlast),
-	TYPE_METHOD_HINT(set_trygetfirst, &mapped_trygetfirst), /* Must also be set because the "first" getset defines __seq_first__ and __set_first__ */
-	TYPE_METHOD_HINT(set_trygetlast, &mapped_trygetlast),   /* Must also be set because the "last" getset defines __seq_last__ and __set_last__ */
+	TYPE_METHOD_HINT(seq_trygetfirst, &mapped_seq_trygetfirst),
+	TYPE_METHOD_HINT(seq_trygetlast, &mapped_seq_trygetlast),
+	TYPE_METHOD_HINT(set_trygetfirst, &mapped_set_trygetfirst),
+	TYPE_METHOD_HINT(set_trygetlast, &mapped_set_trygetlast),
 	TYPE_METHOD_HINT(seq_any, &mapped_mh_seq_any),
+	TYPE_METHOD_HINT(seq_any_with_key, &mapped_mh_seq_any_with_key),
 	TYPE_METHOD_HINT(seq_any_with_range, &mapped_mh_seq_any_with_range),
+	TYPE_METHOD_HINT(seq_any_with_range_and_key, &mapped_mh_seq_any_with_range_and_key),
 	TYPE_METHOD_HINT(seq_all, &mapped_mh_seq_all),
+	TYPE_METHOD_HINT(seq_all_with_key, &mapped_mh_seq_all_with_key),
 	TYPE_METHOD_HINT(seq_all_with_range, &mapped_mh_seq_all_with_range),
+	TYPE_METHOD_HINT(seq_all_with_range_and_key, &mapped_mh_seq_all_with_range_and_key),
 	TYPE_METHOD_HINT(seq_parity, &mapped_mh_seq_parity),
+	TYPE_METHOD_HINT(seq_parity_with_key, &mapped_mh_seq_parity_with_key),
 	TYPE_METHOD_HINT(seq_parity_with_range, &mapped_mh_seq_parity_with_range),
+	TYPE_METHOD_HINT(seq_parity_with_range_and_key, &mapped_mh_seq_parity_with_range_and_key),
 	TYPE_METHOD_HINT(seq_sort, &mapped_mh_seq_sort),
+	TYPE_METHOD_HINT(seq_sort_with_key, &mapped_mh_seq_sort_with_key),
 	TYPE_METHOD_HINT(seq_sorted, &mapped_mh_seq_sorted),
+	TYPE_METHOD_HINT(seq_sorted_with_key, &mapped_mh_seq_sorted_with_key),
+	TYPE_METHOD_HINT(seq_erase, &mapped_mh_seq_erase),
+	TYPE_METHOD_HINT(seq_clear, &mapped_mh_seq_clear),
+	TYPE_METHOD_HINT(seq_pop, &mapped_mh_seq_pop),
+	TYPE_METHOD_HINT(seq_reverse, &mapped_mh_seq_reverse),
+	TYPE_METHOD_HINT(seq_reversed, &mapped_mh_seq_reversed),
+	TYPE_METHOD_HINT(seq_unpack, mapped_mh_seq_unpack),
+	TYPE_METHOD_HINT(seq_unpack_ex, mapped_mh_seq_unpack_ex),
+	TYPE_METHOD_HINT(seq_unpack_ub, mapped_mh_seq_unpack_ub),
+	TYPE_METHOD_HINT(seq_min, mapped_mh_seq_min),
+	TYPE_METHOD_HINT(seq_min_with_key, mapped_mh_seq_min_with_key),
+	TYPE_METHOD_HINT(seq_min_with_range, mapped_mh_seq_min_with_range),
+	TYPE_METHOD_HINT(seq_min_with_range_and_key, mapped_mh_seq_min_with_range_and_key),
+	TYPE_METHOD_HINT(seq_max, mapped_mh_seq_max),
+	TYPE_METHOD_HINT(seq_max_with_key, mapped_mh_seq_max_with_key),
+	TYPE_METHOD_HINT(seq_max_with_range, mapped_mh_seq_max_with_range),
+	TYPE_METHOD_HINT(seq_max_with_range_and_key, mapped_mh_seq_max_with_range_and_key),
+	TYPE_METHOD_HINT(seq_locate, mapped_mh_seq_locate),                         /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_locate_with_range, mapped_mh_seq_locate_with_range),   /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_rlocate, mapped_mh_seq_rlocate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_rlocate_with_range, mapped_mh_seq_rlocate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_removeif, mapped_mh_seq_removeif),                     /* Just use `DeeFunctionComposition_Of(2, {should, self->sm_mapper})' as new "should" */
+
 #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	/* TODO: Can implement pretty much all find(), remove(), etc. functions by injecting "sm_mapper" as an (additional) key */
+	/* Can implement pretty much all find(), remove(), etc.
+	 * functions by injecting "sm_mapper" as an (additional) key */
+	TYPE_METHOD_HINT(seq_count, mapped_mh_seq_count),
+	TYPE_METHOD_HINT(seq_count_with_key, mapped_mh_seq_count_with_key),
+	TYPE_METHOD_HINT(seq_count_with_range, mapped_mh_seq_count_with_range),
+	TYPE_METHOD_HINT(seq_count_with_range_and_key, mapped_mh_seq_count_with_range_and_key),
+	TYPE_METHOD_HINT(seq_contains, mapped_mh_seq_contains),
+	TYPE_METHOD_HINT(seq_contains_with_key, mapped_mh_seq_contains_with_key),
+	TYPE_METHOD_HINT(seq_contains_with_range, mapped_mh_seq_contains_with_range),
+	TYPE_METHOD_HINT(seq_contains_with_range_and_key, mapped_mh_seq_contains_with_range_and_key),
+	TYPE_METHOD_HINT(seq_startswith, mapped_mh_seq_startswith),
+	TYPE_METHOD_HINT(seq_startswith_with_key, mapped_mh_seq_startswith_with_key),
+	TYPE_METHOD_HINT(seq_startswith_with_range, mapped_mh_seq_startswith_with_range),
+	TYPE_METHOD_HINT(seq_startswith_with_range_and_key, mapped_mh_seq_startswith_with_range_and_key),
+	TYPE_METHOD_HINT(seq_endswith, mapped_mh_seq_endswith),
+	TYPE_METHOD_HINT(seq_endswith_with_key, mapped_mh_seq_endswith_with_key),
+	TYPE_METHOD_HINT(seq_endswith_with_range, mapped_mh_seq_endswith_with_range),
+	TYPE_METHOD_HINT(seq_endswith_with_range_and_key, mapped_mh_seq_endswith_with_range_and_key),
+	TYPE_METHOD_HINT(seq_find, mapped_mh_seq_find),
+	TYPE_METHOD_HINT(seq_find_with_key, mapped_mh_seq_find_with_key),
+	TYPE_METHOD_HINT(seq_rfind, mapped_mh_seq_rfind),
+	TYPE_METHOD_HINT(seq_rfind_with_key, mapped_mh_seq_rfind_with_key),
+	TYPE_METHOD_HINT(seq_remove, mapped_mh_seq_remove),
+	TYPE_METHOD_HINT(seq_remove_with_key, mapped_mh_seq_remove_with_key),
+	TYPE_METHOD_HINT(seq_rremove, mapped_mh_seq_rremove),
+	TYPE_METHOD_HINT(seq_rremove_with_key, mapped_mh_seq_rremove_with_key),
+	TYPE_METHOD_HINT(seq_removeall, mapped_mh_seq_removeall),
+	TYPE_METHOD_HINT(seq_removeall_with_key, mapped_mh_seq_removeall_with_key),
+	TYPE_METHOD_HINT(seq_bfind, mapped_mh_seq_bfind),
+	TYPE_METHOD_HINT(seq_bfind_with_key, mapped_mh_seq_bfind_with_key),
+	TYPE_METHOD_HINT(seq_bposition, mapped_mh_seq_bposition),
+	TYPE_METHOD_HINT(seq_bposition_with_key, mapped_mh_seq_bposition_with_key),
+	TYPE_METHOD_HINT(seq_brange, mapped_mh_seq_brange),
+	TYPE_METHOD_HINT(seq_brange_with_key, mapped_mh_seq_brange_with_key),
 #endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	TYPE_METHOD_HINT(set_pop, &mapped_mh_set_pop),
+	TYPE_METHOD_HINT(set_pop_with_default, &mapped_mh_set_pop_with_default),
+	TYPE_METHOD_HINT(map_popitem, &mapped_mh_map_popitem),
+	TYPE_METHOD_HINT(set_operator_bool, &mapped_mh_set_operator_bool),
+	TYPE_METHOD_HINT(set_operator_size, &mapped_mh_set_operator_size),
+	TYPE_METHOD_HINT(set_operator_sizeob, &mapped_mh_set_operator_sizeob),
+	TYPE_METHOD_HINT(map_operator_size, &mapped_mh_map_operator_size),
+	TYPE_METHOD_HINT(map_operator_sizeob, &mapped_mh_map_operator_sizeob),
 	TYPE_METHOD_HINT_END
 };
 

@@ -38,6 +38,15 @@ DECL_BEGIN
 DDATDEF DeeTypeObject DeeCallable_Type;
 #define DeeCallable_Check(ob) DeeObject_Implements(ob, &DeeCallable_Type)
 
+/* Create a composite function taking a singular
+ * argument and returning the result of:
+ * >> argv[0](argv[1](argv[2](...(argv[argc-2](argv[argc-1](IN)))))
+ *
+ * This function is used to implement `Callable.compose()' */
+DFUNDEF WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
+DeeFunctionComposition_Of(size_t argc, DeeObject *const *argv);
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_CALLABLE_H */

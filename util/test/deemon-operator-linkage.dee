@@ -1663,21 +1663,21 @@ Type_assert(rt.MapFromAttr, {
 
 Type_assert(rt.SeqMapped, {
 	"mh_seq_any":                       "mapped_mh_seq_any",
-	"mh_seq_any_with_key":              "default__seq_any_with_key__with__seq_operator_foreach",
+	"mh_seq_any_with_key":              "mapped_mh_seq_any_with_key",
 	"mh_seq_any_with_range":            "mapped_mh_seq_any_with_range",
-	"mh_seq_any_with_range_and_key":    "default__seq_any_with_range_and_key__with__seq_enumerate_index",
+	"mh_seq_any_with_range_and_key":    "mapped_mh_seq_any_with_range_and_key",
 	"mh_seq_all":                       "mapped_mh_seq_all",
-	"mh_seq_all_with_key":              "default__seq_all_with_key__with__seq_operator_foreach",
+	"mh_seq_all_with_key":              "mapped_mh_seq_all_with_key",
 	"mh_seq_all_with_range":            "mapped_mh_seq_all_with_range",
-	"mh_seq_all_with_range_and_key":    "default__seq_all_with_range_and_key__with__seq_enumerate_index",
+	"mh_seq_all_with_range_and_key":    "mapped_mh_seq_all_with_range_and_key",
 	"mh_seq_parity":                    "mapped_mh_seq_parity",
-	"mh_seq_parity_with_key":           "default__seq_parity_with_key__with__seq_operator_foreach",
+	"mh_seq_parity_with_key":           "mapped_mh_seq_parity_with_key",
 	"mh_seq_parity_with_range":         "mapped_mh_seq_parity_with_range",
-	"mh_seq_parity_with_range_and_key": "default__seq_parity_with_range_and_key__with__seq_enumerate_index",
+	"mh_seq_parity_with_range_and_key": "mapped_mh_seq_parity_with_range_and_key",
 	"mh_seq_sort":                      "mapped_mh_seq_sort",
-	"mh_seq_sort_with_key":             "default__seq_sort_with_key__unsupported",
+	"mh_seq_sort_with_key":             "mapped_mh_seq_sort_with_key",
 	"mh_seq_sorted":                    "mapped_mh_seq_sorted",
-	"mh_seq_sorted_with_key":           "default__seq_sorted_with_key__with__seq_operator_size__and__seq_operator_trygetitem_index",
+	"mh_seq_sorted_with_key":           "mapped_mh_seq_sorted_with_key",
 });
 
 #endif  /* !__MAIN__ */

@@ -78,8 +78,13 @@ PRIVATE struct {
 	/* .t_size = */ 0
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-composition_of(size_t argc, DeeObject *const *argv) {
+/* Create a composite function taking a singular
+ * argument and returning the result of:
+ * >> argv[0](argv[1](argv[2](...(argv[argc-2](argv[argc-1](IN)))))
+ *
+ * This function is used to implement `Callable.compose()' */
+PUBLIC WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
+DeeFunctionComposition_Of(size_t argc, DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
 	DREF DeeObject **dst;
 	size_t i, total;
@@ -138,7 +143,7 @@ done:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 composition_init(size_t argc, DeeObject *const *argv) {
-	DREF DeeObject *result = composition_of(argc, argv);
+	DREF DeeObject *result = DeeFunctionComposition_Of(argc, argv);
 	if likely(result && !DeeObject_InstanceOfExact(result, &FunctionComposition_Type)) {
 		DREF DeeTupleObject *composition;
 		composition = DeeTuple_NewUninitialized(1);
@@ -321,7 +326,7 @@ callable_compose2(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	DeeObject *callbacks[2];
 	DeeArg_Unpack1(err, argc, argv, "compose", &callbacks[1]);
 	callbacks[0] = self;
-	return composition_of(2, callbacks);
+	return DeeFunctionComposition_Of(2, callbacks);
 err:
 	return NULL;
 }
@@ -349,7 +354,7 @@ PRIVATE struct type_method tpconst callable_methods[] = {
 	TYPE_METHOD_END
 };
 
-PRIVATE DEFINE_CMETHOD(callable_compose_obj, &composition_of, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(callable_compose_obj, &DeeFunctionComposition_Of, METHOD_FCONSTCALL);
 
 PRIVATE struct type_member tpconst callable_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("compose", &callable_compose_obj,
