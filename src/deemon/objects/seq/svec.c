@@ -52,11 +52,14 @@
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
 
-#ifdef __OPTIMIZE_SIZE__
-#define NULL_IF_Os(v) NULL
-#else /* __OPTIMIZE_SIZE__ */
-#define NULL_IF_Os(v) v
-#endif /* !__OPTIMIZE_SIZE__ */
+#ifndef CONFIG_TINY_DEEMON
+#define WANT_rvec_contains
+#define WANT_svec_getitem_index_fast
+#define WANT_svec_foreach
+#define WANT_svec_mh_seq_enumerate_index_reverse
+#define WANT_svec_mh_find
+#define WANT_svec_mh_rfind
+#endif /* !CONFIG_TINY_DEEMON */
 
 DECL_BEGIN
 
@@ -286,7 +289,8 @@ done:
 	return result;
 }
 
-#ifndef __OPTIMIZE_SIZE__
+#ifdef WANT_rvec_contains
+#define PTR_rvec_contains &rvec_contains
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rvec_contains(RefVector *self, DeeObject *other) {
 	size_t index;
@@ -310,7 +314,9 @@ rvec_contains(RefVector *self, DeeObject *other) {
 err:
 	return NULL;
 }
-#endif /* !__OPTIMIZE_SIZE__ */
+#else /* WANT_rvec_contains */
+#define PTR_rvec_contains NULL
+#endif /* !WANT_rvec_contains */
 
 PRIVATE ATTR_COLD int DCALL err_readonly_rvec(void) {
 	return DeeError_Throwf(&DeeError_ValueError,
@@ -619,7 +625,7 @@ PRIVATE struct type_method_hint tpconst rvec_method_hints[] = {
 PRIVATE struct type_seq rvec_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains                   = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rvec_contains),
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_rvec_contains,
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index), /* default */
 	/* .tp_delitem                    = */ DEFIMPL(&default__delitem__with__delitem_index), /* default */
 	/* .tp_setitem                    = */ DEFIMPL(&default__setitem__with__setitem_index), /* default */
@@ -1039,6 +1045,8 @@ svec_getitem_index(SharedVector *__restrict self, size_t index) {
 	return result;
 }
 
+#ifdef WANT_svec_getitem_index_fast
+#define PTR_svec_getitem_index_fast &svec_getitem_index_fast
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_getitem_index_fast(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
@@ -1054,7 +1062,12 @@ svec_getitem_index_fast(SharedVector *__restrict self, size_t index) {
 	SharedVector_LockEndRead(self);
 	return result;
 }
+#else /* WANT_svec_getitem_index_fast */
+#define PTR_svec_getitem_index_fast NULL
+#endif /* !WANT_svec_getitem_index_fast */
 
+#ifdef WANT_svec_foreach
+#define PTR_svec_foreach &svec_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 svec_foreach(SharedVector *self, Dee_foreach_t proc, void *arg) {
 	size_t i;
@@ -1077,6 +1090,10 @@ svec_foreach(SharedVector *self, Dee_foreach_t proc, void *arg) {
 err:
 	return temp;
 }
+#else /* WANT_svec_foreach */
+#define PTR_svec_foreach NULL
+#endif /* !WANT_svec_foreach */
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 svec_mh_seq_enumerate_index(SharedVector *self, Dee_seq_enumerate_index_t proc,
@@ -1104,6 +1121,7 @@ err:
 	return temp;
 }
 
+#ifdef WANT_svec_mh_seq_enumerate_index_reverse
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 svec_mh_seq_enumerate_index_reverse(SharedVector *self, Dee_seq_enumerate_index_t proc,
                                     void *arg, size_t start, size_t end) {
@@ -1131,6 +1149,7 @@ svec_mh_seq_enumerate_index_reverse(SharedVector *self, Dee_seq_enumerate_index_
 err:
 	return temp;
 }
+#endif /* WANT_svec_mh_seq_enumerate_index_reverse */
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 svec_asvector_nothrow(SharedVector *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
@@ -1144,6 +1163,7 @@ svec_asvector_nothrow(SharedVector *self, size_t dst_length, /*out*/ DREF DeeObj
 }
 
 
+#ifdef WANT_svec_mh_find
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 svec_mh_find(SharedVector *self, DeeObject *item, size_t start, size_t end) {
 	size_t i = start;
@@ -1207,7 +1227,10 @@ err:
 #endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
+#endif /* WANT_svec_mh_find */
 
+
+#ifdef WANT_svec_mh_rfind
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 svec_mh_rfind(SharedVector *self, DeeObject *item, size_t start, size_t end) {
 	size_t i = end;
@@ -1281,21 +1304,33 @@ err:
 #endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
+#endif /* WANT_svec_mh_rfind */
+
 
 PRIVATE struct type_method tpconst svec_methods[] = {
-	TYPE_METHOD_HINTREF(Sequence_find),
-	TYPE_METHOD_HINTREF(Sequence_rfind),
 	TYPE_METHOD_HINTREF(__seq_enumerate__),
+#ifdef WANT_svec_mh_find
+	TYPE_METHOD_HINTREF(Sequence_find),
+#endif /* WANT_svec_mh_find */
+#ifdef WANT_svec_mh_rfind
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+#endif /* WANT_svec_mh_rfind */
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst svec_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate_index, &svec_mh_seq_enumerate_index),
+#ifdef WANT_svec_mh_seq_enumerate_index_reverse
 	TYPE_METHOD_HINT(seq_enumerate_index_reverse, &svec_mh_seq_enumerate_index_reverse),
+#endif /* WANT_svec_mh_seq_enumerate_index_reverse */
+#ifdef WANT_svec_mh_find
 	TYPE_METHOD_HINT(seq_find, &svec_mh_find),
 	TYPE_METHOD_HINT(seq_find_with_key, &svec_mh_find_with_key),
+#endif /* WANT_svec_mh_find */
+#ifdef WANT_svec_mh_rfind
 	TYPE_METHOD_HINT(seq_rfind, &svec_mh_rfind),
 	TYPE_METHOD_HINT(seq_rfind_with_key, &svec_mh_rfind_with_key),
+#endif /* WANT_svec_mh_rfind */
 	TYPE_METHOD_HINT_END
 };
 
@@ -1309,14 +1344,14 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
 	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))PTR_svec_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&svec_getitem_index,
-	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&svec_getitem_index_fast,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_svec_getitem_index_fast,
 	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__size__and__getitem_index_fast),
