@@ -33,7 +33,7 @@
 #include <deemon/bool.h>              /* DeeBool_Type, Dee_False, Dee_True */
 #include <deemon/bytes.h>             /* DeeBytes_Type, Dee_EmptyBytes */
 #include <deemon/cached-dict.h>       /* DeeCachedDict_Type */
-#include <deemon/callable.h>          /* DeeCallable_Type */
+#include <deemon/callable.h>          /* DeeCallable_Type, DeeFunctionComposition_Of */
 #include <deemon/cell.h>              /* DeeCell_Type */
 #include <deemon/class.h>             /* DeeClassDescriptor_Type, DeeClass_New, DeeInstanceMember_Type */
 #include <deemon/code.h>              /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING */

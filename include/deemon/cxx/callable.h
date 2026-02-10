@@ -24,7 +24,8 @@
 #include "api.h"
 
 #include "../callable.h" /* DeeCallable_Type */
-#include "../types.h"    /* DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact */
+#include "../object.h"   /* DeeObject, DeeObject_*, _Dee_HashSelectC */
+#include "../types.h"    /* DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"
 
 #include <stdbool.h> /* bool */

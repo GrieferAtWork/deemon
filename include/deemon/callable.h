@@ -24,7 +24,9 @@
 
 #include "api.h"
 
-#include "types.h" /* DeeObject_Implements, DeeTypeObject */
+#include "types.h" /* DREF, DeeObject, DeeObject_Implements, DeeTypeObject */
+
+#include <stddef.h> /* size_t */
 
 DECL_BEGIN
 

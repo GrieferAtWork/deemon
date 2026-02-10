@@ -32,7 +32,7 @@
 #include <deemon/list.h>               /* DeeListObject, DeeList_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, Dee_REFTRACKER_UNTRACKED, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref*, Dee_Movprefv, Dee_Movrefv, Dee_Setrefv, Dee_TYPE, Dee_XDecrefv, Dee_XDecrefv_likely, Dee_XIncref, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref*, Dee_Movprefv, Dee_Movrefv, Dee_REFTRACKER_UNTRACKED, Dee_Setrefv, Dee_TYPE, Dee_XDecrefv, Dee_XDecrefv_likely, Dee_XIncref, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_foreach_t, DeeType_HasNativeOperator, DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */

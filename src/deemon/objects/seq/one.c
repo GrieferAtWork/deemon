@@ -740,10 +740,10 @@ so_mh_seq_count_with_range_and_key(SeqOne *self, DeeObject *item,
 
 
 #if defined(DCALL_RETURN_COMMON) || __SIZEOF_SIZE_T__ == __SIZEOF_INT__
-#define so_mh_seq_contains                    (*(int(DCALL *)(SeqOne *, DeeObject *))&so_mh_seq_count)
-#define so_mh_seq_contains_with_key           (*(int(DCALL *)(SeqOne *, DeeObject *, DeeObject *))&so_mh_seq_count_with_key)
-#define so_mh_seq_contains_with_range         (*(int(DCALL *)(SeqOne *, DeeObject *, size_t, size_t))&so_mh_seq_count_with_range)
-#define so_mh_seq_contains_with_range_and_key (*(int(DCALL *)(SeqOne *, DeeObject *, size_t, size_t, DeeObject *))&so_mh_seq_count_with_range_and_key)
+#define so_mh_seq_contains                    (*(int (DCALL *)(SeqOne *, DeeObject *))&so_mh_seq_count)
+#define so_mh_seq_contains_with_key           (*(int (DCALL *)(SeqOne *, DeeObject *, DeeObject *))&so_mh_seq_count_with_key)
+#define so_mh_seq_contains_with_range         (*(int (DCALL *)(SeqOne *, DeeObject *, size_t, size_t))&so_mh_seq_count_with_range)
+#define so_mh_seq_contains_with_range_and_key (*(int (DCALL *)(SeqOne *, DeeObject *, size_t, size_t, DeeObject *))&so_mh_seq_count_with_range_and_key)
 #else /* DCALL_RETURN_COMMON || __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 so_mh_seq_contains(SeqOne *self, DeeObject *item) {
