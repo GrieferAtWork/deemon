@@ -31,7 +31,7 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/kwds.h>               /* DeeKwArgs* */
 #include <deemon/map.h>                /*  */
-#include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_map_frozen_t, DeeMH_map_iterkeys_t, DeeMH_map_itervalues_t, DeeMH_map_keys_t, DeeMH_map_operator_iter_t, DeeMH_map_values_t, DeeObject_InvokeMethodHint, DeeType_HasTrait, DeeType_RequireMethodHint, DeeType_TRAIT___map_getitem_always_bound__ */
+#include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_*_t, DeeObject_InvokeMethodHint, DeeType_HasTrait, DeeType_RequireMethodHint, DeeType_TRAIT___map_getitem_always_bound__ */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */

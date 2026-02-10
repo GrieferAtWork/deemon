@@ -26,6 +26,7 @@
 /*!export DeeType_TRAIT_**/
 /*!export Dee_TYPE_METHOD_HINT**/
 /*!export TYPE_METHOD_HINT**/
+/*!export DeeMH_*_t*/
 /*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_METHOD_HINTS_H
 #define GUARD_DEEMON_METHOD_HINTS_H 1 /*!export-*/

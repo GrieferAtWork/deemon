@@ -32,7 +32,7 @@
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_reti1_3 */
-#include <deemon/none.h>               /* DeeNone_Check, return_none */
+#include <deemon/none.h>               /* DeeNone_Check */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_Compare, Dee_CompareFromDiff, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */

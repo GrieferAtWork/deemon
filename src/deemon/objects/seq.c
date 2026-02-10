@@ -31,7 +31,7 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/kwds.h>               /* DeeKwArgs* */
-#include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_seq_frozen_t, DeeMH_seq_operator_foreach_t, DeeMH_seq_operator_iter_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, DeeType_HasTrait, DeeType_RequireMethodHint, DeeType_TRAIT___seq_getitem_always_bound__ */
+#include <deemon/method-hints.h>       /* DeeMA_*, DeeMH_*_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, DeeType_HasTrait, DeeType_RequireMethodHint, DeeType_TRAIT___seq_getitem_always_bound__ */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */

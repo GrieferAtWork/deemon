@@ -24,7 +24,7 @@
 #include "api.h"
 
 #include "../callable.h" /* DeeCallable_Type */
-#include "../object.h"   /* DeeObject, DeeObject_*, _Dee_HashSelectC */
+#include "../object.h"   /* DeeObject_CallAttrStringHash */
 #include "../types.h"    /* DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"
 

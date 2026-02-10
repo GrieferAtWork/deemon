@@ -33,10 +33,10 @@
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_Track */
 #include <deemon/int.h>                 /* DeeIntObject, DeeInt_* */
 #include <deemon/map.h>                 /* Dee_EmptyMapping */
-#include <deemon/method-hints.h>        /* DeeMH_map_operator_trygetitem_t, DeeMH_seq_append_t, DeeMH_seq_enumerate_index_reverse_t, DeeMH_seq_find_t, DeeMH_seq_find_with_key_t, DeeMH_seq_insert_t, DeeMH_seq_operator_bounditem_index_t, DeeMH_seq_operator_bounditem_t, DeeMH_seq_operator_delitem_index_t, DeeMH_seq_operator_foreach_t, DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_getitem_t, DeeMH_seq_operator_trygetitem_index_t, DeeMH_seq_operator_trygetitem_t, DeeMH_seq_pop_t, DeeMH_seq_remove_t, DeeMH_seq_remove_with_key_t, DeeObject_InvokeMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
+#include <deemon/method-hints.h>        /* DeeMH_*_t, DeeObject_InvokeMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
 #include <deemon/module.h>              /* DeeModule_CallExternStringf */
 #include <deemon/none.h>                /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>              /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, return_reference_ */
+#include <deemon/object.h>              /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>      /* DeeNO_*_t, DeeType_RequireNativeOperator */
 #include <deemon/pair.h>                /* DeeSeqOne_DecrefSymbolic, DeeSeqPair_DecrefSymbolic, DeeSeq_Of* */
 #include <deemon/seq.h>                 /* DeeIterator_*, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
