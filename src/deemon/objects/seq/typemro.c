@@ -43,6 +43,21 @@
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 
+#ifndef CONFIG_TINY_DEEMON
+#define WANT_typemro_bool
+#define WANT_typebases_bool
+#define WANT_typemro_contains
+#define WANT_typebases_contains
+#define WANT_typemro_size
+#define WANT_typebases_size
+#define WANT_typemro_getitem_index
+#define WANT_typemro_getitem_index_fast
+#define WANT_typebases_getitem_index
+#define WANT_typebases_getitem_index_fast
+#define WANT_typemro_foreach
+#define WANT_typebases_foreach
+#endif /* !CONFIG_TINY_DEEMON */
+
 DECL_BEGIN
 
 #define typebasesiter_copy typemroiter_copy
@@ -491,19 +506,6 @@ STATIC_ASSERT(offsetof(TypeMRO, tm_type) == offsetof(ProxyObject, po_obj));
 #define typebases_copy  generic_proxy__copy_alias
 #define typebases_deep  generic_proxy__copy_alias
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-typemro_bool(TypeMRO *__restrict self) {
-	/* MRO is never empty, because it always contains at least the type itself */
-	(void)self;
-	return 1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-typebases_bool(TypeMRO *__restrict self) {
-	/* Bases are empty when the type doesn't have any bases. */
-	return DeeType_Base(self->tm_type) != NULL ? 1 : 0;
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF TypeMROIterator *DCALL
 typemro_iter(TypeMRO *__restrict self) {
 	DREF TypeMROIterator *result;
@@ -533,6 +535,31 @@ done:
 	return result;
 }
 
+#ifdef WANT_typemro_bool
+#define PTR_typemro_bool &typemro_bool
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+typemro_bool(TypeMRO *__restrict self) {
+	/* MRO is never empty, because it always contains at least the type itself */
+	(void)self;
+	return 1;
+}
+#else /* WANT_typemro_bool */
+#define PTR_typemro_bool NULL
+#endif /* !WANT_typemro_bool */
+
+#ifdef WANT_typebases_bool
+#define PTR_typebases_bool &typebases_bool
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+typebases_bool(TypeMRO *__restrict self) {
+	/* Bases are empty when the type doesn't have any bases. */
+	return DeeType_Base(self->tm_type) != NULL ? 1 : 0;
+}
+#else /* WANT_typebases_bool */
+#define PTR_typebases_bool NULL
+#endif /* !WANT_typebases_bool */
+
+#ifdef WANT_typemro_contains
+#define PTR_typemro_contains &typemro_contains
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 typemro_contains(TypeMRO *self, DeeTypeObject *elem) {
 	DeeTypeMRO mro;
@@ -544,7 +571,12 @@ typemro_contains(TypeMRO *self, DeeTypeObject *elem) {
 	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 	return_false;
 }
+#else /* WANT_typemro_contains */
+#define PTR_typemro_contains NULL
+#endif /* !WANT_typemro_contains */
 
+#ifdef WANT_typebases_contains
+#define PTR_typebases_contains &typebases_contains
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 typebases_contains(TypeMRO *self, DeeTypeObject *elem) {
 	DeeTypeMRO mro;
@@ -556,7 +588,13 @@ typebases_contains(TypeMRO *self, DeeTypeObject *elem) {
 	}
 	return_false;
 }
+#else /* WANT_typebases_contains */
+#define PTR_typebases_contains NULL
+#endif /* !WANT_typebases_contains */
 
+#ifdef WANT_typemro_size
+#define PTR_typemro_size      &typemro_size
+#define PTR_typemro_size_fast &typemro_size
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 typemro_size(TypeMRO *__restrict self) {
 	size_t result = 0;
@@ -568,7 +606,14 @@ typemro_size(TypeMRO *__restrict self) {
 	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
 	return result;
 }
+#else /* WANT_typemro_size */
+#define PTR_typemro_size      DEFIMPL(&default__seq_operator_size__with__seq_operator_iter)
+#define PTR_typemro_size_fast NULL
+#endif /* !WANT_typemro_size */
 
+#ifdef WANT_typebases_size
+#define PTR_typebases_size      &typebases_size
+#define PTR_typebases_size_fast &typebases_size
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 typebases_size(TypeMRO *__restrict self) {
 	size_t result = 0;
@@ -579,7 +624,13 @@ typebases_size(TypeMRO *__restrict self) {
 		++result;
 	return result;
 }
+#else /* WANT_typebases_size */
+#define PTR_typebases_size      DEFIMPL(&default__seq_operator_size__with__seq_operator_iter)
+#define PTR_typebases_size_fast NULL
+#endif /* !WANT_typebases_size */
 
+#ifdef WANT_typemro_getitem_index
+#define PTR_typemro_getitem_index &typemro_getitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 typemro_getitem_index(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
@@ -594,7 +645,12 @@ typemro_getitem_index(TypeMRO *__restrict self, size_t index) {
 	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, position);
 	return NULL;
 }
+#else /* WANT_typemro_getitem_index */
+#define PTR_typemro_getitem_index DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach)
+#endif /* !WANT_typemro_getitem_index */
 
+#ifdef WANT_typemro_getitem_index_fast
+#define PTR_typemro_getitem_index_fast &typemro_getitem_index_fast
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 typemro_getitem_index_fast(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
@@ -611,7 +667,12 @@ typemro_getitem_index_fast(TypeMRO *__restrict self, size_t index) {
 		        index, position);
 	}
 }
+#else /* WANT_typemro_getitem_index_fast */
+#define PTR_typemro_getitem_index_fast NULL
+#endif /* !WANT_typemro_getitem_index_fast */
 
+#ifdef WANT_typebases_getitem_index
+#define PTR_typebases_getitem_index &typebases_getitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 typebases_getitem_index(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
@@ -626,7 +687,12 @@ typebases_getitem_index(TypeMRO *__restrict self, size_t index) {
 	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, position);
 	return NULL;
 }
+#else /* WANT_typebases_getitem_index */
+#define PTR_typebases_getitem_index DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach)
+#endif /* !WANT_typebases_getitem_index */
 
+#ifdef WANT_typebases_getitem_index_fast
+#define PTR_typebases_getitem_index_fast &typebases_getitem_index_fast
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 typebases_getitem_index_fast(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
@@ -643,7 +709,12 @@ typebases_getitem_index_fast(TypeMRO *__restrict self, size_t index) {
 		++position;
 	}
 }
+#else /* WANT_typebases_getitem_index_fast */
+#define PTR_typebases_getitem_index_fast NULL
+#endif /* !WANT_typebases_getitem_index_fast */
 
+#ifdef WANT_typemro_foreach
+#define PTR_typemro_foreach &typemro_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 typemro_foreach(TypeMRO *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -659,7 +730,12 @@ typemro_foreach(TypeMRO *self, Dee_foreach_t proc, void *arg) {
 err_temp:
 	return temp;
 }
+#else /* WANT_typemro_foreach */
+#define PTR_typemro_foreach DEFIMPL(&default__seq_operator_foreach__with__seq_operator_iter)
+#endif /* !WANT_typemro_foreach */
 
+#ifdef WANT_typebases_foreach
+#define PTR_typebases_foreach &typebases_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 typebases_foreach(TypeMRO *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -675,26 +751,29 @@ typebases_foreach(TypeMRO *self, Dee_foreach_t proc, void *arg) {
 err_temp:
 	return temp;
 }
+#else /* WANT_typebases_foreach */
+#define PTR_typebases_foreach DEFIMPL(&default__seq_operator_foreach__with__seq_operator_iter)
+#endif /* !WANT_typebases_foreach */
 
 
 PRIVATE struct type_seq typemro_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typemro_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemro_contains,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_typemro_contains,
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
 	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
 	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
 	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typemro_foreach,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))PTR_typemro_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&typemro_size,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&typemro_size,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typemro_getitem_index,
-	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typemro_getitem_index_fast,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))PTR_typemro_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))PTR_typemro_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_typemro_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_typemro_getitem_index_fast,
 	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__size__and__getitem_index_fast),
@@ -724,21 +803,21 @@ PRIVATE struct type_seq typemro_seq = {
 PRIVATE struct type_seq typebases_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typebases_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebases_contains,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_typebases_contains,
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
 	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
 	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
 	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typebases_foreach,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))PTR_typebases_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
-	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&typebases_size,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&typebases_size,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typebases_getitem_index,
-	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typebases_getitem_index_fast,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))PTR_typebases_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))PTR_typebases_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_typebases_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_typebases_getitem_index_fast,
 	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__size__and__getitem_index_fast),
@@ -810,7 +889,7 @@ INTERN DeeTypeObject TypeMRO_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&typemro_bool,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))PTR_typemro_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
@@ -860,7 +939,7 @@ INTERN DeeTypeObject TypeBases_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&typebases_bool,
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))PTR_typebases_bool,
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
 	},
