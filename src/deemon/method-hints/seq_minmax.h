@@ -44,16 +44,16 @@ g('/' '************************************************************************'
 /' '* deemon.Sequence.{m}()                                                *' '/
 /' '************************************************************************' '/
 [[kw, alias(Sequence.{m})]]
-__seq_{m}__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?O {
+__seq_{m}__(size_t start = 0, size_t end = (size_t)-1, def=!N, key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_{m}_with_key, self, key)
-		         : CALL_DEPENDENCY(seq_{m}, self);
+		         ? CALL_DEPENDENCY(seq_{m}_with_key, self, def, key)
+		         : CALL_DEPENDENCY(seq_{m}, self, def);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_{m}_with_range_and_key, self, start, end, key)
-		         : CALL_DEPENDENCY(seq_{m}_with_range, self, start, end);
+		         ? CALL_DEPENDENCY(seq_{m}_with_range_and_key, self, start, end, def, key)
+		         : CALL_DEPENDENCY(seq_{m}_with_range, self, start, end, def);
 	}
 	return result;
 err:
@@ -85,8 +85,10 @@ seq_{m}_foreach_cb(void *arg, DeeObject *item) {
 )]
 
 [[wunused]] DREF DeeObject *
-__seq_{m}__.seq_{m}([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto)} %{$empty = return_none}
+__seq_{m}__.seq_{m}([[nonnull]] DeeObject *self,
+                    [[nonnull]] DeeObject *def)
+%{unsupported(auto)}
+%{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_{m}_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
@@ -94,13 +96,17 @@ __seq_{m}__.seq_{m}([[nonnull]] DeeObject *__restrict self)
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
 	return NULL;
 }} {
-	return LOCAL_CALLATTR(self, 0, NULL);
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return LOCAL_CALLATTR(self, 3, args);
 }
 
 %[define(DEFINE_seq_{m}_with_key_foreach_cb =
@@ -151,8 +157,10 @@ err:
 
 [[wunused]] DREF DeeObject *
 __seq_{m}__.seq_{m}_with_key([[nonnull]] DeeObject *self,
+                             [[nonnull]] DeeObject *def,
                              [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = return_none}
+%{unsupported(auto)}
+%{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_{m}_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
@@ -164,7 +172,7 @@ __seq_{m}__.seq_{m}_with_key([[nonnull]] DeeObject *self,
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -179,11 +187,12 @@ err_data:
 /' '*err:*' '/
 	return NULL;
 }} {
-	DeeObject *args[3];
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return LOCAL_CALLATTR(self, 3, args);
+	args[2] = def;
+	args[3] = key;
+	return LOCAL_CALLATTR(self, 4, args);
 }
 
 %[define(DEFINE_seq_{m}_enumerate_cb =
@@ -201,11 +210,11 @@ seq_{m}_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 )]
 
 [[wunused]] DREF DeeObject *
-__seq_{m}__.seq_{m}_with_range([[nonnull]] DeeObject *__restrict self,
-                               size_t start, size_t end)
+__seq_{m}__.seq_{m}_with_range([[nonnull]] DeeObject *self,
+                               size_t start, size_t end,
+                               [[nonnull]] DeeObject *def)
 %{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return_none}
+%{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_{m}_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
@@ -213,13 +222,13 @@ __seq_{m}__.seq_{m}_with_range([[nonnull]] DeeObject *__restrict self,
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
 	return NULL;
 }} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
 %[define(DEFINE_seq_{m}_with_key_enumerate_cb =
@@ -239,10 +248,10 @@ seq_{m}_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_{m}__.seq_{m}_with_range_and_key([[nonnull]] DeeObject *self,
                                        size_t start, size_t end,
+                                       [[nonnull]] DeeObject *def,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return_none}
+%{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_{m}_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
@@ -254,7 +263,7 @@ __seq_{m}__.seq_{m}_with_range_and_key([[nonnull]] DeeObject *self,
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -269,7 +278,7 @@ err_data:
 /' '*err:*' '/
 	return NULL;
 }} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
 
@@ -309,16 +318,16 @@ seq_{m}_with_range_and_key = {
 /* deemon.Sequence.min()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.min)]]
-__seq_min__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?O {
+__seq_min__(size_t start = 0, size_t end = (size_t)-1, def=!N, key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_min_with_key, self, key)
-		         : CALL_DEPENDENCY(seq_min, self);
+		         ? CALL_DEPENDENCY(seq_min_with_key, self, def, key)
+		         : CALL_DEPENDENCY(seq_min, self, def);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_min_with_range_and_key, self, start, end, key)
-		         : CALL_DEPENDENCY(seq_min_with_range, self, start, end);
+		         ? CALL_DEPENDENCY(seq_min_with_range_and_key, self, start, end, def, key)
+		         : CALL_DEPENDENCY(seq_min_with_range, self, start, end, def);
 	}
 	return result;
 err:
@@ -350,8 +359,10 @@ seq_min_foreach_cb(void *arg, DeeObject *item) {
 )]
 
 [[wunused]] DREF DeeObject *
-__seq_min__.seq_min([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto)} %{$empty = return_none}
+__seq_min__.seq_min([[nonnull]] DeeObject *self,
+                    [[nonnull]] DeeObject *def)
+%{unsupported(auto)}
+%{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_min_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
@@ -359,13 +370,17 @@ __seq_min__.seq_min([[nonnull]] DeeObject *__restrict self)
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
 	return NULL;
 }} {
-	return LOCAL_CALLATTR(self, 0, NULL);
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return LOCAL_CALLATTR(self, 3, args);
 }
 
 %[define(DEFINE_seq_min_with_key_foreach_cb =
@@ -416,8 +431,10 @@ err:
 
 [[wunused]] DREF DeeObject *
 __seq_min__.seq_min_with_key([[nonnull]] DeeObject *self,
+                             [[nonnull]] DeeObject *def,
                              [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = return_none}
+%{unsupported(auto)}
+%{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_min_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
@@ -429,7 +446,7 @@ __seq_min__.seq_min_with_key([[nonnull]] DeeObject *self,
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -444,11 +461,12 @@ err_data:
 /*err:*/
 	return NULL;
 }} {
-	DeeObject *args[3];
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return LOCAL_CALLATTR(self, 3, args);
+	args[2] = def;
+	args[3] = key;
+	return LOCAL_CALLATTR(self, 4, args);
 }
 
 %[define(DEFINE_seq_min_enumerate_cb =
@@ -466,11 +484,11 @@ seq_min_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 )]
 
 [[wunused]] DREF DeeObject *
-__seq_min__.seq_min_with_range([[nonnull]] DeeObject *__restrict self,
-                               size_t start, size_t end)
+__seq_min__.seq_min_with_range([[nonnull]] DeeObject *self,
+                               size_t start, size_t end,
+                               [[nonnull]] DeeObject *def)
 %{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return_none}
+%{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_min_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
@@ -478,13 +496,13 @@ __seq_min__.seq_min_with_range([[nonnull]] DeeObject *__restrict self,
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
 	return NULL;
 }} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
 %[define(DEFINE_seq_min_with_key_enumerate_cb =
@@ -504,10 +522,10 @@ seq_min_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_min__.seq_min_with_range_and_key([[nonnull]] DeeObject *self,
                                        size_t start, size_t end,
+                                       [[nonnull]] DeeObject *def,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return_none}
+%{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_min_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
@@ -519,7 +537,7 @@ __seq_min__.seq_min_with_range_and_key([[nonnull]] DeeObject *self,
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -534,7 +552,7 @@ err_data:
 /*err:*/
 	return NULL;
 }} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
 
@@ -578,16 +596,16 @@ seq_min_with_range_and_key = {
 /* deemon.Sequence.max()                                                */
 /************************************************************************/
 [[kw, alias(Sequence.max)]]
-__seq_max__(size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?O {
+__seq_max__(size_t start = 0, size_t end = (size_t)-1, def=!N, key:?DCallable=!N)->?O {
 	DREF DeeObject *result;
 	if (start == 0 && end == (size_t)-1) {
 		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_max_with_key, self, key)
-		         : CALL_DEPENDENCY(seq_max, self);
+		         ? CALL_DEPENDENCY(seq_max_with_key, self, def, key)
+		         : CALL_DEPENDENCY(seq_max, self, def);
 	} else {
 		result = !DeeNone_Check(key)
-		         ? CALL_DEPENDENCY(seq_max_with_range_and_key, self, start, end, key)
-		         : CALL_DEPENDENCY(seq_max_with_range, self, start, end);
+		         ? CALL_DEPENDENCY(seq_max_with_range_and_key, self, start, end, def, key)
+		         : CALL_DEPENDENCY(seq_max_with_range, self, start, end, def);
 	}
 	return result;
 err:
@@ -619,8 +637,10 @@ seq_max_foreach_cb(void *arg, DeeObject *item) {
 )]
 
 [[wunused]] DREF DeeObject *
-__seq_max__.seq_max([[nonnull]] DeeObject *__restrict self)
-%{unsupported(auto)} %{$empty = return_none}
+__seq_max__.seq_max([[nonnull]] DeeObject *self,
+                    [[nonnull]] DeeObject *def)
+%{unsupported(auto)}
+%{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_max_foreach_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
@@ -628,13 +648,17 @@ __seq_max__.seq_max([[nonnull]] DeeObject *__restrict self)
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
 	return NULL;
 }} {
-	return LOCAL_CALLATTR(self, 0, NULL);
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return LOCAL_CALLATTR(self, 3, args);
 }
 
 %[define(DEFINE_seq_max_with_key_foreach_cb =
@@ -685,8 +709,10 @@ err:
 
 [[wunused]] DREF DeeObject *
 __seq_max__.seq_max_with_key([[nonnull]] DeeObject *self,
+                             [[nonnull]] DeeObject *def,
                              [[nonnull]] DeeObject *key)
-%{unsupported(auto)} %{$empty = return_none}
+%{unsupported(auto)}
+%{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_max_with_key_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
@@ -698,7 +724,7 @@ __seq_max__.seq_max_with_key([[nonnull]] DeeObject *self,
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -713,11 +739,12 @@ err_data:
 /*err:*/
 	return NULL;
 }} {
-	DeeObject *args[3];
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return LOCAL_CALLATTR(self, 3, args);
+	args[2] = def;
+	args[3] = key;
+	return LOCAL_CALLATTR(self, 4, args);
 }
 
 %[define(DEFINE_seq_max_enumerate_cb =
@@ -735,11 +762,11 @@ seq_max_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 )]
 
 [[wunused]] DREF DeeObject *
-__seq_max__.seq_max_with_range([[nonnull]] DeeObject *__restrict self,
-                               size_t start, size_t end)
+__seq_max__.seq_max_with_range([[nonnull]] DeeObject *self,
+                               size_t start, size_t end,
+                               [[nonnull]] DeeObject *def)
 %{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return_none}
+%{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_max_enumerate_cb)]] {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
@@ -747,13 +774,13 @@ __seq_max__.seq_max_with_range([[nonnull]] DeeObject *__restrict self,
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
 	return NULL;
 }} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
 %[define(DEFINE_seq_max_with_key_enumerate_cb =
@@ -773,10 +800,10 @@ seq_max_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 [[wunused]] DREF DeeObject *
 __seq_max__.seq_max_with_range_and_key([[nonnull]] DeeObject *self,
                                        size_t start, size_t end,
+                                       [[nonnull]] DeeObject *def,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return_none}
+%{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_max_with_key_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
@@ -788,7 +815,7 @@ __seq_max__.seq_max_with_range_and_key([[nonnull]] DeeObject *self,
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -803,7 +830,7 @@ err_data:
 /*err:*/
 	return NULL;
 }} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
 

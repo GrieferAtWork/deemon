@@ -89,6 +89,7 @@ local kw_lists = {
 	{"item", "start", "end", "key"},
 	{"item", "start", "end", "max", "key"},
 	{"match", "start", "end", "def"},
+	{"start", "end", "def", "key"},
 	{"should", "start", "end", "max"},
 	{"size", "filler"},
 	{"start", "end", "items"},
@@ -261,6 +262,7 @@ DECLARE_KWLIST(kwlist__should_start_end_max, { KEX("should", 0x28877b82, 0xbb3cb
 DECLARE_KWLIST(kwlist__signed, { KEX("signed", 0x17a15883, 0x58a245b6f802625f), KEND });
 DECLARE_KWLIST(kwlist__size_filler, { KEX("size", 0xed8917fa, 0x3fe8023bdf261c0f), KEX("filler", 0xb990988f, 0x6067d27b1e35cd17), KEND });
 DECLARE_KWLIST(kwlist__start_end, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEND });
+DECLARE_KWLIST(kwlist__start_end_def_key, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("def", 0xf5797de2, 0x6cea9b604fa07583), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });
 DECLARE_KWLIST(kwlist__start_end_filler, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("filler", 0xb990988f, 0x6067d27b1e35cd17), KEND });
 DECLARE_KWLIST(kwlist__start_end_items, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("items", 0x8858badc, 0xa52ef5f42baafa42), KEND });
 DECLARE_KWLIST(kwlist__start_end_key, { KEX("start", 0xa2ed6890, 0x80b621ce3c3982d5), KEX("end", 0x37fb4a05, 0x6de935c204dc3d01), KEX("key", 0xe29c6a44, 0x612dd31212e90587), KEND });

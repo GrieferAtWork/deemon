@@ -401,6 +401,15 @@ err:
 	return -1;
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+Dee_accu_add_inherited(/*struct Dee_accu*/ void *self,
+                       /*inherit(always)*/ DREF DeeObject *item) {
+	Dee_ssize_t result = Dee_accu_add(self, item);
+	Dee_Decref(item);
+	return result;
+}
+
+
 /* Add all elements of `items' into the accumulator. */
 PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_addall(/*struct Dee_accu*/ void *self, DeeObject *items) {

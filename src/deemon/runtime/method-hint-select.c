@@ -1890,6 +1890,16 @@ mh_select_seq_sum(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	return NULL;
 }
 
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_with_key_t DCALL
+mh_select_seq_sum_with_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_operator_foreach_t seq_operator_foreach = (DeeMH_seq_operator_foreach_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_foreach);
+	if (seq_operator_foreach == &default__seq_operator_foreach__empty)
+		return &default__seq_sum_with_key__empty;
+	if (seq_operator_foreach)
+		return &default__seq_sum_with_key__with__seq_operator_foreach;
+	return NULL;
+}
+
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_with_range_t DCALL
 mh_select_seq_sum_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_enumerate_index_t seq_enumerate_index = (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate_index);
@@ -1897,6 +1907,16 @@ mh_select_seq_sum_with_range(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		return &default__seq_sum_with_range__empty;
 	if (seq_enumerate_index)
 		return &default__seq_sum_with_range__with__seq_enumerate_index;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_with_range_and_key_t DCALL
+mh_select_seq_sum_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_seq_enumerate_index_t seq_enumerate_index = (DeeMH_seq_enumerate_index_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_enumerate_index);
+	if (seq_enumerate_index == &default__seq_enumerate_index__empty)
+		return &default__seq_sum_with_range_and_key__empty;
+	if (seq_enumerate_index)
+		return &default__seq_sum_with_range_and_key__with__seq_enumerate_index;
 	return NULL;
 }
 

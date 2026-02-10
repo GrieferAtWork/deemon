@@ -1650,22 +1650,22 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	              "When ${start == 0 && end == -1 && key is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__();}&"
-	              /**/ "${function min(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min();}&"
+	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__(0. int.SIZE_MAX, def);}&"
+	              /**/ "${function min(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min(0. int.SIZE_MAX, def);}&"
 	              /**/ "?#{op:iter}" /*                                                          */ "|${"
 	              /**/ /**/ "local result;\n"
 	              /**/ /**/ "foreach (local item: Sequence.__iter__(this)) {\n"
 	              /**/ /**/ "	if (result !is bound || !(result < item))\n"
 	              /**/ /**/ "		result = item;\n"
 	              /**/ /**/ "}\n"
-	              /**/ /**/ "return result is bound ? result : none;"
+	              /**/ /**/ "return result is bound ? result : def;"
 	              /**/ "}"
 	              "}\n"
 
 	              "When ${start == 0 && end == -1 && key !is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__(0, int.SIZE_MAX, key);}&"
-	              /**/ "${function min(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min(0, int.SIZE_MAX, key);}&"
+	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__(0, int.SIZE_MAX, def, key);}&"
+	              /**/ "${function min(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min(0, int.SIZE_MAX, def, key);}&"
 	              /**/ "?#{op:iter}" /*                                                          */ "|${"
 	              /**/ /**/ "local result;\n"
 	              /**/ /**/ "local keyedResult;\n"
@@ -1676,14 +1676,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "		result = item;\n"
 	              /**/ /**/ "	}\n"
 	              /**/ /**/ "}\n"
-	              /**/ /**/ "return result is bound ? result : none;"
+	              /**/ /**/ "return result is bound ? result : def;"
 	              /**/ "}"
 	              "}\n"
 
 	              "When ${(start != 0 || end != -1) && key is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__(start, end);}&"
-	              /**/ "${function min(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min(start, end);}&"
+	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__(start, end, def);}&"
+	              /**/ "${function min(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min(start, end, def);}&"
 	              /**/ "?#__enumerate__" /*                                                     */ "|${"
 	              /**/ /**/ "local result = Cell();\n"
 	              /**/ /**/ "this.__enumerate__((i, item?) -\\> {\n"
@@ -1691,14 +1691,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "		result.value = item;\n"
 	              /**/ /**/ "	return none;\n"
 	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "return result.value is bound ? result.value : none;"
+	              /**/ /**/ "return result.value is bound ? result.value : def;"
 	              /**/ "}"
 	              "}\n"
 
 	              "When ${(start != 0 || end != -1) && key !is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__(start, end, key);}&"
-	              /**/ "${function min(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min(start, end, key);}&"
+	              /**/ "${function __seq_min__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_min__(start, end, def, key);}&"
+	              /**/ "${function min(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.min(start, end, def, key);}&"
 	              /**/ "?#__enumerate__" /*                                                      */ "|${"
 	              /**/ /**/ "local result = Cell();\n"
 	              /**/ /**/ "local keyedResult = Cell();\n"
@@ -1712,7 +1712,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "	}\n"
 	              /**/ /**/ "	return none;\n"
 	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "return result.value is bound ? result.value : none;"
+	              /**/ /**/ "return result.value is bound ? result.value : def;"
 	              /**/ "}"
 	              "}"),
 
@@ -1726,22 +1726,22 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	              "When ${start == 0 && end == -1 && key is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__();}&"
-	              /**/ "${function max(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max();}&"
+	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__(0. int.SIZE_MAX, def);}&"
+	              /**/ "${function max(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max(0. int.SIZE_MAX, def);}&"
 	              /**/ "?#{op:iter}" /*                                                          */ "|${"
 	              /**/ /**/ "local result;\n"
 	              /**/ /**/ "foreach (local item: Sequence.__iter__(this)) {\n"
 	              /**/ /**/ "	if (result !is bound || !(result > item))\n"
 	              /**/ /**/ "		result = item;\n"
 	              /**/ /**/ "}\n"
-	              /**/ /**/ "return result is bound ? result : none;"
+	              /**/ /**/ "return result is bound ? result : def;"
 	              /**/ "}"
 	              "}\n"
 
 	              "When ${start == 0 && end == -1 && key !is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__(0, int.SIZE_MAX, key);}&"
-	              /**/ "${function max(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max(0, int.SIZE_MAX, key);}&"
+	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__(0, int.SIZE_MAX, def, key);}&"
+	              /**/ "${function max(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max(0, int.SIZE_MAX, def, key);}&"
 	              /**/ "?#{op:iter}" /*                                                          */ "|${"
 	              /**/ /**/ "local result;\n"
 	              /**/ /**/ "local keyedResult;\n"
@@ -1752,14 +1752,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "		result = item;\n"
 	              /**/ /**/ "	}\n"
 	              /**/ /**/ "}\n"
-	              /**/ /**/ "return result is bound ? result : none;"
+	              /**/ /**/ "return result is bound ? result : def;"
 	              /**/ "}"
 	              "}\n"
 
 	              "When ${(start != 0 || end != -1) && key is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__(start, end);}&"
-	              /**/ "${function max(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max(start, end);}&"
+	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__(start, end, def);}&"
+	              /**/ "${function max(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max(start, end, def);}&"
 	              /**/ "?#__enumerate__" /*                                                     */ "|${"
 	              /**/ /**/ "local result = Cell();\n"
 	              /**/ /**/ "this.__enumerate__((i, item?) -\\> {\n"
@@ -1767,14 +1767,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "		result.value = item;\n"
 	              /**/ /**/ "	return none;\n"
 	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "return result.value is bound ? result.value : none;"
+	              /**/ /**/ "return result.value is bound ? result.value : def;"
 	              /**/ "}"
 	              "}\n"
 
 	              "When ${(start != 0 || end != -1) && key !is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__(start, end, key);}&"
-	              /**/ "${function max(start: int = 0, end: int = -1, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max(start, end, key);}&"
+	              /**/ "${function __seq_max__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_max__(start, end, def, key);}&"
+	              /**/ "${function max(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.max(start, end, def, key);}&"
 	              /**/ "?#__enumerate__" /*                                                      */ "|${"
 	              /**/ /**/ "local result = Cell();\n"
 	              /**/ /**/ "local keyedResult = Cell();\n"
@@ -1788,7 +1788,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              /**/ /**/ "	}\n"
 	              /**/ /**/ "	return none;\n"
 	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "return result.value is bound ? result.value : none;"
+	              /**/ /**/ "return result.value is bound ? result.value : def;"
 	              /**/ "}"
 	              "}"),
 
@@ -1798,29 +1798,63 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Returns the sum of all elements, or ?N if the Sequence is empty\n"
 	              "This function is used to implement ${this + ...}\n"
 
-	              "When ${start == 0 && end == -1}:"
+	              "When ${start == 0 && end == -1 && key is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_sum__(start: int = 0, end: int = -1): Object}" /*                     */ "|${return this.__seq_sum__();}&"
-	              /**/ "${function sum(start: int = 0, end: int = -1): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.sum();}&"
+	              /**/ "${function __seq_sum__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_sum__(0. int.SIZE_MAX, def);}&"
+	              /**/ "${function sum(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.sum(0. int.SIZE_MAX, def);}&"
 	              /**/ "?#{op:iter}" /*                                                          */ "|${"
 	              /**/ /**/ "local result;\n"
-	              /**/ /**/ "foreach (local item: Sequence.__iter__(this))\n"
+	              /**/ /**/ "foreach (local item: Sequence.__iter__(this)) {\n"
 	              /**/ /**/ "	result = result is bound ? result + item : item;\n"
-	              /**/ /**/ "return result is bound ? result : none;"
+	              /**/ /**/ "}\n"
+	              /**/ /**/ "return result is bound ? result : def;"
 	              /**/ "}"
 	              "}\n"
 
-	              "When ${start != 0 || end != -1}:"
+	              "When ${start == 0 && end == -1 && key !is none}:"
 	              "#T{Requirements|Implementation~"
-	              /**/ "${function __seq_sum__(start: int = 0, end: int = -1): Object}" /*                     */ "|${return this.__seq_sum__(start, end);}&"
-	              /**/ "${function sum(start: int = 0, end: int = -1): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.sum(start, end);}&"
+	              /**/ "${function __seq_sum__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_sum__(0, int.SIZE_MAX, def, key);}&"
+	              /**/ "${function sum(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.sum(0, int.SIZE_MAX, def, key);}&"
+	              /**/ "?#{op:iter}" /*                                                          */ "|${"
+	              /**/ /**/ "local result;\n"
+	              /**/ /**/ "foreach (local item: Sequence.__iter__(this)) {\n"
+	              /**/ /**/ "	item = key(item);\n"
+	              /**/ /**/ "	result = result is bound ? result + item : item;\n"
+	              /**/ /**/ "}\n"
+	              /**/ /**/ "return result is bound ? result : def;"
+	              /**/ "}"
+	              "}\n"
+
+	              "When ${(start != 0 || end != -1) && key is none}:"
+	              "#T{Requirements|Implementation~"
+	              /**/ "${function __seq_sum__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_sum__(start, end, def);}&"
+	              /**/ "${function sum(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.sum(start, end, def);}&"
 	              /**/ "?#__enumerate__" /*                                                     */ "|${"
 	              /**/ /**/ "local result = Cell();\n"
 	              /**/ /**/ "this.__enumerate__((i, item?) -\\> {\n"
-	              /**/ /**/ "	result.value = result.value is bound ? result.value + item : item;\n"
+	              /**/ /**/ "	if (item is bound)\n"
+	              /**/ /**/ "		result.value = result.value is bound ? result.value + item : item;\n"
 	              /**/ /**/ "	return none;\n"
 	              /**/ /**/ "}, start, end);\n"
-	              /**/ /**/ "return result.value is bound ? result.value : none;"
+	              /**/ /**/ "return result.value is bound ? result.value : def;"
+	              /**/ "}"
+	              "}\n"
+
+	              "When ${(start != 0 || end != -1) && key !is none}:"
+	              "#T{Requirements|Implementation~"
+	              /**/ "${function __seq_sum__(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object}" /*                     */ "|${return this.__seq_sum__(start, end, def, key);}&"
+	              /**/ "${function sum(start: int = 0, end: int = -1, def = none, key: Callable | none = none): Object} (?A__seqclass__?DType is ?.)" /**/ "|${return this.sum(start, end, def, key);}&"
+	              /**/ "?#__enumerate__" /*                                                      */ "|${"
+	              /**/ /**/ "local result = Cell();\n"
+	              /**/ /**/ "local keyedResult = Cell();\n"
+	              /**/ /**/ "this.__enumerate__((i, item?) -\\> {\n"
+	              /**/ /**/ "	if (item is bound) {\n"
+	              /**/ /**/ "		item = key(item);\n"
+	              /**/ /**/ "		result.value = result.value is bound ? result.value + item : item;\n"
+	              /**/ /**/ "	}\n"
+	              /**/ /**/ "	return none;\n"
+	              /**/ /**/ "}, start, end);\n"
+	              /**/ /**/ "return result.value is bound ? result.value : def;"
 	              /**/ "}"
 	              "}"),
 
@@ -2621,39 +2655,39 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 
 	/* TODO: findall: "(item,start=!0,end=!-1,key:?DCallable=!N)->?S?Dint"
 	 * > Find not just the first, but all indices of @item */
-	/* TODO: findallseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): {int...} */
+	/* TODO: findallseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable | none = none): {int...} */
 
-	/* TODO: findseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) | none */
-	/* TODO: rfindseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) | none */
+	/* TODO: findseq(subseq: Sequence | rt.SeqSome, key: Callable | none = none): (int, int) | none */
+	/* TODO: rfindseq(subseq: Sequence | rt.SeqSome, key: Callable | none = none): (int, int) | none */
 
-	/* TODO: indexseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) */
-	/* TODO: rindexseq(subseq: Sequence | rt.SeqSome, key: Callable = none): (int, int) */
+	/* TODO: indexseq(subseq: Sequence | rt.SeqSome, key: Callable | none = none): (int, int) */
+	/* TODO: rindexseq(subseq: Sequence | rt.SeqSome, key: Callable | none = none): (int, int) */
 
 	/* TODO: join: "(seqs:?S?S?O)->?." */
 
-	/* TODO: strip(item: Object, key: Callable = none): Sequence */
-	/* TODO: sstrip(subseq: Sequence, key: Callable = none): Sequence */
+	/* TODO: strip(item: Object, key: Callable | none = none): Sequence */
+	/* TODO: sstrip(subseq: Sequence, key: Callable | none = none): Sequence */
 
-	/* TODO: lstrip(item: Object, key: Callable = none): Sequence */
-	/* TODO: lsstrip(subseq: Sequence, key: Callable = none): Sequence */
+	/* TODO: lstrip(item: Object, key: Callable | none = none): Sequence */
+	/* TODO: lsstrip(subseq: Sequence, key: Callable | none = none): Sequence */
 
-	/* TODO: rstrip(item: Object, key: Callable = none): Sequence */
-	/* TODO: rsstrip(subseq: Sequence, key: Callable = none): Sequence */
+	/* TODO: rstrip(item: Object, key: Callable | none = none): Sequence */
+	/* TODO: rsstrip(subseq: Sequence, key: Callable | none = none): Sequence */
 
-	/* TODO: split(item: Object, key: Callable = none): Sequence */
-	/* TODO: splitseq(subseq: Sequence | rt.SeqSome, key: Callable = none): Sequence */
+	/* TODO: split(item: Object, key: Callable | none = none): Sequence */
+	/* TODO: splitseq(subseq: Sequence | rt.SeqSome, key: Callable | none = none): Sequence */
 
-	/* TODO: countseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): int */
+	/* TODO: countseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable | none = none): int */
 
-	/* TODO: partition(item: Object, start: int = 0, end: int = -1, key: Callable = none): (Sequence, item, Sequence) */
-	/* TODO: partitionseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): (Sequence, subseq, Sequence) */
+	/* TODO: partition(item: Object, start: int = 0, end: int = -1, key: Callable | none = none): (Sequence, item, Sequence) */
+	/* TODO: partitionseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable | none = none): (Sequence, subseq, Sequence) */
 
-	/* TODO: rpartition(item: Object, start: int = 0, end: int = -1, key: Callable = none): (Sequence, item, Sequence) */
-	/* TODO: rpartitionseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): (Sequence, subseq, Sequence) */
+	/* TODO: rpartition(item: Object, start: int = 0, end: int = -1, key: Callable | none = none): (Sequence, item, Sequence) */
+	/* TODO: rpartitionseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable | none = none): (Sequence, subseq, Sequence) */
 
-	/* TODO: startswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): bool */
+	/* TODO: startswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable | none = none): bool */
 
-	/* TODO: endswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable = none): bool */
+	/* TODO: endswithseq(subseq: Sequence | rt.SeqSome, start: int = 0, end: int = -1, key: Callable | none = none): bool */
 
 
 	/* Special proxy functions that are implemented using multiple method hints */
@@ -4164,7 +4198,7 @@ DeeType_GetSeqClass(DeeTypeObject const *__restrict self) {
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Sum(DeeObject *__restrict self) {
-	return DeeObject_InvokeMethodHint(seq_sum, self);
+	return DeeObject_InvokeMethodHint(seq_sum, self, Dee_None);
 }
 
 PUBLIC WUNUSED NONNULL((1)) int DCALL
@@ -4179,12 +4213,12 @@ DeeSeq_All(DeeObject *__restrict self) {
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Min(DeeObject *self) {
-	return DeeObject_InvokeMethodHint(seq_min, self);
+	return DeeObject_InvokeMethodHint(seq_min, self, Dee_None);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Max(DeeObject *self) {
-	return DeeObject_InvokeMethodHint(seq_max, self);
+	return DeeObject_InvokeMethodHint(seq_max, self, Dee_None);
 }
 
 /* Unpack the given sequence `self' into `dst_length' items then stored within the `dst' vector.

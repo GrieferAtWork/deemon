@@ -743,23 +743,25 @@ DeeMA___seq_min__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		size_t start;
 		size_t end;
+		DeeObject *def;
 		DeeObject *key;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
+	args.def = Dee_None;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_min__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_def_key, "|" UNPuSIZ UNPxSIZ "oo:__seq_min__", &args))
 		goto err;
 {
 	DREF DeeObject *result;
 	if (args.start == 0 && args.end == (size_t)-1) {
 		result = !DeeNone_Check(args.key)
-		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min_with_key))(self, args.key)
-		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min))(self);
+		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min_with_key))(self, args.def, args.key)
+		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min))(self, args.def);
 	} else {
 		result = !DeeNone_Check(args.key)
-		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min_with_range_and_key))(self, args.start, args.end, args.key)
-		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min_with_range))(self, args.start, args.end);
+		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min_with_range_and_key))(self, args.start, args.end, args.def, args.key)
+		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_min_with_range))(self, args.start, args.end, args.def);
 	}
 	return result;
 err:
@@ -771,23 +773,25 @@ DeeMA___seq_max__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		size_t start;
 		size_t end;
+		DeeObject *def;
 		DeeObject *key;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
+	args.def = Dee_None;
 	args.key = Dee_None;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_key, "|" UNPuSIZ UNPxSIZ "o:__seq_max__", &args))
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_def_key, "|" UNPuSIZ UNPxSIZ "oo:__seq_max__", &args))
 		goto err;
 {
 	DREF DeeObject *result;
 	if (args.start == 0 && args.end == (size_t)-1) {
 		result = !DeeNone_Check(args.key)
-		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max_with_key))(self, args.key)
-		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max))(self);
+		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max_with_key))(self, args.def, args.key)
+		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max))(self, args.def);
 	} else {
 		result = !DeeNone_Check(args.key)
-		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max_with_range_and_key))(self, args.start, args.end, args.key)
-		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max_with_range))(self, args.start, args.end);
+		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max_with_range_and_key))(self, args.start, args.end, args.def, args.key)
+		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_max_with_range))(self, args.start, args.end, args.def);
 	}
 	return result;
 err:
@@ -799,17 +803,25 @@ DeeMA___seq_sum__(DeeObject *__restrict self, size_t argc, DeeObject *const *arg
 	struct {
 		size_t start;
 		size_t end;
+		DeeObject *def;
+		DeeObject *key;
 	} args;
 	args.start = 0;
 	args.end = (size_t)-1;
-	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end, "|" UNPuSIZ UNPxSIZ ":__seq_sum__", &args))
+	args.def = Dee_None;
+	args.key = Dee_None;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__start_end_def_key, "|" UNPuSIZ UNPxSIZ "oo:__seq_sum__", &args))
 		goto err;
 {
 	DREF DeeObject *result;
 	if (args.start == 0 && args.end == (size_t)-1) {
-		result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sum))(self);
+		result = !DeeNone_Check(args.key)
+		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sum_with_key))(self, args.def, args.key)
+		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sum))(self, args.def);
 	} else {
-		result = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sum_with_range))(self, args.start, args.end);
+		result = !DeeNone_Check(args.key)
+		         ? (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sum_with_range_and_key))(self, args.start, args.end, args.def, args.key)
+		         : (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_sum_with_range))(self, args.start, args.end, args.def);
 	}
 	return result;
 err:

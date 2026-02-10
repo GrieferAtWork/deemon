@@ -238,7 +238,9 @@ enum Dee_tmh_id {
 	Dee_TMH_seq_max_with_range,
 	Dee_TMH_seq_max_with_range_and_key,
 	Dee_TMH_seq_sum,
+	Dee_TMH_seq_sum_with_key,
 	Dee_TMH_seq_sum_with_range,
+	Dee_TMH_seq_sum_with_range_and_key,
 	Dee_TMH_seq_count,
 	Dee_TMH_seq_count_with_key,
 	Dee_TMH_seq_count_with_range,
@@ -555,20 +557,22 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_reduce_wit
 typedef WUNUSED_T NONNULL_T((1, 2, 5)) DREF DeeObject *(DCALL *DeeMH_seq_reduce_with_range_and_init_t)(DeeObject *self, DeeObject *combine, size_t start, size_t end, DeeObject *init);
 
 /* Sequence_min, __seq_min__ */
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_min_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_min_with_key_t)(DeeObject *self, DeeObject *key);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_min_with_range_t)(DeeObject *__restrict self, size_t start, size_t end);
-typedef WUNUSED_T NONNULL_T((1, 4)) DREF DeeObject *(DCALL *DeeMH_seq_min_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_min_t)(DeeObject *self, DeeObject *def);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_min_with_key_t)(DeeObject *self, DeeObject *def, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 4)) DREF DeeObject *(DCALL *DeeMH_seq_min_with_range_t)(DeeObject *self, size_t start, size_t end, DeeObject *def);
+typedef WUNUSED_T NONNULL_T((1, 4, 5)) DREF DeeObject *(DCALL *DeeMH_seq_min_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key);
 
 /* Sequence_max, __seq_max__ */
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_max_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_max_with_key_t)(DeeObject *self, DeeObject *key);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_max_with_range_t)(DeeObject *__restrict self, size_t start, size_t end);
-typedef WUNUSED_T NONNULL_T((1, 4)) DREF DeeObject *(DCALL *DeeMH_seq_max_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_max_t)(DeeObject *self, DeeObject *def);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_max_with_key_t)(DeeObject *self, DeeObject *def, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 4)) DREF DeeObject *(DCALL *DeeMH_seq_max_with_range_t)(DeeObject *self, size_t start, size_t end, DeeObject *def);
+typedef WUNUSED_T NONNULL_T((1, 4, 5)) DREF DeeObject *(DCALL *DeeMH_seq_max_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key);
 
 /* Sequence_sum, __seq_sum__ */
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_sum_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_seq_sum_with_range_t)(DeeObject *__restrict self, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeMH_seq_sum_t)(DeeObject *self, DeeObject *def);
+typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_seq_sum_with_key_t)(DeeObject *self, DeeObject *def, DeeObject *key);
+typedef WUNUSED_T NONNULL_T((1, 4)) DREF DeeObject *(DCALL *DeeMH_seq_sum_with_range_t)(DeeObject *self, size_t start, size_t end, DeeObject *def);
+typedef WUNUSED_T NONNULL_T((1, 4, 5)) DREF DeeObject *(DCALL *DeeMH_seq_sum_with_range_and_key_t)(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key);
 
 /* Sequence_count, __seq_count__ */
 typedef WUNUSED_T NONNULL_T((1, 2)) size_t (DCALL *DeeMH_seq_count_t)(DeeObject *self, DeeObject *item);
@@ -1136,7 +1140,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_reduce__(DeeObject *__res
 
 #define DeeMA___seq_min___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_min___name  _DeeMA_ATTRSTR(__seq_min__)
-#define DeeMA___seq_min___doc   "(start=!0,end=!-1,key:?DCallable=!N)->"
+#define DeeMA___seq_min___doc   "(start=!0,end=!-1,def=!N,key:?DCallable=!N)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_min__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_min_flags DeeMA___seq_min___flags
 #define DeeMA_Sequence_min_name  _DeeMA_ATTRSTR(min)
@@ -1145,7 +1149,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_min__(DeeObject *__restri
 
 #define DeeMA___seq_max___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_max___name  _DeeMA_ATTRSTR(__seq_max__)
-#define DeeMA___seq_max___doc   "(start=!0,end=!-1,key:?DCallable=!N)->"
+#define DeeMA___seq_max___doc   "(start=!0,end=!-1,def=!N,key:?DCallable=!N)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_max__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_max_flags DeeMA___seq_max___flags
 #define DeeMA_Sequence_max_name  _DeeMA_ATTRSTR(max)
@@ -1154,7 +1158,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_max__(DeeObject *__restri
 
 #define DeeMA___seq_sum___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_sum___name  _DeeMA_ATTRSTR(__seq_sum__)
-#define DeeMA___seq_sum___doc   "(start=!0,end=!-1)->"
+#define DeeMA___seq_sum___doc   "(start=!0,end=!-1,def=!N,key:?DCallable=!N)->"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sum__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_sum_flags DeeMA___seq_sum___flags
 #define DeeMA_Sequence_sum_name  _DeeMA_ATTRSTR(sum)

@@ -244,7 +244,9 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	(Dee_funptr_t)&default__seq_max_with_range__unsupported,
 	(Dee_funptr_t)&default__seq_max_with_range_and_key__unsupported,
 	(Dee_funptr_t)&default__seq_sum__unsupported,
+	(Dee_funptr_t)&default__seq_sum_with_key__unsupported,
 	(Dee_funptr_t)&default__seq_sum_with_range__unsupported,
+	(Dee_funptr_t)&default__seq_sum_with_range_and_key__unsupported,
 	(Dee_funptr_t)&default__seq_count__unsupported,
 	(Dee_funptr_t)&default__seq_count_with_key__unsupported,
 	(Dee_funptr_t)&default__seq_count_with_range__unsupported,
@@ -1007,8 +1009,16 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_sum[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_sum, NULL, Dee_SEQCLASS_SEQ, &default__seq_sum__with_callattr_sum),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_sum_with_key[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_sum, NULL, Dee_SEQCLASS_SEQ, &default__seq_sum_with_key__with_callattr_sum),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_sum_with_range[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_sum, NULL, Dee_SEQCLASS_SEQ, &default__seq_sum_with_range__with_callattr_sum),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_sum_with_range_and_key[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_sum, NULL, Dee_SEQCLASS_SEQ, &default__seq_sum_with_range_and_key__with_callattr_sum),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_count[2] = {
@@ -1872,7 +1882,7 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_popitem[2]
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_popitem, NULL, Dee_SEQCLASS_MAP, &default__map_popitem__with_callattr_popitem),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[252] = {
+INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, NULL, mh_operators_seq_operator_bool, &default__seq_operator_bool__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_bool__with_callobjectcache___seq_bool__, &mh_select_seq_operator_bool),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_sizeob, mh_operators_seq_operator_sizeob, &default__seq_operator_sizeob__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_sizeob__with_callobjectcache___seq_size__, &mh_select_seq_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_size, mh_operators_seq_operator_size, &default__seq_operator_size__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_size__with_callobjectcache___seq_size__, &mh_select_seq_operator_size),
@@ -1962,7 +1972,9 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[252] = {
 	MH_INIT_SPEC_INIT(&str___seq_max__, mh_secondary_seq_max_with_range, NULL, NULL, &default__seq_max_with_range__with_callattr___seq_max__, offsetof(struct Dee_type_mh_cache, mhc___seq_max__), MH_KIND_METHOD, &default__seq_max_with_range__with_callobjectcache___seq_max__, &mh_select_seq_max_with_range),
 	MH_INIT_SPEC_INIT(&str___seq_max__, mh_secondary_seq_max_with_range_and_key, NULL, NULL, &default__seq_max_with_range_and_key__with_callattr___seq_max__, offsetof(struct Dee_type_mh_cache, mhc___seq_max__), MH_KIND_METHOD, &default__seq_max_with_range_and_key__with_callobjectcache___seq_max__, &mh_select_seq_max_with_range_and_key),
 	MH_INIT_SPEC_INIT(&str___seq_sum__, mh_secondary_seq_sum, NULL, NULL, &default__seq_sum__with_callattr___seq_sum__, offsetof(struct Dee_type_mh_cache, mhc___seq_sum__), MH_KIND_METHOD, &default__seq_sum__with_callobjectcache___seq_sum__, &mh_select_seq_sum),
+	MH_INIT_SPEC_INIT(&str___seq_sum__, mh_secondary_seq_sum_with_key, NULL, NULL, &default__seq_sum_with_key__with_callattr___seq_sum__, offsetof(struct Dee_type_mh_cache, mhc___seq_sum__), MH_KIND_METHOD, &default__seq_sum_with_key__with_callobjectcache___seq_sum__, &mh_select_seq_sum_with_key),
 	MH_INIT_SPEC_INIT(&str___seq_sum__, mh_secondary_seq_sum_with_range, NULL, NULL, &default__seq_sum_with_range__with_callattr___seq_sum__, offsetof(struct Dee_type_mh_cache, mhc___seq_sum__), MH_KIND_METHOD, &default__seq_sum_with_range__with_callobjectcache___seq_sum__, &mh_select_seq_sum_with_range),
+	MH_INIT_SPEC_INIT(&str___seq_sum__, mh_secondary_seq_sum_with_range_and_key, NULL, NULL, &default__seq_sum_with_range_and_key__with_callattr___seq_sum__, offsetof(struct Dee_type_mh_cache, mhc___seq_sum__), MH_KIND_METHOD, &default__seq_sum_with_range_and_key__with_callobjectcache___seq_sum__, &mh_select_seq_sum_with_range_and_key),
 	MH_INIT_SPEC_INIT(&str___seq_count__, mh_secondary_seq_count, NULL, NULL, &default__seq_count__with_callattr___seq_count__, offsetof(struct Dee_type_mh_cache, mhc___seq_count__), MH_KIND_METHOD, &default__seq_count__with_callobjectcache___seq_count__, &mh_select_seq_count),
 	MH_INIT_SPEC_INIT(&str___seq_count__, mh_secondary_seq_count_with_key, NULL, NULL, &default__seq_count_with_key__with_callattr___seq_count__, offsetof(struct Dee_type_mh_cache, mhc___seq_count__), MH_KIND_METHOD, &default__seq_count_with_key__with_callobjectcache___seq_count__, &mh_select_seq_count_with_key),
 	MH_INIT_SPEC_INIT(&str___seq_count__, mh_secondary_seq_count_with_range, NULL, NULL, &default__seq_count_with_range__with_callattr___seq_count__, offsetof(struct Dee_type_mh_cache, mhc___seq_count__), MH_KIND_METHOD, &default__seq_count_with_range__with_callobjectcache___seq_count__, &mh_select_seq_count_with_range),
@@ -2744,7 +2756,9 @@ INTERN struct Dee_type_mh_cache mh_cache_empty = {
 	/* .mh_seq_max_with_range                      = */ &default__seq_max_with_range__empty,
 	/* .mh_seq_max_with_range_and_key              = */ &default__seq_max_with_range_and_key__empty,
 	/* .mh_seq_sum                                 = */ &default__seq_sum__empty,
+	/* .mh_seq_sum_with_key                        = */ &default__seq_sum_with_key__empty,
 	/* .mh_seq_sum_with_range                      = */ &default__seq_sum_with_range__empty,
+	/* .mh_seq_sum_with_range_and_key              = */ &default__seq_sum_with_range_and_key__empty,
 	/* .mh_seq_count                               = */ &default__seq_count__empty,
 	/* .mh_seq_count_with_key                      = */ &default__seq_count_with_key__empty,
 	/* .mh_seq_count_with_range                    = */ &default__seq_count_with_range__empty,

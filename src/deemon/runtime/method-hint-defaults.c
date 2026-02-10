@@ -8920,29 +8920,46 @@ err_data_result:
 
 
 /* seq_min */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min__with_callattr_min(DeeObject *__restrict self) {
-	return DeeObject_CallAttr(self, Dee_AsObject(&str_min), 0, NULL);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_min__with_callattr_min(DeeObject *self, DeeObject *def) {
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_min), 3, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min__with_callattr___seq_min__(DeeObject *__restrict self) {
-	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_min__), 0, NULL);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_min__with_callattr___seq_min__(DeeObject *self, DeeObject *def) {
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_min__), 3, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min__with_callobjectcache___seq_min__(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_min__with_callobjectcache___seq_min__(DeeObject *self, DeeObject *def) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_min__with_callobjectcache___seq_min__(Dee_TYPE(self), self);
+	return tdefault__seq_min__with_callobjectcache___seq_min__(Dee_TYPE(self), self, def);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, 1, (DeeObject *const *)&self);
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, 3, args);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min__unsupported(DeeObject *__restrict self) {
-	err_seq_unsupportedf(self, "__seq_min__()");
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_min__unsupported(DeeObject *self, DeeObject *def) {
+	err_seq_unsupportedf(self, "__seq_min__(%r)", def);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_min__empty(DeeObject *UNUSED(self), DeeObject *def) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_min_foreach_cb
@@ -8966,15 +8983,15 @@ seq_min_foreach_cb(void *arg, DeeObject *item) {
 	return temp;
 }
 #endif /* !DEFINED_seq_min_foreach_cb */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min__with__seq_operator_foreach(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_min__with__seq_operator_foreach(DeeObject *self, DeeObject *def) {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_min_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -8983,41 +9000,49 @@ err_r:
 
 
 /* seq_min_with_key */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_min_with_key__with_callattr_min(DeeObject *self, DeeObject *key) {
-	DeeObject *args[3];
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_min_with_key__with_callattr_min(DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return DeeObject_CallAttr(self, Dee_AsObject(&str_min), 3, args);
+	args[2] = def;
+	args[3] = key;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_min), 4, args);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_min_with_key__with_callattr___seq_min__(DeeObject *self, DeeObject *key) {
-	DeeObject *args[3];
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_min_with_key__with_callattr___seq_min__(DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_min__), 3, args);
+	args[2] = def;
+	args[3] = key;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_min__), 4, args);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_min_with_key__with_callobjectcache___seq_min__(DeeObject *self, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_min_with_key__with_callobjectcache___seq_min__(DeeObject *self, DeeObject *def, DeeObject *key) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_min_with_key__with_callobjectcache___seq_min__(Dee_TYPE(self), self, key);
+	return tdefault__seq_min_with_key__with_callobjectcache___seq_min__(Dee_TYPE(self), self, def, key);
 #else /* __OPTIMIZE_SIZE__ */
-	DeeObject *args[3];
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, 3, args);
+	args[2] = def;
+	args[3] = key;
+	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, 4, args);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_min_with_key__unsupported(DeeObject *self, DeeObject *key) {
-	err_seq_unsupportedf(self, "__seq_min__(%r)", key);
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_min_with_key__unsupported(DeeObject *self, DeeObject *def, DeeObject *key) {
+	err_seq_unsupportedf(self, "__seq_min__(%r, %r)", def, key);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_min_with_key__empty(DeeObject *UNUSED(self), DeeObject *def, DeeObject *UNUSED(key)) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_minmax_with_key_data
@@ -9070,8 +9095,8 @@ err:
 	return -1;
 }
 #endif /* !DEFINED_seq_min_with_key_foreach_cb */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_min_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_min_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject *def, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
 	data.gsmmwk_key     = key;
@@ -9082,7 +9107,7 @@ default__seq_min_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -9100,29 +9125,34 @@ err_data:
 
 
 /* seq_min_with_range */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min_with_range__with_callattr_min(DeeObject *__restrict self, size_t start, size_t end) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str_min), PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_min_with_range__with_callattr_min(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str_min), PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min_with_range__with_callattr___seq_min__(DeeObject *__restrict self, size_t start, size_t end) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_min__), PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_min_with_range__with_callattr___seq_min__(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_min__), PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min_with_range__with_callobjectcache___seq_min__(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_min_with_range__with_callobjectcache___seq_min__(DeeObject *self, size_t start, size_t end, DeeObject *def) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_min_with_range__with_callobjectcache___seq_min__(Dee_TYPE(self), self, start, end);
+	return tdefault__seq_min_with_range__with_callobjectcache___seq_min__(Dee_TYPE(self), self, start, end, def);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ, start, end);
+	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ "o", start, end, def);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min_with_range__unsupported(DeeObject *__restrict self, size_t start, size_t end) {
-	err_seq_unsupportedf(self, "__seq_min__(%" PRFuSIZ ", %" PRFuSIZ ")", start, end);
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_min_with_range__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	err_seq_unsupportedf(self, "__seq_min__(%" PRFuSIZ ", %" PRFuSIZ ", %r)", start, end, def);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_min_with_range__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_min_foreach_cb
@@ -9156,15 +9186,15 @@ seq_min_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	return seq_min_foreach_cb(arg, item);
 }
 #endif /* !DEFINED_seq_min_enumerate_cb */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_min_with_range__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_min_with_range__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *def) {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_min_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -9173,29 +9203,34 @@ err_r:
 
 
 /* seq_min_with_range_and_key */
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_min_with_range_and_key__with_callattr_min(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str_min), PCKuSIZ PCKuSIZ "o", start, end, key);
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_min_with_range_and_key__with_callattr_min(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str_min), PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_min_with_range_and_key__with_callattr___seq_min__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_min__), PCKuSIZ PCKuSIZ "o", start, end, key);
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_min_with_range_and_key__with_callattr___seq_min__(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_min__), PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_min_with_range_and_key__with_callobjectcache___seq_min__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_min_with_range_and_key__with_callobjectcache___seq_min__(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_min_with_range_and_key__with_callobjectcache___seq_min__(Dee_TYPE(self), self, start, end, key);
+	return tdefault__seq_min_with_range_and_key__with_callobjectcache___seq_min__(Dee_TYPE(self), self, start, end, def, key);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_min_with_range_and_key__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	err_seq_unsupportedf(self, "__seq_min__(%" PRFuSIZ ", %" PRFuSIZ ", %r)", start, end, key);
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_min_with_range_and_key__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	err_seq_unsupportedf(self, "__seq_min__(%" PRFuSIZ ", %" PRFuSIZ ", %r, %r)", start, end, def, key);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_min_with_range_and_key__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def, DeeObject *UNUSED(key)) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_minmax_with_key_data
@@ -9258,8 +9293,8 @@ seq_min_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	return seq_min_with_key_foreach_cb(arg, item);
 }
 #endif /* !DEFINED_seq_min_with_key_enumerate_cb */
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_min_with_range_and_key__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_min_with_range_and_key__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
 	data.gsmmwk_key     = key;
@@ -9270,7 +9305,7 @@ default__seq_min_with_range_and_key__with__seq_enumerate_index(DeeObject *self, 
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -9288,29 +9323,46 @@ err_data:
 
 
 /* seq_max */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max__with_callattr_max(DeeObject *__restrict self) {
-	return DeeObject_CallAttr(self, Dee_AsObject(&str_max), 0, NULL);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_max__with_callattr_max(DeeObject *self, DeeObject *def) {
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_max), 3, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max__with_callattr___seq_max__(DeeObject *__restrict self) {
-	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_max__), 0, NULL);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_max__with_callattr___seq_max__(DeeObject *self, DeeObject *def) {
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_max__), 3, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max__with_callobjectcache___seq_max__(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_max__with_callobjectcache___seq_max__(DeeObject *self, DeeObject *def) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_max__with_callobjectcache___seq_max__(Dee_TYPE(self), self);
+	return tdefault__seq_max__with_callobjectcache___seq_max__(Dee_TYPE(self), self, def);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, 1, (DeeObject *const *)&self);
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, 3, args);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max__unsupported(DeeObject *__restrict self) {
-	err_seq_unsupportedf(self, "__seq_max__()");
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_max__unsupported(DeeObject *self, DeeObject *def) {
+	err_seq_unsupportedf(self, "__seq_max__(%r)", def);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_max__empty(DeeObject *UNUSED(self), DeeObject *def) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_max_foreach_cb
@@ -9334,15 +9386,15 @@ seq_max_foreach_cb(void *arg, DeeObject *item) {
 	return temp;
 }
 #endif /* !DEFINED_seq_max_foreach_cb */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max__with__seq_operator_foreach(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_max__with__seq_operator_foreach(DeeObject *self, DeeObject *def) {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_max_foreach_cb, &result);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -9351,41 +9403,49 @@ err_r:
 
 
 /* seq_max_with_key */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_max_with_key__with_callattr_max(DeeObject *self, DeeObject *key) {
-	DeeObject *args[3];
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_max_with_key__with_callattr_max(DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return DeeObject_CallAttr(self, Dee_AsObject(&str_max), 3, args);
+	args[2] = def;
+	args[3] = key;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_max), 4, args);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_max_with_key__with_callattr___seq_max__(DeeObject *self, DeeObject *key) {
-	DeeObject *args[3];
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_max_with_key__with_callattr___seq_max__(DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_max__), 3, args);
+	args[2] = def;
+	args[3] = key;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_max__), 4, args);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_max_with_key__with_callobjectcache___seq_max__(DeeObject *self, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_max_with_key__with_callobjectcache___seq_max__(DeeObject *self, DeeObject *def, DeeObject *key) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_max_with_key__with_callobjectcache___seq_max__(Dee_TYPE(self), self, key);
+	return tdefault__seq_max_with_key__with_callobjectcache___seq_max__(Dee_TYPE(self), self, def, key);
 #else /* __OPTIMIZE_SIZE__ */
-	DeeObject *args[3];
+	DeeObject *args[4];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
-	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, 3, args);
+	args[2] = def;
+	args[3] = key;
+	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, 4, args);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_max_with_key__unsupported(DeeObject *self, DeeObject *key) {
-	err_seq_unsupportedf(self, "__seq_max__(%r)", key);
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_max_with_key__unsupported(DeeObject *self, DeeObject *def, DeeObject *key) {
+	err_seq_unsupportedf(self, "__seq_max__(%r, %r)", def, key);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_max_with_key__empty(DeeObject *UNUSED(self), DeeObject *def, DeeObject *UNUSED(key)) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_minmax_with_key_data
@@ -9438,8 +9498,8 @@ err:
 	return -1;
 }
 #endif /* !DEFINED_seq_max_with_key_foreach_cb */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-default__seq_max_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_max_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject *def, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
 	data.gsmmwk_key     = key;
@@ -9450,7 +9510,7 @@ default__seq_max_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -9468,29 +9528,34 @@ err_data:
 
 
 /* seq_max_with_range */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max_with_range__with_callattr_max(DeeObject *__restrict self, size_t start, size_t end) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str_max), PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_max_with_range__with_callattr_max(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str_max), PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max_with_range__with_callattr___seq_max__(DeeObject *__restrict self, size_t start, size_t end) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_max__), PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_max_with_range__with_callattr___seq_max__(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_max__), PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max_with_range__with_callobjectcache___seq_max__(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_max_with_range__with_callobjectcache___seq_max__(DeeObject *self, size_t start, size_t end, DeeObject *def) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_max_with_range__with_callobjectcache___seq_max__(Dee_TYPE(self), self, start, end);
+	return tdefault__seq_max_with_range__with_callobjectcache___seq_max__(Dee_TYPE(self), self, start, end, def);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ, start, end);
+	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ "o", start, end, def);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max_with_range__unsupported(DeeObject *__restrict self, size_t start, size_t end) {
-	err_seq_unsupportedf(self, "__seq_max__(%" PRFuSIZ ", %" PRFuSIZ ")", start, end);
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_max_with_range__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	err_seq_unsupportedf(self, "__seq_max__(%" PRFuSIZ ", %" PRFuSIZ ", %r)", start, end, def);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_max_with_range__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_max_foreach_cb
@@ -9524,15 +9589,15 @@ seq_max_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	return seq_max_foreach_cb(arg, item);
 }
 #endif /* !DEFINED_seq_max_enumerate_cb */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_max_with_range__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_max_with_range__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *def) {
 	DREF DeeObject *result = NULL;
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_max_enumerate_cb, &result, start, end);
 	if unlikely(foreach_status < 0)
 		goto err_r;
 	if unlikely(!result)
-		return_none;
+		return_reference(def);
 	return result;
 err_r:
 	Dee_XDecref(result);
@@ -9541,29 +9606,34 @@ err_r:
 
 
 /* seq_max_with_range_and_key */
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_max_with_range_and_key__with_callattr_max(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str_max), PCKuSIZ PCKuSIZ "o", start, end, key);
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_max_with_range_and_key__with_callattr_max(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str_max), PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_max_with_range_and_key__with_callattr___seq_max__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_max__), PCKuSIZ PCKuSIZ "o", start, end, key);
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_max_with_range_and_key__with_callattr___seq_max__(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_max__), PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_max_with_range_and_key__with_callobjectcache___seq_max__(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_max_with_range_and_key__with_callobjectcache___seq_max__(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_max_with_range_and_key__with_callobjectcache___seq_max__(Dee_TYPE(self), self, start, end, key);
+	return tdefault__seq_max_with_range_and_key__with_callobjectcache___seq_max__(Dee_TYPE(self), self, start, end, def, key);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ "o", start, end, key);
+	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_max_with_range_and_key__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	err_seq_unsupportedf(self, "__seq_max__(%" PRFuSIZ ", %" PRFuSIZ ", %r)", start, end, key);
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_max_with_range_and_key__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	err_seq_unsupportedf(self, "__seq_max__(%" PRFuSIZ ", %" PRFuSIZ ", %r, %r)", start, end, def, key);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_max_with_range_and_key__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def, DeeObject *UNUSED(key)) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_minmax_with_key_data
@@ -9626,8 +9696,8 @@ seq_max_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	return seq_max_with_key_foreach_cb(arg, item);
 }
 #endif /* !DEFINED_seq_max_with_key_enumerate_cb */
-INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-default__seq_max_with_range_and_key__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_max_with_range_and_key__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	struct seq_minmax_with_key_data data;
 	data.gsmmwk_key     = key;
@@ -9638,7 +9708,7 @@ default__seq_max_with_range_and_key__with__seq_enumerate_index(DeeObject *self, 
 		goto err_data;
 	if unlikely(!data.gsmmwk_result) {
 		ASSERT(!data.gsmmwk_kresult);
-		return_none;
+		return_reference(def);
 	}
 	Dee_XDecref(data.gsmmwk_kresult);
 	return data.gsmmwk_result;
@@ -9656,33 +9726,50 @@ err_data:
 
 
 /* seq_sum */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum__with_callattr_sum(DeeObject *__restrict self) {
-	return DeeObject_CallAttr(self, Dee_AsObject(&str_sum), 0, NULL);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_sum__with_callattr_sum(DeeObject *self, DeeObject *def) {
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_sum), 3, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum__with_callattr___seq_sum__(DeeObject *__restrict self) {
-	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_sum__), 0, NULL);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_sum__with_callattr___seq_sum__(DeeObject *self, DeeObject *def) {
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_sum__), 3, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum__with_callobjectcache___seq_sum__(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_sum__with_callobjectcache___seq_sum__(DeeObject *self, DeeObject *def) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_sum__with_callobjectcache___seq_sum__(Dee_TYPE(self), self);
+	return tdefault__seq_sum__with_callobjectcache___seq_sum__(Dee_TYPE(self), self, def);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_call(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, 1, (DeeObject *const *)&self);
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, self, 3, args);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum__unsupported(DeeObject *__restrict self) {
-	err_seq_unsupportedf(self, "__seq_sum__()");
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_sum__unsupported(DeeObject *self, DeeObject *def) {
+	err_seq_unsupportedf(self, "__seq_sum__(%r)", def);
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum__with__seq_operator_foreach(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_sum__empty(DeeObject *UNUSED(self), DeeObject *def) {
+	return_reference(def);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__seq_sum__with__seq_operator_foreach(DeeObject *self, DeeObject *def) {
 	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
@@ -9692,7 +9779,7 @@ default__seq_sum__with__seq_operator_foreach(DeeObject *__restrict self) {
 		goto err;
 	result = Dee_accu_pack(&accu);
 	if unlikely(result == ITER_DONE)
-		result = DeeNone_NewRef();
+		return_reference(def);
 	return result;
 err:
 	Dee_accu_fini(&accu);
@@ -9700,30 +9787,122 @@ err:
 }
 
 
-/* seq_sum_with_range */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum_with_range__with_callattr_sum(DeeObject *__restrict self, size_t start, size_t end) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str_sum), PCKuSIZ PCKuSIZ, start, end);
+/* seq_sum_with_key */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_sum_with_key__with_callattr_sum(DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	args[3] = key;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str_sum), 4, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum_with_range__with_callattr___seq_sum__(DeeObject *__restrict self, size_t start, size_t end) {
-	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_sum__), PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_sum_with_key__with_callattr___seq_sum__(DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	args[3] = key;
+	return DeeObject_CallAttr(self, Dee_AsObject(&str___seq_sum__), 4, args);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum_with_range__with_callobjectcache___seq_sum__(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_sum_with_key__with_callobjectcache___seq_sum__(DeeObject *self, DeeObject *def, DeeObject *key) {
 #ifdef __OPTIMIZE_SIZE__
-	return tdefault__seq_sum_with_range__with_callobjectcache___seq_sum__(Dee_TYPE(self), self, start, end);
+	return tdefault__seq_sum_with_key__with_callobjectcache___seq_sum__(Dee_TYPE(self), self, def, key);
 #else /* __OPTIMIZE_SIZE__ */
-	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, self, PCKuSIZ PCKuSIZ, start, end);
+	DeeObject *args[4];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	args[3] = key;
+	return mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, self, 4, args);
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum_with_range__unsupported(DeeObject *__restrict self, size_t start, size_t end) {
-	err_seq_unsupportedf(self, "__seq_sum__(%" PRFuSIZ ", %" PRFuSIZ ")", start, end);
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_sum_with_key__unsupported(DeeObject *self, DeeObject *def, DeeObject *key) {
+	err_seq_unsupportedf(self, "__seq_sum__(%r, %r)", def, key);
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_sum_with_key__empty(DeeObject *UNUSED(self), DeeObject *def, DeeObject *UNUSED(key)) {
+	return_reference(def);
+}
+
+#ifndef DEFINED_seq_sum_with_key_foreach_cb
+#define DEFINED_seq_sum_with_key_foreach_cb
+struct seq_sum_with_key_foreach_data {
+	struct Dee_accu sswkfd_accu; /* Accumulator */
+	DeeObject      *sswkfd_key;  /* [1..1] Key function */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seq_sum_with_key_foreach_cb(void *arg, DeeObject *item) {
+	struct seq_sum_with_key_foreach_data *data;
+	data = (struct seq_sum_with_key_foreach_data *)arg;
+	item = DeeObject_Call(data->sswkfd_key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	if (!item)
+		return 0;
+	return Dee_accu_add_inherited(&data->sswkfd_accu, item);
+err:
+	return -1;
+}
+#endif /* !DEFINED_seq_sum_with_key_foreach_cb */
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+default__seq_sum_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject *def, DeeObject *key) {
+	DREF DeeObject *result;
+	Dee_ssize_t foreach_status;
+	struct seq_sum_with_key_foreach_data data;
+	Dee_accu_init(&data.sswkfd_accu);
+	data.sswkfd_key = key;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_sum_with_key_foreach_cb, &data);
+	if unlikely(foreach_status < 0)
+		goto err;
+	result = Dee_accu_pack(&data.sswkfd_accu);
+	if unlikely(result == ITER_DONE)
+		return_reference(def);
+	return result;
+err:
+	Dee_accu_fini(&data.sswkfd_accu);
+	return NULL;
+}
+
+
+/* seq_sum_with_range */
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_sum_with_range__with_callattr_sum(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str_sum), PCKuSIZ PCKuSIZ "o", start, end, def);
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_sum_with_range__with_callattr___seq_sum__(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_sum__), PCKuSIZ PCKuSIZ "o", start, end, def);
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_sum_with_range__with_callobjectcache___seq_sum__(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__seq_sum_with_range__with_callobjectcache___seq_sum__(Dee_TYPE(self), self, start, end, def);
+#else /* __OPTIMIZE_SIZE__ */
+	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, self, PCKuSIZ PCKuSIZ "o", start, end, def);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_sum_with_range__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	err_seq_unsupportedf(self, "__seq_sum__(%" PRFuSIZ ", %" PRFuSIZ ", %r)", start, end, def);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_sum_with_range__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def) {
+	return_reference(def);
 }
 
 #ifndef DEFINED_seq_sum_enumerate_cb
@@ -9736,8 +9915,8 @@ seq_sum_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 	return Dee_accu_add(arg, item);
 }
 #endif /* !DEFINED_seq_sum_enumerate_cb */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__seq_sum_with_range__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+default__seq_sum_with_range__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *def) {
 	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
@@ -9747,10 +9926,90 @@ default__seq_sum_with_range__with__seq_enumerate_index(DeeObject *__restrict sel
 		goto err;
 	result = Dee_accu_pack(&accu);
 	if unlikely(result == ITER_DONE)
-		result = DeeNone_NewRef();
+		return_reference(def);
 	return result;
 err:
 	Dee_accu_fini(&accu);
+	return NULL;
+}
+
+
+/* seq_sum_with_range_and_key */
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_sum_with_range_and_key__with_callattr_sum(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str_sum), PCKuSIZ PCKuSIZ "oo", start, end, def, key);
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_sum_with_range_and_key__with_callattr___seq_sum__(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return DeeObject_CallAttrf(self, Dee_AsObject(&str___seq_sum__), PCKuSIZ PCKuSIZ "oo", start, end, def, key);
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_sum_with_range_and_key__with_callobjectcache___seq_sum__(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__seq_sum_with_range_and_key__with_callobjectcache___seq_sum__(Dee_TYPE(self), self, start, end, def, key);
+#else /* __OPTIMIZE_SIZE__ */
+	return mhcache_thiscallf(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___seq_sum__, self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_sum_with_range_and_key__unsupported(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	err_seq_unsupportedf(self, "__seq_sum__(%" PRFuSIZ ", %" PRFuSIZ ", %r, %r)", start, end, def, key);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_sum_with_range_and_key__empty(DeeObject *UNUSED(self), size_t UNUSED(start), size_t UNUSED(end), DeeObject *def, DeeObject *UNUSED(key)) {
+	return_reference(def);
+}
+
+#ifndef DEFINED_seq_sum_with_key_foreach_cb
+#define DEFINED_seq_sum_with_key_foreach_cb
+struct seq_sum_with_key_foreach_data {
+	struct Dee_accu sswkfd_accu; /* Accumulator */
+	DeeObject      *sswkfd_key;  /* [1..1] Key function */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seq_sum_with_key_foreach_cb(void *arg, DeeObject *item) {
+	struct seq_sum_with_key_foreach_data *data;
+	data = (struct seq_sum_with_key_foreach_data *)arg;
+	item = DeeObject_Call(data->sswkfd_key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	if (!item)
+		return 0;
+	return Dee_accu_add_inherited(&data->sswkfd_accu, item);
+err:
+	return -1;
+}
+#endif /* !DEFINED_seq_sum_with_key_foreach_cb */
+#ifndef DEFINED_seq_sum_with_key_enumerate_cb
+#define DEFINED_seq_sum_with_key_enumerate_cb
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+seq_sum_with_key_enumerate_cb(void *arg, size_t index, DeeObject *item) {
+	(void)index;
+	return item ? seq_sum_with_key_foreach_cb(arg, item) : 0;
+}
+#endif /* !DEFINED_seq_sum_with_key_enumerate_cb */
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+default__seq_sum_with_range_and_key__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	DREF DeeObject *result;
+	Dee_ssize_t foreach_status;
+	struct seq_sum_with_key_foreach_data data;
+	Dee_accu_init(&data.sswkfd_accu);
+	data.sswkfd_key = key;
+	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_sum_with_key_enumerate_cb, &data, start, end);
+	if unlikely(foreach_status < 0)
+		goto err;
+	result = Dee_accu_pack(&data.sswkfd_accu);
+	if unlikely(result == ITER_DONE)
+		return_reference(def);
+	return result;
+err:
+	Dee_accu_fini(&data.sswkfd_accu);
 	return NULL;
 }
 
@@ -22887,71 +23146,102 @@ tdefault__seq_reduce_with_range_and_init__with_callobjectcache___seq_reduce__(De
 }
 
 /* seq_min */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_min__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_min__, 1, (DeeObject *const *)&self);
-}
-
-/* seq_min_with_key */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-tdefault__seq_min_with_key__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *key) {
+tdefault__seq_min__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *def) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
+	args[2] = def;
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_min__, self, 3, args);
 }
 
+/* seq_min_with_key */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+tdefault__seq_min_with_key__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	args[3] = key;
+	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_min__, self, 4, args);
+}
+
 /* seq_min_with_range */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_min_with_range__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end) {
-	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+tdefault__seq_min_with_range__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
 /* seq_min_with_range_and_key */
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-tdefault__seq_min_with_range_and_key__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ "o", start, end, key);
+INTERN WUNUSED NONNULL((1, 2, 5, 6)) DREF DeeObject *DCALL
+tdefault__seq_min_with_range_and_key__with_callobjectcache___seq_min__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_min__, self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
 /* seq_max */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_max__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_max__, 1, (DeeObject *const *)&self);
-}
-
-/* seq_max_with_key */
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-tdefault__seq_max_with_key__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *key) {
+tdefault__seq_max__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *def) {
 	DeeObject *args[3];
 	args[0] = DeeInt_Zero;
 	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
-	args[2] = key;
+	args[2] = def;
 	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_max__, self, 3, args);
 }
 
+/* seq_max_with_key */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+tdefault__seq_max_with_key__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	args[3] = key;
+	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_max__, self, 4, args);
+}
+
 /* seq_max_with_range */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_max_with_range__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end) {
-	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+tdefault__seq_max_with_range__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ "o", start, end, def);
 }
 
 /* seq_max_with_range_and_key */
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-tdefault__seq_max_with_range_and_key__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *key) {
-	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ "o", start, end, key);
+INTERN WUNUSED NONNULL((1, 2, 5, 6)) DREF DeeObject *DCALL
+tdefault__seq_max_with_range_and_key__with_callobjectcache___seq_max__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_max__, self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
 /* seq_sum */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_sum__with_callobjectcache___seq_sum__(DeeTypeObject *tp_self, DeeObject *self) {
-	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, 1, (DeeObject *const *)&self);
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+tdefault__seq_sum__with_callobjectcache___seq_sum__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *def) {
+	DeeObject *args[3];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, self, 3, args);
+}
+
+/* seq_sum_with_key */
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+tdefault__seq_sum_with_key__with_callobjectcache___seq_sum__(DeeTypeObject *tp_self, DeeObject *self, DeeObject *def, DeeObject *key) {
+	DeeObject *args[4];
+	args[0] = DeeInt_Zero;
+	args[1] = Dee_AsObject(&Dee_int_SIZE_MAX);
+	args[2] = def;
+	args[3] = key;
+	return mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, self, 4, args);
 }
 
 /* seq_sum_with_range */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__seq_sum_with_range__with_callobjectcache___seq_sum__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end) {
-	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, self, PCKuSIZ PCKuSIZ, start, end);
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+tdefault__seq_sum_with_range__with_callobjectcache___seq_sum__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *def) {
+	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, self, PCKuSIZ PCKuSIZ "o", start, end, def);
+}
+
+/* seq_sum_with_range_and_key */
+INTERN WUNUSED NONNULL((1, 2, 5, 6)) DREF DeeObject *DCALL
+tdefault__seq_sum_with_range_and_key__with_callobjectcache___seq_sum__(DeeTypeObject *tp_self, DeeObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	return mhcache_thiscallf(tp_self, tp_self->tp_mhcache->mhc___seq_sum__, self, PCKuSIZ PCKuSIZ "oo", start, end, def, key);
 }
 
 /* seq_count */

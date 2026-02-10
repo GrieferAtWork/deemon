@@ -209,7 +209,9 @@ struct Dee_type_mh_cache {
 	DeeMH_seq_max_with_range_t mh_seq_max_with_range;
 	DeeMH_seq_max_with_range_and_key_t mh_seq_max_with_range_and_key;
 	DeeMH_seq_sum_t mh_seq_sum;
+	DeeMH_seq_sum_with_key_t mh_seq_sum_with_key;
 	DeeMH_seq_sum_with_range_t mh_seq_sum_with_range;
+	DeeMH_seq_sum_with_range_and_key_t mh_seq_sum_with_range_and_key;
 	DeeMH_seq_count_t mh_seq_count;
 	DeeMH_seq_count_with_key_t mh_seq_count_with_key;
 	DeeMH_seq_count_with_range_t mh_seq_count_with_range;

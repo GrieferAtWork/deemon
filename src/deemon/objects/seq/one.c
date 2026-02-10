@@ -629,39 +629,51 @@ so_mh_seq_any_with_range_and_key(SeqOne *self, size_t start,
 	return 0;
 }
 
-#define so_mh_seq_min          _so_getitem
-#define so_mh_seq_max          _so_getitem
+#define so_mh_seq_max          so_mh_seq_min
 #define so_mh_seq_max_with_key so_mh_seq_min_with_key
+#define so_mh_seq_sum          so_mh_seq_min
+#define so_mh_seq_sum_with_key so_mh_seq_min_with_key
 #ifdef DCALL_CALLER_CLEANUP
+#define so_mh_seq_min          _so_getitem
 #define so_mh_seq_min_with_key _so_getitem
 #else /* DCALL_CALLER_CLEANUP */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-so_mh_seq_min_with_key(SeqOne *self, DeeObject *key) {
+so_mh_seq_min(SeqOne *self, DeeObject *def) {
+	(void)def;
+	return_reference(self->so_item);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+so_mh_seq_min_with_key(SeqOne *self, DeeObject *def, DeeObject *key) {
+	(void)def;
 	(void)key;
 	return_reference(self->so_item);
 }
 #endif /* !DCALL_CALLER_CLEANUP */
 
+#define so_mh_seq_sum_with_range so_mh_seq_min_with_range
 #define so_mh_seq_max_with_range so_mh_seq_min_with_range
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-so_mh_seq_min_with_range(SeqOne *__restrict self, size_t start, size_t end) {
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+so_mh_seq_min_with_range(SeqOne *self, size_t start, size_t end, DeeObject *def) {
+	(void)def;
 	if likely(start == 0 && end >= 1)
 		return_reference(self->so_item);
 	DeeRT_ErrEmptySequence(self);
 	return NULL;
 }
 
+#define so_mh_seq_sum_with_range_and_key so_mh_seq_min_with_range_and_key
 #define so_mh_seq_max_with_range_and_key so_mh_seq_min_with_range_and_key
-PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-so_mh_seq_min_with_range_and_key(SeqOne *self, size_t start,
-                                 size_t end, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+so_mh_seq_min_with_range_and_key(SeqOne *self, size_t start, size_t end,
+                                 DeeObject *def, DeeObject *key) {
 	(void)key;
-	return so_mh_seq_min_with_range(self, start, end);
+	return so_mh_seq_min_with_range(self, start, end, def);
 }
 
 
 
-#define so_mh_seq_reduce so_mh_seq_min_with_key
+#define so_mh_seq_reduce so_mh_seq_min
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 so_mh_seq_reduce_with_init(SeqOne *self, DeeObject *combine, DeeObject *init) {
 	DeeObject *args[2];
@@ -673,8 +685,7 @@ so_mh_seq_reduce_with_init(SeqOne *self, DeeObject *combine, DeeObject *init) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 so_mh_seq_reduce_with_range(SeqOne *self, DeeObject *combine,
                             size_t start, size_t end) {
-	(void)combine;
-	return so_mh_seq_min_with_range(self, start, end);
+	return so_mh_seq_min_with_range(self, start, end, combine);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
@@ -687,9 +698,6 @@ so_mh_seq_reduce_with_range_and_init(SeqOne *self, DeeObject *combine,
 	return NULL;
 }
 
-
-#define so_mh_seq_sum            _so_getitem
-#define so_mh_seq_sum_with_range so_mh_seq_min_with_range
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 so_mh_seq_count(SeqOne *self, DeeObject *item) {
@@ -1147,7 +1155,9 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_max_with_range, &so_mh_seq_max_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &so_mh_seq_max_with_range_and_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_sum, &so_mh_seq_sum, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sum_with_key, &so_mh_seq_sum_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_sum_with_range, &so_mh_seq_sum_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_sum_with_range_and_key, &so_mh_seq_sum_with_range_and_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_count, &so_mh_seq_count, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_count_with_key, &so_mh_seq_count_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_count_with_range, &so_mh_seq_count_with_range, METHOD_FNOREFESCAPE),

@@ -116,7 +116,9 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_max_with_key_t DCALL mh_selec
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_max_with_range_t DCALL mh_select_seq_max_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_max_with_range_and_key_t DCALL mh_select_seq_max_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_t DCALL mh_select_seq_sum(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_with_key_t DCALL mh_select_seq_sum_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_with_range_t DCALL mh_select_seq_sum_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_sum_with_range_and_key_t DCALL mh_select_seq_sum_with_range_and_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_count_t DCALL mh_select_seq_count(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_count_with_key_t DCALL mh_select_seq_count_with_key(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_seq_count_with_range_t DCALL mh_select_seq_count_with_range(DeeTypeObject *self, DeeTypeObject *orig_type);

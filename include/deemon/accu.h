@@ -113,6 +113,9 @@ Dee_accu_pack(struct Dee_accu *__restrict self);
  * HINT: This function is `Dee_foreach_t'-compatible. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_accu_add(/*struct Dee_accu*/ void *self, DeeObject *item);
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+Dee_accu_add_inherited(/*struct Dee_accu*/ void *self,
+                       /*inherit(always)*/ DREF DeeObject *item);
 
 /* Add all elements of `items' into the accumulator. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

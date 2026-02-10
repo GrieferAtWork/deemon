@@ -1328,161 +1328,193 @@ super_mh__seq_reduce_with_range_and_init(DeeSuperObject *self, DeeObject *combin
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_mh__seq_min(DeeSuperObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_mh__seq_min(DeeSuperObject *self, DeeObject *def) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_min, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_min_t)specs.smh_cb)(self->s_self);
+		return (*(DeeMH_seq_min_t)specs.smh_cb)(self->s_self, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_min_t)specs.smh_cb)(Dee_AsObject(self));
+		return (*(DeeMH_seq_min_t)specs.smh_cb)(Dee_AsObject(self), def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, def);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-super_mh__seq_min_with_key(DeeSuperObject *self, DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_mh__seq_min_with_key(DeeSuperObject *self, DeeObject *def, DeeObject *key) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_min_with_key, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_min_with_key_t)specs.smh_cb)(self->s_self, key);
+		return (*(DeeMH_seq_min_with_key_t)specs.smh_cb)(self->s_self, def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_min_with_key_t)specs.smh_cb)(Dee_AsObject(self), key);
+		return (*(DeeMH_seq_min_with_key_t)specs.smh_cb)(Dee_AsObject(self), def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
-	default: __builtin_unreachable();
-	}
-	__builtin_unreachable();
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_mh__seq_min_with_range(DeeSuperObject *__restrict self, size_t start, size_t end) {
-	struct Dee_super_method_hint specs;
-	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_min_with_range, &specs);
-	switch (specs.smh_cc) {
-	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_min_with_range_t)specs.smh_cb)(self->s_self, start, end);
-	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_min_with_range_t)specs.smh_cb)(Dee_AsObject(self), start, end);
-	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, def, key);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-super_mh__seq_min_with_range_and_key(DeeSuperObject *self, size_t start, size_t end, DeeObject *key) {
+super_mh__seq_min_with_range(DeeSuperObject *self, size_t start, size_t end, DeeObject *def) {
 	struct Dee_super_method_hint specs;
-	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_min_with_range_and_key, &specs);
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_min_with_range, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_min_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, key);
+		return (*(DeeMH_seq_min_with_range_t)specs.smh_cb)(self->s_self, start, end, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_min_with_range_and_key_t)specs.smh_cb)(Dee_AsObject(self), start, end, key);
+		return (*(DeeMH_seq_min_with_range_t)specs.smh_cb)(Dee_AsObject(self), start, end, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, def);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_mh__seq_max(DeeSuperObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+super_mh__seq_min_with_range_and_key(DeeSuperObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
 	struct Dee_super_method_hint specs;
-	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_max, &specs);
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_min_with_range_and_key, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_max_t)specs.smh_cb)(self->s_self);
+		return (*(DeeMH_seq_min_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_max_t)specs.smh_cb)(Dee_AsObject(self));
+		return (*(DeeMH_seq_min_with_range_and_key_t)specs.smh_cb)(Dee_AsObject(self), start, end, def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, def, key);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-super_mh__seq_max_with_key(DeeSuperObject *self, DeeObject *key) {
+super_mh__seq_max(DeeSuperObject *self, DeeObject *def) {
 	struct Dee_super_method_hint specs;
-	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_max_with_key, &specs);
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_max, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_max_with_key_t)specs.smh_cb)(self->s_self, key);
+		return (*(DeeMH_seq_max_t)specs.smh_cb)(self->s_self, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_max_with_key_t)specs.smh_cb)(Dee_AsObject(self), key);
+		return (*(DeeMH_seq_max_t)specs.smh_cb)(Dee_AsObject(self), def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, key);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, def);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_mh__seq_max_with_range(DeeSuperObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_mh__seq_max_with_key(DeeSuperObject *self, DeeObject *def, DeeObject *key) {
 	struct Dee_super_method_hint specs;
-	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_max_with_range, &specs);
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_max_with_key, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_max_with_range_t)specs.smh_cb)(self->s_self, start, end);
+		return (*(DeeMH_seq_max_with_key_t)specs.smh_cb)(self->s_self, def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_max_with_range_t)specs.smh_cb)(Dee_AsObject(self), start, end);
+		return (*(DeeMH_seq_max_with_key_t)specs.smh_cb)(Dee_AsObject(self), def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, def, key);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
 INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
-super_mh__seq_max_with_range_and_key(DeeSuperObject *self, size_t start, size_t end, DeeObject *key) {
+super_mh__seq_max_with_range(DeeSuperObject *self, size_t start, size_t end, DeeObject *def) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_max_with_range, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_seq_max_with_range_t)specs.smh_cb)(self->s_self, start, end, def);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_seq_max_with_range_t)specs.smh_cb)(Dee_AsObject(self), start, end, def);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, def);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+super_mh__seq_max_with_range_and_key(DeeSuperObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_max_with_range_and_key, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_max_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, key);
+		return (*(DeeMH_seq_max_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_max_with_range_and_key_t)specs.smh_cb)(Dee_AsObject(self), start, end, key);
+		return (*(DeeMH_seq_max_with_range_and_key_t)specs.smh_cb)(Dee_AsObject(self), start, end, def, key);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, key);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, def, key);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_mh__seq_sum(DeeSuperObject *__restrict self) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_mh__seq_sum(DeeSuperObject *self, DeeObject *def) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_sum, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_sum_t)specs.smh_cb)(self->s_self);
+		return (*(DeeMH_seq_sum_t)specs.smh_cb)(self->s_self, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_sum_t)specs.smh_cb)(Dee_AsObject(self));
+		return (*(DeeMH_seq_sum_t)specs.smh_cb)(Dee_AsObject(self), def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, def);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_mh__seq_sum_with_range(DeeSuperObject *__restrict self, size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_mh__seq_sum_with_key(DeeSuperObject *self, DeeObject *def, DeeObject *key) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_sum_with_key, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_seq_sum_with_key_t)specs.smh_cb)(self->s_self, def, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_seq_sum_with_key_t)specs.smh_cb)(Dee_AsObject(self), def, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, def, key);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+super_mh__seq_sum_with_range(DeeSuperObject *self, size_t start, size_t end, DeeObject *def) {
 	struct Dee_super_method_hint specs;
 	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_sum_with_range, &specs);
 	switch (specs.smh_cc) {
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
-		return (*(DeeMH_seq_sum_with_range_t)specs.smh_cb)(self->s_self, start, end);
+		return (*(DeeMH_seq_sum_with_range_t)specs.smh_cb)(self->s_self, start, end, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
-		return (*(DeeMH_seq_sum_with_range_t)specs.smh_cb)(Dee_AsObject(self), start, end);
+		return (*(DeeMH_seq_sum_with_range_t)specs.smh_cb)(Dee_AsObject(self), start, end, def);
 	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
-		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t))specs.smh_cb)(self->s_type, self->s_self, start, end);
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, def);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1, 4, 5)) DREF DeeObject *DCALL
+super_mh__seq_sum_with_range_and_key(DeeSuperObject *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_seq_sum_with_range_and_key, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_seq_sum_with_range_and_key_t)specs.smh_cb)(self->s_self, start, end, def, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_seq_sum_with_range_and_key_t)specs.smh_cb)(Dee_AsObject(self), start, end, def, key);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *, size_t, size_t, DeeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self, start, end, def, key);
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
@@ -4254,7 +4286,9 @@ INTERN struct Dee_type_mh_cache super_mhcache = {
 	/* .mh_seq_max_with_range                      = */ (DeeMH_seq_max_with_range_t)&super_mh__seq_max_with_range,
 	/* .mh_seq_max_with_range_and_key              = */ (DeeMH_seq_max_with_range_and_key_t)&super_mh__seq_max_with_range_and_key,
 	/* .mh_seq_sum                                 = */ (DeeMH_seq_sum_t)&super_mh__seq_sum,
+	/* .mh_seq_sum_with_key                        = */ (DeeMH_seq_sum_with_key_t)&super_mh__seq_sum_with_key,
 	/* .mh_seq_sum_with_range                      = */ (DeeMH_seq_sum_with_range_t)&super_mh__seq_sum_with_range,
+	/* .mh_seq_sum_with_range_and_key              = */ (DeeMH_seq_sum_with_range_and_key_t)&super_mh__seq_sum_with_range_and_key,
 	/* .mh_seq_count                               = */ (DeeMH_seq_count_t)&super_mh__seq_count,
 	/* .mh_seq_count_with_key                      = */ (DeeMH_seq_count_with_key_t)&super_mh__seq_count_with_key,
 	/* .mh_seq_count_with_range                    = */ (DeeMH_seq_count_with_range_t)&super_mh__seq_count_with_range,

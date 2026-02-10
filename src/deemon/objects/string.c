@@ -2613,22 +2613,21 @@ INTERN WUNUSED NONNULL((1)) DREF String *DCALL
 string_getsubstr(String *__restrict self,
                  size_t start, size_t end);
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_mh_seq_sum(String *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_mh_seq_sum(String *self, DeeObject *def) {
 	/* Must handle special case: `({} + ...)' is "none", so
-	 * if the string is empty, we must return "none" here! */
+	 * if the string is empty, we must return "def" here! */
 	if (DeeString_IsEmpty(self))
-		return_none;
+		return_reference(def);
 	return_reference_(Dee_AsObject(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_mh_seq_sum_with_range(String *__restrict self,
-                             size_t start, size_t end) {
+string_mh_seq_sum_with_range(String *self, size_t start, size_t end, DeeObject *def) {
 	if (end > DeeString_WLEN(self))
 		end = DeeString_WLEN(self);
 	if (start >= end)
-		return_none;
+		return_reference(def);
 	return Dee_AsObject(string_getsubstr(self, start, end));
 }
 
@@ -2667,7 +2666,9 @@ PRIVATE struct type_method_hint tpconst string_method_hints[] = {
 
 	/* Optimized */
 	TYPE_METHOD_HINT(seq_sum, &string_mh_seq_sum),
+	TYPE_METHOD_HINT(seq_sum_with_key, &default__seq_sum_with_key__with__seq_operator_foreach),
 	TYPE_METHOD_HINT(seq_sum_with_range, &string_mh_seq_sum_with_range),
+	TYPE_METHOD_HINT(seq_sum_with_range_and_key, &default__seq_sum_with_range_and_key__with__seq_enumerate_index),
 
 	/* seq.all() is true if no sequence element evaluates to false.
 	 * Since the elements of strings are all 1-char strings, there can
