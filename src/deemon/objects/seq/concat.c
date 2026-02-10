@@ -457,6 +457,7 @@ cat_get_sequences(Cat *__restrict self) {
 	                                DeeTuple_ELEM(self));
 }
 
+#ifndef CONFIG_TINY_DEEMON
 PRIVATE WUNUSED NONNULL((1)) DREF Cat *DCALL
 cat_get_frozen(Cat *__restrict self) {
 	size_t i;
@@ -498,10 +499,13 @@ err_r_i:
 err:
 	return NULL;
 }
+#endif /* !CONFIG_TINY_DEEMON */
 
 PRIVATE struct type_getset tpconst cat_getsets[] = {
 	TYPE_GETTER_AB_F("__sequences__", &cat_get_sequences, METHOD_FNOREFESCAPE, "->?S?DSequence"),
+#ifndef CONFIG_TINY_DEEMON
 	TYPE_GETTER_AB(STR_frozen, &cat_get_frozen, "->?."),
+#endif /* !CONFIG_TINY_DEEMON */
 	TYPE_GETSET_END
 };
 
@@ -544,6 +548,10 @@ cat_size_fast(Cat *__restrict self) {
 	return result;
 }
 
+#ifdef CONFIG_TINY_DEEMON
+#define PTR_cat_contains DEFIMPL(&default__seq_operator_contains__with__seq_contains)
+#else /* CONFIG_TINY_DEEMON */
+#define PTR_cat_contains &cat_contains
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_contains(Cat *self, DeeObject *search_item) {
 	size_t i;
@@ -559,6 +567,7 @@ cat_contains(Cat *self, DeeObject *search_item) {
 err:
 	return NULL;
 }
+#endif /* !CONFIG_TINY_DEEMON */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_getitem_index(Cat *__restrict self, size_t index) {
@@ -641,6 +650,21 @@ err:
 	return Dee_BOUND_ERR;
 }
 
+#ifdef CONFIG_TINY_DEEMON
+#define PTR_cat_hasitem_index DEFIMPL(&default__hasitem_index__with__bounditem_index)
+#else /* CONFIG_TINY_DEEMON */
+#define PTR_cat_hasitem_index &cat_hasitem_index
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cat_hasitem_index(Cat *self, size_t index) {
+	size_t total = cat_size(self);
+	if unlikely(total == (size_t)-1)
+		goto err;
+	return index < total ? Dee_HAS_YES : Dee_HAS_NO;
+err:
+	return Dee_HAS_ERR;
+}
+#endif /* !CONFIG_TINY_DEEMON */
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cat_foreach(Cat *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -661,7 +685,7 @@ err_temp:
 PRIVATE struct type_seq cat_seq = {
 	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
 	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_contains,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_cat_contains,
 	/* .tp_getitem            = */ DEFIMPL(&default__getitem__with__getitem_index),
 	/* .tp_delitem            = */ DEFIMPL(&default__delitem__with__delitem_index),
 	/* .tp_setitem            = */ DEFIMPL(&default__setitem__with__setitem_index),
@@ -679,7 +703,7 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&cat_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&cat_setitem_index,
 	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&cat_bounditem_index,
-	/* .tp_hasitem_index      = */ DEFIMPL(&default__hasitem_index__with__bounditem_index),
+	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))PTR_cat_hasitem_index,
 	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_getitem_index),
 	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
 	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),

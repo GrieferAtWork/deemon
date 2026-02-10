@@ -321,6 +321,25 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !... */
 #endif /* !CONFIG_STRING_LATIN1_... */
 
+/* Config option: disable all semantically unnecessary overloads/fast-paths to reduce binary size
+ * Carefully crafted code might be able to detect if this config option is enabled or disabled,
+ * but only in terms of how/when user-defined operators are invoked, and only where both kinds of
+ * operator invocations are allowed.
+ *
+ * Examples:
+ * - Disable the "Sequence.map(key).find(item)" -> "Sequence.find(item, key: key)" forwarding
+ * - Disable optimized operators for builtin sequence types, where those operators can also
+ *   be auto-substituted (with less efficient equivalents) instead.
+ */
+#if (!defined(CONFIG_TINY_DEEMON) && \
+     !defined(CONFIG_NO_TINY_DEEMON))
+#if defined(__OPTIMIZE_SIZE__) || 0
+#define CONFIG_TINY_DEEMON
+#else /* __OPTIMIZE_SIZE__ */
+#define CONFIG_NO_TINY_DEEMON
+#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_[NO_]TINY_DEEMON */
+
 
 /* Configure option:
  *     CONFIG_DEFAULT_MESSAGE_FORMAT_(MSVC|GCC)

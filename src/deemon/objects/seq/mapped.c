@@ -300,6 +300,11 @@ err:
 }
 
 
+#ifdef CONFIG_TINY_DEEMON
+#define PTR_mapped_getitem_index NULL
+#define PTR_mapped_foreach       NULL
+#else /* CONFIG_TINY_DEEMON */
+#define PTR_mapped_getitem_index &mapped_getitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getitem_index(SeqMapped *__restrict self, size_t index) {
 	DREF DeeObject *inner[1], *result;
@@ -334,6 +339,7 @@ err:
 	return -1;
 }
 
+#define PTR_mapped_foreach &mapped_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 mapped_foreach(SeqMapped *self, Dee_foreach_t proc, void *arg) {
 	struct mapped_foreach_data data;
@@ -342,11 +348,12 @@ mapped_foreach(SeqMapped *self, Dee_foreach_t proc, void *arg) {
 	data.tfd_arg  = arg;
 	return DeeObject_InvokeMethodHint(seq_operator_foreach, self->sm_seq, &mapped_foreach_cb, &data);
 }
+#endif /* !CONFIG_TINY_DEEMON */
 
 struct mapped_mh_seq_enumerate_data {
-	DeeObject      *ted_fun;  /* [1..1] Mapper function. */
+	DeeObject          *ted_fun;  /* [1..1] Mapper function. */
 	Dee_seq_enumerate_t ted_proc; /* [1..1] Inner callback. */
-	void           *ted_arg;  /* [?..?] Cookie for `ted_proc'. */
+	void               *ted_arg;  /* [?..?] Cookie for `ted_proc'. */
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -408,6 +415,14 @@ mapped_mh_seq_enumerate_index(SeqMapped *self, Dee_seq_enumerate_index_t proc,
 	return DeeObject_InvokeMethodHint(seq_enumerate_index, self->sm_seq, &mapped_mh_seq_enumerate_index_cb, &data, start, end);
 }
 
+#ifdef CONFIG_TINY_DEEMON
+#define PTR_mapped_getrange_index   NULL
+#define PTR_mapped_getrange_index_n NULL
+#define PTR_mapped_trygetitem       NULL
+#define PTR_mapped_trygetitem_index NULL
+#else /* CONFIG_TINY_DEEMON */
+
+#define PTR_mapped_getrange_index &mapped_getrange_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getrange_index(SeqMapped *self, Dee_ssize_t start, Dee_ssize_t end) {
 	DREF DeeObject *orig, *result;
@@ -421,6 +436,7 @@ err:
 	return NULL;
 }
 
+#define PTR_mapped_getrange_index_n &mapped_getrange_index_n
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getrange_index_n(SeqMapped *self, Dee_ssize_t start) {
 	DREF DeeObject *orig, *result;
@@ -434,6 +450,7 @@ err:
 	return NULL;
 }
 
+#define PTR_mapped_trygetitem &mapped_trygetitem
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_trygetitem(SeqMapped *self, DeeObject *index) {
 	DREF DeeObject *result;
@@ -447,6 +464,7 @@ mapped_trygetitem(SeqMapped *self, DeeObject *index) {
 	return result;
 }
 
+#define PTR_mapped_trygetitem_index &mapped_trygetitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_trygetitem_index(SeqMapped *self, size_t index) {
 	DREF DeeObject *result;
@@ -459,6 +477,7 @@ mapped_trygetitem_index(SeqMapped *self, size_t index) {
 	}
 	return result;
 }
+#endif /* !CONFIG_TINY_DEEMON */
 
 PRIVATE struct type_seq mapped_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mapped_iter,
@@ -470,26 +489,26 @@ PRIVATE struct type_seq mapped_seq = {
 	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&mapped_getrange,
 	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&mapped_delrange,
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&mapped_foreach,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))PTR_mapped_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&mapped_bounditem,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&mapped_hasitem,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&mapped_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&mapped_size_fast,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&mapped_getitem_index,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_mapped_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&mapped_delitem_index,
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&mapped_bounditem_index,
 	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&mapped_hasitem_index,
-	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&mapped_getrange_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))PTR_mapped_getrange_index,
 	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&mapped_delrange_index,
 	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
-	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&mapped_getrange_index_n,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))PTR_mapped_getrange_index_n,
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&mapped_delrange_index_n,
 	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
-	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mapped_trygetitem,
-	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&mapped_trygetitem_index,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_mapped_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_mapped_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
 	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
 	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
@@ -523,6 +542,9 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
 #define mapped_init generic_proxy2__init
 
+#ifdef CONFIG_TINY_DEEMON
+#define mapped_getsets NULL
+#else /* CONFIG_TINY_DEEMON */
 /* Return the composition of "key" being applied on-top of "self" */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_compose(SeqMapped *self, DeeObject *key) {
@@ -1518,9 +1540,12 @@ err:
 	return -1;
 }
 #endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+#endif /* !CONFIG_TINY_DEEMON */
 
 
 PRIVATE struct type_method tpconst mapped_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+#ifndef CONFIG_TINY_DEEMON
 	/* Override "Sequence.map()" such that instead of having 2 nested "SeqMapped" objects,
 	 * there is only one whose callback is an instance of "FunctionComposition_Type". */
 	TYPE_METHOD("map", &mapped_map,
@@ -1529,7 +1554,6 @@ PRIVATE struct type_method tpconst mapped_methods[] = {
 	            "Same as ?Amap?DSequence, but instead of chaining sequences on-top "
 	            /**/ "of more sequences, simply ?Acompose?DCallable @mapper with "
 	            /**/ "?#__mapper__ and return the result as a new ?."),
-	TYPE_METHOD_HINTREF(__seq_enumerate__),
 	TYPE_METHOD_HINTREF(Sequence_any),
 	TYPE_METHOD_HINTREF(Sequence_all),
 	TYPE_METHOD_HINTREF(Sequence_parity),
@@ -1567,12 +1591,14 @@ PRIVATE struct type_method tpconst mapped_methods[] = {
 	TYPE_METHOD_HINTREF(__set_bool__),
 	TYPE_METHOD_HINTREF(__set_size__),
 	TYPE_METHOD_HINTREF(__map_size__),
+#endif /* !CONFIG_TINY_DEEMON */
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_enumerate, &mapped_mh_seq_enumerate),
 	TYPE_METHOD_HINT(seq_enumerate_index, &mapped_mh_seq_enumerate_index),
+#ifndef CONFIG_TINY_DEEMON
 	TYPE_METHOD_HINT(seq_trygetfirst, &mapped_seq_trygetfirst),
 	TYPE_METHOD_HINT(seq_trygetlast, &mapped_seq_trygetlast),
 	TYPE_METHOD_HINT(set_trygetfirst, &mapped_set_trygetfirst),
@@ -1663,6 +1689,7 @@ PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(set_operator_sizeob, &mapped_mh_set_operator_sizeob),
 	TYPE_METHOD_HINT(map_operator_size, &mapped_mh_map_operator_size),
 	TYPE_METHOD_HINT(map_operator_sizeob, &mapped_mh_map_operator_sizeob),
+#endif /* !CONFIG_TINY_DEEMON */
 	TYPE_METHOD_HINT_END
 };
 

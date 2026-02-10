@@ -1669,25 +1669,6 @@ Type_assert(rt.MapFromAttr, {
 	"mh_map_popitem":                             "default__map_popitem__with__seq_trygetfirst__and__map_operator_delitem",
 });
 
-Type_assert(rt.SeqMapped, {
-	"mh_seq_any":                       "mapped_mh_seq_any",
-	"mh_seq_any_with_key":              "mapped_mh_seq_any_with_key",
-	"mh_seq_any_with_range":            "mapped_mh_seq_any_with_range",
-	"mh_seq_any_with_range_and_key":    "mapped_mh_seq_any_with_range_and_key",
-	"mh_seq_all":                       "mapped_mh_seq_all",
-	"mh_seq_all_with_key":              "mapped_mh_seq_all_with_key",
-	"mh_seq_all_with_range":            "mapped_mh_seq_all_with_range",
-	"mh_seq_all_with_range_and_key":    "mapped_mh_seq_all_with_range_and_key",
-	"mh_seq_parity":                    "mapped_mh_seq_parity",
-	"mh_seq_parity_with_key":           "mapped_mh_seq_parity_with_key",
-	"mh_seq_parity_with_range":         "mapped_mh_seq_parity_with_range",
-	"mh_seq_parity_with_range_and_key": "mapped_mh_seq_parity_with_range_and_key",
-	"mh_seq_sort":                      "mapped_mh_seq_sort",
-	"mh_seq_sort_with_key":             "mapped_mh_seq_sort_with_key",
-	"mh_seq_sorted":                    "mapped_mh_seq_sorted",
-	"mh_seq_sorted_with_key":           "mapped_mh_seq_sorted_with_key",
-});
-
 #endif  /* !__MAIN__ */
 
 #ifdef __MAIN__
