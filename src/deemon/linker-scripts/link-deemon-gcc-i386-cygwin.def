@@ -1593,7 +1593,7 @@ EXPORTS
 	_Dee_accu_add@8=Dee_accu_add@8
 	_Dee_accu_addall@8=Dee_accu_addall@8
 	_Dee_accu_fini@4=Dee_accu_fini@4
-	_Dee_accu_pack@8=Dee_accu_pack@8
+	_Dee_accu_pack@4=Dee_accu_pack@4
 	_Dee_accu_visit@12=Dee_accu_visit@12
 	_Dee_ascii_printer_alloc@8=Dee_ascii_printer_alloc@8
 	_Dee_ascii_printer_allocstr@12=Dee_ascii_printer_allocstr@12

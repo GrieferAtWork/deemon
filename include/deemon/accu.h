@@ -103,10 +103,11 @@ Dee_accu_visit(struct Dee_accu *__restrict self, Dee_visit_t proc, void *arg);
  *
  * Hint: if you want `self' to remain valid, you can just re-init it
  *       after the call using `Dee_accu_init_with_first_inherited()'
- * @param: empty: What to return if the accumulator is empty. You may
- *                not pass "NULL" here, but you may pass "ITER_DONE" */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-Dee_accu_pack(struct Dee_accu *__restrict self, DeeObject *empty);
+ * @return: * :        Result of accumulation
+ * @return: NULL:      Error
+ * @return: ITER_DONE: Accumulator is empty. */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+Dee_accu_pack(struct Dee_accu *__restrict self);
 
 /* Add `item' into the accumulator.
  * HINT: This function is `Dee_foreach_t'-compatible. */

@@ -40,13 +40,17 @@ __seq_sum__.seq_sum([[nonnull]] DeeObject *__restrict self)
 %{$none = return_none}
 %{$empty = return_none}
 %{$with__seq_operator_foreach = {
+	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &Dee_accu_add, &accu);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu, Dee_None);
+	result = Dee_accu_pack(&accu);
+	if unlikely(result == ITER_DONE)
+		result = DeeNone_NewRef();
+	return result;
 err:
 	Dee_accu_fini(&accu);
 	return NULL;
@@ -76,13 +80,17 @@ __seq_sum__.seq_sum_with_range([[nonnull]] DeeObject *__restrict self,
 %{$none = return_none}
 %{$empty = return_none}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_sum_enumerate_cb)]] {
+	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_sum_enumerate_cb, &accu, start, end);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu, Dee_None);
+	result = Dee_accu_pack(&accu);
+	if unlikely(result == ITER_DONE)
+		result = DeeNone_NewRef();
+	return result;
 err:
 	Dee_accu_fini(&accu);
 	return NULL;

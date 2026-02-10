@@ -295,7 +295,7 @@ final class NativeMethodParam {
 	}
 
 	public function CstrForBody(body: string) {
-		return name in body ? Cstr : Cstr_UNUSED;
+		return body.recontains(f"\\b{name}\\b") ? Cstr : Cstr_UNUSED;
 	}
 
 	public property Cstr: string = {
@@ -1490,12 +1490,10 @@ final class NativeOperator {
 			})");
 		}
 		if (normalNames) {
-			print(f"#define maketyped__{name.name}({nameFieldBase}) ({
-				(
-					for (local i, symbolName: normalNames.enumerate())
-						f"({nameFieldBase}) == &{symbolName} ? &{typedNames[i]} : "
-				) + ...
-			}&tdefault__{name.name})");
+			print(f"#define maketyped__{name.name}({nameFieldBase}) ({"".join(
+				for (local i, symbolName: normalNames.enumerate())
+					f"({nameFieldBase}) == &{symbolName} ? &{typedNames[i]} : "
+			)}&tdefault__{name.name})");
 		}
 		print;
 	}
@@ -1583,10 +1581,10 @@ final class NativeOperator {
 				local fallbackName, mustMap = getDependencyMappings(impl, dep)...;
 				if (!mustMap)
 					return f"(*{tpSelfExpr}->{dep})({", ".join(args)})";
-				return f"(*({(
+				return f"(*({"".join(
 					for (local src, dst: mustMap)
 						f"{tpSelfExpr}->{dep} == &{src} ? &{dst} : "
-				) + ...}&{fallbackName}))({tpSelfExpr}, {", ".join(args)})";
+				)}&{fallbackName}))({tpSelfExpr}, {", ".join(args)})";
 			}
 			printInternImpl(symName, usedImpl, {
 				"THIS_TYPE": tpSelfExpr,
@@ -2231,10 +2229,10 @@ final class ErrorMethodKey {
 		if (!firstParam.endswith("*"))
 			print(" "),;
 		print(body.recontains(r"\bself\b") ? "self" : "UNUSED(self)"),;
-		print(((
+		print("".join(
 			for (local i, x: paramTypes.enumerate()[1:])
 				f", {x}{x.endswith("*") ? "" : " "}UNUSED(arg{i})"
-		) + ...) ?? "", ") ", body),;
+		), ") ", body),;
 		print;
 	}
 
@@ -3655,10 +3653,10 @@ done:
 				}({", ".join(
 					for (local x: method.params[1:])
 						getCTypeFormatReprCode(x.typ, x.typAfter)
-				)})\"{((
+				)})\"{"".join(
 					for (local x: method.params[1:])
 						f", {x.name}"
-				) + ...) ?? ""})";
+				)})";
 			}	break;
 
 			default:

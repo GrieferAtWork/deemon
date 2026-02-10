@@ -69,7 +69,7 @@ accu_trygetvalue(AccuObject *__restrict self) {
 	DREF DeeObject *result;
 	if unlikely(accu_acquire(self))
 		goto err;
-	result = Dee_accu_pack(&self->a_accu, ITER_DONE);
+	result = Dee_accu_pack(&self->a_accu);
 	if (ITER_ISOK(result)) {
 		Dee_accu_init_with_first(&self->a_accu, result);
 	} else {

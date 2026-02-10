@@ -121,15 +121,14 @@ Dee_accu_visit(struct Dee_accu *__restrict self,
  *
  * Hint: if you want `self' to remain valid, you can just re-init it
  *       after the call using `Dee_accu_init_with_first_inherited()'
- * @param: empty: What to return if the accumulator is empty. You may
- *                not pass "NULL" here, but you may pass "ITER_DONE" */
+ * @return: * :        Result of accumulation
+ * @return: NULL:      Error
+ * @return: ITER_DONE: Accumulator is empty. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_accu_pack(struct Dee_accu *__restrict self, DeeObject *empty) {
+Dee_accu_pack(struct Dee_accu *__restrict self) {
 	switch (self->acu_mode) {
 	case Dee_ACCU_FIRST:
-		if (empty != ITER_DONE)
-			Dee_Incref(empty);
-		return empty;
+		return ITER_DONE;
 	case Dee_ACCU_NONE:
 		return_none;
 	case Dee_ACCU_SECOND:

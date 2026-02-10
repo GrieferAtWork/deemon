@@ -9683,13 +9683,17 @@ default__seq_sum__unsupported(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_sum__with__seq_operator_foreach(DeeObject *__restrict self) {
+	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &Dee_accu_add, &accu);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu, Dee_None);
+	result = Dee_accu_pack(&accu);
+	if unlikely(result == ITER_DONE)
+		result = DeeNone_NewRef();
+	return result;
 err:
 	Dee_accu_fini(&accu);
 	return NULL;
@@ -9734,13 +9738,17 @@ seq_sum_enumerate_cb(void *arg, size_t index, DeeObject *item) {
 #endif /* !DEFINED_seq_sum_enumerate_cb */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__seq_sum_with_range__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end) {
+	DREF DeeObject *result;
 	Dee_ssize_t foreach_status;
 	struct Dee_accu accu;
 	Dee_accu_init(&accu);
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_sum_enumerate_cb, &accu, start, end);
 	if unlikely(foreach_status < 0)
 		goto err;
-	return Dee_accu_pack(&accu, Dee_None);
+	result = Dee_accu_pack(&accu);
+	if unlikely(result == ITER_DONE)
+		result = DeeNone_NewRef();
+	return result;
 err:
 	Dee_accu_fini(&accu);
 	return NULL;
