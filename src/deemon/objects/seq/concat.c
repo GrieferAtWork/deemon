@@ -48,6 +48,12 @@
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 
+#ifndef CONFIG_TINY_DEEMON
+#define WANT_cat_get_frozen
+#define WANT_cat_contains
+#define WANT_cat_hasitem_index
+#endif /* !CONFIG_TINY_DEEMON */
+
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -457,7 +463,7 @@ cat_get_sequences(Cat *__restrict self) {
 	                                DeeTuple_ELEM(self));
 }
 
-#ifndef CONFIG_TINY_DEEMON
+#ifdef WANT_cat_get_frozen
 PRIVATE WUNUSED NONNULL((1)) DREF Cat *DCALL
 cat_get_frozen(Cat *__restrict self) {
 	size_t i;
@@ -499,13 +505,13 @@ err_r_i:
 err:
 	return NULL;
 }
-#endif /* !CONFIG_TINY_DEEMON */
+#endif /* WANT_cat_get_frozen */
 
 PRIVATE struct type_getset tpconst cat_getsets[] = {
 	TYPE_GETTER_AB_F("__sequences__", &cat_get_sequences, METHOD_FNOREFESCAPE, "->?S?DSequence"),
-#ifndef CONFIG_TINY_DEEMON
+#ifdef WANT_cat_get_frozen
 	TYPE_GETTER_AB(STR_frozen, &cat_get_frozen, "->?."),
-#endif /* !CONFIG_TINY_DEEMON */
+#endif /* WANT_cat_get_frozen */
 	TYPE_GETSET_END
 };
 
@@ -548,9 +554,9 @@ cat_size_fast(Cat *__restrict self) {
 	return result;
 }
 
-#ifdef CONFIG_TINY_DEEMON
+#ifndef WANT_cat_contains
 #define PTR_cat_contains DEFIMPL(&default__seq_operator_contains__with__seq_contains)
-#else /* CONFIG_TINY_DEEMON */
+#else /* !WANT_cat_contains */
 #define PTR_cat_contains &cat_contains
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cat_contains(Cat *self, DeeObject *search_item) {
@@ -567,7 +573,7 @@ cat_contains(Cat *self, DeeObject *search_item) {
 err:
 	return NULL;
 }
-#endif /* !CONFIG_TINY_DEEMON */
+#endif /* WANT_cat_contains */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_getitem_index(Cat *__restrict self, size_t index) {
@@ -650,9 +656,9 @@ err:
 	return Dee_BOUND_ERR;
 }
 
-#ifdef CONFIG_TINY_DEEMON
+#ifndef WANT_cat_hasitem_index
 #define PTR_cat_hasitem_index DEFIMPL(&default__hasitem_index__with__bounditem_index)
-#else /* CONFIG_TINY_DEEMON */
+#else /* !WANT_cat_hasitem_index */
 #define PTR_cat_hasitem_index &cat_hasitem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_hasitem_index(Cat *self, size_t index) {
@@ -663,7 +669,7 @@ cat_hasitem_index(Cat *self, size_t index) {
 err:
 	return Dee_HAS_ERR;
 }
-#endif /* !CONFIG_TINY_DEEMON */
+#endif /* WANT_cat_hasitem_index */
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cat_foreach(Cat *self, Dee_foreach_t proc, void *arg) {

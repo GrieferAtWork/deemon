@@ -47,13 +47,13 @@ struct seq_compareforeach__vector__data {
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL seq_compareeq__lhs_xvector__rhs_foreach__cb(void *arg, DeeObject *rhs_elem);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL seq_compare__lhs_xvector__rhs_foreach__cb(void *arg, DeeObject *rhs_elem);
-#ifdef __OPTIMIZE_SIZE__
+#ifdef CONFIG_TINY_DEEMON
 #define seq_compareeq__lhs_vector__rhs_foreach__cb seq_compareeq__lhs_xvector__rhs_foreach__cb
 #define seq_compare__lhs_vector__rhs_foreach__cb   seq_compare__lhs_xvector__rhs_foreach__cb
-#else /* __OPTIMIZE_SIZE__ */
+#else /* CONFIG_TINY_DEEMON */
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL seq_compareeq__lhs_vector__rhs_foreach__cb(void *arg, DeeObject *rhs_elem);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL seq_compare__lhs_vector__rhs_foreach__cb(void *arg, DeeObject *rhs_elem);
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_TINY_DEEMON */
 
 struct seq_compareforeach__size_and_getitem_index__data {
 	DeeObject *scf_sgi_other;  /* [1..1] "other" sequence */
@@ -121,18 +121,18 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL seq_docompareeq__lhs_xvector(DeeObject 
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL seq_docompare__lhs_xvector(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs);
 
 /* Implementations when "lhs" is a constant vector (which is *NOT* allowed to contain NULL items). */
-#ifdef __OPTIMIZE_SIZE__
-#define seq_docompareeq__lhs_xvector__rhs_size_and_getitem_index_fast seq_docompareeq__lhs_vector__rhs_size_and_getitem_index_fast
-#define seq_docompareeq__lhs_xvector__rhs_size_and_trygetitem_index   seq_docompareeq__lhs_vector__rhs_size_and_trygetitem_index
-#define seq_docompareeq__lhs_xvector__rhs_size_and_getitem_index      seq_docompareeq__lhs_vector__rhs_size_and_getitem_index
-#define seq_docompareeq__lhs_xvector__rhs_sizeob_and_getitem          seq_docompareeq__lhs_vector__rhs_sizeob_and_getitem
-#define seq_docompare__lhs_xvector__rhs_size_and_getitem_index_fast   seq_docompare__lhs_vector__rhs_size_and_getitem_index_fast
-#define seq_docompare__lhs_xvector__rhs_size_and_trygetitem_index     seq_docompare__lhs_vector__rhs_size_and_trygetitem_index
-#define seq_docompare__lhs_xvector__rhs_size_and_getitem_index        seq_docompare__lhs_vector__rhs_size_and_getitem_index
-#define seq_docompare__lhs_xvector__rhs_sizeob_and_getitem            seq_docompare__lhs_vector__rhs_sizeob_and_getitem
-#define seq_docompareeq__lhs_xvector                                  seq_docompareeq__lhs_vector
-#define seq_docompare__lhs_xvector                                    seq_docompare__lhs_vector
-#else /* __OPTIMIZE_SIZE__ */
+#ifdef CONFIG_TINY_DEEMON
+#define seq_docompareeq__lhs_vector__rhs_size_and_getitem_index_fast seq_docompareeq__lhs_xvector__rhs_size_and_getitem_index_fast
+#define seq_docompareeq__lhs_vector__rhs_size_and_trygetitem_index   seq_docompareeq__lhs_xvector__rhs_size_and_trygetitem_index
+#define seq_docompareeq__lhs_vector__rhs_size_and_getitem_index      seq_docompareeq__lhs_xvector__rhs_size_and_getitem_index
+#define seq_docompareeq__lhs_vector__rhs_sizeob_and_getitem          seq_docompareeq__lhs_xvector__rhs_sizeob_and_getitem
+#define seq_docompare__lhs_vector__rhs_size_and_getitem_index_fast   seq_docompare__lhs_xvector__rhs_size_and_getitem_index_fast
+#define seq_docompare__lhs_vector__rhs_size_and_trygetitem_index     seq_docompare__lhs_xvector__rhs_size_and_trygetitem_index
+#define seq_docompare__lhs_vector__rhs_size_and_getitem_index        seq_docompare__lhs_xvector__rhs_size_and_getitem_index
+#define seq_docompare__lhs_vector__rhs_sizeob_and_getitem            seq_docompare__lhs_xvector__rhs_sizeob_and_getitem
+#define seq_docompareeq__lhs_vector                                  seq_docompareeq__lhs_xvector
+#define seq_docompare__lhs_vector                                    seq_docompare__lhs_xvector
+#else /* CONFIG_TINY_DEEMON */
 INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL seq_docompareeq__lhs_vector__rhs_size_and_getitem_index_fast(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_getitem_index_fast)(DeeObject *self, size_t index));
 INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL seq_docompareeq__lhs_vector__rhs_size_and_trygetitem_index(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_trygetitem_index)(DeeObject *self, size_t index));
 INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL seq_docompareeq__lhs_vector__rhs_size_and_getitem_index(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_getitem_index)(DeeObject *self, size_t index));
@@ -143,7 +143,7 @@ INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL seq_docompare__lhs_vector__rhs_size_
 INTDEF WUNUSED NONNULL((1, 3, 4, 5)) int DCALL seq_docompare__lhs_vector__rhs_sizeob_and_getitem(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs, DeeObject *rhs_sizeob, DREF DeeObject *(DCALL *rhs_getitem)(DeeObject *self, DeeObject *index));
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL seq_docompareeq__lhs_vector(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL seq_docompare__lhs_vector(DeeObject *const *lhs_vector, size_t lhs_size, DeeObject *rhs);
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_TINY_DEEMON */
 
 /* Implementations when "lhs" should be accessed using size+getitem_index_fast. */
 INTDEF WUNUSED NONNULL((1, 3, 4, 6)) int DCALL seq_docompareeq__lhs_size_and_getitem_index_fast__rhs_size_and_getitem_index_fast(DeeObject *lhs, size_t lhs_size, DREF DeeObject *(DCALL *lhs_getitem_index_fast)(DeeObject *self, size_t index), DeeObject *rhs, size_t rhs_size, DREF DeeObject *(DCALL *rhs_getitem_index_fast)(DeeObject *self, size_t index));

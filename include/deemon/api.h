@@ -330,7 +330,10 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * - Disable the "Sequence.map(key).find(item)" -> "Sequence.find(item, key: key)" forwarding
  * - Disable optimized operators for builtin sequence types, where those operators can also
  *   be auto-substituted (with less efficient equivalents) instead.
- */
+ *
+ * WARNING: If you enable this config option, **all** (deemon core) source files must be compiled
+ *          with this option enabled. -- This differs from regular "__OPTIMIZE_SIZE__", which can
+ *          be enabled/disabled on a per-source-file basis! */
 #if (!defined(CONFIG_TINY_DEEMON) && \
      !defined(CONFIG_NO_TINY_DEEMON))
 #if defined(__OPTIMIZE_SIZE__) || 0

@@ -99,7 +99,7 @@ err:
 	return LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR;
 }
 
-#ifndef __OPTIMIZE_SIZE__
+#ifndef CONFIG_TINY_DEEMON
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 LOCAL_seq_compare__(lhs_vector__rhs_foreach__cb)(void *arg, DeeObject *rhs_elem) {
 	int temp;
@@ -116,7 +116,7 @@ LOCAL_seq_compare__(lhs_vector__rhs_foreach__cb)(void *arg, DeeObject *rhs_elem)
 err:
 	return LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR;
 }
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_TINY_DEEMON */
 
 /************************************************************************/
 /* seq_compareforeach__size_and_getitem_index__data                     */
@@ -743,7 +743,7 @@ err:
 /************************************************************************/
 /* Implementations when "lhs" is a constant vector (which is *NOT* allowed to contain NULL items). */
 /************************************************************************/
-#ifndef __OPTIMIZE_SIZE__
+#ifndef CONFIG_TINY_DEEMON
 INTERN WUNUSED NONNULL((1, 3, 5)) int DCALL
 LOCAL_seq_docompare__(lhs_vector__rhs_size_and_getitem_index_fast)(DeeObject *const *lhs_vector, size_t lhs_size,
                                                                    DeeObject *rhs, size_t rhs_size,
@@ -972,7 +972,7 @@ LOCAL_seq_docompare__(lhs_vector)(DeeObject *const *lhs_vector, size_t lhs_size,
 err:
 	return Dee_COMPARE_ERR;
 }
-#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_TINY_DEEMON */
 
 
 

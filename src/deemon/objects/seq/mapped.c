@@ -40,6 +40,58 @@
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 
+#ifndef CONFIG_TINY_DEEMON
+#define WANT_mapped_getitem_index
+#define WANT_mapped_foreach
+#define WANT_mapped_mh_seq_enumerate
+#define WANT_mapped_mh_seq_enumerate_index
+#define WANT_mapped_getrange_index
+#define WANT_mapped_getrange_index_n
+#define WANT_mapped_trygetitem
+#define WANT_mapped_trygetitem_index
+#define WANT_mapped_map
+#define WANT_mapped_seq_getfirst
+#define WANT_mapped_seq_getlast
+#define WANT_mapped_set_getfirst
+#define WANT_mapped_set_getlast
+#define WANT_mapped_mh_seq_erase
+#define WANT_mapped_mh_seq_clear
+#define WANT_mapped_mh_seq_reverse
+#define WANT_mapped_mh_set_operator_bool
+#define WANT_mapped_mh_set_operator_size
+#define WANT_mapped_mh_set_operator_sizeob
+#define WANT_mapped_mh_map_operator_size
+#define WANT_mapped_mh_seq_any
+#define WANT_mapped_mh_seq_all
+#define WANT_mapped_mh_seq_parity
+#define WANT_mapped_mh_seq_sort
+#define WANT_mapped_mh_seq_sorted
+#define WANT_mapped_mh_seq_pop
+#define WANT_mapped_mh_seq_reversed
+#define WANT_mapped_mh_seq_unpack
+#define WANT_mapped_mh_seq_unpack_ub
+#define WANT_mapped_mh_set_pop
+#define WANT_mapped_mh_map_popitem
+#define WANT_mapped_mh_seq_sum
+#define WANT_mapped_mh_seq_min
+#define WANT_mapped_mh_seq_max
+#define WANT_mapped_mh_seq_locate
+#define WANT_mapped_mh_seq_rlocate
+#define WANT_mapped_mh_seq_removeif
+#define WANT_mapped_mh_seq_count
+#define WANT_mapped_mh_seq_contains
+#define WANT_mapped_mh_seq_startswith
+#define WANT_mapped_mh_seq_endswith
+#define WANT_mapped_mh_seq_find
+#define WANT_mapped_mh_seq_rfind
+#define WANT_mapped_mh_seq_remove
+#define WANT_mapped_mh_seq_rremove
+#define WANT_mapped_mh_seq_removeall
+#define WANT_mapped_mh_seq_bfind
+#define WANT_mapped_mh_seq_bposition
+#define WANT_mapped_mh_seq_brange
+#endif /* !CONFIG_TINY_DEEMON */
+
 DECL_BEGIN
 
 STATIC_ASSERT(offsetof(SeqMappedIterator, smi_iter) == offsetof(ProxyObject2, po_obj1) ||
@@ -300,10 +352,7 @@ err:
 }
 
 
-#ifdef CONFIG_TINY_DEEMON
-#define PTR_mapped_getitem_index NULL
-#define PTR_mapped_foreach       NULL
-#else /* CONFIG_TINY_DEEMON */
+#ifdef WANT_mapped_getitem_index
 #define PTR_mapped_getitem_index &mapped_getitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getitem_index(SeqMapped *__restrict self, size_t index) {
@@ -317,7 +366,11 @@ mapped_getitem_index(SeqMapped *__restrict self, size_t index) {
 err:
 	return NULL;
 }
+#else /* WANT_mapped_getitem_index */
+#define PTR_mapped_getitem_index NULL
+#endif /* !WANT_mapped_getitem_index */
 
+#ifdef WANT_mapped_foreach
 struct mapped_foreach_data {
 	DeeObject    *tfd_fun;  /* [1..1] Mapper function. */
 	Dee_foreach_t tfd_proc; /* [1..1] Inner callback. */
@@ -348,8 +401,14 @@ mapped_foreach(SeqMapped *self, Dee_foreach_t proc, void *arg) {
 	data.tfd_arg  = arg;
 	return DeeObject_InvokeMethodHint(seq_operator_foreach, self->sm_seq, &mapped_foreach_cb, &data);
 }
-#endif /* !CONFIG_TINY_DEEMON */
+#else /* WANT_mapped_foreach */
+#define PTR_mapped_foreach DEFIMPL(&default__seq_operator_foreach__with__seq_operator_iter)
+#endif /* !WANT_mapped_foreach */
 
+
+#ifdef WANT_mapped_mh_seq_enumerate
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 struct mapped_mh_seq_enumerate_data {
 	DeeObject          *ted_fun;  /* [1..1] Mapper function. */
 	Dee_seq_enumerate_t ted_proc; /* [1..1] Inner callback. */
@@ -381,7 +440,12 @@ mapped_mh_seq_enumerate(SeqMapped *self, Dee_seq_enumerate_t proc, void *arg) {
 	data.ted_arg  = arg;
 	return DeeObject_InvokeMethodHint(seq_enumerate, self->sm_seq, &mapped_mh_seq_enumerate_cb, &data);
 }
+#endif /* !WANT_mapped_mh_seq_enumerate */
 
+
+#ifdef WANT_mapped_mh_seq_enumerate_index
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 struct mapped_mh_seq_enumerate_index_data {
 	DeeObject                *teid_fun;  /* [1..1] Mapper function. */
 	Dee_seq_enumerate_index_t teid_proc; /* [1..1] Inner callback. */
@@ -414,14 +478,10 @@ mapped_mh_seq_enumerate_index(SeqMapped *self, Dee_seq_enumerate_index_t proc,
 	data.teid_arg  = arg;
 	return DeeObject_InvokeMethodHint(seq_enumerate_index, self->sm_seq, &mapped_mh_seq_enumerate_index_cb, &data, start, end);
 }
+#endif /* WANT_mapped_mh_seq_enumerate_index */
 
-#ifdef CONFIG_TINY_DEEMON
-#define PTR_mapped_getrange_index   NULL
-#define PTR_mapped_getrange_index_n NULL
-#define PTR_mapped_trygetitem       NULL
-#define PTR_mapped_trygetitem_index NULL
-#else /* CONFIG_TINY_DEEMON */
 
+#ifdef WANT_mapped_getrange_index
 #define PTR_mapped_getrange_index &mapped_getrange_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getrange_index(SeqMapped *self, Dee_ssize_t start, Dee_ssize_t end) {
@@ -435,7 +495,11 @@ mapped_getrange_index(SeqMapped *self, Dee_ssize_t start, Dee_ssize_t end) {
 err:
 	return NULL;
 }
+#else /* WANT_mapped_getrange_index */
+#define PTR_mapped_getrange_index NULL
+#endif /* !WANT_mapped_getrange_index */
 
+#ifdef WANT_mapped_getrange_index_n
 #define PTR_mapped_getrange_index_n &mapped_getrange_index_n
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_getrange_index_n(SeqMapped *self, Dee_ssize_t start) {
@@ -449,7 +513,11 @@ mapped_getrange_index_n(SeqMapped *self, Dee_ssize_t start) {
 err:
 	return NULL;
 }
+#else /* WANT_mapped_getrange_index_n */
+#define PTR_mapped_getrange_index_n NULL
+#endif /* !WANT_mapped_getrange_index_n */
 
+#ifdef WANT_mapped_trygetitem
 #define PTR_mapped_trygetitem &mapped_trygetitem
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_trygetitem(SeqMapped *self, DeeObject *index) {
@@ -463,7 +531,11 @@ mapped_trygetitem(SeqMapped *self, DeeObject *index) {
 	}
 	return result;
 }
+#else /* WANT_mapped_trygetitem */
+#define PTR_mapped_trygetitem NULL
+#endif /* !WANT_mapped_trygetitem */
 
+#ifdef WANT_mapped_trygetitem_index
 #define PTR_mapped_trygetitem_index &mapped_trygetitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_trygetitem_index(SeqMapped *self, size_t index) {
@@ -477,7 +549,10 @@ mapped_trygetitem_index(SeqMapped *self, size_t index) {
 	}
 	return result;
 }
-#endif /* !CONFIG_TINY_DEEMON */
+#else /* WANT_mapped_trygetitem_index */
+#define PTR_mapped_trygetitem_index NULL
+#endif /* !WANT_mapped_trygetitem_index */
+
 
 PRIVATE struct type_seq mapped_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mapped_iter,
@@ -542,11 +617,8 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
 #define mapped_init generic_proxy2__init
 
-#ifdef CONFIG_TINY_DEEMON
-#define mapped_getsets NULL
-#else /* CONFIG_TINY_DEEMON */
 /* Return the composition of "key" being applied on-top of "self" */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_compose(SeqMapped *self, DeeObject *key) {
 	DeeObject *mappers[2];
 	mappers[0] = key;
@@ -554,6 +626,9 @@ mapped_compose(SeqMapped *self, DeeObject *key) {
 	return DeeFunctionComposition_Of(2, mappers);
 }
 
+
+#ifdef WANT_mapped_map
+#define NEED_mapped_methods
 PRIVATE WUNUSED NONNULL((1)) DREF SeqMapped *DCALL
 mapped_map(SeqMapped *self, size_t argc, DeeObject *const *argv) {
 	DREF SeqMapped *result;
@@ -581,26 +656,16 @@ err_r:
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_map */
 
 
-
+#ifdef WANT_mapped_seq_getfirst
+#define NEED_mapped_getsets
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_seq_getfirst(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
 	result = DeeObject_InvokeMethodHint(seq_getfirst, self->sm_seq);
-	if unlikely(!result)
-		goto err;
-	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
-	Dee_Decref(result);
-	return mapped;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mapped_seq_getlast(SeqMapped *__restrict self) {
-	DREF DeeObject *result, *mapped;
-	result = DeeObject_InvokeMethodHint(seq_getlast, self->sm_seq);
 	if unlikely(!result)
 		goto err;
 	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
@@ -621,6 +686,28 @@ mapped_seq_trygetfirst(SeqMapped *__restrict self) {
 	return mapped;
 }
 
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_seq_boundfirst generic_proxy__seq_boundfirst
+#define mapped_seq_delfirst   generic_proxy__seq_delfirst
+#endif /* WANT_mapped_seq_getfirst */
+
+
+#ifdef WANT_mapped_seq_getlast
+#define NEED_mapped_getsets
+#define NEED_mapped_method_hints
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_seq_getlast(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(seq_getlast, self->sm_seq);
+	if unlikely(!result)
+		goto err;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_seq_trygetlast(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
@@ -632,23 +719,19 @@ mapped_seq_trygetlast(SeqMapped *__restrict self) {
 	return mapped;
 }
 
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_seq_boundlast generic_proxy__seq_boundlast
+#define mapped_seq_dellast   generic_proxy__seq_dellast
+#endif /* WANT_mapped_seq_getfirst */
+
+
+#ifdef WANT_mapped_set_getfirst
+#define NEED_mapped_getsets
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_set_getfirst(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
 	result = DeeObject_InvokeMethodHint(set_getfirst, self->sm_seq);
-	if unlikely(!result)
-		goto err;
-	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
-	Dee_Decref(result);
-	return mapped;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mapped_set_getlast(SeqMapped *__restrict self) {
-	DREF DeeObject *result, *mapped;
-	result = DeeObject_InvokeMethodHint(set_getlast, self->sm_seq);
 	if unlikely(!result)
 		goto err;
 	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
@@ -669,6 +752,28 @@ mapped_set_trygetfirst(SeqMapped *__restrict self) {
 	return mapped;
 }
 
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_set_boundfirst generic_proxy__set_boundfirst
+#define mapped_set_delfirst   generic_proxy__set_delfirst
+#endif /* WANT_mapped_set_getfirst */
+
+
+#ifdef WANT_mapped_set_getlast
+#define NEED_mapped_getsets
+#define NEED_mapped_method_hints
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mapped_set_getlast(SeqMapped *__restrict self) {
+	DREF DeeObject *result, *mapped;
+	result = DeeObject_InvokeMethodHint(set_getlast, self->sm_seq);
+	if unlikely(!result)
+		goto err;
+	mapped = DeeObject_Call(self->sm_mapper, 1, &result);
+	Dee_Decref(result);
+	return mapped;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_set_trygetlast(SeqMapped *__restrict self) {
 	DREF DeeObject *result, *mapped;
@@ -681,31 +786,58 @@ mapped_set_trygetlast(SeqMapped *__restrict self) {
 }
 
 STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
-#define mapped_seq_boundfirst         generic_proxy__seq_boundfirst
-#define mapped_seq_delfirst           generic_proxy__seq_delfirst
-#define mapped_seq_boundlast          generic_proxy__seq_boundlast
-#define mapped_seq_dellast            generic_proxy__seq_dellast
-#define mapped_set_boundfirst         generic_proxy__set_boundfirst
-#define mapped_set_delfirst           generic_proxy__set_delfirst
-#define mapped_set_boundlast          generic_proxy__set_boundlast
-#define mapped_set_dellast            generic_proxy__set_dellast
-#define mapped_mh_seq_erase           generic_proxy__seq_erase
-#define mapped_mh_seq_clear           generic_proxy__seq_clear
-#define mapped_mh_seq_reverse         generic_proxy__seq_reverse
-#define mapped_mh_set_operator_bool   generic_proxy__set_operator_bool
+#define mapped_set_boundlast generic_proxy__set_boundlast
+#define mapped_set_dellast   generic_proxy__set_dellast
+#endif /* WANT_mapped_set_getlast */
+
+
+#ifdef WANT_mapped_mh_seq_erase
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_mh_seq_erase generic_proxy__seq_erase
+#endif /* WANT_mapped_mh_seq_erase */
+
+#ifdef WANT_mapped_mh_seq_clear
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_mh_seq_clear generic_proxy__seq_clear
+#endif /* WANT_mapped_mh_seq_clear */
+
+#ifdef WANT_mapped_mh_seq_reverse
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_mh_seq_reverse generic_proxy__seq_reverse
+#endif /* WANT_mapped_mh_seq_reverse */
+
+#ifdef WANT_mapped_mh_set_operator_bool
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
+#define mapped_mh_set_operator_bool generic_proxy__set_operator_bool
+#endif /* WANT_mapped_mh_set_operator_bool */
+
+#ifdef WANT_mapped_mh_set_operator_size
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
 #define mapped_mh_set_operator_size   generic_proxy__set_operator_size
 #define mapped_mh_set_operator_sizeob generic_proxy__set_operator_sizeob
+#endif /* WANT_mapped_mh_set_operator_size */
+
+#ifdef WANT_mapped_mh_map_operator_size
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject, po_obj));
 #define mapped_mh_map_operator_size   generic_proxy__map_operator_size
 #define mapped_mh_map_operator_sizeob generic_proxy__map_operator_sizeob
+#endif /* WANT_mapped_mh_map_operator_size */
 
-PRIVATE struct type_getset tpconst mapped_getsets[] = {
-	TYPE_GETSET_BOUND_NODOC(STR_first, &mapped_seq_getfirst, &mapped_seq_delfirst, NULL, &mapped_seq_boundfirst),
-	TYPE_GETSET_BOUND_NODOC(STR_last, &mapped_seq_getlast, &mapped_seq_dellast, NULL, &mapped_seq_boundlast),
-	TYPE_GETSET_BOUND_NODOC(STR___set_first__, &mapped_set_getfirst, &mapped_set_delfirst, NULL, &mapped_set_boundfirst),
-	TYPE_GETSET_BOUND_NODOC(STR___set_last__, &mapped_set_getlast, &mapped_set_dellast, NULL, &mapped_set_boundlast),
-	TYPE_GETSET_END
-};
-
+#ifdef WANT_mapped_mh_seq_any
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_any(SeqMapped *__restrict self) {
 	return DeeObject_InvokeMethodHint(seq_any_with_key, self->sm_seq, self->sm_mapper);
@@ -743,7 +875,12 @@ mapped_mh_seq_any_with_range_and_key(SeqMapped *self, size_t start, size_t end, 
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_any */
 
+
+#ifdef WANT_mapped_mh_seq_all
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_all(SeqMapped *__restrict self) {
 	return DeeObject_InvokeMethodHint(seq_all_with_key, self->sm_seq, self->sm_mapper);
@@ -781,7 +918,12 @@ mapped_mh_seq_all_with_range_and_key(SeqMapped *self, size_t start, size_t end, 
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_all */
 
+
+#ifdef WANT_mapped_mh_seq_parity
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_parity(SeqMapped *__restrict self) {
 	return DeeObject_InvokeMethodHint(seq_parity_with_key, self->sm_seq, self->sm_mapper);
@@ -819,7 +961,12 @@ mapped_mh_seq_parity_with_range_and_key(SeqMapped *self, size_t start, size_t en
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_parity */
 
+
+#ifdef WANT_mapped_mh_seq_sort
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mapped_mh_seq_sort(SeqMapped *__restrict self, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_sort_with_key, self->sm_seq,
@@ -838,7 +985,12 @@ mapped_mh_seq_sort_with_key(SeqMapped *self, size_t start, size_t end, DeeObject
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_sort */
 
+
+#ifdef WANT_mapped_mh_seq_sorted
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_mh_seq_sorted(SeqMapped *__restrict self, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_sorted_with_key, self->sm_seq,
@@ -857,7 +1009,12 @@ mapped_mh_seq_sorted_with_key(SeqMapped *self, size_t start, size_t end, DeeObje
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_sorted */
 
+
+#ifdef WANT_mapped_mh_seq_pop
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_mh_seq_pop(SeqMapped *self, Dee_ssize_t index) {
 	DREF DeeObject *item, *result;
@@ -870,7 +1027,12 @@ mapped_mh_seq_pop(SeqMapped *self, Dee_ssize_t index) {
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_pop */
 
+
+#ifdef WANT_mapped_mh_seq_reversed
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) DREF SeqMapped *DCALL
 mapped_mh_seq_reversed(SeqMapped *__restrict self, size_t start, size_t end) {
 	DREF DeeObject *seq;
@@ -890,8 +1052,12 @@ err_r:
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_reversed */
 
 
+#ifdef WANT_mapped_mh_seq_unpack
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 mapped_mapv_inherited(SeqMapped *__restrict self, size_t count,
                       /*inherit(on_failure)*/ DREF DeeObject *result[]) {
@@ -932,7 +1098,12 @@ mapped_mh_seq_unpack_ex(SeqMapped *__restrict self, size_t min_count,
 	}
 	return count;
 }
+#endif /* WANT_mapped_mh_seq_unpack */
 
+
+#ifdef WANT_mapped_mh_seq_unpack_ub
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 mapped_mh_seq_unpack_ub(SeqMapped *__restrict self, size_t min_count,
                         size_t max_count, DREF DeeObject *result[]) {
@@ -956,12 +1127,12 @@ err_r:
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_unpack_ub */
 
 
-
-
-
-
+#ifdef WANT_mapped_mh_set_pop
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_mh_set_pop(SeqMapped *__restrict self) {
 	DREF DeeObject *item, *result;
@@ -993,7 +1164,12 @@ mapped_mh_set_pop_with_default(SeqMapped *self, DeeObject *default_) {
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_set_pop */
 
+
+#ifdef WANT_mapped_mh_map_popitem
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mapped_mh_map_popitem(SeqMapped *__restrict self) {
 	DREF DeeObject *item, *result;
@@ -1006,9 +1182,12 @@ mapped_mh_map_popitem(SeqMapped *__restrict self) {
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_map_popitem */
 
 
-
+#ifdef WANT_mapped_mh_seq_sum
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_mh_seq_sum(SeqMapped *self, DeeObject *def) {
 	return DeeObject_InvokeMethodHint(seq_sum_with_key, self->sm_seq, def, self->sm_mapper);
@@ -1046,9 +1225,12 @@ mapped_mh_seq_sum_with_range_and_key(SeqMapped *self, size_t start, size_t end, 
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_sum */
 
 
-
+#ifdef WANT_mapped_mh_seq_min
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_mh_seq_min(SeqMapped *self, DeeObject *def) {
 	return DeeObject_InvokeMethodHint(seq_min_with_key, self->sm_seq, def, self->sm_mapper);
@@ -1086,9 +1268,12 @@ mapped_mh_seq_min_with_range_and_key(SeqMapped *self, size_t start, size_t end, 
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_min */
 
 
-
+#ifdef WANT_mapped_mh_seq_max
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapped_mh_seq_max(SeqMapped *self, DeeObject *def) {
 	return DeeObject_InvokeMethodHint(seq_max_with_key, self->sm_seq, def, self->sm_mapper);
@@ -1126,9 +1311,18 @@ mapped_mh_seq_max_with_range_and_key(SeqMapped *self, size_t start, size_t end, 
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_max */
 
 
+#ifdef WANT_mapped_mh_seq_locate
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+
+#ifdef WANT_mapped_mh_set_pop
 #define mapped_mh_seq_locate_dummy mapped_mh_set_pop_dummy
+#else /* WANT_mapped_mh_set_pop */
+PRIVATE DeeObject mapped_mh_seq_locate_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+#endif /* !WANT_mapped_mh_set_pop */
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 mapped_mh_seq_locate(SeqMapped *self, DeeObject *match, DeeObject *def) {
@@ -1174,9 +1368,20 @@ mapped_mh_seq_locate_with_range(SeqMapped *self, DeeObject *match,
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_locate */
 
 
+#ifdef WANT_mapped_mh_seq_rlocate
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
+
+#ifdef WANT_mapped_mh_set_pop
 #define mapped_mh_seq_rlocate_dummy mapped_mh_set_pop_dummy
+#elif defined(WANT_mapped_mh_seq_locate)
+#define mapped_mh_seq_rlocate_dummy mapped_mh_seq_locate_dummy
+#else /* ... */
+PRIVATE DeeObject mapped_mh_seq_rlocate_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+#endif /* !... */
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 mapped_mh_seq_rlocate(SeqMapped *self, DeeObject *match, DeeObject *def) {
@@ -1222,7 +1427,12 @@ mapped_mh_seq_rlocate_with_range(SeqMapped *self, DeeObject *match,
 err:
 	return NULL;
 }
+#endif /* WANT_mapped_mh_seq_rlocate */
 
+
+#ifdef WANT_mapped_mh_seq_removeif
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mapped_mh_seq_removeif(SeqMapped *self, DeeObject *should, size_t start, size_t end, size_t max) {
 	size_t result;
@@ -1235,12 +1445,17 @@ mapped_mh_seq_removeif(SeqMapped *self, DeeObject *should, size_t start, size_t 
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_removeif */
+
 
 
 #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 /* Can implement pretty much all find(), remove(), etc.
  * functions by injecting "sm_mapper" as an (additional) key */
 
+#ifdef WANT_mapped_mh_seq_count
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mapped_mh_seq_count(SeqMapped *self, DeeObject *item) {
 	return DeeObject_InvokeMethodHint(seq_count_with_key, self->sm_seq, item, self->sm_mapper);
@@ -1276,8 +1491,12 @@ mapped_mh_seq_count_with_range_and_key(SeqMapped *self, DeeObject *item, size_t 
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_count */
 
 
+#ifdef WANT_mapped_mh_seq_contains
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mapped_mh_seq_contains(SeqMapped *self, DeeObject *item) {
 	return DeeObject_InvokeMethodHint(seq_contains_with_key, self->sm_seq, item, self->sm_mapper);
@@ -1313,8 +1532,12 @@ mapped_mh_seq_contains_with_range_and_key(SeqMapped *self, DeeObject *item, size
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_contains */
 
 
+#ifdef WANT_mapped_mh_seq_startswith
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mapped_mh_seq_startswith(SeqMapped *self, DeeObject *item) {
 	return DeeObject_InvokeMethodHint(seq_startswith_with_key, self->sm_seq, item, self->sm_mapper);
@@ -1350,8 +1573,12 @@ mapped_mh_seq_startswith_with_range_and_key(SeqMapped *self, DeeObject *item, si
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_startswith */
 
 
+#ifdef WANT_mapped_mh_seq_endswith
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mapped_mh_seq_endswith(SeqMapped *self, DeeObject *item) {
 	return DeeObject_InvokeMethodHint(seq_endswith_with_key, self->sm_seq, item, self->sm_mapper);
@@ -1387,8 +1614,12 @@ mapped_mh_seq_endswith_with_range_and_key(SeqMapped *self, DeeObject *item, size
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_endswith */
 
 
+#ifdef WANT_mapped_mh_seq_find
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mapped_mh_seq_find(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_find_with_key, self->sm_seq, item, start, end, self->sm_mapper);
@@ -1406,8 +1637,12 @@ mapped_mh_seq_find_with_key(SeqMapped *self, DeeObject *item, size_t start, size
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_find */
 
 
+#ifdef WANT_mapped_mh_seq_rfind
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mapped_mh_seq_rfind(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_rfind_with_key, self->sm_seq, item, start, end, self->sm_mapper);
@@ -1425,8 +1660,12 @@ mapped_mh_seq_rfind_with_key(SeqMapped *self, DeeObject *item, size_t start, siz
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_rfind */
 
 
+#ifdef WANT_mapped_mh_seq_remove
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mapped_mh_seq_remove(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_remove_with_key, self->sm_seq, item, start, end, self->sm_mapper);
@@ -1444,8 +1683,12 @@ mapped_mh_seq_remove_with_key(SeqMapped *self, DeeObject *item, size_t start, si
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_remove */
 
 
+#ifdef WANT_mapped_mh_seq_rremove
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mapped_mh_seq_rremove(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_rremove_with_key, self->sm_seq, item, start, end, self->sm_mapper);
@@ -1463,8 +1706,12 @@ mapped_mh_seq_rremove_with_key(SeqMapped *self, DeeObject *item, size_t start, s
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_rremove */
 
 
+#ifdef WANT_mapped_mh_seq_removeall
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mapped_mh_seq_removeall(SeqMapped *self, DeeObject *item, size_t start, size_t end, size_t max) {
 	return DeeObject_InvokeMethodHint(seq_removeall_with_key, self->sm_seq, item, start, end, max, self->sm_mapper);
@@ -1482,8 +1729,12 @@ mapped_mh_seq_removeall_with_key(SeqMapped *self, DeeObject *item, size_t start,
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_removeall */
 
 
+#ifdef WANT_mapped_mh_seq_bfind
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mapped_mh_seq_bfind(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_bfind_with_key, self->sm_seq, item, start, end, self->sm_mapper);
@@ -1501,8 +1752,12 @@ mapped_mh_seq_bfind_with_key(SeqMapped *self, DeeObject *item, size_t start, siz
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_bfind */
 
 
+#ifdef WANT_mapped_mh_seq_bposition
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 mapped_mh_seq_bposition(SeqMapped *self, DeeObject *item, size_t start, size_t end) {
 	return DeeObject_InvokeMethodHint(seq_bposition_with_key, self->sm_seq, item, start, end, self->sm_mapper);
@@ -1520,8 +1775,12 @@ mapped_mh_seq_bposition_with_key(SeqMapped *self, DeeObject *item, size_t start,
 err:
 	return (size_t)-1;
 }
+#endif /* WANT_mapped_mh_seq_bposition */
 
 
+#ifdef WANT_mapped_mh_seq_brange
+#define NEED_mapped_methods
+#define NEED_mapped_method_hints
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 mapped_mh_seq_brange(SeqMapped *self, DeeObject *item, size_t start, size_t end, size_t result_range[2]) {
 	return DeeObject_InvokeMethodHint(seq_brange_with_key, self->sm_seq, item, start, end, self->sm_mapper, result_range);
@@ -1539,13 +1798,35 @@ mapped_mh_seq_brange_with_key(SeqMapped *self, DeeObject *item, size_t start, si
 err:
 	return -1;
 }
+#endif /* WANT_mapped_mh_seq_brange */
 #endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-#endif /* !CONFIG_TINY_DEEMON */
 
 
+#ifndef NEED_mapped_getsets
+#define mapped_getsets NULL
+#else /* !NEED_mapped_getsets */
+PRIVATE struct type_getset tpconst mapped_getsets[] = {
+#ifdef WANT_mapped_seq_getfirst
+	TYPE_GETSET_BOUND_NODOC(STR_first, &mapped_seq_getfirst, &mapped_seq_delfirst, NULL, &mapped_seq_boundfirst),
+#endif /* WANT_mapped_seq_getfirst */
+#ifdef WANT_mapped_seq_getlast
+	TYPE_GETSET_BOUND_NODOC(STR_last, &mapped_seq_getlast, &mapped_seq_dellast, NULL, &mapped_seq_boundlast),
+#endif /* WANT_mapped_seq_getlast */
+#ifdef WANT_mapped_set_getfirst
+	TYPE_GETSET_BOUND_NODOC(STR___set_first__, &mapped_set_getfirst, &mapped_set_delfirst, NULL, &mapped_set_boundfirst),
+#endif /* WANT_mapped_set_getfirst */
+#ifdef WANT_mapped_set_getlast
+	TYPE_GETSET_BOUND_NODOC(STR___set_last__, &mapped_set_getlast, &mapped_set_dellast, NULL, &mapped_set_boundlast),
+#endif /* WANT_mapped_set_getlast */
+	TYPE_GETSET_END
+};
+#endif /* NEED_mapped_getsets */
+
+#ifndef NEED_mapped_methods
+#define mapped_methods NULL
+#else /* !NEED_mapped_methods */
 PRIVATE struct type_method tpconst mapped_methods[] = {
-	TYPE_METHOD_HINTREF(__seq_enumerate__),
-#ifndef CONFIG_TINY_DEEMON
+#ifdef WANT_mapped_map
 	/* Override "Sequence.map()" such that instead of having 2 nested "SeqMapped" objects,
 	 * there is only one whose callback is an instance of "FunctionComposition_Type". */
 	TYPE_METHOD("map", &mapped_map,
@@ -1554,144 +1835,307 @@ PRIVATE struct type_method tpconst mapped_methods[] = {
 	            "Same as ?Amap?DSequence, but instead of chaining sequences on-top "
 	            /**/ "of more sequences, simply ?Acompose?DCallable @mapper with "
 	            /**/ "?#__mapper__ and return the result as a new ?."),
-	TYPE_METHOD_HINTREF(Sequence_any),
-	TYPE_METHOD_HINTREF(Sequence_all),
-	TYPE_METHOD_HINTREF(Sequence_parity),
-	TYPE_METHOD_HINTREF(Sequence_sort),
-	TYPE_METHOD_HINTREF(Sequence_sorted),
+#endif /* WANT_mapped_map */
+
+#if defined(WANT_mapped_mh_seq_enumerate) || defined(WANT_mapped_mh_seq_enumerate_index)
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+#endif /* WANT_mapped_mh_seq_enumerate || WANT_mapped_mh_seq_enumerate_index */
+
+#ifdef WANT_mapped_mh_seq_erase
 	TYPE_METHOD_HINTREF(Sequence_erase),
+#endif /* WANT_mapped_mh_seq_erase */
+#ifdef WANT_mapped_mh_seq_clear
 	TYPE_METHOD_HINTREF(Sequence_clear),
-	TYPE_METHOD_HINTREF(Sequence_pop),
+#endif /* WANT_mapped_mh_seq_clear */
+#ifdef WANT_mapped_mh_seq_reverse
 	TYPE_METHOD_HINTREF(Sequence_reverse),
-	TYPE_METHOD_HINTREF(Sequence_reversed),
-	TYPE_METHOD_HINTREF(Sequence_unpack),
-	TYPE_METHOD_HINTREF(Sequence_unpackub),
-	TYPE_METHOD_HINTREF(Sequence_sum),
-	TYPE_METHOD_HINTREF(Sequence_min),
-	TYPE_METHOD_HINTREF(Sequence_max),
-	TYPE_METHOD_HINTREF(Sequence_locate),
-	TYPE_METHOD_HINTREF(Sequence_rlocate),
-	TYPE_METHOD_HINTREF(Sequence_removeif),
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	TYPE_METHOD_HINTREF(Sequence_count),
-	TYPE_METHOD_HINTREF(Sequence_contains),
-	TYPE_METHOD_HINTREF(Sequence_startswith),
-	TYPE_METHOD_HINTREF(Sequence_endswith),
-	TYPE_METHOD_HINTREF(Sequence_find),
-	TYPE_METHOD_HINTREF(Sequence_rfind),
-	TYPE_METHOD_HINTREF(Sequence_remove),
-	TYPE_METHOD_HINTREF(Sequence_rremove),
-	TYPE_METHOD_HINTREF(Sequence_removeall),
-	TYPE_METHOD_HINTREF(Sequence_bfind),
-	TYPE_METHOD_HINTREF(Sequence_bposition),
-	TYPE_METHOD_HINTREF(Sequence_brange),
-#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	TYPE_METHOD_HINTREF(__set_pop__),
-	TYPE_METHOD_HINTREF(__map_popitem__),
+#endif /* WANT_mapped_mh_seq_reverse */
+#ifdef WANT_mapped_mh_set_operator_bool
 	TYPE_METHOD_HINTREF(__set_bool__),
+#endif /* WANT_mapped_mh_set_operator_bool */
+#ifdef WANT_mapped_mh_set_operator_size
 	TYPE_METHOD_HINTREF(__set_size__),
+#endif /* WANT_mapped_mh_set_operator_size */
+#ifdef WANT_mapped_mh_map_operator_size
 	TYPE_METHOD_HINTREF(__map_size__),
-#endif /* !CONFIG_TINY_DEEMON */
+#endif /* WANT_mapped_mh_map_operator_size */
+#ifdef WANT_mapped_mh_seq_any
+	TYPE_METHOD_HINTREF(Sequence_any),
+#endif /* WANT_mapped_mh_seq_any */
+#ifdef WANT_mapped_mh_seq_all
+	TYPE_METHOD_HINTREF(Sequence_all),
+#endif /* WANT_mapped_mh_seq_all */
+#ifdef WANT_mapped_mh_seq_parity
+	TYPE_METHOD_HINTREF(Sequence_parity),
+#endif /* WANT_mapped_mh_seq_parity */
+#ifdef WANT_mapped_mh_seq_sort
+	TYPE_METHOD_HINTREF(Sequence_sort),
+#endif /* WANT_mapped_mh_seq_sort */
+#ifdef WANT_mapped_mh_seq_sorted
+	TYPE_METHOD_HINTREF(Sequence_sorted),
+#endif /* WANT_mapped_mh_seq_sorted */
+#ifdef WANT_mapped_mh_seq_pop
+	TYPE_METHOD_HINTREF(Sequence_pop),
+#endif /* WANT_mapped_mh_seq_pop */
+#ifdef WANT_mapped_mh_seq_reversed
+	TYPE_METHOD_HINTREF(Sequence_reversed),
+#endif /* WANT_mapped_mh_seq_reversed */
+#ifdef WANT_mapped_mh_seq_unpack
+	TYPE_METHOD_HINTREF(Sequence_unpack),
+#endif /* WANT_mapped_mh_seq_unpack */
+#ifdef WANT_mapped_mh_seq_unpack_ub
+	TYPE_METHOD_HINTREF(Sequence_unpackub),
+#endif /* WANT_mapped_mh_seq_unpack_ub */
+#ifdef WANT_mapped_mh_seq_sum
+	TYPE_METHOD_HINTREF(Sequence_sum),
+#endif /* WANT_mapped_mh_seq_sum */
+#ifdef WANT_mapped_mh_seq_min
+	TYPE_METHOD_HINTREF(Sequence_min),
+#endif /* WANT_mapped_mh_seq_min */
+#ifdef WANT_mapped_mh_seq_max
+	TYPE_METHOD_HINTREF(Sequence_max),
+#endif /* WANT_mapped_mh_seq_max */
+#ifdef WANT_mapped_mh_seq_locate
+	TYPE_METHOD_HINTREF(Sequence_locate),
+#endif /* WANT_mapped_mh_seq_locate */
+#ifdef WANT_mapped_mh_seq_rlocate
+	TYPE_METHOD_HINTREF(Sequence_rlocate),
+#endif /* WANT_mapped_mh_seq_rlocate */
+#ifdef WANT_mapped_mh_seq_removeif
+	TYPE_METHOD_HINTREF(Sequence_removeif),
+#endif /* WANT_mapped_mh_seq_removeif */
+#ifdef WANT_mapped_mh_set_pop
+	TYPE_METHOD_HINTREF(__set_pop__),
+#endif /* WANT_mapped_mh_set_pop */
+#ifdef WANT_mapped_mh_map_popitem
+	TYPE_METHOD_HINTREF(__map_popitem__),
+#endif /* WANT_mapped_mh_map_popitem */
+
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+#ifdef WANT_mapped_mh_seq_count
+	TYPE_METHOD_HINTREF(Sequence_count),
+#endif /* WANT_mapped_mh_seq_count */
+#ifdef WANT_mapped_mh_seq_contains
+	TYPE_METHOD_HINTREF(Sequence_contains),
+#endif /* WANT_mapped_mh_seq_contains */
+#ifdef WANT_mapped_mh_seq_startswith
+	TYPE_METHOD_HINTREF(Sequence_startswith),
+#endif /* WANT_mapped_mh_seq_startswith */
+#ifdef WANT_mapped_mh_seq_endswith
+	TYPE_METHOD_HINTREF(Sequence_endswith),
+#endif /* WANT_mapped_mh_seq_endswith */
+#ifdef WANT_mapped_mh_seq_find
+	TYPE_METHOD_HINTREF(Sequence_find),
+#endif /* WANT_mapped_mh_seq_find */
+#ifdef WANT_mapped_mh_seq_rfind
+	TYPE_METHOD_HINTREF(Sequence_rfind),
+#endif /* WANT_mapped_mh_seq_rfind */
+#ifdef WANT_mapped_mh_seq_remove
+	TYPE_METHOD_HINTREF(Sequence_remove),
+#endif /* WANT_mapped_mh_seq_remove */
+#ifdef WANT_mapped_mh_seq_rremove
+	TYPE_METHOD_HINTREF(Sequence_rremove),
+#endif /* WANT_mapped_mh_seq_rremove */
+#ifdef WANT_mapped_mh_seq_removeall
+	TYPE_METHOD_HINTREF(Sequence_removeall),
+#endif /* WANT_mapped_mh_seq_removeall */
+#ifdef WANT_mapped_mh_seq_bfind
+	TYPE_METHOD_HINTREF(Sequence_bfind),
+#endif /* WANT_mapped_mh_seq_bfind */
+#ifdef WANT_mapped_mh_seq_bposition
+	TYPE_METHOD_HINTREF(Sequence_bposition),
+#endif /* WANT_mapped_mh_seq_bposition */
+#ifdef WANT_mapped_mh_seq_brange
+	TYPE_METHOD_HINTREF(Sequence_brange),
+#endif /* WANT_mapped_mh_seq_brange */
+#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	TYPE_METHOD_END
 };
+#endif /* NEED_mapped_methods */
 
+#ifndef NEED_mapped_method_hints
+#define mapped_method_hints NULL
+#else /* !NEED_mapped_method_hints */
 PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
+#ifdef WANT_mapped_mh_seq_enumerate
 	TYPE_METHOD_HINT(seq_enumerate, &mapped_mh_seq_enumerate),
+#endif /* WANT_mapped_mh_seq_enumerate */
+#ifdef WANT_mapped_mh_seq_enumerate_index
 	TYPE_METHOD_HINT(seq_enumerate_index, &mapped_mh_seq_enumerate_index),
-#ifndef CONFIG_TINY_DEEMON
+#endif /* WANT_mapped_mh_seq_enumerate_index */
+#ifdef WANT_mapped_seq_getfirst
 	TYPE_METHOD_HINT(seq_trygetfirst, &mapped_seq_trygetfirst),
+#endif /* WANT_mapped_seq_getfirst */
+#ifdef WANT_mapped_seq_getlast
 	TYPE_METHOD_HINT(seq_trygetlast, &mapped_seq_trygetlast),
+#endif /* WANT_mapped_seq_getlast */
+#ifdef WANT_mapped_set_getfirst
 	TYPE_METHOD_HINT(set_trygetfirst, &mapped_set_trygetfirst),
+#endif /* WANT_mapped_set_getfirst */
+#ifdef WANT_mapped_set_getlast
 	TYPE_METHOD_HINT(set_trygetlast, &mapped_set_trygetlast),
+#endif /* WANT_mapped_set_getlast */
+#ifdef WANT_mapped_mh_seq_erase
+	TYPE_METHOD_HINT(seq_erase, &mapped_mh_seq_erase),
+#endif /* WANT_mapped_mh_seq_erase */
+#ifdef WANT_mapped_mh_seq_clear
+	TYPE_METHOD_HINT(seq_clear, &mapped_mh_seq_clear),
+#endif /* WANT_mapped_mh_seq_clear */
+#ifdef WANT_mapped_mh_seq_reverse
+	TYPE_METHOD_HINT(seq_reverse, &mapped_mh_seq_reverse),
+#endif /* WANT_mapped_mh_seq_reverse */
+#ifdef WANT_mapped_mh_set_operator_bool
+	TYPE_METHOD_HINT(set_operator_bool, &mapped_mh_set_operator_bool),
+#endif /* WANT_mapped_mh_set_operator_bool */
+#ifdef WANT_mapped_mh_set_operator_size
+	TYPE_METHOD_HINT(set_operator_size, &mapped_mh_set_operator_size),
+	TYPE_METHOD_HINT(set_operator_sizeob, &mapped_mh_set_operator_sizeob),
+#endif /* WANT_mapped_mh_set_operator_size */
+#ifdef WANT_mapped_mh_map_operator_size
+	TYPE_METHOD_HINT(map_operator_size, &mapped_mh_map_operator_size),
+	TYPE_METHOD_HINT(map_operator_sizeob, &mapped_mh_map_operator_sizeob),
+#endif /* WANT_mapped_mh_map_operator_size */
+#ifdef WANT_mapped_mh_seq_any
 	TYPE_METHOD_HINT(seq_any, &mapped_mh_seq_any),
 	TYPE_METHOD_HINT(seq_any_with_key, &mapped_mh_seq_any_with_key),
 	TYPE_METHOD_HINT(seq_any_with_range, &mapped_mh_seq_any_with_range),
 	TYPE_METHOD_HINT(seq_any_with_range_and_key, &mapped_mh_seq_any_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_any */
+#ifdef WANT_mapped_mh_seq_all
 	TYPE_METHOD_HINT(seq_all, &mapped_mh_seq_all),
 	TYPE_METHOD_HINT(seq_all_with_key, &mapped_mh_seq_all_with_key),
 	TYPE_METHOD_HINT(seq_all_with_range, &mapped_mh_seq_all_with_range),
 	TYPE_METHOD_HINT(seq_all_with_range_and_key, &mapped_mh_seq_all_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_all */
+#ifdef WANT_mapped_mh_seq_parity
 	TYPE_METHOD_HINT(seq_parity, &mapped_mh_seq_parity),
 	TYPE_METHOD_HINT(seq_parity_with_key, &mapped_mh_seq_parity_with_key),
 	TYPE_METHOD_HINT(seq_parity_with_range, &mapped_mh_seq_parity_with_range),
 	TYPE_METHOD_HINT(seq_parity_with_range_and_key, &mapped_mh_seq_parity_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_parity */
+#ifdef WANT_mapped_mh_seq_sort
 	TYPE_METHOD_HINT(seq_sort, &mapped_mh_seq_sort),
 	TYPE_METHOD_HINT(seq_sort_with_key, &mapped_mh_seq_sort_with_key),
+#endif /* WANT_mapped_mh_seq_sort */
+#ifdef WANT_mapped_mh_seq_sorted
 	TYPE_METHOD_HINT(seq_sorted, &mapped_mh_seq_sorted),
 	TYPE_METHOD_HINT(seq_sorted_with_key, &mapped_mh_seq_sorted_with_key),
-	TYPE_METHOD_HINT(seq_erase, &mapped_mh_seq_erase),
-	TYPE_METHOD_HINT(seq_clear, &mapped_mh_seq_clear),
+#endif /* WANT_mapped_mh_seq_sorted */
+
+#ifdef WANT_mapped_mh_seq_pop
 	TYPE_METHOD_HINT(seq_pop, &mapped_mh_seq_pop),
-	TYPE_METHOD_HINT(seq_reverse, &mapped_mh_seq_reverse),
+#endif /* WANT_mapped_mh_seq_pop */
+#ifdef WANT_mapped_mh_seq_reversed
 	TYPE_METHOD_HINT(seq_reversed, &mapped_mh_seq_reversed),
-	TYPE_METHOD_HINT(seq_unpack, mapped_mh_seq_unpack),
-	TYPE_METHOD_HINT(seq_unpack_ex, mapped_mh_seq_unpack_ex),
-	TYPE_METHOD_HINT(seq_unpack_ub, mapped_mh_seq_unpack_ub),
-	TYPE_METHOD_HINT(seq_sum, mapped_mh_seq_sum),
-	TYPE_METHOD_HINT(seq_sum_with_key, mapped_mh_seq_sum_with_key),
-	TYPE_METHOD_HINT(seq_sum_with_range, mapped_mh_seq_sum_with_range),
-	TYPE_METHOD_HINT(seq_sum_with_range_and_key, mapped_mh_seq_sum_with_range_and_key),
-	TYPE_METHOD_HINT(seq_min, mapped_mh_seq_min),
-	TYPE_METHOD_HINT(seq_min_with_key, mapped_mh_seq_min_with_key),
-	TYPE_METHOD_HINT(seq_min_with_range, mapped_mh_seq_min_with_range),
-	TYPE_METHOD_HINT(seq_min_with_range_and_key, mapped_mh_seq_min_with_range_and_key),
-	TYPE_METHOD_HINT(seq_max, mapped_mh_seq_max),
-	TYPE_METHOD_HINT(seq_max_with_key, mapped_mh_seq_max_with_key),
-	TYPE_METHOD_HINT(seq_max_with_range, mapped_mh_seq_max_with_range),
-	TYPE_METHOD_HINT(seq_max_with_range_and_key, mapped_mh_seq_max_with_range_and_key),
-	TYPE_METHOD_HINT(seq_locate, mapped_mh_seq_locate),                         /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
-	TYPE_METHOD_HINT(seq_locate_with_range, mapped_mh_seq_locate_with_range),   /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
-	TYPE_METHOD_HINT(seq_rlocate, mapped_mh_seq_rlocate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
-	TYPE_METHOD_HINT(seq_rlocate_with_range, mapped_mh_seq_rlocate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
-	TYPE_METHOD_HINT(seq_removeif, mapped_mh_seq_removeif),                     /* Just use `DeeFunctionComposition_Of(2, {should, self->sm_mapper})' as new "should" */
+#endif /* WANT_mapped_mh_seq_reversed */
+#ifdef WANT_mapped_mh_seq_unpack
+	TYPE_METHOD_HINT(seq_unpack, &mapped_mh_seq_unpack),
+	TYPE_METHOD_HINT(seq_unpack_ex, &mapped_mh_seq_unpack_ex),
+#endif /* WANT_mapped_mh_seq_unpack */
+#ifdef WANT_mapped_mh_seq_unpack_ub
+	TYPE_METHOD_HINT(seq_unpack_ub, &mapped_mh_seq_unpack_ub),
+#endif /* WANT_mapped_mh_seq_unpack_ub */
+#ifdef WANT_mapped_mh_seq_sum
+	TYPE_METHOD_HINT(seq_sum, &mapped_mh_seq_sum),
+	TYPE_METHOD_HINT(seq_sum_with_key, &mapped_mh_seq_sum_with_key),
+	TYPE_METHOD_HINT(seq_sum_with_range, &mapped_mh_seq_sum_with_range),
+	TYPE_METHOD_HINT(seq_sum_with_range_and_key, &mapped_mh_seq_sum_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_sum */
+#ifdef WANT_mapped_mh_seq_min
+	TYPE_METHOD_HINT(seq_min, &mapped_mh_seq_min),
+	TYPE_METHOD_HINT(seq_min_with_key, &mapped_mh_seq_min_with_key),
+	TYPE_METHOD_HINT(seq_min_with_range, &mapped_mh_seq_min_with_range),
+	TYPE_METHOD_HINT(seq_min_with_range_and_key, &mapped_mh_seq_min_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_min */
+#ifdef WANT_mapped_mh_seq_max
+	TYPE_METHOD_HINT(seq_max, &mapped_mh_seq_max),
+	TYPE_METHOD_HINT(seq_max_with_key, &mapped_mh_seq_max_with_key),
+	TYPE_METHOD_HINT(seq_max_with_range, &mapped_mh_seq_max_with_range),
+	TYPE_METHOD_HINT(seq_max_with_range_and_key, &mapped_mh_seq_max_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_max */
+#ifdef WANT_mapped_mh_seq_locate
+	TYPE_METHOD_HINT(seq_locate, &mapped_mh_seq_locate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_locate_with_range, &mapped_mh_seq_locate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+#endif /* WANT_mapped_mh_seq_locate */
+#ifdef WANT_mapped_mh_seq_rlocate
+	TYPE_METHOD_HINT(seq_rlocate, &mapped_mh_seq_rlocate),                       /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+	TYPE_METHOD_HINT(seq_rlocate_with_range, &mapped_mh_seq_rlocate_with_range), /* Just use `DeeFunctionComposition_Of(2, {match, self->sm_mapper})' as new "match" */
+#endif /* WANT_mapped_mh_seq_rlocate */
+#ifdef WANT_mapped_mh_seq_removeif
+	TYPE_METHOD_HINT(seq_removeif, &mapped_mh_seq_removeif), /* Just use `DeeFunctionComposition_Of(2, {should, self->sm_mapper})' as new "should" */
+#endif /* WANT_mapped_mh_seq_removeif */
+
+#ifdef WANT_mapped_mh_set_pop
+	TYPE_METHOD_HINT(set_pop, &mapped_mh_set_pop),
+	TYPE_METHOD_HINT(set_pop_with_default, &mapped_mh_set_pop_with_default),
+#endif /* WANT_mapped_mh_set_pop */
+#ifdef WANT_mapped_mh_map_popitem
+	TYPE_METHOD_HINT(map_popitem, &mapped_mh_map_popitem),
+#endif /* WANT_mapped_mh_map_popitem */
 
 #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	/* Can implement pretty much all find(), remove(), etc.
 	 * functions by injecting "sm_mapper" as an (additional) key */
-	TYPE_METHOD_HINT(seq_count, mapped_mh_seq_count),
-	TYPE_METHOD_HINT(seq_count_with_key, mapped_mh_seq_count_with_key),
-	TYPE_METHOD_HINT(seq_count_with_range, mapped_mh_seq_count_with_range),
-	TYPE_METHOD_HINT(seq_count_with_range_and_key, mapped_mh_seq_count_with_range_and_key),
-	TYPE_METHOD_HINT(seq_contains, mapped_mh_seq_contains),
-	TYPE_METHOD_HINT(seq_contains_with_key, mapped_mh_seq_contains_with_key),
-	TYPE_METHOD_HINT(seq_contains_with_range, mapped_mh_seq_contains_with_range),
-	TYPE_METHOD_HINT(seq_contains_with_range_and_key, mapped_mh_seq_contains_with_range_and_key),
-	TYPE_METHOD_HINT(seq_startswith, mapped_mh_seq_startswith),
-	TYPE_METHOD_HINT(seq_startswith_with_key, mapped_mh_seq_startswith_with_key),
-	TYPE_METHOD_HINT(seq_startswith_with_range, mapped_mh_seq_startswith_with_range),
-	TYPE_METHOD_HINT(seq_startswith_with_range_and_key, mapped_mh_seq_startswith_with_range_and_key),
-	TYPE_METHOD_HINT(seq_endswith, mapped_mh_seq_endswith),
-	TYPE_METHOD_HINT(seq_endswith_with_key, mapped_mh_seq_endswith_with_key),
-	TYPE_METHOD_HINT(seq_endswith_with_range, mapped_mh_seq_endswith_with_range),
-	TYPE_METHOD_HINT(seq_endswith_with_range_and_key, mapped_mh_seq_endswith_with_range_and_key),
-	TYPE_METHOD_HINT(seq_find, mapped_mh_seq_find),
-	TYPE_METHOD_HINT(seq_find_with_key, mapped_mh_seq_find_with_key),
-	TYPE_METHOD_HINT(seq_rfind, mapped_mh_seq_rfind),
-	TYPE_METHOD_HINT(seq_rfind_with_key, mapped_mh_seq_rfind_with_key),
-	TYPE_METHOD_HINT(seq_remove, mapped_mh_seq_remove),
-	TYPE_METHOD_HINT(seq_remove_with_key, mapped_mh_seq_remove_with_key),
-	TYPE_METHOD_HINT(seq_rremove, mapped_mh_seq_rremove),
-	TYPE_METHOD_HINT(seq_rremove_with_key, mapped_mh_seq_rremove_with_key),
-	TYPE_METHOD_HINT(seq_removeall, mapped_mh_seq_removeall),
-	TYPE_METHOD_HINT(seq_removeall_with_key, mapped_mh_seq_removeall_with_key),
-	TYPE_METHOD_HINT(seq_bfind, mapped_mh_seq_bfind),
-	TYPE_METHOD_HINT(seq_bfind_with_key, mapped_mh_seq_bfind_with_key),
-	TYPE_METHOD_HINT(seq_bposition, mapped_mh_seq_bposition),
-	TYPE_METHOD_HINT(seq_bposition_with_key, mapped_mh_seq_bposition_with_key),
-	TYPE_METHOD_HINT(seq_brange, mapped_mh_seq_brange),
-	TYPE_METHOD_HINT(seq_brange_with_key, mapped_mh_seq_brange_with_key),
+#ifdef WANT_mapped_mh_seq_count
+	TYPE_METHOD_HINT(seq_count, &mapped_mh_seq_count),
+	TYPE_METHOD_HINT(seq_count_with_key, &mapped_mh_seq_count_with_key),
+	TYPE_METHOD_HINT(seq_count_with_range, &mapped_mh_seq_count_with_range),
+	TYPE_METHOD_HINT(seq_count_with_range_and_key, &mapped_mh_seq_count_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_count */
+#ifdef WANT_mapped_mh_seq_contains
+	TYPE_METHOD_HINT(seq_contains, &mapped_mh_seq_contains),
+	TYPE_METHOD_HINT(seq_contains_with_key, &mapped_mh_seq_contains_with_key),
+	TYPE_METHOD_HINT(seq_contains_with_range, &mapped_mh_seq_contains_with_range),
+	TYPE_METHOD_HINT(seq_contains_with_range_and_key, &mapped_mh_seq_contains_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_contains */
+#ifdef WANT_mapped_mh_seq_startswith
+	TYPE_METHOD_HINT(seq_startswith, &mapped_mh_seq_startswith),
+	TYPE_METHOD_HINT(seq_startswith_with_key, &mapped_mh_seq_startswith_with_key),
+	TYPE_METHOD_HINT(seq_startswith_with_range, &mapped_mh_seq_startswith_with_range),
+	TYPE_METHOD_HINT(seq_startswith_with_range_and_key, &mapped_mh_seq_startswith_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_startswith */
+#ifdef WANT_mapped_mh_seq_endswith
+	TYPE_METHOD_HINT(seq_endswith, &mapped_mh_seq_endswith),
+	TYPE_METHOD_HINT(seq_endswith_with_key, &mapped_mh_seq_endswith_with_key),
+	TYPE_METHOD_HINT(seq_endswith_with_range, &mapped_mh_seq_endswith_with_range),
+	TYPE_METHOD_HINT(seq_endswith_with_range_and_key, &mapped_mh_seq_endswith_with_range_and_key),
+#endif /* WANT_mapped_mh_seq_endswith */
+#ifdef WANT_mapped_mh_seq_find
+	TYPE_METHOD_HINT(seq_find, &mapped_mh_seq_find),
+	TYPE_METHOD_HINT(seq_find_with_key, &mapped_mh_seq_find_with_key),
+#endif /* WANT_mapped_mh_seq_find */
+#ifdef WANT_mapped_mh_seq_rfind
+	TYPE_METHOD_HINT(seq_rfind, &mapped_mh_seq_rfind),
+	TYPE_METHOD_HINT(seq_rfind_with_key, &mapped_mh_seq_rfind_with_key),
+#endif /* WANT_mapped_mh_seq_rfind */
+#ifdef WANT_mapped_mh_seq_remove
+	TYPE_METHOD_HINT(seq_remove, &mapped_mh_seq_remove),
+	TYPE_METHOD_HINT(seq_remove_with_key, &mapped_mh_seq_remove_with_key),
+#endif /* WANT_mapped_mh_seq_remove */
+#ifdef WANT_mapped_mh_seq_rremove
+	TYPE_METHOD_HINT(seq_rremove, &mapped_mh_seq_rremove),
+	TYPE_METHOD_HINT(seq_rremove_with_key, &mapped_mh_seq_rremove_with_key),
+#endif /* WANT_mapped_mh_seq_rremove */
+#ifdef WANT_mapped_mh_seq_removeall
+	TYPE_METHOD_HINT(seq_removeall, &mapped_mh_seq_removeall),
+	TYPE_METHOD_HINT(seq_removeall_with_key, &mapped_mh_seq_removeall_with_key),
+#endif /* WANT_mapped_mh_seq_removeall */
+#ifdef WANT_mapped_mh_seq_bfind
+	TYPE_METHOD_HINT(seq_bfind, &mapped_mh_seq_bfind),
+	TYPE_METHOD_HINT(seq_bfind_with_key, &mapped_mh_seq_bfind_with_key),
+#endif /* WANT_mapped_mh_seq_bfind */
+#ifdef WANT_mapped_mh_seq_bposition
+	TYPE_METHOD_HINT(seq_bposition, &mapped_mh_seq_bposition),
+	TYPE_METHOD_HINT(seq_bposition_with_key, &mapped_mh_seq_bposition_with_key),
+#endif /* WANT_mapped_mh_seq_bposition */
+#ifdef WANT_mapped_mh_seq_brange
+	TYPE_METHOD_HINT(seq_brange, &mapped_mh_seq_brange),
+	TYPE_METHOD_HINT(seq_brange_with_key, &mapped_mh_seq_brange_with_key),
+#endif /* WANT_mapped_mh_seq_brange */
 #endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	TYPE_METHOD_HINT(set_pop, &mapped_mh_set_pop),
-	TYPE_METHOD_HINT(set_pop_with_default, &mapped_mh_set_pop_with_default),
-	TYPE_METHOD_HINT(map_popitem, &mapped_mh_map_popitem),
-	TYPE_METHOD_HINT(set_operator_bool, &mapped_mh_set_operator_bool),
-	TYPE_METHOD_HINT(set_operator_size, &mapped_mh_set_operator_size),
-	TYPE_METHOD_HINT(set_operator_sizeob, &mapped_mh_set_operator_sizeob),
-	TYPE_METHOD_HINT(map_operator_size, &mapped_mh_map_operator_size),
-	TYPE_METHOD_HINT(map_operator_sizeob, &mapped_mh_map_operator_sizeob),
-#endif /* !CONFIG_TINY_DEEMON */
 	TYPE_METHOD_HINT_END
 };
+#endif /* NEED_mapped_method_hints */
 
 INTERN DeeTypeObject SeqMapped_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
