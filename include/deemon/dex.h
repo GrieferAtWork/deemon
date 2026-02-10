@@ -34,7 +34,7 @@
 
 #include "gc.h"     /* Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include "module.h" /* DeeModuleDex_Type, DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_module_object, Dee_module_symbol, _Dee_MODULE_INIT_mo_lock */
-#include "object.h" /* DEE_REFTRACKER_UNTRACKED, DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_WEAKREF_SUPPORT_INIT */
+#include "object.h" /* Dee_REFTRACKER_UNTRACKED, DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_WEAKREF_SUPPORT_INIT */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
@@ -193,7 +193,7 @@ INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[]; /*!expo
 /* Helpers for defining DEX exports from C */
 #ifdef CONFIG_BUILDING_DEX
 #ifdef CONFIG_TRACE_REFCHANGES
-#define _Dee_PRIVATE_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type, DEE_REFTRACKER_UNTRACKED
+#define _Dee_PRIVATE_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type, Dee_REFTRACKER_UNTRACKED
 #else /* CONFIG_TRACE_REFCHANGES */
 #define _Dee_PRIVATE_DEX_OBJECT_HEAD_INIT 1, &DeeModuleDex_Type
 #endif /* !CONFIG_TRACE_REFCHANGES */

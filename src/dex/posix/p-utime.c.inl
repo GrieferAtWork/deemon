@@ -42,7 +42,7 @@
 
 #include "p-path.c.inl"     /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
 #include "p-readlink.c.inl" /* For `posix_utime_USE_posix_readlink__AND__posix_lutime()' */
-#include "p-stat.c.inl"     /* For `DEE_STAT_F_LSTAT', `stat_get_ctime_IS_stat_get_mtime' */
+#include "p-stat.c.inl"     /* For `Dee_STAT_F_LSTAT', `stat_get_ctime_IS_stat_get_mtime' */
 
 #include <stddef.h> /* NULL, size_t, wchar_t */
 
@@ -1158,7 +1158,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL posix_lutime_f
 	if unlikely(!os_path)
 		goto err;
 #ifdef posix_lutime_USED_struct_timespec_IS_timeval
-	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime, path, DEE_STAT_F_LSTAT))
+	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime, path, Dee_STAT_F_LSTAT))
 #elif posix_lutime_USED_struct_timespec_COUNT == 2
 	if (posix_lutime_USED_struct_timespec_parse(tsv, atime, mtime))
 #else /* posix_lutime_USED_struct_timespec_COUNT == 2 */
@@ -1202,7 +1202,7 @@ err:
 	if unlikely(posix_lutime_USED_struct_utimbuf_parse(&file_times,
 	                                                   atime, mtime,
 	                                                   ctime, birthtime,
-	                                                   path, DEE_STAT_F_LSTAT))
+	                                                   path, Dee_STAT_F_LSTAT))
 		goto err;
 
 EINTR_ENOMEM_LABEL(again)

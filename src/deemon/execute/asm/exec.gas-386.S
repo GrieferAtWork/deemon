@@ -584,17 +584,17 @@ END(_impl_assert_failed)
 
 
 #ifdef CONFIG_HOST_WINDOWS
-#define DEECODE_EXECFRAMEFAST   @DeeCode_ExecFrameFast@4
-.globl  DEECODE_EXECFRAMEFAST
-.def    DEECODE_EXECFRAMEFAST; .scl 2; .type 32; .endef
-DEECODE_EXECFRAMEFAST:
+#define SYM_DeeCode_ExecFrameFast   @DeeCode_ExecFrameFast@4
+.globl  SYM_DeeCode_ExecFrameFast
+.def    SYM_DeeCode_ExecFrameFast; .scl 2; .type 32; .endef
+SYM_DeeCode_ExecFrameFast:
 .section .drectve
 	.ascii " -export:\"@DeeCode_ExecFrameFast@4\""
 .text
 #else
-#define DEECODE_EXECFRAMEFAST   SYM(DeeCode_ExecFrameFast)
-.global DEECODE_EXECFRAMEFAST
-DEECODE_EXECFRAMEFAST:
+#define SYM_DeeCode_ExecFrameFast   SYM(DeeCode_ExecFrameFast)
+.global SYM_DeeCode_ExecFrameFast
+SYM_DeeCode_ExecFrameFast:
 #endif
 IF_USE_CFI(.cfi_startproc)
 	//jmp    @DeeCode_ExecFrameSafe@4
@@ -875,7 +875,7 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 	ADJUST_CFA_OFFSET(-4)
 
 	ret
-END(DEECODE_EXECFRAMEFAST)
+END(SYM_DeeCode_ExecFrameFast)
 IF_USE_CFI(.cfi_restore_state)
 
 

@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_TryCalloc */
 #include <deemon/format.h>          /* PRFXSIZ, PRFuSIZ */
-#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_AT, DEE_REFTRACKER_UNTRACKED, DREF, DeeObject, DeeObject_Check, DeeTypeObject, Dee_Decref*, Dee_Incref*, Dee_TYPE, Dee_refcnt_t */
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_AT, Dee_REFTRACKER_UNTRACKED, DREF, DeeObject, DeeObject_Check, DeeTypeObject, Dee_Decref*, Dee_Incref*, Dee_TYPE, Dee_refcnt_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, strlen */
 #include <deemon/type.h>            /* DeeType_*, Dee_TP_FGC, Dee_TP_FHEAP, Dee_TP_FMAYREVIVE, Dee_refchange, Dee_refchanges, Dee_reftracker, Dee_tp_destroy_t */
 #include <deemon/util/atomic.h>     /* atomic_* */
@@ -710,7 +710,7 @@ reftracker_addchange(DeeObject *__restrict ob,
 	struct Dee_refchanges *new_changes;
 	struct Dee_refchanges *last;
 	self = get_reftracker(ob);
-	if unlikely(!self || self == DEE_REFTRACKER_UNTRACKED)
+	if unlikely(!self || self == Dee_REFTRACKER_UNTRACKED)
 		return;
 again:
 	last = self->rt_last;

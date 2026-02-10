@@ -127,7 +127,7 @@ typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void
 /************************************************************************/
 #ifdef CONFIG_TRACE_REFCHANGES
 struct Dee_reftracker;
-#define DEE_REFTRACKER_UNTRACKED ((struct Dee_reftracker  *)(uintptr_t)-1l)
+#define Dee_REFTRACKER_UNTRACKED ((struct Dee_reftracker  *)(uintptr_t)-1l)
 #define _Dee_PRIVATE_REFCHANGE_PRIVATE_DATA \
 	struct Dee_reftracker *ob_trace; /* [0..1][owned][lock(WRITE_ONCE)] Tracked reference counter data. */
 #define Dee_OBJECT_OFFSETOF_DATA (__SIZEOF_POINTER__ * 3)
@@ -195,7 +195,7 @@ template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
 #endif /* !Dee_STATIC_REFCOUNT_INIT */
 
 #ifdef CONFIG_TRACE_REFCHANGES
-#define Dee_OBJECT_HEAD_INIT(type) Dee_STATIC_REFCOUNT_INIT, type, DEE_REFTRACKER_UNTRACKED
+#define Dee_OBJECT_HEAD_INIT(type) Dee_STATIC_REFCOUNT_INIT, type, Dee_REFTRACKER_UNTRACKED
 #else /* CONFIG_TRACE_REFCHANGES */
 #define Dee_OBJECT_HEAD_INIT(type) Dee_STATIC_REFCOUNT_INIT, type
 #endif /* !CONFIG_TRACE_REFCHANGES */

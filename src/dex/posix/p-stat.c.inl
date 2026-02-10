@@ -579,13 +579,13 @@ PRIVATE ATTR_COLD int DCALL err_lstat_not_implemented(void) {
 
 
 /* Bits for `dee_stat_init::atflags' */
-#define DEE_STAT_F_NORMAL   0x00                       /* Normal flags */
-#define DEE_STAT_F_TRY      (AT_SYMLINK_NOFOLLOW << 1) /* Return `1' on file-not-found, rather than throw an exception */
-#define DEE_STAT_F_LSTAT    AT_SYMLINK_NOFOLLOW        /* Don't dereference a final symlink */
+#define Dee_STAT_F_NORMAL   0x00                       /* Normal flags */
+#define Dee_STAT_F_TRY      (AT_SYMLINK_NOFOLLOW << 1) /* Return `1' on file-not-found, rather than throw an exception */
+#define Dee_STAT_F_LSTAT    AT_SYMLINK_NOFOLLOW        /* Don't dereference a final symlink */
 
 /* @return: 0 : Success
  * @return: -1: Error
- * @return: 1 : No such file, and `DEE_STAT_F_TRY' */
+ * @return: 1 : No such file, and `Dee_STAT_F_TRY' */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 dee_stat_init(struct dee_stat *__restrict self, DeeObject *dfd,
               DeeObject *path_or_file, unsigned int atflags) {
@@ -595,8 +595,8 @@ dee_stat_init(struct dee_stat *__restrict self, DeeObject *dfd,
 		DREF DeeObject *abs_path;
 #define NEED_posix_dfd_makepath
 		abs_path = posix_dfd_makepath(dfd, path_or_file,
-		                              atflags & ~(DEE_STAT_F_TRY |
-		                                          DEE_STAT_F_LSTAT));
+		                              atflags & ~(Dee_STAT_F_TRY |
+		                                          Dee_STAT_F_LSTAT));
 		if unlikely(!abs_path)
 			goto err;
 #define NEED_err
@@ -613,7 +613,7 @@ again:
 		int error;
 		HANDLE hFile;
 		DWORD dwFlagsAndAttributes;
-		if (atflags & DEE_STAT_F_LSTAT) {
+		if (atflags & Dee_STAT_F_LSTAT) {
 			dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT;
 		} else {
 			dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS;
@@ -722,14 +722,14 @@ err_nt:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if ((atflags & DEE_STAT_F_TRY) && DeeNTSystem_IsFileNotFoundError(dwError))
+		if ((atflags & Dee_STAT_F_TRY) && DeeNTSystem_IsFileNotFoundError(dwError))
 			return 1; /* File not found. */
 
 		if (DeeNTSystem_IsBadAllocError(dwError)) {
 			if (Dee_ReleaseSystemMemory())
 				goto again;
 		} else if (DeeNTSystem_IsNotDir(dwError)) {
-			if (atflags & DEE_STAT_F_TRY)
+			if (atflags & Dee_STAT_F_TRY)
 				return 1;
 #define NEED_err_nt_path_not_dir
 			err_nt_path_not_dir(dwError, path_or_file);
@@ -737,7 +737,7 @@ err_nt:
 #define NEED_err_nt_path_no_access
 			err_nt_path_no_access(dwError, path_or_file);
 		} else if (DeeNTSystem_IsFileNotFoundError(dwError)) {
-			if (atflags & DEE_STAT_F_TRY)
+			if (atflags & Dee_STAT_F_TRY)
 				return 1;
 #define NEED_err_nt_path_not_found
 			err_nt_path_not_found(dwError, path_or_file);
@@ -774,8 +774,8 @@ again:
 					DREF DeeObject *abs_path;
 #define NEED_posix_dfd_makepath
 					abs_path = posix_dfd_makepath(dfd, path_or_file,
-					                              atflags & ~(DEE_STAT_F_TRY |
-					                                          DEE_STAT_F_LSTAT));
+					                              atflags & ~(Dee_STAT_F_TRY |
+					                                          Dee_STAT_F_LSTAT));
 					if unlikely(!abs_path)
 						goto err;
 					error = dee_stat_init(self, NULL, abs_path, atflags);
@@ -790,7 +790,7 @@ again:
 			if unlikely(!str_path)
 				goto err;
 			error = posix_stat_USED_fstatat(os_dfd, str_path, &self->st_info,
-			                                atflags & ~DEE_STAT_F_TRY);
+			                                atflags & ~Dee_STAT_F_TRY);
 		} else
 #endif /* !posix_stat_USED_fstatat */
 		{
@@ -847,7 +847,7 @@ again:
 #endif /* EACCES */
 #ifdef ENOTDIR
 		if (error == ENOTDIR) {
-			if (atflags & DEE_STAT_F_TRY)
+			if (atflags & Dee_STAT_F_TRY)
 				return 1;
 			return err_unix_path_not_dir(error, path_or_file);
 		}
@@ -855,7 +855,7 @@ again:
 #endif /* ENOTDIR */
 #ifdef ENOENT
 		if (error == ENOENT) {
-			if (atflags & DEE_STAT_F_TRY)
+			if (atflags & Dee_STAT_F_TRY)
 				return 1;
 			return err_unix_path_not_found(error, path_or_file);
 		}
@@ -887,7 +887,7 @@ again:
 		self->st_file = fopen((char *)utf8_filename, "r");
 #endif /* !CONFIG_HAVE_fopen64 */
 		if unlikely(!self->st_file) {
-			if (atflags & DEE_STAT_F_TRY)
+			if (atflags & Dee_STAT_F_TRY)
 				return 1;
 			return DeeError_Throwf(&DeeError_FileNotFound,
 			                       "Path %r could not be found",
@@ -989,7 +989,7 @@ stat_unpack_args(size_t argc, DeeObject *const *argv,
 			*p_dfd          = NULL;
 		}
 	}
-	*p_used_atflags = DEE_STAT_F_NORMAL;
+	*p_used_atflags = Dee_STAT_F_NORMAL;
 	if (user_atflags) {
 		if (DeeInt_AsUInt(user_atflags, p_used_atflags))
 			goto err;
@@ -1038,7 +1038,7 @@ lstat_init(DeeStatObject *__restrict self,
 		path_or_file = dfd;
 		dfd          = NULL;
 	}
-	return dee_stat_init(&self->so_stat, dfd, path_or_file, DEE_STAT_F_LSTAT);
+	return dee_stat_init(&self->so_stat, dfd, path_or_file, Dee_STAT_F_LSTAT);
 err:
 	return -1;
 #else /* posix_stat_HAVE_lstat */
@@ -1080,7 +1080,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fstat_f_impl(DeeObje
 	result = DeeObject_MALLOC(DeeStatObject);
 	if unlikely(!result)
 		goto err;
-	if unlikely(dee_stat_init(&result->so_stat, NULL, fd, DEE_STAT_F_NORMAL))
+	if unlikely(dee_stat_init(&result->so_stat, NULL, fd, Dee_STAT_F_NORMAL))
 		goto err_r;
 	DeeObject_Init(result, &DeeStat_Type);
 	return Dee_AsObject(result);
@@ -1779,7 +1779,7 @@ stat_class_exists(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -1831,7 +1831,7 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -1868,7 +1868,7 @@ stat_class_ischr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -1905,7 +1905,7 @@ stat_class_isblk(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -1942,7 +1942,7 @@ stat_class_isdev(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -1995,7 +1995,7 @@ stat_class_isreg(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -2032,7 +2032,7 @@ stat_class_isfifo(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -2076,7 +2076,7 @@ stat_class_islnk(DeeObject *UNUSED(self),
 		if (stat_unpack_args(argc, argv, stat_unpack_args_format("islnk"),
 		                     &dfd, &path_or_file, &used_atflags))
 			goto err;
-		used_atflags |= AT_SYMLINK_NOFOLLOW | DEE_STAT_F_TRY;
+		used_atflags |= AT_SYMLINK_NOFOLLOW | Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -2119,7 +2119,7 @@ stat_class_issock(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -2202,7 +2202,7 @@ stat_class_ishidden(DeeObject *self, size_t argc, DeeObject *const *argv) {
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)
@@ -2389,7 +2389,7 @@ err:
 			goto err;
 #endif /* !posix_stat_HAVE_lstat */
 		}
-		used_atflags |= DEE_STAT_F_TRY;
+		used_atflags |= Dee_STAT_F_TRY;
 		error = dee_stat_init(&st, dfd, path_or_file, used_atflags);
 	}
 	if unlikely(error < 0)

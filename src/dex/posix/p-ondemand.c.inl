@@ -1349,7 +1349,7 @@ done:
 #undef NEED_posix_stat_getmode
 INTERN WUNUSED NONNULL((1)) unsigned int DCALL
 posix_stat_getmode(DeeObject *__restrict path) {
-	return posix_xstat_getmode(path, DEE_STAT_F_NORMAL);
+	return posix_xstat_getmode(path, Dee_STAT_F_NORMAL);
 #define NEED_posix_xstat_getmode
 }
 #endif /* NEED_posix_stat_getmode */
@@ -1358,7 +1358,7 @@ posix_stat_getmode(DeeObject *__restrict path) {
 #undef NEED_posix_lstat_getmode
 INTERN WUNUSED NONNULL((1)) unsigned int DCALL
 posix_lstat_getmode(DeeObject *__restrict path) {
-	return posix_xstat_getmode(path, DEE_STAT_F_LSTAT);
+	return posix_xstat_getmode(path, Dee_STAT_F_LSTAT);
 #define NEED_posix_xstat_getmode
 }
 #endif /* NEED_posix_lstat_getmode */

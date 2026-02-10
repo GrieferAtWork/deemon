@@ -582,7 +582,7 @@ err:
 		int status;
 		/* TODO: Use `faccessat(..., F_OK, AT_SYMLINK_NOFOLLOW)' if available */
 		status = dee_stat_init(&st, newdirfd, newpath,
-		                       atflags | AT_SYMLINK_NOFOLLOW | DEE_STAT_F_TRY);
+		                       atflags | AT_SYMLINK_NOFOLLOW | Dee_STAT_F_TRY);
 		if unlikely(status < 0)
 			goto err;
 		if (status == 0) {

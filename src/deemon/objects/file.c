@@ -1500,6 +1500,7 @@ PRIVATE struct type_method tpconst file_class_methods[] = {
 };
 
 
+#undef DEE_STDCNT
 #ifdef Dee_STDDBG_IS_UNIQUE
 #define DEE_STDCNT 4
 PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE, ITER_DONE };

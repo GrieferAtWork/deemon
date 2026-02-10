@@ -109,51 +109,51 @@ PRIVATE int DCALL dee_atoi(char const *s) {
 
 
 #ifdef __cplusplus
-#define DEE_COMPILER_CXX "++"
+#define Dee_HOST_COMPILER_CXX "++"
 #else /* __cplusplus */
-#define DEE_COMPILER_CXX ""
+#define Dee_HOST_COMPILER_CXX ""
 #endif /* !__cplusplus */
 
 #if defined(_MSC_FULL_VER)
 /* >> http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008 */
 #if _MSC_VER <= 1100
-#   define DEE_VC_VERSION " 5.0"
+#   define Dee_HOST_VC_VERSION " 5.0"
 #elif _MSC_VER <= 1200
-#   define DEE_VC_VERSION " 6.0"
+#   define Dee_HOST_VC_VERSION " 6.0"
 #elif _MSC_VER <= 1300
-#   define DEE_VC_VERSION " 7.0"
+#   define Dee_HOST_VC_VERSION " 7.0"
 #elif _MSC_VER <= 1310
-#   define DEE_VC_VERSION " 7.1 (VS 2003)"
+#   define Dee_HOST_VC_VERSION " 7.1 (VS 2003)"
 #elif _MSC_VER <= 1400
-#   define DEE_VC_VERSION " 8.0 (VS 2005)"
+#   define Dee_HOST_VC_VERSION " 8.0 (VS 2005)"
 #elif _MSC_VER <= 1500
-#   define DEE_VC_VERSION " 9.0 (VS 2008)"
+#   define Dee_HOST_VC_VERSION " 9.0 (VS 2008)"
 #elif _MSC_VER <= 1600
-#   define DEE_VC_VERSION " 10.0 (VS 2010)"
+#   define Dee_HOST_VC_VERSION " 10.0 (VS 2010)"
 #elif _MSC_VER <= 1700
-#   define DEE_VC_VERSION " 11.0 (VS 2012)"
+#   define Dee_HOST_VC_VERSION " 11.0 (VS 2012)"
 #elif _MSC_VER <= 1800
-#   define DEE_VC_VERSION " 12.0 (VS 2013)"
+#   define Dee_HOST_VC_VERSION " 12.0 (VS 2013)"
 #elif _MSC_VER <= 1900
-#   define DEE_VC_VERSION " 14.0 (VS 2015)"
+#   define Dee_HOST_VC_VERSION " 14.0 (VS 2015)"
 #elif _MSC_VER <= 1916
-#   define DEE_VC_VERSION " 14.16 (VS 2017)"
+#   define Dee_HOST_VC_VERSION " 14.16 (VS 2017)"
 #else
-#   define DEE_VC_VERSION ""
+#   define Dee_HOST_VC_VERSION ""
 #endif
-#   define DEE_COMPILER "VC" DEE_COMPILER_CXX DEE_VC_VERSION " (" PP_STR(_MSC_FULL_VER) ")"
+#   define Dee_HOST_COMPILER "VC" Dee_HOST_COMPILER_CXX Dee_HOST_VC_VERSION " (" PP_STR(_MSC_FULL_VER) ")"
 #elif defined(__clang__)
-#   define DEE_COMPILER "clang" DEE_COMPILER_CXX " " PP_STR(__clang__)
+#   define Dee_HOST_COMPILER "clang" Dee_HOST_COMPILER_CXX " " PP_STR(__clang__)
 #elif defined(__GNUC__) && defined(__cplusplus)
-#   define DEE_COMPILER "g++ " PP_STR(__GNUC__) "." PP_STR(__GNUC_MINOR__) "." PP_STR(__GNUC_PATCHLEVEL__)
+#   define Dee_HOST_COMPILER "g++ " PP_STR(__GNUC__) "." PP_STR(__GNUC_MINOR__) "." PP_STR(__GNUC_PATCHLEVEL__)
 #elif defined(__GNUC__) && !defined(__cplusplus)
-#   define DEE_COMPILER "gcc " PP_STR(__GNUC__) "." PP_STR(__GNUC_MINOR__) "." PP_STR(__GNUC_PATCHLEVEL__)
+#   define Dee_HOST_COMPILER "gcc " PP_STR(__GNUC__) "." PP_STR(__GNUC_MINOR__) "." PP_STR(__GNUC_PATCHLEVEL__)
 #elif defined(__TINYC__)
-#   define DEE_COMPILER "tcc " PP_STR(__TINYC__)
+#   define Dee_HOST_COMPILER "tcc " PP_STR(__TINYC__)
 #elif defined(__DCC_VERSION__)
-#   define DEE_COMPILER "dcc " PP_STR(__DCC_VERSION__)
+#   define Dee_HOST_COMPILER "dcc " PP_STR(__DCC_VERSION__)
 #else
-#   define DEE_COMPILER "Unknown c" DEE_COMPILER_CXX " compiler"
+#   define Dee_HOST_COMPILER "Unknown c" Dee_HOST_COMPILER_CXX " compiler"
 #endif
 
 
@@ -175,7 +175,7 @@ PRIVATE char const str_version[] =
 #ifdef __TPP_VERSION__
 "TPP " PP_STR(__TPP_VERSION__) "|"
 #endif /* __TPP_VERSION__ */
-DEE_COMPILER "|"
+Dee_HOST_COMPILER "|"
 #ifdef __TIME__
 __TIME__ "|"
 #endif /* __TIME__ */
