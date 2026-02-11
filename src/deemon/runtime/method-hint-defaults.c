@@ -16523,10 +16523,10 @@ default__set_operator_add__unsupported(DeeObject *lhs, DeeObject *rhs) {
 		inv_lhs = SetInversion_New(lhs);
 		if unlikely(!inv_lhs)
 			goto err;
-		intersection = SetIntersection_New_inherit_b(inv_lhs, xrhs->si_set);
+		intersection = SetIntersection_NewInherited1(inv_lhs, xrhs->si_set);
 		if unlikely(!intersection)
 			goto err;
-		return Dee_AsObject(SetInversion_New_inherit(intersection));
+		return Dee_AsObject(SetInversion_NewInherited(intersection));
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs);
@@ -16649,7 +16649,7 @@ default__set_operator_xor__unsupported(DeeObject *lhs, DeeObject *rhs) {
 		symdiff = SetSymmetricDifference_New(lhs, xrhs->si_set);
 		if unlikely(!symdiff)
 			goto err;
-		return Dee_AsObject(SetInversion_New_inherit(symdiff));
+		return Dee_AsObject(SetInversion_NewInherited(symdiff));
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs); /* `a ^ {}' -> `a' */
@@ -19918,16 +19918,7 @@ default__map_keys__empty(DeeObject *__restrict UNUSED(self)) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_keys__with__map_iterkeys(DeeObject *__restrict self) {
-	DREF DefaultSequence_MapProxy *result;
-	result = DeeObject_MALLOC(DefaultSequence_MapProxy);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(self);
-	result->dsmp_map = self;
-	DeeObject_Init(result, &DefaultSequence_MapKeys_Type);
-	return Dee_AsObject(result);
-err:
-	return NULL;
+	return DefaultSequence_MapKeys_New(self);
 }
 
 
@@ -20042,16 +20033,7 @@ default__map_values__empty(DeeObject *__restrict UNUSED(self)) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_values__with__map_itervalues(DeeObject *__restrict self) {
-	DREF DefaultSequence_MapProxy *result;
-	result = DeeObject_MALLOC(DefaultSequence_MapProxy);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(self);
-	result->dsmp_map = self;
-	DeeObject_Init(result, &DefaultSequence_MapValues_Type);
-	return Dee_AsObject(result);
-err:
-	return NULL;
+	return DefaultSequence_MapValues_New(self);
 }
 
 

@@ -47,6 +47,13 @@ typedef struct {
 	PROXY_OBJECT_HEAD(si_set); /* [1..1][const] The underlying set. */
 } SetInversion;
 
+#define SetInversion_New(ob) \
+	((DREF SetInversion *)ProxyObject_New(&SetInversion_Type, Dee_AsObject(ob)))
+#define SetInversion_NewInherited(ob) \
+	((DREF SetInversion *)ProxyObject_NewInherited(&SetInversion_Type, Dee_AsObject(ob)))
+#define SetInversion_NewInheritedOnSuccess(ob) \
+	((DREF SetInversion *)ProxyObject_NewInheritedOnSuccess(&SetInversion_Type, Dee_AsObject(ob)))
+
 #define SetInversion_GetSet(self) ((SetInversion *)(self))->si_set /* TODO: Remove this macro! */
 
 INTDEF DeeTypeObject SetInversion_Type;
@@ -66,6 +73,12 @@ typedef struct {
 	PROXY_OBJECT_HEAD2(su_a,  /* [1..1][const] The first set of the union. */
 	                   su_b); /* [1..1][const] The second set of the union. */
 } SetUnion;
+
+#define SetUnion_New(obj1, obj2)                   ((DREF SetUnion *)ProxyObject2_New(&SetUnion_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetUnion_NewInherited(obj1, obj2)          ((DREF SetUnion *)ProxyObject2_NewInherited(&SetUnion_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetUnion_NewInherited1(obj1, obj2)         ((DREF SetUnion *)ProxyObject2_NewInherited1(&SetUnion_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetUnion_NewInherited2(obj1, obj2)         ((DREF SetUnion *)ProxyObject2_NewInherited2(&SetUnion_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetUnion_NewInheritedOnSuccess(obj1, obj2) ((DREF SetUnion *)ProxyObject2_NewInheritedOnSuccess(&SetUnion_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 
 typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject, sui_iter,  /* [1..1][lock(sui_lock)] The current iterator. */
@@ -103,6 +116,12 @@ typedef struct {
 	                   si_b); /* [1..1][const] The second set of the intersection. */
 } SetIntersection;
 
+#define SetIntersection_New(obj1, obj2)                   ((DREF SetIntersection *)ProxyObject2_New(&SetIntersection_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetIntersection_NewInherited(obj1, obj2)          ((DREF SetIntersection *)ProxyObject2_NewInherited(&SetIntersection_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetIntersection_NewInherited1(obj1, obj2)         ((DREF SetIntersection *)ProxyObject2_NewInherited1(&SetIntersection_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetIntersection_NewInherited2(obj1, obj2)         ((DREF SetIntersection *)ProxyObject2_NewInherited2(&SetIntersection_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetIntersection_NewInheritedOnSuccess(obj1, obj2) ((DREF SetIntersection *)ProxyObject2_NewInheritedOnSuccess(&SetIntersection_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+
 typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject,       sii_iter,       /* [1..1][const] An iterator for `sii_intersect->si_a' */
 	                      SetIntersection, sii_intersect); /* [1..1][const] The underlying intersection-set. */
@@ -119,6 +138,12 @@ typedef struct {
 	                   sd_b); /* [1..1][const] The set of objects excluded from `sd_a'. */
 } SetDifference;
 
+#define SetDifference_New(obj1, obj2)                   ((DREF SetDifference *)ProxyObject2_New(&SetDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetDifference_NewInherited(obj1, obj2)          ((DREF SetDifference *)ProxyObject2_NewInherited(&SetDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetDifference_NewInherited1(obj1, obj2)         ((DREF SetDifference *)ProxyObject2_NewInherited1(&SetDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetDifference_NewInherited2(obj1, obj2)         ((DREF SetDifference *)ProxyObject2_NewInherited2(&SetDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetDifference_NewInheritedOnSuccess(obj1, obj2) ((DREF SetDifference *)ProxyObject2_NewInheritedOnSuccess(&SetDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+
 typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject,     sdi_iter,  /* [1..1][const] An iterator for `sdi_diff->sd_a' */
 	                      SetDifference, sdi_diff); /* [1..1][const] The underlying difference-set. */
@@ -134,6 +159,12 @@ typedef struct {
 	PROXY_OBJECT_HEAD2(ssd_a,  /* [1..1][const] The first set. */
 	                   ssd_b); /* [1..1][const] The second set. */
 } SetSymmetricDifference;
+
+#define SetSymmetricDifference_New(obj1, obj2)                   ((DREF SetSymmetricDifference *)ProxyObject2_New(&SetSymmetricDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetSymmetricDifference_NewInherited(obj1, obj2)          ((DREF SetSymmetricDifference *)ProxyObject2_NewInherited(&SetSymmetricDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetSymmetricDifference_NewInherited1(obj1, obj2)         ((DREF SetSymmetricDifference *)ProxyObject2_NewInherited1(&SetSymmetricDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetSymmetricDifference_NewInherited2(obj1, obj2)         ((DREF SetSymmetricDifference *)ProxyObject2_NewInherited2(&SetSymmetricDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define SetSymmetricDifference_NewInheritedOnSuccess(obj1, obj2) ((DREF SetSymmetricDifference *)ProxyObject2_NewInheritedOnSuccess(&SetSymmetricDifference_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 
 typedef struct {
 	PROXY_OBJECT_HEAD2_EX(DeeObject,              ssd_iter,  /* [1..1][lock(ssd_lock)] The current iterator. */
@@ -163,350 +194,6 @@ typedef struct {
 
 INTDEF DeeTypeObject SetSymmetricDifference_Type;
 INTDEF DeeTypeObject SetSymmetricDifferenceIterator_Type;
-
-
-
-#define SetInversion_New(a) \
-	_SetInversion_New(Dee_AsObject(a))
-LOCAL WUNUSED NONNULL((1)) DREF SetInversion *DCALL
-_SetInversion_New(DeeObject *a) {
-	DREF SetInversion *result;
-	result = DeeObject_MALLOC(SetInversion);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	result->si_set = a;
-	DeeObject_Init(result, &SetInversion_Type);
-	return result;
-err:
-	return NULL;
-}
-
-#define SetInversion_New_inherit(a) \
-	_SetInversion_New_inherit(Dee_AsObject(a))
-LOCAL WUNUSED NONNULL((1)) DREF SetInversion *DCALL
-_SetInversion_New_inherit(/*inherit(always)*/ DREF DeeObject *a) {
-	DREF SetInversion *result;
-	result = DeeObject_MALLOC(SetInversion);
-	if unlikely(!result)
-		goto err;
-	result->si_set = a; /* Inherited */
-	DeeObject_Init(result, &SetInversion_Type);
-	return result;
-err:
-	Dee_Decref(a);
-	return NULL;
-}
-
-
-
-
-
-#define SetUnion_New(a, b) \
-	_SetUnion_New(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
-_SetUnion_New(DeeObject *a, DeeObject *b) {
-	DREF SetUnion *result;
-	result = DeeObject_MALLOC(SetUnion);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	Dee_Incref(b);
-	result->su_a = a;
-	result->su_b = b;
-	DeeObject_Init(result, &SetUnion_Type);
-	return result;
-err:
-	return NULL;
-}
-
-#define SetUnion_New_inherit_a(a, b) \
-	_SetUnion_New_inherit_a(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
-_SetUnion_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
-	DREF SetUnion *result;
-	result = DeeObject_MALLOC(SetUnion);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(b);
-	result->su_a = a; /* Inherited */
-	result->su_b = b;
-	DeeObject_Init(result, &SetUnion_Type);
-	return result;
-err:
-	Dee_Decref(a);
-	return NULL;
-}
-
-#define SetUnion_New_inherit_b(a, b) \
-	_SetUnion_New_inherit_b(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
-_SetUnion_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetUnion *result;
-	result = DeeObject_MALLOC(SetUnion);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	result->su_a = a;
-	result->su_b = b; /* Inherited */
-	DeeObject_Init(result, &SetUnion_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	return NULL;
-}
-
-#define SetUnion_New_inherit_ab(a, b) \
-	_SetUnion_New_inherit_ab(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetUnion *DCALL
-_SetUnion_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
-                         /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetUnion *result;
-	result = DeeObject_MALLOC(SetUnion);
-	if unlikely(!result)
-		goto err;
-	result->su_a = a; /* Inherited */
-	result->su_b = b; /* Inherited */
-	DeeObject_Init(result, &SetUnion_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return NULL;
-}
-
-
-
-
-
-#define SetIntersection_New(a, b) \
-	_SetIntersection_New(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
-_SetIntersection_New(DeeObject *a, DeeObject *b) {
-	DREF SetIntersection *result;
-	result = DeeObject_MALLOC(SetIntersection);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	Dee_Incref(b);
-	result->si_a = a;
-	result->si_b = b;
-	DeeObject_Init(result, &SetIntersection_Type);
-	return result;
-err:
-	return NULL;
-}
-
-#define SetIntersection_New_inherit_a(a, b) \
-	_SetIntersection_New_inherit_a(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
-_SetIntersection_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
-	DREF SetIntersection *result;
-	result = DeeObject_MALLOC(SetIntersection);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(b);
-	result->si_a = a; /* Inherited */
-	result->si_b = b;
-	DeeObject_Init(result, &SetIntersection_Type);
-	return result;
-err:
-	Dee_Decref(a);
-	return NULL;
-}
-
-#define SetIntersection_New_inherit_b(a, b) \
-	_SetIntersection_New_inherit_b(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
-_SetIntersection_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetIntersection *result;
-	result = DeeObject_MALLOC(SetIntersection);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	result->si_a = a;
-	result->si_b = b; /* Inherited */
-	DeeObject_Init(result, &SetIntersection_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	return NULL;
-}
-
-#define SetIntersection_New_inherit_ab(a, b) \
-	_SetIntersection_New_inherit_ab(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetIntersection *DCALL
-_SetIntersection_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
-                                /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetIntersection *result;
-	result = DeeObject_MALLOC(SetIntersection);
-	if unlikely(!result)
-		goto err;
-	result->si_a = a; /* Inherited */
-	result->si_b = b; /* Inherited */
-	DeeObject_Init(result, &SetIntersection_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return NULL;
-}
-
-
-
-
-
-#define SetDifference_New(a, b) \
-	_SetDifference_New(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
-_SetDifference_New(DeeObject *a, DeeObject *b) {
-	DREF SetDifference *result;
-	result = DeeObject_MALLOC(SetDifference);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	Dee_Incref(b);
-	result->sd_a = a;
-	result->sd_b = b;
-	DeeObject_Init(result, &SetDifference_Type);
-	return result;
-err:
-	return NULL;
-}
-
-#define SetDifference_New_inherit_a(a, b) \
-	_SetDifference_New_inherit_a(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
-_SetDifference_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
-	DREF SetDifference *result;
-	result = DeeObject_MALLOC(SetDifference);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(b);
-	result->sd_a = a; /* Inherited */
-	result->sd_b = b;
-	DeeObject_Init(result, &SetDifference_Type);
-	return result;
-err:
-	Dee_Decref(a);
-	return NULL;
-}
-
-#define SetDifference_New_inherit_b(a, b) \
-	_SetDifference_New_inherit_b(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
-_SetDifference_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetDifference *result;
-	result = DeeObject_MALLOC(SetDifference);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	result->sd_a = a;
-	result->sd_b = b; /* Inherited */
-	DeeObject_Init(result, &SetDifference_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	return NULL;
-}
-
-#define SetDifference_New_inherit_ab(a, b) \
-	_SetDifference_New_inherit_ab(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetDifference *DCALL
-_SetDifference_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
-                              /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetDifference *result;
-	result = DeeObject_MALLOC(SetDifference);
-	if unlikely(!result)
-		goto err;
-	result->sd_a = a; /* Inherited */
-	result->sd_b = b; /* Inherited */
-	DeeObject_Init(result, &SetDifference_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return NULL;
-}
-
-
-
-
-
-#define SetSymmetricDifference_New(a, b) \
-	_SetSymmetricDifference_New(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
-_SetSymmetricDifference_New(DeeObject *a, DeeObject *b) {
-	DREF SetSymmetricDifference *result;
-	result = DeeObject_MALLOC(SetSymmetricDifference);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	Dee_Incref(b);
-	result->ssd_a = a;
-	result->ssd_b = b;
-	DeeObject_Init(result, &SetSymmetricDifference_Type);
-	return result;
-err:
-	return NULL;
-}
-
-#define SetSymmetricDifference_New_inherit_a(a, b) \
-	_SetSymmetricDifference_New_inherit_a(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
-_SetSymmetricDifference_New_inherit_a(/*inherit(always)*/ DREF DeeObject *a, DeeObject *b) {
-	DREF SetSymmetricDifference *result;
-	result = DeeObject_MALLOC(SetSymmetricDifference);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(b);
-	result->ssd_a = a; /* Inherited */
-	result->ssd_b = b;
-	DeeObject_Init(result, &SetSymmetricDifference_Type);
-	return result;
-err:
-	Dee_Decref(a);
-	return NULL;
-}
-
-#define SetSymmetricDifference_New_inherit_b(a, b) \
-	_SetSymmetricDifference_New_inherit_b(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
-_SetSymmetricDifference_New_inherit_b(DeeObject *a, /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetSymmetricDifference *result;
-	result = DeeObject_MALLOC(SetSymmetricDifference);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(a);
-	result->ssd_a = a;
-	result->ssd_b = b; /* Inherited */
-	DeeObject_Init(result, &SetSymmetricDifference_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	return NULL;
-}
-
-#define SetSymmetricDifference_New_inherit_ab(a, b) \
-	_SetSymmetricDifference_New_inherit_ab(Dee_AsObject(a), Dee_AsObject(b))
-LOCAL WUNUSED NONNULL((1, 2)) DREF SetSymmetricDifference *DCALL
-_SetSymmetricDifference_New_inherit_ab(/*inherit(always)*/ DREF DeeObject *a,
-                                       /*inherit(always)*/ DREF DeeObject *b) {
-	DREF SetSymmetricDifference *result;
-	result = DeeObject_MALLOC(SetSymmetricDifference);
-	if unlikely(!result)
-		goto err;
-	result->ssd_a = a; /* Inherited */
-	result->ssd_b = b; /* Inherited */
-	DeeObject_Init(result, &SetSymmetricDifference_Type);
-	return result;
-err:
-	Dee_Decref(b);
-	Dee_Decref(a);
-	return NULL;
-}
-
-
 
 
 /*INTDEF WUNUSED NONNULL((1, 2)) int DCALL SetUnion_NonEmpty(DeeObject *a, DeeObject *b);*/ /* !!a || !!b */

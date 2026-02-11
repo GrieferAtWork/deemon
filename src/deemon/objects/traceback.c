@@ -224,7 +224,7 @@ done:
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeTracebackObject, ti_trace); /* [1..1][const] The traceback that is being iterated. */
-	struct Dee_code_frame                       *ti_next;   /* [1..1][in(ti_trace->tb_frames)][atomic]
+	struct Dee_code_frame                   *ti_next;   /* [1..1][in(ti_trace->tb_frames)][atomic]
 	                                                     * The next frame (yielded in reverse order) */
 } TraceIterator;
 #define READ_NEXT(x)     atomic_read(&(x)->ti_next)

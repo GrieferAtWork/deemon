@@ -108,6 +108,10 @@ typedef struct {
 	PROXY_OBJECT_HEAD_EX(ClassDescriptor, co_desc) /* [1..1][const] The referenced class descriptor. */
 } ClassOperatorTable;
 
+#define ClassOperatorTable_New(self) \
+	((DREF ClassOperatorTable *)ProxyObject_New(&ClassOperatorTable_Type, Dee_AsObject(self)))
+
+
 typedef struct {
 	/* A mapping-like {(string | int, int)...} object used for mapping
 	 * operator names to their respective class instance table slots. */
@@ -267,15 +271,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF ClassOperatorTable *DCALL
 coti_getseq(ClassOperatorTableIterator *__restrict self) {
-	DREF ClassOperatorTable *result;
-	result = DeeObject_MALLOC(ClassOperatorTable);
-	if unlikely(!result)
-		goto done;
-	result->co_desc = self->co_desc;
-	Dee_Incref(self->co_desc);
-	DeeObject_Init(result, &ClassOperatorTable_Type);
-done:
-	return result;
+	return ClassOperatorTable_New(self->co_desc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
@@ -1631,15 +1627,7 @@ PRIVATE struct type_cmp cd_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF ClassOperatorTable *DCALL
 cd_operators(ClassDescriptor *__restrict self) {
-	DREF ClassOperatorTable *result;
-	result = DeeObject_MALLOC(ClassOperatorTable);
-	if unlikely(!result)
-		goto done;
-	result->co_desc = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &ClassOperatorTable_Type);
-done:
-	return result;
+	return ClassOperatorTable_New(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ClassAttributeTable *DCALL

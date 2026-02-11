@@ -968,28 +968,12 @@ INTERN DeeTypeObject TypeBases_Type = {
 /* Construct wrappers for the mro/bases of a given type. */
 INTERN WUNUSED NONNULL((1)) DREF TypeMRO *DCALL
 TypeMRO_New(DeeTypeObject *__restrict self) {
-	DREF TypeMRO *result;
-	result = DeeObject_MALLOC(TypeMRO);
-	if unlikely(!result)
-		goto done;
-	result->tm_type = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &TypeMRO_Type);
-done:
-	return result;
+	return (DREF TypeMRO *)ProxyObject_New(&TypeMRO_Type, Dee_AsObject(self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF TypeMRO *DCALL
 TypeBases_New(DeeTypeObject *__restrict self) {
-	DREF TypeMRO *result;
-	result = DeeObject_MALLOC(TypeMRO);
-	if unlikely(!result)
-		goto done;
-	result->tm_type = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &TypeBases_Type);
-done:
-	return result;
+	return (DREF TypeMRO *)ProxyObject_New(&TypeBases_Type, Dee_AsObject(self));
 }
 
 DECL_END

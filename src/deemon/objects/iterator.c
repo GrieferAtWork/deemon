@@ -2698,15 +2698,7 @@ typedef struct {
 INTDEF DeeTypeObject IteratorFuture_Type;
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorFuture_For(DeeObject *__restrict self) {
-	DREF IteratorFuture *result;
-	result = DeeObject_MALLOC(IteratorFuture);
-	if unlikely(!result)
-		goto done;
-	result->if_iter = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &IteratorFuture_Type);
-done:
-	return Dee_AsObject(result);
+	return ProxyObject_New(&IteratorFuture_Type, self);
 }
 
 
@@ -2848,15 +2840,7 @@ typedef struct {
 INTDEF DeeTypeObject IteratorPending_Type;
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorPending_For(DeeObject *__restrict self) {
-	DREF IteratorPending *result;
-	result = DeeObject_MALLOC(IteratorPending);
-	if unlikely(!result)
-		goto done;
-	result->ip_iter = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &IteratorPending_Type);
-done:
-	return Dee_AsObject(result);
+	return ProxyObject_New(&IteratorPending_Type, self);
 }
 
 STATIC_ASSERT(offsetof(IteratorPending, ip_iter) == offsetof(IteratorFuture, if_iter));

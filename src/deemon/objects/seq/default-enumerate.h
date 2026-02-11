@@ -78,16 +78,8 @@ typedef struct {
 	size_t            dewif_end;   /* [const] Enumeration range end. */
 } DefaultEnumerationWithIntFilter;
 
-LOCAL WUNUSED NONNULL((1, 2)) DREF DefaultEnumeration *DCALL
-DefaultEnumeration_New(DeeTypeObject *DefaultEnumeration__with__xxx, DeeObject *self) {
-	DREF DefaultEnumeration *result = DeeObject_MALLOC(DefaultEnumeration);
-	if likely(result) {
-		Dee_Incref(self);
-		result->de_seq = self;
-		DeeObject_Init(result, DefaultEnumeration__with__xxx);
-	}
-	return result;
-}
+#define DefaultEnumeration_New(DefaultEnumeration__with__xxx, self) \
+	((DREF DefaultEnumeration *)ProxyObject_New(DefaultEnumeration__with__xxx, self))
 
 LOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DefaultEnumerationWithFilter *DCALL
 DefaultEnumerationWithFilter_New(DeeTypeObject *DefaultEnumerationWithFilter__with__xxx,

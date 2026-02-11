@@ -57,6 +57,15 @@ err:
 	return -1;
 }
 
+seq_operator_delitem = {
+	DeeMH_seq_operator_delitem_index_t seq_operator_delitem_index = REQUIRE(seq_operator_delitem_index);
+	if (seq_operator_delitem_index == &default__seq_operator_delitem_index__empty)
+		return &$empty;
+	if (seq_operator_delitem_index)
+		return &$with__seq_operator_delitem_index;
+	/* TODO: CALL_DEPENDENCY(set_remove, self, CALL_DEPENDENCY(seq_operator_getitem, self, index)) */
+};
+
 
 
 
@@ -91,15 +100,6 @@ err:
 err:
 	return -1;
 }
-
-seq_operator_delitem = {
-	DeeMH_seq_operator_delitem_index_t seq_operator_delitem_index = REQUIRE(seq_operator_delitem_index);
-	if (seq_operator_delitem_index == &default__seq_operator_delitem_index__empty)
-		return &$empty;
-	if (seq_operator_delitem_index)
-		return &$with__seq_operator_delitem_index;
-	/* TODO: CALL_DEPENDENCY(set_remove, self, CALL_DEPENDENCY(seq_operator_getitem, self, index)) */
-};
 
 seq_operator_delitem_index = {
 	DeeMH_seq_erase_t seq_erase;

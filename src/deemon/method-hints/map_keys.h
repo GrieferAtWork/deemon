@@ -31,18 +31,8 @@ __map_keys__.map_keys([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$empty = return_reference_(Dee_EmptySet)}
 %{$none = return_none}
-%{$with__map_iterkeys = {
-	DREF DefaultSequence_MapProxy *result;
-	result = DeeObject_MALLOC(DefaultSequence_MapProxy);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(self);
-	result->dsmp_map = self;
-	DeeObject_Init(result, &DefaultSequence_MapKeys_Type);
-	return Dee_AsObject(result);
-err:
-	return NULL;
-}} {
+%{$with__map_iterkeys = DefaultSequence_MapKeys_New(self)}
+{
 	return LOCAL_GETATTR(self);
 }
 

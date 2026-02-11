@@ -238,7 +238,7 @@ invset_operator_add(SetInversion *self, DeeObject *some_object) {
 		intersection = DeeObject_InvokeMethodHint(set_operator_and, self->si_set, xrhs->si_set);
 		if unlikely(!intersection)
 			goto err;
-		return Dee_AsObject(SetInversion_New_inherit(intersection));
+		return Dee_AsObject(SetInversion_NewInherited(intersection));
 	} else {
 		/* (~a | b)  <=>  ~(a & ~b) */
 		DREF SetInversion *b_inv;
@@ -246,10 +246,10 @@ invset_operator_add(SetInversion *self, DeeObject *some_object) {
 		b_inv = SetInversion_New(some_object);
 		if unlikely(!b_inv)
 			goto err;
-		intersection = SetIntersection_New_inherit_b(self->si_set, b_inv);
+		intersection = SetIntersection_NewInherited2(self->si_set, b_inv);
 		if unlikely(!intersection)
 			goto err;
-		return Dee_AsObject(SetInversion_New_inherit(intersection));
+		return Dee_AsObject(SetInversion_NewInherited(intersection));
 	}
 	__builtin_unreachable();
 err:
@@ -269,7 +269,7 @@ invset_operator_sub(SetInversion *self, DeeObject *some_object) {
 		DREF SetUnion *su = SetUnion_New(self->si_set, some_object);
 		if unlikely(!su)
 			goto err;
-		return Dee_AsObject(SetInversion_New_inherit(su));
+		return Dee_AsObject(SetInversion_NewInherited(su));
 	}
 	__builtin_unreachable();
 err:
@@ -289,10 +289,10 @@ invset_operator_and(SetInversion *self, DeeObject *some_object) {
 		b_inv = SetInversion_New(some_object);
 		if unlikely(!b_inv)
 			goto err;
-		su = SetUnion_New_inherit_b(self->si_set, b_inv);
+		su = SetUnion_NewInherited2(self->si_set, b_inv);
 		if unlikely(!su)
 			goto err;
-		return Dee_AsObject(SetInversion_New_inherit(su));
+		return Dee_AsObject(SetInversion_NewInherited(su));
 	}
 	__builtin_unreachable();
 err:
@@ -306,7 +306,7 @@ invset_operator_xor(SetInversion *self, DeeObject *some_object) {
 	ssd = SetSymmetricDifference_New(self->si_set, some_object);
 	if unlikely(!ssd)
 		goto err;
-	return Dee_AsObject(SetInversion_New_inherit(ssd));
+	return Dee_AsObject(SetInversion_NewInherited(ssd));
 err:
 	return NULL;
 }

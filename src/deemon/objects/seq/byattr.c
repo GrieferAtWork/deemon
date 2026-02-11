@@ -285,14 +285,7 @@ INTERN DeeTypeObject MapByAttr_Type = {
 /* Create a new byattr proxy for `map' */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 MapByAttr_New(DeeObject *__restrict map) {
-	DREF MapByAttr *result;
-	result = DeeObject_MALLOC(MapByAttr);
-	if likely(result) {
-		DeeObject_Init(result, &MapByAttr_Type);
-		Dee_Incref(map);
-		result->mba_map = map;
-	}
-	return Dee_AsObject(result);
+	return ProxyObject_New(&MapByAttr_Type, map);
 }
 
 

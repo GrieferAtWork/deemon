@@ -35,6 +35,13 @@ typedef struct {
 INTDEF DeeTypeObject DefaultSequence_MapKeys_Type;   /* DefaultSequence_MapProxy */
 INTDEF DeeTypeObject DefaultSequence_MapValues_Type; /* DefaultSequence_MapProxy */
 
+#define DefaultSequence_MapKeys_New(ob)                     ProxyObject_New(&DefaultSequence_MapKeys_Type, ob)
+#define DefaultSequence_MapKeys_NewInherited(ob)            ProxyObject_NewInherited(&DefaultSequence_MapKeys_Type, ob)
+#define DefaultSequence_MapKeys_NewInheritedOnSuccess(ob)   ProxyObject_NewInheritedOnSuccess(&DefaultSequence_MapKeys_Type, ob)
+#define DefaultSequence_MapValues_New(ob)                   ProxyObject_New(&DefaultSequence_MapValues_Type, ob)
+#define DefaultSequence_MapValues_NewInherited(ob)          ProxyObject_NewInherited(&DefaultSequence_MapValues_Type, ob)
+#define DefaultSequence_MapValues_NewInheritedOnSuccess(ob) ProxyObject_NewInheritedOnSuccess(&DefaultSequence_MapValues_Type, ob)
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_MAP_PROXY_H */

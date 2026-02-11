@@ -45,10 +45,10 @@ __set_add__.set_operator_add([[nonnull]] DeeObject *lhs,
 		inv_lhs = SetInversion_New(lhs);
 		if unlikely(!inv_lhs)
 			goto err;
-		intersection = SetIntersection_New_inherit_b(inv_lhs, xrhs->si_set);
+		intersection = SetIntersection_NewInherited1(inv_lhs, xrhs->si_set);
 		if unlikely(!intersection)
 			goto err;
-		return Dee_AsObject(SetInversion_New_inherit(intersection));
+		return Dee_AsObject(SetInversion_NewInherited(intersection));
 	}
 	if (DeeSet_CheckEmpty(rhs))
 		return_reference_(lhs);

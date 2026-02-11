@@ -84,6 +84,9 @@ typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeFunctionObject, fs_func); /* [1..1][const] Function in question */
 } FunctionStatics;
 
+#define FunctionStatics_New(self) \
+	((DREF FunctionStatics *)ProxyObject_New(&FunctionStatics_Type, Dee_AsObject(self)))
+
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeFunctionObject, fsi_func); /* [1..1][const] Function in question */
 	uint16_t                                fsi_sid;   /* [>= fsi_func->fo_code->co_refc][lock(ATOMIC)] Index of next static to enumerate. */
@@ -635,16 +638,7 @@ INTERN DeeTypeObject FunctionStatics_Type = {
 /* Callbacks to create specialized function wrappers. */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFunction_GetStaticsWrapper(DeeFunctionObject *__restrict self) {
-	DREF FunctionStatics *result;
-	result = DeeObject_MALLOC(FunctionStatics);
-	if unlikely(!result)
-		goto err;
-	result->fs_func = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &FunctionStatics_Type);
-	return Dee_AsObject(result);
-err:
-	return NULL;
+	return Dee_AsObject(FunctionStatics_New(self));
 }
 
 
@@ -3646,6 +3640,9 @@ typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeFrameObject, fs_frame); /* [1..1][const] The frame in question */
 } FrameStack;
 
+#define FrameStack_New(frame) \
+	((DREF FrameStack *)ProxyObject_New(&FrameStack_Type, Dee_AsObject(frame)))
+
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 framestack_size(FrameStack *__restrict self) {
 	uint16_t result;
@@ -4044,16 +4041,7 @@ INTERN DeeTypeObject FrameStack_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetStackWrapper(DeeFrameObject *__restrict self) {
-	DREF FrameStack *result;
-	result = DeeObject_MALLOC(FrameStack);
-	if unlikely(!result)
-		goto err;
-	result->fs_frame = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &FrameStack_Type);
-	return Dee_AsObject(result);
-err:
-	return NULL;
+	return Dee_AsObject(FrameStack_New(self));
 }
 
 

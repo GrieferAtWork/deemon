@@ -69,6 +69,9 @@ typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeModuleObject, me_module); /* [1..1][const] The module who's exports are being viewed. */
 } ModuleExports;
 
+#define ModuleExports_New(mod) \
+	((DREF ModuleExports *)ProxyObject_New(&ModuleExports_Type, Dee_AsObject(mod)))
+
 INTDEF DeeTypeObject ModuleExports_Type;
 INTDEF DeeTypeObject ModuleExportsIterator_Type;
 INTDEF DeeTypeObject ModuleExportsKeysIterator_Type;
@@ -1325,15 +1328,7 @@ INTERN DeeTypeObject ModuleExports_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF ModuleExports *DCALL
 DeeModule_ViewExports(DeeModuleObject *__restrict self) {
-	DREF ModuleExports *result;
-	result = DeeObject_MALLOC(ModuleExports);
-	if unlikely(!result)
-		goto done;
-	result->me_module = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &ModuleExports_Type);
-done:
-	return result;
+	return ModuleExports_New(self);
 }
 
 
@@ -1343,6 +1338,9 @@ done:
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mg_module); /* [1..1] The module who's exports are being viewed. */
 } ModuleGlobals;
+
+#define ModuleGlobals_New(mod) \
+	((DREF ModuleGlobals *)ProxyObject_New(&ModuleGlobals_Type, Dee_AsObject(mod)))
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modglobals_init(ModuleGlobals *__restrict self,
@@ -1628,15 +1626,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
 DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
-	DREF ModuleGlobals *result;
-	result = DeeObject_MALLOC(ModuleGlobals);
-	if unlikely(!result)
-		goto done;
-	result->mg_module = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &ModuleGlobals_Type);
-done:
-	return result;
+	return ModuleGlobals_New(self);
 }
 
 
@@ -1645,6 +1635,9 @@ done:
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mln_module); /* [1..1] The module who's libnames are being viewed. */
 } ModuleLibNames;
+
+#define ModuleLibNames_New(mod) \
+	((DREF ModuleLibNames *)ProxyObject_New(&ModuleLibNames_Type, Dee_AsObject(mod)))
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modlibnames_init(ModuleLibNames *__restrict self,
@@ -1796,15 +1789,7 @@ INTERN DeeTypeObject ModuleLibNames_Type = {
 
 INTERN WUNUSED NONNULL((1)) DREF ModuleLibNames *DCALL
 DeeModule_LibNames(DeeModuleObject *__restrict self) {
-	DREF ModuleLibNames *result;
-	result = DeeObject_MALLOC(ModuleLibNames);
-	if unlikely(!result)
-		goto done;
-	result->mln_module = self;
-	Dee_Incref(self);
-	DeeObject_Init(result, &ModuleLibNames_Type);
-done:
-	return result;
+	return ModuleLibNames_New(self);
 }
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 

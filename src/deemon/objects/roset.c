@@ -59,7 +59,7 @@ typedef DeeRoSetObject RoSet;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(RoSet, rosi_set)  /* [1..1][const] The set being iterated. */
-	struct Dee_roset_item          *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
+	struct Dee_roset_item      *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
 	                                        * The first candidate for the next item. */
 } RoSetIterator;
 #define READ_ITEM(x) atomic_read(&(x)->rosi_next)
