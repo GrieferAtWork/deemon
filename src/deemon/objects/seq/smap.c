@@ -63,9 +63,6 @@ STATIC_ASSERT(offsetof(SharedMap, sm_lock) == offsetof(SharedVector, sv_lock));
 #endif /* !CONFIG_NO_THREADS */
 STATIC_ASSERT(offsetof(SharedMap, sm_length) == offsetof(SharedVector, sv_length));
 STATIC_ASSERT(offsetof(SharedMap, sm_vector) == offsetof(SharedVector, sv_vector));
-STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(SharedVectorIterator, si_seq));
-STATIC_ASSERT(offsetof(SharedMapIterator, smi_index) == offsetof(SharedVectorIterator, si_index));
-STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
 
 
 
@@ -216,25 +213,29 @@ PRIVATE struct type_iterator smapiter_iterator = {
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-smapiter_ctor(SharedVectorIterator *__restrict self,
+smapiter_ctor(SharedMapIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SharedMapIterator", &self->si_seq);
-	if (DeeObject_AssertTypeExact(self->si_seq, &DeeSharedMap_Type))
+	DeeArg_Unpack1(err, argc, argv, "_SharedMapIterator", &self->smi_seq);
+	if (DeeObject_AssertTypeExact(self->smi_seq, &DeeSharedMap_Type))
 		goto err;
-	Dee_Incref(self->si_seq);
-	self->si_index = 0;
+	Dee_Incref(self->smi_seq);
+	self->smi_index = 0;
 	return 0;
 err:
 	return -1;
 }
 
 STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(ProxyObject, po_obj));
-#define smapiter_fini  generic_proxy__fini
-#define smapiter_visit generic_proxy__visit
+#define smapiter_fini      generic_proxy__fini
+#define smapiter_visit     generic_proxy__visit
+#define smapiter_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
 
+#ifdef WANT_SharedVectorIterator
 STATIC_ASSERT(offsetof(SharedMapIterator, smi_index) == offsetof(SharedVectorIterator, si_index));
 STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(SharedVectorIterator, si_seq));
+STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
 STATIC_ASSERT(offsetof(SharedMap, sm_length) == offsetof(SharedVector, sv_length));
+
 INTDEF WUNUSED NONNULL((1)) int DCALL
 sveciter_bool(SharedVectorIterator *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
@@ -243,13 +244,69 @@ sveciter_copy(SharedVectorIterator *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_deep(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other);
-#define sveciter_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
 INTDEF struct type_cmp sveciter_cmp;
 #define smapiter_bool      sveciter_bool
 #define smapiter_copy      sveciter_copy
 #define smapiter_deep      sveciter_deep
-#define smapiter_serialize sveciter_serialize
 #define smapiter_cmp       sveciter_cmp
+#else /* WANT_SharedVectorIterator */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+smapiter_bool(SharedMapIterator *__restrict self) {
+	return (atomic_read(&self->smi_index) <
+	        atomic_read(&self->smi_seq->sm_length));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+smapiter_copy(SharedMapIterator *__restrict self,
+              SharedMapIterator *__restrict other) {
+	self->smi_index = atomic_read(&other->smi_index);
+	self->smi_seq = other->smi_seq;
+	Dee_Incref(self->smi_seq);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+smapiter_deep(SharedMapIterator *__restrict self,
+              SharedMapIterator *__restrict other) {
+	self->smi_seq = (DREF SharedMap *)DeeObject_DeepCopy((DeeObject *)other->smi_seq);
+	if unlikely(self->smi_seq)
+		goto err;
+	self->smi_index = atomic_read(&other->smi_index);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+smapiter_hash(SharedMapIterator *self) {
+	return Dee_HashCombine(Dee_HashPointer(self->smi_seq),
+	                       atomic_read(&self->smi_index));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+smapiter_compare(SharedMapIterator *self, SharedMapIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &SharedMapIterator_Type))
+		goto err;
+	Dee_return_compare_if_ne(self->smi_seq, other->smi_seq);
+	Dee_return_compareT(size_t, atomic_read(&self->smi_index),
+	                    /*   */ atomic_read(&other->smi_index));
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE struct type_cmp smapiter_cmp = {
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&smapiter_hash,
+	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&smapiter_compare,
+	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
+	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
+	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
+	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
+	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
+	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
+	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
+};
+#endif /* !WANT_SharedVectorIterator */
 
 PRIVATE struct type_member tpconst smapiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedMapIterator, smi_seq), "->?Ert:SharedMap"),
@@ -853,13 +910,12 @@ PRIVATE struct type_seq smap_seq = {
 };
 
 PRIVATE struct type_getset tpconst smap_getsets[] = {
-	TYPE_GETTER_AB("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst smap_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedMapIterator_Type),
-	TYPE_MEMBER_CONST(STR_Frozen, &DeeSharedMap_Type),
 	TYPE_MEMBER_END
 };
 
@@ -926,7 +982,7 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
  *       on the returned object, as `vector' will be shared with it until
  *       that point in time! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem const *vector) {
+DeeSharedMap_NewShared(size_t length, /*inherit(maybe)*/ DREF DeeSharedItem const *vector) {
 	DREF SharedMap *result;
 	size_t mask = 0x03;
 	while (length * 2 >= mask)

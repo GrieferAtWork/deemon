@@ -30,6 +30,12 @@
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 
+
+#ifndef CONFIG_TINY_DEEMON
+#define WANT_RefVectorIterator
+#define WANT_SharedVectorIterator
+#endif /* !CONFIG_TINY_DEEMON */
+
 DECL_BEGIN
 
 /* A type `RefVector' that acts and works very much the same as `SharedVector',
@@ -51,6 +57,8 @@ typedef struct {
 #define RefVector_IsWritable(self) ((self)->rv_writable)
 #endif /* CONFIG_NO_THREADS */
 } RefVector;
+
+INTDEF DeeTypeObject RefVector_Type;
 
 #define RefVector_LockReading(self)    Dee_atomic_rwlock_reading((self)->rv_plock)
 #define RefVector_LockWriting(self)    Dee_atomic_rwlock_writing((self)->rv_plock)
@@ -106,15 +114,15 @@ typedef struct {
 #endif /* !CONFIG_NO_THREADS */
 
 
+#ifdef WANT_RefVectorIterator
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(RefVector, rvi_vector); /* [1..1][const] The underlying vector being iterated. */
 	DeeObject                     **rvi_pos;     /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
 	                                              * The current iterator position. */
 } RefVectorIterator;
 
-
-INTDEF DeeTypeObject RefVector_Type;
 INTDEF DeeTypeObject RefVectorIterator_Type;
+#endif /* WANT_RefVectorIterator */
 
 
 typedef struct {
@@ -145,6 +153,8 @@ typedef struct {
 #define SharedVector_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->sv_lock)
 #define SharedVector_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->sv_lock)
 
+
+#ifdef WANT_SharedVectorIterator
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(SharedVector, si_seq);  /* [1..1][const] The shared-vector that is being iterated. */
 	size_t                             si_index; /* [atomic] The current sequence index.
@@ -153,6 +163,7 @@ typedef struct {
 } SharedVectorIterator;
 
 INTDEF DeeTypeObject SharedVectorIterator_Type;
+#endif /* WANT_SharedVectorIterator */
 
 DECL_END
 

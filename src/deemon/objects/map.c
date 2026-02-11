@@ -477,7 +477,7 @@ PRIVATE struct type_getset tpconst map_getsets[] = {
 	               "Returns a ?DSet that can be enumerated to view the key-item "
 	               /**/ "pairs as 2-element sequences, the same way they could be viewed "
 	               /**/ "if @this ?. itself was being iterated\n"
-	               "Same as ${this as Sequence}"),
+	               "Same as ${this as Set} or ?#asset"),
 	TYPE_GETTER(STR_iterkeys, &default__map_iterkeys,
 	            "->?#IterKeys\n"
 	            "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}"),
@@ -707,8 +707,8 @@ PRIVATE struct type_getset tpconst map_class_getsets[] = {
 	            "\n"
 	            "Sub-classes that implement ${Mapping.operator []} (or unrelated classes "
 	            /**/ "that define ${__map_getitem__}), such that it never throws "
-	            /**/ ":UnboundItem errors should override this property like: "
-	            /**/ "${public static final __map_getitem_always_bound__ = true}. "
+	            /**/ ":UnboundItem errors should override this property like:\n"
+	            /**/ "${public static final __map_getitem_always_bound__ = true;}\n"
 	            /**/ "Doing so allows the deemon runtime to implement generated "
 	            /**/ "mapping functions more efficiently in some cases. In order "
 	            /**/ "for deemon to see and understand the attribute, it #Bmust be "

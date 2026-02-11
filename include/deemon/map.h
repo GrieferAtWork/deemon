@@ -137,7 +137,7 @@ DDATDEF DeeTypeObject DeeSharedMap_Type;
  *       on the returned object, as `vector' will be shared with it until
  *       that point in time! */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem const *vector);
+DeeSharedMap_NewShared(size_t length, /*inherit(maybe)*/ DREF DeeSharedItem const *vector);
 
 /* Check if the reference counter of `self' is 1. When it is,
  * simply destroy the shared vector without freeing `vector',

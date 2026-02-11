@@ -63,6 +63,7 @@
 
 DECL_BEGIN
 
+#ifdef WANT_RefVectorIterator
 #define RVI_GETPOS(x) atomic_read(&(x)->rvi_pos)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -264,6 +265,7 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
+#endif /* WANT_RefVectorIterator */
 
 
 STATIC_ASSERT(offsetof(RefVector, rv_owner) == offsetof(ProxyObject, po_obj));
@@ -275,6 +277,8 @@ rvec_bool(RefVector *__restrict self) {
 	return self->rv_length != 0;
 }
 
+#ifdef WANT_RefVectorIterator
+#define PTR_rvec_iter &rvec_iter
 PRIVATE WUNUSED NONNULL((1)) DREF RefVectorIterator *DCALL
 rvec_iter(RefVector *__restrict self) {
 	DREF RefVectorIterator *result;
@@ -288,6 +292,9 @@ rvec_iter(RefVector *__restrict self) {
 done:
 	return result;
 }
+#else /* WANT_RefVectorIterator */
+#define PTR_rvec_iter NULL
+#endif /* !WANT_RefVectorIterator */
 
 #ifdef WANT_rvec_contains
 #define PTR_rvec_contains &rvec_contains
@@ -328,6 +335,17 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 rvec_size(RefVector *__restrict self) {
 	ASSERT(self->rv_length != (size_t)-1);
 	return self->rv_length;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rvec_getitem_index_fast(RefVector *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	ASSERT(index < self->rv_length);
+	RefVector_XLockRead(self);
+	result = self->rv_vector[index];
+	Dee_XIncref(result);
+	RefVector_XLockEndRead(self);
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -390,17 +408,6 @@ rvec_bounditem_index(RefVector *self, size_t index) {
 	        ? Dee_atomic_read_with_atomic_rwlock(&self->rv_vector[index], self->rv_plock)
 	        : self->rv_vector[index];
 	return Dee_BOUND_FROMBOOL(value != NULL);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rvec_getitem_index_fast(RefVector *__restrict self, size_t index) {
-	DREF DeeObject *result;
-	ASSERT(index < self->rv_length);
-	RefVector_XLockRead(self);
-	result = self->rv_vector[index];
-	Dee_XIncref(result);
-	RefVector_XLockEndRead(self);
-	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
@@ -623,7 +630,7 @@ PRIVATE struct type_method_hint tpconst rvec_method_hints[] = {
 };
 
 PRIVATE struct type_seq rvec_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_iter,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_rvec_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_rvec_contains,
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index), /* default */
@@ -667,7 +674,9 @@ PRIVATE struct type_seq rvec_seq = {
 };
 
 PRIVATE struct type_member tpconst rvec_class_members[] = {
+#ifdef WANT_RefVectorIterator
 	TYPE_MEMBER_CONST(STR_Iterator, &RefVectorIterator_Type),
+#endif /* WANT_RefVectorIterator */
 	TYPE_MEMBER_END
 };
 
@@ -823,6 +832,7 @@ done:
 
 
 
+#ifdef WANT_SharedVectorIterator
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sveciter_ctor(SharedVectorIterator *__restrict self) {
 	self->si_seq = (DREF SharedVector *)DeeObject_NewDefault(&DeeSharedVector_Type);
@@ -921,7 +931,7 @@ sveciter_hash(SharedVectorIterator *self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_compare(SharedVectorIterator *self, SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	Dee_return_compare_if_ne(self->si_seq, other->si_seq);
 	Dee_return_compareT(size_t, READ_INDEX(self),
@@ -997,6 +1007,7 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
+#endif /* WANT_SharedVectorIterator */
 
 PRIVATE NONNULL((1)) void DCALL
 svec_fini(SharedVector *__restrict self) {
@@ -1009,6 +1020,8 @@ svec_visit(SharedVector *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv(self->sv_vector, self->sv_length);
 }
 
+#ifdef WANT_SharedVectorIterator
+#define PTR_svec_iter &svec_iter
 PRIVATE WUNUSED NONNULL((1)) DREF SharedVectorIterator *DCALL
 svec_iter(SharedVector *__restrict self) {
 	DREF SharedVectorIterator *result;
@@ -1022,6 +1035,9 @@ svec_iter(SharedVector *__restrict self) {
 done:
 	return result;
 }
+#else /* WANT_SharedVectorIterator */
+#define PTR_svec_iter NULL
+#endif /* !WANT_SharedVectorIterator */
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 svec_size(SharedVector *__restrict self) {
@@ -1335,7 +1351,7 @@ PRIVATE struct type_method_hint tpconst svec_method_hints[] = {
 };
 
 PRIVATE struct type_seq svec_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&svec_iter,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_svec_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
@@ -1381,12 +1397,14 @@ PRIVATE struct type_seq svec_seq = {
 };
 
 PRIVATE struct type_getset tpconst svec_getsets[] = {
-	TYPE_GETTER_AB("frozen", &DeeObject_NewRef, "->?."),
+	TYPE_GETTER_AB(STR_frozen, &DeeObject_NewRef, "->?."),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst svec_class_members[] = {
+#ifdef WANT_SharedVectorIterator
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedVectorIterator_Type),
+#endif /* WANT_SharedVectorIterator */
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeSharedVector_Type),
 	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END
