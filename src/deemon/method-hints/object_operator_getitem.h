@@ -803,9 +803,6 @@ err:
 [[wunused]] int
 tp_seq->tp_hasitem([[nonnull]] DeeObject *self,
                    [[nonnull]] DeeObject *index)
-%{using tp_seq->tp_bounditem: {
-	return CALL_DEPENDENCY(tp_seq->tp_bounditem, self, index);
-}}
 %{using [tp_seq->tp_hasitem_index, tp_seq->tp_hasitem_string_len_hash]: {
 	size_t index_value;
 	if (DeeString_Check(index)) {
@@ -860,6 +857,9 @@ err:
 err:
 	return -1;
 }}
+%{using tp_seq->tp_bounditem: [[disliked]] {
+	return CALL_DEPENDENCY(tp_seq->tp_bounditem, self, index);
+}}
 %{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
@@ -874,9 +874,6 @@ err:
 [[export("DeeObject_{|T}HasItemIndex")]]
 [[wunused]] int
 tp_seq->tp_hasitem_index([[nonnull]] DeeObject *self, size_t index)
-%{using tp_seq->tp_bounditem_index: {
-	return CALL_DEPENDENCY(tp_seq->tp_bounditem_index, self, index);
-}}
 %{using [tp_seq->tp_size, tp_seq->tp_getitem_index_fast]: {
 	size_t size = CALL_DEPENDENCY(tp_seq->tp_size, self);
 	if unlikely(size == (size_t)-1)
@@ -884,6 +881,9 @@ tp_seq->tp_hasitem_index([[nonnull]] DeeObject *self, size_t index)
 	return index < size ? 1 : 0;
 err:
 	return -1;
+}}
+%{using tp_seq->tp_bounditem_index: [[disliked]] {
+	return CALL_DEPENDENCY(tp_seq->tp_bounditem_index, self, index);
 }}
 %{using tp_seq->tp_hasitem: [[disliked]] {
 	int result;
@@ -902,7 +902,7 @@ err:
 [[wunused]] int
 tp_seq->tp_hasitem_string_hash([[nonnull]] DeeObject *self,
                                [[nonnull]] char const *key, Dee_hash_t hash)
-%{using tp_seq->tp_bounditem_string_hash: {
+%{using tp_seq->tp_bounditem_string_hash: [[disliked]] {
 	return CALL_DEPENDENCY(tp_seq->tp_bounditem_string_hash, self, key, hash);
 }}
 %{using tp_seq->tp_hasitem_string_len_hash: {
@@ -926,7 +926,7 @@ err:
 tp_seq->tp_hasitem_string_len_hash([[nonnull]] DeeObject *self,
                                    [[nonnull]] char const *key,
                                    size_t keylen, Dee_hash_t hash)
-%{using tp_seq->tp_bounditem_string_len_hash: {
+%{using tp_seq->tp_bounditem_string_len_hash: [[disliked]] {
 	return CALL_DEPENDENCY(tp_seq->tp_bounditem_string_len_hash, self, key, keylen, hash);
 }}
 %{using tp_seq->tp_hasitem_string_hash: [[prefix(DEFINE_WITH_ZSTRING)]] {

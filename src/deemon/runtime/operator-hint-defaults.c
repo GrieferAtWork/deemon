@@ -3738,7 +3738,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tdefault__getitem__with__trygetitem__and__hasitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	DREF DeeObject *result = (*(tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash ? &tdefault__trygetitem__with__trygetitem_index__and__trygetitem_string_len_hash : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_index__and__trygetitem_string_hash ? &tdefault__trygetitem__with__trygetitem_index__and__trygetitem_string_hash : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_index ? &tdefault__trygetitem__with__trygetitem_index : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_string_len_hash ? &tdefault__trygetitem__with__trygetitem_string_len_hash : tp_self->tp_seq->tp_trygetitem == &default__trygetitem__with__trygetitem_string_hash ? &tdefault__trygetitem__with__trygetitem_string_hash : &tdefault__trygetitem))(tp_self, self, index);
 	if unlikely(result == ITER_DONE) {
-		int has = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, index);
+		int has = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, index);
 		if (has > 0) {
 			DeeRT_ErrUnboundKey(self, index);
 		} else if (has == 0) {
@@ -3905,7 +3905,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__getitem_index__with__trygetitem_index__and__hasitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
 	DREF DeeObject *result = (*(tp_self->tp_seq->tp_trygetitem_index == &default__trygetitem_index__with__size__and__getitem_index_fast ? &tdefault__trygetitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_trygetitem_index == &default__trygetitem_index__with__trygetitem ? &tdefault__trygetitem_index__with__trygetitem : &tdefault__trygetitem_index))(tp_self, self, index);
 	if unlikely(result == ITER_DONE) {
-		int has = (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__hasitem ? &tdefault__hasitem_index__with__hasitem : &tdefault__hasitem_index))(tp_self, self, index);
+		int has = (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__hasitem ? &tdefault__hasitem_index__with__hasitem : &tdefault__hasitem_index))(tp_self, self, index);
 		if (has > 0) {
 			DeeRT_ErrUnboundKeyInt(self, index);
 		} else if (has == 0) {
@@ -5451,11 +5451,6 @@ err:
 
 /* tp_seq->tp_hasitem */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-tdefault__hasitem__with__bounditem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
-	return (*(tp_self->tp_seq->tp_bounditem == &default__bounditem__with__size__and__getitem_index_fast ? &tdefault__bounditem__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__getitem ? &tdefault__bounditem__with__getitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem__and__hasitem ? &tdefault__bounditem__with__trygetitem__and__hasitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index ? &tdefault__bounditem__with__bounditem_index : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem ? &tdefault__bounditem__with__trygetitem : &tdefault__bounditem))(tp_self, self, index);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	size_t index_value;
 	if (DeeString_Check(index)) {
@@ -5463,7 +5458,7 @@ tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash(DeeTypeObje
 	}
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
-	return (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : &tdefault__hasitem_index))(tp_self, self, index_value);
+	return (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : &tdefault__hasitem_index))(tp_self, self, index_value);
 err:
 	return -1;
 }
@@ -5476,7 +5471,7 @@ tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash(DeeTypeObject *
 	}
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
-	return (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : &tdefault__hasitem_index))(tp_self, self, index_value);
+	return (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : &tdefault__hasitem_index))(tp_self, self, index_value);
 err:
 	return -1;
 }
@@ -5486,7 +5481,7 @@ tdefault__hasitem__with__hasitem_index(DeeTypeObject *tp_self, DeeObject *self, 
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
-	return (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : &tdefault__hasitem_index))(tp_self, self, index_value);
+	return (*(tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__size__and__getitem_index_fast ? &tdefault__hasitem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_hasitem_index == &default__hasitem_index__with__bounditem_index ? &tdefault__hasitem_index__with__bounditem_index : &tdefault__hasitem_index))(tp_self, self, index_value);
 err:
 	return -1;
 }
@@ -5510,6 +5505,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+tdefault__hasitem__with__bounditem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
+	return (*(tp_self->tp_seq->tp_bounditem == &default__bounditem__with__size__and__getitem_index_fast ? &tdefault__bounditem__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index__and__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_index__and__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__getitem ? &tdefault__bounditem__with__getitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem__and__hasitem ? &tdefault__bounditem__with__trygetitem__and__hasitem : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_index ? &tdefault__bounditem__with__bounditem_index : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_len_hash ? &tdefault__bounditem__with__bounditem_string_len_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__bounditem_string_hash ? &tdefault__bounditem__with__bounditem_string_hash : tp_self->tp_seq->tp_bounditem == &default__bounditem__with__trygetitem ? &tdefault__bounditem__with__trygetitem : &tdefault__bounditem))(tp_self, self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasitem__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
@@ -5522,15 +5522,6 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 tdefault__hasitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index) {
 	return (*tp_self->tp_seq->tp_hasitem)(self, index);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__hasitem__with__bounditem(DeeObject *self, DeeObject *index) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__hasitem__with__bounditem(Dee_TYPE(self), self, index);
-#else /* __OPTIMIZE_SIZE__ */
-	return (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, index);
-#endif /* __OPTIMIZE_SIZE__ */
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -5608,6 +5599,15 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__hasitem__with__bounditem(DeeObject *self, DeeObject *index) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__hasitem__with__bounditem(Dee_TYPE(self), self, index);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_seq->tp_bounditem)(self, index);
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__hasitem__with__size__and__getitem_index_fast(DeeObject *self, DeeObject *index) {
 #ifdef __OPTIMIZE_SIZE__
 	return tdefault__hasitem__with__size__and__getitem_index_fast(Dee_TYPE(self), self, index);
@@ -5623,11 +5623,6 @@ err:
 
 /* tp_seq->tp_hasitem_index */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-tdefault__hasitem_index__with__bounditem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
-	return (*(tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__size__and__getitem_index_fast ? &tdefault__bounditem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__getitem_index ? &tdefault__bounditem_index__with__getitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__bounditem ? &tdefault__bounditem_index__with__bounditem : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index ? &tdefault__bounditem_index__with__trygetitem_index : &tdefault__bounditem_index))(tp_self, self, index);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__hasitem_index__with__size__and__getitem_index_fast(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
 	size_t size = (*(tp_self->tp_seq->tp_size == &default__size__with__sizeob ? &tdefault__size__with__sizeob : &tdefault__size))(tp_self, self);
 	if unlikely(size == (size_t)-1)
@@ -5638,12 +5633,17 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+tdefault__hasitem_index__with__bounditem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
+	return (*(tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__size__and__getitem_index_fast ? &tdefault__bounditem_index__with__size__and__getitem_index_fast : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__getitem_index ? &tdefault__bounditem_index__with__getitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index__and__hasitem_index ? &tdefault__bounditem_index__with__trygetitem_index__and__hasitem_index : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__bounditem ? &tdefault__bounditem_index__with__bounditem : tp_self->tp_seq->tp_bounditem_index == &default__bounditem_index__with__trygetitem_index ? &tdefault__bounditem_index__with__trygetitem_index : &tdefault__bounditem_index))(tp_self, self, index);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__hasitem_index__with__hasitem(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
 	int result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
 		goto err;
-	result = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, indexob);
+	result = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, indexob);
 	Dee_Decref_likely(indexob);
 	return result;
 err:
@@ -5653,15 +5653,6 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 tdefault__hasitem_index(DeeTypeObject *tp_self, DeeObject *self, size_t index) {
 	return (*tp_self->tp_seq->tp_hasitem_index)(self, index);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__hasitem_index__with__bounditem_index(DeeObject *self, size_t index) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__hasitem_index__with__bounditem_index(Dee_TYPE(self), self, index);
-#else /* __OPTIMIZE_SIZE__ */
-	return (*Dee_TYPE(self)->tp_seq->tp_bounditem_index)(self, index);
-#endif /* __OPTIMIZE_SIZE__ */
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -5675,6 +5666,15 @@ default__hasitem_index__with__size__and__getitem_index_fast(DeeObject *self, siz
 	return index < size ? 1 : 0;
 err:
 	return -1;
+#endif /* __OPTIMIZE_SIZE__ */
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+default__hasitem_index__with__bounditem_index(DeeObject *self, size_t index) {
+#ifdef __OPTIMIZE_SIZE__
+	return tdefault__hasitem_index__with__bounditem_index(Dee_TYPE(self), self, index);
+#else /* __OPTIMIZE_SIZE__ */
+	return (*Dee_TYPE(self)->tp_seq->tp_bounditem_index)(self, index);
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
@@ -5712,7 +5712,7 @@ tdefault__hasitem_string_hash__with__hasitem(DeeTypeObject *tp_self, DeeObject *
 	DREF DeeObject *keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, keyob);
+	result = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, keyob);
 	Dee_Decref_likely(keyob);
 	return result;
 err:
@@ -5781,7 +5781,7 @@ tdefault__hasitem_string_len_hash__with__hasitem(DeeTypeObject *tp_self, DeeObje
 	DREF DeeObject *keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
 		goto err;
-	result = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, keyob);
+	result = (*(tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_len_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index__and__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_index ? &tdefault__hasitem__with__hasitem_index : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__hasitem_string_hash ? &tdefault__hasitem__with__hasitem_string_hash : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__bounditem ? &tdefault__hasitem__with__bounditem : tp_self->tp_seq->tp_hasitem == &default__hasitem__with__size__and__getitem_index_fast ? &tdefault__hasitem__with__size__and__getitem_index_fast : &tdefault__hasitem))(tp_self, self, keyob);
 	Dee_Decref_likely(keyob);
 	return result;
 err:

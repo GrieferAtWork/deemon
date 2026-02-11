@@ -299,12 +299,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_hasitem[10] = {
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_hasitem[7] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__bounditem, &tdefault__hasitem__with__bounditem),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index, &tdefault__hasitem__with__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_hash, &tdefault__hasitem__with__hasitem_string_hash),
+	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__bounditem, &tdefault__hasitem__with__bounditem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_hasitem_index[9] = {
@@ -319,8 +319,8 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__seq_operator_hasitem_index[9] = {
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__seq_operator_hasitem_index[4] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__bounditem_index, &tdefault__hasitem_index__with__bounditem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__size__and__getitem_index_fast, &tdefault__hasitem_index__with__size__and__getitem_index_fast),
+	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__bounditem_index, &tdefault__hasitem_index__with__bounditem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__hasitem, &tdefault__hasitem_index__with__hasitem),
 	MH_SUPER_MAP_TYPED_END
 };
@@ -3244,12 +3244,12 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_hasitem[6] = {
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_hasitem[7] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__bounditem, &tdefault__hasitem__with__bounditem),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index__and__hasitem_string_hash, &tdefault__hasitem__with__hasitem_index__and__hasitem_string_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_index, &tdefault__hasitem__with__hasitem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_len_hash, &tdefault__hasitem__with__hasitem_string_len_hash),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__hasitem_string_hash, &tdefault__hasitem__with__hasitem_string_hash),
+	MH_SUPER_MAP_TYPED_INIT(&default__hasitem__with__bounditem, &tdefault__hasitem__with__bounditem),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_hasitem_index[6] = {
@@ -3261,8 +3261,8 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__map_operator_hasitem_index[6] = {
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_operator_hasitem_index[4] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__bounditem_index, &tdefault__hasitem_index__with__bounditem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__size__and__getitem_index_fast, &tdefault__hasitem_index__with__size__and__getitem_index_fast),
+	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__bounditem_index, &tdefault__hasitem_index__with__bounditem_index),
 	MH_SUPER_MAP_TYPED_INIT(&default__hasitem_index__with__hasitem, &tdefault__hasitem_index__with__hasitem),
 	MH_SUPER_MAP_TYPED_END
 };

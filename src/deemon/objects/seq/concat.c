@@ -701,7 +701,7 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cat_foreach,
 	/* .tp_foreach_pair       = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__bounditem_index),
-	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__bounditem),
+	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__hasitem_index),
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size,
 	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size_fast,
 	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cat_getitem_index,
@@ -723,13 +723,13 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
 	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
 	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
-	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
 	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__getitem_string_len_hash),
 	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
 	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
 	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
 	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
-	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
 };
 
 

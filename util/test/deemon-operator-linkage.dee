@@ -1416,7 +1416,7 @@ Type_assert(rt.ClassAttributeTable, {
 	"tp_bounditem_index":            "default__bounditem_index__with__bounditem",
 	"tp_bounditem_string_hash":      "default__bounditem_string_hash__with__bounditem_string_len_hash",
 	"tp_bounditem_string_len_hash":  "default__bounditem_string_len_hash__with__trygetitem_string_len_hash",
-	"tp_hasitem":                    "default__hasitem__with__bounditem",
+	"tp_hasitem":                    "default__hasitem__with__hasitem_string_len_hash",
 	"tp_hasitem_index":              "default__hasitem_index__with__bounditem_index",
 	"tp_hasitem_string_hash":        "default__hasitem_string_hash__with__bounditem_string_hash",
 	"tp_hasitem_string_len_hash":    "default__hasitem_string_len_hash__with__bounditem_string_len_hash",
