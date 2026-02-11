@@ -42,6 +42,7 @@
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
 #include <hybrid/typecore.h>  /* __SIZEOF_SIZE_T__ */
 
+#include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "svec.h"
@@ -54,7 +55,12 @@
 
 #ifndef CONFIG_TINY_DEEMON
 #define WANT_rvec_contains
-#define WANT_svec_getitem_index_fast
+#define WANT_rvec_getitem_index
+#define WANT_rvec_bounditem_index
+#define WANT_rvec_foreach
+#define WANT_rvec_mh_seq_enumerate_index
+#define WANT_rvec_mh_seq_enumerate_index_reverse
+#define WANT_svec_getitem_index
 #define WANT_svec_foreach
 #define WANT_svec_mh_seq_enumerate_index_reverse
 #define WANT_svec_mh_find
@@ -62,211 +68,6 @@
 #endif /* !CONFIG_TINY_DEEMON */
 
 DECL_BEGIN
-
-#ifdef WANT_RefVectorIterator
-#define RVI_GETPOS(x) atomic_read(&(x)->rvi_pos)
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rveciter_copy(RefVectorIterator *__restrict self,
-              RefVectorIterator *__restrict other) {
-	self->rvi_vector = other->rvi_vector;
-	self->rvi_pos    = RVI_GETPOS(other);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rveciter_ctor(RefVectorIterator *__restrict self,
-              size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_RefVectorIterator", &self->rvi_vector);
-	if (DeeObject_AssertTypeExact(self->rvi_vector, &RefVector_Type))
-		goto err;
-	Dee_Incref(self->rvi_vector);
-	self->rvi_pos = self->rvi_vector->rv_vector;
-	return 0;
-err:
-	return -1;
-}
-
-STATIC_ASSERT(offsetof(RefVectorIterator, rvi_vector) == offsetof(ProxyObject, po_obj));
-#define rveciter_fini  generic_proxy__fini
-#define rveciter_visit generic_proxy__visit
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rveciter_serialize(RefVectorIterator *__restrict self,
-                   DeeSerial *__restrict writer, Dee_seraddr_t addr) {
-#define ADDROF(field) (addr + offsetof(RefVectorIterator, field))
-	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
-	if likely(result == 0) {
-		DeeObject **pos = atomic_read(&self->rvi_pos);;
-		result = DeeSerial_PutPointer(writer, ADDROF(rvi_pos), pos);
-	}
-	return result;
-#undef ADDROF
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rveciter_next(RefVectorIterator *__restrict self) {
-	DREF DeeObject **p_result, *result;
-	RefVector *vector = self->rvi_vector;
-	for (;;) {
-		do {
-			p_result = atomic_read(&self->rvi_pos);
-			if (p_result >= vector->rv_vector + vector->rv_length)
-				return ITER_DONE;
-		} while (!atomic_cmpxch_weak_or_write(&self->rvi_pos, p_result, p_result + 1));
-
-		RefVector_XLockRead(vector);
-		result = *p_result;
-		Dee_XIncref(result);
-		RefVector_XLockEndRead(vector);
-		/* Skip NULL entries. */
-		if (result)
-			break;
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rveciter_bool(RefVectorIterator *__restrict self) {
-	RefVector *vector = self->rvi_vector;
-	if (RVI_GETPOS(self) >= vector->rv_vector + vector->rv_length)
-		return 0;
-	return 1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-rveciter_hash(RefVectorIterator *self) {
-	return Dee_HashCombine(Dee_HashPointer(self->rvi_vector),
-	                       Dee_HashPointer(RVI_GETPOS(self)));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rveciter_compare(RefVectorIterator *self, RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
-		goto err;
-	Dee_return_compare_if_ne(self->rvi_vector, other->rvi_vector);
-	Dee_return_compareT(DeeObject **, RVI_GETPOS(self),
-	                    /*         */ RVI_GETPOS(other));
-err:
-	return Dee_COMPARE_ERR;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF RefVector *DCALL
-rveciter_nii_getseq(RefVectorIterator *__restrict self) {
-	return_reference_(self->rvi_vector);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-rveciter_nii_getindex(RefVectorIterator *__restrict self) {
-	return (size_t)(atomic_read(&self->rvi_pos) - self->rvi_vector->rv_vector);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rveciter_nii_setindex(RefVectorIterator *__restrict self, size_t new_index) {
-	if (new_index > self->rvi_vector->rv_length)
-		new_index = self->rvi_vector->rv_length;
-	atomic_write(&self->rvi_pos, self->rvi_vector->rv_vector + new_index);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rveciter_nii_rewind(RefVectorIterator *__restrict self) {
-	atomic_write(&self->rvi_pos, self->rvi_vector->rv_vector);
-	return 0;
-}
-
-PRIVATE struct type_nii tpconst rveciter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&rveciter_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&rveciter_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&rveciter_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&rveciter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ NULL,
-		}
-	}
-};
-
-PRIVATE struct type_cmp rveciter_cmp = {
-	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&rveciter_hash,
-	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&rveciter_compare,
-	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
-	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
-	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
-	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
-	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
-	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
-	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &rveciter_nii,
-};
-
-PRIVATE struct type_member tpconst rveciter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RefVectorIterator, rvi_vector), "->?Ert:RefVector"),
-	TYPE_MEMBER_END
-};
-
-/* This types isn't actually be needed (Sequence would emulate it using `FastNsiIterator'),
- * but since ref-vectors are used in a couple of places, they get their own, dedicated
- * iterator type (which is a tiny bit faster than `FastNsiIterator') */
-INTERN DeeTypeObject RefVectorIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_RefVectorIterator",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-			/* T:              */ RefVectorIterator,
-			/* tp_ctor:        */ NULL,
-			/* tp_copy_ctor:   */ &rveciter_copy,
-			/* tp_deep_ctor:   */ NULL,
-			/* tp_any_ctor:    */ &rveciter_ctor,
-			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ &rveciter_serialize
-		),
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rveciter_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
-		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rveciter_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
-	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&rveciter_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
-	/* .tp_cmp           = */ &rveciter_cmp,
-	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rveciter_next,
-	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ rveciter_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
-};
-#endif /* WANT_RefVectorIterator */
-
 
 STATIC_ASSERT(offsetof(RefVector, rv_owner) == offsetof(ProxyObject, po_obj));
 #define rvec_fini  generic_proxy__fini
@@ -276,25 +77,6 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_bool(RefVector *__restrict self) {
 	return self->rv_length != 0;
 }
-
-#ifdef WANT_RefVectorIterator
-#define PTR_rvec_iter &rvec_iter
-PRIVATE WUNUSED NONNULL((1)) DREF RefVectorIterator *DCALL
-rvec_iter(RefVector *__restrict self) {
-	DREF RefVectorIterator *result;
-	result = DeeObject_MALLOC(RefVectorIterator);
-	if unlikely(!result)
-		goto done;
-	DeeObject_Init(result, &RefVectorIterator_Type);
-	Dee_Incref(self); /* Reference stored in `rvi_vector' */
-	result->rvi_vector = self;
-	result->rvi_pos    = self->rv_vector; /* Start at index 0 */
-done:
-	return result;
-}
-#else /* WANT_RefVectorIterator */
-#define PTR_rvec_iter NULL
-#endif /* !WANT_RefVectorIterator */
 
 #ifdef WANT_rvec_contains
 #define PTR_rvec_contains &rvec_contains
@@ -322,7 +104,7 @@ err:
 	return NULL;
 }
 #else /* WANT_rvec_contains */
-#define PTR_rvec_contains NULL
+#define PTR_rvec_contains DEFIMPL(&default__seq_operator_contains__with__seq_contains)
 #endif /* !WANT_rvec_contains */
 
 PRIVATE ATTR_COLD int DCALL err_readonly_rvec(void) {
@@ -348,6 +130,8 @@ rvec_getitem_index_fast(RefVector *__restrict self, size_t index) {
 	return result;
 }
 
+#ifdef WANT_rvec_getitem_index
+#define PTR_rvec_getitem_index &rvec_getitem_index
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rvec_getitem_index(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
@@ -366,6 +150,9 @@ rvec_getitem_index(RefVector *__restrict self, size_t index) {
 	RefVector_XLockEndRead(self);
 	return result;
 }
+#else /* WANT_rvec_getitem_index */
+#define PTR_rvec_getitem_index DEFIMPL(&default__getitem_index__with__size__and__getitem_index_fast)
+#endif /* !WANT_rvec_getitem_index */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_delitem_index(RefVector *__restrict self, size_t index) {
@@ -383,8 +170,7 @@ rvec_delitem_index(RefVector *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-rvec_setitem_index(RefVector *self, size_t index,
-                 DeeObject *value) {
+rvec_setitem_index(RefVector *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
 		return DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, self->rv_length);
@@ -399,6 +185,8 @@ rvec_setitem_index(RefVector *self, size_t index,
 	return 0;
 }
 
+#ifdef WANT_rvec_bounditem_index
+#define PTR_rvec_bounditem_index &rvec_bounditem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_bounditem_index(RefVector *self, size_t index) {
 	DeeObject *value;
@@ -409,6 +197,9 @@ rvec_bounditem_index(RefVector *self, size_t index) {
 	        : self->rv_vector[index];
 	return Dee_BOUND_FROMBOOL(value != NULL);
 }
+#else /* WANT_rvec_bounditem_index */
+#define PTR_rvec_bounditem_index DEFIMPL(&default__bounditem_index__with__size__and__getitem_index_fast)
+#endif /* !WANT_rvec_bounditem_index */
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 rvec_xchitem_index(RefVector *self, size_t index, DeeObject *value) {
@@ -541,6 +332,8 @@ rvec_setrange_index_n(RefVector *self, Dee_ssize_t start, DeeObject *values) {
 	return rvec_setrange_index(self, start, SSIZE_MAX, values);
 }
 
+#ifdef WANT_rvec_foreach
+#define PTR_rvec_foreach &rvec_foreach
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rvec_foreach(RefVector *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -568,7 +361,11 @@ done:
 err_temp:
 	return temp;
 }
+#else /* WANT_rvec_foreach */
+#define PTR_rvec_foreach DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
+#endif /* !WANT_rvec_foreach */
 
+#ifdef WANT_rvec_mh_seq_enumerate_index
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rvec_mh_seq_enumerate_index(RefVector *self, Dee_seq_enumerate_index_t proc,
                             void *arg, size_t start, size_t end) {
@@ -592,7 +389,9 @@ rvec_mh_seq_enumerate_index(RefVector *self, Dee_seq_enumerate_index_t proc,
 err_temp:
 	return temp;
 }
+#endif /* WANT_rvec_mh_seq_enumerate_index */
 
+#ifdef WANT_rvec_mh_seq_enumerate_index_reverse
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 rvec_mh_seq_enumerate_index_reverse(RefVector *self, Dee_seq_enumerate_index_t proc,
                                     void *arg, size_t start, size_t end) {
@@ -615,6 +414,7 @@ rvec_mh_seq_enumerate_index_reverse(RefVector *self, Dee_seq_enumerate_index_t p
 err_temp:
 	return temp;
 }
+#endif /* WANT_rvec_mh_seq_enumerate_index_reverse */
 
 PRIVATE struct type_method tpconst rvec_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_xchitem),
@@ -624,37 +424,41 @@ PRIVATE struct type_method tpconst rvec_methods[] = {
 
 PRIVATE struct type_method_hint tpconst rvec_method_hints[] = {
 	TYPE_METHOD_HINT(seq_xchitem_index, &rvec_xchitem_index),
+#ifdef WANT_rvec_mh_seq_enumerate_index
 	TYPE_METHOD_HINT(seq_enumerate_index, &rvec_mh_seq_enumerate_index),
+#endif /* WANT_rvec_mh_seq_enumerate_index */
+#ifdef WANT_rvec_mh_seq_enumerate_index_reverse
 	TYPE_METHOD_HINT(seq_enumerate_index_reverse, &rvec_mh_seq_enumerate_index_reverse),
+#endif /* WANT_rvec_mh_seq_enumerate_index_reverse */
 	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_seq rvec_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_rvec_iter,
+	/* .tp_iter                       = */ DEFIMPL(&default__iter__with__foreach),
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_rvec_contains,
-	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index), /* default */
-	/* .tp_delitem                    = */ DEFIMPL(&default__delitem__with__delitem_index), /* default */
-	/* .tp_setitem                    = */ DEFIMPL(&default__setitem__with__setitem_index), /* default */
-	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n), /* default */
-	/* .tp_delrange                   = */ DEFIMPL(&default__delrange__with__delrange_index__and__delrange_index_n), /* default */
-	/* .tp_setrange                   = */ DEFIMPL(&default__setrange__with__setrange_index__and__setrange_index_n), /* default */
-	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
+	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
+	/* .tp_delitem                    = */ DEFIMPL(&default__delitem__with__delitem_index),
+	/* .tp_setitem                    = */ DEFIMPL(&default__setitem__with__setitem_index),
+	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange                   = */ DEFIMPL(&default__delrange__with__delrange_index__and__delrange_index_n),
+	/* .tp_setrange                   = */ DEFIMPL(&default__setrange__with__setrange_index__and__setrange_index_n),
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))PTR_rvec_foreach,
 	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rvec_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&rvec_size,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rvec_getitem_index,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_rvec_getitem_index,
 	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rvec_getitem_index_fast,
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&rvec_delitem_index,
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&rvec_setitem_index,
-	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&rvec_bounditem_index,
-	/* .tp_hasitem_index              = */ DEFIMPL(&default__hasitem_index__with__bounditem_index), /* default */
-	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__operator_getitem_index_fast), /* default */
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))PTR_rvec_bounditem_index,
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__hasitem_index__with__bounditem_index),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__operator_getitem_index_fast),
 	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&rvec_delrange_index,
 	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&rvec_setrange_index,
-	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__operator_getitem_index_fast), /* default */
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__operator_getitem_index_fast),
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&rvec_delrange_index_n,
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&rvec_setrange_index_n,
 	/* .tp_trygetitem                 = */ DEFIMPL(&default__trygetitem__with__trygetitem_index),
@@ -671,13 +475,6 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
 	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
 	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
-};
-
-PRIVATE struct type_member tpconst rvec_class_members[] = {
-#ifdef WANT_RefVectorIterator
-	TYPE_MEMBER_CONST(STR_Iterator, &RefVectorIterator_Type),
-#endif /* WANT_RefVectorIterator */
-	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst rvec_members[] = {
@@ -789,7 +586,7 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_members       = */ rvec_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ rvec_class_members,
+	/* .tp_class_members = */ NULL,
 	/* .tp_method_hints  = */ rvec_method_hints,
 	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
 	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
@@ -832,183 +629,6 @@ done:
 
 
 
-#ifdef WANT_SharedVectorIterator
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sveciter_ctor(SharedVectorIterator *__restrict self) {
-	self->si_seq = (DREF SharedVector *)DeeObject_NewDefault(&DeeSharedVector_Type);
-	if unlikely(!self->si_seq)
-		goto err;
-	self->si_index = 0;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sveciter_init(SharedVectorIterator *__restrict self,
-              size_t argc, DeeObject *const *argv) {
-	DeeArg_Unpack1(err, argc, argv, "_SharedVectorIterator", &self->si_seq);
-	if (DeeObject_AssertTypeExact(self->si_seq, &DeeSharedVector_Type))
-		goto err;
-	Dee_Incref(self->si_seq);
-	self->si_index = 0;
-	return 0;
-err:
-	return -1;
-}
-
-STATIC_ASSERT(offsetof(SharedVectorIterator, si_seq) == offsetof(ProxyObject, po_obj));
-#define sveciter_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
-#define sveciter_fini      generic_proxy__fini
-#define sveciter_visit     generic_proxy__visit
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sveciter_next(SharedVectorIterator *__restrict self) {
-	DREF DeeObject *result = ITER_DONE;
-	SharedVector *vec      = self->si_seq;
-	for (;;) {
-		size_t index;
-		SharedVector_LockRead(vec);
-		index = atomic_read(&self->si_index);
-		if (self->si_index >= vec->sv_length) {
-			SharedVector_LockEndRead(vec);
-			break;
-		}
-		result = vec->sv_vector[index];
-
-		/* Acquire a reference to keep the item alive. */
-		Dee_Incref(result);
-		SharedVector_LockEndRead(vec);
-		if (atomic_cmpxch_weak_or_write(&self->si_index, index, index + 1))
-			break;
-
-		/* If some other thread stole the index, drop their value. */
-		Dee_Decref(result);
-	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-sveciter_bool(SharedVectorIterator *__restrict self) {
-	return (atomic_read(&self->si_index) <
-	        atomic_read(&self->si_seq->sv_length));
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-sveciter_copy(SharedVectorIterator *__restrict self,
-              SharedVectorIterator *__restrict other) {
-	self->si_index = atomic_read(&other->si_index);
-	self->si_seq = other->si_seq;
-	Dee_Incref(self->si_seq);
-	return 0;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-sveciter_deep(SharedVectorIterator *__restrict self,
-              SharedVectorIterator *__restrict other) {
-	self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);
-	if unlikely(self->si_seq)
-		goto err;
-	self->si_index = atomic_read(&other->si_index);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE struct type_member tpconst sveciter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedVectorIterator, si_seq), "->?Ert:SharedVector"),
-	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SharedVectorIterator, si_index)),
-	TYPE_MEMBER_END
-};
-
-#define READ_INDEX(x) atomic_read(&(x)->si_index)
-
-PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
-sveciter_hash(SharedVectorIterator *self) {
-	return Dee_HashCombine(Dee_HashPointer(self->si_seq),
-	                       READ_INDEX(self));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sveciter_compare(SharedVectorIterator *self, SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
-		goto err;
-	Dee_return_compare_if_ne(self->si_seq, other->si_seq);
-	Dee_return_compareT(size_t, READ_INDEX(self),
-	                    /*   */ READ_INDEX(other));
-err:
-	return Dee_COMPARE_ERR;
-}
-
-INTERN struct type_cmp sveciter_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *))&sveciter_hash,
-	/* .tp_compare_eq = */ DEFIMPL(&default__compare_eq__with__compare),
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&sveciter_compare,
-	/* .tp_trycompare_eq = */ DEFIMPL(&default__trycompare_eq__with__compare_eq),
-	/* .tp_eq            = */ DEFIMPL(&default__eq__with__compare_eq),
-	/* .tp_ne            = */ DEFIMPL(&default__ne__with__compare_eq),
-	/* .tp_lo            = */ DEFIMPL(&default__lo__with__compare),
-	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
-	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
-	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-};
-
-
-
-/* This types isn't actually be needed (Sequence would emulate it using `FastNsiIterator'),
- * but since shared vectors are used by `ASM_CALL_SEQ' instructions, they get their own,
- * dedicated iterator type (which is a tiny bit faster than `FastNsiIterator') */
-INTERN DeeTypeObject SharedVectorIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SharedVectorIterator",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-			/* T:              */ SharedVectorIterator,
-			/* tp_ctor:        */ &sveciter_ctor,
-			/* tp_copy_ctor:   */ &sveciter_copy,
-			/* tp_deep_ctor:   */ &sveciter_deep,
-			/* tp_any_ctor:    */ &sveciter_init,
-			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ &sveciter_serialize
-		),
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sveciter_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
-		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sveciter_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
-	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&sveciter_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
-	/* .tp_cmp           = */ &sveciter_cmp,
-	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sveciter_next,
-	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__863AC70046E4B6B0),
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ sveciter_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
-};
-#endif /* WANT_SharedVectorIterator */
-
 PRIVATE NONNULL((1)) void DCALL
 svec_fini(SharedVector *__restrict self) {
 	Dee_Decrefv(self->sv_vector, self->sv_length);
@@ -1020,49 +640,12 @@ svec_visit(SharedVector *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_Visitv(self->sv_vector, self->sv_length);
 }
 
-#ifdef WANT_SharedVectorIterator
-#define PTR_svec_iter &svec_iter
-PRIVATE WUNUSED NONNULL((1)) DREF SharedVectorIterator *DCALL
-svec_iter(SharedVector *__restrict self) {
-	DREF SharedVectorIterator *result;
-	result = DeeObject_MALLOC(SharedVectorIterator);
-	if unlikely(!result)
-		goto done;
-	DeeObject_Init(result, &SharedVectorIterator_Type);
-	Dee_Incref(self);
-	result->si_seq   = self;
-	result->si_index = 0;
-done:
-	return result;
-}
-#else /* WANT_SharedVectorIterator */
-#define PTR_svec_iter NULL
-#endif /* !WANT_SharedVectorIterator */
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 svec_size(SharedVector *__restrict self) {
 	ASSERT(self->sv_length != (size_t)-1);
 	return atomic_read(&self->sv_length);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-svec_getitem_index(SharedVector *__restrict self, size_t index) {
-	DREF DeeObject *result;
-	SharedVector_LockRead(self);
-	if unlikely(index >= self->sv_length) {
-		size_t my_length = self->sv_length;
-		SharedVector_LockEndRead(self);
-		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, my_length);
-		return NULL;
-	}
-	result = self->sv_vector[index];
-	Dee_Incref(result);
-	SharedVector_LockEndRead(self);
-	return result;
-}
-
-#ifdef WANT_svec_getitem_index_fast
-#define PTR_svec_getitem_index_fast &svec_getitem_index_fast
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_getitem_index_fast(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
@@ -1078,9 +661,27 @@ svec_getitem_index_fast(SharedVector *__restrict self, size_t index) {
 	SharedVector_LockEndRead(self);
 	return result;
 }
-#else /* WANT_svec_getitem_index_fast */
-#define PTR_svec_getitem_index_fast NULL
-#endif /* !WANT_svec_getitem_index_fast */
+
+#ifdef WANT_svec_getitem_index
+#define PTR_svec_getitem_index &svec_getitem_index
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+svec_getitem_index(SharedVector *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	SharedVector_LockRead(self);
+	if unlikely(index >= self->sv_length) {
+		size_t my_length = self->sv_length;
+		SharedVector_LockEndRead(self);
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, my_length);
+		return NULL;
+	}
+	result = self->sv_vector[index];
+	Dee_Incref(result);
+	SharedVector_LockEndRead(self);
+	return result;
+}
+#else /* WANT_svec_getitem_index */
+#define PTR_svec_getitem_index DEFIMPL(&default__getitem_index__with__size__and__getitem_index_fast)
+#endif /* !WANT_svec_getitem_index */
 
 #ifdef WANT_svec_foreach
 #define PTR_svec_foreach &svec_foreach
@@ -1107,7 +708,7 @@ err:
 	return temp;
 }
 #else /* WANT_svec_foreach */
-#define PTR_svec_foreach NULL
+#define PTR_svec_foreach DEFIMPL(&default__seq_operator_foreach__with__seq_operator_size__and__operator_getitem_index_fast)
 #endif /* !WANT_svec_foreach */
 
 
@@ -1351,7 +952,7 @@ PRIVATE struct type_method_hint tpconst svec_method_hints[] = {
 };
 
 PRIVATE struct type_seq svec_seq = {
-	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_svec_iter,
+	/* .tp_iter                       = */ &default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
@@ -1366,8 +967,8 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,
-	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&svec_getitem_index,
-	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_svec_getitem_index_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))PTR_svec_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&svec_getitem_index_fast,
 	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
 	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
 	/* .tp_bounditem_index            = */ DEFIMPL(&default__bounditem_index__with__size__and__getitem_index_fast),
@@ -1402,9 +1003,6 @@ PRIVATE struct type_getset tpconst svec_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst svec_class_members[] = {
-#ifdef WANT_SharedVectorIterator
-	TYPE_MEMBER_CONST(STR_Iterator, &SharedVectorIterator_Type),
-#endif /* WANT_SharedVectorIterator */
 	TYPE_MEMBER_CONST(STR_Frozen, &DeeSharedVector_Type),
 	TYPE_MEMBER_CONST("__seq_getitem_always_bound__", Dee_True),
 	TYPE_MEMBER_END

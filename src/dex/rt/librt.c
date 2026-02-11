@@ -2100,11 +2100,6 @@ librt_get_SeqPairIterator_Type_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedVectorIterator_f(void) {
-	return_cached(DeeObject_GetAttr(Dee_AsObject(&DeeSharedVector_Type), Dee_AsObject(&str_Iterator)));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SharedMapIterator_f(void) {
 	return_cached(DeeObject_GetAttr(Dee_AsObject(&DeeSharedMap_Type), Dee_AsObject(&str_Iterator)));
 }
@@ -2113,11 +2108,6 @@ librt_get_SharedMapIterator_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_RefVector_f(void) {
 	return_cached(get_type_of(DeeRefVector_NewReadonly(Dee_None, 0, NULL)));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_RefVectorIterator_f(void) {
-	return_cached(get_Iterator_of(librt_get_RefVector_f()));
 }
 
 
@@ -2994,10 +2984,8 @@ PRIVATE DEFINE_CMETHOD0(librt_get_MapFromKeysAndValueIterator, &librt_get_MapFro
 PRIVATE DEFINE_CMETHOD0(librt_get_MapFromKeysAndCallbackIterator, &librt_get_MapFromKeysAndCallbackIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_MapFromAttr, &librt_get_MapFromAttr_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_MapFromAttrKeysIterator, &librt_get_MapFromAttrKeysIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_SharedVectorIterator, &librt_get_SharedVectorIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_SharedMapIterator, &librt_get_SharedMapIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_RefVector, &librt_get_RefVector_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_RefVectorIterator, &librt_get_RefVectorIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_TypeOperators, &librt_get_TypeOperators_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_TypeOperatorsIterator, &librt_get_TypeOperatorsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_ModuleExports, &librt_get_ModuleExports_f, METHOD_FCONSTCALL);
@@ -3379,11 +3367,9 @@ DEX_MEMBER_F_NODOC("NullableTuple", &DeeNullableTuple_Type, DEXSYM_READONLY),
 
 /* Internal types used for safe & fast passing of temporary sequences */
 DEX_MEMBER_F_NODOC("SharedVector", &DeeSharedVector_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR), /* DeeSharedVector_Type */
-DEX_GETTER_F_NODOC("SharedVectorIterator", &librt_get_SharedVectorIterator, DEXSYM_CONSTEXPR), /* SharedVectorIterator_Type */
 DEX_MEMBER_F_NODOC("SharedMap", &DeeSharedMap_Type, DEXSYM_READONLY | DEXSYM_CONSTEXPR),       /* DeeSharedMap_Type */
 DEX_GETTER_F_NODOC("SharedMapIterator", &librt_get_SharedMapIterator, DEXSYM_CONSTEXPR),       /* SharedMapIterator_Type */
 DEX_GETTER_F_NODOC("RefVector", &librt_get_RefVector, DEXSYM_CONSTEXPR),                       /* RefVector_Type */
-DEX_GETTER_F_NODOC("RefVectorIterator", &librt_get_RefVectorIterator, DEXSYM_CONSTEXPR),       /* RefVectorIterator_Type */
 
 /* Internal types used to drive sequence operations on `Bytes' */
 DEX_GETTER_F_NODOC("BytesFind", &librt_get_BytesFind, DEXSYM_CONSTEXPR),                           /* BytesFind_Type */

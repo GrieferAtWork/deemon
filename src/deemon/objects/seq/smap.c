@@ -230,26 +230,6 @@ STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(ProxyObject, po_o
 #define smapiter_visit     generic_proxy__visit
 #define smapiter_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)
 
-#ifdef WANT_SharedVectorIterator
-STATIC_ASSERT(offsetof(SharedMapIterator, smi_index) == offsetof(SharedVectorIterator, si_index));
-STATIC_ASSERT(offsetof(SharedMapIterator, smi_seq) == offsetof(SharedVectorIterator, si_seq));
-STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
-STATIC_ASSERT(offsetof(SharedMap, sm_length) == offsetof(SharedVector, sv_length));
-
-INTDEF WUNUSED NONNULL((1)) int DCALL
-sveciter_bool(SharedVectorIterator *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-sveciter_copy(SharedVectorIterator *__restrict self,
-              SharedVectorIterator *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-sveciter_deep(SharedVectorIterator *__restrict self,
-              SharedVectorIterator *__restrict other);
-INTDEF struct type_cmp sveciter_cmp;
-#define smapiter_bool      sveciter_bool
-#define smapiter_copy      sveciter_copy
-#define smapiter_deep      sveciter_deep
-#define smapiter_cmp       sveciter_cmp
-#else /* WANT_SharedVectorIterator */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 smapiter_bool(SharedMapIterator *__restrict self) {
 	return (atomic_read(&self->smi_index) <
@@ -306,7 +286,6 @@ PRIVATE struct type_cmp smapiter_cmp = {
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
-#endif /* !WANT_SharedVectorIterator */
 
 PRIVATE struct type_member tpconst smapiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SharedMapIterator, smi_seq), "->?Ert:SharedMap"),

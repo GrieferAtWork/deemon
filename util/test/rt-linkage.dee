@@ -209,11 +209,9 @@ assertRtTypeName("MapFromAttrKeysIterator");
 assertRtTypeName("NullableTuple", "NullableTuple");
 
 assertRtTypeName("SharedVector");
-assertRtTypeName("SharedVectorIterator", { "_SharedVectorIterator", "_IterWithSizeAndGetItemIndex" });
 assertRtTypeName("SharedMap");
 assertRtTypeName("SharedMapIterator");
 assertRtTypeName("RefVector");
-assertRtTypeName("RefVectorIterator", { "_RefVectorIterator", "_IterWithSizeAndGetItemIndexFast" });
 
 assertRtTypeName("BytesFind");
 assertRtTypeName("BytesFindIterator");

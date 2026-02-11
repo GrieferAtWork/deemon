@@ -31,11 +31,6 @@
 #include <stddef.h>  /* NULL, size_t */
 
 
-#ifndef CONFIG_TINY_DEEMON
-#define WANT_RefVectorIterator
-#define WANT_SharedVectorIterator
-#endif /* !CONFIG_TINY_DEEMON */
-
 DECL_BEGIN
 
 /* A type `RefVector' that acts and works very much the same as `SharedVector',
@@ -114,17 +109,6 @@ INTDEF DeeTypeObject RefVector_Type;
 #endif /* !CONFIG_NO_THREADS */
 
 
-#ifdef WANT_RefVectorIterator
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(RefVector, rvi_vector); /* [1..1][const] The underlying vector being iterated. */
-	DeeObject                     **rvi_pos;     /* [0..1][lock(*rvi_vector->rv_plock)][1..1][in(rvi_vector->rv_vector)][atomic]
-	                                              * The current iterator position. */
-} RefVectorIterator;
-
-INTDEF DeeTypeObject RefVectorIterator_Type;
-#endif /* WANT_RefVectorIterator */
-
-
 typedef struct {
 	OBJECT_HEAD
 	size_t                 sv_length; /* [lock(sv_lock)] The number of items in this vector. */
@@ -152,18 +136,6 @@ typedef struct {
 #define SharedVector_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->sv_lock)
 #define SharedVector_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->sv_lock)
 #define SharedVector_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->sv_lock)
-
-
-#ifdef WANT_SharedVectorIterator
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(SharedVector, si_seq);  /* [1..1][const] The shared-vector that is being iterated. */
-	size_t                             si_index; /* [atomic] The current sequence index.
-	                                              * Should this value be `>= si_seq->sv_length',
-	                                              * then the iterator has been exhausted. */
-} SharedVectorIterator;
-
-INTDEF DeeTypeObject SharedVectorIterator_Type;
-#endif /* WANT_SharedVectorIterator */
 
 DECL_END
 
