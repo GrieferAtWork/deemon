@@ -582,11 +582,6 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_getitem_i
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_index, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_trygetitem[3] = {
-	MH_INIT_USING_INIT(&default__seq_operator_trygetitem__with__seq_operator_getitem, Dee_TMH_seq_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index, Dee_TMH_seq_operator_trygetitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_trygetitem[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
@@ -599,18 +594,9 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_trygetite
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_index, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_hasitem[3] = {
-	MH_INIT_USING_INIT(&default__seq_operator_hasitem__with__seq_operator_hasitem_index, Dee_TMH_seq_operator_hasitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__seq_operator_hasitem__with__seq_operator_getitem, Dee_TMH_seq_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_hasitem[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_hasitem_index[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_hasitem_index__with__seq_operator_getitem_index, Dee_TMH_seq_operator_getitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_hasitem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_index, NULL, Dee_SEQCLASS_SEQ),
@@ -1512,12 +1498,14 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_hash[2] =
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem[6] = {
+PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem[8] = {
 	MH_INIT_USING_INIT(&default__map_operator_getitem__with__map_operator_getitem_index__and__map_operator_getitem_string_len_hash, Dee_TMH_map_operator_getitem_index, Dee_TMH_map_operator_getitem_string_len_hash),
 	MH_INIT_USING_INIT(&default__map_operator_getitem__with__map_operator_getitem_index__and__map_operator_getitem_string_hash, Dee_TMH_map_operator_getitem_index, Dee_TMH_map_operator_getitem_string_hash),
 	MH_INIT_USING_INIT(&default__map_operator_getitem__with__map_operator_getitem_string_len_hash, Dee_TMH_map_operator_getitem_string_len_hash, Dee_TMH_COUNT),
 	MH_INIT_USING_INIT(&default__map_operator_getitem__with__map_operator_getitem_string_hash, Dee_TMH_map_operator_getitem_string_hash, Dee_TMH_COUNT),
 	MH_INIT_USING_INIT(&default__map_operator_getitem__with__map_operator_getitem_index, Dee_TMH_map_operator_getitem_index, Dee_TMH_COUNT),
+	MH_INIT_USING_INIT(&default__map_operator_getitem__with__map_operator_trygetitem__and__map_operator_hasitem, Dee_TMH_map_operator_trygetitem, Dee_TMH_map_operator_hasitem),
+	MH_INIT_USING_INIT(&default__map_operator_getitem__with__map_operator_trygetitem, Dee_TMH_map_operator_trygetitem, Dee_TMH_COUNT),
 	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_getitem[2] = {
@@ -1891,10 +1879,10 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___seq_iter__, NULL, mh_using_seq_operator_foreach_pair, mh_operators_seq_operator_foreach_pair, &default__seq_operator_foreach_pair__with_callattr___seq_iter__, offsetof(struct Dee_type_mh_cache, mhc___seq_iter__), MH_KIND_METHOD, &default__seq_operator_foreach_pair__with_callobjectcache___seq_iter__, &mh_select_seq_operator_foreach_pair),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_getitem, mh_operators_seq_operator_getitem, &default__seq_operator_getitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_getitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_getitem),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_getitem_index, mh_operators_seq_operator_getitem_index, &default__seq_operator_getitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_getitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_getitem_index),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_trygetitem, mh_operators_seq_operator_trygetitem, &default__seq_operator_trygetitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_trygetitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_trygetitem),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_trygetitem, &default__seq_operator_trygetitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_trygetitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_trygetitem),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_trygetitem_index, mh_operators_seq_operator_trygetitem_index, &default__seq_operator_trygetitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_trygetitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_trygetitem_index),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_hasitem, mh_operators_seq_operator_hasitem, &default__seq_operator_hasitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_hasitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_hasitem),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_hasitem_index, mh_operators_seq_operator_hasitem_index, &default__seq_operator_hasitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_hasitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_hasitem_index),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_hasitem, &default__seq_operator_hasitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_hasitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_hasitem),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_hasitem_index, &default__seq_operator_hasitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_hasitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_hasitem_index),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_bounditem, mh_operators_seq_operator_bounditem, &default__seq_operator_bounditem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_bounditem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_bounditem),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_bounditem_index, mh_operators_seq_operator_bounditem_index, &default__seq_operator_bounditem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_bounditem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_bounditem_index),
 	MH_INIT_SPEC_INIT(&str___seq_delitem__, NULL, mh_using_seq_operator_delitem, mh_operators_seq_operator_delitem, &default__seq_operator_delitem__with_callattr___seq_delitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_delitem__), MH_KIND_METHOD, &default__seq_operator_delitem__with_callobjectcache___seq_delitem__, &mh_select_seq_operator_delitem),
@@ -2187,17 +2175,45 @@ find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
 		missing_dependencies[0] = (enum Dee_tmh_id)iter->miu_dep1;
 		missing_dependencies[1] = (enum Dee_tmh_id)iter->miu_dep2;
 		for (dep_i = 0; dep_i < COMPILER_LENOF(missing_dependencies); ++dep_i) {
-			if (missing_dependencies[dep_i] >= Dee_TMH_COUNT)
+			enum Dee_tmh_id dependency = missing_dependencies[dep_i];
+			struct mh_init_spec const *dependency_specs;
+			if ((unsigned int)dependency >= (unsigned int)Dee_TMH_COUNT)
 				break; /* No more dependencies... */
-			if (Dee_tmh_id_array_contains(absent, absent_count, missing_dependencies[dep_i])) {
+			if (Dee_tmh_id_array_contains(absent, absent_count, dependency)) {
 				/* Dependency is known to be absent (meaning it
 				 * can't be implemented via some other "using") */
 				goto next_using;
 			}
-			if (DeeType_GetExplicitMethodHint(self, missing_dependencies[dep_i])) {
+			if (DeeType_GetExplicitMethodHint(self, dependency)) {
 				/* Dependency is being provided explicitly! */
+got_dependency:
 				missing_dependencies[dep_i] = Dee_TMH_COUNT;
+				continue;
 			}
+
+#if 1
+			/* Check if "dependency" can be implemented using native operators. */
+			dependency_specs = &mh_init_specs[(unsigned int)dependency];
+			if (dependency_specs->mis_operators) {
+				struct mh_init_spec_operator const *dep_opiter;
+				for (dep_opiter = dependency_specs->mis_operators;
+				     dep_opiter->miso_tno < Dee_TNO_COUNT; ++dep_opiter) {
+					if (dep_opiter->miso_implements) {
+						if (!DeeType_Implements(self, dep_opiter->miso_implements))
+							continue;
+						if (self == dep_opiter->miso_implements)
+							continue; /* Don't inherit from the abstract origin */
+					} else if (dep_opiter->miso_seqclass != Dee_SEQCLASS_UNKNOWN) {
+						if (DeeType_GetSeqClass(self) != dep_opiter->miso_seqclass)
+							continue;
+						if (DeeType_IsSeqClassBase(self, dep_opiter->miso_seqclass))
+							continue; /* Don't inherit from the abstract origin */
+					}
+					if (DeeType_GetNativeOperatorWithoutDefaults(self, dep_opiter->miso_tno))
+						goto got_dependency;
+				}
+			}
+#endif
 		}
 
 		/* Handle the case where the first dependency was resolved. */
@@ -2216,9 +2232,10 @@ find_method_hint_in_using(DeeTypeObject *__restrict self, enum Dee_tmh_id id,
 		dep_actions = 1;
 		for (dep_i = 0; dep_i < COMPILER_LENOF(missing_dependencies); ++dep_i) {
 			size_t single_dep_actions;
-			if (missing_dependencies[dep_i] >= Dee_TMH_COUNT)
+			enum Dee_tmh_id dependency = missing_dependencies[dep_i];
+			if ((unsigned int)dependency >= (unsigned int)Dee_TMH_COUNT)
 				break; /* No more dependencies... */
-			if (!find_method_hint_in_using(self, missing_dependencies[dep_i],
+			if (!find_method_hint_in_using(self, dependency,
 			                               absent, absent_count, &single_dep_actions))
 				goto next_using; /* Implementation not possible due to missing dependencies */
 			dep_actions += single_dep_actions;
@@ -2458,6 +2475,32 @@ DeeType_GetPrivateMethodHint(DeeTypeObject *self, DeeTypeObject *orig_type, enum
 	Dee_funptr_t result = DeeType_GetPrivateMethodHintNoDefault(self, orig_type, id);
 	if (result == NULL) {
 		struct mh_init_spec const *specs = &mh_init_specs[id];
+		if (specs->mis_operators) {
+			/* Check for "using" implementations of the method hint where referenced,
+			 * dependent method hints can be implemented via (potentially object-
+			 * defaulted) operators */
+			struct mh_init_spec_operator const *iter;
+			for (iter = specs->mis_operators; iter->miso_tno < Dee_TNO_COUNT; ++iter) {
+				if (iter->miso_implements) {
+					if (!DeeType_Implements(self, iter->miso_implements))
+						continue;
+					if (self == iter->miso_implements)
+						continue; /* Don't inherit from the abstract origin */
+				} else if (iter->miso_seqclass != Dee_SEQCLASS_UNKNOWN) {
+					if (DeeType_GetSeqClass(self) != iter->miso_seqclass)
+						continue;
+					if (DeeType_IsSeqClassBase(self, iter->miso_seqclass))
+						continue; /* Don't inherit from the abstract origin */
+				}
+	
+				if (DeeType_GetNativeOperatorWithoutHints(self, iter->miso_tno)) {
+					result = DeeType_GetExplicitOrImplicitMethodHint(self, id);
+					if (result)
+						return result;
+					break;
+				}
+			}
+		}
 		if (specs->mis_select)
 			return (*specs->mis_select)(self, orig_type);
 	}

@@ -521,7 +521,7 @@ err:
 PRIVATE struct type_seq cot_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains                   = */ DEFIMPL(&default__map_operator_contains__with__map_operator_bounditem),
+	/* .tp_contains                   = */ DEFIMPL(&default__map_operator_contains__with__map_operator_trygetitem),
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__trygetitem),
 	/* .tp_delitem                    = */ DEFIMPL(&default__map_operator_delitem__unsupported),
 	/* .tp_setitem                    = */ DEFIMPL(&default__map_operator_setitem__unsupported),
@@ -1151,7 +1151,7 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 PRIVATE struct type_seq cat_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains                   = */ DEFIMPL(&default__map_operator_contains__with__map_operator_bounditem),
+	/* .tp_contains                   = */ DEFIMPL(&default__map_operator_contains__with__map_operator_trygetitem),
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_string_len_hash),
 	/* .tp_delitem                    = */ DEFIMPL(&default__map_operator_delitem__unsupported),
 	/* .tp_setitem                    = */ DEFIMPL(&default__map_operator_setitem__unsupported),

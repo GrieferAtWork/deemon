@@ -2352,14 +2352,6 @@ err:
 
 
 
-#ifndef __OPTIMIZE_SIZE__
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_sizeob(Dict *__restrict self) {
-	size_t result = DeeDict_SIZE_ATOMIC(self);
-	return DeeInt_NewSize(result);
-}
-#endif /* !__OPTIMIZE_SIZE__ */
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 dict_foreach_pair(Dict *__restrict self, Dee_foreach_pair_t cb, void *arg) {
 	Dee_hash_vidx_t i;
@@ -3259,7 +3251,7 @@ err:
 
 PRIVATE struct type_seq dict_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_iter,
-	/* .tp_sizeob                     = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_sizeob),
+	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_contains,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_getitem,
 	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_delitem,

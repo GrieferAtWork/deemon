@@ -120,6 +120,28 @@ err:
 err:
 	return NULL;
 }}
+%{using [map_operator_trygetitem, map_operator_hasitem]: {
+	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_trygetitem, self, key);
+	if unlikely(result == ITER_DONE) {
+		int has = CALL_DEPENDENCY(map_operator_hasitem, self, key);
+		if (has > 0) {
+			DeeRT_ErrUnboundKey(self, key);
+		} else if (has == 0) {
+			DeeRT_ErrUnknownKey(self, key);
+		}
+		result = NULL;
+	}
+	return result;
+}}
+%{using map_operator_trygetitem: {
+	DREF DeeObject *result = CALL_DEPENDENCY(map_operator_trygetitem, self, key);
+	if unlikely(result == ITER_DONE) {
+		/* Assume that there is no such thing as unbound indices */
+		DeeRT_ErrUnknownKey(self, key);
+		result = NULL;
+	}
+	return result;
+}}
 %{$with__map_enumerate = [[prefix(DEFINE_default_map_getitem_with_map_enumerate_cb)]] {
 	struct default_map_getitem_with_map_enumerate_data data;
 	Dee_ssize_t status;

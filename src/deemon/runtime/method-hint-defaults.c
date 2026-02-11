@@ -1723,6 +1723,19 @@ default__seq_operator_hasitem__unsupported(DeeObject *self, DeeObject *index) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+default__seq_operator_hasitem__with__seq_operator_sizeob(DeeObject *self, DeeObject *index) {
+	int result;
+	DREF DeeObject *sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_sizeob))(self);
+	if unlikely(!sizeob)
+		goto err;
+	result = DeeObject_CmpLoAsBool(index, sizeob);
+	Dee_Decref(sizeob);
+	return result;
+err:
+	return Dee_HAS_ERR;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_operator_hasitem__with__seq_operator_hasitem_index(DeeObject *self, DeeObject *index) {
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
@@ -1743,19 +1756,6 @@ default__seq_operator_hasitem__with__seq_operator_getitem(DeeObject *self, DeeOb
 	}
 	if (DeeError_Catch(&DeeError_IndexError))
 		return Dee_HAS_NO;
-	return Dee_HAS_ERR;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__seq_operator_hasitem__with__seq_operator_sizeob(DeeObject *self, DeeObject *index) {
-	int result;
-	DREF DeeObject *sizeob = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_sizeob))(self);
-	if unlikely(!sizeob)
-		goto err;
-	result = DeeObject_CmpLoAsBool(index, sizeob);
-	Dee_Decref(sizeob);
-	return result;
-err:
 	return Dee_HAS_ERR;
 }
 
@@ -1797,6 +1797,16 @@ default__seq_operator_hasitem_index__unsupported(DeeObject *__restrict self, siz
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+default__seq_operator_hasitem_index__with__seq_operator_size(DeeObject *__restrict self, size_t index) {
+	size_t seqsize = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
+	if unlikely(seqsize == (size_t)-1)
+		goto err;
+	return Dee_HAS_FROMBOOL(index < seqsize);
+err:
+	return Dee_HAS_ERR;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_hasitem_index__with__seq_operator_getitem_index(DeeObject *__restrict self, size_t index) {
 	DREF DeeObject *value = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem_index))(self, index);
 	if (value) {
@@ -1805,16 +1815,6 @@ default__seq_operator_hasitem_index__with__seq_operator_getitem_index(DeeObject 
 	}
 	if (DeeError_Catch(&DeeError_IndexError))
 		return Dee_HAS_NO;
-	return Dee_HAS_ERR;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-default__seq_operator_hasitem_index__with__seq_operator_size(DeeObject *__restrict self, size_t index) {
-	size_t seqsize = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_size))(self);
-	if unlikely(seqsize == (size_t)-1)
-		goto err;
-	return Dee_HAS_FROMBOOL(index < seqsize);
-err:
 	return Dee_HAS_ERR;
 }
 
@@ -18596,6 +18596,32 @@ default__map_operator_getitem__with__map_operator_getitem_index(DeeObject *self,
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_getitem_index))(self, key_value);
 err:
 	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__map_operator_getitem__with__map_operator_trygetitem__and__map_operator_hasitem(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem))(self, key);
+	if unlikely(result == ITER_DONE) {
+		int has = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_hasitem))(self, key);
+		if (has > 0) {
+			DeeRT_ErrUnboundKey(self, key);
+		} else if (has == 0) {
+			DeeRT_ErrUnknownKey(self, key);
+		}
+		result = NULL;
+	}
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+default__map_operator_getitem__with__map_operator_trygetitem(DeeObject *self, DeeObject *key) {
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem))(self, key);
+	if unlikely(result == ITER_DONE) {
+		/* Assume that there is no such thing as unbound indices */
+		DeeRT_ErrUnknownKey(self, key);
+		result = NULL;
+	}
+	return result;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

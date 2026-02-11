@@ -511,7 +511,7 @@ Type_assert(deemon.HashSet, {
 	"tp_xor":                                     "default__set_operator_xor__unsupported",
 	"tp_inplace_xor":                             "default__set_operator_inplace_xor__with__set_operator_foreach__and__set_insertall__and__set_removeall",
 	"mh_seq_operator_bool":                       "hashset_bool",
-	"mh_seq_operator_sizeob":                     "default__set_operator_sizeob__with__set_operator_size",
+	"mh_seq_operator_sizeob":                     {"default__seq_operator_sizeob__with__seq_operator_size", "default__set_operator_sizeob__with__set_operator_size"},
 	"mh_seq_operator_size":                       "hashset_size",
 	"mh_seq_operator_iter":                       "hashset_iter",
 	"mh_seq_operator_foreach":                    "hashset_foreach",
@@ -520,7 +520,7 @@ Type_assert(deemon.HashSet, {
 	"mh_seq_operator_getitem_index":              "default__seq_operator_getitem_index__with__seq_operator_foreach",
 	"mh_seq_operator_trygetitem":                 "default__seq_operator_trygetitem__with__seq_operator_trygetitem_index",
 	"mh_seq_operator_trygetitem_index":           "default__seq_operator_trygetitem_index__with__seq_operator_foreach",
-	"mh_seq_operator_hasitem":                    "default__seq_operator_hasitem__with__seq_operator_sizeob",
+	"mh_seq_operator_hasitem":                    "default__seq_operator_hasitem__with__seq_operator_hasitem_index",
 	"mh_seq_operator_hasitem_index":              "default__seq_operator_hasitem_index__with__seq_operator_size",
 	"mh_seq_operator_bounditem":                  "default__seq_operator_bounditem__with__seq_operator_getitem",
 	"mh_seq_operator_bounditem_index":            "default__seq_operator_bounditem_index__with__seq_operator_getitem_index",
@@ -788,7 +788,7 @@ Type_assert(deemon.Dict, {
 	"tp_iter":                                    "dict_iter",
 	"tp_foreach":                                 "dict_mh_seq_foreach",
 	"tp_foreach_pair":                            "dict_foreach_pair",
-	"tp_sizeob":                                  "dict_sizeob",
+	"tp_sizeob":                                  "default__sizeob__with__size",
 	"tp_size":                                    "dict_size",
 	"tp_size_fast":                               "dict_size",
 	"tp_contains":                                "dict_contains",
@@ -829,7 +829,7 @@ Type_assert(deemon.Dict, {
 	"tp_xor":                                     "default__map_operator_xor__unsupported",
 	"tp_inplace_xor":                             "default__map_operator_inplace_xor__with__map_operator_foreach_pair__and__map_update__and__map_removekeys",
 	"mh_seq_operator_bool":                       "dict_bool",
-	"mh_seq_operator_sizeob":                     "dict_sizeob",
+	"mh_seq_operator_sizeob":                     "default__seq_operator_sizeob__with__seq_operator_size",
 	"mh_seq_operator_size":                       "dict_size",
 	"mh_seq_operator_iter":                       "dict_iter",
 	"mh_seq_operator_foreach":                    "dict_mh_seq_foreach",
@@ -977,7 +977,7 @@ Type_assert(deemon.Dict, {
 	"mh_seq_brange_with_key":                     "default__seq_brange_with_key__with__seq_operator_size__and__seq_operator_trygetitem_index",
 	"mh_set_operator_iter":                       "dict_iter",
 	"mh_set_operator_foreach":                    "default__seq_operator_foreach__with__seq_operator_foreach_pair",
-	"mh_set_operator_sizeob":                     "dict_sizeob",
+	"mh_set_operator_sizeob":                     "default__set_operator_sizeob__with__set_operator_size",
 	"mh_set_operator_size":                       "dict_size",
 	"mh_set_operator_hash":                       "default__map_operator_hash__with__map_operator_foreach_pair",
 	"mh_set_operator_compare_eq":                 "default__set_operator_compare_eq__with__set_operator_foreach",
@@ -1018,7 +1018,7 @@ Type_assert(deemon.Dict, {
 	"mh_set_setlast":                             "dict_setlast",
 	"mh_map_operator_iter":                       "dict_iter",
 	"mh_map_operator_foreach_pair":               "dict_foreach_pair",
-	"mh_map_operator_sizeob":                     "dict_sizeob",
+	"mh_map_operator_sizeob":                     "default__map_operator_sizeob__with__map_operator_size",
 	"mh_map_operator_size":                       "dict_size",
 	"mh_map_operator_getitem":                    "dict_getitem",
 	"mh_map_operator_trygetitem":                 "dict_trygetitem",
@@ -1696,8 +1696,7 @@ function dumpType(typ: Type) {
 }
 
 
-class SetList: Set, List {}
-dumpType(rt.SeqMapped);
+dumpType(rt.SharedVector);
 
 #endif /* __MAIN__ */
 

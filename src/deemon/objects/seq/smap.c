@@ -52,6 +52,12 @@
 #undef si_value
 #undef si_hash
 
+#ifndef CONFIG_TINY_DEEMON
+#define WANT_smapiter_nextkey
+#define WANT_smapiter_nextvalue
+#define WANT_smapiter_next
+#endif /* !CONFIG_TINY_DEEMON */
+
 DECL_BEGIN
 
 STATIC_ASSERT(sizeof(DeeSharedItem) == 2 * sizeof(DeeObject *));
@@ -67,6 +73,8 @@ STATIC_ASSERT(offsetof(SharedMap, sm_vector) == offsetof(SharedVector, sv_vector
 
 
 
+#ifdef WANT_smapiter_nextkey
+#define PTR_smapiter_nextkey &smapiter_nextkey
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smapiter_nextkey(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_key;
@@ -92,7 +100,12 @@ smapiter_nextkey(SharedMapIterator *__restrict self) {
 	}
 	return result_key;
 }
+#else /* WANT_smapiter_nextkey */
+#define PTR_smapiter_nextkey DEFIMPL(&default__nextkey__with__nextpair)
+#endif /* !WANT_smapiter_nextkey */
 
+#ifdef WANT_smapiter_nextvalue
+#define PTR_smapiter_nextvalue &smapiter_nextvalue
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smapiter_nextvalue(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_value;
@@ -118,7 +131,12 @@ smapiter_nextvalue(SharedMapIterator *__restrict self) {
 	}
 	return result_value;
 }
+#else /* WANT_smapiter_nextvalue */
+#define PTR_smapiter_nextvalue DEFIMPL(&default__nextvalue__with__nextpair)
+#endif /* !WANT_smapiter_nextvalue */
 
+#ifdef WANT_smapiter_next
+#define PTR_smapiter_next &smapiter_next
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smapiter_next(SharedMapIterator *__restrict self) {
 	SharedMap *map = self->smi_seq;
@@ -154,6 +172,9 @@ smapiter_next(SharedMapIterator *__restrict self) {
 err:
 	return NULL;
 }
+#else /* WANT_smapiter_next */
+#define PTR_smapiter_next DEFIMPL(&default__iter_next__with__nextpair)
+#endif /* !WANT_smapiter_next */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 smapiter_nextpair(SharedMapIterator *__restrict self,
@@ -205,8 +226,8 @@ smapiter_advance(SharedMapIterator *__restrict self, size_t skip) {
 
 PRIVATE struct type_iterator smapiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&smapiter_nextpair,
-	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smapiter_nextkey,
-	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smapiter_nextvalue,
+	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_smapiter_nextkey,
+	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_smapiter_nextvalue,
 	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&smapiter_advance,
 };
 
@@ -328,7 +349,7 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &smapiter_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smapiter_next,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_smapiter_next,
 	/* .tp_iterator      = */ &smapiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
@@ -470,91 +491,6 @@ PRIVATE NONNULL((1)) void DCALL
 smap_mark_loaded_and_endwrite(SharedMap *__restrict self) {
 	self->sm_loaded = 1;
 	SharedMap_LockEndWrite(self);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-smap_contains(SharedMap *self, DeeObject *key) {
-	Dee_hash_t i, perturb, hash;
-	SharedItemEx *item;
-	bool was_loaded;
-	was_loaded = self->sm_loaded != 0;
-	COMPILER_READ_BARRIER();
-
-	/* Search the hash-table. */
-	hash = DeeObject_Hash(key);
-again_search:
-	perturb = i = SMAP_HASHST(self, hash);
-	for (;; SMAP_HASHNX(i, perturb)) {
-		int temp;
-		DREF DeeObject *item_key;
-		item = SMAP_HASHIT(self, i);
-		if (!item->si_key)
-			break;
-		if (item->si_hash != hash)
-			continue;
-		SharedMap_LockRead(self);
-		item_key = item->si_key;
-		if (self->sm_length == 0)
-			goto endread_and_not_found;
-		Dee_Incref(item_key);
-		SharedMap_LockEndRead(self);
-		temp = DeeObject_TryCompareEq(key, item->si_key);
-		Dee_Decref(item_key);
-		if (Dee_COMPARE_ISERR(temp))
-			goto err;
-		if (Dee_COMPARE_ISEQ(temp))
-			return_true;
-	}
-
-	/* Find the item in the key vector. */
-	SharedMap_LockRead(self);
-	if (self->sm_loaded) {
-		if (!was_loaded) {
-			SharedMap_LockEndRead(self);
-			was_loaded = true;
-			goto again_search;
-		}
-	} else {
-		for (i = 0; i < self->sm_length; ++i) {
-			DREF DeeObject *item_key, *item_value;
-			Dee_hash_t item_hash;
-			item_key   = self->sm_vector[i].si_key;
-			item_value = self->sm_vector[i].si_value;
-			Dee_Incref(item_key);
-			Dee_Incref(item_value);
-			SharedMap_LockEndRead(self);
-			item_hash = DeeObject_Hash(item_key);
-
-			/* Cache the key-value pair in the hash-vector */
-			SharedMap_LockWrite(self);
-			smap_cache(self, item_key, item_value, item_hash);
-			SharedMap_LockEndWrite(self);
-
-			/* Check if this is the key we're looking for. */
-			Dee_Decref(item_value);
-			if (item_hash == hash) {
-				int temp = DeeObject_TryCompareEq(key, item_key);
-				Dee_Decref(item_key);
-				if (Dee_COMPARE_ISERR(temp))
-					goto err;
-				if (Dee_COMPARE_ISEQ(temp))
-					return_true; /* Found it! */
-			} else {
-				Dee_Decref(item_key);
-			}
-			SharedMap_LockRead(self);
-		}
-		if (SharedMap_LockTryUpgrade(self)) {
-			smap_mark_loaded_and_endwrite(self);
-			goto not_found;
-		}
-	}
-endread_and_not_found:
-	SharedMap_LockEndRead(self);
-not_found:
-	return_false;
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -847,8 +783,8 @@ not_found:
 PRIVATE struct type_seq smap_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_contains,
-	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__trygetitem), /* default */
+	/* .tp_contains                   = */ DEFIMPL(&default__map_operator_contains__with__map_operator_trygetitem),
+	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__trygetitem),
 	/* .tp_delitem                    = */ DEFIMPL(&default__map_operator_delitem__unsupported),
 	/* .tp_setitem                    = */ DEFIMPL(&default__map_operator_setitem__unsupported),
 	/* .tp_getrange                   = */ DEFIMPL_UNSUPPORTED(&default__getrange__unsupported),
@@ -856,8 +792,8 @@ PRIVATE struct type_seq smap_seq = {
 	/* .tp_setrange                   = */ DEFIMPL_UNSUPPORTED(&default__setrange__unsupported),
 	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
 	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&smap_foreach,
-	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__trygetitem), /* default */
-	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem), /* default */
+	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__trygetitem),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__bounditem),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&smap_size,
 	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&smap_size,
 	/* .tp_getitem_index              = */ DEFIMPL(&default__getitem_index__with__getitem),
@@ -875,17 +811,17 @@ PRIVATE struct type_seq smap_seq = {
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_trygetitem,
 	/* .tp_trygetitem_index           = */ DEFIMPL(&default__trygetitem_index__with__trygetitem),
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&smap_trygetitem_string_hash,
-	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__trygetitem_string_hash), /* default */
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__trygetitem_string_hash),
 	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__map_operator_delitem_string_hash__unsupported),
 	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__map_operator_setitem_string_hash__unsupported),
-	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__trygetitem_string_hash), /* default */
-	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash), /* default */
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__trygetitem_string_hash),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash),
 	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&smap_trygetitem_string_len_hash,
-	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__trygetitem_string_len_hash), /* default */
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__trygetitem_string_len_hash),
 	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__map_operator_delitem_string_len_hash__unsupported),
 	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__map_operator_setitem_string_len_hash__unsupported),
-	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__trygetitem_string_len_hash), /* default */
-	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash), /* default */
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__trygetitem_string_len_hash),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash),
 };
 
 PRIVATE struct type_getset tpconst smap_getsets[] = {

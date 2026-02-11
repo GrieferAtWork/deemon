@@ -1921,7 +1921,8 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
  *          you've already called it with all preceding types "self" that
  *          appear in "orig_type.__mro__". */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
-(DCALL DeeType_GetPrivateMethodHintNoDefault)(DeeTypeObject *self, DeeTypeObject *orig_type, enum Dee_tmh_id id);
+(DCALL DeeType_GetPrivateMethodHintNoDefault)(DeeTypeObject *self, DeeTypeObject *orig_type,
+                                              enum Dee_tmh_id id);
 
 /* Check if "impl" is a default impl for "id", and if so:
  * - Return "DeeType_GetMethodHint(into, id)" if non-NULL
