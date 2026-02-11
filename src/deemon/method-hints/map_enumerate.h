@@ -126,78 +126,6 @@ err:
 }
 
 
-%[define(DEFINE_map_enumerate_with_filter_cb =
-#ifndef DEFINED_map_enumerate_with_filter_cb
-#define DEFINED_map_enumerate_with_filter_cb
-struct map_enumerate_with_filter_data {
-	Dee_seq_enumerate_t mewfd_cb;           /* [1..1] Underlying callback. */
-	void               *mewfd_arg;          /* Cookie for `mewfd_cb' */
-	DeeObject          *mewfd_filter_start; /* [1..1] Filter start. */
-	DeeObject          *mewfd_filter_end;   /* [1..1] Filter end. */
-};
-
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-map_enumerate_with_filter_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
-	int temp;
-	struct map_enumerate_with_filter_data *data;
-	data = (struct map_enumerate_with_filter_data *)arg;
-	/* if (!(mewfd_filter_start <= index))
-	 *     return 0; */
-	temp = DeeObject_CmpLeAsBool(data->mewfd_filter_start, index);
-	if (temp <= 0)
-		return temp;
-
-	/* if (!(mewfd_filter_end > index))
-	 *     return 0; */
-	temp = DeeObject_CmpGrAsBool(data->mewfd_filter_end, index);
-	if (temp <= 0)
-		return temp;
-
-	return (*data->mewfd_cb)(data->mewfd_arg, index, value);
-}
-#endif /* !DEFINED_map_enumerate_with_filter_cb */
-)]
-
-[[wunused]] Dee_ssize_t
-__map_enumerate__.map_enumerate_range([[nonnull]] DeeObject *self,
-                                      [[nonnull]] Dee_seq_enumerate_t cb, void *arg,
-                                      [[nonnull]] DeeObject *start,
-                                      [[nonnull]] DeeObject *end)
-%{unsupported({
-	return err_map_unsupportedf(self, "__map_enumerate__(<callable>, %r, %r)", start, end);
-})}
-%{$empty = 0}
-%{using map_enumerate: [[prefix(DEFINE_map_enumerate_with_filter_cb)]] {
-	struct map_enumerate_with_filter_data data;
-	data.mewfd_cb           = cb;
-	data.mewfd_arg          = arg;
-	data.mewfd_filter_start = start;
-	data.mewfd_filter_end   = end;
-	return CALL_DEPENDENCY(map_enumerate, self, &map_enumerate_with_filter_cb, &data);
-}}
-%{$with__map_iterkeys__and__map_operator_trygetitem = {
-	/* TODO */
-	(void)self;
-	(void)cb;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
-}} {
-	DeeObject *args[3];
-	DREF DeeObject *result;
-	DREF SeqEnumerateWrapper *wrapper;
-	wrapper = SeqEnumerateWrapper_New(cb, arg);
-	if unlikely(!wrapper)
-		goto err;
-	args[0] = (DeeObject *)wrapper;
-	args[1] = start;
-	args[2] = end;
-	result  = LOCAL_CALLATTR(self, 3, args);
-	return SeqEnumerateWrapper_Decref(wrapper, result);
-err:
-	return -1;
-}
-
-
 map_enumerate = {
 	DeeMH_map_keys_t map_keys;
 	DeeMH_map_iterkeys_t map_iterkeys;
@@ -243,6 +171,81 @@ check_with_iterkeys:
 		return map_operator_foreach_pair; /* Binary-compatible */
 	}
 };
+
+
+
+
+%[define(DEFINE_map_enumerate_with_filter_cb =
+#ifndef DEFINED_map_enumerate_with_filter_cb
+#define DEFINED_map_enumerate_with_filter_cb
+struct map_enumerate_with_filter_data {
+	Dee_seq_enumerate_t mewfd_cb;           /* [1..1] Underlying callback. */
+	void               *mewfd_arg;          /* Cookie for `mewfd_cb' */
+	DeeObject          *mewfd_filter_start; /* [1..1] Filter start. */
+	DeeObject          *mewfd_filter_end;   /* [1..1] Filter end. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+map_enumerate_with_filter_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value) {
+	int temp;
+	struct map_enumerate_with_filter_data *data;
+	data = (struct map_enumerate_with_filter_data *)arg;
+	/* if (!(mewfd_filter_start <= index))
+	 *     return 0; */
+	temp = DeeObject_CmpLeAsBool(data->mewfd_filter_start, index);
+	if (temp <= 0)
+		return temp;
+
+	/* if (!(mewfd_filter_end > index))
+	 *     return 0; */
+	temp = DeeObject_CmpGrAsBool(data->mewfd_filter_end, index);
+	if (temp <= 0)
+		return temp;
+
+	return (*data->mewfd_cb)(data->mewfd_arg, index, value);
+}
+#endif /* !DEFINED_map_enumerate_with_filter_cb */
+)]
+
+[[wunused]] Dee_ssize_t
+__map_enumerate__.map_enumerate_range([[nonnull]] DeeObject *self,
+                                      [[nonnull]] Dee_seq_enumerate_t cb, void *arg,
+                                      [[nonnull]] DeeObject *start,
+                                      [[nonnull]] DeeObject *end)
+%{unsupported({
+	return err_map_unsupportedf(self, "__map_enumerate__(<callable>, %r, %r)", start, end);
+})}
+%{$empty = 0}
+%{$with__map_enumerate = [[prefix(DEFINE_map_enumerate_with_filter_cb)]] {
+	struct map_enumerate_with_filter_data data;
+	data.mewfd_cb           = cb;
+	data.mewfd_arg          = arg;
+	data.mewfd_filter_start = start;
+	data.mewfd_filter_end   = end;
+	return CALL_DEPENDENCY(map_enumerate, self, &map_enumerate_with_filter_cb, &data);
+}}
+%{$with__map_iterkeys__and__map_operator_trygetitem = {
+	/* TODO */
+	(void)self;
+	(void)cb;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}} {
+	DeeObject *args[3];
+	DREF DeeObject *result;
+	DREF SeqEnumerateWrapper *wrapper;
+	wrapper = SeqEnumerateWrapper_New(cb, arg);
+	if unlikely(!wrapper)
+		goto err;
+	args[0] = (DeeObject *)wrapper;
+	args[1] = start;
+	args[2] = end;
+	result  = LOCAL_CALLATTR(self, 3, args);
+	return SeqEnumerateWrapper_Decref(wrapper, result);
+err:
+	return -1;
+}
+
 
 map_enumerate_range = {
 	DeeMH_map_enumerate_t map_enumerate = REQUIRE(map_enumerate);

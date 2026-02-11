@@ -33,32 +33,6 @@ __map_delitem__.map_operator_delitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *key)
 %{unsupported(auto("operator del[]"))}
 %{$empty = 0}
-%{$with__map_remove = {
-	int result = CALL_DEPENDENCY(map_remove, self, key);
-	if (result > 0)
-		result = 0;
-	return result;
-}}
-%{$with__map_pop_with_default = {
-	DREF DeeObject *oldvalue = CALL_DEPENDENCY(map_pop_with_default, self, key, Dee_None);
-	if unlikely(!oldvalue)
-		goto err;
-	Dee_Decref(oldvalue);
-	return 0;
-err:
-	return -1;
-}}
-%{$with__map_removekeys = {
-	int result;
-	DREF DeeObject *keys = DeeSeq_OfOneSymbolic(key);
-	if unlikely(!keys)
-		goto err;
-	result = CALL_DEPENDENCY(map_removekeys, self, keys);
-	DeeSeqOne_DecrefSymbolic((DeeObject *)keys);
-	return result;
-err:
-	return -1;
-}}
 %{using [map_operator_delitem_index, map_operator_delitem_string_len_hash]: {
 	size_t key_value;
 	if (DeeString_Check(key)) {
@@ -110,6 +84,32 @@ err:
 	if (DeeObject_AsSize(key, &key_value))
 		goto err;
 	return CALL_DEPENDENCY(map_operator_delitem_index, self, key_value);
+err:
+	return -1;
+}}
+%{$with__map_remove = {
+	int result = CALL_DEPENDENCY(map_remove, self, key);
+	if (result > 0)
+		result = 0;
+	return result;
+}}
+%{$with__map_pop_with_default = {
+	DREF DeeObject *oldvalue = CALL_DEPENDENCY(map_pop_with_default, self, key, Dee_None);
+	if unlikely(!oldvalue)
+		goto err;
+	Dee_Decref(oldvalue);
+	return 0;
+err:
+	return -1;
+}}
+%{$with__map_removekeys = {
+	int result;
+	DREF DeeObject *keys = DeeSeq_OfOneSymbolic(key);
+	if unlikely(!keys)
+		goto err;
+	result = CALL_DEPENDENCY(map_removekeys, self, keys);
+	DeeSeqOne_DecrefSymbolic((DeeObject *)keys);
+	return result;
 err:
 	return -1;
 }} {
@@ -165,7 +165,7 @@ map_operator_delitem = {
 __map_delitem__.map_operator_delitem_index([[nonnull]] DeeObject *self, size_t key)
 %{unsupported(auto("operator del[]"))}
 %{$empty = 0}
-%{using map_operator_delitem: {
+%{$with__map_operator_delitem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeInt_NewSize(key);
@@ -197,7 +197,7 @@ __map_delitem__.map_operator_delitem_string_hash([[nonnull]] DeeObject *self,
 	return err_map_unsupportedf(self, "operator del[](%q)", key);
 })}
 %{$empty = 0}
-%{using map_operator_delitem: {
+%{$with__map_operator_delitem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewWithHash(key, hash);
@@ -230,7 +230,7 @@ __map_delitem__.map_operator_delitem_string_len_hash([[nonnull]] DeeObject *self
 	return err_map_unsupportedf(self, "operator del[](%$q)", keylen, key);
 })}
 %{$empty = 0}
-%{using map_operator_delitem: {
+%{$with__map_operator_delitem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);

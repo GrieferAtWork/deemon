@@ -262,7 +262,7 @@ err:
 	ASSERT(status == -1);
 	return NULL;
 }}
-%{using map_operator_getitem: {
+%{$with__map_operator_getitem = {
 	DREF DeeObject *result;
 	result = CALL_DEPENDENCY(map_operator_getitem, self, key);
 	if unlikely(!result) {
@@ -316,7 +316,7 @@ __map_getitem__.map_operator_getitem_index([[nonnull]] DeeObject *self, size_t k
 	DeeRT_ErrUnknownKeyInt(self, key);
 	return NULL;
 }}
-%{using map_operator_getitem: {
+%{$with__map_operator_getitem = {
 	DREF DeeObject *result, *keyob;
 	keyob = DeeInt_NewSize(key);
 	if unlikely(!keyob)
@@ -346,7 +346,7 @@ __map_getitem__.map_operator_trygetitem_index([[nonnull]] DeeObject *self, size_
 %{unsupported_alias("default__map_operator_getitem_index__unsupported")}
 %{$none = return_none}
 %{$empty = ITER_DONE}
-%{using map_operator_trygetitem: {
+%{$with__map_operator_trygetitem = {
 	DREF DeeObject *result, *keyob;
 	keyob = DeeInt_NewSize(key);
 	if unlikely(!keyob)
@@ -446,7 +446,7 @@ __map_getitem__.map_operator_getitem_string_hash([[nonnull]] DeeObject *self,
 err:
 	return NULL;
 }}
-%{using map_operator_getitem: {
+%{$with__map_operator_getitem = {
 	DREF DeeObject *result, *keyob;
 	keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -494,7 +494,7 @@ __map_getitem__.map_operator_trygetitem_string_hash([[nonnull]] DeeObject *self,
 err:
 	return NULL;
 }}
-%{using map_operator_trygetitem: {
+%{$with__map_operator_trygetitem = {
 	DREF DeeObject *result, *keyob;
 	keyob = DeeString_NewWithHash(key, hash);
 	if unlikely(!keyob)
@@ -599,7 +599,7 @@ __map_getitem__.map_operator_getitem_string_len_hash([[nonnull]] DeeObject *self
 err:
 	return NULL;
 }}
-%{using map_operator_getitem: {
+%{$with__map_operator_getitem = {
 	DREF DeeObject *result, *keyob;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
@@ -649,7 +649,7 @@ __map_getitem__.map_operator_trygetitem_string_len_hash([[nonnull]] DeeObject *s
 err:
 	return NULL;
 }}
-%{using map_operator_trygetitem: {
+%{$with__map_operator_trygetitem = {
 	DREF DeeObject *result, *keyob;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
@@ -736,7 +736,7 @@ __map_getitem__.map_operator_bounditem([[nonnull]] DeeObject *self,
 err:
 	return Dee_BOUND_ERR;
 }}
-%{using map_operator_getitem: {
+%{$with__map_operator_getitem = {
 	DREF DeeObject *value;
 	value = CALL_DEPENDENCY(map_operator_getitem, self, key);
 	if (value) {
@@ -778,7 +778,7 @@ __map_getitem__.map_operator_bounditem_index([[nonnull]] DeeObject *self, size_t
 })}
 %{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
-%{using map_operator_bounditem: {
+%{$with__map_operator_bounditem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeInt_NewSize(key);
@@ -790,7 +790,7 @@ __map_getitem__.map_operator_bounditem_index([[nonnull]] DeeObject *self, size_t
 err:
 	return Dee_BOUND_ERR;
 }}
-%{using map_operator_getitem_index: {
+%{$with__map_operator_getitem_index = {
 	DREF DeeObject *value;
 	value = CALL_DEPENDENCY(map_operator_getitem_index, self, key);
 	if (value) {
@@ -828,7 +828,7 @@ __map_getitem__.map_operator_bounditem_string_hash([[nonnull]] DeeObject *self,
 })}
 %{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
-%{using map_operator_bounditem: {
+%{$with__map_operator_bounditem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewWithHash(key, hash);
@@ -840,7 +840,7 @@ __map_getitem__.map_operator_bounditem_string_hash([[nonnull]] DeeObject *self,
 err:
 	return Dee_BOUND_ERR;
 }}
-%{using map_operator_getitem_string_hash: {
+%{$with__map_operator_getitem_string_hash = {
 	DREF DeeObject *value;
 	value = CALL_DEPENDENCY(map_operator_getitem_string_hash, self, key, hash);
 	if (value) {
@@ -876,7 +876,7 @@ __map_getitem__.map_operator_bounditem_string_len_hash([[nonnull]] DeeObject *se
 })}
 %{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
-%{using map_operator_bounditem: {
+%{$with__map_operator_bounditem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
@@ -888,7 +888,7 @@ __map_getitem__.map_operator_bounditem_string_len_hash([[nonnull]] DeeObject *se
 err:
 	return Dee_BOUND_ERR;
 }}
-%{using map_operator_getitem_string_len_hash: {
+%{$with__map_operator_getitem_string_len_hash = {
 	DREF DeeObject *value;
 	value = CALL_DEPENDENCY(map_operator_getitem_string_len_hash, self, key, keylen, hash);
 	if (value) {

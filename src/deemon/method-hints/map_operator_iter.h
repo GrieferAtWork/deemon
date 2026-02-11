@@ -59,6 +59,18 @@ err:
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
+map_operator_iter = {
+	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
+	if (seq_operator_iter == &default__seq_operator_iter__empty)
+		return &$empty;
+	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
+	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
+		return seq_operator_iter;
+	if (seq_operator_iter)
+		return &$with__seq_operator_iter;
+};
+
 
 
 %[define(DEFINE_default_foreach_pair_with_map_enumerate_cb =
@@ -111,7 +123,7 @@ __map_iter__.map_operator_foreach_pair([[nonnull]] DeeObject *__restrict self,
                                        [[nonnull]] Dee_foreach_pair_t cb,
                                        void *arg)
 %{$empty = 0}
-%{using map_operator_iter: {
+%{$with__map_operator_iter = {
 	Dee_ssize_t result;
 	DREF DeeObject *iter;
 	iter = CALL_DEPENDENCY(map_operator_iter, self);
@@ -140,19 +152,6 @@ err:
 	return CALL_DEPENDENCY(map_enumerate, self, &default_foreach_pair_with_map_enumerate_cb, &data);
 }} = $with__map_operator_iter;
 
-
-
-map_operator_iter = {
-	DeeMH_seq_operator_iter_t seq_operator_iter = REQUIRE(seq_operator_iter);
-	if (seq_operator_iter == &default__seq_operator_iter__empty)
-		return &$empty;
-	if (seq_operator_iter == &default__seq_operator_iter__with__map_enumerate ||
-	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_trygetitem ||
-	    seq_operator_iter == &default__seq_operator_iter__with__map_iterkeys__and__map_operator_getitem)
-		return seq_operator_iter;
-	if (seq_operator_iter)
-		return &$with__seq_operator_iter;
-};
 
 map_operator_foreach_pair = {
 	DeeMH_map_operator_iter_t map_operator_iter;

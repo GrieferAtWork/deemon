@@ -566,17 +566,9 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_foreach_p
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_UNKNOWN),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getitem[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_getitem__with__seq_operator_getitem_index, Dee_TMH_seq_operator_getitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_getitem[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getitem_index[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_getitem_index__with__seq_operator_getitem, Dee_TMH_seq_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_getitem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_index, NULL, Dee_SEQCLASS_SEQ),
@@ -585,10 +577,6 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_getitem_i
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_trygetitem[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_trygetitem_index[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_trygetitem_index__with__seq_operator_getitem_index, Dee_TMH_seq_operator_getitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_trygetitem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_index, NULL, Dee_SEQCLASS_SEQ),
@@ -602,18 +590,9 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_hasitem_i
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_hasitem_index, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_bounditem[3] = {
-	MH_INIT_USING_INIT(&default__seq_operator_bounditem__with__seq_operator_bounditem_index, Dee_TMH_seq_operator_bounditem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__seq_operator_bounditem__with__seq_operator_getitem, Dee_TMH_seq_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_bounditem[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_bounditem_index[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index, Dee_TMH_seq_operator_getitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_bounditem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_index, NULL, Dee_SEQCLASS_SEQ),
@@ -643,10 +622,6 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_setitem_i
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_index, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getrange[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n, Dee_TMH_seq_operator_getrange_index, Dee_TMH_seq_operator_getrange_index_n),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_getrange[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
@@ -659,9 +634,8 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_getrange_
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getrange_index, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getrange_index_n[3] = {
+PRIVATE struct mh_init_using tpconst mh_using_seq_operator_getrange_index_n[2] = {
 	MH_INIT_USING_INIT(&default__seq_operator_getrange_index_n__with__seq_operator_getrange, Dee_TMH_seq_operator_getrange, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_getrange_index, Dee_TMH_seq_operator_size, Dee_TMH_seq_operator_getrange_index),
 	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_getrange_index_n[2] = {
@@ -747,10 +721,6 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_operator_t
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_equals, NULL, Dee_SEQCLASS_SEQ, &default__seq_operator_trycompare_eq__with_callattr_equals),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_trycompare_eq[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_trycompare_eq__with__seq_operator_compare_eq, Dee_TMH_seq_operator_compare_eq, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_trycompare_eq[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_SEQ),
 	MH_INIT_SPEC_OPERATOR_END
@@ -797,10 +767,6 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_inplace_m
 };
 PRIVATE struct mh_init_using tpconst mh_using_seq_enumerate[2] = {
 	MH_INIT_USING_INIT(&default__seq_enumerate__with__seq_enumerate_index, Dee_TMH_seq_enumerate_index, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_seq_enumerate_index[2] = {
-	MH_INIT_USING_INIT(&default__seq_enumerate_index__with__seq_enumerate, Dee_TMH_seq_enumerate, Dee_TMH_COUNT),
 	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_using tpconst mh_using_seq_makeenumeration_with_range[2] = {
@@ -1027,10 +993,6 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_contains[2
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_contains, NULL, Dee_SEQCLASS_SEQ, &default__seq_contains__with_callattr_contains),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_seq_contains[2] = {
-	MH_INIT_USING_INIT(&default__seq_contains__with__seq_operator_contains, Dee_TMH_seq_operator_contains, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_contains_with_key[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_contains, NULL, Dee_SEQCLASS_SEQ, &default__seq_contains_with_key__with_callattr_contains),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
@@ -1046,10 +1008,6 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_contains_w
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_seq_operator_contains[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_contains, NULL, Dee_SEQCLASS_SEQ, &default__seq_operator_contains__with_callattr_contains),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_seq_operator_contains[2] = {
-	MH_INIT_USING_INIT(&default__seq_operator_contains__with__seq_contains, Dee_TMH_seq_contains, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_seq_operator_contains[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_contains, NULL, Dee_SEQCLASS_SEQ),
@@ -1470,17 +1428,9 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_iter[2] =
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_iter, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_foreach_pair[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_foreach_pair__with__map_operator_iter, Dee_TMH_map_operator_iter, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_foreach_pair[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_sizeob[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_sizeob__with__map_operator_size, Dee_TMH_map_operator_size, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_sizeob[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_sizeob, NULL, Dee_SEQCLASS_MAP),
@@ -1512,97 +1462,53 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_getitem[2
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem[7] = {
+PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem[6] = {
 	MH_INIT_USING_INIT(&default__map_operator_trygetitem__with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_len_hash, Dee_TMH_map_operator_trygetitem_index, Dee_TMH_map_operator_trygetitem_string_len_hash),
 	MH_INIT_USING_INIT(&default__map_operator_trygetitem__with__map_operator_trygetitem_index__and__map_operator_trygetitem_string_hash, Dee_TMH_map_operator_trygetitem_index, Dee_TMH_map_operator_trygetitem_string_hash),
 	MH_INIT_USING_INIT(&default__map_operator_trygetitem__with__map_operator_trygetitem_string_len_hash, Dee_TMH_map_operator_trygetitem_string_len_hash, Dee_TMH_COUNT),
 	MH_INIT_USING_INIT(&default__map_operator_trygetitem__with__map_operator_trygetitem_string_hash, Dee_TMH_map_operator_trygetitem_string_hash, Dee_TMH_COUNT),
 	MH_INIT_USING_INIT(&default__map_operator_trygetitem__with__map_operator_trygetitem_index, Dee_TMH_map_operator_trygetitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__map_operator_trygetitem__with__map_operator_getitem, Dee_TMH_map_operator_getitem, Dee_TMH_COUNT),
 	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_trygetitem[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem_index[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_getitem_index__with__map_operator_getitem, Dee_TMH_map_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_getitem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_index, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem_index[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_trygetitem_index__with__map_operator_trygetitem, Dee_TMH_map_operator_trygetitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_trygetitem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_index, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem_string_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_getitem_string_hash__with__map_operator_getitem, Dee_TMH_map_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_getitem_string_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem_string_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_trygetitem_string_hash__with__map_operator_trygetitem, Dee_TMH_map_operator_trygetitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_trygetitem_string_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_getitem_string_len_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_getitem_string_len_hash__with__map_operator_getitem, Dee_TMH_map_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_getitem_string_len_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_getitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_trygetitem_string_len_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_trygetitem_string_len_hash__with__map_operator_trygetitem, Dee_TMH_map_operator_trygetitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_trygetitem_string_len_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trygetitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_bounditem__with__map_operator_getitem, Dee_TMH_map_operator_getitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_bounditem[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem_index[3] = {
-	MH_INIT_USING_INIT(&default__map_operator_bounditem_index__with__map_operator_bounditem, Dee_TMH_map_operator_bounditem, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__map_operator_bounditem_index__with__map_operator_getitem_index, Dee_TMH_map_operator_getitem_index, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_bounditem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_index, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem_string_hash[3] = {
-	MH_INIT_USING_INIT(&default__map_operator_bounditem_string_hash__with__map_operator_bounditem, Dee_TMH_map_operator_bounditem, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__map_operator_bounditem_string_hash__with__map_operator_getitem_string_hash, Dee_TMH_map_operator_getitem_string_hash, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_bounditem_string_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_bounditem_string_len_hash[3] = {
-	MH_INIT_USING_INIT(&default__map_operator_bounditem_string_len_hash__with__map_operator_bounditem, Dee_TMH_map_operator_bounditem, Dee_TMH_COUNT),
-	MH_INIT_USING_INIT(&default__map_operator_bounditem_string_len_hash__with__map_operator_getitem_string_len_hash, Dee_TMH_map_operator_getitem_string_len_hash, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_bounditem_string_len_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bounditem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
@@ -1636,25 +1542,13 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_delitem[2
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_delitem_index[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_delitem_index__with__map_operator_delitem, Dee_TMH_map_operator_delitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_delitem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_index, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_delitem_string_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_delitem_string_hash__with__map_operator_delitem, Dee_TMH_map_operator_delitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_delitem_string_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_delitem_string_len_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_delitem_string_len_hash__with__map_operator_delitem, Dee_TMH_map_operator_delitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_delitem_string_len_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_delitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
@@ -1672,25 +1566,13 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_setitem[2
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_setitem_index[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_setitem_index__with__map_operator_setitem, Dee_TMH_map_operator_setitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_setitem_index[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_index, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_setitem_string_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_setitem_string_hash__with__map_operator_setitem, Dee_TMH_map_operator_setitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_setitem_string_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_string_hash, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_setitem_string_len_hash[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_setitem_string_len_hash__with__map_operator_setitem, Dee_TMH_map_operator_setitem, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_setitem_string_len_hash[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_setitem_string_len_hash, NULL, Dee_SEQCLASS_MAP),
@@ -1724,10 +1606,6 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_enumerate[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_foreach_pair, NULL, Dee_SEQCLASS_MAP),
 	MH_INIT_SPEC_OPERATOR_END
 };
-PRIVATE struct mh_init_using tpconst mh_using_map_enumerate_range[2] = {
-	MH_INIT_USING_INIT(&default__map_enumerate_range__with__map_enumerate, Dee_TMH_map_enumerate, Dee_TMH_COUNT),
-	MH_INIT_USING_END
-};
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_operator_compare_eq[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_equals, NULL, Dee_SEQCLASS_MAP, &default__map_operator_compare_eq__with_callattr_equals),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
@@ -1739,10 +1617,6 @@ PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_compare_e
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_operator_trycompare_eq[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_equals, NULL, Dee_SEQCLASS_MAP, &default__map_operator_trycompare_eq__with_callattr_equals),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
-};
-PRIVATE struct mh_init_using tpconst mh_using_map_operator_trycompare_eq[2] = {
-	MH_INIT_USING_INIT(&default__map_operator_trycompare_eq__with__map_operator_compare_eq, Dee_TMH_map_operator_compare_eq, Dee_TMH_COUNT),
-	MH_INIT_USING_END
 };
 PRIVATE struct mh_init_spec_operator tpconst mh_operators_map_operator_trycompare_eq[2] = {
 	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_trycompare_eq, NULL, Dee_SEQCLASS_MAP),
@@ -1877,19 +1751,19 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___seq_iter__, NULL, NULL, mh_operators_seq_operator_iter, &default__seq_operator_iter__with_callattr___seq_iter__, offsetof(struct Dee_type_mh_cache, mhc___seq_iter__), MH_KIND_METHOD, &default__seq_operator_iter__with_callobjectcache___seq_iter__, &mh_select_seq_operator_iter),
 	MH_INIT_SPEC_INIT(&str___seq_iter__, NULL, mh_using_seq_operator_foreach, mh_operators_seq_operator_foreach, &default__seq_operator_foreach__with_callattr___seq_iter__, offsetof(struct Dee_type_mh_cache, mhc___seq_iter__), MH_KIND_METHOD, &default__seq_operator_foreach__with_callobjectcache___seq_iter__, &mh_select_seq_operator_foreach),
 	MH_INIT_SPEC_INIT(&str___seq_iter__, NULL, mh_using_seq_operator_foreach_pair, mh_operators_seq_operator_foreach_pair, &default__seq_operator_foreach_pair__with_callattr___seq_iter__, offsetof(struct Dee_type_mh_cache, mhc___seq_iter__), MH_KIND_METHOD, &default__seq_operator_foreach_pair__with_callobjectcache___seq_iter__, &mh_select_seq_operator_foreach_pair),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_getitem, mh_operators_seq_operator_getitem, &default__seq_operator_getitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_getitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_getitem),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_getitem_index, mh_operators_seq_operator_getitem_index, &default__seq_operator_getitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_getitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_getitem_index),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_getitem, &default__seq_operator_getitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_getitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_getitem),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_getitem_index, &default__seq_operator_getitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_getitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_getitem_index),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_trygetitem, &default__seq_operator_trygetitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_trygetitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_trygetitem),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_trygetitem_index, mh_operators_seq_operator_trygetitem_index, &default__seq_operator_trygetitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_trygetitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_trygetitem_index),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_trygetitem_index, &default__seq_operator_trygetitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_trygetitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_trygetitem_index),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_hasitem, &default__seq_operator_hasitem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_hasitem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_hasitem),
 	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_hasitem_index, &default__seq_operator_hasitem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_hasitem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_hasitem_index),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_bounditem, mh_operators_seq_operator_bounditem, &default__seq_operator_bounditem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_bounditem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_bounditem),
-	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, mh_using_seq_operator_bounditem_index, mh_operators_seq_operator_bounditem_index, &default__seq_operator_bounditem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_bounditem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_bounditem_index),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_bounditem, &default__seq_operator_bounditem__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_bounditem__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_bounditem),
+	MH_INIT_SPEC_INIT(&str___seq_getitem__, NULL, NULL, mh_operators_seq_operator_bounditem_index, &default__seq_operator_bounditem_index__with_callattr___seq_getitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_getitem__), MH_KIND_METHOD, &default__seq_operator_bounditem_index__with_callobjectcache___seq_getitem__, &mh_select_seq_operator_bounditem_index),
 	MH_INIT_SPEC_INIT(&str___seq_delitem__, NULL, mh_using_seq_operator_delitem, mh_operators_seq_operator_delitem, &default__seq_operator_delitem__with_callattr___seq_delitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_delitem__), MH_KIND_METHOD, &default__seq_operator_delitem__with_callobjectcache___seq_delitem__, &mh_select_seq_operator_delitem),
 	MH_INIT_SPEC_INIT(&str___seq_delitem__, NULL, NULL, mh_operators_seq_operator_delitem_index, &default__seq_operator_delitem_index__with_callattr___seq_delitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_delitem__), MH_KIND_METHOD, &default__seq_operator_delitem_index__with_callobjectcache___seq_delitem__, &mh_select_seq_operator_delitem_index),
 	MH_INIT_SPEC_INIT(&str___seq_setitem__, NULL, mh_using_seq_operator_setitem, mh_operators_seq_operator_setitem, &default__seq_operator_setitem__with_callattr___seq_setitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_setitem__), MH_KIND_METHOD, &default__seq_operator_setitem__with_callobjectcache___seq_setitem__, &mh_select_seq_operator_setitem),
 	MH_INIT_SPEC_INIT(&str___seq_setitem__, NULL, NULL, mh_operators_seq_operator_setitem_index, &default__seq_operator_setitem_index__with_callattr___seq_setitem__, offsetof(struct Dee_type_mh_cache, mhc___seq_setitem__), MH_KIND_METHOD, &default__seq_operator_setitem_index__with_callobjectcache___seq_setitem__, &mh_select_seq_operator_setitem_index),
-	MH_INIT_SPEC_INIT(&str___seq_getrange__, NULL, mh_using_seq_operator_getrange, mh_operators_seq_operator_getrange, &default__seq_operator_getrange__with_callattr___seq_getrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_getrange__), MH_KIND_METHOD, &default__seq_operator_getrange__with_callobjectcache___seq_getrange__, &mh_select_seq_operator_getrange),
+	MH_INIT_SPEC_INIT(&str___seq_getrange__, NULL, NULL, mh_operators_seq_operator_getrange, &default__seq_operator_getrange__with_callattr___seq_getrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_getrange__), MH_KIND_METHOD, &default__seq_operator_getrange__with_callobjectcache___seq_getrange__, &mh_select_seq_operator_getrange),
 	MH_INIT_SPEC_INIT(&str___seq_getrange__, NULL, mh_using_seq_operator_getrange_index, mh_operators_seq_operator_getrange_index, &default__seq_operator_getrange_index__with_callattr___seq_getrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_getrange__), MH_KIND_METHOD, &default__seq_operator_getrange_index__with_callobjectcache___seq_getrange__, &mh_select_seq_operator_getrange_index),
 	MH_INIT_SPEC_INIT(&str___seq_getrange__, NULL, mh_using_seq_operator_getrange_index_n, mh_operators_seq_operator_getrange_index_n, &default__seq_operator_getrange_index_n__with_callattr___seq_getrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_getrange__), MH_KIND_METHOD, &default__seq_operator_getrange_index_n__with_callobjectcache___seq_getrange__, &mh_select_seq_operator_getrange_index_n),
 	MH_INIT_SPEC_INIT(&str___seq_delrange__, NULL, mh_using_seq_operator_delrange, mh_operators_seq_operator_delrange, &default__seq_operator_delrange__with_callattr___seq_delrange__, offsetof(struct Dee_type_mh_cache, mhc___seq_delrange__), MH_KIND_METHOD, &default__seq_operator_delrange__with_callobjectcache___seq_delrange__, &mh_select_seq_operator_delrange),
@@ -1902,7 +1776,7 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___seq_hash__, NULL, NULL, mh_operators_seq_operator_hash, &default__seq_operator_hash__with_callattr___seq_hash__, offsetof(struct Dee_type_mh_cache, mhc___seq_hash__), MH_KIND_METHOD, &default__seq_operator_hash__with_callobjectcache___seq_hash__, &mh_select_seq_operator_hash),
 	MH_INIT_SPEC_INIT(&str___seq_compare__, mh_secondary_seq_operator_compare, NULL, mh_operators_seq_operator_compare, &default__seq_operator_compare__with_callattr___seq_compare__, offsetof(struct Dee_type_mh_cache, mhc___seq_compare__), MH_KIND_METHOD, &default__seq_operator_compare__with_callobjectcache___seq_compare__, &mh_select_seq_operator_compare),
 	MH_INIT_SPEC_INIT(&str___seq_compare_eq__, mh_secondary_seq_operator_compare_eq, NULL, mh_operators_seq_operator_compare_eq, &default__seq_operator_compare_eq__with_callattr___seq_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___seq_compare_eq__), MH_KIND_METHOD, &default__seq_operator_compare_eq__with_callobjectcache___seq_compare_eq__, &mh_select_seq_operator_compare_eq),
-	MH_INIT_SPEC_INIT(&str___seq_compare_eq__, mh_secondary_seq_operator_trycompare_eq, mh_using_seq_operator_trycompare_eq, mh_operators_seq_operator_trycompare_eq, &default__seq_operator_trycompare_eq__with_callattr___seq_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___seq_compare_eq__), MH_KIND_METHOD, &default__seq_operator_trycompare_eq__with_callobjectcache___seq_compare_eq__, &mh_select_seq_operator_trycompare_eq),
+	MH_INIT_SPEC_INIT(&str___seq_compare_eq__, mh_secondary_seq_operator_trycompare_eq, NULL, mh_operators_seq_operator_trycompare_eq, &default__seq_operator_trycompare_eq__with_callattr___seq_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___seq_compare_eq__), MH_KIND_METHOD, &default__seq_operator_trycompare_eq__with_callobjectcache___seq_compare_eq__, &mh_select_seq_operator_trycompare_eq),
 	MH_INIT_SPEC_INIT(&str___seq_eq__, NULL, NULL, mh_operators_seq_operator_eq, &default__seq_operator_eq__with_callattr___seq_eq__, offsetof(struct Dee_type_mh_cache, mhc___seq_eq__), MH_KIND_METHOD, &default__seq_operator_eq__with_callobjectcache___seq_eq__, &mh_select_seq_operator_eq),
 	MH_INIT_SPEC_INIT(&str___seq_ne__, NULL, NULL, mh_operators_seq_operator_ne, &default__seq_operator_ne__with_callattr___seq_ne__, offsetof(struct Dee_type_mh_cache, mhc___seq_ne__), MH_KIND_METHOD, &default__seq_operator_ne__with_callobjectcache___seq_ne__, &mh_select_seq_operator_ne),
 	MH_INIT_SPEC_INIT(&str___seq_lo__, NULL, NULL, mh_operators_seq_operator_lo, &default__seq_operator_lo__with_callattr___seq_lo__, offsetof(struct Dee_type_mh_cache, mhc___seq_lo__), MH_KIND_METHOD, &default__seq_operator_lo__with_callobjectcache___seq_lo__, &mh_select_seq_operator_lo),
@@ -1914,7 +1788,7 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___seq_inplace_add__, NULL, NULL, mh_operators_seq_operator_inplace_add, &default__seq_operator_inplace_add__with_callattr___seq_inplace_add__, offsetof(struct Dee_type_mh_cache, mhc___seq_inplace_add__), MH_KIND_METHOD, &default__seq_operator_inplace_add__with_callobjectcache___seq_inplace_add__, &mh_select_seq_operator_inplace_add),
 	MH_INIT_SPEC_INIT(&str___seq_inplace_mul__, NULL, NULL, mh_operators_seq_operator_inplace_mul, &default__seq_operator_inplace_mul__with_callattr___seq_inplace_mul__, offsetof(struct Dee_type_mh_cache, mhc___seq_inplace_mul__), MH_KIND_METHOD, &default__seq_operator_inplace_mul__with_callobjectcache___seq_inplace_mul__, &mh_select_seq_operator_inplace_mul),
 	MH_INIT_SPEC_INIT(&str___seq_enumerate__, NULL, mh_using_seq_enumerate, NULL, &default__seq_enumerate__with_callattr___seq_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate__), MH_KIND_METHOD, &default__seq_enumerate__with_callobjectcache___seq_enumerate__, &mh_select_seq_enumerate),
-	MH_INIT_SPEC_INIT(&str___seq_enumerate__, NULL, mh_using_seq_enumerate_index, NULL, &default__seq_enumerate_index__with_callattr___seq_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate__), MH_KIND_METHOD, &default__seq_enumerate_index__with_callobjectcache___seq_enumerate__, &mh_select_seq_enumerate_index),
+	MH_INIT_SPEC_INIT(&str___seq_enumerate__, NULL, NULL, NULL, &default__seq_enumerate_index__with_callattr___seq_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate__), MH_KIND_METHOD, &default__seq_enumerate_index__with_callobjectcache___seq_enumerate__, &mh_select_seq_enumerate_index),
 	MH_INIT_SPEC_INIT(&str___seq_enumerate_items__, NULL, NULL, NULL, &default__seq_makeenumeration__with_callattr___seq_enumerate_items__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate_items__), MH_KIND_METHOD, &default__seq_makeenumeration__with_callobjectcache___seq_enumerate_items__, &mh_select_seq_makeenumeration),
 	MH_INIT_SPEC_INIT(&str___seq_enumerate_items__, NULL, mh_using_seq_makeenumeration_with_range, NULL, &default__seq_makeenumeration_with_range__with_callattr___seq_enumerate_items__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate_items__), MH_KIND_METHOD, &default__seq_makeenumeration_with_range__with_callobjectcache___seq_enumerate_items__, &mh_select_seq_makeenumeration_with_range),
 	MH_INIT_SPEC_INIT(&str___seq_enumerate_items__, NULL, mh_using_seq_makeenumeration_with_intrange, NULL, &default__seq_makeenumeration_with_intrange__with_callattr___seq_enumerate_items__, offsetof(struct Dee_type_mh_cache, mhc___seq_enumerate_items__), MH_KIND_METHOD, &default__seq_makeenumeration_with_intrange__with_callobjectcache___seq_enumerate_items__, &mh_select_seq_makeenumeration_with_intrange),
@@ -1967,11 +1841,11 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___seq_count__, mh_secondary_seq_count_with_key, NULL, NULL, &default__seq_count_with_key__with_callattr___seq_count__, offsetof(struct Dee_type_mh_cache, mhc___seq_count__), MH_KIND_METHOD, &default__seq_count_with_key__with_callobjectcache___seq_count__, &mh_select_seq_count_with_key),
 	MH_INIT_SPEC_INIT(&str___seq_count__, mh_secondary_seq_count_with_range, NULL, NULL, &default__seq_count_with_range__with_callattr___seq_count__, offsetof(struct Dee_type_mh_cache, mhc___seq_count__), MH_KIND_METHOD, &default__seq_count_with_range__with_callobjectcache___seq_count__, &mh_select_seq_count_with_range),
 	MH_INIT_SPEC_INIT(&str___seq_count__, mh_secondary_seq_count_with_range_and_key, NULL, NULL, &default__seq_count_with_range_and_key__with_callattr___seq_count__, offsetof(struct Dee_type_mh_cache, mhc___seq_count__), MH_KIND_METHOD, &default__seq_count_with_range_and_key__with_callobjectcache___seq_count__, &mh_select_seq_count_with_range_and_key),
-	MH_INIT_SPEC_INIT(&str___seq_contains__, mh_secondary_seq_contains, mh_using_seq_contains, NULL, &default__seq_contains__with_callattr___seq_contains__, offsetof(struct Dee_type_mh_cache, mhc___seq_contains__), MH_KIND_METHOD, &default__seq_contains__with_callobjectcache___seq_contains__, &mh_select_seq_contains),
+	MH_INIT_SPEC_INIT(&str___seq_contains__, mh_secondary_seq_contains, NULL, NULL, &default__seq_contains__with_callattr___seq_contains__, offsetof(struct Dee_type_mh_cache, mhc___seq_contains__), MH_KIND_METHOD, &default__seq_contains__with_callobjectcache___seq_contains__, &mh_select_seq_contains),
 	MH_INIT_SPEC_INIT(&str___seq_contains__, mh_secondary_seq_contains_with_key, NULL, NULL, &default__seq_contains_with_key__with_callattr___seq_contains__, offsetof(struct Dee_type_mh_cache, mhc___seq_contains__), MH_KIND_METHOD, &default__seq_contains_with_key__with_callobjectcache___seq_contains__, &mh_select_seq_contains_with_key),
 	MH_INIT_SPEC_INIT(&str___seq_contains__, mh_secondary_seq_contains_with_range, NULL, NULL, &default__seq_contains_with_range__with_callattr___seq_contains__, offsetof(struct Dee_type_mh_cache, mhc___seq_contains__), MH_KIND_METHOD, &default__seq_contains_with_range__with_callobjectcache___seq_contains__, &mh_select_seq_contains_with_range),
 	MH_INIT_SPEC_INIT(&str___seq_contains__, mh_secondary_seq_contains_with_range_and_key, NULL, NULL, &default__seq_contains_with_range_and_key__with_callattr___seq_contains__, offsetof(struct Dee_type_mh_cache, mhc___seq_contains__), MH_KIND_METHOD, &default__seq_contains_with_range_and_key__with_callobjectcache___seq_contains__, &mh_select_seq_contains_with_range_and_key),
-	MH_INIT_SPEC_INIT(&str___seq_contains__, mh_secondary_seq_operator_contains, mh_using_seq_operator_contains, mh_operators_seq_operator_contains, &default__seq_operator_contains__with_callattr___seq_contains__, offsetof(struct Dee_type_mh_cache, mhc___seq_contains__), MH_KIND_METHOD, &default__seq_operator_contains__with_callobjectcache___seq_contains__, &mh_select_seq_operator_contains),
+	MH_INIT_SPEC_INIT(&str___seq_contains__, mh_secondary_seq_operator_contains, NULL, mh_operators_seq_operator_contains, &default__seq_operator_contains__with_callattr___seq_contains__, offsetof(struct Dee_type_mh_cache, mhc___seq_contains__), MH_KIND_METHOD, &default__seq_operator_contains__with_callobjectcache___seq_contains__, &mh_select_seq_operator_contains),
 	MH_INIT_SPEC_INIT(&str___seq_locate__, mh_secondary_seq_locate, NULL, NULL, &default__seq_locate__with_callattr___seq_locate__, offsetof(struct Dee_type_mh_cache, mhc___seq_locate__), MH_KIND_METHOD, &default__seq_locate__with_callobjectcache___seq_locate__, &mh_select_seq_locate),
 	MH_INIT_SPEC_INIT(&str___seq_locate__, mh_secondary_seq_locate_with_range, NULL, NULL, &default__seq_locate_with_range__with_callattr___seq_locate__, offsetof(struct Dee_type_mh_cache, mhc___seq_locate__), MH_KIND_METHOD, &default__seq_locate_with_range__with_callobjectcache___seq_locate__, &mh_select_seq_locate_with_range),
 	MH_INIT_SPEC_INIT(&str___seq_rlocate__, mh_secondary_seq_rlocate, NULL, NULL, &default__seq_rlocate__with_callattr___seq_rlocate__, offsetof(struct Dee_type_mh_cache, mhc___seq_rlocate__), MH_KIND_METHOD, &default__seq_rlocate__with_callobjectcache___seq_rlocate__, &mh_select_seq_rlocate),
@@ -2060,45 +1934,45 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___set_last__, mh_secondary_set_dellast, NULL, NULL, &default__set_dellast__with_callattr___set_last__, offsetof(struct Dee_type_mh_cache, mhc_del___set_last__), MH_KIND_GETSET_DEL, &default__set_dellast__with_callobjectcache___set_last__, &mh_select_set_dellast),
 	MH_INIT_SPEC_INIT(&str___set_last__, mh_secondary_set_setlast, NULL, NULL, &default__set_setlast__with_callattr___set_last__, offsetof(struct Dee_type_mh_cache, mhc_set___set_last__), MH_KIND_GETSET_SET, &default__set_setlast__with_callobjectcache___set_last__, &mh_select_set_setlast),
 	MH_INIT_SPEC_INIT(&str___map_iter__, NULL, NULL, mh_operators_map_operator_iter, &default__map_operator_iter__with_callattr___map_iter__, offsetof(struct Dee_type_mh_cache, mhc___map_iter__), MH_KIND_METHOD, &default__map_operator_iter__with_callobjectcache___map_iter__, &mh_select_map_operator_iter),
-	MH_INIT_SPEC_INIT(&str___map_iter__, NULL, mh_using_map_operator_foreach_pair, mh_operators_map_operator_foreach_pair, &default__map_operator_foreach_pair__with_callattr___map_iter__, offsetof(struct Dee_type_mh_cache, mhc___map_iter__), MH_KIND_METHOD, &default__map_operator_foreach_pair__with_callobjectcache___map_iter__, &mh_select_map_operator_foreach_pair),
-	MH_INIT_SPEC_INIT(&str___map_size__, NULL, mh_using_map_operator_sizeob, mh_operators_map_operator_sizeob, &default__map_operator_sizeob__with_callattr___map_size__, offsetof(struct Dee_type_mh_cache, mhc___map_size__), MH_KIND_METHOD, &default__map_operator_sizeob__with_callobjectcache___map_size__, &mh_select_map_operator_sizeob),
+	MH_INIT_SPEC_INIT(&str___map_iter__, NULL, NULL, mh_operators_map_operator_foreach_pair, &default__map_operator_foreach_pair__with_callattr___map_iter__, offsetof(struct Dee_type_mh_cache, mhc___map_iter__), MH_KIND_METHOD, &default__map_operator_foreach_pair__with_callobjectcache___map_iter__, &mh_select_map_operator_foreach_pair),
+	MH_INIT_SPEC_INIT(&str___map_size__, NULL, NULL, mh_operators_map_operator_sizeob, &default__map_operator_sizeob__with_callattr___map_size__, offsetof(struct Dee_type_mh_cache, mhc___map_size__), MH_KIND_METHOD, &default__map_operator_sizeob__with_callobjectcache___map_size__, &mh_select_map_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___map_size__, NULL, mh_using_map_operator_size, mh_operators_map_operator_size, &default__map_operator_size__with_callattr___map_size__, offsetof(struct Dee_type_mh_cache, mhc___map_size__), MH_KIND_METHOD, &default__map_operator_size__with_callobjectcache___map_size__, &mh_select_map_operator_size),
 	MH_INIT_SPEC_INIT(&str___map_hash__, NULL, NULL, mh_operators_map_operator_hash, &default__map_operator_hash__with_callattr___map_hash__, offsetof(struct Dee_type_mh_cache, mhc___map_hash__), MH_KIND_METHOD, &default__map_operator_hash__with_callobjectcache___map_hash__, &mh_select_map_operator_hash),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_getitem, mh_operators_map_operator_getitem, &default__map_operator_getitem__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem__with_callobjectcache___map_getitem__, &mh_select_map_operator_getitem),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_trygetitem, mh_operators_map_operator_trygetitem, &default__map_operator_trygetitem__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem__with_callobjectcache___map_getitem__, &mh_select_map_operator_trygetitem),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_getitem_index, mh_operators_map_operator_getitem_index, &default__map_operator_getitem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem_index__with_callobjectcache___map_getitem__, &mh_select_map_operator_getitem_index),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_trygetitem_index, mh_operators_map_operator_trygetitem_index, &default__map_operator_trygetitem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem_index__with_callobjectcache___map_getitem__, &mh_select_map_operator_trygetitem_index),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_getitem_string_hash, mh_operators_map_operator_getitem_string_hash, &default__map_operator_getitem_string_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem_string_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_getitem_string_hash),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_trygetitem_string_hash, mh_operators_map_operator_trygetitem_string_hash, &default__map_operator_trygetitem_string_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem_string_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_trygetitem_string_hash),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_getitem_string_len_hash, mh_operators_map_operator_getitem_string_len_hash, &default__map_operator_getitem_string_len_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem_string_len_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_getitem_string_len_hash),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_trygetitem_string_len_hash, mh_operators_map_operator_trygetitem_string_len_hash, &default__map_operator_trygetitem_string_len_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem_string_len_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_trygetitem_string_len_hash),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_bounditem, mh_operators_map_operator_bounditem, &default__map_operator_bounditem__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_bounditem_index, mh_operators_map_operator_bounditem_index, &default__map_operator_bounditem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem_index__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem_index),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_bounditem_string_hash, mh_operators_map_operator_bounditem_string_hash, &default__map_operator_bounditem_string_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem_string_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem_string_hash),
-	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, mh_using_map_operator_bounditem_string_len_hash, mh_operators_map_operator_bounditem_string_len_hash, &default__map_operator_bounditem_string_len_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem_string_len_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem_string_len_hash),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_getitem_index, &default__map_operator_getitem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem_index__with_callobjectcache___map_getitem__, &mh_select_map_operator_getitem_index),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_trygetitem_index, &default__map_operator_trygetitem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem_index__with_callobjectcache___map_getitem__, &mh_select_map_operator_trygetitem_index),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_getitem_string_hash, &default__map_operator_getitem_string_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem_string_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_getitem_string_hash),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_trygetitem_string_hash, &default__map_operator_trygetitem_string_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem_string_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_trygetitem_string_hash),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_getitem_string_len_hash, &default__map_operator_getitem_string_len_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_getitem_string_len_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_getitem_string_len_hash),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_trygetitem_string_len_hash, &default__map_operator_trygetitem_string_len_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_trygetitem_string_len_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_trygetitem_string_len_hash),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_bounditem, &default__map_operator_bounditem__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_bounditem_index, &default__map_operator_bounditem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem_index__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem_index),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_bounditem_string_hash, &default__map_operator_bounditem_string_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem_string_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem_string_hash),
+	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_bounditem_string_len_hash, &default__map_operator_bounditem_string_len_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_bounditem_string_len_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_bounditem_string_len_hash),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_hasitem, &default__map_operator_hasitem__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_hasitem__with_callobjectcache___map_getitem__, &mh_select_map_operator_hasitem),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_hasitem_index, &default__map_operator_hasitem_index__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_hasitem_index__with_callobjectcache___map_getitem__, &mh_select_map_operator_hasitem_index),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_hasitem_string_hash, &default__map_operator_hasitem_string_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_hasitem_string_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_hasitem_string_hash),
 	MH_INIT_SPEC_INIT(&str___map_getitem__, NULL, NULL, mh_operators_map_operator_hasitem_string_len_hash, &default__map_operator_hasitem_string_len_hash__with_callattr___map_getitem__, offsetof(struct Dee_type_mh_cache, mhc___map_getitem__), MH_KIND_METHOD, &default__map_operator_hasitem_string_len_hash__with_callobjectcache___map_getitem__, &mh_select_map_operator_hasitem_string_len_hash),
 	MH_INIT_SPEC_INIT(&str___map_delitem__, NULL, mh_using_map_operator_delitem, mh_operators_map_operator_delitem, &default__map_operator_delitem__with_callattr___map_delitem__, offsetof(struct Dee_type_mh_cache, mhc___map_delitem__), MH_KIND_METHOD, &default__map_operator_delitem__with_callobjectcache___map_delitem__, &mh_select_map_operator_delitem),
-	MH_INIT_SPEC_INIT(&str___map_delitem__, NULL, mh_using_map_operator_delitem_index, mh_operators_map_operator_delitem_index, &default__map_operator_delitem_index__with_callattr___map_delitem__, offsetof(struct Dee_type_mh_cache, mhc___map_delitem__), MH_KIND_METHOD, &default__map_operator_delitem_index__with_callobjectcache___map_delitem__, &mh_select_map_operator_delitem_index),
-	MH_INIT_SPEC_INIT(&str___map_delitem__, NULL, mh_using_map_operator_delitem_string_hash, mh_operators_map_operator_delitem_string_hash, &default__map_operator_delitem_string_hash__with_callattr___map_delitem__, offsetof(struct Dee_type_mh_cache, mhc___map_delitem__), MH_KIND_METHOD, &default__map_operator_delitem_string_hash__with_callobjectcache___map_delitem__, &mh_select_map_operator_delitem_string_hash),
-	MH_INIT_SPEC_INIT(&str___map_delitem__, NULL, mh_using_map_operator_delitem_string_len_hash, mh_operators_map_operator_delitem_string_len_hash, &default__map_operator_delitem_string_len_hash__with_callattr___map_delitem__, offsetof(struct Dee_type_mh_cache, mhc___map_delitem__), MH_KIND_METHOD, &default__map_operator_delitem_string_len_hash__with_callobjectcache___map_delitem__, &mh_select_map_operator_delitem_string_len_hash),
+	MH_INIT_SPEC_INIT(&str___map_delitem__, NULL, NULL, mh_operators_map_operator_delitem_index, &default__map_operator_delitem_index__with_callattr___map_delitem__, offsetof(struct Dee_type_mh_cache, mhc___map_delitem__), MH_KIND_METHOD, &default__map_operator_delitem_index__with_callobjectcache___map_delitem__, &mh_select_map_operator_delitem_index),
+	MH_INIT_SPEC_INIT(&str___map_delitem__, NULL, NULL, mh_operators_map_operator_delitem_string_hash, &default__map_operator_delitem_string_hash__with_callattr___map_delitem__, offsetof(struct Dee_type_mh_cache, mhc___map_delitem__), MH_KIND_METHOD, &default__map_operator_delitem_string_hash__with_callobjectcache___map_delitem__, &mh_select_map_operator_delitem_string_hash),
+	MH_INIT_SPEC_INIT(&str___map_delitem__, NULL, NULL, mh_operators_map_operator_delitem_string_len_hash, &default__map_operator_delitem_string_len_hash__with_callattr___map_delitem__, offsetof(struct Dee_type_mh_cache, mhc___map_delitem__), MH_KIND_METHOD, &default__map_operator_delitem_string_len_hash__with_callobjectcache___map_delitem__, &mh_select_map_operator_delitem_string_len_hash),
 	MH_INIT_SPEC_INIT(&str___map_setitem__, NULL, mh_using_map_operator_setitem, mh_operators_map_operator_setitem, &default__map_operator_setitem__with_callattr___map_setitem__, offsetof(struct Dee_type_mh_cache, mhc___map_setitem__), MH_KIND_METHOD, &default__map_operator_setitem__with_callobjectcache___map_setitem__, &mh_select_map_operator_setitem),
-	MH_INIT_SPEC_INIT(&str___map_setitem__, NULL, mh_using_map_operator_setitem_index, mh_operators_map_operator_setitem_index, &default__map_operator_setitem_index__with_callattr___map_setitem__, offsetof(struct Dee_type_mh_cache, mhc___map_setitem__), MH_KIND_METHOD, &default__map_operator_setitem_index__with_callobjectcache___map_setitem__, &mh_select_map_operator_setitem_index),
-	MH_INIT_SPEC_INIT(&str___map_setitem__, NULL, mh_using_map_operator_setitem_string_hash, mh_operators_map_operator_setitem_string_hash, &default__map_operator_setitem_string_hash__with_callattr___map_setitem__, offsetof(struct Dee_type_mh_cache, mhc___map_setitem__), MH_KIND_METHOD, &default__map_operator_setitem_string_hash__with_callobjectcache___map_setitem__, &mh_select_map_operator_setitem_string_hash),
-	MH_INIT_SPEC_INIT(&str___map_setitem__, NULL, mh_using_map_operator_setitem_string_len_hash, mh_operators_map_operator_setitem_string_len_hash, &default__map_operator_setitem_string_len_hash__with_callattr___map_setitem__, offsetof(struct Dee_type_mh_cache, mhc___map_setitem__), MH_KIND_METHOD, &default__map_operator_setitem_string_len_hash__with_callobjectcache___map_setitem__, &mh_select_map_operator_setitem_string_len_hash),
+	MH_INIT_SPEC_INIT(&str___map_setitem__, NULL, NULL, mh_operators_map_operator_setitem_index, &default__map_operator_setitem_index__with_callattr___map_setitem__, offsetof(struct Dee_type_mh_cache, mhc___map_setitem__), MH_KIND_METHOD, &default__map_operator_setitem_index__with_callobjectcache___map_setitem__, &mh_select_map_operator_setitem_index),
+	MH_INIT_SPEC_INIT(&str___map_setitem__, NULL, NULL, mh_operators_map_operator_setitem_string_hash, &default__map_operator_setitem_string_hash__with_callattr___map_setitem__, offsetof(struct Dee_type_mh_cache, mhc___map_setitem__), MH_KIND_METHOD, &default__map_operator_setitem_string_hash__with_callobjectcache___map_setitem__, &mh_select_map_operator_setitem_string_hash),
+	MH_INIT_SPEC_INIT(&str___map_setitem__, NULL, NULL, mh_operators_map_operator_setitem_string_len_hash, &default__map_operator_setitem_string_len_hash__with_callattr___map_setitem__, offsetof(struct Dee_type_mh_cache, mhc___map_setitem__), MH_KIND_METHOD, &default__map_operator_setitem_string_len_hash__with_callobjectcache___map_setitem__, &mh_select_map_operator_setitem_string_len_hash),
 	MH_INIT_SPEC_INIT(&str___map_contains__, NULL, NULL, mh_operators_map_operator_contains, &default__map_operator_contains__with_callattr___map_contains__, offsetof(struct Dee_type_mh_cache, mhc___map_contains__), MH_KIND_METHOD, &default__map_operator_contains__with_callobjectcache___map_contains__, &mh_select_map_operator_contains),
 	MH_INIT_SPEC_INIT(&str___map_keys__, mh_secondary_map_keys, NULL, NULL, &default__map_keys__with_callattr___map_keys__, offsetof(struct Dee_type_mh_cache, mhc_get___map_keys__), MH_KIND_GETSET_GET, &default__map_keys__with_callobjectcache___map_keys__, &mh_select_map_keys),
 	MH_INIT_SPEC_INIT(&str___map_iterkeys__, mh_secondary_map_iterkeys, NULL, NULL, &default__map_iterkeys__with_callattr___map_iterkeys__, offsetof(struct Dee_type_mh_cache, mhc_get___map_iterkeys__), MH_KIND_GETSET_GET, &default__map_iterkeys__with_callobjectcache___map_iterkeys__, &mh_select_map_iterkeys),
 	MH_INIT_SPEC_INIT(&str___map_values__, mh_secondary_map_values, NULL, NULL, &default__map_values__with_callattr___map_values__, offsetof(struct Dee_type_mh_cache, mhc_get___map_values__), MH_KIND_GETSET_GET, &default__map_values__with_callobjectcache___map_values__, &mh_select_map_values),
 	MH_INIT_SPEC_INIT(&str___map_itervalues__, mh_secondary_map_itervalues, NULL, NULL, &default__map_itervalues__with_callattr___map_itervalues__, offsetof(struct Dee_type_mh_cache, mhc_get___map_itervalues__), MH_KIND_GETSET_GET, &default__map_itervalues__with_callobjectcache___map_itervalues__, &mh_select_map_itervalues),
 	MH_INIT_SPEC_INIT(&str___map_enumerate__, NULL, mh_using_map_enumerate, mh_operators_map_enumerate, &default__map_enumerate__with_callattr___map_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___map_enumerate__), MH_KIND_METHOD, &default__map_enumerate__with_callobjectcache___map_enumerate__, &mh_select_map_enumerate),
-	MH_INIT_SPEC_INIT(&str___map_enumerate__, NULL, mh_using_map_enumerate_range, NULL, &default__map_enumerate_range__with_callattr___map_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___map_enumerate__), MH_KIND_METHOD, &default__map_enumerate_range__with_callobjectcache___map_enumerate__, &mh_select_map_enumerate_range),
+	MH_INIT_SPEC_INIT(&str___map_enumerate__, NULL, NULL, NULL, &default__map_enumerate_range__with_callattr___map_enumerate__, offsetof(struct Dee_type_mh_cache, mhc___map_enumerate__), MH_KIND_METHOD, &default__map_enumerate_range__with_callobjectcache___map_enumerate__, &mh_select_map_enumerate_range),
 	MH_INIT_SPEC_INIT(&str___map_enumerate_items__, NULL, NULL, NULL, &default__map_makeenumeration__with_callattr___map_enumerate_items__, offsetof(struct Dee_type_mh_cache, mhc___map_enumerate_items__), MH_KIND_METHOD, &default__map_makeenumeration__with_callobjectcache___map_enumerate_items__, &mh_select_map_makeenumeration),
 	MH_INIT_SPEC_INIT(&str___map_enumerate_items__, NULL, NULL, NULL, &default__map_makeenumeration_with_range__with_callattr___map_enumerate_items__, offsetof(struct Dee_type_mh_cache, mhc___map_enumerate_items__), MH_KIND_METHOD, &default__map_makeenumeration_with_range__with_callobjectcache___map_enumerate_items__, &mh_select_map_makeenumeration_with_range),
 	MH_INIT_SPEC_INIT(&str___map_compare_eq__, mh_secondary_map_operator_compare_eq, NULL, mh_operators_map_operator_compare_eq, &default__map_operator_compare_eq__with_callattr___map_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___map_compare_eq__), MH_KIND_METHOD, &default__map_operator_compare_eq__with_callobjectcache___map_compare_eq__, &mh_select_map_operator_compare_eq),
-	MH_INIT_SPEC_INIT(&str___map_compare_eq__, mh_secondary_map_operator_trycompare_eq, mh_using_map_operator_trycompare_eq, mh_operators_map_operator_trycompare_eq, &default__map_operator_trycompare_eq__with_callattr___map_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___map_compare_eq__), MH_KIND_METHOD, &default__map_operator_trycompare_eq__with_callobjectcache___map_compare_eq__, &mh_select_map_operator_trycompare_eq),
+	MH_INIT_SPEC_INIT(&str___map_compare_eq__, mh_secondary_map_operator_trycompare_eq, NULL, mh_operators_map_operator_trycompare_eq, &default__map_operator_trycompare_eq__with_callattr___map_compare_eq__, offsetof(struct Dee_type_mh_cache, mhc___map_compare_eq__), MH_KIND_METHOD, &default__map_operator_trycompare_eq__with_callobjectcache___map_compare_eq__, &mh_select_map_operator_trycompare_eq),
 	MH_INIT_SPEC_INIT(&str___map_eq__, NULL, NULL, mh_operators_map_operator_eq, &default__map_operator_eq__with_callattr___map_eq__, offsetof(struct Dee_type_mh_cache, mhc___map_eq__), MH_KIND_METHOD, &default__map_operator_eq__with_callobjectcache___map_eq__, &mh_select_map_operator_eq),
 	MH_INIT_SPEC_INIT(&str___map_ne__, NULL, NULL, mh_operators_map_operator_ne, &default__map_operator_ne__with_callattr___map_ne__, offsetof(struct Dee_type_mh_cache, mhc___map_ne__), MH_KIND_METHOD, &default__map_operator_ne__with_callobjectcache___map_ne__, &mh_select_map_operator_ne),
 	MH_INIT_SPEC_INIT(&str___map_lo__, NULL, NULL, mh_operators_map_operator_lo, &default__map_operator_lo__with_callattr___map_lo__, offsetof(struct Dee_type_mh_cache, mhc___map_lo__), MH_KIND_METHOD, &default__map_operator_lo__with_callobjectcache___map_lo__, &mh_select_map_operator_lo),
@@ -2130,11 +2004,11 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 /* clang-format on */
 
 /*[[[deemon (print_TMH_USING_MAXLEN from "..method-hints.method-hints")();]]]*/
-/* { Dee_TMH_seq_operator_getrange,         &default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n }
- * { Dee_TMH_seq_operator_getrange_index_n, &default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_getrange_index }
+/* { Dee_TMH_seq_operator_delrange,         &default__seq_operator_delrange__with__seq_operator_delrange_index__and__seq_operator_delrange_index_n }
+ * { Dee_TMH_seq_operator_delrange_index_n, &default__seq_operator_delrange_index_n__with__seq_operator_size__and__seq_operator_delrange_index }
  * { Dee_TMH_seq_operator_size,             &default__seq_operator_size__with__seq_operator_sizeob }
  * { Dee_TMH_seq_operator_sizeob,           &default__seq_operator_sizeob__with__seq_operator_size }
- * { Dee_TMH_seq_operator_getrange_index,   &default__seq_operator_getrange_index__with__seq_operator_getrange } */
+ * { Dee_TMH_seq_operator_delrange_index,   &default__seq_operator_delrange_index__with__seq_operator_delrange } */
 #define Dee_TMH_USING_MAXLEN 5 /* 6 with duplicates */
 /*[[[end]]]*/
 

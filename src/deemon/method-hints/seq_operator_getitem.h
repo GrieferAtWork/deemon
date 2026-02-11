@@ -39,7 +39,7 @@ __seq_getitem__.seq_operator_getitem([[nonnull]] DeeObject *self,
 	DeeRT_ErrIndexOutOfBoundsObj(self, index, DeeInt_Zero);
 	return NULL;
 }}
-%{using seq_operator_getitem_index: {
+%{$with__seq_operator_getitem_index = {
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
@@ -68,6 +68,20 @@ err:
 }} {
 	return LOCAL_CALLATTR(self, 1, &index);
 }
+
+
+seq_operator_getitem = {
+	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
+	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
+		return &$empty;
+	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_enumerate_index) {
+		if (REQUIRE_NODEFAULT(seq_enumerate))
+			return &$with__seq_enumerate;
+	}
+	if (seq_operator_getitem_index)
+		return &$with__seq_operator_getitem_index;
+};
+
 
 
 %[define(DEFINE_default_seq_getitem_index_with_foreach =
@@ -201,7 +215,7 @@ err_bad_bounds:
 err:
 	return NULL;
 }}
-%{using seq_operator_getitem: {
+%{$with__seq_operator_getitem = {
 	DREF DeeObject *result;
 	DREF DeeObject *indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
@@ -255,18 +269,6 @@ err:
 
 
 
-
-seq_operator_getitem = {
-	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
-	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)
-		return &$empty;
-	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__with__seq_enumerate_index) {
-		if (REQUIRE_NODEFAULT(seq_enumerate))
-			return &$with__seq_enumerate;
-	}
-	if (seq_operator_getitem_index)
-		return &$with__seq_operator_getitem_index;
-};
 
 seq_operator_getitem_index = {
 	DeeMH_seq_operator_foreach_t seq_operator_foreach = REQUIRE(seq_operator_foreach);
@@ -374,7 +376,7 @@ __seq_getitem__.seq_operator_trygetitem_index([[nonnull]] DeeObject *__restrict 
 %{unsupported_alias("default__seq_operator_getitem_index__unsupported")}
 %{$none = return_none}
 %{$empty = ITER_DONE}
-%{using seq_operator_getitem_index: {
+%{$with__seq_operator_getitem_index = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_getitem_index, self, index);
 	if unlikely(!result) {
 		if (DeeError_Catch(&DeeError_IndexError) ||
@@ -644,7 +646,8 @@ __seq_getitem__.seq_operator_bounditem([[nonnull]] DeeObject *self,
 })}
 %{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
-%{using seq_operator_bounditem_index: {
+%{$with__seq_operator_sizeob = "default__seq_operator_hasitem__with__seq_operator_sizeob"}
+%{$with__seq_operator_bounditem_index = {
 	size_t index_value;
 	if (DeeObject_AsSize(index, &index_value))
 		goto err;
@@ -654,7 +657,7 @@ err:
 		return Dee_BOUND_MISSING;
 	return Dee_BOUND_ERR;
 }}
-%{using seq_operator_getitem: {
+%{$with__seq_operator_getitem = {
 	DREF DeeObject *value = CALL_DEPENDENCY(seq_operator_getitem, self, index);
 	if (value) {
 		Dee_Decref(value);
@@ -683,7 +686,15 @@ err:
 seq_operator_bounditem = {
 	DeeMH_seq_operator_bounditem_index_t seq_operator_bounditem_index;
 	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__)) {
-		/* TODO: Optimizations */
+		DeeMH_seq_operator_sizeob_t seq_operator_sizeob = REQUIRE(seq_operator_sizeob);
+		if (seq_operator_sizeob == &default__seq_operator_sizeob__empty)
+			return &$empty;
+		if (seq_operator_sizeob != &default__seq_operator_sizeob__with__seq_operator_size)
+			return &$with__seq_operator_sizeob;
+		/* Fallthru to "seq_operator_bounditem_index" below -- that way,
+		 * - default__seq_operator_bounditem__with__seq_operator_bounditem_index
+		 * - default__seq_operator_bounditem_index__with__seq_operator_size
+		 * will probably be used, in which case no int-object gets created */
 	}
 	seq_operator_bounditem_index = REQUIRE(seq_operator_bounditem_index);
 	if (seq_operator_bounditem_index == &default__seq_operator_bounditem_index__empty)
@@ -710,7 +721,8 @@ __seq_getitem__.seq_operator_bounditem_index([[nonnull]] DeeObject *__restrict s
 })}
 %{$none = Dee_BOUND_YES}
 %{$empty = Dee_BOUND_MISSING}
-%{using seq_operator_getitem_index: {
+%{$with__seq_operator_size = "default__seq_operator_hasitem_index__with__seq_operator_size"}
+%{$with__seq_operator_getitem_index = {
 	DREF DeeObject *value = CALL_DEPENDENCY(seq_operator_getitem_index, self, index);
 	if (value) {
 		Dee_Decref(value);
@@ -766,7 +778,11 @@ err:
 seq_operator_bounditem_index = {
 	DeeMH_seq_operator_getitem_index_t seq_operator_getitem_index;
 	if (HAS_TRAIT_NODEFAULT(__seq_getitem_always_bound__)) {
-		/* TODO: Optimizations */
+		DeeMH_seq_operator_size_t seq_operator_size = REQUIRE(seq_operator_size);
+		if (seq_operator_size == &default__seq_operator_size__empty)
+			return &$empty;
+		if (seq_operator_size)
+			return &$with__seq_operator_size;
 	}
 	seq_operator_getitem_index = REQUIRE(seq_operator_getitem_index);
 	if (seq_operator_getitem_index == &default__seq_operator_getitem_index__empty)

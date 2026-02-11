@@ -2023,7 +2023,7 @@ err:
 		return Dee_COMPARE_NE;
 	return Dee_COMPARE_ERR;
 }}
-%{using seq_operator_compare_eq: {
+%{$with__seq_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(seq_operator_compare_eq, lhs, rhs);
 	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||

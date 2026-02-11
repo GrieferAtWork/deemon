@@ -1303,7 +1303,7 @@ INTERN DeeTypeObject ModuleExports_Type = {
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&modexports_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__E5A99B058858326C),
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__E66FA6851AAFE176),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__2BD018178123F93E),
 	/* .tp_seq           = */ &modexports_seq,
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),

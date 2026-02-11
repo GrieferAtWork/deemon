@@ -31,7 +31,7 @@ __map_size__.map_operator_sizeob([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator size"))}
 %{$none = return_none}
 %{$empty = "default__seq_operator_sizeob__empty"}
-%{using map_operator_size: {
+%{$with__map_operator_size = {
 	size_t mapsize = CALL_DEPENDENCY(map_operator_size, self);
 	if unlikely(mapsize == (size_t)-1)
 		goto err;
@@ -41,6 +41,14 @@ err:
 }} {
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
+
+map_operator_sizeob = {
+	DeeMH_map_operator_size_t map_operator_size = REQUIRE(map_operator_size);
+	if (map_operator_size == &default__map_operator_size__empty)
+		return &$empty;
+	if (map_operator_size)
+		return &$with__map_operator_size;
+};
 
 
 [[operator(Mapping: tp_seq->tp_size)]] /* TODO: Allow operator init for Set, but not method hint init */
@@ -74,18 +82,10 @@ err:
 }} = $with__map_operator_sizeob;
 
 
-map_operator_sizeob = {
-	DeeMH_map_operator_size_t map_operator_size = REQUIRE(map_operator_size);
-	if (map_operator_size == &default__map_operator_size__empty)
-		return &$empty;
-	if (map_operator_size)
-		return &$with__map_operator_size;
-};
-
 map_operator_size = {
 	DeeMH_map_operator_foreach_pair_t map_operator_foreach_pair;
-	if (REQUIRE_NODEFAULT(map_operator_sizeob))
-		return &$with__map_operator_sizeob;
+	/*if (REQUIRE_NODEFAULT(map_operator_sizeob))
+		return &$with__map_operator_sizeob;*/
 	map_operator_foreach_pair = REQUIRE(map_operator_foreach_pair);
 	if (map_operator_foreach_pair == &default__map_operator_foreach_pair__empty)
 		return &$empty;

@@ -75,86 +75,6 @@ __seq_enumerate_items__.seq_makeenumeration([[nonnull]] DeeObject *__restrict se
 	return LOCAL_CALLATTR(self, 0, NULL);
 }
 
-
-
-[[wunused]] DREF DeeObject *
-__seq_enumerate_items__.seq_makeenumeration_with_range([[nonnull]] DeeObject *self,
-                                                       [[nonnull]] DeeObject *start,
-                                                       [[nonnull]] DeeObject *end)
-%{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return DeeSeq_NewEmpty()}
-%{using seq_makeenumeration_with_intrange: {
-	size_t start_index, end_index;
-	if (DeeObject_AsSize(start, &start_index))
-		goto err;
-	if (DeeObject_AsSizeM1(end, &end_index))
-		goto err;
-	return CALL_DEPENDENCY(seq_makeenumeration_with_intrange, self, start_index, end_index);
-err:
-	return NULL;
-}}
-%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
-	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end));
-}}
-%{$with__seq_operator_getitem = {
-	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end));
-}} {
-	DeeObject *args[2];
-	args[0] = start;
-	args[1] = end;
-	return LOCAL_CALLATTR(self, 2, args);
-}
-
-
-
-
-
-[[wunused]] DREF DeeObject *
-__seq_enumerate_items__.seq_makeenumeration_with_intrange([[nonnull]] DeeObject *__restrict self,
-                                                          size_t start, size_t end)
-%{unsupported(auto)}
-%{$none = return_none}
-%{$empty = return DeeSeq_NewEmpty()}
-%{using seq_makeenumeration_with_range: {
-	DREF DeeObject *result, *startob, *endob;
-	startob = DeeInt_NewSize(start);
-	if unlikely(!startob)
-		goto err;
-	endob = DeeInt_NewSize(end);
-	if unlikely(!endob)
-		goto err_startob;
-	result = CALL_DEPENDENCY(seq_makeenumeration_with_range, self, startob, endob);
-	Dee_Decref(endob);
-	Dee_Decref(startob);
-	return result;
-err_startob:
-	Dee_Decref(startob);
-err:
-	return NULL;
-}}
-%{$with__seq_operator_size__and__operator_getitem_index_fast =
-[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
-	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end));
-}}
-%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
-	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index, self, start, end));
-}}
-%{$with__seq_operator_size__and__seq_operator_getitem_index = {
-	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index, self, start, end));
-}}
-%{$with__seq_operator_getitem_index = {
-	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index, self, start, end));
-}}
-%{$with__seq_operator_iter__and__counter = {
-	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end));
-}}
-%{$with__seq_enumerate_index = {
-	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_enumerate_index, self, start, end));
-}} {
-	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
-}
-
 seq_makeenumeration = {
 	DeeMH_seq_enumerate_t seq_enumerate = REQUIRE(seq_enumerate);
 	if (seq_enumerate == &default__seq_enumerate__empty)
@@ -213,10 +133,43 @@ use__seq_enumerate:
 	}
 };
 
+
+
+
+[[wunused]] DREF DeeObject *
+__seq_enumerate_items__.seq_makeenumeration_with_range([[nonnull]] DeeObject *self,
+                                                       [[nonnull]] DeeObject *start,
+                                                       [[nonnull]] DeeObject *end)
+%{unsupported(auto)}
+%{$none = return_none}
+%{$empty = return DeeSeq_NewEmpty()}
+%{using seq_makeenumeration_with_intrange: {
+	size_t start_index, end_index;
+	if (DeeObject_AsSize(start, &start_index))
+		goto err;
+	if (DeeObject_AsSizeM1(end, &end_index))
+		goto err;
+	return CALL_DEPENDENCY(seq_makeenumeration_with_intrange, self, start_index, end_index);
+err:
+	return NULL;
+}}
+%{$with__seq_operator_sizeob__and__seq_operator_getitem = {
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_sizeob__and__seq_operator_getitem, self, start, end));
+}}
+%{$with__seq_operator_getitem = {
+	return Dee_AsObject(DefaultEnumerationWithFilter_New(&DefaultEnumerationWithFilter__with__seq_operator_getitem, self, start, end));
+}} {
+	DeeObject *args[2];
+	args[0] = start;
+	args[1] = end;
+	return LOCAL_CALLATTR(self, 2, args);
+}
+
+
 seq_makeenumeration_with_range = {
 	DeeMH_seq_makeenumeration_t seq_makeenumeration;
-	if (REQUIRE_NODEFAULT(seq_makeenumeration_with_intrange))
-		return &$with__seq_makeenumeration_with_intrange;
+	/*if (REQUIRE_NODEFAULT(seq_makeenumeration_with_intrange))
+		return &$with__seq_makeenumeration_with_intrange;*/
 	seq_makeenumeration = REQUIRE(seq_makeenumeration);
 
 	if (seq_makeenumeration == &default__seq_makeenumeration__empty)
@@ -235,10 +188,57 @@ seq_makeenumeration_with_range = {
 };
 
 
+
+[[wunused]] DREF DeeObject *
+__seq_enumerate_items__.seq_makeenumeration_with_intrange([[nonnull]] DeeObject *__restrict self,
+                                                          size_t start, size_t end)
+%{unsupported(auto)}
+%{$none = return_none}
+%{$empty = return DeeSeq_NewEmpty()}
+%{using seq_makeenumeration_with_range: {
+	DREF DeeObject *result, *startob, *endob;
+	startob = DeeInt_NewSize(start);
+	if unlikely(!startob)
+		goto err;
+	endob = DeeInt_NewSize(end);
+	if unlikely(!endob)
+		goto err_startob;
+	result = CALL_DEPENDENCY(seq_makeenumeration_with_range, self, startob, endob);
+	Dee_Decref(endob);
+	Dee_Decref(startob);
+	return result;
+err_startob:
+	Dee_Decref(startob);
+err:
+	return NULL;
+}}
+%{$with__seq_operator_size__and__operator_getitem_index_fast =
+[[inherit_as($with__seq_operator_size__and__seq_operator_trygetitem_index)]] {
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__getitem_index_fast, self, start, end));
+}}
+%{$with__seq_operator_size__and__seq_operator_trygetitem_index = {
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_trygetitem_index, self, start, end));
+}}
+%{$with__seq_operator_size__and__seq_operator_getitem_index = {
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_size__and__seq_operator_getitem_index, self, start, end));
+}}
+%{$with__seq_operator_getitem_index = {
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_getitem_index, self, start, end));
+}}
+%{$with__seq_operator_iter__and__counter = {
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_operator_iter__and__counter, self, start, end));
+}}
+%{$with__seq_enumerate_index = {
+	return Dee_AsObject(DefaultEnumerationWithIntFilter_New(&DefaultEnumerationWithIntFilter__with__seq_enumerate_index, self, start, end));
+}} {
+	return LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
+}
+
+
 seq_makeenumeration_with_intrange = {
 	DeeMH_seq_makeenumeration_t seq_makeenumeration;
-	if (REQUIRE_NODEFAULT(seq_makeenumeration_with_range))
-		return &$with__seq_makeenumeration_with_range;
+	/*if (REQUIRE_NODEFAULT(seq_makeenumeration_with_range))
+		return &$with__seq_makeenumeration_with_range;*/
 
 	seq_makeenumeration = REQUIRE(seq_makeenumeration);
 	if (seq_makeenumeration == &default__seq_makeenumeration__empty)

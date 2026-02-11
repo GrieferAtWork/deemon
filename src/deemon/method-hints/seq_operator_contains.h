@@ -75,7 +75,9 @@ __seq_contains__.seq_contains([[nonnull]] DeeObject *self,
                               [[nonnull]] DeeObject *item)
 %{unsupported(auto)}
 %{$empty = 0}
-%{using seq_operator_contains: {
+/* Can't use "using" here since the impl would only be used if the user
+ * defines "__seq_contains__", and we want to use it whenever possible! */
+%{$with__seq_operator_contains = {
 	DREF DeeObject *result = CALL_DEPENDENCY(seq_operator_contains, self, item);
 	if unlikely(!result)
 		goto err;
@@ -131,10 +133,9 @@ err:
 }
 
 seq_contains = {
-	DeeMH_seq_operator_contains_t seq_operator_contains;
 	DeeMH_seq_find_t seq_find;
-	seq_operator_contains = REQUIRE_NODEFAULT(seq_operator_contains);
-	if (seq_operator_contains)
+	/* Check if the underlying operator is defined. */
+	if (REQUIRE_NODEFAULT(seq_operator_contains))
 		return &$with__seq_operator_contains;
 	if (SEQ_CLASS == Dee_SEQCLASS_MAP) {
 		DeeMH_map_operator_trygetitem_t map_operator_trygetitem;
@@ -406,7 +407,7 @@ __seq_contains__.seq_operator_contains([[nonnull]] DeeObject *self,
 %{unsupported(auto("operator contains"))}
 %{$none = return_none}
 %{$empty = return_false}
-%{using seq_contains: {
+%{$with__seq_contains = {
 	int result = CALL_DEPENDENCY(seq_contains, self, item);
 	if unlikely(result < 0)
 		goto err;

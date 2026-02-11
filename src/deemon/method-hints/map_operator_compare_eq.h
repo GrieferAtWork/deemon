@@ -129,7 +129,7 @@ __map_compare_eq__.map_operator_trycompare_eq([[nonnull]] DeeObject *lhs,
 	return Dee_COMPARE_NE;
 })}
 %{$empty = "default__seq_operator_trycompare_eq__empty"}
-%{using map_operator_compare_eq: {
+%{$with__map_operator_compare_eq = {
 	int result = CALL_DEPENDENCY(map_operator_compare_eq, lhs, rhs);
 	if (Dee_COMPARE_ISERR(result)) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||

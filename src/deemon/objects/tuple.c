@@ -1236,11 +1236,6 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_sizeob(Tuple *__restrict self) {
-	return DeeInt_NewSize(DeeTuple_SIZE(self));
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tuple_contains(Tuple *self, DeeObject *item) {
 	int error;
@@ -1409,7 +1404,7 @@ tuple_mh_seq_unpack_ex(Tuple *self, size_t dst_length_min, size_t dst_length_max
 
 PRIVATE struct type_seq tuple_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iter,
-	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_sizeob,
+	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_contains,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_getitem,
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
@@ -2638,7 +2633,7 @@ nullable_tuple_asvector(Tuple *self, size_t dst_length, /*out*/ DREF DeeObject *
 
 PRIVATE struct type_seq nullable_tuple_seq = {
 	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast),
-	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_sizeob,
+	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nullable_tuple_contains,
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
 	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),

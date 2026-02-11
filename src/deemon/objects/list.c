@@ -1161,11 +1161,6 @@ list_bool(List *__restrict me) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_sizeob(List *__restrict me) {
-	return DeeInt_NewSize(DeeList_SIZE_ATOMIC(me));
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 list_contains(List *me, DeeObject *elem) {
 	DeeObject **iter, **end, *list_elem;
@@ -2533,7 +2528,7 @@ list_asvector_nothrow(List *self, size_t dst_length, /*out*/ DREF DeeObject **ds
 
 PRIVATE struct type_seq list_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_iter,
-	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_sizeob,
+	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_contains,
 	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_getitem,
 	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_delitem,

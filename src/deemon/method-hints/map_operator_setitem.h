@@ -206,7 +206,7 @@ __map_setitem__.map_operator_setitem_index([[nonnull]] DeeObject *self, size_t k
 	(void)value;
 	return DeeRT_ErrUnknownKeyInt(self, key);
 }}
-%{using map_operator_setitem: {
+%{$with__map_operator_setitem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeInt_NewSize(key);
@@ -244,7 +244,7 @@ __map_setitem__.map_operator_setitem_string_hash([[nonnull]] DeeObject *self,
 	(void)value;
 	return DeeRT_ErrUnboundKeyStr(self, key);
 }}
-%{using map_operator_setitem: {
+%{$with__map_operator_setitem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewWithHash(key, hash);
@@ -283,7 +283,7 @@ __map_setitem__.map_operator_setitem_string_len_hash([[nonnull]] DeeObject *self
 	(void)value;
 	return DeeRT_ErrUnknownKeyStrLen(self, key, keylen);
 }}
-%{using map_operator_setitem: {
+%{$with__map_operator_setitem = {
 	int result;
 	DREF DeeObject *keyob;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);

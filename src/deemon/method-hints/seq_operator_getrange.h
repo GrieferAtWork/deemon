@@ -37,7 +37,7 @@ __seq_getrange__.seq_operator_getrange([[nonnull]] DeeObject *self,
 %{unsupported(auto("operator [:]"))}
 %{$none = return_none}
 %{$empty = return DeeSeq_NewEmpty()}
-%{using [seq_operator_getrange_index, seq_operator_getrange_index_n]: {
+%{$with__seq_operator_getrange_index__and__seq_operator_getrange_index_n = {
 	Dee_ssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start, &start_index))
 		goto err;
@@ -87,7 +87,8 @@ err:
 
 
 seq_operator_getrange = {
-	DeeMH_seq_operator_getrange_index_t seq_operator_getrange_index = REQUIRE(seq_operator_getrange_index);
+	DeeMH_seq_operator_getrange_index_t seq_operator_getrange_index;
+	seq_operator_getrange_index = REQUIRE(seq_operator_getrange_index);
 	if (seq_operator_getrange_index == &default__seq_operator_getrange_index__empty)
 		return &$empty;
 	if ((seq_operator_getrange_index == &default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_getitem_index &&
@@ -251,7 +252,10 @@ err:
 }} = $with__seq_operator_getrange;
 
 seq_operator_getrange_index = {
-	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
+	DeeMH_seq_operator_size_t seq_operator_size;
+	/*if (REQUIRE_NODEFAULT(seq_operator_getrange))
+		return &$with__seq_operator_getrange;*/
+	seq_operator_size = REQUIRE_ANY(seq_operator_size);
 	if (seq_operator_size != &default__seq_operator_size__unsupported) {
 		DeeMH_seq_operator_trygetitem_index_t seq_operator_trygetitem_index;
 		if (seq_operator_size == &default__seq_operator_size__empty)
@@ -331,7 +335,7 @@ empty_range:
 err:
 	return NULL;
 }}
-%{using [seq_operator_size, seq_operator_getrange_index]: {
+%{$with__seq_operator_size__and__seq_operator_getrange_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(size == (size_t)-1)
 		goto err;
@@ -469,7 +473,10 @@ err:
 
 
 seq_operator_getrange_index_n = {
-	DeeMH_seq_operator_size_t seq_operator_size = REQUIRE_ANY(seq_operator_size);
+	DeeMH_seq_operator_size_t seq_operator_size;
+	/*if (REQUIRE_NODEFAULT(seq_operator_getrange))
+		return &$with__seq_operator_getrange;*/
+	seq_operator_size = REQUIRE_ANY(seq_operator_size);
 	if (seq_operator_size != &default__seq_operator_size__unsupported) {
 		DeeMH_seq_operator_getrange_index_t seq_operator_getrange_index;
 		if (seq_operator_size == &default__seq_operator_size__empty)
