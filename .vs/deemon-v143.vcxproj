@@ -440,6 +440,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\removeif-cb.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\repeat.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\segments.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\smap.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\sort-impl.c.inl" />

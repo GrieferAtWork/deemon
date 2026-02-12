@@ -1296,6 +1296,9 @@
 		<ClInclude Include="..\src\deemon\objects\seq\segments.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy-impl.c.inl">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\simpleproxy.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
