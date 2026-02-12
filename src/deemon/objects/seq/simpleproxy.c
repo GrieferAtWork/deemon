@@ -67,7 +67,6 @@ STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) == offsetof(ProxyObject, po_obj))
 PRIVATE WUNUSED NONNULL((1)) DREF SeqSimpleProxy *DCALL
 proxy_get_frozen(SeqSimpleProxy *__restrict self) {
 	DREF DeeObject *inner_frozen;
-	DREF SeqSimpleProxy *result;
 	inner_frozen = DeeObject_GetAttr(self->sp_seq, Dee_AsObject(&str_frozen));
 	if unlikely(!inner_frozen)
 		goto err;
@@ -75,14 +74,7 @@ proxy_get_frozen(SeqSimpleProxy *__restrict self) {
 		Dee_DecrefNokill(inner_frozen);
 		return_reference_(self);
 	}
-	result = DeeObject_MALLOC(SeqSimpleProxy);
-	if unlikely(!result)
-		goto err_inner;
-	result->sp_seq = inner_frozen; /* Inherit reference */
-	DeeObject_Init(result, Dee_TYPE(self));
-	return result;
-err_inner:
-	Dee_Decref(inner_frozen);
+	return SeqSimpleProxy_NewInherited(Dee_TYPE(self), inner_frozen);
 err:
 	return NULL;
 }
@@ -962,7 +954,7 @@ idsiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, Dee_AsObject(&str_seq));
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *baseseq = result;
-		result = SeqIds_New(baseseq);
+		result = SeqIds_Of(baseseq);
 		Dee_Decref(baseseq);
 	}
 	return result;
@@ -973,7 +965,7 @@ typesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, Dee_AsObject(&str_seq));
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *baseseq = result;
-		result = SeqTypes_New(baseseq);
+		result = SeqTypes_Of(baseseq);
 		Dee_Decref(baseseq);
 	}
 	return result;
@@ -984,7 +976,7 @@ classesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result = DeeObject_GetAttr(self->si_iter, Dee_AsObject(&str_seq));
 	if (ITER_ISOK(result)) {
 		DREF DeeObject *baseseq = result;
-		result = SeqClasses_New(baseseq);
+		result = SeqClasses_Of(baseseq);
 		Dee_Decref(baseseq);
 	}
 	return result;
@@ -1161,44 +1153,19 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-SeqIds_New(DeeObject *__restrict seq) {
-	DREF SeqSimpleProxy *result;
-	result = DeeObject_MALLOC(SeqSimpleProxy);
-	if unlikely(!result)
-		goto done;
-	Dee_Incref(seq);
-	result->sp_seq = seq;
-	DeeObject_Init(result, &SeqIds_Type);
-done:
-	return Dee_AsObject(result);
+SeqIds_Of(DeeObject *__restrict seq) {
+	return Dee_AsObject(SeqIds_New(seq));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-SeqTypes_New(DeeObject *__restrict seq) {
-	DREF SeqSimpleProxy *result;
-	result = DeeObject_MALLOC(SeqSimpleProxy);
-	if unlikely(!result)
-		goto done;
-	Dee_Incref(seq);
-	result->sp_seq = seq;
-	DeeObject_Init(result, &SeqTypes_Type);
-done:
-	return Dee_AsObject(result);
+SeqTypes_Of(DeeObject *__restrict seq) {
+	return Dee_AsObject(SeqTypes_New(seq));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-SeqClasses_New(DeeObject *__restrict seq) {
-	DREF SeqSimpleProxy *result;
-	result = DeeObject_MALLOC(SeqSimpleProxy);
-	if unlikely(!result)
-		goto done;
-	Dee_Incref(seq);
-	result->sp_seq = seq;
-	DeeObject_Init(result, &SeqClasses_Type);
-done:
-	return Dee_AsObject(result);
+SeqClasses_Of(DeeObject *__restrict seq) {
+	return Dee_AsObject(SeqClasses_New(seq));
 }
-
 
 DECL_END
 

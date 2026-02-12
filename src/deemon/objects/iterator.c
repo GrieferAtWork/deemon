@@ -2695,10 +2695,14 @@ typedef struct {
 	PROXY_OBJECT_HEAD(if_iter) /* [1..1][const] The iterator who's future is viewed. */
 } IteratorFuture;
 
+#define IteratorFuture_New(ob)                   ((DREF IteratorFuture *)ProxyObject_New(&IteratorFuture_Type, Dee_AsObject(ob)))
+#define IteratorFuture_NewInherited(ob)          ((DREF IteratorFuture *)ProxyObject_NewInherited(&IteratorFuture_Type, Dee_AsObject(ob)))
+#define IteratorFuture_NewInheritedOnSuccess(ob) ((DREF IteratorFuture *)ProxyObject_NewInheritedOnSuccess(&IteratorFuture_Type, Dee_AsObject(ob)))
+
 INTDEF DeeTypeObject IteratorFuture_Type;
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorFuture_For(DeeObject *__restrict self) {
-	return ProxyObject_New(&IteratorFuture_Type, self);
+	return Dee_AsObject(IteratorFuture_New(self));
 }
 
 
@@ -2837,10 +2841,14 @@ typedef struct {
 	PROXY_OBJECT_HEAD(ip_iter) /* [1..1][const] The iterator who's remainder is viewed. */
 } IteratorPending;
 
+#define IteratorPending_New(ob)                   ((DREF IteratorPending *)ProxyObject_New(&IteratorPending_Type, Dee_AsObject(ob)))
+#define IteratorPending_NewInherited(ob)          ((DREF IteratorPending *)ProxyObject_NewInherited(&IteratorPending_Type, Dee_AsObject(ob)))
+#define IteratorPending_NewInheritedOnSuccess(ob) ((DREF IteratorPending *)ProxyObject_NewInheritedOnSuccess(&IteratorPending_Type, Dee_AsObject(ob)))
+
 INTDEF DeeTypeObject IteratorPending_Type;
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorPending_For(DeeObject *__restrict self) {
-	return ProxyObject_New(&IteratorPending_Type, self);
+	return Dee_AsObject(IteratorPending_New(self));
 }
 
 STATIC_ASSERT(offsetof(IteratorPending, ip_iter) == offsetof(IteratorFuture, if_iter));

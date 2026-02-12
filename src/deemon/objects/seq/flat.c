@@ -1360,19 +1360,9 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeSeq_Flat(DeeObject *__restrict self) {
-	DREF SeqFlat *result;
-	result = DeeObject_MALLOC(SeqFlat);
-	if unlikely(!result)
-		goto err;
-	Dee_Incref(self);
-	result->sf_seq = self;
-	DeeObject_Init(result, &SeqFlat_Type);
-	return Dee_AsObject(result);
-err:
-	return NULL;
+SeqFlat_Of(DeeObject *__restrict self) {
+	return Dee_AsObject(SeqFlat_New(self));
 }
-
 
 DECL_END
 

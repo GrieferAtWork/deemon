@@ -3281,15 +3281,15 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	               /**/ "item being searched on the left-hand-side, meaning #Iits compare operators are "
 	               /**/ "invoked in order to determine equality. As such, ${(seq.some == foo).operator bool()} "
 	               /**/ "has been programmed to return the same as ${(foo in seq).operator bool()}"),
-	TYPE_GETTER_AB("ids", &SeqIds_New,
+	TYPE_GETTER_AB("ids", &SeqIds_Of,
 	               "->?S?Dint\n"
 	               "Returns a special proxy object for accessing the ids of Sequence elements\n"
 	               "This is equivalent to ${this.transform(x -\\> Object.id(x))}"),
-	TYPE_GETTER_AB("types", &SeqTypes_New,
+	TYPE_GETTER_AB("types", &SeqTypes_Of,
 	               "->?S?DType\n"
 	               "Returns a special proxy object for accessing the types of Sequence elements\n"
 	               "This is equivalent to ${this.transform(x -\\> type(x))}"),
-	TYPE_GETTER_AB("classes", &SeqClasses_New,
+	TYPE_GETTER_AB("classes", &SeqClasses_Of,
 	               "->?S?DType\n"
 	               "Returns a special proxy object for accessing the classes of Sequence elements\n"
 	               "This is equivalent to ${this.transform(x -\\> x.class)}"),
@@ -3309,7 +3309,7 @@ PRIVATE struct type_getset tpconst seq_getsets[] = {
 	TYPE_GETTER("isnonempty", &seq_get_isnonempty,
 	            "->?Dbool\n"
 	            "Alias for ?#{op:bool}"),
-	TYPE_GETTER_AB("flatten", &DeeSeq_Flat,
+	TYPE_GETTER_AB("flatten", &SeqFlat_Of,
 	               "->?Ert:SeqFlat\n"
 	               "Flatten a sequence ${{{T...}...}} to ${{T...}}:"
 	               "${"

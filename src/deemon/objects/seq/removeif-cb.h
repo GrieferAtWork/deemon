@@ -32,10 +32,22 @@ typedef struct {
 	PROXY_OBJECT_HEAD(srwrip_item); /* [1..1][const] Item to remove */
 } SeqRemoveWithRemoveIfPredicate;
 
+#define SeqRemoveWithRemoveIfPredicate_New(ob)                   ((DREF SeqRemoveWithRemoveIfPredicate *)ProxyObject_New(&SeqRemoveWithRemoveIfPredicate_Type, Dee_AsObject(ob)))
+#define SeqRemoveWithRemoveIfPredicate_NewInherited(ob)          ((DREF SeqRemoveWithRemoveIfPredicate *)ProxyObject_NewInherited(&SeqRemoveWithRemoveIfPredicate_Type, Dee_AsObject(ob)))
+#define SeqRemoveWithRemoveIfPredicate_NewInheritedOnSuccess(ob) ((DREF SeqRemoveWithRemoveIfPredicate *)ProxyObject_NewInheritedOnSuccess(&SeqRemoveWithRemoveIfPredicate_Type, Dee_AsObject(ob)))
+#define SeqRemoveWithRemoveIfPredicate_DecrefSymbolic(self)      ProxyObject_DecrefSymbolic((DREF ProxyObject *)Dee_REQUIRES_TYPE(DREF SeqRemoveWithRemoveIfPredicate *, self))
+
 typedef struct {
 	PROXY_OBJECT_HEAD2(srwripwk_item, /* [1..1][const] Keyed item to remove */
 	                   srwripwk_key)  /* [1..1][const] Key to use during compare */
 } SeqRemoveWithRemoveIfPredicateWithKey;
+
+#define SeqRemoveWithRemoveIfPredicateWithKey_New(item, key)                   ((DREF SeqRemoveWithRemoveIfPredicateWithKey *)ProxyObject2_New(&SeqRemoveWithRemoveIfPredicateWithKey_Type, Dee_AsObject(item), Dee_AsObject(key)))
+#define SeqRemoveWithRemoveIfPredicateWithKey_NewInherited(item, key)          ((DREF SeqRemoveWithRemoveIfPredicateWithKey *)ProxyObject2_NewInherited(&SeqRemoveWithRemoveIfPredicateWithKey_Type, Dee_AsObject(item), Dee_AsObject(key)))
+#define SeqRemoveWithRemoveIfPredicateWithKey_NewInherited1(item, key)         ((DREF SeqRemoveWithRemoveIfPredicateWithKey *)ProxyObject2_NewInherited1(&SeqRemoveWithRemoveIfPredicateWithKey_Type, Dee_AsObject(item), Dee_AsObject(key)))
+#define SeqRemoveWithRemoveIfPredicateWithKey_NewInherited2(item, key)         ((DREF SeqRemoveWithRemoveIfPredicateWithKey *)ProxyObject2_NewInherited2(&SeqRemoveWithRemoveIfPredicateWithKey_Type, Dee_AsObject(item), Dee_AsObject(key)))
+#define SeqRemoveWithRemoveIfPredicateWithKey_NewInheritedOnSuccess(item, key) ((DREF SeqRemoveWithRemoveIfPredicateWithKey *)ProxyObject2_NewInheritedOnSuccess(&SeqRemoveWithRemoveIfPredicateWithKey_Type, Dee_AsObject(item), Dee_AsObject(key)))
+#define SeqRemoveWithRemoveIfPredicateWithKey_DecrefSymbolic(self)              ProxyObject2_DecrefSymbolic((DREF ProxyObject2 *)Dee_REQUIRES_TYPE(DREF SeqRemoveWithRemoveIfPredicateWithKey *, self))
 
 INTDEF DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type;
 INTDEF DeeTypeObject SeqRemoveWithRemoveIfPredicateWithKey_Type;
@@ -50,6 +62,11 @@ INTDEF DeeObject SeqRemoveIfWithRemoveAllItem_DummyInstance;
 typedef struct {
 	PROXY_OBJECT_HEAD(sriwrak_should) /* [1..1] Predicate to determine if an element should be removed. */
 } SeqRemoveIfWithRemoveAllKey;
+
+#define SeqRemoveIfWithRemoveAllKey_New(should)                   ((DREF SeqRemoveIfWithRemoveAllKey *)ProxyObject_New(&SeqRemoveIfWithRemoveAllKey_Type, Dee_AsObject(should)))
+#define SeqRemoveIfWithRemoveAllKey_NewInherited(should)          ((DREF SeqRemoveIfWithRemoveAllKey *)ProxyObject_NewInherited(&SeqRemoveIfWithRemoveAllKey_Type, Dee_AsObject(should)))
+#define SeqRemoveIfWithRemoveAllKey_NewInheritedOnSuccess(should) ((DREF SeqRemoveIfWithRemoveAllKey *)ProxyObject_NewInheritedOnSuccess(&SeqRemoveIfWithRemoveAllKey_Type, Dee_AsObject(should)))
+#define SeqRemoveIfWithRemoveAllKey_DecrefSymbolic(self)          ProxyObject_DecrefSymbolic((DREF ProxyObject *)Dee_REQUIRES_TYPE(DREF SeqRemoveIfWithRemoveAllKey *, self))
 
 INTDEF DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type;
 

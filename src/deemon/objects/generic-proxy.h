@@ -311,6 +311,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_obj__asmap(DeeObject *
 #define MyObject_New(ob)                   ((DREF MyObject *)ProxyObject_New(&MyObject_Type, Dee_AsObject(ob)))
 #define MyObject_NewInherited(ob)          ((DREF MyObject *)ProxyObject_NewInherited(&MyObject_Type, Dee_AsObject(ob)))
 #define MyObject_NewInheritedOnSuccess(ob) ((DREF MyObject *)ProxyObject_NewInheritedOnSuccess(&MyObject_Type, Dee_AsObject(ob)))
+#define MyObject_DecrefSymbolic(self)      ProxyObject_DecrefSymbolic((DREF ProxyObject *)Dee_REQUIRES_TYPE(DREF MyObject *, self))
 #endif
 LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ProxyObject_New(DeeTypeObject *tp, DeeObject *ob) {
@@ -353,6 +354,19 @@ err:
 	return NULL;
 }
 
+LOCAL NONNULL((1)) void DCALL
+ProxyObject_DecrefSymbolic(DREF ProxyObject *__restrict self) {
+	if (!DeeObject_IsShared(self)) {
+		Dee_DecrefNokill(Dee_TYPE(self));
+		DeeObject_FREE(self);
+	} else {
+		Dee_Incref(self->po_obj);
+		Dee_Decref_unlikely(self);
+	}
+}
+
+
+
 
 #if 0
 #define MyObject_New(obj1, obj2)                   ((DREF MyObject *)ProxyObject2_New(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
@@ -360,6 +374,7 @@ err:
 #define MyObject_NewInherited1(obj1, obj2)         ((DREF MyObject *)ProxyObject2_NewInherited1(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 #define MyObject_NewInherited2(obj1, obj2)         ((DREF MyObject *)ProxyObject2_NewInherited2(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
 #define MyObject_NewInheritedOnSuccess(obj1, obj2) ((DREF MyObject *)ProxyObject2_NewInheritedOnSuccess(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2)))
+#define MyObject_DecrefSymbolic(self)              ProxyObject2_DecrefSymbolic((DREF ProxyObject2 *)Dee_REQUIRES_TYPE(DREF MyObject *, self))
 #endif
 LOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 ProxyObject2_New(DeeTypeObject *tp, DeeObject *obj1, DeeObject *obj2) {
@@ -440,6 +455,83 @@ ProxyObject2_NewInheritedOnSuccess(DeeTypeObject *tp,
 		goto err;
 	result->po_obj1 = obj1; /* Inherit */
 	result->po_obj2 = obj2; /* Inherit */
+	DeeObject_Init(result, tp);
+	return Dee_AsObject(result);
+err:
+	return NULL;
+}
+
+LOCAL NONNULL((1)) void DCALL
+ProxyObject2_DecrefSymbolic(DREF ProxyObject2 *__restrict self) {
+	if (!DeeObject_IsShared(self)) {
+		Dee_DecrefNokill(Dee_TYPE(self));
+		DeeObject_FREE(self);
+	} else {
+		Dee_Incref(self->po_obj2);
+		Dee_Incref(self->po_obj1);
+		Dee_Decref_unlikely(self);
+	}
+}
+
+
+#if 0
+#define MyObject_New(obj1, obj2, obj3)                   ((DREF MyObject *)ProxyObject3_New(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2), Dee_AsObject(obj3)))
+#define MyObject_NewInherited(obj1, obj2, obj3)          ((DREF MyObject *)ProxyObject3_NewInherited(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2), Dee_AsObject(obj3)))
+#define MyObject_NewInherited1(obj1, obj2, obj3)         ((DREF MyObject *)ProxyObject3_NewInherited1(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2), Dee_AsObject(obj3)))
+#define MyObject_NewInherited3(obj1, obj2, obj3)         ((DREF MyObject *)ProxyObject3_NewInherited3(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2), Dee_AsObject(obj3)))
+#define MyObject_NewInheritedOnSuccess(obj1, obj2, obj3) ((DREF MyObject *)ProxyObject3_NewInheritedOnSuccess(&MyObject_Type, Dee_AsObject(obj1), Dee_AsObject(obj2), Dee_AsObject(obj3)))
+#endif
+LOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+ProxyObject3_New(DeeTypeObject *tp, DeeObject *obj1, DeeObject *obj2, DeeObject *obj3) {
+	DREF ProxyObject3 *result;
+	result = DeeObject_MALLOC(ProxyObject3);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(obj1);
+	result->po_obj1 = obj1;
+	Dee_Incref(obj2);
+	result->po_obj2 = obj2;
+	Dee_Incref(obj3);
+	result->po_obj3 = obj3;
+	DeeObject_Init(result, tp);
+	return Dee_AsObject(result);
+err:
+	return NULL;
+}
+
+LOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+ProxyObject3_NewInherited(DeeTypeObject *tp,
+                          /*inherit(always)*/ DREF DeeObject *obj1,
+                          /*inherit(always)*/ DREF DeeObject *obj2,
+                          /*inherit(always)*/ DREF DeeObject *obj3) {
+	DREF ProxyObject3 *result;
+	result = DeeObject_MALLOC(ProxyObject3);
+	if unlikely(!result)
+		goto err;
+	result->po_obj1 = obj1; /* Inherit */
+	result->po_obj2 = obj2; /* Inherit */
+	result->po_obj3 = obj3; /* Inherit */
+	DeeObject_Init(result, tp);
+	return Dee_AsObject(result);
+err:
+	Dee_Decref(obj3);
+	Dee_Decref(obj2);
+	Dee_Decref(obj1);
+	return NULL;
+}
+
+LOCAL WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+ProxyObject3_NewInheritedOnSuccess(DeeTypeObject *tp,
+                                   /*inherit(on_success)*/ DREF DeeObject *obj1,
+                                   /*inherit(on_success)*/ DREF DeeObject *obj2,
+                                   /*inherit(on_success)*/ DREF DeeObject *obj3) {
+	DREF ProxyObject3 *result;
+	result = DeeObject_MALLOC(ProxyObject3);
+	if unlikely(!result)
+		goto err;
+	result->po_obj1 = obj1; /* Inherit */
+	result->po_obj2 = obj2; /* Inherit */
+	result->po_obj3 = obj3; /* Inherit */
 	DeeObject_Init(result, tp);
 	return Dee_AsObject(result);
 err:

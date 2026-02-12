@@ -32,11 +32,15 @@ typedef struct {
 	PROXY_OBJECT_HEAD(mba_map)  /* [1..1][const] The underlying map. */
 } MapByAttr;
 
+#define MapByAttr_New(ob)                   ((DREF MapByAttr *)ProxyObject_New(&MapByAttr_Type, Dee_AsObject(ob)))
+#define MapByAttr_NewInherited(ob)          ((DREF MapByAttr *)ProxyObject_NewInherited(&MapByAttr_Type, Dee_AsObject(ob)))
+#define MapByAttr_NewInheritedOnSuccess(ob) ((DREF MapByAttr *)ProxyObject_NewInheritedOnSuccess(&MapByAttr_Type, Dee_AsObject(ob)))
+
 INTDEF DeeTypeObject MapByAttr_Type;
 
 /* Create a new byattr proxy for `map' */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-MapByAttr_New(DeeObject *__restrict map);
+MapByAttr_Of(DeeObject *__restrict map);
 
 DECL_END
 

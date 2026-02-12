@@ -51,16 +51,13 @@ __seq_removeif__.seq_removeif([[nonnull]] DeeObject *self,
 	 * >> }); */
 	size_t result;
 	DREF SeqRemoveIfWithRemoveAllKey *key;
-	key = DeeObject_MALLOC(SeqRemoveIfWithRemoveAllKey);
+	key = SeqRemoveIfWithRemoveAllKey_NewInheritedOnSuccess(should);
 	if unlikely(!key)
 		goto err;
-	Dee_Incref(should);
-	key->sriwrak_should = should;
-	DeeObject_Init(key, &SeqRemoveIfWithRemoveAllKey_Type);
 	result = CALL_DEPENDENCY(seq_removeall_with_key, self,
 	                         &SeqRemoveIfWithRemoveAllItem_DummyInstance,
-	                         start, end, max, (DeeObject *)key);
-	Dee_Decref_likely(key);
+	                         start, end, max, Dee_AsObject(key));
+	SeqRemoveIfWithRemoveAllKey_DecrefSymbolic(key);
 	return result;
 err:
 	return (size_t)-1;

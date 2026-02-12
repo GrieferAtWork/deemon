@@ -64,6 +64,9 @@ typedef struct {
 	PROXY_OBJECT_HEAD(de_seq)     /* [1..1][const] The sequence being iterated. */
 } DefaultEnumeration;
 
+#define DefaultEnumeration_New(DefaultEnumeration__with__xxx, self) \
+	((DREF DefaultEnumeration *)ProxyObject_New(DefaultEnumeration__with__xxx, self))
+
 typedef struct {
 	/* Enumerate all keys within within range [dewf_start,dewf_end) */
 	PROXY_OBJECT_HEAD3(dewf_seq,   /* [1..1][const] The sequence being iterated. */
@@ -71,31 +74,15 @@ typedef struct {
 	                   dewf_end)   /* [1..1][const] Enumeration range end. */
 } DefaultEnumerationWithFilter;
 
+#define DefaultEnumerationWithFilter_New(DefaultEnumerationWithFilter__with__xxx, self, start, end) \
+	((DREF DefaultEnumerationWithFilter *)ProxyObject3_New(DefaultEnumerationWithFilter__with__xxx, self, start, end))
+
 typedef struct {
 	/* Enumerate all keys within within range [dewf_start,dewf_end) */
 	PROXY_OBJECT_HEAD(dewif_seq)   /* [1..1][const] The sequence being iterated. */
 	size_t            dewif_start; /* [const] Enumeration range start. */
 	size_t            dewif_end;   /* [const] Enumeration range end. */
 } DefaultEnumerationWithIntFilter;
-
-#define DefaultEnumeration_New(DefaultEnumeration__with__xxx, self) \
-	((DREF DefaultEnumeration *)ProxyObject_New(DefaultEnumeration__with__xxx, self))
-
-LOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DefaultEnumerationWithFilter *DCALL
-DefaultEnumerationWithFilter_New(DeeTypeObject *DefaultEnumerationWithFilter__with__xxx,
-                                 DeeObject *self, DeeObject *start, DeeObject *end) {
-	DREF DefaultEnumerationWithFilter *result = DeeObject_MALLOC(DefaultEnumerationWithFilter);
-	if likely(result) {
-		Dee_Incref(self);
-		result->dewf_seq = self;
-		Dee_Incref(start);
-		result->dewf_start = start;
-		Dee_Incref(end);
-		result->dewf_end = end;
-		DeeObject_Init(result, DefaultEnumerationWithFilter__with__xxx);
-	}
-	return result;
-}
 
 LOCAL WUNUSED NONNULL((1, 2)) DREF DefaultEnumerationWithIntFilter *DCALL
 DefaultEnumerationWithIntFilter_New(DeeTypeObject *DefaultEnumerationWithIntFilter__with__xxx,

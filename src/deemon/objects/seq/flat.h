@@ -48,10 +48,15 @@ typedef struct {
 	PROXY_OBJECT_HEAD(sf_seq) /* [1..1][const] The function that is being flattened. */
 } SeqFlat;
 
+#define SeqFlat_New(ob)                   ((DREF SeqFlat *)ProxyObject_New(&SeqFlat_Type, Dee_AsObject(ob)))
+#define SeqFlat_NewInherited(ob)          ((DREF SeqFlat *)ProxyObject_NewInherited(&SeqFlat_Type, Dee_AsObject(ob)))
+#define SeqFlat_NewInheritedOnSuccess(ob) ((DREF SeqFlat *)ProxyObject_NewInheritedOnSuccess(&SeqFlat_Type, Dee_AsObject(ob)))
+
 INTDEF DeeTypeObject SeqFlat_Type;
 INTDEF DeeTypeObject SeqFlatIterator_Type;
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Flat(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+SeqFlat_Of(DeeObject *__restrict self);
 
 DECL_END
 

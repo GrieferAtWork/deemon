@@ -32,21 +32,58 @@ typedef struct {
 	PROXY_OBJECT_HEAD(sp_seq) /* [1..1][const] The underlying sequence. */
 } SeqSimpleProxy;
 
-typedef struct {
-	PROXY_OBJECT_HEAD(si_iter) /* [1..1][const] The underlying iterator. */
-} SeqSimpleProxyIterator;
-
+#define SeqSimpleProxy_New(type, seq)                   ((DREF SeqSimpleProxy *)ProxyObject_New(type, Dee_AsObject(seq)))
+#define SeqSimpleProxy_NewInherited(type, seq)          ((DREF SeqSimpleProxy *)ProxyObject_NewInherited(type, Dee_AsObject(seq)))
+#define SeqSimpleProxy_NewInheritedOnSuccess(type, seq) ((DREF SeqSimpleProxy *)ProxyObject_NewInheritedOnSuccess(type, Dee_AsObject(seq)))
+#define SeqSimpleProxy_DecrefSymbolic(self)             ProxyObject_DecrefSymbolic((DREF ProxyObject *)Dee_REQUIRES_TYPE(DREF SeqSimpleProxy *, self))
 
 INTDEF DeeTypeObject SeqIds_Type;             /* Sequence.Ids */
 INTDEF DeeTypeObject SeqTypes_Type;           /* Sequence.Types */
 INTDEF DeeTypeObject SeqClasses_Type;         /* Sequence.Classes */
+
+#define SeqIds_New(seq)                       SeqSimpleProxy_New(&SeqIds_Type, seq)
+#define SeqIds_NewInherited(seq)              SeqSimpleProxy_NewInherited(&SeqIds_Type, seq)
+#define SeqIds_NewInheritedOnSuccess(seq)     SeqSimpleProxy_NewInheritedOnSuccess(&SeqIds_Type, seq)
+#define SeqIds_DecrefSymbolic(self)           SeqSimpleProxy_DecrefSymbolic(self)
+#define SeqTypes_New(seq)                     SeqSimpleProxy_New(&SeqTypes_Type, seq)
+#define SeqTypes_NewInherited(seq)            SeqSimpleProxy_NewInherited(&SeqTypes_Type, seq)
+#define SeqTypes_NewInheritedOnSuccess(seq)   SeqSimpleProxy_NewInheritedOnSuccess(&SeqTypes_Type, seq)
+#define SeqTypes_DecrefSymbolic(self)         SeqSimpleProxy_DecrefSymbolic(self)
+#define SeqClasses_New(seq)                   SeqSimpleProxy_New(&SeqClasses_Type, seq)
+#define SeqClasses_NewInherited(seq)          SeqSimpleProxy_NewInherited(&SeqClasses_Type, seq)
+#define SeqClasses_NewInheritedOnSuccess(seq) SeqSimpleProxy_NewInheritedOnSuccess(&SeqClasses_Type, seq)
+#define SeqClasses_DecrefSymbolic(self)       SeqSimpleProxy_DecrefSymbolic(self)
+
+
+typedef struct {
+	PROXY_OBJECT_HEAD(si_iter) /* [1..1][const] The underlying iterator. */
+} SeqSimpleProxyIterator;
+
+#define SeqSimpleProxyIterator_New(type, seq)                   ((DREF SeqSimpleProxyIterator *)ProxyObject_New(type, Dee_AsObject(seq)))
+#define SeqSimpleProxyIterator_NewInherited(type, seq)          ((DREF SeqSimpleProxyIterator *)ProxyObject_NewInherited(type, Dee_AsObject(seq)))
+#define SeqSimpleProxyIterator_NewInheritedOnSuccess(type, seq) ((DREF SeqSimpleProxyIterator *)ProxyObject_NewInheritedOnSuccess(type, Dee_AsObject(seq)))
+#define SeqSimpleProxyIterator_DecrefSymbolic(self)             ProxyObject_DecrefSymbolic((DREF ProxyObject *)Dee_REQUIRES_TYPE(DREF SeqSimpleProxyIterator *, self))
+
 INTDEF DeeTypeObject SeqIdsIterator_Type;     /* Sequence.Ids.Iterator */
 INTDEF DeeTypeObject SeqTypesIterator_Type;   /* Sequence.Types.Iterator */
 INTDEF DeeTypeObject SeqClassesIterator_Type; /* Sequence.Classes.Iterator */
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqIds_New(DeeObject *__restrict seq);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqTypes_New(DeeObject *__restrict seq);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqClasses_New(DeeObject *__restrict seq);
+#define SeqIdsIterator_New(seq)                       SeqSimpleProxyIterator_New(&SeqIdsIterator_Type, seq)
+#define SeqIdsIterator_NewInherited(seq)              SeqSimpleProxyIterator_NewInherited(&SeqIdsIterator_Type, seq)
+#define SeqIdsIterator_NewInheritedOnSuccess(seq)     SeqSimpleProxyIterator_NewInheritedOnSuccess(&SeqIdsIterator_Type, seq)
+#define SeqIdsIterator_DecrefSymbolic(self)           SeqSimpleProxyIterator_DecrefSymbolic(self)
+#define SeqTypesIterator_New(seq)                     SeqSimpleProxyIterator_New(&SeqTypesIterator_Type, seq)
+#define SeqTypesIterator_NewInherited(seq)            SeqSimpleProxyIterator_NewInherited(&SeqTypesIterator_Type, seq)
+#define SeqTypesIterator_NewInheritedOnSuccess(seq)   SeqSimpleProxyIterator_NewInheritedOnSuccess(&SeqTypesIterator_Type, seq)
+#define SeqTypesIterator_DecrefSymbolic(self)         SeqSimpleProxyIterator_DecrefSymbolic(self)
+#define SeqClassesIterator_New(seq)                   SeqSimpleProxyIterator_New(&SeqClassesIterator_Type, seq)
+#define SeqClassesIterator_NewInherited(seq)          SeqSimpleProxyIterator_NewInherited(&SeqClassesIterator_Type, seq)
+#define SeqClassesIterator_NewInheritedOnSuccess(seq) SeqSimpleProxyIterator_NewInheritedOnSuccess(&SeqClassesIterator_Type, seq)
+#define SeqClassesIterator_DecrefSymbolic(self)       SeqSimpleProxyIterator_DecrefSymbolic(self)
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqIds_Of(DeeObject *__restrict seq);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqTypes_Of(DeeObject *__restrict seq);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqClasses_Of(DeeObject *__restrict seq);
 
 
 DECL_END

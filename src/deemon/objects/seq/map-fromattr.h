@@ -37,6 +37,10 @@ typedef struct {
 	PROXY_OBJECT_HEAD(mfa_ob) /* [1..1][const] The object whose attributes are being enumerated */
 } MapFromAttr;
 
+#define MapFromAttr_New(ob)                   ((DREF MapFromAttr *)ProxyObject_New(&MapFromAttr_Type, Dee_AsObject(ob)))
+#define MapFromAttr_NewInherited(ob)          ((DREF MapFromAttr *)ProxyObject_NewInherited(&MapFromAttr_Type, Dee_AsObject(ob)))
+#define MapFromAttr_NewInheritedOnSuccess(ob) ((DREF MapFromAttr *)ProxyObject_NewInheritedOnSuccess(&MapFromAttr_Type, Dee_AsObject(ob)))
+
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject     *mfai_obj;  /* [1..1][const] The object whose attributes are being enumerated. */
@@ -46,17 +50,6 @@ typedef struct {
 
 INTDEF DeeTypeObject MapFromAttr_Type;             /* type(Mapping.fromattr(ob)); */
 INTDEF DeeTypeObject MapFromAttrKeysIterator_Type; /* type(Mapping.fromattr(ob).__map_iterkeys__()); */
-
-LOCAL WUNUSED NONNULL((1)) DREF MapFromAttr *DCALL
-MapFromAttr_New(DeeObject *__restrict ob) {
-	DREF MapFromAttr *result = DeeObject_MALLOC(MapFromAttr);
-	if likely(result) {
-		result->mfa_ob = ob;
-		Dee_Incref(ob);
-		DeeObject_Init(result, &MapFromAttr_Type);
-	}
-	return result;
-}
 
 DECL_END
 

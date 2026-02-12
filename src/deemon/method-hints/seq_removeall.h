@@ -49,14 +49,11 @@ __seq_removeall__.seq_removeall([[nonnull]] DeeObject *self,
 	/* >> return self.removeif(x -> deemon.equals(item, x), start, end, max); */
 	size_t result;
 	DREF SeqRemoveWithRemoveIfPredicate *pred;
-	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicate);
+	pred = SeqRemoveWithRemoveIfPredicate_NewInheritedOnSuccess(item);
 	if unlikely(!pred)
 		goto err;
-	Dee_Incref(item);
-	pred->srwrip_item = item;
-	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicate_Type);
-	result = CALL_DEPENDENCY(seq_removeif, self, (DeeObject *)pred, start, end, max);
-	Dee_Decref_likely(pred);
+	result = CALL_DEPENDENCY(seq_removeif, self, Dee_AsObject(pred), start, end, max);
+	SeqRemoveWithRemoveIfPredicate_DecrefSymbolic(pred);
 	return result;
 err:
 	return (size_t)-1;
@@ -188,26 +185,26 @@ __seq_removeall__.seq_removeall_with_key([[nonnull]] DeeObject *self,
 #endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	size_t result;
 	DREF SeqRemoveWithRemoveIfPredicateWithKey *pred;
-	pred = DeeObject_MALLOC(SeqRemoveWithRemoveIfPredicateWithKey);
+#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
+	pred = SeqRemoveWithRemoveIfPredicateWithKey_NewInheritedOnSuccess(item, key);
 	if unlikely(!pred)
 		goto err;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Incref(item);
-	pred->srwripwk_item = item;
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	pred->srwripwk_item = DeeObject_Call(key, 1, &item);
-	if unlikely(!pred->srwripwk_item)
-		goto err_pred;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	Dee_Incref(key);
-	pred->srwripwk_key = key;
-	DeeObject_Init(pred, &SeqRemoveWithRemoveIfPredicateWithKey_Type);
-	result = CALL_DEPENDENCY(seq_removeif, self, (DeeObject *)pred, start, end, max);
-	Dee_Decref_likely(pred);
+	result = CALL_DEPENDENCY(seq_removeif, self, Dee_AsObject(pred), start, end, max);
+	SeqRemoveWithRemoveIfPredicateWithKey_DecrefSymbolic(pred);
 	return result;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-err_pred:
-	DeeObject_FREE(pred);
+#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	item = DeeObject_Call(key, 1, &item);
+	if unlikely(!item)
+		goto err;
+	pred = SeqRemoveWithRemoveIfPredicateWithKey_NewInheritedOnSuccess(item, key);
+	if unlikely(!pred)
+		goto err_item;
+	result = CALL_DEPENDENCY(seq_removeif, self, Dee_AsObject(pred), start, end, max);
+	SeqRemoveWithRemoveIfPredicateWithKey_DecrefSymbolic(pred);
+	Dee_Decref(item);
+	return result;
+err_item:
+	Dee_Decref(item);
 #endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)-1;
