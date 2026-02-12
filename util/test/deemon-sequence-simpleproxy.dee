@@ -33,3 +33,8 @@ test.assertSequence(x.ids, { a.id, b.id, c.id });
 test.assertSequence(x.ids, { Object.id(a), Object.id(b), Object.id(c) });
 test.assertSequence(x.classes, { bool, string, int });
 test.assertSequence(x.types, { bool, string, int });
+assert true !in x.types;
+assert true !in x.classes;
+assert List !in x.types;
+assert List !in x.classes;
+

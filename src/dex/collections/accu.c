@@ -32,7 +32,7 @@
 #include <deemon/error-rt.h>    /* DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>       /* DeeError_RuntimeError, DeeError_Throwf */
 #include <deemon/format.h>      /* DeeFormat_PRINT, DeeFormat_Printf */
-#include <deemon/object.h>      /* DeeObject_*, Dee_BOUND_ERR, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Decref, Dee_visit_t, return_reference_ */
+#include <deemon/object.h>      /* DeeObject_*, Dee_BOUND_ERR, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Compare, Dee_Decref, Dee_visit_t, return_reference_ */
 #include <deemon/type.h>        /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/types.h>       /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/util/nrlock.h> /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_OK, Dee_nrshared_lock_* */
@@ -222,7 +222,7 @@ accu_printrepr(AccuObject *__restrict self, Dee_formatprinter_t printer, void *a
 		goto err;
 	if (value == ITER_DONE)
 		return DeeFormat_PRINT(printer, arg, "Accu()");
-	return DeeFormat_Printf(printer, arg, "Accu(%r)", value);
+	return DeeFormat_Printf(printer, arg, "Accu(%R)", value);
 err:
 	return -1;
 }
@@ -276,9 +276,22 @@ accu_compare_impl(AccuObject *lhs, AccuObject *rhs,
 	rhs_ob = accu_trygetvalue(rhs);
 	if (rhs_ob == NULL)
 		goto err_lhs;
-	result = (*compare)(lhs_ob, rhs_ob);
-	Dee_Decref(rhs_ob);
-	Dee_Decref(lhs_ob);
+	if (lhs_ob == ITER_DONE) {
+		if (rhs_ob == ITER_DONE) {
+			result = Dee_COMPARE_EQ;
+		} else {
+			Dee_Decref(rhs_ob);
+			result = Dee_COMPARE_LO;
+		}
+	} else {
+		if (rhs_ob == ITER_DONE) {
+			result = Dee_COMPARE_GR;
+		} else {
+			result = (*compare)(lhs_ob, rhs_ob);
+			Dee_Decref(rhs_ob);
+		}
+		Dee_Decref(lhs_ob);
+	}
 	return result;
 err_lhs:
 	Dee_Decref(lhs_ob);

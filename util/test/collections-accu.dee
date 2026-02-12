@@ -23,7 +23,18 @@ import * from deemon;
 import Accu from collections;
 import .common.test;
 
+function assertUnbound(x: Accu) {
+	assert !x;
+	assert x.value !is bound;
+}
+
+function assertBound(x: Accu) {
+	assert x;
+	assert x.value is bound;
+}
+
 function assertAccuImpl(expected: Object, accu: Accu) {
+	assertBound(accu);
 	local actual = accu.value;
 	test.assertEqualsTyped(expected, actual);
 }
@@ -39,7 +50,11 @@ function assertAccu(expected: Object, values: {Object...}) {
 	assertAccuImpl(expected, a);
 }
 
-assert Accu().value !is bound;
+assertUnbound(Accu());
+assert repr(Accu()) == "Accu()";
+assert repr(Accu(42)) == "Accu(42)";
+assert str(Accu()) == "<empty accumulation>";
+assert str(Accu(42)) == "<accumulation with 42>";
 assertAccu(42, {42});
 assertAccu(30, {10, 20});
 assertAccu(0, {10, 20, -30});
@@ -64,3 +79,27 @@ assertAccu(MyAdder(3), {MyAdder(), MyAdder(), MyAdder()});
 assertAccu(MyAdder(6), {MyAdder(), MyAdder(), MyAdder(4)});
 assertAccu(MyAdder(2), {MyAdder(), MyAdder(), MyAdder(0)});
 
+
+local x = Accu();
+assertUnbound(x);
+x.value = 42;
+assertBound(x);
+assert x.value == 42;
+x.add(10);
+assert x.value == 52;
+local y = copy x;
+assertBound(x);
+del x.value;
+assertUnbound(x);
+
+assertBound(y);
+assert y.value == 52;
+del y.value;
+assertUnbound(y);
+assertUnbound(copy y);
+
+test.assertEqualsTyped(Accu(), Accu(), compare: true);
+test.assertEqualsTyped(Accu(42), Accu(42), compare: true);
+test.assertNotEquals(Accu(), Accu(42));
+test.assertNotEquals(Accu(10), Accu(42));
+test.assertNotEquals(Accu("foo"), Accu(42));
