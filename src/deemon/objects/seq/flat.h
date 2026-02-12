@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h>    /* DREF, DeeObject, DeeTypeObject */
+#include <deemon/object.h>    /* DREF, DeeObject, DeeTypeObject, Dee_AsObject */
 #include <deemon/util/lock.h> /* Dee_atomic_lock_* */
 
 #include "../generic-proxy.h"

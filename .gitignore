@@ -16,6 +16,8 @@
 /.vs/*.opensdf
 /.vs/.vs
 /.vs/.opencppcov
+/.vs/CodeCoverage.cov
+/.vs/CodeCoverage.xml
 *.exe
 *.exp
 *.lib

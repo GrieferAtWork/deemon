@@ -22,13 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h> /* DREF, DeeObject, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD */
+#include <deemon/alloc.h>  /* DeeObject_FREE, DeeObject_MALLOC */
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD */
 #include <deemon/serial.h> /* Dee_seraddr_t */
-#include <deemon/type.h>   /* type_cmp */
+#include <deemon/type.h>   /* DeeObject_Init, DeeObject_IsShared, type_cmp */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
-#include <stddef.h> /* offsetof, size_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

@@ -23,7 +23,21 @@
 //#define DEFINE_Sequence_classes
 #endif /* __INTELLISENSE__ */
 
+#include <deemon/api.h>
+
+#include <deemon/alloc.h>        /* DeeObject_FREE, DeeObject_MALLOC */
+#include <deemon/bool.h>         /* return_bool, return_false */
+#include <deemon/error-rt.h>     /* DeeRT_ErrNestSequenceError */
+#include <deemon/int.h>          /* DeeInt_NewUIntptr */
+#include <deemon/method-hints.h> /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
+#include <deemon/object.h>       /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_foreach_t, Dee_ssize_t, ITER_ISOK */
+#include <deemon/type.h>         /* DeeObject_Init, DeeType_Check */
+#include <deemon/util/hash.h>    /* DeeObject_Id */
+
 #include "simpleproxy.c"
+
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* uintptr_t */
 
 #if (defined(DEFINE_Sequence_ids) +   \
      defined(DEFINE_Sequence_types) + \

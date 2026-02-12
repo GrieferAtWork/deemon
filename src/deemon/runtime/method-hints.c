@@ -28,7 +28,7 @@
 #include <deemon/method-hints.h>   /* Dee_tmh_id, type_method_hint */
 #include <deemon/mro.h>            /* DeeObject_TFindPrivateAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo */
 #include <deemon/object.h>         /* DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_TYPE, Dee_funptr_t */
-#include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutDefaults, Dee_tno_id */
+#include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutDefaults, DeeType_GetNativeOperatorWithoutHints, Dee_tno_id */
 #include <deemon/seq.h>            /* DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/set.h>            /* DeeSet_Type */
 #include <deemon/string.h>         /* DeeStringObject */

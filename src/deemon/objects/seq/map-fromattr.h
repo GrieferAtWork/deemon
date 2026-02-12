@@ -22,10 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>  /* DeeObject_MALLOC */
 #include <deemon/mro.h>    /* Dee_attriter */
-#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_Incref, OBJECT_HEAD */
-#include <deemon/type.h>   /* DeeObject_Init */
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, OBJECT_HEAD */
 
 #include "../generic-proxy.h"
 

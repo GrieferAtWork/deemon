@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
+#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPdSIZ */
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/class.h>              /* DeeClass_DESC, DeeClass_QueryInstanceAttributeStringHash, DeeInstance_DESC, DeeInstance_GetAttribute, Dee_class_attribute, Dee_class_desc */
@@ -39,7 +39,7 @@
 #include <deemon/seq.h>                /* DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD */
