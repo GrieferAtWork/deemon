@@ -809,8 +809,9 @@ repeatitemiter_compare(RepeatItemIterator *lhs,
 	if (DeeObject_AssertTypeExact(rhs, &SeqRepeatItemIterator_Type))
 		goto err;
 	Dee_return_compare_if_ne(lhs->rii_obj, rhs->rii_obj);
-	Dee_return_compareT(size_t, REPEATITEMPITER_READ_NUM(lhs),
-	                    /*   */ REPEATITEMPITER_READ_NUM(rhs));
+	/* Compare "num" in reverse (because "num" becomes less as the iterator is advanced) */
+	Dee_return_compareT(size_t, REPEATITEMPITER_READ_NUM(rhs),
+	                    /*   */ REPEATITEMPITER_READ_NUM(lhs));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -832,10 +833,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitemiter_next(RepeatItemIterator *__restrict self) {
 	size_t count;
 	do {
-		count = atomic_read(&self->rii_num);
+		count = REPEATITEMPITER_READ_NUM(self);
 		if (count == 0)
 			return ITER_DONE;
-	} while (!atomic_cmpxch_weak_or_write(&self->ob_refcnt, count, count - 1));
+	} while (!atomic_cmpxch_weak_or_write(&self->rii_num, count, count - 1));
 	return_reference_(self->rii_obj);
 }
 
