@@ -114,7 +114,6 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
 			/* T:              */ CompilerItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -159,7 +158,6 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
 			/* T:              */ CompilerItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -211,7 +209,6 @@ INTERN DeeTypeObject DeeCompilerWrapper_Type = {
 			/* T:              */ CompilerWrapper,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL

@@ -98,8 +98,6 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 	return 0;
 }
 
-#define kwdsiter_deep kwdsiter_copy /* Only uses Immutable types, so deepcopy == copy */
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1(err, argc, argv, "_KwdsIterator", &self->ki_map);
@@ -295,7 +293,6 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 			/* T:              */ KwdsIterator,
 			/* tp_ctor:        */ &kwdsiter_ctor,
 			/* tp_copy_ctor:   */ &kwdsiter_copy,
-			/* tp_deep_ctor:   */ &kwdsiter_deep,
 			/* tp_any_ctor:    */ &kwdsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &kwdsiter_serialize
@@ -303,7 +300,6 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwdsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -784,11 +780,7 @@ PRIVATE struct type_member tpconst kwds_class_members[] = {
 PRIVATE struct type_operator const kwds_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	TYPE_OPERATOR_FLAGS(OPERATOR_0002_SERIALIZE, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
@@ -816,7 +808,6 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &kwds_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &kwds_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &kwds_serialize,
@@ -825,7 +816,6 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kwds_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),
@@ -955,7 +945,6 @@ err:
 }
 
 #define kmapiter_copy      kwdsiter_copy
-#define kmapiter_deep      kwdsiter_deep
 #define kmapiter_serialize kwdsiter_serialize
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject *const *argv) {
@@ -1090,7 +1079,6 @@ PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
 			/* T:              */ KmapIterator,
 			/* tp_ctor:        */ &kmapiter_ctor,
 			/* tp_copy_ctor:   */ &kmapiter_copy,
-			/* tp_deep_ctor:   */ &kmapiter_deep,
 			/* tp_any_ctor:    */ &kmapiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &kmapiter_serialize
@@ -1098,7 +1086,6 @@ PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmapiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -1167,34 +1154,6 @@ kmap_copy(KwdsMapping *__restrict self) {
 	DeeObject_Init(result, &DeeKwdsMapping_Type);
 done:
 	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF KwdsMapping *DCALL
-kmap_deep(KwdsMapping *__restrict self) {
-	DREF KwdsMapping *result;
-	size_t argc;
-	argc   = DeeKwds_SIZE(self->kmo_kwds);
-	result = (DREF KwdsMapping *)DeeObject_Mallocc(offsetof(KwdsMapping, kmo_args),
-	                                               argc, sizeof(DREF DeeObject *));
-	if unlikely(!result)
-		goto done;
-	DeeKwdsMapping_LockRead(self);
-	Dee_Movrefv(result->kmo_args, self->kmo_argv, argc);
-	DeeKwdsMapping_LockEndRead(self);
-	if (DeeObject_InplaceDeepCopyv(result->kmo_args, argc))
-		goto err_r_argv;
-	result->kmo_argv = result->kmo_args;
-	result->kmo_kwds = self->kmo_kwds;
-	Dee_Incref(result->kmo_kwds);
-	Dee_atomic_rwlock_init(&result->kmo_lock);
-	DeeObject_Init(result, &DeeKwdsMapping_Type);
-done:
-	return result;
-err_r_argv:
-	Dee_Decrefv(result->kmo_args, argc);
-/*err_r:*/
-	DeeObject_Free(result);
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
@@ -1570,7 +1529,6 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &kmap_ctor,
 			/* tp_copy_ctor:   */ &kmap_copy,
-			/* tp_deep_ctor:   */ &kmap_deep,
 			/* tp_any_ctor:    */ &kmap_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &kmap_serialize,
@@ -1579,7 +1537,6 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmap_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

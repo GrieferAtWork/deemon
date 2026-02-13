@@ -99,18 +99,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filteriterator_deep(HashFilterIterator *__restrict self,
-                    HashFilterIterator *__restrict other) {
-	self->fi_iter = DeeObject_DeepCopy(other->fi_iter);
-	if unlikely(!self->fi_iter)
-		goto err;
-	self->fi_hash = other->fi_hash;
-	return 0;
-err:
-	return -1;
-}
-
 STATIC_ASSERT(offsetof(HashFilterIterator, fi_iter) == offsetof(HashFilter, f_seq));
 STATIC_ASSERT(offsetof(HashFilterIterator, fi_hash) == offsetof(HashFilter, f_hash));
 #define filteriterator_fini      filter_fini
@@ -252,7 +240,6 @@ INTERN DeeTypeObject SeqHashFilterIterator_Type = {
 			/* T:              */ HashFilterIterator,
 			/* tp_ctor:        */ &filteriterator_ctor,
 			/* tp_copy_ctor:   */ &filteriterator_copy,
-			/* tp_deep_ctor:   */ &filteriterator_deep,
 			/* tp_any_ctor:    */ &seq_filteriterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filteriterator_serialize
@@ -302,7 +289,6 @@ INTERN DeeTypeObject MapHashFilterIterator_Type = {
 			/* T:              */ HashFilterIterator,
 			/* tp_ctor:        */ &filteriterator_ctor,
 			/* tp_copy_ctor:   */ &filteriterator_copy,
-			/* tp_deep_ctor:   */ &filteriterator_deep,
 			/* tp_any_ctor:    */ &map_filteriterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filteriterator_serialize
@@ -446,18 +432,6 @@ filter_copy(HashFilter *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-filter_deep(HashFilter *__restrict self,
-            HashFilter *__restrict other) {
-	self->f_seq = DeeObject_DeepCopy(other->f_seq);
-	if unlikely(!self->f_seq)
-		goto err;
-	self->f_hash = other->f_hash;
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_filter_init(HashFilter *__restrict self,
                 size_t argc, DeeObject *const *argv) {
@@ -531,7 +505,6 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 			/* T:              */ HashFilter,
 			/* tp_ctor:        */ &filter_ctor,
 			/* tp_copy_ctor:   */ &filter_copy,
-			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &seq_filter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filter_serialize
@@ -582,7 +555,6 @@ INTERN DeeTypeObject MapHashFilter_Type = {
 			/* T:              */ HashFilter,
 			/* tp_ctor:        */ &filter_ctor,
 			/* tp_copy_ctor:   */ &filter_copy,
-			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &map_filter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filter_serialize

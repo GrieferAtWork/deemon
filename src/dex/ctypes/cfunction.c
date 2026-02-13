@@ -211,7 +211,6 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 					/* T:              */ DeeObject,
 					/* tp_ctor:        */ NULL,
 					/* tp_copy_ctor:   */ NULL,
-					/* tp_deep_ctor:   */ NULL,
 					/* tp_any_ctor:    */ NULL,
 					/* tp_any_ctor_kw: */ NULL,
 					/* tp_serialize:   */ NULL /* TODO */

@@ -132,7 +132,6 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 DEFINE_OPERATOR_INVOKE(operator_serialize, &instance_builtin_serialize, &do_inherit_constructor) {
 	(void)p_self;
 	(void)opname;
@@ -167,21 +166,6 @@ DEFINE_OPERATOR_INVOKE(operator_serialize, &instance_builtin_serialize, &do_inhe
 err:
 	return NULL;
 }
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-DEFINE_OPERATOR_INVOKE(operator_deepcopy, &instance_deepcopy, &do_inherit_constructor) {
-	(void)p_self;
-	(void)opname;
-	DeeArg_Unpack0(err, argc, argv, OPNAME("deepcopy"));
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
-	(void)tp_self;
-	return DeeObject_DeepCopy(self);
-#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-	return DeeObject_TDeepCopy(tp_self, self);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-err:
-	return NULL;
-}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor, &do_inherit_noop) {
 	(void)self;
@@ -1198,11 +1182,7 @@ INTERN_CONST struct type_operator tpconst type_operators[LENGTHOF_type_operators
 	 *       enumerated (also without any gaps). */
 	TYPE_OPERATOR_DECL(OPERATOR_0000_CONSTRUCTOR, /**/ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_alloc.tp_any_ctor), /* */ OPCC_SPECIAL, /*         */ "this", /*    */ "constructor", /**/ "tp_any_ctor", &operator_constructor),
 	TYPE_OPERATOR_DECL(OPERATOR_0001_COPY, /*       */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_alloc.tp_copy_ctor), /**/ OPCC_SPECIAL, /*         */ "copy", /*    */ "copy", /*       */ "tp_copy_ctor", &operator_copy),
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	TYPE_OPERATOR_DECL(OPERATOR_0002_SERIALIZE, /*  */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_alloc.tp_serialize), /**/ OPCC_SPECIAL, /*         */ "serialize", /**/ "serialize", /* */ "tp_serialize", &operator_serialize),
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-	TYPE_OPERATOR_DECL(OPERATOR_0002_DEEPCOPY, /*   */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_alloc.tp_deep_ctor), /**/ OPCC_SPECIAL, /*         */ "deepcopy", /**/ "deepcopy", /*   */ "tp_deep_ctor", &operator_deepcopy),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_DECL(OPERATOR_0003_DESTRUCTOR, /* */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_dtor), /*              */ OPCC_UNARY_VOID, /*      */ "~this", /*   */ "destructor", /* */ "tp_dtor", &operator_destructor),
 	TYPE_OPERATOR_DECL(OPERATOR_0004_ASSIGN, /*     */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_assign), /*            */ OPCC_BINARY_INT, /*      */ ":=", /*      */ "assign", /*     */ "tp_assign", &operator_assign),
 	TYPE_OPERATOR_DECL(OPERATOR_0005_MOVEASSIGN, /* */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_move_assign), /*       */ OPCC_SPECIAL, /*         */ "move:=", /*  */ "moveassign", /* */ "tp_move_assign", &operator_moveassign),

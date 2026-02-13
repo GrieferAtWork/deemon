@@ -2155,14 +2155,6 @@ yield_semi_after_operator:
 				goto err;
 			operator_name = OPERATOR_COPY;
 			goto define_operator;
-
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		case KWD_deepcopy:
-			if unlikely(yield() < 0)
-				goto err;
-			operator_name = OPERATOR_DEEPCOPY;
-			goto define_operator;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		}	break;
 
 		default: {

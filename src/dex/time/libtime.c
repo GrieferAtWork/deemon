@@ -3681,7 +3681,6 @@ INTERN DeeTypeObject DeeTime_Type = {
 			/* T:              */ DeeTimeObject,
 			/* tp_ctor:        */ &time_ctor,
 			/* tp_copy_ctor:   */ &time_copy,
-			/* tp_deep_ctor:   */ &time_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &time_init_kw,
 			/* tp_serialize:   */ &time_serialize

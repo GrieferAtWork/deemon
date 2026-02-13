@@ -252,7 +252,6 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 /************************************************************************/
 #define Dee_TYPE_CONSTRUCTOR_INIT_VAR(tp_ctor,                   \
                                       tp_copy_ctor,              \
-                                      tp_deep_ctor,              \
                                       tp_any_ctor,               \
                                       tp_any_ctor_kw,            \
                                       tp_serialize,              \
@@ -260,7 +259,6 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 	{{                                                           \
 		_Dee_PRIVATE_REQUIRE_VAR_tp_ctor(tp_ctor),               \
 		_Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(tp_copy_ctor),     \
-		_Dee_PRIVATE_REQUIRE_VAR_tp_copy_ctor(tp_deep_ctor),     \
 		_Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor(tp_any_ctor),       \
 		_Dee_PRIVATE_REQUIRE_VAR_tp_any_ctor_kw(tp_any_ctor_kw), \
 		_Dee_PRIVATE_REQUIRE_VAR_tp_serialize(tp_serialize),     \
@@ -276,7 +274,6 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 /* With custom allocator */
 #define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor,                   \
                                         tp_copy_ctor,              \
-                                        tp_deep_ctor,              \
                                         tp_any_ctor,               \
                                         tp_any_ctor_kw,            \
                                         tp_serialize,              \
@@ -285,7 +282,6 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 	{{                                                             \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(tp_ctor),               \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),     \
-		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),     \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),       \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw), \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(tp_serialize),     \
@@ -294,21 +290,19 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 	}}
 
 /* Specifies an automatic object allocator. */
-#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
 #define Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED(tp_instance_size, \
                                                   tp_ctor,          \
                                                   tp_copy_ctor,     \
-                                                  tp_deep_ctor,     \
                                                   tp_any_ctor,      \
                                                   tp_any_ctor_kw,   \
                                                   tp_serialize)     \
 	{{                                                              \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_ctor(tp_ctor),                \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_copy_ctor),      \
-		_Dee_PRIVATE_REQUIRE_ALLOC_tp_copy_ctor(tp_deep_ctor),      \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor(tp_any_ctor),        \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_any_ctor_kw(tp_any_ctor_kw),  \
 		_Dee_PRIVATE_REQUIRE_ALLOC_tp_serialize(tp_serialize),      \
@@ -327,22 +321,22 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED      Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("alloc.h"))*/
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO        /*!export(include("alloc.h"))*/
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                   \
-	                                DeeSlab_Invoke(&DeeObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)),  \
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)              \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                                \
+	                                DeeSlab_Invoke(&DeeObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)), \
 	                                DeeSlab_Invoke(&DeeObject_SlabFree, min_tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                      \
-	                                DeeSlab_Invoke(&DeeGCObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)),   \
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(min_tp_instance_size, max_tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)             \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                                                  \
+	                                DeeSlab_Invoke(&DeeGCObject_SlabMalloc, max_tp_instance_size, , (void *(DCALL *)(void))(void *)(uintptr_t)(max_tp_instance_size)), \
 	                                DeeSlab_Invoke(&DeeGCObject_SlabFree, min_tp_instance_size, , (void (DCALL *)(void *))(Dee_funptr_t)NULL))
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED(tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
-	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R(tp_instance_size, tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
 /* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link against
@@ -367,7 +361,6 @@ struct Dee_type_constructor {
 		struct {
 			Dee_funptr_t _tp_init0_; /* tp_ctor */
 			Dee_funptr_t _tp_init1_; /* tp_copy_ctor */
-			Dee_funptr_t _tp_init2_; /* tp_deep_ctor */
 			Dee_funptr_t _tp_init3_; /* tp_any_ctor */
 			Dee_funptr_t _tp_init4_; /* tp_any_ctor_kw */
 			Dee_funptr_t _tp_init5_; /* tp_serialize */
@@ -379,11 +372,6 @@ struct Dee_type_constructor {
 		struct {
 			WUNUSED_T NONNULL_T((1))                  int (DCALL *tp_ctor)(DeeObject *__restrict self);
 			WUNUSED_T NONNULL_T((1, 2))               int (DCALL *tp_copy_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-			Dee_funptr_t                                  _unused_tp_deep_ctor;
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-			WUNUSED_T NONNULL_T((1, 2))               int (DCALL *tp_deep_ctor)(DeeObject *__restrict self, DeeObject *__restrict other);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			WUNUSED_T NONNULL_T((1)) ATTR_INS_T(3, 2) int (DCALL *tp_any_ctor)(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
@@ -442,11 +430,6 @@ struct Dee_type_constructor {
 			 */
 			WUNUSED_T                  DREF DeeObject *(DCALL *tp_ctor)(void);
 			WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-			Dee_funptr_t                               _unused_tp_deep_ctor;
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-			WUNUSED_T NONNULL_T((1))   DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			WUNUSED_T ATTR_INS_T(2, 1) DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
 			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
 			 *          even when `tp_ctor' or `tp_any_ctor' has been defined as non-NULL! */
@@ -481,60 +464,6 @@ struct Dee_type_constructor {
 	 * @return: != 0: Error was thrown */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_assign)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_move_assign)(DeeObject *self, DeeObject *other);
-
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	WUNUSED_T NONNULL_T((1)) int (DCALL *_unused_tp_deepload)(DeeObject *__restrict self);
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-	/* Following a previously successful construction using the `tp_deep_ctor' operator,
-	 * go through all member objects of the type and replace them with deep copies.
-	 * This operator is required to provide a safe way for GC objects to be
-	 * constructed for deepcopy, using a 2-step process that allows the
-	 * runtime to account for possible recursion:
-	 * >>     DeeTypeObject *type;       // The type implementing the visible `tp_deep_ctor'
-	 * >>     Deebject      *old_object; // The object being copied.
-	 * >>     Deebject      *new_object; // The object resulting from the copy.
-	 * >>     // Check if this instance is already being duplicated
-	 * >>     new_object = deepcopy_lookup(old_object, type);
-	 * >>     if (new_object) return_reference_(new_object);
-	 * >>     // Construct a new object using the deep-constructor.
-	 * >>     // For non-GC objects, this will do _all_ the work, but for GC objects,
-	 * >>     // it will only create shallow references to all associated objects,
-	 * >>     // which are then replaced by deep copies once `tp_deepload' is invoked.
-	 * >>     // Note however that some GC-able classes (such as user-defined ones)
-	 * >>     // do not provide a tp_deepload operator, rather choosing to implement
-	 * >>     // their own mechanism to safely implement a deepcopy+load mechanism.
-	 * >>     // However since such a complex mechanism is often not required (in the
-	 * >>     // case of user-classes it is unify the deepcopy operator to a single
-	 * >>     // function invocation), deepload can be used to split the two parts
-	 * >>     // and take the load of calling `Dee_DeepCopyAddAssoc' from the
-	 * >>     // implementing type to the runtime library.
-	 * >>     deepcopy_begin();
-	 * >>     new_object = tp_deep_ctor(old_object); // Usually the same callback as `tp_copy_ctor'
-	 * >>     if (tp_deepload) {
-	 * >>         int error;
-	 * >>         if unlikely(!new_object)
-	 * >>             goto err;
-	 * >>         if unlikely(!Dee_DeepCopyAddAssoc(old_object, new_object))
-	 * >>             goto err_new;
-	 * >>         error = tp_deepload(new_object);
-	 * >>         if (error)
-	 * >>             goto err_new;
-	 * >>         deepcopy_end();
-	 * >>     } else if (deepcopy_end()) {
-	 * >>         // This is a recursive deepcopy operation, so we must still track the new object
-	 * >>         if unlikely(!Dee_DeepCopyAddAssoc(old_object, new_object))
-	 * >>             goto err_new;
-	 * >>     }
-	 * >>     return new_object;
-	 * >> err_new:
-	 * >>     Dee_Decref(new_object);
-	 * >> err:
-	 * >>     deepcopy_end();
-	 * >>     return NULL;
-	 * @return: == 0: Success
-	 * @return: != 0: Error was thrown */
-	WUNUSED_T NONNULL_T((1)) int (DCALL *tp_deepload)(DeeObject *__restrict self);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	/* Callback for `DeeObject_Destroy()' (usually auto-assigned by
 	 * `DeeType_RequireDestroy()', but can be overwritten with a
@@ -1737,24 +1666,21 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR          0x00000200 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator str)) && ...; */
 #define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR         0x00000300 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator repr)) && ...; */
 #define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH         0x00000400 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator hash)) && ...; */
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP         0x00000500 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator deepcopy)) && ...; */
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ             0x00000600 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a == b, a != b, [a.operator hash(), b.operator hash()]))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMP               0x00000700 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a == b, a != b, a < b, a > b, a <= b, a >= b))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          0x00000800 /* >> (for (local arg: ...) for (local elem: thisarg) IS_CONSTEXPR(elem == arg)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ             0x00000900 /* TODO (for sets and maps) */
-#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMP               0x00000a00 /* TODO (for sets and maps) */
-#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS          0x00000b00 /* TODO (for sets and maps) */
-#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES 0x00000c00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) DeeType_IsConstCastable(Dee_TYPE(x)))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES  0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) IS_CONSTEXPR(x.operator str))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES     0x00000e00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_IsWritable(arg) : DeeType_IsConstCastable(Dee_TYPE(arg))) && ...); */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      0x00000f00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_IsWritable(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
-#define Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          0x00001000 /* Special casing for `OPERATOR_CALL' of `DeeInstanceMethod_Type', `DeeObjMethod_Type', `DeeKwObjMethod_Type', `DeeClsMethod_Type', `DeeKwClsMethod_Type', `DeeClsProperty_Type', `DeeClsMember_Type', `DeeCMethod_Type' and `DeeKwCMethod_Type' */
-#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR            0x00001100 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator str)    (fields are STRUCT_OBJECT-like tp_members) */
-#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR           0x00001200 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator repr)   (fields are STRUCT_OBJECT-like tp_members) */
-#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ          0x00001300 /* Foreach field in pair(this,arg0): IS_CONSTEXPR(a == b, a != b, [a.operator hash(), b.operator hash()]) */
-#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP            0x00001400 /* Foreach field in pair(this,arg0): IS_CONSTEXPR(a == b, a != b, a < b, a > b, a <= b, a >= b) */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ             0x00000500 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a == b, a != b, [a.operator hash(), b.operator hash()]))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMP               0x00000600 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a == b, a != b, a < b, a > b, a <= b, a >= b))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          0x00000700 /* >> (for (local arg: ...) for (local elem: thisarg) IS_CONSTEXPR(elem == arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ             0x00000800 /* TODO (for sets and maps) */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMP               0x00000900 /* TODO (for sets and maps) */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS          0x00000a00 /* TODO (for sets and maps) */
+#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES 0x00000b00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) DeeType_IsConstCastable(Dee_TYPE(x)))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES  0x00000c00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) IS_CONSTEXPR(x.operator str))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES     0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_IsWritable(arg) : DeeType_IsConstCastable(Dee_TYPE(arg))) && ...); */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      0x00000e00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_IsWritable(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_IsWritable(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
+#define Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          0x00000f00 /* Special casing for `OPERATOR_CALL' of `DeeInstanceMethod_Type', `DeeObjMethod_Type', `DeeKwObjMethod_Type', `DeeClsMethod_Type', `DeeKwClsMethod_Type', `DeeClsProperty_Type', `DeeClsMember_Type', `DeeCMethod_Type' and `DeeKwCMethod_Type' */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR            0x00001000 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator str)    (fields are STRUCT_OBJECT-like tp_members) */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR           0x00001100 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator repr)   (fields are STRUCT_OBJECT-like tp_members) */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ          0x00001200 /* Foreach field in pair(this,arg0): IS_CONSTEXPR(a == b, a != b, [a.operator hash(), b.operator hash()]) */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP            0x00001300 /* Foreach field in pair(this,arg0): IS_CONSTEXPR(a == b, a != b, a < b, a > b, a <= b, a >= b) */
 
 #ifdef DEE_SOURCE
 #define METHOD_FMASK                                    Dee_METHOD_FMASK
@@ -1772,9 +1698,6 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR          Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR
 #define METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR
 #define METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-#define METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ             Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ
 #define METHOD_FCONSTCALL_IF_SEQ_CONSTCMP               Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMP
 #define METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS
@@ -2253,11 +2176,7 @@ typedef uint16_t Dee_operator_t;
 /* Universal operator codes. */
 #define OPERATOR_CONSTRUCTOR  0x0000 /* `operator this(args...)'                                    - `__constructor__' - `tp_any_ctor'. */
 #define OPERATOR_COPY         0x0001 /* `operator copy(other: type(this))'                          - `__copy__'        - `tp_copy_ctor'. */
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 #define OPERATOR_SERIALIZE    0x0002 /* `operator serialize(TODO)'                                  - `__serialize__'   - `tp_serialize'. */
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-#define OPERATOR_DEEPCOPY     0x0002 /* `operator deepcopy(other: type(this))'                      - `__deepcopy__'    - `tp_deep_ctor'. */
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define OPERATOR_DESTRUCTOR   0x0003 /* `operator ~this()'                                          - `__destructor__'  - `tp_dtor'. */
 #define OPERATOR_ASSIGN       0x0004 /* `operator := (other: Object)'                               - `__assign__'      - `tp_assign'. */
 #define OPERATOR_MOVEASSIGN   0x0005 /* `operator move := (other: type(this))'                      - `__moveassign__'  - `tp_move_assign'. */
@@ -2354,11 +2273,7 @@ typedef uint16_t Dee_operator_t;
  * a lexicographical line sort. */
 #define OPERATOR_0000_CONSTRUCTOR  OPERATOR_CONSTRUCTOR
 #define OPERATOR_0001_COPY         OPERATOR_COPY
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 #define OPERATOR_0002_SERIALIZE    OPERATOR_SERIALIZE
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-#define OPERATOR_0002_DEEPCOPY     OPERATOR_DEEPCOPY
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define OPERATOR_0003_DESTRUCTOR   OPERATOR_DESTRUCTOR
 #define OPERATOR_0004_ASSIGN       OPERATOR_ASSIGN
 #define OPERATOR_0005_MOVEASSIGN   OPERATOR_MOVEASSIGN
@@ -2844,11 +2759,7 @@ struct Dee_type_object {
 #define DeeType_IsNoArgConstructible(x)  (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_ctor != NULL)
 #define DeeType_IsVarArgConstructible(x) (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_any_ctor != NULL || ((DeeTypeObject const *)(x))->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
 #define DeeType_IsConstructible(x)       (DeeType_IsSuperConstructible(x) || DeeType_IsNoArgConstructible(x) || DeeType_IsVarArgConstructible(x))
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 #define DeeType_IsCopyable(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_copy_ctor != NULL) /* TODO: What about inherited copyability? (Dee_TP_FINHERITCTOR) */
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-#define DeeType_IsCopyable(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_copy_ctor != NULL || ((DeeTypeObject const *)(x))->tp_init.tp_alloc.tp_deep_ctor != NULL) /* TODO: What about inherited copyability? (Dee_TP_FINHERITCTOR) */
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define DeeType_IsNamespace(x)           ((Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & (Dee_TP_FFINAL | Dee_TP_FABSTRACT)) == (Dee_TP_FFINAL | Dee_TP_FABSTRACT) && (((DeeTypeObject const *)(x))->tp_features & Dee_TF_SINGLETON))
 #define DeeType_Base(x)                  (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_base)
 #define DeeType_GCPriority(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_gc ? ((DeeTypeObject const *)(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
@@ -3028,7 +2939,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
  * its intend of inheriting constructors)
  *
  * s.a. `DeeType_InheritOperator()' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self); /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self); /* tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_buffer_flags */
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeType_InheritConstructors(self) DeeType_InheritOperator(self, OPERATOR_CONSTRUCTOR)

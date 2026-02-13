@@ -193,7 +193,6 @@ INTERN DeeTypeObject SlabStat_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &ss_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ss_serialize,
@@ -369,7 +368,6 @@ INTERN DeeTypeObject SlabInfo_Type = {
 			/* T:              */ SlabInfoObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &si_serialize

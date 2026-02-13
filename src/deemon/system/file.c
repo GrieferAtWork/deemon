@@ -252,7 +252,6 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 			Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 				/* tp_ctor:        */ &debugfile_get,
 				/* tp_copy_ctor:   */ &DeeObject_NewRef,
-				/* tp_deep_ctor:   */ &DeeObject_NewRef,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL, /* Static singleton, so no serial needed */
@@ -3219,7 +3218,6 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 				/* T:              */ SystemFile,
 				/* tp_ctor:        */ NULL,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ PTR_sysfile_init_kw,
 				/* tp_serialize:   */ NULL /* System files can't be serialized */
@@ -3312,7 +3310,6 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 				/* T:              */ SystemFile,
 				/* tp_ctor:        */ NULL,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL /* System files can't be serialized */

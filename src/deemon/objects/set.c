@@ -606,7 +606,6 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor, /* Allow default-construction of sequence objects. */
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
-			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &DeeNone_OperatorSerialize

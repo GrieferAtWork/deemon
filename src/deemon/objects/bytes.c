@@ -188,7 +188,6 @@ INTERN DeeTypeObject BytesIterator_Type = {
 			/* T:              */ BytesIterator,
 			/* tp_ctor:        */ &bytesiter_ctor,
 			/* tp_copy_ctor:   */ &bytesiter_copy,
-			/* tp_deep_ctor:   */ &bytesiter_copy,
 			/* tp_any_ctor:    */ &bytesiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bytesiter_serialize
@@ -1842,9 +1841,6 @@ PUBLIC struct _Dee_empty_bytes_struct DeeBytes_Empty = {
 PRIVATE struct type_operator const bytes_operators[] = {
 //	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL), /* TODO: Allow when the result is a read-only buffer */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FNOREFESCAPE),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
@@ -2048,7 +2044,6 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &bytes_ctor,
 			/* tp_copy_ctor:   */ &bytes_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bytes_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bytes_serialize,

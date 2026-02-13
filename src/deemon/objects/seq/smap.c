@@ -266,18 +266,6 @@ smapiter_copy(SharedMapIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-smapiter_deep(SharedMapIterator *__restrict self,
-              SharedMapIterator *__restrict other) {
-	self->smi_seq = (DREF SharedMap *)DeeObject_DeepCopy((DeeObject *)other->smi_seq);
-	if unlikely(self->smi_seq)
-		goto err;
-	self->smi_index = atomic_read(&other->smi_index);
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 smapiter_hash(SharedMapIterator *self) {
 	return Dee_HashCombine(Dee_HashPointer(self->smi_seq),
@@ -328,7 +316,6 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 			/* T:              */ SharedMapIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &smapiter_copy,
-			/* tp_deep_ctor:   */ &smapiter_deep,
 			/* tp_any_ctor:    */ &smapiter_ctor,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &smapiter_serialize
@@ -846,7 +833,6 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &smap_serialize,
@@ -855,7 +841,6 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&smap_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

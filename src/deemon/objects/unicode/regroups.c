@@ -334,7 +334,6 @@ INTERN DeeTypeObject ReGroups_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &rg_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rg_serialize,
@@ -384,7 +383,6 @@ INTERN DeeTypeObject ReSubStrings_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &rss_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rss_serialize,
@@ -434,7 +432,6 @@ INTERN DeeTypeObject ReSubBytes_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &rsb_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rsb_serialize,

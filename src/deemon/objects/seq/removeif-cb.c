@@ -40,7 +40,6 @@ DECL_BEGIN
 STATIC_ASSERT(offsetof(SeqRemoveWithRemoveIfPredicate, srwrip_item) == offsetof(ProxyObject, po_obj));
 #define srwrip_init      generic_proxy__init
 #define srwrip_copy      generic_proxy__copy_alias
-#define srwrip_deep      generic_proxy__deepcopy
 #define srwrip_fini      generic_proxy__fini
 #define srwrip_visit     generic_proxy__visit
 #define srwrip_serialize generic_proxy__serialize
@@ -51,7 +50,6 @@ STATIC_ASSERT(offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_key) == o
               offsetof(SeqRemoveWithRemoveIfPredicateWithKey, srwripwk_key) == offsetof(ProxyObject2, po_obj2));
 #define srwripwk_init      generic_proxy2__init
 #define srwripwk_copy      generic_proxy2__copy_alias12
-#define srwripwk_deep      generic_proxy2__deepcopy
 #define srwripwk_fini      generic_proxy2__fini
 #define srwripwk_visit     generic_proxy2__visit
 #define srwripwk_serialize generic_proxy2__serialize
@@ -104,7 +102,6 @@ INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicate_Type = {
 			/* T:              */ SeqRemoveWithRemoveIfPredicate,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &srwrip_copy,
-			/* tp_deep_ctor:   */ &srwrip_deep,
 			/* tp_any_ctor:    */ &srwrip_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &srwrip_serialize
@@ -151,7 +148,6 @@ INTERN DeeTypeObject SeqRemoveWithRemoveIfPredicateWithKey_Type = {
 			/* T:              */ SeqRemoveWithRemoveIfPredicateWithKey,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &srwripwk_copy,
-			/* tp_deep_ctor:   */ &srwripwk_deep,
 			/* tp_any_ctor:    */ &srwripwk_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &srwripwk_serialize
@@ -232,7 +228,6 @@ INTERN DeeTypeObject SeqRemoveIfWithRemoveAllItem_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Static singleton, so no serial needed */
@@ -270,7 +265,6 @@ INTERN DeeObject SeqRemoveIfWithRemoveAllItem_DummyInstance = {
 
 STATIC_ASSERT(offsetof(SeqRemoveIfWithRemoveAllKey, sriwrak_should) == offsetof(ProxyObject, po_obj));
 #define seq_removeif_with_removeall_key_copy      generic_proxy__copy_alias
-#define seq_removeif_with_removeall_key_deep      generic_proxy__deepcopy
 #define seq_removeif_with_removeall_key_init      generic_proxy__init
 #define seq_removeif_with_removeall_key_serialize generic_proxy__serialize
 #define seq_removeif_with_removeall_key_fini      generic_proxy__fini
@@ -307,7 +301,6 @@ INTERN DeeTypeObject SeqRemoveIfWithRemoveAllKey_Type = {
 			/* T:              */ SeqRemoveIfWithRemoveAllKey,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &seq_removeif_with_removeall_key_copy,
-			/* tp_deep_ctor:   */ &seq_removeif_with_removeall_key_deep,
 			/* tp_any_ctor:    */ &seq_removeif_with_removeall_key_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &seq_removeif_with_removeall_key_serialize

@@ -39,7 +39,6 @@
 #include "util/futex.h" /* DeeFutex_WakeAll */
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
 #include <stdint.h>  /* uint16_t, uint32_t, uint64_t, uintptr_t */
 
 #ifndef __INTELLISENSE__
@@ -139,84 +138,6 @@ struct Dee_trepr_frame {
 	DeeObject              *rf_obj;  /* [1..1][const] The object for which the `__str__' or `__repr__' operator is being invoked. */
 	DeeTypeObject          *rf_type; /* [1..1][const] The type of object that is being converted to a string. */
 };
-
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-struct Dee_deep_assoc_entry {
-	DREF DeeObject *de_old; /* [0..1] The old object that is being copied.
-	                         * NOTE: NULL is used to indicate a sentinel entry.
-	                         * NOTE: For the purposes of hashing, `Dee_HashPointer(de_old) ^ Dee_HashPointer(Dee_TYPE(de_new))' is used. */
-	DREF DeeObject *de_new; /* [?..1][valid_if(da_old)] The new object that results the copy operation. */
-};
-
-struct Dee_deep_assoc {
-	/* During deepcopy operations, it should be noted that there
-	 * exists the chance that some recursive object is being copied:
-	 * >> local my_list = [10, 20];
-	 * >> my_list.append(my_list);
-	 * >> local dup = deepcopy my_list; // Here.
-	 *
-	 * To deal with this, the `deepcopy' operator must be able to
-	 * recursively track all objects that are already in the process
-	 * of being copied, even when those object have only been
-	 * partially constructed.
-	 *
-	 * Therefor, it is necessary to keep track of the association of
-	 * any GC-object (those are the ones that can be recursive and
-	 * therefor able to re-appear in chains) to the respective
-	 * existing object, such that an attempt to deep-copy an object
-	 * that is already being duplicated will return the partially
-	 * constructed copy.
-	 *
-	 * For this, we need something that is similar to what a Dict
-	 * does, however it doesn't need to be thread-safe (because we
-	 * keep track of this thread-locally and only clear the set of
-	 * objects having already been copied once execution is no
-	 * longer inside any deepcopy operator), and also mustn't keep
-	 * track of objects based on __hash__ and __eq__, but based on
-	 * their pointers alone.
-	 *
-	 * It must however still keep a reference to both the old and
-	 * the new object, since there is a possibility that some object
-	 * is only temporarily being constructed during deepcopy, but
-	 * then not actually referenced by the end product.
-	 * >> // MAP:  DeeObject *old --> DeeObject *new;
-	 * >> function deepcopy(ob) {
-	 * >>     local result;
-	 * >>     if (ob in THREAD_LOCAL_DEEPCOPY_MAP)
-	 * >>         return THREAD_LOCAL_DEEPCOPY_MAP[ob];
-	 * >>     if (type(ob).__isgc__) {
-	 * >>         result = type(ob).begin_deepcopy();
-	 * >>         THREAD_LOCAL_DEEPCOPY_MAP[ob] = result;
-	 * >>         type(ob).perform_deepcopy(result, ob);
-	 * >>     } else {
-	 * >>         result = deepcopy:
-	 * >>     }
-	 * >>     return result;
-	 * >> }
-	 */
-	size_t                       da_used;      /* Amount of old-new pairs actually in use. */
-	size_t                       da_mask;      /* Allocated dictionary size. */
-	struct Dee_deep_assoc_entry *da_list;      /* [1..da_used|ALLOC(da_mask+1)][owned_if(!= INTERNAL(empty_deep_assoc))] Deepcopy old-new value pairs. */
-	size_t                       da_recursion; /* Amount of recursive deepcopy operations currently active.
-	                                            * When this counter is decremented down to ZERO(0), the association map is cleared. */
-};
-#define Dee_DEEPASSOC_HASHST(self, hash)  ((hash) & (self)->da_mask)
-#define Dee_DEEPASSOC_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_DEEPASSOC_HASHIT(self, i)     ((self)->da_list + ((i) & (self)->da_mask))
-
-
-/* Implementation detail required to implement recursive deepcopy.
- * To see how this function must be used, look at the documentation for `tp_deepload'
- * WARNING: THIS FUNCTION MUST NOT BE CALLED BY THE IMPLEMENTING
- *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED!
- * @return: * :        Another replacement for "old_object" already exists (return is that object)
- * @return: ITER_DONE: The replacement link "old_object -> new_object" was registered
- * @return: NULL:      An error was thrown */
-DFUNDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL
-Dee_DeepCopyAddAssoc(DeeObject *new_object,
-                     DeeObject *old_object);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-
 
 #ifdef CONFIG_BUILDING_DEEMON
 struct Dee_thread_object;
@@ -353,11 +274,6 @@ typedef struct Dee_thread_object {
 	struct Dee_repr_frame         *t_hash_curr;  /* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Chain of GC objects currently invoking the `__hash__' operator. */
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	struct Dee_deep_assoc          t_deepassoc;  /* [lock(PRIVATE(DeeThread_Self()))]
-	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
-	                                              * Deepcopy association map. */
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	struct Dee_code_frame         *t_exec;       /* [lock(PRIVATE(DeeThread_Self()))][0..1][(!= NULL) == (t_execsz != 0)]
 	                                              * [if(!Dee_THREAD_STATE_STARTED || Dee_THREAD_STATE_TERMINATED, [0..0])]
 	                                              * [const_if(Dee_THREAD_STATE_TERMINATED)]

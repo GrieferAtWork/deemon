@@ -4112,7 +4112,6 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 			/* T:              */ DeeObject, /* Allow default-construction of Sequence objects. */
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
-			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &DeeNone_OperatorSerialize

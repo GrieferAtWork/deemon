@@ -185,7 +185,6 @@ INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 			/* T:              */ BytesSegmentsIterator,
 			/* tp_ctor:        */ &bsegiter_ctor,
 			/* tp_copy_ctor:   */ &bsegiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsegiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bsegiter_serialize
@@ -440,7 +439,6 @@ INTERN DeeTypeObject BytesSegments_Type = {
 			/* T:              */ BytesSegments,
 			/* tp_ctor:        */ &bseg_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bseg_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bseg_serialize

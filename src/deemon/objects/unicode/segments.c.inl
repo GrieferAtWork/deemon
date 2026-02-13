@@ -216,7 +216,6 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 			/* T:              */ StringSegmentsIterator,
 			/* tp_ctor:        */ &ssegiter_ctor,
 			/* tp_copy_ctor:   */ &ssegiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &ssegiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ssegiter_serialize
@@ -499,7 +498,6 @@ INTERN DeeTypeObject StringSegments_Type = {
 			/* T:              */ StringSegments,
 			/* tp_ctor:        */ &sseg_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &sseg_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sseg_serialize

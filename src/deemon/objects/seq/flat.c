@@ -136,7 +136,6 @@ err:
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqFlat, sf_seq) == offsetof(ProxyObject, po_obj));
 #define sf_copy      generic_proxy__copy_alias
-#define sf_deep      generic_proxy__deepcopy
 #define sf_init      generic_proxy__init
 #define sf_serialize generic_proxy__serialize
 #define sf_fini      generic_proxy__fini
@@ -912,7 +911,6 @@ INTERN DeeTypeObject SeqFlat_Type = {
 			/* T:              */ SeqFlat,
 			/* tp_ctor:        */ &sf_ctor,
 			/* tp_copy_ctor:   */ &sf_copy,
-			/* tp_deep_ctor:   */ &sf_deep,
 			/* tp_any_ctor:    */ &sf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sf_serialize
@@ -986,28 +984,6 @@ sfi_copy(SeqFlatIterator *__restrict self,
 	self->sfi_baseiter = other->sfi_baseiter;
 	Dee_atomic_lock_init(&self->sfi_currlock);
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE NONNULL((1, 2)) int DCALL
-sfi_deep(SeqFlatIterator *__restrict self,
-         SeqFlatIterator *__restrict other) {
-	DREF DeeObject *other_curriter;
-	SeqFlatIterator_LockAcquire(self);
-	other_curriter = other->sfi_curriter;
-	Dee_Incref(other_curriter);
-	SeqFlatIterator_LockRelease(self);
-	if unlikely((other_curriter = DeeObject_DeepCopyInherited(other_curriter)) == NULL)
-		goto err;
-	self->sfi_curriter = other_curriter;
-	self->sfi_baseiter = DeeObject_DeepCopy(other->sfi_baseiter);
-	if unlikely(!self->sfi_baseiter)
-		goto err_curriter;
-	Dee_atomic_lock_init(&self->sfi_currlock);
-	return 0;
-err_curriter:
-	Dee_Decref(other_curriter);
 err:
 	return -1;
 }
@@ -1321,7 +1297,6 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 			/* T:              */ SeqFlatIterator,
 			/* tp_ctor:        */ &sfi_ctor,
 			/* tp_copy_ctor:   */ &sfi_copy,
-			/* tp_deep_ctor:   */ &sfi_deep,
 			/* tp_any_ctor:    */ &sfi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sfi_serialize

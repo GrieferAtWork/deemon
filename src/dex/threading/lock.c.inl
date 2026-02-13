@@ -943,7 +943,6 @@ INTERN DeeTypeObject LOCAL_DeeLock_Type = {
 			/* T:              */ LOCAL_DeeLockObject,
 			/* tp_ctor:        */ &LOCAL_lockapi_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ LOCAL_lockapi_init_kw_PTR,
 			/* tp_serialize:   */ NULL /* TODO (writes the output lock matching the "acquired" ctor argument (or unlock if no such argument)) */
@@ -1416,7 +1415,6 @@ INTERN DeeTypeObject LOCAL_DeeRWLock_Type = {
 			/* T:              */ LOCAL_DeeRWLockObject,
 			/* tp_ctor:        */ &LOCAL_rwlockapi_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ LOCAL_rwlockapi_init_kw_PTR,
 			/* tp_serialize:   */ NULL /* TODO (writes the output lock as unlocked) */
@@ -1682,7 +1680,6 @@ INTERN DeeTypeObject LOCAL_DeeRWLockReadLock_Type = {
 			/* T:              */ DeeGenericRWLockProxyObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &LOCAL_rwlockapi_readlock_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -1728,7 +1725,6 @@ INTERN DeeTypeObject LOCAL_DeeRWLockWriteLock_Type = {
 			/* T:              */ DeeGenericRWLockProxyObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &LOCAL_rwlockapi_writelock_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */

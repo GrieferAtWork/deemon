@@ -1373,22 +1373,6 @@ AttributeError_fini(AttributeError *__restrict self) {
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-AttributeError_deep(AttributeError *__restrict self,
-                    AttributeError *__restrict other) {
-	if unlikely(AttributeError_copy(self, other))
-		goto err;
-	if unlikely(DeeObject_XInplaceDeepCopy((DeeObject **)&self->e_cause))
-		goto err_self;
-	if unlikely(DeeObject_XInplaceDeepCopy((DeeObject **)&self->ae_obj))
-		goto err_self;
-	return 0;
-err_self:
-	AttributeError_fini(self);
-err:
-	return -1;
-}
-
 PRIVATE NONNULL((1, 2)) void DCALL
 AttributeError_visit(AttributeError *__restrict self, Dee_visit_t proc, void *arg) {
 	if (self->ae_obj) {
@@ -1829,7 +1813,6 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 			/* T:              */ AttributeError,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &AttributeError_copy,
-			/* tp_deep_ctor:   */ &AttributeError_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &AttributeError_init_kw,
 			/* tp_serialize:   */ &AttributeError_serialize
@@ -1883,7 +1866,6 @@ PUBLIC DeeTypeObject DeeError_AttributeError = {
 				/* T:              */ AttributeError,                       \
 				/* tp_ctor:        */ NULL,                                 \
 				/* tp_copy_ctor:   */ &AttributeError_copy,                 \
-				/* tp_deep_ctor:   */ &AttributeError_deep,                 \
 				/* tp_any_ctor:    */ NULL,                                 \
 				/* tp_any_ctor_kw: */ &AttributeError_init_kw,              \
 				/* tp_serialize:   */ &AttributeError_serialize             \

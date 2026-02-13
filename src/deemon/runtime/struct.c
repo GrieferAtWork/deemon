@@ -561,35 +561,6 @@ struct_copy_cb(void *arg, DeeTypeObject *declaring_type,
 	return 0;
 }
 
-
-PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL
-struct_deepcopy_cb(void *arg, DeeTypeObject *declaring_type,
-                   struct type_member const *field) {
-	struct struct_copy_data *data = (struct struct_copy_data *)arg;
-	byte_t *dst = (byte_t *)data->scd_dst + field->m_desc.md_field.mdf_offset;
-	byte_t *src = (byte_t *)data->scd_src + field->m_desc.md_field.mdf_offset;
-	ASSERT(TYPE_MEMBER_ISFIELD(field));
-	(void)declaring_type;
-	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
-	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
-	case STRUCT_OBJECT & ~STRUCT_CONST: {
-		DeeObject *obj = *(DeeObject *const *)src;
-		if (obj) {
-			obj = DeeObject_DeepCopy(obj);
-			if unlikely(!obj)
-				return -1;
-		}
-		*(DREF DeeObject **)dst = obj; /* Inherit reference */
-	}	break;
-	case STRUCT_VARIANT:
-		return Dee_variant_init_deepcopy((struct Dee_variant *)dst, (struct Dee_variant *)src);
-	default:
-		return struct_copy_cb(arg, declaring_type, field);
-	}
-	return 0;
-}
-
-
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeStructObject_Copy(DeeObject *__restrict self,
                      DeeObject *__restrict other) {
@@ -601,19 +572,6 @@ DeeStructObject_Copy(DeeObject *__restrict self,
 	                                         &struct_copy_undo_cb,
 	                                         &data);
 }
-
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeStructObject_Deep(DeeObject *__restrict self,
-                     DeeObject *__restrict other) {
-	struct struct_copy_data data;
-	data.scd_dst = self;
-	data.scd_src = other;
-	return (int)DeeStructObject_ForeachField(Dee_TYPE(self),
-	                                         &struct_deepcopy_cb,
-	                                         &struct_copy_undo_cb,
-	                                         &data);
-}
-
 
 PRIVATE NONNULL((2, 3)) Dee_ssize_t DCALL
 struct_fini_all_cb(void *arg, DeeTypeObject *declaring_type,

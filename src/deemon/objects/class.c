@@ -38,7 +38,6 @@
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/super.h>           /* DeeObject_TAssign, DeeObject_TMoveAssign */
 #include <deemon/system-features.h> /* bzero*, memcpyc, memmoveupc */
-#include <deemon/thread.h>          /* Dee_DeepCopyAddAssoc */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_GC_PRIORITY_INSTANCE, Dee_METHOD_FNORMAL, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_type_operator_isdecl, OPCC_SPECIAL, OPCLASS_CUSTOM, OPERATOR_*, TP_F*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
@@ -903,11 +902,6 @@ instance_destructor(DeeObject *__restrict self) {
 	      IF_NOBASE((func) == &instance_builtin_nobase_copy ? instance_builtin_nobase_tcopy(tp_self, self, other) :) \
 	                (func) == &instance_copy ? instance_tcopy(tp_self, self, other) :                                \
 	              (*(func))(self, other))
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-#define DeeType_INVOKE_DEEPCOPY(func, tp_self, self, other)                                   \
-	               ((func) == &instance_deepcopy ? instance_tdeepcopy(tp_self, self, other) : \
-	              (*(func))(self, other))
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define DeeType_INVOKE_CTOR(func, tp_self, self)                                                                          \
 	               ((func) == &instance_builtin_ctor ? instance_builtin_tctor(tp_self, self) :                            \
 	      IF_NOBASE((func) == &instance_builtin_nobase_ctor ? instance_builtin_nobase_tctor(tp_self, self) :)             \
@@ -1008,11 +1002,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_initsuper_as_copy(DeeTypeObject *tp_super,
                            DeeObject *__restrict self,
-                           DeeObject *other
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-                           , bool deep_copy
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-                           ) {
+                           DeeObject *other) {
 	int result;
 
 	/* Handle constructor inheritance */
@@ -1024,13 +1014,6 @@ instance_initsuper_as_copy(DeeTypeObject *tp_super,
 	ASSERTF(!DeeType_IsVariable(tp_super), "Type derived from variable type");
 
 	/* Initialize the super-type. */
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	if (tp_super->tp_init.tp_alloc.tp_deep_ctor && deep_copy) {
-		int (DCALL *func)(DeeObject *__restrict, DeeObject *__restrict);
-		func   = tp_super->tp_init.tp_alloc.tp_deep_ctor;
-		result = DeeType_INVOKE_DEEPCOPY(func, tp_super, self, other);
-	} else
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	if (tp_super->tp_init.tp_alloc.tp_copy_ctor) {
 		int (DCALL *func)(DeeObject *__restrict, DeeObject *__restrict);
 		func   = tp_super->tp_init.tp_alloc.tp_copy_ctor;
@@ -1044,13 +1027,7 @@ instance_initsuper_as_copy(DeeTypeObject *tp_super,
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, 1, (DeeObject **)&other, NULL);
 	} else {
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		result = err_unimplemented_operator(tp_super, OPERATOR_COPY);
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-		result = err_unimplemented_operator(tp_super,
-		                                    deep_copy ? OPERATOR_COPY
-		                                              : OPERATOR_DEEPCOPY);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	}
 	return result;
 }
@@ -1081,13 +1058,8 @@ instance_tcopy(DeeTypeObject *tp_self,
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		if (instance_initsuper_as_copy(tp_super, self, other))
 			goto err_members;
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-		if (instance_initsuper_as_copy(tp_super, self, other, false))
-			goto err_members;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	}
 	result = DeeObject_ThisCall(func, self, 1, (DeeObject **)&other);
 	if unlikely(!result)
@@ -1107,73 +1079,12 @@ err_members:
 err:
 	return -1;
 }
-
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-instance_tdeepcopy(DeeTypeObject *tp_self,
-                   DeeObject *__restrict self,
-                   DeeObject *other) {
-	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
-	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
-	DREF DeeObject *func, *result;
-	DeeTypeObject *tp_super;
-
-	/* Lookup the copy operator function. */
-	func = class_desc_get_known_operator(tp_self, desc, OPERATOR_DEEPCOPY);
-	if unlikely(!func)
-		goto err;
-
-	/* Default-initialize the members of this instance. */
-	Dee_atomic_rwlock_init(&instance->id_lock);
-	bzeroc(instance->id_vtab,
-	       desc->cd_desc->cd_imemb_size,
-	       sizeof(DREF DeeObject *));
-
-	/* Initialize the super-classes. */
-	tp_super = DeeType_Base(tp_self);
-	if (tp_super && tp_super != &DeeObject_Type) {
-		if (instance_initsuper_as_copy(tp_super, self, other, true))
-			goto err_members;
-	}
-	ASSERT(!tp_self->tp_init.tp_deepload);
-
-	/* Add a deepcopy association for `self' replacing `other' */
-	if unlikely(!Dee_DeepCopyAddAssoc(self, other))
-		goto err_super;
-	result = DeeObject_ThisCall(func, self, 1, (DeeObject **)&other);
-	if unlikely(!result)
-		goto err_super;
-	Dee_Decref(result);
-	Dee_Decref(func);
-	return 0;
-err_super:
-	if (!DeeObject_UndoConstruction(tp_super, self)) {
-		DeeError_Print(str_shared_ctor_failed, ERROR_PRINT_DOHANDLE);
-		Dee_Decref(func);
-		return 0;
-	}
-err_members:
-	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);
-	Dee_Decref(func);
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_copy(DeeObject *__restrict self,
               DeeObject *__restrict other) {
 	return instance_tcopy(Dee_TYPE(self), self, other);
 }
-
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_deepcopy(DeeObject *__restrict self,
-                  DeeObject *__restrict other) {
-	return instance_tdeepcopy(Dee_TYPE(self), self, other);
-}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_tcopy(DeeTypeObject *tp_self,
@@ -1198,13 +1109,8 @@ instance_builtin_tcopy(DeeTypeObject *tp_self,
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		if (instance_initsuper_as_copy(tp_super, self, other))
 			goto err_members;
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-		if (instance_initsuper_as_copy(tp_super, self, other, false))
-			goto err_members;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	}
 	return 0;
 err_members:
@@ -1235,27 +1141,6 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_builtin_tdeepload(DeeTypeObject *tp_self,
-                           DeeObject *__restrict self) {
-	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
-	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
-	uint16_t i, size;
-
-	/* Replace all members with deep copies of themself. */
-	size = desc->cd_desc->cd_imemb_size;
-	for (i = 0; i < size; ++i) {
-		if (DeeObject_XInplaceDeepCopyWithRWLock(&instance->id_vtab[i],
-		                                         &instance->id_lock))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_copy(DeeObject *__restrict self,
                       DeeObject *__restrict other) {
@@ -1269,40 +1154,6 @@ instance_builtin_nobase_copy(DeeObject *__restrict self,
 	return instance_builtin_nobase_tcopy(Dee_TYPE(self), self, other);
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_deepload(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
-	tp_self = Dee_TYPE(self);
-	do {
-		if unlikely(instance_builtin_tdeepload(tp_self, self))
-			goto err;
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
-	         DeeType_IsClass(tp_self));
-
-	/* Invoke deepload for all non-user defined base classes. */
-	for (; tp_self; tp_self = DeeType_Base(tp_self)) {
-		if (!tp_self->tp_init.tp_deepload)
-			continue;
-		if unlikely((*tp_self->tp_init.tp_deepload)(self))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_nobase_deepload(DeeObject *__restrict self) {
-	return instance_builtin_tdeepload(Dee_TYPE(self), self);
-}
-#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-
-
-
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_tassign(DeeTypeObject *tp_self,
@@ -4329,19 +4180,12 @@ err_custom_allocator:
 	result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_copy;
 	result->tp_init.tp_assign             = &instance_builtin_assign;
 	result->tp_init.tp_move_assign        = &instance_builtin_moveassign;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	result->tp_init.tp_deepload           = &instance_builtin_deepload;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	result->tp_init.tp_dtor               = &instance_builtin_destructor;
 	result->tp_visit                      = &instance_visit;
 	result->tp_gc                         = &instance_gc;
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-	if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type) {
+	if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type)
 		result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_nobase_copy;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		result->tp_init.tp_deepload = &instance_builtin_nobase_deepload;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-	}
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 	/* Enable DEC encoding if supported by the underlying base. */
@@ -4411,14 +4255,6 @@ err_custom_allocator:
 					result->tp_cast.tp_repr = &usrtype__repr__with__PRINTREPR;
 				break;
 
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-			case OPERATOR_DEEPCOPY:
-				/* A user-defined deepcopy callback must not invoke the deepload
-				 * operator, which would normally replace all members with deep
-				 * copies of themself. */
-				result->tp_init.tp_deepload = NULL;
-				ATTR_FALLTHROUGH
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			default:
 				/* Bind the C-wrapper-function for this operator. */
 				if (bind_class_operator(result_type_type, result, op->co_name))

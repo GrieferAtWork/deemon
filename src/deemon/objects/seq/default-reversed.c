@@ -55,22 +55,6 @@ rs_gii_copy(DefaultReversed_WithGetItemIndex *__restrict self,
 	return 0;
 }
 
-#define rs_giif_deepcopy rs_gii_deepcopy
-#define rs_tgii_deepcopy rs_gii_deepcopy
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rs_gii_deepcopy(DefaultReversed_WithGetItemIndex *__restrict self,
-                DefaultReversed_WithGetItemIndex *__restrict other) {
-	self->drwgii_seq = DeeObject_DeepCopy(other->drwgii_seq);
-	if unlikely(!self->drwgii_seq)
-		goto err;
-	self->drwgii_tp_getitem_index = other->drwgii_tp_getitem_index;
-	self->drwgii_max              = other->drwgii_max;
-	self->drwgii_size             = other->drwgii_size;
-	return 0;
-err:
-	return -1;
-}
-
 #define rs_giif_serialize rs_gii_serialize
 #define rs_tgii_serialize rs_gii_serialize
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -679,7 +663,6 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndex_Type = {
 			/* T:              */ DefaultReversed_WithGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &rs_gii_copy,
-			/* tp_deep_ctor:   */ &rs_gii_deepcopy,
 			/* tp_any_ctor:    */ &rs_gii_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rs_gii_serialize
@@ -729,7 +712,6 @@ INTERN DeeTypeObject DefaultReversed_WithGetItemIndexFast_Type = {
 			/* T:              */ DefaultReversed_WithGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &rs_giif_copy,
-			/* tp_deep_ctor:   */ &rs_giif_deepcopy,
 			/* tp_any_ctor:    */ &rs_giif_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rs_giif_serialize
@@ -779,7 +761,6 @@ INTERN DeeTypeObject DefaultReversed_WithTryGetItemIndex_Type = {
 			/* T:              */ DefaultReversed_WithGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &rs_tgii_copy,
-			/* tp_deep_ctor:   */ &rs_tgii_deepcopy,
 			/* tp_any_ctor:    */ &rs_tgii_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rs_tgii_serialize

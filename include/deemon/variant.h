@@ -267,9 +267,6 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
 DFUNDEF NONNULL((1, 2)) void DCALL
 Dee_variant_init_copy(struct Dee_variant *__restrict self,
                       struct Dee_variant *__restrict other);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_variant_init_deepcopy(struct Dee_variant *__restrict self,
-                          struct Dee_variant *__restrict other);
 DFUNDEF NONNULL((1, 2)) void DCALL
 Dee_variant_visit(struct Dee_variant *__restrict self,
                   Dee_visit_t proc, void *arg);

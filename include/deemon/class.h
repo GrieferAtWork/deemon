@@ -939,16 +939,9 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_inherited_initkw(DeeObjec
 /* Builtin (pre-defined) hooks that are used when the user-class doesn't override these operators. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tdeepload(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_deepload(DeeObject *__restrict self);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_deepload(DeeObject *__restrict self);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTDEF NONNULL((1)) void DCALL instance_builtin_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
@@ -998,10 +991,6 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_builtin_auto_printrepr
 /* Hooks when the user-class overrides the associated operator. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tdeepcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_deepcopy(DeeObject *__restrict self, DeeObject *__restrict other);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 INTDEF NONNULL((1)) void DCALL instance_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
 
 /* GC support for class objects. */

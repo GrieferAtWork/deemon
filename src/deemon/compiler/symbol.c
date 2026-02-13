@@ -615,7 +615,6 @@ INTERN DeeTypeObject DeeScope_Type = {
 			/* T:              */ DeeScopeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -679,7 +678,6 @@ INTERN DeeTypeObject DeeClassScope_Type = {
 			/* T:              */ DeeClassScopeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -779,7 +777,6 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 			/* T:              */ DeeBaseScopeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -931,7 +928,6 @@ INTERN DeeTypeObject DeeRootScope_Type = {
 			/* T:              */ DeeRootScopeObject,
 			/* tp_ctor:        */ PTR_root_scope_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ PTR_root_scope_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL

@@ -67,12 +67,6 @@ DECL_BEGIN
  * >>     Dee_variant_init_copy(&self->c, &other->c);
  * >>     return 0;
  * >> }
- * >> PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
- * >> my_object_deep(MyObject *__restrict self, MyObject *__restrict other) {
- * >>     self->a = other->a;
- * >>     self->b = other->b;
- * >>     return Dee_variant_init_deepcopy(&self->c, &other->c);
- * >> }
  * >> PRIVATE NONNULL((1)) int DCALL
  * >> my_object_init_kw(MyObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
  * >>     static DEFINE_KWLIST(kwlist, { K(a), K(b), K(c), KEND });
@@ -149,7 +143,6 @@ struct Dee_type_member; /*!export-*/
 
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_Ctor(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Copy(DeeObject *__restrict self, DeeObject *__restrict other);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Deep(DeeObject *__restrict self, DeeObject *__restrict other);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_Init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_InitKw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Serialize(DeeObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);

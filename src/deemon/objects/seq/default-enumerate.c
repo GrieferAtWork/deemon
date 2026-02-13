@@ -55,7 +55,6 @@ STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(ProxyObject, po_o
 #define DefaultEnumeration__fini      generic_proxy__fini
 #define DefaultEnumeration__visit     generic_proxy__visit
 #define DefaultEnumeration__copy      generic_proxy__copy_alias
-#define DefaultEnumeration__deepcopy  generic_proxy__deepcopy
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 DefaultEnumeration__ctor(DefaultEnumeration *__restrict self) {
@@ -73,7 +72,6 @@ STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_end) == offsetof(Proxy
 #define DefaultEnumerationWithFilter__fini      generic_proxy3__fini
 #define DefaultEnumerationWithFilter__visit     generic_proxy3__visit
 #define DefaultEnumerationWithFilter__copy      generic_proxy3__copy_alias123
-#define DefaultEnumerationWithFilter__deepcopy  generic_proxy3__deepcopy
 STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(DefaultEnumerationWithFilter, dewf_seq));
 PRIVATE struct type_member tpconst DefaultEnumerationWithFilter__members[] = {
 	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultEnumerationWithFilter, dewf_start)),
@@ -121,14 +119,6 @@ DefaultEnumerationWithIntFilter__init(DefaultEnumerationWithIntFilter *__restric
 	err_invalid_argc(tp_name, argc, 3, 3);
 err:
 	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-DefaultEnumerationWithIntFilter__deepcopy(DefaultEnumerationWithIntFilter *__restrict self,
-                                          DefaultEnumerationWithIntFilter *__restrict other) {
-	self->dewif_start = other->dewif_start;
-	self->dewif_end   = other->dewif_end;
-	return generic_proxy__deepcopy((ProxyObject *)self, (ProxyObject *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -198,7 +188,6 @@ function printPrefixAliases(name: string) {
 printPrefixAliases("ctor");
 printPrefixAliases("init");
 printPrefixAliases("copy");
-printPrefixAliases("deepcopy");
 printPrefixAliases("serialize");
 printPrefixAliases("fini");
 printPrefixAliases("visit");
@@ -278,31 +267,6 @@ printPrefixAliases("members");
 #define dewf_mik_motg__copy   DefaultEnumerationWithFilter__copy
 #define de_me__copy           DefaultEnumeration__copy
 #define dewf_mer__copy        DefaultEnumerationWithFilter__copy
-
-/* Common: deepcopy */
-#define de_sos_gif__deepcopy      DefaultEnumeration__deepcopy
-#define dewif_sos_gif__deepcopy   DefaultEnumerationWithIntFilter__deepcopy
-#define de_sos_sotgi__deepcopy    DefaultEnumeration__deepcopy
-#define dewif_sos_sotgi__deepcopy DefaultEnumerationWithIntFilter__deepcopy
-#define de_sos_sogi__deepcopy     DefaultEnumeration__deepcopy
-#define dewif_sos_soii__deepcopy  DefaultEnumerationWithIntFilter__deepcopy
-#define de_soso_sog__deepcopy     DefaultEnumeration__deepcopy
-#define de_sogi__deepcopy         DefaultEnumeration__deepcopy
-#define dewif_soii__deepcopy      DefaultEnumerationWithIntFilter__deepcopy
-#define dewf_soso_sog__deepcopy   DefaultEnumerationWithFilter__deepcopy
-#define de_sog__deepcopy          DefaultEnumeration__deepcopy
-#define dewf_sog__deepcopy        DefaultEnumerationWithFilter__deepcopy
-#define de_soi__deepcopy          DefaultEnumeration__deepcopy
-#define dewif_soi__deepcopy       DefaultEnumerationWithIntFilter__deepcopy
-#define de_se__deepcopy           DefaultEnumeration__deepcopy
-#define dewif_sei__deepcopy       DefaultEnumerationWithIntFilter__deepcopy
-#define dewf_moi__deepcopy        DefaultEnumerationWithFilter__deepcopy
-#define de_mik_mog__deepcopy      DefaultEnumeration__deepcopy
-#define dewf_mik_mog__deepcopy    DefaultEnumerationWithFilter__deepcopy
-#define de_mik_motg__deepcopy     DefaultEnumeration__deepcopy
-#define dewf_mik_motg__deepcopy   DefaultEnumerationWithFilter__deepcopy
-#define de_me__deepcopy           DefaultEnumeration__deepcopy
-#define dewf_mer__deepcopy        DefaultEnumerationWithFilter__deepcopy
 
 /* Common: serialize */
 #define de_sos_gif__serialize      DefaultEnumeration__serialize
@@ -1239,7 +1203,6 @@ do_print_substruct:
 		print('			/' '* T:              *' '/ ', typename.partition("__").first, ',');
 		print('			/' '* tp_ctor:        *' '/ ', getFieldPtr('ctor'), ',');
 		print('			/' '* tp_copy_ctor:   *' '/ ', getFieldPtr('copy'), ',');
-		print('			/' '* tp_deep_ctor:   *' '/ ', getFieldPtr('deepcopy'), ',');
 		print('			/' '* tp_any_ctor:    *' '/ ', getFieldPtr('init'), ',');
 		print('			/' '* tp_any_ctor_kw: *' '/ NULL,');
 		print('			/' '* tp_serialize:   *' '/ ', getFieldPtr('serialize'));
@@ -1383,7 +1346,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_size__and__getitem_i
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_sos_gif__ctor,
 			/* tp_copy_ctor:   */ &de_sos_gif__copy,
-			/* tp_deep_ctor:   */ &de_sos_gif__deepcopy,
 			/* tp_any_ctor:    */ &de_sos_gif__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_sos_gif__serialize
@@ -1476,7 +1438,6 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_size__a
 			/* T:              */ DefaultEnumerationWithIntFilter,
 			/* tp_ctor:        */ &dewif_sos_gif__ctor,
 			/* tp_copy_ctor:   */ &dewif_sos_gif__copy,
-			/* tp_deep_ctor:   */ &dewif_sos_gif__deepcopy,
 			/* tp_any_ctor:    */ &dewif_sos_gif__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewif_sos_gif__serialize
@@ -1569,7 +1530,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_size__and__seq_opera
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_sos_sotgi__ctor,
 			/* tp_copy_ctor:   */ &de_sos_sotgi__copy,
-			/* tp_deep_ctor:   */ &de_sos_sotgi__deepcopy,
 			/* tp_any_ctor:    */ &de_sos_sotgi__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_sos_sotgi__serialize
@@ -1662,7 +1622,6 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_size__a
 			/* T:              */ DefaultEnumerationWithIntFilter,
 			/* tp_ctor:        */ &dewif_sos_sotgi__ctor,
 			/* tp_copy_ctor:   */ &dewif_sos_sotgi__copy,
-			/* tp_deep_ctor:   */ &dewif_sos_sotgi__deepcopy,
 			/* tp_any_ctor:    */ &dewif_sos_sotgi__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewif_sos_sotgi__serialize
@@ -1755,7 +1714,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_size__and__seq_opera
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_sos_sogi__ctor,
 			/* tp_copy_ctor:   */ &de_sos_sogi__copy,
-			/* tp_deep_ctor:   */ &de_sos_sogi__deepcopy,
 			/* tp_any_ctor:    */ &de_sos_sogi__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_sos_sogi__serialize
@@ -1848,7 +1806,6 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_size__a
 			/* T:              */ DefaultEnumerationWithIntFilter,
 			/* tp_ctor:        */ &dewif_sos_soii__ctor,
 			/* tp_copy_ctor:   */ &dewif_sos_soii__copy,
-			/* tp_deep_ctor:   */ &dewif_sos_soii__deepcopy,
 			/* tp_any_ctor:    */ &dewif_sos_soii__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewif_sos_soii__serialize
@@ -1941,7 +1898,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_sizeob__and__seq_ope
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_soso_sog__ctor,
 			/* tp_copy_ctor:   */ &de_soso_sog__copy,
-			/* tp_deep_ctor:   */ &de_soso_sog__deepcopy,
 			/* tp_any_ctor:    */ &de_soso_sog__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_soso_sog__serialize
@@ -2034,7 +1990,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_getitem_index = {
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_sogi__ctor,
 			/* tp_copy_ctor:   */ &de_sogi__copy,
-			/* tp_deep_ctor:   */ &de_sogi__deepcopy,
 			/* tp_any_ctor:    */ &de_sogi__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_sogi__serialize
@@ -2127,7 +2082,6 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_getitem
 			/* T:              */ DefaultEnumerationWithIntFilter,
 			/* tp_ctor:        */ &dewif_soii__ctor,
 			/* tp_copy_ctor:   */ &dewif_soii__copy,
-			/* tp_deep_ctor:   */ &dewif_soii__deepcopy,
 			/* tp_any_ctor:    */ &dewif_soii__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewif_soii__serialize
@@ -2220,7 +2174,6 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__seq_operator_sizeob__an
 			/* T:              */ DefaultEnumerationWithFilter,
 			/* tp_ctor:        */ &dewf_soso_sog__ctor,
 			/* tp_copy_ctor:   */ &dewf_soso_sog__copy,
-			/* tp_deep_ctor:   */ &dewf_soso_sog__deepcopy,
 			/* tp_any_ctor:    */ &dewf_soso_sog__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewf_soso_sog__serialize
@@ -2313,7 +2266,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_getitem = {
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_sog__ctor,
 			/* tp_copy_ctor:   */ &de_sog__copy,
-			/* tp_deep_ctor:   */ &de_sog__deepcopy,
 			/* tp_any_ctor:    */ &de_sog__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_sog__serialize
@@ -2406,7 +2358,6 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__seq_operator_getitem = 
 			/* T:              */ DefaultEnumerationWithFilter,
 			/* tp_ctor:        */ &dewf_sog__ctor,
 			/* tp_copy_ctor:   */ &dewf_sog__copy,
-			/* tp_deep_ctor:   */ &dewf_sog__deepcopy,
 			/* tp_any_ctor:    */ &dewf_sog__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewf_sog__serialize
@@ -2499,7 +2450,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_operator_iter__and__counter =
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_soi__ctor,
 			/* tp_copy_ctor:   */ &de_soi__copy,
-			/* tp_deep_ctor:   */ &de_soi__deepcopy,
 			/* tp_any_ctor:    */ &de_soi__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_soi__serialize
@@ -2592,7 +2542,6 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_operator_iter__a
 			/* T:              */ DefaultEnumerationWithIntFilter,
 			/* tp_ctor:        */ &dewif_soi__ctor,
 			/* tp_copy_ctor:   */ &dewif_soi__copy,
-			/* tp_deep_ctor:   */ &dewif_soi__deepcopy,
 			/* tp_any_ctor:    */ &dewif_soi__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewif_soi__serialize
@@ -2685,7 +2634,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__seq_enumerate = {
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_se__ctor,
 			/* tp_copy_ctor:   */ &de_se__copy,
-			/* tp_deep_ctor:   */ &de_se__deepcopy,
 			/* tp_any_ctor:    */ &de_se__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_se__serialize
@@ -2778,7 +2726,6 @@ INTERN DeeTypeObject DefaultEnumerationWithIntFilter__with__seq_enumerate_index 
 			/* T:              */ DefaultEnumerationWithIntFilter,
 			/* tp_ctor:        */ &dewif_sei__ctor,
 			/* tp_copy_ctor:   */ &dewif_sei__copy,
-			/* tp_deep_ctor:   */ &dewif_sei__deepcopy,
 			/* tp_any_ctor:    */ &dewif_sei__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewif_sei__serialize
@@ -2871,7 +2818,6 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_operator_iter__and_
 			/* T:              */ DefaultEnumerationWithFilter,
 			/* tp_ctor:        */ &dewf_moi__ctor,
 			/* tp_copy_ctor:   */ &dewf_moi__copy,
-			/* tp_deep_ctor:   */ &dewf_moi__deepcopy,
 			/* tp_any_ctor:    */ &dewf_moi__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewf_moi__serialize
@@ -2964,7 +2910,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__map_iterkeys__and__map_operator_g
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_mik_mog__ctor,
 			/* tp_copy_ctor:   */ &de_mik_mog__copy,
-			/* tp_deep_ctor:   */ &de_mik_mog__deepcopy,
 			/* tp_any_ctor:    */ &de_mik_mog__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_mik_mog__serialize
@@ -3057,7 +3002,6 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_iterkeys__and__map_
 			/* T:              */ DefaultEnumerationWithFilter,
 			/* tp_ctor:        */ &dewf_mik_mog__ctor,
 			/* tp_copy_ctor:   */ &dewf_mik_mog__copy,
-			/* tp_deep_ctor:   */ &dewf_mik_mog__deepcopy,
 			/* tp_any_ctor:    */ &dewf_mik_mog__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewf_mik_mog__serialize
@@ -3150,7 +3094,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__map_iterkeys__and__map_operator_t
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_mik_motg__ctor,
 			/* tp_copy_ctor:   */ &de_mik_motg__copy,
-			/* tp_deep_ctor:   */ &de_mik_motg__deepcopy,
 			/* tp_any_ctor:    */ &de_mik_motg__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_mik_motg__serialize
@@ -3243,7 +3186,6 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_iterkeys__and__map_
 			/* T:              */ DefaultEnumerationWithFilter,
 			/* tp_ctor:        */ &dewf_mik_motg__ctor,
 			/* tp_copy_ctor:   */ &dewf_mik_motg__copy,
-			/* tp_deep_ctor:   */ &dewf_mik_motg__deepcopy,
 			/* tp_any_ctor:    */ &dewf_mik_motg__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewf_mik_motg__serialize
@@ -3336,7 +3278,6 @@ INTERN DeeTypeObject DefaultEnumeration__with__map_enumerate = {
 			/* T:              */ DefaultEnumeration,
 			/* tp_ctor:        */ &de_me__ctor,
 			/* tp_copy_ctor:   */ &de_me__copy,
-			/* tp_deep_ctor:   */ &de_me__deepcopy,
 			/* tp_any_ctor:    */ &de_me__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &de_me__serialize
@@ -3429,7 +3370,6 @@ INTERN DeeTypeObject DefaultEnumerationWithFilter__with__map_enumerate_range = {
 			/* T:              */ DefaultEnumerationWithFilter,
 			/* tp_ctor:        */ &dewf_mer__ctor,
 			/* tp_copy_ctor:   */ &dewf_mer__copy,
-			/* tp_deep_ctor:   */ &dewf_mer__deepcopy,
 			/* tp_any_ctor:    */ &dewf_mer__init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dewf_mer__serialize

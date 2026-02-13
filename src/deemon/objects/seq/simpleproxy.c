@@ -49,7 +49,6 @@ proxy_ctor(SeqSimpleProxy *__restrict self) {
 
 STATIC_ASSERT(offsetof(SeqSimpleProxy, sp_seq) == offsetof(ProxyObject, po_obj));
 #define proxy_copy            generic_proxy__copy_alias
-#define proxy_deep            generic_proxy__deepcopy
 #define proxy_init            generic_proxy__init
 #define proxy_serialize       generic_proxy__serialize
 #define proxy_fini            generic_proxy__fini
@@ -319,7 +318,6 @@ INTERN DeeTypeObject SeqIds_Type = {
 			/* T:              */ SeqSimpleProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deep,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -369,7 +367,6 @@ INTERN DeeTypeObject SeqTypes_Type = {
 			/* T:              */ SeqSimpleProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deep,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -419,7 +416,6 @@ INTERN DeeTypeObject SeqClasses_Type = {
 			/* T:              */ SeqSimpleProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deep,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -493,7 +489,6 @@ err:
 
 STATIC_ASSERT(offsetof(SeqSimpleProxyIterator, si_iter) == offsetof(ProxyObject, po_obj));
 #define iter_copy          generic_proxy__copy_recursive
-#define iter_deep          generic_proxy__deepcopy
 #define iter_serialize     generic_proxy__serialize
 #define iter_fini          generic_proxy__fini
 #define iter_visit         generic_proxy__visit
@@ -612,7 +607,6 @@ INTERN DeeTypeObject SeqIdsIterator_Type = {
 			/* T:              */ SeqSimpleProxyIterator,
 			/* tp_ctor:        */ &iter_ctor,
 			/* tp_copy_ctor:   */ &iter_copy,
-			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &iter_serialize
@@ -662,7 +656,6 @@ INTERN DeeTypeObject SeqTypesIterator_Type = {
 			/* T:              */ SeqSimpleProxyIterator,
 			/* tp_ctor:        */ &iter_ctor,
 			/* tp_copy_ctor:   */ &iter_copy,
-			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &iter_serialize
@@ -712,7 +705,6 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 			/* T:              */ SeqSimpleProxyIterator,
 			/* tp_ctor:        */ &iter_ctor,
 			/* tp_copy_ctor:   */ &iter_copy,
-			/* tp_deep_ctor:   */ &iter_deep,
 			/* tp_any_ctor:    */ &iter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &iter_serialize

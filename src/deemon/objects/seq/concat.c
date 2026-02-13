@@ -93,31 +93,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-catiterator_deep(CatIterator *__restrict self,
-                 CatIterator *__restrict other) {
-	DREF DeeObject *iterator;
-	size_t sequence_index;
-	CatIterator_LockRead(other);
-	iterator = other->cti_curr;
-	Dee_Incref(iterator);
-	sequence_index = other->cti_pseq - DeeTuple_ELEM(other->cti_cat);
-	CatIterator_LockEndRead(other);
-	if unlikely((iterator = DeeObject_DeepCopyInherited(iterator)) == NULL)
-		goto err;
-	self->cti_curr = iterator;
-	self->cti_cat  = (DREF Cat *)DeeObject_DeepCopy((DeeObject *)other->cti_cat);
-	if unlikely(!self->cti_cat)
-		goto err_iterator;
-	self->cti_pseq = DeeTuple_ELEM(self->cti_cat) + sequence_index;
-	Dee_atomic_rwlock_init(&self->cti_lock);
-	return 0;
-err_iterator:
-	Dee_Decref(iterator);
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_init(CatIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
@@ -389,7 +364,6 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 			/* T:              */ CatIterator,
 			/* tp_ctor:        */ &catiterator_ctor,
 			/* tp_copy_ctor:   */ &catiterator_copy,
-			/* tp_deep_ctor:   */ &catiterator_deep,
 			/* tp_any_ctor:    */ &catiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &catiterator_serialize
@@ -752,24 +726,6 @@ cat_bool(Cat *__restrict self) {
 }
 
 
-
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-tuple_deepcopy(DeeTupleObject *__restrict self);
-
-PRIVATE WUNUSED NONNULL((1)) DREF Cat *DCALL
-cat_deepcopy(Cat *__restrict self) {
-	DREF Cat *result;
-	result = (DREF Cat *)tuple_deepcopy((DeeTupleObject *)self);
-	if likely(result) {
-		Dee_Incref(&SeqConcat_Type);
-		result->ob_type = &SeqConcat_Type;
-		Dee_DecrefNokill(&DeeTuple_Type);
-	}
-	return result;
-}
-
-
 INTERN DeeTypeObject SeqConcat_Type = {
 	/* NOTE: `_SeqConcat' objects are never empty, else
 	 *        we'd get an overlap with `Dee_EmptyTuple' */
@@ -784,7 +740,6 @@ INTERN DeeTypeObject SeqConcat_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &cat_deepcopy,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cat_serialize,

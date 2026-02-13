@@ -177,7 +177,6 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 			/* T:              */ GCSetIterator,
 			/* tp_ctor:        */ &gcsetiterator_ctor,
 			/* tp_copy_ctor:   */ &gcsetiterator_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &gcsetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &gcsetiterator_serialize
@@ -217,35 +216,6 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 
 PRIVATE WUNUSED DREF GCSet *DCALL gcset_ctor(void) {
 	return DeeGCSet_NewEmpty();
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
-gcset_deepcopy(GCSet *__restrict self) {
-	if (!self->gs_size)
-		return gcset_ctor();
-	{
-		size_t i;
-		GCSetMaker maker = GCSETMAKER_INIT;
-		for (i = 0; i <= self->gs_mask; ++i) {
-			DREF DeeObject *copy;
-			int error;
-			if (!self->gs_elem[i])
-				continue;
-			copy = DeeObject_DeepCopy(self->gs_elem[i]);
-			if unlikely(!copy)
-				goto err_maker;
-			error = GCSetMaker_Insert(&maker, copy);
-			if (error == 0)
-				continue;
-			Dee_Decref(copy);
-			if unlikely(error < 0)
-				goto err_maker;
-		}
-		return GCSetMaker_Pack(&maker);
-err_maker:
-		GCSetMaker_Fini(&maker);
-		return NULL;
-	}
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
@@ -377,7 +347,6 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &gcset_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &gcset_deepcopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &gcset_serialize,
@@ -386,7 +355,6 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gcset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

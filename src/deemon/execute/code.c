@@ -1904,49 +1904,6 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
-code_deepcopy(DeeCodeObject *__restrict self) {
-	DREF DeeCodeObject *result;
-	uint16_t i;
-	result = code_copy(self);
-	if unlikely(!result)
-		goto done;
-	if (result->co_defaultv) {
-		uint16_t n = result->co_argc_max - result->co_argc_min;
-		for (i = 0; i < n; ++i) {
-			if (DeeObject_XInplaceDeepCopy((DeeObject **)&result->co_defaultv[i]))
-				goto err_r;
-		}
-	}
-	if (result->co_constv) {
-		for (i = 0; i < result->co_constc; ++i) {
-			if (DeeObject_InplaceDeepCopy((DeeObject **)&result->co_constv[i]))
-				goto err_r;
-		}
-	}
-#if 0 /* Debug information wouldn't change... */
-	if (DeeObject_InplaceDeepCopy((DeeObject **)&result->co_ddi))
-		goto err_r;
-#endif
-#if 0 /* Types are singletons. */
-	if (result->co_exceptv) {
-		for (i = 0; i < result->co_exceptc; ++i) {
-			if (DeeObject_XInplaceDeepCopy((DeeObject **)&result->co_exceptv[i].eh_mask))
-				goto err_r;
-		}
-	}
-#endif
-#if 0 /* Modules are singletons! - If they weren't, we'd be corrupting their filesystem namespace... */
-	if (DeeObject_XInplaceDeepCopy((DeeObject **)&result->co_module))
-		goto err_r;
-#endif
-done:
-	return result;
-err_r:
-	Dee_Decref(result);
-	return NULL;
-}
-
 struct except_flag {
 	char     ef_name[14]; /* Flag name. */
 	uint16_t ef_flag;     /* Flag value. */
@@ -2746,7 +2703,6 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &code_ctor,
 			/* tp_copy_ctor:   */ &code_copy,
-			/* tp_deep_ctor:   */ &code_deepcopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &code_init_kw,
 			/* tp_serialize:   */ &code_serialize,
@@ -2755,7 +2711,6 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&code_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),

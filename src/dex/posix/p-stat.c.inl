@@ -2660,7 +2660,6 @@ INTERN DeeTypeObject DeeStat_Type = {
 			/* T:              */ DeeStatObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &stat_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Filesystem status can't be serialized */
@@ -2716,7 +2715,6 @@ INTERN DeeTypeObject DeeLStat_Type = {
 			/* T:              */ DeeStatObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &lstat_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Filesystem status can't be serialized */

@@ -2131,7 +2131,6 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 			/* T:              */ DeeDirIteratorObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &diriter_init_kw,
 			/* tp_serialize:   */ NULL /* Directory iterators can't be serialized */
@@ -2139,7 +2138,6 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&diriter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -2331,7 +2329,6 @@ INTERN DeeTypeObject DeeDir_Type = {
 			/* T:              */ DeeDirObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &dir_copy,
-			/* tp_deep_ctor:   */ &dir_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &dir_init_kw,
 			/* tp_serialize:   */ NULL /* Directory readers can't be serialized */
@@ -2339,7 +2336,6 @@ INTERN DeeTypeObject DeeDir_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dir_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,

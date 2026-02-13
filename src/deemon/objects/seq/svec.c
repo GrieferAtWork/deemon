@@ -552,7 +552,6 @@ INTERN DeeTypeObject RefVector_Type = {
 			/* T:              */ RefVector,
 			/* tp_ctor:        */ &rvec_init,
 			/* tp_copy_ctor:   */ &rvec_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rvec_serialize
@@ -1037,24 +1036,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-svec_deep(SharedVector *__restrict self,
-          SharedVector *__restrict other) {
-	size_t i;
-	if unlikely(svec_copy(self, other))
-		goto err;
-	for (i = 0; i < self->sv_length; ++i) {
-		if unlikely(DeeObject_InplaceDeepCopy((DREF DeeObject **)&self->sv_vector[i]))
-			goto err_r;
-	}
-	return 0;
-err_r:
-	Dee_Decrefv(self->sv_vector, self->sv_length);
-	Dee_Free((void *)self->sv_vector);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 svec_serialize(SharedVector *__restrict self,
                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(SharedVector, field))
@@ -1112,7 +1093,6 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 			/* T:              */ SharedVector,
 			/* tp_ctor:        */ &svec_ctor,
 			/* tp_copy_ctor:   */ &svec_copy,
-			/* tp_deep_ctor:   */ &svec_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &svec_serialize

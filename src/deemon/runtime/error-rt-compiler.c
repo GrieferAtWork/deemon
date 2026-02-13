@@ -78,15 +78,6 @@ comerr_copy(DeeCompilerErrorObject *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-comerr_deep(DeeCompilerErrorObject *__restrict self,
-            DeeCompilerErrorObject *__restrict other) {
-	/* TODO */
-	(void)self;
-	(void)other;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
 comerr_serialize(DeeCompilerErrorObject *__restrict self,
                  DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 	/* TODO */
@@ -183,7 +174,6 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 			/* T:              */ DeeCompilerErrorObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &comerr_copy,
-			/* tp_deep_ctor:   */ &comerr_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &comerr_init_kw,
 			/* tp_serialize:   */ &comerr_serialize
@@ -236,7 +226,6 @@ PUBLIC DeeTypeObject DeeError_CompilerError = {
 				/* T:              */ DeeCompilerErrorObject,             \
 				/* tp_ctor:        */ NULL,                               \
 				/* tp_copy_ctor:   */ &comerr_copy,                       \
-				/* tp_deep_ctor:   */ &comerr_deep,                       \
 				/* tp_any_ctor:    */ NULL,                               \
 				/* tp_any_ctor_kw: */ &comerr_init_kw,                    \
 				/* tp_serialize:   */ &comerr_serialize                   \

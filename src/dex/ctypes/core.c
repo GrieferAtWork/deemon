@@ -548,7 +548,6 @@ INTERN DeeTypeObject DeeSType_Type = {
 			/* T:              */ DeeSTypeObject,
 			/* tp_ctor:        */ &stype_init,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -631,7 +630,6 @@ INTERN DeeTypeObject DeePointerType_Type = {
 			/* T:              */ DeePointerTypeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -783,7 +781,6 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 			/* T:              */ DeeLValueTypeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -1472,7 +1469,6 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 				/* T:              */ DeeObject,
 				/* tp_ctor:        */ &struct_ctor,
 				/* tp_copy_ctor:   */ &struct_copy,
-				/* tp_deep_ctor:   */ &struct_copy,
 				/* tp_any_ctor:    */ &struct_init,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL /* TODO */
@@ -2106,7 +2102,6 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 			/* T:              */ DeeArrayTypeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -2264,7 +2259,6 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 			/* T:              */ DeeCFunctionTypeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */

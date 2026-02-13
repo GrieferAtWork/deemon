@@ -127,21 +127,6 @@ soi_copy(SeqOneIterator *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-soi_deep(SeqOneIterator *__restrict self,
-         SeqOneIterator *__restrict other) {
-	DREF DeeObject *item;
-	item = soi_trygetitemref(other);
-	if (item != ITER_DONE) {
-		if unlikely((item = DeeObject_DeepCopy(item)) == NULL)
-			goto err;
-	}
-	self->soi_item = item;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 soi_serialize(SeqOneIterator *__restrict self,
               DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(SeqOneIterator, field))
@@ -277,7 +262,6 @@ INTERN DeeTypeObject SeqOneIterator_Type = {
 			/* T:              */ SeqOneIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &soi_copy,
-			/* tp_deep_ctor:   */ &soi_deep,
 			/* tp_any_ctor:    */ &soi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &soi_serialize
@@ -321,7 +305,6 @@ INTERN DeeTypeObject SeqOneIterator_Type = {
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
 #define so_copy      generic_proxy__copy_alias
-#define so_deep      generic_proxy__deepcopy
 #define so_init      generic_proxy__init
 #define so_serialize generic_proxy__serialize
 #define so_fini      generic_proxy__fini
@@ -1264,7 +1247,6 @@ INTERN DeeTypeObject DeeSeqOne_Type = {
 			/* T:              */ SeqOne,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &so_copy,
-			/* tp_deep_ctor:   */ &so_deep,
 			/* tp_any_ctor:    */ &so_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &so_serialize

@@ -620,18 +620,6 @@ rditer_copy(RoDictIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rditer_deep(RoDictIterator *__restrict self,
-            RoDictIterator *__restrict other) {
-	self->rodi_dict = (DREF RoDict *)DeeObject_DeepCopy((DeeObject *)other->rodi_dict);
-	if unlikely(!self->rodi_dict)
-		goto err;
-	self->rodi_vidx = atomic_read(&other->rodi_vidx);
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rditer_init(RoDictIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoDictIterator", params: "
@@ -776,7 +764,6 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 			/* T:              */ RoDictIterator,
 			/* tp_ctor:        */ &rditer_ctor,
 			/* tp_copy_ctor:   */ &rditer_copy,
-			/* tp_deep_ctor:   */ &rditer_deep,
 			/* tp_any_ctor:    */ &rditer_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rditer_serialize
@@ -837,54 +824,6 @@ PUBLIC struct Dee_empty_rodict_object DeeRoDict_EmptyInstance = {
 
 PRIVATE WUNUSED DREF RoDict *DCALL rodict_ctor(void) {
 	return_reference_((DREF RoDict *)Dee_EmptyRoDict);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
-rodict_deepcopy(RoDict *__restrict self) {
-	size_t sizeof_result, i;
-	DREF RoDict *result;
-	Dee_hash_hidxio_t hidxio;
-	hidxio        = Dee_HASH_HIDXIO_FROM_VALLOC(self->rd_vsize);
-	sizeof_result = _RoDict_SizeOf3(self->rd_vsize, self->rd_hmask, hidxio);
-	result        = _RoDict_Malloc(sizeof_result);
-	if unlikely(!result)
-		goto err;
-	sizeof_result -= offsetof(DeeRoDictObject, rd_vtab);
-	for (i = 0; i < self->rd_vsize; ++i) {
-		struct Dee_dict_item *dst = &_DeeRoDict_GetRealVTab(result)[i];
-		struct Dee_dict_item *src = &_DeeRoDict_GetRealVTab(self)[i];
-		dst->di_key = DeeObject_DeepCopy(src->di_key);
-		if unlikely(!dst->di_key)
-			goto err_r_items_before_i;
-		dst->di_value = DeeObject_DeepCopy(src->di_value);
-		if unlikely(!dst->di_value)
-			goto err_r_items_before_i_and_key_at_i;
-		dst->di_hash = DeeObject_Hash(dst->di_key);
-	}
-	result->rd_vsize   = self->rd_vsize;
-	result->rd_hmask   = self->rd_hmask;
-	result->rd_hidxget = self->rd_hidxget;
-	result->rd_htab    = (union Dee_hash_htab *)(_DeeRoDict_GetRealVTab(result) + result->rd_vsize);
-	bzero(result->rd_htab, (result->rd_hmask + 1) << hidxio);
-	/* Must rebuild the hash-table since deep-copied keys may have different hashs. */
-	rodict_htab_rebuild(result, Dee_hash_hidxio[hidxio].hxio_set);
-	DeeObject_Init(result, &DeeRoDict_Type);
-	rodict_verify(result);
-	return result;
-err_r_items_before_i_and_key_at_i:
-	Dee_Decref(_DeeRoDict_GetRealVTab(result)[i].di_key);
-err_r_items_before_i:
-	while (i) {
-		struct Dee_dict_item *item;
-		--i;
-		item = &_DeeRoDict_GetRealVTab(result)[i];
-		Dee_Decref(item->di_value);
-		Dee_Decref(item->di_key);
-	}
-/*err_r:*/
-	_RoDict_Free(result);
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED DREF RoDict *DCALL
@@ -2107,9 +2046,6 @@ PRIVATE struct type_method tpconst rodict_class_methods[] = {
 
 PRIVATE struct type_operator const rodict_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP | METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH | METHOD_FNOREFESCAPE),
@@ -2147,7 +2083,6 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &rodict_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &rodict_deepcopy,
 			/* tp_any_ctor:    */ &rodict_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rodict_serialize,
@@ -2156,7 +2091,6 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rodict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),

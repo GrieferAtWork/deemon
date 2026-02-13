@@ -67,17 +67,6 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy__deepcopy(ProxyObject *__restrict self,
-                        ProxyObject *__restrict other) {
-	self->po_obj = DeeObject_DeepCopy(other->po_obj);
-	if unlikely(!self->po_obj)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy__init(ProxyObject *__restrict self,
                     size_t argc, DeeObject *const *argv) {
@@ -139,22 +128,6 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy2__deepcopy(ProxyObject2 *__restrict self,
-                         ProxyObject2 *__restrict other) {
-	self->po_obj1 = DeeObject_DeepCopy(other->po_obj1);
-	if unlikely(!self->po_obj1)
-		goto err;
-	self->po_obj2 = DeeObject_DeepCopy(other->po_obj2);
-	if unlikely(!self->po_obj2)
-		goto err_obj1;
-	return 0;
-err_obj1:
-	Dee_Decref(self->po_obj1);
-err:
-	return -1;
-}
-
 INTERN WUNUSED NONNULL((1)) int DCALL
 generic_proxy2__init(ProxyObject2 *__restrict self,
                      size_t argc, DeeObject *const *argv) {
@@ -207,27 +180,6 @@ generic_proxy3__copy_alias123(ProxyObject3 *__restrict self,
 	Dee_Incref(other->po_obj3);
 	self->po_obj3 = other->po_obj3;
 	return 0;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-generic_proxy3__deepcopy(ProxyObject3 *__restrict self,
-                         ProxyObject3 *__restrict other) {
-	self->po_obj1 = DeeObject_DeepCopy(other->po_obj1);
-	if unlikely(!self->po_obj1)
-		goto err;
-	self->po_obj2 = DeeObject_DeepCopy(other->po_obj2);
-	if unlikely(!self->po_obj2)
-		goto err_obj1;
-	self->po_obj3 = DeeObject_DeepCopy(other->po_obj3);
-	if unlikely(!self->po_obj3)
-		goto err_obj1_obj2;
-	return 0;
-err_obj1_obj2:
-	Dee_Decref(self->po_obj2);
-err_obj1:
-	Dee_Decref(self->po_obj1);
-err:
-	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

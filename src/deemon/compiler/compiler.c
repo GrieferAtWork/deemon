@@ -376,7 +376,6 @@ PUBLIC DeeTypeObject DeeCompiler_Type = {
 			/* T:              */ DeeCompilerObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &compiler_init,
 			/* tp_serialize:   */ NULL

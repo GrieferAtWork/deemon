@@ -110,7 +110,6 @@ STATIC_ASSERT(offsetof(InstanceMethod, im_this) == offsetof(ProxyObject2, po_obj
 #define im_fini          generic_proxy2__fini
 #define im_visit         generic_proxy2__visit
 #define im_copy          generic_proxy2__copy_alias12
-#define im_deepcopy      generic_proxy2__deepcopy
 #define im_serialize     generic_proxy2__serialize
 #define im_hash          generic_proxy2__hash_recursive_ordered
 #define im_compare_eq    generic_proxy2__compare_eq_recursive
@@ -357,9 +356,6 @@ PRIVATE struct type_member tpconst im_members[] = {
 PRIVATE struct type_operator const im_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR),
 	TYPE_OPERATOR_FLAGS(OPERATOR_000A_CALL, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ),
@@ -385,7 +381,6 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 			/* T:              */ InstanceMethod,
 			/* tp_ctor:        */ &im_ctor,
 			/* tp_copy_ctor:   */ &im_copy,
-			/* tp_deep_ctor:   */ &im_deepcopy,
 			/* tp_any_ctor:    */ &im_init,
 			/* tp_any_ctor_kw: */ &im_init_kw,
 			/* tp_serialize:   */ &im_serialize

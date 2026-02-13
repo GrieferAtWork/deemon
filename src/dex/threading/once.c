@@ -138,43 +138,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-once_deepload(DeeOnceObject *__restrict self) {
-	int error;
-	error = Dee_once_begin(&self->o_once);
-	if unlikely(error < 0)
-		goto err;
-	if (error != 0) {
-		error = 0;
-		if (self->o_value)
-			error = DeeObject_InplaceDeepCopy(&self->o_value);
-		Dee_once_abort(&self->o_once);
-		if unlikely(error)
-			goto err;
-	} else {
-		DREF DeeObject *value;
-		DeeOnce_InUseInc(self);
-		value = atomic_read(&self->o_value);
-		Dee_XIncref(value);
-		DeeOnce_InUseDec(self);
-		if (value) {
-			error = DeeObject_InplaceDeepCopy(&value);
-			if unlikely(error) {
-				Dee_Decref(value);
-				goto err;
-			}
-			value = atomic_xch(&self->o_value, value);
-			if likely(value) {
-				DeeOnce_InUseWaitFor(self);
-				Dee_Decref(value);
-			}
-		}
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
 once_init(DeeOnceObject *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	Dee_once_init(&self->o_once);
@@ -713,7 +676,6 @@ INTERN DeeTypeObject DeeOnce_Type = {
 			/* T:              */ DeeOnceObject,
 			/* tp_ctor:        */ &once_ctor,
 			/* tp_copy_ctor:   */ &once_copy,
-			/* tp_deep_ctor:   */ &once_copy,
 			/* tp_any_ctor:    */ &once_init,
 			/* tp_any_ctor_kw: */ &once_init_kw,
 			/* tp_serialize:   */ NULL /* TODO (writes the object in its current state) */
@@ -721,7 +683,6 @@ INTERN DeeTypeObject DeeOnce_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&once_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&once_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,

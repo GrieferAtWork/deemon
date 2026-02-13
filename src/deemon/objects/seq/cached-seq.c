@@ -114,50 +114,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cswi_deep(CachedSeq_WithIter *__restrict self,
-          CachedSeq_WithIter *__restrict other) {
-	return cswi_copycache(self, other);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-cswi_deepload(CachedSeq_WithIter *__restrict self) {
-	size_t i;
-	for (i = 0;; ++i) {
-		DREF DeeObject *oldval, *newval;
-again_copy_at_i:
-		CachedSeq_WithIter_LockAcquire(self);
-		if (i >= self->cswi_cache.ol_elemc) {
-			CachedSeq_WithIter_LockRelease(self);
-			break;
-		}
-		oldval = self->cswi_cache.ol_elemv[i];
-		Dee_Incref(oldval);
-		CachedSeq_WithIter_LockRelease(self);
-		newval = DeeObject_DeepCopyInherited(oldval);
-		if unlikely(!newval)
-			goto err;
-		CachedSeq_WithIter_LockAcquire(self);
-		if unlikely(i >= self->cswi_cache.ol_elemc) {
-			CachedSeq_WithIter_LockRelease(self);
-			Dee_Decref(newval);
-			break;
-		}
-		if unlikely(self->cswi_cache.ol_elemv[i] != oldval) {
-			CachedSeq_WithIter_LockRelease(self);
-			Dee_Decref(newval);
-			goto again_copy_at_i;
-		}
-		self->cswi_cache.ol_elemv[i] = newval; /* Inherit reference (x2) */
-		CachedSeq_WithIter_LockRelease(self);
-		Dee_Decref(oldval);
-	}
-	return DeeObject_XInplaceDeepCopyWithLock(&self->cswi_iter,
-	                                          &self->cswi_lock);
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cswi_init(CachedSeq_WithIter *__restrict self,
           size_t argc, DeeObject *const *argv) {
@@ -635,7 +591,6 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 			/* T:              */ CachedSeq_WithIter,
 			/* tp_ctor:        */ &cswi_ctor,
 			/* tp_copy_ctor:   */ &cswi_copy,
-			/* tp_deep_ctor:   */ &cswi_deep,
 			/* tp_any_ctor:    */ &cswi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cswi_serialize
@@ -643,7 +598,6 @@ INTERN DeeTypeObject CachedSeq_WithIter_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cswi_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -698,13 +652,6 @@ cswiiter_copy(CachedSeq_WithIter_Iterator *__restrict self,
               CachedSeq_WithIter_Iterator *__restrict other) {
 	self->cswii_index = atomic_read(&other->cswii_index);
 	return generic_proxy__copy_alias((ProxyObject *)self, (ProxyObject *)other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-cswiiter_deep(CachedSeq_WithIter_Iterator *__restrict self,
-              CachedSeq_WithIter_Iterator *__restrict other) {
-	self->cswii_index = atomic_read(&other->cswii_index);
-	return generic_proxy__deepcopy((ProxyObject *)self, (ProxyObject *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -799,7 +746,6 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 			/* T:              */ CachedSeq_WithIter_Iterator,
 			/* tp_ctor:        */ &cswiiter_ctor,
 			/* tp_copy_ctor:   */ &cswiiter_copy,
-			/* tp_deep_ctor:   */ &cswiiter_deep,
 			/* tp_any_ctor:    */ &cswiiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cswiiter_serialize
@@ -1001,11 +947,8 @@ cswgi_visit(CachedSeq_WithGetItem *__restrict self, Dee_visit_t proc, void *arg)
 	CachedSeq_WithGetItem_LockRelease(self);
 }
 
-#define cswgi_deep   cswgi_copy
 #define cswsogi_copy cswgi_copy
-#define cswsogi_deep cswgi_copy
 #define cswsgi_copy  cswgi_copy
-#define cswsgi_deep  cswgi_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cswgi_copy(CachedSeq_WithGetItem *__restrict self,
            CachedSeq_WithGetItem *__restrict other) {
@@ -1091,54 +1034,6 @@ err_vector_copy:
 err:
 	return -1;
 }
-
-#define cswsogi_deepload cswgi_deepload
-#define cswsgi_deepload  cswgi_deepload
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-cswgi_deepload(CachedSeq_WithGetItem *__restrict self) {
-	size_t i;
-	CachedSeq_WithGetItem_LockAcquire(self);
-	for (i = 0; i < self->cswgi_vector.ol_elemc; ++i) {
-		DREF DeeObject *new_vector_elem;
-		DREF DeeObject *old_vector_elem;
-		old_vector_elem = self->cswgi_vector.ol_elemv[i];
-		if (!old_vector_elem)
-			continue;
-		CachedSeq_WithGetItem_LockRelease(self);
-		new_vector_elem = DeeObject_DeepCopyInherited(old_vector_elem);
-		if unlikely(!new_vector_elem)
-			goto err;
-		CachedSeq_WithGetItem_LockAcquire(self);
-		old_vector_elem = self->cswgi_vector.ol_elemv[i]; /* Inherit reference */
-		self->cswgi_vector.ol_elemv[i] = new_vector_elem; /* Inherit reference */
-		CachedSeq_WithGetItem_LockRelease(self);
-		Dee_XDecref(old_vector_elem);
-		CachedSeq_WithGetItem_LockAcquire(self);
-	}
-	for (i = 0; i < self->cswgi_btab.ibt_size; ++i) {
-		DREF DeeObject *old_indexbtab_elem;
-		DREF DeeObject *new_indexbtab_elem;
-		old_indexbtab_elem = self->cswgi_btab.ibt_elem[i].ibti_value;
-		if (!old_indexbtab_elem)
-			continue;
-		Dee_Incref(old_indexbtab_elem);
-		CachedSeq_WithGetItem_LockRelease(self);
-		new_indexbtab_elem = DeeObject_DeepCopyInherited(old_indexbtab_elem);
-		if unlikely(!new_indexbtab_elem)
-			goto err;
-		CachedSeq_WithGetItem_LockAcquire(self);
-		old_indexbtab_elem = self->cswgi_btab.ibt_elem[i].ibti_value; /* Inherit reference */
-		self->cswgi_btab.ibt_elem[i].ibti_value = new_indexbtab_elem; /* Inherit reference */
-		CachedSeq_WithGetItem_LockRelease(self);
-		Dee_XDecref(old_indexbtab_elem);
-		CachedSeq_WithGetItem_LockAcquire(self);
-	}
-	CachedSeq_WithGetItem_LockRelease(self);
-	return DeeObject_XInplaceDeepCopyWithLock(&self->cswgi_seq, &self->cswgi_lock);
-err:
-	return -1;
-}
-
 
 #define cswsogi_clear cswgi_clear
 #define cswsgi_clear  cswgi_clear
@@ -1787,7 +1682,6 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 			/* T:              */ CachedSeq_WithGetItem,
 			/* tp_ctor:        */ &cswgi_ctor,
 			/* tp_copy_ctor:   */ &cswgi_copy,
-			/* tp_deep_ctor:   */ &cswgi_deep,
 			/* tp_any_ctor:    */ &cswgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -1795,7 +1689,6 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswgi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cswgi_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1835,7 +1728,6 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 			/* T:              */ CachedSeq_WithGetItem,
 			/* tp_ctor:        */ &cswsogi_ctor,
 			/* tp_copy_ctor:   */ &cswsogi_copy,
-			/* tp_deep_ctor:   */ &cswsogi_deep,
 			/* tp_any_ctor:    */ &cswsogi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -1843,7 +1735,6 @@ INTERN DeeTypeObject CachedSeq_WithSizeObAndGetItem_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsogi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cswsogi_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1883,7 +1774,6 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 			/* T:              */ CachedSeq_WithGetItem,
 			/* tp_ctor:        */ &cswsgi_ctor,
 			/* tp_copy_ctor:   */ &cswsgi_copy,
-			/* tp_deep_ctor:   */ &cswsgi_deep,
 			/* tp_any_ctor:    */ &cswsgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -1891,7 +1781,6 @@ INTERN DeeTypeObject CachedSeq_WithSizeAndGetItem_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cswsgi_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cswsgi_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1939,7 +1828,6 @@ INTERN DeeTypeObject CachedSeq_WithGetItem_Iterator_Type = {
 			/* T:              */ CachedSeq_WithGetItem_Iterator,
 			/* tp_ctor:        */ &cswgiiter_ctor,
 			/* tp_copy_ctor:   */ &cswgiiter_copy,
-			/* tp_deep_ctor:   */ &cswgiiter_deep,
 			/* tp_any_ctor:    */ &cswgiiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */

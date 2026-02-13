@@ -28,7 +28,7 @@
 #include <deemon/computed-operators.h>
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Clear, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/roset.h>              /* DeeRoSet*, Dee_roset_item */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -205,7 +205,6 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 			/* T:              */ RoSetIterator,
 			/* tp_ctor:        */ &rosetiterator_ctor,
 			/* tp_copy_ctor:   */ &rosetiterator_copy,
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &rosetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rosetiterator_serialize
@@ -633,37 +632,6 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF RoSet *DCALL
-roset_deepcopy(RoSet *__restrict self) {
-	DREF RoSet *result;
-	size_t i;
-	int temp;
-	result = (DREF RoSet *)DeeRoSet_NewWithHint(self->rs_size);
-	if unlikely(!result)
-		goto done;
-	for (i = 0; i <= self->rs_mask; ++i) {
-		DREF DeeObject *key_copy;
-
-		/* Deep-copy the key & value */
-		if (!self->rs_elem[i].rsi_key)
-			continue;
-		key_copy = DeeObject_DeepCopy(self->rs_elem[i].rsi_key);
-		if unlikely(!key_copy)
-			goto err;
-
-		/* Insert the copied key & value into the new set. */
-		temp = DeeRoSet_Insert(&result, key_copy);
-		Dee_Decref(key_copy);
-		if unlikely(temp)
-			goto err;
-	}
-done:
-	return result;
-err:
-	Dee_Clear(result);
-	goto done;
-}
-
 PRIVATE WUNUSED DREF RoSet *DCALL
 roset_init(size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("_RoSet", params: "
@@ -720,9 +688,6 @@ err:
 PRIVATE struct type_operator const roset_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP | METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH | METHOD_FNOREFESCAPE),
@@ -751,7 +716,6 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &roset_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &roset_deepcopy,
 			/* tp_any_ctor:    */ &roset_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &roset_serialize,
@@ -760,7 +724,6 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&roset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),

@@ -389,7 +389,6 @@ INTERN DeeTypeObject TypeMROIterator_Type = {
 			/* T:              */ TypeMROIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &typemroiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &typemroiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &typemroiter_serialize
@@ -440,7 +439,6 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 			/* T:              */ TypeMROIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &typebasesiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &typebasesiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &typebasesiter_serialize
@@ -504,9 +502,7 @@ STATIC_ASSERT(offsetof(TypeMRO, tm_type) == offsetof(ProxyObject, po_obj));
 #define typebases_visit generic_proxy__visit
 #define typemro_visit   generic_proxy__visit
 #define typemro_copy    generic_proxy__copy_alias
-#define typemro_deep    generic_proxy__copy_alias
 #define typebases_copy  generic_proxy__copy_alias
-#define typebases_deep  generic_proxy__copy_alias
 
 PRIVATE WUNUSED NONNULL((1)) DREF TypeMROIterator *DCALL
 typemro_iter(TypeMRO *__restrict self) {
@@ -879,7 +875,6 @@ INTERN DeeTypeObject TypeMRO_Type = {
 			/* T:              */ TypeMRO,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &typemro_copy,
-			/* tp_deep_ctor:   */ &typemro_deep,
 			/* tp_any_ctor:    */ &typemro_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &typemro_serialize
@@ -929,7 +924,6 @@ INTERN DeeTypeObject TypeBases_Type = {
 			/* T:              */ TypeMRO,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &typebases_copy,
-			/* tp_deep_ctor:   */ &typebases_deep,
 			/* tp_any_ctor:    */ &typebases_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &typebases_serialize

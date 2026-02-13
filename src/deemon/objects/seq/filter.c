@@ -62,7 +62,6 @@ filter_ctor(Filter *__restrict self) {
 }
 
 #define filter_copy      generic_proxy2__copy_alias12
-#define filter_deep      generic_proxy2__deepcopy
 #define filter_init      generic_proxy2__init
 #define filter_fini      generic_proxy2__fini
 #define filter_visit     generic_proxy2__visit
@@ -97,7 +96,6 @@ err:
 }
 
 #define filteriterator_copy      generic_proxy2__copy_recursive1_alias2
-#define filteriterator_deep      generic_proxy2__deepcopy
 #define filteriterator_fini      generic_proxy2__fini
 #define filteriterator_visit     generic_proxy2__visit
 #define filteriterator_serialize generic_proxy2__serialize
@@ -193,7 +191,6 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 			/* T:              */ FilterIterator,
 			/* tp_ctor:        */ &filteriterator_ctor,
 			/* tp_copy_ctor:   */ &filteriterator_copy,
-			/* tp_deep_ctor:   */ &filteriterator_deep,
 			/* tp_any_ctor:    */ &filteriterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filteriterator_serialize
@@ -803,7 +800,6 @@ INTERN DeeTypeObject SeqFilter_Type = {
 			/* T:              */ Filter,
 			/* tp_ctor:        */ &filter_ctor,
 			/* tp_copy_ctor:   */ &filter_copy,
-			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &filter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filter_serialize
@@ -854,7 +850,6 @@ INTERN DeeTypeObject SeqFilterAsUnbound_Type = {
 			/* T:              */ Filter,
 			/* tp_ctor:        */ &filter_ctor,
 			/* tp_copy_ctor:   */ &filter_copy,
-			/* tp_deep_ctor:   */ &filter_deep,
 			/* tp_any_ctor:    */ &filter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filter_serialize

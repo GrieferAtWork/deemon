@@ -119,7 +119,6 @@ se_ctor(SeqEachBase *__restrict self) {
 }
 
 #define se_copy      generic_proxy__copy_alias
-#define se_deep      generic_proxy__deepcopy
 #define se_init      generic_proxy__init
 #define se_serialize generic_proxy__serialize
 #define se_fini      generic_proxy__fini
@@ -1329,7 +1328,6 @@ INTERN DeeTypeObject SeqEach_Type = {
 			/* T:              */ SeqEachBase,
 			/* tp_ctor:        */ &se_ctor,
 			/* tp_copy_ctor:   */ &se_copy,
-			/* tp_deep_ctor:   */ &se_deep,
 			/* tp_any_ctor:    */ &se_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &se_serialize
@@ -1426,7 +1424,6 @@ err:
 
 #define ss_ctor      se_ctor
 #define ss_copy      se_copy
-#define ss_deep      se_deep
 #define ss_serialize se_serialize
 #define ss_init      se_init
 #define ss_fini      se_fini
@@ -2084,7 +2081,6 @@ PUBLIC DeeTypeObject DeeSeqSome_Type = {
 			/* T:              */ SeqEachBase,
 			/* tp_ctor:        */ &ss_ctor,
 			/* tp_copy_ctor:   */ &ss_copy,
-			/* tp_deep_ctor:   */ &ss_deep,
 			/* tp_any_ctor:    */ &ss_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ss_serialize
@@ -2181,28 +2177,6 @@ seo_copy(SeqEachOperator *__restrict self,
 	Dee_Movrefv(self->so_opargv, other->so_opargv, self->so_opargc);
 	Dee_Incref(self->se_seq);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-seo_deep(SeqEachOperator *__restrict self,
-         SeqEachOperator *__restrict other) {
-	size_t i;
-	self->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if unlikely(!self->se_seq)
-		goto err;
-	for (i = 0; i < other->so_opargc; ++i) {
-		self->so_opargv[i] = DeeObject_DeepCopy(other->so_opargv[i]);
-		if unlikely(!self->so_opargv[i])
-			goto err_i;
-	}
-	self->so_opname = other->so_opname;
-	self->so_opargc = other->so_opargc;
-	return 0;
-err_i:
-	Dee_Decrefv(self->so_opargv, i);
-	Dee_Decref(self->se_seq);
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3431,7 +3405,6 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 			/* max_tp_instance_size: */ sizeof(SeqEachOperator),
 			/* tp_ctor:              */ &seo_ctor,
 			/* tp_copy_ctor:         */ &seo_copy,
-			/* tp_deep_ctor:         */ &seo_deep,
 			/* tp_any_ctor:          */ &seo_init,
 			/* tp_any_ctor_kw:       */ NULL,
 			/* tp_serialize:         */ NULL
@@ -3924,7 +3897,6 @@ INTERN DeeTypeObject SeqSomeOperator_Type = {
 			/* max_tp_instance_size: */ sizeof(SeqEachOperator),
 			/* tp_ctor:              */ &seo_ctor,
 			/* tp_copy_ctor:         */ &seo_copy,
-			/* tp_deep_ctor:         */ &seo_deep,
 			/* tp_any_ctor:          */ &seo_init,
 			/* tp_any_ctor_kw:       */ NULL,
 			/* tp_serialize:         */ NULL
@@ -3997,7 +3969,6 @@ err:
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_each) == offsetof(ProxyObject2, po_obj2));
 #define sewi_copy      generic_proxy2__copy_recursive1_alias2 /* Copy "ei_iter", alias "ei_each" */
-#define sewi_deep      generic_proxy2__deepcopy
 #define sewi_serialize generic_proxy2__serialize
 #define sewi_fini      generic_proxy2__fini
 #define sewi_visit     generic_proxy2__visit
@@ -4121,7 +4092,6 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 			/* T:              */ SeqEachIterator,
 			/* tp_ctor:        */ &seoi_ctor,
 			/* tp_copy_ctor:   */ &sewi_copy,
-			/* tp_deep_ctor:   */ &sewi_deep,
 			/* tp_any_ctor:    */ &seoi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sewi_serialize

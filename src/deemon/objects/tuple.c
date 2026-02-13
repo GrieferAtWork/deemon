@@ -32,7 +32,7 @@
 #include <deemon/list.h>               /* DeeListObject, DeeList_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref*, Dee_Movprefv, Dee_Movrefv, Dee_REFTRACKER_UNTRACKED, Dee_Setrefv, Dee_TYPE, Dee_XDecrefv, Dee_XDecrefv_likely, Dee_XIncref, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref*, Dee_Movprefv, Dee_Movrefv, Dee_REFTRACKER_UNTRACKED, Dee_Setrefv, Dee_TYPE, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_foreach_t, DeeType_HasNativeOperator, DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -897,18 +897,6 @@ tuple_iterator_copy(TupleIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE NONNULL((1, 2)) int DCALL
-tuple_iterator_deep(TupleIterator *__restrict self,
-                    TupleIterator *__restrict other) {
-	self->ti_tuple = (DREF Tuple *)DeeObject_DeepCopy((DeeObject *)other->ti_tuple);
-	if unlikely(!self->ti_tuple)
-		goto err;
-	self->ti_index = READ_INDEX(other);
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE NONNULL((1, 3)) int DCALL
 tuple_iterator_init(TupleIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
@@ -1105,7 +1093,6 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 			/* T:              */ TupleIterator,
 			/* tp_ctor:        */ &tuple_iterator_ctor,
 			/* tp_copy_ctor:   */ &tuple_iterator_copy,
-			/* tp_deep_ctor:   */ &tuple_iterator_deep,
 			/* tp_any_ctor:    */ &tuple_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &tuple_iterator_serialize
@@ -1156,28 +1143,6 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 
 PRIVATE WUNUSED DREF Tuple *DCALL tuple_ctor(void) {
 	return (DREF Tuple *)DeeTuple_NewEmpty();
-}
-
-INTERN WUNUSED NONNULL((1)) DREF Tuple *DCALL
-tuple_deepcopy(Tuple *__restrict self) {
-	DREF Tuple *result;
-	size_t i, size = DeeTuple_SIZE(self);
-	result = DeeTuple_NewUninitialized(size);
-	if unlikely(!result)
-		goto err;
-	for (i = 0; i < size; ++i) {
-		DREF DeeObject *temp;
-		temp = DeeObject_DeepCopy(DeeTuple_GET(self, i));
-		if unlikely(!temp)
-			goto err_r;
-		DeeTuple_SET(result, i, temp); /* Inherit reference. */
-	}
-	return result;
-err_r:
-	Dee_Decrefv_likely(DeeTuple_ELEM(result), i);
-	DeeTuple_FreeUninitialized(result);
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED DREF Tuple *DCALL
@@ -2242,9 +2207,6 @@ PRIVATE struct type_cmp tuple_cmp = {
 PRIVATE struct type_operator const tuple_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP | METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
@@ -2365,7 +2327,6 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &tuple_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &tuple_deepcopy,
 			/* tp_any_ctor:    */ &tuple_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &tuple_serialize,
@@ -2466,31 +2427,6 @@ done:
 PRIVATE WUNUSED DREF Tuple *DCALL nullable_tuple_ctor(void) {
 	Dee_Incref(&DeeNullableTuple_Empty);
 	return (DREF DeeTupleObject *)&DeeNullableTuple_Empty;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF Tuple *DCALL
-nullable_tuple_deepcopy(Tuple *__restrict self) {
-	DREF Tuple *result;
-	size_t i, size = DeeTuple_SIZE(self);
-	result = DeeTuple_NewUninitialized(size);
-	if unlikely(!result)
-		goto err;
-	for (i = 0; i < size; ++i) {
-		DREF DeeObject *temp;
-		temp = DeeTuple_GET(self, i);
-		if (temp) {
-			temp = DeeObject_DeepCopy(DeeTuple_GET(self, i));
-			if unlikely(!temp)
-				goto err_r;
-		}
-		DeeTuple_SET(result, i, temp); /* Inherit reference. */
-	}
-	return make_nullable(result);
-err_r:
-	Dee_XDecrefv_likely(DeeTuple_ELEM(result), i);
-	DeeTuple_FreeUninitialized(result);
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED DREF Tuple *DCALL
@@ -2763,9 +2699,6 @@ PRIVATE struct type_cmp nullable_tuple_cmp = {
 PRIVATE struct type_operator const nullable_tuple_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP | METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS | METHOD_FNOREFESCAPE),
@@ -2793,7 +2726,6 @@ PUBLIC DeeTypeObject DeeNullableTuple_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &nullable_tuple_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &nullable_tuple_deepcopy,
 			/* tp_any_ctor:    */ &nullable_tuple_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &nullable_tuple_serialize,

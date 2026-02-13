@@ -1235,12 +1235,8 @@ do_jcc:
 	TARGET(ASM_COPY)
 		return fg_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES);
 	TARGET(ASM_DEEPCOPY)
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		/* TODO: Optimizations */
 		return fg_vcallapi(self, &DeeObject_DeepCopy, VCALL_CC_OBJECT, 1);
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-		return fg_vop(self, OPERATOR_DEEPCOPY, 1, VOP_F_PUSHRES);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TARGET(ASM_GETATTR)
 		return fg_vopgetattr(self);
 	TARGET(ASM_DELATTR)

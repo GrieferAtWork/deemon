@@ -539,7 +539,6 @@ INTERN DeeTypeObject DeeShLib_Type = {
 			/* T:              */ Shlib,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &shlib_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Can't be serialized */

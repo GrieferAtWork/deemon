@@ -30,7 +30,7 @@
 #include <deemon/gc.h>                 /* DeeGCObject_TryMallocc, DeeGC_TRACK */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_DeepCopy, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
@@ -249,21 +249,6 @@ traceiter_copy(TraceIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-traceiter_deep(TraceIterator *__restrict self,
-               TraceIterator *__restrict other) {
-	size_t index;
-	self->ti_trace = (DREF DeeTracebackObject *)DeeObject_DeepCopy((DeeObject *)other->ti_trace);
-	if unlikely(!self->ti_trace)
-		goto err;
-	index         = (size_t)(READ_NEXT(other) - other->ti_trace->tb_frames);
-	self->ti_next = self->ti_trace->tb_frames + index;
-	Dee_Incref(self->ti_trace);
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_init(TraceIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
@@ -446,7 +431,6 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 			/* T:              */ TraceIterator,
 			/* tp_ctor:        */ &traceiter_ctor,
 			/* tp_copy_ctor:   */ &traceiter_copy,
-			/* tp_deep_ctor:   */ &traceiter_deep,
 			/* tp_any_ctor:    */ &traceiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &traceiter_serialize
@@ -930,7 +914,6 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &traceback_new,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &traceback_serialize,

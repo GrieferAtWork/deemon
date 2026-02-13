@@ -281,7 +281,6 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 			/* T:              */ FunctionStaticsIterator,
 			/* tp_ctor:        */ &funcstaticsiter_ctor,
 			/* tp_copy_ctor:   */ &funcstaticsiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcstaticsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &funcstaticsiter_serialize
@@ -595,7 +594,6 @@ INTERN DeeTypeObject FunctionStatics_Type = {
 			/* T:              */ FunctionStatics,
 			/* tp_ctor:        */ &funcstatics_ctor,
 			/* tp_copy_ctor:   */ &funcstatics_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcstatics_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &funcstatics_serialize
@@ -962,7 +960,6 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 			/* T:              */ FunctionSymbolsByNameIterator,
 			/* tp_ctor:        */ &funcsymbolsbynameiter_ctor,
 			/* tp_copy_ctor:   */ &funcsymbolsbynameiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &funcsymbolsbynameiter_serialize
@@ -1012,7 +1009,6 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 			/* T:              */ FunctionSymbolsByNameIterator,
 			/* tp_ctor:        */ &funcsymbolsbynameiter_ctor,
 			/* tp_copy_ctor:   */ &funcsymbolsbynameiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &funcsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &funcsymbolsbynameiter_serialize
@@ -1745,7 +1741,6 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 			/* T:              */ FunctionSymbolsByName,
 			/* tp_ctor:        */ &funcsymbolsbyname_ctor,
 			/* tp_copy_ctor:   */ &funcsymbolsbyname_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &funcsymbolsbyname_init_kw,
 			/* tp_serialize:   */ &funcsymbolsbyname_serialize
@@ -2322,7 +2317,6 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 			/* T:              */ YieldFunctionSymbolsByNameIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &yfuncsymbolsbynameiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &yfuncsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &yfuncsymbolsbynameiter_serialize
@@ -2375,7 +2369,6 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 			/* T:              */ YieldFunctionSymbolsByNameIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &yfuncsymbolsbynameiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &yfuncsymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &yfuncsymbolsbynameiter_serialize
@@ -2812,20 +2805,6 @@ yfuncsymbolsbyname_copy(YieldFunctionSymbolsByName *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-yfuncsymbolsbyname_deep(YieldFunctionSymbolsByName *__restrict self,
-                        YieldFunctionSymbolsByName *__restrict other) {
-	self->yfsbn_yfunc = (DREF DeeYieldFunctionObject *)DeeObject_DeepCopy(Dee_AsObject(other->yfsbn_yfunc));
-	if unlikely(!self->yfsbn_yfunc)
-		goto err;
-	self->yfsbn_nargs     = other->yfsbn_nargs;
-	self->yfsbn_rid_start = other->yfsbn_rid_start;
-	self->yfsbn_rid_end   = other->yfsbn_rid_end;
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfuncsymbolsbyname_init_kw(YieldFunctionSymbolsByName *__restrict self,
                            size_t argc, DeeObject *const *argv,
@@ -2960,7 +2939,6 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 			/* T:              */ YieldFunctionSymbolsByName,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &yfuncsymbolsbyname_copy,
-			/* tp_deep_ctor:   */ &yfuncsymbolsbyname_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &yfuncsymbolsbyname_init_kw,
 			/* tp_serialize:   */ &yfuncsymbolsbyname_serialize
@@ -3228,7 +3206,6 @@ INTERN DeeTypeObject FrameArgs_Type = {
 			/* T:              */ FrameArgs,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &frameargs_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &frameargs_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &frameargs_serialize
@@ -3570,7 +3547,6 @@ INTERN DeeTypeObject FrameLocals_Type = {
 			/* T:              */ FrameLocals,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &framelocals_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framelocals_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &framelocals_serialize
@@ -4002,7 +3978,6 @@ INTERN DeeTypeObject FrameStack_Type = {
 			/* T:              */ FrameStack,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &framestack_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framestack_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &framestack_serialize
@@ -4762,7 +4737,6 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 			/* T:              */ FrameSymbolsByNameIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &framesymbolsbynameiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framesymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &framesymbolsbynameiter_serialize
@@ -4812,7 +4786,6 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 			/* T:              */ FrameSymbolsByNameIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &framesymbolsbynameiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &framesymbolsbynameiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &framesymbolsbynameiter_serialize
@@ -5597,7 +5570,6 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 			/* T:              */ FrameSymbolsByName,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &framesymbolsbyname_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &framesymbolsbyname_init_kw,
 			/* tp_serialize:   */ &framesymbolsbyname_serialize

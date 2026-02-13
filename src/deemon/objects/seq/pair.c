@@ -158,7 +158,6 @@ INTERN DeeTypeObject SeqPairIterator_Type = {
 			/* T:              */ SeqPairIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &spi_copy,
-			/* tp_deep_ctor:   */ NULL, /* Intentionally not implemented (even though it should be) because redundant after CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			/* tp_any_ctor:    */ &spi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &spi_serialize
@@ -217,7 +216,6 @@ STATIC_ASSERT((offsetof(SeqPair, sp_items) + (0 * sizeof(DeeObject *))) == offse
 STATIC_ASSERT((offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj1) ||
               (offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj2));
 #define sp_copy      generic_proxy2__copy_alias12
-#define sp_deep      generic_proxy2__deepcopy
 #define sp_serialize generic_proxy2__serialize
 #define sp_fini      generic_proxy2__fini
 #define sp_bool      _DeeNone_reti1_1
@@ -1016,7 +1014,6 @@ INTERN DeeTypeObject DeeSeqPair_Type = {
 			/* T:              */ SeqPair,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &sp_copy,
-			/* tp_deep_ctor:   */ &sp_deep,
 			/* tp_any_ctor:    */ &sp_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sp_serialize

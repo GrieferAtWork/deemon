@@ -304,19 +304,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-fl_deepload(FixedList *__restrict self) {
-	size_t i;
-	for (i = 0; i < self->fl_size; ++i) {
-		if (DeeObject_XInplaceDeepCopyWithRWLock(&self->fl_elem[i],
-		                                         &self->fl_lock))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL fl_bool(FixedList *__restrict self) {
 	return self->fl_size != 0;
 }
@@ -1523,7 +1510,6 @@ INTERN DeeTypeObject FixedList_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &fl_ctor,
 			/* tp_copy_ctor:   */ &fl_copy,
-			/* tp_deep_ctor:   */ &fl_copy,
 			/* tp_any_ctor:    */ &fl_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &fl_serialize,
@@ -1532,7 +1518,6 @@ INTERN DeeTypeObject FixedList_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fl_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&fl_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&fl_moveassign,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&fl_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1580,18 +1565,6 @@ fli_copy(FixedListIterator *__restrict self,
 	self->li_iter = FLI_GETITER(other);
 	Dee_Incref(self->li_list);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-fli_deep(FixedListIterator *__restrict self,
-         FixedListIterator *__restrict other) {
-	self->li_iter = FLI_GETITER(other);
-	self->li_list = (DREF FixedList *)DeeObject_DeepCopy((DeeObject *)other->li_list);
-	if unlikely(!self->li_list)
-		goto err;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1809,7 +1782,6 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 			/* T:              */ FixedListIterator,
 			/* tp_ctor:        */ &fli_ctor,
 			/* tp_copy_ctor:   */ &fli_copy,
-			/* tp_deep_ctor:   */ &fli_deep,
 			/* tp_any_ctor:    */ &fli_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &fli_serialize
@@ -1817,7 +1789,6 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&fli_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,

@@ -1608,7 +1608,6 @@ typedef struct {
 #define GCIter_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->gi_lock)
 #define GCIter_LockRelease(self)    Dee_atomic_lock_release(&(self)->gi_lock)
 
-#define gciter_deep gciter_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 gciter_copy(GCIter *__restrict self,
             GCIter *__restrict other) {
@@ -1704,7 +1703,6 @@ PRIVATE DeeTypeObject GCIter_Type = {
 			/* T:              */ GCIter,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &gciter_copy,
-			/* tp_deep_ctor:   */ &gciter_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &gciter_serialize
@@ -2026,7 +2024,6 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Static singleton, so no serial needed */

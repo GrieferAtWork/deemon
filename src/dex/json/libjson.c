@@ -141,8 +141,6 @@ jmapiter_ctor(DeeJsonIteratorObject *__restrict self) {
 
 #define jseqiter_copy jiter_copy
 #define jmapiter_copy jiter_copy
-#define jseqiter_deep jiter_copy
-#define jmapiter_deep jiter_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 jiter_copy(DeeJsonIteratorObject *__restrict self,
            DeeJsonIteratorObject *__restrict other) {
@@ -1380,7 +1378,6 @@ INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 			/* T:              */ DeeJsonIteratorObject,
 			/* tp_ctor:        */ &jseqiter_ctor,
 			/* tp_copy_ctor:   */ &jseqiter_copy,
-			/* tp_deep_ctor:   */ &jseqiter_deep,
 			/* tp_any_ctor:    */ &jseqiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &jseqiter_serialize
@@ -1388,7 +1385,6 @@ INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jseqiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1426,7 +1422,6 @@ INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 			/* T:              */ DeeJsonIteratorObject,
 			/* tp_ctor:        */ &jmapiter_ctor,
 			/* tp_copy_ctor:   */ &jmapiter_copy,
-			/* tp_deep_ctor:   */ &jmapiter_deep,
 			/* tp_any_ctor:    */ &jmapiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &jmapiter_serialize
@@ -1434,7 +1429,6 @@ INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&jmapiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1476,7 +1470,6 @@ INTERN DeeTypeObject DeeJsonSequence_Type = {
 			/* T:              */ DeeJsonSequenceObject,
 			/* tp_ctor:        */ &jseq_ctor,
 			/* tp_copy_ctor:   */ &jseq_copy,
-			/* tp_deep_ctor:   */ &jseq_copy,
 			/* tp_any_ctor:    */ &jseq_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &jseq_serialize
@@ -1523,7 +1516,6 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 			/* T:              */ DeeJsonMappingObject,
 			/* tp_ctor:        */ &jmap_ctor,
 			/* tp_copy_ctor:   */ &jmap_copy,
-			/* tp_deep_ctor:   */ &jmap_copy,
 			/* tp_any_ctor:    */ &jmap_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &jmap_serialize

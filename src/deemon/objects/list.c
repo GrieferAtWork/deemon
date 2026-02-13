@@ -191,48 +191,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_deepload(List *__restrict me) {
-	DREF DeeObject *new_item, *old_item;
-	size_t i = 0;
-	Dee_weakref_support_init(me);
-	DeeList_LockRead(me);
-	for (; i < me->l_list.ol_elemc; ++i) {
-		old_item = me->l_list.ol_elemv[i];
-		Dee_Incref(old_item);
-		DeeList_LockEndRead(me);
-
-		/* Create the deep copy. */
-		new_item = DeeObject_DeepCopyInherited(old_item);
-		if unlikely(!new_item)
-			goto err;
-		DeeList_LockWrite(me);
-
-		/* Must re-check that the list hasn't been shrunk in the mean time. */
-		if unlikely(i >= me->l_list.ol_elemc)
-			goto stop_on_end;
-
-		/* Write the duplicated object back into the list's vector. */
-		old_item = me->l_list.ol_elemv[i]; /* Inherit */
-		me->l_list.ol_elemv[i] = new_item; /* Inherit */
-		DeeList_LockEndWrite(me);
-
-		/* Drop the old object. */
-		Dee_Decref(old_item);
-		DeeList_LockRead(me);
-	}
-	DeeList_LockEndRead(me);
-done:
-	return 0;
-err:
-	return -1;
-stop_on_end:
-	DeeList_LockEndWrite(me);
-	Dee_Decref(new_item);
-	goto done;
-}
-
-
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewWithHint(size_t n_prealloc) {
 	DREF List *result;
@@ -4262,9 +4220,6 @@ PRIVATE struct type_cmp list_cmp = {
 
 PRIVATE struct type_operator const list_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FNOREFESCAPE),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0004_ASSIGN, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0005_MOVEASSIGN, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE),
@@ -4418,7 +4373,6 @@ PUBLIC DeeTypeObject DeeList_Type = {
 			/* T:              */ List,
 			/* tp_ctor:        */ &list_ctor,
 			/* tp_copy_ctor:   */ &list_copy,
-			/* tp_deep_ctor:   */ &list_copy,
 			/* tp_any_ctor:    */ &list_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &list_serialize
@@ -4426,7 +4380,6 @@ PUBLIC DeeTypeObject DeeList_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&list_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_moveassign,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&list_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),
@@ -4479,18 +4432,6 @@ li_copy(ListIterator *__restrict self,
 	self->li_index = LI_GETINDEX(other);
 	Dee_Incref(self->li_list);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-li_deep(ListIterator *__restrict self,
-        ListIterator *__restrict other) {
-	self->li_list = (DREF List *)DeeObject_DeepCopy((DeeObject *)other->li_list);
-	if unlikely(!self->li_list)
-		goto err;
-	self->li_index = LI_GETINDEX(other);
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -4716,7 +4657,6 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 			/* T:              */ ListIterator,
 			/* tp_ctor:        */ &li_ctor,
 			/* tp_copy_ctor:   */ &li_copy,
-			/* tp_deep_ctor:   */ &li_deep,
 			/* tp_any_ctor:    */ &li_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &li_serialize
@@ -4724,7 +4664,6 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&li_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

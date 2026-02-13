@@ -805,7 +805,6 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &ddi_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ddi_serialize,

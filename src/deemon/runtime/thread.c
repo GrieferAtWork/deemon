@@ -36,19 +36,18 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/module.h>             /* DeeModule_GetShortName */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8 */
 #include <deemon/system-error.h>       /* DeeSystemError_Pop, DeeSystemError_Push */
 #include <deemon/system-features.h>    /* CLOCK_MONOTONIC, CLOCK_REALTIME, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, abort, bsd_signal, bzero*, clock_gettime, clock_gettime64, fprintf, getpid, gettid, gettimeofday, gettimeofday64, kill, memcpy*, memmovedownc, memmoveupc, memset, nanosleep, nanosleep64, pselect, pthread_create, pthread_detach, pthread_getspecific, pthread_gettid_np, pthread_join, pthread_key_create, pthread_key_delete, pthread_kill, pthread_self, pthread_setspecific, pthread_sigqueue, select, sigaction, signal, stderr, strerror, strlen, syscall, sysv_signal, tgkill, thrd_create, thrd_current, thrd_detach, thrd_join, thrd_nomem, thrd_success, time, time64, tss_create, tss_delete, tss_get, tss_set, usleep */
 #include <deemon/system.h>             /* DeeNTSystem_IsBadAllocError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_DEEPASSOC_HASHIT, Dee_DEEPASSOC_HASHNX, Dee_DEEPASSOC_HASHST, Dee_THREAD_STATE_*, Dee_deep_assoc_entry, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_object, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_object, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
 #include <deemon/traceback.h>          /* DeeTraceback*, Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple, Dee_tuple_object */
 #include <deemon/type.h>               /* DeeObject_GenericCmpByAddr, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_* */
-#include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init, Dee_atomic_rwlock_*, Dee_shared_lock_* */
 #include <deemon/util/once.h>          /* Dee_ONCE */
 
@@ -862,188 +861,6 @@ PUBLIC struct Dee_tls_callback_hooks _DeeThread_TlsCallbacks = {
 PRIVATE DEFINE_STRING(main_thread_name, "MainThread");
 PUBLIC uint16_t DeeExec_StackLimit = Dee_EXEC_DEFAULT_STACK_LIMIT;
 
-
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-PRIVATE struct Dee_deep_assoc_entry empty_deep_assoc[] = {
-	{ NULL, NULL }
-};
-
-
-PRIVATE NONNULL((1)) bool DCALL
-deepassoc_rehash(DeeThreadObject *__restrict self) {
-	struct Dee_deep_assoc_entry *new_vector, *iter, *end;
-	size_t new_mask;
-	new_mask = self->t_deepassoc.da_mask;
-	new_mask = (new_mask << 1) | 1;
-	if unlikely(new_mask == 1)
-		new_mask = 64 - 1; /* Start out bigger than 2. */
-	ASSERT(self->t_deepassoc.da_used < new_mask);
-	new_vector = (struct Dee_deep_assoc_entry *)Dee_TryCallocc(new_mask + 1, sizeof(struct Dee_deep_assoc_entry));
-	if unlikely(!new_vector)
-		return false;
-	ASSERT((self->t_deepassoc.da_list == empty_deep_assoc) == (self->t_deepassoc.da_used == 0));
-	ASSERT((self->t_deepassoc.da_list == empty_deep_assoc) == (self->t_deepassoc.da_mask == 0));
-	if (self->t_deepassoc.da_list != empty_deep_assoc) {
-
-		/* Re-insert all existing items into the new table vector. */
-		end = (iter = self->t_deepassoc.da_list) + (self->t_deepassoc.da_mask + 1);
-		for (; iter < end; ++iter) {
-			struct Dee_deep_assoc_entry *item;
-			Dee_hash_t i, perturb;
-
-			/* Skip NULL entries. */
-			if (!iter->de_old)
-				continue;
-			perturb = i = (Dee_HashPointer(iter->de_old) ^
-			               Dee_HashPointer(Dee_TYPE(iter->de_new))) &
-			              new_mask;
-			for (;; Dee_DEEPASSOC_HASHNX(i, perturb)) {
-				item = &new_vector[i & new_mask];
-				if (!item->de_old)
-					break; /* Empty slot found. */
-			}
-
-			/* Transfer this object. */
-			memcpy(item, iter, sizeof(struct Dee_deep_assoc_entry));
-		}
-		Dee_Free(self->t_deepassoc.da_list);
-	}
-	self->t_deepassoc.da_mask = new_mask;
-	self->t_deepassoc.da_list = new_vector;
-	return true;
-}
-
-
-
-/* Implementation detail required to implement recursive deepcopy.
- * To see how this function must be used, look at the documentation for `tp_deepload'
- * WARNING: THIS FUNCTION MUST NOT BE CALLED BY THE IMPLEMENTING
- *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED!
- * @return: * :        Another replacement for "old_object" already exists (return is that object)
- * @return: ITER_DONE: The replacement link "old_object -> new_object" was registered
- * @return: NULL:      An error was thrown */
-PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *
-(DCALL Dee_DeepCopyAddAssoc)(DeeObject *new_object,
-                             DeeObject *old_object) {
-	size_t mask;
-	Dee_hash_t i, perturb, hash;
-	DeeThreadObject *self = DeeThread_Self();
-	ASSERT_OBJECT(old_object);
-	ASSERT_OBJECT(new_object);
-
-	/* Make sure that the type of the new object is equal to, or a base of that of the old object,
-	 * as if this wasn't the case in all situations, then `old_object' could never have been used to
-	 * construct `new_object' as a copy.
-	 * HINT: This also further ensures a valid pre-initialization (if that wasn't asserted enough already).
-	 * Note however that the other way around may not necessarily be true, as constructing
-	 * a deep-copy of a super-class `A' from an instances of `B' derived from `A' will produce
-	 * an association from an instance of `B' to an instance of `A'. */
-	ASSERT(DeeObject_InstanceOf(old_object, Dee_TYPE(new_object)));
-
-	hash = (Dee_HashPointer(old_object) ^
-	        Dee_HashPointer(Dee_TYPE(new_object)));
-again:
-	mask    = self->t_deepassoc.da_mask;
-	perturb = i = hash & mask;
-	for (;; Dee_DEEPASSOC_HASHNX(i, perturb)) {
-		struct Dee_deep_assoc_entry *item = &self->t_deepassoc.da_list[i & mask];
-		if (!item->de_old) {
-			if (self->t_deepassoc.da_used + 1 >= self->t_deepassoc.da_mask)
-				break; /* Rehash the table and try again. */
-
-			/* Not found. - Use this empty slot. */
-			item->de_old = old_object;
-			item->de_new = new_object;
-			Dee_Incref(old_object);
-			Dee_Incref(new_object);
-			++self->t_deepassoc.da_used;
-
-			/* Try to keep the table vector big at least twice as big as the element count. */
-			if (self->t_deepassoc.da_used * 2 > self->t_deepassoc.da_mask)
-				deepassoc_rehash(self);
-			return ITER_DONE;
-		}
-
-		/* Check for illegal duplicate entries. */
-		ASSERT_OBJECT(item->de_new);
-
-		/* Check if this association was already made */
-		if (item->de_old == old_object &&
-		    Dee_TYPE(item->de_new) == Dee_TYPE(new_object))
-			return item->de_new;
-	}
-
-	/* Rehash the table and try again. */
-	if (deepassoc_rehash(self))
-		goto again;
-
-	/* If that failed, collect memory. */
-	if (Dee_CollectMemory(1))
-		goto again;
-
-	/* If that failed, we've failed... */
-	return NULL;
-}
-
-/* Lookup a GC association of `old_object', who's
- * new object is an exact instance of `new_type' */
-INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
-deepcopy_lookup(struct Dee_thread_object *thread_self, DeeObject *old_object,
-                DeeTypeObject *new_type) {
-	uintptr_t i, perturb;
-	uintptr_t hash = (Dee_HashPointer(old_object) ^
-	                  Dee_HashPointer(new_type));
-	perturb = i = Dee_DEEPASSOC_HASHST(&thread_self->t_deepassoc, hash);
-	for (;; Dee_DEEPASSOC_HASHNX(i, perturb)) {
-		struct Dee_deep_assoc_entry *item;
-		item = Dee_DEEPASSOC_HASHIT(&thread_self->t_deepassoc, i);
-		if (item->de_old != old_object) {
-			if (!item->de_old)
-				break;
-			continue;
-		}
-		if unlikely(Dee_TYPE(item->de_new) != new_type)
-			continue;
-		return item->de_new;
-	}
-	return NULL;
-}
-
-INTERN NONNULL((1)) void DCALL
-deepcopy_clear(struct Dee_thread_object *__restrict thread_self) {
-	/* NOTE: Everything here is synchronized by lock(PRIVATE(DeeThread_Self())) */
-	struct Dee_deep_assoc_entry *begin;
-	size_t mask;
-	struct Dee_deep_assoc_entry *iter, *end;
-	begin = thread_self->t_deepassoc.da_list;
-	mask  = thread_self->t_deepassoc.da_mask;
-	thread_self->t_deepassoc.da_list = empty_deep_assoc;
-	thread_self->t_deepassoc.da_mask = 0;
-	thread_self->t_deepassoc.da_used = 0;
-	end = (iter = begin) + (mask + 1);
-
-	/* Go through and clear out all the generated mappings. */
-	for (; iter < end; ++iter) {
-		if (!iter->de_old)
-			continue;
-		Dee_Decref(iter->de_old);
-		Dee_Decref(iter->de_new);
-		iter->de_old = NULL;
-	}
-	if (thread_self->t_deepassoc.da_list == empty_deep_assoc && mask <= 0xff) {
-		/* Return the pre-allocated (but empty) map to the thread.
-		 * NOTE: So-as not to clobber member, only do this for small masks. */
-		thread_self->t_deepassoc.da_list = begin;
-		thread_self->t_deepassoc.da_mask = mask;
-	} else {
-		/* Some destructor call initiated another deepcopy.
-		 * -> Can't replace the existing map with the new one. */
-		Dee_Free(begin);
-	}
-}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-
-
 typedef struct os_thread_object {
 	DeeThreadObject ot_thread;     /* Underlying thread */
 #ifdef Dee_pid_t
@@ -1160,9 +977,6 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 		/* .t_str_curr   = */ NULL,
 		/* .t_repr_curr  = */ NULL,
 		/* .t_hash_curr  = */ NULL,
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		/* .t_deepassoc  = */ { 0, 0, empty_deep_assoc, 0 },
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		/* .t_exec       = */ NULL,
 		/* .t_except     = */ NULL,
 		/* .t_execsz     = */ 0,
@@ -1797,9 +1611,6 @@ DeeThread_AllocateCurrentThread(void) {
 	if unlikely(result == NULL)
 		return NULL;
 	DeeObject_Init(&result->at_os_thread.ot_thread, &DeeThread_Type);
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	result->at_os_thread.ot_thread.t_deepassoc.da_list = empty_deep_assoc;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	/* Set expected thread flags. */
 	result->at_os_thread.ot_thread.t_state = 0 |
@@ -1968,11 +1779,6 @@ DeeThread_Secede(DREF DeeObject *thread_result) {
 	ASSERTF(self->t_str_curr == NULL, "Calling thread still has active calls to `DeeObject_Str'");
 	ASSERTF(self->t_repr_curr == NULL, "Calling thread still has active calls to `DeeObject_Repr'");
 	ASSERTF(self->t_hash_curr == NULL, "Calling thread still has active calls to `DeeObject_Hash'");
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	ASSERTF(self->t_deepassoc.da_used == 0, "Calling thread still has active calls to `DeeObject_DeepCopy'");
-	ASSERT((self->t_deepassoc.da_mask != 0) ==
-	       (self->t_deepassoc.da_list != empty_deep_assoc));
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	ASSERT(!self->t_threadname || DeeString_Check(self->t_threadname));
 
 	/* Set the TERMINATING flag to prevent further interrupts from being scheduled. */
@@ -2206,15 +2012,6 @@ INTERN void DCALL DeeThread_SubSystemFini(void) {
 
 	/* Finalize the main-thread object */
 	_DeeThread_FiniMainThread();
-
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	/* Do some cleanup on the main-thread object */
-	if (DeeThread_Main.ot_thread.t_deepassoc.da_list != empty_deep_assoc)
-		Dee_Free(DeeThread_Main.ot_thread.t_deepassoc.da_list);
-	DeeThread_Main.ot_thread.t_deepassoc.da_used = 0;
-	DeeThread_Main.ot_thread.t_deepassoc.da_mask = 0;
-	DeeThread_Main.ot_thread.t_deepassoc.da_list = empty_deep_assoc;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	DBG_ALIGNMENT_ENABLE();
 }
@@ -3588,11 +3385,6 @@ thread_fini(DeeThreadObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(!LIST_ISBOUND(self, t_global));
 #endif /* !CONFIG_NO_THREADS */
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	ASSERT(self->t_deepassoc.da_used == 0);
-	ASSERT(self->t_deepassoc.da_mask == 0);
-	ASSERT(self->t_deepassoc.da_list == empty_deep_assoc);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #ifndef CONFIG_NO_THREADS
 	ASSERT(self->t_threadname == NULL);
 #endif /* !CONFIG_NO_THREADS */
@@ -3617,13 +3409,6 @@ thread_fini(DeeThreadObject *__restrict self) {
 #endif /* !... */
 	}
 
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	ASSERT(!self->t_deepassoc.da_used);
-	ASSERT((self->t_deepassoc.da_mask != 0) ==
-	       (self->t_deepassoc.da_list != empty_deep_assoc));
-	if (self->t_deepassoc.da_list != empty_deep_assoc)
-		Dee_Free(self->t_deepassoc.da_list);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	Dee_XDecref(self->t_threadname);
 	if (self->t_state & Dee_THREAD_STATE_STARTED) {
 		if (self->t_state & Dee_THREAD_STATE_TERMINATED) {
@@ -3667,9 +3452,6 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	                            Dee_THREAD_STATE_HASTID |
 	                            Dee_THREAD_STATE_UNMANAGED;
 	result->ot_tid = tid;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	result->ot_thread.t_deepassoc.da_list = empty_deep_assoc;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	DeeObject_Init(&result->ot_thread, &DeeThread_Type);
 	return DeeGC_Track(Dee_AsObject(&result->ot_thread));
 err:
@@ -3867,12 +3649,6 @@ thread_init(DeeThreadObject *__restrict self,
 		me->ot_thread.t_str_curr               = NULL;
 		me->ot_thread.t_repr_curr              = NULL;
 		me->ot_thread.t_hash_curr              = NULL;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		me->ot_thread.t_deepassoc.da_used      = 0;
-		me->ot_thread.t_deepassoc.da_mask      = 0;
-		me->ot_thread.t_deepassoc.da_list      = empty_deep_assoc;
-		me->ot_thread.t_deepassoc.da_recursion = 0;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		me->ot_thread.t_exec                   = NULL;
 		me->ot_thread.t_except                 = NULL;
 		me->ot_thread.t_execsz                 = 0;
@@ -3956,12 +3732,6 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_interrupt.ti_args = NULL;
 	self->t_global.le_prev    = NULL;
 	DBG_memset(&self->t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	self->t_deepassoc.da_used      = 0;
-	self->t_deepassoc.da_mask      = 0;
-	self->t_deepassoc.da_list      = empty_deep_assoc;
-	self->t_deepassoc.da_recursion = 0;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	self->t_heap = NULL;
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
@@ -4964,7 +4734,6 @@ PUBLIC DeeTypeObject DeeThread_Type = {
 			/* T:              */ DeeOSThreadObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &thread_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Threads can't be serialized */

@@ -88,20 +88,6 @@ Dee_variant_init_copy(struct Dee_variant *__restrict self,
 	self->var_type = type;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-Dee_variant_init_deepcopy(struct Dee_variant *__restrict self,
-                          struct Dee_variant *__restrict other) {
-	Dee_variant_init_copy(self, other);
-	if (self->var_type == Dee_VARIANT_OBJECT) {
-		if (DeeObject_InplaceDeepCopy(&self->var_data.d_object))
-			goto err_copy;
-	}
-	return 0;
-err_copy:
-	Dee_Decref(self->var_data.d_object);
-	return -1;
-}
-
 PUBLIC NONNULL((1, 2)) void DCALL
 Dee_variant_visit(struct Dee_variant *__restrict self,
                   Dee_visit_t proc, void *arg) {

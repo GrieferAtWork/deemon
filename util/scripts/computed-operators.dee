@@ -170,7 +170,6 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 			Field("tp_dtor"),
 			Field("tp_assign"),      /* NativeOperator("tp_assign") */
 			Field("tp_move_assign"), /* NativeOperator("tp_move_assign") */
-			Field("tp_deepload"),
 			Field("tp_destroy"),
 		},
 		/* .tp_cast = */ {

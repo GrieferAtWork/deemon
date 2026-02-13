@@ -2355,13 +2355,6 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeObject_DeepCopyInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_DeepCopy(self);
-	Dee_Decref_unlikely(self); /* You usually copy something because someone will continue to use the source */
-	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_SizeObInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 	DREF DeeObject *result = DeeObject_SizeOb(self);
 	Dee_Decref_unlikely(self); /* You usually take the size of something because you indent to keep working with that something */

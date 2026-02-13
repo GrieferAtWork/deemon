@@ -248,7 +248,6 @@ INTERN DeeTypeObject USetIterator_Type = {
 			/* T:              */ USetIterator,
 			/* tp_ctor:        */ &usetiterator_ctor,
 			/* tp_copy_ctor:   */ &usetiterator_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &usetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &usetiterator_serialize
@@ -790,96 +789,6 @@ again:
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-uset_deepload(USet *__restrict self) {
-	DREF DeeObject **new_items, **items = NULL;
-	size_t i, hash_i, item_count, ols_item_count = 0;
-	struct uset_item *new_map, *ols_map;
-	size_t new_mask;
-	for (;;) {
-		USet_LockRead(self);
-		/* Optimization: if the Set is empty, then there's nothing to copy! */
-		if (self->us_elem == empty_set_items) {
-			USet_LockEndRead(self);
-			return 0;
-		}
-		item_count = self->us_used;
-		if (item_count <= ols_item_count)
-			break;
-		USet_LockEndRead(self);
-		new_items = (DREF DeeObject **)Dee_Reallocc(items, item_count,
-		                                            sizeof(DREF DeeObject *));
-		if unlikely(!new_items)
-			goto err_items;
-		ols_item_count = item_count;
-		items          = new_items;
-	}
-
-	/* Copy all used items. */
-	for (i = 0, hash_i = 0; i < item_count; ++hash_i) {
-		ASSERT(hash_i <= self->us_mask);
-		if (self->us_elem[hash_i].usi_key == NULL)
-			continue;
-		if (self->us_elem[hash_i].usi_key == dummy)
-			continue;
-		items[i] = self->us_elem[hash_i].usi_key;
-		Dee_Incref(items[i]);
-		++i;
-	}
-	USet_LockEndRead(self);
-
-	/* With our own local copy of all items being
-	 * used, replace all of them with deep copies. */
-	for (i = 0; i < item_count; ++i) {
-		if (DeeObject_InplaceDeepCopy(&items[i]))
-			goto err_items_v;
-	}
-	new_mask = 1;
-	while ((item_count & new_mask) != item_count)
-		new_mask = (new_mask << 1) | 1;
-	new_map = (struct uset_item *)Dee_Callocc(new_mask + 1, sizeof(struct uset_item));
-	if unlikely(!new_map)
-		goto err_items_v;
-	/* Insert all the copied items into the new map. */
-	for (i = 0; i < item_count; ++i) {
-		Dee_hash_t j, perturb;
-		perturb = j = UHASH(items[i]) & new_mask;
-		for (;; USet_HashNx(j, perturb)) {
-			struct uset_item *item = &new_map[j & new_mask];
-			if (item->usi_key) {
-				if likely(!USAME(item->usi_key, items[i]))
-					continue; /* Already in use */
-				Dee_Decref(items[i]);
-				goto next_item;
-			}
-			item->usi_key = items[i]; /* Inherit reference. */
-			break;
-		}
-next_item:
-		;
-	}
-	USet_LockWrite(self);
-	i            = self->us_mask + 1;
-	self->us_mask = new_mask;
-	self->us_used = item_count;
-	self->us_size = item_count;
-	ols_map      = self->us_elem;
-	self->us_elem = new_map;
-	USet_LockEndWrite(self);
-	if (ols_map != empty_set_items) {
-		while (i--)
-			Dee_XDecref(ols_map[i].usi_key);
-		Dee_Free(ols_map);
-	}
-	Dee_Free(items);
-	return 0;
-err_items_v:
-	Dee_Decrefv(items, item_count);
-err_items:
-	Dee_Free(items);
-	return -1;
-}
-
 PRIVATE NONNULL((1)) void DCALL USet_Fini(USet *__restrict self) {
 	Dee_weakref_support_fini(self);
 	ASSERT((self->us_elem == empty_set_items) == (self->us_mask == 0));
@@ -1370,7 +1279,6 @@ INTERN DeeTypeObject USet_Type = {
 			/* T:              */ USet,
 			/* tp_ctor:        */ &USet_InitEmpty,
 			/* tp_copy_ctor:   */ &USet_InitCopy,
-			/* tp_deep_ctor:   */ &USet_InitCopy,
 			/* tp_any_ctor:    */ &uset_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &uset_serialize
@@ -1378,7 +1286,6 @@ INTERN DeeTypeObject USet_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&USet_Fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&uset_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -1529,7 +1436,6 @@ INTERN DeeTypeObject URoSetIterator_Type = {
 			/* T:              */ URoSetIterator,
 			/* tp_ctor:        */ &urosetiterator_ctor,
 			/* tp_copy_ctor:   */ &urosetiterator_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &urosetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &urosetiterator_serialize
@@ -1992,36 +1898,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF URoSet *DCALL
-uroset_deepcopy(URoSet *__restrict self) {
-	DREF URoSet *result;
-	size_t i;
-	result = (DREF URoSet *)DeeObject_Callocc(offsetof(URoSet, urs_elem),
-	                                          self->urs_mask + 1,
-	                                          sizeof(struct uset_item));
-	if unlikely(!result)
-		goto err;
-	result->urs_mask = self->urs_mask;
-	result->urs_size = self->urs_size;
-	for (i = 0; i <= self->urs_mask; ++i) {
-		DREF DeeObject *key;
-		key = self->urs_elem[i].usi_key;
-		if (key != NULL) {
-			key = DeeObject_DeepCopy(key);
-			if unlikely(!key)
-				goto err_r;
-			URoSet_DoInsertUnlocked(result, key);
-		}
-	}
-	DeeObject_Init(result, &URoSet_Type);
-	return result;
-err_r:
-	Dee_XDecrefv((DREF DeeObject **)result->urs_elem, i);
-	DeeObject_Free(result);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 uroset_serialize(URoSet *__restrict self,
                  DeeSerial *__restrict writer) {
@@ -2106,7 +1982,6 @@ INTERN DeeTypeObject URoSet_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &URoSet_New,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &uroset_deepcopy,
 			/* tp_any_ctor:    */ &uroset_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &uroset_serialize,
@@ -2115,7 +1990,6 @@ INTERN DeeTypeObject URoSet_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&uroset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,

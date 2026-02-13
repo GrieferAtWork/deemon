@@ -65,7 +65,6 @@
 
 #include "types.h"     /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_SIZEOF_REFCNT_T, Dee_TYPE, Dee_[u]int128_t, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
 #include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
-#include "util/lock.h" /* Dee_atomic_lock_t, Dee_atomic_rwlock_t */
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, false, true */
@@ -1129,61 +1128,14 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VNewf(DeeTypeObj
 #define DeeObject_NewTupleKw(object_type, args, kw) DeeObject_NewKw(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !__OPTIMIZE_SIZE__ */
 
+/* Object deepcopy invocation (convenience wrappers for `DeeDeepCopyContext') */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopy(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopyInherited(/*inherit(always)*/ DREF DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF DeeObject **__restrict p_self); /* TODO: Remove me */
+
 /* Object copy/assign operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Copy(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopy(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_CopyInherited(/*inherit(always)*/ DREF DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DeepCopyInherited(/*inherit(always)*/ DREF DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF DeeObject **__restrict p_self);
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopyv(/*in|out*/ DREF DeeObject **__restrict object_vector, size_t object_count);
-#define DeeObject_XInplaceDeepCopy(p_self) (!*(p_self) ? 0 : DeeObject_InplaceDeepCopy(p_self))
-#ifndef CONFIG_NO_THREADS
-/* A helper functions to acquire the proper read/write locks on a given
- * Dee_atomic_rwlock_t when accessing memory pointed to by the given `*p_self'.
- *
- * This is highly useful due to the fact that practically the only place where
- * `DeeObject_InplaceDeepCopy()' might ever be encountered, is in tp_deepload
- * operators, where using it on a raw pointer is not thread-safe, considering
- * the fact that the caller must probably be holding some kind of lock
- * (presumably an `Dee_atomic_rwlock_t'), which must be used in the following
- * order to safely replace the field with a deepcopy (the safe order of
- * operations that is then performed by this helper):
- * >> DREF DeeObject *temp, *copy;
- * >> Dee_atomic_rwlock_read(p_lock);
- * >> temp = *p_self;
- * >> #if IS_XDEEPCOPY
- * >> if (!temp) {
- * >>     Dee_atomic_rwlock_endread(p_lock);
- * >>     return 0;
- * >> }
- * >> #endif // IS_XDEEPCOPY
- * >> Dee_Incref(temp);
- * >> Dee_atomic_rwlock_endread(p_lock);
- * >> copy = DeeObject_DeepCopy(temp);
- * >> Dee_Decref(temp);
- * >> if unlikely(!copy)
- * >>    return -1;
- * >> Dee_atomic_rwlock_write(p_lock);
- * >> temp   = *p_self; // Inherit
- * >> *p_self = copy;   // Inherit
- * >> Dee_atomic_rwlock_endwrite(p_lock);
- * >> #if IS_XDEEPCOPY
- * >> Dee_XDecref(temp);
- * >> #else // IS_XDEEPCOPY
- * >> Dee_Decref(temp);
- * >> #endif // !IS_XDEEPCOPY
- * >> return 0;
- */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_lock_t *__restrict p_lock);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_lock_t *__restrict p_lock);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithRWLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_XInplaceDeepCopyWithRWLock(/*in|out*/ DREF DeeObject **__restrict p_self, Dee_atomic_rwlock_t *__restrict p_lock);
-#else /* !CONFIG_NO_THREADS */
-#define DeeObject_InplaceDeepCopyWithLock(p_self, p_lock)    DeeObject_InplaceDeepCopy(p_self)
-#define DeeObject_XInplaceDeepCopyWithLock(p_self, p_lock)   DeeObject_XInplaceDeepCopy(p_self)
-#define DeeObject_InplaceDeepCopyWithRWLock(p_self, p_lock)  DeeObject_InplaceDeepCopy(p_self)
-#define DeeObject_XInplaceDeepCopyWithRWLock(p_self, p_lock) DeeObject_XInplaceDeepCopy(p_self)
-#endif /* CONFIG_NO_THREADS */
 
 /* @return: == 0: Success
  * @return: != 0: Error was thrown */
@@ -2014,7 +1966,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #define DeeObject_InplaceDeepCopy(p_self)                              __builtin_expect(DeeObject_InplaceDeepCopy(p_self), 0)
-#define DeeObject_InplaceDeepCopyv(object_vector, object_count)        __builtin_expect(DeeObject_InplaceDeepCopyv(object_vector, object_count), 0)
 #define DeeObject_Assign(self, some_object)                            __builtin_expect(DeeObject_Assign(self, some_object), 0)
 #define DeeObject_MoveAssign(self, other)                              __builtin_expect(DeeObject_MoveAssign(self, other), 0)
 #define DeeObject_AsInt8(self, result)                                 __builtin_expect(DeeObject_AsInt8(self, result), 0)

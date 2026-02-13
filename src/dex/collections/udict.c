@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_*ALLOC*, DeeObject_Free, Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
+#include <deemon/alloc.h>           /* DeeObject_*ALLOC*, DeeObject_Free, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryCallocc, Dee_TryMallocc, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
 #include <deemon/bool.h>            /* Dee_True, return_false, return_true */
 #include <deemon/dict.h>            /* DeeDict_Dummy */
@@ -36,12 +36,12 @@
 #include <deemon/map.h>             /* DeeMapping_Type */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* Dee_None */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_BOUND_YES, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_BOUND_YES, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/pair.h>            /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h> /* memcpy*, memmovedownc */
+#include <deemon/system-features.h> /* memcpy* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
@@ -297,7 +297,6 @@ INTERN DeeTypeObject UDictIterator_Type = {
 			/* T:              */ USetIterator,
 			/* tp_ctor:        */ &udictiterator_ctor,
 			/* tp_copy_ctor:   */ &udictiterator_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &udictiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &udictiterator_serialize
@@ -461,128 +460,6 @@ again:
 	Dee_weakref_support_init(self);
 	return 0;
 err:
-	return -1;
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-udict_deepload(UDict *__restrict self) {
-	typedef struct {
-		DREF DeeObject *e_key;   /* [0..1][lock(:ud_lock)] Dictionary item key. */
-		DREF DeeObject *e_value; /* [1..1|if(di_key == dummy, 0..0)][valid_if(di_key)][lock(:ud_lock)] Dictionary item value. */
-	} Entry;
-	/* #1 Allocate 2 new element-vector of the same size as `self'
-	 *    One of them has a length `ud_mask+1', the other `ud_used'
-	 * #2 Copy all key/value pairs from `self' into the ud_used-one (create references)
-	 *    NOTE: Skip NULL/dummy entries in the Dict vector.
-	 * #3 Go through the vector and create deep copies of all keys and items.
-	 *    For every key, hash it and insert it into the 2nd vector from before.
-	 * #4 Clear and free the 1st vector.
-	 * #5 Assign the 2nd vector to the Dict, extracting the old one at the same time.
-	 * #6 Clear and free the old vector. */
-	Entry *new_items, *items = NULL;
-	size_t i, hash_i, item_count, old_item_count = 0;
-	struct udict_item *new_map, *old_map;
-	size_t new_mask;
-	for (;;) {
-		UDict_LockRead(self);
-		/* Optimization: if the Dict is empty, then there's nothing to copy! */
-		if (self->ud_elem == empty_dict_items) {
-			UDict_LockEndRead(self);
-			return 0;
-		}
-		item_count = self->ud_used;
-		if (item_count <= old_item_count)
-			break;
-		UDict_LockEndRead(self);
-		new_items = (Entry *)Dee_Reallocc(items, item_count, sizeof(Entry));
-		if unlikely(!new_items)
-			goto err_items;
-		old_item_count = item_count;
-		items          = new_items;
-	}
-	/* Copy all used items. */
-	for (i = 0, hash_i = 0; i < item_count; ++hash_i) {
-		ASSERT(hash_i <= self->ud_mask);
-		if (self->ud_elem[hash_i].di_key == NULL)
-			continue;
-		if (self->ud_elem[hash_i].di_key == dummy)
-			continue;
-		items[i].e_key   = self->ud_elem[hash_i].di_key;
-		items[i].e_value = self->ud_elem[hash_i].di_value;
-		Dee_Incref(items[i].e_key);
-		Dee_Incref(items[i].e_value);
-		++i;
-	}
-	UDict_LockEndRead(self);
-	/* With our own local copy of all items being
-	 * used, replace all of them with deep copies. */
-	for (i = 0; i < item_count; ++i) {
-		if (DeeObject_InplaceDeepCopy(&items[i].e_key))
-			goto err_items_v;
-		if (DeeObject_InplaceDeepCopy(&items[i].e_value))
-			goto err_items_v;
-	}
-	new_mask = 1;
-	while ((item_count & new_mask) != item_count)
-		new_mask = (new_mask << 1) | 1;
-	new_map = (struct udict_item *)Dee_Callocc(new_mask + 1, sizeof(struct udict_item));
-	if unlikely(!new_map)
-		goto err_items_v;
-	/* Insert all the copied items into the new map. */
-	for (i = 0; i < item_count; ++i) {
-		Dee_hash_t j, perturb, hash;
-		hash    = UHASH(items[i].e_key);
-		perturb = j = hash & new_mask;
-		for (;; UDict_HashNx(j, perturb)) {
-			struct udict_item *item = &new_map[j & new_mask];
-			if (item->di_key) {
-				/* Check if deepcopy caused one of the elements to get duplicated. */
-				if unlikely(USAME(item->di_key, items[i].e_key)) {
-					Dee_Decref(items[i].e_key);
-					Dee_Decref(items[i].e_value);
-					--item_count;
-					memmovedownc(&items[i],
-					             &items[i + 1],
-					             item_count - i,
-					             sizeof(struct udict_item));
-					break;
-				}
-				/* Slot already in use */
-				continue;
-			}
-			item->di_key   = items[i].e_key;   /* Inherit reference. */
-			item->di_value = items[i].e_value; /* Inherit reference. */
-			break;
-		}
-	}
-	UDict_LockWrite(self);
-	i            = self->ud_mask + 1;
-	self->ud_mask = new_mask;
-	self->ud_used = item_count;
-	self->ud_size = item_count;
-	old_map      = self->ud_elem;
-	self->ud_elem = new_map;
-	UDict_LockEndWrite(self);
-	if (old_map != empty_dict_items) {
-		while (i--) {
-			if (!old_map[i].di_key)
-				continue;
-			Dee_Decref(old_map[i].di_value);
-			Dee_Decref(old_map[i].di_key);
-		}
-		Dee_Free(old_map);
-	}
-	Dee_Free(items);
-	return 0;
-err_items_v:
-	i = item_count;
-	while (i--) {
-		Dee_Decref(items[i].e_value);
-		Dee_Decref(items[i].e_key);
-	}
-err_items:
-	Dee_Free(items);
 	return -1;
 }
 
@@ -1454,7 +1331,6 @@ INTERN DeeTypeObject UDict_Type = {
 			/* T:              */ UDict,
 			/* tp_ctor:        */ &udict_ctor,
 			/* tp_copy_ctor:   */ &udict_copy,
-			/* tp_deep_ctor:   */ &udict_copy,
 			/* tp_any_ctor:    */ &udict_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &udict_serialize
@@ -1462,7 +1338,6 @@ INTERN DeeTypeObject UDict_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&udict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&udict_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -1652,7 +1527,6 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 			/* T:              */ URoSetIterator,
 			/* tp_ctor:        */ &urodictiterator_ctor,
 			/* tp_copy_ctor:   */ &urodictiterator_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &urodictiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &urodictiterator_serialize
@@ -1708,6 +1582,7 @@ done:
 	return result;
 }
 
+#if 0
 PRIVATE WUNUSED DREF URoDict *DCALL
 URoDict_NewWithHint(size_t num_items) {
 	DREF URoDict *result;
@@ -1724,6 +1599,7 @@ URoDict_NewWithHint(size_t num_items) {
 done:
 	return result;
 }
+#endif
 
 PRIVATE WUNUSED DREF URoDict *DCALL
 urodict_rehash(DREF URoDict *__restrict self,
@@ -1863,43 +1739,6 @@ URoDict_FromUDict(UDict *__restrict self) {
 	/* TODO */
 	return URoDict_FromSequence(Dee_AsObject(self));
 }
-
-PRIVATE WUNUSED NONNULL((1)) DREF URoDict *DCALL
-urodict_deepcopy(URoDict *__restrict self) {
-	DREF URoDict *result;
-	size_t i;
-	result = (DREF URoDict *)URoDict_NewWithHint(self->urd_size);
-	if unlikely(!result)
-		goto done;
-	for (i = 0; i <= self->urd_mask; ++i) {
-		Dee_ssize_t temp;
-		DREF DeeObject *key_copy, *value_copy;
-		/* Deep-copy the key & value */
-		if (!self->urd_elem[i].di_key)
-			continue;
-		key_copy = DeeObject_DeepCopy(self->urd_elem[i].di_key);
-		if unlikely(!key_copy)
-			goto err;
-		value_copy = DeeObject_DeepCopy(self->urd_elem[i].di_value);
-		if unlikely(!value_copy) {
-			Dee_Decref(key_copy);
-			goto err;
-		}
-
-		/* Insert the copied key & value into the new Dict. */
-		temp = URoDict_Insert(&result, key_copy, value_copy);
-		Dee_Decref(value_copy);
-		Dee_Decref(key_copy);
-		if unlikely(temp)
-			goto err;
-	}
-done:
-	return result;
-err:
-	Dee_Clear(result);
-	goto done;
-}
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 urodict_serialize(URoDict *__restrict self,
@@ -2192,7 +2031,6 @@ INTERN DeeTypeObject URoDict_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &URoDict_New,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &urodict_deepcopy,
 			/* tp_any_ctor:    */ &urodict_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &urodict_serialize,
@@ -2201,7 +2039,6 @@ INTERN DeeTypeObject URoDict_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&urodict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,

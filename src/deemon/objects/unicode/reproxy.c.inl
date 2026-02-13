@@ -198,7 +198,6 @@ rebfaiter_ctor(ReSequenceIterator *__restrict self) {
 	return 0;
 }
 
-#define ReSequenceIterator__deep ReSequenceIterator__copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ReSequenceIterator__copy(ReSequenceIterator *__restrict self,
                          ReSequenceIterator *__restrict other) {
@@ -212,7 +211,6 @@ ReSequenceIterator__copy(ReSequenceIterator *__restrict self,
 	return 0;
 }
 
-#define ReSequence__deep ReSequence__copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ReSequence__copy(ReSequence *__restrict self,
                  ReSequence *__restrict other) {
@@ -323,14 +321,12 @@ err:
 
 #define refaiter_init      ReSequenceIterator__init
 #define refaiter_copy      ReSequenceIterator__copy
-#define refaiter_deep      ReSequenceIterator__deep
 #define refaiter_serialize ReSequenceIterator__serialize
 #define refaiter_fini      ReSequenceIterator__fini
 #define refaiter_visit     ReSequenceIterator__visit
 
 #define rebfaiter_init      ReSequenceIterator__init
 #define rebfaiter_copy      ReSequenceIterator__copy
-#define rebfaiter_deep      ReSequenceIterator__deep /* XXX: Should actually deep-copy the underlying Bytes (since those are mutable...) */
 #define rebfaiter_serialize ReSequenceIterator__serialize
 #define rebfaiter_fini      ReSequenceIterator__fini
 #define rebfaiter_visit     ReSequenceIterator__visit
@@ -543,7 +539,6 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &refaiter_ctor,
 			/* tp_copy_ctor:   */ &refaiter_copy,
-			/* tp_deep_ctor:   */ &refaiter_deep,
 			/* tp_any_ctor:    */ &refaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &refaiter_serialize
@@ -595,7 +590,6 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &rebfaiter_ctor,
 			/* tp_copy_ctor:   */ &rebfaiter_copy,
-			/* tp_deep_ctor:   */ &rebfaiter_deep,
 			/* tp_any_ctor:    */ &rebfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rebfaiter_serialize
@@ -635,7 +629,6 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 
 #define regfaiter_ctor      refaiter_ctor
 #define regfaiter_copy      refaiter_copy
-#define regfaiter_deep      refaiter_deep
 #define regfaiter_serialize refaiter_serialize
 #define regfaiter_init      refaiter_init
 #define regfaiter_fini      refaiter_fini
@@ -646,7 +639,6 @@ INTERN DeeTypeObject ReBytesFindAllIterator_Type = {
 
 #define regbfaiter_ctor      rebfaiter_ctor
 #define regbfaiter_copy      rebfaiter_copy
-#define regbfaiter_deep      rebfaiter_deep
 #define regbfaiter_serialize rebfaiter_serialize
 #define regbfaiter_init      rebfaiter_init
 #define regbfaiter_fini      rebfaiter_fini
@@ -794,7 +786,6 @@ INTERN DeeTypeObject RegFindAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &regfaiter_ctor,
 			/* tp_copy_ctor:   */ &regfaiter_copy,
-			/* tp_deep_ctor:   */ &regfaiter_deep,
 			/* tp_any_ctor:    */ &regfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &regfaiter_serialize
@@ -846,7 +837,6 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &regbfaiter_ctor,
 			/* tp_copy_ctor:   */ &regbfaiter_copy,
-			/* tp_deep_ctor:   */ &regbfaiter_deep,
 			/* tp_any_ctor:    */ &regbfaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &regbfaiter_serialize
@@ -888,7 +878,6 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 /* LocateAllIterator wrapper (based on FindAll) */
 #define reglaiter_ctor      regfaiter_ctor
 #define reglaiter_copy      regfaiter_copy
-#define reglaiter_deep      regfaiter_deep
 #define reglaiter_serialize regfaiter_serialize
 #define reglaiter_init      regfaiter_init
 #define reglaiter_fini      regfaiter_fini
@@ -899,7 +888,6 @@ INTERN DeeTypeObject RegBytesFindAllIterator_Type = {
 
 #define regblaiter_ctor      regbfaiter_ctor
 #define regblaiter_copy      regbfaiter_copy
-#define regblaiter_deep      regbfaiter_deep
 #define regblaiter_serialize regbfaiter_serialize
 #define regblaiter_init      regbfaiter_init
 #define regblaiter_fini      regbfaiter_fini
@@ -1047,7 +1035,6 @@ INTERN DeeTypeObject RegLocateAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &reglaiter_ctor,
 			/* tp_copy_ctor:   */ &reglaiter_copy,
-			/* tp_deep_ctor:   */ &reglaiter_deep,
 			/* tp_any_ctor:    */ &reglaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &reglaiter_serialize
@@ -1099,7 +1086,6 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &regblaiter_ctor,
 			/* tp_copy_ctor:   */ &regblaiter_copy,
-			/* tp_deep_ctor:   */ &regblaiter_deep,
 			/* tp_any_ctor:    */ &regblaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &regblaiter_serialize
@@ -1139,7 +1125,6 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 
 #define relaiter_ctor      refaiter_ctor
 #define relaiter_copy      refaiter_copy
-#define relaiter_deep      refaiter_deep
 #define relaiter_serialize refaiter_serialize
 #define relaiter_fini      refaiter_fini
 #define relaiter_bool      refaiter_bool
@@ -1148,7 +1133,6 @@ INTERN DeeTypeObject RegBytesLocateAllIterator_Type = {
 
 #define reblaiter_ctor      rebfaiter_ctor
 #define reblaiter_copy      rebfaiter_copy
-#define reblaiter_deep      rebfaiter_deep
 #define reblaiter_serialize rebfaiter_serialize
 #define reblaiter_fini      rebfaiter_fini
 #define reblaiter_bool      rebfaiter_bool
@@ -1268,7 +1252,6 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &relaiter_ctor,
 			/* tp_copy_ctor:   */ &relaiter_copy,
-			/* tp_deep_ctor:   */ &relaiter_deep,
 			/* tp_any_ctor:    */ &relaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &relaiter_serialize
@@ -1320,7 +1303,6 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &reblaiter_ctor,
 			/* tp_copy_ctor:   */ &reblaiter_copy,
-			/* tp_deep_ctor:   */ &reblaiter_deep,
 			/* tp_any_ctor:    */ &reblaiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &reblaiter_serialize
@@ -1360,7 +1342,6 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 
 #define respiter_ctor      refaiter_ctor
 #define respiter_copy      refaiter_copy
-#define respiter_deep      refaiter_deep
 #define respiter_serialize refaiter_serialize
 #define respiter_fini      refaiter_fini
 #define respiter_visit     refaiter_visit
@@ -1369,7 +1350,6 @@ INTERN DeeTypeObject ReBytesLocateAllIterator_Type = {
 
 #define rebspiter_ctor      rebfaiter_ctor
 #define rebspiter_copy      rebfaiter_copy
-#define rebspiter_deep      rebfaiter_deep
 #define rebspiter_serialize rebfaiter_serialize
 #define rebspiter_fini      rebfaiter_fini
 #define rebspiter_visit     rebfaiter_visit
@@ -1515,7 +1495,6 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &respiter_ctor,
 			/* tp_copy_ctor:   */ &respiter_copy,
-			/* tp_deep_ctor:   */ &respiter_deep,
 			/* tp_any_ctor:    */ &respiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &respiter_serialize
@@ -1567,7 +1546,6 @@ INTERN DeeTypeObject ReBytesSplitIterator_Type = {
 			/* T:              */ ReSequenceIterator,
 			/* tp_ctor:        */ &rebspiter_ctor,
 			/* tp_copy_ctor:   */ &rebspiter_copy,
-			/* tp_deep_ctor:   */ &rebspiter_deep,
 			/* tp_any_ctor:    */ &rebspiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rebspiter_serialize
@@ -1618,10 +1596,8 @@ refa_ctor(ReSequence *__restrict self) {
 }
 
 #define refa_copy       ReSequence__copy
-#define refa_deep       ReSequence__deep
 #define refa_serialize  ReSequence__serialize
 #define rebfa_copy      ReSequence__copy
-#define rebfa_deep      ReSequence__deep /* TODO: Should actually deep-copy the underlying Bytes (since those are mutable...) */
 #define rebfa_serialize ReSequence__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1845,7 +1821,6 @@ INTERN DeeTypeObject ReFindAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &refa_ctor,
 			/* tp_copy_ctor:   */ &refa_copy,
-			/* tp_deep_ctor:   */ &refa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &refa_serialize
@@ -1895,7 +1870,6 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &rebfa_ctor,
 			/* tp_copy_ctor:   */ &rebfa_copy,
-			/* tp_deep_ctor:   */ &rebfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rebfa_serialize
@@ -1935,7 +1909,6 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 
 #define regfa_ctor      refa_ctor
 #define regfa_copy      refa_copy
-#define regfa_deep      refa_deep
 #define regfa_serialize refa_serialize
 #define regfa_fini      refa_fini
 #define regfa_bool      refa_bool
@@ -1945,7 +1918,6 @@ INTERN DeeTypeObject ReBytesFindAll_Type = {
 
 #define regbfa_ctor      rebfa_ctor
 #define regbfa_copy      rebfa_copy
-#define regbfa_deep      rebfa_deep
 #define regbfa_serialize rebfa_serialize
 #define regbfa_fini      rebfa_fini
 #define regbfa_bool      rebfa_bool
@@ -2098,7 +2070,6 @@ INTERN DeeTypeObject RegFindAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &regfa_ctor,
 			/* tp_copy_ctor:   */ &regfa_copy,
-			/* tp_deep_ctor:   */ &regfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &regfa_serialize
@@ -2148,7 +2119,6 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &regbfa_ctor,
 			/* tp_copy_ctor:   */ &regbfa_copy,
-			/* tp_deep_ctor:   */ &regbfa_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &regbfa_serialize
@@ -2190,7 +2160,6 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 /* LocateAll wrapper (based on FindAll) */
 #define regla_ctor      regfa_ctor
 #define regla_copy      regfa_copy
-#define regla_deep      regfa_deep
 #define regla_serialize regfa_serialize
 #define regla_fini      regfa_fini
 #define regla_bool      regfa_bool
@@ -2200,7 +2169,6 @@ INTERN DeeTypeObject RegBytesFindAll_Type = {
 
 #define regbla_ctor      regbfa_ctor
 #define regbla_copy      regbfa_copy
-#define regbla_deep      regbfa_deep
 #define regbla_serialize regbfa_serialize
 #define regbla_fini      regbfa_fini
 #define regbla_bool      regbfa_bool
@@ -2354,7 +2322,6 @@ INTERN DeeTypeObject RegLocateAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &regla_ctor,
 			/* tp_copy_ctor:   */ &regla_copy,
-			/* tp_deep_ctor:   */ &regla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &regla_serialize
@@ -2404,7 +2371,6 @@ INTERN DeeTypeObject RegBytesLocateAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &regbla_ctor,
 			/* tp_copy_ctor:   */ &regbla_copy,
-			/* tp_deep_ctor:   */ &regbla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &regbla_serialize
@@ -2444,7 +2410,6 @@ INTERN DeeTypeObject RegBytesLocateAll_Type = {
 
 #define rela_ctor      refa_ctor
 #define rela_copy      refa_copy
-#define rela_deep      refa_deep
 #define rela_serialize refa_serialize
 #define rela_fini      refa_fini
 #define rela_visit     refa_visit
@@ -2454,7 +2419,6 @@ INTERN DeeTypeObject RegBytesLocateAll_Type = {
 
 #define rebla_ctor      rebfa_ctor
 #define rebla_copy      rebfa_copy
-#define rebla_deep      rebfa_deep
 #define rebla_serialize rebfa_serialize
 #define rebla_fini      rebfa_fini
 #define rebla_visit     rebfa_visit
@@ -2608,7 +2572,6 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &rela_ctor,
 			/* tp_copy_ctor:   */ &rela_copy,
-			/* tp_deep_ctor:   */ &rela_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rela_serialize
@@ -2658,7 +2621,6 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &rebla_ctor,
 			/* tp_copy_ctor:   */ &rebla_copy,
-			/* tp_deep_ctor:   */ &rebla_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rebla_serialize
@@ -2697,7 +2659,6 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 
 #define resp_ctor      refa_ctor
 #define resp_copy      refa_copy
-#define resp_deep      refa_deep
 #define resp_serialize refa_serialize
 #define resp_fini      refa_fini
 #define resp_visit     refa_visit
@@ -2705,7 +2666,6 @@ INTERN DeeTypeObject ReBytesLocateAll_Type = {
 
 #define rebsp_ctor      rebfa_ctor
 #define rebsp_copy      rebfa_copy
-#define rebsp_deep      rebfa_deep
 #define rebsp_serialize rebfa_serialize
 #define rebsp_fini      rebfa_fini
 #define rebsp_visit     rebfa_visit
@@ -2883,7 +2843,6 @@ INTERN DeeTypeObject ReSplit_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &resp_ctor,
 			/* tp_copy_ctor:   */ &resp_copy,
-			/* tp_deep_ctor:   */ &resp_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &resp_serialize
@@ -2933,7 +2892,6 @@ INTERN DeeTypeObject ReBytesSplit_Type = {
 			/* T:              */ ReSequence,
 			/* tp_ctor:        */ &rebsp_ctor,
 			/* tp_copy_ctor:   */ &rebsp_copy,
-			/* tp_deep_ctor:   */ &rebsp_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rebsp_serialize

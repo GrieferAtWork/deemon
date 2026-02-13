@@ -34,7 +34,7 @@
 #include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
 #include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>                /* DeeInt_* */
-#include <deemon/kwds.h>               /* DeeKwBlackList_Decref, DeeKw_TryGetItemNR, DeeKwds_Check, DeeKwds_IndexOf */
+#include <deemon/kwds.h>               /* DeeKwBlackList_Decref */
 #include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_module_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decprefv, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
@@ -1283,7 +1283,6 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &function_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &function_serialize,
@@ -1406,93 +1405,6 @@ err_r:
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
-yf_deepcopy(YFunction *__restrict self) {
-	struct Dee_code_frame_kwds *kw;
-	DREF YFunction *result;
-	result = (DREF YFunction *)DeeObject_Malloc(DeeYieldFunction_Sizeof(self->yf_argc));
-	if unlikely(!result)
-		goto err;
-	result->yf_pargc = self->yf_pargc;
-	result->yf_argc  = self->yf_argc;
-	Dee_Movrefv(result->yf_argv, self->yf_argv, self->yf_argc);
-	if (DeeObject_InplaceDeepCopyv(result->yf_argv, self->yf_argc))
-		goto err_args_r;
-	result->yf_this = NULL;
-	if (self->yf_this) {
-		result->yf_this = DeeObject_DeepCopy(self->yf_this);
-		if unlikely(!result->yf_this)
-			goto err_args_r;
-	}
-	result->yf_kw = NULL;
-	if (self->yf_kw) {
-		size_t i, count;
-		DeeObject *kwcopy;
-		DeeCodeObject *code;
-		DeeObject *const *kw_argv;
-		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
-		kw = (struct Dee_code_frame_kwds *)Dee_Mallococ(offsetof(struct Dee_code_frame_kwds, fk_kargv),
-		                                            count, sizeof(DeeObject *));
-		if unlikely(!kw)
-			goto err_this_args_r;
-		result->yf_kw = kw;
-		kwcopy = DeeObject_DeepCopy(self->yf_kw->fk_kw);
-		if unlikely(!kwcopy)
-			goto err_kw_this_args_r;
-		kw->fk_kw = kwcopy; /* Inherit reference. */
-		if (self->yf_func->fo_code->co_flags & Dee_CODE_FVARKWDS)
-			kw->fk_varkwds = NULL; /* Don't copy this one... */
-		code    = self->yf_func->fo_code;
-		kw_argv = result->yf_argv + result->yf_pargc;
-		ASSERT(code->co_keywords != NULL || !count);
-		for (i = 0; i < count; ++i) {
-			DeeObject *val = NULL;
-			DeeStringObject *name = code->co_keywords[self->yf_pargc + i];
-			if (DeeKwds_Check(kwcopy)) {
-				size_t index = DeeKwds_IndexOf(kwcopy, Dee_AsObject(name));
-				if (index != (size_t)-1) {
-					ASSERT(index < (result->yf_argc - result->yf_pargc));
-					val = kw_argv[index];
-				}
-			} else {
-				val = DeeKw_TryGetItemNR(kwcopy, Dee_AsObject(name));
-				if unlikely(!ITER_ISOK(val)) {
-					if unlikely(!val)
-						goto err_kw_this_args_r_kw;
-					val = NULL;
-				}
-			}
-			if unlikely(!val && /* Only throw an error if the argument is mandatory. */
-			            (result->yf_pargc + i) < code->co_argc_min) {
-				err_invalid_argc_missing_kw(DeeString_STR(name),
-				                            DeeCode_NAME(code),
-				                            self->yf_argc,
-				                            code->co_argc_min,
-				                            code->co_argc_max);
-				goto err_kw_this_args_r_kw;
-			}
-			kw->fk_kargv[i] = val;
-		}
-	}
-	result->yf_func = self->yf_func;
-	Dee_Incref(result->yf_func);
-	DeeObject_Init(result, &DeeYieldFunction_Type);
-	return result;
-err_kw_this_args_r_kw:
-	Dee_Decref(kw->fk_kw);
-err_kw_this_args_r:
-	Dee_Free(kw);
-err_this_args_r:
-	Dee_XDecref(result->yf_this);
-err_args_r:
-	Dee_Decrefv(result->yf_argv, result->yf_argc);
-/*err_r:*/
-	DeeObject_Free(result);
-err:
-	return NULL;
-}
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 yfi_init(YFIterator *__restrict self,
@@ -1860,7 +1772,6 @@ PUBLIC DeeTypeObject DeeYieldFunction_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &yf_ctor,
 			/* tp_copy_ctor:   */ &yf_copy,
-			/* tp_deep_ctor:   */ &yf_deepcopy,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL, // TODO: &yf_serialize
@@ -3122,7 +3033,6 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 			/* T:              */ YFIterator,
 			/* tp_ctor:        */ &yfi_ctor,
 			/* tp_copy_ctor:   */ &yfi_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &yfi_new,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -3130,7 +3040,6 @@ PUBLIC DeeTypeObject DeeYieldFunctionIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&yfi_dtor,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

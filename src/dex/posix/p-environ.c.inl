@@ -2098,7 +2098,6 @@ INTERN DeeTypeObject DeeEnvironIterator_Type = {
 			/* T:              */ EnvironIterator,
 			/* tp_ctor:        */ &environ_iterator_init,
 			/* tp_copy_ctor:   */ &environ_iterator_copy,
-			/* tp_deep_ctor:   */ &environ_iterator_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Not serializable (environ strings are under the OS's control) */
@@ -2290,7 +2289,6 @@ INTERN DeeTypeObject DeeEnviron_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &environ_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL, /* Static singleton, so no serial needed */

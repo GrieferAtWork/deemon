@@ -352,7 +352,6 @@ INTERN DeeTypeObject BytesFindIterator_Type = {
 			/* T:              */ BytesFindIterator,
 			/* tp_ctor:        */ &bfi_ctor,
 			/* tp_copy_ctor:   */ &bfi_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bfi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bfi_serialize
@@ -404,7 +403,6 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 			/* T:              */ BytesFindIterator,
 			/* tp_ctor:        */ &bcfi_ctor,
 			/* tp_copy_ctor:   */ &bcfi_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bcfi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bfi_serialize
@@ -669,7 +667,6 @@ INTERN DeeTypeObject BytesFind_Type = {
 			/* T:              */ BytesFind,
 			/* tp_ctor:        */ &bf_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bf_serialize
@@ -727,7 +724,6 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 			/* T:              */ BytesFind,
 			/* tp_ctor:        */ &bf_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bf_serialize

@@ -84,22 +84,6 @@ sc_copy(SeqCombinations *__restrict self,
 	return 0;
 }
 
-#define src_deep sc_deep
-#define sp_deep  sc_deep
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sc_deep(SeqCombinations *__restrict self,
-        SeqCombinations *__restrict other) {
-	self->sc_seq = DeeObject_DeepCopy(other->sc_seq);
-	if unlikely(!self->sc_seq)
-		goto err;
-	self->sc_trygetitem_index = DeeObject_RequireMethodHint(self->sc_seq, seq_operator_trygetitem_index);
-	self->sc_seqsize          = other->sc_seqsize;
-	self->sc_rparam           = other->sc_rparam;
-	return 0;
-err:
-	return -1;
-}
-
 #define src_init sc_init
 #define sp_init  sc_init
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -455,7 +439,6 @@ INTERN DeeTypeObject SeqCombinations_Type = {
 			/* T:              */ SeqCombinations,
 			/* tp_ctor:        */ &sc_ctor,
 			/* tp_copy_ctor:   */ &sc_copy,
-			/* tp_deep_ctor:   */ &sc_deep,
 			/* tp_any_ctor:    */ &sc_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sc_serialize
@@ -508,7 +491,6 @@ INTERN DeeTypeObject SeqRepeatCombinations_Type = {
 			/* T:              */ SeqCombinations,
 			/* tp_ctor:        */ &src_ctor,
 			/* tp_copy_ctor:   */ &src_copy,
-			/* tp_deep_ctor:   */ &src_deep,
 			/* tp_any_ctor:    */ &src_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &src_serialize
@@ -559,7 +541,6 @@ INTERN DeeTypeObject SeqPermutations_Type = {
 			/* T:              */ SeqCombinations,
 			/* tp_ctor:        */ &sp_ctor,
 			/* tp_copy_ctor:   */ &sp_copy,
-			/* tp_deep_ctor:   */ &sp_deep,
 			/* tp_any_ctor:    */ &sp_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sp_serialize
@@ -658,19 +639,6 @@ sci_copy(SeqCombinationsIterator *__restrict self) {
 	DeeObject_Init(result, Dee_TYPE(self));
 	return result;
 err:
-	return NULL;
-}
-
-#define srci_deep sci_deep
-#define spi_deep  sci_deep
-PRIVATE WUNUSED NONNULL((1)) DREF SeqCombinationsIterator *DCALL
-sci_deep(SeqCombinationsIterator *__restrict self) {
-	DREF SeqCombinationsIterator *result = sci_copy(self);
-	if (DeeObject_InplaceDeepCopy((DREF DeeObject **)&result->sci_com))
-		goto err_r;
-	return result;
-err_r:
-	Dee_DecrefDokill(result);
 	return NULL;
 }
 
@@ -1083,7 +1051,6 @@ INTERN DeeTypeObject SeqCombinationsIterator_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &sci_ctor,
 			/* tp_copy_ctor:   */ &sci_copy,
-			/* tp_deep_ctor:   */ &sci_deep,
 			/* tp_any_ctor:    */ &sci_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sci_serialize,
@@ -1135,7 +1102,6 @@ INTERN DeeTypeObject SeqRepeatCombinationsIterator_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &srci_ctor,
 			/* tp_copy_ctor:   */ &srci_copy,
-			/* tp_deep_ctor:   */ &srci_deep,
 			/* tp_any_ctor:    */ &srci_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &srci_serialize,
@@ -1187,7 +1153,6 @@ INTERN DeeTypeObject SeqPermutationsIterator_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &spi_ctor,
 			/* tp_copy_ctor:   */ &spi_copy,
-			/* tp_deep_ctor:   */ &spi_deep,
 			/* tp_any_ctor:    */ &spi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &spi_serialize,
@@ -1284,21 +1249,6 @@ scv_copy(SeqCombinationsView *__restrict self,
 	self->scv_com  = self->scv_iter->sci_com;
 	Dee_weakref_support_init(self);
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-scv_deep(SeqCombinationsView *__restrict self,
-         SeqCombinationsView *__restrict other) {
-	if unlikely(scv_copy(self, other))
-		goto err;
-	if (DeeObject_InplaceDeepCopy((DeeObject **)&self->scv_iter))
-		goto err_self;
-	self->scv_com = self->scv_iter->sci_com;
-	return 0;
-err_self:
-	scv_fini(self);
 err:
 	return -1;
 }
@@ -1572,7 +1522,6 @@ INTERN DeeTypeObject SeqCombinationsView_Type = {
 			/* T:              */ SeqCombinationsView,
 			/* tp_ctor:        */ &scv_ctor,
 			/* tp_copy_ctor:   */ &scv_copy,
-			/* tp_deep_ctor:   */ &scv_deep,
 			/* tp_any_ctor:    */ &scv_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &scv_serialize

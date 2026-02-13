@@ -29,18 +29,15 @@
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE, DeeObject_IsKw */
 #include <deemon/list.h>           /* DeeList_* */
-#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, return_reference_ */
+#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_Inherit*, DeeType_InvokeCastPrint, DeeType_InvokeCastPrintRepr, DeeType_InvokeCastRepr, DeeType_InvokeCastStr, DeeType_InvokeCmpHash */
 #include <deemon/seq.h>            /* DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>         /* DeeString_PrintAscii, DeeString_Type */
-#include <deemon/super.h>          /* DeeObject_TClear, DeeObject_TDeepCopy */
-#include <deemon/thread.h>         /* DeeThreadObject, DeeThread_Self, Dee_DeepCopyAddAssoc, Dee_repr_frame, Dee_trepr_frame, deepcopy_begin, deepcopy_clear, deepcopy_end, deepcopy_lookup */
+#include <deemon/super.h>          /* DeeObject_TClear */
+#include <deemon/thread.h>         /* DeeThreadObject, DeeThread_Self, Dee_repr_frame, Dee_trepr_frame */
 #include <deemon/tuple.h>          /* DeeTuple* */
 #include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, Dee_GC_PRIORITY_LATE, OPERATOR_*, TF_TPVISIT */
 #include <deemon/util/hash.h>      /* DeeObject_HashGeneric, Dee_HASHOF_RECURSIVE_ITEM */
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
-#include <deemon/deepcopy.h> /* DeeDeepCopyContext, DeeDeepCopy_* */
-#endif /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
 
@@ -602,173 +599,6 @@ DeeObject_Newf(DeeTypeObject *object_type,
 
 
 
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-STATIC_ASSERT(offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor) ==
-              offsetof(DeeTypeObject, tp_init.tp_var.tp_deep_ctor));
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
-#ifndef DEFINE_TYPED_OPERATORS
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_DeepCopy(DeeObject *__restrict self) {
-	DeeObject *result;
-	DeeDeepCopyContext ctx;
-	DeeDeepCopy_Init(&ctx);
-	result = DeeDeepCopy_CopyObject(&ctx, self);
-	if unlikely(!result)
-		goto err;
-	DeeDeepCopy_Pack(&ctx);
-	return result;
-err:
-	DeeDeepCopy_Fini(&ctx);
-	return NULL;
-}
-#endif /* !DEFINE_TYPED_OPERATORS */
-#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
-	DREF DeeObject *result;
-	DeeThreadObject *thread_self = DeeThread_Self();
-	LOAD_TP_SELF;
-
-	/* Check to make sure that a deepcopy construction is implemented by this type.
-	 * Note that the variable-and fixed-length constructors are located at the same
-	 * offset in the type structure, meaning that we only need to check one address. */
-	if unlikely(!tp_self->tp_init.tp_alloc.tp_deep_ctor) {
-		if (!tp_self->tp_init.tp_alloc.tp_copy_ctor) {
-			if (DeeType_InheritConstructors(tp_self)) {
-				if (tp_self->tp_init.tp_alloc.tp_deep_ctor)
-					goto got_deep_copy;
-				if (tp_self->tp_init.tp_alloc.tp_copy_ctor)
-					goto got_normal_copy;
-			}
-
-			/* when neither a deepcopy, nor a regular copy operator are present,
-			 * assume that the object is immutable and re-return the object itself. */
-			return_reference_(self);
-		}
-got_normal_copy:
-		/* There isn't a deepcopy operator, but there is a copy operator.
-		 * Now, if there also is a deepload operator, then we can invoke that one! */
-		if unlikely(!tp_self->tp_init.tp_deepload) {
-			err_unimplemented_operator(tp_self, OPERATOR_DEEPCOPY);
-			return NULL;
-		}
-	}
-got_deep_copy:
-
-	/* Check if this object is already being constructed. */
-	result = deepcopy_lookup(thread_self, self, tp_self);
-	if (result)
-		return_reference_(result);
-	deepcopy_begin(thread_self);
-
-	/* Allocate an to basic construction of the deepcopy object. */
-	if (DeeType_IsVariable(tp_self)) {
-		/* Variable-length object. */
-		result = tp_self->tp_init.tp_var.tp_deep_ctor
-		         ? (*tp_self->tp_init.tp_var.tp_deep_ctor)(self)
-		         : (*tp_self->tp_init.tp_var.tp_copy_ctor)(self);
-		if unlikely(!result)
-			goto done_endcopy;
-	} else {
-		ASSERT(!DeeType_IsVariable(tp_self));
-
-		/* Static-length object. */
-		result = DeeType_AllocInstance(tp_self);
-		if unlikely(!result)
-			goto done_endcopy;
-
-		/* Perform basic object initialization. */
-		DeeObject_Init((GenericObject *)result, tp_self);
-
-		/* Invoke the deepcopy constructor first. */
-		if unlikely(tp_self->tp_init.tp_alloc.tp_deep_ctor
-		            ? (*tp_self->tp_init.tp_alloc.tp_deep_ctor)(result, self)
-		            : (*tp_self->tp_init.tp_alloc.tp_copy_ctor)(result, self)) {
-			/* Undo allocating and base-initializing the new object. */
-			DeeObject_FreeTracker(result);
-			DeeType_FreeInstance(tp_self, result);
-			Dee_DecrefNokill(tp_self);
-			result = NULL;
-			goto done_endcopy;
-		}
-
-		/* Begin tracking the returned object if this is a GC type. */
-		if (DeeType_IsGC(tp_self))
-			result = DeeGC_Track(result);
-	}
-
-	/* Now comes the interesting part concerning
-	 * recursion possible with deepcopy. */
-	if (tp_self->tp_init.tp_deepload) {
-		/* The type implements the deepload callback, meaning that we must
-		 * always track the copies association to allow for recursion before
-		 * attempting to invoke the object. */
-
-		/* Must always track this association in case the object attempts
-		 * to reference itself (which should only happen by GC objects, but
-		 * then again: it is likely that only GC objects would ever implement
-		 * tp_deepload to begin with, as non-GC objects could just create all
-		 * the necessary deep copies straight from the regular tp_deep_ctor
-		 * callback) */
-		if unlikely(!Dee_DeepCopyAddAssoc(result, self))
-			goto err_result_endcopy;
-		if unlikely((*tp_self->tp_init.tp_deepload)(result))
-			goto err_result_endcopy;
-done_endcopy:
-		deepcopy_end(thread_self);
-	} else {
-		/* Optimization: In the event that this is the first-level deepcopy call,
-		 *               yet the type does not implement the deepload protocol
-		 *               (as could be the case for immutable sequence types like
-		 *               tuple, which could still contain the same object twice),
-		 *               then we don't need to track the association of this
-		 *               specific deepcopy, as it would have just become undone
-		 *               as soon as `deepcopy_end()' cleared the association map.
-		 *               However if this deepcopy is part of a larger hierarchy of
-		 *               recursive deepcopy operations, then we must still trace
-		 *               the association of this new entry in case it also appears
-		 *               in some different branch of the tree of remaining objects
-		 *               still to-be copied. */
-		if ((--thread_self->t_deepassoc.da_recursion) != 0) {
-			DeeObject *existing_replacement = Dee_DeepCopyAddAssoc(result, self);
-			if unlikely(!existing_replacement)
-				goto err_result;
-			if (existing_replacement != ITER_DONE) {
-				Dee_Incref(existing_replacement);
-				Dee_Decref_likely(result);
-				return existing_replacement;
-			}
-		} else {
-			/* Check if there is now a deepcopy assoc for "self" (one may have
-			 * been created during recursive calls within "tp_deep_ctor").
-			 * This is needed so that:
-			 * >> local x = ([],);
-			 * >> x[0].append(x);
-			 * >> local y = deepcopy x;
-			 * >> assert x[0][0].id == x;
-			 * >> assert y[0][0].id == y; // <<< this would fail otherwise
-			 */
-			DeeObject *existing_replacement = deepcopy_lookup(thread_self, self, tp_self);
-			if (existing_replacement) {
-				Dee_Incref(existing_replacement);
-				Dee_Decref_likely(result);
-				deepcopy_clear(thread_self);
-				return existing_replacement;
-			}
-			deepcopy_clear(thread_self);
-		}
-	}
-done:
-	return result;
-err_result_endcopy:
-	deepcopy_end(thread_self);
-err_result:
-	Dee_Clear(result);
-	goto done;
-}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-
 DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
@@ -777,20 +607,6 @@ DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 do_invoke_var_copy:
 			return (*tp_self->tp_init.tp_var.tp_copy_ctor)(self);
 		}
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		if (tp_self->tp_init.tp_var.tp_deep_ctor) {
-do_invoke_var_deep:
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
-			return DeeObject_DeepCopy(self);
-#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-#ifdef DEFINE_TYPED_OPERATORS
-			return DeeObject_TDeepCopy(tp_self, self);
-#else /* DEFINE_TYPED_OPERATORS */
-			return DeeObject_DeepCopy(self);
-#endif /* !DEFINE_TYPED_OPERATORS */
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-		}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		if (tp_self->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
 			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
@@ -804,10 +620,6 @@ do_invoke_var_any_ctor_kw:
 		if (DeeType_InheritConstructors(tp_self)) {
 			if (tp_self->tp_init.tp_var.tp_copy_ctor)
 				goto do_invoke_var_copy;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-			if (tp_self->tp_init.tp_var.tp_deep_ctor)
-				goto do_invoke_var_deep;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			if (tp_self->tp_init.tp_var.tp_any_ctor)
 				goto do_invoke_var_any_ctor;
 			if (tp_self->tp_init.tp_var.tp_any_ctor_kw)
@@ -828,10 +640,6 @@ do_invoke_alloc_copy:
 		if (DeeType_IsGC(tp_self))
 			result = DeeGC_Track(result);
 		return result;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	} else if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
-		goto do_invoke_var_deep;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	} else {
 		int error;
 		ASSERT(!DeeType_IsVariable(tp_self));
@@ -856,12 +664,6 @@ do_invoke_alloc_any_ctor_kw:
 				Dee_DecrefNokill(tp_self);
 				goto do_invoke_alloc_copy;
 			}
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-			if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
-				Dee_DecrefNokill(tp_self);
-				goto do_invoke_var_deep;
-			}
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			result = DeeType_AllocInstance(tp_self);
 			if unlikely(!result)
 				goto err_object_type;

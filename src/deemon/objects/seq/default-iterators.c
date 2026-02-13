@@ -86,35 +86,6 @@ di_sgi_copy(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_gi_deepcopy(DefaultIterator_WithGetItemIndex *__restrict self,
-               DefaultIterator_WithGetItemIndex *__restrict other) {
-	self->digi_seq = DeeObject_DeepCopy(other->digi_seq);
-	if unlikely(!self->digi_seq)
-		goto err;
-	self->digi_tp_getitem_index = other->digi_tp_getitem_index;
-	self->digi_index = atomic_read(&other->digi_index);
-	return 0;
-err:
-	return -1;
-}
-
-#define di_sgif_deepcopy di_sgi_deepcopy
-#define di_stgi_deepcopy di_sgi_deepcopy
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_sgi_deepcopy(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
-                DefaultIterator_WithSizeAndGetItemIndex *__restrict other) {
-	self->disgi_seq = DeeObject_DeepCopy(other->disgi_seq);
-	if unlikely(!self->disgi_seq)
-		goto err;
-	self->disgi_tp_getitem_index = other->disgi_tp_getitem_index;
-	self->disgi_index = atomic_read(&other->disgi_index);
-	self->disgi_end   = other->disgi_end;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_serialize(DefaultIterator_WithGetItemIndex *__restrict self,
                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(DefaultIterator_WithGetItemIndex, field))
@@ -561,7 +532,6 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndex_Type = {
 			/* T:              */ DefaultIterator_WithGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_gi_copy,
-			/* tp_deep_ctor:   */ &di_gi_deepcopy,
 			/* tp_any_ctor:    */ &di_gi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_gi_serialize
@@ -613,7 +583,6 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndexPair_Type = {
 			/* T:              */ DefaultIterator_WithGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_gi_copy,
-			/* tp_deep_ctor:   */ &di_gi_deepcopy,
 			/* tp_any_ctor:    */ &di_gi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_gi_serialize
@@ -663,7 +632,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 			/* T:              */ DefaultIterator_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_sgi_copy,
-			/* tp_deep_ctor:   */ &di_sgi_deepcopy,
 			/* tp_any_ctor:    */ &di_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_sgi_serialize
@@ -715,7 +683,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexPair_Type = {
 			/* T:              */ DefaultIterator_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_sgi_copy,
-			/* tp_deep_ctor:   */ &di_sgi_deepcopy,
 			/* tp_any_ctor:    */ &di_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_sgi_serialize
@@ -765,7 +732,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 			/* T:              */ DefaultIterator_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_sgif_copy,
-			/* tp_deep_ctor:   */ &di_sgif_deepcopy,
 			/* tp_any_ctor:    */ &di_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_sgif_serialize
@@ -817,7 +783,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFastPair_Type = {
 			/* T:              */ DefaultIterator_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_sgif_copy,
-			/* tp_deep_ctor:   */ &di_sgif_deepcopy,
 			/* tp_any_ctor:    */ &di_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_sgif_serialize
@@ -867,7 +832,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type = {
 			/* T:              */ DefaultIterator_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_stgi_copy,
-			/* tp_deep_ctor:   */ &di_stgi_deepcopy,
 			/* tp_any_ctor:    */ &di_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_stgi_serialize
@@ -919,7 +883,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type = {
 			/* T:              */ DefaultIterator_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_stgi_copy,
-			/* tp_deep_ctor:   */ &di_stgi_deepcopy,
 			/* tp_any_ctor:    */ &di_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_stgi_serialize
@@ -1021,30 +984,6 @@ di_g_copy(DefaultIterator_WithGetItem *__restrict self,
 	return 0;
 err:
 	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_g_deepcopy(DefaultIterator_WithGetItem *__restrict self,
-              DefaultIterator_WithGetItem *__restrict other) {
-	DREF DeeObject *index;
-	self->dig_seq = DeeObject_DeepCopy(other->dig_seq);
-	if unlikely(!self->dig_seq)
-		goto err;
-	DefaultIterator_WithGetItem_LockAcquire(other);
-	index = other->dig_index;
-	Dee_Incref(index);
-	DefaultIterator_WithGetItem_LockRelease(other);
-	self->dig_index = index; /* Inherit reference */
-	Dee_atomic_lock_init(&self->dig_lock);
-	self->dig_tp_getitem = other->dig_tp_getitem;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-di_g_deepload(DefaultIterator_WithGetItem *__restrict self) {
-	return DeeObject_InplaceDeepCopyWithLock(&self->dig_index, &self->dig_lock);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1291,7 +1230,6 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 			/* T:              */ DefaultIterator_WithGetItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_g_copy,
-			/* tp_deep_ctor:   */ &di_g_deepcopy,
 			/* tp_any_ctor:    */ &di_g_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_g_serialize
@@ -1299,7 +1237,6 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_g_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -1342,7 +1279,6 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 			/* T:              */ DefaultIterator_WithGetItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_g_copy,
-			/* tp_deep_ctor:   */ &di_g_deepcopy,
 			/* tp_any_ctor:    */ &di_g_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_g_serialize
@@ -1350,7 +1286,6 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_g_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_g_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -1454,36 +1389,6 @@ err_no_getitem:
 err:
 	return -1;
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_sg_deepcopy(DefaultIterator_WithSizeObAndGetItem *__restrict self,
-               DefaultIterator_WithSizeObAndGetItem *__restrict other) {
-	self->disg_end = DeeObject_DeepCopy(other->disg_end);
-	if unlikely(!self->disg_end)
-		goto err;
-	self->disg_seq = DeeObject_DeepCopy(other->disg_seq);
-	if unlikely(!self->disg_seq)
-		goto err_end_copy;
-	Dee_atomic_lock_init(&self->disg_lock);
-	self->disg_tp_getitem = other->disg_tp_getitem;
-	DefaultIterator_WithSizeAndGetItem_LockAcquire(other);
-	self->disg_index = other->disg_index;
-	Dee_Incref(self->disg_index);
-	DefaultIterator_WithSizeAndGetItem_LockRelease(other);
-	return 0;
-err_end_copy:
-	Dee_Decref(self->disg_end);
-err:
-	return -1;
-}
-
-STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_index) ==
-              offsetof(DefaultIterator_WithGetItem, dig_index));
-#ifndef CONFIG_NO_THREADS
-STATIC_ASSERT(offsetof(DefaultIterator_WithSizeObAndGetItem, disg_lock) ==
-              offsetof(DefaultIterator_WithGetItem, dig_lock));
-#endif /* !CONFIG_NO_THREADS */
-#define di_sg_deepload di_g_deepload
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_sg_serialize(DefaultIterator_WithSizeObAndGetItem *__restrict self,
@@ -1662,7 +1567,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 			/* T:              */ DefaultIterator_WithSizeObAndGetItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_sg_copy,
-			/* tp_deep_ctor:   */ &di_sg_deepcopy,
 			/* tp_any_ctor:    */ &di_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_sg_serialize
@@ -1670,7 +1574,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_sg_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -1713,7 +1616,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 			/* T:              */ DefaultIterator_WithSizeObAndGetItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_sg_copy,
-			/* tp_deep_ctor:   */ &di_sg_deepcopy,
 			/* tp_any_ctor:    */ &di_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_sg_serialize
@@ -1721,7 +1623,6 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_sg_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&di_sg_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -1804,19 +1705,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_nl_copy(DefaultIterator_WithNextAndLimit *__restrict self,
            DefaultIterator_WithNextAndLimit *__restrict other) {
 	self->dinl_iter = DeeObject_Copy(other->dinl_iter);
-	if unlikely(!self->dinl_iter)
-		goto err;
-	self->dinl_tp_next = other->dinl_tp_next;
-	self->dinl_limit   = atomic_read(&other->dinl_limit);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_nl_deepcopy(DefaultIterator_WithNextAndLimit *__restrict self,
-               DefaultIterator_WithNextAndLimit *__restrict other) {
-	self->dinl_iter = DeeObject_DeepCopy(other->dinl_iter);
 	if unlikely(!self->dinl_iter)
 		goto err;
 	self->dinl_tp_next = other->dinl_tp_next;
@@ -1942,7 +1830,6 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 			/* T:              */ DefaultIterator_WithNextAndLimit,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_nl_copy,
-			/* tp_deep_ctor:   */ &di_nl_deepcopy,
 			/* tp_any_ctor:    */ &di_nl_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_nl_serialize
@@ -2073,26 +1960,6 @@ err:
 	return -1;
 }
 
-#define di_iktrgim_deepcopy di_ikgim_deepcopy
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_ikgim_deepcopy(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
-                  DefaultIterator_WithIterKeysAndGetItem *__restrict other) {
-	self->diikgi_iter = DeeObject_DeepCopy(other->diikgi_iter);
-	if unlikely(!self->diikgi_iter)
-		goto err;
-	self->diikgi_seq = DeeObject_DeepCopy(other->diikgi_seq);
-	if unlikely(!self->diikgi_seq)
-		goto err_iter;
-	self->diikgi_tp_next    = other->diikgi_tp_next;
-	self->diikgi_tp_getitem = other->diikgi_tp_getitem;
-	return 0;
-err_iter:
-	Dee_Decref(self->diikgi_iter);
-err:
-	return -1;
-}
-
-
 #define di_iktrgim_serialize di_ikgim_serialize
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_ikgim_serialize(DefaultIterator_WithIterKeysAndGetItem *__restrict self,
@@ -2218,7 +2085,6 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 			/* T:              */ DefaultIterator_WithIterKeysAndGetItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_ikgim_copy,
-			/* tp_deep_ctor:   */ &di_ikgim_deepcopy,
 			/* tp_any_ctor:    */ &di_ikgim_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_ikgim_serialize
@@ -2269,7 +2135,6 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 			/* T:              */ DefaultIterator_WithIterKeysAndGetItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_iktrgim_copy,
-			/* tp_deep_ctor:   */ &di_iktrgim_deepcopy,
 			/* tp_any_ctor:    */ &di_iktrgim_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_iktrgim_serialize
@@ -2349,7 +2214,6 @@ INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -2399,7 +2263,6 @@ INTERN DeeTypeObject DefaultIterator_WithForeachPair_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -2449,7 +2312,6 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateSeq_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -2499,7 +2361,6 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateMap_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -2549,7 +2410,6 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -2601,7 +2461,6 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_tp_next
 STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_counter) == offsetof(DefaultIterator_WithNextAndCounter, dinc_counter));
 
 #define di_ncp_copy      di_nl_copy
-#define di_ncp_deepcopy  di_nl_deepcopy
 #define di_ncp_serialize di_nl_serialize
 #define di_ncp_fini      di_nl_fini
 #define di_ncp_visit     di_nl_visit
@@ -2616,14 +2475,6 @@ di_ncpl_copy(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
 	self->dincl_limit = other->dincl_limit;
 	return di_ncp_copy((DefaultIterator_WithNextAndLimit *)self,
 	                   (DefaultIterator_WithNextAndLimit *)other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_ncpl_deepcopy(DefaultIterator_WithNextAndCounterAndLimit *__restrict self,
-                 DefaultIterator_WithNextAndCounterAndLimit *__restrict other) {
-	self->dincl_limit = other->dincl_limit;
-	return di_ncp_deepcopy((DefaultIterator_WithNextAndLimit *)self,
-	                       (DefaultIterator_WithNextAndLimit *)other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2769,7 +2620,6 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndCounterPair_Type = {
 			/* T:              */ DefaultIterator_WithNextAndCounter,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_ncp_copy,
-			/* tp_deep_ctor:   */ &di_ncp_deepcopy,
 			/* tp_any_ctor:    */ &di_ncp_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_ncp_serialize
@@ -2819,7 +2669,6 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndCounterAndLimitPair_Type = {
 			/* T:              */ DefaultIterator_WithNextAndCounterAndLimit,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_ncpl_copy,
-			/* tp_deep_ctor:   */ &di_ncpl_deepcopy,
 			/* tp_any_ctor:    */ &di_ncpl_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_ncpl_serialize
@@ -2877,28 +2726,6 @@ di_nuf_copy(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
 	Dee_Incref(other->dinuf_end);
 	self->dinuf_end = other->dinuf_end;
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_nuf_deepcopy(DefaultIterator_WithNextAndUnpackFilter *__restrict self,
-                DefaultIterator_WithNextAndUnpackFilter *__restrict other) {
-	self->dinuf_iter = DeeObject_DeepCopy(other->dinuf_iter);
-	if unlikely(!self->dinuf_iter)
-		goto err;
-	self->dinuf_tp_next = other->dinuf_tp_next;
-	self->dinuf_start = DeeObject_DeepCopy(other->dinuf_start);
-	if unlikely(!self->dinuf_start)
-		goto err_iter;
-	self->dinuf_end = DeeObject_DeepCopy(other->dinuf_end);
-	if unlikely(!self->dinuf_end)
-		goto err_iter_start;
-	return 0;
-err_iter_start:
-	Dee_Decref(self->dinuf_start);
-err_iter:
-	Dee_Decref(self->dinuf_iter);
 err:
 	return -1;
 }
@@ -3118,7 +2945,6 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndUnpackFilter_Type = {
 			/* T:              */ DefaultIterator_WithNextAndUnpackFilter,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_nuf_copy,
-			/* tp_deep_ctor:   */ &di_nuf_deepcopy,
 			/* tp_any_ctor:    */ &di_nuf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_nuf_serialize
@@ -3172,19 +2998,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_nk_copy(DefaultIterator_PairSubItem *__restrict self,
            DefaultIterator_PairSubItem *__restrict other) {
 	self->dipsi_iter = DeeObject_Copy(other->dipsi_iter);
-	if unlikely(!self->dipsi_iter)
-		goto err;
-	self->dipsi_next = other->dipsi_next;
-	return 0;
-err:
-	return -1;
-}
-
-#define di_nv_deepcopy di_nk_deepcopy
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-di_nk_deepcopy(DefaultIterator_PairSubItem *__restrict self,
-               DefaultIterator_PairSubItem *__restrict other) {
-	self->dipsi_iter = DeeObject_DeepCopy(other->dipsi_iter);
 	if unlikely(!self->dipsi_iter)
 		goto err;
 	self->dipsi_next = other->dipsi_next;
@@ -3308,7 +3121,6 @@ INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 			/* T:              */ DefaultIterator_PairSubItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_nk_copy,
-			/* tp_deep_ctor:   */ &di_nk_deepcopy,
 			/* tp_any_ctor:    */ &di_nk_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_nk_serialize
@@ -3358,7 +3170,6 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 			/* T:              */ DefaultIterator_PairSubItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_nv_copy,
-			/* tp_deep_ctor:   */ &di_nv_deepcopy,
 			/* tp_any_ctor:    */ &di_nv_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_nv_serialize

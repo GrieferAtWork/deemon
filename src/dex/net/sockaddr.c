@@ -1922,7 +1922,6 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 			/* T:              */ DeeSockAddrObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &sockaddr_ctor,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Not serializable (may contain os-specific pointer fields) */

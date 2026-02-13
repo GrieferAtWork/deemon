@@ -3490,7 +3490,6 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL, /* !!! Not constructible !!! */
 			/* tp_copy_ctor:   */ NULL, /* !!! Not constructible !!! */
-			/* tp_deep_ctor:   */ NULL, /* !!! Not constructible !!! */
 			/* tp_any_ctor:    */ NULL, /* !!! Not constructible !!! */
 			/* tp_any_ctor_kw: */ NULL, /* !!! Not constructible !!! */
 			/* tp_serialize:   */ NULL, /* !!! Not constructible !!! */
@@ -3541,7 +3540,6 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL, /* Not serializable */
@@ -3550,7 +3548,6 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dir_destroy,
 	},
 	/* .tp_cast = */ {
@@ -3594,7 +3591,6 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &module_dee_serialize,
@@ -3603,7 +3599,6 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_destroy,
 	},
 	/* .tp_cast = */ {
@@ -3648,7 +3643,6 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL, /* !!! Not constructible !!! */
 			/* tp_copy_ctor:   */ NULL, /* !!! Not constructible !!! */
-			/* tp_deep_ctor:   */ NULL, /* !!! Not constructible !!! */
 			/* tp_any_ctor:    */ NULL, /* !!! Not constructible !!! */
 			/* tp_any_ctor_kw: */ NULL, /* !!! Not constructible !!! */
 			/* tp_serialize:   */ NULL, /* Not serializable */
@@ -3657,7 +3651,6 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_destroy,
 	},
 	/* .tp_cast = */ {
@@ -3742,7 +3735,6 @@ PUBLIC DeeTypeObject DeeModule_Type = {
 			/* T:              */ DeeModuleObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Legacy; unsupported */

@@ -707,54 +707,6 @@ err_restart_collect:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-deq_deepload(Deque *__restrict self) {
-	Deque_LockRead(self);
-	if (self->d_size) {
-		DequeIterator iter;
-		size_t version;
-		version = self->d_version;
-		DequeIterator_InitBegin(&iter, self);
-		for (;;) {
-			DREF DeeObject *orig_ob, *copy;
-			orig_ob = DequeIterator_ITEM(&iter);
-			Dee_Incref(orig_ob);
-			Deque_LockEndRead(self);
-			/* Create a deep copy of this item. */
-			copy = DeeObject_DeepCopyInherited(orig_ob);
-			if unlikely(!copy)
-				goto err;
-			Deque_LockWrite(self);
-			/* Check if the deque changed in the mean time. */
-			if (version != self->d_version) {
-				Deque_LockEndWrite(self);
-				Dee_Decref(copy);
-				return 0;
-			}
-			orig_ob = DequeIterator_ITEM(&iter); /* Inherit reference. */
-			DequeIterator_ITEM(&iter) = copy;    /* Inherit reference. */
-			Deque_LockDowngrade(self);
-			/* Drop a reference from the exchanged object. */
-			if (!Dee_DecrefIfNotOne(orig_ob)) {
-				Deque_LockEndRead(self);
-				Dee_Decref(orig_ob);
-				Deque_LockRead(self);
-				if (version != self->d_version)
-					break;
-			}
-			if (!DequeIterator_HasNext(&iter, self))
-				break;
-			DequeIterator_Next(&iter, self);
-		}
-	}
-	Deque_LockEndRead(self);
-	return 0;
-err:
-	return -1;
-}
-
-
-
 PRIVATE NONNULL((1)) void DCALL
 deq_fini(Deque *__restrict self) {
 	DequeBucket *iter, *next;
@@ -1653,7 +1605,6 @@ INTERN DeeTypeObject Deque_Type = {
 			/* T:              */ Deque,
 			/* tp_ctor:        */ &deq_ctor, /* Allow default-construction of sequence objects. */
 			/* tp_copy_ctor:   */ &deq_copy,
-			/* tp_deep_ctor:   */ &deq_copy,
 			/* tp_any_ctor:    */ &deq_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &deq_serialize
@@ -1661,7 +1612,6 @@ INTERN DeeTypeObject Deque_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deq_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_moveassign,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&deq_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
@@ -1742,30 +1692,6 @@ deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 	}
 	Deque_LockEndRead(self->di_deq);
 	DequeIterator_LockEndWrite(self);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-deqiter_deep(DequeIteratorObject *__restrict self,
-             DequeIteratorObject *__restrict other) {
-	size_t index;
-	self->di_deq = (DREF Deque *)DeeObject_DeepCopy((DeeObject *)other->di_deq);
-	if unlikely(!self->di_deq)
-		goto err;
-	index = deqiter_getindex(other);
-	Deque_LockRead(self->di_deq);
-	self->di_ver = self->di_deq->d_version;
-	if unlikely(index >= self->di_deq->d_size) {
-		--self->di_ver;
-	} else {
-		DequeIterator_InitAt(&self->di_iter,
-		                     self->di_deq,
-		                     index);
-	}
-	Deque_LockEndRead(self->di_deq);
-	Dee_atomic_rwlock_init(&self->di_lock);
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1910,7 +1836,6 @@ INTERN DeeTypeObject DequeIterator_Type = {
 			/* T:              */ DequeIteratorObject,
 			/* tp_ctor:        */ &deqiter_ctor,
 			/* tp_copy_ctor:   */ &deqiter_copy,
-			/* tp_deep_ctor:   */ &deqiter_deep,
 			/* tp_any_ctor:    */ &deqiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &deqiter_serialize
@@ -1918,7 +1843,6 @@ INTERN DeeTypeObject DequeIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deqiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,

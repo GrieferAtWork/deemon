@@ -2013,7 +2013,6 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 			/* T:              */ DeeRelIntObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -2021,7 +2020,6 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&relint_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,

@@ -186,7 +186,6 @@ PRIVATE struct type_cmp mappediter_cmp = {
 STATIC_ASSERT(offsetof(SeqMappedIterator, smi_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(SeqMappedIterator, smi_mapper) == offsetof(ProxyObject2, po_obj2));
 #define mappediter_copy      generic_proxy2__copy_recursive1_alias2 /* copy "smi_iter", alias "smi_mapper" */
-#define mappediter_deep      generic_proxy2__deepcopy
 #define mappediter_serialize generic_proxy2__serialize
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -230,7 +229,6 @@ INTERN DeeTypeObject SeqMappedIterator_Type = {
 			/* T:              */ SeqMappedIterator,
 			/* tp_ctor:        */ &mappediter_ctor,
 			/* tp_copy_ctor:   */ &mappediter_copy,
-			/* tp_deep_ctor:   */ &mappediter_deep,
 			/* tp_any_ctor:    */ &mappediter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mappediter_serialize
@@ -610,7 +608,6 @@ STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1) ||
 STATIC_ASSERT(offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(SeqMapped, sm_mapper) == offsetof(ProxyObject2, po_obj2));
 #define mapped_copy      generic_proxy2__copy_alias12
-#define mapped_deep      generic_proxy2__deepcopy
 #define mapped_serialize generic_proxy2__serialize
 
 STATIC_ASSERT(offsetof(SeqMapped, sm_seq) == offsetof(ProxyObject2, po_obj1));
@@ -2150,7 +2147,6 @@ INTERN DeeTypeObject SeqMapped_Type = {
 			/* T:              */ SeqMapped,
 			/* tp_ctor:        */ &mapped_ctor,
 			/* tp_copy_ctor:   */ &mapped_copy,
-			/* tp_deep_ctor:   */ &mapped_deep,
 			/* tp_any_ctor:    */ &mapped_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mapped_serialize

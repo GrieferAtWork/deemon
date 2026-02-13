@@ -192,7 +192,6 @@ INTERN DeeTypeObject DistinctIterator_Type = {
 			/* T:              */ DistinctIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &di_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &di_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &di_serialize
@@ -394,7 +393,6 @@ INTERN DeeTypeObject DistinctIteratorWithKey_Type = {
 			/* T:              */ DistinctIteratorWithKey,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &uqiwk_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &uqiwk_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &uqiwk_serialize
@@ -441,7 +439,6 @@ STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_seq) == offsetof(ProxyObject2, p
 STATIC_ASSERT(offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(DistinctSetWithKey, dswk_key) == offsetof(ProxyObject2, po_obj2));
 #define dswk_copy      generic_proxy2__copy_alias12
-#define dswk_deep      generic_proxy2__deepcopy
 #define dswk_fini      generic_proxy2__fini
 #define dswk_visit     generic_proxy2__visit
 #define dswk_serialize generic_proxy2__serialize
@@ -547,7 +544,6 @@ INTERN DeeTypeObject DistinctSetWithKey_Type = {
 			/* T:              */ DistinctSetWithKey,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &dswk_copy,
-			/* tp_deep_ctor:   */ &dswk_deep,
 			/* tp_any_ctor:    */ &dswk_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dswk_serialize
@@ -678,7 +674,6 @@ INTERN DeeTypeObject DistinctMappingIterator_Type = {
 			/* T:              */ DistinctMappingIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &dmi_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dmi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dmi_serialize

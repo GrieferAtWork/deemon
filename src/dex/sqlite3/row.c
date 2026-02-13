@@ -180,7 +180,6 @@ INTERN DeeTypeObject CellFmt_Type = {
 			/* T:              */ CellFmt,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ob_cellfmt_serialize /* TODO */
@@ -328,7 +327,6 @@ INTERN DeeTypeObject RowFmtColumns_Type = {
 			/* T:              */ RowFmtColumns,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL, /* TODO */
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rowfmtcolumns_serialize
@@ -594,7 +592,6 @@ INTERN DeeTypeObject RowFmt_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rowfmt_serialize,
@@ -1059,7 +1056,6 @@ INTERN DeeTypeObject Row_Type = {
 			/* T:              */ Row,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO (always writes "r_query == NULL") */

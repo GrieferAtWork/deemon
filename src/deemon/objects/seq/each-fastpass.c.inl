@@ -1146,19 +1146,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-LOCAL_seX(deep)(LOCAL_SeqEach *__restrict self,
-                LOCAL_SeqEach *__restrict other) {
-	self->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if unlikely(!self->se_seq)
-		goto err;
-	self->sg_attr = other->sg_attr;
-	Dee_Incref(self->sg_attr);
-	return 0;
-err:
-	return -1;
-}
-
 #elif defined(DEFINE_SeqEachCallAttr) || defined(DEFINE_SeqEachCallAttrKw)
 
 PRIVATE WUNUSED DREF LOCAL_SeqEach *DCALL LOCAL_seX(ctor)(void) {
@@ -1197,46 +1184,6 @@ LOCAL_seX(copy)(LOCAL_SeqEach *__restrict other) {
 	DeeObject_Init(result, &LOCAL_SeqEach_Type);
 done:
 	return result;
-}
-
-PRIVATE WUNUSED DREF LOCAL_SeqEach *DCALL
-LOCAL_seX(deep)(LOCAL_SeqEach *__restrict other) {
-	DREF LOCAL_SeqEach *result;
-	size_t i;
-	result = (DREF LOCAL_SeqEach *)DeeObject_Mallocc(offsetof(LOCAL_SeqEach, sg_argv),
-	                                                 other->sg_argc, sizeof(DREF DeeObject *));
-	if unlikely(!result)
-		goto done;
-	result->se_seq = DeeObject_DeepCopy(other->se_seq);
-	if unlikely(!result->se_seq)
-		goto err_r;
-#ifdef DEFINE_SeqEachCallAttrKw
-	result->sg_kw = DeeObject_DeepCopy(other->sg_kw);
-	if unlikely(!result->sg_kw)
-		goto err_r_seq;
-#endif /* DEFINE_SeqEachCallAttrKw */
-	result->sg_argc = other->sg_argc;
-	for (i = 0; i < result->sg_argc; ++i) {
-		result->sg_argv[i] = DeeObject_DeepCopy(other->sg_argv[i]);
-		if unlikely(!result->sg_argv[i])
-			goto err_r_argv;
-	}
-	result->sg_attr = other->sg_attr;
-	Dee_Incref(result->sg_attr);
-	DeeObject_Init(result, &LOCAL_SeqEach_Type);
-done:
-	return result;
-err_r_argv:
-	Dee_Decrefv(result->sg_argv, i);
-/*err_r_kw:*/
-#ifdef DEFINE_SeqEachCallAttrKw
-	Dee_Decref(result->sg_kw);
-err_r_seq:
-#endif /* DEFINE_SeqEachCallAttrKw */
-	Dee_Decref(result->se_seq);
-err_r:
-	DeeObject_Free(result);
-	return NULL;
 }
 
 PRIVATE WUNUSED DREF LOCAL_SeqEach *DCALL
@@ -1400,7 +1347,6 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 			/* T:              */ LOCAL_SeqEach,
 			/* tp_ctor:        */ &LOCAL_seX(ctor),
 			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
-			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &LOCAL_seX(serialize)
@@ -1409,7 +1355,6 @@ INTERN DeeTypeObject LOCAL_SeqEach_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &LOCAL_seX(ctor),
 			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
-			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &LOCAL_seX(serialize),
@@ -1525,7 +1470,6 @@ INTERN DeeTypeObject LOCAL_SeqEachIterator_Type = {
 			/* T:              */ SeqEachIterator,
 			/* tp_ctor:        */ &LOCAL_seXi(ctor),
 			/* tp_copy_ctor:   */ &sewi_copy,
-			/* tp_deep_ctor:   */ &sewi_deep,
 			/* tp_any_ctor:    */ &LOCAL_seXi(init),
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sewi_serialize
@@ -1897,7 +1841,6 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 			/* T:              */ LOCAL_SeqEach,
 			/* tp_ctor:        */ &LOCAL_seX(ctor),
 			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
-			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &LOCAL_seX(serialize)
@@ -1906,7 +1849,6 @@ INTERN DeeTypeObject LOCAL_SeqSome_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &LOCAL_seX(ctor),
 			/* tp_copy_ctor:   */ &LOCAL_seX(copy),
-			/* tp_deep_ctor:   */ &LOCAL_seX(deep),
 			/* tp_any_ctor:    */ &LOCAL_seX(init),
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &LOCAL_seX(serialize),

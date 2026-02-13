@@ -41,7 +41,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
-#include <deemon/system-features.h>    /* memcpyc, memmovedownc */
+#include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_F*, OPERATOR_*, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
@@ -450,117 +450,6 @@ again:
 	Dee_weakref_support_init(self);
 	return 0;
 err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-hashset_deepload(HashSet *__restrict self) {
-	DREF DeeObject **new_items, **items = NULL;
-	size_t i, hash_i, item_count, ols_item_count = 0;
-	struct Dee_hashset_item *new_map, *ols_map;
-	size_t new_mask;
-	for (;;) {
-		DeeHashSet_LockRead(self);
-		/* Optimization: if the Set is empty, then there's nothing to copy! */
-		if (self->hs_elem == empty_hashset_items) {
-			DeeHashSet_LockEndRead(self);
-			return 0;
-		}
-		item_count = self->hs_used;
-		if (item_count <= ols_item_count)
-			break;
-		DeeHashSet_LockEndRead(self);
-		new_items = (DREF DeeObject **)Dee_Reallocc(items, item_count,
-		                                            sizeof(DREF DeeObject *));
-		if unlikely(!new_items)
-			goto err_items;
-		ols_item_count = item_count;
-		items          = new_items;
-	}
-
-	/* Copy all used items. */
-	for (i = 0, hash_i = 0; i < item_count; ++hash_i) {
-		ASSERT(hash_i <= self->hs_mask);
-		if (self->hs_elem[hash_i].hsi_key == NULL)
-			continue;
-		if (self->hs_elem[hash_i].hsi_key == dummy)
-			continue;
-		items[i] = self->hs_elem[hash_i].hsi_key;
-		Dee_Incref(items[i]);
-		++i;
-	}
-	DeeHashSet_LockEndRead(self);
-
-	/* With our own local copy of all items being
-	 * used, replace all of them with deep copies. */
-	for (i = 0; i < item_count; ++i) {
-		if (DeeObject_InplaceDeepCopy(&items[i]))
-			goto err_items_v;
-	}
-	new_mask = 1;
-	while ((item_count & new_mask) != item_count)
-		new_mask = (new_mask << 1) | 1;
-	new_map = (struct Dee_hashset_item *)Dee_Callocc(new_mask + 1,
-	                                                 sizeof(struct Dee_hashset_item));
-	if unlikely(!new_map)
-		goto err_items_v;
-
-	/* Insert all the copied items into the new map. */
-	for (i = 0; i < item_count; ++i) {
-		Dee_hash_t j, perturb, hash;
-		hash    = DeeObject_Hash(items[i]);
-		perturb = j = hash & new_mask;
-		for (;; DeeHashSet_HashNx(j, perturb)) {
-			struct Dee_hashset_item *item = &new_map[j & new_mask];
-			if (item->hsi_key) {
-				/* Check if deepcopy caused one of the elements to get duplicated. */
-				if unlikely(item->hsi_key == items[i]) {
-remove_duplicate_key:
-					Dee_Decref(items[i]);
-					--item_count;
-					memmovedownc(&items[i],
-					             &items[i + 1],
-					             item_count - i,
-					             sizeof(DREF DeeObject *));
-					break;
-				}
-				if (Dee_TYPE(item->hsi_key) == Dee_TYPE(items[i])) {
-					int error = DeeObject_TryCompareEq(item->hsi_key, items[i]);
-					if (Dee_COMPARE_ISERR(error))
-						goto err_items_v_new_map;
-					if (Dee_COMPARE_ISEQ(error))
-						goto remove_duplicate_key;
-				}
-
-				/* Slot already in use */
-				continue;
-			}
-			item->hsi_hash = hash;
-			item->hsi_key  = items[i]; /* Inherit reference. */
-			break;
-		}
-	}
-	DeeHashSet_LockWrite(self);
-	i             = self->hs_mask + 1;
-	self->hs_mask = new_mask;
-	self->hs_used = item_count;
-	self->hs_size = item_count;
-	ols_map       = self->hs_elem;
-	self->hs_elem = new_map;
-	DeeHashSet_LockEndWrite(self);
-	if (ols_map != empty_hashset_items) {
-		while (i--)
-			Dee_XDecref(ols_map[i].hsi_key);
-		Dee_Free(ols_map);
-	}
-	Dee_Free(items);
-	return 0;
-err_items_v_new_map:
-	Dee_Free(new_map);
-err_items_v:
-	Dee_Decrefv(items, item_count);
-err_items:
-	Dee_Free(items);
 	return -1;
 }
 
@@ -1428,7 +1317,6 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 			/* T:              */ HashSetIterator,
 			/* tp_ctor:        */ &hashsetiterator_ctor,
 			/* tp_copy_ctor:   */ &hashsetiterator_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &hashsetiterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &hashsetiterator_serialize
@@ -1906,9 +1794,6 @@ PRIVATE struct type_gc tpconst hashset_gc = {
 
 PRIVATE struct type_operator const hashset_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FNOREFESCAPE),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0004_ASSIGN, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0005_MOVEASSIGN, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE),
@@ -1972,7 +1857,6 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 			/* T:              */ HashSet,
 			/* tp_ctor:        */ &hashset_ctor,
 			/* tp_copy_ctor:   */ &hashset_copy,
-			/* tp_deep_ctor:   */ &hashset_copy,
 			/* tp_any_ctor:    */ &hashset_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &hashset_serialize
@@ -1980,7 +1864,6 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&hashset_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&hashset_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),

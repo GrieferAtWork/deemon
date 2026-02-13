@@ -79,22 +79,6 @@ ds_sgi_copy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	return 0;
 }
 
-#define ds_sgif_deepcopy ds_sgi_deepcopy
-#define ds_stgi_deepcopy ds_sgi_deepcopy
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ds_sgi_deepcopy(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                DefaultSequence_WithSizeAndGetItemIndex *__restrict other) {
-	self->dssgi_seq = DeeObject_DeepCopy(other->dssgi_seq);
-	if unlikely(!self->dssgi_seq)
-		goto err;
-	self->dssgi_tp_getitem_index = other->dssgi_tp_getitem_index;
-	self->dssgi_start            = other->dssgi_start;
-	self->dssgi_end              = other->dssgi_end;
-	return 0;
-err:
-	return -1;
-}
-
 #define ds_sgif_serialize ds_sgi_serialize
 #define ds_stgi_serialize ds_sgi_serialize
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1065,7 +1049,6 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
 			/* T:              */ DefaultSequence_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_sgi_copy,
-			/* tp_deep_ctor:   */ &ds_sgi_deepcopy,
 			/* tp_any_ctor:    */ &ds_sgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_sgi_serialize
@@ -1115,7 +1098,6 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 			/* T:              */ DefaultSequence_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_sgif_copy,
-			/* tp_deep_ctor:   */ &ds_sgif_deepcopy,
 			/* tp_any_ctor:    */ &ds_sgif_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_sgif_serialize
@@ -1165,7 +1147,6 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 			/* T:              */ DefaultSequence_WithSizeAndGetItemIndex,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_stgi_copy,
-			/* tp_deep_ctor:   */ &ds_stgi_deepcopy,
 			/* tp_any_ctor:    */ &ds_stgi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_stgi_serialize
@@ -1252,28 +1233,6 @@ ds_sg_copy(DefaultSequence_WithSizeObAndGetItem *__restrict self,
 	self->dssg_end        = other->dssg_end;
 	self->dssg_tp_getitem = other->dssg_tp_getitem;
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ds_sg_deepcopy(DefaultSequence_WithSizeObAndGetItem *__restrict self,
-               DefaultSequence_WithSizeObAndGetItem *__restrict other) {
-	self->dssg_seq = DeeObject_DeepCopy(other->dssg_seq);
-	if unlikely(!self->dssg_seq)
-		goto err;
-	self->dssg_start = DeeObject_DeepCopy(other->dssg_start);
-	if unlikely(!self->dssg_start)
-		goto err_seq;
-	self->dssg_end = DeeObject_DeepCopy(other->dssg_end);
-	if unlikely(!self->dssg_end)
-		goto err_seq_start;
-	self->dssg_tp_getitem = other->dssg_tp_getitem;
-	return 0;
-err_seq_start:
-	Dee_Decref(self->dssg_start);
-err_seq:
-	Dee_Decref(self->dssg_seq);
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1855,7 +1814,6 @@ INTERN DeeTypeObject DefaultSequence_WithSizeObAndGetItem_Type = {
 			/* T:              */ DefaultSequence_WithSizeObAndGetItem,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_sg_copy,
-			/* tp_deep_ctor:   */ &ds_sg_deepcopy,
 			/* tp_any_ctor:    */ &ds_sg_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_sg_serialize
@@ -1934,7 +1892,6 @@ STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_start) == offseto
 STATIC_ASSERT(offsetof(DefaultSequence_WithIterAndLimit, dsial_limit) == offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_start) ||
               offsetof(DefaultSequence_WithIterAndLimit, dsial_limit) == offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_end));
 #define ds_ial_copy      ds_sgi_copy
-#define ds_ial_deepcopy  ds_sgi_deepcopy
 #define ds_ial_serialize ds_sgi_serialize
 
 STATIC_ASSERT(offsetof(DefaultSequence_WithIter, dsi_seq) == offsetof(ProxyObjectWithPointer, po_obj));
@@ -1948,18 +1905,6 @@ ds_i_copy(DefaultSequence_WithIter *__restrict self,
 	self->dsi_seq     = other->dsi_seq;
 	self->dsi_tp_iter = other->dsi_tp_iter;
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ds_i_deepcopy(DefaultSequence_WithIter *__restrict self,
-              DefaultSequence_WithIter *__restrict other) {
-	self->dsi_seq = DeeObject_DeepCopy(other->dsi_seq);
-	if unlikely(!self->dsi_seq)
-		goto err;
-	self->dsi_tp_iter = other->dsi_tp_iter;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2343,7 +2288,6 @@ INTERN DeeTypeObject DefaultSequence_WithIter_Type = {
 			/* T:              */ DefaultSequence_WithIter,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_i_copy,
-			/* tp_deep_ctor:   */ &ds_i_deepcopy,
 			/* tp_any_ctor:    */ &ds_i_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_i_serialize
@@ -2393,7 +2337,6 @@ INTERN DeeTypeObject DefaultSequence_WithIterAndLimit_Type = {
 			/* T:              */ DefaultSequence_WithIterAndLimit,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_ial_copy,
-			/* tp_deep_ctor:   */ &ds_ial_deepcopy,
 			/* tp_any_ctor:    */ &ds_ial_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_ial_serialize

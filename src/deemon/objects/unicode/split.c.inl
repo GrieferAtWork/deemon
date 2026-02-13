@@ -362,7 +362,6 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 			/* T:              */ StringSplitIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &splititer_copy,
-			/* tp_deep_ctor:   */ &splititer_copy,
 			/* tp_any_ctor:    */ &splititer_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &splititer_serialize
@@ -414,7 +413,6 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 			/* T:              */ StringSplitIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &splititer_copy,
-			/* tp_deep_ctor:   */ &splititer_copy,
 			/* tp_any_ctor:    */ &splititer_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &splititer_serialize
@@ -675,7 +673,6 @@ INTERN DeeTypeObject StringSplit_Type = {
 			/* T:              */ StringSplit,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &split_copy,
-			/* tp_deep_ctor:   */ &split_copy,
 			/* tp_any_ctor:    */ &split_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &split_serialize
@@ -725,7 +722,6 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 			/* T:              */ StringSplit,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &split_copy,
-			/* tp_deep_ctor:   */ &split_copy,
 			/* tp_any_ctor:    */ &split_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &split_serialize
@@ -1025,7 +1021,6 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 			/* T:              */ LineSplitIterator,
 			/* tp_ctor:        */ &lineiter_ctor,
 			/* tp_copy_ctor:   */ &lineiter_copy,
-			/* tp_deep_ctor:   */ &lineiter_copy,
 			/* tp_any_ctor:    */ &lineiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &lineiter_serialize
@@ -1190,7 +1185,6 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 			/* T:              */ LineSplit,
 			/* tp_ctor:        */ &linesplit_ctor,
 			/* tp_copy_ctor:   */ &linesplit_copy,
-			/* tp_deep_ctor:   */ &linesplit_copy,
 			/* tp_any_ctor:    */ &linesplit_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &linesplit_serialize

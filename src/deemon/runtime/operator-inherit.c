@@ -62,7 +62,6 @@ DECL_BEGIN
 #undef CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
 #define CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS
 
-#define DeeType_Optimize_tp_deepload(self, tp_deepload)       tp_deepload
 #define DeeType_Optimize_tp_assign(self, tp_assign)           tp_assign
 #define DeeType_Optimize_tp_move_assign(self, tp_move_assign) tp_move_assign
 
@@ -80,9 +79,6 @@ DeeType_InheritConstructors(DeeTypeObject *__restrict self) {
 	if (DeeType_IsVariable(self)) {
 		self->tp_init.tp_var.tp_ctor        = base->tp_init.tp_var.tp_ctor;
 		self->tp_init.tp_var.tp_copy_ctor   = base->tp_init.tp_var.tp_copy_ctor;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		self->tp_init.tp_var.tp_deep_ctor   = base->tp_init.tp_var.tp_deep_ctor;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		self->tp_init.tp_var.tp_any_ctor    = base->tp_init.tp_var.tp_any_ctor;
 		self->tp_init.tp_var.tp_free        = base->tp_init.tp_var.tp_free;
 		self->tp_init.tp_var.tp_any_ctor_kw = base->tp_init.tp_var.tp_any_ctor_kw;
@@ -101,15 +97,9 @@ DeeType_InheritConstructors(DeeTypeObject *__restrict self) {
 #endif
 		self->tp_init.tp_alloc.tp_ctor        = base->tp_init.tp_alloc.tp_ctor;
 		self->tp_init.tp_alloc.tp_copy_ctor   = base->tp_init.tp_alloc.tp_copy_ctor;
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		self->tp_init.tp_alloc.tp_deep_ctor   = base->tp_init.tp_alloc.tp_deep_ctor;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		self->tp_init.tp_alloc.tp_any_ctor    = base->tp_init.tp_alloc.tp_any_ctor;
 		self->tp_init.tp_alloc.tp_any_ctor_kw = base->tp_init.tp_alloc.tp_any_ctor_kw;
 	}
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	self->tp_init.tp_deepload = DeeType_Optimize_tp_deepload(self, base->tp_init.tp_deepload);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 
 	/* Only inherit assign operators if the class itself doesn't define any already. */
 	if (self->tp_init.tp_assign == NULL)

@@ -126,7 +126,6 @@ STATIC_ASSERT(offsetof(MapUnion, mu_a) == offsetof(ProxyObject2, po_obj1) ||
 STATIC_ASSERT(offsetof(MapUnion, mu_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapUnion, mu_b) == offsetof(ProxyObject2, po_obj2));
 #define mu_copy      generic_proxy2__copy_alias12
-#define mu_deep      generic_proxy2__deepcopy
 #define mu_init      generic_proxy2__init
 #define mu_fini      generic_proxy2__fini
 #define mu_visit     generic_proxy2__visit
@@ -417,7 +416,6 @@ INTERN DeeTypeObject MapUnion_Type = {
 			/* T:              */ MapUnion,
 			/* tp_ctor:        */ &mu_ctor,
 			/* tp_copy_ctor:   */ &mu_copy,
-			/* tp_deep_ctor:   */ &mu_deep,
 			/* tp_any_ctor:    */ &mu_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mu_serialize
@@ -561,31 +559,6 @@ muiter_copy(MapUnionIterator *__restrict self,
 err:
 	return -1;
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-muiter_deep(MapUnionIterator *__restrict self,
-            MapUnionIterator *__restrict other) {
-	DREF DeeObject *iter;
-	MapUnionIterator_LockRead(other);
-	iter = other->mui_iter;
-	Dee_Incref(iter);
-	self->mui_in2nd = other->mui_in2nd;
-	MapUnionIterator_LockEndRead(other);
-	iter = DeeObject_DeepCopyInherited(iter);
-	if unlikely(!iter)
-		goto err;
-	self->mui_iter = iter;
-	Dee_atomic_rwlock_init(&self->mui_lock);
-	self->mui_union = (DREF MapUnion *)DeeObject_DeepCopy((DeeObject *)other->mui_union);
-	if unlikely(!self->mui_union)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref(iter);
-err:
-	return -1;
-}
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 muiter_serialize(MapUnionIterator *__restrict self,
@@ -914,7 +887,6 @@ INTERN DeeTypeObject MapUnionIterator_Type = {
 			/* T:              */ MapUnionIterator,
 			/* tp_ctor:        */ &muiter_ctor,
 			/* tp_copy_ctor:   */ &muiter_copy,
-			/* tp_deep_ctor:   */ &muiter_deep,
 			/* tp_any_ctor:    */ &muiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &muiter_serialize
@@ -968,7 +940,6 @@ STATIC_ASSERT(offsetof(MapIntersection, mi_map) == offsetof(ProxyObject2, po_obj
 STATIC_ASSERT(offsetof(MapIntersection, mi_keys) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapIntersection, mi_keys) == offsetof(ProxyObject2, po_obj2));
 #define mi_copy      generic_proxy2__copy_alias12
-#define mi_deep      generic_proxy2__deepcopy
 #define mi_init      generic_proxy2__init
 #define mi_fini      generic_proxy2__fini
 #define mi_visit     generic_proxy2__visit
@@ -1165,7 +1136,6 @@ INTERN DeeTypeObject MapIntersection_Type = {
 			/* T:              */ MapIntersection,
 			/* tp_ctor:        */ &mi_ctor,
 			/* tp_copy_ctor:   */ &mi_copy,
-			/* tp_deep_ctor:   */ &mi_deep,
 			/* tp_any_ctor:    */ &mi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mi_serialize
@@ -1230,22 +1200,6 @@ miiter_copy(MapIntersectionIterator *self, MapIntersectionIterator *other) {
 	Dee_Incref(self->mii_intersect);
 	self->mii_keys = other->mii_keys;
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-miiter_deep(MapIntersectionIterator *self, MapIntersectionIterator *other) {
-	self->mii_intersect = (DREF MapIntersection *)DeeObject_DeepCopy((DeeObject *)other->mii_intersect);
-	if unlikely(!self->mii_intersect)
-		goto err;
-	self->mii_iter = DeeObject_DeepCopy(other->mii_iter);
-	if unlikely(!self->mii_iter)
-		goto err_intersect;
-	self->mii_keys = self->mii_intersect->mi_keys;
-	return 0;
-err_intersect:
-	Dee_Decref(self->mii_intersect);
 err:
 	return -1;
 }
@@ -1369,7 +1323,6 @@ INTERN DeeTypeObject MapIntersectionIterator_Type = {
 			/* T:              */ MapIntersectionIterator,
 			/* tp_ctor:        */ &miiter_ctor,
 			/* tp_copy_ctor:   */ &miiter_copy,
-			/* tp_deep_ctor:   */ &miiter_deep,
 			/* tp_any_ctor:    */ &miiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &miiter_serialize
@@ -1419,7 +1372,6 @@ STATIC_ASSERT(offsetof(MapDifference, md_map) == offsetof(ProxyObject2, po_obj1)
 STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapDifference, md_keys) == offsetof(ProxyObject2, po_obj2));
 #define md_copy      generic_proxy2__copy_alias12
-#define md_deep      generic_proxy2__deepcopy
 #define md_fini      generic_proxy2__fini
 #define md_visit     generic_proxy2__visit
 #define md_serialize generic_proxy2__serialize
@@ -1609,7 +1561,6 @@ INTERN DeeTypeObject MapDifference_Type = {
 			/* T:              */ MapDifference,
 			/* tp_ctor:        */ &md_ctor,
 			/* tp_copy_ctor:   */ &md_copy,
-			/* tp_deep_ctor:   */ &md_deep,
 			/* tp_any_ctor:    */ &md_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &md_serialize
@@ -1652,7 +1603,6 @@ STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_diff) == offsetof(MapIntersect
 STATIC_ASSERT(offsetof(MapDifferenceIterator, mdi_keys) == offsetof(MapIntersectionIterator, mii_keys));
 #define mditer_ctor      miiter_ctor
 #define mditer_copy      miiter_copy
-#define mditer_deep      miiter_deep
 #define mditer_serialize miiter_serialize
 #define mditer_init      miiter_init
 
@@ -1741,7 +1691,6 @@ INTERN DeeTypeObject MapDifferenceIterator_Type = {
 			/* T:              */ MapDifferenceIterator,
 			/* tp_ctor:        */ &mditer_ctor,
 			/* tp_copy_ctor:   */ &mditer_copy,
-			/* tp_deep_ctor:   */ &mditer_deep,
 			/* tp_any_ctor:    */ &mditer_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mditer_serialize
@@ -1791,7 +1740,6 @@ STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_a) == offsetof(ProxyObject2, 
 STATIC_ASSERT(offsetof(MapSymmetricDifference, msd_b) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(MapSymmetricDifference, msd_b) == offsetof(ProxyObject2, po_obj2));
 #define msd_copy      generic_proxy2__copy_alias12
-#define msd_deep      generic_proxy2__deepcopy
 #define msd_init      generic_proxy2__init
 #define msd_fini      generic_proxy2__fini
 #define msd_visit     generic_proxy2__visit
@@ -2311,7 +2259,6 @@ INTERN DeeTypeObject MapSymmetricDifference_Type = {
 			/* T:              */ MapSymmetricDifference,
 			/* tp_ctor:        */ &msd_ctor,
 			/* tp_copy_ctor:   */ &msd_copy,
-			/* tp_deep_ctor:   */ &msd_deep,
 			/* tp_any_ctor:    */ &msd_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &msd_serialize
@@ -2447,7 +2394,6 @@ STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_iter) == offsetof(Ma
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_symdiff) == offsetof(MapUnionIterator, mui_union));
 STATIC_ASSERT(offsetof(MapSymmetricDifferenceIterator, msdi_in2nd) == offsetof(MapUnionIterator, mui_in2nd));
 #define msditer_copy      muiter_copy
-#define msditer_deep      muiter_deep
 #define msditer_serialize muiter_serialize
 #define msditer_ctor      muiter_ctor
 #define msditer_init      muiter_init
@@ -2468,29 +2414,6 @@ msditer_copy(MapSymmetricDifferenceIterator *__restrict self,
 	self->msdi_symdiff = other->msdi_symdiff;
 	Dee_Incref(self->msdi_symdiff);
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-msditer_deep(MapSymmetricDifferenceIterator *__restrict self,
-             MapSymmetricDifferenceIterator *__restrict other) {
-	DREF DeeObject *iter;
-	MapSymmetricDifferenceIterator_LockRead(other);
-	iter = other->msdi_iter;
-	Dee_Incref(iter);
-	self->msdi_in2nd = other->msdi_in2nd;
-	MapSymmetricDifferenceIterator_LockEndRead(other);
-	if unlikely((iter = DeeObject_DeepCopyInherited(iter)) == NULL)
-		goto err;
-	self->msdi_iter = iter;
-	Dee_atomic_rwlock_init(&self->msdi_lock);
-	self->msdi_symdiff = (DREF MapSymmetricDifference *)DeeObject_DeepCopy((DeeObject *)other->msdi_symdiff);
-	if unlikely(!self->msdi_symdiff)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref(iter);
 err:
 	return -1;
 }
@@ -2796,7 +2719,6 @@ INTERN DeeTypeObject MapSymmetricDifferenceIterator_Type = {
 			/* T:              */ MapSymmetricDifferenceIterator,
 			/* tp_ctor:        */ &msditer_ctor,
 			/* tp_copy_ctor:   */ &msditer_copy,
-			/* tp_deep_ctor:   */ &msditer_deep,
 			/* tp_any_ctor:    */ &msditer_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &msditer_serialize

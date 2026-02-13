@@ -155,24 +155,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-super_deepcopy(Super *__restrict self,
-               Super *__restrict other) {
-	ASSERT_OBJECT(self);
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
-	self->s_self = DeeObject_DeepCopy(other->s_self);
-#else /* CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-	self->s_self = DeeObject_TDeepCopy(other->s_type, other->s_self);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-	if unlikely(!self->s_self)
-		goto err;
-	self->s_type = Dee_TYPE(self->s_self);
-	Dee_Incref(self->s_type);
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_init(Super *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("Super", params: "
@@ -1281,7 +1263,6 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 			/* T:              */ Super,
 			/* tp_ctor:        */ &super_ctor,
 			/* tp_copy_ctor:   */ &super_copy,
-			/* tp_deep_ctor:   */ &super_deepcopy,
 			/* tp_any_ctor:    */ &super_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &super_serialize

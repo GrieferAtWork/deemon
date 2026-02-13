@@ -797,7 +797,6 @@ INTERN DeeTypeObject RangeMap_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
-			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &DeeNone_OperatorSerialize
@@ -805,7 +804,6 @@ INTERN DeeTypeObject RangeMap_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -866,17 +864,6 @@ proxy_copy(RangeMapProxy *__restrict self,
 	self->rmp_rmap = other->rmp_rmap;
 	Dee_Incref(self->rmp_rmap);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-proxy_deepcopy(RangeMapProxy *__restrict self,
-               RangeMapProxy *__restrict other) {
-	self->rmp_rmap = DeeObject_DeepCopy(other->rmp_rmap);
-	if unlikely(!self->rmp_rmap)
-		goto err;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1760,7 +1747,6 @@ INTERN DeeTypeObject RangeMapProxy_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -1814,7 +1800,6 @@ INTERN DeeTypeObject RangeMapKeys_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -1864,7 +1849,6 @@ INTERN DeeTypeObject RangeMapValues_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -1910,7 +1894,6 @@ INTERN DeeTypeObject RangeMapItems_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -1956,7 +1939,6 @@ INTERN DeeTypeObject RangeMapNodes_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -2002,7 +1984,6 @@ INTERN DeeTypeObject RangeMapRanges_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -2048,7 +2029,6 @@ INTERN DeeTypeObject RangeMapMapItems_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -2102,7 +2082,6 @@ INTERN DeeTypeObject RangeMapAsMap_Type = {
 			/* T:              */ RangeMapProxy,
 			/* tp_ctor:        */ &proxy_ctor,
 			/* tp_copy_ctor:   */ &proxy_copy,
-			/* tp_deep_ctor:   */ &proxy_deepcopy,
 			/* tp_any_ctor:    */ &proxy_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_serialize
@@ -2216,22 +2195,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-proxy_iterator_deepcopy(RangeMapProxyIterator *__restrict self,
-                        RangeMapProxyIterator *__restrict other) {
-	self->rmpi_iter = DeeObject_DeepCopy(other->rmpi_iter);
-	if unlikely(!self->rmpi_iter)
-		goto err;
-	self->rmpi_rmap = DeeObject_DeepCopy(other->rmpi_rmap);
-	if unlikely(!self->rmpi_iter)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref(self->rmpi_iter);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 proxy_iterator_serialize(RangeMapProxyIterator *__restrict self,
                          DeeSerial *__restrict writer,
                          Dee_seraddr_t addr) {
@@ -2295,22 +2258,6 @@ proxy_items_iterator_copy(RangeMapProxyItemsIterator *__restrict self,
 	self->rmpii_base.rmpi_rmap = other->rmpii_base.rmpi_rmap;
 	Dee_Incref(self->rmpii_base.rmpi_rmap);
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-proxy_items_iterator_deepcopy(RangeMapProxyItemsIterator *__restrict self,
-                              RangeMapProxyItemsIterator *__restrict other) {
-	self->rmpii_base.rmpi_iter = DeeObject_DeepCopy(other->rmpii_base.rmpi_iter);
-	if unlikely(!self->rmpii_base.rmpi_iter)
-		goto err;
-	self->rmpii_base.rmpi_rmap = DeeObject_DeepCopy(other->rmpii_base.rmpi_rmap);
-	if unlikely(!self->rmpii_base.rmpi_iter)
-		goto err_iter;
-	return 0;
-err_iter:
-	Dee_Decref(self->rmpii_base.rmpi_iter);
 err:
 	return -1;
 }
@@ -2433,7 +2380,6 @@ INTERN DeeTypeObject RangeMapProxyIterator_Type = {
 			/* T:              */ RangeMapProxyIterator,
 			/* tp_ctor:        */ &proxy_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_iterator_serialize
@@ -2478,7 +2424,6 @@ INTERN DeeTypeObject RangeMapValuesIterator_Type = {
 			/* T:              */ RangeMapProxyItemsIterator,
 			/* tp_ctor:        */ &proxy_items_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_items_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_items_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_items_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_items_iterator_serialize
@@ -2523,7 +2468,6 @@ INTERN DeeTypeObject RangeMapItemsIterator_Type = {
 			/* T:              */ RangeMapProxyItemsIterator,
 			/* tp_ctor:        */ &proxy_items_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_items_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_items_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_items_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_items_iterator_serialize
@@ -2568,7 +2512,6 @@ INTERN DeeTypeObject RangeMapRangesIterator_Type = {
 			/* T:              */ RangeMapProxyItemsIterator,
 			/* tp_ctor:        */ &proxy_items_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_items_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_items_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_items_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_items_iterator_serialize
@@ -2613,7 +2556,6 @@ INTERN DeeTypeObject RangeMapNodesIterator_Type = {
 			/* T:              */ RangeMapProxyIterator,
 			/* tp_ctor:        */ &proxy_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_iterator_serialize
@@ -2699,38 +2641,6 @@ proxy_keys_iterator_copy(RangeMapProxyKeysIterator *__restrict self,
 	Dee_atomic_lock_init(&self->rmpki_lock);
 	self->rmpki_first = true;
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-proxy_keys_iterator_deepcopy(RangeMapProxyKeysIterator *__restrict self,
-                             RangeMapProxyKeysIterator *__restrict other) {
-	self->rmpki_base.rmpii_base.rmpi_rmap = DeeObject_DeepCopy(other->rmpki_base.rmpii_base.rmpi_rmap);
-	if unlikely(!self->rmpki_base.rmpii_base.rmpi_rmap)
-		goto err;
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_DeepCopy(other->rmpki_base.rmpii_base.rmpi_iter);
-	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
-		goto err_rmap;
-	RangeMapProxyKeysIterator_LockAcquire(other);
-	self->rmpki_prvkey = other->rmpki_prvkey;
-	self->rmpki_maxkey = other->rmpki_maxkey;
-	Dee_Incref(self->rmpki_prvkey);
-	Dee_Incref(self->rmpki_maxkey);
-	RangeMapProxyKeysIterator_LockRelease(other);
-	if unlikely(DeeObject_InplaceDeepCopy(&self->rmpki_prvkey))
-		goto err_rmap_iter_prv_max;
-	if unlikely(DeeObject_InplaceDeepCopy(&self->rmpki_maxkey))
-		goto err_rmap_iter_prv_max;
-	Dee_atomic_lock_init(&self->rmpki_lock);
-	self->rmpki_first = false;
-	return 0;
-err_rmap_iter_prv_max:
-	Dee_Decref(self->rmpki_maxkey);
-	Dee_Decref(self->rmpki_prvkey);
-	Dee_Decref(self->rmpki_base.rmpii_base.rmpi_iter);
-err_rmap:
-	Dee_Decref(self->rmpki_base.rmpii_base.rmpi_rmap);
 err:
 	return -1;
 }
@@ -2839,43 +2749,6 @@ proxy_mapitems_iterator_copy(RangeMapProxyKeysIterator *__restrict self,
 	Dee_atomic_lock_init(&self->rmpki_lock);
 	self->rmpki_first = true;
 	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-proxy_mapitems_iterator_deepcopy(RangeMapProxyKeysIterator *__restrict self,
-                                 RangeMapProxyKeysIterator *__restrict other) {
-	self->rmpki_base.rmpii_base.rmpi_rmap = DeeObject_DeepCopy(other->rmpki_base.rmpii_base.rmpi_rmap);
-	if unlikely(!self->rmpki_base.rmpii_base.rmpi_rmap)
-		goto err;
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_DeepCopy(other->rmpki_base.rmpii_base.rmpi_iter);
-	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
-		goto err_rmap;
-	RangeMapProxyKeysIterator_LockAcquire(other);
-	self->rmpki_prvkey           = other->rmpki_prvkey;
-	self->rmpki_maxkey           = other->rmpki_maxkey;
-	self->rmpki_base.rmpii_value = other->rmpki_base.rmpii_value;
-	Dee_Incref(self->rmpki_prvkey);
-	Dee_Incref(self->rmpki_maxkey);
-	Dee_Incref(self->rmpki_base.rmpii_value);
-	RangeMapProxyKeysIterator_LockRelease(other);
-	if unlikely(DeeObject_InplaceDeepCopy(&self->rmpki_prvkey))
-		goto err_rmap_iter_prv_max_val;
-	if unlikely(DeeObject_InplaceDeepCopy(&self->rmpki_maxkey))
-		goto err_rmap_iter_prv_max_val;
-	if unlikely(DeeObject_InplaceDeepCopy(&self->rmpki_base.rmpii_value))
-		goto err_rmap_iter_prv_max_val;
-	Dee_atomic_lock_init(&self->rmpki_lock);
-	self->rmpki_first = false;
-	return 0;
-err_rmap_iter_prv_max_val:
-	Dee_Decref(self->rmpki_base.rmpii_value);
-	Dee_Decref(self->rmpki_maxkey);
-	Dee_Decref(self->rmpki_prvkey);
-	Dee_Decref(self->rmpki_base.rmpii_base.rmpi_iter);
-err_rmap:
-	Dee_Decref(self->rmpki_base.rmpii_base.rmpi_rmap);
 err:
 	return -1;
 }
@@ -3282,7 +3155,6 @@ INTERN DeeTypeObject RangeMapKeysIterator_Type = {
 			/* T:              */ RangeMapProxyKeysIterator,
 			/* tp_ctor:        */ &proxy_keys_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_keys_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_keys_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_keys_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_keys_iterator_serialize
@@ -3327,7 +3199,6 @@ INTERN DeeTypeObject RangeMapMapItemsIterator_Type = {
 			/* T:              */ RangeMapProxyKeysIterator,
 			/* tp_ctor:        */ &proxy_mapitems_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_mapitems_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_mapitems_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_mapitems_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_mapitems_iterator_serialize
@@ -3372,7 +3243,6 @@ INTERN DeeTypeObject RangeMapAsMapIterator_Type = {
 			/* T:              */ RangeMapProxyKeysIterator,
 			/* tp_ctor:        */ &proxy_mapitems_iterator_ctor,
 			/* tp_copy_ctor:   */ &proxy_mapitems_iterator_copy,
-			/* tp_deep_ctor:   */ &proxy_mapitems_iterator_deepcopy,
 			/* tp_any_ctor:    */ &proxy_mapitems_iterator_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &proxy_mapitems_iterator_serialize

@@ -161,26 +161,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-accu_deep(AccuObject *__restrict self, AccuObject *__restrict other) {
-	DREF DeeObject *value = accu_trygetvalue(other);
-	if (value == NULL)
-		goto err;
-	if (value == ITER_DONE) {
-		Dee_accu_init(&self->a_accu);
-	} else {
-		if unlikely(DeeObject_InplaceDeepCopy(&value))
-			goto err_value;
-		Dee_accu_init_with_first_inherited(&self->a_accu, value);
-	}
-	Dee_nrshared_lock_init(&self->a_lock);
-	return 0;
-err_value:
-	Dee_Decref(value);
-err:
-	return -1;
-}
-
 PRIVATE NONNULL((1)) void DCALL
 accu_fini(AccuObject *__restrict self) {
 	Dee_accu_fini(&self->a_accu);
@@ -416,7 +396,6 @@ INTERN DeeTypeObject Accu_Type = {
 			/* T:              */ AccuObject,
 			/* tp_ctor:        */ &accu_ctor,
 			/* tp_copy_ctor:   */ &accu_copy,
-			/* tp_deep_ctor:   */ &accu_deep,
 			/* tp_any_ctor:    */ &accu_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -424,7 +403,6 @@ INTERN DeeTypeObject Accu_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&accu_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,

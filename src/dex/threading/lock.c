@@ -696,7 +696,6 @@ INTERN DeeTypeObject DeeLock_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &DeeNone_OperatorSerialize
@@ -1269,7 +1268,6 @@ INTERN DeeTypeObject DeeRWLock_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &DeeNone_OperatorSerialize
@@ -1584,7 +1582,6 @@ INTERN DeeTypeObject DeeRWLockReadLock_Type = {
 			/* T:              */ DeeGenericRWLockProxyObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rwlock_readlock_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rwlock_readlock_serialize
@@ -1633,7 +1630,6 @@ INTERN DeeTypeObject DeeRWLockWriteLock_Type = {
 			/* T:              */ DeeGenericRWLockProxyObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &rwlock_writelock_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rwlock_writelock_serialize
@@ -1903,7 +1899,6 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 			/* T:              */ DeeSemaphoreObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &semaphore_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &semaphore_serialize
@@ -2100,7 +2095,6 @@ INTERN DeeTypeObject DeeEvent_Type = {
 			/* T:              */ DeeEventObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &event_init_kw,
 			/* tp_serialize:   */ &event_serialize
@@ -2948,7 +2942,6 @@ INTERN DeeTypeObject DeeLockUnion_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &lock_union_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &lock_union_serialize,

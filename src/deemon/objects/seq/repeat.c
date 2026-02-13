@@ -89,29 +89,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-repeatiter_deep(RepeatIterator *__restrict self,
-                RepeatIterator *__restrict other) {
-	DREF DeeObject *copy;
-	RepeatIterator_LockRead(other);
-	copy = other->rpi_iter;
-	Dee_Incref(copy);
-	self->rpi_num = other->rpi_num;
-	RepeatIterator_LockEndRead(other);
-	if unlikely((copy = DeeObject_DeepCopyInherited(copy)) == NULL)
-		goto err;
-	self->rpi_iter = copy;
-	self->rpi_rep  = (DREF Repeat *)DeeObject_DeepCopy((DeeObject *)other->rpi_rep);
-	if unlikely(!self->rpi_rep)
-		goto err_copy;
-	Dee_atomic_rwlock_init(&self->rpi_lock);
-	return 0;
-err_copy:
-	Dee_Decref(copy);
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
@@ -366,7 +343,6 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 			/* T:              */ RepeatIterator,
 			/* tp_ctor:        */ &repeatiter_ctor,
 			/* tp_copy_ctor:   */ &repeatiter_copy,
-			/* tp_deep_ctor:   */ &repeatiter_deep,
 			/* tp_any_ctor:    */ &repeatiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &repeatiter_serialize
@@ -418,18 +394,6 @@ repeat_copy(Repeat *__restrict self,
 	self->rp_seq = other->rp_seq;
 	Dee_Incref(self->rp_seq);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-repeat_deep(Repeat *__restrict self,
-            Repeat *__restrict other) {
-	self->rp_seq = DeeObject_DeepCopy(other->rp_seq);
-	if unlikely(!self->rp_seq)
-		goto err;
-	self->rp_num = other->rp_num;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -688,7 +652,6 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 			/* T:              */ Repeat,
 			/* tp_ctor:        */ &repeat_ctor,
 			/* tp_copy_ctor:   */ &repeat_copy,
-			/* tp_deep_ctor:   */ &repeat_deep,
 			/* tp_any_ctor:    */ &repeat_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &repeat_serialize
@@ -752,19 +715,6 @@ repeatitemiter_copy(RepeatItemIterator *__restrict self,
 	self->rii_rep = other->rii_rep;
 	Dee_Incref(self->rii_rep);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-repeatitemiter_deep(RepeatItemIterator *__restrict self,
-                    RepeatItemIterator *__restrict other) {
-	self->rii_num = REPEATITEMPITER_READ_NUM(other);
-	self->rii_rep = (DREF RepeatItem *)DeeObject_DeepCopy((DeeObject *)other->rii_rep);
-	if unlikely(!self->rii_rep)
-		goto err;
-	self->rii_obj = self->rii_rep->rpit_obj;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -863,7 +813,6 @@ INTERN DeeTypeObject SeqRepeatItemIterator_Type = {
 			/* T:              */ RepeatItemIterator,
 			/* tp_ctor:        */ &repeatitemiter_ctor,
 			/* tp_copy_ctor:   */ &repeatitemiter_copy,
-			/* tp_deep_ctor:   */ &repeatitemiter_deep,
 			/* tp_any_ctor:    */ &repeatitemiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &repeatitemiter_serialize
@@ -915,18 +864,6 @@ repeatitem_copy(RepeatItem *__restrict self,
 	self->rpit_obj = other->rpit_obj;
 	Dee_Incref(self->rpit_obj);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-repeatitem_deep(RepeatItem *__restrict self,
-                RepeatItem *__restrict other) {
-	self->rpit_num = other->rpit_num;
-	self->rpit_obj = DeeObject_DeepCopy(other->rpit_obj);
-	if unlikely(!self->rpit_obj)
-		goto err;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1151,7 +1088,6 @@ INTERN DeeTypeObject SeqRepeatItem_Type = {
 			/* T:              */ RepeatItem,
 			/* tp_ctor:        */ &repeatitem_ctor,
 			/* tp_copy_ctor:   */ &repeatitem_copy,
-			/* tp_deep_ctor:   */ &repeatitem_deep,
 			/* tp_any_ctor:    */ &repeatitem_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &repeatitem_serialize

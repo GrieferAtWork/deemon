@@ -74,7 +74,6 @@ struct Dee_serial;
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__copy_alias(ProxyObject *__restrict self, ProxyObject *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__copy_recursive(ProxyObject *__restrict self, ProxyObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__deepcopy(ProxyObject *__restrict self, ProxyObject *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy__init(ProxyObject *__restrict self, size_t argc, DeeObject *const *argv); /* (obj) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy__serialize(ProxyObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 
@@ -87,7 +86,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy__getobj(ProxyObj
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_alias12(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_recursive1_alias2(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__deepcopy(ProxyObject2 *__restrict self, ProxyObject2 *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2__init(ProxyObject2 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__serialize(ProxyObject2 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 
@@ -103,7 +101,6 @@ INTDEF NONNULL((1)) void DCALL generic_proxy2__fini(ProxyObject2 *__restrict sel
 #define generic_proxy2__fini_unlikely_unlikely generic_proxy2__fini
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__copy_alias123(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__deepcopy(ProxyObject3 *__restrict self, ProxyObject3 *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy3__init(ProxyObject3 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2,obj3) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__serialize(ProxyObject3 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 

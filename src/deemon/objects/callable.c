@@ -280,7 +280,6 @@ INTERN DeeTypeObject FunctionComposition_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &composition_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &composition_serialize,
@@ -405,7 +404,6 @@ PUBLIC DeeTypeObject DeeCallable_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
-			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &DeeNone_OperatorSerialize

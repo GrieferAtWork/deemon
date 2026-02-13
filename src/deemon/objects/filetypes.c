@@ -269,7 +269,6 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 				/* T:              */ DeeMemoryFileObject,
 				/* tp_ctor:        */ &mf_init,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL /* Not serializable */
@@ -814,7 +813,6 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 				/* T:              */ DeeFileReaderObject,
 				/* tp_ctor:        */ &reader_ctor,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ &reader_init_kw,
 				/* tp_serialize:   */ &reader_serialize
@@ -3113,7 +3111,6 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 				/* T:              */ DeeFileWriterObject,
 				/* tp_ctor:        */ &writer_ctor,
 				/* tp_copy_ctor:   */ &writer_copy,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ &writer_init,
 				/* tp_any_ctor_kw: */ &writer_init_kw,
 				/* tp_serialize:   */ &writer_serialize
@@ -3247,7 +3244,6 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 				/* T:              */ DeeFilePrinterObject,
 				/* tp_ctor:        */ NULL,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL /* Not serializable (wouldn't work with `DeeFilePrinter_Close()') */
@@ -3505,7 +3501,6 @@ PUBLIC DeeTypeObject DeeMapFile_Type = {
 			/* T:              */ DeeMapFileObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &mapfile_init_kw,
 			/* tp_serialize:   */ NULL /* Not serializable since "struct DeeMapFile" isn't (always) serializable */
@@ -3513,7 +3508,6 @@ PUBLIC DeeTypeObject DeeMapFile_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mapfile_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

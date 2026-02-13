@@ -235,7 +235,6 @@ INTERN DeeFileTypeObject DeePipe_Type = {
 				/* T:              */ DeeSystemFileObject,
 				/* tp_ctor:        */ NULL,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL /* System files can't be serialized */
@@ -293,7 +292,6 @@ INTERN DeeFileTypeObject DeePipeReader_Type = {
 				/* T:              */ DeeSystemFileObject,
 				/* tp_ctor:        */ NULL,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL /* System files can't be serialized */
@@ -351,7 +349,6 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
 				/* T:              */ DeeSystemFileObject,
 				/* tp_ctor:        */ NULL,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ NULL /* System files can't be serialized */

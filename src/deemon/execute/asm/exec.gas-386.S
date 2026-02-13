@@ -413,12 +413,7 @@ END(_impl_assert_failed)
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 #define t_repr_curr    (t_str_curr+4)               /* struct Dee_repr_frame *t_repr_curr; */
 #define t_hash_curr    (t_str_curr+8)               /* struct Dee_repr_frame *t_hash_curr; */
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 #define t_exec         (t_str_curr+12)              /* struct Dee_code_frame *t_exec; */
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-#define t_deepassoc    (t_str_curr+12)              /* struct Dee_deep_assoc t_deepassoc; */
-#define t_exec         (t_str_curr+28)              /* struct Dee_code_frame *t_exec; */
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define t_except       (t_exec+4)                   /* struct Dee_except_frame *t_except; */
 #define t_execsz       (t_exec+8)                   /* uint16_t t_execsz; */
 #define t_exceptsz     (t_exec+10)                  /* uint16_t t_exceptsz; */

@@ -87,19 +87,6 @@ blvi_copy(DeeBlackListKwdsIterator *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-blvi_deep(DeeBlackListKwdsIterator *__restrict self,
-          DeeBlackListKwdsIterator *__restrict other) {
-	self->blki_iter = BLVI_GETITER(other);
-	self->blki_end  = other->blki_end;
-	self->blki_map  = (DREF DeeBlackListKwdsObject *)DeeObject_DeepCopy((DeeObject *)other->blki_map);
-	if unlikely(!self->blki_map)
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_serialize(DeeBlackListKwdsIterator *__restrict self,
                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(DeeBlackListKwdsIterator, field))
@@ -244,7 +231,6 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 			/* T:              */ DeeBlackListKwdsIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &blvi_copy,
-			/* tp_deep_ctor:   */ &blvi_deep,
 			/* tp_any_ctor:    */ NULL, /* TODO */
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &blvi_serialize
@@ -915,48 +901,6 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeBlackListKwdsObject *DCALL
-blv_deep(DeeBlackListKwdsObject *__restrict self) {
-	size_t count = self->blkd_kwds->kw_size;
-	size_t sizeof_blkd_blck = ((self->blkd_mask + 1) * sizeof(DeeBlackListKwdsEntry));
-	DREF DeeBlackListKwdsObject *result;
-	result = (DREF DeeBlackListKwdsObject *)DeeObject_Mallocc(offsetof(DeeBlackListKwdsObject, blkd_blck) +
-	                                                          sizeof_blkd_blck,
-	                                                          count, sizeof(DREF DeeObject *));
-	if unlikely(!result)
-		goto done;
-	result->blkd_argv = (DREF DeeObject **)((byte_t *)result->blkd_blck + sizeof_blkd_blck);
-	DeeBlackListKwds_LockRead(self);
-	Dee_Movrefv(result->blkd_argv, self->blkd_argv, count);
-	result->blkd_load = self->blkd_load;
-	memcpyc(result->blkd_blck,
-	        self->blkd_blck,
-	        self->blkd_mask + 1,
-	        sizeof(DeeBlackListKwdsEntry));
-	DeeBlackListKwds_LockEndRead(self);
-
-	/* Construct deep copies of all of the arguments. */
-	if (DeeObject_InplaceDeepCopyv(result->blkd_argv, count))
-		goto err_r_argv;
-	Dee_atomic_rwlock_init(&result->blkd_lock);
-	result->blkd_code = self->blkd_code;
-	Dee_Incref(result->blkd_code);
-	result->blkd_ckwc = self->blkd_ckwc;
-	result->blkd_ckwv = self->blkd_ckwv;
-	result->blkd_kwds = self->blkd_kwds;
-	Dee_Incref(result->blkd_kwds);
-	result->blkd_mask = self->blkd_mask;
-	DeeObject_Init(result, &DeeBlackListKwds_Type);
-done:
-	return result;
-err_r_argv:
-	Dee_Decrefv(result->blkd_argv, count);
-/*err_r:*/
-	DeeObject_Free(result);
-	return NULL;
-}
-
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 blv_serialize(DeeBlackListKwdsObject *__restrict self,
               DeeSerial *__restrict writer) {
@@ -1051,7 +995,6 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &blv_copy,
-			/* tp_deep_ctor:   */ &blv_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &blv_init_kw,
 			/* tp_serialize:   */ &blv_serialize,
@@ -1060,7 +1003,6 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blv_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
@@ -1195,7 +1137,6 @@ INTDEF DeeTypeObject DeeBlackListKwIterator_Type;
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_map) == offsetof(ProxyObject2, po_obj2));
 #define blmi_copy      generic_proxy2__copy_recursive1_alias2
-#define blmi_deep      generic_proxy2__deepcopy
 #define blmi_serialize generic_proxy2__serialize
 #define blmi_fini      generic_proxy2__fini
 #define blmi_visit     generic_proxy2__visit
@@ -1288,7 +1229,6 @@ INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 			/* T:              */ DeeBlackListKwIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &blmi_copy,
-			/* tp_deep_ctor:   */ &blmi_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &blmi_serialize
@@ -1842,38 +1782,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeBlackListKwObject *DCALL
-blkw_deep(DeeBlackListKwObject *__restrict self) {
-	DREF DeeBlackListKwObject *result;
-	result = (DREF DeeBlackListKwObject *)DeeObject_Mallocc(offsetof(DeeBlackListKwObject, blkw_blck),
-	                                                        self->blkw_mask + 1, sizeof(DeeBlackListKwdsEntry));
-	if unlikely(!result)
-		goto done;
-	result->blkw_kw = DeeObject_DeepCopy(self->blkw_kw);
-	if unlikely(!result->blkw_kw)
-		goto err_r;
-	Dee_atomic_rwlock_init(&result->blkw_lock);
-	result->blkw_code = self->blkw_code; /* Immutable, so no copy required */
-	Dee_Incref(result->blkw_code);
-	result->blkw_ckwc = self->blkw_ckwc;
-	result->blkw_ckwv = self->blkw_ckwv;
-	result->blkw_mask = self->blkw_mask;
-	DeeBlackListKw_LockRead(self);
-	result->blkw_load = self->blkw_load;
-	memcpyc(result->blkw_blck,
-	        self->blkw_blck,
-	        result->blkw_mask + 1,
-	        sizeof(DeeBlackListKwdsEntry));
-	DeeBlackListKw_LockEndRead(self);
-	DeeObject_Init(result, &DeeBlackListKw_Type);
-done:
-	return result;
-err_r:
-	DeeObject_Free(result);
-	return NULL;
-}
-
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 blkw_serialize(DeeBlackListKwObject *__restrict self,
                DeeSerial *__restrict writer) {
@@ -1996,7 +1904,6 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &blkw_copy,
-			/* tp_deep_ctor:   */ &blkw_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &blkw_init_kw,
 			/* tp_serialize:   */ &blkw_serialize,
@@ -2005,7 +1912,6 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blkw_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

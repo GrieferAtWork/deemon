@@ -53,8 +53,6 @@ STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_iter) == offsetof(ProxyObject2,
 STATIC_ASSERT(offsetof(MapFromKeysIterator, mfki_base) == offsetof(ProxyObject2, po_obj2));
 #define mfkvi_copy      generic_proxy2__copy_recursive1_alias2
 #define mfkci_copy      generic_proxy2__copy_recursive1_alias2
-#define mfkvi_deep      generic_proxy2__deepcopy
-#define mfkci_deep      generic_proxy2__deepcopy
 #define mfkvi_serialize generic_proxy2__serialize
 #define mfkci_serialize generic_proxy2__serialize
 #define mfkvi_fini      generic_proxy2__fini
@@ -219,7 +217,6 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 			/* T:              */ MapFromKeysIterator,
 			/* tp_ctor:        */ &mfkvi_ctor,
 			/* tp_copy_ctor:   */ &mfkvi_copy,
-			/* tp_deep_ctor:   */ &mfkvi_deep,
 			/* tp_any_ctor:    */ &mfkvi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mfkvi_serialize
@@ -272,7 +269,6 @@ INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 			/* T:              */ MapFromKeysIterator,
 			/* tp_ctor:        */ &mfkci_ctor,
 			/* tp_copy_ctor:   */ &mfkci_copy,
-			/* tp_deep_ctor:   */ &mfkci_deep,
 			/* tp_any_ctor:    */ &mfkci_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mfkci_serialize
@@ -322,8 +318,6 @@ STATIC_ASSERT(offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj1
               offsetof(MapFromKeys, mfk_value) == offsetof(ProxyObject2, po_obj2));
 #define mfkv_copy      generic_proxy2__copy_alias12
 #define mfkc_copy      generic_proxy2__copy_alias12
-#define mfkv_deep      generic_proxy2__deepcopy
-#define mfkc_deep      generic_proxy2__deepcopy
 #define mfkv_fini      generic_proxy2__fini
 #define mfkc_fini      generic_proxy2__fini
 #define mfkv_visit     generic_proxy2__visit
@@ -688,7 +682,6 @@ INTERN DeeTypeObject MapFromKeysAndValue_Type = {
 			/* T:              */ MapFromKeys,
 			/* tp_ctor:        */ &mfkv_ctor,
 			/* tp_copy_ctor:   */ &mfkv_copy,
-			/* tp_deep_ctor:   */ &mfkv_deep,
 			/* tp_any_ctor:    */ &mfkv_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mfkv_serialize
@@ -739,7 +732,6 @@ INTERN DeeTypeObject MapFromKeysAndCallback_Type = {
 			/* T:              */ MapFromKeys,
 			/* tp_ctor:        */ &mfkc_ctor,
 			/* tp_copy_ctor:   */ &mfkc_copy,
-			/* tp_deep_ctor:   */ &mfkc_deep,
 			/* tp_any_ctor:    */ &mfkc_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mfkc_serialize

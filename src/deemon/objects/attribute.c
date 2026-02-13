@@ -756,7 +756,6 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 			/* T:              */ Attr,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &attr_init_kw,
 			/* tp_serialize:   */ &attr_serialize
@@ -1000,7 +999,6 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 			/* T:              */ EnumAttr,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &enumattr_init_kw,
 			/* tp_serialize:   */ &enumattr_serialize
@@ -1141,7 +1139,6 @@ PUBLIC DeeTypeObject DeeEnumAttrIterator_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &enumattriter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &enumattriter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL, /* Not serializable (would require an extra operator in `struct Dee_attriter_type') */

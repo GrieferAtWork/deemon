@@ -1159,7 +1159,6 @@ INTERN DeeTypeObject RBTreeIterator_Type = {
 			/* T:              */ RBTreeIterator,
 			/* tp_ctor:        */ &rbtreeiter_ctor,
 			/* tp_copy_ctor:   */ &rbtreeiter_copy,
-			/* tp_deep_ctor:   */ NULL, /* TODO */
 			/* tp_any_ctor:    */ &rbtreeiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &rbtreeiter_serialize
@@ -3120,13 +3119,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-rbtree_deepload(RBTree *__restrict self) {
-	(void)self;
-	/* TODO */
-	return DeeError_NOTIMPLEMENTED();
-}
-
 PRIVATE NONNULL((1)) void DCALL
 rbtree_fini(RBTree *__restrict self) {
 	if (self->rbt_root)
@@ -3684,7 +3676,6 @@ INTERN DeeTypeObject RBTree_Type = {
 			/* T:              */ RBTree,
 			/* tp_ctor:        */ &rbtree_ctor,
 			/* tp_copy_ctor:   */ &rbtree_copy,
-			/* tp_deep_ctor:   */ &rbtree_copy,
 			/* tp_any_ctor:    */ &rbtree_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */
@@ -3692,7 +3683,6 @@ INTERN DeeTypeObject RBTree_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&rbtree_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_move_assign,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&rbtree_deepload
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,

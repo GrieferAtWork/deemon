@@ -530,29 +530,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MMAP_DEC */
 
 
-/* Experimental feature switch: Use "tp_serialize" to implement "DeeObject_DeepCopy" */
-#if (!defined(CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY))
-#if 1
-#define CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY
-#else
-#define CONFIG_NO_EXPERIMENTAL_SERIALIZED_DEEPCOPY
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_SERIALIZED_DEEPCOPY */
-
-
-/* Experimental feature switch: Replace "OPERATOR_DEEPCOPY" with "OPERATOR_SERIALIZE"
- * TODO: When this one becomes mandatory, "tp_deep_copy" and "tp_deepload" will be removed! */
-#if (!defined(CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_SERIALIZE_OPERATOR))
-#if defined(CONFIG_EXPERIMENTAL_SERIALIZED_DEEPCOPY) && 1
-#define CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-#else
-#define CONFIG_NO_EXPERIMENTAL_SERIALIZE_OPERATOR
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_SERIALIZE_OPERATOR */
-
-
 /* Experimental feature switch: sequence functions taking a "key" argument,
  * as well as a item/value argument will **NOT** apply said "key" to said
  * item/value argument, only applying it to the sequence's items:

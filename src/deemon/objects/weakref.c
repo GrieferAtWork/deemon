@@ -78,21 +78,6 @@ ob_weakref_copy(WeakRef *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ob_weakref_deep(WeakRef *__restrict self,
-                WeakRef *__restrict other) {
-	self->wr_del = NULL;
-	if (other->wr_del) {
-		self->wr_del = DeeObject_DeepCopy(other->wr_del);
-		if unlikely(!self->wr_del)
-			goto err;
-	}
-	Dee_weakref_copy(&self->wr_ref, &other->wr_ref);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_weakref_serialize(WeakRef *__restrict self,
                      DeeSerial *__restrict writer,
                      Dee_seraddr_t addr) {
@@ -443,7 +428,6 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 			/* T:              */ WeakRef,
 			/* tp_ctor:        */ &ob_weakref_ctor,
 			/* tp_copy_ctor:   */ &ob_weakref_copy,
-			/* tp_deep_ctor:   */ &ob_weakref_deep,
 			/* tp_any_ctor:    */ &ob_weakref_init,
 			/* tp_any_ctor_kw: */ &ob_weakref_init_kw,
 			/* tp_serialize:   */ &ob_weakref_serialize
@@ -451,7 +435,6 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ob_weakref_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&ob_weakref_moveassign,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),
@@ -541,7 +524,6 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 			/* T:              */ WeakRefAble,
 			/* tp_ctor:        */ &weakrefable_init,
 			/* tp_copy_ctor:   */ &weakrefable_copy,
-			/* tp_deep_ctor:   */ &weakrefable_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &weakrefable_serialize
@@ -549,7 +531,6 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&weakrefable_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&weakrefable_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&weakrefable_moveassign,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),

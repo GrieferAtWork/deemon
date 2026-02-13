@@ -781,7 +781,6 @@ INTERN DeeTypeObject DeeCopyFileProgress_Type = {
 			/* T:              */ DeeCopyFileProgressObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &copyfile_progress_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &copyfile_progress_init_kw,
 			/* tp_serialize:   */ &copyfile_progress_serialize

@@ -698,7 +698,6 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 			/* T:              */ StringScanIterator,
 			/* tp_ctor:        */ &ssi_ctor,
 			/* tp_copy_ctor:   */ &ssi_copy,
-			/* tp_deep_ctor:   */ &ssi_copy,
 			/* tp_any_ctor:    */ &ssi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ssi_serialize
@@ -745,7 +744,6 @@ STATIC_ASSERT(offsetof(StringScanner, ss_data) == offsetof(ProxyObject2, po_obj1
 STATIC_ASSERT(offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(StringScanner, ss_format) == offsetof(ProxyObject2, po_obj2));
 #define ss_copy      generic_proxy2__copy_alias12
-#define ss_deep      generic_proxy2__copy_alias12
 #define ss_fini      generic_proxy2__fini_normal_unlikely /* unlikely: it's probably a string constant */
 #define ss_visit     generic_proxy2__visit
 #define ss_serialize generic_proxy2__serialize
@@ -864,7 +862,6 @@ INTERN DeeTypeObject StringScan_Type = {
 			/* T:              */ StringScanner,
 			/* tp_ctor:        */ &ss_ctor,
 			/* tp_copy_ctor:   */ &ss_copy,
-			/* tp_deep_ctor:   */ &ss_deep,
 			/* tp_any_ctor:    */ &ss_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ss_serialize

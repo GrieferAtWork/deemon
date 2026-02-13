@@ -2647,7 +2647,6 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
-			/* tp_deep_ctor:   */ &DeeNone_OperatorCopy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &DeeNone_OperatorSerialize
@@ -2714,7 +2713,6 @@ if_ctor(IteratorFuture *__restrict self) {
 
 STATIC_ASSERT(offsetof(IteratorFuture, if_iter) == offsetof(ProxyObject, po_obj));
 #define if_copy      generic_proxy__copy_recursive
-#define if_deep      generic_proxy__deepcopy
 #define if_init      generic_proxy__init
 #define if_bool      generic_proxy__bool
 #define if_fini      generic_proxy__fini
@@ -2798,7 +2796,6 @@ INTERN DeeTypeObject IteratorFuture_Type = {
 			/* T:              */ IteratorFuture,
 			/* tp_ctor:        */ &if_ctor,
 			/* tp_copy_ctor:   */ &if_copy,
-			/* tp_deep_ctor:   */ &if_deep,
 			/* tp_any_ctor:    */ &if_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &if_serialize
@@ -2857,7 +2854,6 @@ STATIC_ASSERT(offsetof(IteratorPending, ip_iter) == offsetof(IteratorFuture, if_
 
 STATIC_ASSERT(offsetof(IteratorPending, ip_iter) == offsetof(ProxyObject, po_obj));
 #define ip_copy      generic_proxy__copy_alias
-#define ip_deep      generic_proxy__deepcopy
 #define ip_init      generic_proxy__init
 #define ip_fini      generic_proxy__fini
 #define ip_visit     generic_proxy__visit
@@ -2924,7 +2920,6 @@ INTERN DeeTypeObject IteratorPending_Type = {
 			/* T:              */ IteratorPending,
 			/* tp_ctor:        */ &ip_ctor,
 			/* tp_copy_ctor:   */ &ip_copy,
-			/* tp_deep_ctor:   */ &ip_deep,
 			/* tp_any_ctor:    */ &ip_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ip_serialize

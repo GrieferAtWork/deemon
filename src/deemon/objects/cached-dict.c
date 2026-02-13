@@ -1157,7 +1157,6 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 			/* T:              */ CachedDict,
 			/* tp_ctor:        */ &cdict_ctor,
 			/* tp_copy_ctor:   */ &cdict_copy,
-			/* tp_deep_ctor:   */ &cdict_copy,
 			/* tp_any_ctor:    */ &cdict_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cdict_serialize
@@ -1165,7 +1164,6 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cdict_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),

@@ -122,18 +122,6 @@ diter_copy(DictIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-diter_deep(DictIterator *__restrict self,
-           DictIterator *__restrict other) {
-	self->di_dict = (DREF Dict *)DeeObject_DeepCopy((DeeObject *)other->di_dict);
-	if unlikely(!self->di_dict)
-		goto err;
-	self->di_vidx = atomic_read(&other->di_vidx);
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 diter_init(DictIterator *__restrict self,
            size_t argc, DeeObject *const *argv) {
@@ -347,7 +335,6 @@ INTERN DeeTypeObject DictIterator_Type = {
 			/* T:              */ DictIterator,
 			/* tp_ctor:        */ &diter_ctor,
 			/* tp_copy_ctor:   */ &diter_copy,
-			/* tp_deep_ctor:   */ &diter_deep,
 			/* tp_any_ctor:    */ &diter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &diter_serialize
@@ -2063,80 +2050,6 @@ dict_init(Dict *__restrict self, size_t argc, DeeObject *const *argv) {
 	return err_invalid_argc(STR_Dict, argc, 1, 2);
 err:
 	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-dict_deepload(Dict *__restrict self) {
-	int result = 0;
-	bool must_rebuild_htab = false;
-	/*virt*/ Dee_hash_vidx_t i;
-	DeeDict_LockRead(self);
-	for (i = Dee_hash_vidx_tovirt(0);
-	     Dee_hash_vidx_virt_lt_real(i, self->d_vsize); ++i) {
-		struct Dee_dict_item *item;
-		DREF DeeObject *old_item_key;
-		DREF DeeObject *old_item_value;
-		DREF DeeObject *new_item_key;
-		DREF DeeObject *new_item_value;
-		Dee_hash_t old_key_hash;
-		Dee_hash_t new_key_hash;
-again_deepload_at_i:
-		item = &_DeeDict_GetVirtVTab(self)[i];
-		old_item_key = item->di_key;
-		if (!old_item_key)
-			continue; /* Deleted key */
-		old_item_value = item->di_value;
-		Dee_Incref(old_item_key);
-		Dee_Incref(old_item_value);
-		old_key_hash = item->di_hash;
-		DeeDict_LockEndRead(self);
-		new_item_key = DeeObject_DeepCopyInherited(old_item_key);
-		if unlikely(!new_item_key) {
-			Dee_Decref_unlikely(old_item_value);
-			goto err;
-		}
-		new_item_value = DeeObject_DeepCopyInherited(old_item_value);
-		if unlikely(!new_item_value) {
-			Dee_Decref_unlikely(new_item_key);
-			goto err;
-		}
-		new_key_hash = DeeObject_Hash(new_item_key);
-		if (old_key_hash != new_key_hash)
-			must_rebuild_htab = true; /* Hash changed (must rebuild htab later on...) */
-		DeeDict_LockWrite(self);
-		if unlikely(item != &_DeeDict_GetVirtVTab(self)[i] ||
-		            item->di_hash != old_key_hash ||
-		            item->di_key != old_item_key ||
-		            item->di_value != old_item_value) {
-			DeeDict_LockEndWrite(self);
-			Dee_Decref(new_item_value);
-			Dee_Decref(new_item_key);
-			DeeDict_LockRead(self);
-			goto again_deepload_at_i;
-		}
-		item->di_hash  = new_key_hash;
-		item->di_key   = new_item_key;   /* Inherit reference (x2) */
-		item->di_value = new_item_value; /* Inherit reference (x2) */
-		/* NOTE: It's OK if the htab is invalid (item lookup will just be
-		 *       broken until "d_htab" was re-build below, but that's OK) */
-		DeeDict_LockEndWrite(self);
-		Dee_Decref(old_item_key);
-		Dee_Decref(old_item_value);
-		DeeDict_LockRead(self);
-	}
-	DeeDict_LockEndRead(self);
-
-done:
-	/* If necessary, rebuild "d_htab" */
-	if (must_rebuild_htab) {
-		DeeDict_LockWrite(self);
-		dict_htab_rebuild(self);
-		DeeDict_LockEndWrite(self);
-	}
-	return result;
-err:
-	result = -1;
-	goto done;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3910,9 +3823,6 @@ PRIVATE struct type_method tpconst dict_class_methods[] = {
 
 PRIVATE struct type_operator const dict_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FNOREFESCAPE),
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FNOREFESCAPE),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0004_ASSIGN, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0005_MOVEASSIGN, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE),
@@ -4019,7 +3929,6 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 			/* T:              */ Dict,
 			/* tp_ctor:        */ &dict_ctor,
 			/* tp_copy_ctor:   */ &dict_copy,
-			/* tp_deep_ctor:   */ &dict_copy,
 			/* tp_any_ctor:    */ &dict_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dict_serialize
@@ -4027,7 +3936,6 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dict_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_moveassign,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&dict_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&object_str),

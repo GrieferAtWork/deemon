@@ -88,7 +88,6 @@ modexportsiter_ctor(ModuleExportsIterator *__restrict self) {
 	return 0;
 }
 
-#define modexportsiter_deep modexportsiter_copy /* Don't deep-copy modules */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 modexportsiter_copy(ModuleExportsIterator *__restrict self,
                     ModuleExportsIterator *__restrict other) {
@@ -299,7 +298,6 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 			/* T:              */ ModuleExportsIterator,
 			/* tp_ctor:        */ &modexportsiter_ctor,
 			/* tp_copy_ctor:   */ &modexportsiter_copy,
-			/* tp_deep_ctor:   */ &modexportsiter_deep,
 			/* tp_any_ctor:    */ &modexportsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &modexportsiter_serialize
@@ -349,7 +347,6 @@ INTERN DeeTypeObject ModuleExportsKeysIterator_Type = {
 			/* T:              */ ModuleExportsIterator,
 			/* tp_ctor:        */ &modexportsiter_ctor,
 			/* tp_copy_ctor:   */ &modexportsiter_copy,
-			/* tp_deep_ctor:   */ &modexportsiter_deep,
 			/* tp_any_ctor:    */ &modexportsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &modexportsiter_serialize
@@ -409,7 +406,6 @@ err:
 
 STATIC_ASSERT(offsetof(ModuleExports, me_module) == offsetof(ProxyObject, po_obj));
 #define modexports_copy      generic_proxy__copy_alias
-#define modexports_deep      generic_proxy__copy_alias /* Don't deep-copy modules */
 #define modexports_fini      generic_proxy__fini_unlikely
 #define modexports_visit     generic_proxy__visit
 #define modexports_serialize generic_proxy__serialize
@@ -1288,7 +1284,6 @@ INTERN DeeTypeObject ModuleExports_Type = {
 			/* T:              */ ModuleExports,
 			/* tp_ctor:        */ &modexports_ctor,
 			/* tp_copy_ctor:   */ &modexports_copy,
-			/* tp_deep_ctor:   */ &modexports_deep,
 			/* tp_any_ctor:    */ &modexports_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &modexports_serialize
@@ -1356,7 +1351,6 @@ err:
 
 STATIC_ASSERT(offsetof(ModuleGlobals, mg_module) == offsetof(ProxyObject, po_obj));
 #define modglobals_copy      generic_proxy__copy_alias
-#define modglobals_deep      generic_proxy__copy_alias /* Don't deep-copy modules */
 #define modglobals_fini      generic_proxy__fini_unlikely
 #define modglobals_visit     generic_proxy__visit
 #define modglobals_serialize generic_proxy__serialize
@@ -1586,7 +1580,6 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 			/* T:              */ ModuleExports,
 			/* tp_ctor:        */ &modglobals_ctor,
 			/* tp_copy_ctor:   */ &modglobals_copy,
-			/* tp_deep_ctor:   */ &modglobals_deep,
 			/* tp_any_ctor:    */ &modglobals_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &modglobals_serialize
@@ -1653,7 +1646,6 @@ err:
 
 STATIC_ASSERT(offsetof(ModuleLibNames, mln_module) == offsetof(ProxyObject, po_obj));
 #define modlibnames_copy      generic_proxy__copy_alias
-#define modlibnames_deep      generic_proxy__copy_alias /* Don't deep-copy modules */
 #define modlibnames_fini      generic_proxy__fini_unlikely
 #define modlibnames_visit     generic_proxy__visit
 #define modlibnames_serialize generic_proxy__serialize
@@ -1750,7 +1742,6 @@ INTERN DeeTypeObject ModuleLibNames_Type = {
 			/* T:              */ ModuleExports,
 			/* tp_ctor:        */ &modlibnames_ctor,
 			/* tp_copy_ctor:   */ &modlibnames_copy,
-			/* tp_deep_ctor:   */ &modlibnames_deep,
 			/* tp_any_ctor:    */ &modlibnames_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &modlibnames_serialize

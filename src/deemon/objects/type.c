@@ -685,9 +685,6 @@ type_serialize(DeeTypeObject *__restrict self,
 	DeeType_InheritConstructors(self);
 	PUT_FUNPTR(tp_init.tp_alloc.tp_ctor);
 	PUT_FUNPTR(tp_init.tp_alloc.tp_copy_ctor);
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	PUT_FUNPTR(tp_init.tp_alloc.tp_deep_ctor);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	PUT_FUNPTR(tp_init.tp_alloc.tp_any_ctor);
 	PUT_FUNPTR(tp_init.tp_alloc.tp_any_ctor_kw);
 	PUT_FUNPTR(tp_init.tp_alloc.tp_serialize);
@@ -695,9 +692,6 @@ type_serialize(DeeTypeObject *__restrict self,
 	if (self->tp_init.tp_alloc.tp_free)
 		PUT_FUNPTR(tp_init.tp_alloc.tp_alloc);
 	PUT_FUNPTR(tp_init.tp_dtor);
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	PUT_FUNPTR(tp_init.tp_deepload);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	if (DeeSerial_PutFuncPtr(writer, ADDROF(tp_init.tp_destroy), DeeType_RequireDestroy(self)))
 		goto err;
 	PUT_FUNPTR(tp_visit);
@@ -2436,9 +2430,6 @@ type_get_instancesize(DeeTypeObject *__restrict self) {
 		goto unknown;
 	if (!self->tp_init.tp_alloc.tp_ctor &&
 	    !self->tp_init.tp_alloc.tp_copy_ctor &&
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	    !self->tp_init.tp_alloc.tp_deep_ctor &&
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	    !self->tp_init.tp_alloc.tp_any_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor_kw)
 		goto unknown;
@@ -2457,9 +2448,6 @@ type_bound_instancesize(DeeTypeObject *__restrict self) {
 		goto unknown;
 	if (!self->tp_init.tp_alloc.tp_ctor &&
 	    !self->tp_init.tp_alloc.tp_copy_ctor &&
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	    !self->tp_init.tp_alloc.tp_deep_ctor &&
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	    !self->tp_init.tp_alloc.tp_any_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor_kw)
 		goto unknown;
@@ -2913,7 +2901,6 @@ PUBLIC DeeTypeObject DeeType_Type = {
 			/* T:              */ DeeTypeObject,
 			/* tp_ctor:        */ &type_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &type_serialize

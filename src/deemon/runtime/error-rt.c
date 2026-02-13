@@ -96,42 +96,40 @@ print define_Dee_HashStr("cause");
 /*[[[end]]]*/
 
 
-#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags,                         \
-                          tp_base, T, tp_str, tp_print,                      \
-                          tp_methods, tp_getsets, tp_members,                \
-                          tp_class_members)                                  \
-	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_TPVISIT, tp_base, T,  \
-	                     &DeeStructObject_Ctor, &DeeStructObject_Copy,       \
-	                     &DeeStructObject_Deep, &DeeStructObject_Init,       \
-	                     &DeeStructObject_InitKw, &DeeStructObject_Serialize, \
-	                     &DeeStructObject_Fini, &DeeStructObject_Visit,      \
-	                     &DeeStructObject_Cmp, tp_str, tp_print,             \
-	                     tp_methods, tp_getsets, tp_members,                 \
-	                     tp_class_members)
+#define INIT_CUSTOM_ERROR(tp_name, tp_doc, tp_flags,                        \
+                          tp_base, T, tp_str, tp_print,                     \
+                          tp_methods, tp_getsets, tp_members,               \
+                          tp_class_members)                                 \
+	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_TPVISIT, tp_base, T, \
+	                     &DeeStructObject_Ctor, &DeeStructObject_Copy,      \
+	                     &DeeStructObject_Init, &DeeStructObject_InitKw,    \
+	                     &DeeStructObject_Serialize, &DeeStructObject_Fini, \
+	                     &DeeStructObject_Visit, &DeeStructObject_Cmp,      \
+	                     tp_str, tp_print, tp_methods, tp_getsets,          \
+	                     tp_members, tp_class_members)
 #define INIT_LIKE_BASECLASS(tp_name, tp_doc, tp_flags,                  \
                             tp_base, T, tp_str, tp_print,               \
                             tp_methods, tp_getsets, tp_class_members)   \
 	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, (tp_flags) | TP_FINHERITCTOR, \
 	                     0, tp_base, T,                                 \
 	                     NULL, NULL, NULL, NULL,                        \
-	                     NULL, NULL, NULL, NULL, NULL,                  \
+	                     NULL, NULL, NULL, NULL,                        \
 	                     tp_str, tp_print,                              \
 	                     tp_methods, tp_getsets, NULL,                  \
 	                     tp_class_members)
 
 
 /* Initialize an error type that uses `DeeErrorObject' as its struct type */
-#define INIT_LIKE_ERROR(tp_name, tp_doc, tp_flags,                            \
-                        tp_base, tp_str, tp_print,                            \
-                        tp_methods, tp_getsets, tp_class_members)             \
-	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_NONE,                  \
-	                     tp_base, DeeErrorObject, &error_ctor, &error_copy,   \
-	                     &error_deep, &error_init, &error_init_kw,            \
+#define INIT_LIKE_ERROR(tp_name, tp_doc, tp_flags,                             \
+                        tp_base, tp_str, tp_print,                             \
+                        tp_methods, tp_getsets, tp_class_members)              \
+	INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, TF_NONE,                   \
+	                     tp_base, DeeErrorObject, &error_ctor,                 \
+	                     &error_copy, &error_init, &error_init_kw,             \
 	                     &error_serialize, NULL, NULL, NULL, tp_str, tp_print, \
-	                     tp_methods, tp_getsets, NULL,                        \
-	                     tp_class_members)
+	                     tp_methods, tp_getsets, NULL, tp_class_members)
 #define INIT_CUSTOM_ERROR_EX(tp_name, tp_doc, tp_flags, tp_features,                                   \
-                             tp_base, T, tp_ctor, tp_copy, tp_deep, tp_init,                           \
+                             tp_base, T, tp_ctor, tp_copy, tp_init,                                    \
                              tp_init_kw, tp_serialize, tp_fini, tp_visit, tp_cmp,                      \
                              tp_str, tp_print,                                                         \
                              tp_methods, tp_getsets, tp_members,                                       \
@@ -149,7 +147,6 @@ print define_Dee_HashStr("cause");
 				/* T:              */ T,                                                               \
 				/* tp_ctor:        */ tp_ctor,                                                         \
 				/* tp_copy_ctor:   */ tp_copy,                                                         \
-				/* tp_deep_ctor:   */ tp_deep,                                                         \
 				/* tp_any_ctor:    */ tp_init,                                                         \
 				/* tp_any_ctor_kw: */ tp_init_kw,                                                      \
 				/* tp_serialize:   */ tp_serialize                                                     \
@@ -205,7 +202,6 @@ PRIVATE struct type_member tpconst error_class_members[] = {
 #define error_tp_features TF_TPVISIT
 #define error_ctor        DeeStructObject_Ctor
 #define error_copy        DeeStructObject_Copy
-#define error_deep        DeeStructObject_Deep
 #define error_serialize   DeeStructObject_Serialize
 #define error_init        DeeStructObject_Init
 #define error_init_kw     DeeStructObject_InitKw
@@ -242,23 +238,6 @@ error_copy(DeeObject *__restrict self, DeeObject *__restrict other_ob) {
 	Dee_XIncref(me->e_msg);
 	Dee_XIncref(me->e_cause);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-error_deep(DeeObject *__restrict self, DeeObject *__restrict other_ob) {
-	DeeErrorObject *me = (DeeErrorObject *)self;
-	DeeErrorObject *other = (DeeErrorObject *)other_ob;
-	me->e_cause = NULL;
-	if (other->e_cause) {
-		me->e_cause = DeeObject_DeepCopy(other->e_cause);
-		if unlikely(!me->e_cause)
-			goto err;
-	}
-	me->e_msg = other->e_msg;
-	Dee_XIncref(me->e_msg);
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -675,7 +654,6 @@ PUBLIC DeeTypeObject DeeError_Error = {
 			/* T:              */ DeeErrorObject,
 			/* tp_ctor:        */ &error_ctor,
 			/* tp_copy_ctor:   */ &error_copy,
-			/* tp_deep_ctor:   */ &error_deep,
 			/* tp_any_ctor:    */ &error_init,
 			/* tp_any_ctor_kw: */ &error_init_kw,
 			/* tp_serialize:   */ &error_serialize

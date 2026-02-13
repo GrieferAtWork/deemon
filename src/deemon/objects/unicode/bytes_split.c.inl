@@ -31,7 +31,7 @@
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h>
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
-#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_return_compare, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_AsUIntX, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_return_compare, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_AsBytes, DeeString_Check, WSTR_LENGTH */
@@ -114,28 +114,6 @@ bsi_copy(BytesSplitIterator *__restrict self,
 	self->bsi_sep_len = other->bsi_sep_len;
 	Dee_Incref(self->bsi_split);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bsi_deepcopy(BytesSplitIterator *__restrict self,
-             BytesSplitIterator *__restrict other) {
-	byte_t const *iterpos;
-	self->bsi_split = (DREF BytesSplit *)DeeObject_DeepCopy((DeeObject *)other->bsi_split);
-	if unlikely(!self->bsi_split)
-		goto err;
-	iterpos = READ_BSI_ITER(other);
-	if (iterpos) {
-		iterpos = DeeBytes_DATA(self->bsi_split->bs_bytes) +
-		          (iterpos - DeeBytes_DATA(other->bsi_bytes));
-	}
-	self->bsi_iter    = iterpos;
-	self->bsi_end     = DeeBytes_END(self->bsi_split->bs_bytes);
-	self->bsi_bytes   = self->bsi_split->bs_bytes;
-	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
-	self->bsi_sep_len = self->bsi_split->bs_sep_len;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -293,7 +271,6 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 			/* T:              */ BytesSplitIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &bsi_copy,
-			/* tp_deep_ctor:   */ &bsi_deepcopy,
 			/* tp_any_ctor:    */ &bsi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bsi_serialize
@@ -345,7 +322,6 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 			/* T:              */ BytesSplitIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &bsi_copy,
-			/* tp_deep_ctor:   */ &bsi_deepcopy,
 			/* tp_any_ctor:    */ &bsi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bsi_serialize
@@ -397,39 +373,6 @@ bs_copy(BytesSplit *__restrict self,
 	Dee_Incref(self->bs_bytes);
 	Dee_XIncref(self->bs_sep_owner);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bs_deepcopy(BytesSplit *__restrict self,
-            BytesSplit *__restrict other) {
-	self->bs_bytes = (DREF Bytes *)DeeObject_DeepCopy((DeeObject *)other->bs_bytes);
-	if unlikely(!self->bs_bytes)
-		goto err;
-	self->bs_sep_owner = other->bs_sep_owner;
-	self->bs_sep_ptr   = other->bs_sep_ptr;
-	self->bs_sep_len   = other->bs_sep_len;
-	if (self->bs_sep_ptr == other->bs_sep_buf) {
-		self->bs_sep_ptr = (byte_t *)memcpy(self->bs_sep_buf,
-		                                    other->bs_sep_buf,
-		                                    sizeof(self->bs_sep_buf));
-	}
-	if (!self->bs_sep_owner) {
-		/* ... */
-	} else if (DeeBytes_Check(self->bs_sep_owner)) {
-		self->bs_sep_owner = DeeObject_DeepCopy(self->bs_sep_owner);
-		if unlikely(!self->bs_sep_owner)
-			goto err_bytes;
-		self->bs_sep_ptr = DeeBytes_DATA(self->bs_sep_owner);
-		self->bs_sep_len = DeeBytes_SIZE(self->bs_sep_owner);
-	} else {
-		/* Can't copy the sep-owner in this case... */
-		Dee_Incref(self->bs_sep_owner);
-	}
-	return 0;
-err_bytes:
-	Dee_Decref(self->bs_bytes);
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -683,7 +626,6 @@ INTERN DeeTypeObject BytesSplit_Type = {
 			/* T:              */ BytesSplit,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &bs_copy,
-			/* tp_deep_ctor:   */ &bs_deepcopy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bs_serialize
@@ -733,7 +675,6 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 			/* T:              */ BytesSplit,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &bs_copy,
-			/* tp_deep_ctor:   */ &bs_deepcopy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bs_serialize
@@ -934,26 +875,6 @@ blsi_copy(BytesLineSplitIterator *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-blsi_deepcopy(BytesLineSplitIterator *__restrict self,
-              BytesLineSplitIterator *__restrict other) {
-	byte_t *other_pos;
-	self->blsi_bytes = (DREF Bytes *)DeeObject_DeepCopy((DeeObject *)other->blsi_bytes);
-	if unlikely(!self->blsi_bytes)
-		goto err;
-	other_pos = READ_BLSI_ITER(other);
-	if (other_pos) {
-		other_pos = DeeBytes_DATA(self->blsi_bytes) +
-		            (other_pos - DeeBytes_DATA(other->blsi_bytes));
-	}
-	self->blsi_iter = other_pos;
-	self->blsi_end  = DeeBytes_END(self->blsi_bytes);
-	Dee_Incref(self->blsi_bytes);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blsi_serialize(BytesLineSplitIterator *__restrict self,
                DeeSerial *__restrict writer, Dee_seraddr_t addr) {
 	BytesLineSplitIterator *out;
@@ -1055,7 +976,6 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 			/* T:              */ BytesLineSplitIterator,
 			/* tp_ctor:        */ &blsi_ctor,
 			/* tp_copy_ctor:   */ &blsi_copy,
-			/* tp_deep_ctor:   */ &blsi_deepcopy,
 			/* tp_any_ctor:    */ &blsi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &blsi_serialize
@@ -1107,18 +1027,6 @@ bls_copy(BytesLineSplit *__restrict self,
 	self->bls_keepends = other->bls_keepends;
 	Dee_Incref(self->bls_bytes);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bls_deepcopy(BytesLineSplit *__restrict self,
-             BytesLineSplit *__restrict other) {
-	self->bls_bytes = (DREF Bytes *)DeeObject_DeepCopy((DeeObject *)other->bls_bytes);
-	if unlikely(!self->bls_bytes)
-		goto err;
-	self->bls_keepends = other->bls_keepends;
-	return 0;
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1231,7 +1139,6 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 			/* T:              */ BytesLineSplit,
 			/* tp_ctor:        */ &bls_ctor,
 			/* tp_copy_ctor:   */ &bls_copy,
-			/* tp_deep_ctor:   */ &bls_deepcopy,
 			/* tp_any_ctor:    */ &bls_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bls_serialize

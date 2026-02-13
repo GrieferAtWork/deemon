@@ -511,7 +511,6 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 			/* T:              */ StringFindIterator,
 			/* tp_ctor:        */ &sfi_ctor,
 			/* tp_copy_ctor:   */ &sfi_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &sfi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sfi_serialize
@@ -563,7 +562,6 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 			/* T:              */ StringFindIterator,
 			/* tp_ctor:        */ &scfi_ctor,
 			/* tp_copy_ctor:   */ &scfi_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &scfi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sfi_serialize
@@ -833,7 +831,6 @@ INTERN DeeTypeObject StringFind_Type = {
 			/* T:              */ StringFind,
 			/* tp_ctor:        */ &sf_ctor,
 			/* tp_copy_ctor:   */ &sf_copy,
-			/* tp_deep_ctor:   */ &sf_copy,
 			/* tp_any_ctor:    */ &sf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sf_serialize
@@ -885,7 +882,6 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 			/* T:              */ StringFind,
 			/* tp_ctor:        */ &scf_ctor,
 			/* tp_copy_ctor:   */ &scf_copy,
-			/* tp_deep_ctor:   */ &scf_copy,
 			/* tp_any_ctor:    */ &scf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &sf_serialize

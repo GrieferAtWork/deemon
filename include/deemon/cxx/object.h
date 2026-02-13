@@ -1789,10 +1789,6 @@ protected:
 	WUNUSED DREF DeeObject *_deepcopy() const {
 		return DeeObject_DeepCopy(this->it_iter);
 	}
-	CxxIteratorBase &inplace_deepcopy() {
-		throw_if_nonzero(DeeObject_InplaceDeepCopy(&this->it_iter));
-		return *this;
-	}
 	CxxIteratorBase &inc() {
 		if (ITER_ISOK(it_next))
 			Dee_Decref(it_next);
@@ -1897,9 +1893,6 @@ public:
 	}
 	CxxIterator<GetItemType> deepcopy() const {
 		return inherit(CxxIteratorBase::_deepcopy());
-	}
-	CxxIterator<GetItemType> &inplace_deepcopy() {
-		return (CxxIterator<GetItemType> &)CxxIteratorBase::inplace_deepcopy();
 	}
 	WUNUSED operator GetItemType *() const DEE_CXX_NOTHROW {
 		return (GetItemType *)it_next;

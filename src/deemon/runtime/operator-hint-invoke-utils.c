@@ -22,16 +22,16 @@
 
 #include <deemon/api.h>
 
+#include <deemon/deepcopy.h>       /* DeeDeepCopyContext, DeeDeepCopy_* */
 #include <deemon/error-rt.h>       /* DeeRT_Err* */
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_*, INT_SIGNED, INT_UNSIGNED */
 #include <deemon/none.h>           /* DeeNone_Check */
-#include <deemon/object.h>         /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
+#include <deemon/object.h>         /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t */
 #include <deemon/operator-hints.h> /* DeeNO_int_t, _DeeType_RequireNativeOperator */
 #include <deemon/super.h>          /* DeeObject_T* */
 #include <deemon/tuple.h>          /* DeeTuple* */
 #include <deemon/type.h>           /* DeeType_IsIntTruncated, INT_* */
 #include <deemon/util/hash.h>      /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
-#include <deemon/util/lock.h>      /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_set64 */
 #include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __UINTn_MAX__ */
@@ -870,11 +870,31 @@ err:
 
 
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_DeepCopy(DeeObject *__restrict self) {
+	DeeObject *result;
+	DeeDeepCopyContext ctx;
+	DeeDeepCopy_Init(&ctx);
+	result = DeeDeepCopy_CopyObject(&ctx, self);
+	if unlikely(!result)
+		goto err;
+	DeeDeepCopy_Pack(&ctx);
+	return result;
+err:
+	DeeDeepCopy_Fini(&ctx);
+	return NULL;
+}
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_DeepCopyInherited)(/*inherit(always)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result = DeeObject_DeepCopy(self);
+	Dee_Decref_unlikely(self); /* You usually copy something because someone will continue to use the source */
+	return result;
+}
 
 PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict p_self) {
-	DeeObject *objcopy, *old_object;
+	DREF DeeObject *objcopy, *old_object;
 	old_object = *p_self;
 	ASSERT_OBJECT(old_object);
 	objcopy = DeeObject_DeepCopy(old_object);
@@ -886,142 +906,6 @@ PUBLIC WUNUSED NONNULL((1)) int
 err:
 	return -1;
 }
-
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_InplaceDeepCopyv)(/*in|out*/ DREF DeeObject **__restrict object_vector,
-                                   size_t object_count) {
-	size_t i;
-	for (i = 0; i < object_count; ++i) {
-		if (DeeObject_InplaceDeepCopy(&object_vector[i]))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceDeepCopyWithLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
-                                          Dee_atomic_lock_t *__restrict p_lock) {
-	DREF DeeObject *temp, *copy;
-	(void)p_lock;
-
-	/* Step #1: Extract the existing object. */
-	Dee_atomic_lock_acquire(p_lock);
-	temp = *p_self;
-	Dee_Incref(temp);
-	Dee_atomic_lock_release(p_lock);
-
-	/* Step #2: Create a deep copy for it. */
-	copy = DeeObject_DeepCopyInherited(temp);
-	if unlikely(!copy)
-		goto err;
-
-	/* Step #3: Write back the newly created deep copy. */
-	Dee_atomic_lock_acquire(p_lock);
-	temp   = *p_self; /* Inherit */
-	*p_self = copy;   /* Inherit */
-	Dee_atomic_lock_release(p_lock);
-	Dee_Decref(temp);
-	return 0;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_XInplaceDeepCopyWithLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
-                                           Dee_atomic_lock_t *__restrict p_lock) {
-	DREF DeeObject *temp, *copy;
-	(void)p_lock;
-
-	/* Step #1: Extract the existing object. */
-	Dee_atomic_lock_acquire(p_lock);
-	temp = *p_self;
-	if (!temp) {
-		Dee_atomic_lock_release(p_lock);
-		goto done;
-	}
-	Dee_Incref(temp);
-	Dee_atomic_lock_release(p_lock);
-
-	/* Step #2: Create a deep copy for it. */
-	copy = DeeObject_DeepCopyInherited(temp);
-	if unlikely(!copy)
-		goto err;
-
-	/* Step #3: Write back the newly created deep copy. */
-	Dee_atomic_lock_acquire(p_lock);
-	temp   = *p_self; /* Inherit */
-	*p_self = copy;   /* Inherit */
-	Dee_atomic_lock_release(p_lock);
-	Dee_XDecref(temp);
-done:
-	return 0;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_InplaceDeepCopyWithRWLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
-                                            Dee_atomic_rwlock_t *__restrict p_lock) {
-	DREF DeeObject *temp, *copy;
-	(void)p_lock;
-
-	/* Step #1: Extract the existing object. */
-	Dee_atomic_rwlock_read(p_lock);
-	temp = *p_self;
-	Dee_Incref(temp);
-	Dee_atomic_rwlock_endread(p_lock);
-
-	/* Step #2: Create a deep copy for it. */
-	copy = DeeObject_DeepCopyInherited(temp);
-	if unlikely(!copy)
-		goto err;
-
-	/* Step #3: Write back the newly created deep copy. */
-	Dee_atomic_rwlock_write(p_lock);
-	temp   = *p_self; /* Inherit */
-	*p_self = copy;   /* Inherit */
-	Dee_atomic_rwlock_endwrite(p_lock);
-	Dee_Decref(temp);
-	return 0;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_XInplaceDeepCopyWithRWLock)(/*in|out*/ DREF DeeObject **__restrict p_self,
-                                             Dee_atomic_rwlock_t *__restrict p_lock) {
-	DREF DeeObject *temp, *copy;
-	(void)p_lock;
-
-	/* Step #1: Extract the existing object. */
-	Dee_atomic_rwlock_read(p_lock);
-	temp = *p_self;
-	if (!temp) {
-		Dee_atomic_rwlock_endread(p_lock);
-		goto done;
-	}
-	Dee_Incref(temp);
-	Dee_atomic_rwlock_endread(p_lock);
-
-	/* Step #2: Create a deep copy for it. */
-	copy = DeeObject_DeepCopyInherited(temp);
-	if unlikely(!copy)
-		goto err;
-
-	/* Step #3: Write back the newly created deep copy. */
-	Dee_atomic_rwlock_write(p_lock);
-	temp   = *p_self; /* Inherit */
-	*p_self = copy;   /* Inherit */
-	Dee_atomic_rwlock_endwrite(p_lock);
-	Dee_XDecref(temp);
-done:
-	return 0;
-err:
-	return -1;
-}
-
 
 
 

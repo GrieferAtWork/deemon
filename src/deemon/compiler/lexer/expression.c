@@ -882,13 +882,8 @@ mkconst:
 		opid = OPERATOR_REPR;
 		goto do_unary_operator_kwd;
 	case KWD_deepcopy:
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 		opid = AST_FACTION_DEEPCOPY;
 		goto do_unary_action_kwd;
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-		opid = OPERATOR_DEEPCOPY;
-		goto do_unary_operator_kwd;
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case KWD_copy:
 		opid = OPERATOR_COPY;
 do_unary_operator_kwd:
@@ -942,9 +937,7 @@ do_unary_operator:
 
 	case KWD_type:
 		opid = AST_FACTION_TYPEOF;
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 do_unary_action_kwd:
-#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err;

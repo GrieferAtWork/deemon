@@ -131,7 +131,6 @@ INTERN DeeTypeObject QueryIterator_Type = {
 			/* T:              */ QueryIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &qiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Can't be serialized because queries can't be serialized */
@@ -870,7 +869,6 @@ INTERN DeeTypeObject Query_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL, // TODO: &query_init_kw,
 			/* tp_serialize:   */ NULL, /* Queries can't be serialized */
@@ -879,7 +877,6 @@ INTERN DeeTypeObject Query_Type = {
 		/* .tp_dtor        = */ NULL, /* Nope: this one has a custom tp_destroy (needed to dead queries can be re-used) */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&query_destroy,
 	},
 	/* .tp_cast = */ {

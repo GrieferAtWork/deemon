@@ -382,7 +382,6 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 			/* T:              */ DeeObjMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &objmethod_serialize
@@ -611,7 +610,6 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 			/* T:              */ DocKwdsIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &dockwdsiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dockwdsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dockwdsiter_serialize
@@ -790,7 +788,6 @@ INTERN DeeTypeObject DocKwds_Type = {
 			/* T:              */ DocKwds,
 			/* tp_ctor:        */ &dockwds_ctor,
 			/* tp_copy_ctor:   */ &dockwds_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &dockwds_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &dockwds_serialize
@@ -949,7 +946,6 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 			/* T:              */ DeeObjMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &kwobjmethod_serialize
@@ -1247,7 +1243,6 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 			/* T:              */ DeeClsMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &clsmethod_serialize
@@ -1383,7 +1378,6 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 			/* T:              */ DeeClsMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &kwclsmethod_serialize
@@ -1828,7 +1822,6 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 			/* T:              */ DeeClsPropertyObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &clsproperty_serialize
@@ -2134,7 +2127,6 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 			/* T:              */ DeeClsMemberObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &clsmember_serialize
@@ -2549,7 +2541,6 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 			/* T:              */ DeeCMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cmethod_serialize
@@ -2662,7 +2653,6 @@ PUBLIC DeeTypeObject DeeCMethod0_Type = {
 			/* T:              */ DeeCMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cmethod0_serialize
@@ -2715,7 +2705,6 @@ PUBLIC DeeTypeObject DeeCMethod1_Type = {
 			/* T:              */ DeeCMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cmethod1_serialize
@@ -2800,7 +2789,6 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 			/* T:              */ DeeCMethodObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &kwcmethod_serialize

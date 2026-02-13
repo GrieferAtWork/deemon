@@ -216,7 +216,6 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 			/* T:              */ StringOrdinals,
 			/* tp_ctor:        */ &stringordinals_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &stringordinals_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &stringordinals_serialize

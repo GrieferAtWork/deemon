@@ -1170,7 +1170,6 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 			/* T:              */ DeeFileTypeObject,
 			/* tp_ctor:        */ &filetype_ctor,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &filetype_serialize
@@ -2940,7 +2939,6 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 				/* T:              */ DeeFileObject,
 				/* tp_ctor:        */ &DeeNone_OperatorCtor,
 				/* tp_copy_ctor:   */ NULL,
-				/* tp_deep_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,
 				/* tp_any_ctor_kw: */ NULL,
 				/* tp_serialize:   */ &DeeNone_OperatorSerialize

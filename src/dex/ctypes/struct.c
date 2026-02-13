@@ -369,7 +369,6 @@ INTERN DeeTypeObject DeeStructType_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &struct_type_new_empty,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &struct_type_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* TODO */,
@@ -678,7 +677,6 @@ INTERN struct empty_struct_type_object DeeStruct_Type = {
 					/* T:              */ DeeObject,
 					/* tp_ctor:        */ NULL,
 					/* tp_copy_ctor:   */ NULL,
-					/* tp_deep_ctor:   */ NULL,
 					/* tp_any_ctor:    */ NULL,
 					/* tp_any_ctor_kw: */ NULL,
 					/* tp_serialize:   */ NULL /* TODO */

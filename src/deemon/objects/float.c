@@ -925,7 +925,6 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 			/* T:              */ Float,
 			/* tp_ctor:        */ &float_ctor,
 			/* tp_copy_ctor:   */ &float_copy,
-			/* tp_deep_ctor:   */ &float_copy,
 			/* tp_any_ctor:    */ &float_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &float_serialize
@@ -981,7 +980,6 @@ PUBLIC DeeTypeObject _nofpu_DeeFloat_Type = {
 			/* T:              */ Float,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL /* Dummy */

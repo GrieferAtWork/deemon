@@ -82,18 +82,6 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-segiter_deep(SegmentsIterator *__restrict self,
-             SegmentsIterator *__restrict other) {
-	self->si_iter = DeeObject_DeepCopy(other->si_iter);
-	if unlikely(!self->si_iter)
-		goto err;
-	self->si_len = other->si_len;
-	return 0;
-err:
-	return -1;
-}
-
 STATIC_ASSERT(offsetof(SegmentsIterator, si_iter) == offsetof(ProxyObject, po_obj));
 #define segiter_serialize generic_proxy__serialize_and_memcpy
 #define segiter_fini      generic_proxy__fini
@@ -184,7 +172,6 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 			/* T:              */ SegmentsIterator,
 			/* tp_ctor:        */ &segiter_ctor,
 			/* tp_copy_ctor:   */ &segiter_copy,
-			/* tp_deep_ctor:   */ &segiter_deep,
 			/* tp_any_ctor:    */ &segiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &segiter_serialize
@@ -226,7 +213,6 @@ INTERN DeeTypeObject SeqSegmentsIterator_Type = {
 STATIC_ASSERT(offsetof(Segments, s_seq) == offsetof(SegmentsIterator, si_iter));
 STATIC_ASSERT(offsetof(Segments, s_len) == offsetof(SegmentsIterator, si_len));
 #define seg_copy      segiter_copy
-#define seg_deep      segiter_deep
 #define seg_serialize segiter_serialize
 #define seg_fini      segiter_fini
 #define seg_visit     segiter_visit
@@ -434,7 +420,6 @@ INTERN DeeTypeObject SeqSegments_Type = {
 			/* T:              */ Segments,
 			/* tp_ctor:        */ &seg_ctor,
 			/* tp_copy_ctor:   */ &seg_copy,
-			/* tp_deep_ctor:   */ &seg_deep,
 			/* tp_any_ctor:    */ &seg_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &seg_serialize

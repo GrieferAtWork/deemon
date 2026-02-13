@@ -61,7 +61,7 @@
 
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uint16_t */
 
 #undef byte_t
@@ -333,7 +333,6 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 			/* T:              */ ClassOperatorTableIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &coti_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &coti_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &coti_serialize
@@ -373,7 +372,6 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 
 STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ProxyObject, po_obj));
 #define cot_copy      generic_proxy__copy_alias
-#define cot_deep      generic_proxy__copy_alias
 #define cot_fini      generic_proxy__fini
 #define cot_visit     generic_proxy__visit
 #define cot_serialize generic_proxy__serialize
@@ -594,7 +592,6 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 			/* T:              */ ClassOperatorTable,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &cot_copy,
-			/* tp_deep_ctor:   */ &cot_deep,
 			/* tp_any_ctor:    */ &cot_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cot_serialize
@@ -1201,7 +1198,6 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 			/* T:              */ ClassAttribute,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ca_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ca_serialize
@@ -1253,7 +1249,6 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 			/* T:              */ ClassAttributeTableIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &cati_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &cati_iter,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cati_serialize
@@ -1329,7 +1324,6 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 			/* T:              */ ClassAttributeTable,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cat_serialize
@@ -2547,7 +2541,6 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &cd_init_kw,
 			/* tp_serialize:   */ &cd_serialize,
@@ -2934,23 +2927,6 @@ ot_copy(ObjectTable *__restrict self, ObjectTable *__restrict other) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ot_deepcopy(ObjectTable *__restrict self, ObjectTable *__restrict other) {
-	ptrdiff_t offset;
-	if (DeeType_Check(other->ot_owner))
-		return ot_copy(self, other);
-	self->ot_owner = DeeObject_DeepCopy(other->ot_owner);
-	if unlikely(!self->ot_owner)
-		goto err;
-	offset = (byte_t *)other->ot_desc - (byte_t *)other->ot_owner;
-	self->ot_desc = (struct Dee_instance_desc *)((byte_t *)self->ot_owner + offset);
-	self->ot_size = other->ot_size;
-	return 0;
-err:
-	return -1;
-}
-
-
 INTERN DeeTypeObject ObjectTable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ObjectTable",
@@ -2966,7 +2942,6 @@ INTERN DeeTypeObject ObjectTable_Type = {
 			/* T:              */ ObjectTable,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ot_copy,
-			/* tp_deep_ctor:   */ &ot_deepcopy,
 			/* tp_any_ctor:    */ &ot_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ot_serialize
@@ -3334,7 +3309,6 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 			/* T:              */ DeeInstanceMemberObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &instancemember_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &instancemember_serialize

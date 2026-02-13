@@ -77,33 +77,6 @@ property_copy(Property *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-property_deep(Property *__restrict self,
-              Property *__restrict other) {
-	self->p_get = NULL;
-	self->p_del = NULL;
-	self->p_set = NULL;
-	if (other->p_get) {
-		if unlikely((self->p_get = DeeObject_DeepCopy(other->p_get)) == NULL)
-			goto err;
-	}
-	if (other->p_del) {
-		if unlikely((self->p_del = DeeObject_DeepCopy(other->p_del)) == NULL)
-			goto err_get;
-	}
-	if (other->p_set) {
-		if unlikely((self->p_set = DeeObject_DeepCopy(other->p_set)) == NULL)
-			goto err_del;
-	}
-	return 0;
-err_del:
-	Dee_XDecref(self->p_del);
-err_get:
-	Dee_XDecref(self->p_get);
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_init_kw(Property *__restrict self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
@@ -600,7 +573,6 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 			/* T:              */ Property,
 			/* tp_ctor:        */ &property_ctor,
 			/* tp_copy_ctor:   */ &property_copy,
-			/* tp_deep_ctor:   */ &property_deep,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ &property_init_kw,
 			/* tp_serialize:   */ &property_serialize

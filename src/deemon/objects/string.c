@@ -1698,7 +1698,6 @@ INTERN DeeTypeObject StringIterator_Type = {
 			/* T:              */ StringIterator,
 			/* tp_ctor:        */ &stringiter_ctor,
 			/* tp_copy_ctor:   */ &stringiter_copy,
-			/* tp_deep_ctor:   */ &stringiter_copy,
 			/* tp_any_ctor:    */ &stringiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &stringiter_serialize
@@ -2819,11 +2818,7 @@ PRIVATE struct type_buffer string_buffer = {
 PRIVATE struct type_operator const string_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	TYPE_OPERATOR_FLAGS(OPERATOR_0002_SERIALIZE, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
@@ -2965,7 +2960,6 @@ PUBLIC DeeTypeObject DeeString_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &string_new_empty,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &string_new,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &string_serialize,

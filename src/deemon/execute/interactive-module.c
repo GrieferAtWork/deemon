@@ -1975,7 +1975,6 @@ PUBLIC DeeTypeObject DeeInteractiveModule_Type = {
 			/* T:              */ InteractiveModule,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &imod_ctor,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL

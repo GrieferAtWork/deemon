@@ -25,7 +25,7 @@
 #include "../module.h" /* DeeModule_Deemon, Dee_module_symbol_getindex */
 #include "../none.h"   /* DeeNone_Check */
 #include "../object.h" /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
-#include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY, OPERATOR_DEEPCOPY */
+#include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
 #include "symbol.h"
 
@@ -415,9 +415,7 @@ struct ast {
 #   define AST_FACTION_SAMEOBJ  0x2017 /* `<act0> === <act1>'         - Check if <act0> and <act1> are the same object */
 #   define AST_FACTION_DIFFOBJ  0x2018 /* `<act0> !== <act1>'         - Check if <act0> and <act1> are the different objects */
 #   define AST_FACTION_CALL_KW  0x3019 /* `<act0>(<act1>..., **<act2>)' - Call `act0' with `act1', while also passing keywords from `act2' */
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 #   define AST_FACTION_DEEPCOPY 0x101a /* `deepcopy <act0>'           - Create a deep copy of `act0' */
-#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		struct {
 			DREF struct ast    *a_act0; /* [0..1] Primary action operand or NULL when not used. */
 			DREF struct ast    *a_act1; /* [0..1] Secondary action operand or NULL when not used. */
@@ -632,16 +630,9 @@ struct ast {
 
 /* Automatically generate moveassign operations when the
  * right-hand-size has been modulated using a copy/deepcopy operator. */
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 #define AST_SHOULD_MOVEASSIGN(x)                                      \
 	(((x)->a_type == AST_OPERATOR && (x)->a_flag == OPERATOR_COPY) || \
 	 ((x)->a_type == AST_ACTION && (x)->a_flag == AST_FACTION_DEEPCOPY))
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-#define AST_SHOULD_MOVEASSIGN(x)      \
-	((x)->a_type == AST_OPERATOR &&   \
-	 ((x)->a_flag == OPERATOR_COPY || \
-	  (x)->a_flag == OPERATOR_DEEPCOPY))
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 #define AST_ISNONE(x) ((x)->a_type == AST_CONSTEXPR && DeeNone_Check((x)->a_constexpr))
 #define AST_HASDDI(x) ((x)->ast_ddi.l_file != NULL)
 

@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_Track */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_* */
@@ -161,13 +161,6 @@ cell_clear(DeeCellObject *__restrict self) {
 	DeeCell_LockEndWrite(self);
 	Dee_XDecref(old_obj);
 }
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-cell_deepload(DeeCellObject *__restrict self) {
-	return DeeObject_XInplaceDeepCopyWithRWLock(&self->c_item,
-	                                            &self->c_lock);
-}
-
 
 /* Get/Del/Set the value associated with a given Cell.
  * HINT: These are the getset callbacks used for `Cell.item' (or its deprecated name `Cell.value').
@@ -641,7 +634,6 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 			/* T:              */ DeeCellObject,
 			/* tp_ctor:        */ &cell_ctor,
 			/* tp_copy_ctor:   */ &cell_copy,
-			/* tp_deep_ctor:   */ &cell_copy,
 			/* tp_any_ctor:    */ &cell_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &cell_serialize
@@ -649,7 +641,6 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cell_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_moveassign,
-		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cell_deepload,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ DEFIMPL(&default__str__with__print),

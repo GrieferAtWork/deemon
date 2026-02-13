@@ -394,10 +394,6 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 		if (EQAT(name + 1, "iv"))
 			RETURN(OPERATOR_DIV);
 		if (name[1] == 'e') {
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-			if (EQAT(name + 2, "epcopy"))
-				RETURN(OPERATOR_DEEPCOPY);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			if (EQAT(name + 2, "structor"))
 				RETURN(OPERATOR_DESTRUCTOR);
 			if (name[2] == 'c' && !name[3])
@@ -608,10 +604,6 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 				if (EQAT(name + 3, "attr"))
 					RETURN(OPERATOR_SETATTR);
 			}
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-			if (EQAT(name + 2, "rialize"))
-				RETURN(OPERATOR_SERIALIZE);
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		}
 		break;
 
@@ -1002,11 +994,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	switch (name) {
 	case OPERATOR_CONSTRUCTOR:
 	case OPERATOR_COPY:
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	case OPERATOR_SERIALIZE:
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-	case OPERATOR_DEEPCOPY:
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case OPERATOR_DESTRUCTOR:
 		return (DeeTypeObject *)self;
 
@@ -1149,16 +1137,11 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	case OPERATOR_CONSTRUCTOR:
 		return self->tp_init.tp_var.tp_ctor ||
 		       self->tp_init.tp_var.tp_copy_ctor ||
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		       self->tp_init.tp_var.tp_deep_ctor ||
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 		       self->tp_init.tp_var.tp_any_ctor ||
 		       self->tp_init.tp_var.tp_any_ctor_kw ||
 		       DeeType_InheritConstructors(self);
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	case OPERATOR_SERIALIZE:
 		return DeeType_GetTpSerialize(self) != NULL;
-#endif /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case OPERATOR_GETBUF:
 		return (self->tp_buffer && self->tp_buffer->tp_getbuf) ||
 		       DeeType_InheritBuffer(self);
@@ -1437,9 +1420,6 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 	switch (name) {
 
 	case OPERATOR_COPY:
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	case OPERATOR_DEEPCOPY:
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case OPERATOR_STR:
 	case OPERATOR_REPR:
 		ASSERT(info);
@@ -1495,9 +1475,6 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 	switch (name) {
 
 	case OPERATOR_COPY:
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-	case OPERATOR_DEEPCOPY:
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	case OPERATOR_STR:
 	case OPERATOR_REPR:
 	case OPERATOR_BOOL:
@@ -2047,7 +2024,6 @@ INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 			/* T:              */ TypeOperatorsIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &toi_copy,
-			/* tp_deep_ctor:   */ &toi_copy,
 			/* tp_any_ctor:    */ &toi_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &toi_serialize
@@ -2097,7 +2073,6 @@ INTERN DeeTypeObject TypeOperators_Type = {
 			/* T:              */ TypeOperators,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &to_copy,
-			/* tp_deep_ctor:   */ &to_copy,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &to_serialize

@@ -47,8 +47,6 @@ STATIC_ASSERT(offsetof(DefaultSequence_MapProxy, dsmp_map) ==
 #define ds_mv_serialize        generic_proxy__serialize
 #define ds_mk_copy             generic_proxy__copy_alias
 #define ds_mv_copy             generic_proxy__copy_alias
-#define ds_mv_deepcopy         generic_proxy__deepcopy
-#define ds_mk_deepcopy         generic_proxy__deepcopy
 #define ds_mv_fini             generic_proxy__fini
 #define ds_mk_fini             generic_proxy__fini
 #define ds_mv_visit            generic_proxy__visit
@@ -415,7 +413,6 @@ INTERN DeeTypeObject DefaultSequence_MapKeys_Type = {
 			/* T:              */ DefaultSequence_MapProxy,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_mk_copy,
-			/* tp_deep_ctor:   */ &ds_mk_deepcopy,
 			/* tp_any_ctor:    */ &ds_mk_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_mk_serialize
@@ -465,7 +462,6 @@ INTERN DeeTypeObject DefaultSequence_MapValues_Type = {
 			/* T:              */ DefaultSequence_MapProxy,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &ds_mv_copy,
-			/* tp_deep_ctor:   */ &ds_mv_deepcopy,
 			/* tp_any_ctor:    */ &ds_mv_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &ds_mv_serialize

@@ -372,9 +372,6 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			return &DeeString_Type;
 
 		case OPERATOR_COPY:
-#ifndef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
-		case OPERATOR_DEEPCOPY:
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 			return ast_predict_type_ex(self->a_operator.o_op0, flags);
 
 		case OPERATOR_DELITEM:
@@ -532,6 +529,9 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 
 		ACTION(AST_FACTION_FPRINT)
 		ACTION(AST_FACTION_FPRINTLN)
+		ACTION(AST_FACTION_ASSERT)
+		ACTION(AST_FACTION_ASSERT_M)
+		ACTION(AST_FACTION_DEEPCOPY)
 			return ast_predict_type_ex(self->a_action.a_act0, flags);
 
 		ACTION(AST_FACTION_CELL0)
@@ -550,10 +550,6 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 		ACTION(AST_FACTION_SAMEOBJ)
 		ACTION(AST_FACTION_DIFFOBJ)
 			return &DeeBool_Type;
-
-		ACTION(AST_FACTION_ASSERT)
-		ACTION(AST_FACTION_ASSERT_M)
-			return ast_predict_type_ex(self->a_action.a_act0, flags);
 
 		default: break;
 #undef ACTION

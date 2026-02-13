@@ -245,7 +245,6 @@ INTERN DeeTypeObject MapFromAttrKeysIterator_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &mfaki_ctor,
 			/* tp_copy_ctor:   */ &mfaki_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &mfaki_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL, /* Not serializable (would require an extra operator in `struct Dee_attriter_type') */
@@ -295,7 +294,6 @@ INTERN DeeTypeObject MapFromAttrKeysIterator_Type = {
 
 STATIC_ASSERT(offsetof(MapFromAttr, mfa_ob) == offsetof(ProxyObject, po_obj));
 #define mfa_copy      generic_proxy__copy_alias
-#define mfa_deep      generic_proxy__deepcopy
 #define mfa_init      generic_proxy__init
 #define mfa_serialize generic_proxy__serialize
 #define mfa_fini      generic_proxy__fini
@@ -538,7 +536,6 @@ INTERN DeeTypeObject MapFromAttr_Type = {
 			/* T:              */ MapFromAttr,
 			/* tp_ctor:        */ &mfa_ctor,
 			/* tp_copy_ctor:   */ &mfa_copy,
-			/* tp_deep_ctor:   */ &mfa_deep,
 			/* tp_any_ctor:    */ &mfa_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &mfa_serialize

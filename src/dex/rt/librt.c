@@ -940,7 +940,6 @@ my_custom_getitem(DeeObject *self, DeeObject *index) {
 				/* T:              */ DeeObject,              \
 				/* tp_ctor:        */ NULL,                   \
 				/* tp_copy_ctor:   */ NULL,                   \
-				/* tp_deep_ctor:   */ NULL,                   \
 				/* tp_any_ctor:    */ NULL,                   \
 				/* tp_any_ctor_kw: */ NULL,                   \
 				/* tp_serialize:   */ NULL                    \
@@ -1557,7 +1556,6 @@ PRIVATE DeeTypeObject type_with_seq_enumerate = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -1660,7 +1658,6 @@ PRIVATE DeeTypeObject type_with_map_enumerate = {
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL

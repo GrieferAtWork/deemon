@@ -1953,7 +1953,6 @@ INTERN DeeTypeObject Bitset_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &bs_ctor,
 			/* tp_copy_ctor:   */ &bs_copy,
-			/* tp_deep_ctor:   */ &bs_copy,
 			/* tp_any_ctor:    */ &bs_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bs_serialize,
@@ -1962,7 +1961,6 @@ INTERN DeeTypeObject Bitset_Type = {
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&bs_assign,
 		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&bs_assign,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -2376,11 +2374,7 @@ PRIVATE struct type_getset tpconst robs_getsets[] = {
 PRIVATE struct type_operator const robs_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#ifdef CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR
 	TYPE_OPERATOR_FLAGS(OPERATOR_0002_SERIALIZE, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#else /* CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
-	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
-#endif /* !CONFIG_EXPERIMENTAL_SERIALIZE_OPERATOR */
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE | METHOD_FNOTHROW),
@@ -2475,7 +2469,6 @@ INTERN DeeTypeObject RoBitset_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &robs_ctor,
 			/* tp_copy_ctor:   */ &DeeObject_NewRef,
-			/* tp_deep_ctor:   */ &DeeObject_NewRef,
 			/* tp_any_ctor:    */ &robs_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &robs_serialize,
@@ -2484,7 +2477,6 @@ INTERN DeeTypeObject RoBitset_Type = {
 		/* .tp_dtor        = */ NULL, /* No destructor needed! */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -4218,7 +4210,6 @@ INTERN DeeTypeObject BitsetView_Type = {
 			/* T:              */ BitsetView,
 			/* tp_ctor:        */ &bsv_ctor,
 			/* tp_copy_ctor:   */ &bsv_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsv_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bsv_serialize
@@ -4226,7 +4217,6 @@ INTERN DeeTypeObject BitsetView_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsv_fini,
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&bsv_assign,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -4556,7 +4546,6 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 			/* T:              */ BitsetIterator,
 			/* tp_ctor:        */ &bsiter_ctor,
 			/* tp_copy_ctor:   */ &bsiter_copy,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ &bsiter_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bsiter_serialize
@@ -4564,7 +4553,6 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
-		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,

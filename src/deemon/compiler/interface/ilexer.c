@@ -864,7 +864,6 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
 			/* T:              */ DeeCompilerItemObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -2598,7 +2597,6 @@ INTERN DeeTypeObject DeeCompilerLexer_Type = {
 			/* T:              */ DeeCompilerWrapperObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -2695,7 +2693,6 @@ INTERN DeeTypeObject DeeCompilerLexerKeywords_Type = {
 			/* T:              */ DeeCompilerWrapperObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -2740,7 +2737,6 @@ INTERN DeeTypeObject DeeCompilerLexerExtensions_Type = {
 			/* T:              */ DeeCompilerWrapperObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -2785,7 +2781,6 @@ INTERN DeeTypeObject DeeCompilerLexerWarnings_Type = {
 			/* T:              */ DeeCompilerWrapperObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -2982,7 +2977,6 @@ INTERN DeeTypeObject DeeCompilerLexerSyspaths_Type = {
 			/* T:              */ DeeCompilerWrapperObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -3029,7 +3023,6 @@ INTERN DeeTypeObject DeeCompilerLexerIfdef_Type = {
 			/* T:              */ DeeCompilerWrapperObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -3492,7 +3485,6 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
 			/* T:              */ DeeCompilerWrapperObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL
@@ -4993,7 +4985,6 @@ INTERN DeeTypeObject DeeCompilerFile_Type = {
 			/* T:              */ DeeCompilerItemObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
-			/* tp_deep_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ NULL

@@ -48,7 +48,6 @@ byattr_ctor(MapByAttr *__restrict self) {
 
 STATIC_ASSERT(offsetof(MapByAttr, mba_map) == offsetof(ProxyObject, po_obj));
 #define byattr_copy      generic_proxy__copy_alias
-#define byattr_deep      generic_proxy__deepcopy
 #define byattr_init      generic_proxy__init
 #define byattr_serialize generic_proxy__serialize
 
@@ -244,7 +243,6 @@ INTERN DeeTypeObject MapByAttr_Type = {
 			/* T:              */ MapByAttr,
 			/* tp_ctor:        */ &byattr_ctor,
 			/* tp_copy_ctor:   */ &byattr_copy,
-			/* tp_deep_ctor:   */ &byattr_deep,
 			/* tp_any_ctor:    */ &byattr_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &byattr_serialize
