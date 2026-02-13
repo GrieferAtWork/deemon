@@ -619,7 +619,7 @@ sp_mh_seq_any_with_range(SeqPair *__restrict self, size_t start, size_t end) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 sp_mh_seq_any_with_range_and_key(SeqPair *self, size_t start, size_t end, DeeObject *key) {
 	int result = 0;
 	if (start <= 0 && end > 0)
@@ -655,7 +655,7 @@ sp_mh_seq_all_with_range(SeqPair *__restrict self, size_t start, size_t end) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 sp_mh_seq_all_with_range_and_key(SeqPair *self, size_t start, size_t end, DeeObject *key) {
 	int result = 1;
 	if (start <= 0 && end > 0)
@@ -711,7 +711,7 @@ sp_mh_seq_parity_with_range(SeqPair *__restrict self, size_t start, size_t end) 
 	}
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 sp_mh_seq_parity_with_range_and_key(SeqPair *self, size_t start, size_t end, DeeObject *key) {
 	if (end > 2)
 		end = 2;
