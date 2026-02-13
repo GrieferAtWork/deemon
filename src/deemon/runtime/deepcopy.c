@@ -126,7 +126,7 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
+PRIVATE ATTR_COLD NONNULL((1, 2)) void DCALL
 deepcopy_unmappointer(DeeDeepCopyContext *__restrict self, void const *optr) {
 	size_t lo, hi;
 	struct Dee_deepcopy_mapitem *map;
@@ -376,7 +376,7 @@ deepcopy_gcobject_trycalloc(DeeDeepCopyContext *__restrict self,
 /* Free a heap pointer
  * CAUTION: Only the most-recent pointer can *actually* be free'd!
  *          If you pass anything else, this function is a no-op! */
-PRIVATE NONNULL((1)) void DCALL
+PRIVATE ATTR_COLD NONNULL((1)) void DCALL
 deepcopy_free(DeeDeepCopyContext *__restrict self,
               Dee_seraddr_t addr, void const *ref) {
 	if (ref)
@@ -384,7 +384,7 @@ deepcopy_free(DeeDeepCopyContext *__restrict self,
 	deepcopy_heap_free(&self->dcc_heap, deepcopy_ser2ptr(self, addr, void));
 }
 
-PRIVATE NONNULL((1, 3)) void DCALL
+PRIVATE ATTR_COLD NONNULL((1, 3)) void DCALL
 deepcopy_object_free(DeeDeepCopyContext *__restrict self,
                      Dee_seraddr_t addr, DeeObject *__restrict ref) {
 	DeeObject *out = deepcopy_ser2ptr(self, addr, DeeObject);
@@ -393,7 +393,7 @@ deepcopy_object_free(DeeDeepCopyContext *__restrict self,
 	deepcopy_heap_free(&self->dcc_obheap, out);
 }
 
-PRIVATE NONNULL((1, 3)) void DCALL
+PRIVATE ATTR_COLD NONNULL((1, 3)) void DCALL
 deepcopy_gcobject_free(DeeDeepCopyContext *__restrict self,
                        Dee_seraddr_t addr, DeeObject *__restrict ref) {
 	struct Dee_gc_head *next;
