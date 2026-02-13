@@ -21,20 +21,32 @@
 
 import * from deemon;
 import .common.test;
+import rt;
 
 
 local a = true;
 local b = "foo";
-local c = 42;
+local c = 42 as Numeric;
 
 local x = { a, b, c };
 
-test.assertSequence(x.ids, { a.id, b.id, c.id });
+test.assertSequence(x.ids, { a.id, b.id, Object.id(c) });
 test.assertSequence(x.ids, { Object.id(a), Object.id(b), Object.id(c) });
-test.assertSequence(x.classes, { bool, string, int });
-test.assertSequence(x.types, { bool, string, int });
+test.assertSequence(x.classes, { bool, string, Numeric });
+test.assertSequence(x.types, { bool, string, Super });
 assert true !in x.types;
 assert true !in x.classes;
 assert List !in x.types;
 assert List !in x.classes;
+assert x.ids is rt.SeqIds;
+assert x.classes is rt.SeqClasses;
+assert x.types is rt.SeqTypes;
+
+test.assertSequence(rt.SeqIds(), {});
+test.assertSequence(rt.SeqClasses(), {});
+test.assertSequence(rt.SeqTypes(), {});
+
+test.assertSequence(rt.SeqIds(x), { a.id, b.id, Object.id(c) });
+test.assertSequence(rt.SeqClasses(x), { bool, string, Numeric });
+test.assertSequence(rt.SeqTypes(x), { bool, string, Super });
 
