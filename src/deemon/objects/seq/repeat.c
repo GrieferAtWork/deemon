@@ -266,8 +266,10 @@ again_iter:
 done:
 		return result;
 	}
+#ifndef __OPTIMIZE_SIZE__
 	if (!REPEATITER_READ_NUM(self))
 		goto done;
+#endif /* !__OPTIMIZE_SIZE__ */
 	/* Create a new iterator for the next loop. */
 	iter = DeeObject_Iter(self->rpi_rep->rp_seq);
 	if unlikely(!iter)
@@ -275,6 +277,7 @@ done:
 	COMPILER_READ_BARRIER();
 	RepeatIterator_LockWrite(self);
 	if unlikely(!self->rpi_num) {
+		/* Race condition: iterator was exhausted while we created a new sub-iterator */
 		RepeatIterator_LockEndWrite(self);
 		Dee_Decref(iter);
 		ASSERT(result == ITER_DONE);

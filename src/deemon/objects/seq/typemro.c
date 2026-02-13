@@ -127,10 +127,12 @@ typemroiter_serialize(TypeMROIterator *__restrict self,
 	if (self__tmi_iter != self__tmi_mro.tp_mro_orig) {
 		if (DeeSerial_PutPointer(writer, ADDROF(tmi_mro.tp_mro_iter), self__tmi_mro.tp_mro_iter))
 			goto err;
+		Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, TypeMROIterator)->tmi_lock);
 	} else {
 		TypeMROIterator *out;
 		out = DeeSerial_Addr2Mem(writer, addr, TypeMROIterator);
 		out->tmi_mro.tp_mro_iter = NULL;
+		Dee_atomic_lock_init(&out->tmi_lock);
 	}
 	return DeeSerial_PutPointer(writer, ADDROF(tmi_iter), self__tmi_iter);
 err:

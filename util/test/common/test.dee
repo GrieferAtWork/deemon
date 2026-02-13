@@ -324,7 +324,6 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		}
 
 		for (local i, v: iterated7.enumerate()) {
-			assert i is int;
 			assert it;
 			assertEquals(v, it.operator next());
 			assertEquals(v, x[i]);
@@ -344,6 +343,49 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 			assert it in x;
 
 		_assertIteratorConstructor(type it, x);
+
+		/* Assert that deepcopy works on iterators */
+
+		/* Deepcopy while nothing has been enumerated, yet */
+		local it = x.operator iter();
+		local it2 = deepcopy it;
+		if (iterated2) {
+			for (local v: iterated2) {
+				assert it2;
+				assertEquals(v, it2.operator next());
+			}
+			assert !it2, type it2;
+			for (local v: iterated2) {
+				assert it;
+				assertEquals(v, it.operator next());
+			}
+			assert !it, type it;
+			assert (try ({ it.operator next(); none; }) catch (e...) e) == rt.StopIteration_instance;
+			assert (try ({ it2.operator next(); none; }) catch (e...) e) == rt.StopIteration_instance;
+
+			/* Deepcopy while nothing has been enumerated, yet */
+			local it = x.operator iter();
+			assertEquals(iterated2.first, it.operator next());
+			local it2 = deepcopy it;
+			local withoutFirst = iterated2[1:];
+			for (local v: withoutFirst) {
+				assert it2;
+				assertEquals(v, it2.operator next());
+			}
+			assert !it2, type it2;
+			for (local v: withoutFirst) {
+				assert it;
+				assertEquals(v, it.operator next());
+			}
+			assert !it, type it;
+			assert (try ({ it.operator next(); none; }) catch (e...) e) == rt.StopIteration_instance;
+			assert (try ({ it2.operator next(); none; }) catch (e...) e) == rt.StopIteration_instance;
+		} else {
+			assert !it, repr it;
+			assert !it2;
+			assert (try ({ it.operator next(); none; }) catch (e...) e) == rt.StopIteration_instance;
+			assert (try ({ it2.operator next(); none; }) catch (e...) e) == rt.StopIteration_instance;
+		}
 	} else {
 		assert !x;
 

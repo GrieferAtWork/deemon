@@ -85,9 +85,6 @@ di_sgi_copy(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
 	return 0;
 }
 
-#define di_sgi_deepcopy  di_gi_deepcopy
-#define di_sgif_deepcopy di_gi_deepcopy
-#define di_stgi_deepcopy di_gi_deepcopy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_deepcopy(DefaultIterator_WithGetItemIndex *__restrict self,
                DefaultIterator_WithGetItemIndex *__restrict other) {
@@ -101,9 +98,22 @@ err:
 	return -1;
 }
 
-#define di_sgi_serialize  di_gi_serialize
-#define di_sgif_serialize di_gi_serialize
-#define di_stgi_serialize di_gi_serialize
+#define di_sgif_deepcopy di_sgi_deepcopy
+#define di_stgi_deepcopy di_sgi_deepcopy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_sgi_deepcopy(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
+                DefaultIterator_WithSizeAndGetItemIndex *__restrict other) {
+	self->disgi_seq = DeeObject_DeepCopy(other->disgi_seq);
+	if unlikely(!self->disgi_seq)
+		goto err;
+	self->disgi_tp_getitem_index = other->disgi_tp_getitem_index;
+	self->disgi_index = atomic_read(&other->disgi_index);
+	self->disgi_end   = other->disgi_end;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_serialize(DefaultIterator_WithGetItemIndex *__restrict self,
                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
@@ -115,6 +125,25 @@ di_gi_serialize(DefaultIterator_WithGetItemIndex *__restrict self,
 		DefaultIterator_WithGetItemIndex *out;
 		out = DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithGetItemIndex);
 		out->digi_index = atomic_read(&self->digi_index);
+	}
+	return result;
+#undef ADDROF
+}
+
+#define di_sgif_serialize di_sgi_serialize
+#define di_stgi_serialize di_sgi_serialize
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_sgi_serialize(DefaultIterator_WithSizeAndGetItemIndex *__restrict self,
+                 DeeSerial *__restrict writer, Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(DefaultIterator_WithSizeAndGetItemIndex, field))
+	DefaultIterator_WithSizeAndGetItemIndex *out;
+	int result = generic_proxy__serialize((ProxyObject *)self, writer, addr);
+	if likely(result == 0)
+		result = DeeSerial_PutFuncPtr(writer, ADDROF(disgi_tp_getitem_index), self->disgi_tp_getitem_index);
+	if likely(result == 0) {
+		out = DeeSerial_Addr2Mem(writer, addr, DefaultIterator_WithSizeAndGetItemIndex);
+		out->disgi_index = atomic_read(&self->disgi_index);
+		out->disgi_end   = self->disgi_end;
 	}
 	return result;
 #undef ADDROF
