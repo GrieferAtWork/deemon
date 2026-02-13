@@ -193,8 +193,8 @@ repeatiter_compare(RepeatIterator *self, RepeatIterator *other) {
 		goto err;
 	my_len = REPEATITER_READ_NUM(self);
 	ot_len = REPEATITER_READ_NUM(other);
-	if (my_len != ot_len)
-		return Dee_CompareNe(my_len, ot_len);
+	/* Compare "num" in reverse (because "num" becomes less as the iterator is advanced) */
+	Dee_return_compare_if_ne(ot_len, my_len);
 	RepeatIterator_LockRead(self);
 	my_iter = self->rpi_iter;
 	Dee_Incref(my_iter);

@@ -24,5 +24,7 @@ import .common.test;
 
 local i = "foo";
 test.assertSequence(Sequence.repeatitem(i, 4), {i,i,i,i});
+test.assertSequence(Sequence.repeat({i}, 4), {i,i,i,i});
+test.assertSequence(Sequence.repeat({i,i}, 4), {i,i,i,i,i,i,i,i});
 
 

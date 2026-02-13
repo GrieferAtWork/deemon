@@ -68,7 +68,9 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *soi_item; /* [0..1][lock(ATOMIC && CLEAR_ONCE)]
 	                           * The item to yield (or "ITER_DONE" if that already
-	                           * happened, or "NULL" if temporarily locked) */
+	                           * happened, or "NULL" if temporarily locked; note that
+	                           * "NULL" will never appear if "ITER_DONE" was already
+	                           * set at one point, unless the iterator is reset) */
 } SeqOneIterator;
 
 INTDEF DeeTypeObject SeqOneIterator_Type;
@@ -201,8 +203,8 @@ soi_compare(SeqOneIterator *lhs, SeqOneIterator *rhs) {
 	bool lhs_consumed, rhs_consumed;
 	if (DeeObject_AssertTypeExact(rhs, &SeqOneIterator_Type))
 		goto err;
-	lhs_consumed = atomic_read(&lhs->soi_item) != ITER_DONE;
-	rhs_consumed = atomic_read(&rhs->soi_item) != ITER_DONE;
+	lhs_consumed = atomic_read(&lhs->soi_item) == ITER_DONE;
+	rhs_consumed = atomic_read(&rhs->soi_item) == ITER_DONE;
 	Dee_return_compare(lhs_consumed, rhs_consumed);
 err:
 	return Dee_COMPARE_ERR;

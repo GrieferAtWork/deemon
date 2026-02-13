@@ -300,6 +300,7 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 			assert !it;
 		}
 		local it2 = x.operator iter();
+		assertSame(type(it), type(it2));
 		assertEqualsTyped(it, it2);
 		if (iterated1) {
 			local it2First = it2.operator next();
@@ -316,21 +317,23 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 			itSeq = itSeq as Super.typeof(x);
 		assertEquals(x, itSeq);
 		if (iterated1) {
-			assert it2 > it;
-			assert it < it2;
-			assert compare(it2, it) > 0;
-			assert compare(it, it2) < 0;
+			assert it2 > it, type it;
+			assert it < it2, type it;
+			assert compare(it2, it) > 0, type it;
+			assert compare(it, it2) < 0, type it;
 		}
 
 		for (local i, v: iterated7.enumerate()) {
+			assert i is int;
 			assert it;
 			assertEquals(v, it.operator next());
 			assertEquals(v, x[i]);
 		}
-		assert !it;
+		assert !it, type it;
 
 		local it = x.operator iter();
 		for (local i, v: x.enumerate()) {
+			assert i is int;
 			assert it;
 			assertEquals(v, it.operator next());
 			assertEquals(v, iterated7[i]);
