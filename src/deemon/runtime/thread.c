@@ -1776,6 +1776,9 @@ DeeThread_Secede(DREF DeeObject *thread_result) {
 #endif /* DeeThread_HAVE_GetCurrentXThread && !DeeThread_USE_CreateThread */
 	ASSERTF(self->t_inout.io_result == NULL, "Calling thread was created by deemon");
 	ASSERTF(self->t_exec == NULL && self->t_execsz == 0, "Calling thread is still executing deemon code");
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	ASSERTF(self->t_import_curr == NULL, "Calling thread still has active calls to `DeeModule_Import'");
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERTF(self->t_str_curr == NULL, "Calling thread still has active calls to `DeeObject_Str'");
 	ASSERTF(self->t_repr_curr == NULL, "Calling thread still has active calls to `DeeObject_Repr'");
 	ASSERTF(self->t_hash_curr == NULL, "Calling thread still has active calls to `DeeObject_Hash'");
@@ -3375,6 +3378,9 @@ PRIVATE NONNULL((1)) void DCALL
 thread_fini(DeeThreadObject *__restrict self) {
 	ASSERT(!self->t_exec);
 	ASSERT(!self->t_execsz);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	ASSERT(!self->t_import_curr);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	ASSERT(!self->t_str_curr);
 	ASSERT(!self->t_repr_curr);
 	ASSERT(!self->t_hash_curr);
@@ -3646,6 +3652,9 @@ thread_init(DeeThreadObject *__restrict self,
 		/* Construct unmanaged thread from TID */
 		DeeOSThreadObject *me = DeeThread_AsOSThread(self);
 		me->ot_thread.t_inthookon              = 0;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		me->ot_thread.t_import_curr            = NULL;
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 		me->ot_thread.t_str_curr               = NULL;
 		me->ot_thread.t_repr_curr              = NULL;
 		me->ot_thread.t_hash_curr              = NULL;
@@ -3722,6 +3731,9 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_exceptsz          = 0;
 	self->t_execsz            = 0;
 	self->t_inthookon         = 0;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	self->t_import_curr       = NULL;
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	self->t_str_curr          = NULL;
 	self->t_repr_curr         = NULL;
 	self->t_hash_curr         = NULL;
