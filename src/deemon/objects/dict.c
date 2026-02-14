@@ -315,7 +315,7 @@ PRIVATE struct type_cmp diter_cmp = {
 
 
 PRIVATE struct type_member tpconst diter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DictIterator, di_dict), "->?DDict"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(DictIterator, di_dict), "->?DDict"),
 	TYPE_MEMBER_END
 };
 

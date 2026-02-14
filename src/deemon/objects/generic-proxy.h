@@ -89,6 +89,9 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__copy_recursive1_alias2(
 INTDEF WUNUSED NONNULL((1)) int DCALL generic_proxy2__init(ProxyObject2 *__restrict self, size_t argc, DeeObject *const *argv); /* (obj1,obj2) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy2__serialize(ProxyObject2 *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
 
+#define generic_proxy2__getobj1 generic_proxy__getobj
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy2__getobj2(ProxyObject2 *__restrict self);
+
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy2__visit(ProxyObject2 *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy2__fini(ProxyObject2 *__restrict self);
 #define generic_proxy2__fini_normal_likely     generic_proxy2__fini
@@ -106,6 +109,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_proxy3__serialize(ProxyObject3 
 
 INTDEF NONNULL((1, 2)) void DCALL generic_proxy3__visit(ProxyObject3 *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL generic_proxy3__fini(ProxyObject3 *__restrict self);
+
+#define generic_proxy3__getobj1 generic_proxy2__getobj1
+#define generic_proxy3__getobj2 generic_proxy2__getobj2
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_proxy3__getobj3(ProxyObject3 *__restrict self);
 
 
 /* Same as `generic_proxy__serialize()', but look at "tp_instance_size" (or

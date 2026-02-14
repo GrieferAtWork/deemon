@@ -276,10 +276,12 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		}
 		if (first) {
 			assertEquals(first.value, x.first);
+			assertEquals(first.value, Sequence.first(x));
 			assertEquals(x.find(first.value), 0);
 			assertEquals(x.index(first.value), 0);
 		} else {
 			assert TRY(x.first) == UnboundAttribute(ob: x, attr: "first");
+			assert TRY(Sequence.first(x)) == UnboundAttribute(ob: x, attr: "first");
 		}
 
 		local last = Cell();
@@ -289,8 +291,12 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		}
 		if (last) {
 			assertEquals(last.value, x.last);
+			assertEquals(last.value, Sequence.last(x));
 			assertEquals(x.rfind(last.value), len - 1);
 			assertEquals(x.rindex(last.value), len - 1);
+		} else {
+			assert TRY(x.last) == UnboundAttribute(ob: x, attr: "last");
+			assert TRY(Sequence.last(x)) == UnboundAttribute(ob: x, attr: "last");
 		}
 
 		local it = x.operator iter();

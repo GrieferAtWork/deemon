@@ -504,13 +504,13 @@ PRIVATE struct type_member tpconst di_sgi_members[] = {
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_end)),
 #define di_gi_members (di_sgi_members + 1)
 	TYPE_MEMBER_FIELD("__index__", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(DefaultIterator_WithGetItemIndex, digi_index)),
-	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
+	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
 	TYPE_MEMBER_END,
 };
 
 PRIVATE struct type_member tpconst di_sgif_members[] = {
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_end)),
-	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
+	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithGetItemIndex, digi_seq)),
 	TYPE_MEMBER_END,
 };
 
@@ -1208,7 +1208,7 @@ PRIVATE struct type_gc tpconst di_g_gc = {
 };
 
 PRIVATE struct type_member tpconst di_g_members[] = {
-	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithGetItem, dig_seq)),
+	TYPE_MEMBER_FIELD(STR_seq, STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithGetItem, dig_seq)),
 	TYPE_MEMBER_END,
 };
 
@@ -1798,7 +1798,7 @@ PRIVATE struct type_member tpconst di_nl_members[] = {
 	TYPE_MEMBER_FIELD("__limit__", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(DefaultIterator_WithNextAndLimit, dinl_limit)),
 #define di_nk_members (di_nl_members + 1)
 #define di_nv_members di_nk_members
-	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndLimit, dinl_iter)),
+	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithNextAndLimit, dinl_iter)),
 	TYPE_MEMBER_END,
 };
 
@@ -2009,8 +2009,8 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter) == o
 
 PRIVATE struct type_member tpconst di_ikgim_members[] = {
 #define di_iktrgim_members di_ikgim_members
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__iterkeys__", STRUCT_OBJECT, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__iterkeys__", STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithIterKeysAndGetItem, diikgi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 
@@ -2602,7 +2602,7 @@ PRIVATE struct type_cmp di_ncp_cmp = {
 PRIVATE struct type_member tpconst di_ncpl_members[] = {
 	TYPE_MEMBER_FIELD("__limit__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(DefaultIterator_WithNextAndCounterAndLimit, dincl_limit)),
 #define di_ncp_members (di_ncpl_members + 1)
-	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndCounter, dinc_iter)),
+	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithNextAndCounter, dinc_iter)),
 	TYPE_MEMBER_FIELD("__counter__", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(DefaultIterator_WithNextAndCounter, dinc_counter)),
 	TYPE_MEMBER_END,
 };
@@ -2924,9 +2924,9 @@ PRIVATE struct type_iterator di_nuf_iterator = {
 };
 
 PRIVATE struct type_member tpconst di_nuf_members[] = {
-	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_iter)),
-	TYPE_MEMBER_FIELD("__startkey__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_start)),
-	TYPE_MEMBER_FIELD("__endkey__", STRUCT_OBJECT, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_end)),
+	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_iter)),
+	TYPE_MEMBER_FIELD("__startkey__", STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_start)),
+	TYPE_MEMBER_FIELD("__endkey__", STRUCT_OBJECT_AB, offsetof(DefaultIterator_WithNextAndUnpackFilter, dinuf_end)),
 	TYPE_MEMBER_END,
 };
 

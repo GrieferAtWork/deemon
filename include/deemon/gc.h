@@ -56,31 +56,18 @@ DECL_END
 
 DECL_BEGIN
 
-#if defined(DEE_SOURCE) && defined(__INTELLISENSE__)
 struct Dee_gc_head;
 struct Dee_gc_head_link {
 	/* The structure that is prefixed before every GC-allocated object. */
 	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
 	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 };
-struct Dee_gc_head {
-	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
-	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
-	DeeObject        gc_object; /* The object that is being controlled by the GC. */
-};
-#else /* DEE_SOURCE && __INTELLISENSE__ */
-struct Dee_gc_head;
-struct Dee_gc_head_link {
-	/* The structure that is prefixed before every GC-allocated object. */
-	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
-	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
-};
+
 struct Dee_gc_head {
 	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
 	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 	DeeObject            gc_object; /* The object that is being controlled by the GC. */
 };
-#endif /* !DEE_SOURCE || !__INTELLISENSE__ */
 
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4

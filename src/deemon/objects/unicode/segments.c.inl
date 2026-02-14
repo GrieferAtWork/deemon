@@ -472,7 +472,7 @@ PRIVATE struct type_seq sseg_seq = {
 
 
 PRIVATE struct type_member tpconst sseg_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringSegments, s_str), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(StringSegments, s_str), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__len__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(StringSegments, s_siz)),
 	TYPE_MEMBER_END
 };

@@ -55,7 +55,7 @@
 #include <deemon/string.h>          /* DeeString*, DeeUni_AsDigit, DeeUni_IsSymCont, Dee_ASCII_PRINTER_INIT, Dee_STRING_MUL_SIZEOF_WIDTH, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer*, Dee_string_utf, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h> /* bcmpc, memchr, strchr, strlen */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_F*, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
@@ -1336,7 +1336,7 @@ jseq_visit(DeeJsonSequenceObject *__restrict self,
 }
 
 PRIVATE struct type_member tpconst jseq_members[] = {
-	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(DeeJsonSequenceObject, js_owner)),
+	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT_AB, offsetof(DeeJsonSequenceObject, js_owner)),
 	TYPE_MEMBER_END
 };
 

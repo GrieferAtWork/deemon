@@ -361,7 +361,7 @@ PRIVATE struct type_getset tpconst ri_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst ri_members[] = {
-	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(RangeIterator, ri_end)),
+	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT_AB, offsetof(RangeIterator, ri_end)),
 	TYPE_MEMBER_FIELD("__step__", STRUCT_OBJECT, offsetof(RangeIterator, ri_step)),
 	/* TODO: `__isfirst__' is writeable when `ri_lock' is held! */
 	TYPE_MEMBER_FIELD("__isfirst__", STRUCT_CONST | STRUCT_CBOOL, offsetof(RangeIterator, ri_first)),
@@ -986,8 +986,8 @@ PRIVATE struct type_seq range_seq = {
 };
 
 PRIVATE struct type_member tpconst range_members[] = {
-	TYPE_MEMBER_FIELD("start", STRUCT_OBJECT, offsetof(Range, r_start)),
-	TYPE_MEMBER_FIELD("end", STRUCT_OBJECT, offsetof(Range, r_end)),
+	TYPE_MEMBER_FIELD("start", STRUCT_OBJECT_AB, offsetof(Range, r_start)),
+	TYPE_MEMBER_FIELD("end", STRUCT_OBJECT_AB, offsetof(Range, r_end)),
 	TYPE_MEMBER_FIELD("step", STRUCT_OBJECT, offsetof(Range, r_step)),
 	TYPE_MEMBER_FIELD("__rev__", STRUCT_CONST | STRUCT_CBOOL, offsetof(Range, r_rev)),
 	TYPE_MEMBER_END

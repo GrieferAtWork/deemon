@@ -30,7 +30,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_foreach_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeSeq_Type, DeeSeq_Unpack */
 #include <deemon/set.h>                /* DeeSet_Type */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../generic-proxy.h"
 #include "default-map-proxy.h"
@@ -392,7 +392,7 @@ PRIVATE struct type_method_hint tpconst ds_mk_method_hints[] = {
 
 #define ds_mv_members ds_mk_members
 PRIVATE struct type_member tpconst ds_mk_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(DefaultSequence_MapProxy, dsmp_map),
+	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT_AB, offsetof(DefaultSequence_MapProxy, dsmp_map),
 	                      "->?DMapping\n"
 	                      "The underlying mapping-object"),
 	TYPE_MEMBER_END

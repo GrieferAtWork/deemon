@@ -1305,7 +1305,7 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst object_members[] = {
-	TYPE_MEMBER_FIELD_DOC("type", STRUCT_OBJECT, offsetof(DeeObject, ob_type),
+	TYPE_MEMBER_FIELD_DOC("type", STRUCT_OBJECT_AB, offsetof(DeeObject, ob_type),
 	                      "->?DType\n"
 	                      "The type of @this object (same as ${type this})"),
 	TYPE_MEMBER_FIELD_DOC("__refcnt__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_refcnt),

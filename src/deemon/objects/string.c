@@ -1541,7 +1541,7 @@ err:
 }
 
 PRIVATE struct type_member tpconst stringiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(StringIterator, si_string), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(StringIterator, si_string), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__width__", STRUCT_CONST | STRUCT_INT, offsetof(StringIterator, si_width)),
 	TYPE_MEMBER_END
 };
@@ -1563,10 +1563,8 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
-stringiter_nii_getseq(StringIterator *__restrict self) {
-	return_reference_(self->si_string);
-}
+STATIC_ASSERT(offsetof(StringIterator, si_string) == offsetof(ProxyObject, po_obj));
+#define stringiter_nii_getseq generic_proxy__getobj
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_hasprev(StringIterator *__restrict self) {

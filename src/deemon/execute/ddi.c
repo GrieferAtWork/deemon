@@ -31,7 +31,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/system-features.h>    /* bcmp, bcmpc, memcpy* */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPtr */
 
 #include <hybrid/minmax.h>   /* MIN */
@@ -701,7 +701,7 @@ ddi_visit(DeeDDIObject *__restrict self, Dee_visit_t proc, void *arg) {
 }
 
 PRIVATE struct type_member tpconst ddi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__strtab__", STRUCT_OBJECT, offsetof(DeeDDIObject, d_strtab), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__strtab__", STRUCT_OBJECT_AB, offsetof(DeeDDIObject, d_strtab), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 

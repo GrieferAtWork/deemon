@@ -724,7 +724,7 @@ PRIVATE struct type_iterator cswiiter_iterator = {
 };
 
 PRIVATE struct type_member tpconst cswiiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB,
 	                      offsetof(CachedSeq_WithIter_Iterator, cswii_cache),
 	                      "->?Ert:CachedSeqWithIter"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T | STRUCT_ATOMIC,

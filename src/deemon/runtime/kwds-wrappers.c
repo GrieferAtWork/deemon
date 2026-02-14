@@ -38,7 +38,7 @@
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, STRUCT_OBJECT, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, STRUCT_OBJECT_AB, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
@@ -61,8 +61,8 @@ DECL_BEGIN
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(DeeBlackListKwdsObject, blki_map); /* [1..1][const] The associated keywords mapping. */
-	struct Dee_kwds_entry                           *blki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
-	struct Dee_kwds_entry                           *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	struct Dee_kwds_entry                       *blki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
+	struct Dee_kwds_entry                       *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } DeeBlackListKwdsIterator;
 
 INTDEF DeeTypeObject DeeBlackListKwdsIterator_Type;
@@ -213,7 +213,7 @@ PRIVATE struct type_cmp blvi_cmp = {
 };
 
 PRIVATE struct type_member tpconst blvi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwdsIterator, blki_map),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(DeeBlackListKwdsIterator, blki_map),
 	                      "->?Ert:BlackListKwds"),
 	TYPE_MEMBER_END
 };
@@ -1211,8 +1211,8 @@ STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject,
 #define blmi_cmp           generic_proxy__cmp_recursive
 
 PRIVATE struct type_member tpconst blmi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwIterator, mi_map), "->?Ert:BlackListKw"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(DeeBlackListKwIterator, mi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(DeeBlackListKwIterator, mi_map), "->?Ert:BlackListKw"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(DeeBlackListKwIterator, mi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 

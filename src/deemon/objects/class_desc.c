@@ -116,8 +116,8 @@ typedef struct {
 	/* A mapping-like {(string | int, int)...} object used for mapping
 	 * operator names to their respective class instance table slots. */
 	PROXY_OBJECT_HEAD_EX(ClassDescriptor, co_desc) /* [1..1][const] The referenced class descriptor. */
-	DWEAK struct Dee_class_operator          *co_iter; /* [1..1][lock(ATOMIC)] Current iterator position. */
-	struct Dee_class_operator                *co_end;  /* [1..1][const] Iterator end position. */
+	DWEAK struct Dee_class_operator      *co_iter; /* [1..1][lock(ATOMIC)] Current iterator position. */
+	struct Dee_class_operator            *co_end;  /* [1..1][const] Iterator end position. */
 } ClassOperatorTableIterator;
 #define COTI_GETITER(x) atomic_read(&(x)->co_iter)
 
@@ -312,7 +312,7 @@ STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) ==
               offsetof(ClassOperatorTableIterator, co_desc));
 PRIVATE struct type_member tpconst coti_members[] = {
 #define cot_members coti_members
-	TYPE_MEMBER_FIELD_DOC("__class__", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC("__class__", STRUCT_OBJECT_AB,
 	                      offsetof(ClassOperatorTableIterator, co_desc),
 	                      "->?Ert:ClassDescriptor"),
 	TYPE_MEMBER_END
@@ -2868,7 +2868,7 @@ PRIVATE struct type_getset tpconst ot_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst ot_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(ObjectTable, ot_owner),
+	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT_AB, offsetof(ObjectTable, ot_owner),
 	                      "The object that owns @this object table"),
 	TYPE_MEMBER_END
 };
@@ -3212,7 +3212,7 @@ PRIVATE struct type_getset tpconst instancemember_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst instancemember_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeInstanceMemberObject, im_type), "->?DType"),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT_AB, offsetof(DeeInstanceMemberObject, im_type), "->?DType"),
 	TYPE_MEMBER_END
 };
 

@@ -44,7 +44,7 @@
 #include <deemon/system-features.h>    /* bzero, memcpy*, memset */
 #include <deemon/traceback.h>          /* DeeFrameObject, DeeFrame_NewReferenceWithLock, Dee_FRAME_F* */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, METHOD_F*, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, METHOD_F*, STRUCT_OBJECT, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_inc */
 #include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
 #include <deemon/util/hash.h>          /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
@@ -905,7 +905,7 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst function_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__code__", STRUCT_OBJECT, offsetof(Function, fo_code), "->?Ert:Code"),
+	TYPE_MEMBER_FIELD_DOC("__code__", STRUCT_OBJECT_AB, offsetof(Function, fo_code), "->?Ert:Code"),
 	TYPE_MEMBER_END
 };
 
@@ -1547,7 +1547,7 @@ PRIVATE struct type_member tpconst yf_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst yf_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(YFunction, yf_func), "->?Dfunction"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(YFunction, yf_func), "->?Dfunction"),
 	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(YFunction, yf_this),
 	                      "#tUnboundAttribute{The associated code doesn't take a this-argument}"
 	                      "Returns the special $this argument linked to @this yield-function"),

@@ -1491,10 +1491,10 @@ err:
 }
 
 PRIVATE struct type_member tpconst code_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__ddi__", STRUCT_OBJECT, offsetof(DeeCodeObject, co_ddi),
+	TYPE_MEMBER_FIELD_DOC("__ddi__", STRUCT_OBJECT_AB, offsetof(DeeCodeObject, co_ddi),
 	                      "->?Ert:Ddi\n"
 	                      "The DDI (DeemonDebugInformation) data block"),
-	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT, offsetof(DeeCodeObject, co_module),
+	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT_AB, offsetof(DeeCodeObject, co_module),
 	                      "->?DModule"),
 	TYPE_MEMBER_FIELD_DOC("__argc_min__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_argc_min),
 	                      "Min amount of arguments required to execute @this ?."),

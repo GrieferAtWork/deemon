@@ -293,7 +293,7 @@ iter_done:
 }
 
 PRIVATE struct type_member tpconst bfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesFind"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesFind"),
 	TYPE_MEMBER_END
 };
 
@@ -301,7 +301,7 @@ PRIVATE struct type_member tpconst bfi_members[] = {
 #define bcfi_members bfi_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst bcfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesCaseFind"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(BytesFindIterator, bfi_find), "->?Ert:BytesCaseFind"),
 	TYPE_MEMBER_END
 };
 #endif /* !CONFIG_NO_DOC */
@@ -630,8 +630,8 @@ PRIVATE struct type_seq bcf_seq = {
 
 
 PRIVATE struct type_member tpconst bf_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesFind, bf_bytes), "->?DBytes"),
-	TYPE_MEMBER_FIELD_DOC("__needle__", STRUCT_OBJECT, offsetof(BytesFind, bf_needle), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(BytesFind, bf_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("__needle__", STRUCT_OBJECT_AB, offsetof(BytesFind, bf_other), "->?DBytes"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(BytesFind, bf_start)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(BytesFind, bf_end)),
 	TYPE_MEMBER_END

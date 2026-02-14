@@ -30,7 +30,7 @@
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Decref*, Dee_Incref, Dee_foreach_t, Dee_hash_t, Dee_return_compare_if_ne, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, Dee_HashCombine */
 
 #include "../../runtime/method-hint-defaults.h"
@@ -138,8 +138,8 @@ PRIVATE struct type_getset tpconst mappediter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst mappediter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqMappedIterator, smi_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(SeqMappedIterator, smi_mapper), "->?DCallable"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SeqMappedIterator, smi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(SeqMappedIterator, smi_mapper), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
@@ -313,8 +313,8 @@ err:
 }
 
 PRIVATE struct type_member tpconst mapped_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqMapped, sm_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__mapper__", STRUCT_OBJECT, offsetof(SeqMapped, sm_mapper), "->?DCallable"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(SeqMapped, sm_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__mapper__", STRUCT_OBJECT_AB, offsetof(SeqMapped, sm_mapper), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 

@@ -34,7 +34,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTupleObject, DeeTuple_FromSequence */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
@@ -887,7 +887,7 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 };
 
 PRIVATE struct type_member tpconst sf_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqFlat, sf_seq), "->?S?S?O"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(SeqFlat, sf_seq), "->?S?S?O"),
 	TYPE_MEMBER_END
 };
 
@@ -1250,7 +1250,7 @@ PRIVATE struct type_iterator sfi_iterator = {
 };
 
 PRIVATE struct type_member sfi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__baseiter__", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC("__baseiter__", STRUCT_OBJECT_AB,
 	                      offsetof(SeqFlatIterator, sfi_baseiter),
 	                      "->?DIterator"),
 	TYPE_MEMBER_END

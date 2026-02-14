@@ -39,7 +39,7 @@
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* mempcpyc, strlen */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, OPERATOR_CALL, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, OPERATOR_CALL, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -1003,10 +1003,10 @@ PRIVATE struct type_method_hint LOCAL_seX(method_hints)[] = {
 #undef LOCAL_seX_operator_hasitem_string_len_hash_PTR
 
 PRIVATE struct type_member tpconst LOCAL_seX(members)[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(LOCAL_SeqEach, se_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__attr__", STRUCT_OBJECT, offsetof(LOCAL_SeqEach, sg_attr), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(LOCAL_SeqEach, se_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__attr__", STRUCT_OBJECT_AB, offsetof(LOCAL_SeqEach, sg_attr), "->?Dstring"),
 #ifdef DEFINE_SeqEachCallAttrKw
-	TYPE_MEMBER_FIELD_DOC("__kw__", STRUCT_OBJECT, offsetof(LOCAL_SeqEach, sg_kw), "->?M?Dstring?O"),
+	TYPE_MEMBER_FIELD_DOC("__kw__", STRUCT_OBJECT_AB, offsetof(LOCAL_SeqEach, sg_kw), "->?M?Dstring?O"),
 #endif /* DEFINE_SeqEachCallAttrKw */
 	TYPE_MEMBER_END
 };
@@ -1436,8 +1436,8 @@ err:
 
 #ifndef CONFIG_NO_DOC
 PRIVATE struct type_member tpconst LOCAL_seXi(members)[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:" LOCAL_SeqEach_Type_NAME),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(SeqEachIterator, ei_each), "->?Ert:" LOCAL_SeqEach_Type_NAME),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 #endif /* !CONFIG_NO_DOC */

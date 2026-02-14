@@ -741,10 +741,10 @@ copyfile_progress_total_set(DeeCopyFileProgressObject *self,
 }
 
 PRIVATE struct type_member tpconst copyfile_progress_members[] = {
-	TYPE_MEMBER_FIELD_DOC("srcfile", STRUCT_OBJECT, offsetof(DeeCopyFileProgressObject, cfp_srcfile),
+	TYPE_MEMBER_FIELD_DOC("srcfile", STRUCT_OBJECT_AB, offsetof(DeeCopyFileProgressObject, cfp_srcfile),
 	                      "->?DFile\n"
 	                      "The source file from which data is being read"),
-	TYPE_MEMBER_FIELD_DOC("dstfile", STRUCT_OBJECT, offsetof(DeeCopyFileProgressObject, cfp_dstfile),
+	TYPE_MEMBER_FIELD_DOC("dstfile", STRUCT_OBJECT_AB, offsetof(DeeCopyFileProgressObject, cfp_dstfile),
 	                      "->?DFile\n"
 	                      "The destination file to which data is being written"),
 	TYPE_MEMBER_FIELD_DOC("bufsize", STRUCT_SIZE_T, offsetof(DeeCopyFileProgressObject, cfp_bufsize),

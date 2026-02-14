@@ -28,7 +28,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_*, Dee_EmptySeq */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_HASH_T, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_HASH_T, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 
 #include "../../runtime/strings.h"
@@ -222,7 +222,7 @@ PRIVATE struct type_getset tpconst map_filteriterator_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst filteriterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(HashFilterIterator, fi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(HashFilterIterator, fi_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__hash__", STRUCT_HASH_T, offsetof(HashFilterIterator, fi_hash)),
 	TYPE_MEMBER_END
 };
@@ -393,13 +393,13 @@ PRIVATE struct type_seq filter_seq = {
 };
 
 PRIVATE struct type_member tpconst seq_filter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(HashFilter, f_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(HashFilter, f_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__hash__", STRUCT_HASH_T, offsetof(HashFilter, f_hash)),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst map_filter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(HashFilter, f_seq), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(HashFilter, f_seq), "->?DMapping"),
 	TYPE_MEMBER_FIELD("__hash__", STRUCT_HASH_T, offsetof(HashFilter, f_hash)),
 	TYPE_MEMBER_END
 };

@@ -140,7 +140,7 @@ PRIVATE struct type_cmp spi_cmp = {
 };
 
 PRIVATE struct type_member tpconst spi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqPairIterator, spi_pair), "->?Ert:SeqPair"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(SeqPairIterator, spi_pair), "->?Ert:SeqPair"),
 	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(SeqPairIterator, spi_index)),
 	TYPE_MEMBER_END
 };
@@ -384,27 +384,6 @@ sp_asvector(SeqPair *__restrict self, size_t dst_length, /*out*/ DREF DeeObject 
 		Dee_Movrefv(dst, self->sp_items, 2);
 	return 2;
 }
-
-#define sp_mh_seq_trygetfirst sp_getfirst
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sp_getfirst(SeqPair *__restrict self) {
-	return_reference(self->sp_items[0]);
-}
-
-#define sp_mh_seq_trygetlast sp_getlast
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sp_getlast(SeqPair *__restrict self) {
-	return_reference(self->sp_items[1]);
-}
-
-/* Can just re-use first/last getters for sets:
- * >> local x = {a, b} as Set;
- * >> print x.first; // Always "a" (if "a == b", this is also correct, since that also means "first == last")
- * >> print x.last;  // Always "b" (if "a == b", this is also correct, since that also means "first == last") */
-#define sp_mh_set_trygetfirst sp_mh_seq_trygetfirst
-#define sp_mh_set_getfirst    sp_getfirst
-#define sp_mh_set_trygetlast  sp_mh_seq_trygetlast
-#define sp_mh_set_getlast     sp_getlast
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sp_mh_seq_enumerate(SeqPair *__restrict self, Dee_seq_enumerate_t cb, void *arg) {
@@ -897,8 +876,6 @@ PRIVATE struct type_method_hint tpconst sp_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_unpack, &sp_mh_seq_unpack, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_unpack_ex, &sp_mh_seq_unpack_ex, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_unpack_ub, &sp_mh_seq_unpack_ub, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_trygetfirst, &sp_mh_seq_trygetfirst, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_trygetlast, &sp_mh_seq_trygetlast, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any, &sp_mh_seq_any, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_key, &sp_mh_seq_any_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_range, &sp_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
@@ -962,8 +939,6 @@ PRIVATE struct type_method_hint tpconst sp_method_hints[] = {
 	TYPE_METHOD_HINT_F(set_operator_sizeob, &sp_mh_set_operator_sizeob, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_operator_size, &sp_mh_set_operator_size, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_operator_hash, &sp_mh_set_operator_hash, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(set_trygetfirst, &sp_mh_set_trygetfirst, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(set_trygetlast, &sp_mh_set_trygetlast, METHOD_FNOREFESCAPE),
 //TODO:	TYPE_METHOD_HINT_F(map_operator_iter, &sp_mh_map_operator_iter, METHOD_FNOREFESCAPE),
 //TODO:	TYPE_METHOD_HINT_F(map_operator_sizeob, &sp_mh_map_operator_sizeob, METHOD_FNOREFESCAPE),
 //TODO:	TYPE_METHOD_HINT_F(map_operator_size, &sp_mh_map_operator_size, METHOD_FNOREFESCAPE),
@@ -973,20 +948,22 @@ PRIVATE struct type_method_hint tpconst sp_method_hints[] = {
 
 PRIVATE struct type_getset tpconst sp_getsets[] = {
 	/* These must be in "so_getsets" since that's where method hints are expected to find them. */
-	TYPE_GETTER_AB_F_NODOC(STR_first, &sp_getfirst, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
-	TYPE_GETTER_AB_F_NODOC(STR_last, &sp_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_GETTER_AB_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
-	TYPE_GETTER_AB_F_NODOC(STR___set_first__, &sp_mh_set_getfirst, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
-	TYPE_GETTER_AB_F_NODOC(STR___set_last__, &sp_mh_set_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_GETTER_AB_F(STR___set_frozen__, &sp_mh_set_frozen, METHOD_FCONSTCALL, "->?DSet"),
 //TODO:	TYPE_GETTER_AB_F(STR___map_frozen__, &sp_mh_map_frozen, METHOD_FCONSTCALL, "->?DMapping"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_member tpconst sp_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__first__", STRUCT_OBJECT, offsetof(SeqPair, sp_items[0]), "Alias for ?#first"),
-	TYPE_MEMBER_FIELD_DOC("__last__", STRUCT_OBJECT, offsetof(SeqPair, sp_items[1]), "Alias for ?#last"),
+	TYPE_MEMBER_FIELD(STR_first, STRUCT_OBJECT_AB, offsetof(SeqPair, sp_items[0])),
+	TYPE_MEMBER_FIELD(STR_last, STRUCT_OBJECT_AB, offsetof(SeqPair, sp_items[1])),
+	/* Can just re-use first/last getters for sets:
+	 * >> local x = {a, b} as Set;
+	 * >> print x.first; // Always "a" (if "a == b", this is also correct, since that also means "first == last")
+	 * >> print x.last;  // Always "b" (if "a == b", this is also correct, since that also means "first == last") */
+	TYPE_MEMBER_FIELD(STR___set_first__, STRUCT_OBJECT_AB, offsetof(SeqPair, sp_items[0])),
+	TYPE_MEMBER_FIELD(STR___set_last__, STRUCT_OBJECT_AB, offsetof(SeqPair, sp_items[1])),
 	TYPE_MEMBER_CONST("length", DeeInt_Two),
 	TYPE_MEMBER_END
 };

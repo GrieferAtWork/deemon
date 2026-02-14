@@ -155,6 +155,10 @@ generic_proxy2__serialize(ProxyObject2 *__restrict self,
 #undef ADDROF
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy2__getobj2(ProxyObject2 *__restrict self) {
+	return_reference(self->po_obj2);
+}
 
 INTERN NONNULL((1, 2)) void DCALL
 generic_proxy2__visit(ProxyObject2 *__restrict self,
@@ -227,6 +231,10 @@ generic_proxy3__fini(ProxyObject3 *__restrict self) {
 	Dee_Decref(self->po_obj3);
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_proxy3__getobj3(ProxyObject3 *__restrict self) {
+	return_reference(self->po_obj3);
+}
 
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL

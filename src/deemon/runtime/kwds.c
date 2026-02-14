@@ -40,7 +40,7 @@
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy* */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, METHOD_F*, OPERATOR_*, STRUCT_OBJECT, TF_*, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_*, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
@@ -67,8 +67,8 @@ typedef DeeKwdsMappingObject KwdsMapping;
 
 typedef struct {
 	PROXY_OBJECT_HEAD_EX(Kwds, ki_map); /* [1..1][const] The associated keywords table. */
-	struct Dee_kwds_entry         *ki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
-	struct Dee_kwds_entry         *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	struct Dee_kwds_entry     *ki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
+	struct Dee_kwds_entry     *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
 } KwdsIterator;
 
 #define READ_ITER(x) atomic_read(&(x)->ki_iter)
@@ -271,7 +271,7 @@ PRIVATE struct type_cmp kwdsiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst kwdsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(KwdsIterator, ki_map), "->?Ert:Kwds"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(KwdsIterator, ki_map), "->?Ert:Kwds"),
 	TYPE_MEMBER_END
 };
 
@@ -1504,7 +1504,7 @@ PRIVATE struct type_seq kmap_seq = {
 };
 
 PRIVATE struct type_member tpconst kmap_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___kwds__, STRUCT_OBJECT, offsetof(KwdsMapping, kmo_kwds), "->?Ert:Kwds"),
+	TYPE_MEMBER_FIELD_DOC(STR___kwds__, STRUCT_OBJECT_AB, offsetof(KwdsMapping, kmo_kwds), "->?Ert:Kwds"),
 	TYPE_MEMBER_END
 };
 

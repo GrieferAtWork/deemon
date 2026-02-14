@@ -33,7 +33,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -173,8 +173,8 @@ PRIVATE struct type_getset tpconst filteriterator_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst filteriterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(FilterIterator, fi_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__filter__", STRUCT_OBJECT, offsetof(FilterIterator, fi_func), "->?DCallable"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(FilterIterator, fi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__filter__", STRUCT_OBJECT_AB, offsetof(FilterIterator, fi_func), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 
@@ -686,8 +686,8 @@ PRIVATE struct type_seq filterub_seq = {
 };
 
 PRIVATE struct type_member tpconst filter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Filter, f_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__filter__", STRUCT_OBJECT, offsetof(Filter, f_fun), "->?DCallable"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(Filter, f_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__filter__", STRUCT_OBJECT_AB, offsetof(Filter, f_fun), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 

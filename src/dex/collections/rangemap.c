@@ -42,7 +42,7 @@
 #include <deemon/serial.h>        /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>           /* DeeSet_Type */
 #include <deemon/thread.h>        /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>          /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_FNOREFESCAPE, OPERATOR_ITER, STRUCT_OBJECT, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>          /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_FNOREFESCAPE, OPERATOR_ITER, STRUCT_OBJECT_AB, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/lock.h>     /* Dee_atomic_lock_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
@@ -1728,7 +1728,7 @@ PRIVATE struct type_member tpconst proxy_mapitems_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst proxy_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__rangemap__", STRUCT_OBJECT, offsetof(RangeMapProxy, rmp_rmap), "->?GRangeMap"),
+	TYPE_MEMBER_FIELD_DOC("__rangemap__", STRUCT_OBJECT_AB, offsetof(RangeMapProxy, rmp_rmap), "->?GRangeMap"),
 	TYPE_MEMBER_END
 };
 
@@ -2265,8 +2265,8 @@ err:
 #define proxy_items_iterator_serialize proxy_iterator_serialize
 
 PRIVATE struct type_member tpconst proxy_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__rangemap__", STRUCT_OBJECT, offsetof(RangeMapProxyIterator, rmpi_rmap), "->?GRangeMap"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(RangeMapProxyIterator, rmpi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__rangemap__", STRUCT_OBJECT_AB, offsetof(RangeMapProxyIterator, rmpi_rmap), "->?GRangeMap"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(RangeMapProxyIterator, rmpi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 

@@ -74,10 +74,10 @@ STATIC_ASSERT(offsetof(DefaultEnumerationWithFilter, dewf_end) == offsetof(Proxy
 #define DefaultEnumerationWithFilter__copy      generic_proxy3__copy_alias123
 STATIC_ASSERT(offsetof(DefaultEnumeration, de_seq) == offsetof(DefaultEnumerationWithFilter, dewf_seq));
 PRIVATE struct type_member tpconst DefaultEnumerationWithFilter__members[] = {
-	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultEnumerationWithFilter, dewf_start)),
-	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(DefaultEnumerationWithFilter, dewf_end)),
+	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT_AB, offsetof(DefaultEnumerationWithFilter, dewf_start)),
+	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT_AB, offsetof(DefaultEnumerationWithFilter, dewf_end)),
 #define DefaultEnumeration__members (DefaultEnumerationWithFilter__members + 2)
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(DefaultEnumerationWithFilter, dewf_seq)),
+	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT_AB, offsetof(DefaultEnumerationWithFilter, dewf_seq)),
 	TYPE_MEMBER_END
 };
 
@@ -98,7 +98,7 @@ STATIC_ASSERT(offsetof(DefaultEnumerationWithIntFilter, dewif_seq) == offsetof(P
 PRIVATE struct type_member tpconst DefaultEnumerationWithIntFilter__members[] = {
 	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultEnumerationWithIntFilter, dewif_start)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultEnumerationWithIntFilter, dewif_end)),
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(DefaultEnumerationWithIntFilter, dewif_seq)),
+	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT_AB, offsetof(DefaultEnumerationWithIntFilter, dewif_seq)),
 	TYPE_MEMBER_END
 };
 

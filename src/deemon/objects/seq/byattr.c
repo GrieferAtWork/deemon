@@ -31,7 +31,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_HAS_ISERR, Dee_HAS_ISNO, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeString_Check, DeeString_STR */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_attr, type_member */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_attr, type_member */
 
 #include "../generic-proxy.h"
 #include "byattr.h"
@@ -216,7 +216,7 @@ err:
 
 
 PRIVATE struct type_member tpconst byattr_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(MapByAttr, mba_map),
+	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT_AB, offsetof(MapByAttr, mba_map),
 	                      "->?DMapping\n"
 	                      "Underlying mapping"),
 	TYPE_MEMBER_END

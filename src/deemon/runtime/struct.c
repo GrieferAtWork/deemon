@@ -33,7 +33,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
 #include <deemon/struct.h>          /* Dee_struct_object_foreach_field_cb_t, Dee_struct_object_foreach_field_undo_t */
 #include <deemon/system-features.h> /* bzero, memcpy */
-#include <deemon/type.h>            /* DeeType_*, Dee_XVisit, Dee_type_member, STRUCT_*, TYPE_MEMBER_ISFIELD, type_cmp, type_member */
+#include <deemon/type.h>            /* DeeType_*, Dee_Visit, Dee_XVisit, Dee_type_member, STRUCT_*, TYPE_MEMBER_ISFIELD, type_cmp, type_member */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/hash.h>       /* DeeObject_HashGeneric, Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine, Dee_HashPtr */
@@ -277,6 +277,7 @@ Dee_type_struct_getlocfields_uncached(DeeTypeObject *__restrict self) {
 			switch (member->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 			case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 			case STRUCT_OBJECT & ~STRUCT_CONST:
+			case STRUCT_OBJECT_AB & ~STRUCT_CONST:
 			case STRUCT_WOBJECT_OPT:
 			case STRUCT_WOBJECT:
 			case STRUCT_VARIANT:
@@ -465,7 +466,10 @@ struct_fini_cb(void *arg, DeeTypeObject *declaring_type,
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 	case STRUCT_OBJECT & ~STRUCT_CONST:
-		Dee_XDecref(*(DeeObject **)dst);
+		Dee_XDecref(*(DREF DeeObject **)dst);
+		break;
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+		Dee_Decref(*(DREF DeeObject **)dst);
 		break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT:
@@ -504,6 +508,11 @@ struct_copy_cb(void *arg, DeeTypeObject *declaring_type,
 		DeeObject *obj = *(DeeObject *const *)src;
 		*(DeeObject **)dst = obj;
 		Dee_XIncref(obj);
+	}	break;
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST: {
+		DeeObject *obj = *(DeeObject *const *)src;
+		*(DeeObject **)dst = obj;
+		Dee_Incref(obj);
 	}	break;
 	case STRUCT_WOBJECT_OPT:
 	case STRUCT_WOBJECT:
@@ -604,6 +613,7 @@ Dee_type_member_init(struct type_member const *desc,
 	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 	case STRUCT_OBJECT & ~STRUCT_CONST:
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
 		Dee_Incref(value);
 		*(DeeObject **)dst = value;
 		break;
@@ -632,6 +642,7 @@ Dee_type_member_init_unbound(struct type_member const *desc, DeeObject *self) {
 	switch (desc->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 	case STRUCT_OBJECT & ~STRUCT_CONST:
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST:
 		*(DeeObject **)dst = NULL;
 		break;
 	case STRUCT_WOBJECT_OPT:
@@ -726,7 +737,8 @@ struct_serialize_cb(void *arg, DeeTypeObject *declaring_type,
 	(void)declaring_type;
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
-	case STRUCT_OBJECT & ~STRUCT_CONST: {
+	case STRUCT_OBJECT & ~STRUCT_CONST:
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST: {
 		DeeObject *obj = *(DeeObject *const *)src;
 		return DeeSerial_XPutObject(data->scd_dst_writer, dst_addr, obj);
 	}	break;
@@ -829,6 +841,9 @@ DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 			case STRUCT_OBJECT & ~STRUCT_CONST:
 				Dee_XVisit(*(DREF DeeObject **)dst);
 				break;
+			case STRUCT_OBJECT_AB & ~STRUCT_CONST:
+				Dee_Visit(*(DREF DeeObject **)dst);
+				break;
 			case STRUCT_VARIANT:
 				Dee_variant_visit((struct Dee_variant *)dst, proc, arg);
 				break;
@@ -848,6 +863,7 @@ DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 			switch (member->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 			case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
 			case STRUCT_OBJECT & ~STRUCT_CONST:
+			case STRUCT_OBJECT_AB & ~STRUCT_CONST:
 				if (!struct_offset_exists_r(tp_base, member->m_desc.md_field.mdf_offset))
 					Dee_XVisit(*(DREF DeeObject **)dst);
 				break;
@@ -930,7 +946,8 @@ struct_printrepr_cb(void *arg, DeeTypeObject *declaring_type,
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
-	case STRUCT_OBJECT & ~STRUCT_CONST: {
+	case STRUCT_OBJECT & ~STRUCT_CONST:
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST: {
 		DeeObject *value = *(DeeObject *const *)src;
 		if (!value)
 			return 0; /* Unbound */
@@ -1206,7 +1223,8 @@ struct_hashof_field(DeeObject *self, struct type_member const *field) {
 	ASSERT(TYPE_MEMBER_ISFIELD(field));
 	switch (field->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
 	case STRUCT_OBJECT_OPT & ~STRUCT_CONST:
-	case STRUCT_OBJECT & ~STRUCT_CONST: {
+	case STRUCT_OBJECT & ~STRUCT_CONST:
+	case STRUCT_OBJECT_AB & ~STRUCT_CONST: {
 		DeeObject *obj = *(DeeObject *const *)src;
 		if (obj == NULL)
 			return Dee_HASHOF_UNBOUND_ITEM;

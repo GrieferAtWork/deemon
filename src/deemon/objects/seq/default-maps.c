@@ -36,7 +36,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_NewEmpty */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
@@ -392,8 +392,8 @@ PRIVATE struct type_seq mu_seq = {
 };
 
 PRIVATE struct type_member mu_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__map_a__", STRUCT_OBJECT, offsetof(MapUnion, mu_a), "->?DMapping"),
-	TYPE_MEMBER_FIELD_DOC("__map_b__", STRUCT_OBJECT, offsetof(MapUnion, mu_b), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC("__map_a__", STRUCT_OBJECT_AB, offsetof(MapUnion, mu_a), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC("__map_b__", STRUCT_OBJECT_AB, offsetof(MapUnion, mu_b), "->?DMapping"),
 	TYPE_MEMBER_END
 };
 
@@ -830,7 +830,7 @@ PRIVATE struct type_cmp muiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst muiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapUnionIterator, mui_union), "->?Ert:MapUnion"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(MapUnionIterator, mui_union), "->?Ert:MapUnion"),
 	TYPE_MEMBER_END
 };
 
@@ -1112,8 +1112,8 @@ PRIVATE struct type_seq mi_seq = {
 };
 
 PRIVATE struct type_member tpconst mi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(MapIntersection, mi_map), "->?DMapping"),
-	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapIntersection, mi_keys), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT_AB, offsetof(MapIntersection, mi_map), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT_AB, offsetof(MapIntersection, mi_keys), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
@@ -1303,9 +1303,9 @@ PRIVATE struct type_iterator miiter_iterator = {
 };
 
 PRIVATE struct type_member tpconst miiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapIntersectionIterator, mii_intersect), "->?Ert:MapIntersection"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapIntersectionIterator, mii_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapIntersectionIterator, mii_keys), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(MapIntersectionIterator, mii_intersect), "->?Ert:MapIntersection"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(MapIntersectionIterator, mii_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT_AB, offsetof(MapIntersectionIterator, mii_keys), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
@@ -1536,8 +1536,8 @@ STATIC_ASSERT(offsetof(MapDifference, md_keys) == offsetof(MapIntersection, mi_k
 #define md_members mi_members
 #else
 PRIVATE struct type_member tpconst md_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(MapDifference, md_map), "->?DMapping"),
-	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapDifference, md_keys), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT_AB, offsetof(MapDifference, md_map), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT_AB, offsetof(MapDifference, md_keys), "->?DSet"),
 	TYPE_MEMBER_END
 };
 #endif
@@ -1671,9 +1671,9 @@ PRIVATE struct type_iterator mditer_iterator = {
 };
 
 PRIVATE struct type_member tpconst mditer_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapDifferenceIterator, mdi_diff), "->?Ert:MapDifference"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapDifferenceIterator, mdi_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT, offsetof(MapDifferenceIterator, mdi_keys), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(MapDifferenceIterator, mdi_diff), "->?Ert:MapDifference"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(MapDifferenceIterator, mdi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__keys__", STRUCT_OBJECT_AB, offsetof(MapDifferenceIterator, mdi_keys), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
@@ -2235,8 +2235,8 @@ PRIVATE struct type_seq msd_seq = {
 };
 
 PRIVATE struct type_member tpconst msd_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__map_a__", STRUCT_OBJECT, offsetof(MapSymmetricDifference, msd_a), "->?DMapping"),
-	TYPE_MEMBER_FIELD_DOC("__map_b__", STRUCT_OBJECT, offsetof(MapSymmetricDifference, msd_b), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC("__map_a__", STRUCT_OBJECT_AB, offsetof(MapSymmetricDifference, msd_a), "->?DMapping"),
+	TYPE_MEMBER_FIELD_DOC("__map_b__", STRUCT_OBJECT_AB, offsetof(MapSymmetricDifference, msd_b), "->?DMapping"),
 	TYPE_MEMBER_END
 };
 
@@ -2690,7 +2690,7 @@ err:
 
 
 PRIVATE struct type_member tpconst msditer_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapSymmetricDifferenceIterator, msdi_symdiff), "->?Ert:MapSymmetricDifference"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(MapSymmetricDifferenceIterator, msdi_symdiff), "->?Ert:MapSymmetricDifference"),
 	TYPE_MEMBER_END
 };
 

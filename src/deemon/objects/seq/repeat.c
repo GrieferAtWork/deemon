@@ -326,7 +326,7 @@ PRIVATE struct type_getset tpconst repeatiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst repeatiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RepeatIterator, rpi_rep), "->?Ert:SeqRepeat"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(RepeatIterator, rpi_rep), "->?Ert:SeqRepeat"),
 	TYPE_MEMBER_END
 };
 
@@ -626,7 +626,7 @@ PRIVATE struct type_getset tpconst repeat_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst repeat_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Repeat, rp_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(Repeat, rp_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(Repeat, rp_num)),
 	TYPE_MEMBER_END
 };
@@ -794,8 +794,8 @@ repeatitemiter_next(RepeatItemIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst repeatitemiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_rep), "->?Ert:SeqRepeatItem"),
-	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT, offsetof(RepeatItemIterator, rii_obj)),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(RepeatItemIterator, rii_rep), "->?Ert:SeqRepeatItem"),
+	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT_AB, offsetof(RepeatItemIterator, rii_obj)),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T, offsetof(RepeatItemIterator, rii_num)),
 	TYPE_MEMBER_END
 };
@@ -1057,7 +1057,7 @@ PRIVATE struct type_seq repeatitem_seq = {
 };
 
 PRIVATE struct type_member tpconst repeatitem_members[] = {
-	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT, offsetof(RepeatItem, rpit_obj)),
+	TYPE_MEMBER_FIELD("__obj__", STRUCT_OBJECT_AB, offsetof(RepeatItem, rpit_obj)),
 	TYPE_MEMBER_FIELD("__num__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(RepeatItem, rpit_num)),
 	TYPE_MEMBER_END
 };

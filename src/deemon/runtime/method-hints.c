@@ -27,12 +27,13 @@
 #include <deemon/map.h>            /* DeeMapping_Type */
 #include <deemon/method-hints.h>   /* Dee_tmh_id, type_method_hint */
 #include <deemon/mro.h>            /* DeeObject_TFindPrivateAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo */
-#include <deemon/object.h>         /* DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_TYPE, Dee_funptr_t */
+#include <deemon/none-operator.h>  /* _DeeNone_reti0_1, _DeeNone_reti1_1 */
+#include <deemon/object.h>         /* DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_YES, Dee_TYPE, Dee_funptr_t */
 #include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutDefaults, DeeType_GetNativeOperatorWithoutHints, Dee_tno_id */
 #include <deemon/seq.h>            /* DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/set.h>            /* DeeSet_Type */
 #include <deemon/string.h>         /* DeeStringObject */
-#include <deemon/type.h>           /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsHeapType */
+#include <deemon/type.h>           /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsHeapType, Dee_type_member, STRUCT_OBJECT_AB */
 #include <deemon/util/atomic.h>    /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_HALF_TYPE__ */
@@ -2329,6 +2330,46 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 			}
 		}
 		break;
+
+#ifdef SEARCH_IN_TYPE_FOR_ATTRIBUTES
+	case Dee_ATTRINFO_INSTANCE_MEMBER:
+#else /* SEARCH_IN_TYPE_FOR_ATTRIBUTES */
+	case Dee_ATTRINFO_MEMBER:
+#endif /* !SEARCH_IN_TYPE_FOR_ATTRIBUTES */
+	{
+		struct Dee_type_member const *member;
+		member = info->ai_value.v_member;
+		switch (specs->mis_attr_kind) {
+		case MH_KIND_GETSET_GET:
+		case MH_KIND_GETSET_TRYGET:
+			/* Optimize some known member getters */
+			switch (member->m_desc.md_field.mdf_type) {
+			case STRUCT_OBJECT_AB:
+				switch (member->m_desc.md_field.mdf_offset) {
+				case offsetof(ProxyObject3, po_obj1):
+					return (Dee_funptr_t)&generic_proxy3__getobj1;
+				case offsetof(ProxyObject3, po_obj2):
+					return (Dee_funptr_t)&generic_proxy3__getobj2;
+				case offsetof(ProxyObject3, po_obj3):
+					return (Dee_funptr_t)&generic_proxy3__getobj3;
+				default: break;
+				}
+				break;
+			default: break;
+			}
+			break;
+		case MH_KIND_GETSET_BOUND:
+			if (member->m_desc.md_field.mdf_type == STRUCT_OBJECT_AB) {
+#if Dee_BOUND_YES == 1
+				return (Dee_funptr_t)&_DeeNone_reti1_1;
+#elif Dee_BOUND_YES == 0
+				return (Dee_funptr_t)&_DeeNone_reti0_1;
+#endif /* ... */
+			}
+			break;
+		default: break;
+		}
+	}	break;
 
 	default:
 		break;

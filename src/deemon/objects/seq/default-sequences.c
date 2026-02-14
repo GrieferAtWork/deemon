@@ -853,7 +853,7 @@ err:
 #define ds_sgif_members ds_sgi_members
 #define ds_stgi_members ds_sgi_members
 PRIVATE struct type_member tpconst ds_sgi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_start)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_end)),
 	TYPE_MEMBER_END
@@ -1790,9 +1790,9 @@ PRIVATE struct type_seq ds_sg_seq = {
 };
 
 PRIVATE struct type_member tpconst ds_sg_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeObAndGetItem, dssg_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeObAndGetItem, dssg_start)),
-	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeObAndGetItem, dssg_end)),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(DefaultSequence_WithSizeObAndGetItem, dssg_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT_AB, offsetof(DefaultSequence_WithSizeObAndGetItem, dssg_start)),
+	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT_AB, offsetof(DefaultSequence_WithSizeObAndGetItem, dssg_end)),
 	TYPE_MEMBER_END
 };
 
@@ -2262,10 +2262,10 @@ PRIVATE struct type_seq ds_ial_seq = {
 };
 
 PRIVATE struct type_member tpconst ds_ial_members[] = {
-	TYPE_MEMBER_FIELD("__start__", STRUCT_OBJECT, offsetof(DefaultSequence_WithIterAndLimit, dsial_start)),
-	TYPE_MEMBER_FIELD("__limit__", STRUCT_OBJECT, offsetof(DefaultSequence_WithIterAndLimit, dsial_limit)),
+	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultSequence_WithIterAndLimit, dsial_start)),
+	TYPE_MEMBER_FIELD("__limit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultSequence_WithIterAndLimit, dsial_limit)),
 #define ds_i_members (ds_ial_members + 2)
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultSequence_WithIterAndLimit, dsial_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(DefaultSequence_WithIterAndLimit, dsial_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
 

@@ -280,7 +280,7 @@ PRIVATE struct type_iterator udictiterator_iterator = {
 
 
 PRIVATE struct type_member tpconst udictiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(UDictIterator, udi_dict), "->?GUniqueDict"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(UDictIterator, udi_dict), "->?GUniqueDict"),
 	TYPE_MEMBER_END
 };
 
@@ -1510,7 +1510,7 @@ PRIVATE struct type_iterator urodictiterator_iterator = {
 };
 
 PRIVATE struct type_member tpconst urodictiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(URoDictIterator, urdi_dict), "->?AFrozen?GUniqueDict"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(URoDictIterator, urdi_dict), "->?AFrozen?GUniqueDict"),
 	TYPE_MEMBER_END
 };
 

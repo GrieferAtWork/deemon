@@ -7165,7 +7165,8 @@ _fg_vpush_type_member(struct fungen *__restrict self,
 	}	break;
 
 	CASE(STRUCT_OBJECT):
-	CASE(STRUCT_OBJECT_OPT): {
+	CASE(STRUCT_OBJECT_OPT):
+	CASE(STRUCT_OBJECT_AB): {
 		/* XXX: It's possible to inline these! */
 		(void)ref;
 	}	break;
@@ -7248,6 +7249,7 @@ push_true:
 	CASE(STRUCT_UNSIGNED|STRUCT_INT128):
 	CASE(STRUCT_INT128):
 	CASE(STRUCT_WOBJECT_OPT):
+	CASE(STRUCT_OBJECT_AB):
 		goto push_true;
 
 	CASE(STRUCT_WOBJECT): {

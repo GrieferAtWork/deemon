@@ -148,10 +148,10 @@ err:
 }
 
 PRIVATE struct type_member tpconst uqiwk_members[] = {
-	TYPE_MEMBER_FIELD("__key__", STRUCT_OBJECT, offsetof(DistinctIteratorWithKey, diwk_key)),
+	TYPE_MEMBER_FIELD("__key__", STRUCT_OBJECT_AB, offsetof(DistinctIteratorWithKey, diwk_key)),
 #define di_members  (uqiwk_members + 1)
 #define dmi_members di_members
-	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT, offsetof(DistinctIteratorWithKey, diwk_iter)),
+	TYPE_MEMBER_FIELD("__iter__", STRUCT_OBJECT_AB, offsetof(DistinctIteratorWithKey, diwk_iter)),
 	TYPE_MEMBER_FIELD("__num_encountered__", STRUCT_ATOMIC | STRUCT_CONST | STRUCT_SIZE_T,
 	                  offsetof(DistinctIteratorWithKey, diwk_encountered.shswl_set.shs_size)),
 	TYPE_MEMBER_END
@@ -521,8 +521,8 @@ PRIVATE struct type_seq dswk_seq = {
 };
 
 PRIVATE struct type_member tpconst dswk_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DistinctSetWithKey, dswk_seq), "->?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__key__", STRUCT_OBJECT, offsetof(DistinctSetWithKey, dswk_key), "->?DCallable"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(DistinctSetWithKey, dswk_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__key__", STRUCT_OBJECT_AB, offsetof(DistinctSetWithKey, dswk_key), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 

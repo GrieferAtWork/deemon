@@ -34,7 +34,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* Dee_EmptyString */
 #include <deemon/system-features.h>    /* memcpyc */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, type_member, type_seq */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, type_member, type_seq */
 
 #include "regroups.h"
 
@@ -302,7 +302,7 @@ PRIVATE struct type_seq rsb_seq = {
 };
 
 PRIVATE struct type_member tpconst rss_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(ReSubStrings, rss_baseown), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT_AB, offsetof(ReSubStrings, rss_baseown), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 
@@ -310,7 +310,7 @@ PRIVATE struct type_member tpconst rss_members[] = {
 #define rsb_members rss_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst rsb_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(ReSubStrings, rss_baseown), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT_AB, offsetof(ReSubStrings, rss_baseown), "->?DBytes"),
 	TYPE_MEMBER_END
 };
 #endif /* !CONFIG_NO_DOC */

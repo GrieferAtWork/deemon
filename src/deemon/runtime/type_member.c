@@ -65,6 +65,7 @@ STATIC_ASSERT((STRUCT_OBJECT & 1) == 1);
 STATIC_ASSERT((STRUCT_WOBJECT & 1) == 1);
 STATIC_ASSERT((STRUCT_OBJECT_OPT & 1) == 1);
 STATIC_ASSERT((STRUCT_WOBJECT_OPT & 1) == 1);
+STATIC_ASSERT((STRUCT_OBJECT_AB & 1) == 1);
 STATIC_ASSERT((STRUCT_CSTR & 1) == 1);
 STATIC_ASSERT((STRUCT_CSTR_OPT & 1) == 1);
 STATIC_ASSERT((STRUCT_CSTR_EMPTY & 1) == 1);
@@ -665,6 +666,13 @@ handle_null_ob:
 		return ob;
 	}	break;
 
+	CASE(STRUCT_OBJECT_AB): {
+		DeeObject *ob;
+		ob = FIELD(DeeObject *);
+		Dee_Incref(ob);
+		return ob;
+	}	break;
+
 	CASE(STRUCT_CSTR):
 	CASE(STRUCT_CSTR_OPT):
 	CASE(STRUCT_CSTR_EMPTY): {
@@ -787,20 +795,18 @@ Dee_type_member_tryget(struct type_member const *desc,
 #define CASE(x) case (x) & ~(STRUCT_CONST | STRUCT_ATOMIC)
 
 	CASE(STRUCT_WOBJECT): {
-		DeeObject *ob;
+		DREF DeeObject *ob;
 		ob = Dee_weakref_lock(&FIELD(struct Dee_weakref));
 		if unlikely(!ob)
-			goto handle_null_ob;
+			ob = ITER_DONE;
 		return ob;
 	}	break;
 
 	CASE(STRUCT_OBJECT): {
-		DeeObject *ob;
+		DREF DeeObject *ob;
 		ob = FIELD(DeeObject *);
-		if unlikely(!ob) {
-handle_null_ob:
-			ob = Dee_None;
-		}
+		if unlikely(!ob)
+			return ITER_DONE;
 		Dee_Incref(ob);
 		return ob;
 	}	break;
@@ -822,6 +828,7 @@ handle_null_ob:
 	CASE(STRUCT_NONE):
 	CASE(STRUCT_OBJECT_OPT):
 	CASE(STRUCT_WOBJECT_OPT):
+	CASE(STRUCT_OBJECT_AB):
 	CASE(STRUCT_CSTR_OPT):
 	CASE(STRUCT_CSTR_EMPTY):
 	CASE(STRUCT_STRING):
@@ -902,6 +909,7 @@ Dee_type_member_bound(struct type_member const *desc,
 	CASE(STRUCT_UNSIGNED|STRUCT_INT128):
 	CASE(STRUCT_INT128):
 	CASE(STRUCT_WOBJECT_OPT):
+	CASE(STRUCT_OBJECT_AB):
 		return true;
 
 	CASE(STRUCT_VARIANT):

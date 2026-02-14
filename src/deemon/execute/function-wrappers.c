@@ -262,7 +262,7 @@ PRIVATE struct type_getset tpconst funcstaticsiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst funcstaticsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FunctionStaticsIterator, fsi_func), "->?DFunction"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(FunctionStaticsIterator, fsi_func), "->?DFunction"),
 	TYPE_MEMBER_FIELD("__sid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionStaticsIterator, fsi_sid)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionStaticsIterator, fsi_end)),
 	TYPE_MEMBER_END
@@ -577,7 +577,7 @@ PRIVATE struct type_member tpconst funcstatics_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst funcstatics_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FunctionStatics, fs_func), "->?DFunction"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(FunctionStatics, fs_func), "->?DFunction"),
 	TYPE_MEMBER_END
 };
 
@@ -663,11 +663,8 @@ INTDEF DeeTypeObject FunctionSymbolsByNameIterator_Type;
 INTDEF DeeTypeObject FunctionSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject FunctionSymbolsByName_Type;
 
-
-PRIVATE WUNUSED NONNULL((1)) DREF FunctionSymbolsByName *DCALL
-funcsymbolsbynameiter_nii_getseq(FunctionSymbolsByNameIterator *__restrict self) {
-	return_reference_(self->fsbni_seq);
-}
+STATIC_ASSERT(offsetof(FunctionSymbolsByNameIterator, fsbni_seq) == offsetof(ProxyObject, po_obj));
+#define funcsymbolsbynameiter_nii_getseq generic_proxy__getobj
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 funcsymbolsbynameiter_nii_getindex(FunctionSymbolsByNameIterator *__restrict self) {
@@ -940,8 +937,8 @@ PRIVATE struct type_cmp funcsymbolsbynameiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbynameiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(FunctionSymbolsByNameIterator, fsbni_seq), "->?Ert:FunctionSymbolsByName"),
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FunctionSymbolsByNameIterator, fsbni_func), "->?DFunction"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(FunctionSymbolsByNameIterator, fsbni_seq), "->?Ert:FunctionSymbolsByName"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(FunctionSymbolsByNameIterator, fsbni_func), "->?DFunction"),
 	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByNameIterator, fsbni_rid)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByNameIterator, fsbni_end)),
 	TYPE_MEMBER_END
@@ -1708,7 +1705,7 @@ PRIVATE struct type_getset tpconst funcsymbolsbyname_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FunctionSymbolsByName, fsbn_func), "->?DFunction"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(FunctionSymbolsByName, fsbn_func), "->?DFunction"),
 	TYPE_MEMBER_FIELD("__ridstart__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByName, fsbn_rid_start)),
 	TYPE_MEMBER_FIELD("__ridend__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByName, fsbn_rid_end)),
 	TYPE_MEMBER_END
@@ -1860,10 +1857,8 @@ INTDEF DeeTypeObject YieldFunctionSymbolsByNameIterator_Type;
 INTDEF DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject YieldFunctionSymbolsByName_Type;
 
-PRIVATE WUNUSED NONNULL((1)) DREF YieldFunctionSymbolsByName *DCALL
-yfuncsymbolsbynameiter_nii_getseq(YieldFunctionSymbolsByNameIterator *__restrict self) {
-	return_reference_(self->yfsbni_seq);
-}
+STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offsetof(ProxyObject, po_obj));
+#define yfuncsymbolsbynameiter_nii_getseq generic_proxy__getobj
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 yfuncsymbolsbynameiter_nii_getindex(YieldFunctionSymbolsByNameIterator *__restrict self) {
@@ -2283,7 +2278,7 @@ PRIVATE struct type_getset tpconst yfuncsymbolsbynameiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst yfuncsymbolsbynameiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq), "->?Ert:YieldFunctionSymbolsByName"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq), "->?Ert:YieldFunctionSymbolsByName"),
 	TYPE_MEMBER_FIELD("__aid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_aid)),
 	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_rid)),
 	TYPE_MEMBER_END
@@ -2909,7 +2904,7 @@ PRIVATE struct type_getset tpconst yfuncsymbolsbyname_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst yfuncsymbolsbyname_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT, offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc), "->?Ert:YieldFunction"),
+	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT_AB, offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc), "->?Ert:YieldFunction"),
 	TYPE_MEMBER_FIELD("__nargs__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_nargs)),
 	TYPE_MEMBER_FIELD("__ridstart__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_rid_start)),
 	TYPE_MEMBER_FIELD("__ridend__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_rid_end)),
@@ -3188,8 +3183,8 @@ PRIVATE struct type_getset tpconst frameargs_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst frameargs_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameArgs, fa_frame), "->?Ert:Frame"),
-	TYPE_MEMBER_FIELD_DOC("__code__", STRUCT_OBJECT, offsetof(FrameArgs, fa_code), "->?Ert:Code"),
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT_AB, offsetof(FrameArgs, fa_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_FIELD_DOC("__code__", STRUCT_OBJECT_AB, offsetof(FrameArgs, fa_code), "->?Ert:Code"),
 	TYPE_MEMBER_END
 };
 
@@ -3529,7 +3524,7 @@ PRIVATE struct type_getset tpconst framelocals_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst framelocals_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameLocals, fl_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT_AB, offsetof(FrameLocals, fl_frame), "->?Ert:Frame"),
 	TYPE_MEMBER_FIELD("__localc__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameLocals, fl_localc)),
 	TYPE_MEMBER_END
 };
@@ -3956,7 +3951,7 @@ PRIVATE struct type_seq framestack_seq = {
 };
 
 PRIVATE struct type_member tpconst framestack_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameStack, fs_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT_AB, offsetof(FrameStack, fs_frame), "->?Ert:Frame"),
 	TYPE_MEMBER_END
 };
 
@@ -4062,10 +4057,8 @@ INTDEF DeeTypeObject FrameSymbolsByNameIterator_Type;
 INTDEF DeeTypeObject FrameSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject FrameSymbolsByName_Type;
 
-PRIVATE WUNUSED NONNULL((1)) DREF FrameSymbolsByName *DCALL
-framesymbolsbynameiter_nii_getseq(FrameSymbolsByNameIterator *__restrict self) {
-	return_reference_(self->frsbni_seq);
-}
+STATIC_ASSERT(offsetof(FrameSymbolsByNameIterator, frsbni_seq) == offsetof(ProxyObject, po_obj));
+#define framesymbolsbynameiter_nii_getseq generic_proxy__getobj
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 framesymbolsbynameiter_nii_getindex(FrameSymbolsByNameIterator *__restrict self) {
@@ -4716,7 +4709,7 @@ PRIVATE struct type_getset tpconst framesymbolsbynameiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst framesymbolsbynameiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(FrameSymbolsByNameIterator, frsbni_seq), "->?Ert:FrameSymbolsByName"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(FrameSymbolsByNameIterator, frsbni_seq), "->?Ert:FrameSymbolsByName"),
 	TYPE_MEMBER_FIELD("__aid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByNameIterator, frsbni_idx.frsbnii_aid)),
 	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByNameIterator, frsbni_idx.frsbnii_rid)),
 	TYPE_MEMBER_FIELD("__lid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByNameIterator, frsbni_idx.frsbnii_lid)),
@@ -5542,8 +5535,8 @@ PRIVATE struct type_member tpconst framesymbolsbyname_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst framesymbolsbyname_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameSymbolsByName, frsbn_frame), "->?Ert:Frame"),
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FrameSymbolsByName, frsbn_func), "->?DFunction"),
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT_AB, offsetof(FrameSymbolsByName, frsbn_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(FrameSymbolsByName, frsbn_func), "->?DFunction"),
 	TYPE_MEMBER_FIELD("__nargs__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByName, frsbn_nargs)),
 	TYPE_MEMBER_FIELD("__ridstart__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByName, frsbn_rid_start)),
 	TYPE_MEMBER_FIELD("__ridend__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByName, frsbn_rid_end)),

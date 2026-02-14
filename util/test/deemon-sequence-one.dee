@@ -20,6 +20,7 @@
  */
 
 import * from deemon;
+import .common.test;
 
 assert type [42] === List;
 assert type (42,) === Tuple;
@@ -37,6 +38,9 @@ assert {"foo"}.bposition("z") == 1;
 assert (0, 0) == {"foo"}.brange("a");
 assert (0, 1) == {"foo"}.brange("foo");
 assert (1, 1) == {"foo"}.brange("z");
+
+test.assertSequence({42}, (42,));
+test.assertSequence({10, 20}, (10, 20));
 
 
 #if __DEEMON_VARIANT__ == "gatw"

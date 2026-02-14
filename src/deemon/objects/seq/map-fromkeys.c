@@ -34,7 +34,7 @@
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type */
 #include <deemon/set.h>                /* DeeSet_NewEmpty, DeeSet_Type, Dee_EmptySet */
 #include <deemon/super.h>              /* DeeSuper_New */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -185,8 +185,8 @@ PRIVATE struct type_iterator mfkci_iterator = {
 
 
 PRIVATE struct type_member tpconst mfkvi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_base), "->?Ert:MapFromKeysAndValue"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(MapFromKeysIterator, mfki_base), "->?Ert:MapFromKeysAndValue"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(MapFromKeysIterator, mfki_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 
@@ -194,8 +194,8 @@ PRIVATE struct type_member tpconst mfkvi_members[] = {
 #define mfkci_members mfkvi_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst mfkci_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_base), "->?Ert:MapFromKeysAndCallback"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(MapFromKeysIterator, mfki_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(MapFromKeysIterator, mfki_base), "->?Ert:MapFromKeysAndCallback"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(MapFromKeysIterator, mfki_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 #endif /* !CONFIG_NO_DOC */
@@ -398,14 +398,14 @@ PRIVATE struct type_getset tpconst mfkc_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst mfkv_members[] = {
-	TYPE_MEMBER_FIELD("__keys__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_keys)),
-	TYPE_MEMBER_FIELD("__value__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_value)),
+	TYPE_MEMBER_FIELD("__keys__", STRUCT_OBJECT_AB, offsetof(MapFromKeys, mfk_keys)),
+	TYPE_MEMBER_FIELD("__value__", STRUCT_OBJECT_AB, offsetof(MapFromKeys, mfk_value)),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_member tpconst mfkc_members[] = {
-	TYPE_MEMBER_FIELD("__keys__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_keys)),
-	TYPE_MEMBER_FIELD_DOC("__valuefor__", STRUCT_OBJECT, offsetof(MapFromKeys, mfk_value), "->?DCallable"),
+	TYPE_MEMBER_FIELD("__keys__", STRUCT_OBJECT_AB, offsetof(MapFromKeys, mfk_keys)),
+	TYPE_MEMBER_FIELD_DOC("__valuefor__", STRUCT_OBJECT_AB, offsetof(MapFromKeys, mfk_value), "->?DCallable"),
 	TYPE_MEMBER_END
 };
 

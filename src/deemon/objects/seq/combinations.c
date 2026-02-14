@@ -33,7 +33,7 @@
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/tuple.h>              /* Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_FNOREFESCAPE, STRUCT_OBJECT, STRUCT_WOBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, STRUCT_WOBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 #include <deemon/util/weakref.h>       /* Dee_weakref_* */
 
@@ -402,7 +402,7 @@ PRIVATE struct type_getset tpconst sc_getsets[] = {
 #define src_members sc_members
 #define sp_members  sc_members
 PRIVATE struct type_member tpconst sc_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqCombinations, sc_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(SeqCombinations, sc_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
 
@@ -1017,7 +1017,7 @@ PRIVATE struct type_getset tpconst sci_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst sci_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqCombinations"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqCombinations"),
 	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT, offsetof(SeqCombinationsIterator, sci_view), "->?Ert:SeqCombinationsView"),
 	TYPE_MEMBER_END
 };
@@ -1026,12 +1026,12 @@ PRIVATE struct type_member tpconst sci_members[] = {
 #define spi_members  sci_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst srci_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqRepeatCombinations"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqRepeatCombinations"),
 	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT, offsetof(SeqCombinationsIterator, sci_view), "->?Ert:SeqCombinationsView"),
 	TYPE_MEMBER_END
 };
 PRIVATE struct type_member tpconst spi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqPermutations"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(SeqCombinationsIterator, sci_com), "->?Ert:SeqPermutations"),
 	TYPE_MEMBER_FIELD_DOC("__wview__", STRUCT_WOBJECT, offsetof(SeqCombinationsIterator, sci_view), "->?Ert:SeqCombinationsView"),
 	TYPE_MEMBER_END
 };
@@ -1312,11 +1312,11 @@ err:
 
 
 PRIVATE struct type_member tpconst scv_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqCombinationsView, scv_iter),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SeqCombinationsView, scv_iter),
 	                      "->?X3?Ert:SeqCombinationsIterator"
 	                      /**/ "?Ert:SeqRepeatCombinationsIterator"
 	                      /**/ "?Ert:SeqPermutationsIterator"),
-	TYPE_MEMBER_FIELD_DOC("__com__", STRUCT_OBJECT, offsetof(SeqCombinationsView, scv_com),
+	TYPE_MEMBER_FIELD_DOC("__com__", STRUCT_OBJECT_AB, offsetof(SeqCombinationsView, scv_com),
 	                      "->?X3?Ert:SeqCombinations"
 	                      /**/ "?Ert:SeqRepeatCombinations"
 	                      /**/ "?Ert:SeqPermutations"),

@@ -35,7 +35,7 @@
 #include <deemon/pair.h>               /* DeeSeq_OfPairInherited */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include "../objects/generic-proxy.h"
@@ -279,7 +279,7 @@ PRIVATE struct type_getset tpconst modexportsiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst modexportsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT_AB,
 	                      offsetof(ModuleExportsIterator, mei_module),
 	                      "->?DModule"),
 	TYPE_MEMBER_END
@@ -1258,7 +1258,8 @@ PRIVATE struct type_getset tpconst modexports_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst modexports_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT, offsetof(ModuleExports, me_module), "->?DModule"),
+	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT_AB,
+	                      offsetof(ModuleExports, me_module), "->?DModule"),
 	TYPE_MEMBER_END
 };
 

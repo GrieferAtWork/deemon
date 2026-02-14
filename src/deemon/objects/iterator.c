@@ -39,7 +39,7 @@
 #include <deemon/seq.h>                /* DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
 #include <hybrid/overflow.h>  /* OVERFLOW_UADD */
@@ -2769,7 +2769,7 @@ PRIVATE struct type_seq if_seq = {
 };
 
 PRIVATE struct type_member tpconst if_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(IteratorFuture, if_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(IteratorFuture, if_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 

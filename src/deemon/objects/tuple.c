@@ -940,7 +940,7 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst tuple_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
 	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(TupleIterator, ti_index)),
 	TYPE_MEMBER_END
 };
@@ -960,10 +960,8 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
-tuple_iterator_nii_getseq(TupleIterator *__restrict self) {
-	return_reference_(self->ti_tuple);
-}
+STATIC_ASSERT(offsetof(TupleIterator, ti_tuple) == offsetof(ProxyObject, po_obj));
+#define tuple_iterator_nii_getseq generic_proxy__getobj
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 tuple_iterator_nii_getindex(TupleIterator *__restrict self) {

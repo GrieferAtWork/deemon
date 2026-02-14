@@ -4079,7 +4079,7 @@ PRIVATE struct type_member tpconst bsv_members[] = {
 	                         "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)"),
 	TYPE_MEMBER_BITFIELD_DOC("ismutable", STRUCT_CONST, BitsetView, bsv_bflags, Dee_BUFFER_FWRITABLE,
 	                         "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(BitsetView, bsv_owner), "->?X2?GBitset?O"),
+	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT_AB, offsetof(BitsetView, bsv_owner), "->?X2?GBitset?O"),
 	TYPE_MEMBER_FIELD_DOC("__startbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetView, bsv_startbit),
 	                      "Starting bit number in the buffer of ?#__owner__"),
 	TYPE_MEMBER_FIELD_DOC("__endbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetView, bsv_endbit),
@@ -4519,7 +4519,7 @@ PRIVATE struct type_cmp bsiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst bsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BitsetIterator, bsi_owner),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(BitsetIterator, bsi_owner),
 	                      "->?X2?GBitset?AView?GBitset\n"
 	                      "The ?GBitset or ?AView?GBitset that is being iterated"),
 	TYPE_MEMBER_FIELD_DOC("__startbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetIterator, bsi_startbit),

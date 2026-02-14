@@ -41,7 +41,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* strcmp */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TP_FVARIABLE, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TP_FVARIABLE, TYPE_*, type_* */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int64_t */
@@ -163,7 +163,7 @@ PRIVATE struct type_getset tpconst cellfmt_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst cellfmt_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__rowfmt__", STRUCT_OBJECT, offsetof(CellFmt, cfo_fmt), "->?G_RowFmt"),
+	TYPE_MEMBER_FIELD_DOC("__rowfmt__", STRUCT_OBJECT_AB, offsetof(CellFmt, cfo_fmt), "->?G_RowFmt"),
 	TYPE_MEMBER_END
 };
 
@@ -303,7 +303,7 @@ PRIVATE struct type_seq rowfmtcolumns_seq = {
 };
 
 PRIVATE struct type_member tpconst rowfmtcolumns_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__rowfmt__", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC("__rowfmt__", STRUCT_OBJECT_AB,
 	                      offsetof(RowFmtColumns, rfc_fmt),
 	                      "->?G_RowFmt"),
 	TYPE_MEMBER_END

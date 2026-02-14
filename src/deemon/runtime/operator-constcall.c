@@ -31,7 +31,7 @@
 #include <deemon/rodict.h>         /* DeeRoDictObject, DeeRoDict_Type, _DeeRoDict_GetRealVTab */
 #include <deemon/roset.h>          /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/tuple.h>          /* DeeTupleObject, DeeTuple_Type */
-#include <deemon/type.h>           /* DeeType_*, Dee_STRUCT_OBJECT, Dee_STRUCT_OBJECT_OPT, Dee_TYPE_MEMBER_ISFIELD, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, STRUCT_ATOMIC, STRUCT_CONST, TYPE_MEMBER_ISCONST, type_member */
+#include <deemon/type.h>           /* DeeType_*, Dee_STRUCT_*, Dee_TYPE_MEMBER_ISFIELD, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, STRUCT_ATOMIC, STRUCT_CONST, TYPE_MEMBER_ISCONST, type_member */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
@@ -131,6 +131,7 @@ check_foreach_field(DeeObject *ob, bool (DCALL *check)(DeeObject *ob)) {
 				if (!Dee_TYPE_MEMBER_ISFIELD(iter))
 					continue;
 				if (iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT ||
+				    iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT_AB ||
 				    iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT_OPT) {
 					DeeObject *value = *(DeeObject *const *)((byte_t *)ob + iter->m_desc.md_field.mdf_offset);
 					if (value && !(*check)(value))
@@ -162,6 +163,7 @@ check_foreach_field2(DeeObject *a, DeeObject *b,
 				if (!Dee_TYPE_MEMBER_ISFIELD(iter))
 					continue;
 				if (iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT ||
+				    iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT_AB ||
 				    iter->m_desc.md_field.mdf_type == Dee_STRUCT_OBJECT_OPT) {
 					DeeObject *lhs = *(DeeObject *const *)((byte_t *)a + iter->m_desc.md_field.mdf_offset);
 					DeeObject *rhs = *(DeeObject *const *)((byte_t *)b + iter->m_desc.md_field.mdf_offset);

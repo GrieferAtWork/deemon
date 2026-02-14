@@ -1857,6 +1857,7 @@ struct Dee_type_getset {
 #define Dee_STRUCT_WOBJECT     0x0007 /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
 #define Dee_STRUCT_OBJECT_OPT  0x800b /* `[0..1] DREF DeeObject *const' (return `none' if NULL) */
 #define Dee_STRUCT_WOBJECT_OPT 0x000f /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
+#define Dee_STRUCT_OBJECT_AB   0x8013 /* `[1..1] DREF DeeObject *const' (never NULL) */
 #define Dee_STRUCT_CSTR        0x8021 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
 #define Dee_STRUCT_CSTR_OPT    0x8023 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
 #define Dee_STRUCT_CSTR_EMPTY  0x8025 /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */
@@ -1915,6 +1916,7 @@ struct Dee_type_getset {
 #define STRUCT_WOBJECT     Dee_STRUCT_WOBJECT     /* `[0..1] struct Dee_weakref' (raise `Error.AttributeError' if locking fails) */
 #define STRUCT_OBJECT_OPT  Dee_STRUCT_OBJECT_OPT  /* `[0..1] DREF DeeObject *const' (return `none' if NULL) */
 #define STRUCT_WOBJECT_OPT Dee_STRUCT_WOBJECT_OPT /* `[0..1] struct Dee_weakref' (return `none' if locking fails) */
+#define STRUCT_OBJECT_AB   Dee_STRUCT_OBJECT_AB   /* `[1..1] DREF DeeObject *const' (never NULL) */
 #define STRUCT_CSTR        Dee_STRUCT_CSTR        /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; raise `Error.AttributeError' if `NULL') */
 #define STRUCT_CSTR_OPT    Dee_STRUCT_CSTR_OPT    /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return `none' when `NULL') */
 #define STRUCT_CSTR_EMPTY  Dee_STRUCT_CSTR_EMPTY  /* `[0..1] char const *' (utf-8) (Accessible as `DeeStringObject'; return an empty string when `NULL') */

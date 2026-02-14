@@ -143,7 +143,7 @@ PRIVATE struct type_getset tpconst segiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst segiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SegmentsIterator, si_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SegmentsIterator, si_iter), "->?DIterator"),
 	TYPE_MEMBER_FIELD("__len__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(SegmentsIterator, si_len)),
 	TYPE_MEMBER_END
 };
@@ -361,7 +361,7 @@ PRIVATE struct type_seq seg_seq = {
 };
 
 PRIVATE struct type_member tpconst seg_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(Segments, s_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(Segments, s_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__len__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Segments, s_len)),
 	TYPE_MEMBER_END
 };

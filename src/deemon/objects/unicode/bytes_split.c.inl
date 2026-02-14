@@ -240,8 +240,8 @@ bsci_next(BytesSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst bsi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesSplit"),
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesSplit"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
 
@@ -249,8 +249,8 @@ PRIVATE struct type_member tpconst bsi_members[] = {
 #define bcsi_members bsi_members
 #else /* CONFIG_NO_DOC */
 PRIVATE struct type_member tpconst bcsi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesCaseSplit"),
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(BytesSplitIterator, bsi_split), "->?Ert:BytesCaseSplit"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(BytesSplitIterator, bsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
 #endif /* !CONFIG_NO_DOC */
@@ -595,7 +595,7 @@ PRIVATE struct type_getset tpconst bs_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst bs_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesSplit, bs_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(BytesSplit, bs_bytes), "->?DBytes"),
 	TYPE_MEMBER_FIELD("__sep_owner__", STRUCT_OBJECT, offsetof(BytesSplit, bs_sep_owner)),
 	TYPE_MEMBER_FIELD("__sep_length__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BytesSplit, bs_sep_len)),
 	TYPE_MEMBER_END
@@ -955,7 +955,7 @@ PRIVATE struct type_getset tpconst blsi_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst blsi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesLineSplitIterator, blsi_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(BytesLineSplitIterator, blsi_bytes), "->?DBytes"),
 	TYPE_MEMBER_FIELD("__keepends__", STRUCT_CONST | STRUCT_CBOOL, offsetof(BytesLineSplitIterator, blsi_keepends)),
 	TYPE_MEMBER_END
 };
@@ -1115,7 +1115,7 @@ PRIVATE struct type_seq bls_seq = {
 };
 
 PRIVATE struct type_member tpconst bls_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesLineSplit, bls_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(BytesLineSplit, bls_bytes), "->?DBytes"),
 	TYPE_MEMBER_FIELD("__keepends__", STRUCT_CONST | STRUCT_CBOOL, offsetof(BytesLineSplit, bls_keepends)),
 	TYPE_MEMBER_END
 };

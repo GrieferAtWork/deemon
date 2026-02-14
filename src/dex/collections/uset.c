@@ -231,7 +231,7 @@ INTERN struct type_cmp usetiterator_cmp = {
 };
 
 PRIVATE struct type_member tpconst usetiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(USetIterator, usi_set), "->?GUniqueSet"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(USetIterator, usi_set), "->?GUniqueSet"),
 	TYPE_MEMBER_END
 };
 
@@ -1369,7 +1369,7 @@ STATIC_ASSERT(offsetof(USetIterator, usi_next) == offsetof(URoSetIterator, ursi_
 #define urosetiterator_cmp   usetiterator_cmp
 
 PRIVATE struct type_member tpconst urosetiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(URoSetIterator, ursi_set), "->?AFrozen?GUniqueSet"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(URoSetIterator, ursi_set), "->?AFrozen?GUniqueSet"),
 	TYPE_MEMBER_END
 };
 

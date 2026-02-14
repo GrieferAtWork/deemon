@@ -30,12 +30,13 @@
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Clear, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Clear, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/operator-hints.h>     /* DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_*, Dee_EmptySet */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
@@ -145,7 +146,7 @@ STATIC_ASSERT(offsetof(SetInversion, si_set) == offsetof(ProxyObject, po_obj));
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 invset_printrepr(SetInversion *__restrict self,
                  Dee_formatprinter_t printer, void *arg) {
-	if (DeeObject_Implements(self->si_set, &DeeSet_Type))
+	if (DeeType_RequireNativeOperator(Dee_TYPE(self->si_set), inv) == &default__set_operator_inv__unsupported)
 		return DeeFormat_Printf(printer, arg, "~%r", self->si_set);
 	return DeeFormat_Printf(printer, arg, "Set.__inv__(%r)", self->si_set);
 }
@@ -205,7 +206,7 @@ PRIVATE struct type_seq invset_seq = {
 };
 
 PRIVATE struct type_member tpconst invset_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT, offsetof(SetInversion, si_set), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC("__blacklist__", STRUCT_OBJECT_AB, offsetof(SetInversion, si_set), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
@@ -223,11 +224,8 @@ PRIVATE struct type_cmp invset_cmp = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-invset_getset(SetInversion *__restrict self) {
-	return_reference_(self->si_set);
-}
-
+STATIC_ASSERT(offsetof(SetInversion, si_set) == offsetof(ProxyObject, po_obj));
+#define invset_getset generic_proxy__getobj
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 invset_operator_add(SetInversion *self, DeeObject *some_object) {
@@ -736,7 +734,7 @@ PRIVATE struct type_cmp suiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst suiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetUnionIterator, sui_union), "->?Ert:SetUnion"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(SetUnionIterator, sui_union), "->?Ert:SetUnion"),
 	TYPE_MEMBER_END
 };
 
@@ -1120,7 +1118,7 @@ done:
 }
 
 PRIVATE struct type_member tpconst ssditer_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB,
 	                      offsetof(SetSymmetricDifferenceIterator, ssd_set),
 	                      "->?Ert:SetSymmetricDifference"),
 	TYPE_MEMBER_END
@@ -1464,9 +1462,9 @@ STATIC_ASSERT(offsetof(SetIntersectionIterator, sii_iter) == offsetof(ProxyObjec
 #define siiter_cmp           generic_proxy__cmp_recursive
 
 PRIVATE struct type_member tpconst siiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetIntersectionIterator, sii_other), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(SetIntersectionIterator, sii_intersect), "->?Ert:SetIntersection"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SetIntersectionIterator, sii_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT_AB, offsetof(SetIntersectionIterator, sii_other), "->?DSet"),
 	TYPE_MEMBER_END
 };
 
@@ -1732,9 +1730,9 @@ done:
 }
 
 PRIVATE struct type_member tpconst sditer_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_diff), "->?Ert:SetDifference"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_iter), "->?DIterator"),
-	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT, offsetof(SetDifferenceIterator, sdi_other), "->?DSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(SetDifferenceIterator, sdi_diff), "->?Ert:SetDifference"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SetDifferenceIterator, sdi_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC("__other__", STRUCT_OBJECT_AB, offsetof(SetDifferenceIterator, sdi_other), "->?DSet"),
 	TYPE_MEMBER_END
 };
 

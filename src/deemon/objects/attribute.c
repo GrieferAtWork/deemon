@@ -591,7 +591,7 @@ PRIVATE struct type_cmp attr_cmp = {
 };
 
 PRIVATE struct type_member tpconst attr_members[] = {
-	TYPE_MEMBER_FIELD_DOC("decl", STRUCT_OBJECT, offsetof(Attr, a_desc.ad_info.ai_decl),
+	TYPE_MEMBER_FIELD_DOC("decl", STRUCT_OBJECT_AB, offsetof(Attr, a_desc.ad_info.ai_decl),
 	                      "->?X2?DModule?DType\n"
 	                      "The ?DType or ?DModule that is declaring this ?.. "
 	                      /**/ "In the case of custom attribute operators, this is the "
@@ -961,7 +961,7 @@ PRIVATE struct type_seq enumattr_seq = {
 };
 
 PRIVATE struct type_member tpconst enumattr_members[] = {
-	TYPE_MEMBER_FIELD("__ob__", STRUCT_OBJECT, offsetof(EnumAttr, ea_obj)),
+	TYPE_MEMBER_FIELD("__ob__", STRUCT_OBJECT_AB, offsetof(EnumAttr, ea_obj)),
 	TYPE_MEMBER_FIELD("__decl__", STRUCT_OBJECT, offsetof(EnumAttr, ea_hint.ah_decl)),
 	TYPE_MEMBER_FIELD("__perm__", STRUCT_CONST | STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(Dee_SIZEOF_ATTRPERM_T),
 	                  offsetof(EnumAttr, ea_hint.ah_perm_mask)),
@@ -1121,7 +1121,7 @@ enumattriter_bool(EnumAttrIter *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst enumattriter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(EnumAttrIter, ei_seq), "->?Ert:EnumAttr"),
 	TYPE_MEMBER_FIELD("__itersz__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(EnumAttrIter, ei_itsz)),
 	TYPE_MEMBER_END
 };

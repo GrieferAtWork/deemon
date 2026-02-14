@@ -613,7 +613,7 @@ ptype_repr(DeePointerTypeObject *__restrict self) {
 
 PRIVATE struct type_member tpconst ptype_members[] = {
 	TYPE_MEMBER_CONST_DOC("ispointer", Dee_True, DOC_GET(ispointer_doc)),
-	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeePointerTypeObject, pt_orig), "->?GStructuredType"),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(DeePointerTypeObject, pt_orig), "->?GStructuredType"),
 	TYPE_MEMBER_END
 };
 
@@ -752,7 +752,7 @@ PRIVATE struct type_getset tpconst ltype_getsets[] = {
 
 PRIVATE struct type_member tpconst ltype_members[] = {
 	TYPE_MEMBER_CONST_DOC("islvalue", Dee_True, DOC_GET(islvalue_doc)),
-	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeLValueTypeObject, lt_orig), "->?GStructuredType"),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(DeeLValueTypeObject, lt_orig), "->?GStructuredType"),
 	TYPE_MEMBER_END
 };
 
@@ -2079,7 +2079,7 @@ atype_repr(DeeArrayTypeObject *__restrict self) {
 
 PRIVATE struct type_member tpconst atype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isarray", Dee_True, DOC_GET(isarray_doc)),
-	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeArrayTypeObject, at_orig),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(DeeArrayTypeObject, at_orig),
 	                      "->?GStructuredType"),
 	TYPE_MEMBER_FIELD("size", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeArrayTypeObject, at_count)),
 	TYPE_MEMBER_END
@@ -2232,7 +2232,7 @@ PRIVATE struct type_getset tpconst ftype_getsets[] = {
 PRIVATE struct type_member tpconst ftype_members[] = {
 	TYPE_MEMBER_CONST_DOC("isfunction", Dee_True, DOC_GET(isfunction_doc)),
 #ifndef CONFIG_NO_CFUNCTION
-	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT, offsetof(DeeCFunctionTypeObject, ft_orig),
+	TYPE_MEMBER_FIELD_DOC("base", STRUCT_OBJECT_AB, offsetof(DeeCFunctionTypeObject, ft_orig),
 	                      "->?GStructuredType"),
 #endif /* !CONFIG_NO_CFUNCTION */
 	TYPE_MEMBER_END

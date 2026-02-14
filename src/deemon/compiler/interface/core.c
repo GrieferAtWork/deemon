@@ -27,7 +27,7 @@
 #include <deemon/compiler/interface.h>
 #include <deemon/error.h>              /* DeeError_ReferenceError, DeeError_Throwf */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_InstanceOfExact, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_visit_t, OBJECT_HEAD_INIT */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -95,7 +95,7 @@ DeeCompilerObjItem_Visit(CompilerItem *__restrict self, Dee_visit_t proc, void *
 
 INTDEF struct type_member tpconst DeeCompilerItem_Members[];
 INTERN_CONST struct type_member tpconst DeeCompilerItem_Members[] = {
-	TYPE_MEMBER_FIELD_DOC("compiler", STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC("compiler", STRUCT_OBJECT_AB,
 	                      offsetof(CompilerItem, ci_compiler),
 	                      "->" DR_Compiler),
 	TYPE_MEMBER_END

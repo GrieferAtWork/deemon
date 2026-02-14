@@ -33,7 +33,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, DeeUni_*, Dee_EmptyString, STRING_ERROR_FNORMAL, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8, Dee_unicode_readutf8_n */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
@@ -576,7 +576,7 @@ PRIVATE struct type_cmp ssi_cmp = {
 };
 
 PRIVATE struct type_member tpconst ssi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB,
 	                      offsetof(StringScanIterator, si_scanner),
 	                      "->?Ert:StringScan"),
 	TYPE_MEMBER_END
@@ -835,8 +835,8 @@ PRIVATE struct type_seq ss_seq = {
 };
 
 PRIVATE struct type_member tpconst ss_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringScanner, ss_data), "->?X2?Dstring?DBytes"),
-	TYPE_MEMBER_FIELD_DOC(STR___format__, STRUCT_OBJECT, offsetof(StringScanner, ss_format), "->?X2?Dstring?DBytes"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(StringScanner, ss_data), "->?X2?Dstring?DBytes"),
+	TYPE_MEMBER_FIELD_DOC(STR___format__, STRUCT_OBJECT_AB, offsetof(StringScanner, ss_format), "->?X2?Dstring?DBytes"),
 	TYPE_MEMBER_END
 };
 

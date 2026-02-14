@@ -170,7 +170,7 @@ PRIVATE struct type_cmp bytesiter_cmp = {
 };
 
 PRIVATE struct type_member tpconst bytesiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(BytesIterator, bi_bytes), "->?DBytes"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(BytesIterator, bi_bytes), "->?DBytes"),
 	TYPE_MEMBER_END
 };
 

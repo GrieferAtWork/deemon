@@ -269,7 +269,7 @@ PRIVATE struct type_cmp splititer_cmp = {
 
 
 PRIVATE struct type_member tpconst splititer_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(StringSplitIterator, s_split), "->?Ert:StringSplit"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(StringSplitIterator, s_split), "->?Ert:StringSplit"),
 	TYPE_MEMBER_END
 };
 
@@ -527,8 +527,8 @@ casesplit_iter(StringSplit *__restrict self) {
 }
 
 PRIVATE struct type_member tpconst split_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringSplit, s_str), "->?Dstring"),
-	TYPE_MEMBER_FIELD_DOC("__sep__", STRUCT_OBJECT, offsetof(StringSplit, s_sep), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(StringSplit, s_str), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__sep__", STRUCT_OBJECT_AB, offsetof(StringSplit, s_sep), "->?Dstring"),
 	TYPE_MEMBER_END
 };
 
@@ -1136,7 +1136,7 @@ STATIC_ASSERT(offsetof(LineSplit, ls_str) == offsetof(StringSplit, s_str));
 #define linesplit_bool split_bool
 
 PRIVATE struct type_member tpconst linesplit_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(LineSplit, ls_str), "->?Dstring"),
+	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT_AB, offsetof(LineSplit, ls_str), "->?Dstring"),
 	TYPE_MEMBER_FIELD("__keeplf__", STRUCT_CONST | STRUCT_CBOOL, offsetof(LineSplit, ls_keep)),
 	TYPE_MEMBER_END
 };

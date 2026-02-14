@@ -1140,7 +1140,7 @@ PRIVATE struct type_getset tpconst rbtreeiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst rbtreeiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RBTreeIterator, rbti_tree), "->?GRBTree"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(RBTreeIterator, rbti_tree), "->?GRBTree"),
 	TYPE_MEMBER_FIELD("__version__", STRUCT_UINTPTR_T | STRUCT_ATOMIC | STRUCT_CONST,
 	                  offsetof(RBTreeIterator, rbti_version)),
 	TYPE_MEMBER_END

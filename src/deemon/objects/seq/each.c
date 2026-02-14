@@ -29,11 +29,11 @@
 #include <deemon/format.h>             /* DeeFormat_PrintOperatorRepr, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/method-hints.h>       /* DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_setitem_index_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/mro.h>                /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attriter_initempty, Dee_attrspec */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSomeObject, DeeSeq_*, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, OPERATOR_*, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
@@ -1299,7 +1299,7 @@ PRIVATE struct type_attr se_attr = {
 
 PRIVATE struct type_member tpconst se_members[] = {
 #define ss_members se_members
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(SeqEachBase, se_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(SeqEachBase, se_seq), "->?DSequence"),
 	TYPE_MEMBER_END
 };
 
@@ -3981,10 +3981,8 @@ STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj
 #define sewi_compare       generic_proxy__compare_recursive
 #define sewi_trycompare_eq generic_proxy__trycompare_eq_recursive
 
-PRIVATE WUNUSED NONNULL((1)) DREF SeqEachBase *DCALL
-sewi_nii_getseq(SeqEachIterator *__restrict self) {
-	return_reference_(self->ei_each);
-}
+STATIC_ASSERT(offsetof(SeqEachIterator, ei_each) == offsetof(ProxyObject2, po_obj2));
+#define sewi_nii_getseq generic_proxy2__getobj2
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 sewi_nii_getindex(SeqEachIterator *__restrict self) {
@@ -4065,8 +4063,8 @@ PRIVATE struct type_cmp sewi_cmp = {
 };
 
 PRIVATE struct type_member tpconst seoi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachOperator"),
-	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachOperator"),
+	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 

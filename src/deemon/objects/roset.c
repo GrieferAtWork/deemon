@@ -187,7 +187,7 @@ PRIVATE struct type_cmp rosetiterator_cmp = {
 
 
 PRIVATE struct type_member tpconst roset_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RoSetIterator, rosi_set), "->?Ert:RoSet"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(RoSetIterator, rosi_set), "->?Ert:RoSet"),
 	TYPE_MEMBER_END
 };
 

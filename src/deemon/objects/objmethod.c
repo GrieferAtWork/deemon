@@ -323,7 +323,7 @@ PRIVATE struct type_getset tpconst objmethod_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst objmethod_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(DeeObjMethodObject, om_this),
+	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT_AB, offsetof(DeeObjMethodObject, om_this),
 	                      "The object to which @this object-method is bound"),
 #define OBJMETHOD_MEMBERS_INDEXOF_KWDS 1
 	TYPE_MEMBER_CONST_DOC(STR___kwds__, Dee_EmptySeq, objmethod_get_kwds_doc), /* NOTE: _MUST_ always come last! */
@@ -591,7 +591,7 @@ PRIVATE struct type_getset tpconst dockwdsiter_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst dockwdsiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:DocKwds"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:DocKwds"),
 	TYPE_MEMBER_END
 };
 
@@ -717,7 +717,7 @@ PRIVATE struct type_seq dockwds_seq = {
 
 PRIVATE struct type_member tpconst dockwds_members[] = {
 	TYPE_MEMBER_FIELD("__docstr__", STRUCT_CONST | STRUCT_CSTR, offsetof(DocKwds, dk_start)),
-	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(DocKwds, dk_owner)),
+	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT_AB, offsetof(DocKwds, dk_owner)),
 	TYPE_MEMBER_END
 };
 
@@ -1212,7 +1212,7 @@ PRIVATE struct type_callable clsmethod_callable = {
 PRIVATE struct type_member tpconst kwclsmethod_members[] = {
 	TYPE_MEMBER_CONST_DOC(STR___kwds__, Dee_EmptySeq, clsmethod_get_kwds_doc),
 #define clsmethod_members (kwclsmethod_members + 1)
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsMethodObject, clm_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT_AB, offsetof(DeeClsMethodObject, clm_type),
 	                      "->?DType\n"
 	                      "The type implementing @this method"),
 	TYPE_MEMBER_END
@@ -1786,7 +1786,7 @@ PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst clsproperty_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsPropertyObject, cp_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT_AB, offsetof(DeeClsPropertyObject, cp_type),
 	                      "->?DType\n"
 	                      "The type implementing @this property"),
 	TYPE_MEMBER_END
@@ -2042,7 +2042,7 @@ PRIVATE struct type_cmp clsmember_cmp = {
 };
 
 PRIVATE struct type_member tpconst clsmember_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT,
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT_AB,
 	                      offsetof(DeeClsMemberObject, cmb_type),
 	                      "->?DType\n"
 	                      "The type implementing @this member"),

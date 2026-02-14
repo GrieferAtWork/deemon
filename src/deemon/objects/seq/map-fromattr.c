@@ -218,7 +218,7 @@ PRIVATE struct type_getset tpconst mfaki_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst mfaki_members[] = {
-	TYPE_MEMBER_FIELD("__ob__", STRUCT_OBJECT, offsetof(MapFromAttrIterator, mfai_obj)),
+	TYPE_MEMBER_FIELD("__ob__", STRUCT_OBJECT_AB, offsetof(MapFromAttrIterator, mfai_obj)),
 	TYPE_MEMBER_FIELD("__itersz__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(MapFromAttrIterator, mfai_itsz)),
 	TYPE_MEMBER_END
 };
@@ -513,7 +513,7 @@ PRIVATE struct type_getset tpconst mfa_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst mfa_members[] = {
-	TYPE_MEMBER_FIELD("__ob__", STRUCT_OBJECT, offsetof(MapFromAttr, mfa_ob)),
+	TYPE_MEMBER_FIELD("__ob__", STRUCT_OBJECT_AB, offsetof(MapFromAttr, mfa_ob)),
 	TYPE_MEMBER_END
 };
 

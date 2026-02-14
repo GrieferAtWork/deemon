@@ -113,11 +113,12 @@ DECL_BEGIN
  *          which isn't supported by `DeeStructObject_*' which requires that all fields
  *          be optional):
  * - "STRUCT_OBJECT"      (use "STRUCT_OBJECT_OPT" instead)
+ * - "STRUCT_OBJECT_AB"   (use "STRUCT_OBJECT_OPT" instead)
  * - "STRUCT_WOBJECT"     (use "STRUCT_WOBJECT_OPT" instead)
- * - "STRUCT_CSTR"        (owner wouldn't be reference; use "STRUCT_OBJECT" instead)
- * - "STRUCT_CSTR_OPT"    (owner wouldn't be reference; use "STRUCT_OBJECT" instead)
- * - "STRUCT_CSTR_EMPTY"  (owner wouldn't be reference; use "STRUCT_OBJECT" instead)
- * - "STRUCT_STRING"      (impossible to know max-length; use "STRUCT_OBJECT" instead)
+ * - "STRUCT_CSTR"        (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
+ * - "STRUCT_CSTR_OPT"    (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
+ * - "STRUCT_CSTR_EMPTY"  (owner wouldn't be reference; use "STRUCT_OBJECT_OPT" instead)
+ * - "STRUCT_STRING"      (impossible to know max-length; use "STRUCT_OBJECT_OPT" instead)
  */
 
 #ifndef Dee_seraddr_t_DEFINED

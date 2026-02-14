@@ -1412,7 +1412,7 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
 	                      "Alias for ?#__impbase__"),
-	TYPE_MEMBER_FIELD_DOC("__source__", STRUCT_OBJECT, offsetof(JITFunction, jf_source),
+	TYPE_MEMBER_FIELD_DOC("__source__", STRUCT_OBJECT_AB, offsetof(JITFunction, jf_source),
 	                      "->?X3?Dstring?DBytes?O\n"
 	                      "Returns the object that owns the source code executed by @this function (s.a. ?#__text__)"),
 	TYPE_MEMBER_FIELD_DOC("__argc_min__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(JITFunction, jf_argc_min),

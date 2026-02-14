@@ -475,7 +475,7 @@ PRIVATE struct type_seq rvec_seq = {
 };
 
 PRIVATE struct type_member tpconst rvec_members[] = {
-	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(RefVector, rv_owner)),
+	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT_AB, offsetof(RefVector, rv_owner)),
 	TYPE_MEMBER_FIELD("__len__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(RefVector, rv_length)),
 	TYPE_MEMBER_END
 };

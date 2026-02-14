@@ -38,7 +38,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* remainder */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_F*, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UADD */
@@ -314,11 +314,7 @@ STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
 #define so_size      _DeeNone_rets1_1
 #define so_size_fast _DeeNone_rets1_1
 
-#define _so_getitem           generic_proxy__getobj
-#define so_getfirst           _so_getitem
-#define so_getlast            _so_getitem
-#define so_mh_seq_trygetfirst _so_getitem
-#define so_mh_seq_trygetlast  _so_getitem
+#define _so_getitem generic_proxy__getobj
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 so_printrepr(SeqOne *__restrict self, Dee_formatprinter_t printer, void *arg) {
@@ -1113,8 +1109,6 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_unpack, &so_mh_seq_unpack, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_unpack_ex, &so_mh_seq_unpack_ex, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_unpack_ub, &so_mh_seq_unpack_ub, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_trygetfirst, &so_mh_seq_trygetfirst, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_trygetlast, &so_mh_seq_trygetlast, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any, &so_mh_seq_any, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_key, &so_mh_seq_any_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_range, &so_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
@@ -1181,8 +1175,6 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 	TYPE_METHOD_HINT_F(set_operator_sizeob, &so_mh_set_operator_sizeob, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_operator_size, &so_mh_set_operator_size, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(set_operator_hash, &so_mh_set_operator_hash, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(set_trygetfirst, &so_mh_seq_trygetfirst, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(set_trygetlast, &so_mh_seq_trygetlast, METHOD_FNOREFESCAPE),
 	/* TODO: */
 //	TYPE_METHOD_HINT_F(set_operator_compare_eq, &so_mh_set_operator_compare_eq, METHOD_FNOREFESCAPE),
 //	TYPE_METHOD_HINT_F(set_operator_trycompare_eq, &so_mh_set_operator_trycompare_eq, METHOD_FNOREFESCAPE),
@@ -1205,8 +1197,6 @@ PRIVATE struct type_method_hint tpconst so_method_hints[] = {
 
 PRIVATE struct type_getset tpconst so_getsets[] = {
 	/* These must be in "so_getsets" since that's where method hints are expected to find them. */
-	TYPE_GETTER_AB_F_NODOC(STR_first, &so_getfirst, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
-	TYPE_GETTER_AB_F_NODOC(STR_last, &so_getlast, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_GETTER_AB_F(STR_cached, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR_frozen, &DeeObject_NewRef, METHOD_FCONSTCALL, "->?."),
 	TYPE_GETTER_AB_F(STR___set_frozen__, &generic_obj__asset, METHOD_FCONSTCALL, "->?DSet"),
@@ -1220,8 +1210,12 @@ PRIVATE struct type_getset tpconst so_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst so_members[] = {
+	TYPE_MEMBER_FIELD(STR_first, STRUCT_OBJECT_AB, offsetof(SeqOne, so_item)),
+	TYPE_MEMBER_FIELD(STR_last, STRUCT_OBJECT_AB, offsetof(SeqOne, so_item)),
+	TYPE_MEMBER_FIELD(STR___set_first__, STRUCT_OBJECT_AB, offsetof(SeqOne, so_item)),
+	TYPE_MEMBER_FIELD(STR___set_last__, STRUCT_OBJECT_AB, offsetof(SeqOne, so_item)),
 	TYPE_MEMBER_CONST("length", DeeInt_One),
-	TYPE_MEMBER_FIELD("__item__", STRUCT_OBJECT, offsetof(SeqOne, so_item)),
+	TYPE_MEMBER_FIELD("__item__", STRUCT_OBJECT_AB, offsetof(SeqOne, so_item)),
 	TYPE_MEMBER_END
 };
 

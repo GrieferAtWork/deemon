@@ -32,7 +32,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpy */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_*, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_*, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
@@ -232,7 +232,7 @@ PRIVATE struct type_getset tpconst typebasesiter_getsets[] = {
 
 #define typebasesiter_members typemroiter_members
 PRIVATE struct type_member tpconst typemroiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(TypeMROIterator, tmi_mro.tp_mro_orig), "->?DType"),
+	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT_AB, offsetof(TypeMROIterator, tmi_mro.tp_mro_orig), "->?DType"),
 	TYPE_MEMBER_END
 };
 
@@ -844,7 +844,7 @@ PRIVATE struct type_seq typebases_seq = {
 
 #define typebases_members typemro_members
 PRIVATE struct type_member tpconst typemro_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT, offsetof(TypeMRO, tm_type), "->?DType"),
+	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT_AB, offsetof(TypeMRO, tm_type), "->?DType"),
 	TYPE_MEMBER_END
 };
 

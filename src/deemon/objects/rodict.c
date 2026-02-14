@@ -743,7 +743,7 @@ PRIVATE struct type_iterator rditer_iterator = {
 };
 
 PRIVATE struct type_member tpconst rditer_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(RoDictIterator, rodi_dict), "->?DDict"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(RoDictIterator, rodi_dict), "->?DDict"),
 	TYPE_MEMBER_FIELD_DOC("__index__", STRUCT_SIZE_T | STRUCT_ATOMIC, offsetof(RoDictIterator, rodi_vidx), "->?Dint"),
 	TYPE_MEMBER_END
 };

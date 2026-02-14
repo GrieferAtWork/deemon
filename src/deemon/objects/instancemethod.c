@@ -34,7 +34,7 @@
 #include <deemon/none.h>               /* DeeNone_Singleton, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_YES, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_F*, OPERATOR_*, STRUCT_OBJECT, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
@@ -344,10 +344,10 @@ PRIVATE struct type_getset tpconst im_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst im_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(InstanceMethod, im_this),
+	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT_AB, offsetof(InstanceMethod, im_this),
 	                      "->\n"
 	                      "The object to which @this ?DInstanceMethod is bound"),
-	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(InstanceMethod, im_func),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(InstanceMethod, im_func),
 	                      "->?DCallable\n"
 	                      "The unbound class-function that is being bound by this ?DInstanceMethod"),
 	TYPE_MEMBER_END

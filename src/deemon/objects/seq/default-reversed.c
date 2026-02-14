@@ -643,7 +643,7 @@ PRIVATE struct type_seq rs_tgii_seq = {
 #define rs_giif_members rs_gii_members
 #define rs_tgii_members rs_gii_members
 PRIVATE struct type_member tpconst rs_gii_members[] = {
-	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT, offsetof(DefaultReversed_WithGetItemIndex, drwgii_seq)),
+	TYPE_MEMBER_FIELD("__seq__", STRUCT_OBJECT_AB, offsetof(DefaultReversed_WithGetItemIndex, drwgii_seq)),
 	TYPE_MEMBER_FIELD("__max__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(DefaultReversed_WithGetItemIndex, drwgii_max)),
 	TYPE_MEMBER_FIELD("__size__", STRUCT_SIZE_T | STRUCT_CONST, offsetof(DefaultReversed_WithGetItemIndex, drwgii_size)),
 	TYPE_MEMBER_END

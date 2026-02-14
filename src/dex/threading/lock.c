@@ -43,7 +43,7 @@
 #include <deemon/system-features.h> /* memset */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t, _Dee_semaphore_waiting_wakemany */
 #include <deemon/util/rlock.h>      /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_t, Dee_rshared_lock_t, Dee_rshared_rwlock_t */
@@ -1346,7 +1346,7 @@ rwlock_proxy_visit(DeeGenericRWLockProxyObject *__restrict self,
 }
 
 PRIVATE struct type_member tpconst rwlock_proxy_members[] = {
-	TYPE_MEMBER_FIELD_DOC("rwlock", STRUCT_OBJECT, offsetof(DeeGenericRWLockProxyObject, grwl_lock), "->?GRWLock"),
+	TYPE_MEMBER_FIELD_DOC("rwlock", STRUCT_OBJECT_AB, offsetof(DeeGenericRWLockProxyObject, grwl_lock), "->?GRWLock"),
 	TYPE_MEMBER_END
 };
 

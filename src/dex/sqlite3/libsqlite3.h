@@ -291,7 +291,7 @@ DB_NewQuery(DB *__restrict self, DeeStringObject *__restrict sql,
 /************************************************************************/
 struct query_object {
 	OBJECT_HEAD                         /* [@ob_type: ref_if(true)] */
-	Dee_WEAKREF_SUPPORT                     /* [valid_if(Query_InUse(self))] Weak references */
+	Dee_WEAKREF_SUPPORT                 /* [valid_if(Query_InUse(self))] Weak references */
 	DREF DB                  *q_db;     /* [ref_if(Query_InUse(self))][1..1][const] Associated database */
 	DREF DeeStringObject     *q_sql;    /* [ref_if(Query_InUse(self))][1..1][const] DeeStringObject that was used to compile this query */
 	Dee_WEAKREF(Row)          q_row;    /* [0..1][lock(READ(API), WRITE(q_db->q_db && API))][valid_if(Query_InUse(self))] Cached row pointer (during `sqlite3_step()', if this weakref is still valid, this row is updated with copies of data from all columns) */

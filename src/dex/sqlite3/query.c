@@ -37,7 +37,7 @@
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* strlen */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_type_iterator, STRUCT_OBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_type_iterator, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 #include <deemon/util/weakref.h>    /* Dee_weakref_* */
@@ -112,7 +112,7 @@ PRIVATE struct Dee_type_iterator qiter_iterator = {
 };
 
 PRIVATE struct type_member tpconst qiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(QueryIterator, qi_query), "->?GQuery"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(QueryIterator, qi_query), "->?GQuery"),
 	TYPE_MEMBER_END
 };
 
@@ -842,8 +842,8 @@ PRIVATE struct type_getset tpconst query_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst query_members[] = {
-	TYPE_MEMBER_FIELD_DOC("db", STRUCT_OBJECT, offsetof(Query, q_db), "->?GDB"),
-	TYPE_MEMBER_FIELD_DOC("rawsql", STRUCT_OBJECT, offsetof(Query, q_sql),
+	TYPE_MEMBER_FIELD_DOC("db", STRUCT_OBJECT_AB, offsetof(Query, q_db), "->?GDB"),
+	TYPE_MEMBER_FIELD_DOC("rawsql", STRUCT_OBJECT_AB, offsetof(Query, q_sql),
 	                      "->?Dstring\n"
 	                      "The original SQL before parameters were inserted (s.a. ?#sql)"),
 	TYPE_MEMBER_END
