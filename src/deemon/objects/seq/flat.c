@@ -897,8 +897,21 @@ sf_mh_seq_insertall_cb(DeeObject *__restrict subseq, size_t subseq_index, void *
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-sf_mh_seq_insertall(SeqFlat *self, size_t index, DeeObject *item) {
-	return sf_interact_withposition(self, index, &sf_mh_seq_insertall_cb, item);
+sf_mh_seq_insertall(SeqFlat *self, size_t index, DeeObject *items) {
+	return sf_interact_withposition(self, index, &sf_mh_seq_insertall_cb, items);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+sf_mh_seq_pushfront(SeqFlat *self, DeeObject *item) {
+	int result;
+	DREF DeeObject *seq = sf_getfirstseq(self);
+	if unlikely(!seq)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_pushfront, seq, item);
+	Dee_Decref_unlikely(seq);
+	return result;
+err:
+	return -1;
 }
 
 
@@ -1130,7 +1143,7 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_erase, &sf_mh_seq_erase, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_insert, &sf_mh_seq_insert, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_insertall, &sf_mh_seq_insertall, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_pushfront, &sf_mh_seq_pushfront, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_pushfront, &sf_mh_seq_pushfront, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_append, &sf_mh_seq_append, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_extend, &sf_mh_seq_extend, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_xchitem_index, &sf_mh_seq_xchitem_index, METHOD_FNOREFESCAPE),
@@ -1171,7 +1184,7 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_erase),
 	TYPE_METHOD_HINTREF(Sequence_insert),
 	TYPE_METHOD_HINTREF(Sequence_insertall),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_pushfront),
+	TYPE_METHOD_HINTREF(Sequence_pushfront),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_append),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_extend),
 	TYPE_METHOD_HINTREF(Sequence_xchitem),

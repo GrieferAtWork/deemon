@@ -84,4 +84,9 @@ for (local useInsertAll: {false, true}) {
 	test.assertSequence(c, {});
 	test.assertSequence(a, {});
 	test.assertSequence(b, {});
+
+	c.pushfront("first");
+	test.assertSequence(c, {"first"});
+	test.assertSequence(a, {"first"});
+	test.assertSequence(b, {});
 }
