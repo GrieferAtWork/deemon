@@ -58,6 +58,7 @@
 #define WANT_sf_mh_seq_parity
 #define WANT_sf_mh_seq_min
 #define WANT_sf_mh_seq_max
+#define WANT_sf_mh_seq_count
 #define WANT_sf_mh_seq_find
 #endif /* !CONFIG_TINY_DEEMON */
 
@@ -1424,7 +1425,11 @@ err_data:
 
 
 #ifdef WANT_sf_mh_seq_max
+#ifdef WANT_sf_mh_seq_min
+#define sf_mh_seq_max_dummy sf_mh_seq_min_dummy
+#else /* WANT_sf_mh_seq_min */
 PRIVATE DeeObject sf_mh_seq_max_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+#endif /* !WANT_sf_mh_seq_min */
 
 struct sf_mh_seq_max_data {
 	DREF DeeObject *sfmhsmd_maxval; /* [0..1] Greatest value encountered thus far. */
@@ -1665,6 +1670,158 @@ err_data:
 #endif /* WANT_sf_mh_seq_max */
 
 
+#ifdef WANT_sf_mh_seq_count
+struct sf_mh_seq_count_data {
+	DeeObject *sfmhscd_item;  /* [1..1] Item to count */
+	size_t     sfmhscd_count; /* Count total */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_count_cb(void *arg, DeeObject *subseq) {
+	size_t count, total;
+	struct sf_mh_seq_count_data *data;
+	data  = (struct sf_mh_seq_count_data *)arg;
+	count = DeeObject_InvokeMethodHint(seq_count, subseq, data->sfmhscd_item);
+	if unlikely(count == (size_t)-1)
+		goto err;
+	if (OVERFLOW_UADD(data->sfmhscd_count, count, &total))
+		goto err_overflow;
+	data->sfmhscd_count = total;
+	return 0;
+err_overflow:
+	DeeRT_ErrIntegerOverflowUAdd(data->sfmhscd_count, count);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+sf_mh_seq_count(SeqFlat *self, DeeObject *item) {
+	struct sf_mh_seq_count_data data;
+	data.sfmhscd_item  = item;
+	data.sfmhscd_count = 0;
+	if unlikely(sf_foreachseq(self, &sf_mh_seq_count_cb, &data))
+		data.sfmhscd_count = (size_t)-1;
+	return data.sfmhscd_count;
+}
+
+
+struct sf_mh_seq_count_with_key_data {
+	DeeObject *sfmhscwkd_item;  /* [1..1] Item to count */
+	DeeObject *sfmhscwkd_key;   /* [1..1] Key mapper */
+	size_t     sfmhscwkd_count; /* Count total */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_count_with_key_cb(void *arg, DeeObject *subseq) {
+	size_t count, total;
+	struct sf_mh_seq_count_with_key_data *data;
+	data  = (struct sf_mh_seq_count_with_key_data *)arg;
+	count = DeeObject_InvokeMethodHint(seq_count_with_key, subseq,
+	                                   data->sfmhscwkd_item,
+	                                   data->sfmhscwkd_key);
+	if unlikely(count == (size_t)-1)
+		goto err;
+	if (OVERFLOW_UADD(data->sfmhscwkd_count, count, &total))
+		goto err_overflow;
+	data->sfmhscwkd_count = total;
+	return 0;
+err_overflow:
+	DeeRT_ErrIntegerOverflowUAdd(data->sfmhscwkd_count, count);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) size_t DCALL
+sf_mh_seq_count_with_key(SeqFlat *self, DeeObject *item, DeeObject *key) {
+	struct sf_mh_seq_count_with_key_data data;
+	data.sfmhscwkd_item  = item;
+	data.sfmhscwkd_key   = key;
+	data.sfmhscwkd_count = 0;
+	if unlikely(sf_foreachseq(self, &sf_mh_seq_count_with_key_cb, &data))
+		data.sfmhscwkd_count = (size_t)-1;
+	return data.sfmhscwkd_count;
+}
+
+
+struct sf_mh_seq_count_with_range_data {
+	DeeObject *sfmhscwrd_item;  /* [1..1] Item to count */
+	size_t     sfmhscwrd_count; /* Count total */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_count_with_range_cb(void *arg, DeeObject *subseq,
+                              size_t subseq_start, size_t subseq_end,
+                              size_t UNUSED(range_start)) {
+	size_t count, total;
+	struct sf_mh_seq_count_with_range_data *data;
+	data  = (struct sf_mh_seq_count_with_range_data *)arg;
+	count = DeeObject_InvokeMethodHint(seq_count_with_range, subseq,
+	                                   data->sfmhscwrd_item,
+	                                   subseq_start, subseq_end);
+	if unlikely(count == (size_t)-1)
+		goto err;
+	if (OVERFLOW_UADD(data->sfmhscwrd_count, count, &total))
+		goto err_overflow;
+	data->sfmhscwrd_count = total;
+	return 0;
+err_overflow:
+	DeeRT_ErrIntegerOverflowUAdd(data->sfmhscwrd_count, count);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+sf_mh_seq_count_with_range(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
+	struct sf_mh_seq_count_with_range_data data;
+	data.sfmhscwrd_item  = item;
+	data.sfmhscwrd_count = 0;
+	if unlikely(sf_interact_withrange(self, start, end, &sf_mh_seq_count_with_range_cb, &data))
+		data.sfmhscwrd_count = (size_t)-1;
+	return data.sfmhscwrd_count;
+}
+
+struct sf_mh_seq_count_with_range_and_key_data {
+	DeeObject *sfmhscwrd_item;  /* [1..1] Item to count */
+	DeeObject *sfmhscwrd_key;   /* [1..1] Key mapper */
+	size_t     sfmhscwrd_count; /* Count total */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_count_with_range_and_key_cb(void *arg, DeeObject *subseq,
+                              size_t subseq_start, size_t subseq_end,
+                              size_t UNUSED(range_start)) {
+	size_t count, total;
+	struct sf_mh_seq_count_with_range_and_key_data *data;
+	data  = (struct sf_mh_seq_count_with_range_and_key_data *)arg;
+	count = DeeObject_InvokeMethodHint(seq_count_with_range_and_key, subseq,
+	                                   data->sfmhscwrd_item,
+	                                   subseq_start, subseq_end,
+	                                   data->sfmhscwrd_key);
+	if unlikely(count == (size_t)-1)
+		goto err;
+	if (OVERFLOW_UADD(data->sfmhscwrd_count, count, &total))
+		goto err_overflow;
+	data->sfmhscwrd_count = total;
+	return 0;
+err_overflow:
+	DeeRT_ErrIntegerOverflowUAdd(data->sfmhscwrd_count, count);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+sf_mh_seq_count_with_range_and_key(SeqFlat *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	struct sf_mh_seq_count_with_range_and_key_data data;
+	data.sfmhscwrd_item  = item;
+	data.sfmhscwrd_key   = key;
+	data.sfmhscwrd_count = 0;
+	if unlikely(sf_interact_withrange(self, start, end, &sf_mh_seq_count_with_range_and_key_cb, &data))
+		data.sfmhscwrd_count = (size_t)-1;
+	return data.sfmhscwrd_count;
+}
+#endif /* WANT_sf_mh_seq_count */
+
+
 #ifdef WANT_sf_mh_seq_find
 union sf_mh_seq_find_data {
 	struct {
@@ -1772,7 +1929,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 #ifdef WANT_sf_mh_seq_max
 	TYPE_METHOD_HINTREF(Sequence_max),
 #endif /* WANT_sf_mh_seq_max */
-	//TODO:TYPE_METHOD_HINTREF(Sequence_count),
+#ifdef WANT_sf_mh_seq_count
+	TYPE_METHOD_HINTREF(Sequence_count),
+#endif /* WANT_sf_mh_seq_count */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_contains),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_locate),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_rlocate),
@@ -1839,10 +1998,12 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_max_with_range, &sf_mh_seq_max_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &sf_mh_seq_max_with_range_and_key, METHOD_FNOREFESCAPE),
 #endif /* WANT_sf_mh_seq_max */
-	//TODO:TYPE_METHOD_HINT_F(seq_count, &sf_mh_seq_count, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_count_with_key, &sf_mh_seq_count_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_count_with_range, &sf_mh_seq_count_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &sf_mh_seq_count_with_range_and_key, METHOD_FNOREFESCAPE),
+#ifdef WANT_sf_mh_seq_count
+	TYPE_METHOD_HINT_F(seq_count, &sf_mh_seq_count, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_key, &sf_mh_seq_count_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range, &sf_mh_seq_count_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &sf_mh_seq_count_with_range_and_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_seq_count */
 	//TODO:TYPE_METHOD_HINT_F(seq_contains, &sf_mh_seq_contains, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_key, &sf_mh_seq_contains_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_range, &sf_mh_seq_contains_with_range, METHOD_FNOREFESCAPE),

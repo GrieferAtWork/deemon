@@ -106,6 +106,10 @@ function assertEqualsTyped(expected: Object, actual: Object,
 	assert type(expected) == type(actual), f"type({safeRepr(expected)}) == type({safeRepr(actual)})";
 }
 
+function assertNone(actual: Object, message: Callable | string | none = none) {
+	assert actual is none, concatMessage(f"actual: {repr actual} ({type actual})", message);
+}
+
 function assertNotEquals(unexpected: Object, actual: Object,
                          message: Callable | string | none = none,
                          compare: bool | none = none) {
