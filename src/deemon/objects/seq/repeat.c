@@ -852,7 +852,7 @@ INTERN DeeTypeObject SeqRepeatItemIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_ctor(RepeatItem *__restrict self) {
-	self->rpit_num = 1;
+	self->rpit_num = 0;
 	self->rpit_obj = DeeNone_NewRef();
 	return 0;
 }
@@ -906,6 +906,8 @@ done:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitem_contains(RepeatItem *self,
                     DeeObject *item) {
+	if unlikely(self->rpit_num == 0)
+		return_false;
 	return DeeObject_CmpEq(self->rpit_obj, item);
 }
 

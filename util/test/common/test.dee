@@ -301,6 +301,7 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		local it = x.operator iter();
 		if (iterated1) {
 			assert it;
+			assert copy it;
 		} else {
 			assert !it;
 		}
@@ -345,6 +346,7 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 			assertEquals(v, iterated7[i]);
 		}
 		assert !it;
+		assert !copy it;
 
 		for (local it: iterated1)
 			assert it in x;

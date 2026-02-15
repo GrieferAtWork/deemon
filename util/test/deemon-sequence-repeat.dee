@@ -21,10 +21,24 @@
 
 import * from deemon;
 import .common.test;
+import rt;
 
 local i = "foo";
 test.assertSequence(Sequence.repeatitem(i, 4), {i,i,i,i});
+test.assertSequence(Sequence.repeatitem(i, 0), {});
 test.assertSequence(Sequence.repeat({i}, 4), {i,i,i,i});
+test.assertSequence(Sequence.repeat({i}, 0), {});
 test.assertSequence(Sequence.repeat({i,i}, 4), {i,i,i,i,i,i,i,i});
+test.assertSequence(Sequence.repeat({i,i}, 0), {});
+test.assertSequence(Sequence.repeat({}, 4), {});
+test.assertSequence(Sequence.repeat({}, 0), {});
+test.assertSequence(rt.SeqRepeat({i,i}, 4), {i,i,i,i,i,i,i,i});
+test.assertSequence(rt.SeqRepeat({i,i}, 0), {});
+test.assertSequence(rt.SeqRepeat({}, 4), {});
+test.assertSequence(rt.SeqRepeat({}, 0), {});
+test.assertSequence(rt.SeqRepeat(), {});
+test.assertSequence(rt.SeqRepeatItem(i, 4), {i,i,i,i});
+test.assertSequence(rt.SeqRepeatItem(i, 0), {});
+test.assertSequence(rt.SeqRepeatItem(), {});
 
 
