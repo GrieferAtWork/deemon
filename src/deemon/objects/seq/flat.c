@@ -56,6 +56,7 @@
 #ifndef CONFIG_TINY_DEEMON
 #define WANT_sf_mh_seq_any
 #define WANT_sf_mh_seq_all
+#define WANT_sf_mh_seq_parity
 #define WANT_sf_mh_seq_min
 #define WANT_sf_mh_seq_max
 #define WANT_sf_mh_seq_find
@@ -1121,6 +1122,66 @@ sf_mh_seq_all_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObj
 #endif /* WANT_sf_mh_seq_all */
 
 
+#ifdef WANT_sf_mh_seq_parity
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_parity_cb(void *UNUSED(arg), DeeObject *subseq) {
+	return (Dee_ssize_t)DeeObject_InvokeMethodHint(seq_parity, subseq);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_mh_seq_parity(SeqFlat *__restrict self) {
+	Dee_ssize_t result = sf_foreachseq(self, &sf_mh_seq_parity_cb, NULL);
+	if (result >= 0)
+		result &= 1;
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_parity_with_key_cb(void *arg, DeeObject *subseq) {
+	return DeeObject_InvokeMethodHint(seq_parity_with_key, subseq, (DeeObject *)arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sf_mh_seq_parity_with_key(SeqFlat *self, DeeObject *key) {
+	Dee_ssize_t result = sf_foreachseq(self, &sf_mh_seq_parity_with_key_cb, key);
+	if (result >= 0)
+		result &= 1;
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_parity_with_range_cb(void *UNUSED(arg), DeeObject *subseq,
+                               size_t subseq_start, size_t subseq_end,
+                               size_t UNUSED(range_start)) {
+	return DeeObject_InvokeMethodHint(seq_parity_with_range, subseq, subseq_start, subseq_end);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_mh_seq_parity_with_range(SeqFlat *__restrict self, size_t start, size_t end) {
+	Dee_ssize_t result = sf_interact_withrange(self, start, end, &sf_mh_seq_parity_with_range_cb, NULL);
+	if (result >= 0)
+		result &= 1;
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_parity_with_range_and_key_cb(void *arg, DeeObject *subseq,
+                                       size_t subseq_start, size_t subseq_end,
+                                       size_t UNUSED(range_start)) {
+	return DeeObject_InvokeMethodHint(seq_parity_with_range_and_key, subseq,
+	                                  subseq_start, subseq_end, (DeeObject *)arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+sf_mh_seq_parity_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObject *key) {
+	Dee_ssize_t result = sf_interact_withrange(self, start, end, &sf_mh_seq_parity_with_range_and_key_cb, key);
+	if (result >= 0)
+		result &= 1;
+	return result;
+}
+#endif /* WANT_sf_mh_seq_parity */
+
+
 #ifdef WANT_sf_mh_seq_min
 PRIVATE DeeObject sf_mh_seq_min_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
 
@@ -1703,7 +1764,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 #ifdef WANT_sf_mh_seq_all
 	TYPE_METHOD_HINTREF(Sequence_all),
 #endif /* WANT_sf_mh_seq_all */
-	//TODO:TYPE_METHOD_HINTREF(Sequence_parity),
+#ifdef WANT_sf_mh_seq_parity
+	TYPE_METHOD_HINTREF(Sequence_parity),
+#endif /* WANT_sf_mh_seq_parity */
 #ifdef WANT_sf_mh_seq_min
 	TYPE_METHOD_HINTREF(Sequence_min),
 #endif /* WANT_sf_mh_seq_min */
@@ -1759,10 +1822,12 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_all_with_range, &sf_mh_seq_all_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &sf_mh_seq_all_with_range_and_key, METHOD_FNOREFESCAPE),
 #endif /* WANT_sf_mh_seq_all */
-	//TODO:TYPE_METHOD_HINT_F(seq_parity, &sf_mh_seq_parity, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_key, &sf_mh_seq_parity_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range, &sf_mh_seq_parity_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &sf_mh_seq_parity_with_range_and_key, METHOD_FNOREFESCAPE),
+#ifdef WANT_sf_mh_seq_parity
+	TYPE_METHOD_HINT_F(seq_parity, &sf_mh_seq_parity, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_parity_with_key, &sf_mh_seq_parity_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_parity_with_range, &sf_mh_seq_parity_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &sf_mh_seq_parity_with_range_and_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_seq_parity */
 #ifdef WANT_sf_mh_seq_min
 	TYPE_METHOD_HINT_F(seq_min, &sf_mh_seq_min, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_min_with_key, &sf_mh_seq_min_with_key, METHOD_FNOREFESCAPE),
