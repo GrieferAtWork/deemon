@@ -2252,6 +2252,7 @@ typedef uint16_t Dee_operator_t;
 #define FAKE_OPERATOR_IS          0xff00 /* `a is b' */
 #define FAKE_OPERATOR_SAME_OBJECT 0xff01 /* `a === b' */
 #define FAKE_OPERATOR_DIFF_OBJECT 0xff02 /* `a !== b' */
+#define FAKE_OPERATOR_NOT         0xff03 /* `!a' */
 
 /* Operator association ranges. */
 #define OPERATOR_TYPEMIN    OPERATOR_CONSTRUCTOR

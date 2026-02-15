@@ -66,7 +66,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	int32_t deemon_modid;
 	Dee_operator_t operator_name;
 	if (current_assembler.a_flag & ASM_FNOASSERT) {
-		/* Discard the assert-expression and message and emit a constant true. */
+		/* Discard the assert-expression and message. */
 		if (gflags & ASM_G_FPUSHRES)
 			DO(ast_genasm(expr, gflags));
 		goto done;
@@ -116,6 +116,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	    (operator_name = expr->a_flag,
 	     operator_name < OPERATOR_INC || operator_name > OPERATOR_INPLACE_POW)) {
 		instruction_t op_instr;
+		instruction_t jmp_instr;
 		uint8_t operand_mode;
 
 		/* Figure out how many operands there are while generating code for the operator itself. */
@@ -136,6 +137,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 
 		/* Duplicate all operands. */
 emit_instruction:
+		jmp_instr = ASM_JT;
 		DO(asm_putddi(ddi_ast));
 
 		/* TODO: Some operands don't need to be duplicated, as re-loading them
@@ -218,6 +220,14 @@ emit_instruction:
 				error = asm_gdiffobj();
 				break;
 
+			case FAKE_OPERATOR_NOT:
+				if (argc != 1)
+					goto fallback_generate_goperator;
+				/* Special case: `assert !a' */
+				jmp_instr = ASM_JX_NOT(jmp_instr);
+				error = 0;
+				break;
+
 			default:
 fallback_generate_goperator:
 				/* Invoke the operator using a general-purpose instruction. */
@@ -275,10 +285,10 @@ fallback_generate_goperator:
 #define assert_cleanup assert_enter
 		old_section = current_assembler.a_curr;
 		if (old_section == &current_assembler.a_sect[SECTION_COLD]) {
-			DO(asm_gjmp(ASM_JT, assert_cleanup));
+			DO(asm_gjmp(jmp_instr, assert_cleanup));
 			asm_decsp(); /* Adjust for `ASM_JT' */
 		} else {
-			DO(asm_gjmp(ASM_JF, assert_enter));
+			DO(asm_gjmp(ASM_JX_NOT(jmp_instr), assert_enter));
 			asm_decsp(); /* Adjust for `ASM_JF' */
 			current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
 			DO(asm_putddi(ddi_ast));
@@ -345,7 +355,9 @@ fallback_generate_goperator:
 #undef assert_cleanup
 	}
 
-	if (expr->a_type == AST_ACTION) {
+	switch (expr->a_type) {
+
+	case AST_ACTION:
 		switch (expr->a_flag) {
 
 		case AST_FACTION_IN:
@@ -392,6 +404,19 @@ fallback_generate_goperator:
 
 		default: break;
 		}
+		break;
+
+	case AST_BOOL:
+		if (expr->a_flag & AST_FBOOL_NEGATE) {
+			operator_name = FAKE_OPERATOR_NOT;
+			DO(ast_genasm(expr->a_bool, ASM_G_FPUSHRES));
+			DO(asm_putddi(ddi_ast));
+			argc = 1;
+			goto emit_instruction;
+		}
+		break;
+
+	default: break;
 	}
 #if 0
 	if (expr->a_type == AST_ACTION &&

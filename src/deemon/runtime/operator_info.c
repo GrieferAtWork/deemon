@@ -1433,6 +1433,11 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 			DO(err, DeeFormat_PRINT(printer, arg, "!!"));
 		break;
 
+	case FAKE_OPERATOR_NOT:
+		if (argc == 0)
+			DO(err, DeeFormat_PRINT(printer, arg, "!"));
+		break;
+
 	case OPERATOR_INV:
 	case OPERATOR_POS:
 	case OPERATOR_NEG:
@@ -1478,6 +1483,7 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
 	case OPERATOR_STR:
 	case OPERATOR_REPR:
 	case OPERATOR_BOOL:
+	case FAKE_OPERATOR_NOT:
 	case OPERATOR_INV:
 	case OPERATOR_POS:
 	case OPERATOR_NEG:
