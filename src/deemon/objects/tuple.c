@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MallococBufsize */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_True, return_false, return_true */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/int.h>                /* DeeInt_NewSize */

@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_BadArgc0, DeeArg_Unpack* */
 #include <deemon/attribute.h>          /* DeeEnumAttr_Type */
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_return_bool01, return_bool */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/float.h>              /* DeeFloat_Type */

@@ -29,7 +29,7 @@
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ, UNPxSIZ */
 #include <deemon/bytes.h>              /* DeeBytes*, Dee_EmptyBytes */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* PCKuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_Type */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */

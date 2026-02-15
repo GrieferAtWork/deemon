@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/int.h>                /* DeeInt_NewSize */

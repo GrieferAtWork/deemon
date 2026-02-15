@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeFunctionObject, Dee_CODE_F*, Dee_DDI_*, Dee_code_frame, Dee_code_frame_*, Dee_ddi_*, code_addr_t */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFX32 */

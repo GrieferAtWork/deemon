@@ -22,12 +22,11 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_BadAlloc */
-#include <deemon/computed-operators.h>
-#include <deemon/object.h>             /* DREF, DeeObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t */
-#include <deemon/operator-hints.h>     /*  */
-#include <deemon/type.h>               /* OPERATOR_*, type_* */
-#include <deemon/util/hash.h>          /* DeeObject_HashGeneric */
+#include <deemon/alloc.h>          /* Dee_BadAlloc */
+#include <deemon/object.h>         /* DREF, DeeObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t */
+#include <deemon/operator-hints.h> /*  */
+#include <deemon/type.h>           /* OPERATOR_*, type_* */
+#include <deemon/util/hash.h>      /* DeeObject_HashGeneric */
 
 #include "operator-hint-errors.h"
 #include "runtime_error.h"

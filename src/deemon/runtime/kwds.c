@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* Dee_True, return_bool, return_false */
 #include <deemon/cached-dict.h>        /* DeeCachedDict_New, DeeCachedDict_NewInheritedOnSuccess */
 #include <deemon/code.h>               /* Dee_code_object */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_Type */

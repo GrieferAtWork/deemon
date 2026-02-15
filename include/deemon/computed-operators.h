@@ -17,10 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!fixincludes no_include_comments*/
-/*!export **/
 #ifndef GUARD_DEEMON_COMPUTED_OPERATORS_H
-#define GUARD_DEEMON_COMPUTED_OPERATORS_H 1 /*!export-*/
+#define GUARD_DEEMON_COMPUTED_OPERATORS_H 1
 
 #include "api.h"
 
@@ -30,11 +28,11 @@
 #if defined(CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS) || 0 /*<<< change to "1" to quickly disable */
 #undef CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
 #undef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
-#define CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
+#define CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS /*!export*/
 #elif defined(CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS) || 0
 #undef CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
 #undef CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
-#define CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
+#define CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS /*!export*/
 #else /* ... */
 #include <hybrid/host.h> /* __pic__ */
 /* Disable computed operators when the deemon core is built as position-independent code.
@@ -42,9 +40,9 @@
  * function pointer that appears in program data, so computed operators would add a heap
  * of overhead to program startup time. */
 #ifdef __pic__
-#define CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
+#define CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS /*!export*/
 #else /* __pic__ */
-#define CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS
+#define CONFIG_WITH_COMPUTED_DEFAULT_OPERATORS /*!export*/
 #endif /* !__pic__ */
 #endif /* !... */
 
@@ -79,21 +77,21 @@
  * #1: Build deemon with CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS
  * #2: `$ make computed-operators`
  */
-#define DEFIMPL(x) x
+#define DEFIMPL(x) x /*!export*/
 /* clang-format off */
 #ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
-#define DEFIMPL_UNSUPPORTED(x) x
+#define DEFIMPL_UNSUPPORTED(x) x /*!export*/
 #include "../../src/deemon/runtime/operator-hint-errors.h" /*!KEEPME*/
 #else /* CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 #include <stddef.h> /* NULL */
-#define DEFIMPL_UNSUPPORTED(x) NULL
+#define DEFIMPL_UNSUPPORTED(x) NULL /*!export*/
 #endif /* !CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 #include "../../src/deemon/runtime/method-hint-defaults.h" /*!KEEPME*/
 #include "operator-hints.h"                                /*!KEEPME*/
 /* clang-format on */
 
-#define DEFAULT_OPDEF INTDEF
-#define DEFAULT_OPIMP INTERN
+#define DEFAULT_OPDEF INTDEF /*!export*/
+#define DEFAULT_OPIMP INTERN /*!export*/
 
 #include <stddef.h> /* size_t */
 
@@ -173,11 +171,11 @@ INTDEF Dee_hash_t DCALL default__hash__unsupported(DeeObject *__restrict self);
 
 DECL_END
 #else /* !CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */
-#define DEFIMPL(x)             NULL
-#define DEFIMPL_UNSUPPORTED(x) NULL
+#define DEFIMPL(x)             NULL /*!export*/
+#define DEFIMPL_UNSUPPORTED(x) NULL /*!export*/
 
-#define DEFAULT_OPDEF PRIVATE
-#define DEFAULT_OPIMP PRIVATE
+#define DEFAULT_OPDEF PRIVATE /*!export*/
+#define DEFAULT_OPIMP PRIVATE /*!export*/
 #endif /* CONFIG_WITHOUT_COMPUTED_DEFAULT_OPERATORS */
 #endif /* CONFIG_BUILDING_DEEMON */
 

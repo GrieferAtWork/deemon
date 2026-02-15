@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bool.h>               /* Dee_True */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK */

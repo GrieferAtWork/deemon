@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* Dee_True */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnknownKey */
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */

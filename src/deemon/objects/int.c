@@ -35,7 +35,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP*, _DeeArg_AsObject */
 #include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
 #include <deemon/bytes.h>              /* DeeBytes* */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Repeat */

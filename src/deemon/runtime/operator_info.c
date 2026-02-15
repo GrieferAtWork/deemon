@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* return_bool, return_false */
 #include <deemon/cached-dict.h>        /* DeeCachedDict_Check, DeeCachedDict_MAP */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
 #include <deemon/int.h>                /* DeeInt_NewUInt16, DeeInt_Type */

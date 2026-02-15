@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_COUNT, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrTUnboundAttr */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */

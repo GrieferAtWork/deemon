@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* Dee_True, return_bool, return_false */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AsUInt32, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Incref, Dee_visit_t, OBJECT_HEAD_INIT */

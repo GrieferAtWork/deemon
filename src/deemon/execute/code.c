@@ -27,7 +27,7 @@
 #include <deemon/asm.h>                /* ASM_RET_NONE, INSTRLEN_MAX, instruction_t */
 #include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/code.h>               /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, Dee_CODE_F*, Dee_CODE_LARGEFRAME_THRESHOLD, Dee_DDI_EXDAT_*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_SIZE, Dee_SIZEOF_CODE_ADDR_T, Dee_TRIGGER_BREAKPOINT_CONTINUE, Dee_code_frame, Dee_code_metrics_init, Dee_except_handler, Dee_function_info, Dee_hostasm_code_init, code_size_t, instruction_t */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_*, Dee_Unpackf, PRF* */

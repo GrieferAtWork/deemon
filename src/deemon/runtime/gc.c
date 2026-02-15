@@ -28,7 +28,7 @@
 #include <deemon/asm.h>                /* ASM_RET_NONE, instruction_t */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_CODE_FFINALLY, instruction_t */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/exec.h>               /*  */
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/gc.h>                 /* DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_gc_head */

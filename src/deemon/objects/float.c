@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, CONFIG_HAVE_IEEE754_LE, DeeFloatObject, DeeFloat_PrintRepr, Dee_Strtod */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */

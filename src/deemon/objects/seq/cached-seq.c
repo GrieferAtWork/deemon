@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryMallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
 #include <deemon/bool.h>               /* Dee_True */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */

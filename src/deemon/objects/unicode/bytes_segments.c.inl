@@ -31,7 +31,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack, DeeArg_Unpack1, UNPuSIZ */
 #include <deemon/bool.h>               /* Dee_True, return_bool, return_false, return_true */
 #include <deemon/bytes.h>              /* DeeBytes* */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_TypeAssertFailed, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_foreach_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */

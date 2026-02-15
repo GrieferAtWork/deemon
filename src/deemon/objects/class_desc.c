@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_*, DeeClass_BoundMember, DeeClass_DESC, DeeInstanceMemberObject, DeeInstance_DESC, Dee_CLASS_*, Dee_TP_FCLASS_AUTOINIT, Dee_TP_FCLASS_SUPERKWDS, Dee_class_attribute, Dee_class_desc, Dee_class_desc_*, Dee_class_operator, Dee_instance_desc, Dee_instance_desc_* */
 #include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_code_frame */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_*, DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_*, PRFu16, PRFx16 */

@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPdSIZ */
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/class.h>              /* DeeClass_DESC, DeeClass_QueryInstanceAttributeStringHash, DeeInstance_DESC, DeeInstance_GetAttribute, Dee_class_attribute, Dee_class_desc */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFAULT_OPDEF, DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_ErrIntegerOverflowU, DeeRT_ErrUnknownAttr */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */

@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* Dee_*alloc*, Dee_Free */
 #include <deemon/asm.h>                /* DDI_* */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_StackDepth, DeeCode_Type, DeeDDIObject, DeeDDI_Empty, Dee_DDI_*, Dee_code_addr_t, Dee_ddi_*, code_addr_t */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_*, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */

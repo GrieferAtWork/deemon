@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_BadArgcEx */
 #include <deemon/attribute.h>          /* DeeAttributeObject, DeeAttribute_Type */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClass_DESC, DeeInstance_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc_as_instance, Dee_instance_desc, Dee_instance_desc_lock_endread, Dee_instance_desc_lock_read */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_* */
 #include <deemon/error.h>              /* DeeError_*, Dee_ERROR_OBJECT_HEAD */
 #include <deemon/format.h>             /* DeeFormat_* */

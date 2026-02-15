@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/bool.h>               /* DeeBool_NewFalse, return_bool, return_false, return_true */
 #include <deemon/cell.h>               /* DeeCell* */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_Track */

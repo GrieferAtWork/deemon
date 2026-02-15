@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/cached-dict.h>        /* DeeCachedDict*, Dee_cached_dict_item */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/dict.h>               /* DeeDict_CheckExact */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */

@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPu64 */
 #include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool, return_false */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeFunctionObject, DeeFunction_Check, Dee_CODE_FRAME_NOT_EXECUTING, Dee_CODE_FTHISCALL, Dee_code_frame */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrNoActiveException, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeErrorObject, DeeError_*, DeeThreadExit_Check, DeeThreadExit_Result, Dee_threadexit_object, ERROR_HANDLED_INTERRUPT */
 #include <deemon/error_types.h>        /* DeeError_Interrupt_instance, DeeSignalObject */

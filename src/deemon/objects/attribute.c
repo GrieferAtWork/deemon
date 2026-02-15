@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/attribute.h>          /* DeeAttributeObject, DeeEnumAttrIteratorObject, DeeEnumAttrObject */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/mro.h>                /* DeeObject_FindAttr, DeeObject_IterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_SIZEOF_ATTRPERM_T, Dee_attrdesc, Dee_attrdesc_*, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo_typeof, Dee_attriter_*, Dee_attrperm_t, Dee_attrspec */

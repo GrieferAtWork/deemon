@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* _Dee_MallococBufsize */
 #include <deemon/bool.h>               /* Dee_True */
 #include <deemon/bytes.h>              /* Dee_EmptyBytes */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1 */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_Decref, OBJECT_HEAD_INIT */

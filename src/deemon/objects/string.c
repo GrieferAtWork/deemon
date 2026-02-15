@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_Unpack1X, UNPu32 */
 #include <deemon/bool.h>               /* return_bool, return_false */
 #include <deemon/bytes.h>              /* DeeBytes* */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_UnicodeEncodeError */
 #include <deemon/int.h>                /* DeeInt_NewSize */

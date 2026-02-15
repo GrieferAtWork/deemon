@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/map.h>                /* DeeMapping_NewEmpty */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */

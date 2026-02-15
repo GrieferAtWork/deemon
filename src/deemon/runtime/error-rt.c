@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_* */
 #include <deemon/code.h>               /* DeeCodeObject, Dee_code_frame */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeErrorObject, DeeError_*, Dee_ERROR_HANDLED_RESTORE, Dee_ERROR_OBJECT_HEAD */
 #include <deemon/error_types.h>        /* DeeNoMemoryErrorObject */

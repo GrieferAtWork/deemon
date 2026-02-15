@@ -28,7 +28,7 @@
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/class.h>              /* DeeClassDesc_QueryInstanceAttributeStringHash, DeeClassDescriptorObject, DeeClass_DESC, DeeInstance_DESC, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endread, Dee_class_desc_lock_read, Dee_instance_desc, Dee_instance_desc_lock_endwrite, Dee_instance_desc_lock_write */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_Check, DeeFunction_Type, DeeYieldFunctionObject, DeeYieldFunction_Type */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFAULT_OPDEF, DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_BOUND, DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */

@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw, UNPu16, UNPx16 */
 #include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Type, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FLENIENT, Dee_DDI_*, Dee_code_*, Dee_ddi_*, code_addr_t */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* PRFxSIZ */

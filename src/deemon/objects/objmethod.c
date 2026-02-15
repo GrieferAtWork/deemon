@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_* */
 #include <deemon/bool.h>               /* Dee_True, return_bool, return_false */
 #include <deemon/callable.h>           /* DeeCallable_Type */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_CALL, DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */

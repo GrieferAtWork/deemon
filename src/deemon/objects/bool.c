@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/bool.h>               /* DeeBool*, Dee_False, Dee_True, return_bool, return_false, return_true */
-#include <deemon/computed-operators.h>
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/int.h>                /* Dee_return_smallint, INT_UNSIGNED */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
