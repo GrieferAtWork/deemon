@@ -113,11 +113,11 @@ sfi_inititer_withseq(SeqFlatIterator *__restrict self, DeeObject *seq) {
 		/* Special case: "{}.flatten" */
 		self->sfi_curriter = DeeIterator_NewEmpty();
 	} else {
-		self->sfi_curriter = DeeObject_Iter(seq);
+		self->sfi_curriter = DeeObject_Iter(firstseq);
 		if unlikely(!self->sfi_curriter)
 			goto err_baseiter_firstseq;
+		Dee_Decref_unlikely(firstseq);
 	}
-	Dee_Decref_unlikely(firstseq);
 	Dee_atomic_lock_init(&self->sfi_currlock);
 	return 0;
 err_baseiter_firstseq:
@@ -973,17 +973,22 @@ PRIVATE NONNULL((1, 2)) int DCALL
 sfi_copy(SeqFlatIterator *__restrict self,
          SeqFlatIterator *__restrict other) {
 	DREF DeeObject *other_curriter;
-	SeqFlatIterator_LockAcquire(self);
+	SeqFlatIterator_LockAcquire(other);
 	other_curriter = other->sfi_curriter;
 	Dee_Incref(other_curriter);
-	SeqFlatIterator_LockRelease(self);
-	if unlikely((other_curriter = DeeObject_CopyInherited(other_curriter)) == NULL)
+	SeqFlatIterator_LockRelease(other);
+	other_curriter = DeeObject_CopyInherited(other_curriter);
+	if unlikely(!other_curriter)
 		goto err;
 	self->sfi_curriter = other_curriter;
-	Dee_Incref(other->sfi_baseiter);
-	self->sfi_baseiter = other->sfi_baseiter;
+	self->sfi_baseiter = DeeObject_Copy(other->sfi_baseiter);
+	if unlikely(!self->sfi_baseiter)
+		goto err_other_curriter;
 	Dee_atomic_lock_init(&self->sfi_currlock);
 	return 0;
+err_other_curriter:
+	ASSERT(self->sfi_curriter == other_curriter);
+	Dee_Decref(other_curriter);
 err:
 	return -1;
 }
