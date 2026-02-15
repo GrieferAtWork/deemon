@@ -40,15 +40,25 @@ assert x.flatten.any(5, -1, e -> e == 9);
 assert !x.flatten.any(6, -1, e -> e == 9);
 assert !x.flatten.any(e -> e == 99);
 
+assert !x.flatten.all();
+assert !x.flatten.all(e -> e != 0);
+assert x.flatten.all(1, -1);
+assert x.flatten.all(1, -1, e -> e != 0);
+
 test.assertSequence({ 10, 20, 30 }.map(e -> (e, e + 1)).flatten, { 10, 11, 20, 21, 30, 31 });
 
+assert { {true}, {}, {1, "foo"} }.flatten.all();
+assert { {true}, {}, {1, "foo"} }.flatten.all(e -> e !== false);
+assert !{ {true}, {}, {1, "foo", false} }.flatten.all(1, -1);
+assert !{ {true}, {}, {1, "foo", false} }.flatten.all(1, -1, e -> e !== false);
 
-assert !{ {0}, {false, ""} }.flatten.any();
-assert { {0}, {true, ""} }.flatten.any();
-assert { {0}, {true, ""} }.flatten.any(1, -1);
-assert { {1}, {false, ""} }.flatten.any();
-assert !{ {1}, {false, ""} }.flatten.any(1, -1);
-assert { {0}, {false, "hi"} }.flatten.any();
+
+assert !{ {0}, {}, {false, ""} }.flatten.any();
+assert { {0}, {}, {true, ""} }.flatten.any();
+assert { {0}, {}, {true, ""} }.flatten.any(1, -1);
+assert { {1}, {}, {false, ""} }.flatten.any();
+assert !{ {1}, {}, {false, ""} }.flatten.any(1, -1);
+assert { {0}, {}, {false, "hi"} }.flatten.any();
 
 for (local useInsertAll: {false, true}) {
 	local a = [10, 20, 30];

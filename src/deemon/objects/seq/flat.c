@@ -55,6 +55,7 @@
 
 #ifndef CONFIG_TINY_DEEMON
 #define WANT_sf_mh_seq_any
+#define WANT_sf_mh_seq_all
 #define WANT_sf_mh_seq_find
 #endif /* !CONFIG_TINY_DEEMON */
 
@@ -1018,6 +1019,106 @@ sf_mh_seq_any_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObj
 #endif /* WANT_sf_mh_seq_any */
 
 
+#ifdef WANT_sf_mh_seq_all
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_all_cb(void *UNUSED(arg), DeeObject *subseq) {
+	int result = DeeObject_InvokeMethodHint(seq_all, subseq);
+	if (result > 0) {
+		result = 0; /* Still all */
+	} else if (result == 0) {
+		result = -2; /* Not all */
+	}
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_mh_seq_all(SeqFlat *__restrict self) {
+	int result = (int)sf_foreachseq(self, &sf_mh_seq_all_cb, NULL);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == 0) {
+		result = 1; /* Still all */
+	} else if (result == -2) {
+		result = 0; /* Not all */
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_all_with_key_cb(void *arg, DeeObject *subseq) {
+	int result = DeeObject_InvokeMethodHint(seq_all_with_key, subseq, (DeeObject *)arg);
+	if (result > 0) {
+		result = 0; /* Still all */
+	} else if (result == 0) {
+		result = -2; /* Not all */
+	}
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sf_mh_seq_all_with_key(SeqFlat *self, DeeObject *key) {
+	int result = (int)sf_foreachseq(self, &sf_mh_seq_all_with_key_cb, key);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == 0) {
+		result = 1; /* Still all */
+	} else if (result == -2) {
+		result = 0; /* Not all */
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_all_with_range_cb(void *UNUSED(arg), DeeObject *subseq,
+                            size_t subseq_start, size_t subseq_end,
+                            size_t UNUSED(range_start)) {
+	int result = DeeObject_InvokeMethodHint(seq_all_with_range, subseq, subseq_start, subseq_end);
+	if (result > 0) {
+		result = 0; /* Still all */
+	} else if (result == 0) {
+		result = -2; /* Not all */
+	}
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_mh_seq_all_with_range(SeqFlat *__restrict self, size_t start, size_t end) {
+	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_all_with_range_cb, NULL);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == 0) {
+		result = 1; /* Still all */
+	} else if (result == -2) {
+		result = 0; /* Not all */
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_all_with_range_and_key_cb(void *arg, DeeObject *subseq,
+                                    size_t subseq_start, size_t subseq_end,
+                                    size_t UNUSED(range_start)) {
+	int result = DeeObject_InvokeMethodHint(seq_all_with_range_and_key, subseq,
+	                                        subseq_start, subseq_end, (DeeObject *)arg);
+	if (result > 0) {
+		result = 0; /* Still all */
+	} else if (result == 0) {
+		result = -2; /* Not all */
+	}
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+sf_mh_seq_all_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObject *key) {
+	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_all_with_range_and_key_cb, key);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == 0) {
+		result = 1; /* Still all */
+	} else if (result == -2) {
+		result = 0; /* Not all */
+	}
+	return result;
+}
+#endif /* WANT_sf_mh_seq_all */
+
+
 #ifdef WANT_sf_mh_seq_find
 union sf_mh_seq_find_data {
 	struct {
@@ -1113,7 +1214,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 #ifdef WANT_sf_mh_seq_any
 	TYPE_METHOD_HINTREF(Sequence_any),
 #endif /* WANT_sf_mh_seq_any */
-	//TODO:TYPE_METHOD_HINTREF(Sequence_all),
+#ifdef WANT_sf_mh_seq_all
+	TYPE_METHOD_HINTREF(Sequence_all),
+#endif /* WANT_sf_mh_seq_all */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_parity),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_min),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_max),
@@ -1160,10 +1263,12 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_any_with_range, &sf_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &sf_mh_seq_any_with_range_and_key, METHOD_FNOREFESCAPE),
 #endif /* WANT_sf_mh_seq_any */
-	//TODO:TYPE_METHOD_HINT_F(seq_all, &sf_mh_seq_all, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_all_with_key, &sf_mh_seq_all_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_all_with_range, &sf_mh_seq_all_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &sf_mh_seq_all_with_range_and_key, METHOD_FNOREFESCAPE),
+#ifdef WANT_sf_mh_seq_all
+	TYPE_METHOD_HINT_F(seq_all, &sf_mh_seq_all, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_key, &sf_mh_seq_all_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range, &sf_mh_seq_all_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &sf_mh_seq_all_with_range_and_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_seq_all */
 	//TODO:TYPE_METHOD_HINT_F(seq_parity, &sf_mh_seq_parity, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_key, &sf_mh_seq_parity_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range, &sf_mh_seq_parity_with_range, METHOD_FNOREFESCAPE),
