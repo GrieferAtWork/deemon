@@ -80,4 +80,8 @@ for (local useInsertAll: {false, true}) {
 	doInsert(99999, "tail");
 	test.assertSequence(c, {"hi",10,20,"there",50,"second",60,"tail"});
 	test.assertSequence(b, {50,"second",60,"tail"});
+	c.clear();
+	test.assertSequence(c, {});
+	test.assertSequence(a, {});
+	test.assertSequence(b, {});
 }

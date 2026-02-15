@@ -855,7 +855,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_seq_clear_foreach_cb(void *UNUSED(arg), DeeObject *subseq) {
-	return DeeObject_InvokeMethodHint(seq_clear, subseq);
+	return (Dee_ssize_t)DeeObject_InvokeMethodHint(seq_clear, subseq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1399,6 +1399,8 @@ sfi_bool(SeqFlatIterator *__restrict self) {
 	int result;
 	for (;;) {
 		DREF DeeObject *curriter;
+		DREF DeeObject *new_currseq;
+		DREF DeeObject *new_curriter;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;
 		Dee_Incref(curriter);
@@ -1406,13 +1408,26 @@ sfi_bool(SeqFlatIterator *__restrict self) {
 		result = DeeObject_BoolInherited(curriter);
 		if (result != 0)
 			break; /* non-empty, or error */
-		result = DeeObject_Bool(self->sfi_baseiter);
-		if (result != 0)
-			break; /* non-empty, or error */
-		if (curriter == atomic_read(&self->sfi_curriter))
-			break; /* EOF has actually been reached. */
+
+		/* Current iterator has been exhausted -> load the next one */
+		new_currseq = DeeObject_IterNext(self->sfi_baseiter);
+		if (!ITER_ISOK(new_currseq))
+			return new_currseq == ITER_DONE ? 0 : -1;  /* Error or ITER_DONE */
+		new_curriter = DeeObject_Iter(new_currseq);
+		Dee_Decref(new_currseq);
+		if unlikely(!new_curriter)
+			goto err;
+		SeqFlatIterator_LockAcquire(self);
+		curriter = self->sfi_curriter;     /* Inherit reference */
+		self->sfi_curriter = new_curriter; /* Inherit reference */
+		SeqFlatIterator_LockRelease(self);
+		Dee_Decref(curriter);
+		if (DeeThread_CheckInterrupt())
+			goto err;
 	}
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
