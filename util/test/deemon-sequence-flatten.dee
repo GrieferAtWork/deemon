@@ -37,13 +37,34 @@ assert 5 == x.flatten[3];
 test.assertSequence({ 10, 20, 30 }.map(e -> (e, e + 1)).flatten, { 10, 11, 20, 21, 30, 31 });
 
 
-local a = [10, 20, 30];
-local b = [40, 50, 60];
-local c = {a,b}.flatten;
+for (local useInsertAll: {false, true}) {
+	local a = [10, 20, 30];
+	local b = [40, 50, 60];
+	local c = {a,b}.flatten;
+	function doInsert(i, v) {
+		if (useInsertAll) {
+			c.insertall(i, {v});
+		} else {
+			c.insert(i, v);
+		}
+	}
 
-test.assertSequence(c, {10,20,30,40,50,60});
-c.erase(2, 2);
-test.assertSequence(c, {10,20,50,60});
-test.assertSequence(a, {10,20});
-test.assertSequence(b, {50,60});
-
+	test.assertSequence(c, {10,20,30,40,50,60});
+	c.erase(2, 2);
+	test.assertSequence(c, {10,20,50,60});
+	test.assertSequence(a, {10,20});
+	test.assertSequence(b, {50,60});
+	doInsert(0, "hi");
+	test.assertSequence(c, {"hi",10,20,50,60});
+	test.assertSequence(a, {"hi",10,20});
+	doInsert(3, "there");
+	test.assertSequence(c, {"hi",10,20,"there",50,60});
+	test.assertSequence(a, {"hi",10,20,"there"});
+	doInsert(5, "second");
+	test.assertSequence(c, {"hi",10,20,"there",50,"second",60});
+	test.assertSequence(a, {"hi",10,20,"there"});
+	test.assertSequence(b, {50,"second",60});
+	doInsert(99999, "tail");
+	test.assertSequence(c, {"hi",10,20,"there",50,"second",60,"tail"});
+	test.assertSequence(b, {50,"second",60,"tail"});
+}

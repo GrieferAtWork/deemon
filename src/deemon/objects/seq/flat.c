@@ -424,11 +424,11 @@ sf_mh_seq_enumerate_index(SeqFlat *__restrict self,
 
 struct sf_enumerate_index_reverse_data {
 	Dee_seq_enumerate_index_t sfeird_proc;   /* [1..1] Underlying proc */
-	void                 *sfeird_arg;    /* [?..?] Cookie for `sfeird_proc' */
-	Dee_ssize_t           sfeird_result; /* Nested enumeration result */
-	size_t                sfeird_index;  /* Next index */
-	size_t                sfeird_start;  /* Start index (stop enumeration when `sfeird_index') */
-	size_t                sfeird_skip;   /* Number of indices that still need to be skipped */
+	void                     *sfeird_arg;    /* [?..?] Cookie for `sfeird_proc' */
+	Dee_ssize_t               sfeird_result; /* Nested enumeration result */
+	size_t                    sfeird_index;  /* Next index */
+	size_t                    sfeird_start;  /* Start index (stop enumeration when `sfeird_index') */
+	size_t                    sfeird_skip;   /* Number of indices that still need to be skipped */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -606,15 +606,17 @@ err:
 	return NULL;
 }
 
+typedef WUNUSED_T NONNULL_T((1)) int
+(DCALL *sf_interact_withitem_cb_t)(DeeObject *__restrict subseq,
+                                   size_t subseq_index, void *arg);
 
 struct sf_interact_withitem_data {
-	WUNUSED_T NONNULL_T((1)) int (DCALL *sfiwid_interact)(DeeObject *__restrict subseq, size_t subseq_index, DeeObject *cookie);
-	DeeObject                           *sfiwid_cookie;
-	size_t                               sfiwid_index;  /* # of elements that still need to be skipped */
-	size_t                               sfiwid_count;  /* Total # of elements from sub-sequences */
+	sf_interact_withitem_cb_t sfiwid_interact; /* [1..1] Interaction callback */
+	void                     *sfiwid_arg;      /* [?..?] Interaction cookie */
+	size_t                    sfiwid_index;    /* # of elements that still need to be skipped */
+	size_t                    sfiwid_count;    /* Total # of elements from sub-sequences */
 };
 
-#define SF_INTERACT_WITHITEM_DONE SSIZE_MIN
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 sf_interact_withitem_cb(void *arg, DeeObject *subseq) {
 	size_t subseq_size;
@@ -628,35 +630,95 @@ sf_interact_withitem_cb(void *arg, DeeObject *subseq) {
 		data->sfiwid_count += subseq_size;
 		return 0;
 	}
-	if unlikely((*data->sfiwid_interact)(subseq, data->sfiwid_index, data->sfiwid_cookie))
+	if unlikely((*data->sfiwid_interact)(subseq, data->sfiwid_index, data->sfiwid_arg))
 		goto err;
-	return SF_INTERACT_WITHITEM_DONE;
+	return -2;
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 sf_interact_withitem(SeqFlat *__restrict self, size_t index,
-                     WUNUSED_T NONNULL_T((1)) int (DCALL *interact)(DeeObject *__restrict subseq,
-                                                                    size_t subseq_index,
-                                                                    DeeObject *cookie),
-                     DeeObject *cookie) {
+                     sf_interact_withitem_cb_t interact, void *arg) {
 	Dee_ssize_t status;
 	struct sf_interact_withitem_data data;
 	data.sfiwid_interact = interact;
-	data.sfiwid_cookie   = cookie;
+	data.sfiwid_arg      = arg;
 	data.sfiwid_index    = index;
 	data.sfiwid_count    = 0;
 	status = sf_foreachseq(self, &sf_interact_withitem_cb, &data);
-	if likely(status == SF_INTERACT_WITHITEM_DONE)
+	ASSERT(status == 0 || status == -1 || status == -2);
+	if likely(status == -2)
 		return 0;
-	if unlikely(status < 0)
+	if unlikely(status == 0) {
+		/* Item not found -> index must be out-of-bounds */
+		DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, data.sfiwid_count);
+	}
+	return -1;
+}
+
+struct sf_interact_withposition_data {
+	sf_interact_withitem_cb_t sfiwpd_interact; /* [1..1] Interaction callback */
+	void                     *sfiwpd_arg;      /* [?..?] Interaction cookie */
+	size_t                    sfiwpd_index;    /* # of elements that still need to be skipped */
+	size_t                    sfiwpd_count;    /* Total # of elements from sub-sequences */
+	DREF DeeObject           *sfiwpd_lastseq;  /* [0..1] Last-enumerated sequence */
+	size_t                    sfiwpd_lastidx;  /* [valid_if(sfiwpd_lastseq)] position in `sfiwpd_lastseq' */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+sf_interact_withposition_cb(void *arg, DeeObject *subseq) {
+	size_t subseq_size;
+	struct sf_interact_withposition_data *data;
+	data = (struct sf_interact_withposition_data *)arg;
+	subseq_size = DeeObject_InvokeMethodHint(seq_operator_size, subseq);
+	if unlikely(subseq_size == (size_t)-1)
 		goto err;
-	/* Item not found -> index must be out-of-bounds */
-	DeeRT_ErrIndexOutOfBounds(Dee_AsObject(self), index, data.sfiwid_count);
+	if (data->sfiwpd_index > subseq_size) {
+		data->sfiwpd_lastidx = data->sfiwpd_index;
+		Dee_XDecref(data->sfiwpd_lastseq);
+		data->sfiwpd_lastseq = subseq;
+		Dee_Incref(subseq);
+		data->sfiwpd_index -= subseq_size;
+		data->sfiwpd_count += subseq_size;
+		return 0;
+	}
+	Dee_XDecref(data->sfiwpd_lastseq);
+	if unlikely((*data->sfiwpd_interact)(subseq, data->sfiwpd_index, data->sfiwpd_arg))
+		goto err;
+	return -2;
 err:
 	return -1;
 }
+
+/* Interact with a given position (as needed to implement "insert") */
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+sf_interact_withposition(SeqFlat *__restrict self, size_t position,
+                         sf_interact_withitem_cb_t interact, void *arg) {
+	Dee_ssize_t status;
+	struct sf_interact_withposition_data data;
+	data.sfiwpd_interact = interact;
+	data.sfiwpd_arg      = arg;
+	data.sfiwpd_index    = position;
+	data.sfiwpd_count    = 0;
+	data.sfiwpd_lastseq  = NULL;
+	status = sf_foreachseq(self, &sf_interact_withposition_cb, &data);
+	ASSERT(status == 0 || status == -1 || status == -2);
+	if likely(status == -2)
+		return 0;
+	if (status == 0) {
+		int result;
+		if unlikely(!data.sfiwpd_lastseq)
+			return DeeRT_ErrEmptySequence(self);
+		ASSERT(interact == data.sfiwpd_interact);
+		ASSERT(arg == data.sfiwpd_arg);
+		result = (*interact)(data.sfiwpd_lastseq, data.sfiwpd_lastidx, arg);
+		Dee_Decref_unlikely(data.sfiwpd_lastseq);
+		return result;
+	}
+	return -1;
+}
+
 
 /* @param: subseq:       The matching sub-sequence that containing. The
  *                       matched sub-range from the given [start,end) is
@@ -751,8 +813,8 @@ sf_interact_withrange(SeqFlat *__restrict self, size_t start, size_t end,
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-sf_delitem_index_cb(DeeObject *__restrict subseq, size_t index,
-                    DeeObject *UNUSED(cookie)) {
+sf_delitem_index_cb(DeeObject *__restrict subseq, size_t index, void *arg) {
+	(void)arg;
 	return DeeObject_InvokeMethodHint(seq_operator_delitem_index, subseq, index);
 }
 
@@ -761,16 +823,14 @@ sf_delitem_index(SeqFlat *__restrict self, size_t index) {
 	return sf_interact_withitem(self, index, &sf_delitem_index_cb, NULL);
 }
 
-#define sf_setitem_index_cb default__seq_operator_setitem_index
-
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 sf_setitem_index(SeqFlat *__restrict self, size_t index, DeeObject *value) {
-	return sf_interact_withitem(self, index, &sf_setitem_index_cb, value);
+	sf_interact_withitem_cb_t cb = (sf_interact_withitem_cb_t)&default__seq_operator_setitem_index;
+	return sf_interact_withitem(self, index, cb, value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-sf_xchitem_index_cb(DeeObject *__restrict subseq, size_t index,
-                    DeeObject *cookie) {
+sf_mh_seq_xchitem_index_cb(DeeObject *__restrict subseq, size_t index, void *cookie) {
 	DREF DeeObject *old_value;
 	DeeObject *new_value = *(DeeObject **)cookie;
 	old_value = DeeObject_InvokeMethodHint(seq_xchitem_index, subseq, index, new_value);
@@ -783,10 +843,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-sf_mh_xchitem_index(SeqFlat *__restrict self, size_t index, DeeObject *value) {
+sf_mh_seq_xchitem_index(SeqFlat *__restrict self, size_t index, DeeObject *value) {
 	DREF DeeObject *result = value;
-	if unlikely(sf_interact_withitem(self, index, &sf_xchitem_index_cb,
-	                                 (DeeObject *)&result))
+	if unlikely(sf_interact_withitem(self, index, &sf_mh_seq_xchitem_index_cb, &result))
 		goto err;
 	return result;
 err:
@@ -794,13 +853,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-sf_mh_clear_foreach_cb(void *UNUSED(arg), DeeObject *subseq) {
+sf_seq_mh_clear_foreach_cb(void *UNUSED(arg), DeeObject *subseq) {
 	return DeeObject_InvokeMethodHint(seq_clear, subseq);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-sf_mh_clear(SeqFlat *__restrict self) {
-	return (int)sf_foreachseq(self, &sf_mh_clear_foreach_cb, NULL);
+sf_seq_mh_clear(SeqFlat *__restrict self) {
+	return (int)sf_foreachseq(self, &sf_seq_mh_clear_foreach_cb, NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -819,6 +878,26 @@ sf_mh_seq_erase(SeqFlat *__restrict self, size_t index, size_t count) {
 	if (OVERFLOW_UADD(index, count, &end))
 		end = (size_t)-1;
 	return (int)sf_interact_withrange(self, index, end, &sf_mh_seq_erase_cb, NULL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_mh_seq_insert_cb(DeeObject *__restrict subseq, size_t subseq_index, void *arg) {
+	return DeeObject_InvokeMethodHint(seq_insert, subseq, subseq_index, (DeeObject *)arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+sf_mh_seq_insert(SeqFlat *self, size_t index, DeeObject *item) {
+	return sf_interact_withposition(self, index, &sf_mh_seq_insert_cb, item);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_mh_seq_insertall_cb(DeeObject *__restrict subseq, size_t subseq_index, void *arg) {
+	return DeeObject_InvokeMethodHint(seq_insertall, subseq, subseq_index, (DeeObject *)arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+sf_mh_seq_insertall(SeqFlat *self, size_t index, DeeObject *item) {
+	return sf_interact_withposition(self, index, &sf_mh_seq_insertall_cb, item);
 }
 
 
@@ -847,7 +926,6 @@ sf_mh_seq_find_cb(void *arg, DeeObject *subseq,
 	}
 	return 0;
 }
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 sf_mh_seq_find(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
@@ -889,7 +967,6 @@ sf_mh_seq_find_with_key_cb(void *arg, DeeObject *subseq,
 	return 0;
 }
 
-
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 sf_mh_seq_find_with_key(SeqFlat *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
@@ -919,77 +996,77 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index, &sf_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_foreach_reverse, &sf_mh_seq_foreach_reverse, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &sf_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_trygetfirst, &sf_mh_trygetfirst, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_trygetlast, &sf_mh_trygetlast, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_any, &sf_mh_any, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_any_with_key, &sf_mh_any_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_any_with_range, &sf_mh_any_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &sf_mh_any_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_all, &sf_mh_all, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_all_with_key, &sf_mh_all_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_all_with_range, &sf_mh_all_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &sf_mh_all_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_parity, &sf_mh_parity, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_key, &sf_mh_parity_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range, &sf_mh_parity_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &sf_mh_parity_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min, &sf_mh_min, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min_with_key, &sf_mh_min_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min_with_range, &sf_mh_min_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min_with_range_and_key, &sf_mh_min_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_max, &sf_mh_max, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_max_with_key, &sf_mh_max_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_max_with_range, &sf_mh_max_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &sf_mh_max_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_count, &sf_mh_count, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_count_with_key, &sf_mh_count_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_count_with_range, &sf_mh_count_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &sf_mh_count_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_contains, &sf_mh_contains, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_key, &sf_mh_contains_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_range, &sf_mh_contains_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &sf_mh_contains_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_locate, &sf_mh_locate, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_key, &sf_mh_locate_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_range, &sf_mh_locate_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_range_and_key, &sf_mh_locate_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_rlocate, &sf_mh_rlocate, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_rlocate_with_key, &sf_mh_rlocate_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_rlocate_with_range, &sf_mh_rlocate_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_rlocate_with_range_and_key, &sf_mh_rlocate_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_startswith, &sf_mh_startswith, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_startswith_with_key, &sf_mh_startswith_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_startswith_with_range, &sf_mh_startswith_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &sf_mh_startswith_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_endswith, &sf_mh_endswith, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_key, &sf_mh_endswith_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range, &sf_mh_endswith_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &sf_mh_endswith_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_trygetfirst, &sf_mh_seq_trygetfirst, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_trygetlast, &sf_mh_seq_trygetlast, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_any, &sf_mh_seq_any, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_any_with_key, &sf_mh_seq_any_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_any_with_range, &sf_mh_seq_any_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_any_with_range_and_key, &sf_mh_seq_any_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_all, &sf_mh_seq_all, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_all_with_key, &sf_mh_seq_all_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_all_with_range, &sf_mh_seq_all_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_all_with_range_and_key, &sf_mh_seq_all_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_parity, &sf_mh_seq_parity, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_key, &sf_mh_seq_parity_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range, &sf_mh_seq_parity_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &sf_mh_seq_parity_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_min, &sf_mh_seq_min, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_min_with_key, &sf_mh_seq_min_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_min_with_range, &sf_mh_seq_min_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_min_with_range_and_key, &sf_mh_seq_min_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_max, &sf_mh_seq_max, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_max_with_key, &sf_mh_seq_max_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_max_with_range, &sf_mh_seq_max_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &sf_mh_seq_max_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_count, &sf_mh_seq_count, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_count_with_key, &sf_mh_seq_count_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_count_with_range, &sf_mh_seq_count_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &sf_mh_seq_count_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_contains, &sf_mh_seq_contains, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_key, &sf_mh_seq_contains_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_range, &sf_mh_seq_contains_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &sf_mh_seq_contains_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_locate, &sf_mh_seq_locate, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_key, &sf_mh_seq_locate_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_range, &sf_mh_seq_locate_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_range_and_key, &sf_mh_seq_locate_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_rlocate, &sf_mh_seq_rlocate, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_rlocate_with_key, &sf_mh_seq_rlocate_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_rlocate_with_range, &sf_mh_seq_rlocate_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_rlocate_with_range_and_key, &sf_mh_seq_rlocate_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_startswith, &sf_mh_seq_startswith, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_startswith_with_key, &sf_mh_seq_startswith_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_startswith_with_range, &sf_mh_seq_startswith_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_startswith_with_range_and_key, &sf_mh_seq_startswith_with_range_and_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_endswith, &sf_mh_seq_endswith, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_key, &sf_mh_seq_endswith_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range, &sf_mh_seq_endswith_with_range, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &sf_mh_seq_endswith_with_range_and_key, METHOD_FNOREFESCAPE),
 #ifdef WANT_sf_mh_seq_find
 	TYPE_METHOD_HINT_F(seq_find, &sf_mh_seq_find, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_find_with_key, &sf_mh_seq_find_with_key, METHOD_FNOREFESCAPE),
 #endif /* WANT_sf_mh_seq_find */
-	//TODO:TYPE_METHOD_HINT_F(seq_rfind, &sf_mh_rfind, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_rfind_with_key, &sf_mh_rfind_with_key, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_rfind, &sf_mh_seq_rfind, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_rfind_with_key, &sf_mh_seq_rfind_with_key, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_erase, &sf_mh_seq_erase, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_insert, &sf_mh_insert, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_insertall, &sf_mh_insertall, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_pushfront, &sf_mh_pushfront, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_append, &sf_mh_append, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_extend, &sf_mh_extend, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_xchitem_index, &sf_mh_xchitem_index, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_clear, &sf_mh_clear, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_pop, &sf_mh_pop, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_remove, &sf_mh_remove, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_rremove, &sf_mh_rremove, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_removeall, &sf_mh_removeall, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_removeif, &sf_mh_removeif, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_resize, &sf_mh_resize, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_fill, &sf_mh_fill, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_reverse, &sf_mh_reverse, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_reversed, &sf_mh_reversed, METHOD_FNOREFESCAPE),
-	/* TODO: TYPE_METHOD_HINT_F(seq_sum, &sf_mh_sum, METHOD_FNOREFESCAPE), */
-	/* TODO: TYPE_METHOD_HINT_F(seq_sum_with_range, &sf_mh_sum_with_range, METHOD_FNOREFESCAPE), */
+	TYPE_METHOD_HINT_F(seq_insert, &sf_mh_seq_insert, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_insertall, &sf_mh_seq_insertall, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_pushfront, &sf_mh_seq_pushfront, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_append, &sf_mh_seq_append, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_extend, &sf_mh_seq_extend, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_xchitem_index, &sf_mh_seq_xchitem_index, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_clear, &sf_seq_mh_clear, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_pop, &sf_mh_seq_pop, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_remove, &sf_mh_seq_remove, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_rremove, &sf_mh_seq_rremove, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_removeall, &sf_mh_seq_removeall, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_removeif, &sf_mh_seq_removeif, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_resize, &sf_mh_seq_resize, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_fill, &sf_mh_seq_fill, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_reverse, &sf_mh_seq_reverse, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_METHOD_HINT_F(seq_reversed, &sf_mh_seq_reversed, METHOD_FNOREFESCAPE),
+	/* TODO: TYPE_METHOD_HINT_F(seq_sum, &sf_mh_seq_sum, METHOD_FNOREFESCAPE), */
+	/* TODO: TYPE_METHOD_HINT_F(seq_sum_with_range, &sf_mh_seq_sum_with_range, METHOD_FNOREFESCAPE), */
 	TYPE_METHOD_HINT_END
 };
 
@@ -1011,8 +1088,8 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 #endif /* WANT_sf_mh_seq_find */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_rfind),
 	TYPE_METHOD_HINTREF(Sequence_erase),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_insert),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_insertall),
+	TYPE_METHOD_HINTREF(Sequence_insert),
+	TYPE_METHOD_HINTREF(Sequence_insertall),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_pushfront),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_append),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_extend),
@@ -1032,7 +1109,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 };
 
 PRIVATE struct type_member tpconst sf_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(SeqFlat, sf_seq), "->?S?S?O"),
+	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT_AB, offsetof(SeqFlat, sf_seq),
+	                      "->?S?S?O\n"
+	                      "The underlying sequence that is being flattened"),
 	TYPE_MEMBER_END
 };
 
