@@ -54,6 +54,7 @@ for (local useInsertAll: {false, true}) {
 	local a = [10, 20, 30];
 	local b = [40, 50, 60];
 	local c = {a,b}.flatten;
+
 	function doInsert(i, v) {
 		if (useInsertAll) {
 			c.insertall(i, {v});
@@ -63,23 +64,29 @@ for (local useInsertAll: {false, true}) {
 	}
 
 	test.assertSequence(c, {10,20,30,40,50,60});
+
 	c.erase(2, 2);
 	test.assertSequence(c, {10,20,50,60});
 	test.assertSequence(a, {10,20});
 	test.assertSequence(b, {50,60});
+
 	doInsert(0, "hi");
 	test.assertSequence(c, {"hi",10,20,50,60});
 	test.assertSequence(a, {"hi",10,20});
+
 	doInsert(3, "there");
 	test.assertSequence(c, {"hi",10,20,"there",50,60});
 	test.assertSequence(a, {"hi",10,20,"there"});
+
 	doInsert(5, "second");
 	test.assertSequence(c, {"hi",10,20,"there",50,"second",60});
 	test.assertSequence(a, {"hi",10,20,"there"});
 	test.assertSequence(b, {50,"second",60});
+
 	doInsert(99999, "tail");
 	test.assertSequence(c, {"hi",10,20,"there",50,"second",60,"tail"});
 	test.assertSequence(b, {50,"second",60,"tail"});
+
 	c.clear();
 	test.assertSequence(c, {});
 	test.assertSequence(a, {});
@@ -89,4 +96,9 @@ for (local useInsertAll: {false, true}) {
 	test.assertSequence(c, {"first"});
 	test.assertSequence(a, {"first"});
 	test.assertSequence(b, {});
+
+	c.append("last");
+	test.assertSequence(c, {"first", "last"});
+	test.assertSequence(a, {"first"});
+	test.assertSequence(b, {"last"});
 }

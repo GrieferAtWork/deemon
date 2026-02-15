@@ -914,6 +914,19 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+sf_mh_seq_append(SeqFlat *self, DeeObject *item) {
+	int result;
+	DREF DeeObject *seq = sf_getlastseq(self);
+	if unlikely(!seq)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_append, seq, item);
+	Dee_Decref_unlikely(seq);
+	return result;
+err:
+	return -1;
+}
+
 
 
 #ifdef WANT_sf_mh_seq_any
@@ -1144,7 +1157,7 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_insert, &sf_mh_seq_insert, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_insertall, &sf_mh_seq_insertall, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_pushfront, &sf_mh_seq_pushfront, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_append, &sf_mh_seq_append, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_append, &sf_mh_seq_append, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_extend, &sf_mh_seq_extend, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_xchitem_index, &sf_mh_seq_xchitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_clear, &sf_mh_seq_clear, METHOD_FNOREFESCAPE),
@@ -1185,7 +1198,7 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_insert),
 	TYPE_METHOD_HINTREF(Sequence_insertall),
 	TYPE_METHOD_HINTREF(Sequence_pushfront),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_append),
+	TYPE_METHOD_HINTREF(Sequence_append),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_extend),
 	TYPE_METHOD_HINTREF(Sequence_xchitem),
 	TYPE_METHOD_HINTREF(Sequence_clear),
