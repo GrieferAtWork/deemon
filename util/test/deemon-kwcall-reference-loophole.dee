@@ -61,7 +61,7 @@ function inner(argName) {
 	 * would ever be detected by the GC (meaning it would never
 	 * make a call to "tp_clear").
 	 *
-	 * However, I still find this to a problem that needs addressing,
+	 * However, I still find this to be a problem that needs addressing,
 	 * especially since as of right now, OPERATOR_CLEAR, while already
 	 * marked as a private operator, isn't explicitly documented as
 	 * something not-to-be exposed to user-code (and can actually be
@@ -92,7 +92,7 @@ function foo(**kwds) {
 
 	/* Make another call using the same CachedDict. During the argument
 	 * binding phase, this will call "MyHackyItemProvider.operator []" a
-	 * total of 1 times, before caching "kwds" within self under "argName" */
+	 * total of 1 times, before caching "kwds" within itself under "argName" */
 	inner(**kwds);
 }
 

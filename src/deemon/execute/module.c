@@ -1857,7 +1857,7 @@ begin_init:
 	self->mo_loader = caller;
 #endif /* !CONFIG_NO_THREADS */
 
-	/* FIXME: Technically, we'd need to acquire a global lock at this point
+	/* FIX-ME: Technically, we'd need to acquire a global lock at this point
 	 *        and only call `init_function' while hold it in a non-sharing
 	 *        manner. Otherwise, there is a slim chance for a deadlock:
 	 *        thread_1:

@@ -413,7 +413,7 @@ dex_fini(DeeDexObject *__restrict self) {
 		 * XXX: Only do this for caches apart of this module's static binary image? */
 		Dee_membercache_clearall((size_t)-1);
 #if 0
-		/* FIXME: Work-around for preventing DEX modules being unloaded
+		/* FIX-ME: Work-around for preventing DEX modules being unloaded
 		 *        while objects referring to statically defined types inside
 		 *        still exist.
 		 *        The proper way to fix this would be to use a GC-like mechanism

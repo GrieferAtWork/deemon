@@ -1076,7 +1076,7 @@ run_finally_after_return:
 	leal   (%edx,%ecx,8), %edx /* edx = edx + ecx * 8 */
 	leal   (%edx,%ecx,4), %edx /* edx = edx + ecx * 4 */
 #else /* sizeof_except_handler == 20 */
-#error FIXME
+#error "Unsupported 'sizeof_except_handler'"
 #endif /* sizeof_except_handler != 20 */
 1:	subl   $(sizeof_except_handler), %edx
 	testw  $(Dee_EXCEPTION_HANDLER_FFINALLY), eh_flags(%edx)
@@ -1179,7 +1179,7 @@ run_finally_after_return:
 	leal  (%edx,%ecx,8), %edx     /* edx = edx + ecx * 8 */
 	leal  (%edx,%ecx,4), %edx     /* edx = edx + ecx * 4 */
 #else /* sizeof_except_handler == 20 */
-#error FIXME
+#error "Unsupported 'sizeof_except_handler'"
 #endif /* sizeof_except_handler != 20 */
 1:	subl   $(sizeof_except_handler), %edx
 	/* Check affect bounds. */
