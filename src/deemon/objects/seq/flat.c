@@ -1363,6 +1363,248 @@ err_data:
 #endif /* WANT_sf_mh_seq_min */
 
 
+#ifdef WANT_sf_mh_seq_max
+PRIVATE DeeObject sf_mh_seq_max_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+
+struct sf_mh_seq_max_data {
+	DREF DeeObject *sfmhsmd_maxval; /* [0..1] Greatest value encountered thus far. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_max_cb(void *arg, DeeObject *subseq) {
+	DREF DeeObject *maxval;
+	struct sf_mh_seq_max_data *data = (struct sf_mh_seq_max_data *)arg;
+	maxval = DeeObject_InvokeMethodHint(seq_max, subseq, &sf_mh_seq_max_dummy);
+	if unlikely(!maxval)
+		goto err;
+	if (maxval == &sf_mh_seq_max_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_max_dummy);
+	} else if (!data->sfmhsmd_maxval) {
+		data->sfmhsmd_maxval = maxval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpGrAsBool(maxval, data->sfmhsmd_maxval);
+		if unlikely(cmp < 0)
+			goto err_maxval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmd_maxval;
+			data->sfmhsmd_maxval = maxval;
+			maxval = temp;
+		}
+		Dee_Decref(maxval);
+	}
+	return 0;
+err_maxval:
+	Dee_Decref(maxval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sf_mh_seq_max(SeqFlat *self, DeeObject *def) {
+	struct sf_mh_seq_max_data data;
+	data.sfmhsmd_maxval = NULL;
+	if unlikely(sf_foreachseq(self, &sf_mh_seq_max_cb, &data))
+		goto err_data;
+	if (data.sfmhsmd_maxval == NULL) {
+		data.sfmhsmd_maxval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmd_maxval;
+err_data:
+	Dee_XDecref(data.sfmhsmd_maxval);
+	return NULL;
+}
+
+
+struct sf_mh_seq_max_with_key_data {
+	DREF DeeObject *sfmhsmwkd_maxval; /* [0..1] Greatest value encountered thus far */
+	DeeObject      *sfmhsmwkd_key;    /* [1..1] Comparison key */
+};
+
+#ifndef DeeObject_CmpGrAsBoolWithKey_DEFINED
+#define DeeObject_CmpGrAsBoolWithKey_DEFINED
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_CmpGrAsBoolWithKey(DeeObject *lhs, DeeObject *rhs, DeeObject *key) {
+	int result;
+	lhs = DeeObject_Call(key, 1, (DeeObject **)&lhs);
+	if unlikely(!lhs)
+		goto err;
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
+		goto err_lhs;
+	result = DeeObject_CmpGrAsBool(lhs, rhs);
+	Dee_Decref(rhs);
+	Dee_Decref(lhs);
+	return result;
+err_lhs:
+	Dee_Decref(lhs);
+err:
+	return -1;
+}
+#endif /* !DeeObject_CmpGrAsBoolWithKey_DEFINED */
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_max_with_key_cb(void *arg, DeeObject *subseq) {
+	DREF DeeObject *maxval;
+	struct sf_mh_seq_max_with_key_data *data = (struct sf_mh_seq_max_with_key_data *)arg;
+	maxval = DeeObject_InvokeMethodHint(seq_max_with_key, subseq, &sf_mh_seq_max_dummy, data->sfmhsmwkd_key);
+	if unlikely(!maxval)
+		goto err;
+	if (maxval == &sf_mh_seq_max_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_max_dummy);
+	} else if (!data->sfmhsmwkd_maxval) {
+		data->sfmhsmwkd_maxval = maxval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpGrAsBoolWithKey(maxval, data->sfmhsmwkd_maxval, data->sfmhsmwkd_key);
+		if unlikely(cmp < 0)
+			goto err_maxval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmwkd_maxval;
+			data->sfmhsmwkd_maxval = maxval;
+			maxval = temp;
+		}
+		Dee_Decref(maxval);
+	}
+	return 0;
+err_maxval:
+	Dee_Decref(maxval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+sf_mh_seq_max_with_key(SeqFlat *self, DeeObject *def, DeeObject *key) {
+	struct sf_mh_seq_max_with_key_data data;
+	data.sfmhsmwkd_maxval = NULL;
+	data.sfmhsmwkd_key    = key;
+	if unlikely(sf_foreachseq(self, &sf_mh_seq_max_with_key_cb, &data))
+		goto err_data;
+	if (data.sfmhsmwkd_maxval == NULL) {
+		data.sfmhsmwkd_maxval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmwkd_maxval;
+err_data:
+	Dee_XDecref(data.sfmhsmwkd_maxval);
+	return NULL;
+}
+
+
+struct sf_mh_seq_max_with_range_data {
+	DREF DeeObject *sfmhsmwrd_maxval; /* [0..1] Greatest value encountered thus far. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_max_with_range_cb(void *arg, DeeObject *subseq,
+                            size_t subseq_start, size_t subseq_end,
+                            size_t UNUSED(range_start)) {
+	DREF DeeObject *maxval;
+	struct sf_mh_seq_max_with_range_data *data = (struct sf_mh_seq_max_with_range_data *)arg;
+	maxval = DeeObject_InvokeMethodHint(seq_max_with_range, subseq,
+	                                    subseq_start, subseq_end,
+	                                    &sf_mh_seq_max_dummy);
+	if unlikely(!maxval)
+		goto err;
+	if (maxval == &sf_mh_seq_max_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_max_dummy);
+	} else if (!data->sfmhsmwrd_maxval) {
+		data->sfmhsmwrd_maxval = maxval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpGrAsBool(maxval, data->sfmhsmwrd_maxval);
+		if unlikely(cmp < 0)
+			goto err_maxval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmwrd_maxval;
+			data->sfmhsmwrd_maxval = maxval;
+			maxval = temp;
+		}
+		Dee_Decref(maxval);
+	}
+	return 0;
+err_maxval:
+	Dee_Decref(maxval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+sf_mh_seq_max_with_range(SeqFlat *self, size_t start, size_t end, DeeObject *def) {
+	struct sf_mh_seq_max_with_range_data data;
+	data.sfmhsmwrd_maxval = NULL;
+	if unlikely(sf_interact_withrange(self, start, end, &sf_mh_seq_max_with_range_cb, &data))
+		goto err_data;
+	if (data.sfmhsmwrd_maxval == NULL) {
+		data.sfmhsmwrd_maxval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmwrd_maxval;
+err_data:
+	Dee_XDecref(data.sfmhsmwrd_maxval);
+	return NULL;
+}
+
+struct sf_mh_seq_max_with_range_and_key_data {
+	DREF DeeObject *sfmhsmwrakd_maxval; /* [0..1] Greatest value encountered thus far. */
+	DeeObject      *sfmhsmwkd_key;      /* [1..1] Comparison key */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_max_with_range_and_key_cb(void *arg, DeeObject *subseq,
+                                    size_t subseq_start, size_t subseq_end,
+                                    size_t UNUSED(range_start)) {
+	DREF DeeObject *maxval;
+	struct sf_mh_seq_max_with_range_and_key_data *data = (struct sf_mh_seq_max_with_range_and_key_data *)arg;
+	maxval = DeeObject_InvokeMethodHint(seq_max_with_range_and_key, subseq,
+	                                    subseq_start, subseq_end,
+	                                    &sf_mh_seq_max_dummy,
+	                                    data->sfmhsmwkd_key);
+	if unlikely(!maxval)
+		goto err;
+	if (maxval == &sf_mh_seq_max_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_max_dummy);
+	} else if (!data->sfmhsmwrakd_maxval) {
+		data->sfmhsmwrakd_maxval = maxval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpGrAsBoolWithKey(maxval, data->sfmhsmwrakd_maxval, data->sfmhsmwkd_key);
+		if unlikely(cmp < 0)
+			goto err_maxval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmwrakd_maxval;
+			data->sfmhsmwrakd_maxval = maxval;
+			maxval = temp;
+		}
+		Dee_Decref(maxval);
+	}
+	return 0;
+err_maxval:
+	Dee_Decref(maxval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4, 4)) DREF DeeObject *DCALL
+sf_mh_seq_max_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	struct sf_mh_seq_max_with_range_and_key_data data;
+	data.sfmhsmwrakd_maxval = NULL;
+	data.sfmhsmwkd_key      = key;
+	if unlikely(sf_interact_withrange(self, start, end, &sf_mh_seq_max_with_range_and_key_cb, &data))
+		goto err_data;
+	if (data.sfmhsmwrakd_maxval == NULL) {
+		data.sfmhsmwrakd_maxval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmwrakd_maxval;
+err_data:
+	Dee_XDecref(data.sfmhsmwrakd_maxval);
+	return NULL;
+}
+#endif /* WANT_sf_mh_seq_max */
+
+
 #ifdef WANT_sf_mh_seq_find
 union sf_mh_seq_find_data {
 	struct {
@@ -1465,7 +1707,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 #ifdef WANT_sf_mh_seq_min
 	TYPE_METHOD_HINTREF(Sequence_min),
 #endif /* WANT_sf_mh_seq_min */
-	//TODO:TYPE_METHOD_HINTREF(Sequence_max),
+#ifdef WANT_sf_mh_seq_max
+	TYPE_METHOD_HINTREF(Sequence_max),
+#endif /* WANT_sf_mh_seq_max */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_count),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_contains),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_locate),
@@ -1525,10 +1769,12 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_min_with_range, &sf_mh_seq_min_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_min_with_range_and_key, &sf_mh_seq_min_with_range_and_key, METHOD_FNOREFESCAPE),
 #endif /* WANT_sf_mh_seq_min */
-	//TODO:TYPE_METHOD_HINT_F(seq_max, &sf_mh_seq_max, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_max_with_key, &sf_mh_seq_max_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_max_with_range, &sf_mh_seq_max_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &sf_mh_seq_max_with_range_and_key, METHOD_FNOREFESCAPE),
+#ifdef WANT_sf_mh_seq_max
+	TYPE_METHOD_HINT_F(seq_max, &sf_mh_seq_max, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_max_with_key, &sf_mh_seq_max_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_max_with_range, &sf_mh_seq_max_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_max_with_range_and_key, &sf_mh_seq_max_with_range_and_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_seq_max */
 	//TODO:TYPE_METHOD_HINT_F(seq_count, &sf_mh_seq_count, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_count_with_key, &sf_mh_seq_count_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_count_with_range, &sf_mh_seq_count_with_range, METHOD_FNOREFESCAPE),
