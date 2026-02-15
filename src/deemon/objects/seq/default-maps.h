@@ -148,7 +148,7 @@ INTDEF DeeTypeObject MapSymmetricDifferenceIterator_Type;
 
 
 
-
+/* TODO: Use generic proxy object constructors */
 #define MapUnion_New(a, b) \
 	_MapUnion_New(Dee_AsObject(a), Dee_AsObject(b))
 LOCAL WUNUSED NONNULL((1, 2)) DREF MapUnion *DCALL

@@ -19912,7 +19912,7 @@ default__map_keys__empty(DeeObject *__restrict UNUSED(self)) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_keys__with__map_iterkeys(DeeObject *__restrict self) {
-	return DefaultSequence_MapKeys_New(self);
+	return Dee_AsObject(DefaultSequence_MapKeys_New(self));
 }
 
 
@@ -20027,7 +20027,7 @@ default__map_values__empty(DeeObject *__restrict UNUSED(self)) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__map_values__with__map_itervalues(DeeObject *__restrict self) {
-	return DefaultSequence_MapValues_New(self);
+	return Dee_AsObject(DefaultSequence_MapValues_New(self));
 }
 
 

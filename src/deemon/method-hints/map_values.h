@@ -31,7 +31,7 @@ __map_values__.map_values([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
 %{$none = return_none}
 %{$empty = return DeeSeq_NewEmpty()}
-%{$with__map_itervalues = DefaultSequence_MapValues_New(self)}
+%{$with__map_itervalues = Dee_AsObject(DefaultSequence_MapValues_New(self))}
 {
 	return LOCAL_GETATTR(self);
 }
