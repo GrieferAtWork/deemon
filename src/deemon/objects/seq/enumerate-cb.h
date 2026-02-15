@@ -85,7 +85,7 @@ typedef struct {
 	DREF DeeObject    *sew_err;  /* [0..1][lock(sew_lock)] Error that was thrown by the last invocation of "sew_cb" (must be NULL when `sew_res >= 0') */
 #ifndef CONFIG_NO_THREADS
 	Dee_rshared_lock_t sew_lock; /* Lock for ensuring that `sew_cb' is only called from
-	                             * **1** thread, and can be deleted, even if shared. */
+	                              * **1** thread, and can be deleted, even if shared. */
 #endif /* !CONFIG_NO_THREADS */
 } SeqEnumerateWrapper;
 
