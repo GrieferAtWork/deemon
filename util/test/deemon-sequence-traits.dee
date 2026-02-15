@@ -125,6 +125,7 @@ assertTraits(rt.SeqWithIter, seq_getitem: true);
 assertTraits(rt.SeqWithIterAndLimit, seq_getitem: true);
 
 assertTraits(rt.SeqOne, seq_getitem: true);
+assertTraits(rt.SeqPair, seq_getitem: true);
 
 assertTraits(rt.SeqReversedWithGetItemIndex, seq_getitem: false);
 assertTraits(rt.SeqReversedWithGetItemIndexFast, seq_getitem: false);
