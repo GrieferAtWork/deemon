@@ -56,6 +56,8 @@
 #ifndef CONFIG_TINY_DEEMON
 #define WANT_sf_mh_seq_any
 #define WANT_sf_mh_seq_all
+#define WANT_sf_mh_seq_min
+#define WANT_sf_mh_seq_max
 #define WANT_sf_mh_seq_find
 #endif /* !CONFIG_TINY_DEEMON */
 
@@ -729,7 +731,7 @@ sf_interact_withposition(SeqFlat *__restrict self, size_t position,
  * @param: subseq_end:   End offset into `subseq' to interact with
  * @param: range_start:  Starting index in flattened super-seq matching
  *                       up with `subseq:subseq_start' */
-typedef WUNUSED_T NONNULL_T((1)) Dee_ssize_t
+typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t
 (DCALL *sf_interact_range_cb_t)(void *arg, DeeObject *subseq,
                                 size_t subseq_start, size_t subseq_end,
                                 size_t range_start);
@@ -1091,7 +1093,7 @@ sf_mh_seq_all_with_range(SeqFlat *__restrict self, size_t start, size_t end) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sf_mh_seq_all_with_range_and_key_cb(void *arg, DeeObject *subseq,
                                     size_t subseq_start, size_t subseq_end,
                                     size_t UNUSED(range_start)) {
@@ -1117,6 +1119,248 @@ sf_mh_seq_all_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObj
 	return result;
 }
 #endif /* WANT_sf_mh_seq_all */
+
+
+#ifdef WANT_sf_mh_seq_min
+PRIVATE DeeObject sf_mh_seq_min_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+
+struct sf_mh_seq_min_data {
+	DREF DeeObject *sfmhsmd_minval; /* [0..1] Lowest value encountered thus far. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_min_cb(void *arg, DeeObject *subseq) {
+	DREF DeeObject *minval;
+	struct sf_mh_seq_min_data *data = (struct sf_mh_seq_min_data *)arg;
+	minval = DeeObject_InvokeMethodHint(seq_min, subseq, &sf_mh_seq_min_dummy);
+	if unlikely(!minval)
+		goto err;
+	if (minval == &sf_mh_seq_min_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_min_dummy);
+	} else if (!data->sfmhsmd_minval) {
+		data->sfmhsmd_minval = minval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpLoAsBool(minval, data->sfmhsmd_minval);
+		if unlikely(cmp < 0)
+			goto err_minval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmd_minval;
+			data->sfmhsmd_minval = minval;
+			minval = temp;
+		}
+		Dee_Decref(minval);
+	}
+	return 0;
+err_minval:
+	Dee_Decref(minval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sf_mh_seq_min(SeqFlat *self, DeeObject *def) {
+	struct sf_mh_seq_min_data data;
+	data.sfmhsmd_minval = NULL;
+	if unlikely(sf_foreachseq(self, &sf_mh_seq_min_cb, &data))
+		goto err_data;
+	if (data.sfmhsmd_minval == NULL) {
+		data.sfmhsmd_minval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmd_minval;
+err_data:
+	Dee_XDecref(data.sfmhsmd_minval);
+	return NULL;
+}
+
+
+struct sf_mh_seq_min_with_key_data {
+	DREF DeeObject *sfmhsmwkd_minval; /* [0..1] Lowest value encountered thus far */
+	DeeObject      *sfmhsmwkd_key;    /* [1..1] Comparison key */
+};
+
+#ifndef DeeObject_CmpLoAsBoolWithKey_DEFINED
+#define DeeObject_CmpLoAsBoolWithKey_DEFINED
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_CmpLoAsBoolWithKey(DeeObject *lhs, DeeObject *rhs, DeeObject *key) {
+	int result;
+	lhs = DeeObject_Call(key, 1, (DeeObject **)&lhs);
+	if unlikely(!lhs)
+		goto err;
+	rhs = DeeObject_Call(key, 1, (DeeObject **)&rhs);
+	if unlikely(!rhs)
+		goto err_lhs;
+	result = DeeObject_CmpLoAsBool(lhs, rhs);
+	Dee_Decref(rhs);
+	Dee_Decref(lhs);
+	return result;
+err_lhs:
+	Dee_Decref(lhs);
+err:
+	return -1;
+}
+#endif /* !DeeObject_CmpLoAsBoolWithKey_DEFINED */
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_min_with_key_cb(void *arg, DeeObject *subseq) {
+	DREF DeeObject *minval;
+	struct sf_mh_seq_min_with_key_data *data = (struct sf_mh_seq_min_with_key_data *)arg;
+	minval = DeeObject_InvokeMethodHint(seq_min_with_key, subseq, &sf_mh_seq_min_dummy, data->sfmhsmwkd_key);
+	if unlikely(!minval)
+		goto err;
+	if (minval == &sf_mh_seq_min_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_min_dummy);
+	} else if (!data->sfmhsmwkd_minval) {
+		data->sfmhsmwkd_minval = minval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpLoAsBoolWithKey(minval, data->sfmhsmwkd_minval, data->sfmhsmwkd_key);
+		if unlikely(cmp < 0)
+			goto err_minval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmwkd_minval;
+			data->sfmhsmwkd_minval = minval;
+			minval = temp;
+		}
+		Dee_Decref(minval);
+	}
+	return 0;
+err_minval:
+	Dee_Decref(minval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+sf_mh_seq_min_with_key(SeqFlat *self, DeeObject *def, DeeObject *key) {
+	struct sf_mh_seq_min_with_key_data data;
+	data.sfmhsmwkd_minval = NULL;
+	data.sfmhsmwkd_key    = key;
+	if unlikely(sf_foreachseq(self, &sf_mh_seq_min_with_key_cb, &data))
+		goto err_data;
+	if (data.sfmhsmwkd_minval == NULL) {
+		data.sfmhsmwkd_minval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmwkd_minval;
+err_data:
+	Dee_XDecref(data.sfmhsmwkd_minval);
+	return NULL;
+}
+
+
+struct sf_mh_seq_min_with_range_data {
+	DREF DeeObject *sfmhsmwrd_minval; /* [0..1] Lowest value encountered thus far. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_min_with_range_cb(void *arg, DeeObject *subseq,
+                            size_t subseq_start, size_t subseq_end,
+                            size_t UNUSED(range_start)) {
+	DREF DeeObject *minval;
+	struct sf_mh_seq_min_with_range_data *data = (struct sf_mh_seq_min_with_range_data *)arg;
+	minval = DeeObject_InvokeMethodHint(seq_min_with_range, subseq,
+	                                    subseq_start, subseq_end,
+	                                    &sf_mh_seq_min_dummy);
+	if unlikely(!minval)
+		goto err;
+	if (minval == &sf_mh_seq_min_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_min_dummy);
+	} else if (!data->sfmhsmwrd_minval) {
+		data->sfmhsmwrd_minval = minval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpLoAsBool(minval, data->sfmhsmwrd_minval);
+		if unlikely(cmp < 0)
+			goto err_minval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmwrd_minval;
+			data->sfmhsmwrd_minval = minval;
+			minval = temp;
+		}
+		Dee_Decref(minval);
+	}
+	return 0;
+err_minval:
+	Dee_Decref(minval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) DREF DeeObject *DCALL
+sf_mh_seq_min_with_range(SeqFlat *self, size_t start, size_t end, DeeObject *def) {
+	struct sf_mh_seq_min_with_range_data data;
+	data.sfmhsmwrd_minval = NULL;
+	if unlikely(sf_interact_withrange(self, start, end, &sf_mh_seq_min_with_range_cb, &data))
+		goto err_data;
+	if (data.sfmhsmwrd_minval == NULL) {
+		data.sfmhsmwrd_minval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmwrd_minval;
+err_data:
+	Dee_XDecref(data.sfmhsmwrd_minval);
+	return NULL;
+}
+
+struct sf_mh_seq_min_with_range_and_key_data {
+	DREF DeeObject *sfmhsmwrakd_minval; /* [0..1] Lowest value encountered thus far. */
+	DeeObject      *sfmhsmwkd_key;      /* [1..1] Comparison key */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+sf_mh_seq_min_with_range_and_key_cb(void *arg, DeeObject *subseq,
+                                    size_t subseq_start, size_t subseq_end,
+                                    size_t UNUSED(range_start)) {
+	DREF DeeObject *minval;
+	struct sf_mh_seq_min_with_range_and_key_data *data = (struct sf_mh_seq_min_with_range_and_key_data *)arg;
+	minval = DeeObject_InvokeMethodHint(seq_min_with_range_and_key, subseq,
+	                                    subseq_start, subseq_end,
+	                                    &sf_mh_seq_min_dummy,
+	                                    data->sfmhsmwkd_key);
+	if unlikely(!minval)
+		goto err;
+	if (minval == &sf_mh_seq_min_dummy) {
+		Dee_DecrefNokill(&sf_mh_seq_min_dummy);
+	} else if (!data->sfmhsmwrakd_minval) {
+		data->sfmhsmwrakd_minval = minval; /* Inherit reference */
+	} else {
+		int cmp = DeeObject_CmpLoAsBoolWithKey(minval, data->sfmhsmwrakd_minval, data->sfmhsmwkd_key);
+		if unlikely(cmp < 0)
+			goto err_minval;
+		if (cmp) {
+			DREF DeeObject *temp;
+			temp = data->sfmhsmwrakd_minval;
+			data->sfmhsmwrakd_minval = minval;
+			minval = temp;
+		}
+		Dee_Decref(minval);
+	}
+	return 0;
+err_minval:
+	Dee_Decref(minval);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4, 4)) DREF DeeObject *DCALL
+sf_mh_seq_min_with_range_and_key(SeqFlat *self, size_t start, size_t end, DeeObject *def, DeeObject *key) {
+	struct sf_mh_seq_min_with_range_and_key_data data;
+	data.sfmhsmwrakd_minval = NULL;
+	data.sfmhsmwkd_key      = key;
+	if unlikely(sf_interact_withrange(self, start, end, &sf_mh_seq_min_with_range_and_key_cb, &data))
+		goto err_data;
+	if (data.sfmhsmwrakd_minval == NULL) {
+		data.sfmhsmwrakd_minval = def;
+		Dee_Incref(def);
+	}
+	return data.sfmhsmwrakd_minval;
+err_data:
+	Dee_XDecref(data.sfmhsmwrakd_minval);
+	return NULL;
+}
+#endif /* WANT_sf_mh_seq_min */
 
 
 #ifdef WANT_sf_mh_seq_find
@@ -1218,7 +1462,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 	TYPE_METHOD_HINTREF(Sequence_all),
 #endif /* WANT_sf_mh_seq_all */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_parity),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_min),
+#ifdef WANT_sf_mh_seq_min
+	TYPE_METHOD_HINTREF(Sequence_min),
+#endif /* WANT_sf_mh_seq_min */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_max),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_count),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_contains),
@@ -1273,10 +1519,12 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_key, &sf_mh_seq_parity_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range, &sf_mh_seq_parity_with_range, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_parity_with_range_and_key, &sf_mh_seq_parity_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min, &sf_mh_seq_min, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min_with_key, &sf_mh_seq_min_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min_with_range, &sf_mh_seq_min_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_min_with_range_and_key, &sf_mh_seq_min_with_range_and_key, METHOD_FNOREFESCAPE),
+#ifdef WANT_sf_mh_seq_min
+	TYPE_METHOD_HINT_F(seq_min, &sf_mh_seq_min, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_min_with_key, &sf_mh_seq_min_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_min_with_range, &sf_mh_seq_min_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_min_with_range_and_key, &sf_mh_seq_min_with_range_and_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_seq_min */
 	//TODO:TYPE_METHOD_HINT_F(seq_max, &sf_mh_seq_max, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_max_with_key, &sf_mh_seq_max_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_max_with_range, &sf_mh_seq_max_with_range, METHOD_FNOREFESCAPE),

@@ -40,6 +40,30 @@ assert x.flatten.any(5, -1, e -> e == 9);
 assert !x.flatten.any(6, -1, e -> e == 9);
 assert !x.flatten.any(e -> e == 99);
 
+assert x.flatten.min() == 0;
+assert x.flatten.max() == 10;
+assert x.flatten.min(0, 4) == 0;
+assert x.flatten.min(1, 4) == 1;
+assert x.flatten.max(0, 3) == 2;
+assert x.flatten.max(0, 4) == 5;
+
+assert x.flatten.min(key: x -> -x) == 10;
+assert x.flatten.max(key: x -> -x) == 0;
+assert x.flatten.min(0, 3, key: x -> -x) == 2;
+assert x.flatten.min(0, 4, key: x -> -x) == 5;
+assert x.flatten.max(0, 4, key: x -> -x) == 0;
+assert x.flatten.max(1, 4, key: x -> -x) == 1;
+assert {}.flatten.min() is none;
+assert {}.flatten.max() is none;
+assert {{}}.flatten.min() is none;
+assert {{}}.flatten.max() is none;
+assert {}.flatten.min(1, -1) is none;
+assert {}.flatten.max(1, -1) is none;
+assert {}.flatten.min(key: x -> "foo") is none;
+assert {}.flatten.max(key: x -> "foo") is none;
+assert {}.flatten.min(1, -1, key: x -> "foo") is none;
+assert {}.flatten.max(1, -1, key: x -> "foo") is none;
+
 assert !x.flatten.all();
 assert !x.flatten.all(e -> e != 0);
 assert x.flatten.all(1, -1);
