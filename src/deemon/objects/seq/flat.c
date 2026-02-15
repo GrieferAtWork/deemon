@@ -904,7 +904,7 @@ sf_mh_seq_insertall(SeqFlat *self, size_t index, DeeObject *items) {
 	return sf_interact_withposition(self, index, &sf_mh_seq_insertall_cb, items);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_mh_seq_pushfront(SeqFlat *self, DeeObject *item) {
 	int result;
 	DREF DeeObject *seq = sf_getfirstseq(self);
@@ -917,7 +917,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_mh_seq_append(SeqFlat *self, DeeObject *item) {
 	int result;
 	DREF DeeObject *seq = sf_getlastseq(self);
@@ -930,7 +930,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_mh_seq_extend(SeqFlat *self, DeeObject *item) {
 	int result;
 	DREF DeeObject *seq = sf_getlastseq(self);
@@ -1132,7 +1132,7 @@ sf_mh_seq_parity(SeqFlat *__restrict self) {
 	Dee_ssize_t result = sf_foreachseq(self, &sf_mh_seq_parity_cb, NULL);
 	if (result >= 0)
 		result &= 1;
-	return result;
+	return (int)result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -1145,7 +1145,7 @@ sf_mh_seq_parity_with_key(SeqFlat *self, DeeObject *key) {
 	Dee_ssize_t result = sf_foreachseq(self, &sf_mh_seq_parity_with_key_cb, key);
 	if (result >= 0)
 		result &= 1;
-	return result;
+	return (int)result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
@@ -1160,7 +1160,7 @@ sf_mh_seq_parity_with_range(SeqFlat *__restrict self, size_t start, size_t end) 
 	Dee_ssize_t result = sf_interact_withrange(self, start, end, &sf_mh_seq_parity_with_range_cb, NULL);
 	if (result >= 0)
 		result &= 1;
-	return result;
+	return (int)result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1176,7 +1176,7 @@ sf_mh_seq_parity_with_range_and_key(SeqFlat *self, size_t start, size_t end, Dee
 	Dee_ssize_t result = sf_interact_withrange(self, start, end, &sf_mh_seq_parity_with_range_and_key_cb, key);
 	if (result >= 0)
 		result &= 1;
-	return result;
+	return (int)result;
 }
 #endif /* WANT_sf_mh_seq_parity */
 

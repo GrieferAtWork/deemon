@@ -121,7 +121,7 @@ err:
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
@@ -158,7 +158,7 @@ int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[3];
@@ -206,7 +206,7 @@ err:
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
@@ -242,7 +242,7 @@ int __seq_parity__.seq_parity_with_range_and_key([[nonnull]] DeeObject *self,
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)

@@ -171,8 +171,6 @@ emit_instruction:
 		default: break;
 		}
 
-		DO(asm_putddi(expr));
-
 		/* With all the operands on-stack, as well as duplicated,
 		 * it's time to perform the operation that's to-be asserted. */
 		if (operator_name > OPERATOR_USERCOUNT ||
@@ -196,6 +194,7 @@ emit_instruction:
 					DO(asm_putddi(kw_ast));
 					DO(asm_gcast_varkwds());
 				}
+				DO(asm_putddi(expr));
 				error = asm_gcall_tuple_kwds();
 			}	break;
 
@@ -203,6 +202,7 @@ emit_instruction:
 				if (argc != 2)
 					goto fallback_generate_goperator;
 				/* Special case: `assert a is b' */
+				DO(asm_putddi(expr));
 				error = asm_gimplements();
 				break;
 
@@ -210,6 +210,7 @@ emit_instruction:
 				if (argc != 2)
 					goto fallback_generate_goperator;
 				/* Special case: `assert a === b' */
+				DO(asm_putddi(expr));
 				error = asm_gsameobj();
 				break;
 
@@ -217,6 +218,7 @@ emit_instruction:
 				if (argc != 2)
 					goto fallback_generate_goperator;
 				/* Special case: `assert a !== b' */
+				DO(asm_putddi(expr));
 				error = asm_gdiffobj();
 				break;
 
@@ -225,12 +227,14 @@ emit_instruction:
 					goto fallback_generate_goperator;
 				/* Special case: `assert !a' */
 				jmp_instr = ASM_JX_NOT(jmp_instr);
-				error = 0;
+				DO(asm_putddi(expr));
+				error = asm_gnoop(); /* XXX: Without this, we get an assert fail: "peephole.c(1240) : Assertion failed : !IS_PROTECTED(instr_pop)" */
 				break;
 
 			default:
 fallback_generate_goperator:
 				/* Invoke the operator using a general-purpose instruction. */
+				DO(asm_putddi(expr));
 				error = asm_goperator(operator_name, argc - 1);
 				break;
 			}
@@ -238,6 +242,7 @@ fallback_generate_goperator:
 				goto err;
 		} else {
 			/* The operator has its own dedicated instruction, which we can use. */
+			DO(asm_putddi(expr));
 			DO(asm_put(op_instr));
 			asm_subsp(argc);
 

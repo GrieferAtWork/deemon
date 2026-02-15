@@ -1050,7 +1050,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IndexError_GetLength_ob(IndexError *__restrict self) {
 	DREF DeeObject *result;
 	struct Dee_variant length;

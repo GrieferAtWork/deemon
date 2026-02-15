@@ -8323,7 +8323,7 @@ default__seq_parity__with__seq_operator_foreach(DeeObject *__restrict self) {
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }
 
 
@@ -8402,7 +8402,7 @@ default__seq_parity_with_key__with__seq_operator_foreach(DeeObject *self, DeeObj
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }
 
 
@@ -8481,7 +8481,7 @@ default__seq_parity_with_range__with__seq_enumerate_index(DeeObject *__restrict 
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }
 
 
@@ -8555,7 +8555,7 @@ default__seq_parity_with_range_and_key__with__seq_enumerate_index(DeeObject *sel
 	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
 		foreach_status &= 1;
-	return foreach_status;
+	return (int)foreach_status;
 }
 
 
