@@ -927,6 +927,19 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+sf_mh_seq_extend(SeqFlat *self, DeeObject *item) {
+	int result;
+	DREF DeeObject *seq = sf_getlastseq(self);
+	if unlikely(!seq)
+		goto err;
+	result = DeeObject_InvokeMethodHint(seq_extend, seq, item);
+	Dee_Decref_unlikely(seq);
+	return result;
+err:
+	return -1;
+}
+
 
 
 #ifdef WANT_sf_mh_seq_any
@@ -1095,6 +1108,46 @@ PRIVATE struct type_getset tpconst sf_getsets[] = {
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_method tpconst sf_methods[] = {
+	TYPE_METHOD_HINTREF(__seq_enumerate__),
+#ifdef WANT_sf_mh_seq_any
+	TYPE_METHOD_HINTREF(Sequence_any),
+#endif /* WANT_sf_mh_seq_any */
+	//TODO:TYPE_METHOD_HINTREF(Sequence_all),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_parity),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_min),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_max),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_count),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_contains),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_locate),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_rlocate),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_startswith),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_endswith),
+#ifdef WANT_sf_mh_seq_find
+	TYPE_METHOD_HINTREF(Sequence_find),
+#endif /* WANT_sf_mh_seq_find */
+	//TODO:TYPE_METHOD_HINTREF(Sequence_rfind),
+	TYPE_METHOD_HINTREF(Sequence_erase),
+	TYPE_METHOD_HINTREF(Sequence_insert),
+	TYPE_METHOD_HINTREF(Sequence_insertall),
+	TYPE_METHOD_HINTREF(Sequence_pushfront),
+	TYPE_METHOD_HINTREF(Sequence_append),
+	TYPE_METHOD_HINTREF(Sequence_extend),
+	TYPE_METHOD_HINTREF(Sequence_xchitem),
+	TYPE_METHOD_HINTREF(Sequence_clear),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_pop),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_remove),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_rremove),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_removeall),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_removeif),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_resize),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_fill),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_reverse),
+	//TODO:TYPE_METHOD_HINTREF(Sequence_reversed),
+	/* TODO: TYPE_METHOD_HINTREF(Sequence_sum),*/
+	TYPE_METHOD_END
+};
+
 PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index, &sf_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_foreach_reverse, &sf_mh_seq_foreach_reverse, METHOD_FNOREFESCAPE),
@@ -1158,7 +1211,7 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_insertall, &sf_mh_seq_insertall, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_pushfront, &sf_mh_seq_pushfront, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_append, &sf_mh_seq_append, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_extend, &sf_mh_seq_extend, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_extend, &sf_mh_seq_extend, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_xchitem_index, &sf_mh_seq_xchitem_index, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_clear, &sf_mh_seq_clear, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_pop, &sf_mh_seq_pop, METHOD_FNOREFESCAPE),
@@ -1173,46 +1226,6 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	/* TODO: TYPE_METHOD_HINT_F(seq_sum, &sf_mh_seq_sum, METHOD_FNOREFESCAPE), */
 	/* TODO: TYPE_METHOD_HINT_F(seq_sum_with_range, &sf_mh_seq_sum_with_range, METHOD_FNOREFESCAPE), */
 	TYPE_METHOD_HINT_END
-};
-
-PRIVATE struct type_method tpconst sf_methods[] = {
-	TYPE_METHOD_HINTREF(__seq_enumerate__),
-#ifdef WANT_sf_mh_seq_any
-	TYPE_METHOD_HINTREF(Sequence_any),
-#endif /* WANT_sf_mh_seq_any */
-	//TODO:TYPE_METHOD_HINTREF(Sequence_all),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_parity),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_min),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_max),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_count),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_contains),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_locate),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_rlocate),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_startswith),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_endswith),
-#ifdef WANT_sf_mh_seq_find
-	TYPE_METHOD_HINTREF(Sequence_find),
-#endif /* WANT_sf_mh_seq_find */
-	//TODO:TYPE_METHOD_HINTREF(Sequence_rfind),
-	TYPE_METHOD_HINTREF(Sequence_erase),
-	TYPE_METHOD_HINTREF(Sequence_insert),
-	TYPE_METHOD_HINTREF(Sequence_insertall),
-	TYPE_METHOD_HINTREF(Sequence_pushfront),
-	TYPE_METHOD_HINTREF(Sequence_append),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_extend),
-	TYPE_METHOD_HINTREF(Sequence_xchitem),
-	TYPE_METHOD_HINTREF(Sequence_clear),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_pop),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_remove),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_rremove),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_removeall),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_removeif),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_resize),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_fill),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_reverse),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_reversed),
-	/* TODO: TYPE_METHOD_HINTREF(Sequence_sum),*/
-	TYPE_METHOD_END
 };
 
 PRIVATE struct type_member tpconst sf_members[] = {

@@ -97,7 +97,11 @@ for (local useInsertAll: {false, true}) {
 	test.assertSequence(a, {"first"});
 	test.assertSequence(b, {});
 
-	c.append("last");
+	if (useInsertAll) {
+		c.extend({"last"});
+	} else {
+		c.append("last");
+	}
 	test.assertSequence(c, {"first", "last"});
 	test.assertSequence(a, {"first"});
 	test.assertSequence(b, {"last"});
