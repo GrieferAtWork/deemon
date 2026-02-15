@@ -32,7 +32,7 @@
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Singleton */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Compare, Dee_Decref, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
@@ -147,13 +147,14 @@ again:
 		 * was spun while we were copying its index. */
 		goto again;
 	}
+	self->ri_index = new_index; /* Inherit reference */
 	Dee_atomic_rwlock_init(&self->ri_lock);
 
 	/* Other members are constant, so we don't
 	 * need to bother with synchronizing them. */
 	Dee_Incref(other->ri_end);
 	self->ri_end = other->ri_end;
-	Dee_Incref(other->ri_step);
+	Dee_XIncref(other->ri_step);
 	self->ri_step = other->ri_step;
 	self->ri_rev  = other->ri_rev;
 	return 0;
@@ -380,7 +381,18 @@ ri_compare(RangeIterator *self, RangeIterator *other) {
 	ot_index = ri_get_next_index(other);
 	if unlikely(!my_index)
 		goto err_my_index;
-	result = DeeObject_Compare(my_index, ot_index);
+	if (self->ri_rev == other->ri_rev) {
+		if (self->ri_rev) {
+			result = DeeObject_Compare(ot_index, my_index);
+		} else {
+			result = DeeObject_Compare(my_index, ot_index);
+		}
+	} else if (self->ri_rev) {
+		result = Dee_COMPARE_LO;
+	} else {
+		ASSERT(other->ri_rev);
+		result = Dee_COMPARE_GR;
+	}
 	Dee_Decref(ot_index);
 	Dee_Decref(my_index);
 	return result;
@@ -708,12 +720,14 @@ do_compare_positive:
 	}
 	if unlikely(error != 0) {
 		if unlikely(error < 0)
-			goto err;
-		goto err_oob;
+			goto err_r;
+		goto err_r_oob;
 	}
 	return result;
-err_oob:
+err_r_oob:
 	DeeRT_ErrIndexOutOfBoundsObj(self, index, (DeeObject *)NULL);
+err_r:
+	Dee_Decref_likely(result);
 err:
 	return NULL;
 }
@@ -1067,6 +1081,8 @@ range_init(Range *__restrict self,
 			goto err;
 		self->r_rev = !!temp;
 		Dee_Incref(self->r_step);
+	} else {
+		self->r_rev = false;
 	}
 	Dee_Incref(self->r_end);
 	Dee_Incref(self->r_start);
@@ -1225,8 +1241,8 @@ iri_compare(IntRangeIterator *lhs, IntRangeIterator *rhs) {
 	Dee_ssize_t lhs_index, rhs_index;
 	if (DeeObject_AssertTypeExact(rhs, &SeqIntRangeIterator_Type))
 		goto err;
-	lhs_index = READ_INDEX(lhs);
-	rhs_index = READ_INDEX(rhs);
+	lhs_index = READ_INDEX(lhs) * lhs->iri_step;
+	rhs_index = READ_INDEX(rhs) * rhs->iri_step;
 	return Dee_Compare(lhs_index, rhs_index);
 err:
 	return Dee_COMPARE_ERR;

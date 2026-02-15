@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_Handled, Dee_ERROR_HANDLED_INTERRUPT */
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/int.h>                /* DeeInt_One, DeeInt_Zero */
-#include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1 */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */

@@ -180,7 +180,6 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 	assert x !is Mapping;
 	assert x.class.__seqclass__ === Sequence;
 	local len = #x;
-	assert len is int;
 	if (expected !is none) {
 		assertEquals(expected, x);
 		assert #expected == len;
@@ -315,13 +314,16 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		}
 		it.operator hash();  /* Only here for coverage */
 		it2.operator hash(); /* Only here for coverage */
-		local itSeq = it.seq;
-		/* This here is needed because "Dict.items.operator iter().seq"
-		 * returns "Dict" instead of "Dict.Items" (since the 2 share the
-		 * same iterator type for the sake of simplicity) */
-		if (type(x) === Super)
-			itSeq = itSeq as Super.typeof(x);
-		assertEquals(x, itSeq);
+		local itSeq = TRY(it.seq);
+		if (itSeq !is AttributeError) {
+			/* This here is needed because "Dict.items.operator iter().seq"
+			 * returns "Dict" instead of "Dict.Items" (since the 2 share the
+			 * same iterator type for the sake of simplicity) */
+			if (type(x) === Super)
+				itSeq = itSeq as Super.typeof(x);
+			assertEquals(x, itSeq);
+		}
+
 		if (iterated1) {
 			assert it2 > it, type it;
 			assert it < it2, type it;
@@ -338,7 +340,6 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 
 		local it = x.operator iter();
 		for (local i, v: x.enumerate()) {
-			assert i is int;
 			assert it;
 			assertEquals(v, it.operator next());
 			assertEquals(v, iterated7[i]);

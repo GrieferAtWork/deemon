@@ -44,7 +44,7 @@
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_THREAD_STATE_TERMINATED, Dee_except_frame */
 #include <deemon/traceback.h>          /* DeeTracebackObject, DeeTraceback_Type */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/variant.h>            /* Dee_variant, Dee_variant_* */
@@ -1036,13 +1036,13 @@ IndexError_GetLength(IndexError *__restrict self,
 		if unlikely(!seq)
 			goto err;
 		if (seq != ITER_DONE) {
-			size_t seq_length;
-			seq_length = DeeObject_InvokeMethodHint(seq_operator_size, seq);
+			DREF DeeObject *seq_length;
+			seq_length = DeeObject_InvokeMethodHint(seq_operator_sizeob, seq);
 			Dee_Decref_unlikely(seq);
-			if unlikely(seq_length == (size_t)-1)
+			if unlikely(!seq_length)
 				goto err;
-			Dee_variant_setsize_if_unbound(&self->ie_length, seq_length);
-			Dee_variant_init_size(p_length, seq_length);
+			Dee_variant_setobject_if_unbound(&self->ie_length, seq_length);
+			Dee_variant_init_object_inherited(p_length, seq_length);
 		}
 	}
 	return 0;
@@ -1050,12 +1050,30 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+IndexError_GetLength_ob(IndexError *__restrict self) {
+	DREF DeeObject *result;
+	struct Dee_variant length;
+	if (IndexError_GetLength(self, &length))
+		goto err;
+	result = Dee_variant_getobject(&length);
+	Dee_variant_fini(&length);
+	return result;
+err:
+	return NULL;
+}
+
 PRIVATE struct type_member tpconst IndexError_members[] = {
 #define IndexError_init_params SequenceError_init_params ",index?:?X2?DNumeric?Dint,length?:?X2?DNumeric?Dint"
 	TYPE_MEMBER_FIELD_DOC("index", STRUCT_VARIANT | STRUCT_CONST, offsetof(IndexError, ie_base.ke_key), "->?X2?DNumeric?Dint"),
-	/* TODO: Have another "getset" that shadows "length" and calls "IndexError_GetLength()" */
+	/* XXX: Should probably have a custom constructor instead of having "length" here for DeeStructObject_Init() */
 	TYPE_MEMBER_FIELD_DOC("length", STRUCT_VARIANT | STRUCT_CONST, offsetof(IndexError, ie_length), "->?X2?DNumeric?Dint"),
 	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_getset tpconst IndexError_getsets[] = {
+	TYPE_GETTER_AB_F("length", &IndexError_GetLength_ob, METHOD_FNOREFESCAPE, "->?X2?DNumeric?Dint"),
+	TYPE_GETSET_END
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -1085,7 +1103,7 @@ PRIVATE struct type_member tpconst IndexError_class_members[] = {
 PUBLIC DeeTypeObject DeeError_IndexError =
 INIT_CUSTOM_ERROR("IndexError", "(" IndexError_init_params ")",
                   TP_FNORMAL, &DeeError_KeyError, IndexError, NULL, &IndexError_print,
-                  NULL, NULL, IndexError_members, IndexError_class_members);
+                  NULL, IndexError_getsets, IndexError_members, IndexError_class_members);
 
 /* Throws an `DeeError_IndexError' indicating that a given index is out-of-bounds */
 PUBLIC ATTR_COLD NONNULL((1)) int

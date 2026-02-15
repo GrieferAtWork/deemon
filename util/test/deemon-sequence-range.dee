@@ -1,0 +1,83 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import .common.test;
+import rt;
+
+
+final class IntWrapper: Numeric {
+	public member i: int = 0;
+	this = default;
+	operator int() { return i; }
+	operator ++ () { return IntWrapper(i + 1); }
+	operator -- () { return IntWrapper(i - 1); }
+	operator bool(): bool {
+		return !!i;
+	}
+	operator + (): IntWrapper -> IntWrapper(+i);
+	operator - (): IntWrapper -> IntWrapper(-i);
+	operator + (x: IntWrapper): IntWrapper -> IntWrapper(i + (x is IntWrapper ? x.i : x));
+	operator - (x: IntWrapper): IntWrapper -> IntWrapper(i - (x is IntWrapper ? x.i : x));
+	operator * (x: IntWrapper): IntWrapper -> IntWrapper(i * (x is IntWrapper ? x.i : x));
+	operator / (x: IntWrapper): IntWrapper -> IntWrapper(i / (x is IntWrapper ? x.i : x));
+	operator % (x: IntWrapper): IntWrapper -> IntWrapper(i % (x is IntWrapper ? x.i : x));
+	operator <  (x: IntWrapper): bool -> i <  (x is IntWrapper ? x.i : x);
+	operator <= (x: IntWrapper): bool -> i <= (x is IntWrapper ? x.i : x);
+	operator == (x: IntWrapper): bool -> i == (x is IntWrapper ? x.i : x);
+	operator != (x: IntWrapper): bool -> i != (x is IntWrapper ? x.i : x);
+	operator >  (x: IntWrapper): bool -> i >  (x is IntWrapper ? x.i : x);
+	operator >= (x: IntWrapper): bool -> i >= (x is IntWrapper ? x.i : x);
+}
+
+test.assertSequence([:8], {0,1,2,3,4,5,6,7});
+test.assertSequence([2:8], {2,3,4,5,6,7});
+test.assertSequence([2:8,2], {2,4,6});
+test.assertSequence([2:8,3], {2,5});
+test.assertSequence([2:8,4], {2,6});
+test.assertSequence([2:8,-1], {});
+test.assertSequence([8:2,-1], {8,7,6,5,4,3});
+test.assertSequence([8:2,-2], {8,6,4});
+test.assertSequence([8:2,-3], {8,5});
+test.assertSequence([8:2,-4], {8,4});
+
+#define iw  IntWrapper
+
+test.assertSequence([:iw(8)], {iw(0),iw(1),iw(2),iw(3),iw(4),iw(5),iw(6),iw(7)});
+test.assertSequence([iw(2):iw(8)], {iw(2),iw(3),iw(4),iw(5),iw(6),iw(7)});
+test.assertSequence([iw(2):iw(8),iw(2)], {iw(2),iw(4),iw(6)});
+test.assertSequence([iw(2):iw(8),iw(3)], {iw(2),iw(5)});
+test.assertSequence([iw(2):iw(8),iw(4)], {iw(2),iw(6)});
+test.assertSequence([iw(2):iw(8),iw(-1)], {});
+test.assertSequence([iw(8):iw(2),iw(-1)], {iw(8),iw(7),iw(6),iw(5),iw(4),iw(3)});
+test.assertSequence([iw(8):iw(2),iw(-2)], {iw(8),iw(6),iw(4)});
+test.assertSequence([iw(8):iw(2),iw(-3)], {iw(8),iw(5)});
+test.assertSequence([iw(8):iw(2),iw(-4)], {iw(8),iw(4)});
+
+
+test.assertSequence(rt.SeqRange(), {});
+test.assertSequence(rt.SeqIntRange(), {});
+test.assertSequence(rt.SeqRange(0, 0), {});
+test.assertSequence(rt.SeqIntRange(0, 0), {});
+test.assertSequence(rt.SeqRange(0, 8), {0,1,2,3,4,5,6,7});
+test.assertSequence(rt.SeqIntRange(0, 8), {0,1,2,3,4,5,6,7});
+test.assertSequence(rt.SeqRange(8, 0, -1), {8,7,6,5,4,3,2,1});
+test.assertSequence(rt.SeqIntRange(8, 0, -1), {8,7,6,5,4,3,2,1});
