@@ -84,6 +84,19 @@ assert { {1}, {}, {false, ""} }.flatten.any();
 assert !{ {1}, {}, {false, ""} }.flatten.any(1, -1);
 assert { {0}, {}, {false, "hi"} }.flatten.any();
 
+assert !{ {0,0,true}, {true,1}, {}, {1} }.flatten.parity();
+assert  { {0,0,true}, {true,1}, {}, {0} }.flatten.parity();
+assert !{ {0,0,true}, {true,1}, {}, {1} }.flatten.parity(1, -1);
+assert  { {0,0,true}, {true,1}, {}, {0} }.flatten.parity(1, -1);
+assert  { {0,0,true}, {true,1}, {}, {1} }.flatten.parity(3, -1);
+assert !{ {0,0,true}, {true,1}, {}, {0} }.flatten.parity(3, -1);
+assert !{ {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(key: e -> e === true);
+assert  { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(key: e -> e === true);
+assert !{ {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(1, -1, key: e -> e === true);
+assert  { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(1, -1, key: e -> e === true);
+assert  { {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(3, -1, key: e -> e === true);
+assert !{ {0,0,true}, {false,1}, {}, {1} }.flatten.parity(3, -1, key: e -> e === true);
+
 for (local useInsertAll: {false, true}) {
 	local a = [10, 20, 30];
 	local b = [40, 50, 60];

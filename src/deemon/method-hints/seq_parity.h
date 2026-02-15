@@ -118,12 +118,10 @@ err:
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_cb, NULL);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
@@ -151,18 +149,16 @@ err:
 
 [[wunused]]
 int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
-                                 [[nonnull]] DeeObject *key)
+                                       [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
 %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_parity_foreach_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_with_key_cb, key);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }} {
 	DREF DeeObject *result;
 	DeeObject *args[3];
@@ -207,12 +203,10 @@ err:
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_cb, NULL, start, end);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ, start, end);
 	if unlikely(!result)
@@ -245,12 +239,10 @@ int __seq_parity__.seq_parity_with_range_and_key([[nonnull]] DeeObject *self,
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_parity_enumerate_with_key_cb)]] {
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_with_key_cb, key, start, end);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }} {
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ PCKuSIZ "o", start, end, key);
 	if unlikely(!result)

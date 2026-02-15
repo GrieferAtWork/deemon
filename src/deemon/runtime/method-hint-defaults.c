@@ -8320,12 +8320,10 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_parity__with__seq_operator_foreach(DeeObject *__restrict self) {
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_parity_foreach_cb, NULL);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }
 
 
@@ -8401,12 +8399,10 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__seq_parity_with_key__with__seq_operator_foreach(DeeObject *self, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_foreach))(self, &seq_parity_foreach_with_key_cb, key);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }
 
 
@@ -8482,12 +8478,10 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_parity_with_range__with__seq_enumerate_index(DeeObject *__restrict self, size_t start, size_t end) {
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_parity_enumerate_cb, NULL, start, end);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }
 
 
@@ -8558,12 +8552,10 @@ INTERN WUNUSED NONNULL((1, 4)) int DCALL
 default__seq_parity_with_range_and_key__with__seq_enumerate_index(DeeObject *self, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t foreach_status;
 	foreach_status = (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_enumerate_index))(self, &seq_parity_enumerate_with_key_cb, key, start, end);
-	ASSERT(foreach_status >= 0 || foreach_status == -1 || foreach_status == -2);
-	if (foreach_status == -2)
-		return 0;
+	ASSERT(foreach_status >= -1);
 	if (foreach_status >= 0)
-		return 1;
-	return -1;
+		foreach_status &= 1;
+	return foreach_status;
 }
 
 
