@@ -42,6 +42,7 @@
 
 #include <hybrid/limitcore.h> /* __SSIZE_MIN__ */
 
+#include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "default-sets.h"

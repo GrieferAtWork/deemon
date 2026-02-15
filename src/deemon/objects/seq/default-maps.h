@@ -22,16 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>     /* DeeObject_MALLOC */
 #include <deemon/map.h>       /* DeeMapping_Type */
-#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref */
-#include <deemon/type.h>      /* DeeObject_Init */
+#include <deemon/object.h>    /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
 #include "../generic-proxy.h"
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* NULL */
 
 DECL_BEGIN
 
