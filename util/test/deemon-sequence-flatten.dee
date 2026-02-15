@@ -33,9 +33,22 @@ assert 0 == x.flatten[0];
 assert 1 == x.flatten[1];
 assert 2 == x.flatten[2];
 assert 5 == x.flatten[3];
+assert x.flatten.any(e -> e == 0);
+assert !x.flatten.any(1, -1, e -> e == 0);
+assert x.flatten.any(1, -1, e -> e == 9);
+assert x.flatten.any(5, -1, e -> e == 9);
+assert !x.flatten.any(6, -1, e -> e == 9);
+assert !x.flatten.any(e -> e == 99);
 
 test.assertSequence({ 10, 20, 30 }.map(e -> (e, e + 1)).flatten, { 10, 11, 20, 21, 30, 31 });
 
+
+assert !{ {0}, {false, ""} }.flatten.any();
+assert { {0}, {true, ""} }.flatten.any();
+assert { {0}, {true, ""} }.flatten.any(1, -1);
+assert { {1}, {false, ""} }.flatten.any();
+assert !{ {1}, {false, ""} }.flatten.any(1, -1);
+assert { {0}, {false, "hi"} }.flatten.any();
 
 for (local useInsertAll: {false, true}) {
 	local a = [10, 20, 30];
