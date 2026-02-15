@@ -223,9 +223,16 @@ STATIC_ASSERT((offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offse
 
 STATIC_ASSERT((offsetof(SeqPair, sp_items) + (0 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT((offsetof(SeqPair, sp_items) + (1 * sizeof(DeeObject *))) == offsetof(ProxyObject2, po_obj2));
-#define sp_init generic_proxy2__init
 #define sp_hash generic_proxy2__hash_recursive_ordered
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sp_init(SeqPair *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeObject *seq;
+	DeeArg_Unpack1(err, argc, argv, "_SeqPair", &seq);
+	return DeeObject_InvokeMethodHint(seq_unpack, seq, 2, self->sp_items);
+err:
+	return -1;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sp_printrepr(SeqPair *__restrict self, Dee_formatprinter_t printer, void *arg) {
@@ -979,9 +986,7 @@ INTERN DeeTypeObject DeeSeqPair_Type = {
 	/* .tp_name     = */ "_SeqPair",
 	/* .tp_doc      = */ DOC("Specialized sequence type that always contains exactly 2 items\n"
 	                         "\n"
-	                         "(a,b)\n"
-	                         "#pa{First item that goes into ?#first}"
-	                         "#pb{Second item that goes into ?#last}"),
+	                         "(seq:?T2?O?O)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

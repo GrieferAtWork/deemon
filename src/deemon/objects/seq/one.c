@@ -305,7 +305,6 @@ INTERN DeeTypeObject SeqOneIterator_Type = {
 /************************************************************************/
 STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
 #define so_copy      generic_proxy__copy_alias
-#define so_init      generic_proxy__init
 #define so_serialize generic_proxy__serialize
 #define so_fini      generic_proxy__fini
 #define so_bool      _DeeNone_reti1_1
@@ -315,6 +314,15 @@ STATIC_ASSERT(offsetof(SeqOne, so_item) == offsetof(ProxyObject, po_obj));
 #define so_size_fast _DeeNone_rets1_1
 
 #define _so_getitem generic_proxy__getobj
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+so_init(SeqOne *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeObject *seq;
+	DeeArg_Unpack1(err, argc, argv, "_SeqOne", &seq);
+	return DeeObject_InvokeMethodHint(seq_unpack, seq, 1, &self->so_item);
+err:
+	return -1;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 so_printrepr(SeqOne *__restrict self, Dee_formatprinter_t printer, void *arg) {
@@ -1230,7 +1238,7 @@ INTERN DeeTypeObject DeeSeqOne_Type = {
 	/* .tp_name     = */ "_SeqOne",
 	/* .tp_doc      = */ DOC("Specialized sequence type that always contains exactly 1 item\n"
 	                         "\n"
-	                         "(item)\n"
+	                         "(seq:?T1?O)\n"
 	                         "#pitem{The one and only item of @this ?DSequence}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
