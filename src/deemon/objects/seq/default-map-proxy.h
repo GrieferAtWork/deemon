@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/object.h> /* DeeTypeObject */
+#include <deemon/object.h> /* DREF, DeeTypeObject, Dee_AsObject */
 
 #include "../generic-proxy.h"
 
