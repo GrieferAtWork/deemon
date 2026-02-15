@@ -100,6 +100,19 @@ test.assertEqualsTyped(-1, flat.find("0", 2, -1, key: int.tostr));
 test.assertEqualsTyped(6, flat.find("1", 2, -1, key: int.tostr));
 test.assertEqualsTyped(8, flat.rfind("1", 2, -1, key: int.tostr));
 
+test.assertSame(false, flat.contains(-1));
+test.assertSame(true,  flat.contains(0));
+test.assertSame(true,  flat.contains(1));
+test.assertSame(false, flat.contains("-1", key: int.tostr));
+test.assertSame(true,  flat.contains("0", key: int.tostr));
+test.assertSame(true,  flat.contains("1", key: int.tostr));
+test.assertSame(false, flat.contains(-1, 2, -1));
+test.assertSame(false, flat.contains(0, 2, -1));
+test.assertSame(true,  flat.contains(1, 2, -1));
+test.assertSame(false, flat.contains("-1", 2, -1, key: int.tostr));
+test.assertSame(false, flat.contains("0", 2, -1, key: int.tostr));
+test.assertSame(true,  flat.contains("1", 2, -1, key: int.tostr));
+
 test.assertSequence({ 10, 20, 30 }.map(e -> (e, e + 1)).flatten, { 10, 11, 20, 21, 30, 31 });
 
 test.assertSame(true, { {true}, {}, {1, "foo"} }.flatten.all());

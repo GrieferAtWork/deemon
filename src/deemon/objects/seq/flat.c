@@ -54,6 +54,7 @@
 
 #ifndef CONFIG_TINY_DEEMON
 #define WANT_sf_mh_seq_any
+#define WANT_sf_mh_seq_contains
 #define WANT_sf_mh_seq_all
 #define WANT_sf_mh_seq_parity
 #define WANT_sf_mh_seq_min
@@ -226,34 +227,6 @@ err:
 	return NULL;
 }
 
-#define SF_CONTAINS_FOREACH_YES SSIZE_MIN
-PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-sf_contains_foreach_cb(void *arg, DeeObject *item) {
-	Dee_ssize_t result;
-	DREF DeeObject *contains_ob;
-	contains_ob = DeeObject_InvokeMethodHint(seq_operator_contains, item, (DeeObject *)arg);
-	if unlikely(!contains_ob)
-		goto err;
-	result = DeeObject_BoolInherited(contains_ob);
-	if (result > 0)
-		result = SF_CONTAINS_FOREACH_YES;
-	ASSERT(result == 0 || result == -1 || result == SF_CONTAINS_FOREACH_YES);
-	return result;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sf_contains(SeqFlat *self, DeeObject *item) {
-	Dee_ssize_t result = sf_foreachseq(self, &sf_contains_foreach_cb, item);
-	ASSERT(result == 0 || result == -1 || result == SF_CONTAINS_FOREACH_YES);
-	if (result == SF_CONTAINS_FOREACH_YES)
-		return_true;
-	if (result == 0)
-		return_false;
-	return NULL;
-}
-
 struct sf_foreach_data {
 	Dee_foreach_t sffd_proc; /* [1..1] Underlying proc */
 	void         *sffd_arg;  /* [?..?] Cookie for `sffd_proc' */
@@ -392,6 +365,8 @@ sf_enumerate_index_foreach_cb(void *arg, DeeObject *subseq) {
 	size_t subseq_fastsize, subseq_skip;
 	struct sf_enumerate_index_data *data;
 	data = (struct sf_enumerate_index_data *)arg;
+	/* TODO: FIXME: This is wrong -- don't use `seq_operator_foreach' here
+	 *       -- that breaks when flattened sequences contain unbound items! */
 	if (!data->sfeid_skip)
 		return DeeObject_InvokeMethodHint(seq_operator_foreach, subseq, &sf_enumerate_index_foreach_inner_cb, data);
 	subseq_fastsize = DeeObject_SizeFast(subseq);
@@ -490,6 +465,8 @@ sf_mh_seq_enumerate_index_reverse_cb(void *arg, DeeObject *subseq) {
 	}
 	ei_reverse_op = DeeObject_RequireMethodHint(subseq, seq_enumerate_index_reverse);
 	if (!ei_reverse_op) {
+		/* TODO: FIXME: This is wrong -- don't use `seq_foreach_reverse' here
+		 *       -- that breaks when flattened sequences contain unbound items! */
 		DeeMH_seq_foreach_reverse_t fe_reverse_op;
 		fe_reverse_op = DeeObject_RequireMethodHint(subseq, seq_foreach_reverse);
 		if (fe_reverse_op != NULL)
@@ -1822,6 +1799,106 @@ sf_mh_seq_count_with_range_and_key(SeqFlat *self, DeeObject *item, size_t start,
 #endif /* WANT_sf_mh_seq_count */
 
 
+#ifdef WANT_sf_mh_seq_contains
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_contains_cb(void *arg, DeeObject *subseq) {
+	int result = DeeObject_InvokeMethodHint(seq_contains, subseq, (DeeObject *)arg);
+	if (result > 0)
+		result = -2;
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sf_mh_seq_contains(SeqFlat *self, DeeObject *item) {
+	int result = (int)sf_foreachseq(self, &sf_mh_seq_contains_cb, item);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == -2)
+		result = 1;
+	return result;
+}
+
+struct sf_mh_seq_contains_with_key_data {
+	DeeObject *sfmhscwk_item; /* [1..1] Item to find */
+	DeeObject *sfmhscwk_key;  /* [1..1] Key mapper */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_contains_with_key_cb(void *arg, DeeObject *subseq) {
+	struct sf_mh_seq_contains_with_key_data *data = (struct sf_mh_seq_contains_with_key_data *)arg;
+	int result = DeeObject_InvokeMethodHint(seq_contains_with_key, subseq, data->sfmhscwk_item, data->sfmhscwk_key);
+	if (result > 0)
+		result = -2;
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+sf_mh_seq_contains_with_key(SeqFlat *self, DeeObject *item, DeeObject *key) {
+	int result;
+	struct sf_mh_seq_contains_with_key_data data;
+	data.sfmhscwk_item = item;
+	data.sfmhscwk_key  = key;
+	result = (int)sf_foreachseq(self, &sf_mh_seq_contains_with_key_cb, &data);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == -2)
+		result = 1;
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_contains_with_range_cb(void *arg, DeeObject *subseq,
+                                 size_t subseq_start, size_t subseq_end,
+                                 size_t UNUSED(range_start)) {
+	int result = DeeObject_InvokeMethodHint(seq_contains_with_range,
+	                                        subseq, (DeeObject *)arg,
+	                                        subseq_start, subseq_end);
+	if (result > 0)
+		result = -2;
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+sf_mh_seq_contains_with_range(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
+	int result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_contains_with_range_cb, item);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == -2)
+		result = 1;
+	return result;
+}
+
+struct sf_mh_seq_contains_with_range_and_key_data {
+	DeeObject *sfmhscwrak_item; /* [1..1] Item to find */
+	DeeObject *sfmhscwrak_key;  /* [1..1] Key mapper */
+};
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_contains_with_range_and_key_cb(void *arg, DeeObject *subseq,
+                                         size_t subseq_start, size_t subseq_end,
+                                         size_t UNUSED(range_start)) {
+	struct sf_mh_seq_contains_with_range_and_key_data *data = (struct sf_mh_seq_contains_with_range_and_key_data *)arg;
+	int result = DeeObject_InvokeMethodHint(seq_contains_with_range_and_key,
+	                                        subseq, data->sfmhscwrak_item,
+	                                        subseq_start, subseq_end,
+	                                        data->sfmhscwrak_key);
+	if (result > 0)
+		result = -2;
+	return (Dee_ssize_t)result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+sf_mh_seq_contains_with_range_and_key(SeqFlat *self, DeeObject *item,
+                                      size_t start, size_t end, DeeObject *key) {
+	int result;
+	struct sf_mh_seq_contains_with_range_and_key_data data;
+	data.sfmhscwrak_item = item;
+	data.sfmhscwrak_key  = key;
+	result = (int)sf_interact_withrange(self, start, end, &sf_mh_seq_contains_with_range_and_key_cb, &data);
+	ASSERT(result == 0 || result == -1 || result == -2);
+	if (result == -2)
+		result = 1;
+	return result;
+}
+#endif /* WANT_sf_mh_seq_contains */
+
+
 #ifdef WANT_sf_mh_seq_find
 union sf_mh_seq_find_data {
 	struct {
@@ -1932,7 +2009,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 #ifdef WANT_sf_mh_seq_count
 	TYPE_METHOD_HINTREF(Sequence_count),
 #endif /* WANT_sf_mh_seq_count */
-	//TODO:TYPE_METHOD_HINTREF(Sequence_contains),
+#ifdef WANT_sf_mh_seq_contains
+	TYPE_METHOD_HINTREF(Sequence_contains),
+#endif /* WANT_sf_mh_seq_contains */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_locate),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_rlocate),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_startswith),
@@ -2004,10 +2083,12 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_count_with_range, &sf_mh_seq_count_with_range, METHOD_FNOREFESCAPE),
 	TYPE_METHOD_HINT_F(seq_count_with_range_and_key, &sf_mh_seq_count_with_range_and_key, METHOD_FNOREFESCAPE),
 #endif /* WANT_sf_mh_seq_count */
-	//TODO:TYPE_METHOD_HINT_F(seq_contains, &sf_mh_seq_contains, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_key, &sf_mh_seq_contains_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_range, &sf_mh_seq_contains_with_range, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &sf_mh_seq_contains_with_range_and_key, METHOD_FNOREFESCAPE),
+#ifdef WANT_sf_mh_seq_contains
+	TYPE_METHOD_HINT_F(seq_contains, &sf_mh_seq_contains, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_key, &sf_mh_seq_contains_with_key, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range, &sf_mh_seq_contains_with_range, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_contains_with_range_and_key, &sf_mh_seq_contains_with_range_and_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_seq_contains */
 	//TODO:TYPE_METHOD_HINT_F(seq_locate, &sf_mh_seq_locate, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_key, &sf_mh_seq_locate_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_locate_with_range, &sf_mh_seq_locate_with_range, METHOD_FNOREFESCAPE),
@@ -2067,7 +2148,7 @@ PRIVATE struct type_member tpconst sf_class_members[] = {
 PRIVATE struct type_seq sf_seq = {
 	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sf_iter,
 	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sf_contains,
+	/* .tp_contains           = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem            = */ DEFIMPL(&default__getitem__with__getitem_index),
 	/* .tp_delitem            = */ DEFIMPL(&default__delitem__with__delitem_index),
 	/* .tp_setitem            = */ DEFIMPL(&default__setitem__with__setitem_index),
