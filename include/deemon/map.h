@@ -124,6 +124,11 @@ typedef struct {
 	DREF DeeObject *si_value; /* [1..1][const] The value of this shared item. */
 } DeeSharedItem;
 
+/* TODO: Re-work "DeeSharedMap_Type" such that rather than taking both keys and values,
+ *       it *only* takes values (of a fixed length), and keys come from a template object
+ *       that is essentially just a `Dict.Frozen{T: int}` to map keys to their relevant
+ *       indices within the value-vector given to "DeeSharedMap_NewShared". */
+
 /* Type of object returned by `DeeSharedMap_NewShared()' */
 DDATDEF DeeTypeObject DeeSharedMap_Type;
 
