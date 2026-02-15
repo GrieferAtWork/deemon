@@ -594,7 +594,7 @@ done:
 
 INTERN NONNULL((1)) void DCALL
 _memstate_debug_print(struct memstate const *__restrict self,
-                      struct function_assembler *assembler,
+                      struct function_assembler *fasm,
                       Dee_instruction_t const *instr) {
 	Dee_DPRINTF("\tCFA:   #%Id\n", (uintptr_t)self->ms_host_cfa_offset);
 	if (self->ms_stackc > 0) {
@@ -618,12 +618,12 @@ _memstate_debug_print(struct memstate const *__restrict self,
 				continue;
 			Dee_DPRINT(is_first ? "\tlocal: " : ", ");
 			lid_name = NULL;
-			if (assembler && i < assembler->fa_localc && instr) {
+			if (fasm && i < fasm->fa_localc && instr) {
 				/* Lookup the name of the local in DDI */
-				lid_name = DeeCode_LidNameAtAddr(assembler->fa_code, (uint16_t)i,
-				                                 function_assembler_addrof(assembler, instr));
-			} else if (assembler && i >= assembler->fa_localc) {
-				lid_t xlid = i - assembler->fa_localc;
+				lid_name = DeeCode_LidNameAtAddr(fasm->fa_code, (uint16_t)i,
+				                                 function_assembler_addrof(fasm, instr));
+			} else if (fasm && i >= fasm->fa_localc) {
+				lid_t xlid = i - fasm->fa_localc;
 				switch (xlid) {
 				case MEMSTATE_XLOCAL_A_THIS:
 					lid_name = "@this";
@@ -633,7 +633,7 @@ _memstate_debug_print(struct memstate const *__restrict self,
 					break;
 				case MEMSTATE_XLOCAL_A_ARGV:
 					lid_name = "@argv";
-					if (assembler->fa_cc & HOST_CC_F_TUPLE)
+					if (fasm->fa_cc & HOST_CC_F_TUPLE)
 						lid_name = "@args";
 					break;
 				case MEMSTATE_XLOCAL_A_KW:
@@ -655,9 +655,9 @@ _memstate_debug_print(struct memstate const *__restrict self,
 					if (xlid >= MEMSTATE_XLOCAL_DEFARG_MIN) {
 						/* Lookup argument name from keywords */
 						aid_t aid = (aid_t)(xlid - MEMSTATE_XLOCAL_DEFARG_MIN);
-						if (assembler->fa_code->co_keywords &&
-						    assembler->fa_code->co_keywords[aid]) {
-							Dee_DPRINTF("@arg(%k)=", assembler->fa_code->co_keywords[aid]);
+						if (fasm->fa_code->co_keywords &&
+						    fasm->fa_code->co_keywords[aid]) {
+							Dee_DPRINTF("@arg(%k)=", fasm->fa_code->co_keywords[aid]);
 							goto do_print_memloc_desc;
 						}
 					}

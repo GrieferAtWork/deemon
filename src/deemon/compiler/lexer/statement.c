@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/code.h>            /* Dee_CODE_FYIELDING */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/lexer.h>  /* AST_COMMA_*, ast_parse_*, ast_tags_clear, current_tags, parse_tags, parse_tags_block */
+#include <deemon/compiler/symbol.h> /* BASESCOPE_FRETURN, BASESCOPE_FSWITCH, LOOKUP_SYM_ALLOWDECL, LOOKUP_SYM_NORMAL, ast_loc, current_basescope, lookup_label, new_case_label, new_default_label, scope_pop, scope_push, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF */

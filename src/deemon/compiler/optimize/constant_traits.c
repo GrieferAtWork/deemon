@@ -25,8 +25,9 @@
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_False, Dee_True */
 #include <deemon/class.h>              /* DeeClassDescriptor_Type */
 #include <deemon/code.h>               /* DeeCode_Type */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/assembler.h> /* ASM_FNODEC, DeeRelInt_Type */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current */
+#include <deemon/compiler/optimize.h>  /* CONSTEXPR_* */
 #include <deemon/dec.h>                /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetVirtVTab */
 #include <deemon/float.h>              /* DeeFloat_Type */

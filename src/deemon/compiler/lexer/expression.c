@@ -24,10 +24,10 @@
 
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc, Dee_Reallocc */
 #include <deemon/bool.h>              /* Dee_False, Dee_True */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/lexer.h>    /* AST_COMMA_*, AST_PARSE_WASEXPR_NO, CASE_TOKEN_IS_*, PARSE_UNARY_DISALLOW_CASTS, P_OPERATOR_FNORMAL, TOKEN_IS_*, ast_*, current_tags, parse_tags_block */
+#include <deemon/compiler/optimize.h> /* ast_optimize_all */
+#include <deemon/compiler/symbol.h>   /* LOOKUP_SYM_*, SYMBOL_TYPE_EXTERN, SYMBOL_TYPE_MYMOD, ast_loc, current_basescope, current_scope, decl_ast_skip, get_current_this, is_reserved_symbol_name, lookup_nth, lookup_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>             /* DeeFloat_New */

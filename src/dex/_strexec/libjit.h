@@ -174,106 +174,106 @@ typedef struct jit_function_object JITFunctionObject;
 
 
 /* Check if the given token qualifies for the associated operation parser function. */
-#define TOKEN_IS_UNARY(self)                                   \
+#define JIT_TOKEN_IS_UNARY(self)                               \
 	((self)->jl_tok == '.' || (self)->jl_tok == '(' ||         \
 	 (self)->jl_tok == '[' || (self)->jl_tok == '{' ||         \
 	 (self)->jl_tok == TOK_INC || (self)->jl_tok == TOK_DEC || \
 	 JITLexer_ISKWD(self, "pack"))
-#define TOKEN_IS_PROD(self)                            \
+#define JIT_TOKEN_IS_PROD(self)                        \
 	((self)->jl_tok == '*' || (self)->jl_tok == '/' || \
 	 (self)->jl_tok == '%' || (self)->jl_tok == TOK_POW)
-#define TOKEN_IS_SUM(self) \
+#define JIT_TOKEN_IS_SUM(self) \
 	((self)->jl_tok == '+' || (self)->jl_tok == '-')
-#define TOKEN_IS_SHIFT(self) \
+#define JIT_TOKEN_IS_SHIFT(self) \
 	((self)->jl_tok == TOK_SHL || (self)->jl_tok == TOK_SHR)
-#define TOKEN_IS_CMP(self)                                               \
+#define JIT_TOKEN_IS_CMP(self)                                           \
 	((self)->jl_tok == TOK_LOWER || (self)->jl_tok == TOK_LOWER_EQUAL || \
 	 (self)->jl_tok == TOK_GREATER || (self)->jl_tok == TOK_GREATER_EQUAL)
-#define TOKEN_IS_CMPEQ(self)                                             \
+#define JIT_TOKEN_IS_CMPEQ(self)                                         \
 	((self)->jl_tok == TOK_EQUAL || (self)->jl_tok == TOK_NOT_EQUAL ||   \
 	 (self)->jl_tok == TOK_EQUAL3 || (self)->jl_tok == TOK_NOT_EQUAL3 || \
 	 (self)->jl_tok == TOK_QMARK_QMARK || (self)->jl_tok == '!' ||       \
 	 ((self)->jl_tok == JIT_KEYWORD &&                                   \
 	  (JITLexer_ISTOK(self, "is") || JITLexer_ISTOK(self, "in"))))
-#define TOKEN_IS_AND(self) \
+#define JIT_TOKEN_IS_AND(self) \
 	((self)->jl_tok == '&')
-#define TOKEN_IS_XOR(self) \
+#define JIT_TOKEN_IS_XOR(self) \
 	((self)->jl_tok == '^')
-#define TOKEN_IS_OR(self) \
+#define JIT_TOKEN_IS_OR(self) \
 	((self)->jl_tok == '|')
-#define TOKEN_IS_AS(self) \
+#define JIT_TOKEN_IS_AS(self) \
 	((self)->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self, "as"))
-#define TOKEN_IS_LAND(self) \
+#define JIT_TOKEN_IS_LAND(self) \
 	((self)->jl_tok == TOK_LAND)
-#define TOKEN_IS_LOR(self) \
+#define JIT_TOKEN_IS_LOR(self) \
 	((self)->jl_tok == TOK_LOR)
-#define TOKEN_IS_COND(self) \
+#define JIT_TOKEN_IS_COND(self) \
 	((self)->jl_tok == '?')
-#define TOKEN_IS_ASSIGN(self)             \
+#define JIT_TOKEN_IS_ASSIGN(self)         \
 	((self)->jl_tok == TOK_COLON_EQUAL || \
 	 ((self)->jl_tok >= TOK_ADD_EQUAL && (self)->jl_tok <= TOK_POW_EQUAL))
 
-#define CASE_TOKEN_IS_UNARY \
-	case '.':               \
-	case '(':               \
-	case '[':               \
-	case '{':               \
-	case TOK_INC:           \
+#define JIT_CASE_TOKEN_IS_UNARY \
+	case '.':                   \
+	case '(':                   \
+	case '[':                   \
+	case '{':                   \
+	case TOK_INC:               \
 	case TOK_DEC
-#define CASE_TOKEN_IS_PROD \
-	case '*':              \
-	case '/':              \
-	case '%':              \
+#define JIT_CASE_TOKEN_IS_PROD \
+	case '*':                  \
+	case '/':                  \
+	case '%':                  \
 	case TOK_POW
-#define CASE_TOKEN_IS_SUM \
-	case '+':             \
+#define JIT_CASE_TOKEN_IS_SUM \
+	case '+':                 \
 	case '-'
-#define CASE_TOKEN_IS_SHIFT \
-	case TOK_SHL:           \
+#define JIT_CASE_TOKEN_IS_SHIFT \
+	case TOK_SHL:               \
 	case TOK_SHR
-#define CASE_TOKEN_IS_CMP \
-	case TOK_LOWER:       \
-	case TOK_LOWER_EQUAL: \
-	case TOK_GREATER:     \
+#define JIT_CASE_TOKEN_IS_CMP \
+	case TOK_LOWER:           \
+	case TOK_LOWER_EQUAL:     \
+	case TOK_GREATER:         \
 	case TOK_GREATER_EQUAL
-#define CASE_TOKEN_IS_CMPEQ \
-	case TOK_EQUAL:         \
-	case TOK_NOT_EQUAL:     \
-	case TOK_EQUAL3:        \
-	case TOK_NOT_EQUAL3:    \
-	case TOK_QMARK_QMARK:   \
+#define JIT_CASE_TOKEN_IS_CMPEQ \
+	case TOK_EQUAL:             \
+	case TOK_NOT_EQUAL:         \
+	case TOK_EQUAL3:            \
+	case TOK_NOT_EQUAL3:        \
+	case TOK_QMARK_QMARK:       \
 	case '!'
-#define CASE_TOKEN_IS_AND \
+#define JIT_CASE_TOKEN_IS_AND \
 	case '&'
-#define CASE_TOKEN_IS_XOR \
+#define JIT_CASE_TOKEN_IS_XOR \
 	case '^'
-#define CASE_TOKEN_IS_OR \
+#define JIT_CASE_TOKEN_IS_OR \
 	case '|'
-#define CASE_TOKEN_IS_LAND \
+#define JIT_CASE_TOKEN_IS_LAND \
 	case TOK_LAND
-#define CASE_TOKEN_IS_LOR \
+#define JIT_CASE_TOKEN_IS_LOR \
 	case TOK_LOR
-#define CASE_TOKEN_IS_COND \
+#define JIT_CASE_TOKEN_IS_COND \
 	case '?'
-#define CASE_TOKEN_IS_ASSIGN \
-	case TOK_COLON_EQUAL:    \
-	case TOK_ADD_EQUAL:      \
-	case TOK_SUB_EQUAL:      \
-	case TOK_MUL_EQUAL:      \
-	case TOK_DIV_EQUAL:      \
-	case TOK_MOD_EQUAL:      \
-	case TOK_SHL_EQUAL:      \
-	case TOK_SHR_EQUAL:      \
-	case TOK_AND_EQUAL:      \
-	case TOK_OR_EQUAL:       \
-	case TOK_XOR_EQUAL:      \
+#define JIT_CASE_TOKEN_IS_ASSIGN \
+	case TOK_COLON_EQUAL:        \
+	case TOK_ADD_EQUAL:          \
+	case TOK_SUB_EQUAL:          \
+	case TOK_MUL_EQUAL:          \
+	case TOK_DIV_EQUAL:          \
+	case TOK_MOD_EQUAL:          \
+	case TOK_SHL_EQUAL:          \
+	case TOK_SHR_EQUAL:          \
+	case TOK_AND_EQUAL:          \
+	case TOK_OR_EQUAL:           \
+	case TOK_XOR_EQUAL:          \
 	case TOK_POW_EQUAL
 
 
 
 /* Helpers for working with  */
-#define TOKEN_IS_DOT(self)       ((self)->jl_tok == '.' || (self)->jl_tok == TOK_DOTS)
-#define TOKEN_IS_DOT_count(self) ((self)->jl_tok == TOK_DOTS ? 3 : 1)
+#define JIT_TOKEN_IS_DOT(self)       ((self)->jl_tok == '.' || (self)->jl_tok == TOK_DOTS)
+#define JIT_TOKEN_IS_DOT_count(self) ((self)->jl_tok == TOK_DOTS ? 3 : 1)
 
 
 #define JIT_SYMBOL_NONE      0x0000 /* No symbol (unused) */
@@ -884,7 +884,7 @@ INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetRWLocals(JITCont
 
 
 /* Lookup a given symbol within a specific JIT context
- * @param: mode: Set of `LOOKUP_SYM_*'
+ * @param: mode: Set of `JIT_LOOKUP_SYM_*'
  * @return: 0:  The specified symbol was found, and `result' was filled
  * @return: -1: An error occurred. */
 INTDEF WUNUSED ATTR_INS(3, 4) NONNULL((1, 2)) int DFCALL
@@ -898,15 +898,15 @@ JITContext_LookupNth(JITContext *__restrict self,
                      /*utf-8*/ char const *name,
                      size_t namelen, size_t nth);
 
-#define LOOKUP_SYM_NORMAL    0x0000
-#define LOOKUP_SYM_VDEFAULT  0x0000 /* Default visibility. */
-#define LOOKUP_SYM_VLOCAL    0x0001 /* Lookup rules when `local' is prefixed. */
-#define LOOKUP_SYM_VGLOBAL   0x0002 /* Lookup rules when `global' is prefixed. */
-#define LOOKUP_SYM_VMASK     0x0003 /* Mask for visibility options. */
-#define LOOKUP_SYM_STATIC    0x0100 /* Create static variables / warn about non-static, existing variables. */
-#define LOOKUP_SYM_STACK     0x0200 /* Create stack variables / warn about non-stack, existing variables. */
-#define LOOKUP_SYM_FINAL     0x0400 /* Create final (write-once) variables. */
-#define LOOKUP_SYM_ALLOWDECL 0x8000 /* Allow declaration of new variables (HINT: Unless set, warn when new variables are created). */
+#define JIT_LOOKUP_SYM_NORMAL    0x0000
+#define JIT_LOOKUP_SYM_VDEFAULT  0x0000 /* Default visibility. */
+#define JIT_LOOKUP_SYM_VLOCAL    0x0001 /* Lookup rules when `local' is prefixed. */
+#define JIT_LOOKUP_SYM_VGLOBAL   0x0002 /* Lookup rules when `global' is prefixed. */
+#define JIT_LOOKUP_SYM_VMASK     0x0003 /* Mask for visibility options. */
+#define JIT_LOOKUP_SYM_STATIC    0x0100 /* Create static variables / warn about non-static, existing variables. */
+#define JIT_LOOKUP_SYM_STACK     0x0200 /* Create stack variables / warn about non-stack, existing variables. */
+#define JIT_LOOKUP_SYM_FINAL     0x0400 /* Create final (write-once) variables. */
+#define JIT_LOOKUP_SYM_ALLOWDECL 0x8000 /* Allow declaration of new variables (HINT: Unless set, warn when new variables are created). */
 
 
 
@@ -920,22 +920,22 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
                            uint16_t features);
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipOperatorName(JITLexer *__restrict self);
-#define P_OPERATOR_FNORMAL 0x0000
-#define P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
+#define JIT_P_OPERATOR_FNORMAL 0x0000
+#define JIT_P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
 
 
 /* Ambiguous operator codes.
  * The caller should resolved these based on operand count. */
-#define AST_OPERATOR_POS_OR_ADD           0xf000 /* `+' */
-#define AST_OPERATOR_NEG_OR_SUB           0xf001 /* `-' */
-#define AST_OPERATOR_GETITEM_OR_SETITEM   0xf002 /* `[]' */
-#define AST_OPERATOR_GETRANGE_OR_SETRANGE 0xf003 /* `[:]' */
-#define AST_OPERATOR_GETATTR_OR_SETATTR   0xf004 /* `.' */
-#define AST_OPERATOR_MIN                  0xf000
-#define AST_OPERATOR_MAX                  0xf004
+#define JIT_AST_OPERATOR_POS_OR_ADD           0xf000 /* `+' */
+#define JIT_AST_OPERATOR_NEG_OR_SUB           0xf001 /* `-' */
+#define JIT_AST_OPERATOR_GETITEM_OR_SETITEM   0xf002 /* `[]' */
+#define JIT_AST_OPERATOR_GETRANGE_OR_SETRANGE 0xf003 /* `[:]' */
+#define JIT_AST_OPERATOR_GETATTR_OR_SETATTR   0xf004 /* `.' */
+#define JIT_AST_OPERATOR_MIN                  0xf000
+#define JIT_AST_OPERATOR_MAX                  0xf004
 
 /* Special class operators. */
-#define AST_OPERATOR_FOR                  0xf005 /* `for' */
+#define JIT_AST_OPERATOR_FOR                  0xf005 /* `for' */
 
 
 /* Check if the current token may refer to the start of an expression.
@@ -949,7 +949,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opname);
 
-/* JIT-specific evaluation flags (may be optionally or'd with `LOOKUP_SYM_*'). */
+/* JIT-specific evaluation flags (may be optionally or'd with `JIT_LOOKUP_SYM_*'). */
 #define JITLEXER_EVAL_FNORMAL       0x0000 /* Normal evaluation flags. */
 #define JITLEXER_EVAL_FALLOWINPLACE 0x0000 /* (ignored) Allow inplace operations */
 #define JITLEXER_EVAL_FALLOWISBOUND 0x0000 /* (ignored) Allow `foo is bound' expressions */
@@ -1042,7 +1042,7 @@ JITLexer_EvalImportExpression(JITLexer *__restrict self);
  * @param: seq_type:   The type of sequence to generate (one of `DeeTuple_Type' or `DeeList_Type')
  *                     When `NULL', evaluate to the last comma-expression.
  * @param: p_out_mode: When non-NULL, instead of parsing a `;' when required,
- *                     set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
+ *                     set to `JIT_AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode,
                    DeeTypeObject *seq_type, uint16_t *p_out_mode);
@@ -1050,23 +1050,23 @@ INTDEF WUNUSED NONNULL((1)) int DCALL
 JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
                    uint16_t *p_out_mode);
 
-#define AST_COMMA_NORMAL        0x0000
-#define AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
-#define AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
-                                        * NOTE: When this flag is set, trailing `,' are not parsed, but remain as the active token upon exit. */
-#define AST_COMMA_NOSUFFIXKWD   0x0080 /* Don't parse c-style variable declarations for reserved keywords.
-                                        * This is required for `else', `catch', `finally', etc.
-                                        * >> `try foo catch (...)' (don't interpret as `local catch = foo(...)' when starting with `foo') */
-#define AST_COMMA_ALLOWTYPEDECL 0x0800 /* Allow type declaration to be appended to variables, as well as documentation strings to be consumed. */
-#define AST_COMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
-#define AST_COMMA_PARSESINGLE   0x2000 /* Only parse a single expression. */
-#define AST_COMMA_PARSESEMI     0x4000 /* Parse a `;' as part of the expression (if a `;' is required). */
-#define AST_COMMA_ALLOWVARDECLS 0x8000 /* Allow new variables to be declared. */
+#define JIT_AST_COMMA_NORMAL        0x0000
+#define JIT_AST_COMMA_FORCEMULTIPLE 0x0001 /* Always pack objects according to `flags' */
+#define JIT_AST_COMMA_STRICTCOMMA   0x0002 /* Strictly enforce the rule of a `,' being followed by another expression.
+                                            * NOTE: When this flag is set, trailing `,' are not parsed, but remain as the active token upon exit. */
+#define JIT_AST_COMMA_NOSUFFIXKWD   0x0080 /* Don't parse c-style variable declarations for reserved keywords.
+                                            * This is required for `else', `catch', `finally', etc.
+                                            * >> `try foo catch (...)' (don't interpret as `local catch = foo(...)' when starting with `foo') */
+#define JIT_AST_COMMA_ALLOWTYPEDECL 0x0800 /* Allow type declaration to be appended to variables, as well as documentation strings to be consumed. */
+#define JIT_AST_COMMA_ALLOWKWDLIST  0x1000 /* Stop if what a keyword list label is encountered. */
+#define JIT_AST_COMMA_PARSESINGLE   0x2000 /* Only parse a single expression. */
+#define JIT_AST_COMMA_PARSESEMI     0x4000 /* Parse a `;' as part of the expression (if a `;' is required). */
+#define JIT_AST_COMMA_ALLOWVARDECLS 0x8000 /* Allow new variables to be declared. */
 
-#define AST_COMMA_OUT_FNORMAL   0x0000 /* Normal comma output flags. */
-#define AST_COMMA_OUT_FNEEDSEMI 0x0001 /* Set if a semicolon is required. */
+#define JIT_AST_COMMA_OUT_FNORMAL   0x0000 /* Normal comma output flags. */
+#define JIT_AST_COMMA_OUT_FNEEDSEMI 0x0001 /* Set if a semicolon is required. */
 /* Additional flags only used by the JIT compiler. */
-#define AST_COMMA_OUT_FMULTIPLE 0x0010 /* Multiple expressions were parsed. */
+#define JIT_AST_COMMA_OUT_FMULTIPLE 0x0010 /* Multiple expressions were parsed. */
 
 
 /* Parse a module name, either writing it to `*printer' (if non-NULL),
@@ -1346,9 +1346,9 @@ JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *p_was_expression);
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 JITLexer_SkipHybridAtBrace(JITLexer *__restrict self, unsigned int *p_was_expression);
 
-#define AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
-#define AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
-#define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
+#define JIT_AST_PARSE_WASEXPR_NO     0 /* It's a statement. */
+#define JIT_AST_PARSE_WASEXPR_YES    1 /* It's an expression for sure. */
+#define JIT_AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
@@ -1360,15 +1360,15 @@ JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
 	} else {
 		switch (*p_was_expression) {
 
-		case AST_PARSE_WASEXPR_NO:
+		case JIT_AST_PARSE_WASEXPR_NO:
 			result = JITLexer_EvalStatement(self);
 			break;
 
-		case AST_PARSE_WASEXPR_YES:
+		case JIT_AST_PARSE_WASEXPR_YES:
 			result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
 			break;
 
-		case AST_PARSE_WASEXPR_MAYBE:
+		case JIT_AST_PARSE_WASEXPR_MAYBE:
 			result = JITLexer_EvalHybrid(self, p_was_expression);
 			break;
 
@@ -1387,15 +1387,15 @@ JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
 	} else {
 		switch (*p_was_expression) {
 
-		case AST_PARSE_WASEXPR_NO:
+		case JIT_AST_PARSE_WASEXPR_NO:
 			result = JITLexer_SkipStatement(self);
 			break;
 
-		case AST_PARSE_WASEXPR_YES:
+		case JIT_AST_PARSE_WASEXPR_YES:
 			result = JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL);
 			break;
 
-		case AST_PARSE_WASEXPR_MAYBE:
+		case JIT_AST_PARSE_WASEXPR_MAYBE:
 			result = JITLexer_SkipHybrid(self, p_was_expression);
 			break;
 
@@ -1422,13 +1422,13 @@ JITLexer_EvalRValue(JITLexer *__restrict self) {
 }
 
 #define JITLexer_SkipRValueDecl(self) \
-	JITLexer_SkipComma(self, AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS, NULL)
+	JITLexer_SkipComma(self, JIT_AST_COMMA_NORMAL | JIT_AST_COMMA_ALLOWVARDECLS, NULL)
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
 JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLexer_EvalComma(self,
-	                            AST_COMMA_NORMAL |
-	                            AST_COMMA_ALLOWVARDECLS,
+	                            JIT_AST_COMMA_NORMAL |
+	                            JIT_AST_COMMA_ALLOWVARDECLS,
 	                            NULL,
 	                            NULL);
 	ASSERT((result == JIT_LVALUE) ==

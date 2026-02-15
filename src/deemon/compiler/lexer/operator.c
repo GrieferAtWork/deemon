@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
 #include <deemon/class.h>           /* Dee_CLASS_OPERATOR_SUPERARGS */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
+#include <deemon/compiler/lexer.h>  /* AST_OPERATOR_*, P_OPERATOR_FCLASS */
+#include <deemon/compiler/symbol.h> /* SYMBOL_TYPE_EXTERN, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/file.h>            /* DeeFileType_Type, FILE_OPERATOR_READ, FILE_OPERATOR_WRITE */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetSymbol */

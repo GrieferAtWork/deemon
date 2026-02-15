@@ -374,7 +374,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					result = 0;
 #endif /* !JIT_EVAL */
 				} else {
-					result = FUNC(Comma)(self, AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) NULL);
+					result = FUNC(Comma)(self, JIT_AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) NULL);
 					if (ISERR(result))
 						goto err;
 					LOAD_LVALUE(result, err);
@@ -464,7 +464,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 					result = 0;
 #endif /* !JIT_EVAL */
 				} else {
-					result = FUNC(Comma)(self, AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) NULL);
+					result = FUNC(Comma)(self, JIT_AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) NULL);
 					if (ISERR(result))
 						goto err;
 					LOAD_LVALUE(result, err);
@@ -719,10 +719,10 @@ check_trailing_asm_semicolon:
 parse_expr:
 		/* Fallback: parse a regular, old expression. */
 		result = FUNC(Comma)(self,
-		                     AST_COMMA_NORMAL |
-		                     AST_COMMA_ALLOWVARDECLS |
-		                     AST_COMMA_ALLOWTYPEDECL |
-		                     AST_COMMA_PARSESEMI,
+		                     JIT_AST_COMMA_NORMAL |
+		                     JIT_AST_COMMA_ALLOWVARDECLS |
+		                     JIT_AST_COMMA_ALLOWTYPEDECL |
+		                     JIT_AST_COMMA_PARSESEMI,
 		                     IF_EVAL(NULL, )
 		                     NULL);
 		break;
@@ -895,7 +895,7 @@ FUNC(ImportItem)(JITLexer *__restrict self,
 				syn_import_expected_keyword_after_as(self);
 				goto err;
 			}
-		} else if (TOKEN_IS_DOT(self) && allow_module_name) {
+		} else if (JIT_TOKEN_IS_DOT(self) && allow_module_name) {
 			/* - `foo.bar'
 			 * - `foo.bar as foobar' */
 #ifdef JIT_EVAL
@@ -911,7 +911,7 @@ FUNC(ImportItem)(JITLexer *__restrict self,
 			result->ii_import_name = NULL;
 #endif /* JIT_EVAL */
 		}
-	} else if (TOKEN_IS_DOT(self) && allow_module_name) {
+	} else if (JIT_TOKEN_IS_DOT(self) && allow_module_name) {
 		/* - `.foo.bar'
 		 * - `.foo.bar as foobar' */
 #ifdef JIT_EVAL
@@ -920,14 +920,14 @@ FUNC(ImportItem)(JITLexer *__restrict self,
 complete_module_name:
 		return_value = 1;
 #ifdef JIT_EVAL
-		if unlikely(Dee_unicode_printer_printascii(&printer, "...", TOKEN_IS_DOT_count(self)) < 0)
+		if unlikely(Dee_unicode_printer_printascii(&printer, "...", JIT_TOKEN_IS_DOT_count(self)) < 0)
 			goto err_printer;
 #endif /* JIT_EVAL */
 		JITLexer_Yield(self);
 
 		/* Make sure to properly parse `import . as me' */
 		if ((self->jl_tok == JIT_KEYWORD && !JITLexer_ISTOK(self, "as")) ||
-		    TOKEN_IS_DOT(self) || self->jl_tok == TOK_STRING) {
+		    JIT_TOKEN_IS_DOT(self) || self->jl_tok == TOK_STRING) {
 #ifdef JIT_EVAL
 			if unlikely(JITLexer_EvalModuleNameIntoPrinter(self, &printer) < 0)
 				goto err_printer;

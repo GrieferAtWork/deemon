@@ -2147,10 +2147,10 @@ DFUNDEF WUNUSED NONNULL((1)) struct Dee_module_symbol *DCALL DeeModule_GetSymbol
 #define DeeModule_GetSymbolHash(self, attr, hash)         DeeModule_GetSymbolStringHash(self, DeeString_STR(attr), hash)
 #define DeeModule_GetSymbolString(self, attr)             DeeModule_GetSymbolStringHash(self, attr, Dee_HashStr(attr))
 #define DeeModule_GetSymbolStringLen(self, attr, attrlen) DeeModule_GetSymbolStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict symbol);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict symbol);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict symbol);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict symbol, DeeObject *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict sym);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict sym);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict sym);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol const *__restrict sym, DeeObject *__restrict value);
 
 /* Return the name of a global variable in the given module.
  * @return: NULL: The given `gid' is not recognized, or the module hasn't finished/started loading yet.

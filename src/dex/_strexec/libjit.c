@@ -132,7 +132,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjit_exec_f_impl(DeeObje
 		unsigned int was;
 		result = JITLexer_EvalHybrid(&lexer, &was);
 		if (lexer.jl_tok && likely(result)) {
-			if (was == AST_PARSE_WASEXPR_YES) {
+			if (was == JIT_AST_PARSE_WASEXPR_YES) {
 				/* Dangling code after expression. */
 				if (result == JIT_LVALUE) {
 					JITLValue_Fini(&lexer.jl_lvalue);

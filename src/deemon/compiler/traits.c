@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/ast.h>
+#include <deemon/compiler/ast.h>    /* ASSERT_AST, AST_EXPAND, AST_MULTIPLE, ast */
 #include <deemon/compiler/traits.h>
 
 #include <stdbool.h> /* bool, false, true */

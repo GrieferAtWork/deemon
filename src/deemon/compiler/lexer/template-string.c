@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/lexer.h>  /* ast_parse_expr */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, ast_loc */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_AsObject, Dee_Decref_unlikely */
 #include <deemon/string.h>          /* DeeUniTrait_AsDigit, DeeUni_AsDigit, DeeUni_Descriptor, Dee_UNICODE_ISLF, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, Dee_unitraits */

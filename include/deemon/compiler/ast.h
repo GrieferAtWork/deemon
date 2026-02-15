@@ -17,8 +17,23 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export AST_**/
+/*!export AST_FACTION_**/
+/*!export AST_FASSEMBLY_**/
+/*!export AST_FBOOL_**/
+/*!export AST_FCLASS_**/
+/*!export AST_FCOND_**/
+/*!export AST_FLABEL_**/
+/*!export AST_FLOOPCTL_**/
+/*!export AST_FLOOP_**/
+/*!export AST_FMULTIPLE_**/
+/*!export AST_FSWITCH_**/
+/*!export AST_OPERATOR_**/
+/*!export CATCH_EXPR_F**/
+/*!export ast_**/
 #ifndef GUARD_DEEMON_COMPILER_AST_H
-#define GUARD_DEEMON_COMPILER_AST_H 1
+#define GUARD_DEEMON_COMPILER_AST_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -27,7 +42,7 @@
 #include "../object.h" /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
 #include "../type.h"   /* DeeObject_IsShared, Dee_operator_t, OPERATOR_COPY */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_refcnt_t */
-#include "symbol.h"
+#include "symbol.h"    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_TYPE_EXTERN, ast_loc, symbol, text_label */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
@@ -130,8 +145,8 @@ struct asm_operand {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define ao_expr  _dee_aunion.ao_expr
-#define ao_label _dee_aunion.ao_label
+#define ao_expr  _dee_aunion.ao_expr  /*!export-*/
+#define ao_label _dee_aunion.ao_label /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -257,8 +272,8 @@ struct ast {
 			}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 			_dee_aunion
-#define l_elem  _dee_aunion.l_elem
-#define l_cond  _dee_aunion.l_cond
+#define l_elem  _dee_aunion.l_elem /*!export-*/
+#define l_cond  _dee_aunion.l_cond /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 			;
 			union {
@@ -268,8 +283,8 @@ struct ast {
 			}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 			_dee_aunion
-#define l_iter  _dee_aunion.l_iter
-#define l_next  _dee_aunion.l_next
+#define l_iter  _dee_aunion.l_iter /*!export-*/
+#define l_next  _dee_aunion.l_next /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 			;
 			DREF struct ast      *l_loop; /* [0..1] Loop block. */
@@ -577,29 +592,29 @@ struct ast {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define a_constexpr      _dee_aunion.a_constexpr
-#define a_sym            _dee_aunion.a_sym
-#define a_unbind         _dee_aunion.a_unbind
-#define a_bound          _dee_aunion.a_bound
-#define a_multiple       _dee_aunion.a_multiple
-#define a_return         _dee_aunion.a_return
-#define a_yield          _dee_aunion.a_yield
-#define a_throw          _dee_aunion.a_throw
-#define a_try            _dee_aunion.a_try
-#define a_loop           _dee_aunion.a_loop
-#define a_conditional    _dee_aunion.a_conditional
-#define a_bool           _dee_aunion.a_bool
-#define a_expand         _dee_aunion.a_expand
-#define a_function       _dee_aunion.a_function
-#define a_operator_func  _dee_aunion.a_operator_func
-#define a_operator       _dee_aunion.a_operator
-#define a_operator_ops   _dee_aunion.a_operator_ops
-#define a_action         _dee_aunion.a_action
-#define a_class          _dee_aunion.a_class
-#define a_label          _dee_aunion.a_label
-#define a_goto           _dee_aunion.a_goto
-#define a_switch         _dee_aunion.a_switch
-#define a_assembly       _dee_aunion.a_assembly
+#define a_constexpr      _dee_aunion.a_constexpr     /*!export-*/
+#define a_sym            _dee_aunion.a_sym           /*!export-*/
+#define a_unbind         _dee_aunion.a_unbind        /*!export-*/
+#define a_bound          _dee_aunion.a_bound         /*!export-*/
+#define a_multiple       _dee_aunion.a_multiple      /*!export-*/
+#define a_return         _dee_aunion.a_return        /*!export-*/
+#define a_yield          _dee_aunion.a_yield         /*!export-*/
+#define a_throw          _dee_aunion.a_throw         /*!export-*/
+#define a_try            _dee_aunion.a_try           /*!export-*/
+#define a_loop           _dee_aunion.a_loop          /*!export-*/
+#define a_conditional    _dee_aunion.a_conditional   /*!export-*/
+#define a_bool           _dee_aunion.a_bool          /*!export-*/
+#define a_expand         _dee_aunion.a_expand        /*!export-*/
+#define a_function       _dee_aunion.a_function      /*!export-*/
+#define a_operator_func  _dee_aunion.a_operator_func /*!export-*/
+#define a_operator       _dee_aunion.a_operator      /*!export-*/
+#define a_operator_ops   _dee_aunion.a_operator_ops  /*!export-*/
+#define a_action         _dee_aunion.a_action        /*!export-*/
+#define a_class          _dee_aunion.a_class         /*!export-*/
+#define a_label          _dee_aunion.a_label         /*!export-*/
+#define a_goto           _dee_aunion.a_goto          /*!export-*/
+#define a_switch         _dee_aunion.a_switch        /*!export-*/
+#define a_assembly       _dee_aunion.a_assembly      /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };

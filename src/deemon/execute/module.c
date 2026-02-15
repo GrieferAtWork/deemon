@@ -472,31 +472,31 @@ DeeModule_GetSymbolStringLenHash(DeeModuleObject const *__restrict self,
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
-                        struct Dee_module_symbol const *__restrict symbol) {
-	ASSERT(symbol >= self->mo_bucketv &&
-	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if likely(!(symbol->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
+                        struct Dee_module_symbol const *__restrict sym) {
+	ASSERT(sym >= self->mo_bucketv &&
+	       sym <= self->mo_bucketv + self->mo_bucketm);
+	if likely(!(sym->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
 		DREF DeeObject *result;
 read_symbol:
-		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
+		ASSERT(Dee_module_symbol_getindex(sym) < self->mo_globalc);
 		DeeModule_LockRead(self);
-		result = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
+		result = self->mo_globalv[Dee_module_symbol_getindex(sym)];
 		Dee_XIncref(result);
 		DeeModule_LockEndRead(self);
 		if unlikely(!result)
-			err_unbound_global(self, Dee_module_symbol_getindex(symbol));
+			err_unbound_global(self, Dee_module_symbol_getindex(sym));
 		return result;
 	}
 
 	/* External symbol, or property. */
-	if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
+	if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 		DREF DeeObject *callback;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback) {
-			err_module_cannot_read_property_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(symbol));
+			err_module_cannot_read_property_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(sym));
 			return NULL;
 		}
 
@@ -505,31 +505,31 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_impid];
+	ASSERT(sym->ss_impid < self->mo_importc);
+	self = self->mo_importv[sym->ss_impid];
 	goto read_symbol;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
-                          struct Dee_module_symbol const *__restrict symbol) {
-	ASSERT(symbol >= self->mo_bucketv &&
-	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if likely(!(symbol->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
+                          struct Dee_module_symbol const *__restrict sym) {
+	ASSERT(sym >= self->mo_bucketv &&
+	       sym <= self->mo_bucketv + self->mo_bucketm);
+	if likely(!(sym->ss_flags & (Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY))) {
 		DeeObject *value;
 read_symbol:
-		ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
+		ASSERT(Dee_module_symbol_getindex(sym) < self->mo_globalc);
 		DeeModule_LockRead(self);
-		value = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
+		value = self->mo_globalv[Dee_module_symbol_getindex(sym)];
 		DeeModule_LockEndRead(self);
 		return Dee_BOUND_FROMBOOL(value);
 	}
 
 	/* External symbol, or property. */
-	if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
+	if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 		DREF DeeObject *callback, *callback_result;
 		DeeModule_LockRead(self);
-		callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_GET];
+		callback = self->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_GET];
 		Dee_XIncref(callback);
 		DeeModule_LockEndRead(self);
 		if unlikely(!callback)
@@ -547,29 +547,29 @@ read_symbol:
 	}
 
 	/* External symbol. */
-	ASSERT(symbol->ss_impid < self->mo_importc);
-	self = self->mo_importv[symbol->ss_impid];
+	ASSERT(sym->ss_impid < self->mo_importc);
+	self = self->mo_importv[sym->ss_impid];
 	goto read_symbol;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
-                        struct Dee_module_symbol const *__restrict symbol) {
+                        struct Dee_module_symbol const *__restrict sym) {
 	DREF DeeObject *old_value;
-	ASSERT(symbol >= self->mo_bucketv &&
-	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if unlikely(symbol->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY)) {
-		if (symbol->ss_flags & Dee_MODSYM_FREADONLY)
-			return err_module_readonly_global_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(symbol));
-		if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
+	ASSERT(sym >= self->mo_bucketv &&
+	       sym <= self->mo_bucketv + self->mo_bucketm);
+	if unlikely(sym->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FEXTERN | Dee_MODSYM_FPROPERTY)) {
+		if (sym->ss_flags & Dee_MODSYM_FREADONLY)
+			return err_module_readonly_global_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(sym));
+		if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 			DREF DeeObject *callback, *temp;
 			DeeModule_LockRead(self);
-			ASSERT(Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_DEL < self->mo_globalc);
-			callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_DEL];
+			ASSERT(Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_DEL < self->mo_globalc);
+			callback = self->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_DEL];
 			Dee_XIncref(callback);
 			DeeModule_LockEndRead(self);
 			if unlikely(!callback)
-				return err_module_cannot_delete_property_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(symbol));
+				return err_module_cannot_delete_property_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(sym));
 
 			/* Invoke the property callback. */
 			temp = DeeObject_CallInherited(callback, 0, NULL);
@@ -578,13 +578,13 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 		}
 
 		/* External symbol. */
-		ASSERT(symbol->ss_impid < self->mo_importc);
-		self = self->mo_importv[symbol->ss_impid];
+		ASSERT(sym->ss_impid < self->mo_importc);
+		self = self->mo_importv[sym->ss_impid];
 	}
-	ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
+	ASSERT(Dee_module_symbol_getindex(sym) < self->mo_globalc);
 	DeeModule_LockWrite(self);
-	old_value = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
-	self->mo_globalv[Dee_module_symbol_getindex(symbol)] = NULL;
+	old_value = self->mo_globalv[Dee_module_symbol_getindex(sym)];
+	self->mo_globalv[Dee_module_symbol_getindex(sym)] = NULL;
 	DeeModule_LockEndWrite(self);
 	Dee_XDecref(old_value);
 	return 0;
@@ -592,54 +592,54 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
-                        struct Dee_module_symbol const *__restrict symbol,
+                        struct Dee_module_symbol const *__restrict sym,
                         DeeObject *__restrict value) {
 	DREF DeeObject *temp;
-	ASSERT(symbol >= self->mo_bucketv &&
-	       symbol <= self->mo_bucketv + self->mo_bucketm);
-	if unlikely(symbol->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FPROPERTY | Dee_MODSYM_FEXTERN)) {
-		if unlikely(symbol->ss_flags & Dee_MODSYM_FEXTERN) {
-			ASSERT(symbol->ss_impid < self->mo_importc);
-			self = self->mo_importv[symbol->ss_impid];
+	ASSERT(sym >= self->mo_bucketv &&
+	       sym <= self->mo_bucketv + self->mo_bucketm);
+	if unlikely(sym->ss_flags & (Dee_MODSYM_FREADONLY | Dee_MODSYM_FPROPERTY | Dee_MODSYM_FEXTERN)) {
+		if unlikely(sym->ss_flags & Dee_MODSYM_FEXTERN) {
+			ASSERT(sym->ss_impid < self->mo_importc);
+			self = self->mo_importv[sym->ss_impid];
 		}
-		if (symbol->ss_flags & Dee_MODSYM_FREADONLY) {
-			if (symbol->ss_flags & Dee_MODSYM_FPROPERTY)
+		if (sym->ss_flags & Dee_MODSYM_FREADONLY) {
+			if (sym->ss_flags & Dee_MODSYM_FPROPERTY)
 				goto err_is_readonly;
-			ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
+			ASSERT(Dee_module_symbol_getindex(sym) < self->mo_globalc);
 			DeeModule_LockWrite(self);
 			/* Make sure not to allow write-access to global variables that
 			 * have already been assigned, but are marked as read-only. */
-			if unlikely(self->mo_globalv[Dee_module_symbol_getindex(symbol)] != NULL) {
+			if unlikely(self->mo_globalv[Dee_module_symbol_getindex(sym)] != NULL) {
 				DeeModule_LockEndWrite(self);
 err_is_readonly:
-				return err_module_readonly_global_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(symbol));
+				return err_module_readonly_global_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(sym));
 			}
 			Dee_Incref(value);
-			self->mo_globalv[Dee_module_symbol_getindex(symbol)] = value;
+			self->mo_globalv[Dee_module_symbol_getindex(sym)] = value;
 			DeeModule_LockEndWrite(self);
 			return 0;
 		}
-		if (symbol->ss_flags & Dee_MODSYM_FPROPERTY) {
+		if (sym->ss_flags & Dee_MODSYM_FPROPERTY) {
 			DREF DeeObject *callback;
 			DeeModule_LockWrite(self);
-			callback = self->mo_globalv[Dee_module_symbol_getindex(symbol) + Dee_MODULE_PROPERTY_SET];
+			callback = self->mo_globalv[Dee_module_symbol_getindex(sym) + Dee_MODULE_PROPERTY_SET];
 			Dee_XIncref(callback);
 			DeeModule_LockEndWrite(self);
 			if unlikely(!callback)
-				return err_module_cannot_write_property_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(symbol));
+				return err_module_cannot_write_property_string(self, Dee_MODULE_SYMBOL_GETNAMESTR(sym));
 			temp = DeeObject_CallInherited(callback, 1, (DeeObject **)&value);
 			Dee_XDecref(temp);
 			return temp ? 0 : -1;
 		}
 		/* External symbol. */
-		ASSERT(symbol->ss_impid < self->mo_importc);
-		self = self->mo_importv[symbol->ss_impid];
+		ASSERT(sym->ss_impid < self->mo_importc);
+		self = self->mo_importv[sym->ss_impid];
 	}
-	ASSERT(Dee_module_symbol_getindex(symbol) < self->mo_globalc);
+	ASSERT(Dee_module_symbol_getindex(sym) < self->mo_globalc);
 	Dee_Incref(value);
 	DeeModule_LockWrite(self);
-	temp = self->mo_globalv[Dee_module_symbol_getindex(symbol)];
-	self->mo_globalv[Dee_module_symbol_getindex(symbol)] = value;
+	temp = self->mo_globalv[Dee_module_symbol_getindex(sym)];
+	self->mo_globalv[Dee_module_symbol_getindex(sym)] = value;
 	DeeModule_LockEndWrite(self);
 	Dee_XDecref(temp);
 	return 0;

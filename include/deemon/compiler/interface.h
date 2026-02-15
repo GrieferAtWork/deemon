@@ -17,8 +17,11 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DR_**/
+/*!export DeeCompiler**/
 #ifndef GUARD_DEEMON_COMPILER_INTERFACE_H
-#define GUARD_DEEMON_COMPILER_INTERFACE_H 1
+#define GUARD_DEEMON_COMPILER_INTERFACE_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -26,8 +29,8 @@
 #include "../object.h" /* Dee_visit_t */
 #include "../type.h"   /* type_member */
 #include "../types.h"  /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_hash_t */
-#include "compiler.h"
-#include "symbol.h"
+#include "compiler.h"  /* DeeCompiler*, Dee_COMPILER_ITEM_OBJECT_HEAD */
+#include "symbol.h"    /* DeeBaseScopeObject, ast_loc */
 #include "tpp.h"
 
 #include <stdbool.h> /* bool */

@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/class.h>              /* DeeClassDescriptor_Check */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_G_FNORMAL, ASM_G_FPUSHRES, asm_*, ast_genasm, ast_genasm_one */
+#include <deemon/compiler/ast.h>       /* AST_*, ast, class_member */
+#include <deemon/compiler/symbol.h>    /* SYMBOL_INPLACE_UNWIND_ALIAS, symbol */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* int32_t, uint16_t */

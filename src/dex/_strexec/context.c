@@ -986,7 +986,7 @@ done:
 
 
 /* Lookup a given symbol within a specific JIT context
- * @param: mode: Set of `LOOKUP_SYM_*'
+ * @param: mode: Set of `JIT_LOOKUP_SYM_*'
  * @return: 0:  The specified symbol was found, and `result' was filled
  * @return: -1: An error occurred. */
 INTERN WUNUSED ATTR_INS(3, 4) NONNULL((1, 2)) int DFCALL
@@ -999,9 +999,9 @@ JITContext_Lookup(JITContext *__restrict self,
 	JITObjectTable *tab;
 	struct jit_object_entry *ent;
 	Dee_hash_t hash = Dee_HashUtf8(name, namelen);
-	switch (mode & LOOKUP_SYM_VMASK) {
+	switch (mode & JIT_LOOKUP_SYM_VMASK) {
 
-	case LOOKUP_SYM_VLOCAL:
+	case JIT_LOOKUP_SYM_VLOCAL:
 		/* Search for a local symbol. */
 		tab = JITContext_GetROLocals(self);
 		if (!tab)
@@ -1060,7 +1060,7 @@ set_object_entry:
 			                  sizeof(char)) == 0)
 				goto err_unknown_var;
 			if (JITContext_Lookup(self, (JITSymbol *)&lv, JIT_RTSYM_THIS,
-			                      COMPILER_STRLEN(JIT_RTSYM_THIS), LOOKUP_SYM_NORMAL))
+			                      COMPILER_STRLEN(JIT_RTSYM_THIS), JIT_LOOKUP_SYM_NORMAL))
 				goto err;
 			result->js_clsattrib.jc_obj = JITLValue_GetValue(&lv, self);
 			JITLValue_Fini(&lv);
@@ -1107,7 +1107,7 @@ set_object_entry:
 done:
 		return 0;
 
-	case LOOKUP_SYM_VGLOBAL:
+	case JIT_LOOKUP_SYM_VGLOBAL:
 set_global:
 #if 0
 		if (!self->jc_globals) {
@@ -1136,7 +1136,7 @@ set_global:
 
 		/* If we're not allowed to declare things, always
 		 * assume that this is referring to a global */
-		if (!(mode & LOOKUP_SYM_ALLOWDECL))
+		if (!(mode & JIT_LOOKUP_SYM_ALLOWDECL))
 			goto set_global;
 
 		/* While inside of the global scope, untyped
@@ -1156,7 +1156,7 @@ set_global:
 		}
 		break;
 	}
-	if unlikely(!(mode & LOOKUP_SYM_ALLOWDECL))
+	if unlikely(!(mode & JIT_LOOKUP_SYM_ALLOWDECL))
 		goto err_unknown_var;
 
 	/* Create a new local variable. */

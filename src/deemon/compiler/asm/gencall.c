@@ -26,12 +26,12 @@
 #include <deemon/bool.h>               /* DeeBool_Type */
 #include <deemon/class.h>              /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_GET, Dee_class_attribute */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject, DeeFunction_NewNoRefs, Dee_CODE_FTHISCALL */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
-#include <deemon/compiler/traits.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_one, code_compile_argrefs, current_assembler */
+#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current */
+#include <deemon/compiler/optimize.h>  /* ast_predict_type, ast_predict_type_noanno */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScope*, DeeClassScopeObject, DeeClassScope_Prev, DeeScopeObject, DeeScope_Type, SYMBOL_*, current_basescope, current_rootscope, current_scope, scope_lookup_str, symbol */
+#include <deemon/compiler/traits.h>    /* ast_chk_multiple_hasexpand */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/kwds.h>               /* DeeObject_IsKw, DeeType_IsKw */

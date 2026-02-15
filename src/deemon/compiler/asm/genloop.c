@@ -23,8 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/asm.h>                /* ASM_* */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, asm_*, ast_genasm, ast_genasm_asp, current_assembler */
+#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
 #include <deemon/type.h>               /* OPERATOR_ITER */
 
 #include <stddef.h> /* NULL */

@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>    /* ast, ast_*, loc_here */
+#include <deemon/compiler/lexer.h>  /* AST_PARSE_WASEXPR_NO, AST_PARSE_WASEXPR_YES, MODULE_CURRENT, ast_decode_unicode_string, ast_parse_postexpr, decref_parse_module_byname */
+#include <deemon/compiler/symbol.h> /* SYMBOL_*, ast_loc, current_rootscope, get_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol, symbol_addambig, symbol_fini */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDLOAD, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_SYMBOL_EQUALS, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/none.h>            /* Dee_None */

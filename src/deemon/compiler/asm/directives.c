@@ -24,11 +24,11 @@
 
 #include <deemon/asm.h>                /* DeeAsm_IsNoreturn */
 #include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F* */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, REL_HASSYM, R_DMN_*, UASM_INTEXPR_FHASSP, UASM_INTEXPR_FNORMAL, USER_ASM_FSTKINV, asm_*, current_assembler, ddi_checkpoint, ddi_newfile, uasm_*, user_assembler */
+#include <deemon/compiler/ast.h>       /* AST_CONSTEXPR, ast, ast_decref */
+#include <deemon/compiler/lexer.h>     /* ast_parse_expr */
+#include <deemon/compiler/optimize.h>  /* ast_optimize_all */
+#include <deemon/compiler/symbol.h>    /* LOOKUP_SYM_NORMAL, current_basescope, scope_pop, scope_push */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */

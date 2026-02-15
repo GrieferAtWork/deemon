@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
 #include <deemon/code.h>            /* Dee_CODE_F* */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
+#include <deemon/compiler/lexer.h>  /* AST_ANNOTATION_FNOFUNC, AST_ANNOTATION_FNORMAL, ast_* */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF */
 #include <deemon/string.h>          /* DeeUni_IsLF, Dee_UNICODE_PRINTER_ISEMPTY, Dee_unicode_printer* */

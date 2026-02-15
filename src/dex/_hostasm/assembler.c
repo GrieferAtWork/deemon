@@ -84,12 +84,12 @@ STATIC_ASSERT((HOST_CC_F_KW | HOST_CC_F_TUPLE | HOST_CC_F_FUNC | HOST_CC_F_THIS)
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 basic_block_compile(struct basic_block *__restrict self,
-                    struct function_assembler *__restrict assembler) {
+                    struct function_assembler *__restrict fasm) {
 	int result;
 	struct fungen gen;
 	gen.fg_block     = self;
 	gen.fg_sect      = &self->bb_htext;
-	gen.fg_assembler = assembler;
+	gen.fg_assembler = fasm;
 	gen.fg_state     = self->bb_mem_start;
 	_fg_initcommon(&gen);
 	ASSERT(gen.fg_state);
@@ -106,7 +106,7 @@ basic_block_compile(struct basic_block *__restrict self,
 	memstate_decref(gen.fg_state);
 	ASSERT(gen.fg_block == self);
 	ASSERT(gen.fg_sect == &self->bb_htext);
-	ASSERT(gen.fg_assembler == assembler);
+	ASSERT(gen.fg_assembler == fasm);
 	return result;
 }
 
@@ -951,7 +951,7 @@ err_equiv:
 /* Append morphing code for `from_state' to `to_state' to `sect' */
 #undef assemble_morph
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-assemble_morph(struct function_assembler *__restrict assembler,
+assemble_morph(struct function_assembler *__restrict fasm,
                struct host_section *sect,
                struct memstate *from_state,
                struct basic_block *to_block
@@ -966,18 +966,18 @@ assemble_morph(struct function_assembler *__restrict assembler,
 	struct fungen gen;
 	ASSERT(to_block->bb_mem_start);
 	Dee_DPRINTF("fg_vmorph: %.4" PRFx32 " -> %.4" PRFx32 "\n",
-	            function_assembler_addrof(assembler, from_instr),
+	            function_assembler_addrof(fasm, from_instr),
 	            to_block->bb_deemon_start < to_block->bb_deemon_end
-	            ? function_assembler_addrof(assembler, to_block->bb_deemon_start)
+	            ? function_assembler_addrof(fasm, to_block->bb_deemon_start)
 	            : 0xffff);
 #ifndef NO_HOSTASM_DEBUG_PRINT
-	_memstate_debug_print(from_state, assembler, from_instr);
-	_memstate_debug_print(to_block->bb_mem_start, assembler,
+	_memstate_debug_print(from_state, fasm, from_instr);
+	_memstate_debug_print(to_block->bb_mem_start, fasm,
 	                      to_block->bb_deemon_start < to_block->bb_deemon_end
 	                      ? to_block->bb_deemon_start
 	                      : NULL);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
-	gen.fg_assembler = assembler;
+	gen.fg_assembler = fasm;
 	gen.fg_block     = to_block;
 	gen.fg_sect      = sect;
 	gen.fg_state     = from_state;
@@ -1626,45 +1626,45 @@ hostfunc_assemble(DeeFunctionObject *function,
                   DeeCodeObject *code,
                   struct hostfunc *__restrict result,
                   host_cc_t cc, uint16_t flags) {
-	struct function_assembler assembler;
-	function_assembler_init(&assembler, function, code, cc, flags);
+	struct function_assembler fasm;
+	function_assembler_init(&fasm, function, code, cc, flags);
 
 	/* Special case: deemon code that contains user-written deemon assembly
 	 *               requires special care to include some extra checks in
 	 *               generated host assembly. */
-	if unlikely(assembler.fa_code->co_flags & Dee_CODE_FASSEMBLY)
-		assembler.fa_flags |= FUNCTION_ASSEMBLER_F_SAFE;
+	if unlikely(fasm.fa_code->co_flags & Dee_CODE_FASSEMBLY)
+		fasm.fa_flags |= FUNCTION_ASSEMBLER_F_SAFE;
 
 #ifdef FUNCTION_ASSEMBLER_F_MCLARGE
 	/* TODO: Only enable by default on __PE__. On __ELF__, try to compile and
 	 *       link w/o, and only fall-back to enabling this if that fails. */
-	assembler.fa_flags |= FUNCTION_ASSEMBLER_F_MCLARGE;
+	fasm.fa_flags |= FUNCTION_ASSEMBLER_F_MCLARGE;
 #endif /* FUNCTION_ASSEMBLER_F_MCLARGE */
 
 	/* Go through all the steps of assembling the function. */
-	if unlikely(function_assembler_loadblocks(&assembler))
+	if unlikely(function_assembler_loadblocks(&fasm))
 		goto err_assembler;
-	if (!(assembler.fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
-		if unlikely(function_assembler_loadlocuse(&assembler))
+	if (!(fasm.fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
+		if unlikely(function_assembler_loadlocuse(&fasm))
 			goto err_assembler;
 	}
-	if unlikely(function_assembler_compileblocks(&assembler))
+	if unlikely(function_assembler_compileblocks(&fasm))
 		goto err_assembler;
-	if unlikely(function_assembler_trimdead(&assembler))
+	if unlikely(function_assembler_trimdead(&fasm))
 		goto err_assembler;
-	if unlikely(function_assembler_compilemorph(&assembler))
+	if unlikely(function_assembler_compilemorph(&fasm))
 		goto err_assembler;
-	if unlikely(function_assembler_ordersections(&assembler))
+	if unlikely(function_assembler_ordersections(&fasm))
 		goto err_assembler;
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
-	function_assembler_shrinkjumps(&assembler);
+	function_assembler_shrinkjumps(&fasm);
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
-	if unlikely(function_assembler_output(&assembler, result))
+	if unlikely(function_assembler_output(&fasm, result))
 		goto err_assembler;
-	function_assembler_fini(&assembler);
+	function_assembler_fini(&fasm);
 	return 0;
 err_assembler:
-	function_assembler_fini(&assembler);
+	function_assembler_fini(&fasm);
 /*err:*/
 	return -1;
 }

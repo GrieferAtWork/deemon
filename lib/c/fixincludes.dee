@@ -32,15 +32,15 @@
  * - wildcard exports line-based export annotations always work on a pool of symbols
  *   defined by the associated header file. This pool consists of:
  *   - All C macro definitions (#define foo)
- *   - A best-effort scan of what are probably "symbol" names:
- *     >> int symbol(void);
- *     >> int symbol;
- *     >> int (symbol);
- *     >> int (symbol)(void);
- *     >> int (CC symbol)(void);
- *     >> int CC symbol(void);
- *     >> struct symbol;
- *     >> struct symbol { ... };
+ *   - A best-effort scan of what are probably "sym" names:
+ *     >> int sym(void);
+ *     >> int sym;
+ *     >> int (sym);
+ *     >> int (sym)(void);
+ *     >> int (CC sym)(void);
+ *     >> int CC sym(void);
+ *     >> struct sym;
+ *     >> struct sym { ... };
  *     None of these match when inside of a {...}-block (iow: when inside of an inline function)
  *
  *

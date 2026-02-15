@@ -417,13 +417,13 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 
 		/* Check if this star-import exposes the required attribute. */
 		if (DeeModule_Check(module_or_object)) {
-			struct Dee_module_symbol *symbol;
-			symbol = DeeModule_GetSymbolStringLenHash((DeeModuleObject *)module_or_object,
-			                                          namestr, namelen, namehsh);
-			if (symbol) {
+			struct Dee_module_symbol *sym;
+			sym = DeeModule_GetSymbolStringLenHash((DeeModuleObject *)module_or_object,
+			                                       namestr, namelen, namehsh);
+			if (sym) {
 				/* Found it! */
 				if (p_mod_symbol)
-					*p_mod_symbol = symbol;
+					*p_mod_symbol = sym;
 				return_reference_(module_or_object);
 			}
 		} else {

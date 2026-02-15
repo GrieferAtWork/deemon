@@ -22,10 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_set, current_assembler */
+#include <deemon/compiler/ast.h>       /* ast */
+#include <deemon/compiler/symbol.h>    /* DeeScopeObject, SYMBOL_*, current_basescope, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>             /* PRFu16 */
 #include <deemon/module.h>             /* DeeModuleObject */

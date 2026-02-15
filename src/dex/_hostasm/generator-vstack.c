@@ -3553,14 +3553,14 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vpush_mod_global(struct fungen *__restrict self,
                     struct Dee_module_object *mod, uint16_t gid, bool ref) {
 	struct memloc *loc;
-	struct Dee_module_symbol *symbol;
+	struct Dee_module_symbol *sym;
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
-	symbol = DeeModule_GetSymbolID(mod, gid);
-	ASSERT(!symbol || Dee_module_symbol_getindex(symbol) == gid);
+	sym = DeeModule_GetSymbolID(mod, gid);
+	ASSERT(!sym || Dee_module_symbol_getindex(sym) == gid);
 	/* Global object references can be inlined if they are `final' and bound */
-	if (((symbol == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
-	     (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&
+	if (((sym == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
+	     (sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&
 	    !(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOROINLINE)) {
 		DeeObject *current_value;
 		DeeModule_LockRead(mod);
@@ -3617,14 +3617,14 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vbound_mod_global(struct fungen *__restrict self,
                      struct Dee_module_object *mod, uint16_t gid) {
 	struct memval *mval;
-	struct Dee_module_symbol *symbol;
+	struct Dee_module_symbol *sym;
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
-	symbol = DeeModule_GetSymbolID(mod, gid);
-	ASSERT(!symbol || Dee_module_symbol_getindex(symbol) == gid);
+	sym = DeeModule_GetSymbolID(mod, gid);
+	ASSERT(!sym || Dee_module_symbol_getindex(sym) == gid);
 	/* If the symbol is read-only and bound, then we know it can't be unbound */
-	if (((symbol == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
-	     (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&
+	if (((sym == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
+	     (sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&
 	    !(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOROINLINE)) {
 		DeeObject *current_value = atomic_read(&mod->mo_globalv[gid]);
 		if (current_value != NULL)

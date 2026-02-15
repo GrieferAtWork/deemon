@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* Dee_Mallocc */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_incref, ast_xincref, catch_expr, class_member */
+#include <deemon/compiler/optimize.h> /* ast_fini_contents */
+#include <deemon/compiler/symbol.h>   /* SYMBOL_*, ast_loc */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>            /* DREF, Dee_Decref, Dee_Incref */
 #include <deemon/system-features.h>   /* bzero, memcpy */

@@ -23,8 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/interface.h>
+#include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN_NOINT, COMPILER_END, DeeCompiler*, Dee_COMPILER_ITEM_HASH, Dee_compiler_items* */
+#include <deemon/compiler/interface.h> /* DR_Compiler, DeeCompilerWrapper_Members, DeeCompilerWrapper_Visit */
 #include <deemon/error.h>              /* DeeError_ReferenceError, DeeError_Throwf */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_InstanceOfExact, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_visit_t, OBJECT_HEAD_INIT */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */

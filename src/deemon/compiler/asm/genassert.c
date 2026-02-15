@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/asm.h>                /* ASM_*, instruction_t */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/assembler.h> /* ASM_FNOASSERT, ASM_G_FPUSHRES, SECTION_COLD, asm_*, ast_genasm, ast_genasm_one, current_assembler */
+#include <deemon/compiler/ast.h>       /* AST_*, ast */
+#include <deemon/compiler/optimize.h>  /* ast_predict_type_noanno */
 #include <deemon/kwds.h>               /* DeeType_IsKw */
 #include <deemon/module.h>             /* DeeModule_GetDeemon */
 #include <deemon/object.h>             /* DeeTypeObject */

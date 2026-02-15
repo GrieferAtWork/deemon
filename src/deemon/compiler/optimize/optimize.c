@@ -24,10 +24,11 @@
 
 #include <deemon/alloc.h>              /* Dee_Free, Dee_Mallocc */
 #include <deemon/bool.h>               /* DeeBool_For, DeeBool_Type */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_FNODEC */
+#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, asm_operand, ast, ast_constexpr, ast_decref_likely */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current */
+#include <deemon/compiler/optimize.h>  /* CONFIG_HAVE_OPTIMIZE_VERBOSE, OPTIMIZE_*, ast_* */
+#include <deemon/compiler/symbol.h>    /* DeeScopeObject, DeeScope_Type, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, Dee_Decref, Dee_Incref */

@@ -25,9 +25,9 @@
 
 #include <deemon/alloc.h>              /* Dee_Callocc, Dee_Free, Dee_TryReallocc */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_Type */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_FNODEC */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_LockWriting */
+#include <deemon/compiler/symbol.h>    /* DeeRootScope_Type, current_rootscope */
 #include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free */
 #include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_object, Dee_module_symbol */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD_INIT */
@@ -41,7 +41,7 @@
 #include <hybrid/int128.h> /* __hybrid_uint128_set64 */
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/compiler/dec.h>
+#include <deemon/compiler/dec.h> /* dec_create */
 #include <deemon/error.h>        /* DeeError_Catch, DeeError_NotImplemented */
 #endif /* !CONFIG_NO_DEC */
 /**/

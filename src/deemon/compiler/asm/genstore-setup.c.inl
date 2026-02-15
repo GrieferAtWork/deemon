@@ -24,10 +24,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, asm_*, ast_genasm, ast_genasm_one, current_assembler */
+#include <deemon/compiler/ast.h>       /* AST_*, ast */
+#include <deemon/compiler/symbol.h>    /* SYMBOL_*, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check */

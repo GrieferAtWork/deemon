@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/ast.h>      /* AST_FLOOP_FOREACH, AST_FLOOP_POSTCOND, ast, ast_decref */
+#include <deemon/compiler/optimize.h> /* OPTIMIZE_FASSUME, OPTIMIZE_VERBOSE, ast_*, optimizer_* */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

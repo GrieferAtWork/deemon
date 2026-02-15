@@ -30,11 +30,11 @@
 #include <deemon/alloc.h>              /* Dee_CollectMemoryoc, Dee_Free, Dee_Freea, Dee_Mallocac, Dee_TryMallocc */
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/code.h>               /* DeeCodeObject, DeeFunctionObject */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/error.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/assembler.h> /* ASM_* */
+#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler_LockEndWrite, DeeCompiler_LockWriteNoInt */
+#include <deemon/compiler/error.h>     /* PARSE_FNORMAL, current_parser_errors, parser_* */
+#include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, PARSE_FNORMAL */
+#include <deemon/compiler/optimize.h>  /* OPTIMIZE_F* */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeAppExit_Exitcode, DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_HANDLED_RESTORE, ERROR_PRINT_HANDLEINTR */
 #include <deemon/error_types.h>        /* Dee_compiler_error_object */
@@ -66,7 +66,7 @@
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-#include <deemon/compiler/dec.h>
+#include <deemon/compiler/dec.h> /* DEC_WRITE_F* */
 #include <deemon/list.h>         /* DeeListObject, DeeList_Append */
 #include <deemon/none.h>         /* DeeNone_Check */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */

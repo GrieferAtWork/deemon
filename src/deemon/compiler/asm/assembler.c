@@ -26,9 +26,9 @@
 #include <deemon/alloc.h>              /* DeeDbgSlab_MALLOC, DeeObject_Free, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC, Dee_*alloc*, Dee_CollectMemory*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/asm.h>                /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_NextInstr, instruction_t */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, Dee_CODE_*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_code_init, code_addr_t, code_size_t, instruction_t */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER, DeeRelIntObject, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, REL_HASSYM, R_DMN_*, SECTION_*, asm_*, assembler, ast_genasm, ast_genasm_one, ddi_*, handler_frame, userassembler_fini, userassembler_init */
+#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeRootScope_Type, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, new_unnamed_symbol_in_scope, symbol, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */

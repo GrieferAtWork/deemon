@@ -288,7 +288,7 @@ fail:
 /* Initialize host function unwind data. */
 INTERN NONNULL((1, 2, 3, 4)) void DCALL
 hostfunc_unwind_init(struct hostfunc_unwind *__restrict self,
-                     struct function_assembler *__restrict assembler,
+                     struct function_assembler *__restrict fasm,
                      byte_t *start_of_text, byte_t *end_of_text) {
 	BOOLEAN bAddOk;
 	struct host_unwind_ms64_writer writer;
@@ -307,7 +307,7 @@ hostfunc_unwind_init(struct hostfunc_unwind *__restrict self,
 	writer.humw_RUNTIME_FUNCTION = (byte_t *)CEIL_ALIGN((uintptr_t)end_of_text, HOST_SIZEOF_POINTER);
 	pFunctionTable = (NT_RUNTIME_FUNCTION *)writer.humw_RUNTIME_FUNCTION;
 	num_functions = 0;
-	TAILQ_FOREACH (sect, &assembler->fa_sections, hs_link) {
+	TAILQ_FOREACH (sect, &fasm->fa_sections, hs_link) {
 		num_functions += sect->hs_unwind.hu_unwindc;
 		if (host_section_size(sect) && sect->hs_unwind.hu_currsp != 0)
 			++num_functions;
@@ -320,7 +320,7 @@ hostfunc_unwind_init(struct hostfunc_unwind *__restrict self,
 	writer.humw_UNWIND_INFO = writer.humw_RUNTIME_FUNCTION + (num_functions * sizeof(NT_RUNTIME_FUNCTION));
 	writer.humw_last_EndAddress = NULL;
 	writer.humw_function_count = 0;
-	TAILQ_FOREACH (sect, &assembler->fa_sections, hs_link)
+	TAILQ_FOREACH (sect, &fasm->fa_sections, hs_link)
 		host_unwind_ms64_writer_writesect(&writer, sect);
 
 	/* Register the function table with NT. */

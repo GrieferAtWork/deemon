@@ -24,11 +24,10 @@
 
 #include <deemon/alloc.h>              /* DeeObject_Free, Dee_Callocc, Dee_Free, Dee_TryReallococ */
 #include <deemon/code.h>               /* Dee_CODE_FASSEMBLY, Dee_CODE_FYIELDING, code_addr_t, instruction_t */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/error.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, INVOKE_FPREFIX, INVOKE_FPUSH, OPERAND_CLASS_*, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, R_DMN_*, USERLABEL_PREFIX, USER_ASM_FSTKINV, asm_*, ast_genasm, ast_genasm_one, current_assembler, current_userasm, uasm_parse */
+#include <deemon/compiler/ast.h>       /* AST_*, asm_operand, ast */
+#include <deemon/compiler/error.h>     /* BEGIN_PARSER_CALLBACK, END_PARSER_CALLBACK, parser_rethrow, parser_start */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScope*, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, current_scope, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/object.h>             /* DeeObject_Foreach, DeeObject_Size, Dee_Decref, Dee_Incref, Dee_XDecref */

@@ -101,7 +101,7 @@ parse_current_token_as_template_string:
 
 			/* Parse an expression at this position. */
 			JITLexer_YieldAt(self, text_iter);
-			expr = CALL_PRIMARYF(Expression, LOOKUP_SYM_NORMAL);
+			expr = CALL_PRIMARYF(Expression, JIT_LOOKUP_SYM_NORMAL);
 			if unlikely(ISERR(expr))
 				goto err;
 			LOAD_LVALUE(expr, err);

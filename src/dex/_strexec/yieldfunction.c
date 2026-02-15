@@ -1157,8 +1157,8 @@ parse_else_after_if:
 				if (self->ji_lex.jl_tok == ';')
 					goto do_normal_for_noinit;
 				result = JITLexer_EvalComma(&self->ji_lex,
-				                            AST_COMMA_NORMAL |
-				                            AST_COMMA_ALLOWVARDECLS,
+				                            JIT_AST_COMMA_NORMAL |
+				                            JIT_AST_COMMA_ALLOWVARDECLS,
 				                            NULL,
 				                            NULL);
 				if unlikely(!result)
@@ -1457,8 +1457,8 @@ err_obj_scope:
 				}
 				JITContext_PushScope(&self->ji_ctx);
 				result = JITLexer_EvalComma(&self->ji_lex,
-				                            AST_COMMA_NORMAL |
-				                            AST_COMMA_ALLOWVARDECLS,
+				                            JIT_AST_COMMA_NORMAL |
+				                            JIT_AST_COMMA_ALLOWVARDECLS,
 				                            NULL,
 				                            NULL);
 				if unlikely(!result)

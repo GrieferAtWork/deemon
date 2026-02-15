@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Reallocc, Dee_TryReallocc */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_* */
+#include <deemon/compiler/lexer.h>  /* AST_COMMA_*, ast_parse_comma, ast_parse_expr */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL */
 #include <deemon/compiler/tpp.h>
 #include <deemon/kwds.h>            /* DeeKwds_AppendStringLen, DeeKwds_NewWithHint */
 #include <deemon/object.h>          /* DREF, DeeObject, Dee_DecrefNokill, Dee_Decref_unlikely */

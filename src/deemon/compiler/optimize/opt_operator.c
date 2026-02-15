@@ -24,8 +24,8 @@
 
 #include <deemon/arg.h>               /* DeeArg_UnpackStruct */
 #include <deemon/bytes.h>             /* DeeBytes_Check */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
+#include <deemon/compiler/optimize.h> /* CONFIG_HAVE_OPTIMIZE_VERBOSE, CONSTEXPR_*, OPTIMIZE_*, allow_constexpr, ast_*, has_cast_constructor, optimizer_count */
 #include <deemon/dict.h>              /* DeeDict_Type */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/hashset.h>           /* DeeHashSet_Type */

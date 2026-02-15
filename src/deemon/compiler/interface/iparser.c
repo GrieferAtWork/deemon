@@ -25,10 +25,11 @@
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
 #include <deemon/bool.h>               /* DeeBool_For */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/interface.h>
-#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/ast.h>       /* AST_FMULTIPLE_KEEPLAST, ast, ast_decref_unlikely, ast_incref */
+#include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompilerWrapperObject, DeeCompilerWrapper_Type */
+#include <deemon/compiler/interface.h> /* DR_CLexer, DeeCompiler*, err_invalid_ast_basescope, err_invalid_ast_compiler, get_token_from_obj */
+#include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, TOKEN_IS_*, ast_parse_*, parser_flags */
+#include <deemon/compiler/symbol.h>    /* current_basescope */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_Bool, DeeTypeObject, Dee_AsObject, Dee_Incref, OBJECT_HEAD_INIT */

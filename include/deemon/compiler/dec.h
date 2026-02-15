@@ -17,8 +17,13 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export DECREL_**/
+/*!export DEC_SECTION_**/
+/*!export DEC_WRITE_F**/
+/*!export dec_**/
 #ifndef GUARD_DEEMON_COMPILER_DEC_H
-#define GUARD_DEEMON_COMPILER_DEC_H 1
+#define GUARD_DEEMON_COMPILER_DEC_H 1 /*!export-*/
 
 #include "../api.h"
 

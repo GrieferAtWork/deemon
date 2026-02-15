@@ -24,9 +24,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>             /* DeeObject_*alloc*, DeeObject_Free, Dee_Alloca, Dee_Free, Dee_Try*alloc* */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* loc_here */
+#include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem */
+#include <deemon/compiler/symbol.h>   /* ast_loc */
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>              /* DeeModule_GetLibPath, DeeModule_GetPath */
 #include <deemon/file.h>              /* DeeFileObject, DeeFile_*, Dee_FILEIO_FNONBLOCKING, Dee_STDOUT, OPEN_FCLOEXEC, OPEN_FRDONLY */

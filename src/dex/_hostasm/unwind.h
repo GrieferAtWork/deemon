@@ -149,7 +149,7 @@ struct hostfunc_unwind {
 /* Initialize host function unwind data. */
 INTDEF NONNULL((1, 2, 3, 4)) void DCALL
 hostfunc_unwind_init(struct hostfunc_unwind *__restrict self,
-                     struct function_assembler *__restrict assembler,
+                     struct function_assembler *__restrict fasm,
                      byte_t *start_of_text, byte_t *end_of_text);
 
 /* Finalize host function unwind data. */

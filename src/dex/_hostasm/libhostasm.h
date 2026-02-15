@@ -201,8 +201,8 @@ struct memequiv;
 struct memequivs;
 INTDEF NONNULL((1)) void DCALL
 _memstate_debug_print(struct memstate const *__restrict self,
-                          struct function_assembler *assembler,
-                          Dee_instruction_t const *instr);
+                      struct function_assembler *fasm,
+                      Dee_instruction_t const *instr);
 INTDEF NONNULL((1)) void DCALL _memadr_debug_print(struct memadr const *__restrict self, ptrdiff_t val_delta);
 INTDEF NONNULL((1)) void DCALL _memloc_debug_print(struct memloc const *__restrict self);
 INTDEF NONNULL((1)) void DCALL _memobj_debug_print(struct memobj const *__restrict self, bool is_local, bool noref);

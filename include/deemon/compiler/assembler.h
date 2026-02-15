@@ -17,8 +17,27 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export ASM_**/
+/*!export DeeRelInt**/
+/*!export INSTRUCTION_EFFECT_**/
+/*!export INVOKE_F**/
+/*!export OPERAND_CLASS_**/
+/*!export PRINT_MODE_**/
+/*!export RELINT_MODE_**/
+/*!export R_DMN_**/
+/*!export SECTION_**/
+/*!export USER_ASM_F**/
+/*!export asm_**/
+/*!export asm_g**/
+/*!export asm_put**/
+/*!export assembler**/
+/*!export ast_gen_**/
+/*!export ast_genasm**/
+/*!export ddi_**/
+/*!export uasm_**/
 #ifndef GUARD_DEEMON_COMPILER_ASSEMBLER_H
-#define GUARD_DEEMON_COMPILER_ASSEMBLER_H 1
+#define GUARD_DEEMON_COMPILER_ASSEMBLER_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -31,8 +50,8 @@
 #include "../pair.h"  /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #include "../type.h"  /* Dee_operator_t */
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_ssize_t, OBJECT_HEAD */
-#include "ast.h"
-#include "symbol.h"
+#include "ast.h"      /* asm_operand, ast */
+#include "symbol.h"   /* DeeScopeObject, SYMBOL_MAY_REFERENCE, SYMBOL_MUST_REFERENCE, ast_loc, symbol, symbol_reachable */
 #include "tpp.h"
 
 #include <stdbool.h> /* bool */
@@ -390,9 +409,9 @@ struct asm_invoke_operand {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define io_symid   _dee_aunion.io_symid
-#define io_extern  _dee_aunion.io_extern
-#define io_intexpr _dee_aunion.io_intexpr
+#define io_symid   _dee_aunion.io_symid   /*!export-*/
+#define io_extern  _dee_aunion.io_extern  /*!export-*/
+#define io_intexpr _dee_aunion.io_intexpr /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -1088,10 +1107,10 @@ asm_ssymid_for_read(struct symbol *__restrict sym, /* `SYM_CLASS_VAR:SYM_FVAR_ST
 
 
 #ifndef UINT8_MAX
-#define UINT8_MAX 0xff
+#define UINT8_MAX 0xff /*!export-*/
 #endif /* !UINT8_MAX */
 #ifndef INT8_MAX
-#define INT8_MAX  127
+#define INT8_MAX  127 /*!export-*/
 #endif /* !INT8_MAX */
 
 #define asm_put816(op, imm816)            \
@@ -1803,10 +1822,10 @@ struct register_effect {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define re_index  _dee_aunion.re_index
-#define re_stack  _dee_aunion.re_stack
-#define re_extern _dee_aunion.re_extern
-#define re_misc   _dee_aunion.re_misc
+#define re_index  _dee_aunion.re_index  /*!export-*/
+#define re_stack  _dee_aunion.re_stack  /*!export-*/
+#define re_extern _dee_aunion.re_extern /*!export-*/
+#define re_misc   _dee_aunion.re_misc   /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };

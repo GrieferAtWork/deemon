@@ -78,33 +78,33 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 	struct Dee_objectlist expr_batch = Dee_OBJECTLIST_INIT;    /* Expressions that have already been written to. */
 	JITLValueList expr_comma         = JITLVALUELIST_INIT; /* Expressions that are pending getting assigned. */
 #endif /* JIT_EVAL */
-#if AST_COMMA_ALLOWVARDECLS == LOOKUP_SYM_ALLOWDECL
-	lookup_mode = mode & AST_COMMA_ALLOWVARDECLS;
-#else /* AST_COMMA_ALLOWVARDECLS == LOOKUP_SYM_ALLOWDECL */
-	lookup_mode = ((mode & AST_COMMA_ALLOWVARDECLS)
-	               ? LOOKUP_SYM_ALLOWDECL
-	               : LOOKUP_SYM_NORMAL);
-#endif /* AST_COMMA_ALLOWVARDECLS != LOOKUP_SYM_ALLOWDECL */
+#if JIT_AST_COMMA_ALLOWVARDECLS == JIT_LOOKUP_SYM_ALLOWDECL
+	lookup_mode = mode & JIT_AST_COMMA_ALLOWVARDECLS;
+#else /* JIT_AST_COMMA_ALLOWVARDECLS == JIT_LOOKUP_SYM_ALLOWDECL */
+	lookup_mode = ((mode & JIT_AST_COMMA_ALLOWVARDECLS)
+	               ? JIT_LOOKUP_SYM_ALLOWDECL
+	               : JIT_LOOKUP_SYM_NORMAL);
+#endif /* JIT_AST_COMMA_ALLOWVARDECLS != JIT_LOOKUP_SYM_ALLOWDECL */
 
 	/* Allow explicit visibility modifiers when variable can be declared. */
-	if (mode & AST_COMMA_ALLOWVARDECLS) {
+	if (mode & JIT_AST_COMMA_ALLOWVARDECLS) {
 		if unlikely(JITLexer_ParseLookupMode(self, &lookup_mode))
 			goto err;
 	}
 
 next_expr:
-	need_semi = !!(mode & AST_COMMA_PARSESEMI);
+	need_semi = !!(mode & JIT_AST_COMMA_PARSESEMI);
 
 	/* Parse an expression (special handling for functions/classes) */
 	if (self->jl_tok == JIT_KEYWORD && JITLexer_ISTOK(self, "class")) {
 		/* Declare a new class */
 #ifdef JIT_EVAL
 		uint16_t tp_flags = TP_FNORMAL;
-		if (lookup_mode & LOOKUP_SYM_FINAL)
+		if (lookup_mode & JIT_LOOKUP_SYM_FINAL)
 			tp_flags = TP_FFINAL;
 #endif /* JIT_EVAL */
 		JITLexer_Yield(self);
-		if (JITLexer_ISKWD(self, "final") && !(lookup_mode & LOOKUP_SYM_FINAL)) {
+		if (JITLexer_ISKWD(self, "final") && !(lookup_mode & JIT_LOOKUP_SYM_FINAL)) {
 #ifdef JIT_EVAL
 			tp_flags |= TP_FFINAL;
 #endif /* JIT_EVAL */
@@ -134,12 +134,12 @@ next_expr:
 		JITLexer_Yield(self);
 		if (self->jl_tok == JIT_KEYWORD) {
 			unsigned int symbol_mode = lookup_mode;
-			if ((symbol_mode & LOOKUP_SYM_VMASK) == LOOKUP_SYM_VDEFAULT) {
+			if ((symbol_mode & JIT_LOOKUP_SYM_VMASK) == JIT_LOOKUP_SYM_VDEFAULT) {
 				/* Use the default mode appropriate for the current scope. */
 				if (JITContext_IsGlobalScope(self->jl_context)) {
-					symbol_mode |= LOOKUP_SYM_VGLOBAL;
+					symbol_mode |= JIT_LOOKUP_SYM_VGLOBAL;
 				} else {
-					symbol_mode |= LOOKUP_SYM_VLOCAL;
+					symbol_mode |= JIT_LOOKUP_SYM_VLOCAL;
 				}
 			}
 
@@ -279,7 +279,7 @@ err_var_symbol:
 		JITSymbol_Fini(&var_symbol);
 #endif /* JIT_EVAL */
 	} else {
-		if (mode & AST_COMMA_ALLOWKWDLIST) {
+		if (mode & JIT_AST_COMMA_ALLOWKWDLIST) {
 			if (self->jl_tok == JIT_KEYWORD) {
 				/* If the next token is a `:', then we're currently at a keyword list label,
 				 * in which case we're supposed to stop and let the caller deal with this. */
@@ -296,8 +296,8 @@ err_var_symbol:
 		/* Check for errors. */
 		if (ISERR(current))
 			goto err;
-		if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) && self->jl_tok == JIT_KEYWORD &&
-		    (!(mode & AST_COMMA_NOSUFFIXKWD) /* TODO: || !is_reserved_symbol_name(token.t_kwd)*/)) {
+		if ((lookup_mode & JIT_LOOKUP_SYM_ALLOWDECL) && self->jl_tok == JIT_KEYWORD &&
+		    (!(mode & JIT_AST_COMMA_NOSUFFIXKWD) /* TODO: || !is_reserved_symbol_name(token.t_kwd)*/)) {
 			/* C-style variable declarations. */
 			RETURN_TYPE args;
 #ifdef JIT_EVAL
@@ -306,9 +306,9 @@ err_var_symbol:
 				unsigned int used_lookup_mode;
 				used_lookup_mode = lookup_mode;
 				LOAD_LVALUE(current, err);
-				if (!(lookup_mode & LOOKUP_SYM_VMASK) &&
+				if (!(lookup_mode & JIT_LOOKUP_SYM_VMASK) &&
 				    JITContext_IsGlobalScope(self->jl_context))
-					used_lookup_mode |= LOOKUP_SYM_VGLOBAL;
+					used_lookup_mode |= JIT_LOOKUP_SYM_VGLOBAL;
 				if (JITContext_Lookup(self->jl_context,
 				                      &var_symbol,
 				                      JITLexer_TokPtr(self),
@@ -343,7 +343,7 @@ err_var_symbol:
 					JITLexer_Yield(self);
 
 				/* Parse a preferred-type brace expression. */
-				args = CALL_PRIMARYF(Expression, LOOKUP_SYM_NORMAL);
+				args = CALL_PRIMARYF(Expression, JIT_LOOKUP_SYM_NORMAL);
 				if (ISERR(args)) {
 err_currrent_var_symbol:
 #ifdef JIT_EVAL
@@ -373,9 +373,9 @@ err_currrent_var_symbol:
 #endif /* JIT_EVAL */
 				} else {
 #ifdef JIT_EVAL
-					args = JITLexer_EvalComma(self, AST_COMMA_FORCEMULTIPLE, &DeeTuple_Type, NULL);
+					args = JITLexer_EvalComma(self, JIT_AST_COMMA_FORCEMULTIPLE, &DeeTuple_Type, NULL);
 #else /* JIT_EVAL */
-					args = JITLexer_SkipComma(self, AST_COMMA_FORCEMULTIPLE, NULL);
+					args = JITLexer_SkipComma(self, JIT_AST_COMMA_FORCEMULTIPLE, NULL);
 #endif /* !JIT_EVAL */
 					if (ISERR(args))
 						goto err_currrent_var_symbol;
@@ -413,7 +413,7 @@ err_currrent_var_symbol:
 #endif /* JIT_EVAL */
 		} else {
 			/* Skip over type annotations. */
-			if ((self->jl_tok == ':') && (mode & AST_COMMA_ALLOWTYPEDECL)
+			if ((self->jl_tok == ':') && (mode & JIT_AST_COMMA_ALLOWTYPEDECL)
 			    IF_EVAL(&& current == JIT_LVALUE
 			            && JITLValue_IsSymbol(&self->jl_lvalue))) {
 				JITLexer_Yield(self);
@@ -427,7 +427,7 @@ err_currrent_var_symbol:
 		/* Expand expression (append everything from `current' to the resulting expression) */
 		JITLexer_Yield(self);
 		if (p_out_mode)
-			*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
+			*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;
 #ifdef JIT_EVAL
 		LOAD_LVALUE(current, err);
 		if (expr_comma.ll_size) {
@@ -445,8 +445,8 @@ err_currrent_var_symbol:
 		goto continue_expression_after_dots;
 	}
 
-	if (self->jl_tok == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
-		if (mode & AST_COMMA_STRICTCOMMA) {
+	if (self->jl_tok == ',' && !(mode & JIT_AST_COMMA_PARSESINGLE)) {
+		if (mode & JIT_AST_COMMA_STRICTCOMMA) {
 			/* Peek the next token to check if it might be an expression. */
 			memcpy(&smlex, self, sizeof(JITSmallLexer));
 			JITLexer_Yield((JITLexer *)&smlex);
@@ -454,7 +454,7 @@ err_currrent_var_symbol:
 				goto done_expression;
 		}
 		if (p_out_mode)
-			*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
+			*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;
 
 			/* Append to the current comma-sequence. */
 #ifdef JIT_EVAL
@@ -534,14 +534,14 @@ continue_at_comma:
 			 * otherwise try to consume a trailing ';'-character. */
 #ifdef JIT_EVAL
 			store_source = JITLexer_EvalComma(self,
-			                                  AST_COMMA_PARSESINGLE |
-			                                  (mode & AST_COMMA_STRICTCOMMA),
+			                                  JIT_AST_COMMA_PARSESINGLE |
+			                                  (mode & JIT_AST_COMMA_STRICTCOMMA),
 			                                  NULL,
 			                                  &store_source_mode);
 #else /* JIT_EVAL */
 			store_source = JITLexer_SkipComma(self,
-			                                  AST_COMMA_PARSESINGLE |
-			                                  (mode & AST_COMMA_STRICTCOMMA),
+			                                  JIT_AST_COMMA_PARSESINGLE |
+			                                  (mode & JIT_AST_COMMA_STRICTCOMMA),
 			                                  &store_source_mode);
 #endif /* !JIT_EVAL */
 		}
@@ -553,7 +553,7 @@ err_current_lvalue:
 			goto err_current;
 		}
 		LOAD_LVALUE(store_source, err_current_lvalue);
-		need_semi = !!(mode & AST_COMMA_PARSESEMI);
+		need_semi = !!(mode & JIT_AST_COMMA_PARSESEMI);
 		/* Now everything depends on whether or not what
 		 * we've just parsed is an expand-expression:
 		 * >> a, b, c = get_value()...; // >> (((a, b, c) = get_value())...);
@@ -561,7 +561,7 @@ err_current_lvalue:
 		if (self->jl_tok == TOK_DOTS) {
 			/* Append the last expression (in the example above, that is `c') */
 			if (p_out_mode)
-				*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
+				*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;
 			JITLexer_Yield(self);
 #ifdef JIT_EVAL
 			if (current == JIT_LVALUE) {
@@ -620,9 +620,9 @@ continue_expression_after_dots:
 				JITLValueList_Fini(&expr_comma);
 
 				/* Check for further comma or store expressions. */
-				if (self->jl_tok == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
+				if (self->jl_tok == ',' && !(mode & JIT_AST_COMMA_PARSESINGLE)) {
 					JITLValueList_Init(&expr_comma);
-					if (!(mode & AST_COMMA_STRICTCOMMA))
+					if (!(mode & JIT_AST_COMMA_STRICTCOMMA))
 						goto set_multiple_and_continue_at_comma;
 					memcpy(&smlex, self, sizeof(JITSmallLexer));
 					JITLexer_Yield((JITLexer *)&smlex);
@@ -687,8 +687,8 @@ continue_expression_after_dots:
 		ASSERT(current != JIT_LVALUE);
 #endif /* JIT_EVAL */
 		/* Check for further comma or store expressions. */
-		if (self->jl_tok == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
-			if (!(mode & AST_COMMA_STRICTCOMMA)) {
+		if (self->jl_tok == ',' && !(mode & JIT_AST_COMMA_PARSESINGLE)) {
+			if (!(mode & JIT_AST_COMMA_STRICTCOMMA)) {
 				/* Append the generated expression to the batch. */
 #ifdef JIT_EVAL
 				error = Dee_objectlist_append(&expr_batch, current);
@@ -698,7 +698,7 @@ continue_expression_after_dots:
 set_multiple_and_continue_at_comma:
 #endif /* JIT_EVAL */
 				if (p_out_mode)
-					*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
+					*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;
 				goto continue_at_comma;
 			} else {
 				memcpy(&smlex, self, sizeof(JITSmallLexer));
@@ -712,7 +712,7 @@ set_multiple_and_continue_at_comma:
 set_multiple_and_continue_at_comma_continue:
 #endif /* JIT_EVAL */
 					if (p_out_mode)
-						*p_out_mode |= AST_COMMA_OUT_FMULTIPLE;
+						*p_out_mode |= JIT_AST_COMMA_OUT_FMULTIPLE;
 					goto continue_at_comma;
 				}
 			}
@@ -762,7 +762,7 @@ done_expression:
 	} else {
 		ASSERT(!expr_batch.ol_elemv);
 		ASSERT(!expr_comma.ll_list);
-		if (mode & AST_COMMA_FORCEMULTIPLE) {
+		if (mode & JIT_AST_COMMA_FORCEMULTIPLE) {
 			/* If the caller wants to force us to package
 			 * everything in a multi-branch, grant that wish. */
 			DREF DeeObject *merge;
@@ -785,7 +785,7 @@ done_expression:
 done_expression_nomerge:
 	if (p_out_mode) {
 		if (need_semi)
-			*p_out_mode |= AST_COMMA_OUT_FNEEDSEMI;
+			*p_out_mode |= JIT_AST_COMMA_OUT_FNEEDSEMI;
 	} else if (need_semi) {
 		/* Consume a `;' token as part of the expression. */
 		if likely(self->jl_tok == ';') {

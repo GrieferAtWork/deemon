@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/assembler.h>
+#include <deemon/compiler/assembler.h> /* ASM_MAX_INSTRUCTION_OPERANDS, ASM_MNEMONIC_MAXNAME */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uint16_t */

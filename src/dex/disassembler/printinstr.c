@@ -331,7 +331,7 @@ print_generic:
 
 PRIVATE Dee_ssize_t DCALL
 print_extern_symbol(Dee_formatprinter_t printer, void *arg,
-                    DeeModuleObject *mod, struct Dee_module_symbol *symbol,
+                    DeeModuleObject *mod, struct Dee_module_symbol *sym,
                     char const *suffix) {
 	Dee_ssize_t result, temp;
 	result = DeeFormat_PRINT(printer, arg, "extern " PREFIX_VARNAME);
@@ -342,9 +342,9 @@ print_extern_symbol(Dee_formatprinter_t printer, void *arg,
 		return temp;
 	result += temp;
 	if (suffix) {
-		temp = DeeFormat_Printf(printer, arg, ":" PREFIX_VARNAME "%s+%s", symbol->ss_name, suffix);
+		temp = DeeFormat_Printf(printer, arg, ":" PREFIX_VARNAME "%s+%s", sym->ss_name, suffix);
 	} else {
-		temp = DeeFormat_Printf(printer, arg, ":" PREFIX_VARNAME "%s", symbol->ss_name);
+		temp = DeeFormat_Printf(printer, arg, ":" PREFIX_VARNAME "%s", sym->ss_name);
 	}
 	if unlikely(temp < 0)
 		return temp;
@@ -357,7 +357,7 @@ libdisasm_printextern(Dee_formatprinter_t printer, void *arg,
                       uint16_t mid, uint16_t gid,
                       DeeCodeObject *code, unsigned int flags) {
 	if (code) {
-		struct Dee_module_symbol *symbol;
+		struct Dee_module_symbol *sym;
 		DeeModuleObject *module;
 		if (mid >= code->co_module->mo_importc) {
 			if (flags & PCODE_FNOBADCOMMENT)
@@ -382,19 +382,19 @@ libdisasm_printextern(Dee_formatprinter_t printer, void *arg,
 			result += temp;
 			return result;
 		}
-		symbol = DeeModule_GetSymbolID(module, gid);
-		if (symbol) {
-			char const *suffix = (symbol->ss_flags & Dee_MODSYM_FPROPERTY) ? "getter" : NULL;
-			return print_extern_symbol(printer, arg, module, symbol, suffix);
+		sym = DeeModule_GetSymbolID(module, gid);
+		if (sym) {
+			char const *suffix = (sym->ss_flags & Dee_MODSYM_FPROPERTY) ? "getter" : NULL;
+			return print_extern_symbol(printer, arg, module, sym, suffix);
 		}
 		if (gid >= Dee_MODULE_PROPERTY_DEL) {
-			symbol = DeeModule_GetSymbolID(module, gid - Dee_MODULE_PROPERTY_DEL);
-			if (symbol && (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY)
-				return print_extern_symbol(printer, arg, module, symbol, "delete");
+			sym = DeeModule_GetSymbolID(module, gid - Dee_MODULE_PROPERTY_DEL);
+			if (sym && (sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY)
+				return print_extern_symbol(printer, arg, module, sym, "delete");
 			if (gid >= Dee_MODULE_PROPERTY_SET) {
-				symbol = DeeModule_GetSymbolID(module, gid - Dee_MODULE_PROPERTY_SET);
-				if (symbol && (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY)
-					return print_extern_symbol(printer, arg, module, symbol, "setter");
+				sym = DeeModule_GetSymbolID(module, gid - Dee_MODULE_PROPERTY_SET);
+				if (sym && (sym->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY)) == Dee_MODSYM_FPROPERTY)
+					return print_extern_symbol(printer, arg, module, sym, "setter");
 			}
 		}
 		{

@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/bool.h>              /* DeeBool_For */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
+#include <deemon/compiler/optimize.h> /* AST_CONTAINS_GOTO_CONSIDER_ALL, AST_CONTAINS_GOTO_CONSIDER_NONE, CONSTEXPR_*, OPTIMIZE_F*, OPTIMIZE_VERBOSE, allow_constexpr, ast_*, optimizer_count, optimizer_flags */
+#include <deemon/compiler/symbol.h>   /* DeeScopeObject, SYMBOL_*, symbol, symbol_set_haseffect */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dec.h>               /* DEC_BUILTINID_UNKNOWN, Dec_BuiltinID */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */

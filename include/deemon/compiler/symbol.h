@@ -17,8 +17,27 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export BASESCOPE_F**/
+/*!export DAST_**/
+/*!export DeeBaseScope**/
+/*!export DeeClassScope**/
+/*!export LOOKUP_SYM_**/
+/*!export SYMBOL_ADD_N**/
+/*!export SYMBOL_SUB_N**/
+/*!export SYMBOL_DEC_N**/
+/*!export SYMBOL_INC_N**/
+/*!export SYMBOL_F**/
+/*!export SYMBOL_**/
+/*!export SYMBOL_MUST_REFERENCE**/
+/*!export SYMBOL_TYPE_**/
+/*!export basescope_**/
+/*!export decl_ast**/
+/*!export lookup_**/
+/*!export scope_**/
+/*!export symbol_**/
 #ifndef GUARD_DEEMON_COMPILER_SYMBOL_H
-#define GUARD_DEEMON_COMPILER_SYMBOL_H 1
+#define GUARD_DEEMON_COMPILER_SYMBOL_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -423,15 +442,15 @@ struct decl_ast {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define da_symbol _dee_aunion.da_symbol
-#define da_const  _dee_aunion.da_const
-#define da_alt    _dee_aunion.da_alt
-#define da_tuple  _dee_aunion.da_tuple
-#define da_seq    _dee_aunion.da_seq
-#define da_func   _dee_aunion.da_func
-#define da_attr   _dee_aunion.da_attr
-#define da_with   _dee_aunion.da_with
-#define da_string _dee_aunion.da_string
+#define da_symbol _dee_aunion.da_symbol /*!export-*/
+#define da_const  _dee_aunion.da_const  /*!export-*/
+#define da_alt    _dee_aunion.da_alt    /*!export-*/
+#define da_tuple  _dee_aunion.da_tuple  /*!export-*/
+#define da_seq    _dee_aunion.da_seq    /*!export-*/
+#define da_func   _dee_aunion.da_func   /*!export-*/
+#define da_attr   _dee_aunion.da_attr   /*!export-*/
+#define da_with   _dee_aunion.da_with   /*!export-*/
+#define da_string _dee_aunion.da_string /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -474,17 +493,17 @@ struct ast_loc {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define l_lc       _dee_aunion.l_lc
+#define l_lc       _dee_aunion.l_lc /*!export-*/
 #ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
-#define l_line     _dee_aunion.l_line
-#define l_col      _dee_aunion.l_col
+#define l_line     _dee_aunion.l_line /*!export-*/
+#define l_col      _dee_aunion.l_col  /*!export-*/
 #else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
-#define l_line     _dee_aunion._dee_astruct.l_line
-#define l_col      _dee_aunion._dee_astruct.l_col
+#define l_line     _dee_aunion._dee_astruct.l_line /*!export-*/
+#define l_col      _dee_aunion._dee_astruct.l_col  /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 #elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
-#define l_line     _dee_astruct.l_line
-#define l_col      _dee_astruct.l_col
+#define l_line     _dee_astruct.l_line /*!export-*/
+#define l_col      _dee_astruct.l_col  /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 	;
 #else /* CONFIG_BUILDING_DEEMON */
@@ -513,8 +532,8 @@ struct text_label {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define tl_expr _dee_aunion.tl_expr
-#define tl_name _dee_aunion.tl_name
+#define tl_expr _dee_aunion.tl_expr /*!export-*/
+#define tl_name _dee_aunion.tl_name /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 	struct asm_sym        *tl_asym; /* [0..1] Assembly symbol (lazily allocated) */
@@ -633,14 +652,14 @@ struct symbol {
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
-#define s_extern _dee_aunion.s_extern
-#define s_module _dee_aunion.s_module
-#define s_global _dee_aunion.s_global
-#define s_attr   _dee_aunion.s_attr
-#define s_getset _dee_aunion.s_getset
-#define s_alias  _dee_aunion.s_alias
-#define s_ambig  _dee_aunion.s_ambig
-#define s_const  _dee_aunion.s_const
+#define s_extern _dee_aunion.s_extern /*!export-*/
+#define s_module _dee_aunion.s_module /*!export-*/
+#define s_global _dee_aunion.s_global /*!export-*/
+#define s_attr   _dee_aunion.s_attr   /*!export-*/
+#define s_getset _dee_aunion.s_getset /*!export-*/
+#define s_alias  _dee_aunion.s_alias  /*!export-*/
+#define s_ambig  _dee_aunion.s_ambig  /*!export-*/
+#define s_const  _dee_aunion.s_const  /*!export-*/
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
@@ -665,6 +684,7 @@ SYMBOL_UNWIND_ALIAS(struct symbol *__restrict x) {
 			(x) = _priv_symbol_dounwind_alias(x); \
 	}	__WHILE0
 
+/*!export -_priv_symbol_**/
 FORCELOCAL ATTR_PURE WUNUSED NONNULL((1)) struct symbol *DCALL
 _priv_symbol_dounwind_alias(struct symbol *__restrict x) {
 	do {

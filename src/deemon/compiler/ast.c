@@ -24,10 +24,10 @@
 
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
 #include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* ASM_OPERAND_IS_INOUT, ASSERT_AST, ASSERT_AST_OPT, AST_*, CONFIG_NO_AST_DEBUG, PRIVATE_AST_GENERATOR_UNPACK_ARGS, asm_operand, ast, ast_*, catch_expr, class_member */
+#include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, DeeCompiler_LockReading */
+#include <deemon/compiler/lexer.h>    /* current_tags */
+#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, ast_loc, current_scope, symbol, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/map.h>               /* Dee_EmptyMapping */
 #include <deemon/none.h>              /* Dee_None */

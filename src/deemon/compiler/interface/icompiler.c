@@ -25,13 +25,13 @@
 #include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_UnpackStructKw */
 #include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_F* */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/error.h>
-#include <deemon/compiler/interface.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>       /* AST_*, CATCH_EXPR_FNORMAL, DeeAst_Type, ast, ast_*, catch_expr */
+#include <deemon/compiler/compiler.h>  /* COMPILER_*, DeeCompiler* */
+#include <deemon/compiler/error.h>     /* PARSE_FNORMAL, parser_errors_init */
+#include <deemon/compiler/interface.h> /* DeeCompiler*, err_compiler_item_deleted, err_different_base_scope, err_different_root_scope, err_invalid_ast_basescope, err_invalid_ast_compiler, err_invalid_scope_compiler, err_invalid_symbol_compiler, err_symbol_not_reachable, scope_reaches_symbol, set_astloc_from_obj */
+#include <deemon/compiler/lexer.h>     /* AST_OPERATOR_*, PARSE_FNORMAL */
+#include <deemon/compiler/optimize.h>  /* OPTIMIZE_FNORMAL */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScopeObject, DeeRootScope_Type, DeeScopeObject, SYMBOL_INC_N*, current_basescope, current_rootscope, current_scope */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */

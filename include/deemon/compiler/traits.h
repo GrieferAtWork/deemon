@@ -17,13 +17,15 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export ast_**/
 #ifndef GUARD_DEEMON_COMPILER_TRAITS_H
-#define GUARD_DEEMON_COMPILER_TRAITS_H 1
+#define GUARD_DEEMON_COMPILER_TRAITS_H 1 /*!export-*/
 
 #include "../api.h"
 
 #include "../types.h" /* DeeTypeObject */
-#include "ast.h"
+#include "ast.h"      /* ast */
 
 #include <stdbool.h> /* bool */
 

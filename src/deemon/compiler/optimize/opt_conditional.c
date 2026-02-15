@@ -24,8 +24,8 @@
 
 #include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
 #include <deemon/bool.h>              /* DeeBool_Check, DeeBool_IsTrue */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_* */
+#include <deemon/compiler/optimize.h> /* AST_DOESNT_RETURN_FNORMAL, OPTIMIZE_*, ast_*, optimizer_count, optimizer_flags */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Decref */
 #include <deemon/tuple.h>             /* DeeTuple_Pack */

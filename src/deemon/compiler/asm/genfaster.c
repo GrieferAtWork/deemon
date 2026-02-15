@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
+#include <deemon/compiler/assembler.h> /* asm_allowconst, asm_gpush_constexpr_inherited, ast_genasm */
+#include <deemon/compiler/ast.h>       /* AST_*, ast */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/hashset.h>            /* DeeHashSet_FromSequence, DeeHashSet_Type */

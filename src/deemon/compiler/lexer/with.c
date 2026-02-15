@@ -23,9 +23,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>    /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/lexer.h>  /* AST_COMMA_ALLOWVARDECLS, AST_COMMA_NORMAL, ast_parse_* */
+#include <deemon/compiler/symbol.h> /* LOOKUP_SYM_NORMAL, SYMBOL_TYPE_STACK, ast_loc, new_unnamed_symbol, scope_pop, scope_push, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/object.h>          /* DREF */
 #include <deemon/type.h>            /* OPERATOR_ENTER, OPERATOR_LEAVE */

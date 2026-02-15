@@ -25,11 +25,10 @@
 #include <deemon/asm.h>                /* ASM16_*, ASM_*, instruction_t */
 #include <deemon/bool.h>               /* DeeBool_Type */
 #include <deemon/code.h>               /* Dee_CODE_FVARARGS, Dee_CODE_FYIELDING, instruction_t */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, DeeRoSet_FromSequenceOrMappingForContains, PRINT_MODE_*, R_DMN_DISP8, SECTION_COLD, asm_*, ast_gen_*, ast_genasm*, ast_genprint, current_assembler */
+#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast, ast_isconstexpr */
+#include <deemon/compiler/optimize.h>  /* ast_* */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScope*, SYMBOL_*, current_basescope, current_rootscope, symbol, symbol_bnd_haseffect, symbol_get_haseffect, text_label, text_label_name */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */

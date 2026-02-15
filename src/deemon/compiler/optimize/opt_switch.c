@@ -22,8 +22,8 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/ast.h>      /* AST_SWITCH, ast */
+#include <deemon/compiler/optimize.h> /* OPTIMIZE_FASSUME, ast_*, optimizer_flags */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL */

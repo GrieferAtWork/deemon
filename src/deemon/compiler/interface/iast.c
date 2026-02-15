@@ -26,11 +26,11 @@
 #include <deemon/bool.h>               /* DeeBool_For */
 #include <deemon/class.h>              /* DeeClassDescriptorObject, DeeClassDescriptor_Check, Dee_CLASS_*, Dee_class_attribute, Dee_class_operator */
 #include <deemon/code.h>               /* Dee_CODE_F*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_EXCEPTION_HANDLER_FINTERPT */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/interface.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>       /* AST_*, asm_operand, ast, ast_*, catch_expr, class_member */
+#include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
+#include <deemon/compiler/interface.h> /* DR_*, DeeCompiler*, check_function_code_scope, get_action_by_name, get_action_name, get_ast_multiple_typing, get_operator_id, parse_conditional_flags, parse_loop_flags, parse_operator_flags, unpack_catch_expressions */
+#include <deemon/compiler/lexer.h>     /* AST_OPERATOR_* */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScopeObject, DeeScopeObject, SYMBOL_*, base_scope_object, scope_object, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error-rt.h>           /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_ErrRestrictedAttrCStr, DeeRT_ErrUnboundAttrCStr */

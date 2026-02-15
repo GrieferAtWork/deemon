@@ -24,12 +24,12 @@
 
 #include <deemon/alloc.h>              /* Dee_Callocc, Dee_CollectMemory, Dee_Free, Dee_TryCallocc */
 #include <deemon/asm.h>                /* ASM_* */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, INVOKE_FPREFIX, INVOKE_FPUSH, OPERAND_CLASS_*, UASM_INTEXPR_FHASSP, UASM_INTEXPR_FNORMAL, USERLABEL_PREFIX, USER_ASM_FSTKINV, asm_*, current_assembler, current_userasm, uasm_* */
+#include <deemon/compiler/ast.h>       /* AST_*, ast, ast_decref */
+#include <deemon/compiler/compiler.h>  /* DeeCompiler_Current */
+#include <deemon/compiler/lexer.h>     /* ast_parse_expr, import_module_symbol, parse_module_byname */
+#include <deemon/compiler/optimize.h>  /* ast_optimize_all */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScope_IsVarargs, DeeBaseScope_IsVarkwds, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_*, current_basescope, current_rootscope, current_scope, scope_*, symbol, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>              /* DeeError_CompilerError, DeeError_Throwf */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_GetShortName, Dee_module_symbol, Dee_module_symbol_getindex */

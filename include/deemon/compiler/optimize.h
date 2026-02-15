@@ -17,14 +17,25 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export AST_ASSUMES_F**/
+/*!export AST_CONTAINS_GOTO_CONSIDER_**/
+/*!export AST_DOESNT_RETURN_F**/
+/*!export AST_PREDICT_TYPE_F_**/
+/*!export AST_SYMBOL_ASSUMES_**/
+/*!export CONSTEXPR_**/
+/*!export OPTIMIZE_F**/
+/*!export OPTIMIZE_**/
+/*!export ast_**/
+/*!export optimizer_**/
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_H
-#define GUARD_DEEMON_COMPILER_OPTIMIZE_H 1
+#define GUARD_DEEMON_COMPILER_OPTIMIZE_H 1 /*!export-*/
 
 #include "../api.h"
 #ifdef CONFIG_BUILDING_DEEMON
 #include "../types.h" /* DREF, DeeObject, DeeTypeObject, Dee_refcnt_t */
-#include "ast.h"
-#include "symbol.h"
+#include "ast.h"      /* ast */
+#include "symbol.h"   /* symbol */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */

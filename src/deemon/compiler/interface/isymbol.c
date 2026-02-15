@@ -24,9 +24,9 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_Unpack1 */
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/interface.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompilerItem*, DeeCompiler_Current */
+#include <deemon/compiler/interface.h> /* DR_CAst, DR_Compiler, DeeCompilerSymbolObject, DeeCompiler_GetSymbol, err_invalid_symbol_compiler */
+#include <deemon/compiler/symbol.h>    /* SYMBOL_ADD_N*, SYMBOL_TYPE_*, symbol, symbol_fini, symbol_incref */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Print, DeeFormat_Printf */
 #include <deemon/none.h>               /* DeeNone_NewRef */

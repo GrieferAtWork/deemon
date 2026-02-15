@@ -419,11 +419,11 @@ scan_instr:
  *   - If a read happens while `b_written[lid] == 1', do nothing
  *   - If a write happens, do `b_written[lid] = 1' */
 PRIVATE NONNULL((1, 2, 3)) void DCALL
-basic_block_locuse_pass1(struct function_assembler *__restrict assembler,
+basic_block_locuse_pass1(struct function_assembler *__restrict fasm,
                          struct basic_block *__restrict block,
                          bitset_t *b_written) {
 	Dee_instruction_t const *instr;
-	lid_t n_locals = assembler->fa_xlocalc;
+	lid_t n_locals = fasm->fa_xlocalc;
 	bitset_clearall(b_written, n_locals);
 	bitset_clearall(block->bb_locuse, n_locals);
 	for (instr = block->bb_deemon_start;
@@ -431,7 +431,7 @@ basic_block_locuse_pass1(struct function_assembler *__restrict assembler,
 	     instr = DeeAsm_NextInstr(instr)) {
 		size_t i;
 		struct asm_locuse use;
-		asm_get_locuse(assembler, instr, &use);
+		asm_get_locuse(fasm, instr, &use);
 		for (i = 0; i < ASM_RDMAX; ++i) {
 			lid_t lid = use.alu_rd[i];
 			if (lid < n_locals && !bitset_test(b_written, lid))
@@ -446,12 +446,12 @@ basic_block_locuse_pass1(struct function_assembler *__restrict assembler,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
-basic_block_locuse_or(struct function_assembler *__restrict assembler,
+basic_block_locuse_or(struct function_assembler *__restrict fasm,
                       struct basic_block *__restrict block,
                       struct basic_block const *__restrict other,
                       bitset_t const *b_written) {
 	bool result = false;
-	lid_t n_locals = assembler->fa_xlocalc;
+	lid_t n_locals = fasm->fa_xlocalc;
 	size_t i, n_words = BITSET_LENGTHOF(n_locals);
 	for (i = 0; i < n_words; ++i) {
 		bitset_t old_word = block->bb_locuse[i];
@@ -474,13 +474,13 @@ basic_block_locuse_or(struct function_assembler *__restrict assembler,
  *   - If it's a branch-instruction, take the `target' block and do:
  *     >> block->bb_locuse |= target->bb_locuse & ~b_written; */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
-basic_block_locuse_pass2(struct function_assembler *__restrict assembler,
+basic_block_locuse_pass2(struct function_assembler *__restrict fasm,
                          struct basic_block *__restrict block,
                          bitset_t *b_written) {
 	bool result = false;
 	Dee_instruction_t const *instr;
 	struct jump_descriptor **exit_iter, **exit_end;
-	lid_t n_locals = assembler->fa_xlocalc;
+	lid_t n_locals = fasm->fa_xlocalc;
 	bitset_clearall(b_written, n_locals);
 	exit_iter = block->bb_exits.jds_list;
 	exit_end  = exit_iter + block->bb_exits.jds_size;
@@ -494,9 +494,9 @@ basic_block_locuse_pass2(struct function_assembler *__restrict assembler,
 			exit_jmp = *exit_iter;
 			if (exit_jmp->jd_from > instr)
 				break;
-			result |= basic_block_locuse_or(assembler, block, exit_jmp->jd_to, b_written);
+			result |= basic_block_locuse_or(fasm, block, exit_jmp->jd_to, b_written);
 		}
-		asm_get_locuse(assembler, instr, &use);
+		asm_get_locuse(fasm, instr, &use);
 		for (i = 0; i < ASM_WRMAX; ++i) {
 			lid_t lid = use.alu_wr[i];
 			if (lid < n_locals)
@@ -505,11 +505,11 @@ basic_block_locuse_pass2(struct function_assembler *__restrict assembler,
 	}
 	for (; unlikely(exit_iter < exit_end); ++exit_iter) {
 		ASSERT((*exit_iter)->jd_from < block->bb_deemon_end);
-		result |= basic_block_locuse_or(assembler, block, (*exit_iter)->jd_to, b_written);
+		result |= basic_block_locuse_or(fasm, block, (*exit_iter)->jd_to, b_written);
 	}
 	/* Deal with the unconditional branch at the end of the block. */
 	if (block->bb_next != NULL)
-		result |= basic_block_locuse_or(assembler, block, block->bb_next, b_written);
+		result |= basic_block_locuse_or(fasm, block, block->bb_next, b_written);
 	return result;
 }
 
@@ -593,7 +593,7 @@ err:
  *   >> }
  * - Sort `block->bb_locreadv' by `bbl_instr' */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-basic_block_locuse_pass3(struct function_assembler *__restrict assembler,
+basic_block_locuse_pass3(struct function_assembler *__restrict fasm,
                          struct basic_block *__restrict block,
                          Dee_instruction_t const **i_lastread) {
 #define LOCAL_append_lastreadat(instr, lid)                                          \
@@ -604,7 +604,7 @@ basic_block_locuse_pass3(struct function_assembler *__restrict assembler,
 	size_t i, bb_locreada = 0;
 	Dee_instruction_t const *instr;
 	struct jump_descriptor **exit_iter, **exit_end;
-	lid_t n_locals = assembler->fa_xlocalc;
+	lid_t n_locals = fasm->fa_xlocalc;
 	ASSERT(block->bb_locreadc == 0);
 	ASSERT(block->bb_locreadv == NULL);
 	bzeroc(i_lastread, n_locals, sizeof(Dee_instruction_t const *));
@@ -616,7 +616,7 @@ basic_block_locuse_pass3(struct function_assembler *__restrict assembler,
 	     instr < block->bb_deemon_end;
 	     instr = DeeAsm_NextInstr(instr)) {
 		struct asm_locuse use;
-		asm_get_locuse(assembler, instr, &use);
+		asm_get_locuse(fasm, instr, &use);
 		for (i = 0; i < ASM_RDMAX; ++i) {
 			lid_t lid = use.alu_rd[i];
 			if (lid < n_locals)

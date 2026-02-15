@@ -117,9 +117,9 @@ do_handle_lparen:
 				int error;
 				JITLexer_Yield(self);
 				if (self->jl_tok == '(') {
-					error = JITLexer_SkipUnaryHead(self, LOOKUP_SYM_NORMAL | JITLEXER_EVAL_FDISALLOWCAST);
+					error = JITLexer_SkipUnaryHead(self, JIT_LOOKUP_SYM_NORMAL | JITLEXER_EVAL_FDISALLOWCAST);
 				} else {
-					error = JITLexer_SkipUnary(self, LOOKUP_SYM_NORMAL);
+					error = JITLexer_SkipUnary(self, JIT_LOOKUP_SYM_NORMAL);
 				}
 				if unlikely(error != 0)
 					goto maybe_handle_error;
@@ -169,7 +169,7 @@ do_handle_lparen:
 				} else {
 					return THROW_ERROR(syn_nth_expected_lparen(self));
 				}
-				if (JITLexer_SkipExpression(self, LOOKUP_SYM_NORMAL))
+				if (JITLexer_SkipExpression(self, JIT_LOOKUP_SYM_NORMAL))
 					goto maybe_handle_error;
 				if (hasparen) {
 					if (self->jl_tok == ')') {

@@ -374,8 +374,8 @@ do_if_statement:
 #ifdef JIT_EVAL
 	JITContext_PushScope(self->jl_context);
 	result = JITLexer_EvalComma(self,
-	                            AST_COMMA_NORMAL |
-	                            AST_COMMA_ALLOWVARDECLS,
+	                            JIT_AST_COMMA_NORMAL |
+	                            JIT_AST_COMMA_ALLOWVARDECLS,
 	                            NULL,
 	                            NULL);
 	if (ISERR(result))
@@ -472,7 +472,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "for"));
 #ifdef JIT_HYBRID
 	if (p_was_expression)
-		*p_was_expression = AST_PARSE_WASEXPR_NO;
+		*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(For)(self, true);
 #else /* JIT_HYBRID */
@@ -490,8 +490,8 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 		if (self->jl_tok == ';')
 			goto do_normal_for_noinit;
 		init = JITLexer_EvalComma(self,
-		                          AST_COMMA_NORMAL |
-		                          AST_COMMA_ALLOWVARDECLS,
+		                          JIT_AST_COMMA_NORMAL |
+		                          JIT_AST_COMMA_ALLOWVARDECLS,
 		                          NULL,
 		                          NULL);
 		if unlikely(!init)
@@ -755,7 +755,7 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "foreach"));
 #ifdef JIT_HYBRID
 	if (p_was_expression)
-		*p_was_expression = AST_PARSE_WASEXPR_NO;
+		*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(Foreach)(self, true);
 #else /* JIT_HYBRID */
@@ -771,8 +771,8 @@ H_FUNC(Foreach)(JITLexer *__restrict self, JIT_ARGS) {
 		DREF DeeObject *init;
 		JITContext_PushScope(self->jl_context);
 		init = JITLexer_EvalComma(self,
-		                          AST_COMMA_NORMAL |
-		                          AST_COMMA_ALLOWVARDECLS,
+		                          JIT_AST_COMMA_NORMAL |
+		                          JIT_AST_COMMA_ALLOWVARDECLS,
 		                          NULL,
 		                          NULL);
 		if unlikely(!init)
@@ -899,7 +899,7 @@ H_FUNC(While)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "while"));
 #ifdef JIT_HYBRID
 	if (p_was_expression)
-		*p_was_expression = AST_PARSE_WASEXPR_NO;
+		*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(While)(self, true);
 #else /* JIT_HYBRID */
@@ -1031,7 +1031,7 @@ H_FUNC(Do)(JITLexer *__restrict self, JIT_ARGS) {
 	ASSERT(JITLexer_ISKWD(self, "do"));
 #ifdef JIT_HYBRID
 	if (p_was_expression)
-		*p_was_expression = AST_PARSE_WASEXPR_NO;
+		*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	/* XXX: Differentiate between expressions and statements */
 	result = FUNC(Do)(self, true);
 #else /* JIT_HYBRID */
@@ -1259,10 +1259,10 @@ INTERN RETURN_TYPE DFCALL
 H_FUNC(Import)(JITLexer *__restrict self, JIT_ARGS) {
 	if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack")) {
 		/* Special handling for `import(...)' expressions. */
-		*p_was_expression = AST_PARSE_WASEXPR_YES;
+		*p_was_expression = JIT_AST_PARSE_WASEXPR_YES;
 	} else {
 		/* All other uses of `import' and `from' are statements. */
-		*p_was_expression = AST_PARSE_WASEXPR_NO;
+		*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	}
 #ifdef JIT_EVAL
 	return JITLexer_EvalImport(self);

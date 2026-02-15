@@ -24,10 +24,10 @@
 
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemoryc, Dee_Free */
 #include <deemon/code.h>              /* Dee_CODE_F* */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* AST_*, ast, ast_*, loc_here */
+#include <deemon/compiler/lexer.h>    /* AST_PARSE_WASEXPR_NO, PARSE_FLFSTMT, ast_annotation*, ast_parse_*, current_tags, parser_flags */
+#include <deemon/compiler/optimize.h> /* ast_optimize_all */
+#include <deemon/compiler/symbol.h>   /* BASESCOPE_FRETURN, DAST_NONE, DeeScopeObject, LOOKUP_SYM_NORMAL, SYMBOL_F*, SYMBOL_TYPE_*, ast_loc, basescope_pop, basescope_push, current_basescope, current_scope, decl_ast*, has_local_symbol, is_reserved_symbol_name, new_local_symbol, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, Dee_Clear, Dee_Decref, Dee_Incref */

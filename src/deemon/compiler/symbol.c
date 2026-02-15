@@ -26,9 +26,9 @@
 #include <deemon/arg.h>               /* DeeArg_Unpack1 */
 #include <deemon/class.h>             /* Dee_CLASS_ATTRIBUTE_FGETSET, Dee_CLASS_ATTRIBUTE_FPRIVATE */
 #include <deemon/code.h>              /* Dee_CODE_F* */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* ASSERT_AST, ast, ast_incref, loc_here */
+#include <deemon/compiler/compiler.h> /* DeeCompiler* */
+#include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, ast_loc, decl_ast_fini, symbol, symbol_*, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>            /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT, return_reference */

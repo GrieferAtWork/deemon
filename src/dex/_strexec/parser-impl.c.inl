@@ -30,8 +30,6 @@
 
 #include <deemon/bool.h>            /* DeeBool* */
 #include <deemon/class.h>           /* DeeClass_QueryClassAttributeStringLen, DeeInstance_DESC, Dee_CLASS_ATTRIBUTE_FFINAL, Dee_CLASS_ATTRIBUTE_FPRIVATE, Dee_class_attribute */
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>            /* DeeDict_New, DeeDict_SetItemStringLen */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/float.h>           /* CONFIG_HAVE_FPU, DeeFloat_New, Dee_Strtod */
@@ -271,8 +269,8 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 #ifdef JIT_EVAL
 	*p_kwds = NULL;
 	result = JITLexer_EvalComma(self,
-	                            AST_COMMA_FORCEMULTIPLE |
-	                            AST_COMMA_ALLOWKWDLIST,
+	                            JIT_AST_COMMA_FORCEMULTIPLE |
+	                            JIT_AST_COMMA_ALLOWKWDLIST,
 	                            &DeeTuple_Type,
 	                            NULL);
 	LOAD_LVALUE(result, err);
@@ -297,8 +295,8 @@ JITLexer_SkipArgumentList(JITLexer *__restrict self)
 	}
 #else /* JIT_EVAL */
 	result = JITLexer_SkipComma(self,
-	                            AST_COMMA_FORCEMULTIPLE |
-	                            AST_COMMA_ALLOWKWDLIST,
+	                            JIT_AST_COMMA_FORCEMULTIPLE |
+	                            JIT_AST_COMMA_ALLOWKWDLIST,
 	                            NULL);
 	if (ISERR(result))
 		goto err;
@@ -416,8 +414,8 @@ not_a_cast:
 		second_paren = self->jl_tok == '(';
 		/* Parse the cast-expression / argument list. */
 		merge = FUNC(Comma)(self,
-		                    AST_COMMA_FORCEMULTIPLE |
-		                    AST_COMMA_ALLOWKWDLIST,
+		                    JIT_AST_COMMA_FORCEMULTIPLE |
+		                    JIT_AST_COMMA_ALLOWKWDLIST,
 		                    IF_EVAL(&DeeTuple_Type, ) & out_mode);
 		if (ISERR(merge))
 			goto err_lhs;
@@ -486,7 +484,7 @@ err_missing_rparen:
 			syn_paren_expected_rparen_after_lparen(self);
 			goto err_merge;
 		}
-		if (!second_paren && !(out_mode & AST_COMMA_OUT_FMULTIPLE)) {
+		if (!second_paren && !(out_mode & JIT_AST_COMMA_OUT_FMULTIPLE)) {
 			/* Recursively parse cast suffix expressions:
 			 * >> (int)(float)get_value(); 
 			 * Parse as:
@@ -828,7 +826,7 @@ done_y1:
 				goto err;
 			LOAD_LVALUE(result, err);
 			allow_cast = false; /* Don't allow braces, or statements as cast expressions. */
-			if (self->jl_tok == ',' && was_expression != AST_PARSE_WASEXPR_NO) {
+			if (self->jl_tok == ',' && was_expression != JIT_AST_PARSE_WASEXPR_NO) {
 				JITLexer_Yield(self);
 				if (self->jl_tok == ')') {
 					/* single-element tuple expression, where the single element is a sequence. */
@@ -842,7 +840,7 @@ done_y1:
 				} else {
 					/* There are more items! */
 					RETURN_TYPE merge;
-					merge = FUNC(Comma)(self, AST_COMMA_FORCEMULTIPLE, IF_EVAL(&DeeTuple_Type, ) NULL);
+					merge = FUNC(Comma)(self, JIT_AST_COMMA_FORCEMULTIPLE, IF_EVAL(&DeeTuple_Type, ) NULL);
 					if (ISERR(merge))
 						goto err_r;
 #ifdef JIT_EVAL
@@ -872,11 +870,11 @@ done_y1:
 #endif /* JIT_EVAL */
 				}
 			}
-			if (self->jl_tok != ')' && was_expression != AST_PARSE_WASEXPR_NO) {
+			if (self->jl_tok != ')' && was_expression != JIT_AST_PARSE_WASEXPR_NO) {
 				result = CALL_SECONDARY(Operand, result);
 				if (ISERR(result))
 					goto err;
-				/*was_expression = AST_PARSE_WASEXPR_YES;*/
+				/*was_expression = JIT_AST_PARSE_WASEXPR_YES;*/
 			}
 		} else
 #endif
@@ -938,7 +936,7 @@ done_y1:
 					if (JITLexer_SkipHybridAtBrace(self, IFELSE(&is_expression, NULL)))
 						goto err;
 				} else {
-					IF_EVAL(is_expression = AST_PARSE_WASEXPR_YES);
+					IF_EVAL(is_expression = JIT_AST_PARSE_WASEXPR_YES);
 					if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
 						goto err;
 				}
@@ -955,7 +953,7 @@ done_y1:
 						break;
 					source_end = (unsigned char const *)next;
 				}
-				if (is_expression == AST_PARSE_WASEXPR_NO) {
+				if (is_expression == JIT_AST_PARSE_WASEXPR_NO) {
 					/* Get rid of the surrounding '{' and '}'
 					 * Execution would work the same even with them there, however
 					 * their presence looks weird in `repr', and might make debugging
@@ -972,7 +970,7 @@ done_y1:
 				                         (char const *)source_end,
 				                         self->jl_context,
 				                         self->jl_text,
-				                         is_expression == AST_PARSE_WASEXPR_NO
+				                         is_expression == JIT_AST_PARSE_WASEXPR_NO
 				                         ? JIT_FUNCTION_FNORMAL  /* w/ statements */
 				                         : JIT_FUNCTION_FRETEXPR /* w/ return-expression */);
 				if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
@@ -999,10 +997,10 @@ not_a_java_lambda:
 			} else {
 				/* Parenthesis / tuple expression. */
 				out_mode = 0;
-				result   = FUNC(Comma)(self, AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) &out_mode);
+				result   = FUNC(Comma)(self, JIT_AST_COMMA_NORMAL, IF_EVAL(&DeeTuple_Type, ) &out_mode);
 				if (ISERR(result))
 					goto err;
-				if (out_mode & AST_COMMA_OUT_FMULTIPLE)
+				if (out_mode & JIT_AST_COMMA_OUT_FMULTIPLE)
 					allow_cast = false; /* Don't allow comma-lists for cast expressions. */
 			}
 		}
@@ -1291,14 +1289,14 @@ skip_brace_lambda:
 		}
 		out_mode = 0;
 #ifdef JIT_EVAL
-		result   = JITLexer_EvalComma(self, AST_COMMA_NORMAL, &DeeList_Type, &out_mode);
+		result   = JITLexer_EvalComma(self, JIT_AST_COMMA_NORMAL, &DeeList_Type, &out_mode);
 #else /* JIT_EVAL */
-		result = JITLexer_SkipComma(self, AST_COMMA_NORMAL, &out_mode);
+		result = JITLexer_SkipComma(self, JIT_AST_COMMA_NORMAL, &out_mode);
 #endif /* !JIT_EVAL */
 		if (ISERR(result))
 			goto err;
 		LOAD_LVALUE(result, err);
-		if (!(out_mode & AST_COMMA_OUT_FMULTIPLE)) {
+		if (!(out_mode & JIT_AST_COMMA_OUT_FMULTIPLE)) {
 			if (self->jl_tok == ':') {
 				/* Range generate with non-zero starting value. */
 				RETURN_TYPE range_end;
@@ -1390,7 +1388,7 @@ skip_rbrck_and_done:
 		                      (JITSymbol *)&self->jl_lvalue,
 		                      "...",
 		                      3,
-		                      flags & ~LOOKUP_SYM_ALLOWDECL))
+		                      flags & ~JIT_LOOKUP_SYM_ALLOWDECL))
 			goto err;
 #endif /* JIT_EVAL */
 		/* !!!NO YIELD HERE!!! -- That is intentional (see comment above!) */
@@ -1535,8 +1533,8 @@ skip_rbrck_and_done:
 					/* Parse the packed expression. */
 					result = FUNC(Comma)(self,
 					                     has_paren
-					                     ? AST_COMMA_FORCEMULTIPLE
-					                     : AST_COMMA_FORCEMULTIPLE | AST_COMMA_STRICTCOMMA,
+					                     ? JIT_AST_COMMA_FORCEMULTIPLE
+					                     : JIT_AST_COMMA_FORCEMULTIPLE | JIT_AST_COMMA_STRICTCOMMA,
 					                     IF_EVAL(&DeeTuple_Type, )
 					                     NULL);
 					if (ISERR(result))
@@ -1568,7 +1566,7 @@ skip_rbrck_and_done:
 				                      (JITSymbol *)&self->jl_lvalue,
 				                      JITLexer_TokPtr(self),
 				                      JITLexer_TokLen(self),
-				                      LOOKUP_SYM_NORMAL))
+				                      JIT_LOOKUP_SYM_NORMAL))
 					goto err;
 				/* Convert an object reference into  */
 				if (self->jl_lvalue.lv_kind != JIT_LVALUE_RVALUE) {
@@ -1673,7 +1671,7 @@ skip_rbrck_and_done:
 				                      (JITSymbol *)&self->jl_lvalue,
 				                      JIT_RTSYM_CLASS,
 				                      COMPILER_STRLEN(JIT_RTSYM_CLASS),
-				                      LOOKUP_SYM_NORMAL))
+				                      JIT_LOOKUP_SYM_NORMAL))
 					goto err;
 				oo_class = (DREF DeeTypeObject *)JITLValue_GetValue(&self->jl_lvalue, self->jl_context);
 				JITLValue_Fini(&self->jl_lvalue);
@@ -1691,7 +1689,7 @@ err_oo_class_reinit_lvalue:
 				                      (JITSymbol *)&self->jl_lvalue,
 				                      JIT_RTSYM_THIS,
 				                      COMPILER_STRLEN(JIT_RTSYM_THIS),
-				                      LOOKUP_SYM_NORMAL))
+				                      JIT_LOOKUP_SYM_NORMAL))
 					goto err_oo_class_reinit_lvalue;
 				oo_this = JITLValue_GetValue(&self->jl_lvalue, self->jl_context);
 				if unlikely(!oo_this)
@@ -1771,7 +1769,7 @@ err_oo_class_reinit_lvalue:
 				JITLexer_Yield(self);
 				/* TODO: Don't hard-code "DeeType_Type" here! Instead, lookup the operator
 				 *       via its name when the operator function actually gets called. */
-				opno = JITLexer_ParseOperatorName(self, &DeeType_Type, P_OPERATOR_FNORMAL);
+				opno = JITLexer_ParseOperatorName(self, &DeeType_Type, JIT_P_OPERATOR_FNORMAL);
 				if unlikely(opno < 0)
 					goto err;
 				result = JIT_GetOperatorFunction(&DeeType_Type, (Dee_operator_t)opno);
@@ -1802,7 +1800,7 @@ err_oo_class_reinit_lvalue:
 					if (JITLexer_SkipHybridAtBrace(self, IFELSE(&is_expression, NULL)))
 						goto err;
 				} else {
-					IF_EVAL(is_expression = AST_PARSE_WASEXPR_YES);
+					IF_EVAL(is_expression = JIT_AST_PARSE_WASEXPR_YES);
 					if (JITLexer_SkipExpression(self, JITLEXER_EVAL_FSECONDARY))
 						goto err;
 				}
@@ -1819,7 +1817,7 @@ err_oo_class_reinit_lvalue:
 						break;
 					source_end = (unsigned char const *)next;
 				}
-				if (is_expression == AST_PARSE_WASEXPR_NO) {
+				if (is_expression == JIT_AST_PARSE_WASEXPR_NO) {
 					/* Get rid of the surrounding '{' and '}'
 					 * Execution would work the same even with them there, however
 					 * their presence looks weird in `repr', and might make debugging
@@ -1836,7 +1834,7 @@ err_oo_class_reinit_lvalue:
 				                         (char const *)source_end,
 				                         self->jl_context,
 				                         self->jl_text,
-				                         is_expression == AST_PARSE_WASEXPR_NO
+				                         is_expression == JIT_AST_PARSE_WASEXPR_NO
 				                         ? JIT_FUNCTION_FNORMAL  /* w/ statements */
 				                         : JIT_FUNCTION_FRETEXPR /* w/ return-expression */);
 				if (!result && DeeError_CurrentIs(&DeeError_SyntaxError))
@@ -1855,11 +1853,11 @@ err_oo_class_reinit_lvalue:
 					goto err;
 				symbol_hash = Dee_HashUtf8(symbol_name, symbol_size);
 				if (DeeModule_Check(mod)) {
-					struct Dee_module_symbol *symbol;
-					symbol = DeeModule_GetSymbolStringLenHash((DREF DeeModuleObject *)mod,
-					                                          symbol_name, symbol_size,
-					                                          symbol_hash);
-					if unlikely(!symbol) {
+					struct Dee_module_symbol *sym;
+					sym = DeeModule_GetSymbolStringLenHash((DREF DeeModuleObject *)mod,
+					                                       symbol_name, symbol_size,
+					                                       symbol_hash);
+					if unlikely(!sym) {
 						DeeError_Throwf(&DeeError_SymbolError,
 						                "Symbol `%$s' could not be found in mod `%k'",
 						                symbol_size, symbol_name, mod);
@@ -1868,7 +1866,7 @@ err_oo_class_reinit_lvalue:
 					}
 					self->jl_lvalue.lv_kind          = JIT_LVALUE_EXTERN;
 					self->jl_lvalue.lv_extern.lx_mod = (DREF DeeModuleObject *)mod; /* Inherit reference. */
-					self->jl_lvalue.lv_extern.lx_sym = symbol;
+					self->jl_lvalue.lv_extern.lx_sym = sym;
 				} else {
 					/* When the import function didn't return */
 					self->jl_lvalue.lv_kind = JIT_LVALUE_ATTRSTR;
@@ -1921,7 +1919,7 @@ err:
 DEFINE_SECONDARY(UnaryOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(unsigned char const *pos;)
-	ASSERT(TOKEN_IS_UNARY(self));
+	ASSERT(JIT_TOKEN_IS_UNARY(self));
 	(void)flags;
 #ifdef JIT_EVAL
 again:
@@ -1991,7 +1989,7 @@ err_result_copy:
 				JITLexer_Yield(self);
 				LOAD_LVALUE(lhs, err);
 				typetype = Dee_TYPE(Dee_TYPE(lhs));
-				opno = JITLexer_ParseOperatorName(self, typetype, P_OPERATOR_FNORMAL);
+				opno = JITLexer_ParseOperatorName(self, typetype, JIT_P_OPERATOR_FNORMAL);
 				if unlikely(opno < 0)
 					goto err_r;
 				opfun = JIT_GetOperatorFunction(typetype, (Dee_operator_t)opno);
@@ -2054,7 +2052,7 @@ err_result_copy:
 						                      (JITSymbol *)&self->jl_lvalue,
 						                      JIT_RTSYM_CLASS,
 						                      COMPILER_STRLEN(JIT_RTSYM_CLASS),
-						                      LOOKUP_SYM_NORMAL))
+						                      JIT_LOOKUP_SYM_NORMAL))
 							goto err;
 						oo_class = (DREF DeeTypeObject *)JITLValue_GetValue(&self->jl_lvalue, self->jl_context);
 						JITLValue_Fini(&self->jl_lvalue);
@@ -2339,91 +2337,91 @@ err:
 
 DEFINE_PRIMARY(Unary) {
 	RETURN_TYPE result = CALL_PRIMARY(UnaryHead);
-	if (ISOK(result) && TOKEN_IS_UNARY(self))
+	if (ISOK(result) && JIT_TOKEN_IS_UNARY(self))
 		result = CALL_SECONDARY(UnaryOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Prod) {
 	RETURN_TYPE result = CALL_PRIMARY(Unary);
-	if (ISOK(result) && TOKEN_IS_PROD(self))
+	if (ISOK(result) && JIT_TOKEN_IS_PROD(self))
 		result = CALL_SECONDARY(ProdOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Sum) {
 	RETURN_TYPE result = CALL_PRIMARY(Prod);
-	if (ISOK(result) && TOKEN_IS_SUM(self))
+	if (ISOK(result) && JIT_TOKEN_IS_SUM(self))
 		result = CALL_SECONDARY(SumOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Shift) {
 	RETURN_TYPE result = CALL_PRIMARY(Sum);
-	if (ISOK(result) && TOKEN_IS_SHIFT(self))
+	if (ISOK(result) && JIT_TOKEN_IS_SHIFT(self))
 		result = CALL_SECONDARY(ShiftOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Cmp) {
 	RETURN_TYPE result = CALL_PRIMARY(Shift);
-	if (ISOK(result) && TOKEN_IS_CMP(self))
+	if (ISOK(result) && JIT_TOKEN_IS_CMP(self))
 		result = CALL_SECONDARY(CmpOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(CmpEQ) {
 	RETURN_TYPE result = CALL_PRIMARYF(Cmp, flags | JITLEXER_EVAL_FALLOWISBOUND);
-	if (ISOK(result) && TOKEN_IS_CMPEQ(self))
+	if (ISOK(result) && JIT_TOKEN_IS_CMPEQ(self))
 		result = CALL_SECONDARY(CmpEQOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(And) {
 	RETURN_TYPE result = CALL_PRIMARY(CmpEQ);
-	if (ISOK(result) && TOKEN_IS_AND(self))
+	if (ISOK(result) && JIT_TOKEN_IS_AND(self))
 		result = CALL_SECONDARY(AndOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Xor) {
 	RETURN_TYPE result = CALL_PRIMARY(And);
-	if (ISOK(result) && TOKEN_IS_XOR(self))
+	if (ISOK(result) && JIT_TOKEN_IS_XOR(self))
 		result = CALL_SECONDARY(XorOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Or) {
 	RETURN_TYPE result = CALL_PRIMARY(Xor);
-	if (ISOK(result) && TOKEN_IS_OR(self))
+	if (ISOK(result) && JIT_TOKEN_IS_OR(self))
 		result = CALL_SECONDARY(OrOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(As) {
 	RETURN_TYPE result = CALL_PRIMARY(Or);
-	if (ISOK(result) && TOKEN_IS_AS(self))
+	if (ISOK(result) && JIT_TOKEN_IS_AS(self))
 		result = CALL_SECONDARY(AsOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Land) {
 	RETURN_TYPE result = CALL_PRIMARY(As);
-	if (ISOK(result) && TOKEN_IS_LAND(self))
+	if (ISOK(result) && JIT_TOKEN_IS_LAND(self))
 		result = CALL_SECONDARY(LandOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Lor) {
 	RETURN_TYPE result = CALL_PRIMARY(Land);
-	if (ISOK(result) && TOKEN_IS_LOR(self))
+	if (ISOK(result) && JIT_TOKEN_IS_LOR(self))
 		result = CALL_SECONDARY(LorOperand, result);
 	return result;
 }
 
 DEFINE_PRIMARY(Cond) {
 	RETURN_TYPE result = CALL_PRIMARY(Lor);
-	if (ISOK(result) && TOKEN_IS_COND(self))
+	if (ISOK(result) && JIT_TOKEN_IS_COND(self))
 		result = CALL_SECONDARY(CondOperand, result);
 	return result;
 }
@@ -2432,7 +2430,7 @@ DEFINE_PRIMARY(Assign) {
 #ifdef __OPTIMIZE_SIZE__
 	RETURN_TYPE result;
 	result = CALL_PRIMARYF(Cond, flags | JITLEXER_EVAL_FALLOWINPLACE);
-	if (ISOK(result) && TOKEN_IS_ASSIGN(self))
+	if (ISOK(result) && JIT_TOKEN_IS_ASSIGN(self))
 		result = CALL_SECONDARY(AssignOperand, result);
 	return result;
 #elif 1
@@ -2456,87 +2454,87 @@ DEFINE_PRIMARY(Assign) {
 			goto case_unary;
 		break;
 
-	CASE_TOKEN_IS_UNARY:
+	JIT_CASE_TOKEN_IS_UNARY:
 case_unary:
 		result = CALL_SECONDARY(UnaryOperand, result);
 		if (ISERR(result))
 			goto done;
-		if (TOKEN_IS_PROD(self)) {
-	CASE_TOKEN_IS_PROD:
+		if (JIT_TOKEN_IS_PROD(self)) {
+	JIT_CASE_TOKEN_IS_PROD:
 			result = CALL_SECONDARY(ProdOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_SUM(self)) {
-	CASE_TOKEN_IS_SUM:
+		if (JIT_TOKEN_IS_SUM(self)) {
+	JIT_CASE_TOKEN_IS_SUM:
 			result = CALL_SECONDARY(SumOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_SHIFT(self)) {
-	CASE_TOKEN_IS_SHIFT:
+		if (JIT_TOKEN_IS_SHIFT(self)) {
+	JIT_CASE_TOKEN_IS_SHIFT:
 			result = CALL_SECONDARY(ShiftOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_CMP(self)) {
-	CASE_TOKEN_IS_CMP:
+		if (JIT_TOKEN_IS_CMP(self)) {
+	JIT_CASE_TOKEN_IS_CMP:
 			result = CALL_SECONDARY(CmpOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_CMPEQ(self)) {
-	CASE_TOKEN_IS_CMPEQ:
+		if (JIT_TOKEN_IS_CMPEQ(self)) {
+	JIT_CASE_TOKEN_IS_CMPEQ:
 case_cmpeq:
 			result = CALL_SECONDARY(CmpEQOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_AND(self)) {
-	CASE_TOKEN_IS_AND:
+		if (JIT_TOKEN_IS_AND(self)) {
+	JIT_CASE_TOKEN_IS_AND:
 			result = CALL_SECONDARY(AndOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_XOR(self)) {
-	CASE_TOKEN_IS_XOR:
+		if (JIT_TOKEN_IS_XOR(self)) {
+	JIT_CASE_TOKEN_IS_XOR:
 			result = CALL_SECONDARY(XorOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_OR(self)) {
-	CASE_TOKEN_IS_OR:
+		if (JIT_TOKEN_IS_OR(self)) {
+	JIT_CASE_TOKEN_IS_OR:
 			result = CALL_SECONDARY(OrOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_AS(self)) {
-/*CASE_TOKEN_IS_AS:*/
+		if (JIT_TOKEN_IS_AS(self)) {
+/*JIT_CASE_TOKEN_IS_AS:*/
 case_as:
 			result = CALL_SECONDARY(AsOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_LAND(self)) {
-	CASE_TOKEN_IS_LAND:
+		if (JIT_TOKEN_IS_LAND(self)) {
+	JIT_CASE_TOKEN_IS_LAND:
 			result = CALL_SECONDARY(LandOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_LOR(self)) {
-	CASE_TOKEN_IS_LOR:
+		if (JIT_TOKEN_IS_LOR(self)) {
+	JIT_CASE_TOKEN_IS_LOR:
 			result = CALL_SECONDARY(LorOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_COND(self)) {
-	CASE_TOKEN_IS_COND:
+		if (JIT_TOKEN_IS_COND(self)) {
+	JIT_CASE_TOKEN_IS_COND:
 			result = CALL_SECONDARY(CondOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_ASSIGN(self)) {
-	CASE_TOKEN_IS_ASSIGN:
+		if (JIT_TOKEN_IS_ASSIGN(self)) {
+	JIT_CASE_TOKEN_IS_ASSIGN:
 			result = CALL_SECONDARY(AssignOperand, result);
 			if (ISERR(result))
 				goto done;
@@ -2557,7 +2555,7 @@ DEFINE_SECONDARY(ProdOperand) {
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
-	ASSERT(TOKEN_IS_PROD(self));
+	ASSERT(JIT_TOKEN_IS_PROD(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -2593,7 +2591,7 @@ DEFINE_SECONDARY(ProdOperand) {
 		Dee_Decref(lhs);
 		lhs = merge;
 #endif /* JIT_EVAL */
-		if (!TOKEN_IS_PROD(self))
+		if (!JIT_TOKEN_IS_PROD(self))
 			break;
 		IF_EVAL(cmd = self->jl_tok;)
 	}
@@ -2616,7 +2614,7 @@ DEFINE_SECONDARY(SumOperand) {
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
 	unsigned int cmd = self->jl_tok;
-	ASSERT(TOKEN_IS_SUM(self));
+	ASSERT(JIT_TOKEN_IS_SUM(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -2653,7 +2651,7 @@ DEFINE_SECONDARY(SumOperand) {
 #endif /* JIT_EVAL */
 		}
 		cmd = self->jl_tok;
-		if (!TOKEN_IS_SUM(self))
+		if (!JIT_TOKEN_IS_SUM(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -2676,7 +2674,7 @@ DEFINE_SECONDARY(ShiftOperand) {
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
-	ASSERT(TOKEN_IS_SHIFT(self));
+	ASSERT(JIT_TOKEN_IS_SHIFT(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -2701,7 +2699,7 @@ DEFINE_SECONDARY(ShiftOperand) {
 		Dee_Decref(lhs);
 		lhs = merge;
 #endif /* JIT_EVAL */
-		if (!TOKEN_IS_SHIFT(self))
+		if (!JIT_TOKEN_IS_SHIFT(self))
 			break;
 		IF_EVAL(cmd = self->jl_tok;)
 	}
@@ -2724,7 +2722,7 @@ DEFINE_SECONDARY(CmpOperand) {
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
 	unsigned int cmd = self->jl_tok;
-	ASSERT(TOKEN_IS_CMP(self));
+	ASSERT(JIT_TOKEN_IS_CMP(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -2769,7 +2767,7 @@ DEFINE_SECONDARY(CmpOperand) {
 #endif /* JIT_EVAL */
 		}
 		cmd = self->jl_tok;
-		if (!TOKEN_IS_CMP(self))
+		if (!JIT_TOKEN_IS_CMP(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -2792,7 +2790,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
-	ASSERT(TOKEN_IS_CMPEQ(self));
+	ASSERT(JIT_TOKEN_IS_CMPEQ(self));
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		if (self->jl_tok == '!') {
@@ -2968,7 +2966,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 		lhs = merge;
 #endif /* JIT_EVAL */
 continue_expr:
-		if (!TOKEN_IS_CMPEQ(self))
+		if (!JIT_TOKEN_IS_CMPEQ(self))
 			break;
 		IF_EVAL(cmd = self->jl_tok;)
 	}
@@ -2991,7 +2989,7 @@ DEFINE_SECONDARY(AndOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
-	ASSERT(TOKEN_IS_AND(self));
+	ASSERT(JIT_TOKEN_IS_AND(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -3008,7 +3006,7 @@ DEFINE_SECONDARY(AndOperand) {
 		Dee_Decref(lhs);
 		lhs = merge;
 #endif /* JIT_EVAL */
-		if (!TOKEN_IS_AND(self))
+		if (!JIT_TOKEN_IS_AND(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -3029,7 +3027,7 @@ DEFINE_SECONDARY(XorOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
-	ASSERT(TOKEN_IS_XOR(self));
+	ASSERT(JIT_TOKEN_IS_XOR(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -3046,7 +3044,7 @@ DEFINE_SECONDARY(XorOperand) {
 		Dee_Decref(lhs);
 		lhs = merge;
 #endif /* JIT_EVAL */
-		if (!TOKEN_IS_XOR(self))
+		if (!JIT_TOKEN_IS_XOR(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -3067,7 +3065,7 @@ DEFINE_SECONDARY(OrOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
-	ASSERT(TOKEN_IS_OR(self));
+	ASSERT(JIT_TOKEN_IS_OR(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -3084,7 +3082,7 @@ DEFINE_SECONDARY(OrOperand) {
 		Dee_Decref(lhs);
 		lhs = merge;
 #endif /* JIT_EVAL */
-		if (!TOKEN_IS_OR(self))
+		if (!JIT_TOKEN_IS_OR(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -3105,7 +3103,7 @@ DEFINE_SECONDARY(AsOperand) {
 	RETURN_TYPE rhs;
 	IF_EVAL(DREF DeeObject * merge;)
 	IF_EVAL(unsigned char const *pos;)
-	ASSERT(TOKEN_IS_AS(self));
+	ASSERT(JIT_TOKEN_IS_AS(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -3122,7 +3120,7 @@ DEFINE_SECONDARY(AsOperand) {
 		Dee_Decref(lhs);
 		lhs = merge;
 #endif /* JIT_EVAL */
-		if (!TOKEN_IS_AS(self))
+		if (!JIT_TOKEN_IS_AS(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -3144,7 +3142,7 @@ DEFINE_SECONDARY(LandOperand) {
 	RETURN_TYPE rhs;
 #endif /* !JIT_EVAL */
 	IF_EVAL(unsigned char const *pos;)
-	ASSERT(TOKEN_IS_LAND(self));
+	ASSERT(JIT_TOKEN_IS_LAND(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -3192,7 +3190,7 @@ DEFINE_SECONDARY(LandOperand) {
 			goto err_r;
 #endif /* !JIT_EVAL */
 continue_expr:
-		if (!TOKEN_IS_LAND(self))
+		if (!JIT_TOKEN_IS_LAND(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -3216,7 +3214,7 @@ DEFINE_SECONDARY(LorOperand) {
 	RETURN_TYPE rhs;
 #endif /* !JIT_EVAL */
 	IF_EVAL(unsigned char const *pos;)
-	ASSERT(TOKEN_IS_LOR(self));
+	ASSERT(JIT_TOKEN_IS_LOR(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -3264,7 +3262,7 @@ DEFINE_SECONDARY(LorOperand) {
 			goto err_r;
 #endif /* !JIT_EVAL */
 continue_expr:
-		if (!TOKEN_IS_LOR(self))
+		if (!JIT_TOKEN_IS_LOR(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -3290,7 +3288,7 @@ DEFINE_SECONDARY(CondOperand) {
 	 * >> (x ? y : ) // >> x ? y : x
 	 * >> (x ? y)    // >> x ? y : none
 	 */
-	ASSERT(TOKEN_IS_COND(self));
+	ASSERT(JIT_TOKEN_IS_COND(self));
 	LOAD_LVALUE(lhs, err);
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
@@ -3372,7 +3370,7 @@ DEFINE_SECONDARY(CondOperand) {
 		}
 #endif /* !JIT_EVAL */
 continue_expr:
-		if (!TOKEN_IS_COND(self))
+		if (!JIT_TOKEN_IS_COND(self))
 			break;
 	}
 	return LHS_OR_OK;
@@ -3425,7 +3423,7 @@ DEFINE_SECONDARY(AssignOperand) {
 	IF_EVAL(int error;)
 	IF_EVAL(unsigned char const *pos;)
 	IF_EVAL(unsigned int cmd = self->jl_tok;)
-	ASSERT(TOKEN_IS_ASSIGN(self));
+	ASSERT(JIT_TOKEN_IS_ASSIGN(self));
 	for (;;) {
 		IF_EVAL(pos = self->jl_tokstart;)
 		if (self->jl_tok == TOK_COLON_EQUAL) {
@@ -3531,7 +3529,7 @@ err_lvalue:
 				goto err_r;
 #endif /* !JIT_EVAL */
 		}
-		if (!TOKEN_IS_ASSIGN(self))
+		if (!JIT_TOKEN_IS_ASSIGN(self))
 			break;
 		IF_EVAL(cmd = self->jl_tok;)
 	}
@@ -3803,87 +3801,87 @@ FUNC(Operand)(JITLexer *__restrict self,
 			goto case_unary;
 		break;
 
-	CASE_TOKEN_IS_UNARY:
+	JIT_CASE_TOKEN_IS_UNARY:
 case_unary:
 		result = CALL_SECONDARY(UnaryOperand, result);
 		if (ISERR(result))
 			goto done;
-		if (TOKEN_IS_PROD(self)) {
-	CASE_TOKEN_IS_PROD:
+		if (JIT_TOKEN_IS_PROD(self)) {
+	JIT_CASE_TOKEN_IS_PROD:
 			result = CALL_SECONDARY(ProdOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_SUM(self)) {
-	CASE_TOKEN_IS_SUM:
+		if (JIT_TOKEN_IS_SUM(self)) {
+	JIT_CASE_TOKEN_IS_SUM:
 			result = CALL_SECONDARY(SumOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_SHIFT(self)) {
-	CASE_TOKEN_IS_SHIFT:
+		if (JIT_TOKEN_IS_SHIFT(self)) {
+	JIT_CASE_TOKEN_IS_SHIFT:
 			result = CALL_SECONDARY(ShiftOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_CMP(self)) {
-	CASE_TOKEN_IS_CMP:
+		if (JIT_TOKEN_IS_CMP(self)) {
+	JIT_CASE_TOKEN_IS_CMP:
 			result = CALL_SECONDARY(CmpOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_CMPEQ(self)) {
-	CASE_TOKEN_IS_CMPEQ:
+		if (JIT_TOKEN_IS_CMPEQ(self)) {
+	JIT_CASE_TOKEN_IS_CMPEQ:
 case_cmpeq:
 			result = CALL_SECONDARY(CmpEQOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_AND(self)) {
-	CASE_TOKEN_IS_AND:
+		if (JIT_TOKEN_IS_AND(self)) {
+	JIT_CASE_TOKEN_IS_AND:
 			result = CALL_SECONDARY(AndOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_XOR(self)) {
-	CASE_TOKEN_IS_XOR:
+		if (JIT_TOKEN_IS_XOR(self)) {
+	JIT_CASE_TOKEN_IS_XOR:
 			result = CALL_SECONDARY(XorOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_OR(self)) {
-	CASE_TOKEN_IS_OR:
+		if (JIT_TOKEN_IS_OR(self)) {
+	JIT_CASE_TOKEN_IS_OR:
 			result = CALL_SECONDARY(OrOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_AS(self)) {
-/*CASE_TOKEN_IS_AS:*/
+		if (JIT_TOKEN_IS_AS(self)) {
+/*JIT_CASE_TOKEN_IS_AS:*/
 case_as:
 			result = CALL_SECONDARY(AsOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_LAND(self)) {
-	CASE_TOKEN_IS_LAND:
+		if (JIT_TOKEN_IS_LAND(self)) {
+	JIT_CASE_TOKEN_IS_LAND:
 			result = CALL_SECONDARY(LandOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_LOR(self)) {
-	CASE_TOKEN_IS_LOR:
+		if (JIT_TOKEN_IS_LOR(self)) {
+	JIT_CASE_TOKEN_IS_LOR:
 			result = CALL_SECONDARY(LorOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_COND(self)) {
-	CASE_TOKEN_IS_COND:
+		if (JIT_TOKEN_IS_COND(self)) {
+	JIT_CASE_TOKEN_IS_COND:
 			result = CALL_SECONDARY(CondOperand, result);
 			if (ISERR(result))
 				goto done;
 		}
-		if (TOKEN_IS_ASSIGN(self)) {
-	CASE_TOKEN_IS_ASSIGN:
+		if (JIT_TOKEN_IS_ASSIGN(self)) {
+	JIT_CASE_TOKEN_IS_ASSIGN:
 			result = CALL_SECONDARY(AssignOperand, result);
 			if (ISERR(result))
 				goto done;

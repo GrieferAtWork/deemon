@@ -25,8 +25,8 @@
 #ifndef CONFIG_NO_DEC
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
 #include <deemon/alloc.h>             /* Dee_*alloc*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free */
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/dec.h>
+#include <deemon/compiler/compiler.h> /* DeeCompiler_Current */
+#include <deemon/compiler/dec.h>      /* DECREL_*, DEC_FOREACH_SECTION, DEC_FOREACH_SECTION_VARS, DEC_SECTION_COUNT, DEC_SYM_DEFINED, DEC_WRITE_FBIGFILE, DEC_WRITE_FREUSE_GLOBAL, dec_* */
 #include <deemon/error.h>             /* DeeError_*, ERROR_HANDLED_NORMAL, ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>              /* DeeFile_*, OPEN_F* */
 #include <deemon/format.h>            /* PRFuSIZ */

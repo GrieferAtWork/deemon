@@ -25,9 +25,9 @@
 #include <deemon/alloc.h>              /* Dee_Callocc, Dee_Free */
 #include <deemon/asm.h>                /* ASM_* */
 #include <deemon/code.h>               /* Dee_CODE_FFINALLY, Dee_EXCEPTION_HANDLER_F*, code_addr_t */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, SECTION_TEXTCOUNT, asm_*, ast_genasm, ast_genasm_one, current_assembler, handler_frame */
+#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, CATCH_EXPR_FSECOND, ast, catch_expr */
+#include <deemon/compiler/symbol.h>    /* current_basescope */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeTypeObject, Dee_Incref, Dee_XDecref, Dee_XDecrefv, Dee_XIncref */
 #include <deemon/system-features.h>    /* bzero, memmovedownc */
 #include <deemon/tuple.h>              /* DeeTuple* */

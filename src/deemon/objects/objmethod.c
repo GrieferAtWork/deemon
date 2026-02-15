@@ -2461,11 +2461,11 @@ cmethod_print(DeeCMethodObject *__restrict self,
 	if (mod != NULL) {
 		DREF DeeTypeObject *type;
 		struct type_member const *member;
-		struct Dee_module_symbol *symbol;
-		symbol = cmethod_getmodsym(mod, self->cm_func.cmf_meth);
-		if (symbol != NULL) {
+		struct Dee_module_symbol *sym;
+		sym = cmethod_getmodsym(mod, self->cm_func.cmf_meth);
+		if (sym != NULL) {
 			result = DeeFormat_Printf(printer, arg, "<%s %k.%s>",
-			                          type_name, mod, symbol->ss_name);
+			                          type_name, mod, sym->ss_name);
 			Dee_Decref(mod);
 			goto done;
 		}
@@ -2497,13 +2497,13 @@ cmethod_printrepr(DeeCMethodObject *__restrict self,
 	DREF DeeModuleObject *mod;
 	mod = DeeModule_OfPointer(*(void **)&self->cm_func);
 	if (mod) {
-		struct Dee_module_symbol *symbol;
+		struct Dee_module_symbol *sym;
 		struct type_member const *member;
 		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(mod, self->cm_func.cmf_meth);
-		if (symbol) {
+		sym = cmethod_getmodsym(mod, self->cm_func.cmf_meth);
+		if (sym) {
 			result = DeeFormat_Printf(printer, arg, "%r.%s",
-			                          mod, symbol->ss_name);
+			                          mod, sym->ss_name);
 			Dee_Decref(mod);
 			return result;
 		}

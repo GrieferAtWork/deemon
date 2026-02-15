@@ -24,9 +24,9 @@
 
 #include <deemon/asm.h>                /* ASM_*, instruction_t */
 #include <deemon/code.h>               /* Dee_EXCEPTION_HANDLER_FHANDLED, code_addr_t, instruction_t */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, DeeRelInt*, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, asm_*, ast_genasm, ast_genasm_one, current_assembler */
+#include <deemon/compiler/ast.h>       /* ASSERT_AST, AST_*, ast */
+#include <deemon/compiler/symbol.h>    /* text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>               /* Dee_dict_item */
 #include <deemon/error.h>              /* DeeError_NotImplemented, DeeError_TypeError */

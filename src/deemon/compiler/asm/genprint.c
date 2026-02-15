@@ -25,9 +25,9 @@
 #include <deemon/alloc.h>              /* Dee_Free, Dee_Reallocc */
 #include <deemon/asm.h>                /* ASM16_*, ASM_*, instruction_t */
 #include <deemon/bytes.h>              /* DeeBytes_Check, DeeBytes_IsEmpty */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, PRINT_MODE_*, asm_*, ast_genasm, current_assembler */
+#include <deemon/compiler/ast.h>       /* AST_*, DeeAst_Type, ast */
+#include <deemon/compiler/optimize.h>  /* ast_predict_type */
 #include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/object.h>             /* DREF, DeeObject, Dee_Decref */
 #include <deemon/objmethod.h>          /* DeeObjMethod* */

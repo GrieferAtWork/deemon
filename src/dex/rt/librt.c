@@ -37,7 +37,7 @@
 #include <deemon/cell.h>              /* DeeCell_Type */
 #include <deemon/class.h>             /* DeeClassDescriptor_Type, DeeClass_New, DeeInstanceMember_Type */
 #include <deemon/code.h>              /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeDDI_Empty, DeeDDI_Type, DeeFunctionObject, DeeFunction_Type, DeeYieldFunctionIteratorObject, DeeYieldFunctionIterator_Type, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FCOPYABLE, Dee_CODE_FYIELDING */
-#include <deemon/compiler/compiler.h>
+#include <deemon/compiler/compiler.h> /* DeeCompiler_Type */
 #include <deemon/dex.h>               /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_*, DeeDex_Type */
 #include <deemon/dict.h>              /* DeeDict_Type, Dee_DICT_ITEM_INIT, Dee_dict_item */
 #include <deemon/error.h>             /* DeeError_* */

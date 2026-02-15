@@ -53,7 +53,7 @@ FUNC(StatementOrBraces)(JITLexer *__restrict self,
 		result = IFELSE(DeeSeq_NewEmpty(), 0);
 		JITLexer_Yield(self);
 		if (p_was_expression)
-			*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
+			*p_was_expression = JIT_AST_PARSE_WASEXPR_MAYBE;
 		break;
 
 	case '.':
@@ -68,7 +68,7 @@ err_rbrace_missing:
 			goto err_r;
 		}
 		if (p_was_expression)
-			*p_was_expression = AST_PARSE_WASEXPR_YES;
+			*p_was_expression = JIT_AST_PARSE_WASEXPR_YES;
 		break;
 
 	case '{': /* Recursion! */
@@ -78,9 +78,9 @@ parse_remainder_after_hybrid_popscope:
 		if (ISERR(result))
 			goto err;
 parse_remainder_after_hybrid_popscope_resok:
-		if (was_expression == AST_PARSE_WASEXPR_NO)
+		if (was_expression == JIT_AST_PARSE_WASEXPR_NO)
 			goto parse_remainder_after_statement;
-		if (was_expression == AST_PARSE_WASEXPR_YES) {
+		if (was_expression == JIT_AST_PARSE_WASEXPR_YES) {
 			result = CALL_SECONDARY(Operand, result);
 			if (ISERR(result))
 				goto err;
@@ -104,7 +104,7 @@ parse_remainder_after_comma_popscope:
 					goto err_rbrace_missing;
 				}
 				if (p_was_expression)
-					*p_was_expression = AST_PARSE_WASEXPR_YES;
+					*p_was_expression = JIT_AST_PARSE_WASEXPR_YES;
 				break;
 			}
 			if likely(self->jl_tok == '}') {
@@ -194,7 +194,7 @@ parse_remainder_before_rbrace_popscope_wrap:
 			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				JITLexer_Yield(self);
-				was_expression = AST_PARSE_WASEXPR_NO;
+				was_expression = JIT_AST_PARSE_WASEXPR_NO;
 				result = FUNC(FromImport)(self);
 				if (ISERR(result))
 					goto err;
@@ -240,7 +240,7 @@ parse_remainder_after_semicolon_hybrid_popscope:
 				/* Special case: `assert' statements require a trailing `;' token.
 				 *                If that token exists, we know for sure that this is a statement! */
 				if (self->jl_tok == ';') {
-					was_expression = AST_PARSE_WASEXPR_NO;
+					was_expression = JIT_AST_PARSE_WASEXPR_NO;
 					JITLexer_Yield(self);
 				}
 				goto parse_remainder_after_hybrid_popscope_resok;
@@ -304,7 +304,7 @@ is_a_statement:
 		LOAD_LVALUE(result, err_popscope);
 		IF_EVAL(JITContext_PopScope(self->jl_context));
 		if (p_was_expression)
-			*p_was_expression = AST_PARSE_WASEXPR_NO;
+			*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 		break;
 
 	default: {
@@ -326,11 +326,11 @@ default_case:
 		IF_EVAL(old_tab = JITContext_GetROLocals(self->jl_context);)
 		comma_mode = 0;
 		result = FUNC(Comma)(self,
-		                     AST_COMMA_NORMAL |
-		                     /*AST_COMMA_FORCEMULTIPLE |*/
-		                     AST_COMMA_ALLOWVARDECLS |
-		                     AST_COMMA_ALLOWTYPEDECL |
-		                     AST_COMMA_PARSESEMI,
+		                     JIT_AST_COMMA_NORMAL |
+		                     /*JIT_AST_COMMA_FORCEMULTIPLE |*/
+		                     JIT_AST_COMMA_ALLOWVARDECLS |
+		                     JIT_AST_COMMA_ALLOWTYPEDECL |
+		                     JIT_AST_COMMA_PARSESEMI,
 		                     IF_EVAL(&DeeTuple_Type, )
 		                     &comma_mode);
 		if (ISERR(result))
@@ -343,8 +343,8 @@ default_case:
 #ifdef JIT_EVAL
 				/* The NEEDSEMI flag is set when only a single expression was parsed.
 				 * If this was the case, then we must pack that expression in a sequence. */
-				if ((comma_mode & (AST_COMMA_OUT_FNEEDSEMI | AST_COMMA_OUT_FMULTIPLE)) ==
-				    /*         */ (AST_COMMA_OUT_FNEEDSEMI)) {
+				if ((comma_mode & (JIT_AST_COMMA_OUT_FNEEDSEMI | JIT_AST_COMMA_OUT_FMULTIPLE)) ==
+				    /*         */ (JIT_AST_COMMA_OUT_FNEEDSEMI)) {
 					DREF DeeObject *seq;
 					LOAD_LVALUE(result, err_popscope);
 					seq = DeeTuple_NewVectorSymbolic(1, (DeeObject *const *)&result);
@@ -360,11 +360,11 @@ parse_remainder_after_rbrace_popscope:
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
 				if (p_was_expression)
-					*p_was_expression = AST_PARSE_WASEXPR_YES;
+					*p_was_expression = JIT_AST_PARSE_WASEXPR_YES;
 				break;
 			}
 			if (self->jl_tok == ':' &&
-			    !(comma_mode & AST_COMMA_OUT_FMULTIPLE)) {
+			    !(comma_mode & JIT_AST_COMMA_OUT_FMULTIPLE)) {
 parse_remainder_after_colon_popscope:
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
@@ -376,16 +376,16 @@ parse_remainder_after_colon_popscope:
 					goto err_rbrace_missing;
 				JITLexer_Yield(self);
 				if (p_was_expression)
-					*p_was_expression = AST_PARSE_WASEXPR_YES;
+					*p_was_expression = JIT_AST_PARSE_WASEXPR_YES;
 				break;
 			}
 		}
 		/* Statement expression. */
-		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
+		if (comma_mode & JIT_AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;' token as part of the expression. */
 			if likely(self->jl_tok == ';') {
 #ifdef JIT_EVAL
-				if (comma_mode & AST_COMMA_OUT_FMULTIPLE) {
+				if (comma_mode & JIT_AST_COMMA_OUT_FMULTIPLE) {
 					/* >> ({ "foo", 42; })
 					 * >> result        = ("foo", 42);
 					 * >> wanted_result = 42; */
@@ -423,7 +423,7 @@ parse_remainder_after_statement:
 		LOAD_LVALUE(result, err_popscope);
 		IF_EVAL(JITContext_PopScope(self->jl_context));
 		if (p_was_expression)
-			*p_was_expression = AST_PARSE_WASEXPR_NO;
+			*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	}	break;
 	}
 	return result;
@@ -451,21 +451,21 @@ FUNC(HybridAtBrace)(JITLexer *__restrict self,
 	result = FUNC(StatementOrBraces)(self, &was_expression);
 	if (ISERR(result))
 		goto err;
-	if (was_expression != AST_PARSE_WASEXPR_NO) {
+	if (was_expression != JIT_AST_PARSE_WASEXPR_NO) {
 		/* Try to parse a suffix expression.
 		 * If there was one, then we know that it actually was an expression. */
 		unsigned char const *token_start;
 		token_start = self->jl_tokstart;
 		result      = CALL_SECONDARY(Operand, result);
 		if (token_start != self->jl_tokstart)
-			was_expression = AST_PARSE_WASEXPR_YES;
+			was_expression = JIT_AST_PARSE_WASEXPR_YES;
 	}
 	if (ISERR(result))
 		goto err;
 	/* _DONT_ consume a trailing ';' !!! */
-	/*if (self->jl_tok == ';' && was_expression != AST_PARSE_WASEXPR_NO) {
+	/*if (self->jl_tok == ';' && was_expression != JIT_AST_PARSE_WASEXPR_NO) {
 		JITLexer_Yield(self);
-		was_expression = AST_PARSE_WASEXPR_NO;
+		was_expression = JIT_AST_PARSE_WASEXPR_NO;
 	}*/
 	if (p_was_expression)
 		*p_was_expression = was_expression;
@@ -488,21 +488,21 @@ FUNC(Hybrid)(JITLexer *__restrict self,
 parse_unary_suffix_if_notexpr:
 		if (ISERR(result))
 			goto err;
-		if (was_expression != AST_PARSE_WASEXPR_NO) {
+		if (was_expression != JIT_AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
 			unsigned char const *token_start;
 			token_start = self->jl_tokstart;
 			result      = CALL_SECONDARY(Operand, result);
 			if (token_start != self->jl_tokstart)
-				was_expression = AST_PARSE_WASEXPR_YES;
+				was_expression = JIT_AST_PARSE_WASEXPR_YES;
 		}
 check_semi_after_expression:
 		if (ISERR(result))
 			goto err;
-		if (self->jl_tok == ';' && was_expression != AST_PARSE_WASEXPR_NO) {
+		if (self->jl_tok == ';' && was_expression != JIT_AST_PARSE_WASEXPR_NO) {
 			JITLexer_Yield(self);
-			was_expression = AST_PARSE_WASEXPR_NO;
+			was_expression = JIT_AST_PARSE_WASEXPR_NO;
 		}
 		if (p_was_expression)
 			*p_was_expression = was_expression;
@@ -513,7 +513,7 @@ check_semi_after_expression:
 is_a_statement:
 		result = FUNC(Statement)(self);
 		if (p_was_expression)
-			*p_was_expression = AST_PARSE_WASEXPR_NO;
+			*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 		break;
 
 	case JIT_KEYWORD: {
@@ -565,7 +565,7 @@ is_a_statement:
 			}
 			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
 				JITLexer_Yield(self);
-				was_expression = AST_PARSE_WASEXPR_NO;
+				was_expression = JIT_AST_PARSE_WASEXPR_NO;
 				result = FUNC(FromImport)(self);
 				goto check_semi_after_expression;
 			}
@@ -657,23 +657,23 @@ default_case:
 #endif /* JIT_EVAL */
 		comma_mode = 0;
 		result = FUNC(Comma)(self,
-		                     AST_COMMA_PARSESINGLE |
-		                     AST_COMMA_NOSUFFIXKWD |
-		                     AST_COMMA_ALLOWVARDECLS |
-		                     AST_COMMA_ALLOWTYPEDECL |
-		                     AST_COMMA_PARSESEMI,
+		                     JIT_AST_COMMA_PARSESINGLE |
+		                     JIT_AST_COMMA_NOSUFFIXKWD |
+		                     JIT_AST_COMMA_ALLOWVARDECLS |
+		                     JIT_AST_COMMA_ALLOWTYPEDECL |
+		                     JIT_AST_COMMA_PARSESEMI,
 		                     IF_EVAL(NULL,)
 		                     &comma_mode);
 		if (ISERR(result))
 			goto err;
-		if (self->jl_tok == ';' && (comma_mode & AST_COMMA_OUT_FNEEDSEMI)) {
+		if (self->jl_tok == ';' && (comma_mode & JIT_AST_COMMA_OUT_FNEEDSEMI)) {
 			JITLexer_Yield(self);
 			if (p_was_expression)
-				*p_was_expression = AST_PARSE_WASEXPR_NO;
+				*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 #ifdef JIT_EVAL
 		} else if (old_tab != JITContext_GetROLocals(self->jl_context) ||
 		           (old_tab && old_varc != old_tab->ot_size)) {
-			if ((comma_mode & AST_COMMA_OUT_FNEEDSEMI) &&
+			if ((comma_mode & JIT_AST_COMMA_OUT_FNEEDSEMI) &&
 			    /* Hack: Allow a missing trailing ';'-token when at the end
 			     *       of the input code, and inside of the global scope. */
 			    (self->jl_tok != 0 || !JITContext_IsGlobalScope(self->jl_context))) {
@@ -682,14 +682,14 @@ default_case:
 				goto err;
 			}
 			if (p_was_expression)
-				*p_was_expression = AST_PARSE_WASEXPR_NO;
+				*p_was_expression = JIT_AST_PARSE_WASEXPR_NO;
 #endif /* JIT_EVAL */
-		} else if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
+		} else if (comma_mode & JIT_AST_COMMA_OUT_FNEEDSEMI) {
 			if (p_was_expression)
-				*p_was_expression = AST_PARSE_WASEXPR_YES;
+				*p_was_expression = JIT_AST_PARSE_WASEXPR_YES;
 		} else {
 			if (p_was_expression)
-				*p_was_expression = AST_PARSE_WASEXPR_MAYBE;
+				*p_was_expression = JIT_AST_PARSE_WASEXPR_MAYBE;
 		}
 	}	break;
 

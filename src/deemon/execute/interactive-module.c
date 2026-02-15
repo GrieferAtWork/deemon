@@ -28,9 +28,13 @@
 #include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_FreeTracker, Dee_*alloc*, Dee_CollectMemoryoc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/asm.h>                /* ASM_JMP, ASM_UD, instruction_t */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Empty, DeeFunctionObject, DeeFunction_NewNoRefs, DeeFunction_Type, Dee_CODE_F*, Dee_code_frame, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_*, code_size_t, instruction_t */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, SECTION_*, asm_*, assembler*, ast_genasm, current_assembler */
+#include <deemon/compiler/ast.h>       /* ast, ast_* */
+#include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompilerObject, DeeCompiler_New */
+#include <deemon/compiler/error.h>     /* parser_rethrow, parser_start */
+#include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, ast_parse_statement */
+#include <deemon/compiler/optimize.h>  /* OPTIMIZE_FENABLED, ast_optimize_all, optimizer_flags */
+#include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeRootScopeObject, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, current_scope, symbol */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack */

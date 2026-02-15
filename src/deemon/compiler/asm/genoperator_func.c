@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/assembler.h> /* ASM_G_FPUSHRES, asm_g*, asm_newmodule, ast_genasm_one */
+#include <deemon/compiler/ast.h>       /* ast */
+#include <deemon/compiler/lexer.h>     /* AST_OPERATOR_MAX, AST_OPERATOR_MIN, inner_compiler_options */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_FEXTERN, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/object.h>             /* DREF, Dee_AsObject, Dee_Decref, ITER_ISOK */
@@ -52,22 +52,22 @@ bind_module_symbol(DeeModuleObject *__restrict module,
                    uint16_t *__restrict p_modid,
                    uint16_t *__restrict p_symid,
                    char const *__restrict symbol_name) {
-	struct Dee_module_symbol *symbol;
+	struct Dee_module_symbol *sym;
 	int32_t temp;
-	symbol = DeeModule_GetSymbolString(module, symbol_name);
-	if unlikely(!symbol)
+	sym = DeeModule_GetSymbolString(module, symbol_name);
+	if unlikely(!sym)
 		return 1; /* Doesn't exists */
-	if (symbol->ss_flags & Dee_MODSYM_FEXTERN) {
+	if (sym->ss_flags & Dee_MODSYM_FEXTERN) {
 		/* Follow external module symbols. */
-		ASSERT(symbol->ss_impid < module->mo_importc);
-		module = module->mo_importv[symbol->ss_impid];
+		ASSERT(sym->ss_impid < module->mo_importc);
+		module = module->mo_importv[sym->ss_impid];
 	}
 	/* XXX: What if the calling module is the `operators' module? */
 	temp = asm_newmodule(module);
 	if unlikely(temp < 0)
 		goto err;
 	*p_modid = (uint16_t)temp;
-	*p_symid = Dee_module_symbol_getindex(symbol);
+	*p_symid = Dee_module_symbol_getindex(sym);
 	return 0;
 err:
 	return -1;

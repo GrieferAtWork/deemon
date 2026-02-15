@@ -27,9 +27,9 @@
 #include <deemon/callable.h>          /* DeeCallable_Type */
 #include <deemon/cell.h>              /* DeeCell_Type */
 #include <deemon/code.h>              /* DeeFunction_Type, Dee_EXCEPTION_HANDLER_FFINALLY */
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/optimize.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/ast.h>      /* ASSERT_AST, AST_*, asm_operand, ast, catch_expr */
+#include <deemon/compiler/optimize.h> /* AST_CONTAINS_GOTO_CONSIDER_*, AST_DOESNT_RETURN_F*, AST_PREDICT_TYPE_F_NOANNO, OPTIMIZE_FNOCOMPARE, OPTIMIZE_FNOPREDICT, ast_*, optimizer_flags */
+#include <deemon/compiler/symbol.h>   /* CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT, DAST_*, DeeBaseScopeObject, DeeBaseScope_IsVarargs, SYMBOL_*, current_basescope, decl_ast, symbol, symbol_*, text_label */
 #include <deemon/dict.h>              /* DeeDict_Type */
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/float.h>             /* CONFIG_HAVE_FPU, DeeFloat_Type */

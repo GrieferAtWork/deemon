@@ -27,10 +27,9 @@
 #include <deemon/bool.h>               /* DeeBool* */
 #include <deemon/class.h>              /* Dee_CLASS_*, Dee_class_attribute */
 #include <deemon/code.h>               /* Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FHANDLED */
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/ast.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/symbol.h>
+#include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, _asm_gadjstack, _asm_glrot, _asm_grrot, asm_*, current_assembler */
+#include <deemon/compiler/ast.h>       /* ast */
+#include <deemon/compiler/symbol.h>    /* DeeBaseScope_IsVarargs, DeeBaseScope_IsVarkwds, DeeScopeObject, SYMBOL_*, current_basescope, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_GetRealVTab, _DeeDict_GetVirtVTab */
 #include <deemon/error.h>              /* DeeError_* */

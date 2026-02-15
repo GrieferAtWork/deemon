@@ -55,12 +55,12 @@ DECL_BEGIN
 
 /* Special symbol names to generate function calls to
  * when the argument count cannot be determined. */
-INTERN_CONST char const rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)][8] = {
-	/* [AST_OPERATOR_POS_OR_ADD           - AST_OPERATOR_MIN] = */ "__pooad",
-	/* [AST_OPERATOR_NEG_OR_SUB           - AST_OPERATOR_MIN] = */ "__neosb",
-	/* [AST_OPERATOR_GETITEM_OR_SETITEM   - AST_OPERATOR_MIN] = */ "__giosi",
-	/* [AST_OPERATOR_GETRANGE_OR_SETRANGE - AST_OPERATOR_MIN] = */ "__grosr",
-	/* [AST_OPERATOR_GETATTR_OR_SETATTR   - AST_OPERATOR_MIN] = */ "__gaosa"
+INTERN_CONST char const rt_operator_names[1 + (JIT_AST_OPERATOR_MAX - JIT_AST_OPERATOR_MIN)][8] = {
+	/* [JIT_AST_OPERATOR_POS_OR_ADD           - JIT_AST_OPERATOR_MIN] = */ "__pooad",
+	/* [JIT_AST_OPERATOR_NEG_OR_SUB           - JIT_AST_OPERATOR_MIN] = */ "__neosb",
+	/* [JIT_AST_OPERATOR_GETITEM_OR_SETITEM   - JIT_AST_OPERATOR_MIN] = */ "__giosi",
+	/* [JIT_AST_OPERATOR_GETRANGE_OR_SETRANGE - JIT_AST_OPERATOR_MIN] = */ "__grosr",
+	/* [JIT_AST_OPERATOR_GETATTR_OR_SETATTR   - JIT_AST_OPERATOR_MIN] = */ "__gaosa"
 };
 
 /* Check if the current token may refer to the start of an expression.
@@ -227,9 +227,9 @@ JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opnam
 	DREF DeeObject *result;
 	DREF DeeModuleObject *operators_module;
 	char const *symbol_name = NULL;
-	if (opname >= AST_OPERATOR_MIN && opname <= AST_OPERATOR_MAX) {
+	if (opname >= JIT_AST_OPERATOR_MIN && opname <= JIT_AST_OPERATOR_MAX) {
 		/* Special, ambiguous operator. */
-		symbol_name = rt_operator_names[opname - AST_OPERATOR_MIN];
+		symbol_name = rt_operator_names[opname - JIT_AST_OPERATOR_MIN];
 	} else {
 		/* Default case: determine the operator symbol using generic-operator info. */
 		struct Dee_opinfo const *info;
@@ -281,11 +281,11 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
 	}
 
 	case '+':
-		result = AST_OPERATOR_POS_OR_ADD;
+		result = JIT_AST_OPERATOR_POS_OR_ADD;
 		goto done_y1;
 
 	case '-':
-		result = AST_OPERATOR_NEG_OR_SUB;
+		result = JIT_AST_OPERATOR_NEG_OR_SUB;
 		goto done_y1;
 
 	case '*':
@@ -454,9 +454,9 @@ err_empty_string:
 
 	case '[':
 		JITLexer_Yield(self);
-		result = AST_OPERATOR_GETITEM_OR_SETITEM;
+		result = JIT_AST_OPERATOR_GETITEM_OR_SETITEM;
 		if (self->jl_tok == ':') {
-			result = AST_OPERATOR_GETRANGE_OR_SETRANGE;
+			result = JIT_AST_OPERATOR_GETRANGE_OR_SETRANGE;
 			JITLexer_Yield(self);
 		}
 		if likely(self->jl_tok == ']') {
@@ -467,7 +467,7 @@ err_rbrck_after_lbrck:
 			goto err_trace;
 		}
 		if (self->jl_tok == '=') {
-			result = (result == AST_OPERATOR_GETITEM_OR_SETITEM
+			result = (result == JIT_AST_OPERATOR_GETITEM_OR_SETITEM
 			          ? OPERATOR_SETITEM
 			          : OPERATOR_SETRANGE);
 			goto done_y1;
@@ -475,7 +475,7 @@ err_rbrck_after_lbrck:
 		goto done;
 
 	case '.':
-		result = AST_OPERATOR_GETATTR_OR_SETATTR;
+		result = JIT_AST_OPERATOR_GETATTR_OR_SETATTR;
 		JITLexer_Yield(self);
 		if (self->jl_tok == '=') {
 			result = OPERATOR_SETATTR;
@@ -530,8 +530,8 @@ err_rbrck_after_lbrck:
 			if (name_begin[0] == 'f' &&
 			    name_begin[1] == 'o' &&
 			    name_begin[2] == 'r' &&
-			    (features & P_OPERATOR_FCLASS)) {
-				result = AST_OPERATOR_FOR;
+			    (features & JIT_P_OPERATOR_FCLASS)) {
+				result = JIT_AST_OPERATOR_FOR;
 				goto done_y1;
 			}
 			break;
@@ -586,7 +586,7 @@ err_rbrck_after_lbrck:
 				result = OPERATOR_LEAVE;
 				goto done_y1;
 			}
-			if (name == ENCODE_INT32('s', 'u', 'p', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r' && (features & P_OPERATOR_FCLASS)) {
+			if (name == ENCODE_INT32('s', 'u', 'p', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r' && (features & JIT_P_OPERATOR_FCLASS)) {
 				result = Dee_CLASS_OPERATOR_SUPERARGS;
 				goto done_y1;
 			}
@@ -688,7 +688,7 @@ err_rbrck_after_lbrck:
 			if (name_size == 9 &&
 			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'u', 'p', 'e') &&
 			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'a', 'r', 'g') &&
-			    UNALIGNED_GET8(name_begin + 8) == 's' && (features & P_OPERATOR_FCLASS)) {
+			    UNALIGNED_GET8(name_begin + 8) == 's' && (features & JIT_P_OPERATOR_FCLASS)) {
 				result = Dee_CLASS_OPERATOR_SUPERARGS;
 				goto done_y1;
 			}
@@ -953,7 +953,7 @@ JITLexer_EvalModuleName(JITLexer *__restrict self,
 	int error;
 	/* Optimization for simple/inline module names, such that we
 	 * don't have to actually copy the module name at this point! */
-	if (TOKEN_IS_DOT(self) || self->jl_tok == JIT_KEYWORD) {
+	if (JIT_TOKEN_IS_DOT(self) || self->jl_tok == JIT_KEYWORD) {
 		unsigned char const *start, *end;
 		start = self->jl_tokstart;
 		end   = self->jl_tokend;
@@ -985,7 +985,7 @@ JITLexer_EvalModuleName(JITLexer *__restrict self,
 		/* Check if the keyword following the simple module
 		 * name is something that would belong to our name. */
 		JITLexer_YieldAt(self, end);
-		if (TOKEN_IS_DOT(self) ||
+		if (JIT_TOKEN_IS_DOT(self) ||
 		    self->jl_tok == JIT_KEYWORD ||
 		    self->jl_tok == JIT_STRING ||
 		    self->jl_tok == JIT_RAWSTRING) {
@@ -1238,29 +1238,29 @@ JITLexer_ParseLookupMode(JITLexer *__restrict self,
 next_modifier:
 	if (self->jl_tok == JIT_KEYWORD) {
 		if (JITLexer_ISTOK(self, "local")) {
-			*p_mode &= ~LOOKUP_SYM_VMASK;
-			*p_mode |= LOOKUP_SYM_VLOCAL;
+			*p_mode &= ~JIT_LOOKUP_SYM_VMASK;
+			*p_mode |= JIT_LOOKUP_SYM_VLOCAL;
 continue_modifier:
 			JITLexer_Yield(self);
 			goto next_modifier;
 		}
 		if (JITLexer_ISTOK(self, "global")) {
-			*p_mode &= ~LOOKUP_SYM_VMASK;
-			*p_mode |= LOOKUP_SYM_VGLOBAL;
+			*p_mode &= ~JIT_LOOKUP_SYM_VMASK;
+			*p_mode |= JIT_LOOKUP_SYM_VGLOBAL;
 			goto continue_modifier;
 		}
 		if (JITLexer_ISTOK(self, "static")) {
-			*p_mode &= ~LOOKUP_SYM_STACK;
-			*p_mode |= LOOKUP_SYM_STATIC;
+			*p_mode &= ~JIT_LOOKUP_SYM_STACK;
+			*p_mode |= JIT_LOOKUP_SYM_STATIC;
 			goto continue_modifier;
 		}
 		if (JITLexer_ISTOK(self, "__stack")) {
-			*p_mode &= ~LOOKUP_SYM_STATIC;
-			*p_mode |= LOOKUP_SYM_STACK;
+			*p_mode &= ~JIT_LOOKUP_SYM_STATIC;
+			*p_mode |= JIT_LOOKUP_SYM_STACK;
 			goto continue_modifier;
 		}
 		if (JITLexer_ISTOK(self, "final")) {
-			*p_mode |= LOOKUP_SYM_FINAL;
+			*p_mode |= JIT_LOOKUP_SYM_FINAL;
 			goto continue_modifier;
 		}
 	}

@@ -17,8 +17,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export COMPILER_**/
+/*!export DeeCompilerItem**/
+/*!export DeeCompiler**/
+/*!export Dee_COMPILER_**/
+/*!export Dee_compiler_items**/
 #ifndef GUARD_DEEMON_COMPILER_COMPILER_H
-#define GUARD_DEEMON_COMPILER_COMPILER_H 1
+#define GUARD_DEEMON_COMPILER_COMPILER_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -29,9 +35,9 @@
 #include "../util/weakref.h" /* Dee_WEAKREF */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include "error.h"
-#include "lexer.h"
-#include "symbol.h"
+#include "error.h"  /* parser_errors */
+#include "lexer.h"  /* ast_tags */
+#include "symbol.h" /* DeeScopeObject */
 #include "tpp.h"
 #endif /* CONFIG_BUILDING_DEEMON */
 

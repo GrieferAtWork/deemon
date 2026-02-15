@@ -25,9 +25,9 @@
 #include <deemon/alloc.h>              /* Dee_Calloc, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/bool.h>               /* DeeBool_For, return_bool */
-#include <deemon/compiler/compiler.h>
-#include <deemon/compiler/interface.h>
-#include <deemon/compiler/lexer.h>
+#include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
+#include <deemon/compiler/interface.h> /* DR_*, DeeCompiler* */
+#include <deemon/compiler/lexer.h>     /* ast_decode_unicode_string */
 #include <deemon/compiler/tpp.h>
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE */

@@ -108,7 +108,7 @@
 #include "../runtime/strings.h"
 
 #ifndef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/compiler/dec.h>
+#include <deemon/compiler/dec.h> /* dec_create */
 #endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 DECL_BEGIN
@@ -5028,13 +5028,16 @@ err:
 DECL_END
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
-#include <deemon/compiler/compiler.h>
+#include <deemon/compiler/compiler.h> /* COMPILER_*, DeeCompiler* */
 
 #include <deemon/alloc.h>
 #include <deemon/code.h>
-#include <deemon/compiler/assembler.h>
-#include <deemon/compiler/lexer.h>
-#include <deemon/compiler/optimize.h>
+#include <deemon/compiler/assembler.h> /* ASM_FNORMAL, asm_symbol_ref, code_compile, module_compile */
+#include <deemon/compiler/ast.h>       /* AST_FMULTIPLE_KEEPLAST, ast, ast_* */
+#include <deemon/compiler/error.h>     /* parser_rethrow, parser_start */
+#include <deemon/compiler/lexer.h>     /* AST_COMMA_*, PARSE_FLFSTMT, ast_parse_*, inner_compiler_options, parser_flags */
+#include <deemon/compiler/optimize.h>  /* OPTIMIZE_FENABLED, ast_optimize_all, optimizer_flags, optimizer_unwind_limit */
+#include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, get_local_symbol_in_scope, new_local_symbol_in_scope, new_unnamed_symbol, symbol */
 #include <deemon/compiler/tpp.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>

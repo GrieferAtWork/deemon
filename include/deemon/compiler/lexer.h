@@ -17,8 +17,21 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+/*!export **/
+/*!export AST_ANNOTATION_F**/
+/*!export AST_COMMA_**/
+/*!export AST_OPERATOR_**/
+/*!export AST_PARSE_WASEXPR_**/
+/*!export CASE_TOKEN_IS_**/
+/*!export TOKEN_IS_**/
+/*!export ast_annotation**/
+/*!export ast_**/
+/*!export ast_parse_**/
+/*!export ast_tags**/
+/*!export astlist**/
+/*!export parse_**/
 #ifndef GUARD_DEEMON_COMPILER_LEXER_H
-#define GUARD_DEEMON_COMPILER_LEXER_H 1
+#define GUARD_DEEMON_COMPILER_LEXER_H 1 /*!export-*/
 
 #include "../api.h"
 
@@ -33,8 +46,8 @@
 #include "../system-features.h" /* bzero, memcpy */
 #include "../type.h"            /* Dee_operator_t */
 #include "../types.h"           /* DREF, DeeObject, ITER_DONE */
-#include "ast.h"
-#include "symbol.h"
+#include "ast.h"                /* ast */
+#include "symbol.h"             /* LOOKUP_SYM_NORMAL, ast_loc, current_rootscope, decl_ast, symbol */
 #include "tpp.h"
 
 #include <stdbool.h> /* bool, false */
