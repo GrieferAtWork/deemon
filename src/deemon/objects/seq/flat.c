@@ -54,7 +54,7 @@
 #define SSIZE_MAX __SSIZE_MAX__
 
 #ifndef CONFIG_TINY_DEEMON
-#define WANT_sf_mh_find
+#define WANT_sf_mh_seq_find
 #endif /* !CONFIG_TINY_DEEMON */
 
 DECL_BEGIN
@@ -270,18 +270,18 @@ sf_foreach(SeqFlat *__restrict self, Dee_foreach_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-sf_mh_foreach_reverse_cb(void *arg, DeeObject *subseq) {
+sf_mh_seq_foreach_reverse_cb(void *arg, DeeObject *subseq) {
 	struct sf_foreach_data *data;
 	data = (struct sf_foreach_data *)arg;
 	return DeeSeq_InvokeForeachReverse(subseq, data->sffd_proc, data->sffd_arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-sf_mh_foreach_reverse(SeqFlat *__restrict self, Dee_foreach_t proc, void *arg) {
+sf_mh_seq_foreach_reverse(SeqFlat *__restrict self, Dee_foreach_t proc, void *arg) {
 	struct sf_foreach_data data;
 	data.sffd_proc = proc;
 	data.sffd_arg  = arg;
-	return sf_foreachseq_reverse(self, &sf_mh_foreach_reverse_cb, &data);
+	return sf_foreachseq_reverse(self, &sf_mh_seq_foreach_reverse_cb, &data);
 }
 
 struct sf_foreach_pair_data {
@@ -469,7 +469,7 @@ sf_enumerate_index_enumerate_reverse_inner_cb(void *arg, size_t UNUSED(index), D
 }
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
-sf_enumerate_index_foreach_reverse_cb(void *arg, DeeObject *subseq) {
+sf_mh_seq_enumerate_index_reverse_cb(void *arg, DeeObject *subseq) {
 	size_t subseq_size, subseq_end;
 	DeeMH_seq_enumerate_index_reverse_t ei_reverse_op;
 	struct sf_enumerate_index_reverse_data *data;
@@ -499,8 +499,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-sf_mh_enumerate_index_reverse(SeqFlat *__restrict self, Dee_seq_enumerate_index_t proc,
-                              void *arg, size_t start, size_t end) {
+sf_mh_seq_enumerate_index_reverse(SeqFlat *__restrict self, Dee_seq_enumerate_index_t proc,
+                                  void *arg, size_t start, size_t end) {
 	size_t fullsize;
 	Dee_ssize_t status;
 	struct sf_enumerate_index_reverse_data data;
@@ -515,7 +515,7 @@ sf_mh_enumerate_index_reverse(SeqFlat *__restrict self, Dee_seq_enumerate_index_
 	data.sfeird_index  = fullsize;
 	data.sfeird_start  = start;
 	data.sfeird_skip   = fullsize - end;
-	status = sf_foreachseq_reverse(self, &sf_enumerate_index_foreach_reverse_cb, &data);
+	status = sf_foreachseq_reverse(self, &sf_mh_seq_enumerate_index_reverse_cb, &data);
 	if (status == 0 || status == SF_ENUMERATE_INDEX_FOREACH_DONE)
 		return data.sfeird_result;
 	ASSERT(status < 0);
@@ -695,6 +695,10 @@ sf_interact_range_foreach_cb(void *arg, DeeObject *elem) {
 		size_t subseq_start = data->sfirfd_start;
 		size_t subseq_size = subseq_end - subseq_start;
 		data->sfirfd_start = 0;
+		if (subseq_size > data->sfirfd_count) {
+			subseq_size = data->sfirfd_count;
+			subseq_end = subseq_start + subseq_size;
+		}
 
 		/* Enumerate sub-sequence */
 		temp = (*data->sfirfd_cb)(data->sfirfd_arg, elem, subseq_start,
@@ -799,8 +803,28 @@ sf_mh_clear(SeqFlat *__restrict self) {
 	return (int)sf_foreachseq(self, &sf_mh_clear_foreach_cb, NULL);
 }
 
-#ifdef WANT_sf_mh_find
-union sf_mh_find_data {
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_seq_erase_cb(void *arg, DeeObject *subseq, size_t subseq_start,
+                   size_t subseq_end, size_t range_start) {
+	(void)arg;
+	(void)range_start;
+	return (Dee_ssize_t)DeeObject_InvokeMethodHint(seq_erase, subseq,
+	                                               subseq_start,
+	                                               subseq_end - subseq_start);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sf_mh_seq_erase(SeqFlat *__restrict self, size_t index, size_t count) {
+	size_t end;
+	if (OVERFLOW_UADD(index, count, &end))
+		end = (size_t)-1;
+	return (int)sf_interact_withrange(self, index, end, &sf_mh_seq_erase_cb, NULL);
+}
+
+
+
+#ifdef WANT_sf_mh_seq_find
+union sf_mh_seq_find_data {
 	struct {
 		DeeObject *s_item;    /* [1..1] Item to find */
 	}          sfmhfd_search; /* [valid_if(NOT_RETURNED)] Item to find */
@@ -808,10 +832,10 @@ union sf_mh_find_data {
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-sf_mh_find_cb(void *arg, DeeObject *subseq,
-              size_t subseq_start, size_t subseq_end,
-              size_t range_start) {
-	union sf_mh_find_data *data = (union sf_mh_find_data *)arg;
+sf_mh_seq_find_cb(void *arg, DeeObject *subseq,
+                  size_t subseq_start, size_t subseq_end,
+                  size_t range_start) {
+	union sf_mh_seq_find_data *data = (union sf_mh_seq_find_data *)arg;
 	size_t index = DeeObject_InvokeMethodHint(seq_find, subseq,
 	                                          data->sfmhfd_search.s_item,
 	                                          subseq_start, subseq_end);
@@ -826,11 +850,11 @@ sf_mh_find_cb(void *arg, DeeObject *subseq,
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-sf_mh_find(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
+sf_mh_seq_find(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
 	Dee_ssize_t status;
-	union sf_mh_find_data data;
+	union sf_mh_seq_find_data data;
 	data.sfmhfd_search.s_item = item;
-	status = sf_interact_withrange(self, start, end, &sf_mh_find_cb, &data);
+	status = sf_interact_withrange(self, start, end, &sf_mh_seq_find_cb, &data);
 	ASSERT(status == 0 || status == -1 || status == -2);
 	if (status == -2)
 		return data.sfmhfd_index;
@@ -839,7 +863,7 @@ sf_mh_find(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
 	return (size_t)-1;
 }
 
-union sf_mh_find_with_key_data {
+union sf_mh_seq_find_with_key_data {
 	struct {
 		DeeObject *s_item;  /* [1..1] Item to find */
 		DeeObject *s_key;   /* [1..1] Find key */
@@ -848,10 +872,10 @@ union sf_mh_find_with_key_data {
 };
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-sf_mh_find_with_key_cb(void *arg, DeeObject *subseq,
-                       size_t subseq_start, size_t subseq_end,
-                       size_t range_start) {
-	union sf_mh_find_with_key_data *data = (union sf_mh_find_with_key_data *)arg;
+sf_mh_seq_find_with_key_cb(void *arg, DeeObject *subseq,
+                           size_t subseq_start, size_t subseq_end,
+                           size_t range_start) {
+	union sf_mh_seq_find_with_key_data *data = (union sf_mh_seq_find_with_key_data *)arg;
 	size_t index = DeeObject_InvokeMethodHint(seq_find_with_key, subseq,
 	                                          data->sfmhfwkd_search.s_item,
 	                                          subseq_start, subseq_end,
@@ -867,12 +891,12 @@ sf_mh_find_with_key_cb(void *arg, DeeObject *subseq,
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-sf_mh_find_with_key(SeqFlat *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+sf_mh_seq_find_with_key(SeqFlat *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
 	Dee_ssize_t status;
-	union sf_mh_find_with_key_data data;
+	union sf_mh_seq_find_with_key_data data;
 	data.sfmhfwkd_search.s_item = item;
 	data.sfmhfwkd_search.s_key  = key;
-	status = sf_interact_withrange(self, start, end, &sf_mh_find_with_key_cb, &data);
+	status = sf_interact_withrange(self, start, end, &sf_mh_seq_find_with_key_cb, &data);
 	ASSERT(status == 0 || status == -1 || status == -2);
 	if (status == -2)
 		return data.sfmhfwkd_index;
@@ -880,7 +904,7 @@ sf_mh_find_with_key(SeqFlat *self, DeeObject *item, size_t start, size_t end, De
 		return (size_t)Dee_COMPARE_ERR;
 	return (size_t)-1;
 }
-#endif /* WANT_sf_mh_find */
+#endif /* WANT_sf_mh_seq_find */
 
 
 PRIVATE struct type_getset tpconst sf_getsets[] = {
@@ -893,8 +917,8 @@ PRIVATE struct type_getset tpconst sf_getsets[] = {
 
 PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index, &sf_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_foreach_reverse, &sf_mh_foreach_reverse, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &sf_mh_enumerate_index_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_foreach_reverse, &sf_mh_seq_foreach_reverse, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_enumerate_index_reverse, &sf_mh_seq_enumerate_index_reverse, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_trygetfirst, &sf_mh_trygetfirst, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_trygetlast, &sf_mh_trygetlast, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_any, &sf_mh_any, METHOD_FNOREFESCAPE),
@@ -941,13 +965,13 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_key, &sf_mh_endswith_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range, &sf_mh_endswith_with_range, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &sf_mh_endswith_with_range_and_key, METHOD_FNOREFESCAPE),
-#ifdef WANT_sf_mh_find
-	TYPE_METHOD_HINT_F(seq_find, &sf_mh_find, METHOD_FNOREFESCAPE),
-	TYPE_METHOD_HINT_F(seq_find_with_key, &sf_mh_find_with_key, METHOD_FNOREFESCAPE),
-#endif /* WANT_sf_mh_find */
+#ifdef WANT_sf_mh_seq_find
+	TYPE_METHOD_HINT_F(seq_find, &sf_mh_seq_find, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &sf_mh_seq_find_with_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_seq_find */
 	//TODO:TYPE_METHOD_HINT_F(seq_rfind, &sf_mh_rfind, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_rfind_with_key, &sf_mh_rfind_with_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_erase, &sf_mh_erase, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_erase, &sf_mh_seq_erase, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_insert, &sf_mh_insert, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_insertall, &sf_mh_insertall, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_pushfront, &sf_mh_pushfront, METHOD_FNOREFESCAPE),
@@ -982,11 +1006,11 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 	//TODO:TYPE_METHOD_HINTREF(Sequence_rlocate),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_startswith),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_endswith),
-#ifdef WANT_sf_mh_find
+#ifdef WANT_sf_mh_seq_find
 	TYPE_METHOD_HINTREF(Sequence_find),
-#endif /* WANT_sf_mh_find */
+#endif /* WANT_sf_mh_seq_find */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_rfind),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_erase),
+	TYPE_METHOD_HINTREF(Sequence_erase),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_insert),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_insertall),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_pushfront),
