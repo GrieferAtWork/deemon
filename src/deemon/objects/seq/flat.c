@@ -53,6 +53,10 @@
 #define SSIZE_MIN __SSIZE_MIN__
 #define SSIZE_MAX __SSIZE_MAX__
 
+#ifndef CONFIG_TINY_DEEMON
+#define WANT_sf_mh_find
+#endif /* !CONFIG_TINY_DEEMON */
+
 DECL_BEGIN
 
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../tuple.c" */
@@ -654,6 +658,93 @@ err:
 	return -1;
 }
 
+/* @param: subseq:       The matching sub-sequence that containing. The
+ *                       matched sub-range from the given [start,end) is
+ *                       `[range_start,+=(subseq_end-subseq_start))'
+ * @param: subseq_start: Start offset into `subseq' to interact with
+ * @param: subseq_end:   End offset into `subseq' to interact with
+ * @param: range_start:  Starting index in flattened super-seq matching
+ *                       up with `subseq:subseq_start' */
+typedef WUNUSED_T NONNULL_T((1)) Dee_ssize_t
+(DCALL *sf_interact_range_cb_t)(void *arg, DeeObject *subseq,
+                                size_t subseq_start, size_t subseq_end,
+                                size_t range_start);
+
+struct sf_interact_range_foreach_data {
+	sf_interact_range_cb_t sfirfd_cb;    /* [1..1] Interaction callback */
+	void                  *sfirfd_arg;   /* [?..?] Cookie for `sfirfd_cb' */
+	size_t                 sfirfd_start; /* # of elements from sub-sequences that must still be skipped */
+	size_t                 sfirfd_range; /* Starting offset in super-sequence where next interaction range starts. */
+	size_t                 sfirfd_count; /* # of elements that must still be enumerated. */
+	Dee_ssize_t            sfirfd_sum;   /* Sum of return values of `sfirfd_cb', or negative for fast-fail */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+sf_interact_range_foreach_cb(void *arg, DeeObject *elem) {
+	size_t subseq_end;
+	struct sf_interact_range_foreach_data *data;
+	data = (struct sf_interact_range_foreach_data *)arg;
+	subseq_end = DeeObject_InvokeMethodHint(seq_operator_size, elem);
+	if unlikely(subseq_end == (size_t)-1)
+		goto err;
+	if (data->sfirfd_start >= subseq_end) {
+		/* Fully skip this sub-sequence */
+		data->sfirfd_start -= subseq_end;
+	} else {
+		Dee_ssize_t temp;
+		size_t subseq_start = data->sfirfd_start;
+		size_t subseq_size = subseq_end - subseq_start;
+		data->sfirfd_start = 0;
+
+		/* Enumerate sub-sequence */
+		temp = (*data->sfirfd_cb)(data->sfirfd_arg, elem, subseq_start,
+		                          subseq_end, data->sfirfd_range);
+		if unlikely(temp < 0) {
+			data->sfirfd_sum = temp;
+			return -2; /* Stop enumeration */
+		}
+		data->sfirfd_sum += temp;
+		if (subseq_size >= data->sfirfd_count)
+			return -2; /* Last sub-sequence was enumerated -> stop */
+		data->sfirfd_range += subseq_size;
+		data->sfirfd_count -= subseq_size;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Interact with the specified range within "self", invoking "interact" on
+ * every sub-sequence containing at least 1 item from the given [start,end)
+ * range.
+ *
+ * @param: start:    Start offset into `self' of sub-range to interact with
+ * @param: end:      End offset into `self' of sub-range to interact with
+ * @param: interact: Callback invoked on each matching sub-range.
+ * @param: arg:      Cookie for `interact'
+ * @return: >= 0: Sum of invocations of `iteract'
+ * @return: < 0:  First negative return value of `iteract'
+ * @return: -1:   An error was thrown, or `interact' returned `-1' */
+PRIVATE WUNUSED NONNULL((1, 4)) Dee_ssize_t DCALL
+sf_interact_withrange(SeqFlat *__restrict self, size_t start, size_t end,
+                      sf_interact_range_cb_t interact, void *arg) {
+	Dee_ssize_t result;
+	struct sf_interact_range_foreach_data data;
+	if (start >= end)
+		return 0; /* Nothing to interact with */
+	data.sfirfd_cb    = interact;
+	data.sfirfd_arg   = arg;
+	data.sfirfd_start = start;
+	data.sfirfd_range = start;
+	data.sfirfd_count = end - start;
+	data.sfirfd_sum   = 0;
+	result = DeeObject_InvokeMethodHint(seq_operator_foreach, self->sf_seq,
+	                                    &sf_interact_range_foreach_cb, &data);
+	if (result == 0 || result == -2)
+		result = data.sfirfd_sum;
+	return result;
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_delitem_index_cb(DeeObject *__restrict subseq, size_t index,
@@ -698,60 +789,6 @@ err:
 	return NULL;
 }
 
-
-
-PRIVATE struct type_seq sf_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sf_iter,
-	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
-	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sf_contains,
-	/* .tp_getitem            = */ DEFIMPL(&default__getitem__with__getitem_index),
-	/* .tp_delitem            = */ DEFIMPL(&default__delitem__with__delitem_index),
-	/* .tp_setitem            = */ DEFIMPL(&default__setitem__with__setitem_index),
-	/* .tp_getrange           = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
-	/* .tp_delrange           = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
-	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sf_foreach,
-	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&sf_foreach_pair,
-	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__getitem),
-	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__hasitem_index),
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&sf_size,
-	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sf_getitem_index,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&sf_delitem_index,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&sf_setitem_index,
-	/* .tp_bounditem_index    = */ DEFIMPL(&default__bounditem_index__with__getitem_index),
-	/* .tp_hasitem_index      = */ DEFIMPL(&default__hasitem_index__with__bounditem_index),
-	/* .tp_getrange_index     = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_trygetitem_index),
-	/* .tp_delrange_index     = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
-	/* .tp_setrange_index     = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
-	/* .tp_getrange_index_n   = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_trygetitem_index),
-	/* .tp_delrange_index_n   = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
-	/* .tp_setrange_index_n   = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
-	/* .tp_trygetitem         = */ DEFIMPL(&default__trygetitem__with__trygetitem_index),
-	/* .tp_trygetitem_index   = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sf_trygetitem_index,
-	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
-	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
-	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
-	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
-	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__getitem_string_hash),
-	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash),
-	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
-	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
-	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
-	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
-	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__getitem_string_len_hash),
-	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash),
-};
-
-PRIVATE struct type_getset tpconst sf_getsets[] = {
-	//TODO:TYPE_GETSET_F_NODOC(STR_first, &sf_getfirst, &sf_delfirst, &sf_setfirst, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_GETSET_F_NODOC(STR_last, &sf_getlast, &sf_dellast, &sf_setlast, METHOD_FNOREFESCAPE),
-	TYPE_GETSET_F("__firstseq__", &sf_getfirstseq, &sf_delfirstseq, &sf_setfirstseq, METHOD_FNOREFESCAPE, "->?DSequence"),
-	TYPE_GETSET_F("__lastseq__", &sf_getlastseq, &sf_dellastseq, &sf_setlastseq, METHOD_FNOREFESCAPE, "->?DSequence"),
-	TYPE_GETSET_END
-};
-
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 sf_mh_clear_foreach_cb(void *UNUSED(arg), DeeObject *subseq) {
 	return DeeObject_InvokeMethodHint(seq_clear, subseq);
@@ -762,17 +799,97 @@ sf_mh_clear(SeqFlat *__restrict self) {
 	return (int)sf_foreachseq(self, &sf_mh_clear_foreach_cb, NULL);
 }
 
+#ifdef WANT_sf_mh_find
+union sf_mh_find_data {
+	struct {
+		DeeObject *s_item;    /* [1..1] Item to find */
+	}          sfmhfd_search; /* [valid_if(NOT_RETURNED)] Item to find */
+	size_t     sfmhfd_index;  /* [valid_if(return == -2)] Discovered index */
+};
 
-//TODO:PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
-//TODO:sf_mh_find(DeeObject *self, DeeObject *item,
-//TODO:           size_t start, size_t end) {
-//TODO:}
-//TODO:
-//TODO:PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
-//TODO:sf_mh_find_with_key(DeeObject *self, DeeObject *item,
-//TODO:                    size_t start, size_t end, DeeObject *key) {
-//TODO:}
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_find_cb(void *arg, DeeObject *subseq,
+              size_t subseq_start, size_t subseq_end,
+              size_t range_start) {
+	union sf_mh_find_data *data = (union sf_mh_find_data *)arg;
+	size_t index = DeeObject_InvokeMethodHint(seq_find, subseq,
+	                                          data->sfmhfd_search.s_item,
+	                                          subseq_start, subseq_end);
+	if (index != (size_t)-1) {
+		if (index == (size_t)Dee_COMPARE_ERR)
+			return -1;
+		data->sfmhfd_index = range_start + index;
+		return -2;
+	}
+	return 0;
+}
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+sf_mh_find(SeqFlat *self, DeeObject *item, size_t start, size_t end) {
+	Dee_ssize_t status;
+	union sf_mh_find_data data;
+	data.sfmhfd_search.s_item = item;
+	status = sf_interact_withrange(self, start, end, &sf_mh_find_cb, &data);
+	ASSERT(status == 0 || status == -1 || status == -2);
+	if (status == -2)
+		return data.sfmhfd_index;
+	if (status == -1)
+		return (size_t)Dee_COMPARE_ERR;
+	return (size_t)-1;
+}
+
+union sf_mh_find_with_key_data {
+	struct {
+		DeeObject *s_item;  /* [1..1] Item to find */
+		DeeObject *s_key;   /* [1..1] Find key */
+	}          sfmhfwkd_search; /* [valid_if(NOT_RETURNED)] Item to find */
+	size_t     sfmhfwkd_index;  /* [valid_if(return == -2)] Discovered index */
+};
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+sf_mh_find_with_key_cb(void *arg, DeeObject *subseq,
+                       size_t subseq_start, size_t subseq_end,
+                       size_t range_start) {
+	union sf_mh_find_with_key_data *data = (union sf_mh_find_with_key_data *)arg;
+	size_t index = DeeObject_InvokeMethodHint(seq_find_with_key, subseq,
+	                                          data->sfmhfwkd_search.s_item,
+	                                          subseq_start, subseq_end,
+	                                          data->sfmhfwkd_search.s_key);
+	if (index != (size_t)-1) {
+		if (index == (size_t)Dee_COMPARE_ERR)
+			return -1;
+		data->sfmhfwkd_index = range_start + index;
+		return -2;
+	}
+	return 0;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
+sf_mh_find_with_key(SeqFlat *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
+	Dee_ssize_t status;
+	union sf_mh_find_with_key_data data;
+	data.sfmhfwkd_search.s_item = item;
+	data.sfmhfwkd_search.s_key  = key;
+	status = sf_interact_withrange(self, start, end, &sf_mh_find_with_key_cb, &data);
+	ASSERT(status == 0 || status == -1 || status == -2);
+	if (status == -2)
+		return data.sfmhfwkd_index;
+	if (status == -1)
+		return (size_t)Dee_COMPARE_ERR;
+	return (size_t)-1;
+}
+#endif /* WANT_sf_mh_find */
+
+
+PRIVATE struct type_getset tpconst sf_getsets[] = {
+	//TODO:TYPE_GETSET_F_NODOC(STR_first, &sf_getfirst, &sf_delfirst, &sf_setfirst, METHOD_FNOREFESCAPE),
+	//TODO:TYPE_GETSET_F_NODOC(STR_last, &sf_getlast, &sf_dellast, &sf_setlast, METHOD_FNOREFESCAPE),
+	TYPE_GETSET_F("__firstseq__", &sf_getfirstseq, &sf_delfirstseq, &sf_setfirstseq, METHOD_FNOREFESCAPE, "->?DSequence"),
+	TYPE_GETSET_F("__lastseq__", &sf_getlastseq, &sf_dellastseq, &sf_setlastseq, METHOD_FNOREFESCAPE, "->?DSequence"),
+	TYPE_GETSET_END
+};
 
 PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	TYPE_METHOD_HINT_F(seq_enumerate_index, &sf_mh_seq_enumerate_index, METHOD_FNOREFESCAPE),
@@ -824,8 +941,10 @@ PRIVATE struct type_method_hint tpconst sf_method_hints[] = {
 	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_key, &sf_mh_endswith_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range, &sf_mh_endswith_with_range, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_endswith_with_range_and_key, &sf_mh_endswith_with_range_and_key, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_find, &sf_mh_find, METHOD_FNOREFESCAPE),
-	//TODO:TYPE_METHOD_HINT_F(seq_find_with_key, &sf_mh_find_with_key, METHOD_FNOREFESCAPE),
+#ifdef WANT_sf_mh_find
+	TYPE_METHOD_HINT_F(seq_find, &sf_mh_find, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(seq_find_with_key, &sf_mh_find_with_key, METHOD_FNOREFESCAPE),
+#endif /* WANT_sf_mh_find */
 	//TODO:TYPE_METHOD_HINT_F(seq_rfind, &sf_mh_rfind, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_rfind_with_key, &sf_mh_rfind_with_key, METHOD_FNOREFESCAPE),
 	//TODO:TYPE_METHOD_HINT_F(seq_erase, &sf_mh_erase, METHOD_FNOREFESCAPE),
@@ -863,7 +982,9 @@ PRIVATE struct type_method tpconst sf_methods[] = {
 	//TODO:TYPE_METHOD_HINTREF(Sequence_rlocate),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_startswith),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_endswith),
-	//TODO:TYPE_METHOD_HINTREF(Sequence_find),
+#ifdef WANT_sf_mh_find
+	TYPE_METHOD_HINTREF(Sequence_find),
+#endif /* WANT_sf_mh_find */
 	//TODO:TYPE_METHOD_HINTREF(Sequence_rfind),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_erase),
 	//TODO:TYPE_METHOD_HINTREF(Sequence_insert),
@@ -896,6 +1017,49 @@ PRIVATE struct type_member tpconst sf_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_seq sf_seq = {
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sf_iter,
+	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sf_contains,
+	/* .tp_getitem            = */ DEFIMPL(&default__getitem__with__getitem_index),
+	/* .tp_delitem            = */ DEFIMPL(&default__delitem__with__delitem_index),
+	/* .tp_setitem            = */ DEFIMPL(&default__setitem__with__setitem_index),
+	/* .tp_getrange           = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange           = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange           = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sf_foreach,
+	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&sf_foreach_pair,
+	/* .tp_bounditem          = */ DEFIMPL(&default__bounditem__with__getitem),
+	/* .tp_hasitem            = */ DEFIMPL(&default__hasitem__with__hasitem_index),
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&sf_size,
+	/* .tp_size_fast          = */ NULL,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sf_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
+	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&sf_delitem_index,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&sf_setitem_index,
+	/* .tp_bounditem_index    = */ DEFIMPL(&default__bounditem_index__with__getitem_index),
+	/* .tp_hasitem_index      = */ DEFIMPL(&default__hasitem_index__with__bounditem_index),
+	/* .tp_getrange_index     = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	/* .tp_delrange_index     = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index     = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n   = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_trygetitem_index),
+	/* .tp_delrange_index_n   = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n   = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem         = */ DEFIMPL(&default__trygetitem__with__trygetitem_index),
+	/* .tp_trygetitem_index   = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sf_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__getitem_string_hash),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__bounditem_string_hash),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__getitem_string_len_hash),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__bounditem_string_len_hash),
+};
 
 INTERN DeeTypeObject SeqFlat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
