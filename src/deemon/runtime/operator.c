@@ -253,11 +253,13 @@ do_invoke_var_any_ctor:
 do_invoke_var_any_ctor_kw:
 			return (*object_type->tp_init.tp_var.tp_any_ctor_kw)(argc, argv, NULL);
 		}
+#if 0 /* Better not -- overcomplicated and is never really used */
 		if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
 		    DeeObject_InstanceOf(argv[0], object_type)) {
 do_invoke_var_copy:
 			return (*object_type->tp_init.tp_var.tp_copy_ctor)(argv[0]);
 		}
+#endif
 		if (DeeType_InheritConstructors(object_type)) {
 			if (object_type->tp_init.tp_var.tp_ctor && !argc)
 				goto do_invoke_var_ctor;
@@ -265,9 +267,11 @@ do_invoke_var_copy:
 				goto do_invoke_var_any_ctor;
 			if (object_type->tp_init.tp_var.tp_any_ctor_kw)
 				goto do_invoke_var_any_ctor_kw;
+#if 0 /* Better not -- overcomplicated and is never really used */
 			if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
 			    DeeObject_InstanceOf(argv[0], object_type))
 				goto do_invoke_var_copy;
+#endif
 		}
 	} else {
 		int error;
@@ -285,10 +289,12 @@ do_invoke_alloc_any_ctor:
 		} else if (object_type->tp_init.tp_alloc.tp_any_ctor_kw) {
 do_invoke_alloc_any_ctor_kw:
 			error = (*object_type->tp_init.tp_alloc.tp_any_ctor_kw)(result, argc, argv, NULL);
+#if 0 /* Better not -- overcomplicated and is never really used */
 		} else if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
 		           DeeObject_InstanceOf(argv[0], object_type)) {
 do_invoke_alloc_copy:
 			error = (*object_type->tp_init.tp_alloc.tp_copy_ctor)(result, argv[0]);
+#endif
 		} else {
 			DeeObject_FreeTracker(result);
 			DeeType_FreeInstance(object_type, result);
@@ -304,9 +310,11 @@ do_invoke_alloc_copy:
 				goto do_invoke_alloc_any_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
 				goto do_invoke_alloc_any_ctor_kw;
+#if 0 /* Better not -- overcomplicated and is never really used */
 			if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
 			    DeeObject_InstanceOf(argv[0], object_type))
 				goto do_invoke_alloc_copy;
+#endif
 			goto err_not_implemented_r;
 		}
 		if unlikely(error)
@@ -377,6 +385,7 @@ do_invoke_var_ctor:
 do_invoke_var_ctor_nokw:
 			return (*object_type->tp_init.tp_var.tp_ctor)();
 		}
+#if 0 /* Better not -- overcomplicated and is never really used */
 		if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
 		    DeeObject_InstanceOf(argv[0], object_type)) {
 do_invoke_var_copy:
@@ -394,6 +403,7 @@ do_invoke_var_copy:
 			}
 			return (*object_type->tp_init.tp_var.tp_copy_ctor)(argv[0]);
 		}
+#endif
 		if (DeeType_InheritConstructors(object_type)) {
 			if (object_type->tp_init.tp_var.tp_any_ctor_kw)
 				goto do_invoke_var_any_ctor_kw;
@@ -401,9 +411,11 @@ do_invoke_var_copy:
 				goto do_invoke_var_any_ctor;
 			if (object_type->tp_init.tp_var.tp_ctor && !argc)
 				goto do_invoke_var_ctor;
+#if 0 /* Better not -- overcomplicated and is never really used */
 			if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
 			    DeeObject_InstanceOf(argv[0], object_type))
 				goto do_invoke_var_copy;
+#endif
 		}
 	} else {
 		int error;
@@ -448,6 +460,7 @@ do_invoke_alloc_ctor:
 			}
 do_invoke_alloc_ctor_nokw:
 			error = (*object_type->tp_init.tp_alloc.tp_ctor)(result);
+#if 0 /* Better not -- overcomplicated and is never really used */
 		} else if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
 		           DeeObject_InstanceOf(argv[0], object_type)) {
 do_invoke_alloc_copy:
@@ -464,6 +477,7 @@ do_invoke_alloc_copy:
 				}
 			}
 			error = (*object_type->tp_init.tp_alloc.tp_copy_ctor)(result, argv[0]);
+#endif
 		} else {
 			DeeObject_FreeTracker(result);
 			DeeType_FreeInstance(object_type, result);
@@ -479,9 +493,11 @@ do_invoke_alloc_copy:
 				goto do_invoke_alloc_any_ctor;
 			if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0)
 				goto do_invoke_alloc_ctor;
+#if 0 /* Better not -- overcomplicated and is never really used */
 			if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
 			    DeeObject_InstanceOf(argv[0], object_type))
 				goto do_invoke_alloc_copy;
+#endif
 			goto err_not_implemented_r;
 		}
 		if unlikely(error)
@@ -607,6 +623,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 do_invoke_var_copy:
 			return (*tp_self->tp_init.tp_var.tp_copy_ctor)(self);
 		}
+#if 0 /* Better not -- overcomplicated and is never really used */
 		if (tp_self->tp_init.tp_var.tp_any_ctor) {
 do_invoke_var_any_ctor:
 			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
@@ -617,17 +634,22 @@ do_invoke_var_any_ctor_kw:
 			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
 			return (*tp_self->tp_init.tp_var.tp_any_ctor_kw)(1, (DeeObject **)&self, NULL);
 		}
+#endif
 		if (DeeType_InheritConstructors(tp_self)) {
 			if (tp_self->tp_init.tp_var.tp_copy_ctor)
 				goto do_invoke_var_copy;
+#if 0 /* Better not -- overcomplicated and is never really used */
 			if (tp_self->tp_init.tp_var.tp_any_ctor)
 				goto do_invoke_var_any_ctor;
 			if (tp_self->tp_init.tp_var.tp_any_ctor_kw)
 				goto do_invoke_var_any_ctor_kw;
+#endif
 		}
 	} else if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
 		int error;
+#if 0 /* Better not -- overcomplicated and is never really used */
 do_invoke_alloc_copy:
+#endif
 		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto err;
@@ -641,6 +663,7 @@ do_invoke_alloc_copy:
 			result = DeeGC_Track(result);
 		return result;
 	} else {
+#if 0 /* Better not -- overcomplicated and is never really used */
 		int error;
 		ASSERT(!DeeType_IsVariable(tp_self));
 		result = DeeType_AllocInstance(tp_self);
@@ -680,17 +703,24 @@ do_invoke_alloc_any_ctor_kw:
 		if (DeeType_IsGC(tp_self))
 			result = DeeGC_Track(result);
 		return result;
+#else
+		goto err_not_implemented;
+#endif
 	}
 err_not_implemented:
 	err_unimplemented_constructor(tp_self, 0, NULL);
 err:
 	return NULL;
+#if 0 /* Better not -- overcomplicated and is never really used */
 err_not_implemented_r:
 	err_unimplemented_constructor(tp_self, 0, NULL);
+#endif
 err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(tp_self, result);
+#if 0 /* Better not -- overcomplicated and is never really used */
 err_object_type:
+#endif
 	Dee_DecrefNokill(tp_self);
 	goto err;
 }
