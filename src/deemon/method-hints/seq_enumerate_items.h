@@ -29,7 +29,7 @@ __seq_enumerate_items__(start?:?X2?Dint?O,end?:?X2?Dint?O)->?S?T2?Dint?O {
 	size_t start_index, end_index;
 	if (end) {
 		if ((DeeInt_Check(start) && DeeInt_Check(end)) &&
-		    (DeeInt_TryAsSize(start, &start_index) && DeeInt_TryAsSize(end, &end_index)))
+		    (DeeInt_TryAsSize(start, &start_index) && DeeInt_TryAsSizeM1(end, &end_index)))
 			return CALL_DEPENDENCY(seq_makeenumeration_with_intrange, self, start_index, end_index);
 		return CALL_DEPENDENCY(seq_makeenumeration_with_range, self, start, end);
 	} else if (start) {

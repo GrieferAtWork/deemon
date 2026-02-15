@@ -395,7 +395,7 @@ DeeMA___seq_enumerate_items__(DeeObject *__restrict self, size_t argc, DeeObject
 	size_t start_index, end_index;
 	if (args.end) {
 		if ((DeeInt_Check(args.start) && DeeInt_Check(args.end)) &&
-		    (DeeInt_TryAsSize(args.start, &start_index) && DeeInt_TryAsSize(args.end, &end_index)))
+		    (DeeInt_TryAsSize(args.start, &start_index) && DeeInt_TryAsSizeM1(args.end, &end_index)))
 			return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_intrange))(self, start_index, end_index);
 		return (*DeeType_RequireMethodHint(Dee_TYPE(self), seq_makeenumeration_with_range))(self, args.start, args.end);
 	} else if (args.start) {

@@ -922,12 +922,12 @@ handle_with_cb:
 			if (endob != ITER_DONE) {
 				if (startob != ITER_DONE) {
 					if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
-					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSizeM1(endob, &end))) {
 						result = seq_call_enumerate_with_intrange(self, cb, start, end);
 					} else {
 						result = seq_call_enumerate_with_range(self, cb, startob, endob);
 					}
-				} else if (DeeInt_Check(endob) && DeeInt_TryAsSize(endob, &end)) {
+				} else if (DeeInt_Check(endob) && DeeInt_TryAsSizeM1(endob, &end)) {
 					result = seq_call_enumerate_with_intrange(self, cb, 0, end);
 				} else {
 					startob = DeeObject_NewDefault(Dee_TYPE(endob));
@@ -949,12 +949,12 @@ handle_with_cb:
 			if (endob != ITER_DONE) {
 				if (startob != ITER_DONE) {
 					if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
-					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+					    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSizeM1(endob, &end))) {
 						result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
 					} else {
 						result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, startob, endob);
 					}
-				} else if (DeeInt_Check(endob) && DeeInt_TryAsSize(endob, &end)) {
+				} else if (DeeInt_Check(endob) && DeeInt_TryAsSizeM1(endob, &end)) {
 					result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, 0, end);
 				} else {
 					startob = DeeObject_NewDefault(Dee_TYPE(endob));
@@ -987,7 +987,7 @@ handle_with_cb:
 		startob = cb;
 		if (endob != ITER_DONE) {
 			if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
-			    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+			    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSizeM1(endob, &end))) {
 				result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
 			} else {
 				result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, startob, endob);
@@ -1010,7 +1010,7 @@ handle_with_cb:
 		startob = argv[0];
 		endob   = argv[1];
 		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
-		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSizeM1(endob, &end))) {
 			result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
 		} else {
 			result = DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, startob, endob);
@@ -1022,7 +1022,7 @@ handle_with_cb:
 		startob = argv[1];
 		endob   = argv[2];
 		if ((DeeInt_Check(startob) && DeeInt_Check(endob)) &&
-		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSize(endob, &end))) {
+		    (DeeInt_TryAsSize(startob, &start) && DeeInt_TryAsSizeM1(endob, &end))) {
 			result = seq_call_enumerate_with_intrange(self, cb, start, end);
 		} else {
 			result = seq_call_enumerate_with_range(self, cb, startob, endob);
@@ -1062,7 +1062,7 @@ seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		if (argc != 3)
 			goto err_bad_args;
 		if ((DeeInt_Check(argv[1]) && DeeInt_Check(argv[2])) &&
-		    (DeeInt_TryAsSize(argv[1], &start) && DeeInt_TryAsSize(argv[2], &end)))
+		    (DeeInt_TryAsSize(argv[1], &start) && DeeInt_TryAsSizeM1(argv[2], &end)))
 			return seq_call_enumerate_with_intrange(self, argv[0], start, end);
 		return seq_call_enumerate_with_range(self, argv[0], argv[1], argv[2]);
 	} else {
@@ -1074,7 +1074,7 @@ seq_enumerate(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *k
 		if (argc != 2)
 			goto err_bad_args;
 		if ((DeeInt_Check(argv[0]) && DeeInt_Check(argv[1])) &&
-		    (DeeInt_TryAsSize(argv[0], &start) && DeeInt_TryAsSize(argv[1], &end)))
+		    (DeeInt_TryAsSize(argv[0], &start) && DeeInt_TryAsSizeM1(argv[1], &end)))
 			return DeeObject_InvokeMethodHint(seq_makeenumeration_with_intrange, self, start, end);
 		return DeeObject_InvokeMethodHint(seq_makeenumeration_with_range, self, argv[0], argv[1]);
 	}
