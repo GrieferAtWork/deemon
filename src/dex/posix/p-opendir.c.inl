@@ -37,7 +37,7 @@
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FREPLAC, WSTR_LENGTH */
-#include <deemon/system-features.h> /* AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DTTOIF, DT_BLK, DT_CHR, DT_DIR, DT_FIFO, DT_LNK, DT_REG, DT_SOCK, DT_UNKNOWN, DT_WHT, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, IFTODT, close, closedir, dirfd, dup, fdopendir, fstatat, fstatat64, lstat, lstat64, opendir, readdir, readdir64, stat, stat64, strlen */
+#include <deemon/system-features.h> /* *stat*, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DTTOIF, DT_*, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, IFTODT, close, closedir, dirfd, dup, fdopendir, opendir, readdir, readdir64, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_SEP, DeeUnixSystem_* */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_FNOREFESCAPE, METHOD_FNORMAL, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak */

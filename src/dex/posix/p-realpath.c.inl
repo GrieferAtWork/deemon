@@ -36,7 +36,7 @@
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FNORMAL, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, canonicalize_file_name, freadlinkat, frealpath4, free, lrealpath, readlink, realpath3, realpathat, strlen */
+#include <deemon/system-features.h> /* AT_*, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, canonicalize_file_name, freadlinkat, frealpath4, free, lrealpath, readlink, realpath3, realpathat, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_* */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

@@ -34,7 +34,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsUIntX, Dee_Decref, Dee_pos_t */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
-#include <deemon/system-features.h> /* AT_EMPTY_PATH, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_RDWR, creat64, ftruncate, ftruncate64, openat64, open64, wcreat64, wopenat64, wopen64 */
+#include <deemon/system-features.h> /* *open*, AT_EMPTY_PATH, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_RDWR, creat64, ftruncate, ftruncate64, wcreat64 */
 #include <deemon/system.h>          /* DeeUnixSystem_GetFD, DeeUnixSystem_HandleGenericError */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

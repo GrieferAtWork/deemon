@@ -34,7 +34,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, Dee_Decref */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
-#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, RENAME_NOREPLACE, link, linkat, rename, renameat, renameat2, wlink, wrename */
+#include <deemon/system-features.h> /* AT_*, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, RENAME_NOREPLACE, link, linkat, rename, renameat, renameat2, wlink, wrename */
 #include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeUnixSystem_GetFD, DeeUnixSystem_HandleGenericError */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

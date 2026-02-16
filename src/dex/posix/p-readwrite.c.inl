@@ -34,7 +34,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref */
 #include <deemon/objmethod.h>       /*  */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, bzero, get_osfhandle, lseek, lseek64, pread, pread64, pwrite, pwrite64, read, write */
+#include <deemon/system-features.h> /* *read*, *write*, CONFIG_HAVE_*, DeeSystem_GetErrno, bzero, get_osfhandle, lseek, lseek64 */
 #include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_* */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

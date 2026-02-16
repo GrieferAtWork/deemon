@@ -34,7 +34,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, Dee_AsObject, Dee_Decref */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
-#include <deemon/system-features.h> /* AT_CHANGE_BTIME, AT_EMPTY_PATH, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, creat64, futime, futime32, futime64, futimens, futimens64, futimes, futimes64, lutimens, lutimens64, lutimes, lutimes64, openat64, open64, utimbuf, utimbuf32, utimbuf64, utimens, utimensat, utimensat64, utimens64, utimes, utimes64, wcreat64, wopenat64, wopen64 */
+#include <deemon/system-features.h> /* *open*, *utim*, AT_*, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, creat64, wcreat64 */
 #include <deemon/system.h>          /* DeeNTSystem_CreateFileNoATime, DeeNTSystem_GetHandle, DeeNT_DWORD, DeeUnixSystem_GetFD, DeeUnixSystem_HandleGenericError */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

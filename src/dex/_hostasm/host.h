@@ -24,7 +24,7 @@
 
 #include <deemon/code.h>            /*  */
 #include <deemon/object.h>          /* DREF, DeeObject */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, MAP_PRIVATE, PROT_EXEC, PROT_READ, PROT_WRITE, mmap64, mprotect, munmap, sysconf */
+#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, MAP_PRIVATE, PROT_*, mmap64, mprotect, munmap, sysconf */
 
 #include <hybrid/align.h>     /* CEIL_ALIGN */
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

@@ -36,7 +36,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, Dee_AsObject, Dee_Decref, ITER_DONE */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
-#include <deemon/system-features.h> /* AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, creat64, fchown, fchownat, openat64, open64, wcreat64, wopenat64, wopen64 */
+#include <deemon/system-features.h> /* *open*, AT_EMPTY_PATH, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, O_NOFOLLOW, O_RDWR, creat64, fchown, fchownat, wcreat64 */
 #include <deemon/system.h>          /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD, DeeUnixSystem_HandleGenericError */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

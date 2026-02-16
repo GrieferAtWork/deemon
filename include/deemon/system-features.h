@@ -21,23 +21,54 @@
 /*!export CONFIG_HAVE_**/
 /*!export CONFIG_NO_**/
 /*!export -dee_**/
+/*!export -NULL*/
 /*!export _DeeSystem_DEFINE_**/
 /*!export DeeSystem_DEFINE_**/
 /*!export DeePrivateSystem_IF_HAVE_**/
 /*!export DeeSystem_DlOpen_USE_**/
-/*!export -NULL*/
+/*!export AT_**/
+/*!export DT_**/
+/*!export F_**/
+/*!export MAP_**/
+/*!export O_**/
+/*!export _O_**/
+/*!export __O_**/
+/*!export PROT_**/
+/*!export RENAME_**/
+/*!export RTLD_**/
+/*!export *_OK*/
+/*!export _SC_**/
+/*!export cnd_**/
+/*!export dl**/
+/*!export futex_**/
+/*!export mtx_**/
+/*!export posix_spawn**/
+/*!export pthread_**/
+/*!export sem_**/
+/*!export thrd_**/
+/*!export tss_**/
+/*!export *stat**/
+/*!export *open**/
+/*!export *read**/
+/*!export *write**/
+/*!export *utim**/
+/*!export *seek**/
+/*!export *exec**/
+/*!export *spawn**/
+/*!export *_FILENO*/
 /*!fixincludes regex keep_default_groups*/
-/*!fixincludes regex group "memcpy.*"        "memcpy*"         2*/
-/*!fixincludes regex group "mempcpy.*"       "mempcpy*"        2*/
-/*!fixincludes regex group "memchr.*"        "memchr*"         2*/
-/*!fixincludes regex group "memmmove.*"      "memmmove*"       2*/
-/*!fixincludes regex group "memmmoveup.*"    "memmmoveup*"     2*/
-/*!fixincludes regex group "memmmovedown.*"  "memmmovedown*"   2*/
-/*!fixincludes regex group "mempmmove.*"     "mempmmove*"      2*/
-/*!fixincludes regex group "mempmmoveup.*"   "mempmmoveup*"    2*/
-/*!fixincludes regex group "mempmmovedown.*" "mempmmovedown*"  2*/
-/*!fixincludes regex group "bzero.*"         "bzero*"          2*/
-/*!fixincludes regex group "to(lower|upper)" "to(lower|upper)" 2*/
+/*!fixincludes regex group "memcpy.*"          "memcpy*"           2*/
+/*!fixincludes regex group "mempcpy.*"         "mempcpy*"          2*/
+/*!fixincludes regex group "memchr.*"          "memchr*"           2*/
+/*!fixincludes regex group "memmmove.*"        "memmmove*"         2*/
+/*!fixincludes regex group "memmmoveup.*"      "memmmoveup*"       2*/
+/*!fixincludes regex group "memmmovedown.*"    "memmmovedown*"     2*/
+/*!fixincludes regex group "mempmmove.*"       "mempmmove*"        2*/
+/*!fixincludes regex group "mempmmoveup.*"     "mempmmoveup*"      2*/
+/*!fixincludes regex group "mempmmovedown.*"   "mempmmovedown*"    2*/
+/*!fixincludes regex group "bzero.*"           "bzero*"            2*/
+/*!fixincludes regex group "to(lower|upper)"   "to(lower|upper)"   2*/
+/*!fixincludes regex group "ENV_(LOCK|UNLOCK)" "ENV_(LOCK|UNLOCK)" 2*/
 #ifndef GUARD_DEEMON_SYSTEM_FEATURES_H
 #define GUARD_DEEMON_SYSTEM_FEATURES_H 1 /*!export-*/
 

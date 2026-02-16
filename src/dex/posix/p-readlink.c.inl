@@ -34,7 +34,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, Dee_Decref, Dee_ssize_t */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t, STRING_ERROR_FREPLAC */
-#include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, freadlinkat, readlink, readlinkat */
+#include <deemon/system-features.h> /* *read*, AT_FDCWD, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeUnixSystem_* */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

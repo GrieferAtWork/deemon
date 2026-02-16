@@ -36,7 +36,7 @@
 #include <deemon/format.h>             /* Dee_sprintf, PRFuSIZ */
 #include <deemon/gc.h>                 /* DeeGCObject_CALLOC, DeeGC_Track */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, dl_iterate_phdr, dladdr, dlgethandle, dlopen, memcpyc, strcmp, strlen */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, dl*, memcpyc, strcmp, strlen */
 #include <deemon/system.h>             /* DeeSystem_DlClose, DeeSystem_DlSym */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
