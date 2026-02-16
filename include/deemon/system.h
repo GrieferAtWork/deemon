@@ -279,9 +279,6 @@ DFUNDEF WUNUSED unsigned int DCALL _DeeNTSystem_HandleGenericError(/*DWORD*/ Dee
 		}                                                       \
 	}	__WHILE0
 
-/* TODO: Lots of system calls are still preceded with `DeeThread_CheckInterrupt()'
- *       -- that is unnecessary: it is enough to only do the check on EINTR! */
-
 /* Translate a given `dwError' into the appropriate `errno' error code.
  * If the translation failed, return a fallback value.
  * Note that (if possible), the implementation of this function is handled by the
@@ -518,7 +515,6 @@ DFUNDEF WUNUSED unsigned int DCALL _DeeUnixSystem_HandleGenericError(int errno_v
 		default: __builtin_unreachable();                         \
 		}                                                         \
 	}	__WHILE0
-/* TODO: Use `DeeUnixSystem_HandleGenericError()' when possible */
 
 /* Throw an exception alongside an errno error-code `error'
  * When `tp' is `NULL', automatically select an appropriate

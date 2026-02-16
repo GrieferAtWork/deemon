@@ -2970,6 +2970,7 @@ save_full_exe_str_and_process_created_ok:
 		}
 
 		/* Create a new process, given its absolute path. */
+again_create_process:
 		DBG_ALIGNMENT_DISABLE();
 		if (!CreateProcessW(lpwExe, lpwCmdLineCopy, NULL, NULL, TRUE,
 		                    CREATE_UNICODE_ENVIRONMENT, lpwEnviron,
@@ -2977,6 +2978,7 @@ save_full_exe_str_and_process_created_ok:
 		                    &piProcessInformation)) {
 			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
+			DeeNTSystem_HandleGenericError(dwError, err_exe_str_lpwCmdLineCopy_pwd_str_env_str_stdfd_files, again_create_process);
 			if (DeeNTSystem_IsUncError(dwError)) {
 				LPWSTR lpwFullExe;
 				full_exe_str = (DREF DeeStringObject *)DeeNTSystem_FixUncPath((DeeObject *)exe_str);
@@ -3470,6 +3472,9 @@ err:
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_kill_impl(Process *__restrict self, int exit_code, int signo) {
+#ifdef ipc_Process_USE_CreateProcessW
+again_lock:
+#endif /* ipc_Process_USE_CreateProcessW */
 	Process_LockWrite(self);
 	if (self->p_state & PROCESS_FLAG_SELF) {
 		Process_LockEndWrite(self);
@@ -3540,6 +3545,7 @@ process_kill_impl(Process *__restrict self, int exit_code, int signo) {
 				}
 			}
 			Process_LockEndWrite(self);
+			DeeNTSystem_HandleGenericError(dwError, err, again_lock);
 			DeeNTSystem_ThrowErrorf(NULL, dwError, "Failed to terminate process %k", self);
 			goto err;
 		}

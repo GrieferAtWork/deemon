@@ -4013,8 +4013,6 @@ INTERN WUNUSED DREF DeeObject *DCALL
 nt_GetComputerName(void) {
 	DWORD dwBufsize = MAX_COMPUTERNAME_LENGTH + 1;
 	LPWSTR lpwBuffer, lpwNewBuffer;
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	lpwBuffer = DeeString_NewWideBuffer(dwBufsize - 1);
 	if unlikely(!lpwBuffer)
 		goto err;

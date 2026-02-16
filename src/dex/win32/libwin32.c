@@ -4804,11 +4804,6 @@ again:
 			goto err;
 		goto again;
 	}
-	if (dwResult == WAIT_IO_COMPLETION) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
-	}
 	if (dwResult == WAIT_FAILED) {
 		DWORD dwError;
 		dwError = GetLastError();

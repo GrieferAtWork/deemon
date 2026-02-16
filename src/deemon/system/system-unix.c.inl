@@ -232,14 +232,14 @@ DeeUnixSystem_PrintLinkString(struct Dee_unicode_printer *__restrict printer,
 		goto err;
 	for (;;) {
 		struct stat st;
-		if (DeeThread_CheckInterrupt())
-			goto err_buf;
+again_readlink:
 		DBG_ALIGNMENT_DISABLE();
 		req_size = (size_t)readlink(filename, buffer, bufsize + 1);
 		if unlikely(req_size == (size_t)-1) {
 handle_error:
 			DBG_ALIGNMENT_ENABLE();
 			error = DeeSystem_GetErrno();
+			DeeUnixSystem_HandleGenericError(error, err_buf, again_readlink);
 			DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 			                          "Failed to read symbolic link %q",
 			                          filename);
