@@ -238,13 +238,13 @@ FORCELOCAL WUNUSED size_t DCALL
 posix_read_f_impl(int fd, void *buf, size_t count) {
 #ifdef posix_read_USE_read
 	size_t result_value;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	result_value = (size_t)read(fd, buf, count);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(result_value == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 		                          "Failed to read from %d", fd);
@@ -441,7 +441,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offs
 #else /* posix_lseek_IS64 */
 	int32_t result;
 #endif /* posix_lseek_IS64 */
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_lseek_USE_lseek64
 	result = lseek64(fd, offset, whence);
@@ -451,7 +451,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "lseek")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -486,7 +486,7 @@ posix_pread_f_impl(int fd, void *buf, size_t count, PREAD_OFF_T offset) {
 
 #if defined(posix_pread_USE_pread64) || defined(posix_pread_USE_pread)
 	size_t result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_pread_USE_pread64
 	result = (size_t)pread64(fd, buf, count, offset);
@@ -496,7 +496,7 @@ EINTR_LABEL(again)
 	if unlikely(result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "pread")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -537,14 +537,10 @@ again_ReadFile:
 	if unlikely(!ReadFile(h, buf, (DWORD)count,
 	                      &bytes_written,
 	                      (LPOVERLAPPED)&overlapped)) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(error)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again_ReadFile;
-		}
-		DeeNTSystem_ThrowErrorf(NULL, error,
+		DeeNTSystem_HandleGenericError(dwError, err, again_ReadFile);
+		DeeNTSystem_ThrowErrorf(NULL, dwError,
 		                        "Failed to read from %d at offset %" PREAD_PRIOFF,
 		                        fd, offset);
 		goto err;
@@ -561,7 +557,7 @@ err:
 #ifdef posix_pread_USE_lseek_AND_read
 	size_t result;
 	PREAD_OFF_T oldpos, newpos;
-EINTR_HANDLE(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	oldpos = PREAD_LSEEK(fd, 0, SEEK_CUR);
 	if unlikely(oldpos == (PREAD_OFF_T)-1)
@@ -578,7 +574,7 @@ EINTR_HANDLE(again)
 handle_system_error:
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "pread")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -760,13 +756,13 @@ FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_write_f_impl(int fd,
 		goto err;
 	if (buffer.bb_size > count)
 		buffer.bb_size = count;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	result_value = (size_t)write(fd, buffer.bb_base, buffer.bb_size);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(result_value == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err_buf, again);
 		DeeBuffer_Fini(&buffer);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -775,6 +771,8 @@ EINTR_LABEL(again)
 	}
 	DeeBuffer_Fini(&buffer);
 	return DeeInt_NewSize(result_value);
+err_buf:
+	DeeBuffer_Fini(&buffer);
 err:
 	return NULL;
 #endif /* posix_write_USE_write */
@@ -801,7 +799,7 @@ posix_pwrite_f_impl(int fd, void const *buf, size_t count, PWRITE_OFF_T offset) 
 
 #if defined(posix_pwrite_USE_pwrite64) || defined(posix_pwrite_USE_pwrite)
 	size_t result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_pwrite_USE_pwrite64
 	result = (size_t)pwrite64(fd, buf, count, offset);
@@ -811,7 +809,7 @@ EINTR_LABEL(again)
 	if (result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "pwrite")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
@@ -852,14 +850,10 @@ again_WriteFile:
 	if unlikely(!WriteFile(h, buf, (DWORD)count,
 	                       &bytes_written,
 	                       (LPOVERLAPPED)&overlapped)) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(error)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again_WriteFile;
-		}
-		DeeNTSystem_ThrowErrorf(NULL, error,
+		DeeNTSystem_HandleGenericError(dwError, err, again_WriteFile);
+		DeeNTSystem_ThrowErrorf(NULL, dwError,
 		                        "Failed to write to %d at offset %" PWRITE_PRIOFF,
 		                        fd, offset);
 		goto err;
@@ -877,7 +871,7 @@ err:
 	int error;
 	size_t result;
 	PWRITE_OFF_T oldpos, newpos;
-EINTR_HANDLE(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	oldpos = PWRITE_LSEEK(fd, 0, SEEK_CUR);
 	if unlikely(oldpos == (PWRITE_OFF_T)-1)
@@ -892,7 +886,7 @@ handle_system_error:
 		error = DeeSystem_GetErrno();
 		PWRITE_LSEEK(fd, oldpos, SEEK_SET);
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "pwrite")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,

@@ -98,13 +98,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void)
 	DREF DeeObject *result;
 	int error;
 	int fds[2];
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	error = pipe(fds);
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -129,15 +129,12 @@ err:
 	HANDLE hRead, hWrite;
 	int fds[2];
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (!CreatePipe(&hRead, &hWrite, NULL, 0)) {
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError))
-			goto again;
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
 		                        "Failed to create pipe");
 		goto err;
@@ -228,7 +225,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags)
 	DREF DeeObject *result;
 	int error;
 	int fds[2];
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 
 #ifdef posix_pipe2_USE_pipe2
@@ -300,7 +297,7 @@ handle_system_error_fds:
 handle_system_error:
 	error = DeeSystem_GetErrno();
 	DBG_ALIGNMENT_ENABLE();
-	EINTR_HANDLE(error, again, err)
+	DeeUnixSystem_HandleGenericError(error, err, again);
 	HANDLE_ENOSYS(error, err, "pipe2")
 	HANDLE_EINVAL(error, err, "Invalid oflags for pipe2 %#x", oflags)
 	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -330,11 +327,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
 		                        "Failed to create pipe");
 		goto err;

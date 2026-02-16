@@ -2543,13 +2543,11 @@ again:
 	}
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_CollectMemory(1))
-			goto again;
-		return -1;
-	}
+	DeeNTSystem_HandleGenericError(dwError, err, again);
 	return DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
 	                               "Failed to start thread %k", self);
+err:
+	return -1;
 #endif /* DeeThread_USE_CreateThread */
 
 #ifdef DeeThread_USE_pthread_create

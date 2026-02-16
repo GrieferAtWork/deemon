@@ -1272,7 +1272,7 @@ nt_os_write_utf8_to_console(SystemFile *__restrict self,
                             byte_t const *__restrict buffer,
                             size_t bufsize) {
 	WCHAR stackBuffer[512];
-	DWORD num_widechars;
+	DWORD num_widechars, dwError;
 again:
 	DBG_ALIGNMENT_DISABLE();
 	num_widechars = (DWORD)MultiByteToWideChar(CP_UTF8,
@@ -1328,23 +1328,16 @@ done:
 	return 0;
 fallback:
 	DBG_ALIGNMENT_DISABLE();
-	if (DeeNTSystem_IsIntr(GetLastError())) {
-		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
-	}
+	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
+	DeeNTSystem_HandleGenericError(dwError, err, again);
+
 	/* Write as ASCII data. */
 	if (!nt_write_all_file(self->sf_handle, buffer, bufsize)) {
 		DBG_ALIGNMENT_DISABLE();
-		if (DeeNTSystem_IsIntr(GetLastError())) {
-			DBG_ALIGNMENT_ENABLE();
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		goto err_io;
 	}
 	return 0;
@@ -1571,19 +1564,10 @@ again:
 	}
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!ReadFile(self->sf_handle, buffer, (DWORD)bufsize, &result, NULL)) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(error)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
-		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			goto err;
-		}
-		switch (error) {
+		switch (dwError) {
+
 		case ERROR_INVALID_FUNCTION: {
 			/* This happens when the handle is for a directory or some other
 			 * kind of file that does not allow reading.
@@ -1593,15 +1577,19 @@ again:
 			 * a directory and throw "DeeError_IsDirectory" */
 			DWORD file_type = nt_sysfile_trygettype(self);
 			if (file_type == FILE_TYPE_DISK) {
-				return (size_t)DeeNTSystem_ThrowErrorf(&DeeError_IsDirectory, error,
+				return (size_t)DeeNTSystem_ThrowErrorf(&DeeError_IsDirectory, dwError,
 				                                       "Cannot read from directory");
 			}
 		}	break;
+
 		case ERROR_BROKEN_PIPE:
 			/* Handle pipe-disconnect as EOF (like it should be...). */
 			result = 0;
 			break;
-		default: goto err_io;
+
+		default:
+			DeeNTSystem_HandleGenericError(dwError, err, again);
+			goto err_io;
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1619,30 +1607,19 @@ err:
 	/* TODO: Use KOS's readf() function */
 	size_t result;
 	(void)flags;
-#if defined(CONFIG_HAVE_errno) && (defined(ENOMEM) || defined(EINTR))
 again:
-#endif /* CONFIG_HAVE_errno && (ENOMEM || EINTR) */
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)read((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			return (size_t)-1;
-		});
-		DeeSystem_IF_E1(error, EINTR, {
-			if (DeeThread_CheckInterrupt())
-				goto again;
-			return (size_t)-1;
-		});
+		DeeUnixSystem_HandleGenericError(error, done, again);
 		DeeSystem_IF_E1(error, EISDIR, {
 			return (size_t)DeeUnixSystem_ThrowErrorf(&DeeError_IsDirectory, error, "Cannot read from directory");
 		});
-		(void)error;
 		err_file_io(self);
 	}
+done:
 	return result;
 #else /* CONFIG_HAVE_read */
 	(void)self;
@@ -1733,27 +1710,19 @@ again:
 	if unlikely(!WriteFile(self->sf_handle, buffer,
 	                       (DWORD)bufsize,
 	                       &bytes_written, NULL)) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(error)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
-		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			goto err;
-		}
-		switch (error) {
+		switch (dwError) {
 		case ERROR_INVALID_FUNCTION:
 			if (file_type == FILE_TYPE_DISK) {
 				/* See ReadFile above... */
-				return (size_t)DeeNTSystem_ThrowErrorf(&DeeError_IsDirectory, error,
+				return (size_t)DeeNTSystem_ThrowErrorf(&DeeError_IsDirectory, dwError,
 				                                       "Cannot write to directory");
 			}
 			break;
-		default: break;
+		default:
+			DeeNTSystem_HandleGenericError(dwError, err, again);
+			break;
 		}
 		return err_file_io(self);
 	}
@@ -1771,30 +1740,20 @@ err:
 	size_t result;
 	(void)flags;
 
-#if defined(CONFIG_HAVE_errno) && (defined(ENOMEM) || defined(EINTR))
 again:
-#endif /* CONFIG_HAVE_errno && (ENOMEM || EINTR) */
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)write((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(result == (size_t)-1) {
 		int error = DeeSystem_GetErrno();
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			return (size_t)-1;
-		});
-		DeeSystem_IF_E1(error, EINTR, {
-			if (DeeThread_CheckInterrupt())
-				goto again;
-			return (size_t)-1;
-		});
+		DeeUnixSystem_HandleGenericError(error, done, again);
 		DeeSystem_IF_E1(error, EISDIR, {
 			return (size_t)DeeUnixSystem_ThrowErrorf(&DeeError_IsDirectory, error, "Cannot write to directory");
 		});
 		(void)error;
 		err_file_io(self);
 	}
+done:
 	return result;
 #else /* CONFIG_HAVE_write */
 	(void)self;
@@ -1884,13 +1843,9 @@ again:
 	                      (DWORD)bufsize,
 	                      &bytes_read,
 	                      (LPOVERLAPPED)&overlapped)) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(error)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		return err_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1966,13 +1921,9 @@ again:
 	                       (DWORD)bufsize,
 	                       &bytes_written,
 	                       (LPOVERLAPPED)&overlapped)) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(error)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		return err_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -2032,14 +1983,10 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	result = SetFilePointer(self->sf_handle, (LONG)(off & 0xffffffff), &high, whence);
 	if unlikely(result == INVALID_SET_FILE_POINTER) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error != NO_ERROR) {
-			if (DeeNTSystem_IsIntr(error)) {
-				if (DeeThread_CheckInterrupt())
-					goto err;
-				goto again;
-			}
+		if (dwError != NO_ERROR) {
+			DeeNTSystem_HandleGenericError(dwError, err, again);
 			return err_file_io(self);
 		}
 	}
@@ -2780,17 +2727,13 @@ again_duplicate:
 		if (!DuplicateHandle(hMyProcess, hHandle,
 		                     hMyProcess, &hDuplicatedHandle,
 		                     0, TRUE, DUPLICATE_SAME_ACCESS)) {
-			DWORD dwError;
-			dwError = GetLastError();
+			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err;
-				goto again_duplicate;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err, again_duplicate);
 			DeeNTSystem_ThrowErrorf(NULL, dwError,
 			                        "Failed to duplicate handle %p",
 			                        hHandle);
+			goto err;
 		}
 		DBG_ALIGNMENT_ENABLE();
 		self->sf_handle    = (void *)hDuplicatedHandle;
@@ -2824,18 +2767,13 @@ err:
 	if (duplicate) {
 #ifdef CONFIG_HAVE_dup
 		int dupfd;
-#ifdef EINTR
 again_dup:
-#endif /* EINTR */
 		DBG_ALIGNMENT_DISABLE();
 		dupfd = dup(fd);
 		if unlikely(dupfd < 0) {
 			int error = DeeSystem_GetErrno();
 			DBG_ALIGNMENT_ENABLE();
-#ifdef EINTR
-			if (error == EINTR)
-				goto again_dup;
-#endif /* EINTR */
+			DeeUnixSystem_HandleGenericError(error, err, again_dup);
 #ifdef ENOSYS
 			if (error == ENOSYS) {
 				DeeError_Throwf(&DeeError_UnsupportedAPI,

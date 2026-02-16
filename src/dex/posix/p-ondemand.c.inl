@@ -310,6 +310,7 @@ nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path,
 	if unlikely(!buffer)
 		goto err;
 	/* Read symbolic link data. */
+again:
 	DBG_ALIGNMENT_DISABLE();
 	while (!DeviceIoControl(hLinkFile, FSCTL_GET_REPARSE_POINT,
 	                        NULL, 0, buffer, bufsiz, &buflen, NULL)) {
@@ -324,12 +325,7 @@ nt_FReadLink(HANDLE hLinkFile, DeeObject *__restrict path,
 			DBG_ALIGNMENT_DISABLE();
 			continue;
 		}
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_buffer;
-			DBG_ALIGNMENT_DISABLE();
-			continue;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_buffer, again);
 		if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 #define NEED_err_nt_path_no_access
 			err_nt_path_no_access(dwError, path);
@@ -554,15 +550,7 @@ again_SetFileTime:
 		DBG_ALIGNMENT_ENABLE();
 
 		/* Handle some common system errors. */
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt() == 0)
-				goto again_SetFileTime;
-			goto err;
-		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again_SetFileTime;
-			goto err;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again_SetFileTime);
 
 		/* Check for special case: the given `hFile' isn't opened with enough permissions.
 		 * In this case, try to re-open the underlying file with extra more permissions. */
@@ -963,15 +951,7 @@ again_SetSecurityInfo:
 	}
 
 	/* Handle some other common errors. */
-	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_ReleaseSystemMemory())
-			goto again_SetSecurityInfo;
-		goto err;
-	} else if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt() == 0)
-			goto again_SetSecurityInfo;
-		goto err;
-	}
+	DeeNTSystem_HandleGenericError(dwError, err, again_SetSecurityInfo);
 
 	/* System error */
 	*p_dwError = dwError;
@@ -1101,15 +1081,7 @@ again_SetNamedSecurityInfoW:
 	}
 
 	/* Handle some common errors. */
-	if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_ReleaseSystemMemory())
-			goto again_SetNamedSecurityInfoW;
-		goto err;
-	} else if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt() == 0)
-			goto again_SetNamedSecurityInfoW;
-		goto err;
-	}
+	DeeNTSystem_HandleGenericError(dwError, err, again_SetNamedSecurityInfoW);
 
 	/* System error */
 	*p_dwError = dwError;
@@ -4059,13 +4031,9 @@ again:
 			lpwBuffer = lpwNewBuffer;
 			goto again;
 		}
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-		} else {
-			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
-			                        "Failed to retrieve the name of the hosting machine");
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_result, again);
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to retrieve the name of the hosting machine");
 		goto err_result;
 	}
 	DBG_ALIGNMENT_ENABLE();

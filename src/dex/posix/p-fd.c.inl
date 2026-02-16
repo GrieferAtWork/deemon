@@ -200,7 +200,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd)
 {
 #ifdef posix_isatty_USE_isatty
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #if defined(__CYGWIN__) || defined(__CYGWIN32__)
 	/* BUG BUG BUG: Cygwin doesn't set errno when isatty()
@@ -212,7 +212,7 @@ EINTR_LABEL(again)
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		DeeSystem_IF_E2(error, ENOTTY, EINVAL, return_false);
-		EINTR_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "isatty");
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -320,13 +320,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd)
 {
 #ifdef posix_dup_USE_dup
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	result = dup(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "dup")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
@@ -384,20 +384,19 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd)
 {
 #ifdef posix_dup2_USE_dup2
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	result = dup2(oldfd, newfd);
+	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
-		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "dup2")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to dup %d", oldfd);
 		goto err;
 	}
-	DBG_ALIGNMENT_ENABLE();
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
@@ -455,7 +454,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd,
      defined(posix_dup3_USE_dup2_AND_SetHandleInformation))
 	DREF DeeObject *result;
 	int error;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 
 #ifdef posix_dup3_USE_dup3
@@ -507,6 +506,7 @@ EINTR_LABEL(again)
 	{
 		HANDLE hNewFd;
 again_setinfo:
+		DBG_ALIGNMENT_DISABLE();
 		hNewFd = (HANDLE)(uintptr_t)get_osfhandle(newfd);
 		if (hNewFd == INVALID_HANDLE_VALUE) {
 			OPT_close(newfd);
@@ -519,15 +519,9 @@ again_setinfo:
 		                          (oflags & O_CLOEXEC)
 		                          ? 0
 		                          : HANDLE_FLAG_INHERIT)) {
-			DWORD dwError;
-			dwError = GetLastError();
+			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err;
-				DBG_ALIGNMENT_DISABLE();
-				goto again_setinfo;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err, again_setinfo);
 			DBG_ALIGNMENT_DISABLE();
 			OPT_close(newfd);
 			DBG_ALIGNMENT_ENABLE();
@@ -559,7 +553,7 @@ handle_system_error_nfd:
 handle_system_error:
 	error = DeeSystem_GetErrno();
 	DBG_ALIGNMENT_ENABLE();
-	EINTR_HANDLE(error, again, err)
+	DeeUnixSystem_HandleGenericError(error, err, again);
 	HANDLE_ENOSYS(error, err, "dup3")
 	HANDLE_EBADF(error, err, "Invalid fd %d", oldfd)
 	HANDLE_EINVAL(error, err, "Invalid oflags for dup3 %#x", oflags)
@@ -625,13 +619,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd)
 {
 #ifdef posix_close_USE_close
 	int error;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	error = close(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err)
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		HANDLE_ENOSYS(error, err, "close")
 		/* For some reason, msvc somethings returns
 		 * ENOENT... (usually when attached to a debugger) */

@@ -359,15 +359,8 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			goto err;
-		} else if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt() == 0)
-				goto again;
-			goto err;
-		} else if (DeeNTSystem_IsNotDir(dwError)) {
+		DeeNTSystem_HandleGenericError(dwError, err, again);
+		if (DeeNTSystem_IsNotDir(dwError)) {
 			goto do_throw_not_dir;
 		} else if (dwError == ERROR_ACCESS_DENIED) {
 			DWORD dwAttributes;
@@ -423,7 +416,7 @@ err:
 		goto err;
 #endif /* posix_chdir_USE_wchdir */
 
-EINTR_ENOMEM_LABEL(again)
+again:
 #ifdef posix_chdir_USE_chdir
 	if unlikely(chdir((char *)utf8_path) != 0)
 #elif defined(posix_chdir_USE_wchdir)
@@ -431,8 +424,7 @@ EINTR_ENOMEM_LABEL(again)
 #endif /* ... */
 	{
 		int error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_chdir(error, path);
 #define NEED_err_unix_chdir
 		goto err;
@@ -480,10 +472,10 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObj
 	int os_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(os_fd == -1)
 		goto err;
-EINTR_LABEL(again)
+again:
 	if unlikely(fchdir(os_fd) != 0) {
 		int error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 #ifdef EBADF
 		if (error == EBADF) {
 			err_unix_handle_closed(error, fd);
@@ -561,13 +553,13 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchdirat_f_impl(D
 		utf8_path = DeeString_AsUtf8(path);
 		if unlikely(!utf8_path)
 			goto err;
-EINTR_LABEL(again)
+again:
 		if (fchdirat(os_dfd, (char *)utf8_path, atflags) == 0) {
 			if (DeeNotify_BroadcastClass(Dee_NOTIFICATION_CLASS_PWD))
 				goto err;
 			return_none;
 		}
-		EINTR_HANDLE(DeeSystem_GetErrno(), again, err);
+		DeeUnixSystem_HandleGenericError(DeeSystem_GetErrno(), err, again);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_fchdirat_USE_fchdirat */

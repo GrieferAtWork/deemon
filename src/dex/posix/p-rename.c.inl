@@ -209,15 +209,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt() == 0)
-			goto again;
-		goto err;
-	} else if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_ReleaseSystemMemory())
-			goto again;
-		goto err;
-	}
+	DeeNTSystem_HandleGenericError(dwError, err, again);
 #define NEED_err_nt_rename
 	err_nt_rename(dwError, oldpath, newpath);
 err:
@@ -250,7 +242,7 @@ err:
 	if unlikely(!utf8_newpath)
 		goto err;
 #endif /* !posix_rename_USE_wrename */
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_rename_USE_wrename
 	error = wrename((wchar_t *)wide_oldpath, (wchar_t *)wide_newpath);
@@ -261,7 +253,7 @@ EINTR_LABEL(again)
 	if likely(error == 0)
 		return_none;
 	error = DeeSystem_GetErrno();
-	EINTR_HANDLE(error, again, err);
+	DeeUnixSystem_HandleGenericError(error, err, again);
 #define NEED_err_unix_rename
 	err_unix_rename(error, oldpath, newpath);
 err:
@@ -480,15 +472,7 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt() == 0)
-				goto again;
-			goto err_abs_oldpath_abs_newpath;
-		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			goto err_abs_oldpath_abs_newpath;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_abs_oldpath_abs_newpath, again);
 #define NEED_err_nt_rename
 		err_nt_rename(dwError, abs_oldpath, abs_newpath);
 		goto err_abs_oldpath_abs_newpath;
@@ -530,7 +514,7 @@ err:
 			goto err;
 
 		/* Name the call to `renameat2()' */
-EINTR_ENOMEM_LABEL(again_renameat2)
+again_renameat2:
 #if defined(AT_RENAME_NOREPLACE) || defined(AT_RENAME_EXCHANGE) || defined(AT_RENAME_WHITEOUT)
 		if (renameat2(os_olddirfd, (char *)utf8_oldpath, os_newdirfd, (char *)utf8_newpath, flags | atflags) == 0)
 #else /* AT_RENAME_NOREPLACE || AT_RENAME_EXCHANGE || AT_RENAME_WHITEOUT */
@@ -542,7 +526,7 @@ EINTR_ENOMEM_LABEL(again_renameat2)
 
 		/* Directly handle rename errors */
 		errno_value = DeeSystem_GetErrno();
-		EINTR_ENOMEM_HANDLE(errno_value, again_renameat2, err);
+		DeeUnixSystem_HandleGenericError(errno_value, err, again_renameat2);
 #define NEED_posix_dfd_makepath
 		abs_oldpath = posix_dfd_makepath(olddirfd, oldpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 		if unlikely(!abs_oldpath)
@@ -669,15 +653,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt() == 0)
-			goto again;
-		goto err;
-	} else if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_ReleaseSystemMemory())
-			goto again;
-		goto err;
-	}
+	DeeNTSystem_HandleGenericError(dwError, err, again);
 #define NEED_err_nt_link
 	err_nt_link(dwError, oldpath, newpath);
 err:
@@ -703,7 +679,7 @@ err:
 	if unlikely(!utf8_newpath)
 		goto err;
 #endif /* !posix_link_USE_wlink */
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_link_USE_wlink
 	error = wlink((wchar_t *)wide_oldpath, (wchar_t *)wide_newpath);
@@ -714,7 +690,7 @@ EINTR_ENOMEM_LABEL(again)
 	if likely(error == 0)
 		return_none;
 	error = DeeSystem_GetErrno();
-	EINTR_ENOMEM_HANDLE(error, again, err);
+	DeeUnixSystem_HandleGenericError(error, err, again);
 #define NEED_err_unix_link
 	err_unix_link(error, oldpath, newpath);
 err:
@@ -845,7 +821,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_linkat_f_im
 		utf8_newpath = DeeString_AsUtf8(newpath);
 		if unlikely(!utf8_newpath)
 			goto err;
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 		error = linkat(os_olddirfd, (char *)utf8_oldpath,
 		               os_newdirfd, (char *)utf8_newpath,
@@ -854,7 +830,7 @@ EINTR_ENOMEM_LABEL(again)
 		if likely(error == 0)
 			return_none;
 		error = DeeSystem_GetErrno();
-		EINTR_ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 #define NEED_posix_dfd_makepath
 		newpath_abspath = posix_dfd_makepath(newdirfd, newpath, atflags & POSIX_DFD_MAKEPATH_ATFLAGS_MASK);
 		if unlikely(!newpath_abspath)

@@ -349,7 +349,7 @@ Dee_rshared_lock_waitfor_timed(Dee_rshared_lock_t *__restrict self,
 	 ? __hybrid_atomic_dec(&(self)->rs_lock.ra_lock, __ATOMIC_RELEASE)        \
 	 : ((self)->rs_lock.ra_tid = __HYBRID_GETTID_INVALID,                     \
 	    __hybrid_atomic_store(&(self)->rs_lock.ra_lock, 0, __ATOMIC_RELEASE), \
-	    _Dee_rshared_lock_wakeone(self)))
+	    (void)_Dee_rshared_lock_wakeone(self)))
 #define _Dee_rshared_lock_release_ex_NDEBUG(self)                             \
 	((self)->rs_lock.ra_lock > 1                                              \
 	 ? (__hybrid_atomic_dec(&(self)->rs_lock.ra_lock, __ATOMIC_RELEASE), 0)   \

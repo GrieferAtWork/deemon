@@ -259,6 +259,29 @@ DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsBufferTooSmall(/*DWORD*/ Dee
 DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError);   /* EINVAL */
 DFUNDEF ATTR_CONST WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);            /* EINVAL (for readlink(2): not a symbolic link) */
 
+/* Try to handle generic errors:
+ * - DeeNTSystem_IsBadAllocError -- Dee_ReleaseSystemMemory()
+ * - DeeNTSystem_IsIntr          -- DeeThread_CheckInterrupt()
+ * @return: _DeeNTSystem_HandleGenericError_AGAIN: System error was handled; try again
+ * @return: _DeeNTSystem_HandleGenericError_OTHER: System error could not be handled.
+ * @return: _DeeNTSystem_HandleGenericError_ERR:   A deemon error was thrown. */
+DFUNDEF WUNUSED unsigned int DCALL _DeeNTSystem_HandleGenericError(/*DWORD*/ DeeNT_DWORD dwError);
+#define _DeeNTSystem_HandleGenericError_OTHER 0
+#define _DeeNTSystem_HandleGenericError_AGAIN 1
+#define _DeeNTSystem_HandleGenericError_ERR   2
+#define DeeNTSystem_HandleGenericError(dwError, err, again)     \
+	do {                                                        \
+		switch (_DeeNTSystem_HandleGenericError(dwError)) {     \
+		case _DeeNTSystem_HandleGenericError_OTHER: break;      \
+		case _DeeNTSystem_HandleGenericError_AGAIN: goto again; \
+		case _DeeNTSystem_HandleGenericError_ERR: goto err;     \
+		default: __builtin_unreachable();                       \
+		}                                                       \
+	}	__WHILE0
+
+/* TODO: Lots of system calls are still preceded with `DeeThread_CheckInterrupt()'
+ *       -- that is unnecessary: it is enough to only do the check on EINTR! */
+
 /* Translate a given `dwError' into the appropriate `errno' error code.
  * If the translation failed, return a fallback value.
  * Note that (if possible), the implementation of this function is handled by the
@@ -475,6 +498,27 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeUnixSystem_ReadLinkString(
  *              was `-1', then an `DeeError_FileClosed' error is thrown. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeUnixSystem_GetFD(DeeObject *__restrict ob);
+
+/* Try to handle generic errors:
+ * - ENOMEM -- Dee_ReleaseSystemMemory()
+ * - EINTR  -- DeeThread_CheckInterrupt()
+ * @return: _DeeUnixSystem_HandleGenericError_AGAIN: System error was handled; try again
+ * @return: _DeeUnixSystem_HandleGenericError_OTHER: System error could not be handled.
+ * @return: _DeeUnixSystem_HandleGenericError_ERR:   A deemon error was thrown. */
+DFUNDEF WUNUSED unsigned int DCALL _DeeUnixSystem_HandleGenericError(int errno_value);
+#define _DeeUnixSystem_HandleGenericError_OTHER 0
+#define _DeeUnixSystem_HandleGenericError_AGAIN 1
+#define _DeeUnixSystem_HandleGenericError_ERR   2
+#define DeeUnixSystem_HandleGenericError(errno_value, err, again) \
+	do {                                                          \
+		switch (_DeeUnixSystem_HandleGenericError(errno_value)) { \
+		case _DeeUnixSystem_HandleGenericError_OTHER: break;      \
+		case _DeeUnixSystem_HandleGenericError_AGAIN: goto again; \
+		case _DeeUnixSystem_HandleGenericError_ERR: goto err;     \
+		default: __builtin_unreachable();                         \
+		}                                                         \
+	}	__WHILE0
+/* TODO: Use `DeeUnixSystem_HandleGenericError()' when possible */
 
 /* Throw an exception alongside an errno error-code `error'
  * When `tp' is `NULL', automatically select an appropriate

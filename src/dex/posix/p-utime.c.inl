@@ -1002,15 +1002,14 @@ err:
 		goto err;
 	}
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	error = posix_utime_USED_utimens(os_path, tsv);
 	if unlikely(error != 0) {
 		DBG_ALIGNMENT_DISABLE();
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_utime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_utime
 		goto err;
@@ -1039,7 +1038,7 @@ err:
 	                                                  path, 0))
 		goto err;
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_utime_USE_wutime
 	error = wutime((wchar_t *)os_path, &file_times);
@@ -1063,8 +1062,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error != 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_utime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_utime
 		goto err;
@@ -1168,15 +1166,14 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL posix_lutime_f
 		goto err;
 	}
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	error = posix_lutime_USED_lutimens(os_path, tsv);
 	if unlikely(error != 0) {
 		DBG_ALIGNMENT_DISABLE();
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_lutime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_lutime
 		goto err;
@@ -1205,7 +1202,7 @@ err:
 	                                                   path, Dee_STAT_F_LSTAT))
 		goto err;
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_lutime_USE_wlutime
 	error = wlutime((wchar_t *)os_path, &file_times);
@@ -1229,8 +1226,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error != 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_lutime(error, path, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_lutime
 		goto err;
@@ -1363,15 +1359,14 @@ err:
 		goto err;
 	}
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	error = posix_futime_USED_futimens(os_fd, tsv);
 	if unlikely(error != 0) {
 		DBG_ALIGNMENT_DISABLE();
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_futime(error, fd, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_futime
 		goto err;
@@ -1398,7 +1393,7 @@ err:
 	                                                   fd, 0))
 		goto err;
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_futime_USE_futime
 	error = futime(os_fd, &file_times);
@@ -1415,8 +1410,7 @@ EINTR_ENOMEM_LABEL(again)
 		DBG_ALIGNMENT_DISABLE();
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_futime(error, fd, atime, mtime, ctime, birthtime);
 #define NEED_err_unix_futime
 		goto err;
@@ -1538,7 +1532,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4, 5, 6)) DREF DeeObject *DCALL posix_utime
 #ifdef CONFIG_HAVE_AT_CHANGE_BTIME
 		atflags |= AT_CHANGE_BTIME;
 #endif /* CONFIG_HAVE_AT_CHANGE_BTIME */
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 		if (posix_utimeat_USED_utimensat(os_dfd, utf8_path, tsv, atflags) == 0) {
 			DBG_ALIGNMENT_ENABLE();
@@ -1546,8 +1540,7 @@ EINTR_ENOMEM_LABEL(again)
 		}
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 #ifdef CONFIG_HAVE_AT_CHANGE_BTIME
 		atflags &= ~AT_CHANGE_BTIME;
 #endif /* CONFIG_HAVE_AT_CHANGE_BTIME */

@@ -218,7 +218,7 @@ err:
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
-EINTR_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 #ifdef posix_readlink_USE_freadlinkat
 		req_size = freadlinkat(AT_FDCWD, (char *)utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE);
@@ -230,7 +230,7 @@ EINTR_LABEL(again)
 		if unlikely(req_size < 0) {
 			error = DeeSystem_GetErrno();
 			DBG_ALIGNMENT_ENABLE();
-			EINTR_HANDLE(error, again, err_buffer);
+			DeeUnixSystem_HandleGenericError(error, err_buffer, again);
 #ifdef EACCES
 			if (error == EACCES) {
 #define NEED_err_unix_path_no_access
@@ -435,7 +435,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_readlinkat_f_impl
 		buffer = (char *)DeeString_New1ByteBuffer(bufsize);
 		if unlikely(!buffer)
 			goto err;
-EINTR_LABEL(again)
+again:
 		for (;;) {
 			DBG_ALIGNMENT_DISABLE();
 #ifdef posix_readlinkat_USE_freadlinkat
@@ -444,7 +444,7 @@ EINTR_LABEL(again)
 			req_size = readlinkat(os_dfd, (char *)utf8_file, buffer, bufsize + 1);
 #endif /* !... */
 			if unlikely(req_size < 0) {
-				EINTR_HANDLE(DeeSystem_GetErrno(), again, err_buffer);
+				DeeUnixSystem_HandleGenericError(DeeSystem_GetErrno(), err_buffer, again);
 				goto do_abspath_readlink;
 			}
 			DBG_ALIGNMENT_ENABLE();
@@ -461,7 +461,7 @@ EINTR_LABEL(again)
 #endif /* !posix_readlinkat_USE_freadlinkat */
 			new_buffer = (char *)DeeString_Resize1ByteBuffer((uint8_t *)buffer, bufsize);
 			if unlikely(!new_buffer) {
-EINTR_LABEL(err_buffer)
+err_buffer:
 				DeeString_Free1ByteBuffer((uint8_t *)buffer);
 				goto err;
 			}

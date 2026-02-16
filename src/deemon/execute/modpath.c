@@ -8137,12 +8137,7 @@ PRIVATE WUNUSED DREF DeeStringObject *DCALL get_default_home(void) {
 #define get_default_home_NEED_ERR 1
 		if unlikely(!lpBuffer)
 			goto err;
-again_chk_intr:
-		if (DeeThread_CheckInterrupt()) {
-err_buffer:
-			DeeString_FreeWideBuffer(lpBuffer);
-			goto err;
-		}
+again:
 		for (;;) {
 			DBG_ALIGNMENT_DISABLE();
 			SetLastError(0);
@@ -8150,8 +8145,7 @@ err_buffer:
 			if (!dwError) {
 				dwError = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				if (DeeNTSystem_IsIntr(dwError))
-					goto again_chk_intr;
+				DeeNTSystem_HandleGenericError(dwError, err_buffer, again);
 				if (DeeNTSystem_IsBufferTooSmall(dwError))
 					goto do_increase_buffer;
 				DeeString_FreeWideBuffer(lpBuffer);
@@ -8171,8 +8165,11 @@ err_buffer:
 do_increase_buffer:
 			dwBufSize *= 2;
 			lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
-			if unlikely(!lpNewBuffer)
-				goto err_buffer;
+			if unlikely(!lpNewBuffer) {
+err_buffer:
+				DeeString_FreeWideBuffer(lpBuffer);
+				goto err;
+			}
 			lpBuffer = lpNewBuffer;
 		}
 		/* TODO: Check if the module's file name is a symbolic link.

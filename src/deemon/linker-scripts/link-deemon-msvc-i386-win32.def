@@ -1789,6 +1789,7 @@ EXPORTS
 	_DeeAssert_Fail@12=__DeeAssert_Fail@12
 	_DeeAssert_XFail@12=__DeeAssert_XFail@12
 	_DeeDecWriter_Init@4=__DeeDecWriter_Init@4
+	_DeeNTSystem_HandleGenericError@4=__DeeNTSystem_HandleGenericError@4
 	_DeeNone_NewRef1@4=__DeeNone_NewRef1@4
 	_DeeNone_NewRef2@8=__DeeNone_NewRef2@8
 	_DeeNone_NewRef3@12=__DeeNone_NewRef3@12
@@ -1812,6 +1813,7 @@ EXPORTS
 	_DeeNone_retsm1_3@12=__DeeNone_retsm1_3@12
 	_DeeNone_retsm1_4@16=__DeeNone_retsm1_4@16
 	_DeeNone_retsm1_5@20=__DeeNone_retsm1_5@20
+	_DeeUnixSystem_HandleGenericError@4=__DeeUnixSystem_HandleGenericError@4
 	_Dee_MalloccBufsizeDbg@16=__Dee_MalloccBufsizeDbg@16
 	_Dee_MallococBufsizeDbg@20=__Dee_MallococBufsizeDbg@20
 	_Dee_dprint@4=__Dee_dprint@4

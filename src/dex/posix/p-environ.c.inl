@@ -678,14 +678,10 @@ again_setenv:
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again_setenv;
-		} else {
-			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
-			                        "Failed to set environment variable `%k' to `%k'",
-			                        name, value);
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again_setenv);
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to set environment variable `%k' to `%k'",
+		                        name, value);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -712,11 +708,7 @@ again_setenv:
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_ReleaseSystemMemory())
-				goto again_setenv;
-			goto err;
-		});
+		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to set environment variable `%k' to `%k'",
 		                          name, value);
@@ -746,11 +738,7 @@ again_setenv:
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_ReleaseSystemMemory())
-				goto again_setenv;
-			goto err;
-		});
+		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to set environment variable `%k' to `%k'",
 		                          name, value);
@@ -806,11 +794,7 @@ again_setenv:
 	if ((error = wputenv_s((wchar_t *)wname, (wchar_t *)wvalue)) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_ReleaseSystemMemory())
-				goto again_setenv;
-			goto err;
-		});
+		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to set environment variable `%k' to `%k'",
 		                          name, value);
@@ -866,11 +850,7 @@ again_setenv:
 	if ((error = putenv_s((char *)utf8_name, (char *)utf8_value)) != 0) {
 		DBG_ALIGNMENT_ENABLE();
 		environ_lock_endwrite();
-		DeeSystem_IF_E1(error, ENOMEM, {
-			if (Dee_ReleaseSystemMemory())
-				goto again_setenv;
-			goto err;
-		});
+		DeeUnixSystem_HandleGenericError(error, err, again_setenv);
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to set environment variable `%k' to `%k'",
 		                          name, value);
@@ -1620,13 +1600,10 @@ again_GetEnvironmentStringsW:
 	if unlikely(!self->ei_environment_strings) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again_GetEnvironmentStringsW;
-		} else {
-			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
-			                        "Failed to enumerate environment variables");
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again_GetEnvironmentStringsW);
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to enumerate environment variables");
+err:
 		return -1;
 	}
 	DBG_ALIGNMENT_ENABLE();

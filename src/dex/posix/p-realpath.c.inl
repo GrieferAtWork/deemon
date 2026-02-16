@@ -257,7 +257,7 @@ err:
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
-EINTR_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 #ifdef posix_readlink_USE_freadlinkat
 		req_size = freadlinkat(AT_FDCWD, (char *)utf8_file, buffer, bufsize + 1, AT_READLINK_REQSIZE);
@@ -269,7 +269,7 @@ EINTR_LABEL(again)
 		if likely(req_size < 0) {
 			error = DeeSystem_GetErrno();
 			DBG_ALIGNMENT_ENABLE();
-			EINTR_HANDLE(error, again, err_buffer);
+			DeeUnixSystem_HandleGenericError(error, err_buffer, again);
 #ifdef posix_readlink_USE_wreadlink
 			DeeString_FreeWideBuffer(buffer);
 #else /* posix_readlink_USE_wreadlink */
@@ -675,7 +675,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_lrealpath_f_impl(Dee
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 		if (lrealpath((char *)utf8_path, buffer, bufsize + 1)) {
 			DBG_ALIGNMENT_ENABLE();
@@ -693,8 +693,7 @@ EINTR_ENOMEM_LABEL(again)
 			bufsize = new_size;
 		}
 #endif /* ERANGE */
-		EINTR_HANDLE(error, again, err_buffer);
-		ENOMEM_HANDLE(error, again, err_buffer);
+		DeeUnixSystem_HandleGenericError(error, err_buffer, again);
 #ifdef EACCES
 		if (error == EACCES) {
 #define NEED_err_unix_path_no_access
@@ -860,7 +859,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_frealpath_f_impl(Dee
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 		if (frealpath4(os_fd, buffer, bufsize + 1, atflags)) {
 			DBG_ALIGNMENT_ENABLE();
@@ -878,8 +877,7 @@ EINTR_ENOMEM_LABEL(again)
 			bufsize = new_size;
 		}
 #endif /* ERANGE */
-		EINTR_HANDLE(error, again, err_buffer);
-		ENOMEM_HANDLE(error, again, err_buffer);
+		DeeUnixSystem_HandleGenericError(error, err_buffer, again);
 		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 		                          "Failed to get realpath of %r",
 		                          fd);
@@ -973,7 +971,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_realpath_f_impl(DeeO
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 		if (realpath3((char *)utf8_path, buffer, bufsize + 1)) {
 			DBG_ALIGNMENT_ENABLE();
@@ -991,8 +989,7 @@ EINTR_ENOMEM_LABEL(again)
 			bufsize = new_size;
 		}
 #endif /* ERANGE */
-		EINTR_HANDLE(error, again, err_buffer);
-		ENOMEM_HANDLE(error, again, err_buffer);
+		DeeUnixSystem_HandleGenericError(error, err_buffer, again);
 #ifdef EACCES
 		if (error == EACCES) {
 #define NEED_err_unix_path_no_access
@@ -1040,14 +1037,13 @@ err:
 	utf8_path = DeeString_AsUtf8(path);
 	if unlikely(!utf8_path)
 		goto err;
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	buffer = canonicalize_file_name((char *)utf8_path);
 	if (!buffer) {
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 #ifdef EACCES
 		if (error == EACCES) {
 #define NEED_err_unix_path_no_access
@@ -1228,7 +1224,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_realpathat_f_impl
 #ifdef ERANGE
 again:
 #else /* ERANGE */
-EINTR_ENOMEM_LABEL(again)
+again:
 #endif /* !ERANGE */
 		DBG_ALIGNMENT_DISABLE();
 		if (realpathat(os_dfd, (char *)utf8_path, buffer, bufsize + 1, atflags)) {
@@ -1252,8 +1248,7 @@ err_buffer:
 			bufsize = new_size;
 		}
 #endif /* ERANGE */
-		EINTR_HANDLE(error, again, err_buffer);
-		ENOMEM_HANDLE(error, again, err_buffer);
+		DeeUnixSystem_HandleGenericError(error, err_buffer, again);
 		DeeString_Free1ByteBuffer((uint8_t *)buffer);
 		/* Fallthru to fallback path below */
 	}

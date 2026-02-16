@@ -725,10 +725,9 @@ err_nt:
 		if ((atflags & Dee_STAT_F_TRY) && DeeNTSystem_IsFileNotFoundError(dwError))
 			return 1; /* File not found. */
 
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-		} else if (DeeNTSystem_IsNotDir(dwError)) {
+		DeeNTSystem_HandleGenericError(dwError, err, again);
+#define NEED_err
+		if (DeeNTSystem_IsNotDir(dwError)) {
 			if (atflags & Dee_STAT_F_TRY)
 				return 1;
 #define NEED_err_nt_path_not_dir
@@ -756,11 +755,7 @@ err_nt:
 
 #ifdef posix_stat_USED_STRUCT_STAT
 #define NEED_err
-#ifdef EINTR
 again:
-#endif /* EINTR */
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	{
 		int error;
 #ifdef posix_stat_USED_fstatat
@@ -836,10 +831,7 @@ again:
 		if likely(error == 0)
 			return 0;
 		error = DeeSystem_GetErrno();
-#ifdef EINTR
-		if (error == EINTR)
-			goto again;
-#endif /* EINTR */
+		DeeUnixSystem_HandleGenericError(error, err, again);
 #ifdef EACCES
 		if (error == EACCES)
 			return err_unix_path_no_access(error, path_or_file);

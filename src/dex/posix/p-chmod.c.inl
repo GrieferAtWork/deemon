@@ -367,7 +367,7 @@ err:
 	if unlikely(used_mode == (unsigned int)-1)
 		goto err;
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_chmod_USE_wchmod
 	error = wchmod((wchar_t *)wide_path, used_mode);
@@ -379,8 +379,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_chmod(error, path, used_mode);
 #define NEED_err_unix_chmod
 		goto err;
@@ -454,7 +453,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_lchmod_f_impl(Dee
 	if unlikely(used_mode == (unsigned int)-1)
 		goto err;
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_lchmod_USE_wlchmod
 	error = wlchmod((wchar_t *)wide_path, used_mode);
@@ -466,8 +465,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_lchmod(error, path, used_mode);
 #define NEED_err_unix_lchmod
 		goto err;
@@ -524,15 +522,14 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fchmod_f_impl(Dee
 	if unlikely(used_mode == (unsigned int)-1)
 		goto err;
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	error = fchmod(os_fd, used_mode);
 	DBG_ALIGNMENT_ENABLE();
 	
 	if unlikely(error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_fchmod(error, fd, used_mode);
 #define NEED_err_unix_fchmod
 		goto err;
@@ -624,7 +621,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL posix_fchmodat_f_imp
 			goto err;
 		if (DeeObject_AsUInt(mode, &used_mode))
 			goto err;
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 		error = fchmodat(os_dfd, (char *)utf8_path, used_mode, atflags);
 		if (error >= 0) {
@@ -633,8 +630,7 @@ EINTR_ENOMEM_LABEL(again)
 		}
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		/* Fallthru to fallback path below */
 	}
 #endif /* posix_fchmodat_USE_fchmodat */

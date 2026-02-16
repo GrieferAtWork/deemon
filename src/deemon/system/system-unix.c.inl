@@ -130,6 +130,26 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 	return result;
 }
 
+/* Try to handle generic errors:
+ * - ENOMEM -- Dee_ReleaseSystemMemory()
+ * - EINTR  -- DeeThread_CheckInterrupt()
+ * @return: _DeeUnixSystem_HandleGenericError_AGAIN: System error was handled; try again
+ * @return: _DeeUnixSystem_HandleGenericError_OTHER: System error could not be handled.
+ * @return: _DeeUnixSystem_HandleGenericError_ERR:   A deemon error was thrown. */
+PUBLIC WUNUSED unsigned int DCALL
+_DeeUnixSystem_HandleGenericError(int errno_value) {
+	(void)errno_value;
+	DeeSystem_IF_E1(errno_value, ENOMEM, {
+		return Dee_ReleaseSystemMemory() ? _DeeUnixSystem_HandleGenericError_AGAIN
+		                                 : _DeeUnixSystem_HandleGenericError_ERR;
+	});
+	DeeSystem_IF_E1(errno_value, EINTR, {
+		return DeeThread_CheckInterrupt() ? _DeeUnixSystem_HandleGenericError_ERR
+		                                  : _DeeUnixSystem_HandleGenericError_AGAIN;
+	});
+	return _DeeUnixSystem_HandleGenericError_OTHER;
+}
+
 
 
 
@@ -400,13 +420,7 @@ increase_buffer_size:
 	} else {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-#ifdef EINTR
-		if (error == EINTR) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
-#endif /* EINTR */
+		DeeUnixSystem_HandleGenericError(error, err, again);
 #ifdef ERANGE
 		if (error == ERANGE)
 			goto increase_buffer_size;

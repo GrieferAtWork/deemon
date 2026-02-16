@@ -152,7 +152,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_system_f_impl(char c
 #if (defined(posix_system_USE_wsystem) || \
      defined(posix_system_USE_system))
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_system_USE_wsystem
 	result = wsystem(command);
@@ -160,18 +160,16 @@ EINTR_LABEL(again)
 	result = system(command);
 #endif /* !posix_system_USE_wsystem */
 	DBG_ALIGNMENT_ENABLE();
-	EINTR_HANDLE(DeeSystem_GetErrno(), again, err)
+	DeeUnixSystem_HandleGenericError(DeeSystem_GetErrno(), err, again);
 	return DeeInt_NewInt(result);
-#ifdef EINTR
 err:
 	return NULL;
-#endif /* EINTR */
 #endif /* posix_system_USE_wsystem || posix_system_USE_system */
 
 #if defined(posix_system_USE_fork_AND_wexec) || defined(posix_system_USE_fork_AND_exec)
 	int cpid, error;
 	int status;
-EINTR_LABEL(again)
+again:
 	cpid = vfork();
 	if (cpid == 0) {
 #ifdef posix_system_USE_fork_AND_wexec
@@ -215,17 +213,15 @@ EINTR_LABEL(again)
 				break;
 			if (error >= 0)
 				continue;
-			EINTR_HANDLE(DeeSystem_GetErrno(), again, err)
+			DeeUnixSystem_HandleGenericError(DeeSystem_GetErrno(), err, again);
 		}
 		status = WIFEXITED(status)
 		         ? WEXITSTATUS(status)
 		         :;
 	}
 	return DeeInt_NewInt(status);
-#ifdef EINTR
 err:
 	return NULL;
-#endif /* EINTR */
 #endif /* posix_system_USE_fork_AND_wexec || posix_system_USE_fork_AND_exec */
 
 #ifdef posix_system_USE_STUB
@@ -273,14 +269,14 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void)
 {
 #ifdef posix_getpid_USE_getpid
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	result = getpid();
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
 		if (error != 0) {
-			EINTR_HANDLE(error, again, err)
+			DeeUnixSystem_HandleGenericError(error, err, again);
 			HANDLE_ENOSYS(error, err, "getpid")
 			DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 			                          "Failed to get pid");

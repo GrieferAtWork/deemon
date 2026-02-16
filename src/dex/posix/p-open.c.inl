@@ -444,7 +444,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__open_f_impl(DeeObje
 	}
 
 	/* Wrap the handle into a file descriptor. */
-ENOMEM_LABEL(again_wrap)
+again_wrap:
 	{
 		int fd_flags = 0;
 #ifdef _O_RDONLY
@@ -459,7 +459,9 @@ ENOMEM_LABEL(again_wrap)
 	}
 	if unlikely(resfd == -1) {
 		resfd = DeeSystem_GetErrno();
-		ENOMEM_HANDLE(resfd, again_wrap, err_fp)
+		DeeUnixSystem_HandleGenericError(resfd, err_fp, again_wrap);
+		DeeUnixSystem_ThrowErrorf(NULL, resfd, "Failed to wrap handle %p as an fd", (void *)hFile);
+		goto err_fp;
 	}
 
 	result = DeeInt_NewUInt((unsigned int)resfd);
@@ -475,7 +477,7 @@ err:
 #if defined(posix_open_USE_wopen) || defined(posix_open_USE_open)
 	DREF DeeObject *result;
 	int resfd;
-EINTR_LABEL(again)
+again:
 
 #ifdef posix_open_USE_wopen
 	{
@@ -502,7 +504,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (resfd < 0) {
 		resfd = DeeSystem_GetErrno();
-		EINTR_HANDLE(resfd, again, err)
+		DeeUnixSystem_HandleGenericError(resfd, err, again);
 		HANDLE_ENOENT_ENOTDIR(resfd, err, "File or directory %r could not be found", filename)
 		HANDLE_EEXIST_IF(resfd, oflags & OPEN_FEXCL, err, "File %r already exists", filename)
 		HANDLE_EACCES(resfd, err, "Failed to access %r", filename)
@@ -594,7 +596,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix__creat_f_impl(DeeObj
 {
 #if defined(posix_creat_USE_wcreat) || defined(posix_creat_USE_creat)
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 
 #ifdef posix_creat_USE_wcreat
@@ -622,7 +624,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		EINTR_HANDLE(result, again, err)
+		DeeUnixSystem_HandleGenericError(result, err, again);
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %r could not be found", filename)
 		HANDLE_EACCES(result, err, "Failed to access %r", filename)
 		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %r for writing", filename)
@@ -747,7 +749,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix__openat_f_impl(De
 			goto err;
 #endif /* posix_openat_USE_openat */
 
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 #ifdef posix_openat_USE_wopenat
 		result = wopenat(os_dfd, (wchar_t *)wide_filename, (int)oflags, (int)mode);
@@ -761,8 +763,7 @@ EINTR_ENOMEM_LABEL(again)
 		}
 		result = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(result, again, err);
-		ENOMEM_HANDLE(result, again, err);
+		DeeUnixSystem_HandleGenericError(result, err, again);
 		/* Fallthru to fallback path below */
 	}
 #endif /* posix_openat_USE_wopenat || posix_openat_USE_openat */

@@ -2478,11 +2478,7 @@ ipc_unix_chdir_getcwd(void) {
 	buffer = (ipc_unix_chdir_char_t *)Dee_TryMallocc(bufsize, sizeof(ipc_unix_chdir_char_t));
 	if unlikely(!buffer)
 		goto err;
-#ifdef EINTR
 again:
-#endif /* EINTR */
-	if (DeeThread_CheckInterrupt())
-		goto err_buf;
 	DBG_ALIGNMENT_DISABLE();
 #ifdef ipc_Process_USE_WCHAR_CHDIR_APIS
 	while (!wgetcwd(buffer, bufsize + 1))
@@ -2491,17 +2487,14 @@ again:
 #endif /* !ipc_Process_USE_WCHAR_CHDIR_APIS */
 	{
 		/* Increase the buffer and try again. */
-#if defined(CONFIG_HAVE_errno) && defined(ERANGE)
 		int error = DeeSystem_GetErrno();
-		if (error != ERANGE) {
-			DBG_ALIGNMENT_ENABLE();
-#ifdef EINTR
-			if (error == EINTR)
-				goto again;
-#endif /* EINTR */
-			goto err_buf;
+		DBG_ALIGNMENT_ENABLE();
+#ifdef ERANGE
+		if (error != ERANGE)
+#endif /* ERANGE */
+		{
+			DeeUnixSystem_HandleGenericError(error, err_buf, again);
 		}
-#endif /* CONFIG_HAVE_errno && ERANGE */
 		DBG_ALIGNMENT_ENABLE();
 		bufsize *= 2;
 		new_buffer = (ipc_unix_chdir_char_t *)Dee_TryReallocc(buffer, bufsize,
@@ -2585,7 +2578,7 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 
 		/* Check if the vfork() itself failed */
 		if (cpid < 0) {
-			error = errno;
+			error = DeeSystem_GetErrno();
 			if unlikely(error == 0)
 				error = 1; /* Shouldn't happen, but mustn't indicate success here */
 			return -error;
@@ -2599,13 +2592,13 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 		 *
 		 * As such, if the child process encountered any kind of problem, we now have
 		 * its error-code safely stored in our `errno'. */
-		error = errno;
+		error = DeeSystem_GetErrno();
 		if (error != 0) {
 			int status;
 			/* Must still reap `cpid' */
 			while (ipc_joinpid(cpid, &status) < 0) {
 #ifdef EINTR
-				if (errno == EINTR)
+				if (DeeSystem_GetErrno() == EINTR)
 					continue;
 #endif /* EINTR */
 				break;
@@ -2639,7 +2632,7 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 			ipc_unix_spawn_in_child(self);
 
 			/* Exec fail -> write the current `errno' value to the pipe. */
-			error = errno;
+			error = DeeSystem_GetErrno();
 			if unlikely(error == 0)
 				error = 1; /* Shouldn't happen, but mustn't indicate success here */
 			(void)writeall(pipefd[1], &error, sizeof(error));
@@ -2650,7 +2643,7 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 
 		/* Check if the fork() itself failed */
 		if (cpid < 0) {
-			error = errno;
+			error = DeeSystem_GetErrno();
 			if unlikely(error == 0)
 				error = 1; /* Shouldn't happen, but mustn't indicate success here */
 			return -error;
@@ -2665,10 +2658,10 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 			if (temp >= 0)
 				break;
 #ifdef EINTR
-			if (errno == EINTR)
+			if (DeeSystem_GetErrno() == EINTR)
 				continue;
 #endif /* EINTR */
-			error = errno;
+			error = DeeSystem_GetErrno();
 			break;
 		}
 		(void)close(pipefd[0]); /* Close read-end */
@@ -2681,7 +2674,7 @@ ipc_unix_spawn(struct unix_spawn_args const *__restrict self) {
 			/* Must still reap `cpid' */
 			while (ipc_joinpid(cpid, &status) < 0) {
 #ifdef EINTR
-				if (errno == EINTR)
+				if (DeeSystem_GetErrno() == EINTR)
 					continue;
 #endif /* EINTR */
 				break;
@@ -2808,7 +2801,7 @@ return_errno_saved_fd:
 				(void)close(saved_fds[i]);
 		}
 return_errno:
-		error = errno;
+		error = DeeSystem_GetErrno();
 		if unlikely(error == 0)
 			error = 1; /* Shouldn't happen, but mustn't indicate success here */
 		return -error;
@@ -3452,7 +3445,7 @@ err:
 		if unlikely(pid == ipc_Process_pid_t_INVALID)
 			goto err;
 		if (kill(pid, 0) != 0) {
-			int error = errno;
+			int error = DeeSystem_GetErrno();
 #ifdef ESRCH
 			if (error == ESRCH)
 				return 0;
@@ -3566,7 +3559,7 @@ err:
 			goto err;
 		(void)exit_code;
 		if (kill(pid, signo) != 0) {
-			int error = errno;
+			int error = DeeSystem_GetErrno();
 #ifdef ESRCH
 			if (error != ESRCH)
 #endif /* ESRCH */
@@ -3752,7 +3745,7 @@ do_handle_EAGAIN:
 
 		/* Check for error. */
 		if (error < 0) {
-			error = errno;
+			error = DeeSystem_GetErrno();
 #if defined(ipc_tryjoinpid) && defined(EAGAIN)
 			if (error == EAGAIN)
 				goto do_handle_EAGAIN;
@@ -4101,11 +4094,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_buffer;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_buffer, again);
 			if (DeeNTSystem_IsBufferTooSmall(dwError))
 				goto do_increase_buffer;
 			DeeString_FreeWideBuffer(lpBuffer);

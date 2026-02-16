@@ -476,23 +476,14 @@ PUBLIC WUNUSED NONNULL((1)) int
 	if unlikely(!buffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_release;
 	DBG_ALIGNMENT_DISABLE();
 	new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(!new_bufsize) {
-DWORD dwError;
-		dwError = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-		} else if (DeeNTSystem_IsIntr(dwError)) {
-			goto again;
-		} else {
-			nt_err_getcwd(dwError);
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_release, again);
+		nt_err_getcwd(dwError);
 		goto err_release;
 	}
 	if (new_bufsize > bufsize) {
@@ -550,23 +541,18 @@ err:
 	                      Dee_unicode_printer_alloc_utf8(printer, bufsize));
 	if unlikely(!buffer)
 		goto err;
-#ifdef EINTR
 again:
-#endif /* EINTR */
-	if (DeeThread_CheckInterrupt())
-		goto err_release;
 	DBG_ALIGNMENT_DISABLE();
 	while (!IFELSE_WCHAR(wgetcwd((wchar_t *)buffer, bufsize + 1),
 	                     getcwd((char *)buffer, bufsize + 1))) {
 		/* Increase the buffer and try again. */
-#if defined(CONFIG_HAVE_errno) && defined(ERANGE)
 		int error = DeeSystem_GetErrno();
-		if (error != ERANGE) {
+#ifdef ERANGE
+		if (error != ERANGE)
+#endif /* ERANGE */
+		{
 			DBG_ALIGNMENT_ENABLE();
-#ifdef EINTR
-			if (error == EINTR)
-				goto again;
-#endif /* EINTR */
+			DeeUnixSystem_HandleGenericError(error, err_release, again);
 			DeeSystem_IF_E1(error, EACCES, {
 				DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
 				                          "Permission to read a part of the current "
@@ -582,7 +568,6 @@ again:
 			                          "Failed to retrieve the current working directory");
 			goto err_release;
 		}
-#endif /* CONFIG_HAVE_errno && ERANGE */
 		DBG_ALIGNMENT_ENABLE();
 		bufsize *= 2;
 		new_buffer = IFELSE_WCHAR(Dee_unicode_printer_resize_wchar(printer, buffer, bufsize),
@@ -776,11 +761,7 @@ again_loadlib:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again_loadlib;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again_loadlib);
 		if (DeeNTSystem_IsUncError(dwError)) {
 			DREF DeeObject *unc_filename;
 			/* Try to fix-up the filename. */
@@ -801,11 +782,7 @@ again_loadlib:
 				DBG_ALIGNMENT_DISABLE();
 				dwError = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				if (DeeNTSystem_IsIntr(dwError)) {
-					if (DeeThread_CheckInterrupt())
-						goto err;
-					goto again;
-				}
+				DeeNTSystem_HandleGenericError(dwError, err, again);
 				hResult = (HMODULE)DeeSystem_DlOpen_FAILED;
 			}
 		}
@@ -1083,17 +1060,8 @@ again:
 	if (!GetFileAttributesExW(wname, fInfoLevelId, lpFileInformation)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-handle_nomem:
-			if (!Dee_ReleaseSystemMemory())
-				goto err;
-			goto again;
-		} else if (DeeNTSystem_IsIntr(dwError)) {
-handle_intr:
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		} else if (DeeNTSystem_IsUncError(dwError)) {
+		DeeNTSystem_HandleGenericError(dwError, err, again);
+		if (DeeNTSystem_IsUncError(dwError)) {
 			BOOL bOk;
 			LPWSTR unc_wname;
 			DREF DeeObject *unc_filename;
@@ -1113,10 +1081,7 @@ handle_intr:
 				DBG_ALIGNMENT_DISABLE();
 				dwError = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				if (DeeNTSystem_IsBadAllocError(dwError))
-					goto handle_nomem;
-				if (DeeNTSystem_IsIntr(dwError))
-					goto handle_intr;
+				DeeNTSystem_HandleGenericError(dwError, err, again);
 				return 0;
 			}
 		} else {
@@ -1199,35 +1164,16 @@ err:
 	struct stat st;
 #endif /* !DeeSystem_GetLastModified_USE_stat64 */
 	DBG_ALIGNMENT_DISABLE();
-#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
 again:
-#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 #ifdef DeeSystem_GetLastModified_USE_stat64
 	if (stat64(filename, &st))
 #else /* DeeSystem_GetLastModified_USE_stat64 */
 	if (stat(filename, &st))
 #endif /* !DeeSystem_GetLastModified_USE_stat64 */
 	{
-#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
 		int error = DeeSystem_GetErrno();
-#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 		DBG_ALIGNMENT_ENABLE();
-#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
-#ifdef EINTR
-		if (error == EINTR) {
-			if (DeeThread_CheckInterrupt())
-				return (uint64_t)-1;
-			goto again;
-		}
-#endif /* EINTR */
-#ifdef ENOMEM
-		if (error == ENOMEM) {
-			if (!Dee_ReleaseSystemMemory())
-				return (uint64_t)-1;
-			goto again;
-		}
-#endif /* ENOMEM */
-#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		return 0;
 	}
 
@@ -1248,6 +1194,8 @@ again:
 	if unlikely(result == (uint64_t)-1)
 		result = (uint64_t)-2;
 	return result;
+err:
+	return (uint64_t)-1;
 #endif /* DeeSystem_GetLastModified_USE_stat || DeeSystem_GetLastModified_USE_stat64 */
 
 #ifdef DeeSystem_GetLastModified_USE_STUB
@@ -1367,35 +1315,16 @@ err:
 	struct stat st;
 #endif /* !DeeSystem_GetFileType_USE_stat64 */
 	DBG_ALIGNMENT_DISABLE();
-#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
 again:
-#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 #ifdef DeeSystem_GetFileType_USE_stat64
 	if (stat64(filename, &st))
 #else /* DeeSystem_GetFileType_USE_stat64 */
 	if (stat(filename, &st))
 #endif /* !DeeSystem_GetFileType_USE_stat64 */
 	{
-#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
 		int error = DeeSystem_GetErrno();
-#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
 		DBG_ALIGNMENT_ENABLE();
-#if defined(CONFIG_HAVE_errno) && (defined(EINTR) || defined(ENOMEM))
-#ifdef EINTR
-		if (error == EINTR) {
-			if (DeeThread_CheckInterrupt())
-				return DeeSystem_GetFileType_ERR;
-			goto again;
-		}
-#endif /* EINTR */
-#ifdef ENOMEM
-		if (error == ENOMEM) {
-			if (!Dee_ReleaseSystemMemory())
-				return DeeSystem_GetFileType_ERR;
-			goto again;
-		}
-#endif /* ENOMEM */
-#endif /* CONFIG_HAVE_errno && (EINTR || ENOMEM) */
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		return DeeSystem_GetFileType_T_NONE;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1440,6 +1369,8 @@ again:
 	if (STAT_ISDIR(st.st_mode))
 		return DeeSystem_GetFileType_T_DIR;
 	return DeeSystem_GetFileType_T_REG;
+err:
+	return DeeSystem_GetFileType_ERR;
 #undef STAT_ISDIR
 #undef STAT_IFDIR
 #undef STAT_IFMT
@@ -1641,53 +1572,62 @@ DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
 	if unlikely(!wname) {
 		/* Since unlink() is a cleanup operation,
 		 * try hard to comply, even after an error! */
-		if (DeleteFileA(DeeString_STR(filename))) {
+		BOOL bOK;
+/*err_deletefile_a:*/
+		/* Try hard to delete the file... (even after an error) */
+		DBG_ALIGNMENT_DISABLE();
+		bOK = DeleteFileA(DeeString_STR(filename));
+		DBG_ALIGNMENT_ENABLE();
+		if (bOK) {
 			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
 				return 0;
 		}
 		goto err;
 	}
 again_deletefile:
-	if (DeleteFileW(wname))
+	DBG_ALIGNMENT_DISABLE();
+	if (DeleteFileW(wname)) {
+		DBG_ALIGNMENT_ENABLE();
 		return 0;
-	dwError = GetLastError();
-	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt()) {
-			/* Try hard to delete the file... (even after an interrupt) */
-			DeleteFileW(wname);
-			goto err;
-		}
-		goto again_deletefile;
 	}
+	dwError = GetLastError();
+	DBG_ALIGNMENT_ENABLE();
+	DeeNTSystem_HandleGenericError(dwError, err_deletefile_w, again_deletefile);
 	if (DeeNTSystem_IsUncError(dwError)) {
 		DREF DeeStringObject *unc_filename;
 		/* Try again with a UNC filename. */
 		unc_filename = (DREF DeeStringObject *)DeeNTSystem_FixUncPath(filename);
 		if unlikely(!unc_filename)
 			goto err;
-		wname = (LPWSTR)DeeString_AsWide(filename);
+		wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(unc_filename));
 		if unlikely(!wname) {
 			/* No point in trying to use DeleteFileA() here.
 			 * It doesn't work for UNC paths to begin with... */
 			Dee_Decref(unc_filename);
 			goto err;
 		}
-again_deletefile2:
+again_deletefile_with_unc:
+		DBG_ALIGNMENT_DISABLE();
 		if (DeleteFileW(wname)) {
+			DBG_ALIGNMENT_ENABLE();
 			Dee_Decref(unc_filename);
 			return 0; /* Success! */
 		}
 		dwError = GetLastError();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt()) {
-				/* Try hard to delete the file... (even after an interrupt) */
-				DeleteFileW(wname);
-				Dee_Decref(unc_filename);
-				goto err;
-			}
-			goto again_deletefile2;
-		}
+		DBG_ALIGNMENT_ENABLE();
+		DeeNTSystem_HandleGenericError(dwError,
+		                               err_deletefile_w_unc_filename,
+		                               again_deletefile_with_unc);
 		Dee_Decref(unc_filename);
+		__IF0{
+err_deletefile_w_unc_filename:
+			/* Try hard to delete the file... (even after an error) */
+			DBG_ALIGNMENT_DISABLE();
+			DeleteFileW(wname);
+			DBG_ALIGNMENT_ENABLE();
+			Dee_Decref(unc_filename);
+			goto err;
+		}
 	}
 	/* Can't delete the file, no matter what I try...  :( */
 	if (!throw_exception_on_error)
@@ -1697,9 +1637,20 @@ again_deletefile2:
 	                        filename);
 err:
 	return -1;
+err_deletefile_w:
+	/* Try hard to delete the file... (even after an error) */
+	DBG_ALIGNMENT_DISABLE();
+	if (DeleteFileW(wname)) {
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeError_Handled(ERROR_HANDLED_NORMAL))
+			return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	goto err;
 #endif /* DeeSystem_Unlink_USE_DeleteFileW */
 
 #if defined(DeeSystem_Unlink_USE_wunlink) || defined(DeeSystem_Unlink_USE_wremove)
+	int error;
 	Dee_wchar_t const *wname;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	wname = DeeString_AsWide(filename);
@@ -1707,67 +1658,71 @@ err:
 #if defined(CONFIG_HAVE_unlink) || defined(CONFIG_HAVE_remove)
 		/* Since unlink() is a cleanup operation,
 		 * try hard to comply, even after an error! */
+		DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_unlink
 		if (unlink(DeeString_STR(filename)) == 0)
 #else /* CONFIG_HAVE_unlink */
 		if (remove(DeeString_STR(filename)) == 0)
 #endif /* !CONFIG_HAVE_unlink */
 		{
+			DBG_ALIGNMENT_ENABLE();
 			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
 				return 0;
 		}
+		DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_unlink || CONFIG_HAVE_remove */
 		return -1;
 	}
-#if defined(CONFIG_HAVE_errno) && defined(EINTR)
 again_deletefile:
-#endif /* CONFIG_HAVE_errno && EINTR */
+	DBG_ALIGNMENT_DISABLE();
 #ifdef DeeSystem_Unlink_USE_wunlink
 	if (wunlink(wname) == 0)
-		return 0;
 #else /* DeeSystem_Unlink_USE_wunlink */
 	if (wremove(wname) == 0)
+#endif /* !DeeSystem_Unlink_USE_wunlink */
+	{
+		DBG_ALIGNMENT_ENABLE();
 		return 0;
-#endif /* !DeeSystem_Unlink_USE_wunlink */
-#if defined(CONFIG_HAVE_errno) && defined(EINTR)
-	if (DeeSystem_GetErrno() == EINTR) {
-		if (DeeThread_CheckInterrupt()) {
-			/* Try hard to delete the file... (even after an interrupt) */
-#ifdef DeeSystem_Unlink_USE_wunlink
-			(void)wunlink(wname);
-#else /* DeeSystem_Unlink_USE_wunlink */
-			(void)wremove(wname);
-#endif /* !DeeSystem_Unlink_USE_wunlink */
-			return -1;
-		}
-		goto again_deletefile;
 	}
-#endif /* CONFIG_HAVE_errno && EINTR */
+	error = DeeSystem_GetErrno();
+	DBG_ALIGNMENT_ENABLE();
+	DeeUnixSystem_HandleGenericError(error, err_wunlink_wname, again_deletefile);
 
 	/* Can't delete the file, no matter what I try...  :( */
 	if (!throw_exception_on_error)
 		return 1;
+	DeeSystem_IF_E4(error, ENOENT, ENOTDIR, ENAMETOOLONG, ELOOP, {
+		return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+		                                 "Cannot delete missing file %r",
+		                                 filename);
+	});
+	DeeSystem_IF_E2(error, EPERM, EACCES, {
+		return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+		                                 "Not allowed to delete file %r",
+		                                 filename);
+	});
+	DeeSystem_IF_E1(error, EROFS, {
+		return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error,
+		                                 "Cannot delete file %r on read-only filesystem",
+		                                 filename);
+	});
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+	                                 "Failed to delete file %r",
+	                                 filename);
+err_wunlink_wname:
+	/* Try hard to delete the file... (even after an interrupt) */
+	DBG_ALIGNMENT_DISABLE();
+#ifdef DeeSystem_Unlink_USE_wunlink
+	if (wunlink(wname) == 0)
+#else /* DeeSystem_Unlink_USE_wunlink */
+	if (wremove(wname) == 0)
+#endif /* !DeeSystem_Unlink_USE_wunlink */
 	{
-		int error = DeeSystem_GetErrno();
-		DeeSystem_IF_E4(error, ENOENT, ENOTDIR, ENAMETOOLONG, ELOOP, {
-			return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
-			                                 "Cannot delete missing file %r",
-			                                 filename);
-		});
-		DeeSystem_IF_E2(error, EPERM, EACCES, {
-			return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
-			                                 "Not allowed to delete file %r",
-			                                 filename);
-		});
-		DeeSystem_IF_E1(error, EROFS, {
-			return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error,
-			                                 "Cannot delete file %r on read-only filesystem",
-			                                 filename);
-		});
-		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-		                          "Failed to delete file %r",
-		                          filename);
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeError_Handled(ERROR_HANDLED_NORMAL))
+			return 0;
 	}
+	DBG_ALIGNMENT_ENABLE();
 	return -1;
 #endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
 
@@ -1848,51 +1803,44 @@ DeeSystem_UnlinkString(/*utf-8*/ char const *__restrict filename,
 #endif /* DeeSystem_Unlink_USE_wunlink || DeeSystem_Unlink_USE_wremove */
 
 #if defined(DeeSystem_Unlink_USE_unlink) || defined(DeeSystem_Unlink_USE_remove)
+	int error;
 #ifdef DeeSystem_Unlink_USE_unlink
 #define LOCAL_unlink_or_remove unlink
 #else /* CONFIG_HAVE_unlink */
 #define LOCAL_unlink_or_remove remove
 #endif /* !CONFIG_HAVE_unlink */
-#if defined(CONFIG_HAVE_errno) && defined(EINTR)
 again_deletefile:
-#endif /* CONFIG_HAVE_errno && EINTR */
-	if (LOCAL_unlink_or_remove(filename) == 0)
+	DBG_ALIGNMENT_DISABLE();
+	if (LOCAL_unlink_or_remove(filename) == 0) {
+		DBG_ALIGNMENT_ENABLE();
 		return 0;
-#if defined(CONFIG_HAVE_errno) && defined(EINTR)
-	if (DeeSystem_GetErrno() == EINTR) {
-		if (DeeThread_CheckInterrupt()) {
-			/* Try hard to delete the file... (even after an interrupt) */
-			(void)LOCAL_unlink_or_remove(filename);
-			return -1;
-		}
-		goto again_deletefile;
 	}
-#endif /* CONFIG_HAVE_errno && EINTR */
+	DBG_ALIGNMENT_ENABLE();
+	error = DeeSystem_GetErrno();
+	DeeUnixSystem_HandleGenericError(error, err, again_deletefile);
 
 	/* Can't delete the file, no matter what I try...  :( */
 	if (!throw_exception_on_error)
 		return 1;
-	{
-		int error = DeeSystem_GetErrno();
-		DeeSystem_IF_E4(error, ENOENT, ENOTDIR, ENAMETOOLONG, ELOOP, {
-			return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
-			                                 "Cannot delete missing file %q",
-			                                 filename);
-		});
-		DeeSystem_IF_E2(error, EPERM, EACCES, {
-			return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
-			                                 "Not allowed to delete file %q",
-			                                 filename);
-		});
-		DeeSystem_IF_E1(error, EROFS, {
-			return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error,
-			                                 "Cannot delete file %q on read-only filesystem",
-			                                 filename);
-		});
-		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
-		                          "Failed to delete file %q",
-		                          filename);
-	}
+	DeeSystem_IF_E4(error, ENOENT, ENOTDIR, ENAMETOOLONG, ELOOP, {
+		return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+		                                 "Cannot delete missing file %q",
+		                                 filename);
+	});
+	DeeSystem_IF_E2(error, EPERM, EACCES, {
+		return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+		                                 "Not allowed to delete file %q",
+		                                 filename);
+	});
+	DeeSystem_IF_E1(error, EROFS, {
+		return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error,
+		                                 "Cannot delete file %q on read-only filesystem",
+		                                 filename);
+	});
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+	                                 "Failed to delete file %q",
+	                                 filename);
+err:
 	return -1;
 #undef LOCAL_unlink_or_remove
 #endif /* DeeSystem_Unlink_USE_unlink || DeeSystem_Unlink_USE_remove */
@@ -2224,9 +2172,7 @@ DeeMapFile_InitSysFd(struct DeeMapFile *__restrict self, Dee_fd_t fd,
 	}
 
 	/* Try to use mmap(2) */
-#if defined(CONFIG_HOST_WINDOWS) || defined(ENOMEM) || defined(EINTR)
 again:
-#endif /* CONFIG_HOST_WINDOWS || ENOMEM || EINTR */
 #if defined(DeeMapFile_IS_CreateFileMapping) || defined(DeeMapFile_IS_mmap)
 	if (FSTAT_FOR_SIZE(fd, &st) == 0) {
 		Dee_pos_t map_offset = offset;
@@ -2817,56 +2763,31 @@ empty_file:
 	{
 		/* Throw/handle system errors */
 #ifdef CONFIG_HOST_WINDOWS
-		DWORD error;
+		DWORD dwError;
 system_err_buf:
-		error = GetLastError();
-		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_ReleaseSystemMemory()) {
-				offset = orig_offset;
-				goto again;
-			}
-		} else if (DeeNTSystem_IsIntr(error)) {
-			if (DeeThread_CheckInterrupt() == 0) {
-				offset = orig_offset;
-				goto again;
-			}
-		} else if (DeeNTSystem_IsBadF(error)) {
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		DeeNTSystem_HandleGenericError(dwError, err_buf, again_restore_orig_offset);
+		if (DeeNTSystem_IsBadF(dwError)) {
 			DeeError_Throwf(&DeeError_FileClosed,
 			                "File descriptor %d was closed",
 			                fd);
 		} else {
-			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, error,
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
 			                        "Failed to map file %d", fd);
 		}
 #else /* CONFIG_HOST_WINDOWS */
 		int error;
 system_err_buf:
 		error = DeeSystem_GetErrno();
-#ifdef ENOMEM
-		if (error == ENOMEM) {
-			if (Dee_ReleaseSystemMemory()) {
-				offset = orig_offset;
-				goto again;
-			}
-			goto err_buf;
-		}
-#endif /* ENOMEM */
-#ifdef EINTR
-		if (error == EINTR) {
-			if (DeeThread_CheckInterrupt())
-				goto err_buf;
-			offset = orig_offset;
-			goto again;
-		}
-#endif /* EINTR */
-#ifdef EBADF
-		if (error == EBADF) {
+		DeeUnixSystem_HandleGenericError(error, err_buf, again_restore_orig_offset);
+		DeeSystem_IF_E1(error, EBADF, {
 			DeeError_Throwf(&DeeError_FileClosed,
 			                "File descriptor %d was closed",
 			                fd);
 			goto err_buf;
-		}
-#endif /* EBADF */
+		});
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
 		                          "Failed to map file %d", fd);
 #endif /* !CONFIG_HOST_WINDOWS */
@@ -2878,6 +2799,9 @@ err_buf_2big:
 	Dee_Free(buf);
 err_2big:
 	return Dee_BadAlloc((size_t)-1);
+again_restore_orig_offset:
+	offset = orig_offset;
+	goto again;
 #else /* ... */
 	return DeeError_Throwf(&DeeError_UnsupportedAPI, "File mappings aren't supported");
 #endif /* !... */

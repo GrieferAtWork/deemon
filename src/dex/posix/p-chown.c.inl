@@ -382,7 +382,7 @@ err:
 		goto err;
 #define NEED_posix_chown_unix_parsegid
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_chown_USE_wchown
 	error = wchown((wchar_t *)wide_path, used_uid, used_gid);
@@ -394,8 +394,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_chown(error, path, used_uid, used_gid);
 #define NEED_err_unix_chown
 		goto err;
@@ -525,7 +524,7 @@ err:
 		goto err;
 #define NEED_posix_chown_unix_parsegid
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_lchown_USE_wlchown
 	error = wlchown((wchar_t *)wide_path, used_uid, used_gid);
@@ -537,8 +536,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_lchown(error, path, used_uid, used_gid);
 #define NEED_err_unix_lchown
 		goto err;
@@ -652,15 +650,14 @@ err:
 		goto err;
 #define NEED_posix_chown_unix_parsegid
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	error = fchown(os_fd, used_uid, used_gid);
 	DBG_ALIGNMENT_ENABLE();
 	
 	if unlikely(error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_fchown(error, fd, used_uid, used_gid);
 #define NEED_err_unix_fchown
 		goto err;
@@ -762,7 +759,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL posix_fchownat_f_
 		if unlikely(posix_chown_unix_parsegid(gid, &used_gid))
 			goto err;
 #define NEED_posix_chown_unix_parsegid
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 		error = fchownat(os_dfd, (char *)utf8_path, used_uid, used_gid, atflags);
 		if (error >= 0) {
@@ -771,8 +768,7 @@ EINTR_ENOMEM_LABEL(again)
 		}
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		/* Fallthru to fallback path below */
 	}
 #endif /* posix_fchownat_USE_fchownat */

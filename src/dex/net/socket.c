@@ -1055,6 +1055,7 @@ handle_accept_error_neterror:
 	error = GET_NET_ERROR();
 	DBG_ALIGNMENT_ENABLE();
 /*handle_accept_error:*/
+	DeeUnixSystem_HandleGenericError(error, err, restart);
 	/* Start over on timeout. */
 	if (error == EWOULDBLOCK)
 		goto restart_after_timeout;
@@ -1065,18 +1066,6 @@ handle_accept_error_neterror:
 	/* Ignore this case (Can happen when the client changed their mind) */
 	if (error == ECONNABORTED)
 		goto restart;
-#ifdef EINTR
-	/* Same deal as `ECONNABORTED' -- Start over. */
-	if (error == EINTR)
-		goto restart;
-#endif /* EINTR */
-#ifdef ENOMEM
-	if (error == ENOMEM) {
-		if (Dee_ReleaseSystemMemory())
-			goto restart;
-		goto err;
-	}
-#endif /* ENOMEM */
 	if (error == EBADF || error == ENOTSOCK) {
 socket_was_closed:
 		err_socket_closed(error, self);
@@ -1518,14 +1507,13 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
 		DBG_ALIGNMENT_ENABLE();
+		DeeUnixSystem_HandleGenericError(error, err, maybe_restart);
 		if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
 		    || error == EAGAIN
 #endif /* EAGAIN&& EAGAIN != EWOULDBLOCK */
-#ifdef EINTR
-		    || error == EINTR
-#endif /* EINTR */
 		    ) {
+maybe_restart:
 			if (timeout_microseconds != (uint64_t)-1) {
 				if (!timeout_microseconds ||
 				    DeeThread_GetTimeMicroSeconds() >= end_time)
@@ -1533,13 +1521,6 @@ again:
 			}
 			goto again;
 		}
-#ifdef ENOMEM
-		if (error == ENOMEM) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			goto err;
-		}
-#endif /* ENOMEM */
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 #ifdef MSG_OOB
@@ -1632,14 +1613,13 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
 		DBG_ALIGNMENT_ENABLE();
+		DeeUnixSystem_HandleGenericError(error, err, maybe_restart);
 		if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
 		    || error == EAGAIN
 #endif /* EAGAIN && EAGAIN != EWOULDBLOCK */
-#ifdef EINTR
-		    || error == EINTR
-#endif /* EINTR */
 		    ) {
+maybe_restart:
 			if (timeout_microseconds != (uint64_t)-1) {
 				if (!timeout_microseconds ||
 				    DeeThread_GetTimeMicroSeconds() >= end_time)
@@ -1647,13 +1627,6 @@ again:
 			}
 			goto again;
 		}
-#ifdef ENOMEM
-		if (error == ENOMEM) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			goto err;
-		}
-#endif /* ENOMEM */
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 		} else if (error == EAFNOSUPPORT) {
@@ -1761,14 +1734,13 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		error = GET_NET_ERROR();
 		DBG_ALIGNMENT_ENABLE();
+		DeeUnixSystem_HandleGenericError(error, err, maybe_restart);
 		if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
 		    || error == EAGAIN
 #endif /* EAGAIN && EAGAIN != EWOULDBLOCK */
-#ifdef EINTR
-		    || error == EINTR
-#endif /* EINTR */
 		) {
+maybe_restart:
 			if (timeout_microseconds != (uint64_t)-1) {
 				if (!timeout_microseconds ||
 				    DeeThread_GetTimeMicroSeconds() >= end_time)
@@ -1776,13 +1748,6 @@ again:
 			}
 			goto again;
 		}
-#ifdef ENOMEM
-		if (error == ENOMEM) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-			goto err;
-		}
-#endif /* ENOMEM */
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 #ifdef MSG_OOB

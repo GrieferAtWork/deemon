@@ -152,15 +152,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt() == 0)
-			goto again;
-		goto err;
-	} else if (DeeNTSystem_IsBadAllocError(dwError)) {
-		if (Dee_ReleaseSystemMemory())
-			goto again;
-		goto err;
-	}
+	DeeNTSystem_HandleGenericError(dwError, err, again);
 #define NEED_err_nt_mkdir
 	err_nt_mkdir(dwError, path, mode);
 err:
@@ -188,7 +180,7 @@ err:
 		goto err;
 #endif /* posix_mkdir_USE_mkdir */
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_mkdir_USE_wmkdir
 	error = wmkdir((wchar_t *)wide_path, mode);
@@ -200,8 +192,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error != 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_mkdir(error, path, mode);
 #define NEED_err_unix_mkdir
 		goto err;
@@ -283,7 +274,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fmkdirat_f_impl(D
 		if unlikely(!utf8_path)
 			goto err;
 #endif /* posix_fmkdirat_USE_fmkdirat || posix_fmkdirat_USE_mkdirat */
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 #if defined(posix_fmkdirat_USE_wfmkdirat)
 		error = wfmkdirat(os_dfd, (wchar_t *)wide_path, mode, atflags);
@@ -300,8 +291,7 @@ EINTR_ENOMEM_LABEL(again)
 		}
 		error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		/* fallthru to the fallback path below */
 	}
 #endif /* posix_mkdirat_USE_wmkdirat || posix_mkdirat_USE_mkdirat */

@@ -181,7 +181,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_access_f_impl(char c
 {
 #if defined(posix_access_USE_waccess) || defined(posix_access_USE_access)
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_access_USE_waccess
 #define ACCESS_PRINTF_FILENAME "%lq"
@@ -193,12 +193,11 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		EINTR_HANDLE(result, again, err)
+		DeeUnixSystem_HandleGenericError(result, err, again);
 #ifdef EACCES
 		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "access")
 		HANDLE_EINVAL(result, err, "Invalid access mode %d", how)
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to " ACCESS_PRINTF_FILENAME, filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " ACCESS_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " ACCESS_PRINTF_FILENAME, filename)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
@@ -211,10 +210,8 @@ EINTR_LABEL(again)
 	}
 	return_true;
 #undef ACCESS_PRINTF_FILENAME
-#if defined(EACCES) || defined(EINTR)
 err:
 	return NULL;
-#endif /* EACCES || EINTR */
 #endif /* posix_access_USE_waccess || posix_access_USE_access */
 
 #ifdef posix_access_USE_STUB
@@ -260,18 +257,17 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_euidaccess_f_impl(ch
 {
 #ifdef posix_euidaccess_USE_euidaccess
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	result = euidaccess((char *)filename, how);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		EINTR_HANDLE(result, again, err)
+		DeeUnixSystem_HandleGenericError(result, err, again);
 #ifdef EACCES
 		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "euidaccess")
 		HANDLE_EINVAL(result, err, "Invalid euidaccess mode %d", how)
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check euidaccess to %s", filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
 		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
@@ -283,10 +279,8 @@ EINTR_LABEL(again)
 #endif /* !EACCES */
 	}
 	return_true;
-#if defined(EACCES) || defined(EINTR)
 err:
 	return NULL;
-#endif /* EACCES || EINTR */
 #endif /* posix_euidaccess_USE_euidaccess */
 
 #ifdef posix_euidaccess_USE_STUB
@@ -329,18 +323,17 @@ FORCELOCAL WUNUSED NONNULL((2)) DREF DeeObject *DCALL posix_faccessat_f_impl(int
 	/* TODO: Re-write this function */
 #ifdef posix_faccessat_USE_faccessat
 	int result;
-EINTR_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 	result = faccessat(dfd, (char *)filename, how, atflags);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
-		EINTR_HANDLE(result, again, err)
+		DeeUnixSystem_HandleGenericError(result, err, again);
 #ifdef EACCES
 		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "faccessat")
 		HANDLE_EINVAL(result, err, "Invalid access-mode (%#x) or at-flags (%#x)", how, atflags)
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to %d:%s", dfd, filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
 		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
@@ -353,10 +346,8 @@ EINTR_LABEL(again)
 #endif /* !EACCES */
 	}
 	return_true;
-#if defined(EACCES) || defined(EINTR)
 err:
 	return NULL;
-#endif /* EACCES || EINTR */
 #endif /* posix_faccessat_USE_faccessat */
 
 #ifdef posix_faccessat_USE_access

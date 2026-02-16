@@ -199,45 +199,6 @@ feature("O_HIDDEN",   "Dee_OPEN_FHIDDEN");
 
 DECL_BEGIN
 
-#ifdef EINTR
-#define EINTR_LABEL(again) \
-	again:
-#define EINTR_HANDLE(error, again, err_label) \
-	if ((error) == EINTR) {                   \
-		if (DeeThread_CheckInterrupt())       \
-			goto err_label;                   \
-		goto again;                           \
-	}
-#else /* EINTR */
-#define EINTR_LABEL(again)                    /* nothing */
-#define EINTR_HANDLE(error, again, err_label) /* nothing */
-#endif /* !EINTR */
-
-#ifdef ENOMEM
-#define ENOMEM_LABEL(again) \
-	again:
-#define ENOMEM_HANDLE(error, again, err_label) \
-	if ((error) == ENOMEM) {                   \
-		if (Dee_ReleaseSystemMemory())         \
-			goto again;                        \
-		goto err_label;                        \
-	}
-#else /* ENOMEM */
-#define ENOMEM_LABEL(again)                    /* nothing */
-#define ENOMEM_HANDLE(error, again, err_label) /* nothing */
-#endif /* !ENOMEM */
-
-#if defined(EINTR) || defined(ENOMEM)
-#define EINTR_ENOMEM_LABEL(again) again:
-#else /* EINTR || ENOMEM */
-#define EINTR_ENOMEM_LABEL(again) /* nothing */
-#endif /* !EINTR && !ENOMEM */
-#define EINTR_ENOMEM_HANDLE(error, again, err_label) \
-	EINTR_HANDLE(error, again, err_label)            \
-	ENOMEM_HANDLE(error, again, err_label)
-
-
-
 /* TODO: Remove all of the following (replaced with `err_unix_*') */
 #define HANDLE_ENOENT(error, err_label, ...)                                   \
 	DeeSystem_IF_E1(error, ENOENT, {                                           \
@@ -280,11 +241,6 @@ DECL_BEGIN
 	DeeSystem_IF_E1(error, EINVAL, {                        \
 		DeeError_Throwf(&DeeError_ValueError, __VA_ARGS__); \
 		goto err_label;                                     \
-	});
-#define HANDLE_ENOMEM(error, err_label, ...)              \
-	DeeSystem_IF_E1(error, ENOMEM, {                      \
-		DeeError_Throwf(&DeeError_NoMemory, __VA_ARGS__); \
-		goto err_label;                                   \
 	});
 #define HANDLE_EBADF(error, err_label, ...)                 \
 	DeeSystem_IF_E1(error, EBADF, {                         \

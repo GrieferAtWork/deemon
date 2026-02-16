@@ -1142,6 +1142,25 @@ DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError) {
 	return false;
 }
 
+/* Try to handle generic errors:
+ * - DeeNTSystem_IsBadAllocError -- Dee_ReleaseSystemMemory()
+ * - DeeNTSystem_IsIntr          -- DeeThread_CheckInterrupt()
+ * @return: _DeeNTSystem_HandleGenericError_AGAIN: System error was handled; try again
+ * @return: _DeeNTSystem_HandleGenericError_OTHER: System error could not be handled.
+ * @return: _DeeNTSystem_HandleGenericError_ERR:   A deemon error was thrown. */
+PUBLIC WUNUSED unsigned int DCALL
+_DeeNTSystem_HandleGenericError(/*DWORD*/ DeeNT_DWORD dwError) {
+	if (DeeNTSystem_IsBadAllocError(dwError)) {
+		return Dee_ReleaseSystemMemory() ? _DeeNTSystem_HandleGenericError_AGAIN
+		                                 : _DeeNTSystem_HandleGenericError_ERR;
+	} else if (DeeNTSystem_IsIntr(dwError)) {
+		return DeeThread_CheckInterrupt() ? _DeeNTSystem_HandleGenericError_ERR
+		                                  : _DeeNTSystem_HandleGenericError_AGAIN;
+	} else {
+		return _DeeNTSystem_HandleGenericError_OTHER;
+	}
+}
+
 
 
 /* Figure out how to implement `DeeNTSystem_TranslateErrno()' */
@@ -2035,9 +2054,9 @@ again_createfile:
 	                      (HANDLE)hTemplateFile);
 	if (hResult == INVALID_HANDLE_VALUE && *lpwName) {
 		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsUncError(dwError)) {
 			/* Fix the filename and try again. */
-			DBG_ALIGNMENT_ENABLE();
 			lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 			if unlikely(!lpFileName)
 				goto err;
@@ -2056,19 +2075,16 @@ again_createfile:
 			                     (HANDLE)hTemplateFile);
 			DBG_ALIGNMENT_ENABLE();
 			Dee_Decref(lpFileName);
-		} else if (DeeNTSystem_IsIntr(dwError)) {
+			if (hResult != INVALID_HANDLE_VALUE)
+				goto done;
+			DBG_ALIGNMENT_DISABLE();
+			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again_createfile;
-		} else if (DeeNTSystem_IsBadAllocError(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
-			if (Dee_ReleaseSystemMemory())
-				goto again_createfile;
-			goto err;
 		}
+		DeeNTSystem_HandleGenericError(dwError, err, again_createfile);
 	}
 	DBG_ALIGNMENT_ENABLE();
+done:
 	if unlikely(hResult == NULL)
 		hResult = INVALID_HANDLE_VALUE; /* Shouldn't happen... */
 	return hResult;
@@ -2198,33 +2214,31 @@ again:
 	if unlikely(!hFile)
 		goto err;
 	if unlikely(hFile == INVALID_HANDLE_VALUE) {
-		DWORD error;
+		DWORD dwError;
 		DBG_ALIGNMENT_DISABLE();
-		error = GetLastError();
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 
 /*check_nt_error:*/
 		/* Handle file already-exists. */
-		if ((error == ERROR_FILE_EXISTS) && (oflags & OPEN_FEXCL))
+		if ((dwError == ERROR_FILE_EXISTS) && (oflags & OPEN_FEXCL))
 			return INVALID_HANDLE_VALUE;
 
 		/* Throw the error as an NT error. */
-		if (DeeNTSystem_IsBadAllocError(error)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-		} else if (DeeNTSystem_IsNotDir(error) ||
-		           DeeNTSystem_IsFileNotFoundError(error)) {
+		DeeNTSystem_HandleGenericError(dwError, err, again);
+		if (DeeNTSystem_IsNotDir(dwError) ||
+		    DeeNTSystem_IsFileNotFoundError(dwError)) {
 			if (!(oflags & OPEN_FCREAT))
 				return INVALID_HANDLE_VALUE;
-			DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+			DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
 			                        "File %r could not be found",
 			                        filename);
-		} else if (DeeNTSystem_IsAccessDeniedError(error)) {
-			DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
+			DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
 			                        "Access has not been granted for file %r",
 			                        filename);
 		} else {
-			DeeNTSystem_ThrowErrorf(&DeeError_FSError, error,
+			DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
 			                        "Failed to obtain a writable handle for %r",
 			                        filename);
 		}
@@ -2364,20 +2378,16 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct Dee_unicode_printer *__restrict pr
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
+again:
 		DBG_ALIGNMENT_DISABLE();
 		dwNewBufSize = (*pdyn_GetFinalPathNameByHandleW)((HANDLE)hFile,
 		                                                 lpBuffer,
 		                                                 dwBufSize,
 		                                                 dwFlags);
 		if unlikely(!dwNewBufSize) {
-			DWORD dwError;
-			dwError = GetLastError();
+			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_lpBuffer;
-				continue;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_lpBuffer, again);
 			if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 				dwNewBufSize = dwBufSize * 2;
 				goto do_resize_buffer;
@@ -2482,6 +2492,7 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct Dee_unicode_printer 
 		goto err;
 	for (;;) {
 		NTSTATUS ntResult;
+again:
 		ulRetBufSize   = 0;
 		dwBufSizeBytes = LOCAL_ALLOC_BUFSIZE_FOR(dwBufSize) * sizeof(WCHAR);
 		DBG_ALIGNMENT_DISABLE();
@@ -2492,11 +2503,7 @@ DeeNTSystem_PrintNtQueryObject_ObjectNameInformation(struct Dee_unicode_printer 
 		if (ntResult == 0)
 			break;
 		ntResult &= 0xffff;
-		if (DeeNTSystem_IsIntr(ntResult)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_lpBuffer;
-			continue;
-		}
+		DeeNTSystem_HandleGenericError(ntResult, err_lpBuffer, again);
 		if (DeeNTSystem_IsBufferTooSmall(ntResult)) {
 			if (!ulRetBufSize)
 				ulRetBufSize = dwBufSize * 2;
@@ -2596,12 +2603,8 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_lpBuffer;
-				goto again;
-			}
 			if (dwError != NO_ERROR) {
+				DeeNTSystem_HandleGenericError(dwError, err_lpBuffer, again);
 				DeeNTSystem_ThrowErrorf(NULL, dwError, "Failed to query logical drive strings");
 				goto err_lpBuffer;
 			}
@@ -3193,26 +3196,24 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 	if unlikely(!lpBuffer)
 		goto err;
 	for (;;) {
+again:
 		DBG_ALIGNMENT_DISABLE();
 		dwNewBufSize = (*pdyn_GetMappedFileNameW)((HANDLE)hProcess,
 		                                          (LPVOID)lpv,
 		                                          lpBuffer,
 		                                          dwBufSize);
 		if unlikely(!dwNewBufSize) {
-			DWORD dwError;
-			dwError = GetLastError();
+			DWORD dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_lpBuffer;
-				continue;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_lpBuffer, again);
 			if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 				dwNewBufSize = dwBufSize * 2;
 				goto do_resize_buffer;
 			}
 			Dee_unicode_printer_free_wchar(printer, lpBuffer);
+			DBG_ALIGNMENT_DISABLE();
 			(void)SetLastError(dwError);
+			DBG_ALIGNMENT_ENABLE();
 			return 1;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -3294,23 +3295,20 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_ReleaseSystemMemory())
-				goto again;
-		} else {
-			/* MSDN says that this string cannot exceed 32*1024
-			 * >> So if it does, treat it as a failure of translating the message... */
-			if (dwBufSize > 32 * 1024) {
-				Dee_unicode_printer_free_wchar(printer, buffer);
-				return 1;
-			}
-			dwBufSize *= 2;
-			newBuffer = Dee_unicode_printer_resize_wchar(printer, buffer, dwBufSize);
-			if unlikely(!newBuffer)
-				goto err_release;
-			buffer = newBuffer;
-			goto again;
+		DeeNTSystem_HandleGenericError(dwError, err_release, again);
+
+		/* MSDN says that this string cannot exceed 32*1024
+		 * >> So if it does, treat it as a failure of translating the message... */
+		if (dwBufSize > 32 * 1024) {
+			Dee_unicode_printer_free_wchar(printer, buffer);
+			return 1;
 		}
+		dwBufSize *= 2;
+		newBuffer = Dee_unicode_printer_resize_wchar(printer, buffer, dwBufSize);
+		if unlikely(!newBuffer)
+			goto err_release;
+		buffer = newBuffer;
+		goto again;
 		goto err_release;
 	}
 	DBG_ALIGNMENT_ENABLE();

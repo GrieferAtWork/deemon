@@ -995,14 +995,9 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = CloseHandle(hObject);
 	if (!bResult) {
-		DWORD dwError;
-		dwError = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to close handle %p",
 		                      hObject);
@@ -1071,14 +1066,9 @@ again:
 	                     dwDesiredAccess,
 	                     bInheritHandle,
 	                     dwOptions)) {
-		DWORD dwError;
-		dwError = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to duplicate handle "
 		             "(hSourceProcessHandle: %p, "
@@ -1225,11 +1215,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		DeeBuffer_Fini(&buffer);
 		RETURN_ERROR(dwError, "Failed to write to file %p", hFile);
 	}
@@ -1292,11 +1278,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		DeeBuffer_Fini(&buffer);
 		RETURN_ERROR(dwError, "Failed to read from file %p", hFile);
 	}
@@ -1342,11 +1324,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to create directory %lq",
 		                      lpPathName);
@@ -1387,11 +1365,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to remove directory %lq",
 		                      lpPathName);
@@ -1432,11 +1406,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to delete file %lq",
 		                      lpFileName);
@@ -1480,11 +1450,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to truncate file %p",
 		                      hFile);
@@ -1539,11 +1505,7 @@ again:
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError != NO_ERROR) {
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err, again);
 			RETURN_ERROR(dwError,
 			             "Failed to seek file %p (offset: %" PRFd64 ", whence: %" PRFu32 ")",
 			             hFile, lDistanceToMove, dwMoveMethod);
@@ -1602,11 +1564,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to lookup file times of %p",
 		             hFile);
@@ -1673,11 +1631,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to set file times for %p",
 		                      hFile);
@@ -1724,11 +1678,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to set valid file data for %p to %" PRFu64,
 		                      hFile, ValidDataLength);
@@ -1760,11 +1710,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			if (dwError != NO_ERROR) {
 				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine TEMPPATH");
@@ -1827,11 +1773,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			if (dwError != NO_ERROR) {
 				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the DLL Directory");
@@ -1903,11 +1845,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to set DLL Directory to %lq",
 		                      lpPathName);
@@ -1956,11 +1894,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to determine free disk space for %lq",
 		             lpRootPathName);
@@ -2013,11 +1947,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to determine free disk space for %lq",
 		             lpDirectoryName);
@@ -2064,11 +1994,7 @@ again:
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError != NO_ERROR) {
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err, again);
 			RETURN_ERROR(dwError,
 			             "Failed to determine drive type of %lq",
 			             lpRootPathName);
@@ -2121,11 +2047,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_buffer;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_buffer, again);
 			if (DeeNTSystem_IsBufferTooSmall(dwError))
 				goto do_increase_buffer;
 			DeeString_FreeWideBuffer(lpBuffer);
@@ -2181,11 +2103,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			if (dwError != NO_ERROR) {
 				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the system directory");
@@ -2233,11 +2151,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			if (dwError != NO_ERROR) {
 				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the Windows directory");
@@ -2283,11 +2197,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			if (dwError != NO_ERROR) {
 				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the System-Windows directory");
@@ -2355,11 +2265,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			if (dwError != NO_ERROR) {
 				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to determine the SystemWow64 directory");
@@ -2426,11 +2332,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			if (dwError != NO_ERROR) {
 				DeeString_FreeWideBuffer(lpBuffer);
 				RETURN_ERROR(dwError, "Failed to query logical drive strings");
@@ -2495,11 +2397,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_buffer;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_buffer, again);
 			if (DeeNTSystem_IsBufferTooSmall(dwError))
 				goto do_increase_buffer;
 			DeeString_FreeWideBuffer(lpBuffer);
@@ -2572,11 +2470,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		if (dwError != NO_ERROR)
 			RETURN_ERROR(dwError, "Failed to determine the typing of handle %p", hFile);
 	}
@@ -2622,11 +2516,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		if (dwError != NO_ERROR)
 			RETURN_ERROR(dwError, "Failed to determine the size of file %p", hFile);
 	}
@@ -2669,11 +2559,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		if (dwError != NO_ERROR)
 			RETURN_ERROR(dwError, "Failed to determine the attributes of %lq", lpFileName);
 	}
@@ -2717,11 +2603,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to set attributes of file %lq to %#" PRFx32 "",
 		                      lpFileName, dwFileAttributes);
@@ -2764,11 +2646,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		if (dwError != NO_ERROR)
 			RETURN_ERROR(dwError, "Failed to determine the compressed size of %lq", lpFileName);
 	} else {
@@ -2815,11 +2693,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to flush buffers of file %p",
 		                      hFile);
@@ -3058,11 +2932,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to map a view of %p into memory "
 		             "(dwDesiredAccess: %#" PRFx32 ", dwFileOffset: %" PRFu64 ", dwNumberOfBytesToMap: %" PRFuSIZ ")",
@@ -3119,11 +2989,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "failed to unmap view of file at %p",
 		                      lpBaseAddress);
@@ -3190,11 +3056,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to create file mapping for %p "
 		             "(flProtect: %#" PRFx32 ", dwMaximumSize: %" PRFu64 ", lpName: %lq)",
@@ -3315,20 +3177,13 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		SetLastError(NO_ERROR);
-		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
-check_interrupt:
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		hResult = GetStdHandle((DWORD)nStdHandle);
 		if (!hResult || hResult == INVALID_HANDLE_VALUE) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
 			if (dwError != NO_ERROR) {
-				if (DeeNTSystem_IsIntr(dwError))
-					goto check_interrupt;
+				DeeNTSystem_HandleGenericError(dwError, err, again);
 				RETURN_ERROR(dwError,
 				             "Failed to get STD handle %" PRFd32,
 				             nStdHandle);
@@ -3379,11 +3234,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to set STD handle %" PRFu32 " to %p",
 		                      nStdHandle, hHandle);
@@ -3461,11 +3312,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to create named pipe %lq (dwOpenMode: %#" PRFx32 ", dwPipeMode: %#" PRFx32 ", "
 		             "nMaxInstances: %#" PRFx32 ", nOutBufferSize: %#" PRFx32 ", nInBufferSize: %#" PRFx32 ", "
@@ -3522,11 +3369,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to wait for connected on named pipe %p",
 		                      hNamedPipe);
@@ -3573,11 +3416,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to wait for named pipe %lq (nTimeOut: %#" PRFx32 ")",
 		                      lpNamedPipeName, nTimeOut);
@@ -3662,12 +3501,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-check_interrupt:
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 			DBG_ALIGNMENT_DISABLE();
 			libwin32_AcquireDebugPrivileges();
@@ -3676,8 +3510,7 @@ check_interrupt:
 				goto got_hResult;
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
-				goto check_interrupt;
+			DeeNTSystem_HandleGenericError(dwError, err, again);
 		}
 		RETURN_ERROR(dwError,
 		             "Failed to open process (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, dwProcessId: %#" PRFx32 ")",
@@ -3730,11 +3563,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to query process exit code (hProcess: %p)",
 		             hProcess);
@@ -3888,11 +3717,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_modules;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_modules, again);
 		Dee_Free(phModules);
 		RETURN_ERROR(dwError,
 		             "Failed to query process modules (hProcess: %p, dwFilterFlag: %#" PRFx32 ")",
@@ -3974,11 +3799,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_modules;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_modules, again);
 		Dee_Free(pidProcesses);
 		RETURN_ERROR(dwError, "Failed to enumerate processes");
 	}
@@ -4063,11 +3884,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			DeeString_FreeWideBuffer(lpBuffer);
 			RETURN_ERROR(dwError,
 			             "Failed to determine the process image filename of %p",
@@ -4139,11 +3956,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			DeeString_FreeWideBuffer(lpBuffer);
 			RETURN_ERROR(dwError,
 			             "Failed to determine the module base name of %p in process %p",
@@ -4215,11 +4028,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError)) {
-				if (DeeThread_CheckInterrupt())
-					goto err_result;
-				goto again;
-			}
+			DeeNTSystem_HandleGenericError(dwError, err_result, again);
 			DeeString_FreeWideBuffer(lpBuffer);
 			RETURN_ERROR(dwError,
 			             "Failed to determine the module filename of %p in process %p",
@@ -4281,11 +4090,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to terminate process %p (uExitCode: %" PRFu32 ")",
 		                      hProcess, uExitCode);
@@ -4334,11 +4139,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to terminate thread %p (dwExitCode: %" PRFu32 ")",
 		                      hThread, dwExitCode);
@@ -4385,11 +4186,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to suspend thread %p",
 		             hThread);
@@ -4436,11 +4233,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to resume thread %p",
 		             hThread);
@@ -4586,11 +4379,7 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = (*RtlNtStatusToDosError)(nsResult);
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_r;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_r, again);
 		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			if (ulReturnLength <= DeeBytes_SIZE(result))
 				ulReturnLength = (ULONG)DeeBytes_SIZE(result) * 2;
@@ -4678,11 +4467,7 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = (*RtlNtStatusToDosError)(nsResult);
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_r;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_r, again);
 		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			if (ulReturnLength <= DeeBytes_SIZE(result))
 				ulReturnLength = (ULONG)DeeBytes_SIZE(result) * 2;
@@ -4760,11 +4545,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_r;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_r, again);
 		Dee_Decref_likely(result);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to read process %p memory at (nSize: %" PRFuSIZ ")",
@@ -4835,11 +4616,7 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = (*RtlNtStatusToDosError)(nsResult);
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_r;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_r, again);
 		Dee_Decref_likely(result);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to read wow64 process %p memory at (nSize: %" PRFuSIZ ")",
@@ -4902,11 +4679,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_buf;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_buf, again);
 		DeeBuffer_Fini(&buf);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to write process %p memory at (nSize: %" PRFuSIZ ")",
@@ -4975,11 +4748,7 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = (*RtlNtStatusToDosError)(nsResult);
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err_buf;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_buf, again);
 		DeeBuffer_Fini(&buf);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to write wow64 process %.16" PRFX64 " memory at (nSize: %" PRFuSIZ ")",
@@ -5030,18 +4799,21 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForSingleObject_f_impl(HAN
 again:
 	DBG_ALIGNMENT_DISABLE();
 	dwResult = WaitForSingleObjectEx(hHandle, dwMilliseconds, true);
-	if (dwResult == WAIT_IO_COMPLETION)
-		goto check_interrupt;
+	if (dwResult == WAIT_IO_COMPLETION) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again;
+	}
+	if (dwResult == WAIT_IO_COMPLETION) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again;
+	}
 	if (dwResult == WAIT_FAILED) {
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-check_interrupt:
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to wait for handle %p (dwMilliseconds: %#" PRFx32 ")",
 		             hHandle, dwMilliseconds);
@@ -5105,18 +4877,16 @@ again:
 	                                    bWaitAll,
 	                                    dwMilliseconds,
 	                                    true);
-	if (dwResult == WAIT_IO_COMPLETION)
-		goto check_interrupt;
+	if (dwResult == WAIT_IO_COMPLETION) {
+		if (DeeThread_CheckInterrupt())
+			goto err_handles;
+		goto again;
+	}
 	if (dwResult == WAIT_FAILED) {
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-check_interrupt:
-			if (DeeThread_CheckInterrupt())
-				goto err_handles;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err_handles, again);
 		Dee_Free(pHandles.v);
 		RETURN_ERROR(dwError,
 		             "Failed to wait for %" PRFuSIZ " handles (bWaitAll: %u, dwMilliseconds: %#" PRFx32 ")",
@@ -5176,18 +4946,16 @@ again:
 	                               hObjectToWaitOn,
 	                               dwMilliseconds,
 	                               true);
-	if (dwResult == WAIT_IO_COMPLETION)
-		goto check_interrupt;
+	if (dwResult == WAIT_IO_COMPLETION) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
+		goto again;
+	}
 	if (dwResult == WAIT_FAILED) {
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-check_interrupt:
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to signal object %p and wait for %p (dwMilliseconds: %#" PRFx32 ")",
 		             hObjectToSignal, hObjectToWaitOn, dwMilliseconds);
@@ -5282,11 +5050,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to create event (bManualReset: %u, bInitialState: %u, lpName: %lq)",
 		             (unsigned int)bManualReset, (unsigned int)bInitialState, lpName);
@@ -5338,11 +5102,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to open event (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
@@ -5393,11 +5153,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to reset event %p",
 		                      hEvent);
@@ -5445,11 +5201,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to set event %p",
 		                      hEvent);
@@ -5502,11 +5254,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to create event (bInitialOwner: %u, lpName: %lq)",
 		             (unsigned int)bInitialOwner, lpName);
@@ -5558,11 +5306,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to open mutex (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
@@ -5612,11 +5356,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to release mutex %p",
 		                      hMutex);
@@ -5675,11 +5415,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to create semaphore (lInitialCount: %" PRFu32 ", lMaximumCount: %" PRFu32 ", lpName: %lq)",
 		             lInitialCount, lMaximumCount, lpName);
@@ -5731,11 +5467,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to open semaphore (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
@@ -5789,11 +5521,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to release semaphore %p",
 		             hSemaphore);
@@ -5848,11 +5576,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to create waitable timer (bManualReset: %u, lpTimerName: %lq)",
 		             (unsigned int)bManualReset, lpTimerName);
@@ -5904,11 +5628,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR(dwError,
 		             "Failed to open waitable timer (dwDesiredAccess: %#" PRFx32 ", bInheritHandle: %u, lpName: %lq)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, lpName);
@@ -5959,11 +5679,7 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError)) {
-			if (DeeThread_CheckInterrupt())
-				goto err;
-			goto again;
-		}
+		DeeNTSystem_HandleGenericError(dwError, err, again);
 		RETURN_ERROR_OR_FALSE(dwError,
 		                      "Failed to cancel timer %p",
 		                      hTimer);

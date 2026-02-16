@@ -351,7 +351,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_truncate_f_impl(D
 #endif /* posix_truncate_USE_pos_t */
 
 
-EINTR_ENOMEM_LABEL(again)
+again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_truncate_USE_wtruncate64
 	error = wtruncate64((wchar_t *)wide_path, used_length);
@@ -369,8 +369,7 @@ EINTR_ENOMEM_LABEL(again)
 
 	if unlikely(error < 0) {
 		error = DeeSystem_GetErrno();
-		EINTR_HANDLE(error, again, err);
-		ENOMEM_HANDLE(error, again, err);
+		DeeUnixSystem_HandleGenericError(error, err, again);
 		err_unix_truncate(error, path, length);
 #define NEED_err_unix_truncate
 		goto err;
@@ -455,7 +454,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_ftruncate_f_impl(
 			goto err;
 #endif /* posix_truncate_USE_pos_t */
 	
-EINTR_ENOMEM_LABEL(again)
+again:
 		DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_ftruncate64
 		error = ftruncate64(os_fd, used_length);
@@ -466,8 +465,7 @@ EINTR_ENOMEM_LABEL(again)
 	
 		if unlikely(error < 0) {
 			error = DeeSystem_GetErrno();
-			EINTR_HANDLE(error, again, err);
-			ENOMEM_HANDLE(error, again, err);
+			DeeUnixSystem_HandleGenericError(error, err, again);
 			err_unix_ftruncate(error, fd, length);
 #define NEED_err_unix_ftruncate
 			goto err;
