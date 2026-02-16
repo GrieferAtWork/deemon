@@ -519,8 +519,8 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_iter[2] = {
 	OH_INIT_SPEC_CLASS_END
 };
 PRIVATE struct oh_init_spec_impl tpconst oh_impls_iter[3] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__iter__with__foreach, Dee_TNO_foreach, Dee_TNO_COUNT),
-	OH_INIT_SPEC_IMPL_INIT(&default__iter__with__foreach_pair, Dee_TNO_foreach_pair, Dee_TNO_COUNT),
+	OH_INIT_SPEC_IMPL_INIT(&default__iter__with__foreach, Dee_TNO_foreach, Dee_TNO_foreach),
+	OH_INIT_SPEC_IMPL_INIT(&default__iter__with__foreach_pair, Dee_TNO_foreach_pair, Dee_TNO_foreach_pair),
 	OH_INIT_SPEC_IMPL_END
 };
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_iter[4] = {

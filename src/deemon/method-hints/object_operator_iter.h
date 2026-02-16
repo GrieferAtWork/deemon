@@ -30,14 +30,14 @@ tp_seq->tp_iter([[nonnull]] DeeObject *__restrict self)
 %{class using OPERATOR_ITER: {
 	return_DeeClass_CallOperator_NoArgs(THIS_TYPE, self, OPERATOR_ITER);
 }}
-%{using tp_seq->tp_foreach: {
+%{using tp_seq->tp_foreach: [[disliked]] {
 	/* TODO: Custom iterator type that uses "tp_foreach" */
 	(void)THIS_TYPE;
 	(void)self;
 	DeeError_NOTIMPLEMENTED();
 	return NULL;
 }}
-%{using tp_seq->tp_foreach_pair: {
+%{using tp_seq->tp_foreach_pair: [[disliked]] {
 	/* TODO: Custom iterator type that uses "tp_foreach_pair" */
 	(void)THIS_TYPE;
 	(void)self;

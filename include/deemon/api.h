@@ -336,7 +336,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  *          be enabled/disabled on a per-source-file basis! */
 #if (!defined(CONFIG_TINY_DEEMON) && \
      !defined(CONFIG_NO_TINY_DEEMON))
-#if defined(__OPTIMIZE_SIZE__) || 0
+#if 0
 #define CONFIG_TINY_DEEMON
 #else /* __OPTIMIZE_SIZE__ */
 #define CONFIG_NO_TINY_DEEMON

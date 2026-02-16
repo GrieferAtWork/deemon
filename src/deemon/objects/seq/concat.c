@@ -51,7 +51,6 @@
 #ifndef CONFIG_TINY_DEEMON
 #define WANT_cat_get_frozen
 #define WANT_cat_contains
-#define WANT_cat_hasitem_index
 #endif /* !CONFIG_TINY_DEEMON */
 
 DECL_BEGIN
@@ -630,10 +629,6 @@ err:
 	return Dee_BOUND_ERR;
 }
 
-#ifndef WANT_cat_hasitem_index
-#define PTR_cat_hasitem_index DEFIMPL(&default__hasitem_index__with__bounditem_index)
-#else /* !WANT_cat_hasitem_index */
-#define PTR_cat_hasitem_index &cat_hasitem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_hasitem_index(Cat *self, size_t index) {
 	size_t total = cat_size(self);
@@ -643,7 +638,6 @@ cat_hasitem_index(Cat *self, size_t index) {
 err:
 	return Dee_HAS_ERR;
 }
-#endif /* WANT_cat_hasitem_index */
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 cat_foreach(Cat *self, Dee_foreach_t proc, void *arg) {
@@ -683,7 +677,7 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&cat_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&cat_setitem_index,
 	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&cat_bounditem_index,
-	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))PTR_cat_hasitem_index,
+	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&cat_hasitem_index,
 	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_getitem_index),
 	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
 	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),

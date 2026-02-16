@@ -431,7 +431,7 @@ PRIVATE struct type_method_hint tpconst rvec_method_hints[] = {
 };
 
 PRIVATE struct type_seq rvec_seq = {
-	/* .tp_iter                       = */ DEFIMPL(&default__iter__with__foreach),
+	/* .tp_iter                       = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__operator_getitem_index_fast),
 	/* .tp_sizeob                     = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))PTR_rvec_contains,
 	/* .tp_getitem                    = */ DEFIMPL(&default__getitem__with__getitem_index),
@@ -441,7 +441,7 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_delrange                   = */ DEFIMPL(&default__delrange__with__delrange_index__and__delrange_index_n),
 	/* .tp_setrange                   = */ DEFIMPL(&default__setrange__with__setrange_index__and__setrange_index_n),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))PTR_rvec_foreach,
-	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rvec_size,
@@ -958,7 +958,7 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
 	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
 	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))PTR_svec_foreach,
-	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__foreach),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__seq_operator_foreach_pair__with__seq_operator_foreach),
 	/* .tp_bounditem                  = */ DEFIMPL(&default__bounditem__with__size__and__getitem_index_fast),
 	/* .tp_hasitem                    = */ DEFIMPL(&default__hasitem__with__size__and__getitem_index_fast),
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,
