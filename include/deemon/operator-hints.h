@@ -975,14 +975,9 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL default__ge__with__compare(
 
 /* tp_seq->tp_iter */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__iter__with__ITER(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter__with__foreach(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter__with__foreach_pair(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL usrtype__iter__with__ITER(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter__with__foreach(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter__with__foreach_pair(DeeObject *__restrict self);
 #define isusrtype__iter(tp_iter) ((tp_iter) == &usrtype__iter__with__ITER)
-#define isdefault__iter(tp_iter) ((tp_iter) == &default__iter__with__foreach || (tp_iter) == &default__iter__with__foreach_pair)
 #define maketyped__iter(tp_iter) ((tp_iter) == &usrtype__iter__with__ITER ? &tusrtype__iter__with__ITER : &tdefault__iter)
 
 /* tp_seq->tp_foreach */

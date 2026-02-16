@@ -3357,24 +3357,6 @@ tusrtype__iter__with__ITER(DeeTypeObject *tp_self, DeeObject *self) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__iter__with__foreach(DeeTypeObject *tp_self, DeeObject *self) {
-	/* TODO: Custom iterator type that uses "tp_foreach" */
-	(void)tp_self;
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__iter__with__foreach_pair(DeeTypeObject *tp_self, DeeObject *self) {
-	/* TODO: Custom iterator type that uses "tp_foreach_pair" */
-	(void)tp_self;
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__iter(DeeTypeObject *tp_self, DeeObject *self) {
 	return (*tp_self->tp_seq->tp_iter)(self);
 }
@@ -3388,37 +3370,11 @@ usrtype__iter__with__ITER(DeeObject *__restrict self) {
 #endif /* __OPTIMIZE_SIZE__ */
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter__with__foreach(DeeObject *__restrict self) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__iter__with__foreach(Dee_TYPE(self), self);
-#else /* __OPTIMIZE_SIZE__ */
-	/* TODO: Custom iterator type that uses "tp_foreach" */
-	(void)Dee_TYPE(self);
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-#endif /* __OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter__with__foreach_pair(DeeObject *__restrict self) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__iter__with__foreach_pair(Dee_TYPE(self), self);
-#else /* __OPTIMIZE_SIZE__ */
-	/* TODO: Custom iterator type that uses "tp_foreach_pair" */
-	(void)Dee_TYPE(self);
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-#endif /* __OPTIMIZE_SIZE__ */
-}
-
 /* tp_seq->tp_foreach */
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 tdefault__foreach__with__iter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t cb, void *arg) {
 	Dee_ssize_t result;
-	DREF DeeObject *iter = (*(tp_self->tp_seq->tp_iter == &usrtype__iter__with__ITER ? &tusrtype__iter__with__ITER : tp_self->tp_seq->tp_iter == &default__iter__with__foreach_pair ? &tdefault__iter__with__foreach_pair : &tdefault__iter))(tp_self, self);
+	DREF DeeObject *iter = (*(tp_self->tp_seq->tp_iter == &usrtype__iter__with__ITER ? &tusrtype__iter__with__ITER : &tdefault__iter))(tp_self, self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_Foreach(iter, cb, arg);
@@ -3534,7 +3490,7 @@ tdefault__foreach_pair__with__foreach(DeeTypeObject *tp_self, DeeObject *self, D
 INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 tdefault__foreach_pair__with__iter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t cb, void *arg) {
 	Dee_ssize_t result;
-	DREF DeeObject *iter = (*(tp_self->tp_seq->tp_iter == &usrtype__iter__with__ITER ? &tusrtype__iter__with__ITER : tp_self->tp_seq->tp_iter == &default__iter__with__foreach ? &tdefault__iter__with__foreach : &tdefault__iter))(tp_self, self);
+	DREF DeeObject *iter = (*(tp_self->tp_seq->tp_iter == &usrtype__iter__with__ITER ? &tusrtype__iter__with__ITER : &tdefault__iter))(tp_self, self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeIterator_ForeachPair(iter, cb, arg);

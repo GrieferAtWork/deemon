@@ -518,11 +518,6 @@ PRIVATE struct oh_init_spec_class tpconst oh_class_iter[2] = {
 	OH_INIT_SPEC_CLASS_INIT(&usrtype__iter__with__ITER, OPERATOR_ITER, OPERATOR_USERCOUNT),
 	OH_INIT_SPEC_CLASS_END
 };
-PRIVATE struct oh_init_spec_impl tpconst oh_impls_iter[3] = {
-	OH_INIT_SPEC_IMPL_INIT(&default__iter__with__foreach, Dee_TNO_foreach, Dee_TNO_foreach),
-	OH_INIT_SPEC_IMPL_INIT(&default__iter__with__foreach_pair, Dee_TNO_foreach_pair, Dee_TNO_foreach_pair),
-	OH_INIT_SPEC_IMPL_END
-};
 PRIVATE struct oh_init_spec_mhint tpconst oh_mhints_iter[4] = {
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_seq_operator_iter, NULL, Dee_SEQCLASS_SEQ),
 	OH_INIT_SPEC_MHINT_INIT(Dee_TMH_set_operator_iter, NULL, Dee_SEQCLASS_SET),
@@ -1318,7 +1313,7 @@ INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[] = {
 	/* tp_cmp->tp_le                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_le), oh_class_le, oh_impls_le, oh_mhints_le, NULL),
 	/* tp_cmp->tp_gr                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_gr), oh_class_gr, oh_impls_gr, oh_mhints_gr, NULL),
 	/* tp_cmp->tp_ge                         */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_cmp), offsetof(struct type_cmp, tp_ge), oh_class_ge, oh_impls_ge, oh_mhints_ge, NULL),
-	/* tp_seq->tp_iter                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_iter), oh_class_iter, oh_impls_iter, oh_mhints_iter, oh_inherit_iter),
+	/* tp_seq->tp_iter                       */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_iter), oh_class_iter, NULL, oh_mhints_iter, oh_inherit_iter),
 	/* tp_seq->tp_foreach                    */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_foreach), NULL, oh_impls_foreach, oh_mhints_foreach, oh_inherit_foreach),
 	/* tp_seq->tp_foreach_pair               */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_foreach_pair), NULL, oh_impls_foreach_pair, oh_mhints_foreach_pair, NULL),
 	/* tp_seq->tp_sizeob                     */ OH_INIT_SPEC_INIT(offsetof(DeeTypeObject, tp_seq), offsetof(struct type_seq, tp_sizeob), oh_class_sizeob, oh_impls_sizeob, oh_mhints_sizeob, NULL),

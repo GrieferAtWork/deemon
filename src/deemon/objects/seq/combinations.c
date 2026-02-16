@@ -1463,7 +1463,7 @@ PRIVATE struct type_method_hint tpconst scv_method_hints[] = {
 };
 
 PRIVATE struct type_seq scv_seq = {
-	/* .tp_iter               = */ DEFIMPL(&default__iter__with__foreach),
+	/* .tp_iter               = */ DEFIMPL(&default__seq_operator_iter__with__seq_operator_size__and__seq_operator_trygetitem_index),
 	/* .tp_sizeob             = */ DEFIMPL(&default__sizeob__with__size),
 	/* .tp_contains           = */ DEFIMPL(&default__seq_operator_contains__with__seq_contains),
 	/* .tp_getitem            = */ DEFIMPL(&default__getitem__with__getitem_index),
