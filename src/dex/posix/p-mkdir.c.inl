@@ -27,7 +27,6 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory */
 #include <deemon/arg.h>             /* DeeArg_UnpackStructKw */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/none.h>            /* return_none */
@@ -35,8 +34,7 @@
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/string.h>          /* DeeString*, Dee_wchar_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, fmkdirat, mkdir, mkdirat, wfmkdirat, wmkdir, wmkdirat */
-#include <deemon/system.h>          /* DeeNTSystem_IsBadAllocError, DeeNTSystem_IsIntr, DeeUnixSystem_GetFD */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeUnixSystem_GetFD, DeeUnixSystem_HandleGenericError */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

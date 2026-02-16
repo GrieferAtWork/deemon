@@ -43,8 +43,8 @@
 #include <deemon/string.h>          /* DeeString*, DeeUni_*, Dee_EmptyString, Dee_UNICODE_IS*, Dee_UNICODE_PRINTER_*, Dee_string_object, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_F*, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar, DeeString_SetChar, Dee_unicode_* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, ENV_LOCK, ENV_UNLOCK, RTLD_GLOBAL, RTLD_LOCAL, basename, bcmp, bcmpc, bzero*, dl_iterate_phdr, dladdr, dlgethandle, dlmodulename, dlopen, environ, getenv, memchr, memcmp, memcpy*, memmovedownc, memmoveupc, mempcpyc, memset, strchr, strcpy, strend, strlen, to(lower|upper), wenviron, wgetenv */
-#include <deemon/system.h>          /* DeeNTSystem_IsBufferTooSmall, DeeNTSystem_IsIntr, DeeSystem_*, DeeUnixSystem_PrintLinkString */
-#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_import_frame */
+#include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeNTSystem_IsBufferTooSmall, DeeSystem_*, DeeUnixSystem_PrintLinkString */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self, Dee_import_frame */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */
 #include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_TYPE_MEMBER_ISCONST, type_* */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */

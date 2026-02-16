@@ -198,7 +198,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free, Dee_ReleaseSystemMemory */
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_*alloc*, Dee_Free */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/file.h>            /* DeeFile_*, DeeSystemFile_Check, Dee_fd_* */
 #include <deemon/filetypes.h>       /* DeeSystemFile_GetHandle */

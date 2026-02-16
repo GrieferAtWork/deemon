@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory, _Dee_MallococBufsize */
+#include <deemon/alloc.h>           /* _Dee_MallococBufsize */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/file.h>            /* Dee_OPEN_F* */
 #include <deemon/int.h>             /* DeeInt_FromBytes */
@@ -30,7 +30,6 @@
 #include <deemon/string.h>          /* DeeStringObject */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, _O_APPEND, close */
 #include <deemon/system.h>          /* DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 
 #include <hybrid/host.h> /* _WIN32 */
 

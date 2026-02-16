@@ -22,14 +22,14 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC */
+#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_ReleaseSystemMemory */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/error_types.h>     /* DeeSystemErrorObject */
 #include <deemon/format.h>          /* Dee_sprintf */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, ITER_DONE */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* AT_FDCWD, CONFIG_HAVE_*, DeeSystem_DEFINE_strnlen, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, frealpath4, get_osfhandle, lstat, readlink, stat */
-#include <deemon/system.h>          /* DeeNTSystem_PrintFilenameOfHandle, DeeNTSystem_TranslateNtError */
+#include <deemon/system.h>          /* DeeNTSystem_PrintFilenameOfHandle, DeeNTSystem_TranslateNtError, DeeUnixSystem_HandleGenericError, _DeeUnixSystem_HandleGenericError_AGAIN, _DeeUnixSystem_HandleGenericError_ERR, _DeeUnixSystem_HandleGenericError_OTHER */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_Check */
 

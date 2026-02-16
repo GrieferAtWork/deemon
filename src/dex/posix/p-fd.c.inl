@@ -36,8 +36,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, DeeSystem_SetErrno, FD_CLOEXEC, F_SETFD, F_SETFL, O_CLOEXEC, O_NONBLOCK, close, dup, dup2, dup3, fcntl, get_osfhandle, isatty, umask */
-#include <deemon/system.h>          /* DeeNTSystem_IsIntr, DeeNTSystem_ThrowErrorf, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_* */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

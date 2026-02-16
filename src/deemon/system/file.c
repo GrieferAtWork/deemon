@@ -36,8 +36,7 @@
 #include <deemon/string.h>          /* DeeString*, DeeUni_ToLower */
 #include <deemon/stringutils.h>     /* Dee_unicode_utf8seqlen_safe */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_SetErrno, O_APPEND, O_BINARY, O_CLOEXEC, O_CREAT, O_DIRECT, O_EXCL, O_NOATIME, O_NOFOLLOW, O_NONBLOCK, O_OBTAIN_DIR, O_SYNC, O_TRUNC, _IOFBF, _IOLBF, _IONBF, __acrt_iob_func, __iob_func, bzero, close, dup, fclose, fdatasync, ferror, fflush, fftruncate64, fgetc, fileno, fisatty, fopen64, fputc, fseek, fseeko, fseeko64, fsync, ftello, ftello64, ftruncate, ftruncate64, isatty, lseek, lseek64, memcpyc, mempcpyc, open, open64, pread, pread64, pwrite, pwrite64, read, setvbuf, sync, truncate, truncate64, ungetc, wopen, wopen64, write */
-#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeUnixSystem_* */
 #include <deemon/type.h>            /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_OBJECT, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 

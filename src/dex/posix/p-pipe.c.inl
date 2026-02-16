@@ -33,8 +33,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_SetErrno, FD_CLOEXEC, F_SETFD, F_SETFL, O_CLOEXEC, O_NONBLOCK, O_RDONLY, O_WRONLY, fcntl, open_osfhandle, pipe, pipe2 */
-#include <deemon/system.h>          /* DeeNTSystem_*, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/system.h>          /* DeeNTSystem_*, DeeUnixSystem_HandleGenericError, DeeUnixSystem_ThrowErrorf */
 #include <deemon/tuple.h>           /* DeeTuple_Newf */
 #include <deemon/type.h>            /* METHOD_FNORMAL */
 

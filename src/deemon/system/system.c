@@ -22,18 +22,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_BadAlloc, Dee_Free, Dee_ReleaseSystemMemory */
+#include <deemon/alloc.h>           /* Dee_*alloc*, Dee_BadAlloc, Dee_Free */
 #include <deemon/error.h>           /* DeeError_*, ERROR_HANDLED_NORMAL */
 #include <deemon/file.h>            /* DeeFile_*, DeeSystemFile_Check, DeeSystemFile_Fileno, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_fd_* */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_AsInt, DeeInt_Check */
 #include <deemon/mapfile.h>         /* DeeMapFile* */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_pos_t, Dee_ssize_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_pos_t, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_skipspaceutf8_n, Dee_unicode_skipspaceutf8_rev_n */
 #include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E4, MAP_ANONYMOUS, MAP_FIXED, MAP_PRIVATE, MAP_SHARED, PROT_READ, PROT_WRITE, RTLD_GLOBAL, RTLD_LAZY, RTLD_LOCAL, RTLD_NOW, bzero, clock_gettime, clock_gettime64, dlclose, dlopen, dlsym, fstat, fstat64, getcwd, getenv, gettimeofday, gettimeofday64, lseek, lseek64, mmap, mmap64, munmap, pread, pread64, read, remove, stat, stat64, strlen, sysconf, time, time64, unlink, wgetcwd, wremove, wunlink */
-#include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
+#include <deemon/system.h>          /* CONFIG_WANT_WINDOWS_STD_FILES, DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_HandleGenericError, DeeUnixSystem_ThrowErrorf */
 #include <deemon/util/atomic.h>     /* atomic_write */
 
 #include <hybrid/byteorder.h>       /* __BYTE_ORDER__, __ORDER_BIG_ENDIAN__ */

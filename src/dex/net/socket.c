@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_ReleaseSystemMemory, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DEFINE_KWLIST, DeeArg_Unpack*, UNPx64 */
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_BYTES_PRINTER_SIZE, Dee_bytes_printer, Dee_bytes_printer_* */
@@ -40,6 +40,7 @@
 #include <deemon/pair.h>            /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_EmptyString, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* memcpy, select */
+#include <deemon/system.h>          /* DeeUnixSystem_HandleGenericError */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_SleepNoInt */
 #include <deemon/tuple.h>           /* DeeTuple* */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
