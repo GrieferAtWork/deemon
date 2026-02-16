@@ -3065,6 +3065,7 @@ err_2big:
 
 
 
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 /* Returns "true" if "ptr" points into statically allocated memory.
  * If "ptr" is heap-allocated, or it being statically allocated can't
  * be determined for some other reason, return "false".
@@ -3074,10 +3075,10 @@ err_2big:
  * a faulty pointer) */
 PUBLIC ATTR_CONST WUNUSED NONNULL((1)) bool DCALL
 DeeSystem_IsStaticPointer(void const *ptr) {
-	/* TODO: OS-specific magic */
 	(void)ptr;
 	return false;
 }
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
 
 DECL_END

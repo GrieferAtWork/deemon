@@ -9747,6 +9747,58 @@ DeeModule_NextLibTree(DeeModuleObject *prev, /*String*/ DeeObject *prev_libname,
 	return data.menld_mod;
 }
 
+/* Returns "true" if "ptr" points into statically allocated memory.
+ * If "ptr" is heap-allocated, or it being statically allocated can't
+ * be determined for some other reason, return "false".
+ *
+ * If the given "ptr" is "NULL" or otherwise not at least readable,
+ * behavior is undefined (meaning this function may SEGFAULT is given
+ * a faulty pointer) */
+PUBLIC ATTR_CONST WUNUSED NONNULL((1)) bool DCALL
+DeeSystem_IsStaticPointer(void const *ptr) {
+	DREF DeeModuleObject *mod;
+	/* Check if "ptr" maps to a DEX module or the deemon core. */
+	module_byaddr_lock_read();
+#ifndef HAVE_module_byaddr_tree_STATIC_INIT
+	if unlikely(!module_byaddr_is_initialized()) {
+		module_byaddr_lock_upgrade();
+		module_byaddr_ensure_initialized();
+		module_byaddr_lock_downgrade();
+	}
+#endif /* !HAVE_module_byaddr_tree_STATIC_INIT */
+
+	/* Search "module_byaddr_tree" */
+	mod = module_byaddr_locate(module_byaddr_tree, (byte_t const *)ptr);
+	if (mod) {
+		bool result;
+		ASSERT(Dee_TYPE(mod) == &DeeModuleDee_Type ||
+		       Dee_TYPE(mod) == &DeeModuleDex_Type);
+		result = Dee_TYPE(mod) == &DeeModuleDex_Type;
+		module_byaddr_lock_endread();
+		return result;
+	}
+
+	/* Search "dex_byaddr_tree" (if present) */
+#ifdef HAVE_Dee_dexataddr_t
+	if (dex_byaddr_tree != NULL) {
+		Dee_dexataddr_t at_addr;
+		if (Dee_dexataddr_init_fromaddr(&at_addr, ptr)) {
+			mod = dex_byaddr_locate(dex_byaddr_tree, &at_addr);
+			if (mod) {
+				ASSERT(Dee_TYPE(mod) == &DeeModuleDex_Type);
+				module_byaddr_lock_endread();
+				return true;
+			}
+		}
+	}
+#endif /* HAVE_Dee_dexataddr_t */
+	module_byaddr_lock_endread();
+
+	/* No DEX module here... */
+	return false;
+}
+
+
 
 
 
