@@ -400,11 +400,6 @@ generic_proxy__bool(ProxyObject *__restrict self) {
 	return DeeObject_Bool(self->po_obj);
 }
 
-INTERN WUNUSED NONNULL((1)) size_t DCALL
-generic_proxy__iter_advance(ProxyObject *__restrict self, size_t step) {
-	return DeeObject_IterAdvance(self->po_obj, step);
-}
-
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_proxy__iter_next(ProxyObject *__restrict self) {
 	return DeeObject_IterNext(self->po_obj);
@@ -732,6 +727,31 @@ generic_proxy__map_remove(ProxyObject *self, DeeObject *key){
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 generic_proxy__map_removekeys(ProxyObject *self, DeeObject *keys){
 	return DeeObject_InvokeMethodHint(map_removekeys, self->po_obj, keys);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+generic_proxy__iter_getindex(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(iter_getindex, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__iter_setindex(ProxyObject *self, size_t index){
+	return DeeObject_InvokeMethodHint(iter_setindex, self->po_obj, index);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+generic_proxy__iter_rewind(ProxyObject *__restrict self){
+	return DeeObject_InvokeMethodHint(iter_rewind, self->po_obj);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+generic_proxy__iter_advance(ProxyObject *__restrict self, size_t step){
+	return DeeObject_InvokeMethodHint(iter_advance, self->po_obj, step);
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+generic_proxy__iter_revert(ProxyObject *__restrict self, size_t step){
+	return DeeObject_InvokeMethodHint(iter_revert, self->po_obj, step);
 }
 /*[[[end]]]*/
 

@@ -148,7 +148,6 @@ __set_last__.set_boundlast([[nonnull]] DeeObject *__restrict self)
 [[wunused, getset_member("del")]] int
 __set_last__.set_dellast([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del last"); })}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_size__and__seq_operator_delitem_index_ab = "default__seq_dellast__with__seq_operator_size__and__seq_operator_delitem_index"}
 %{$with__seq_operator_size__and__seq_operator_bounditem_index__and__seq_operator_delitem_index = {

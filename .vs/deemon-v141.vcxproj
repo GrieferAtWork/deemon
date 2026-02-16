@@ -255,6 +255,14 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_advance.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_index.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_next.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_operator_bool.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_peek.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_prev.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_revert.h" />
+		<ClInclude Include="..\src\deemon\method-hints\iter_seq.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_enumerate_items.h" />
 		<ClInclude Include="..\src\deemon\method-hints\map_frozen.h" />
@@ -448,7 +456,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\svec.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\unique-iterator.h" />
-		<ClInclude Include="..\src\deemon\objects\seq_functions.h" />
 		<ClInclude Include="..\src\deemon\objects\type-operators.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions-strip.c.inl" />

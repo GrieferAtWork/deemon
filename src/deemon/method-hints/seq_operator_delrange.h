@@ -39,7 +39,6 @@ __seq_delrange__.seq_operator_delrange([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *start,
                                        [[nonnull]] DeeObject *end)
 %{unsupported(auto("operator del[:]"))}
-%{$none = 0}
 %{$empty = 0}
 %{using [seq_operator_delrange_index, seq_operator_delrange_index_n]: {
 	Dee_ssize_t start_index, end_index;
@@ -92,7 +91,6 @@ seq_operator_delrange = {
 __seq_delrange__.seq_operator_delrange_index([[nonnull]] DeeObject *self,
                                              Dee_ssize_t start, Dee_ssize_t end)
 %{unsupported(auto("operator del[:]"))}
-%{$none = 0}
 %{$empty = 0}
 %{using seq_operator_delrange: {
 	int result;
@@ -157,7 +155,6 @@ __seq_delrange__.seq_operator_delrange_index_n([[nonnull]] DeeObject *self,
 %{unsupported({
 	return err_seq_unsupportedf(self, "operator del[:](%" PCKdSIZ ", none)", start);
 })}
-%{$none = 0}
 %{$empty = 0}
 %{using [seq_operator_size, seq_operator_delrange_index]: {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);

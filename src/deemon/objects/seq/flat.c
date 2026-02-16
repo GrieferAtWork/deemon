@@ -2589,7 +2589,20 @@ sfi_set_curriter(SeqFlatIterator *self, DeeObject *value) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF SeqFlat *DCALL
+sfi_mh_iter_getseq(SeqFlatIterator *__restrict self) {
+	DREF DeeObject *baseseq;
+	baseseq = DeeObject_InvokeMethodHint(iter_getseq, self->sfi_baseiter);
+	if unlikely(!baseseq)
+		goto err_nest;
+	return SeqFlat_NewInherited(baseseq);
+err_nest:
+	/* TODO: Nest current error within `err_iter_unsupportedf(self, "seq")' */
+	return NULL;
+}
+
 PRIVATE struct type_getset sfi_getsets[] = {
+	TYPE_GETTER_AB(STR_seq, &sfi_mh_iter_getseq, "->?Ert:SeqFlat"),
 	TYPE_GETSET_AB("__curriter__", &sfi_get_curriter, NULL, &sfi_set_curriter, "->?DIterator"),
 	TYPE_GETSET_END
 };

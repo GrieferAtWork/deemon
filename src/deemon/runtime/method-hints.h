@@ -374,6 +374,18 @@ struct Dee_type_mh_cache {
 	DeeMH_map_pop_t mh_map_pop;
 	DeeMH_map_pop_with_default_t mh_map_pop_with_default;
 	DeeMH_map_popitem_t mh_map_popitem;
+	DeeMH_iter_nextkey_t mh_iter_nextkey;
+	DeeMH_iter_nextvalue_t mh_iter_nextvalue;
+	DeeMH_iter_nextpair_t mh_iter_nextpair;
+	DeeMH_iter_advance_t mh_iter_advance;
+	DeeMH_iter_prev_t mh_iter_prev;
+	DeeMH_iter_revert_t mh_iter_revert;
+	DeeMH_iter_operator_bool_t mh_iter_operator_bool;
+	DeeMH_iter_getindex_t mh_iter_getindex;
+	DeeMH_iter_setindex_t mh_iter_setindex;
+	DeeMH_iter_rewind_t mh_iter_rewind;
+	DeeMH_iter_peek_t mh_iter_peek;
+	DeeMH_iter_getseq_t mh_iter_getseq;
 /*[[[end]]]*/
 	/* clang-format on */
 
@@ -382,7 +394,7 @@ struct Dee_type_mh_cache {
 
 	/* clang-format off */
 /*[[[deemon (printMhCacheAttributeMembers from "..method-hints.method-hints")();]]]*/
-#define MHC_COUNT 144
+#define MHC_COUNT 156
 #define MHC_FIRST mhc___seq_bool__
 	Dee_mhc_slot_t mhc___seq_bool__;
 	Dee_mhc_slot_t mhc___seq_size__;
@@ -528,7 +540,19 @@ struct Dee_type_mh_cache {
 	Dee_mhc_slot_t mhc___map_removekeys__;
 	Dee_mhc_slot_t mhc___map_pop__;
 	Dee_mhc_slot_t mhc___map_popitem__;
-#define MHC_LAST mhc___map_popitem__
+	Dee_mhc_slot_t mhc___iter_nextkey__;
+	Dee_mhc_slot_t mhc___iter_nextvalue__;
+	Dee_mhc_slot_t mhc___iter_advance__;
+	Dee_mhc_slot_t mhc___iter_prev__;
+	Dee_mhc_slot_t mhc___iter_revert__;
+	Dee_mhc_slot_t mhc___iter_bool__;
+	Dee_mhc_slot_t mhc_get___iter_index__;
+	Dee_mhc_slot_t mhc_del___iter_index__;
+	Dee_mhc_slot_t mhc_set___iter_index__;
+	Dee_mhc_slot_t mhc___iter_rewind__;
+	Dee_mhc_slot_t mhc___iter_peek__;
+	Dee_mhc_slot_t mhc_get___iter_seq__;
+#define MHC_LAST mhc_get___iter_seq__
 /*[[[end]]]*/
 	/* clang-format on */
 

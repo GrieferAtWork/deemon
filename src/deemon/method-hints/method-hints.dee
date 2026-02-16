@@ -565,7 +565,25 @@ final class NativeMethod {
 	public member operatorSpecs: {OperatorSpec...} = ();
 
 	public member _methodHint: WeakRef with MethodHint | none = none;
-	public property methodHint: MethodHint | none = { get() -> _methodHint.value; };
+	public property methodHint: MethodHint | none = { get() -> _methodHint.value; }
+
+	public member _extraMethodHints: {(WeakRef with MethodHint)...} = ({});
+	public property extraMethodHints: {MethodHint...} = {
+		get(): {MethodHint...} {
+			for (local ref: _extraMethodHints) {
+				local val: MethodHint | none = ref.lock(none);
+				if (val !is none)
+					yield val;
+			}
+		}
+	}
+
+	public property allMethodHints: {MethodHint...} = {
+		get(): {MethodHint...} {
+			yield methodHint;
+			yield extraMethodHints...;
+		}
+	}
 
 	@@True if this method needs something like `tdefault__map_enumerate__with_callobjectcache___map_enumerate__`
 	public property hasTypedCallAttrCacheImpl: bool = {
@@ -781,9 +799,9 @@ final class NativeMethod {
 
 	public printDefaultImplDecls() {
 		print(f"/* {name} */");
-		local methodHint = this.methodHint;
 		if (defineSelfInvocationWrapper)
 			printIntdefDeclOrAlias(f"default__{name}", none);
+		local methodHint = this.methodHint;
 		for (local attr: methodHint.allAttributes.distinct()) {
 			if (callAttrImpl is none)
 				throw Error(f"Native method {repr name} is missing impl for callattr({repr attr})");
@@ -1018,6 +1036,7 @@ global final PRETTY_BASE_CLASS_NAMES: {string: string} = {
 	"DeeSet_Type": "Set",
 	"DeeMapping_Type": "Mapping",
 	"DeeNumeric_Type": "Numeric",
+	"DeeIterator_Type": "Iterator",
 };
 
 global final BASE_CLASS_ALIASES: {string: string} = Dict.Frozen(
@@ -1050,6 +1069,9 @@ final class MethodHint: WeakRefAble {
 	public member getset: bool = false; /* True if this is a getset (meaning it has 3 mhcache slots) */
 	public member getsetCallbacks: {string...} = []; /* Set of getset callbacks defined in @nativeHints (s.a. @NativeMethod.getsetMember) */
 	public member nativeHints: {string: NativeMethod} = Dict();
+	@@Used to store the call2native implementations of custom properties
+	@@Keys here are one of @{"get", "del", "set", "bound"}
+	public member propertyCall2native: {string: NativeMethod} = Dict();
 
 	public property nameComment: string = {
 		get(): string {
@@ -1111,70 +1133,125 @@ final class MethodHint: WeakRefAble {
 		}
 	}
 
+	private getNativeMethodAttributeImpls(): {(string, NativeMethod)...} {
+		if (call2native !is none)
+			return {{"", call2native}};
+		if (propertyCall2native) {
+			return propertyCall2native.map(e -> {
+				local k, v = e...;
+				return {"_" + k, v};
+			});
+		}
+		return {};
+	}
+
 	public printMethodAttributeDecls() {
-		if (call2native is none)
-			return;
-		print("#define DeeMA_", name, "_flags ", typeMethodFlags);
-		print("#define DeeMA_", name, "_name  _DeeMA_ATTRSTR(", attr, ")");
-		print("#define DeeMA_", name, "_doc   ", repr doc);
-		print("DFUNDEF "),;
-		call2native.printDecl(f"DeeMA_{name}");
-		print(";");
-		for (local alias: aliases) {
-			print("#define DeeMA_", alias.name, "_flags DeeMA_", name, "_flags");
-			print("#define DeeMA_", alias.name, "_name  _DeeMA_ATTRSTR(", alias.attr, ")");
-			print("#define DeeMA_", alias.name, "_doc   DeeMA_", name, "_doc");
-			print("#define DeeMA_", alias.name, "       DeeMA_", name);
-			for (local nameAlias: alias.nameAliases) {
-				print("#define DeeMA_", nameAlias, "_flags DeeMA_", alias.name, "_flags");
-				print("#define DeeMA_", nameAlias, "_name  DeeMA_", alias.name, "_name");
-				print("#define DeeMA_", nameAlias, "_doc   DeeMA_", alias.name, "_doc");
-				print("#define DeeMA_", nameAlias, "       DeeMA_", alias.name);
+		local didSomething = false;
+		local allAliases = [];
+		for (local nameSuffix, call2native: getNativeMethodAttributeImpls()) {
+			if (!didSomething) {
+				print("#define DeeMA_", name, "_flags ", typeMethodFlags);
+				print("#define DeeMA_", name, "_name  _DeeMA_ATTRSTR(", attr, ")");
+				print("#define DeeMA_", name, "_doc   ", repr doc);
 			}
+			Set.insert(allAliases, name);
+			local name = this.name + nameSuffix;
+			print("DFUNDEF "),;
+			call2native.printDecl(f"DeeMA_{name}");
+			print(";");
+			for (local alias: aliases) {
+				if (!didSomething) {
+					print("#define DeeMA_", alias.name, "_flags DeeMA_", this.name, "_flags");
+					print("#define DeeMA_", alias.name, "_name  _DeeMA_ATTRSTR(", alias.attr, ")");
+					print("#define DeeMA_", alias.name, "_doc   DeeMA_", this.name, "_doc");
+				}
+				print("#define DeeMA_", alias.name, nameSuffix, "       DeeMA_", name);
+				Set.insert(allAliases, alias.name);
+				for (local nameAlias: alias.nameAliases) {
+					if (!didSomething) {
+						print("#define DeeMA_", nameAlias, "_flags DeeMA_", alias.name, "_flags");
+						print("#define DeeMA_", nameAlias, "_name  DeeMA_", alias.name, "_name");
+						print("#define DeeMA_", nameAlias, "_doc   DeeMA_", alias.name, "_doc");
+					}
+					print("#define DeeMA_", nameAlias, nameSuffix, "       DeeMA_", alias.name, nameSuffix);
+					Set.insert(allAliases, nameAlias);
+				}
+			}
+			for (local declAlias: declNameAliases) {
+				if (!didSomething) {
+					print("#define DeeMA_", declAlias, "_flags DeeMA_", name, "_flags");
+					print("#define DeeMA_", declAlias, "_name  DeeMA_", name, "_name");
+					print("#define DeeMA_", declAlias, "_doc   DeeMA_", name, "_doc");
+				}
+				print("#define DeeMA_", declAlias, nameSuffix, "       DeeMA_", name);
+				Set.insert(allAliases, declAlias);
+			}
+			didSomething = true;
 		}
-		for (local declAlias: declNameAliases) {
-			print("#define DeeMA_", declAlias, "_flags DeeMA_", name, "_flags");
-			print("#define DeeMA_", declAlias, "_name  DeeMA_", name, "_name");
-			print("#define DeeMA_", declAlias, "_doc   DeeMA_", name, "_doc");
-			print("#define DeeMA_", declAlias, "       DeeMA_", name);
+		if (didSomething) {
+			if (propertyCall2native) {
+				local supportedMethods = propertyCall2native.keys;
+				for (local name: allAliases) {
+					/* TODO: Optimizations for always-bound */
+					if (supportedMethods == {"get"}) {
+						print("#define _DeeMA_TYPE_GETSET_HINTREF_", name, "(doc) Dee_TYPE_GETTER_F("
+						      "DeeMA_", name, "_name, &DeeMA_", name, "_get, DeeMA_", name, "_flags, doc)");
+					} else if ("bound" in supportedMethods) {
+						print("#define _DeeMA_TYPE_GETSET_HINTREF_", name, "(doc) Dee_TYPE_GETSET_BOUND_F("
+						      "DeeMA_", name, "_name, ",
+						      ("get" in supportedMethods ? f"&DeeMA_{name}_get" : "NULL"), ", ",
+						      ("del" in supportedMethods ? f"&DeeMA_{name}_del" : "NULL"), ", ",
+						      ("set" in supportedMethods ? f"&DeeMA_{name}_set" : "NULL"), ", ",
+						      ("bound" in supportedMethods ? f"&DeeMA_{name}_bound" : "NULL"), ", "
+						      "DeeMA_", name, "_flags, doc)");
+					} else {
+						print("#define _DeeMA_TYPE_GETSET_HINTREF_", name, "(doc) Dee_TYPE_GETSET_F("
+						      "DeeMA_", name, "_name, ",
+						      ("get" in supportedMethods ? f"&DeeMA_{name}_get" : "NULL"), ", ",
+						      ("del" in supportedMethods ? f"&DeeMA_{name}_del" : "NULL"), ", ",
+						      ("set" in supportedMethods ? f"&DeeMA_{name}_set" : "NULL"), ", "
+						      "DeeMA_", name, "_flags, doc)");
+					}
+				}
+			}
+			print;
 		}
-		print;
 	}
 
 	public printMethodAttributeImpls() {
-		if (call2native is none)
-			return;
-		local tpSelfExpr = call2native.tpSelfExpr;
-		local preloadedDependencies: {string...} = HashSet();
-		local body = call2native.callAttrImpl.formatImpl("$", {
-			"THIS_TYPE": tpSelfExpr,
-			"CALL_DEPENDENCY": (dep, args...) -> {
-				if (dep in preloadedDependencies)
-					return f"(*cached_{dep})({", ".join(args)})";
-				return f"(*DeeType_RequireMethodHint({
-					tpSelfExpr}, {dep}))({", ".join(args)})";
-			},
-			"REQUIRE_DEPENDENCY": (dep) -> {
-				if (dep in preloadedDependencies)
-					return f"cached_{dep}";
-				return f"DeeType_RequireMethodHint({tpSelfExpr}, {dep})";
-			},
-			"PRELOAD_DEPENDENCY": (dep) -> {
-				preloadedDependencies.insert(dep);
-				return f"DeeMH_{dep}_t cached_{dep} = DeeType_RequireMethodHint({
-						tpSelfExpr}, {dep});";
-			},
-			"DeeRT_ErrUnboundAttrCStr": (self, name) ->
-				encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
-			"DeeRT_ErrTUnboundAttrCStr": (decl, self, name) ->
-				encode_DeeRT_ErrTUnboundAttr(decl, self, name),
-		});
-		print("PUBLIC "),;
-		call2native.printDecl(f"DeeMA_{name}",
-				lineFeedBeforeName: true,
-				bodyHint: body);
-		print(" ", body);
-		print;
+		for (local nameSuffix, call2native: getNativeMethodAttributeImpls()) {
+			local tpSelfExpr = call2native.tpSelfExpr;
+			local preloadedDependencies: {string...} = HashSet();
+			local body = call2native.callAttrImpl.formatImpl("$", {
+				"THIS_TYPE": tpSelfExpr,
+				"CALL_DEPENDENCY": (dep, args...) -> {
+					if (dep in preloadedDependencies)
+						return f"(*cached_{dep})({", ".join(args)})";
+					return f"(*DeeType_RequireMethodHint({
+						tpSelfExpr}, {dep}))({", ".join(args)})";
+				},
+				"REQUIRE_DEPENDENCY": (dep) -> {
+					if (dep in preloadedDependencies)
+						return f"cached_{dep}";
+					return f"DeeType_RequireMethodHint({tpSelfExpr}, {dep})";
+				},
+				"PRELOAD_DEPENDENCY": (dep) -> {
+					preloadedDependencies.insert(dep);
+					return f"DeeMH_{dep}_t cached_{dep} = DeeType_RequireMethodHint({
+							tpSelfExpr}, {dep});";
+				},
+				"DeeRT_ErrUnboundAttrCStr": (self, name) ->
+					encode_DeeRT_ErrUnboundAttr(tpSelfExpr, self, name),
+				"DeeRT_ErrTUnboundAttrCStr": (decl, self, name) ->
+					encode_DeeRT_ErrTUnboundAttr(decl, self, name),
+			});
+			print("PUBLIC "),;
+			call2native.printDecl(f"DeeMA_{name}{nameSuffix}",
+					lineFeedBeforeName: true,
+					bodyHint: body);
+			print(" ", body);
+			print;
+		}
 	}
 }
 
@@ -1924,9 +2001,23 @@ function printMhInitSpecs() {
 			!methodHint.getset ? methodHint.attr :
 				f"{native.getsetMember in ["bound", "tryget", ""] ? "get" : native.getsetMember}_{methodHint.attr}"
 		})"),;
-		print(", ", (!methodHint.getset || !native.getsetMember)
-			? "MH_KIND_METHOD"
-			: f"MH_KIND_GETSET_{native.getsetMember.upper()}"),;
+		print(", "),;
+		if (!methodHint.getset || !native.getsetMember) {
+			print("MH_KIND_METHOD"),;
+		} else {
+			local getsetType = native.getsetMember in ["get", "tryget", ""]
+				? native.returnType
+				: native.getsetMember == "set"
+					? native.params.last.cTypeSimplified
+					: "DeeObject*";
+			if (getsetType.endswith("*")) {
+				print(f"MH_KIND_GETSET_{native.getsetMember.upper()}"),;
+			} else if (getsetType in ["size_t"]) {
+				print(f"MH_KIND_GETSET_SZ_{native.getsetMember.upper()}"),;
+			} else {
+				throw Error(f"Unsupported getset return type {repr getsetType}");
+			}
+		}
 		print(", ", methodHint is none ? "NULL" : f"&default__{
 				native.name}__with_callobjectcache_{methodHint.attr}"),;
 		print(", ", native.selectImpl is none ? "NULL" : f"&mh_select_{native.name}"),;
@@ -3056,6 +3147,7 @@ final class _SpecParserAttrib {
 	public member inheritAs: string | none = none;
 	public member acceptAnyBaseClassForMethodHint: bool = false;
 	public member ppCond: string = "1";
+	public member extraMethodHintContext: {string...} | none = none;
 };
 
 global final _C_TYPENAME_TOKENS = HashSet.Frozen({
@@ -3318,7 +3410,13 @@ done:
 
 	public parseOperatorSpecs(): {OperatorSpec...} {
 		local result = OperatorSpec();
-		local baseClasses = parseBaseClassList().frozen;
+		local baseClasses;
+		if (tok == "*") {
+			baseClasses = none;
+			next();
+		} else {
+			baseClasses = parseBaseClassList().frozen;
+		}
 		skip(":");
 		local field = parseFieldDesc();
 		if (tok == "->") {
@@ -3329,9 +3427,14 @@ done:
 			result.operatorField = field;
 		}
 		result.acceptAnyBaseClassForMethodHint = attrib.acceptAnyBaseClassForMethodHint;
-		for (local baseClass: baseClasses) {
-			result.baseClass = baseClass;
-			yield copy result;
+		if (baseClasses is none) {
+			result.baseClass = none;
+			yield result;
+		} else {
+			for (local baseClass: baseClasses) {
+				result.baseClass = baseClass;
+				yield copy result;
+			}
 		}
 	}
 
@@ -3356,6 +3459,16 @@ done:
 					err(f"Invalid getset member name {repr name}");
 				skip(")");
 				attrib.getsetMember = name;
+			}	break;
+
+			case "extra_method_hint_context": {
+				next();
+				skip("(");
+				local name = parseString();
+				skip(")");
+				if (attrib.extraMethodHintContext is none)
+					attrib.extraMethodHintContext = [];
+				attrib.extraMethodHintContext.append(name);
 			}	break;
 
 			case "cc":
@@ -4053,8 +4166,61 @@ done:
 							err(f"Method {repr methodHint.name} is marked as [[getset]] and [[kw]]");
 						methodHint.call2native = none;
 						tokEnd = docEnd;
-						next();
-						skip(";");
+						if (next() == "=") {
+							/* Custom property bindings... */
+							next();
+							skip("{");
+							while (tok !in ["", "}"]) {
+								if (!tok.issymbol())
+									err(f"Expected keyword for property callback definition, but got {repr tok}");
+								local propertyCallbackName: string = tok;
+								if (propertyCallbackName in methodHint.propertyCall2native)
+									err(f"Property callback {repr propertyCallbackName} already defined");
+								next();
+								skip("(");
+								local paramNames = [];
+								for (;;) {
+									if (!tok.issymbol()) {
+										err(f"Expected parameter name for property callback "
+										    f"'{methodHint.name}.{propertyCallbackName}', but got {repr tok}");
+									}
+									paramNames.append(tok);
+									if (next() != ",")
+										break;
+									if (next() in ["", ")"])
+										break;
+								}
+								skip(")");
+								if (tok != "{")
+									err(f"Expected '\{' for body of '{methodHint.name}.{propertyCallbackName}', but got {repr tok}");
+								local bodyStart = tokStart;
+								local bodyEnd = data.findmatch("{", "}", bodyStart + 1);
+								if (bodyEnd < 0)
+									err(f"Missing '\}' to end body of '{methodHint.name}.{propertyCallbackName}'");
+								++bodyEnd;
+								tokEnd = bodyEnd;
+								next();
+								local body = data[bodyStart:bodyEnd];
+								while (body.count("\n") == body.count("\n\t"))
+									body = body.replace("\n\t", "\n");
+								local call2native = NativeMethod(
+									wunused: true,
+									returnType: propertyCallbackName == "get" ? "DREF DeeObject *" : "int",
+									cc: "DCALL",
+									params: paramNames.map(n -> NativeMethodParam(
+										(#paramNames <= 1) ? "DeeObject *__restrict" : "DeeObject *",
+										n, true)).frozen,
+									callAttrImpl: NativeMethodImpl(
+											body,
+											ppLineFile: filenameForPPLine,
+											ppLineLine: lineAt(bodyStart)),
+									_methodHint: WeakRef(methodHint));
+								methodHint.propertyCall2native[propertyCallbackName] = call2native;
+							}
+							skip("}");
+						} else {
+							skip(";");
+						}
 					}
 					if (!METHOD_HINTS.setnew(methodHint.name, methodHint))
 						err(f"Method hint {repr methodHint.name} was already defined");
@@ -4092,6 +4258,14 @@ done:
 					method._methodHint = WeakRef(methodHint);
 					if (!methodHint.nativeHints.setnew(method.name, method))
 						err(f"Method hint {repr methodHint.name} in {repr name1} was already defined");
+					for (local extraName1: attrib.extraMethodHintContext) {
+						local methodHint: MethodHint = METHOD_HINTS.get(extraName1);
+						if (methodHint is none)
+							err(f"Unknown method hint {repr extraName1}");
+						//TODO: method._methodHint = WeakRef(methodHint);
+						if (!methodHint.nativeHints.setnew(method.name, method))
+							err(f"Method hint {repr methodHint.name} in {repr extraName1} was already defined");
+					}
 				} else {
 					method.name = name1;
 					if (!ANONYMOUS_METHOD_HINTS.setnew(name1, method))

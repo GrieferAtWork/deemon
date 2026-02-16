@@ -4189,6 +4189,198 @@ super_mh__map_popitem(DeeSuperObject *self) {
 	}
 	__builtin_unreachable();
 }
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_mh__iter_nextkey(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_nextkey, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_nextkey_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_nextkey_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_mh__iter_nextvalue(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_nextvalue, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_nextvalue_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_nextvalue_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+super_mh__iter_nextpair(DeeSuperObject *__restrict self, DREF DeeObject *key_and_value[2]) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_nextpair, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_nextpair_t)specs.smh_cb)(self->s_self, key_and_value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_nextpair_t)specs.smh_cb)(Dee_AsObject(self), key_and_value);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, DREF DeeObject **))specs.smh_cb)(self->s_type, self->s_self, key_and_value);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+super_mh__iter_advance(DeeSuperObject *__restrict self, size_t step) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_advance, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_advance_t)specs.smh_cb)(self->s_self, step);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_advance_t)specs.smh_cb)(Dee_AsObject(self), step);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, size_t))specs.smh_cb)(self->s_type, self->s_self, step);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_mh__iter_prev(DeeSuperObject *self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_prev, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_prev_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_prev_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+super_mh__iter_revert(DeeSuperObject *__restrict self, size_t step) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_revert, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_revert_t)specs.smh_cb)(self->s_self, step);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_revert_t)specs.smh_cb)(Dee_AsObject(self), step);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *, size_t))specs.smh_cb)(self->s_type, self->s_self, step);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+super_mh__iter_operator_bool(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_operator_bool, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_operator_bool_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_operator_bool_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) size_t DCALL
+super_mh__iter_getindex(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_getindex, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_getindex_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_getindex_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(size_t (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+super_mh__iter_setindex(DeeSuperObject *self, size_t index) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_setindex, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_setindex_t)specs.smh_cb)(self->s_self, index);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_setindex_t)specs.smh_cb)(Dee_AsObject(self), index);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *, size_t))specs.smh_cb)(self->s_type, self->s_self, index);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+super_mh__iter_rewind(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_rewind, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_rewind_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_rewind_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(int (DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_mh__iter_peek(DeeSuperObject *self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_peek, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_peek_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_peek_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_mh__iter_getseq(DeeSuperObject *__restrict self) {
+	struct Dee_super_method_hint specs;
+	DeeType_GetMethodHintForSuper(self, Dee_TMH_iter_getseq, &specs);
+	switch (specs.smh_cc) {
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SELF:
+		return (*(DeeMH_iter_getseq_t)specs.smh_cb)(self->s_self);
+	case Dee_SUPER_METHOD_HINT_CC_WITH_SUPER:
+		return (*(DeeMH_iter_getseq_t)specs.smh_cb)(Dee_AsObject(self));
+	case Dee_SUPER_METHOD_HINT_CC_WITH_TYPE:
+		return (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))specs.smh_cb)(self->s_type, self->s_self);
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -4451,6 +4643,18 @@ INTERN struct Dee_type_mh_cache super_mhcache = {
 	/* .mh_map_pop                                 = */ (DeeMH_map_pop_t)&super_mh__map_pop,
 	/* .mh_map_pop_with_default                    = */ (DeeMH_map_pop_with_default_t)&super_mh__map_pop_with_default,
 	/* .mh_map_popitem                             = */ (DeeMH_map_popitem_t)&super_mh__map_popitem,
+	/* .mh_iter_nextkey                            = */ (DeeMH_iter_nextkey_t)&super_mh__iter_nextkey,
+	/* .mh_iter_nextvalue                          = */ (DeeMH_iter_nextvalue_t)&super_mh__iter_nextvalue,
+	/* .mh_iter_nextpair                           = */ (DeeMH_iter_nextpair_t)&super_mh__iter_nextpair,
+	/* .mh_iter_advance                            = */ (DeeMH_iter_advance_t)&super_mh__iter_advance,
+	/* .mh_iter_prev                               = */ (DeeMH_iter_prev_t)&super_mh__iter_prev,
+	/* .mh_iter_revert                             = */ (DeeMH_iter_revert_t)&super_mh__iter_revert,
+	/* .mh_iter_operator_bool                      = */ (DeeMH_iter_operator_bool_t)&super_mh__iter_operator_bool,
+	/* .mh_iter_getindex                           = */ (DeeMH_iter_getindex_t)&super_mh__iter_getindex,
+	/* .mh_iter_setindex                           = */ (DeeMH_iter_setindex_t)&super_mh__iter_setindex,
+	/* .mh_iter_rewind                             = */ (DeeMH_iter_rewind_t)&super_mh__iter_rewind,
+	/* .mh_iter_peek                               = */ (DeeMH_iter_peek_t)&super_mh__iter_peek,
+	/* .mh_iter_getseq                             = */ (DeeMH_iter_getseq_t)&super_mh__iter_getseq,
 /*[[[end]]]*/
 /* clang-format on */
 };

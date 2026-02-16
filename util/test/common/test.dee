@@ -303,6 +303,7 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		}
 
 		local it = x.operator iter();
+		assert it is Iterator;
 		if (iterated1) {
 			assert it;
 			assert copy it;
@@ -320,7 +321,7 @@ function assertSequence(x: Sequence, expected: {Object...} | none = none) {
 		it.operator hash();  /* Only here for coverage */
 		it2.operator hash(); /* Only here for coverage */
 		local itSeq = TRY(it.seq);
-		if (itSeq !is AttributeError) {
+		if (itSeq !is NotImplemented) {
 			/* This here is needed because "Dict.items.operator iter().seq"
 			 * returns "Dict" instead of "Dict.Items" (since the 2 share the
 			 * same iterator type for the sake of simplicity) */

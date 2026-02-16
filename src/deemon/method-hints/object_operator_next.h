@@ -72,7 +72,7 @@ err:
 [[export("DeeObject_{|T}IterNextPair")]]
 [[wunused]] int
 tp_iterator->tp_nextpair([[nonnull]] DeeObject *__restrict self,
-                         [[nonnull]] DREF DeeObject *key_and_value[2])
+                         [[nonnull]] DREF DeeObject *key_and_value[2]) /* TODO: Remove me */
 %{using tp_iter_next: {
 	int result;
 	DREF DeeObject *item = CALL_DEPENDENCY(tp_iter_next, self);
@@ -94,7 +94,7 @@ err:
  * holding both values (as needs to be done by `tp_iter_next'). */
 [[export("DeeObject_{|T}IterNextKey")]]
 [[wunused]] DREF DeeObject *
-tp_iterator->tp_nextkey([[nonnull]] DeeObject *__restrict self)
+tp_iterator->tp_nextkey([[nonnull]] DeeObject *__restrict self) /* TODO: Remove me */
 %{using tp_iter_next: {
 	int unpack_status;
 	DREF DeeObject *key_and_value[2];
@@ -131,7 +131,7 @@ err:
  * holding both values (as needs to be done by `tp_iter_next'). */
 [[export("DeeObject_{|T}IterNextValue")]]
 [[wunused]] DREF DeeObject *
-tp_iterator->tp_nextvalue([[nonnull]] DeeObject *__restrict self)
+tp_iterator->tp_nextvalue([[nonnull]] DeeObject *__restrict self) /* TODO: Remove me */
 %{using tp_iter_next: {
 	int unpack_status;
 	DREF DeeObject *key_and_value[2];

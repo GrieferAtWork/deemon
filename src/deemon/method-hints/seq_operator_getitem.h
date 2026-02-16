@@ -488,8 +488,8 @@ err:
 __seq_getitem__.seq_operator_hasitem([[nonnull]] DeeObject *self,
                                      [[nonnull]] DeeObject *index)
 %{unsupported(auto("operator []"))}
-%{$none = 1}
-%{$empty = 0}
+%{$none = Dee_HAS_YES}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_operator_sizeob = {
 	int result;
 	DREF DeeObject *sizeob = CALL_DEPENDENCY(seq_operator_sizeob, self);
@@ -574,8 +574,8 @@ default_bounditem_index_with_seq_enumerate_index_cb(void *arg, size_t index, Dee
 __seq_getitem__.seq_operator_hasitem_index([[nonnull]] DeeObject *__restrict self,
                                            size_t index)
 %{unsupported(auto("operator []"))}
-%{$none = 1}
-%{$empty = 0}
+%{$none = Dee_HAS_YES}
+%{$empty = Dee_HAS_NO}
 %{$with__seq_operator_size = {
 	size_t seqsize = CALL_DEPENDENCY(seq_operator_size, self);
 	if unlikely(seqsize == (size_t)-1)

@@ -543,7 +543,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndex_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -594,7 +594,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndexPair_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -643,7 +643,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -694,7 +694,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexPair_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -743,7 +743,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -794,7 +794,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFastPair_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -843,7 +843,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -894,7 +894,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndexPair_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -1241,7 +1241,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -1290,7 +1290,7 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemPair_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -1578,7 +1578,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItem_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -1627,7 +1627,7 @@ INTERN DeeTypeObject DefaultIterator_WithSizeObAndGetItemPair_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2096,7 +2096,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndGetItemMap_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2146,7 +2146,7 @@ INTERN DeeTypeObject DefaultIterator_WithIterKeysAndTryGetItemMap_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2225,7 +2225,7 @@ INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2274,7 +2274,7 @@ INTERN DeeTypeObject DefaultIterator_WithForeachPair_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2323,7 +2323,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateSeq_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2372,7 +2372,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateMap_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},
@@ -2421,7 +2421,7 @@ INTERN DeeTypeObject DefaultIterator_WithEnumerateIndexSeq_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},

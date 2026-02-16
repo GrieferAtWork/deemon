@@ -28,12 +28,12 @@
 #include <deemon/method-hints.h>   /* Dee_tmh_id, type_method_hint */
 #include <deemon/mro.h>            /* DeeObject_TFindPrivateAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo */
 #include <deemon/none-operator.h>  /* _DeeNone_reti0_1, _DeeNone_reti1_1 */
-#include <deemon/object.h>         /* DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_YES, Dee_TYPE, Dee_funptr_t */
+#include <deemon/object.h>         /* DeeObject, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_YES, Dee_TYPE, Dee_funptr_t, OBJECT_HEAD */
 #include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutDefaults, DeeType_GetNativeOperatorWithoutHints, Dee_tno_id */
-#include <deemon/seq.h>            /* DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
+#include <deemon/seq.h>            /* DeeIterator_Type, DeeSeq_Type, DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/set.h>            /* DeeSet_Type */
 #include <deemon/string.h>         /* DeeStringObject */
-#include <deemon/type.h>           /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsHeapType, Dee_type_member, STRUCT_OBJECT_AB */
+#include <deemon/type.h>           /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsHeapType, Dee_TYPE_MEMBER_ISFIELD, Dee_type_member, STRUCT_* */
 #include <deemon/util/atomic.h>    /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __UINTPTR_HALF_TYPE__ */
@@ -131,6 +131,8 @@ struct mh_init_spec {
 #define MH_KIND_GETSET_SET    3 /* Attribute is getset (set). The get/del/set and bound-callbacks are loaded. */
 #define MH_KIND_GETSET_BOUND  4 /* Attribute is getset (bound). The get/del/set and bound-callbacks are loaded. */
 #define MH_KIND_GETSET_TRYGET 5 /* Attribute is getset (tryget). The get/del/set and bound-callbacks are loaded. */
+#define MH_KIND_GETSET_SZ_GET 6 /* Attribute is getset: "size_t (DCALL *)(DeeObject *__restrict self)" */
+#define MH_KIND_GETSET_SZ_SET 7 /* Attribute is getset: "int (DCALL *)(DeeObject *__restrict self, size_t value)" */
 	Dee_funptr_t                                mis_withcache_object;   /* [1..1][valid_if(mis_attr_prim || mis_attr_seco)] default__seq_operator_bool__with_callobjectcache___seq_bool__ */
 	mh_init_select_t                            mis_select;             /* [0..1] Custom fallback resolver function (used when there are no attribute matches) */
 };
@@ -410,6 +412,18 @@ INTERN_TPCONST Dee_funptr_t tpconst mh_unsupported_impls[Dee_TMH_COUNT] = {
 	(Dee_funptr_t)&default__map_pop__unsupported,
 	(Dee_funptr_t)&default__map_pop_with_default__unsupported,
 	(Dee_funptr_t)&default__map_popitem__unsupported,
+	(Dee_funptr_t)&default__iter_nextkey__unsupported,
+	(Dee_funptr_t)&default__iter_nextvalue__unsupported,
+	(Dee_funptr_t)&default__iter_nextpair__unsupported,
+	(Dee_funptr_t)&default__iter_advance__unsupported,
+	(Dee_funptr_t)&default__iter_prev__unsupported,
+	(Dee_funptr_t)&default__iter_revert__unsupported,
+	(Dee_funptr_t)&default__iter_operator_bool__unsupported,
+	(Dee_funptr_t)&default__iter_getindex__unsupported,
+	(Dee_funptr_t)&default__iter_setindex__unsupported,
+	(Dee_funptr_t)&default__iter_rewind__unsupported,
+	(Dee_funptr_t)&default__iter_peek__unsupported,
+	(Dee_funptr_t)&default__iter_getseq__unsupported,
 /*[[[end]]]*/
 	/* clang-format on */
 };
@@ -1745,7 +1759,67 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_map_popitem[2]
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_popitem, NULL, Dee_SEQCLASS_MAP, &default__map_popitem__with_callattr_popitem),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_nextkey[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_nextkey, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_nextkey__with_callattr_nextkey),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_iter_nextkey[2] = {
+	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_nextkey, NULL, Dee_SEQCLASS_UNKNOWN),
+	MH_INIT_SPEC_OPERATOR_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_nextvalue[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_nextvalue, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_nextvalue__with_callattr_nextvalue),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_iter_nextvalue[2] = {
+	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_nextvalue, NULL, Dee_SEQCLASS_UNKNOWN),
+	MH_INIT_SPEC_OPERATOR_END
+};
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_iter_nextpair[2] = {
+	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_nextpair, NULL, Dee_SEQCLASS_UNKNOWN),
+	MH_INIT_SPEC_OPERATOR_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_advance[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_advance, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_advance__with_callattr_advance),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_iter_advance[2] = {
+	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_advance, NULL, Dee_SEQCLASS_UNKNOWN),
+	MH_INIT_SPEC_OPERATOR_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_prev[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_prev, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_prev__with_callattr_prev),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_revert[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_revert, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_revert__with_callattr_revert),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_operator tpconst mh_operators_iter_operator_bool[2] = {
+	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_bool, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN),
+	MH_INIT_SPEC_OPERATOR_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_getindex[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_index, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_getindex__with_callattr_index),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_setindex[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_index, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_setindex__with_callattr_index),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_rewind[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_index, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_rewind__with_callattr_index),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_peek[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_peek, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_peek__with_callattr_peek),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_getseq[2] = {
+	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_seq, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_getseq__with_callattr_seq),
+	MH_INIT_SPEC_SECONDARY_ATTRIB_END
+};
+INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[266] = {
 	MH_INIT_SPEC_INIT(&str___seq_bool__, NULL, NULL, mh_operators_seq_operator_bool, &default__seq_operator_bool__with_callattr___seq_bool__, offsetof(struct Dee_type_mh_cache, mhc___seq_bool__), MH_KIND_METHOD, &default__seq_operator_bool__with_callobjectcache___seq_bool__, &mh_select_seq_operator_bool),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_sizeob, mh_operators_seq_operator_sizeob, &default__seq_operator_sizeob__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_sizeob__with_callobjectcache___seq_size__, &mh_select_seq_operator_sizeob),
 	MH_INIT_SPEC_INIT(&str___seq_size__, NULL, mh_using_seq_operator_size, mh_operators_seq_operator_size, &default__seq_operator_size__with_callattr___seq_size__, offsetof(struct Dee_type_mh_cache, mhc___seq_size__), MH_KIND_METHOD, &default__seq_operator_size__with_callobjectcache___seq_size__, &mh_select_seq_operator_size),
@@ -2000,6 +2074,18 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[254] = {
 	MH_INIT_SPEC_INIT(&str___map_pop__, mh_secondary_map_pop, NULL, NULL, &default__map_pop__with_callattr___map_pop__, offsetof(struct Dee_type_mh_cache, mhc___map_pop__), MH_KIND_METHOD, &default__map_pop__with_callobjectcache___map_pop__, &mh_select_map_pop),
 	MH_INIT_SPEC_INIT(&str___map_pop__, mh_secondary_map_pop_with_default, NULL, NULL, &default__map_pop_with_default__with_callattr___map_pop__, offsetof(struct Dee_type_mh_cache, mhc___map_pop__), MH_KIND_METHOD, &default__map_pop_with_default__with_callobjectcache___map_pop__, &mh_select_map_pop_with_default),
 	MH_INIT_SPEC_INIT(&str___map_popitem__, mh_secondary_map_popitem, NULL, NULL, &default__map_popitem__with_callattr___map_popitem__, offsetof(struct Dee_type_mh_cache, mhc___map_popitem__), MH_KIND_METHOD, &default__map_popitem__with_callobjectcache___map_popitem__, &mh_select_map_popitem),
+	MH_INIT_SPEC_INIT(&str___iter_nextkey__, mh_secondary_iter_nextkey, NULL, mh_operators_iter_nextkey, &default__iter_nextkey__with_callattr___iter_nextkey__, offsetof(struct Dee_type_mh_cache, mhc___iter_nextkey__), MH_KIND_METHOD, &default__iter_nextkey__with_callobjectcache___iter_nextkey__, &mh_select_iter_nextkey),
+	MH_INIT_SPEC_INIT(&str___iter_nextvalue__, mh_secondary_iter_nextvalue, NULL, mh_operators_iter_nextvalue, &default__iter_nextvalue__with_callattr___iter_nextvalue__, offsetof(struct Dee_type_mh_cache, mhc___iter_nextvalue__), MH_KIND_METHOD, &default__iter_nextvalue__with_callobjectcache___iter_nextvalue__, &mh_select_iter_nextvalue),
+	MH_INIT_SPEC_INIT(NULL, NULL, NULL, mh_operators_iter_nextpair, NULL, 0, MH_KIND_METHOD, NULL, NULL),
+	MH_INIT_SPEC_INIT(&str___iter_advance__, mh_secondary_iter_advance, NULL, mh_operators_iter_advance, &default__iter_advance__with_callattr___iter_advance__, offsetof(struct Dee_type_mh_cache, mhc___iter_advance__), MH_KIND_METHOD, &default__iter_advance__with_callobjectcache___iter_advance__, &mh_select_iter_advance),
+	MH_INIT_SPEC_INIT(&str___iter_prev__, mh_secondary_iter_prev, NULL, NULL, &default__iter_prev__with_callattr___iter_prev__, offsetof(struct Dee_type_mh_cache, mhc___iter_prev__), MH_KIND_METHOD, &default__iter_prev__with_callobjectcache___iter_prev__, &mh_select_iter_prev),
+	MH_INIT_SPEC_INIT(&str___iter_revert__, mh_secondary_iter_revert, NULL, NULL, &default__iter_revert__with_callattr___iter_revert__, offsetof(struct Dee_type_mh_cache, mhc___iter_revert__), MH_KIND_METHOD, &default__iter_revert__with_callobjectcache___iter_revert__, &mh_select_iter_revert),
+	MH_INIT_SPEC_INIT(&str___iter_bool__, NULL, NULL, mh_operators_iter_operator_bool, &default__iter_operator_bool__with_callattr___iter_bool__, offsetof(struct Dee_type_mh_cache, mhc___iter_bool__), MH_KIND_METHOD, &default__iter_operator_bool__with_callobjectcache___iter_bool__, &mh_select_iter_operator_bool),
+	MH_INIT_SPEC_INIT(&str___iter_index__, mh_secondary_iter_getindex, NULL, NULL, &default__iter_getindex__with_callattr___iter_index__, offsetof(struct Dee_type_mh_cache, mhc_get___iter_index__), MH_KIND_GETSET_SZ_GET, &default__iter_getindex__with_callobjectcache___iter_index__, &mh_select_iter_getindex),
+	MH_INIT_SPEC_INIT(&str___iter_index__, mh_secondary_iter_setindex, NULL, NULL, &default__iter_setindex__with_callattr___iter_index__, offsetof(struct Dee_type_mh_cache, mhc_set___iter_index__), MH_KIND_GETSET_SZ_SET, &default__iter_setindex__with_callobjectcache___iter_index__, &mh_select_iter_setindex),
+	MH_INIT_SPEC_INIT(&str___iter_index__, mh_secondary_iter_rewind, NULL, NULL, &default__iter_rewind__with_callattr___iter_index__, offsetof(struct Dee_type_mh_cache, mhc_del___iter_index__), MH_KIND_GETSET_DEL, &default__iter_rewind__with_callobjectcache___iter_index__, &mh_select_iter_rewind),
+	MH_INIT_SPEC_INIT(&str___iter_peek__, mh_secondary_iter_peek, NULL, NULL, &default__iter_peek__with_callattr___iter_peek__, offsetof(struct Dee_type_mh_cache, mhc___iter_peek__), MH_KIND_METHOD, &default__iter_peek__with_callobjectcache___iter_peek__, &mh_select_iter_peek),
+	MH_INIT_SPEC_INIT(&str___iter_seq__, mh_secondary_iter_getseq, NULL, NULL, &default__iter_getseq__with_callattr___iter_seq__, offsetof(struct Dee_type_mh_cache, mhc_get___iter_seq__), MH_KIND_GETSET_GET, &default__iter_getseq__with_callobjectcache___iter_seq__, NULL),
 };
 /*[[[end]]]*/
 /* clang-format on */
@@ -2181,6 +2267,46 @@ PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool
 #define SEARCH_IN_TYPE_FOR_ATTRIBUTES
 #endif
 
+typedef struct {
+	OBJECT_HEAD
+	size_t gso_size1;
+	size_t gso_size2;
+	size_t gso_size3;
+} GenericSizeObject;
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+GenericSizeObject_GetSize1(GenericSizeObject *__restrict self) {
+	return atomic_read(&self->gso_size1);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+GenericSizeObject_SetSize1(GenericSizeObject *__restrict self, size_t value) {
+	atomic_write(&self->gso_size1, value);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+GenericSizeObject_GetSize2(GenericSizeObject *__restrict self) {
+	return atomic_read(&self->gso_size2);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+GenericSizeObject_SetSize2(GenericSizeObject *__restrict self, size_t value) {
+	atomic_write(&self->gso_size2, value);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+GenericSizeObject_GetSize3(GenericSizeObject *__restrict self) {
+	return atomic_read(&self->gso_size3);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+GenericSizeObject_SetSize3(GenericSizeObject *__restrict self, size_t value) {
+	atomic_write(&self->gso_size3, value);
+	return 0;
+}
+
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2, 3, 4)) Dee_funptr_t DCALL
 mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict info,
@@ -2340,31 +2466,110 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 		struct Dee_type_member const *member;
 		member = info->ai_value.v_member;
 		switch (specs->mis_attr_kind) {
+
 		case MH_KIND_GETSET_GET:
 		case MH_KIND_GETSET_TRYGET:
 			/* Optimize some known member getters */
-			switch (member->m_desc.md_field.mdf_type) {
-			case STRUCT_OBJECT_AB:
-				switch (member->m_desc.md_field.mdf_offset) {
-				case offsetof(ProxyObject3, po_obj1):
-					return (Dee_funptr_t)&generic_proxy3__getobj1;
-				case offsetof(ProxyObject3, po_obj2):
-					return (Dee_funptr_t)&generic_proxy3__getobj2;
-				case offsetof(ProxyObject3, po_obj3):
-					return (Dee_funptr_t)&generic_proxy3__getobj3;
+			if (Dee_TYPE_MEMBER_ISFIELD(member)) {
+				switch (member->m_desc.md_field.mdf_type) {
+				case STRUCT_OBJECT_AB:
+					switch (member->m_desc.md_field.mdf_offset) {
+					case offsetof(ProxyObject3, po_obj1):
+						return (Dee_funptr_t)&generic_proxy3__getobj1;
+					case offsetof(ProxyObject3, po_obj2):
+						return (Dee_funptr_t)&generic_proxy3__getobj2;
+					case offsetof(ProxyObject3, po_obj3):
+						return (Dee_funptr_t)&generic_proxy3__getobj3;
+					default: break;
+					}
+					break;
 				default: break;
 				}
-				break;
-			default: break;
 			}
 			break;
+
+		case MH_KIND_GETSET_SZ_GET:
+			/* Optimize some known member getters */
+			if (Dee_TYPE_MEMBER_ISFIELD(member)) {
+				switch (member->m_desc.md_field.mdf_type) {
+				case STRUCT_SIZE_T:
+				case STRUCT_SIZE_T | STRUCT_CONST:
+				case STRUCT_SIZE_T | STRUCT_ATOMIC:
+				case STRUCT_SIZE_T | STRUCT_ATOMIC | STRUCT_CONST:
+					switch (member->m_desc.md_field.mdf_offset) {
+					case offsetof(GenericSizeObject, gso_size1):
+						return (Dee_funptr_t)&GenericSizeObject_GetSize1;
+					case offsetof(GenericSizeObject, gso_size2):
+						return (Dee_funptr_t)&GenericSizeObject_GetSize2;
+					case offsetof(GenericSizeObject, gso_size3):
+						return (Dee_funptr_t)&GenericSizeObject_GetSize3;
+					default: break;
+					}
+					break;
+				default: break;
+				}
+			}
+			break;
+
+		case MH_KIND_GETSET_SZ_SET:
+			if (Dee_TYPE_MEMBER_ISFIELD(member)) {
+				switch (member->m_desc.md_field.mdf_type) {
+				case STRUCT_SIZE_T:
+				case STRUCT_SIZE_T | STRUCT_ATOMIC:
+					switch (member->m_desc.md_field.mdf_offset) {
+					case offsetof(GenericSizeObject, gso_size1):
+						return (Dee_funptr_t)&GenericSizeObject_SetSize1;
+					case offsetof(GenericSizeObject, gso_size2):
+						return (Dee_funptr_t)&GenericSizeObject_SetSize2;
+					case offsetof(GenericSizeObject, gso_size3):
+						return (Dee_funptr_t)&GenericSizeObject_SetSize3;
+					default: break;
+					}
+					break;
+				default: break;
+				}
+			}
+			break;
+
 		case MH_KIND_GETSET_BOUND:
-			if (member->m_desc.md_field.mdf_type == STRUCT_OBJECT_AB) {
+			if (Dee_TYPE_MEMBER_ISFIELD(member)) {
+				switch (member->m_desc.md_field.mdf_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) {
+				case STRUCT_NONE:
+				case STRUCT_OBJECT_AB & ~(STRUCT_CONST | STRUCT_ATOMIC):
+				case STRUCT_STRING & ~(STRUCT_CONST | STRUCT_ATOMIC):
+				case STRUCT_CHAR:
+				case STRUCT_BOOL8:
+				case STRUCT_BOOL16:
+				case STRUCT_BOOL32:
+				case STRUCT_BOOL64:
+				case STRUCT_BOOLBIT0:
+				case STRUCT_BOOLBIT1:
+				case STRUCT_BOOLBIT2:
+				case STRUCT_BOOLBIT3:
+				case STRUCT_BOOLBIT4:
+				case STRUCT_BOOLBIT5:
+				case STRUCT_BOOLBIT6:
+				case STRUCT_BOOLBIT7:
+				case STRUCT_FLOAT:
+				case STRUCT_DOUBLE:
+				case STRUCT_LDOUBLE:
+				case STRUCT_INT8:
+				case STRUCT_INT16:
+				case STRUCT_INT32:
+				case STRUCT_INT64:
+				case STRUCT_INT128:
+				case STRUCT_UNSIGNED | STRUCT_INT8:
+				case STRUCT_UNSIGNED | STRUCT_INT16:
+				case STRUCT_UNSIGNED | STRUCT_INT32:
+				case STRUCT_UNSIGNED | STRUCT_INT64:
+				case STRUCT_UNSIGNED | STRUCT_INT128:
 #if Dee_BOUND_YES == 1
-				return (Dee_funptr_t)&_DeeNone_reti1_1;
+					return (Dee_funptr_t)&_DeeNone_reti1_1;
 #elif Dee_BOUND_YES == 0
-				return (Dee_funptr_t)&_DeeNone_reti0_1;
+					return (Dee_funptr_t)&_DeeNone_reti0_1;
 #endif /* ... */
+				default: break;
+				}
 			}
 			break;
 		default: break;
@@ -2474,6 +2679,47 @@ INTERN_TPCONST DeeTypeObject const *tpconst _Dee_SEQCLASS_BASES[] = {
 	&DeeMapping_Type,
 };
 
+PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
+(DCALL gpmhnd_extra__iter_rewind)(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	/* Special case for "iter_rewind": In addition to "del index"
+	 * and "del __iter_index__", this method hint can also be
+	 * implemented via methods: "rewind()" and "__iter_rewind__()" */
+	struct Dee_attrinfo info;
+#if 1 /* This is all that's actually needed */
+	PRIVATE struct mh_init_spec tpconst extra_spec =
+	MH_INIT_SPEC_INIT(NULL, NULL, NULL, NULL,
+	                  &default__iter_rewind__with_callattr___iter_index__,
+	                  offsetof(struct Dee_type_mh_cache, mhc_del___iter_index__),
+	                  MH_KIND_METHOD,
+	                  &default__iter_rewind__with_callobjectcache___iter_index__, NULL);
+#else
+	PRIVATE struct mh_init_spec_secondary_attrib tpconst extra_secondary[2] = {
+		MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_rewind, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN,
+		                                   &default__iter_rewind__with_callattr_rewind),
+		MH_INIT_SPEC_SECONDARY_ATTRIB_END
+	};
+	PRIVATE struct mh_init_spec tpconst extra_spec =
+	MH_INIT_SPEC_INIT(&str___iter_rewind__, extra_secondary, NULL, NULL,
+	                  &default__iter_rewind__with_callattr___iter_index__,
+	                  offsetof(struct Dee_type_mh_cache, mhc_del___iter_index__),
+	                  MH_KIND_METHOD,
+	                  &default__iter_rewind__with_callobjectcache___iter_index__,
+	                  &mh_select_iter_rewind);
+#endif
+	if (findattr_for_method_hint(self, Dee_AsObject(&str___iter_rewind__), &info)) {
+		return mh_init_from_attribute(orig_type, &info, &extra_spec,
+		                              (Dee_funptr_t)&default__iter_rewind__with_callattr___iter_rewind__,
+		                              Dee_TMH_iter_rewind);
+	} else if (DeeType_Implements(self, &DeeIterator_Type) &&
+	           findattr_for_method_hint(self, Dee_AsObject(&str_rewind), &info)) {
+		return mh_init_from_attribute(orig_type, &info, &extra_spec,
+		                              (Dee_funptr_t)&default__iter_rewind__with_callattr_rewind,
+		                              Dee_TMH_iter_rewind);
+	}
+	return NULL;
+}
+
+
 /* Same as `DeeType_GetPrivateMethodHint', but only check for attributes
  * without doing any additional default substitutions.
  *
@@ -2488,7 +2734,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 
 	/* Check if the type "self" implements attributes that can be used to implement the method hint. */
 	if (specs->mis_attr_prim &&
-	    findattr_for_method_hint(self, (DeeObject *)specs->mis_attr_prim, &info)) {
+	    findattr_for_method_hint(self, Dee_AsObject(specs->mis_attr_prim), &info)) {
 		Dee_funptr_t result;
 		result = mh_init_from_attribute(orig_type, &info, specs, specs->mis_withattr_prim, id);
 		if (result)
@@ -2507,12 +2753,25 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
 				if (DeeType_IsSeqClassBase(self, iter->missa_seqclass))
 					continue; /* Don't inherit from the abstract origin */
 			}
-			if (findattr_for_method_hint(self, (DeeObject *)iter->missa_attrib, &info)) {
+			if (findattr_for_method_hint(self, Dee_AsObject(iter->missa_attrib), &info)) {
 				Dee_funptr_t result;
 				result = mh_init_from_attribute(orig_type, &info, specs, iter->missa_withattr, id);
 				if (result)
 					return result;
 			}
+		}
+		switch (id) {
+
+		case Dee_TMH_iter_rewind: {
+			/* Special case for "iter_rewind": In addition to "del index"
+			 * and "del __iter_index__", this method hint can also be
+			 * implemented via methods: "rewind()" and "__iter_rewind__()" */
+			Dee_funptr_t result = gpmhnd_extra__iter_rewind(self, orig_type);
+			if (result)
+				return result;
+		}	break;
+
+		default: break;
 		}
 	} else if (!specs->mis_attr_prim) {
 		/* Anonymous method hint -> check if explicitly defined. */
@@ -2879,6 +3138,18 @@ INTERN struct Dee_type_mh_cache mh_cache_empty = {
 	/* .mh_map_pop                                 = */ &default__map_pop__empty,
 	/* .mh_map_pop_with_default                    = */ &default__map_pop_with_default__empty,
 	/* .mh_map_popitem                             = */ &default__map_popitem__empty,
+	/* .mh_iter_nextkey                            = */ &default__iter_nextkey__empty,
+	/* .mh_iter_nextvalue                          = */ &default__iter_nextvalue__empty,
+	/* .mh_iter_nextpair                           = */ &default__iter_nextpair__empty,
+	/* .mh_iter_advance                            = */ &default__iter_advance__empty,
+	/* .mh_iter_prev                               = */ &default__iter_prev__empty,
+	/* .mh_iter_revert                             = */ &default__iter_revert__empty,
+	/* .mh_iter_operator_bool                      = */ &default__iter_operator_bool__empty,
+	/* .mh_iter_getindex                           = */ &default__iter_getindex__empty,
+	/* .mh_iter_setindex                           = */ &default__iter_setindex__empty,
+	/* .mh_iter_rewind                             = */ &default__iter_rewind__empty,
+	/* .mh_iter_peek                               = */ &default__iter_peek__empty,
+	/* .mh_iter_getseq                             = */ &default__iter_getseq__empty,
 /*[[[end]]]*/
 	/* clang-format on */
 };

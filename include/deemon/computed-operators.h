@@ -107,7 +107,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_object_eq(DeeObject
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_object_ne(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_object_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_add(DeeObject *lhs, DeeObject *rhs);
-INTDEF WUNUSED NONNULL((1)) int DCALL iterator_bool(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL iterator_compare(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1)) int DCALL iterator_dec(DREF DeeObject **__restrict p_self);
 INTDEF WUNUSED NONNULL((1)) int DCALL iterator_inc(DREF DeeObject **__restrict p_self);

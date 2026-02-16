@@ -185,8 +185,8 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		SubTable("tp_cmp", "type_cmp"),
 		SubTable("tp_seq", "type_seq"),
 		NativeOperator("tp_iter_next"),
-		SubTable("tp_iterator", "type_iterator"),
-		Field("tp_attr"), // SubTable("tp_attr", "type_attr"),
+		SubTable("tp_iterator", "type_iterator"), // Field("tp_iterator"),
+		Field("tp_attr"),                         // SubTable("tp_attr", "type_attr"),
 		SubTable("tp_with", "type_with"),
 		Field("tp_buffer"),
 		Field("tp_methods"),
@@ -1030,12 +1030,19 @@ final class StructInitializer {
 						r"(Dee_)?TYPE_METHOD_HINT(_F)?\s*\(\s*(\w+)\s*,").each.last);
 				tpMethods = Sequence.cached(tpMethods.reglocateall(
 						r"(Dee_)?TYPE_METHOD_HINTREF(_DOC)?\s*\(\s*(\w+)\s*[),]").each.last);
-				tpGetsets = Sequence.map(
+				local tpGetsetsNames = Sequence.cached(
 					tpGetsets.reglocateall(
-							r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*(STR_[a-zA-Z0-9_]+|"[^"]*")'
-					).each.last,
-					e -> e.startswith('"') ? e.decode("c-escape") : e.lsstrip("STR_")
-				).cached;
+							r"(Dee_)?TYPE_GETSET_HINTREF(_DOC)?\s*\(\s*(\w+)\s*[),]"
+					).each.last
+				);
+				tpGetsets = Sequence.cached(
+					Sequence.map(
+						tpGetsets.reglocateall(
+								r'(Dee_)?TYPE_GET[A-Z_]+\s*\(\s*(STR_[a-zA-Z0-9_]+|"[^"]*")'
+						).each.last,
+						e -> e.startswith('"') ? e.decode("c-escape") : e.lsstrip("STR_")
+					)
+				);
 
 				for (local hint: tpMethodHints) {
 					if (hint in mh.ANONYMOUS_METHOD_HINTS)
@@ -1054,15 +1061,20 @@ final class StructInitializer {
 						if (!hasTpGetsets)
 							continue; /* Ignore... */
 						local requiredAttributes = methodHint.allAttributes.cached;
+						local requiredNames = methodHint.allNames.cached;
 						if (!((
 							for (local x: requiredAttributes)
 								x in tpGetsets
+						) || ...) && !((
+							for (local x: requiredNames)
+								x in tpGetsetsNames
 						) || ...)) {
 							withDefaultStdout(() -> {
 								print("WARNING: ", structTyp, " ", symbolName,
 										": 'tp_method_hints' defines '", hint, "', but "
 										"'tp_getsets' does NOT contain one of ",
-										repr requiredAttributes, " ", repr tpGetsets);
+										repr requiredAttributes, " ", repr tpGetsets, " ",
+										repr requiredNames, " ", repr tpGetsetsNames);
 							});
 						}
 						continue;

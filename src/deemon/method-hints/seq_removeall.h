@@ -43,7 +43,6 @@ __seq_removeall__.seq_removeall([[nonnull]] DeeObject *self,
                                 [[nonnull]] DeeObject *item,
                                 size_t start, size_t end, size_t max)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_removeif = {
 	/* >> return self.removeif(x -> deemon.equals(item, x), start, end, max); */
@@ -174,7 +173,6 @@ __seq_removeall__.seq_removeall_with_key([[nonnull]] DeeObject *self,
                                          size_t start, size_t end, size_t max,
                                          [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_removeif = {
 #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM

@@ -1769,8 +1769,11 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObjec
  * In the case of mapping iterators, these can be used to iterate only the
  * key/value part of the map, without needing to construct a temporary tuple
  * holding both values (as needs to be done by `DeeObject_IterNext'). */
+/*!DEPRECATED -- use DeeObject_InvokeMethodHint(iter_nextpair)*/
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_IterNextPair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
+/*!DEPRECATED -- use DeeObject_InvokeMethodHint(iter_nextkey)*/
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNextKey)(DeeObject *__restrict self);
+/*!DEPRECATED -- use DeeObject_InvokeMethodHint(iter_nextvalue)*/
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNextValue)(DeeObject *__restrict self);
 
 /* Advance an iterator by "step" items.
@@ -1779,6 +1782,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNextValue)(Dee
  *                      was encountered. Return value is the # of successfully skipped
  *                      entries before "ITER_DONE" was encountered.
  * @return: (size_t)-1: Error. */
+/*!DEPRECATED -- use DeeObject_InvokeMethodHint(iter_advance)*/
 DFUNDEF WUNUSED NONNULL((1)) size_t (DCALL DeeObject_IterAdvance)(DeeObject *__restrict self, size_t step);
 
 /* Invoke `proc' for each element of a general-purpose sequence.

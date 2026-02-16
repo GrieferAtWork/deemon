@@ -19,22 +19,20 @@
  */
 
 /************************************************************************/
-/* deemon.Object.operator :=()                                          */
+/* deemon.Iterator.seq                                                  */
 /************************************************************************/
 
-operator {
+[[getset]]
+[[alias(Iterator.seq)]]
+__iter_seq__->?DSequence;
 
-[[export("DeeObject_{|T}Assign")]]
-[[wunused]] int
-tp_init.tp_assign([[nonnull]] DeeObject *self,
-                  [[nonnull]] DeeObject *value)
-%{class using OPERATOR_ASSIGN: {
-	DREF DeeObject *result;
-	store_DeeClass_CallOperator_1Arg(err, result, THIS_TYPE, self, OPERATOR_ASSIGN, value);
-	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
-	return 0;
-err:
-	return -1;
-}} = OPERATOR_ASSIGN;
 
-} /* operator */
+/* Return the iterator's sequence */
+[[wunused, getset_member("get")]] DREF DeeObject *
+__iter_seq__.iter_getseq([[nonnull]] DeeObject *__restrict self)
+%{unsupported(err_iter_unsupportedf(self, "seq"))}
+%{$none = return_none}
+%{$empty = DeeSeq_NewEmpty()}
+{
+	return LOCAL_GETATTR(self);
+}

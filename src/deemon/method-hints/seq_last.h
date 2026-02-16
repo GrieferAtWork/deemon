@@ -203,7 +203,6 @@ err:
 [[wunused, getset_member("del")]] int
 __seq_last__.seq_dellast([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del last"); })}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_size__and__seq_operator_delitem_index = {
 	size_t size = CALL_DEPENDENCY(seq_operator_size, self);

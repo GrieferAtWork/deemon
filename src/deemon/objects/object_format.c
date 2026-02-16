@@ -22,13 +22,15 @@
 
 #include <deemon/api.h>
 
+#include <deemon/class.h>    /* DeeClass_DESC, DeeInstance_DESC, DeeInstance_GetAttribute, Dee_class_attribute, Dee_class_desc */
 #include <deemon/error-rt.h> /* DeeRT_ErrIntegerOverflowUAdd, DeeRT_ErrIntegerOverflowUMul */
 #include <deemon/error.h>    /* DeeError_* */
 #include <deemon/format.h>   /* DeeFormat_RepeatUtf8 */
-#include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE */
+#include <deemon/mro.h>      /* DeeType_Get*Attr*, DeeType_QueryAttributeHash */
+#include <deemon/object.h>   /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 #include <deemon/string.h>   /* DeeString*, DeeUni_AsDigit, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/super.h>    /* DeeSuper* */
-#include <deemon/type.h>     /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next */
+#include <deemon/type.h>     /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_Check, DeeType_IsClass */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_UMUL */
 
@@ -39,8 +41,39 @@
 
 DECL_BEGIN
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name);
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) {
+	DREF DeeObject *result;
+	Dee_hash_t hash;
+	ASSERT_OBJECT(tp_self);
+	ASSERT_OBJECT(self);
+	ASSERT(DeeType_Check(tp_self));
+	ASSERT(DeeObject_InstanceOf(self, tp_self));
+	hash = DeeString_Hash(name);
+	/* TODO: Search the type's instance-attribute cache and check
+	 *       if the attribute is implemented by the type itself. */
+	if (DeeType_IsClass(tp_self)) {
+		struct Dee_class_attribute *member;
+		if ((member = DeeType_QueryAttributeHash(tp_self, tp_self, name, hash)) != NULL) {
+			struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+			return DeeInstance_GetAttribute(desc, DeeInstance_DESC(desc, self), self, member);
+		}
+		result = ITER_DONE;
+	} else {
+		result = ITER_DONE;
+		if (tp_self->tp_methods &&
+		    (result = DeeType_GetMethodAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+		if (tp_self->tp_getsets &&
+		    (result = DeeType_GetGetSetAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+		if (tp_self->tp_members &&
+		    (result = DeeType_GetMemberAttrStringHash(tp_self, tp_self, self, DeeString_STR(name), hash)) != ITER_DONE)
+			goto done;
+	}
+done:
+	return result;
+}
 
 INTERN WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
 object_format_generic(DeeObject *__restrict self,

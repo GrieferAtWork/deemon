@@ -27,19 +27,18 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>             /* DeeFormat_PrintOperatorRepr, DeeFormat_Printf, PRFuSIZ */
-#include <deemon/method-hints.h>       /* DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_setitem_index_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/method-hints.h>       /* DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_setitem_index_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/mro.h>                /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attriter_initempty, Dee_attrspec */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSomeObject, DeeSeq_*, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSomeObject, DeeSeq_* */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
-#include "../seq_functions.h"
 #include "each.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -3984,69 +3983,36 @@ STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj
 STATIC_ASSERT(offsetof(SeqEachIterator, ei_each) == offsetof(ProxyObject2, po_obj2));
 #define sewi_nii_getseq generic_proxy2__getobj2
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-sewi_nii_getindex(SeqEachIterator *__restrict self) {
-	return DeeIterator_GetIndex(self->ei_iter);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seoi_next(SeqEachIterator *__restrict self) {
+	DREF DeeObject *result = DeeObject_IterNext(self->ei_iter);
+	if likely(ITER_ISOK(result))
+		result = seo_transform_inherit((SeqEachOperator *)self->ei_each, result);
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_nii_setindex(SeqEachIterator *__restrict self, size_t index) {
-	return DeeIterator_SetIndex(self->ei_iter, index);
-}
+STATIC_ASSERT(offsetof(SeqEachIterator, ei_iter) == offsetof(ProxyObject, po_obj));
+#define sewi_mh_iter_getindex generic_proxy__iter_getindex
+#define sewi_mh_iter_setindex generic_proxy__iter_setindex
+#define sewi_mh_iter_rewind   generic_proxy__iter_rewind
+#define sewi_mh_iter_advance  generic_proxy__iter_advance
+#define sewi_mh_iter_revert   generic_proxy__iter_revert
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_nii_rewind(SeqEachIterator *__restrict self) {
-	return DeeIterator_Rewind(self->ei_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_nii_revert(SeqEachIterator *__restrict self, size_t skip) {
-	return DeeIterator_Revert(self->ei_iter, skip);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_nii_advance(SeqEachIterator *__restrict self, size_t skip) {
-	return DeeIterator_Advance(self->ei_iter, skip);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_nii_prev(SeqEachIterator *__restrict self) {
-	return DeeIterator_Prev(self->ei_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_nii_next(SeqEachIterator *__restrict self) {
-	return DeeIterator_Next(self->ei_iter);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-sewi_nii_hasprev(SeqEachIterator *__restrict self) {
-	return DeeIterator_HasPrev(self->ei_iter);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sewi_mh_iter_peek(SeqEachIterator *__restrict self) {
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(iter_peek, self->ei_iter);
+	if likely(ITER_ISOK(result))
+		result = seo_transform_inherit((SeqEachOperator *)self->ei_each, result);
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sewi_nii_peek(SeqEachIterator *__restrict self) {
-	return DeeIterator_Peek(self->ei_iter);
+sewi_mh_iter_prev(SeqEachIterator *__restrict self) {
+	DREF DeeObject *result = DeeObject_InvokeMethodHint(iter_prev, self->ei_iter);
+	if likely(ITER_ISOK(result))
+		result = seo_transform_inherit((SeqEachOperator *)self->ei_each, result);
+	return result;
 }
-
-PRIVATE struct type_nii tpconst sewi_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&sewi_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&sewi_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&sewi_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&sewi_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)&sewi_nii_revert,
-			/* .nii_advance  = */ (Dee_funptr_t)&sewi_nii_advance,
-			/* .nii_prev     = */ (Dee_funptr_t)&sewi_nii_prev,
-			/* .nii_next     = */ (Dee_funptr_t)&sewi_nii_next,
-			/* .nii_hasprev  = */ (Dee_funptr_t)&sewi_nii_hasprev,
-			/* .nii_peek     = */ (Dee_funptr_t)&sewi_nii_peek
-		}
-	}
-};
 
 PRIVATE struct type_cmp sewi_cmp = {
 	/* .tp_hash          = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
@@ -4059,7 +4025,30 @@ PRIVATE struct type_cmp sewi_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &sewi_nii,
+};
+
+PRIVATE struct type_getset tpconst seoi_getsets[] = {
+	TYPE_GETSET_HINTREF(Iterator_index),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method tpconst seoi_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_HINTREF(Iterator_prev),
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_HINTREF(Iterator_revert),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst seoi_method_hints[] = {
+	TYPE_METHOD_HINT_F(iter_peek, &sewi_mh_iter_peek, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(iter_prev, &sewi_mh_iter_prev, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(iter_getindex, &sewi_mh_iter_getindex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(iter_setindex, &sewi_mh_iter_setindex, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(iter_rewind, &sewi_mh_iter_rewind, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(iter_advance, &sewi_mh_iter_advance, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_F(iter_revert, &sewi_mh_iter_revert, METHOD_FNOREFESCAPE),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst seoi_members[] = {
@@ -4067,15 +4056,6 @@ PRIVATE struct type_member tpconst seoi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT_AB, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seoi_next(SeqEachIterator *__restrict self) {
-	DREF DeeObject *result;
-	result = DeeObject_IterNext(self->ei_iter);
-	if likely(ITER_ISOK(result))
-		result = seo_transform_inherit((SeqEachOperator *)self->ei_each, result);
-	return result;
-}
 
 INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -4115,13 +4095,13 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_methods       = */ seoi_methods,
+	/* .tp_getsets       = */ seoi_getsets,
 	/* .tp_members       = */ seoi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ seoi_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

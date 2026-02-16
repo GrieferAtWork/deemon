@@ -83,7 +83,6 @@ __set_first__.set_boundfirst([[nonnull]] DeeObject *__restrict self)
 [[wunused, getset_member("del")]] int
 __set_first__.set_delfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del first"); })}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_delitem_index = "default__seq_delfirst__with__seq_operator_delitem_index"}
 %{$with__seq_operator_size__and__seq_operator_bounditem_index__seq_operator_delitem_index = {

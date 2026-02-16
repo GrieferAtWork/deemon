@@ -94,7 +94,6 @@ err:
 __seq_sort__.seq_sort([[nonnull]] DeeObject *self,
                       size_t start, size_t end)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_sorted__and__seq_operator_setrange_index = {
 	DREF DeeObject *sorted = CALL_DEPENDENCY(seq_sorted, self, start, end);
@@ -128,7 +127,6 @@ __seq_sort__.seq_sort_with_key([[nonnull]] DeeObject *self,
                                size_t start, size_t end,
                                [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_sorted_with_key__and__seq_operator_setrange_index = {
 	DREF DeeObject *sorted = CALL_DEPENDENCY(seq_sorted_with_key, self, start, end, key);

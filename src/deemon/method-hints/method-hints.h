@@ -261,13 +261,16 @@
 /* For `deemon.Iterator'                                                */
 /************************************************************************/
 /* TODO: Use this stuff to replace "struct type_nii" */
-/* TODO: __iter_index__ */
-/* TODO: __iter_peek__ */
-/* TODO: __iter_prev__ */
-/* TODO: __iter_rewind__ */
-/* TODO: __iter_revert__ */
+%[include("iter_next.h")]               /* "*iter++" */
+%[include("iter_advance.h")]            /* "iter += step" */
+%[include("iter_prev.h")]               /* "*--iter" */
+%[include("iter_revert.h")]             /* "iter -= step" */
+%[include("iter_operator_bool.h")]      /* "*iter != ITER_DONE" */
+%[include("iter_index.h")]              /* "iter = BASE + index" */
+%[include("iter_peek.h")]               /* "*iter" */
+/* TODO: operator ==|!=|<|<=|>|>= */
 /* TODO: __iter_future__ */
-/* TODO: __iter_seq__ */
+%[include("iter_seq.h")]
 /* TODO: __iter_hasprev__ */
 
 

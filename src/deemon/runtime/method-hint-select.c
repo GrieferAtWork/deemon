@@ -27,6 +27,7 @@
 #include <deemon/object.h>         /* DeeTypeObject */
 #include <deemon/operator-hints.h> /* DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>            /* DeeType_GetSeqClass, Dee_SEQCLASS_* */
+#include <deemon/type.h>           /* DeeType_IsCopyable */
 
 #include "method-hint-defaults.h"
 #include "method-hint-select.h"
@@ -4452,6 +4453,139 @@ mh_select_map_popitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	}
 	if ((DeeMH_seq_pop_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_pop))
 		return &default__map_popitem__with__seq_pop;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_nextkey_t DCALL
+mh_select_iter_nextkey(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	if ((DeeMH_iter_nextpair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextpair))
+		return &default__iter_nextkey__with__iter_nextpair;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_nextvalue_t DCALL
+mh_select_iter_nextvalue(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	if ((DeeMH_iter_nextpair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextpair))
+		return &default__iter_nextvalue__with__iter_nextpair;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_advance_t DCALL
+mh_select_iter_advance(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	if ((DeeMH_iter_nextkey_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextkey))
+		return &default__iter_advance__with__iter_nextkey;
+	if ((DeeMH_iter_nextvalue_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextvalue))
+		return &default__iter_advance__with__iter_nextvalue;
+	if ((DeeMH_iter_nextpair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextpair))
+		return &default__iter_advance__with__iter_nextpair;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_prev_t DCALL
+mh_select_iter_prev(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_iter_peek_t iter_peek = (DeeMH_iter_peek_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_peek);
+	if (iter_peek == &default__iter_peek__empty)
+		return &default__iter_prev__empty;
+	if (iter_peek == &default__iter_peek__with__operator_next__and__iter_revert)
+		return &default__iter_prev__with__iter_revert__and__iter_peek;
+	if (iter_peek == &default__iter_peek__with__iter_getindex__and_operator_next__and__iter_setindex)
+		return &default__iter_prev__with__iter_getindex__and_operator_next__and__iter_setindex;
+	if (iter_peek) {
+		DeeMH_iter_revert_t iter_revert = (DeeMH_iter_revert_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_revert);
+		if (iter_revert == &default__iter_revert__empty)
+			return &default__iter_prev__empty;
+		if (iter_revert == &default__iter_revert__with__iter_getindex__and__iter_setindex)
+			return &default__iter_prev__with__iter_getindex__and_operator_next__and__iter_setindex;
+		return &default__iter_prev__with__iter_revert__and__iter_peek;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_revert_t DCALL
+mh_select_iter_revert(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	if ((DeeMH_iter_prev_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_prev))
+		return &default__iter_revert__with__iter_prev;
+	if ((DeeMH_iter_getindex_t)DeeType_GetMethodHint(orig_type, Dee_TMH_iter_getindex) != &default__iter_getindex__unsupported) {
+		DeeMH_iter_setindex_t iter_setindex = (DeeMH_iter_setindex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_setindex);
+		if (iter_setindex == &default__iter_setindex__empty)
+			return &default__iter_revert__empty;
+		if (iter_setindex)
+			return &default__iter_revert__with__iter_getindex__and__iter_setindex;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_operator_bool_t DCALL
+mh_select_iter_operator_bool(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_iter_peek_t iter_peek = (DeeMH_iter_peek_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_peek);
+	if (iter_peek == &default__iter_peek__empty)
+		return &default__iter_operator_bool__empty;
+	if (iter_peek)
+		return &default__iter_operator_bool__with__iter_peek;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_getindex_t DCALL
+mh_select_iter_getindex(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_iter_getseq_t iter_getseq = (DeeMH_iter_getseq_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_getseq);
+	if (iter_getseq == &default__iter_getseq__empty)
+		return &default__iter_getindex__empty;
+	if (iter_getseq) {
+		if (DeeType_RequireSupportedNativeOperator(self, compare_eq)) /* TODO: REQUIRE_NODEFAULT(iter_operator_compare_eq) */
+			return &default__iter_getindex__with__iter_getseq__and__iter_operator_compare_eq;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_setindex_t DCALL
+mh_select_iter_setindex(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_iter_getseq_t iter_getseq = (DeeMH_iter_getseq_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_getseq);
+	if (iter_getseq == &default__iter_getseq__empty)
+		return &default__iter_setindex__empty;
+	if (iter_getseq) {
+		if (DeeType_RequireSupportedNativeOperator(self, assign)) /* TODO: REQUIRE_NODEFAULT(iter_operator_assign) */
+			return &default__iter_setindex__with__iter_getseq__and__iter_operator_assign;
+	}
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_rewind_t DCALL
+mh_select_iter_rewind(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	DeeMH_iter_setindex_t iter_setindex = (DeeMH_iter_setindex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_setindex);
+	if (iter_setindex == &default__iter_setindex__empty)
+		return &default__iter_rewind__empty;
+	if (iter_setindex == &default__iter_setindex__with__iter_getseq__and__iter_operator_assign)
+		return &default__iter_rewind__with__iter_getseq__and__iter_operator_assign;
+	if (iter_setindex)
+		return &default__iter_rewind__with__iter_setindex;
+	return NULL;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_peek_t DCALL
+mh_select_iter_peek(DeeTypeObject *self, DeeTypeObject *orig_type) {
+	if (DeeType_RequireSupportedNativeOperator(self, iter_next)) {
+		DeeMH_iter_getindex_t iter_getindex;
+		if ((DeeMH_iter_revert_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_revert))
+			return &default__iter_peek__with__operator_next__and__iter_revert;
+		if ((iter_getindex = (DeeMH_iter_getindex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_getindex)) != NULL) {
+			if (iter_getindex == &default__iter_getindex__empty)
+				return &default__iter_peek__empty;
+			if (iter_getindex == &default__iter_getindex__with__iter_getseq__and__iter_operator_compare_eq &&
+			    DeeType_IsCopyable(self))
+				return &default__iter_peek__with__operator_copy__and__operator_next;
+			if (iter_getindex) {
+				DeeMH_iter_setindex_t iter_setindex = (DeeMH_iter_setindex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_setindex);
+				if (iter_setindex == &default__iter_setindex__empty)
+					return &default__iter_peek__empty;
+				if (iter_setindex == &default__iter_setindex__with__iter_getseq__and__iter_operator_assign &&
+				    DeeType_IsCopyable(self))
+					return &default__iter_peek__with__operator_copy__and__operator_next;
+				return &default__iter_peek__with__iter_getindex__and_operator_next__and__iter_setindex;
+			}
+		}
+		if (DeeType_IsCopyable(self))
+			return &default__iter_peek__with__operator_copy__and__operator_next;
+	}
 	return NULL;
 }
 /*[[[end]]]*/

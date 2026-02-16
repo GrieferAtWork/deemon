@@ -36,7 +36,6 @@ err:
 __seq_reverse__.seq_reverse([[nonnull]] DeeObject *self,
                             size_t start, size_t end)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_reversed__and__seq_operator_setrange_index = {
 	DREF DeeObject *reversed = CALL_DEPENDENCY(seq_reversed, self, start, end);

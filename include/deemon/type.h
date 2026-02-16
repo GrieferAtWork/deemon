@@ -1288,14 +1288,14 @@ struct Dee_type_iterator {
 	 * @return: 0 : Success
 	 * @return: 1 : Iterator has been exhausted
 	 * @return: -1: Error */
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_nextpair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_nextpair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]); /* DEPRECATED -- use method-hint: "iter_nextpair" */
 
 	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
 	 * In the case of mapping iterators, these can be used to iterate only the
 	 * key/value part of the map, without needing to construct a temporary tuple
 	 * holding both values (as needs to be done by `tp_iter_next'). */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextkey)(DeeObject *__restrict self);
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextvalue)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextkey)(DeeObject *__restrict self);   /* DEPRECATED -- use method-hint: "iter_nextkey" */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextvalue)(DeeObject *__restrict self); /* DEPRECATED -- use method-hint: "iter_nextvalue" */
 
 	/* Advance an iterator by "step" items.
 	 * @return: step:       Success.
@@ -1303,7 +1303,7 @@ struct Dee_type_iterator {
 	 *                      was encountered. Return value is the # of successfully skipped
 	 *                      entries before "ITER_DONE" was encountered.
 	 * @return: (size_t)-1: Error. */
-	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_advance)(DeeObject *__restrict self, size_t step);
+	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_advance)(DeeObject *__restrict self, size_t step); /* DEPRECATED -- use method-hint: "iter_advance" */
 };
 
 #if 0
@@ -2670,6 +2670,7 @@ struct Dee_type_object {
 	struct Dee_type_seq                *tp_seq;      /* [0..1][owned_if(tp_class != NULL)] Sequence operators. */
 	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_iter_next)(DeeObject *__restrict self);
+	/* TODO: Get rid of "struct Dee_type_iterator *tp_iterator" -- all functionality should be implemented using method hints! */
 	struct Dee_type_iterator           *tp_iterator; /* [0..1][owned_if(tp_class != NULL)] Extra iterator operators (all of these are optional; only `tp_iter_next' is required) */
 	struct Dee_type_attr               *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
 	struct Dee_type_with               *tp_with;     /* [0..1][owned_if(tp_class != NULL)] __enter__ / __leave__ operators. */

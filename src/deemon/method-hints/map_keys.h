@@ -29,8 +29,8 @@ __map_keys__->?DSet;
 [[wunused, getset_member("get")]] DREF DeeObject *
 __map_keys__.map_keys([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
-%{$empty = return_reference_(Dee_EmptySet)}
 %{$none = return_none}
+%{$empty = return_reference_(Dee_EmptySet)}
 %{$with__map_iterkeys = Dee_AsObject(DefaultSequence_MapKeys_New(self))}
 {
 	return LOCAL_GETATTR(self);

@@ -19,22 +19,50 @@
  */
 
 /************************************************************************/
-/* deemon.Object.operator :=()                                          */
+/* deemon.Iterator.operator bool()                                      */
 /************************************************************************/
+__iter_bool__()->?Dbool {
+	int result = CALL_DEPENDENCY(iter_operator_bool, self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}
 
-operator {
-
-[[export("DeeObject_{|T}Assign")]]
-[[wunused]] int
-tp_init.tp_assign([[nonnull]] DeeObject *self,
-                  [[nonnull]] DeeObject *value)
-%{class using OPERATOR_ASSIGN: {
-	DREF DeeObject *result;
-	store_DeeClass_CallOperator_1Arg(err, result, THIS_TYPE, self, OPERATOR_ASSIGN, value);
-	Dee_Decref_unlikely(result); /* "unlikely" because return is probably "none" */
-	return 0;
+[[wunused]]
+[[operator([Iterator]: tp_cast.tp_bool)]]
+int __iter_bool__.iter_operator_bool([[nonnull]] DeeObject *__restrict self)
+%{unsupported(err_iter_unsupportedf(self, "operator bool"))}
+%{$empty = 0}
+%{$with__iter_peek = {
+	DREF DeeObject *next = CALL_DEPENDENCY(iter_peek, self);
+	if unlikely(!next)
+		goto err;
+	if (next == ITER_DONE)
+		return 0;
+	Dee_Decref_unlikely(next);
+	return 1;
 err:
 	return -1;
-}} = OPERATOR_ASSIGN;
+}} {
+	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
+	if unlikely(!result)
+		goto err;
+	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
+		goto err_r;
+	Dee_DecrefNokill(result);
+	return DeeBool_IsTrue(result);
+err_r:
+	Dee_Decref(result);
+err:
+	return -1;
+}
 
-} /* operator */
+iter_operator_bool = {
+	DeeMH_iter_peek_t iter_peek = REQUIRE(iter_peek);
+	if (iter_peek == &default__iter_peek__empty)
+		return &$empty;
+	if (iter_peek)
+		return &$with__iter_peek;
+};

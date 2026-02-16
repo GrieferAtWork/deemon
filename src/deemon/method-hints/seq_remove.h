@@ -75,7 +75,6 @@ __seq_remove__.seq_remove([[nonnull]] DeeObject *self,
                           [[nonnull]] DeeObject *item,
                           size_t start, size_t end)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_removeall = {
 	size_t result = CALL_DEPENDENCY(seq_removeall, self, item, start, end, 1);
@@ -165,7 +164,6 @@ __seq_remove__.seq_remove_with_key([[nonnull]] DeeObject *self,
                                    size_t start, size_t end,
                                    [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_removeall = {
 	size_t result = CALL_DEPENDENCY(seq_removeall_with_key, self, item, start, end, 1, key);

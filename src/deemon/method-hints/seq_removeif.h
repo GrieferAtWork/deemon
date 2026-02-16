@@ -39,7 +39,6 @@ __seq_removeif__.seq_removeif([[nonnull]] DeeObject *self,
                               [[nonnull]] DeeObject *should,
                               size_t start, size_t end, size_t max)
 %{unsupported(auto)}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_removeall_with_key = {
 	/* >> global final class SeqRemoveIfWithRemoveAllItem { operator == (other) -> other; };

@@ -286,6 +286,18 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__map_removekeys(DeeSuperObject
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_mh__map_pop(DeeSuperObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL super_mh__map_pop_with_default(DeeSuperObject *self, DeeObject *key, DeeObject *default_);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__map_popitem(DeeSuperObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__iter_nextkey(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__iter_nextvalue(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_mh__iter_nextpair(DeeSuperObject *__restrict self, DREF DeeObject *key_and_value[2]);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL super_mh__iter_advance(DeeSuperObject *__restrict self, size_t step);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__iter_prev(DeeSuperObject *self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL super_mh__iter_revert(DeeSuperObject *__restrict self, size_t step);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__iter_operator_bool(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL super_mh__iter_getindex(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__iter_setindex(DeeSuperObject *self, size_t index);
+INTDEF WUNUSED NONNULL((1)) int DCALL super_mh__iter_rewind(DeeSuperObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__iter_peek(DeeSuperObject *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL super_mh__iter_getseq(DeeSuperObject *__restrict self);
 /*[[[end]]]*/
 /* clang-format on */
 

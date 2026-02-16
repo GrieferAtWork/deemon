@@ -35,7 +35,7 @@
 
 #include <hybrid/typecore.h> /* __UINTPTR_HALF_TYPE__ */
 
-#include "type.h"  /* Dee_TYPE_METHOD_FKWDS, Dee_TYPE_METHOD_FNORMAL, Dee_objmethod_t */
+#include "type.h"  /* Dee_TYPE_GETSET_F, Dee_TYPE_METHOD_FKWDS, Dee_TYPE_METHOD_FNORMAL, Dee_objmethod_t */
 #include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stdbool.h> /* bool, false, true */
@@ -404,6 +404,18 @@ enum Dee_tmh_id {
 	Dee_TMH_map_pop,
 	Dee_TMH_map_pop_with_default,
 	Dee_TMH_map_popitem,
+	Dee_TMH_iter_nextkey,
+	Dee_TMH_iter_nextvalue,
+	Dee_TMH_iter_nextpair,
+	Dee_TMH_iter_advance,
+	Dee_TMH_iter_prev,
+	Dee_TMH_iter_revert,
+	Dee_TMH_iter_operator_bool,
+	Dee_TMH_iter_getindex,
+	Dee_TMH_iter_setindex,
+	Dee_TMH_iter_rewind,
+	Dee_TMH_iter_peek,
+	Dee_TMH_iter_getseq,
 	Dee_TMH_COUNT
 };
 /*[[[end]]]*/
@@ -933,9 +945,42 @@ typedef WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *DeeMH_map_pop_wit
 /* Mapping_popitem, __map_popitem__ */
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_map_popitem_t)(DeeObject *self);
 
+/* Iterator_nextkey, __iter_nextkey__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_iter_nextkey_t)(DeeObject *__restrict self);
+
+/* Iterator_nextvalue, __iter_nextvalue__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_iter_nextvalue_t)(DeeObject *__restrict self);
+
+/* Iterator_advance, __iter_advance__ */
+typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_iter_advance_t)(DeeObject *__restrict self, size_t step);
+
+/* Iterator_prev, __iter_prev__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_iter_prev_t)(DeeObject *self);
+
+/* Iterator_revert, __iter_revert__ */
+typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_iter_revert_t)(DeeObject *__restrict self, size_t step);
+
+/* __iter_bool__ */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_iter_operator_bool_t)(DeeObject *__restrict self);
+
+/* Iterator_index, __iter_index__ */
+typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeMH_iter_getindex_t)(DeeObject *__restrict self);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_iter_setindex_t)(DeeObject *self, size_t index);
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_iter_rewind_t)(DeeObject *__restrict self);
+
+/* Iterator_rewind, __iter_rewind__ */
+typedef WUNUSED_T NONNULL_T((1)) int (DCALL *DeeMH_iter_rewind_t)(DeeObject *__restrict self);
+
+/* Iterator_peek, __iter_peek__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_iter_peek_t)(DeeObject *self);
+
+/* Iterator_seq, __iter_seq__ */
+typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeMH_iter_getseq_t)(DeeObject *__restrict self);
+
 /* Anonymous method hints */
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_foreach_reverse_t)(DeeObject *__restrict self, Dee_foreach_t cb, void *arg);
 typedef WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *DeeMH_seq_enumerate_index_reverse_t)(DeeObject *__restrict self, Dee_seq_enumerate_index_t cb, void *arg, size_t start, size_t end);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeMH_iter_nextpair_t)(DeeObject *__restrict self, DREF DeeObject *key_and_value[2]);
 /*[[[end]]]*/
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -1859,6 +1904,89 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___map_popitem__(DeeObject *__re
 #define DeeMA_Mapping_popitem_name  _DeeMA_ATTRSTR(popitem)
 #define DeeMA_Mapping_popitem_doc   DeeMA___map_popitem___doc
 #define DeeMA_Mapping_popitem       DeeMA___map_popitem__
+
+#define DeeMA___iter_nextkey___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_nextkey___name  _DeeMA_ATTRSTR(__iter_nextkey__)
+#define DeeMA___iter_nextkey___doc   "(def?)->"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_nextkey__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Iterator_nextkey_flags DeeMA___iter_nextkey___flags
+#define DeeMA_Iterator_nextkey_name  _DeeMA_ATTRSTR(nextkey)
+#define DeeMA_Iterator_nextkey_doc   DeeMA___iter_nextkey___doc
+#define DeeMA_Iterator_nextkey       DeeMA___iter_nextkey__
+
+#define DeeMA___iter_nextvalue___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_nextvalue___name  _DeeMA_ATTRSTR(__iter_nextvalue__)
+#define DeeMA___iter_nextvalue___doc   "(def?)->"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_nextvalue__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Iterator_nextvalue_flags DeeMA___iter_nextvalue___flags
+#define DeeMA_Iterator_nextvalue_name  _DeeMA_ATTRSTR(nextvalue)
+#define DeeMA_Iterator_nextvalue_doc   DeeMA___iter_nextvalue___doc
+#define DeeMA_Iterator_nextvalue       DeeMA___iter_nextvalue__
+
+#define DeeMA___iter_advance___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_advance___name  _DeeMA_ATTRSTR(__iter_advance__)
+#define DeeMA___iter_advance___doc   "(step:?Dint)->?Dint"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_advance__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Iterator_advance_flags DeeMA___iter_advance___flags
+#define DeeMA_Iterator_advance_name  _DeeMA_ATTRSTR(advance)
+#define DeeMA_Iterator_advance_doc   DeeMA___iter_advance___doc
+#define DeeMA_Iterator_advance       DeeMA___iter_advance__
+
+#define DeeMA___iter_prev___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_prev___name  _DeeMA_ATTRSTR(__iter_prev__)
+#define DeeMA___iter_prev___doc   "(def?)->"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_prev__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Iterator_prev_flags DeeMA___iter_prev___flags
+#define DeeMA_Iterator_prev_name  _DeeMA_ATTRSTR(prev)
+#define DeeMA_Iterator_prev_doc   DeeMA___iter_prev___doc
+#define DeeMA_Iterator_prev       DeeMA___iter_prev__
+
+#define DeeMA___iter_revert___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_revert___name  _DeeMA_ATTRSTR(__iter_revert__)
+#define DeeMA___iter_revert___doc   "(step:?Dint)->?Dint"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_revert__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Iterator_revert_flags DeeMA___iter_revert___flags
+#define DeeMA_Iterator_revert_name  _DeeMA_ATTRSTR(revert)
+#define DeeMA_Iterator_revert_doc   DeeMA___iter_revert___doc
+#define DeeMA_Iterator_revert       DeeMA___iter_revert__
+
+#define DeeMA___iter_bool___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_bool___name  _DeeMA_ATTRSTR(__iter_bool__)
+#define DeeMA___iter_bool___doc   "->?Dbool"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+
+#define DeeMA___iter_index___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_index___name  _DeeMA_ATTRSTR(__iter_index__)
+#define DeeMA___iter_index___doc   "->?X2?DNumeric?Dint"
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_index___get(DeeObject *__restrict self);
+#define DeeMA_Iterator_index_flags DeeMA___iter_index___flags
+#define DeeMA_Iterator_index_name  _DeeMA_ATTRSTR(index)
+#define DeeMA_Iterator_index_doc   DeeMA___iter_index___doc
+#define DeeMA_Iterator_index_get       DeeMA___iter_index___get
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeMA___iter_index___del(DeeObject *__restrict self);
+#define DeeMA_Iterator_index_del       DeeMA___iter_index___del
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMA___iter_index___set(DeeObject *self, DeeObject *index);
+#define DeeMA_Iterator_index_set       DeeMA___iter_index___set
+#define _DeeMA_TYPE_GETSET_HINTREF___iter_index__(doc) Dee_TYPE_GETSET_F(DeeMA___iter_index___name, &DeeMA___iter_index___get, &DeeMA___iter_index___del, &DeeMA___iter_index___set, DeeMA___iter_index___flags, doc)
+#define _DeeMA_TYPE_GETSET_HINTREF_Iterator_index(doc) Dee_TYPE_GETSET_F(DeeMA_Iterator_index_name, &DeeMA_Iterator_index_get, &DeeMA_Iterator_index_del, &DeeMA_Iterator_index_set, DeeMA_Iterator_index_flags, doc)
+
+#define DeeMA___iter_rewind___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_rewind___name  _DeeMA_ATTRSTR(__iter_rewind__)
+#define DeeMA___iter_rewind___doc   "()"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_rewind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Iterator_rewind_flags DeeMA___iter_rewind___flags
+#define DeeMA_Iterator_rewind_name  _DeeMA_ATTRSTR(rewind)
+#define DeeMA_Iterator_rewind_doc   DeeMA___iter_rewind___doc
+#define DeeMA_Iterator_rewind       DeeMA___iter_rewind__
+
+#define DeeMA___iter_peek___flags Dee_TYPE_METHOD_FNORMAL
+#define DeeMA___iter_peek___name  _DeeMA_ATTRSTR(__iter_peek__)
+#define DeeMA___iter_peek___doc   "(def?)->"
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___iter_peek__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
+#define DeeMA_Iterator_peek_flags DeeMA___iter_peek___flags
+#define DeeMA_Iterator_peek_name  _DeeMA_ATTRSTR(peek)
+#define DeeMA_Iterator_peek_doc   DeeMA___iter_peek___doc
+#define DeeMA_Iterator_peek       DeeMA___iter_peek__
 /*[[[end]]]*/
 /* clang-format on */
 
@@ -2046,6 +2174,11 @@ template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCAL
 	  (Dee_objmethod_t)&DeeMA_##attr_name, doc,     \
 	  DeeMA_##attr_name##_flags }
 
+/* Explicit hints for custom properties */
+#define Dee_TYPE_GETSET_HINTREF(attr_name) \
+	_DeeMA_TYPE_GETSET_HINTREF_##attr_name(DeeMA_##attr_name##_doc)
+#define Dee_TYPE_GETSET_HINTREF_DOC(attr_name, doc) \
+	_DeeMA_TYPE_GETSET_HINTREF_##attr_name(doc)
 
 #ifdef DEE_SOURCE
 #define TYPE_METHOD_HINT        Dee_TYPE_METHOD_HINT
@@ -2053,6 +2186,8 @@ template<class RT1, class... TARGS1> struct __PRIVATE_match_method_hint<RT1(DCAL
 #define TYPE_METHOD_HINT_END    Dee_TYPE_METHOD_HINT_END
 #define TYPE_METHOD_HINTREF     Dee_TYPE_METHOD_HINTREF
 #define TYPE_METHOD_HINTREF_DOC Dee_TYPE_METHOD_HINTREF_DOC
+#define TYPE_GETSET_HINTREF     Dee_TYPE_GETSET_HINTREF
+#define TYPE_GETSET_HINTREF_DOC Dee_TYPE_GETSET_HINTREF_DOC
 #endif /* DEE_SOURCE */
 
 

@@ -741,6 +741,30 @@
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_advance.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_index.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_next.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_operator_bool.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_peek.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_prev.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_revert.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\method-hints\iter_seq.h">
+			<Filter>src\method-hints</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\map_enumerate.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -1319,9 +1343,6 @@
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\unique-iterator.h">
 			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq_functions.h">
-			<Filter>src\objects</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\type-operators.h">
 			<Filter>src\objects</Filter>

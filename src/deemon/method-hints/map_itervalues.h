@@ -29,8 +29,8 @@ __map_itervalues__->?DIterator;
 [[wunused, getset_member("get")]] DREF DeeObject *
 __map_itervalues__.map_itervalues([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto)}
-%{$empty = "default__seq_operator_iter__empty"}
 %{$none = return_none}
+%{$empty = "default__seq_operator_iter__empty"}
 %{$with__map_values = {
 	DREF DeeObject *result, *values = CALL_DEPENDENCY(map_values, self);
 	if unlikely(!values)

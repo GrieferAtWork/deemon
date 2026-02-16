@@ -1240,7 +1240,7 @@ INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 	/* .tp_cast = */ {
 		/* .tp_str  = */ DEFIMPL(&object_str),
 		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&iterator_bool),
+		/* .tp_bool = */ DEFIMPL(&default__iter_operator_bool__with__iter_peek),
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
 	},

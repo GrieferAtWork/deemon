@@ -142,7 +142,6 @@ err:
 [[wunused, getset_member("del")]] int
 __seq_first__.seq_delfirst([[nonnull]] DeeObject *__restrict self)
 %{unsupported({ return err_seq_unsupportedf(self, "del first"); })}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_delitem_index = {
 	int result = CALL_DEPENDENCY(seq_operator_delitem_index, self, 0);

@@ -37,7 +37,6 @@ err:
 __seq_inplace_mul__.seq_operator_inplace_mul([[nonnull]] DREF DeeObject **__restrict p_lhs,
                                              [[nonnull]] DeeObject *repeat)
 %{unsupported_alias("default__seq_operator_inplace_mul__with__seq_operator_mul")}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_clear__and__seq_extend = {
 	int result;

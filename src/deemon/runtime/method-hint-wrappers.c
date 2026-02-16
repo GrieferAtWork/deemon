@@ -24,7 +24,7 @@
 
 #include <deemon/arg.h>          /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNP* */
 #include <deemon/bool.h>         /* DeeBool_NewFalse, DeeBool_NewTrue, Dee_False, Dee_True, return_bool */
-#include <deemon/error.h>        /* DeeError_Throwf, DeeError_ValueError */
+#include <deemon/error.h>        /* DeeError_* */
 #include <deemon/format.h>       /* PCKuSIZ, PRFuSIZ */
 #include <deemon/int.h>          /* DeeInt_* */
 #include <deemon/method-hints.h> /* DeeObject_InvokeMethodHint, DeeType_RequireMethodHint */
@@ -2370,6 +2370,172 @@ DeeMA___map_popitem__(DeeObject *__restrict self, size_t argc, DeeObject *const 
 	DeeArg_Unpack0(err, argc, argv, "__map_popitem__");
 {
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_popitem))(self);
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_nextkey__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "__iter_nextkey__", &args.def);
+{
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextkey))(self);
+	if (result == ITER_DONE) {
+		result = args.def;
+		if (result) {
+			Dee_Incref(result);
+		} else {
+			DeeError_Throw(&DeeError_StopIteration_instance);
+		}
+	}
+	return result;
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_nextvalue__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "__iter_nextvalue__", &args.def);
+{
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextvalue))(self);
+	if (result == ITER_DONE) {
+		result = args.def;
+		if (result) {
+			Dee_Incref(result);
+		} else {
+			DeeError_Throw(&DeeError_StopIteration_instance);
+		}
+	}
+	return result;
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_advance__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	struct {
+		size_t step;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "__iter_advance__", &args.step, UNPuSIZ, DeeObject_AsSize);
+{
+	size_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_advance))(self, args.step);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_prev__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "__iter_prev__", &args.def);
+{
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_prev))(self);
+	if (result == ITER_DONE) {
+		result = args.def;
+		if (result) {
+			Dee_Incref(result);
+		} else {
+			DeeError_Throw(&DeeError_StopIteration_instance);
+		}
+	}
+	return result;
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_revert__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	struct {
+		size_t step;
+	} args;
+	DeeArg_Unpack1X(err, argc, argv, "__iter_revert__", &args.step, UNPuSIZ, DeeObject_AsSize);
+{
+	size_t result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_revert))(self, args.step);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_bool__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeArg_Unpack0(err, argc, argv, "__iter_bool__");
+{
+	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_operator_bool))(self);
+	if unlikely(result < 0)
+		goto err;
+	return_bool(result);
+err:
+	return NULL;
+}}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_index___get(DeeObject *__restrict self) {
+	size_t index = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_getindex))(self);
+	if unlikely(index == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(index);
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeMA___iter_index___del(DeeObject *__restrict self) {
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_rewind))(self);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeMA___iter_index___set(DeeObject *self, DeeObject *index) {
+	size_t index_value;
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_setindex))(self, index_value);
+err:
+	return -1;
+}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_rewind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeArg_Unpack0(err, argc, argv, "__iter_rewind__");
+{
+	if unlikely((*DeeType_RequireMethodHint(Dee_TYPE(self), iter_rewind))(self))
+		goto err;
+	return_none;
+err:
+	return NULL;
+}}
+
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeMA___iter_peek__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "__iter_peek__", &args.def);
+{
+	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_peek))(self);
+	if (result == ITER_DONE) {
+		result = args.def;
+		if (result) {
+			Dee_Incref(result);
+		} else {
+			DeeError_Throw(&DeeError_StopIteration_instance);
+		}
+	}
+	return result;
 err:
 	return NULL;
 }}

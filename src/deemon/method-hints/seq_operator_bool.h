@@ -59,7 +59,6 @@ default_seq_bool_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *valu
 [[operator([Sequence, Set, Mapping]: tp_cast.tp_bool)]]
 int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 %{unsupported(auto("operator bool"))}
-%{$none = 0}
 %{$empty = 0}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_default_seq_bool_with_foreach_cb)]] {
 	Dee_ssize_t foreach_status;
