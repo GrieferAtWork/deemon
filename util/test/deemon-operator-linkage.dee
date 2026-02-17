@@ -97,8 +97,8 @@ function Type_getImplName(typ: Type, hintOrOperator: string): string | none {
 	return none;
 }
 
-function Type_assert(typ: Type, impls: {string: string}) {
-	local wrongImpls = [];
+function Type_assert(typ: Type, impls: {string: string | {string...}}) {
+	local wrongImpls: {(string, string | {string...}, string)...} = [];
 	for (local hintOrOperator, expectedImpl: impls) {
 		local actualImpl: string | none = Type_getImplName(typ, hintOrOperator);
 		if (actualImpl !is none) {

@@ -3702,7 +3702,7 @@ err:
 /* Deprecated functions. */
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-IteratorFuture_For(DeeObject *__restrict self); /* From "./iterator.c" */
+IteratorFuture_Of(DeeObject *__restrict self); /* From "./iterator.c" */
 PRIVATE WUNUSED DREF DeeObject *DCALL
 list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
 	int temp;
@@ -3718,7 +3718,7 @@ list_insertiter_deprecated(List *me, size_t argc, DeeObject *const *argv) {
 	} args;
 	DeeArg_UnpackStruct2X(err, argc, argv, "insert_iter", &args, &args.index, UNPuSIZ, DeeObject_AsSize, &args.iter, "o", _DeeArg_AsObject);
 /*[[[end]]]*/
-	future = IteratorFuture_For(args.iter);
+	future = IteratorFuture_Of(args.iter);
 	if unlikely(!future)
 		goto err;
 	temp = DeeList_InsertSequence((DeeObject *)me, args.index, future);

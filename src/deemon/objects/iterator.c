@@ -119,6 +119,9 @@ err:
 
 /* A default-constructed, raw iterator object behaves as empty. */
 STATIC_ASSERT_MSG((size_t)(uintptr_t)ITER_DONE == (size_t)-1, "Assumed by definition of `iterator_iternext'");
+#ifndef DCALL_RETURN_COMMON
+STATIC_ASSERT_MSG(sizeof(size_t) == sizeof(void *), "Assumed by definition of `iterator_iternext'");
+#endif /* !DCALL_RETURN_COMMON */
 #define iterator_iternext (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_retsm1_1)
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -300,7 +303,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	TYPE_METHOD_END
 };
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorFuture_For(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorFuture_Of(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -339,48 +342,10 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	              &DeeMA_Iterator_index_set,
 	              DeeMA_Iterator_index_flags,
 	              "->?Dint\n"
-	              "#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
-	              "Get/set the current sequence index of @this Iterator\n"
-	              "Note however that depending on the type of sequence, certain indices "
-	              /**/ "may not have values bound to them. When invoked, ?#{op:next} usually skips "
-	              /**/ "ahead to the first bound index, meaning that ?#{op:next} does not necessarily "
-	              /**/ "increment the index counter linearly\n"
-	              "${"
-	              /**/ "property index: int = {\n"
-	              /**/ "	get(): int {\n"
-	              /**/ "		local result = 0;\n"
-	              /**/ "		local c;\n"
-	              /**/ "		for (local tp: type(this).__mro__) {\n"
-	              /**/ "			if (tp === Iterator)\n"
-	              /**/ "				break;\n"
-	              /**/ "			if (tp.hasprivateattribute(\"rewind\")) {\n"
-	              /**/ "				c = copy this;\n"
-	              /**/ "				c.rewind();\n"
-	              /**/ "				goto got_rewound_iter;\n"
-	              /**/ "			}\n"
-	              /**/ "			if (tp.hasprivateattribute(\"seq\")) {\n"
-	              /**/ "				c = this.seq.operator iter();\n"
-	              /**/ "				goto got_rewound_iter;\n"
-	              /**/ "			}\n"
-	              /**/ "		}\n"
-	              /**/ "		throw NotImplemented(\"...\");\n"
-	              /**/ "got_rewound_iter:\n"
-	              /**/ "		while (c < this) {\n"
-	              /**/ "			++c;\n"
-	              /**/ "			++result;\n"
-	              /**/ "		}\n"
-	              /**/ "		return result;\n"
-	              /**/ "	}\n"
-	              /**/ "	set(index: int) {\n"
-	              /**/ "		index = index.operator int();\n"
-	              /**/ "		this.rewind();\n"
-	              /**/ "		this.advance(index);\n"
-	              /**/ "	}\n"
-	              /**/ "}"
-	              "}"),
+	              "TODO"),
 
 
-	TYPE_GETTER_AB("future", &IteratorFuture_For,
+	TYPE_GETTER_AB("future", &IteratorFuture_Of,
 	               "->?DSequence\n"
 	               "Returns an abstract sequence proxy that always refers to the items that are "
 	               /**/ "still left to be yielded by @this Iterator. Note that for this to function "
@@ -656,69 +621,58 @@ PRIVATE char const iter_doc[] =
 "${"
 /**/ "operator bool() {\n"
 /**/ "	local c = copy this;\n"
-/**/ "	return try ({\n"
-/**/ "		c.operator next();\n"
-/**/ "		true;\n"
-/**/ "	}) catch (StopIteration from errors) (\n"
-/**/ "		false\n"
-/**/ "	);\n"
+/**/ "	foreach (none: c)\n"
+/**/ "		return true;\n"
+/**/ "	return false;\n"
 /**/ "}"
 "}\n"
 "\n"
 
 "+(step:?Dint)->\n"
-"#tNotImplemented{@step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
-"#tIntegerOverflow{@step is too large}"
-"Copies @this Iterator and advance it by yielding @step items from it before returning it\n"
-"If the Iterator becomes exhausted before then, stop and return that exhausted iterator\n"
+"#tNotImplemented{@step is negative, and @this Iterator does not support ?#revert}"
+"#tIntegerOverflow{@step is too great or too small}"
+"Copies @this Iterator and ?#advance (or ?#revert when ${step < 0}) it by @step items.\n"
+"\n"
+
+"-(step:?Dint)->\n"
+"#tNotImplemented{@step is positive, and @this Iterator does not support ?#revert}"
+"#tIntegerOverflow{@step is too great or too small}"
+"Copies @this Iterator and ?#revert (or ?#advance when ${step < 0}) it by @step items.\n"
 "\n"
 
 "+=(step:?Dint)->\n"
-"#tNotImplemented{@step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
-"#tIntegerOverflow{@step is too large}"
-"Advance @this Iterator by yielding @step items\n"
-"If @this Iterator becomes exhausted before then, stop prematurely\n"
+"#tNotImplemented{@step is negative, and @this Iterator does not support ?#revert}"
+"#tIntegerOverflow{@step is too great or too small}"
+"?#advance (or ?#revert when ${step < 0}) @this Iterator by @step items.\n"
+"\n"
+
+"-=(step:?Dint)->\n"
+"#tNotImplemented{@step is positive, and @this Iterator does not support ?#revert}"
+"#tIntegerOverflow{@step is too great or too small}"
+"?#revert (or ?#advance when ${step < 0}) @this Iterator by @step items.\n"
 "\n"
 
 "++->\n"
 "Advance @this Iterator by one. No-op if the Iterator has been exhausted\n"
-"Note this is very similar to ?#{op:next}, however in the case of generator-like "
-/**/ "iterators, doing this may be faster since no generator value has to be created\n"
-"\n"
-
-"call(def?)->\n"
-"Calling an operator as a function will invoke ${operator next}, and return "
-/**/ "that value, allowing iterators to be used as function-like producers\n"
-"${"
-/**/ "operator call(def?) {\n"
-/**/ "	try {\n"
-/**/ "		return this.operator next();\n"
-/**/ "	} catch (StopIteration) {\n"
-/**/ "		if (def is bound)\n"
-/**/ "			return def;\n"
-/**/ "		throw;\n"
-/**/ "	}\n"
-/**/ "}"
-"}\n"
-"\n"
-
-"-(step:?Dint)->\n"
-"#tNotImplemented{@step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
-"#tIntegerOverflow{@step is too large}"
-"Copies @this Iterator and reverts it by @step before returning it\n"
-"If the Iterator reaches its starting position before then, stop prematurely\n"
+"Same as ${foreach (none: this) break;} or just calling ?#next\n"
 "\n"
 
 "--->\n"
-"#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
-"Decrement @this operator by one. No-op if the Iterator is already at its starting position\n"
+"#tNotImplemented{@this Iterator doesn't support ?#revert}"
+"Revert the iterator by 1 step (same as ${this.revert(1)})\n"
 "\n"
 
-"-=(step:?Dint)->\n"
-"#tNotImplemented{@step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
-"#tIntegerOverflow{@step is too large}"
-"Revert @this Iterator by @step items\n"
-"If @this Iterator reaches its starting position before then, stop prematurely\n"
+"call(def?)->\n"
+"Same as ?#next\n"
+"${"
+/**/ "operator ()(def?) {\n"
+/**/ "	foreach (local next: this)\n"
+/**/ "		return next;\n"
+/**/ "	if (def is bound)\n"
+/**/ "		return def;\n"
+/**/ "	throw StopIteration();\n"
+/**/ "}"
+"}\n"
 "\n"
 
 "<->\n"
@@ -814,7 +768,7 @@ typedef struct {
 
 INTDEF DeeTypeObject IteratorFuture_Type;
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-IteratorFuture_For(DeeObject *__restrict self) {
+IteratorFuture_Of(DeeObject *__restrict self) {
 	return Dee_AsObject(IteratorFuture_New(self));
 }
 
