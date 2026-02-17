@@ -55,49 +55,70 @@ public:
 
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(Iterator from deemon).printCxxApi(templateParameters: { "T" });]]]*/
-	WUNUSED Ref<T> (next)() {
-		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelectC(0x7e5e1569, 0x2a31f6a650652d33), 0, NULL));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<T> (next)(DeeObject *defl) {
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (advance)(DeeObject *step) {
 		DeeObject *args[1];
-		args[0] = defl;
-		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelectC(0x7e5e1569, 0x2a31f6a650652d33), 1, args));
+		args[0] = step;
+		return inherit(DeeObject_CallAttrStringHash(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), 1, args));
+	}
+	WUNUSED Ref<deemon::int_> (advance)(Dee_ssize_t step) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), Dee_PCKdSIZ, step));
+	}
+	WUNUSED Ref<deemon::int_> (advance)(size_t step) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), Dee_PCKuSIZ, step));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::int_> (revert)(DeeObject *step) {
+		DeeObject *args[1];
+		args[0] = step;
+		return inherit(DeeObject_CallAttrStringHash(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), 1, args));
+	}
+	WUNUSED Ref<deemon::int_> (revert)(Dee_ssize_t step) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), Dee_PCKdSIZ, step));
+	}
+	WUNUSED Ref<deemon::int_> (revert)(size_t step) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), Dee_PCKuSIZ, step));
 	}
 	WUNUSED Ref<T> (peek)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "peek", _Dee_HashSelectC(0xb2ae48a2, 0xcc667a4d924a91f8), 0, NULL));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<T> (peek)(DeeObject *defl) {
+	WUNUSED NONNULL_CXX((1)) Ref<T> (peek)(DeeObject *def) {
 		DeeObject *args[1];
-		args[0] = defl;
+		args[0] = def;
 		return inherit(DeeObject_CallAttrStringHash(this, "peek", _Dee_HashSelectC(0xb2ae48a2, 0xcc667a4d924a91f8), 1, args));
 	}
-	WUNUSED Ref<deemon::bool_> (prev)() {
+	WUNUSED Ref<T> (prev)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "prev", _Dee_HashSelectC(0xeb31683d, 0x7487ec947044729e), 0, NULL));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<T> (prev)(DeeObject *def) {
+		DeeObject *args[1];
+		args[0] = def;
+		return inherit(DeeObject_CallAttrStringHash(this, "prev", _Dee_HashSelectC(0xeb31683d, 0x7487ec947044729e), 1, args));
 	}
 	void (rewind)() {
 		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "rewind", _Dee_HashSelectC(0x2ab1b235, 0xa35b8bb3941ca25f), 0, NULL)));
 	}
-	NONNULL_CXX((1)) void (revert)(DeeObject *step) {
+	WUNUSED Ref<T> (next)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelectC(0x7e5e1569, 0x2a31f6a650652d33), 0, NULL));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<T> (next)(DeeObject *def) {
 		DeeObject *args[1];
-		args[0] = step;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), 1, args)));
+		args[0] = def;
+		return inherit(DeeObject_CallAttrStringHash(this, "next", _Dee_HashSelectC(0x7e5e1569, 0x2a31f6a650652d33), 1, args));
 	}
-	void (revert)(Dee_ssize_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), Dee_PCKdSIZ, step)));
+	WUNUSED Ref<T> (nextkey)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "nextkey", _Dee_HashSelectC(0xe9282b29, 0x5af27c2b877b49cf), 0, NULL));
 	}
-	void (revert)(size_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "revert", _Dee_HashSelectC(0x98ca826, 0x626b4fca0d39dcf2), Dee_PCKuSIZ, step)));
-	}
-	NONNULL_CXX((1)) void (advance)(DeeObject *step) {
+	WUNUSED NONNULL_CXX((1)) Ref<T> (nextkey)(DeeObject *def) {
 		DeeObject *args[1];
-		args[0] = step;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), 1, args)));
+		args[0] = def;
+		return inherit(DeeObject_CallAttrStringHash(this, "nextkey", _Dee_HashSelectC(0xe9282b29, 0x5af27c2b877b49cf), 1, args));
 	}
-	void (advance)(Dee_ssize_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), Dee_PCKdSIZ, step)));
+	WUNUSED Ref<T> (nextvalue)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "nextvalue", _Dee_HashSelectC(0x48509118, 0xcb131b8280e955b4), 0, NULL));
 	}
-	void (advance)(size_t step) {
-		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "advance", _Dee_HashSelectC(0xdd1157a0, 0x8667ad2c6ab8d35d), Dee_PCKuSIZ, step)));
+	WUNUSED NONNULL_CXX((1)) Ref<T> (nextvalue)(DeeObject *def) {
+		DeeObject *args[1];
+		args[0] = def;
+		return inherit(DeeObject_CallAttrStringHash(this, "nextvalue", _Dee_HashSelectC(0x48509118, 0xcb131b8280e955b4), 1, args));
 	}
 	class _Wrap_seq
 		: public deemon::detail::ConstGetRefProxy<_Wrap_seq, Sequence<T> > {
@@ -114,6 +135,31 @@ public:
 		}
 	};
 	WUNUSED _Wrap_seq (seq)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap_index
+		: public deemon::detail::ConstGetRefProxy<_Wrap_index, deemon::int_>
+		, public deemon::detail::ConstSetRefProxy<_Wrap_index, deemon::int_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		using deemon::detail::ConstSetRefProxy<_Wrap_index, deemon::int_>::operator =;
+		_Wrap_index(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081)));
+		}
+		void del() const {
+			throw_if_nonzero(DeeObject_DelAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081)));
+		}
+		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
+			return DeeObject_SetAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), value);
+		}
+	};
+	WUNUSED _Wrap_index (index)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_future
@@ -150,23 +196,6 @@ public:
 	WUNUSED _Wrap_pending (pending)() DEE_CXX_NOTHROW {
 		return this;
 	}
-	class _Wrap_isbidirectional
-		: public deemon::detail::ConstGetRefProxy<_Wrap_isbidirectional, deemon::bool_> {
-	private:
-		DeeObject *m_self; /* [1..1] Linked object */
-	public:
-		_Wrap_isbidirectional(DeeObject *self) DEE_CXX_NOTHROW
-			: m_self(self) {}
-		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "isbidirectional", _Dee_HashSelectC(0x11d9fc36, 0x192134b5c30b96b7));
-		}
-		WUNUSED bool bound() const {
-			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "isbidirectional", _Dee_HashSelectC(0x11d9fc36, 0x192134b5c30b96b7)));
-		}
-	};
-	WUNUSED _Wrap_isbidirectional (isbidirectional)() DEE_CXX_NOTHROW {
-		return this;
-	}
 	class _Wrap_hasprev
 		: public deemon::detail::ConstGetRefProxy<_Wrap_hasprev, deemon::bool_> {
 	private:
@@ -199,28 +228,6 @@ public:
 		}
 	};
 	WUNUSED _Wrap_hasnext (hasnext)() DEE_CXX_NOTHROW {
-		return this;
-	}
-	class _Wrap_index
-		: public deemon::detail::ConstGetRefProxy<_Wrap_index, deemon::int_>
-		, public deemon::detail::ConstSetRefProxy<_Wrap_index, deemon::int_> {
-	private:
-		DeeObject *m_self; /* [1..1] Linked object */
-	public:
-		using deemon::detail::ConstSetRefProxy<_Wrap_index, deemon::int_>::operator =;
-		_Wrap_index(DeeObject *self) DEE_CXX_NOTHROW
-			: m_self(self) {}
-		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
-			return DeeObject_GetAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081));
-		}
-		WUNUSED bool bound() const {
-			return throw_if_bounderr(DeeObject_BoundAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081)));
-		}
-		int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
-			return DeeObject_SetAttrStringHash(m_self, "index", _Dee_HashSelectC(0x77f34f0, 0x440d5888c0ff3081), value);
-		}
-	};
-	WUNUSED _Wrap_index (index)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

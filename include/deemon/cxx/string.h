@@ -34183,11 +34183,38 @@ public:
 		args[1] = end;
 		return inherit(DeeObject_CallAttrStringHash(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), 2, args));
 	}
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<Object> (__seq_sum__)(DeeObject *start, DeeObject *end, DeeObject *def) {
+		DeeObject *args[3];
+		args[0] = start;
+		args[1] = end;
+		args[2] = def;
+		return inherit(DeeObject_CallAttrStringHash(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), 3, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<Object> (__seq_sum__)(DeeObject *start, DeeObject *end, DeeObject *def, DeeObject *key) {
+		DeeObject *args[4];
+		args[0] = start;
+		args[1] = end;
+		args[2] = def;
+		args[3] = key;
+		return inherit(DeeObject_CallAttrStringHash(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), 4, args));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__seq_sum__)(DeeObject *start, Dee_ssize_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), "o" Dee_PCKdSIZ, start, end));
 	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<Object> (__seq_sum__)(DeeObject *start, Dee_ssize_t end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), "o" Dee_PCKdSIZ "o", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<Object> (__seq_sum__)(DeeObject *start, Dee_ssize_t end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), "o" Dee_PCKdSIZ "oo", start, end, def, key));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<Object> (__seq_sum__)(DeeObject *start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), "o" Dee_PCKuSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((1, 3)) Ref<Object> (__seq_sum__)(DeeObject *start, size_t end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), "o" Dee_PCKuSIZ "o", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<Object> (__seq_sum__)(DeeObject *start, size_t end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), "o" Dee_PCKuSIZ "oo", start, end, def, key));
 	}
 	WUNUSED Ref<Object> (__seq_sum__)(Dee_ssize_t start) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ, start));
@@ -34195,11 +34222,29 @@ public:
 	WUNUSED NONNULL_CXX((2)) Ref<Object> (__seq_sum__)(Dee_ssize_t start, DeeObject *end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ "o", start, end));
 	}
+	WUNUSED NONNULL_CXX((2, 3)) Ref<Object> (__seq_sum__)(Dee_ssize_t start, DeeObject *end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ "oo", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((2, 3, 4)) Ref<Object> (__seq_sum__)(Dee_ssize_t start, DeeObject *end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ "ooo", start, end, def, key));
+	}
 	WUNUSED Ref<Object> (__seq_sum__)(Dee_ssize_t start, Dee_ssize_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ Dee_PCKdSIZ, start, end));
 	}
+	WUNUSED NONNULL_CXX((3)) Ref<Object> (__seq_sum__)(Dee_ssize_t start, Dee_ssize_t end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ Dee_PCKdSIZ "o", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((3, 4)) Ref<Object> (__seq_sum__)(Dee_ssize_t start, Dee_ssize_t end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ Dee_PCKdSIZ "oo", start, end, def, key));
+	}
 	WUNUSED Ref<Object> (__seq_sum__)(Dee_ssize_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ Dee_PCKuSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((3)) Ref<Object> (__seq_sum__)(Dee_ssize_t start, size_t end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ Dee_PCKuSIZ "o", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((3, 4)) Ref<Object> (__seq_sum__)(Dee_ssize_t start, size_t end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKdSIZ Dee_PCKuSIZ "oo", start, end, def, key));
 	}
 	WUNUSED Ref<Object> (__seq_sum__)(size_t start) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ, start));
@@ -34207,11 +34252,29 @@ public:
 	WUNUSED NONNULL_CXX((2)) Ref<Object> (__seq_sum__)(size_t start, DeeObject *end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ "o", start, end));
 	}
+	WUNUSED NONNULL_CXX((2, 3)) Ref<Object> (__seq_sum__)(size_t start, DeeObject *end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ "oo", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((2, 3, 4)) Ref<Object> (__seq_sum__)(size_t start, DeeObject *end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ "ooo", start, end, def, key));
+	}
 	WUNUSED Ref<Object> (__seq_sum__)(size_t start, Dee_ssize_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ Dee_PCKdSIZ, start, end));
 	}
+	WUNUSED NONNULL_CXX((3)) Ref<Object> (__seq_sum__)(size_t start, Dee_ssize_t end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ Dee_PCKdSIZ "o", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((3, 4)) Ref<Object> (__seq_sum__)(size_t start, Dee_ssize_t end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ Dee_PCKdSIZ "oo", start, end, def, key));
+	}
 	WUNUSED Ref<Object> (__seq_sum__)(size_t start, size_t end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ Dee_PCKuSIZ, start, end));
+	}
+	WUNUSED NONNULL_CXX((3)) Ref<Object> (__seq_sum__)(size_t start, size_t end, DeeObject *def) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ Dee_PCKuSIZ "o", start, end, def));
+	}
+	WUNUSED NONNULL_CXX((3, 4)) Ref<Object> (__seq_sum__)(size_t start, size_t end, DeeObject *def, DeeObject *key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "__seq_sum__", _Dee_HashSelectC(0x18e84724, 0xacd793c141691611), Dee_PCKuSIZ Dee_PCKuSIZ "oo", start, end, def, key));
 	}
 	WUNUSED Ref<deemon::bool_> (__seq_any__)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "__seq_any__", _Dee_HashSelectC(0xdbc18402, 0x809971dbd2fbe45), 0, NULL));
