@@ -1102,16 +1102,8 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE struct type_member tpconst hashsetiterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(HashSetIterator, hsi_set), "->?DHashSet"),
-	TYPE_MEMBER_END
-};
-
-STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(ProxyObject, po_obj));
-#define hseti_nii_getseq generic_proxy__getobj
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-hseti_nii_getindex(HashSetIterator *__restrict self) {
+hseti_mh_iter_getindex(HashSetIterator *__restrict self) {
 	size_t mask;
 	struct Dee_hashset_item *vector, *elem;
 	DeeHashSet_LockRead(self->hsi_set);
@@ -1125,7 +1117,7 @@ hseti_nii_getindex(HashSetIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-hseti_nii_setindex(HashSetIterator *__restrict self, size_t new_index) {
+hseti_mh_iter_setindex(HashSetIterator *__restrict self, size_t new_index) {
 	size_t mask;
 	struct Dee_hashset_item *vector;
 	DeeHashSet_LockRead(self->hsi_set);
@@ -1139,100 +1131,59 @@ hseti_nii_setindex(HashSetIterator *__restrict self, size_t new_index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-hseti_nii_rewind(HashSetIterator *__restrict self) {
+hseti_mh_iter_rewind(HashSetIterator *__restrict self) {
 	atomic_write(&self->hsi_next, atomic_read(&self->hsi_set->hs_elem));
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-hseti_nii_revert(HashSetIterator *__restrict self, size_t step) {
-	size_t index, mask;
-	struct Dee_hashset_item *vector, *elem;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+hseti_mh_iter_revert(HashSetIterator *__restrict self, size_t step) {
+	size_t old_index, mask;
+	struct Dee_hashset_item *vector;
+	struct Dee_hashset_item *old_elem;
+	struct Dee_hashset_item *new_elem;
 again:
 	DeeHashSet_LockRead(self->hsi_set);
 	vector = self->hsi_set->hs_elem;
 	mask   = self->hsi_set->hs_mask;
 	DeeHashSet_LockEndRead(self->hsi_set);
-	elem = READ_ITEM(self);
-	if unlikely(elem < vector || elem > vector + mask)
+	old_elem = READ_ITEM(self);
+	if unlikely(old_elem < vector || old_elem > vector + mask)
 		return 0; /* Indeterminate (detached) */
-	index = (size_t)(elem - vector);
-	if (step < index)
-		vector = elem - step;
-	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
+	new_elem  = vector;
+	old_index = (size_t)(old_elem - vector);
+	if (step < old_index)
+		new_elem = old_elem - step;
+	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, old_elem, new_elem))
 		goto again;
-	return elem == vector ? 1 : 2;
+	return (size_t)(old_elem - new_elem);
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-hseti_nii_advance(HashSetIterator *__restrict self, size_t step) {
-	size_t index, mask;
-	struct Dee_hashset_item *vector, *elem;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+hseti_mh_iter_advance(HashSetIterator *__restrict self, size_t step) {
+	size_t old_index, mask;
+	struct Dee_hashset_item *vector;
+	struct Dee_hashset_item *old_elem;
+	struct Dee_hashset_item *new_elem;
 again:
 	DeeHashSet_LockRead(self->hsi_set);
 	vector = self->hsi_set->hs_elem;
 	mask   = self->hsi_set->hs_mask;
 	DeeHashSet_LockEndRead(self->hsi_set);
-	elem = READ_ITEM(self);
-	if unlikely(elem < vector || elem > vector + mask)
+	old_elem = READ_ITEM(self);
+	if unlikely(old_elem < vector || old_elem > vector + mask)
 		return 0; /* Indeterminate (detached) */
-	index = (size_t)(elem - vector) + step;
-	if (index > mask + 1)
-		index = mask + 1;
-	vector += index;
-	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
+	old_index = (size_t)(old_elem - vector) + step;
+	if (old_index > mask + 1)
+		old_index = mask + 1;
+	new_elem = vector + old_index;
+	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, old_elem, new_elem))
 		goto again;
-	return index == mask + 1 ? 1 : 2;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-hseti_nii_prev(HashSetIterator *__restrict self) {
-	size_t mask;
-	struct Dee_hashset_item *vector, *elem;
-again:
-	DeeHashSet_LockRead(self->hsi_set);
-	vector = self->hsi_set->hs_elem;
-	mask   = self->hsi_set->hs_mask;
-	DeeHashSet_LockEndRead(self->hsi_set);
-	elem = READ_ITEM(self);
-	if unlikely(elem <= vector || elem > vector + mask)
-		return 1; /* Indeterminate (detached), or at start */
-	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
-		goto again;
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-hseti_nii_next(HashSetIterator *__restrict self) {
-	size_t mask;
-	struct Dee_hashset_item *vector, *elem;
-again:
-	DeeHashSet_LockRead(self->hsi_set);
-	vector = self->hsi_set->hs_elem;
-	mask   = self->hsi_set->hs_mask;
-	DeeHashSet_LockEndRead(self->hsi_set);
-	elem = READ_ITEM(self);
-	if unlikely(elem < vector || elem >= vector + mask)
-		return 1; /* Indeterminate (detached), or at end */
-	vector = elem + 1;
-	if (!atomic_cmpxch_weak_or_write(&self->hsi_next, elem, vector))
-		goto again;
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-hseti_nii_hasprev(HashSetIterator *__restrict self) {
-	struct Dee_hashset_item *item = READ_ITEM(self);
-	HashSet *set = self->hsi_set;
-	/* Check if the iterator is in-bounds.
-	 * NOTE: Since this is nothing but a shallow boolean check anyways, there
-	 *       is no need to lock the Set since we're not dereferencing anything. */
-	return (item > set->hs_elem &&
-	        item <= set->hs_elem + (set->hs_mask + 1));
+	return (size_t)(new_elem - old_elem);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hseti_nii_peek(HashSetIterator *__restrict self) {
+hseti_mh_iter_peek(HashSetIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct Dee_hashset_item *item, *end;
 	HashSet *set = self->hsi_set;
@@ -1268,25 +1219,6 @@ iter_exhausted:
 }
 
 
-PRIVATE struct type_nii tpconst hashsetiterator_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&hseti_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&hseti_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&hseti_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&hseti_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)&hseti_nii_revert,
-			/* .nii_advance  = */ (Dee_funptr_t)&hseti_nii_advance,
-			/* .nii_prev     = */ (Dee_funptr_t)&hseti_nii_prev,
-			/* .nii_next     = */ (Dee_funptr_t)&hseti_nii_next,
-			/* .nii_hasprev  = */ (Dee_funptr_t)&hseti_nii_hasprev,
-			/* .nii_peek     = */ (Dee_funptr_t)&hseti_nii_peek
-		}
-	}
-};
-
 PRIVATE struct type_cmp hashsetiterator_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&hashsetiterator_hash,
 	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
@@ -1298,7 +1230,33 @@ PRIVATE struct type_cmp hashsetiterator_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &hashsetiterator_nii,
+};
+
+PRIVATE struct type_method tpconst hashsetiterator_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_HINTREF(Iterator_revert),
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst hashsetiterator_getsets[] = {
+	TYPE_GETSET_HINTREF(Iterator_index),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method_hint tpconst hashsetiterator_method_hints[] = {
+	TYPE_METHOD_HINT(iter_getindex, &hseti_mh_iter_getindex),
+	TYPE_METHOD_HINT(iter_setindex, &hseti_mh_iter_setindex),
+	TYPE_METHOD_HINT(iter_rewind, &hseti_mh_iter_rewind),
+	TYPE_METHOD_HINT(iter_revert, &hseti_mh_iter_revert),
+	TYPE_METHOD_HINT(iter_advance, &hseti_mh_iter_advance),
+	TYPE_METHOD_HINT(iter_peek, &hseti_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_member tpconst hashsetiterator_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(HashSetIterator, hsi_set), "->?DHashSet"),
+	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject HashSetIterator_Type = {
@@ -1340,13 +1298,13 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_methods       = */ hashsetiterator_methods,
+	/* .tp_getsets       = */ hashsetiterator_getsets,
 	/* .tp_members       = */ hashsetiterator_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ hashsetiterator_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
