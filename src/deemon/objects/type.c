@@ -381,8 +381,7 @@ type_fini(DeeTypeObject *__restrict self) {
 	cb(_, 0x06, tp_lo, Dee_TNO_lo)                       \
 	cb(_, 0x07, tp_le, Dee_TNO_le)                       \
 	cb(_, 0x08, tp_gr, Dee_TNO_gr)                       \
-	cb(_, 0x09, tp_ge, Dee_TNO_ge)                       \
-	cb(_, 0x0a, tp_nii, Dee_TNO_UNDEF)
+	cb(_, 0x09, tp_ge, Dee_TNO_ge)
 
 #define VTABLE_DESC__tp_seq(cb, _)                                                 \
 	cb(_, 0x00, tp_iter, Dee_TNO_iter)                                             \

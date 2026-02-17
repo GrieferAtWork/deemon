@@ -43,9 +43,9 @@ __iter_revert__.iter_revert([[nonnull]] DeeObject *__restrict self, size_t step)
 %{unsupported(err_iter_unsupportedf(self, "revert"))}
 %{$empty = 0}
 %{$with__iter_prev = {
-	size_t result = 0;
+	size_t result;
 	PRELOAD_DEPENDENCY(iter_prev);
-	while (result < step) {
+	for (result = 0; result < step; ++result) {
 		DREF DeeObject *elem = CALL_DEPENDENCY(iter_prev, self); /* *--self */
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
@@ -55,13 +55,12 @@ __iter_revert__.iter_revert([[nonnull]] DeeObject *__restrict self, size_t step)
 		Dee_Decref(elem);
 		if (DeeThread_CheckInterrupt())
 			goto err;
-		++result;
 	}
 	return result;
 err:
 	return (size_t)-1;
 }}
-%{$with__iter_getindex__and__iter_setindex = {
+/*%{$with__iter_getindex__and__iter_setindex = {
 	size_t new_index, result;
 	size_t old_index = CALL_DEPENDENCY(iter_getindex, self);
 	if unlikely(old_index == (size_t)-1)
@@ -78,7 +77,7 @@ err:
 	return result;
 err:
 	return (size_t)-1;
-}} {
+}}*/ {
 	size_t result_value;
 	DREF DeeObject *result = LOCAL_CALLATTRF(self, PCKuSIZ, step);
 	if unlikely(!result)
@@ -99,6 +98,7 @@ err:
 iter_revert = {
 	if (REQUIRE_NODEFAULT(iter_prev))
 		return &$with__iter_prev;
+#if 0
 	if (REQUIRE_ANY(iter_getindex) != &default__iter_getindex__unsupported) {
 		/* TODO: Only if "iter_seq" has "__seq_getitem_always_bound__",
 		 *       can use "$with__iter_getindex__and__iter_setindex" */
@@ -108,4 +108,5 @@ iter_revert = {
 		if (iter_setindex)
 			return &$with__iter_getindex__and__iter_setindex;
 	}
+#endif
 };

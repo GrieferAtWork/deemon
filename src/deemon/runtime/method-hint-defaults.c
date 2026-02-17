@@ -22754,9 +22754,9 @@ default__iter_revert__unsupported(DeeObject *__restrict self, size_t UNUSED(step
 
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__iter_revert__with__iter_prev(DeeObject *__restrict self, size_t step) {
-	size_t result = 0;
+	size_t result;
 	DeeMH_iter_prev_t cached_iter_prev = DeeType_RequireMethodHint(Dee_TYPE(self), iter_prev);;
-	while (result < step) {
+	for (result = 0; result < step; ++result) {
 		DREF DeeObject *elem = (*cached_iter_prev)(self); /* *--self */
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
@@ -22766,28 +22766,7 @@ default__iter_revert__with__iter_prev(DeeObject *__restrict self, size_t step) {
 		Dee_Decref(elem);
 		if (DeeThread_CheckInterrupt())
 			goto err;
-		++result;
 	}
-	return result;
-err:
-	return (size_t)-1;
-}
-
-INTERN WUNUSED NONNULL((1)) size_t DCALL
-default__iter_revert__with__iter_getindex__and__iter_setindex(DeeObject *__restrict self, size_t step) {
-	size_t new_index, result;
-	size_t old_index = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_getindex))(self);
-	if unlikely(old_index == (size_t)-1)
-		goto err;
-	if (OVERFLOW_USUB(old_index, step, &new_index))
-		new_index = 0;
-	result = (size_t)(old_index - new_index);
-	if unlikely(result == (size_t)-1) {
-		DeeRT_ErrIntegerOverflowU(result, (size_t)-1);
-		goto err;
-	}
-	if ((*DeeType_RequireMethodHint(Dee_TYPE(self), iter_setindex))(self, new_index))
-		goto err;
 	return result;
 err:
 	return (size_t)-1;

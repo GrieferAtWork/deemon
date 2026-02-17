@@ -3997,13 +3997,12 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_prev[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__iter_prev__with_callobjectcache___iter_prev__, &tdefault__iter_prev__with_callobjectcache___iter_prev__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__iter_revert[7] = {
+PRIVATE Dee_funptr_t tpconst msm_with_super__iter_revert[6] = {
 	(Dee_funptr_t)&default__iter_revert__with_callattr_revert,
 	(Dee_funptr_t)&default__iter_revert__with_callattr___iter_revert__,
 	(Dee_funptr_t)&default__iter_revert__unsupported,
 	(Dee_funptr_t)&default__iter_revert__empty,
 	(Dee_funptr_t)&default__iter_revert__with__iter_prev,
-	(Dee_funptr_t)&default__iter_revert__with__iter_getindex__and__iter_setindex,
 	NULL
 };
 PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_revert[2] = {

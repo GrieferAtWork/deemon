@@ -4491,6 +4491,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_revert_t DCALL
 mh_select_iter_revert(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if ((DeeMH_iter_prev_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_prev))
 		return &default__iter_revert__with__iter_prev;
+#if 0
 	if ((DeeMH_iter_getindex_t)DeeType_GetMethodHint(orig_type, Dee_TMH_iter_getindex) != &default__iter_getindex__unsupported) {
 		/* TODO: Only if "iter_seq" has "__seq_getitem_always_bound__",
 		 *       can use "$with__iter_getindex__and__iter_setindex" */
@@ -4500,6 +4501,7 @@ mh_select_iter_revert(DeeTypeObject *self, DeeTypeObject *orig_type) {
 		if (iter_setindex)
 			return &default__iter_revert__with__iter_getindex__and__iter_setindex;
 	}
+#endif
 	return NULL;
 }
 

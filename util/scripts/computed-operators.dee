@@ -247,7 +247,6 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		NativeOperator("tp_le"),
 		NativeOperator("tp_gr"),
 		NativeOperator("tp_ge"),
-		Field("tp_nii"), // DEPRECATED!
 	},
 	"type_seq": {
 		NativeOperator("tp_iter"),

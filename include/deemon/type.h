@@ -98,7 +98,6 @@ DECL_BEGIN
 #define Dee_type_gc          type_gc
 #define Dee_type_math        type_math
 #define Dee_type_cmp         type_cmp
-#define Dee_type_nii         type_nii
 #define Dee_type_seq         type_seq
 #define Dee_type_iterator    type_iterator
 #define Dee_type_attr        type_attr
@@ -115,7 +114,6 @@ struct type_method_hint; /* Needed so fixincludes doesn't claim a dependency on 
 /*!export type_gc*/
 /*!export type_math*/
 /*!export type_cmp*/
-/*!export type_nii*/
 /*!export type_seq*/
 /*!export type_iterator*/
 /*!export type_attr*/
@@ -678,7 +676,6 @@ struct Dee_type_math {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 };
 
-struct Dee_type_nii;
 struct Dee_type_cmp {
 	/* Compare operators. */
 	WUNUSED_T NONNULL_T((1)) Dee_hash_t (DCALL *tp_hash)(DeeObject *__restrict self);
@@ -724,13 +721,6 @@ struct Dee_type_cmp {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_le)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_gr)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ge)(DeeObject *self, DeeObject *some_object);
-
-	/* Optional iterator-extensions for providing optimized (but
-	 * less generic) variants for various iterator operations.
-	 * NOTE: The compare sub-structure was chosen for this, as native
-	 *       iterators usually implement compare operators to allow
-	 *       them to be ordered with other operators. */
-	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
 };
 
 struct Dee_type_seq {

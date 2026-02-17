@@ -2845,7 +2845,6 @@ INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__iter_revert__with_callobje
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_revert__unsupported(DeeObject *__restrict self, size_t step);
 #define default__iter_revert__empty (*(size_t (DCALL *)(DeeObject *__restrict, size_t))&_DeeNone_rets0_2)
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_revert__with__iter_prev(DeeObject *__restrict self, size_t step);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_revert__with__iter_getindex__and__iter_setindex(DeeObject *__restrict self, size_t step);
 
 /* iter_operator_bool */
 INTDEF WUNUSED NONNULL((1)) int DCALL default__iter_operator_bool(DeeObject *__restrict self);

@@ -1322,7 +1322,6 @@
 #define type_math        Dee_type_math
 #define type_member      Dee_type_member
 #define type_method      Dee_type_method
-#define type_nii         Dee_type_nii
 #define type_operator    Dee_type_operator
 #define type_seq         Dee_type_seq
 #define type_with        Dee_type_with
