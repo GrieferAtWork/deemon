@@ -4456,28 +4456,19 @@ mh_select_map_popitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	return NULL;
 }
 
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_nextkey_t DCALL
-mh_select_iter_nextkey(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	if ((DeeMH_iter_nextpair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextpair))
-		return &default__iter_nextkey__with__iter_nextpair;
-	return NULL;
-}
-
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_nextvalue_t DCALL
-mh_select_iter_nextvalue(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	if ((DeeMH_iter_nextpair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextpair))
-		return &default__iter_nextvalue__with__iter_nextpair;
-	return NULL;
-}
-
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_advance_t DCALL
-mh_select_iter_advance(DeeTypeObject *self, DeeTypeObject *orig_type) {
-	if ((DeeMH_iter_nextkey_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextkey))
+mh_select_iter_advance(DeeTypeObject *self, DeeTypeObject *) {
+	if (DeeType_GetNativeOperatorWithoutDefaults(self, Dee_TNO_nextkey))
 		return &default__iter_advance__with__iter_nextkey;
-	if ((DeeMH_iter_nextvalue_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextvalue))
+	if (DeeType_GetNativeOperatorWithoutDefaults(self, Dee_TNO_nextvalue))
 		return &default__iter_advance__with__iter_nextvalue;
-	if ((DeeMH_iter_nextpair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_nextpair))
+	if (DeeType_GetNativeOperatorWithoutDefaults(self, Dee_TNO_nextpair))
 		return &default__iter_advance__with__iter_nextpair;
+	/* TODO: Only if "iter_seq" has "__seq_getitem_always_bound__",
+	 *       can use "$with__iter_getindex__and__iter_setindex"
+	 * XXX: This doesn't work -- iterator index does not equal # of
+	 *      iterated items (unbound/skipped items may cause the index
+	 *      to increment many times) */
 	return NULL;
 }
 
@@ -4506,6 +4497,8 @@ mh_select_iter_revert(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	if ((DeeMH_iter_prev_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_iter_prev))
 		return &default__iter_revert__with__iter_prev;
 	if ((DeeMH_iter_getindex_t)DeeType_GetMethodHint(orig_type, Dee_TMH_iter_getindex) != &default__iter_getindex__unsupported) {
+		/* TODO: Only if "iter_seq" has "__seq_getitem_always_bound__",
+		 *       can use "$with__iter_getindex__and__iter_setindex" */
 		DeeMH_iter_setindex_t iter_setindex = (DeeMH_iter_setindex_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_setindex);
 		if (iter_setindex == &default__iter_setindex__empty)
 			return &default__iter_revert__empty;

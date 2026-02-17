@@ -38,16 +38,16 @@ err:
  *                      was encountered. Return value is the # of successfully skipped
  *                      entries before "ITER_DONE" was encountered.
  * @return: (size_t)-1: Error. */
-[[operator(*: tp_iterator->tp_advance)]] /* TODO: Remove this (only here because "tp_nextpair" still exists) */
+[[operator(*: tp_iterator->tp_advance)]] /* TODO: Remove this (only here because "tp_advance" still exists) */
 [[wunused]] size_t
 __iter_advance__.iter_advance([[nonnull]] DeeObject *__restrict self, size_t step)
 %{unsupported_alias("default__iter_advance__with__operator_next")}
 %{$empty = 0}
 %{$with__iter_nextkey = {
 	size_t result = 0;
-	PRELOAD_DEPENDENCY(iter_nextkey);
+	DeeNO_nextkey_t nextkey = DeeType_RequireNativeOperator(Dee_TYPE(self), nextkey);
 	while (result < step) {
-		DREF DeeObject *elem = CALL_DEPENDENCY(iter_nextkey, self);
+		DREF DeeObject *elem = (*nextkey)(self);
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
 				goto err;
@@ -64,9 +64,9 @@ err:
 }}
 %{$with__iter_nextvalue = {
 	size_t result = 0;
-	PRELOAD_DEPENDENCY(iter_nextvalue);
+	DeeNO_nextvalue_t nextvalue = DeeType_RequireNativeOperator(Dee_TYPE(self), nextvalue);
 	while (result < step) {
-		DREF DeeObject *elem = CALL_DEPENDENCY(iter_nextvalue, self);
+		DREF DeeObject *elem = (*nextvalue)(self);
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
 				goto err;
@@ -83,10 +83,10 @@ err:
 }}
 %{$with__iter_nextpair = {
 	size_t result = 0;
-	PRELOAD_DEPENDENCY(iter_nextpair)
+	DeeNO_nextpair_t nextpair = DeeType_RequireNativeOperator(Dee_TYPE(self), nextpair);
 	while (result < step) {
 		DREF DeeObject *key_and_value[2];
-		int error = CALL_DEPENDENCY(iter_nextpair, self, key_and_value);
+		int error = (*nextpair)(self, key_and_value);
 		if unlikely(error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -139,10 +139,15 @@ err:
 
 
 iter_advance = {
-	if (REQUIRE_NODEFAULT(iter_nextkey))
+	if (DeeType_GetNativeOperatorWithoutDefaults(THIS_TYPE, Dee_TNO_nextkey))
 		return &$with__iter_nextkey;
-	if (REQUIRE_NODEFAULT(iter_nextvalue))
+	if (DeeType_GetNativeOperatorWithoutDefaults(THIS_TYPE, Dee_TNO_nextvalue))
 		return &$with__iter_nextvalue;
-	if (REQUIRE_NODEFAULT(iter_nextpair))
+	if (DeeType_GetNativeOperatorWithoutDefaults(THIS_TYPE, Dee_TNO_nextpair))
 		return &$with__iter_nextpair;
+	/* TODO: Only if "iter_seq" has "__seq_getitem_always_bound__",
+	 *       can use "$with__iter_getindex__and__iter_setindex"
+	 * XXX: This doesn't work -- iterator index does not equal # of
+	 *      iterated items (unbound/skipped items may cause the index
+	 *      to increment many times) */
 };

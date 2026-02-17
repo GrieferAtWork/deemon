@@ -3969,49 +3969,6 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_popitem[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_popitem__with_callobjectcache___map_popitem__, &tdefault__map_popitem__with_callobjectcache___map_popitem__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__iter_nextkey[8] = {
-	(Dee_funptr_t)&default__iter_nextkey,
-	(Dee_funptr_t)&default__iter_nextkey__with_callattr_nextkey,
-	(Dee_funptr_t)&default__iter_nextkey__with_callattr___iter_nextkey__,
-	(Dee_funptr_t)&default__iter_nextkey__unsupported,
-	(Dee_funptr_t)&default__iter_nextkey__empty,
-	(Dee_funptr_t)&default__iter_nextkey__with__operator_next,
-	(Dee_funptr_t)&default__iter_nextkey__with__iter_nextpair,
-	NULL
-};
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_nextkey[4] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__iter_nextkey__with_callobjectcache___iter_nextkey__, &tdefault__iter_nextkey__with_callobjectcache___iter_nextkey__),
-	MH_SUPER_MAP_TYPED_INIT(&default__nextkey__with__iter_next, &tdefault__nextkey__with__iter_next),
-	MH_SUPER_MAP_TYPED_INIT(&default__nextkey__with__nextpair, &tdefault__nextkey__with__nextpair),
-	MH_SUPER_MAP_TYPED_END
-};
-PRIVATE Dee_funptr_t tpconst msm_with_super__iter_nextvalue[8] = {
-	(Dee_funptr_t)&default__iter_nextvalue,
-	(Dee_funptr_t)&default__iter_nextvalue__with_callattr_nextvalue,
-	(Dee_funptr_t)&default__iter_nextvalue__with_callattr___iter_nextvalue__,
-	(Dee_funptr_t)&default__iter_nextvalue__unsupported,
-	(Dee_funptr_t)&default__iter_nextvalue__empty,
-	(Dee_funptr_t)&default__iter_nextvalue__with__operator_next,
-	(Dee_funptr_t)&default__iter_nextvalue__with__iter_nextpair,
-	NULL
-};
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_nextvalue[4] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__iter_nextvalue__with_callobjectcache___iter_nextvalue__, &tdefault__iter_nextvalue__with_callobjectcache___iter_nextvalue__),
-	MH_SUPER_MAP_TYPED_INIT(&default__nextvalue__with__iter_next, &tdefault__nextvalue__with__iter_next),
-	MH_SUPER_MAP_TYPED_INIT(&default__nextvalue__with__nextpair, &tdefault__nextvalue__with__nextpair),
-	MH_SUPER_MAP_TYPED_END
-};
-PRIVATE Dee_funptr_t tpconst msm_with_super__iter_nextpair[5] = {
-	(Dee_funptr_t)&default__iter_nextpair,
-	(Dee_funptr_t)&default__iter_nextpair__unsupported,
-	(Dee_funptr_t)&default__iter_nextpair__empty,
-	(Dee_funptr_t)&default__iter_nextpair__with__operator_next,
-	NULL
-};
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_nextpair[2] = {
-	MH_SUPER_MAP_TYPED_INIT(&default__nextpair__with__iter_next, &tdefault__nextpair__with__iter_next),
-	MH_SUPER_MAP_TYPED_END
-};
 PRIVATE Dee_funptr_t tpconst msm_with_super__iter_advance[10] = {
 	(Dee_funptr_t)&default__iter_advance,
 	(Dee_funptr_t)&default__iter_advance__with_callattr_advance,
@@ -4140,7 +4097,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_getseq[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__iter_getseq__with_callobjectcache___iter_seq__, &tdefault__iter_getseq__with_callobjectcache___iter_seq__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE struct mh_super_map tpconst mh_super_maps[266] = {
+PRIVATE struct mh_super_map tpconst mh_super_maps[263] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_bool, msm_with_type__seq_operator_bool),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_sizeob, msm_with_type__seq_operator_sizeob),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__seq_operator_size, msm_with_type__seq_operator_size),
@@ -4395,9 +4352,6 @@ PRIVATE struct mh_super_map tpconst mh_super_maps[266] = {
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_pop, msm_with_type__map_pop),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_pop_with_default, msm_with_type__map_pop_with_default),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__map_popitem, msm_with_type__map_popitem),
-	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_nextkey, msm_with_type__iter_nextkey),
-	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_nextvalue, msm_with_type__iter_nextvalue),
-	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_nextpair, msm_with_type__iter_nextpair),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_advance, msm_with_type__iter_advance),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_prev, msm_with_type__iter_prev),
 	MH_SUPER_MAP_INIT(NULL, msm_with_super__iter_revert, msm_with_type__iter_revert),

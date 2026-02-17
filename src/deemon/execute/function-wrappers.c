@@ -26,6 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw, UNPu16, UNPx16 */
 #include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Type, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FLENIENT, Dee_DDI_*, Dee_code_*, Dee_ddi_*, code_addr_t */
+#include <deemon/pair.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Type, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FLENIENT, Dee_DDI_*, Dee_code_*, Dee_ddi_*, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
@@ -34,7 +35,7 @@
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_funptr_t, Dee_hash_t, Dee_return_*, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmpz, bcmp, memcpy*, memmovedownc, memmoveupc, strlen */
@@ -103,7 +104,7 @@ funcstaticsiter_getseq(FunctionStaticsIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-funcstaticsiter_nii_getindex(FunctionStaticsIterator *__restrict self) {
+funcstaticsiter_mh_iter_getindex(FunctionStaticsIterator *__restrict self) {
 	uint16_t base   = self->fsi_func->fo_code->co_refc;
 	uint16_t result = atomic_read(&self->fsi_sid);
 	ASSERT(result >= base);
@@ -111,7 +112,7 @@ funcstaticsiter_nii_getindex(FunctionStaticsIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-funcstaticsiter_nii_setindex(FunctionStaticsIterator *__restrict self, size_t new_index) {
+funcstaticsiter_mh_iter_setindex(FunctionStaticsIterator *__restrict self, size_t new_index) {
 	uint16_t sid, base = self->fsi_func->fo_code->co_refc;
 	if (OVERFLOW_UADD(base, new_index, &sid) || sid > self->fsi_end)
 		sid = self->fsi_end;
@@ -120,7 +121,7 @@ funcstaticsiter_nii_setindex(FunctionStaticsIterator *__restrict self, size_t ne
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-funcstaticsiter_nii_rewind(FunctionStaticsIterator *__restrict self) {
+funcstaticsiter_mh_iter_rewind(FunctionStaticsIterator *__restrict self) {
 	uint16_t base = self->fsi_func->fo_code->co_refc;
 	atomic_write(&self->fsi_sid, base);
 	return 0;
@@ -223,25 +224,6 @@ funcstaticsiter_next(FunctionStaticsIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_nii tpconst funcstaticsiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&funcstaticsiter_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&funcstaticsiter_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&funcstaticsiter_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&funcstaticsiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ NULL,
-		}
-	}
-};
-
 PRIVATE struct type_cmp funcstaticsiter_cmp = {
 	/* .tp_hash          = */ DEFIMPL_UNSUPPORTED(&default__hash__unsupported),
 	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
@@ -253,12 +235,20 @@ PRIVATE struct type_cmp funcstaticsiter_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &funcstaticsiter_nii,
 };
 
+#define funcstaticsiter_methods NULL
 PRIVATE struct type_getset tpconst funcstaticsiter_getsets[] = {
 	TYPE_GETTER_AB(STR_seq, &funcstaticsiter_getseq, "->?Ert:FunctionStatics"),
+	TYPE_GETSET_HINTREF(Iterator_index),
 	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method_hint tpconst funcstaticsiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_getindex, &funcstaticsiter_mh_iter_getindex),
+	TYPE_METHOD_HINT(iter_setindex, &funcstaticsiter_mh_iter_setindex),
+	TYPE_METHOD_HINT(iter_rewind, &funcstaticsiter_mh_iter_rewind),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst funcstaticsiter_members[] = {
@@ -306,13 +296,13 @@ INTERN DeeTypeObject FunctionStaticsIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ funcstaticsiter_methods,
 	/* .tp_getsets       = */ funcstaticsiter_getsets,
 	/* .tp_members       = */ funcstaticsiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ funcstaticsiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -663,11 +653,8 @@ INTDEF DeeTypeObject FunctionSymbolsByNameIterator_Type;
 INTDEF DeeTypeObject FunctionSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject FunctionSymbolsByName_Type;
 
-STATIC_ASSERT(offsetof(FunctionSymbolsByNameIterator, fsbni_seq) == offsetof(ProxyObject, po_obj));
-#define funcsymbolsbynameiter_nii_getseq generic_proxy__getobj
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-funcsymbolsbynameiter_nii_getindex(FunctionSymbolsByNameIterator *__restrict self) {
+funcsymbolsbynameiter_mh_iter_getindex(FunctionSymbolsByNameIterator *__restrict self) {
 	uint16_t base   = self->fsbni_seq->fsbn_rid_start;
 	uint16_t result = atomic_read(&self->fsbni_rid);
 	ASSERT(result >= base);
@@ -675,7 +662,7 @@ funcsymbolsbynameiter_nii_getindex(FunctionSymbolsByNameIterator *__restrict sel
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-funcsymbolsbynameiter_nii_setindex(FunctionSymbolsByNameIterator *__restrict self, size_t new_index) {
+funcsymbolsbynameiter_mh_iter_setindex(FunctionSymbolsByNameIterator *__restrict self, size_t new_index) {
 	uint16_t sid, base = self->fsbni_seq->fsbn_rid_start;
 	if (OVERFLOW_UADD(base, new_index, &sid) || sid > self->fsbni_end)
 		sid = self->fsbni_end;
@@ -684,7 +671,7 @@ funcsymbolsbynameiter_nii_setindex(FunctionSymbolsByNameIterator *__restrict sel
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-funcsymbolsbynameiter_nii_rewind(FunctionSymbolsByNameIterator *__restrict self) {
+funcsymbolsbynameiter_mh_iter_rewind(FunctionSymbolsByNameIterator *__restrict self) {
 	uint16_t base = self->fsbni_seq->fsbn_rid_start;
 	atomic_write(&self->fsbni_rid, base);
 	return 0;
@@ -824,33 +811,6 @@ err_value:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_nextkey(FunctionSymbolsByNameIterator *__restrict self) {
-	uint16_t result_sid;
-	DeeFunctionObject *func = self->fsbni_func;
-	for (;;) {
-		uint16_t old_sid, new_sid;
-		old_sid = atomic_read(&self->fsbni_rid);
-		new_sid = old_sid;
-		DeeFunction_RefLockRead(func);
-		for (;;) {
-			if (new_sid >= self->fsbni_end) {
-				DeeFunction_RefLockEndRead(func);
-				return ITER_DONE;
-			}
-			if (ITER_ISOK(func->fo_refv[new_sid]))
-				break;
-			++new_sid;
-		}
-		DeeFunction_RefLockEndRead(func);
-		result_sid = new_sid;
-		++new_sid;
-		if (atomic_cmpxch_or_write(&self->fsbni_rid, old_sid, new_sid))
-			break;
-	}
-	return Code_GetRefNameById(self->fsbni_func->fo_code, result_sid);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 funcsymbolsbynameiter_nextkey_with_unbound(FunctionSymbolsByNameIterator *__restrict self) {
 	uint16_t result_sid;
 	for (;;) {
@@ -868,58 +828,15 @@ funcsymbolsbynameiter_nextkey_with_unbound(FunctionSymbolsByNameIterator *__rest
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_nextvalue(FunctionSymbolsByNameIterator *__restrict self) {
-	DREF DeeObject *result;
-	DeeFunctionObject *func = self->fsbni_func;
-	for (;;) {
-		uint16_t old_sid, new_sid;
-		old_sid = atomic_read(&self->fsbni_rid);
-		new_sid = old_sid;
-		DeeFunction_RefLockRead(func);
-		for (;;) {
-			if (new_sid >= self->fsbni_end) {
-				DeeFunction_RefLockEndRead(func);
-				return ITER_DONE;
-			}
-			result = func->fo_refv[new_sid];
-			if (ITER_ISOK(result))
-				break;
-			++new_sid;
-		}
-		Dee_Incref(result);
-		DeeFunction_RefLockEndRead(func);
-		++new_sid;
-		if (atomic_cmpxch_or_write(&self->fsbni_rid, old_sid, new_sid))
-			break;
-		Dee_Decref_unlikely(result);
-	}
-	return result;
+funcsymbolsbynamekeysiter_getseq(FunctionSymbolsByNameIterator *__restrict self) {
+	return DeeObject_InvokeMethodHint(map_keys, Dee_AsObject(self->fsbni_seq));
 }
 
 PRIVATE struct type_iterator funcsymbolsbynameiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&funcsymbolsbynameiter_nextpair,
-	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_nextkey,
-	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbynameiter_nextvalue,
+	/* .tp_nextkey   = */ NULL,
+	/* .tp_nextvalue = */ NULL,
 	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
-};
-
-PRIVATE struct type_nii tpconst funcsymbolsbynameiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&funcsymbolsbynameiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ NULL,
-		}
-	}
 };
 
 PRIVATE struct type_cmp funcsymbolsbynameiter_cmp = {
@@ -933,11 +850,29 @@ PRIVATE struct type_cmp funcsymbolsbynameiter_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &funcsymbolsbynameiter_nii,
+};
+
+#define funcsymbolsbynameiter_methods     NULL
+#define funcsymbolsbynamekeysiter_methods NULL
+
+PRIVATE struct type_getset tpconst funcsymbolsbynamekeysiter_getsets[] = {
+	TYPE_GETTER_AB(STR_seq, &funcsymbolsbynamekeysiter_getseq, "->?Ert:MapKeys"),
+#define funcsymbolsbynameiter_getsets (funcsymbolsbynamekeysiter_getsets + 1)
+	TYPE_GETSET_HINTREF(Iterator_index),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method_hint tpconst funcsymbolsbynameiter_method_hints[] = {
+#define funcsymbolsbynamekeysiter_method_hints funcsymbolsbynameiter_method_hints
+	TYPE_METHOD_HINT(iter_getindex, &funcsymbolsbynameiter_mh_iter_getindex),
+	TYPE_METHOD_HINT(iter_setindex, &funcsymbolsbynameiter_mh_iter_setindex),
+	TYPE_METHOD_HINT(iter_rewind, &funcsymbolsbynameiter_mh_iter_rewind),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbynameiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(FunctionSymbolsByNameIterator, fsbni_seq), "->?Ert:FunctionSymbolsByName"),
+#define funcsymbolsbynamekeysiter_members (funcsymbolsbynameiter_members + 1)
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT_AB, offsetof(FunctionSymbolsByNameIterator, fsbni_func), "->?DFunction"),
 	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByNameIterator, fsbni_rid)),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByNameIterator, fsbni_end)),
@@ -977,18 +912,18 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &funcsymbolsbynameiter_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ DEFIMPL(&default__iter_next__with__nextpair),
+	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ &funcsymbolsbynameiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_methods       = */ funcsymbolsbynameiter_methods,
+	/* .tp_getsets       = */ funcsymbolsbynameiter_getsets,
 	/* .tp_members       = */ funcsymbolsbynameiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ funcsymbolsbynameiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -1031,13 +966,13 @@ INTERN DeeTypeObject FunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ funcsymbolsbynameiter_members,
+	/* .tp_methods       = */ funcsymbolsbynamekeysiter_methods,
+	/* .tp_getsets       = */ funcsymbolsbynamekeysiter_getsets,
+	/* .tp_members       = */ funcsymbolsbynamekeysiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ funcsymbolsbynamekeysiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -1857,11 +1792,8 @@ INTDEF DeeTypeObject YieldFunctionSymbolsByNameIterator_Type;
 INTDEF DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject YieldFunctionSymbolsByName_Type;
 
-STATIC_ASSERT(offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq) == offsetof(ProxyObject, po_obj));
-#define yfuncsymbolsbynameiter_nii_getseq generic_proxy__getobj
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-yfuncsymbolsbynameiter_nii_getindex(YieldFunctionSymbolsByNameIterator *__restrict self) {
+yfuncsymbolsbynameiter_mh_iter_getindex(YieldFunctionSymbolsByNameIterator *__restrict self) {
 	size_t result;
 	YieldFunctionSymbolsByNameIteratorIndex idx;
 	idx.yfsbnii_word = atomic_read(&self->yfsbni_idx.yfsbnii_word);
@@ -1871,7 +1803,7 @@ yfuncsymbolsbynameiter_nii_getindex(YieldFunctionSymbolsByNameIterator *__restri
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-yfuncsymbolsbynameiter_nii_setindex(YieldFunctionSymbolsByNameIterator *__restrict self, size_t new_index) {
+yfuncsymbolsbynameiter_mh_iter_setindex(YieldFunctionSymbolsByNameIterator *__restrict self, size_t new_index) {
 	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
 	YieldFunctionSymbolsByNameIteratorIndex idx;
 	if (new_index < sym->yfsbn_nargs) {
@@ -1889,7 +1821,7 @@ yfuncsymbolsbynameiter_nii_setindex(YieldFunctionSymbolsByNameIterator *__restri
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-yfuncsymbolsbynameiter_nii_rewind(YieldFunctionSymbolsByNameIterator *__restrict self) {
+yfuncsymbolsbynameiter_mh_iter_rewind(YieldFunctionSymbolsByNameIterator *__restrict self) {
 	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
 	YieldFunctionSymbolsByNameIteratorIndex idx;
 	idx.yfsbnii_idx.i_aid = 0;
@@ -2082,63 +2014,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_nextkey(YieldFunctionSymbolsByNameIterator *__restrict self) {
-	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
-	YieldFunctionSymbolsByNameIteratorIndex oldidx, newidx;
-	DeeCodeObject *code = sym->yfsbn_yfunc->yf_func->fo_code;
-	DREF DeeObject *name;
-again:
-	oldidx.yfsbnii_word = atomic_read(&self->yfsbni_idx.yfsbnii_word);
-	newidx.yfsbnii_word = oldidx.yfsbnii_word;
-	for (;;) {
-		if (newidx.yfsbnii_idx.i_aid < sym->yfsbn_nargs) {
-			if (!YieldFunction_GetArg(sym->yfsbn_yfunc, newidx.yfsbnii_idx.i_aid)) {
-				++newidx.yfsbnii_idx.i_aid;
-				continue;
-			}
-			/* Lookup name */
-			if (code->co_keywords) {
-				name = Dee_AsObject(code->co_keywords[newidx.yfsbnii_idx.i_aid]);
-				Dee_Incref(name);
-			} else {
-				name = DeeInt_NewUInt16(newidx.yfsbnii_idx.i_aid);
-				if unlikely(!name)
-					goto err;
-			}
-			++newidx.yfsbnii_idx.i_aid;
-			break;
-		}
-		if (newidx.yfsbnii_idx.i_rid < sym->yfsbn_rid_end) {
-			char const *refname;
-			DeeFunctionObject *func = sym->yfsbn_yfunc->yf_func;
-			DeeObject *value;
-			value = atomic_read(&func->fo_refv[newidx.yfsbnii_idx.i_rid]);
-			if (!ITER_ISOK(value)) {
-				++newidx.yfsbnii_idx.i_rid;
-				continue;
-			}
-			refname = DeeCode_GetRSymbolName(Dee_AsObject(code), newidx.yfsbnii_idx.i_rid);
-			name = refname ? DeeString_New(refname)
-			               : DeeInt_NewUInt16(code->co_argc_max + newidx.yfsbnii_idx.i_rid);
-			if unlikely(!name)
-				goto err;
-			++newidx.yfsbnii_idx.i_rid;
-			break;
-		}
-		return ITER_DONE;
-	}
-	if (!atomic_cmpxch_or_write(&self->yfsbni_idx.yfsbnii_word,
-	                            oldidx.yfsbnii_word,
-	                            newidx.yfsbnii_word)) {
-		Dee_Decref_unlikely(name);
-		goto again;
-	}
-	return name;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yfuncsymbolsbynameiter_nextkey_with_unbound(YieldFunctionSymbolsByNameIterator *__restrict self) {
 	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
 	DeeCodeObject *code = sym->yfsbn_yfunc->yf_func->fo_code;
@@ -2184,77 +2059,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_nextvalue(YieldFunctionSymbolsByNameIterator *__restrict self) {
-	YieldFunctionSymbolsByName *sym = self->yfsbni_seq;
-	DREF DeeObject *value;
-	YieldFunctionSymbolsByNameIteratorIndex oldidx, newidx;
-again:
-	oldidx.yfsbnii_word = atomic_read(&self->yfsbni_idx.yfsbnii_word);
-	newidx.yfsbnii_word = oldidx.yfsbnii_word;
-	for (;;) {
-		if (newidx.yfsbnii_idx.i_aid < sym->yfsbn_nargs) {
-			value = YieldFunction_GetArg(sym->yfsbn_yfunc, newidx.yfsbnii_idx.i_aid);
-			if (!value) {
-				++newidx.yfsbnii_idx.i_aid;
-				continue;
-			}
-			Dee_Incref(value);
-			++newidx.yfsbnii_idx.i_aid;
-			break;
-		}
-		if (newidx.yfsbnii_idx.i_rid < sym->yfsbn_rid_end) {
-			DeeFunctionObject *func = sym->yfsbn_yfunc->yf_func;
-			DeeFunction_RefLockRead(func);
-			value = func->fo_refv[newidx.yfsbnii_idx.i_rid];
-			if (!ITER_ISOK(value)) {
-				DeeFunction_RefLockEndRead(func);
-				++newidx.yfsbnii_idx.i_rid;
-				continue;
-			}
-			Dee_Incref(value);
-			DeeFunction_RefLockEndRead(func);
-			++newidx.yfsbnii_idx.i_rid;
-			break;
-		}
-		return ITER_DONE;
-	}
-	if (!atomic_cmpxch_or_write(&self->yfsbni_idx.yfsbnii_word,
-	                            oldidx.yfsbnii_word,
-	                            newidx.yfsbnii_word)) {
-		Dee_Decref_unlikely(value);
-		goto again;
-	}
-	return value;
-/*
-err:
-	return NULL;*/
-}
-
 PRIVATE struct type_iterator yfuncsymbolsbynameiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&yfuncsymbolsbynameiter_nextpair,
-	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_nextkey,
-	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbynameiter_nextvalue,
+	/* .tp_nextkey   = */ NULL,
+	/* .tp_nextvalue = */ NULL,
 	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
-};
-
-PRIVATE struct type_nii tpconst yfuncsymbolsbynameiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&yfuncsymbolsbynameiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ NULL,
-		}
-	}
 };
 
 PRIVATE struct type_cmp yfuncsymbolsbynameiter_cmp = {
@@ -2268,33 +2077,34 @@ PRIVATE struct type_cmp yfuncsymbolsbynameiter_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &yfuncsymbolsbynameiter_nii,
 };
 
-PRIVATE struct type_getset tpconst yfuncsymbolsbynameiter_getsets[] = {
-	TYPE_GETTER_AB("__yfunc__", &yfuncsymbolsbynameiter_get_yfunc, "->?Ert:YieldFunction"),
-	TYPE_GETTER_AB("__func__", &yfuncsymbolsbynameiter_get_func, "->?DFunction"),
-	TYPE_GETSET_END
+#define yfuncsymbolsbynameiter_methods     NULL
+#define yfuncsymbolsbynamekeysiter_methods NULL
+
+PRIVATE struct type_method_hint tpconst yfuncsymbolsbynameiter_method_hints[] = {
+#define yfuncsymbolsbynamekeysiter_method_hints yfuncsymbolsbynameiter_method_hints
+	TYPE_METHOD_HINT(iter_getindex, &yfuncsymbolsbynameiter_mh_iter_getindex),
+	TYPE_METHOD_HINT(iter_setindex, &yfuncsymbolsbynameiter_mh_iter_setindex),
+	TYPE_METHOD_HINT(iter_rewind, &yfuncsymbolsbynameiter_mh_iter_rewind),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst yfuncsymbolsbynameiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_seq), "->?Ert:YieldFunctionSymbolsByName"),
+#define yfuncsymbolsbynamekeysiter_members (yfuncsymbolsbynameiter_members + 1)
 	TYPE_MEMBER_FIELD("__aid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_aid)),
 	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_rid)),
 	TYPE_MEMBER_END
 };
 
 PRIVATE struct type_getset tpconst yfuncsymbolsbynamekeysiter_getsets[] = {
+	TYPE_GETTER_AB(STR_seq, &yfuncsymbolsbynamekeysiter_get_seq, "->?Ert:MapKeys"),
+#define yfuncsymbolsbynameiter_getsets (yfuncsymbolsbynamekeysiter_getsets + 1)
+	TYPE_GETSET_HINTREF(Iterator_index),
 	TYPE_GETTER_AB("__yfunc__", &yfuncsymbolsbynameiter_get_yfunc, "->?Ert:YieldFunction"),
 	TYPE_GETTER_AB("__func__", &yfuncsymbolsbynameiter_get_func, "->?DFunction"),
-	TYPE_GETTER_AB(STR_seq, &yfuncsymbolsbynamekeysiter_get_seq, "->?Ert:MapKeys"),
 	TYPE_GETSET_END
-};
-
-PRIVATE struct type_member tpconst yfuncsymbolsbynamekeysiter_members[] = {
-	TYPE_MEMBER_FIELD("__aid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_aid)),
-	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByNameIterator, yfsbni_idx.yfsbnii_idx.i_rid)),
-	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
@@ -2332,18 +2142,18 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &yfuncsymbolsbynameiter_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ DEFIMPL(&default__iter_next__with__nextpair),
+	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ &yfuncsymbolsbynameiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ yfuncsymbolsbynameiter_methods,
 	/* .tp_getsets       = */ yfuncsymbolsbynameiter_getsets,
 	/* .tp_members       = */ yfuncsymbolsbynameiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ yfuncsymbolsbynameiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -2389,13 +2199,13 @@ INTERN DeeTypeObject YieldFunctionSymbolsByNameKeysIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ yfuncsymbolsbynamekeysiter_methods,
 	/* .tp_getsets       = */ yfuncsymbolsbynamekeysiter_getsets,
 	/* .tp_members       = */ yfuncsymbolsbynamekeysiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ yfuncsymbolsbynamekeysiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -4057,11 +3867,8 @@ INTDEF DeeTypeObject FrameSymbolsByNameIterator_Type;
 INTDEF DeeTypeObject FrameSymbolsByNameKeysIterator_Type;
 INTDEF DeeTypeObject FrameSymbolsByName_Type;
 
-STATIC_ASSERT(offsetof(FrameSymbolsByNameIterator, frsbni_seq) == offsetof(ProxyObject, po_obj));
-#define framesymbolsbynameiter_nii_getseq generic_proxy__getobj
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-framesymbolsbynameiter_nii_getindex(FrameSymbolsByNameIterator *__restrict self) {
+framesymbolsbynameiter_mh_iter_getindex(FrameSymbolsByNameIterator *__restrict self) {
 	size_t result;
 	FrameSymbolsByName *sym = self->frsbni_seq;
 	FrameSymbolsByNameIterator_LockAcquire(self);
@@ -4074,7 +3881,7 @@ framesymbolsbynameiter_nii_getindex(FrameSymbolsByNameIterator *__restrict self)
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-framesymbolsbynameiter_nii_setindex(FrameSymbolsByNameIterator *__restrict self, size_t new_index) {
+framesymbolsbynameiter_mh_iter_setindex(FrameSymbolsByNameIterator *__restrict self, size_t new_index) {
 	FrameSymbolsByName *sym = self->frsbni_seq;
 	FrameSymbolsByNameIterator_LockAcquire(self);
 	if (new_index < sym->frsbn_nargs) {
@@ -4108,7 +3915,7 @@ framesymbolsbynameiter_nii_setindex(FrameSymbolsByNameIterator *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-framesymbolsbynameiter_nii_rewind(FrameSymbolsByNameIterator *__restrict self) {
+framesymbolsbynameiter_mh_iter_rewind(FrameSymbolsByNameIterator *__restrict self) {
 	FrameSymbolsByNameIterator_LockAcquire(self);
 	self->frsbni_idx.frsbnii_aid = 0;
 	self->frsbni_idx.frsbnii_rid = self->frsbni_seq->frsbn_rid_start;
@@ -4633,59 +4440,17 @@ err:
 	return NULL;
 }
 
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-framesymbolsbynameiter_nextvalue(FrameSymbolsByNameIterator *__restrict self) {
-	DREF DeeObject *value;
-	FrameSymbolsByNameIteratorIndex oldidx, newidx;
-again:
-	framesymbolsbynameiter_get_idx(self, &oldidx);
-	memcpy(&newidx, &oldidx, sizeof(newidx));
-	for (;;) {
-		canonical_lid_t clid;
-		clid  = FrameSymbolsByName_Idx2CLid(self->frsbni_seq, &newidx);
-		value = FrameSymbolsByName_GetCLidValue(self->frsbni_seq, clid);
-		if (ITER_ISOK(value)) {
-			FrameSymbolsByName_IdxInc(self->frsbni_seq, &newidx);
-			break;
-		}
-		if unlikely(!value)
-			goto err;
-		if (!FrameSymbolsByName_IdxInc(self->frsbni_seq, &newidx))
-			return ITER_DONE;
-	}
-	if (!framesymbolsbynameiter_cmpxch_idx(self, &oldidx, &newidx)) {
-		Dee_Decref(value);
-		goto again;
-	}
-	return value;
-err:
-	return NULL;
+framesymbolsbynamekeysiter_getseq(FrameSymbolsByNameIterator *__restrict self) {
+	return DeeObject_InvokeMethodHint(map_keys, Dee_AsObject(self->frsbni_seq));
 }
 
 PRIVATE struct type_iterator framesymbolsbynameiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&framesymbolsbynameiter_nextpair,
-	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbynameiter_nextvalue,
+	/* .tp_nextkey   = */ NULL,
+	/* .tp_nextvalue = */ NULL,
 	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextvalue),
-};
-
-PRIVATE struct type_nii tpconst framesymbolsbynameiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&framesymbolsbynameiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ NULL,
-		}
-	}
 };
 
 PRIVATE struct type_cmp framesymbolsbynameiter_cmp = {
@@ -4699,10 +4464,23 @@ PRIVATE struct type_cmp framesymbolsbynameiter_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &framesymbolsbynameiter_nii,
 };
 
-PRIVATE struct type_getset tpconst framesymbolsbynameiter_getsets[] = {
+#define framesymbolsbynamekeysiter_methods NULL
+#define framesymbolsbynameiter_methods     NULL
+
+PRIVATE struct type_method_hint tpconst framesymbolsbynameiter_method_hints[] = {
+#define framesymbolsbynamekeysiter_method_hints framesymbolsbynameiter_method_hints
+	TYPE_METHOD_HINT(iter_getindex, &framesymbolsbynameiter_mh_iter_getindex),
+	TYPE_METHOD_HINT(iter_setindex, &framesymbolsbynameiter_mh_iter_setindex),
+	TYPE_METHOD_HINT(iter_rewind, &framesymbolsbynameiter_mh_iter_rewind),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_getset tpconst framesymbolsbynamekeysiter_getsets[] = {
+	TYPE_GETTER_AB(STR_seq, &framesymbolsbynamekeysiter_getseq, "->?Ert:MapKeys"),
+#define framesymbolsbynameiter_getsets (framesymbolsbynamekeysiter_getsets + 1)
+	TYPE_GETSET_HINTREF(Iterator_index),
 	TYPE_GETTER_AB("__frame__", &framesymbolsbynameiter_get_frame, "->?Ert:Frame"),
 	TYPE_GETTER_AB("__func__", &framesymbolsbynameiter_get_func, "->?DFunction"),
 	TYPE_GETSET_END
@@ -4710,6 +4488,7 @@ PRIVATE struct type_getset tpconst framesymbolsbynameiter_getsets[] = {
 
 PRIVATE struct type_member tpconst framesymbolsbynameiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(FrameSymbolsByNameIterator, frsbni_seq), "->?Ert:FrameSymbolsByName"),
+#define framesymbolsbynamekeysiter_members (framesymbolsbynameiter_members + 1)
 	TYPE_MEMBER_FIELD("__aid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByNameIterator, frsbni_idx.frsbnii_aid)),
 	TYPE_MEMBER_FIELD("__rid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByNameIterator, frsbni_idx.frsbnii_rid)),
 	TYPE_MEMBER_FIELD("__lid__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByNameIterator, frsbni_idx.frsbnii_lid)),
@@ -4750,18 +4529,18 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
 	/* .tp_cmp           = */ &framesymbolsbynameiter_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ DEFIMPL(&default__iter_next__with__nextpair),
+	/* .tp_iter_next     = */ NULL,
 	/* .tp_iterator      = */ &framesymbolsbynameiter_iterator,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ framesymbolsbynameiter_methods,
 	/* .tp_getsets       = */ framesymbolsbynameiter_getsets,
 	/* .tp_members       = */ framesymbolsbynameiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ framesymbolsbynameiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -4804,13 +4583,13 @@ INTERN DeeTypeObject FrameSymbolsByNameKeysIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ framesymbolsbynameiter_getsets,
-	/* .tp_members       = */ framesymbolsbynameiter_members,
+	/* .tp_methods       = */ framesymbolsbynamekeysiter_methods,
+	/* .tp_getsets       = */ framesymbolsbynamekeysiter_getsets,
+	/* .tp_members       = */ framesymbolsbynamekeysiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ framesymbolsbynamekeysiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

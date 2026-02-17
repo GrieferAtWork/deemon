@@ -192,6 +192,38 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_nextkey(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result, *def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "nextkey", &def);
+	result = DeeObject_IterNextKey(self);
+	if (result == ITER_DONE) {
+		if (def)
+			return_reference_(def);
+		DeeError_Throw(&DeeError_StopIteration_instance);
+		result = NULL;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_nextvalue(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result, *def = NULL;
+	DeeArg_Unpack0Or1(err, argc, argv, "nextvalue", &def);
+	result = DeeObject_IterNextValue(self);
+	if (result == ITER_DONE) {
+		if (def)
+			return_reference_(def);
+		DeeError_Throw(&DeeError_StopIteration_instance);
+		result = NULL;
+	}
+	return result;
+err:
+	return NULL;
+}
+
 PRIVATE struct type_method tpconst iterator_methods[] = {
 	TYPE_METHOD_F(DeeMA_Iterator_advance_name, &DeeMA_Iterator_advance,
 	              DeeMA_Iterator_advance_flags,
@@ -227,48 +259,44 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	              DeeMA_Iterator_rewind_flags,
 	              DeeMA_Iterator_rewind_doc "\n"
 	              "Same as ${del this.index} (s.a. ?#index)"),
-	TYPE_METHOD_F(DeeMA_Iterator_nextkey_name, &DeeMA_Iterator_nextkey,
-	              DeeMA_Iterator_nextkey_flags,
-	              DeeMA_Iterator_nextkey_doc "\n"
-	              "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
-	              "Consume the next item, unpack it into a 2-element "
-	              /**/ "sequence, and return that sequence's first item\n"
-	              "${"
-	              /**/ "function nextkey(def?) {\n"
-	              /**/ "	foreach (local next: c) {\n"
-	              /**/ "		local a, none = next...;\n"
-	              /**/ "		return a;\n"
-	              /**/ "	}\n"
-	              /**/ "	if (def is bound)\n"
-	              /**/ "		return def;\n"
-	              /**/ "	throw StopIteration();\n"
-	              /**/ "}"
-	              "}"),
-	TYPE_METHOD_F(DeeMA_Iterator_nextvalue_name, &DeeMA_Iterator_nextvalue,
-	              DeeMA_Iterator_nextvalue_flags,
-	              DeeMA_Iterator_nextvalue_doc "\n"
-	              "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
-	              "Consume the next item, unpack it into a 2-element "
-	              /**/ "sequence, and return that sequence's second item\n"
-	              "${"
-	              /**/ "function nextvalue(def?) {\n"
-	              /**/ "	foreach (local next: c) {\n"
-	              /**/ "		local none, b = next...;\n"
-	              /**/ "		return b;\n"
-	              /**/ "	}\n"
-	              /**/ "	if (def is bound)\n"
-	              /**/ "		return def;\n"
-	              /**/ "	throw StopIteration();\n"
-	              /**/ "}"
-	              "}"),
-
-
 	TYPE_METHOD("next", &iterator_next,
 	            "(def?)->\n"
 	            "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
 	            "Same as ${this.operator next()}\n"
 	            "When given, @def is returned when the Iterator has been "
 	            /**/ "exhausted, rather than throwing a :StopIteration error"),
+	TYPE_METHOD("nextkey", &iterator_nextkey,
+	            "(def?)->\n"
+	            "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
+	            "Consume the next item, unpack it into a 2-element "
+	            /**/ "sequence, and return that sequence's first item\n"
+	            "${"
+	            /**/ "function nextkey(def?) {\n"
+	            /**/ "	foreach (local next: c) {\n"
+	            /**/ "		local a, none = next...;\n"
+	            /**/ "		return a;\n"
+	            /**/ "	}\n"
+	            /**/ "	if (def is bound)\n"
+	            /**/ "		return def;\n"
+	            /**/ "	throw StopIteration();\n"
+	            /**/ "}"
+	            "}"),
+	TYPE_METHOD("nextvalue", &iterator_nextvalue,
+	            "(def?)->\n"
+	            "#tStopIteration{@this Iterator has been exhausted, and no @def was given}"
+	            "Consume the next item, unpack it into a 2-element "
+	            /**/ "sequence, and return that sequence's second item\n"
+	            "${"
+	            /**/ "function nextvalue(def?) {\n"
+	            /**/ "	foreach (local next: c) {\n"
+	            /**/ "		local none, b = next...;\n"
+	            /**/ "		return b;\n"
+	            /**/ "	}\n"
+	            /**/ "	if (def is bound)\n"
+	            /**/ "		return def;\n"
+	            /**/ "	throw StopIteration();\n"
+	            /**/ "}"
+	            "}"),
 	TYPE_METHOD_END
 };
 

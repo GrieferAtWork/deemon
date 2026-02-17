@@ -272,8 +272,6 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_removekeys_t DCALL mh_select_
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_pop_t DCALL mh_select_map_pop(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_pop_with_default_t DCALL mh_select_map_pop_with_default(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_map_popitem_t DCALL mh_select_map_popitem(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_nextkey_t DCALL mh_select_iter_nextkey(DeeTypeObject *self, DeeTypeObject *orig_type);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_nextvalue_t DCALL mh_select_iter_nextvalue(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_advance_t DCALL mh_select_iter_advance(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_prev_t DCALL mh_select_iter_prev(DeeTypeObject *self, DeeTypeObject *orig_type);
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_revert_t DCALL mh_select_iter_revert(DeeTypeObject *self, DeeTypeObject *orig_type);

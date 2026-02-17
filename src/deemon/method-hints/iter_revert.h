@@ -100,6 +100,8 @@ iter_revert = {
 	if (REQUIRE_NODEFAULT(iter_prev))
 		return &$with__iter_prev;
 	if (REQUIRE_ANY(iter_getindex) != &default__iter_getindex__unsupported) {
+		/* TODO: Only if "iter_seq" has "__seq_getitem_always_bound__",
+		 *       can use "$with__iter_getindex__and__iter_setindex" */
 		DeeMH_iter_setindex_t iter_setindex = REQUIRE(iter_setindex);
 		if (iter_setindex == &default__iter_setindex__empty)
 			return &$empty;

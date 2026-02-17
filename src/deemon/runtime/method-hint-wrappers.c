@@ -2375,50 +2375,6 @@ err:
 }}
 
 PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___iter_nextkey__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	struct {
-		DeeObject *def;
-	} args;
-	args.def = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "__iter_nextkey__", &args.def);
-{
-	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextkey))(self);
-	if (result == ITER_DONE) {
-		result = args.def;
-		if (result) {
-			Dee_Incref(result);
-		} else {
-			DeeError_Throw(&DeeError_StopIteration_instance);
-		}
-	}
-	return result;
-err:
-	return NULL;
-}}
-
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
-DeeMA___iter_nextvalue__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
-	struct {
-		DeeObject *def;
-	} args;
-	args.def = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "__iter_nextvalue__", &args.def);
-{
-	DREF DeeObject *result = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextvalue))(self);
-	if (result == ITER_DONE) {
-		result = args.def;
-		if (result) {
-			Dee_Incref(result);
-		} else {
-			DeeError_Throw(&DeeError_StopIteration_instance);
-		}
-	}
-	return result;
-err:
-	return NULL;
-}}
-
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeMA___iter_advance__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
 	struct {
 		size_t step;

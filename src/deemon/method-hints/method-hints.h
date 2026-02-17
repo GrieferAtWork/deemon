@@ -260,8 +260,7 @@
 /************************************************************************/
 /* For `deemon.Iterator'                                                */
 /************************************************************************/
-/* TODO: Use this stuff to replace "struct type_nii" */
-%[include("iter_next.h")]               /* "*iter++" */
+//%[include("iter_next.h")]             /* "*iter++" */
 %[include("iter_advance.h")]            /* "iter += step" */
 %[include("iter_prev.h")]               /* "*--iter" */
 %[include("iter_revert.h")]             /* "iter -= step" */
@@ -271,7 +270,6 @@
 /* TODO: operator ==|!=|<|<=|>|>= */
 /* TODO: __iter_future__ */
 %[include("iter_seq.h")]
-/* TODO: __iter_hasprev__ */
 
 
 

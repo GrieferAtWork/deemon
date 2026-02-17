@@ -2815,34 +2815,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__se
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__seq_trygetfirst__and__map_operator_delitem(DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__seq_pop(DeeObject *self);
 
-/* iter_nextkey */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextkey(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextkey__with_callattr_nextkey(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextkey__with_callattr___iter_nextkey__(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextkey__with_callobjectcache___iter_nextkey__(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter_nextkey__with_callobjectcache___iter_nextkey__(DeeTypeObject *tp_self, DeeObject *self);
-#define default__iter_nextkey__unsupported (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__iter_nextkey__with__operator_next)
-#define default__iter_nextkey__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_retsm1_1)
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextkey__with__operator_next(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextkey__with__iter_nextpair(DeeObject *__restrict self);
-
-/* iter_nextvalue */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextvalue(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextvalue__with_callattr_nextvalue(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextvalue__with_callattr___iter_nextvalue__(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextvalue__with_callobjectcache___iter_nextvalue__(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tdefault__iter_nextvalue__with_callobjectcache___iter_nextvalue__(DeeTypeObject *tp_self, DeeObject *self);
-#define default__iter_nextvalue__unsupported (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&default__iter_nextvalue__with__operator_next)
-#define default__iter_nextvalue__empty (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_retsm1_1)
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextvalue__with__operator_next(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_nextvalue__with__iter_nextpair(DeeObject *__restrict self);
-
-/* iter_nextpair */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__iter_nextpair(DeeObject *__restrict self, DREF DeeObject *key_and_value[2]);
-#define default__iter_nextpair__unsupported (*(int (DCALL *)(DeeObject *__restrict, DREF DeeObject **))&default__iter_nextvalue__with__operator_next)
-#define default__iter_nextpair__empty (*(int (DCALL *)(DeeObject *__restrict, DREF DeeObject **))&_DeeNone_reti1_2)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL default__iter_nextpair__with__operator_next(DeeObject *__restrict self, DREF DeeObject *key_and_value[2]);
-
 /* iter_advance */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_advance(DeeObject *__restrict self, size_t step);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_advance__with_callattr_advance(DeeObject *__restrict self, size_t step);

@@ -22483,179 +22483,6 @@ err:
 }
 
 
-/* iter_nextkey */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextkey(DeeObject *__restrict self) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextkey))(self);
-}
-
-#ifndef DEFINED_iterator_dummy
-#define DEFINED_iterator_dummy
-PRIVATE DeeObject iterator_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
-PRIVATE DeeObject *tpconst iterator_dummy_vec[1] = { &iterator_dummy };
-#endif /* !DEFINED_iterator_dummy */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextkey__with_callattr_nextkey(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_CallAttr(self, Dee_AsObject(&str_nextkey), 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextkey__with_callattr___iter_nextkey__(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_CallAttr(self, Dee_AsObject(&str___iter_nextkey__), 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextkey__with_callobjectcache___iter_nextkey__(DeeObject *__restrict self) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__iter_nextkey__with_callobjectcache___iter_nextkey__(Dee_TYPE(self), self);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___iter_nextkey__, self, 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-#endif /* !__OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextkey__with__operator_next(DeeObject *__restrict self) {
-	int unpack_status;
-	DREF DeeObject *key_and_value[2];
-	DREF DeeObject *item = DeeObject_IterNext(self);
-	if unlikely(!ITER_ISOK(item))
-		return item;
-	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
-	Dee_Decref_likely(item);
-	if unlikely(unpack_status)
-		goto err;
-	Dee_Decref(key_and_value[1]);
-	return key_and_value[0];
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextkey__with__iter_nextpair(DeeObject *__restrict self) {
-	DREF DeeObject *key_and_value[2];
-	int status = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextpair))(self, key_and_value);
-	if unlikely(status != 0) {
-		if unlikely(status < 0)
-			goto err;
-		return ITER_DONE;
-	}
-	Dee_Decref(key_and_value[1]);
-	return key_and_value[0];
-err:
-	return NULL;
-}
-
-
-/* iter_nextvalue */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextvalue(DeeObject *__restrict self) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextvalue))(self);
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextvalue__with_callattr_nextvalue(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_CallAttr(self, Dee_AsObject(&str_nextvalue), 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextvalue__with_callattr___iter_nextvalue__(DeeObject *__restrict self) {
-	DREF DeeObject *result = DeeObject_CallAttr(self, Dee_AsObject(&str___iter_nextvalue__), 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextvalue__with_callobjectcache___iter_nextvalue__(DeeObject *__restrict self) {
-#ifdef __OPTIMIZE_SIZE__
-	return tdefault__iter_nextvalue__with_callobjectcache___iter_nextvalue__(Dee_TYPE(self), self);
-#else /* __OPTIMIZE_SIZE__ */
-	DREF DeeObject *result = mhcache_thiscall(Dee_TYPE(self), Dee_TYPE(self)->tp_mhcache->mhc___iter_nextvalue__, self, 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-#endif /* !__OPTIMIZE_SIZE__ */
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextvalue__with__operator_next(DeeObject *__restrict self) {
-	int unpack_status;
-	DREF DeeObject *key_and_value[2];
-	DREF DeeObject *item = DeeObject_IterNext(self);
-	if unlikely(!ITER_ISOK(item))
-		return item;
-	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
-	Dee_Decref_likely(item);
-	if unlikely(unpack_status)
-		goto err;
-	Dee_Decref(key_and_value[0]);
-	return key_and_value[1];
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_nextvalue__with__iter_nextpair(DeeObject *__restrict self) {
-	DREF DeeObject *key_and_value[2];
-	int status = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextpair))(self, key_and_value);
-	if unlikely(status != 0) {
-		if unlikely(status < 0)
-			goto err;
-		return ITER_DONE;
-	}
-	Dee_Decref(key_and_value[0]);
-	return key_and_value[1];
-err:
-	return NULL;
-}
-
-
-/* iter_nextpair */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__iter_nextpair(DeeObject *__restrict self, DREF DeeObject *key_and_value[2]) {
-	return (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextpair))(self, key_and_value);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-default__iter_nextpair__with__operator_next(DeeObject *__restrict self, DREF DeeObject *key_and_value[2]) {
-	int result;
-	DREF DeeObject *item = DeeObject_IterNext(self);
-	if (item == ITER_DONE)
-		return 1;
-	if unlikely(item == NULL)
-		goto err;
-	result = DeeSeq_Unpack(item, 2, key_and_value);
-	Dee_Decref_likely(item);
-	return result;
-err:
-	return -1;
-}
-
-
 /* iter_advance */
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__iter_advance(DeeObject *__restrict self, size_t step) {
@@ -22723,9 +22550,9 @@ err:
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__iter_advance__with__iter_nextkey(DeeObject *__restrict self, size_t step) {
 	size_t result = 0;
-	DeeMH_iter_nextkey_t cached_iter_nextkey = DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextkey);;
+	DeeNO_nextkey_t nextkey = DeeType_RequireNativeOperator(Dee_TYPE(self), nextkey);
 	while (result < step) {
-		DREF DeeObject *elem = (*cached_iter_nextkey)(self);
+		DREF DeeObject *elem = (*nextkey)(self);
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
 				goto err;
@@ -22744,9 +22571,9 @@ err:
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__iter_advance__with__iter_nextvalue(DeeObject *__restrict self, size_t step) {
 	size_t result = 0;
-	DeeMH_iter_nextvalue_t cached_iter_nextvalue = DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextvalue);;
+	DeeNO_nextvalue_t nextvalue = DeeType_RequireNativeOperator(Dee_TYPE(self), nextvalue);
 	while (result < step) {
-		DREF DeeObject *elem = (*cached_iter_nextvalue)(self);
+		DREF DeeObject *elem = (*nextvalue)(self);
 		if unlikely(!ITER_ISOK(elem)) {
 			if unlikely(!elem)
 				goto err;
@@ -22765,10 +22592,10 @@ err:
 INTERN WUNUSED NONNULL((1)) size_t DCALL
 default__iter_advance__with__iter_nextpair(DeeObject *__restrict self, size_t step) {
 	size_t result = 0;
-	DeeMH_iter_nextpair_t cached_iter_nextpair = DeeType_RequireMethodHint(Dee_TYPE(self), iter_nextpair);
+	DeeNO_nextpair_t nextpair = DeeType_RequireNativeOperator(Dee_TYPE(self), nextpair);
 	while (result < step) {
 		DREF DeeObject *key_and_value[2];
-		int error = (*cached_iter_nextpair)(self, key_and_value);
+		int error = (*nextpair)(self, key_and_value);
 		if unlikely(error != 0) {
 			if unlikely(error < 0)
 				goto err;
@@ -22808,6 +22635,11 @@ err:
 
 
 /* iter_prev */
+#ifndef DEFINED_iterator_dummy
+#define DEFINED_iterator_dummy
+PRIVATE DeeObject iterator_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+PRIVATE DeeObject *tpconst iterator_dummy_vec[1] = { &iterator_dummy };
+#endif /* !DEFINED_iterator_dummy */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default__iter_prev__with_callattr_prev(DeeObject *self) {
 	DREF DeeObject *result = DeeObject_CallAttr(self, Dee_AsObject(&str_prev), 1, iterator_dummy_vec);
@@ -25711,33 +25543,6 @@ tdefault__map_popitem__with_callobjectcache___map_popitem__(DeeTypeObject *tp_se
 	return mhcache_call(tp_self, tp_self->tp_mhcache->mhc___map_popitem__, 1, (DeeObject *const *)&self);
 }
 
-/* iter_nextkey */
-#ifndef DEFINED_iterator_dummy
-#define DEFINED_iterator_dummy
-PRIVATE DeeObject iterator_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
-PRIVATE DeeObject *tpconst iterator_dummy_vec[1] = { &iterator_dummy };
-#endif /* !DEFINED_iterator_dummy */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__iter_nextkey__with_callobjectcache___iter_nextkey__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___iter_nextkey__, self, 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-}
-
-/* iter_nextvalue */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-tdefault__iter_nextvalue__with_callobjectcache___iter_nextvalue__(DeeTypeObject *tp_self, DeeObject *self) {
-	DREF DeeObject *result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___iter_nextvalue__, self, 1, iterator_dummy_vec);
-	if (result == &iterator_dummy) {
-		Dee_DecrefNokill(&iterator_dummy);
-		result = ITER_DONE;
-	}
-	return result;
-}
-
 /* iter_advance */
 INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
 tdefault__iter_advance__with_callobjectcache___iter_advance__(DeeTypeObject *tp_self, DeeObject *self, size_t step) {
@@ -25758,6 +25563,11 @@ err:
 }
 
 /* iter_prev */
+#ifndef DEFINED_iterator_dummy
+#define DEFINED_iterator_dummy
+PRIVATE DeeObject iterator_dummy = { OBJECT_HEAD_INIT(&DeeObject_Type) };
+PRIVATE DeeObject *tpconst iterator_dummy_vec[1] = { &iterator_dummy };
+#endif /* !DEFINED_iterator_dummy */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 tdefault__iter_prev__with_callobjectcache___iter_prev__(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF DeeObject *result = mhcache_thiscall(tp_self, tp_self->tp_mhcache->mhc___iter_prev__, self, 1, iterator_dummy_vec);
