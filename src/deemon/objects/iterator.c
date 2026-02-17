@@ -127,22 +127,12 @@ STATIC_ASSERT_MSG(sizeof(size_t) == sizeof(void *), "Assumed by definition of `i
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 get_remaining_iterations(DeeObject *__restrict self) {
 	size_t result;
-	DREF DeeObject *elem;
-	if unlikely((self = DeeObject_Copy(self)) == NULL)
+	DREF DeeObject *copy;
+	if unlikely((copy = DeeObject_Copy(self)) == NULL)
 		goto err;
-	result = 0;
-	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
-		++result;
-		Dee_Decref(elem);
-		if (DeeThread_CheckInterrupt())
-			goto err_self;
-	}
-	if unlikely(!elem)
-		goto err_self;
-	Dee_Decref(self);
+	result = DeeObject_InvokeMethodHint(iter_advance, copy, (size_t)-1);
+	Dee_Decref_likely(copy);
 	return result;
-err_self:
-	Dee_Decref(self);
 err:
 	return (size_t)-1;
 }
