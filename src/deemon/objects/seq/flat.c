@@ -2417,6 +2417,7 @@ sfi_nextpair(SeqFlatIterator *__restrict self,
 		int result;
 		DREF DeeObject *curriter;
 		DREF DeeObject *new_curriter;
+		DREF DeeObject *new_currseq;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;
 		Dee_Incref(curriter);
@@ -2427,13 +2428,17 @@ sfi_nextpair(SeqFlatIterator *__restrict self,
 			return result; /* Error or success */
 
 		/* Current iterator has been exhausted -> load the next one */
-		new_curriter = DeeObject_IterNext(self->sfi_baseiter);
-		if (!ITER_ISOK(new_curriter)) {
+		new_currseq = DeeObject_IterNext(self->sfi_baseiter);
+		if (!ITER_ISOK(new_currseq)) {
 			/* Error or ITER_DONE */
-			if unlikely(!new_curriter)
+			if unlikely(!new_currseq)
 				goto err;
 			return 1;
 		}
+		new_curriter = DeeObject_Iter(new_currseq);
+		Dee_Decref(new_currseq);
+		if unlikely(!new_curriter)
+			goto err;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;     /* Inherit reference */
 		self->sfi_curriter = new_curriter; /* Inherit reference */
@@ -2453,6 +2458,7 @@ sfi_nextkey(SeqFlatIterator *__restrict self) {
 		DREF DeeObject *result;
 		DREF DeeObject *curriter;
 		DREF DeeObject *new_curriter;
+		DREF DeeObject *new_currseq;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;
 		Dee_Incref(curriter);
@@ -2463,9 +2469,13 @@ sfi_nextkey(SeqFlatIterator *__restrict self) {
 			return result; /* Error or success */
 
 		/* Current iterator has been exhausted -> load the next one */
-		new_curriter = DeeObject_IterNext(self->sfi_baseiter);
-		if (!ITER_ISOK(new_curriter))
-			return new_curriter; /* Error or ITER_DONE */
+		new_currseq = DeeObject_IterNext(self->sfi_baseiter);
+		if (!ITER_ISOK(new_currseq))
+			return new_currseq; /* Error or ITER_DONE */
+		new_curriter = DeeObject_Iter(new_currseq);
+		Dee_Decref(new_currseq);
+		if unlikely(!new_curriter)
+			goto err;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;     /* Inherit reference */
 		self->sfi_curriter = new_curriter; /* Inherit reference */
@@ -2485,6 +2495,7 @@ sfi_nextvalue(SeqFlatIterator *__restrict self) {
 		DREF DeeObject *result;
 		DREF DeeObject *curriter;
 		DREF DeeObject *new_curriter;
+		DREF DeeObject *new_currseq;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;
 		Dee_Incref(curriter);
@@ -2495,9 +2506,13 @@ sfi_nextvalue(SeqFlatIterator *__restrict self) {
 			return result; /* Error or success */
 
 		/* Current iterator has been exhausted -> load the next one */
-		new_curriter = DeeObject_IterNext(self->sfi_baseiter);
-		if (!ITER_ISOK(new_curriter))
-			return new_curriter; /* Error or ITER_DONE */
+		new_currseq = DeeObject_IterNext(self->sfi_baseiter);
+		if (!ITER_ISOK(new_currseq))
+			return new_currseq; /* Error or ITER_DONE */
+		new_curriter = DeeObject_Iter(new_currseq);
+		Dee_Decref(new_currseq);
+		if unlikely(!new_curriter)
+			goto err;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;     /* Inherit reference */
 		self->sfi_curriter = new_curriter; /* Inherit reference */
@@ -2518,6 +2533,7 @@ sfi_advance(SeqFlatIterator *__restrict self, size_t step) {
 		size_t part;
 		DREF DeeObject *curriter;
 		DREF DeeObject *new_curriter;
+		DREF DeeObject *new_currseq;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;
 		Dee_Incref(curriter);
@@ -2533,13 +2549,17 @@ sfi_advance(SeqFlatIterator *__restrict self, size_t step) {
 			break;
 
 		/* Current iterator has been exhausted -> load the next one */
-		new_curriter = DeeObject_IterNext(self->sfi_baseiter);
-		if (!ITER_ISOK(new_curriter)) {
+		new_currseq = DeeObject_IterNext(self->sfi_baseiter);
+		if (!ITER_ISOK(new_currseq)) {
 			/* Error or ITER_DONE */
-			if unlikely(!new_curriter)
+			if unlikely(!new_currseq)
 				goto err;
 			break;
 		}
+		new_curriter = DeeObject_Iter(new_currseq);
+		Dee_Decref(new_currseq);
+		if unlikely(!new_curriter)
+			goto err;
 		SeqFlatIterator_LockAcquire(self);
 		curriter = self->sfi_curriter;     /* Inherit reference */
 		self->sfi_curriter = new_curriter; /* Inherit reference */
