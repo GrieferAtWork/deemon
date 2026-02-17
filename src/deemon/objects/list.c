@@ -4516,77 +4516,35 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-STATIC_ASSERT(offsetof(ListIterator, li_list) == offsetof(ProxyObject, po_obj));
-#define list_iterator_nii_getseq generic_proxy__getobj
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-list_iterator_nii_getindex(ListIterator *__restrict self) {
-	return LI_GETINDEX(self);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_iterator_nii_setindex(ListIterator *__restrict self, size_t new_index) {
-	atomic_write(&self->li_index, new_index);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_iterator_nii_rewind(ListIterator *__restrict self) {
-	atomic_write(&self->li_index, 0);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_iterator_nii_revert(ListIterator *__restrict self, size_t step) {
+list_iterator_mh_iter_revert(ListIterator *__restrict self, size_t step) {
 	size_t old_index, new_index;
 	do {
 		old_index = atomic_read(&self->li_index);
 		if (OVERFLOW_USUB(old_index, step, &new_index))
 			new_index = 0;
 	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, new_index));
-	return 0;
+	return old_index - new_index;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_iterator_nii_advance(ListIterator *__restrict self, size_t step) {
-	size_t old_index, new_index;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+list_iterator_mh_iter_advance(ListIterator *__restrict self, size_t step) {
+	size_t old_index, new_index, list_size;
 	do {
 		old_index = atomic_read(&self->li_index);
 		if (OVERFLOW_UADD(old_index, step, &new_index))
 			new_index = (size_t)-1;
+		list_size = DeeList_SIZE_ATOMIC(self->li_list);
+		if (new_index > list_size)
+			new_index = list_size;
+		if (new_index <= old_index)
+			return 0;
 	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, new_index));
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_iterator_nii_prev(ListIterator *__restrict self) {
-	size_t old_index;
-	do {
-		old_index = atomic_read(&self->li_index);
-		if (!old_index)
-			return 1;
-	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, old_index - 1));
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_iterator_nii_next(ListIterator *__restrict self) {
-	size_t old_index;
-	do {
-		old_index = atomic_read(&self->li_index);
-		if (old_index >= DeeList_SIZE(self->li_list))
-			return 1;
-	} while (!atomic_cmpxch_weak_or_write(&self->li_index, old_index, old_index + 1));
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_iterator_nii_hasprev(ListIterator *__restrict self) {
-	return LI_GETINDEX(self) != 0;
+	return new_index - old_index;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_iterator_nii_peek(ListIterator *__restrict self) {
+list_iterator_mh_iter_peek(ListIterator *__restrict self) {
 	size_t list_index;
 	DREF DeeObject *result;
 	list_index = atomic_read(&self->li_index);
@@ -4601,26 +4559,6 @@ list_iterator_nii_peek(ListIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_nii tpconst list_iterator_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&list_iterator_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&list_iterator_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&list_iterator_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&list_iterator_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)&list_iterator_nii_revert,
-			/* .nii_advance  = */ (Dee_funptr_t)&list_iterator_nii_advance,
-			/* .nii_prev     = */ (Dee_funptr_t)&list_iterator_nii_prev,
-			/* .nii_next     = */ (Dee_funptr_t)&list_iterator_nii_next,
-			/* .nii_hasprev  = */ (Dee_funptr_t)&list_iterator_nii_hasprev,
-			/* .nii_peek     = */ (Dee_funptr_t)&list_iterator_nii_peek
-		}
-	}
-};
-
-
 PRIVATE struct type_cmp li_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&li_hash,
 	/* .tp_compare_eq    = */ DEFIMPL(&default__compare_eq__with__compare),
@@ -4632,10 +4570,23 @@ PRIVATE struct type_cmp li_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &list_iterator_nii,
 };
 
-PRIVATE struct type_member tpconst li_members[] = {
+PRIVATE struct type_method tpconst list_iterator_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_HINTREF(Iterator_revert),
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst list_iterator_method_hints[] = {
+	TYPE_METHOD_HINT(iter_revert, &list_iterator_mh_iter_revert),
+	TYPE_METHOD_HINT(iter_advance, &list_iterator_mh_iter_advance),
+	TYPE_METHOD_HINT(iter_peek, &list_iterator_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_member tpconst list_iterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(ListIterator, li_list), "->?DList"),
 	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(ListIterator, li_index)),
 	TYPE_MEMBER_END
@@ -4680,13 +4631,13 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ list_iterator_methods,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ li_members,
+	/* .tp_members       = */ list_iterator_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ list_iterator_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

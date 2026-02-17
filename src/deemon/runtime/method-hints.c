@@ -2255,6 +2255,12 @@ GenericSizeObject_SetSize1(GenericSizeObject *__restrict self, size_t value) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+GenericSizeObject_ClearSize1(GenericSizeObject *__restrict self) {
+	atomic_write(&self->gso_size1, 0);
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 GenericSizeObject_GetSize2(GenericSizeObject *__restrict self) {
 	return atomic_read(&self->gso_size2);
@@ -2266,6 +2272,12 @@ GenericSizeObject_SetSize2(GenericSizeObject *__restrict self, size_t value) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+GenericSizeObject_ClearSize2(GenericSizeObject *__restrict self) {
+	atomic_write(&self->gso_size2, 0);
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 GenericSizeObject_GetSize3(GenericSizeObject *__restrict self) {
 	return atomic_read(&self->gso_size3);
@@ -2274,6 +2286,12 @@ GenericSizeObject_GetSize3(GenericSizeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 GenericSizeObject_SetSize3(GenericSizeObject *__restrict self, size_t value) {
 	atomic_write(&self->gso_size3, value);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+GenericSizeObject_ClearSize3(GenericSizeObject *__restrict self) {
+	atomic_write(&self->gso_size3, 0);
 	return 0;
 }
 
@@ -2493,6 +2511,26 @@ mh_init_from_attribute(DeeTypeObject *orig_type, struct Dee_attrinfo *__restrict
 						return (Dee_funptr_t)&GenericSizeObject_SetSize2;
 					case offsetof(GenericSizeObject, gso_size3):
 						return (Dee_funptr_t)&GenericSizeObject_SetSize3;
+					default: break;
+					}
+					break;
+				default: break;
+				}
+			}
+			break;
+
+		case MH_KIND_GETSET_DEL:
+			if (Dee_TYPE_MEMBER_ISFIELD(member)) {
+				switch (member->m_desc.md_field.mdf_type) {
+				case STRUCT_SIZE_T:
+				case STRUCT_SIZE_T | STRUCT_ATOMIC:
+					switch (member->m_desc.md_field.mdf_offset) {
+					case offsetof(GenericSizeObject, gso_size1):
+						return (Dee_funptr_t)&GenericSizeObject_ClearSize1;
+					case offsetof(GenericSizeObject, gso_size2):
+						return (Dee_funptr_t)&GenericSizeObject_ClearSize2;
+					case offsetof(GenericSizeObject, gso_size3):
+						return (Dee_funptr_t)&GenericSizeObject_ClearSize3;
 					default: break;
 					}
 					break;
