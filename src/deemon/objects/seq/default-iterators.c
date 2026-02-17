@@ -29,7 +29,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* PCKuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_retsm1_1 */
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Compare, Dee_CompareNe, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
@@ -3046,35 +3046,51 @@ err:
 }
 
 STATIC_ASSERT(offsetof(DefaultIterator_PairSubItem, dipsi_iter) == offsetof(ProxyObject, po_obj));
-#define di_nv_advance generic_proxy__iter_advance
-#define di_nk_advance generic_proxy__iter_advance
-#define di_nv_cmp     generic_proxy__cmp_recursive
-#define di_nk_cmp     generic_proxy__cmp_recursive
+#define di_nX_mh_iter_advance  generic_proxy__iter_advance
+#define di_nX_mh_iter_revert   generic_proxy__iter_revert
+#define di_nX_mh_iter_getindex generic_proxy__iter_getindex
+#define di_nX_mh_iter_setindex generic_proxy__iter_setindex
+#define di_nX_mh_iter_rewind   generic_proxy__iter_rewind
+#define di_nX_cmp              generic_proxy__cmp_recursive
+#define di_nv_cmp              di_nX_cmp
+#define di_nk_cmp              di_nX_cmp
 
-#define di_nv_iter_next di_nk_iter_next
+#define di_nv_iter_next di_nX_iter_next
+#define di_nk_iter_next di_nX_iter_next
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-di_nk_iter_next(DefaultIterator_PairSubItem *__restrict self) {
+di_nX_iter_next(DefaultIterator_PairSubItem *__restrict self) {
 	return (*self->dipsi_next)(self->dipsi_iter);
 }
 
-#define di_nv_iterator di_nk_iterator
-PRIVATE struct type_iterator di_nk_iterator = {
-	/* .tp_nextpair  = */ DEFIMPL(&default__nextpair__with__iter_next),
-	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__iter_next),
-	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__iter_next),
-};
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_nX_mapitem(DefaultIterator_PairSubItem *self, /*inherit(always)*/ DREF DeeObject *item) {
+	int unpack_status;
+	DREF DeeObject *key_and_value[2];
+	if (!ITER_ISOK(item))
+		return item;
+	unpack_status = DeeSeq_Unpack(item, 2, key_and_value);
+	Dee_Decref(item);
+	if unlikely(unpack_status)
+		goto err;
+	if (Dee_TYPE(self) == &DefaultIterator_WithNextKey) {
+		Dee_Decref(key_and_value[1]);
+		return key_and_value[0];
+	}
+	Dee_Decref(key_and_value[0]);
+	return key_and_value[1];
+err:
+	return NULL;
+}
 
-PRIVATE struct type_method tpconst di_nk_methods[] = {
-#define di_nv_methods di_nk_methods
-	TYPE_METHOD_HINTREF(Iterator_advance),
-	TYPE_METHOD_END
-};
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_nX_mh_iter_peek(DefaultIterator_PairSubItem *__restrict self) {
+	return di_nX_mapitem(self, DeeObject_InvokeMethodHint(iter_peek, self->dipsi_iter));
+}
 
-PRIVATE struct type_method_hint tpconst di_nk_method_hints[] = {
-#define di_nv_method_hints di_nk_method_hints
-	TYPE_METHOD_HINT(iter_advance, &di_nk_advance),
-	TYPE_METHOD_HINT_END
-};
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_nX_mh_iter_prev(DefaultIterator_PairSubItem *__restrict self) {
+	return di_nX_mapitem(self, DeeObject_InvokeMethodHint(iter_prev, self->dipsi_iter));
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_MapProxy *DCALL
 di_nX_getseq(DefaultIterator_WithNextAndLimit *__restrict self,
@@ -3109,15 +3125,39 @@ di_nv_getseq(DefaultIterator_WithNextAndLimit *__restrict self) {
 #define di_nv_boundseq di_nl_boundseq
 
 PRIVATE struct type_getset tpconst di_nk_getsets[] = {
-	TYPE_GETTER_BOUND(STR_seq, &di_nk_getseq, &di_nk_boundseq, "Alias for ${rt.MapKeys(this.__iter__.seq)}"),
+	TYPE_GETSET_HINTREF(Iterator_index),
+	TYPE_GETTER_BOUND(STR_seq, &di_nk_getseq, &di_nk_boundseq, "->?Ert:MapKeys\nAlias for ${rt.MapKeys(this.__iter__.seq)}"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst di_nv_getsets[] = {
-	TYPE_GETTER_BOUND(STR_seq, &di_nv_getseq, &di_nv_boundseq, "Alias for ${rt.MapValues(this.__iter__.seq)}"),
+	TYPE_GETSET_HINTREF(Iterator_index),
+	TYPE_GETTER_BOUND(STR_seq, &di_nv_getseq, &di_nv_boundseq, "->?Ert:MapValues\nAlias for ${rt.MapValues(this.__iter__.seq)}"),
 	TYPE_GETSET_END
 };
 
+PRIVATE struct type_method tpconst di_nX_methods[] = {
+#define di_nk_methods di_nX_methods
+#define di_nv_methods di_nX_methods
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_HINTREF(Iterator_revert),
+	TYPE_METHOD_HINTREF(Iterator_prev),
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst di_nX_method_hints[] = {
+#define di_nk_method_hints di_nX_method_hints
+#define di_nv_method_hints di_nX_method_hints
+	TYPE_METHOD_HINT(iter_advance, &di_nX_mh_iter_advance),
+	TYPE_METHOD_HINT(iter_revert, &di_nX_mh_iter_revert),
+	TYPE_METHOD_HINT(iter_getindex, &di_nX_mh_iter_getindex),
+	TYPE_METHOD_HINT(iter_setindex, &di_nX_mh_iter_setindex),
+	TYPE_METHOD_HINT(iter_rewind, &di_nX_mh_iter_rewind),
+	TYPE_METHOD_HINT(iter_prev, &di_nX_mh_iter_prev),
+	TYPE_METHOD_HINT(iter_peek, &di_nX_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
 
 INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -3153,7 +3193,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 	/* .tp_cmp           = */ &di_nk_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nk_iter_next,
-	/* .tp_iterator      = */ &di_nk_iterator,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
@@ -3202,7 +3242,7 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 	/* .tp_cmp           = */ &di_nv_cmp,
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nv_iter_next,
-	/* .tp_iterator      = */ &di_nv_iterator,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,

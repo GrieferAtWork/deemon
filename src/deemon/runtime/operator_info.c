@@ -604,6 +604,8 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 				if (EQAT(name + 3, "attr"))
 					RETURN(OPERATOR_SETATTR);
 			}
+			if (EQAT(name + 2, "rialize"))
+				RETURN(OPERATOR_SERIALIZE);
 		}
 		break;
 

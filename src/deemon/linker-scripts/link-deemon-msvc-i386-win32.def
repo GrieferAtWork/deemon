@@ -506,6 +506,15 @@ EXPORTS
 	DeeList_Resize@12=_DeeList_Resize@12
 	DeeList_Reverse@12=_DeeList_Reverse@12
 	DeeList_Sort@16=_DeeList_Sort@16
+	DeeMA___iter_advance__@12=_DeeMA___iter_advance__@12
+	DeeMA___iter_bool__@12=_DeeMA___iter_bool__@12
+	DeeMA___iter_index___del@4=_DeeMA___iter_index___del@4
+	DeeMA___iter_index___get@4=_DeeMA___iter_index___get@4
+	DeeMA___iter_index___set@8=_DeeMA___iter_index___set@8
+	DeeMA___iter_peek__@12=_DeeMA___iter_peek__@12
+	DeeMA___iter_prev__@12=_DeeMA___iter_prev__@12
+	DeeMA___iter_revert__@12=_DeeMA___iter_revert__@12
+	DeeMA___iter_rewind__@12=_DeeMA___iter_rewind__@12
 	DeeMA___map_add__@12=_DeeMA___map_add__@12
 	DeeMA___map_and__@12=_DeeMA___map_and__@12
 	DeeMA___map_compare_eq__@12=_DeeMA___map_compare_eq__@12

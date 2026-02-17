@@ -2207,7 +2207,7 @@ typedef uint16_t Dee_operator_t;
 #define OPERATOR_DELRANGE     0x0036 /* `operator del[:] (begin: Object, end: Object)'              - `__delrange__'    - `tp_delrange'. */
 #define OPERATOR_SETRANGE     0x0037 /* `operator [:]= (begin: Object, end: Object, value: Object)' - `__setrange__'    - `tp_setrange'. */
 #define OPERATOR_GETATTR      0x0038 /* `operator . (string attr): Object'                          - `__getattr__'     - `tp_getattr'. */
-#define OPERATOR_DELATTR      0x0039 /* `operator del . (string attr)'                              - `__delattr__'     - `tp_delattr'. */
+#define OPERATOR_DELATTR      0x0039 /* `operator del. (string attr)'                               - `__delattr__'     - `tp_delattr'. */
 #define OPERATOR_SETATTR      0x003a /* `operator .= (string attr, value: Object)'                  - `__setattr__'     - `tp_setattr'. */
 #define OPERATOR_ENUMATTR     0x003b /* `operator enumattr(): {attribute...}'                       - `__enumattr__'    - `tp_iterattr'. */
 #define OPERATOR_ENTER        0x003c /* `operator enter()'                                          - `__enter__'       - `tp_enter'. */
@@ -2229,18 +2229,6 @@ typedef uint16_t Dee_operator_t;
 #define FAKE_OPERATOR_NOT         0xff03 /* `!a' */
 
 /* Operator association ranges. */
-#define OPERATOR_TYPEMIN    OPERATOR_CONSTRUCTOR
-#define OPERATOR_TYPEMAX    OPERATOR_CALL
-#define OPERATOR_MATHMIN    OPERATOR_INT
-#define OPERATOR_MATHMAX    OPERATOR_INPLACE_POW
-#define OPERATOR_CMPMIN     OPERATOR_HASH
-#define OPERATOR_CMPMAX     OPERATOR_GE
-#define OPERATOR_SEQMIN     OPERATOR_ITER
-#define OPERATOR_SEQMAX     OPERATOR_SETRANGE
-#define OPERATOR_ATTRMIN    OPERATOR_GETATTR
-#define OPERATOR_ATTRMAX    OPERATOR_ENUMATTR
-#define OPERATOR_WITHMIN    OPERATOR_ENTER
-#define OPERATOR_WITHMAX    OPERATOR_LEAVE
 #define OPERATOR_PRIVMIN    OPERATOR_VISIT
 #define OPERATOR_PRIVMAX    OPERATOR_GETBUF
 

@@ -51,7 +51,7 @@
 #include <deemon/util/lock.h>           /* Dee_atomic_lock_init */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset, Dee_simple_hashset_* */
 
-#include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/overflow.h> /* OVERFLOW_UADD */
 #include <hybrid/typecore.h> /* __CHAR_BIT__, __SIZEOF_INT__, __SIZEOF_SIZE_T__ */
 
 #include "../objects/int_logic.h"             /* int_inc() */
