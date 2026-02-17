@@ -238,7 +238,6 @@ PRIVATE struct type_iterator kwdsiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&kwdsiter_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwdsiter_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwdsiter_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&kwdsiter_advance,
 };
 
 
@@ -268,6 +267,16 @@ PRIVATE struct type_cmp kwdsiter_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
+};
+
+PRIVATE struct type_method tpconst kwdsiter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst kwdsiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &kwdsiter_advance),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst kwdsiter_members[] = {
@@ -318,13 +327,13 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ kwdsiter_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ kwdsiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ kwdsiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -1051,13 +1060,14 @@ kmapiter_nextvalue(KmapIterator *__restrict self) {
 
 STATIC_ASSERT(offsetof(KmapIterator, ki_iter) == offsetof(KwdsIterator, ki_iter));
 STATIC_ASSERT(offsetof(KmapIterator, ki_end) == offsetof(KwdsIterator, ki_end));
-#define kmapiter_advance kwdsiter_advance
+#define kmapiter_advance      kwdsiter_advance
+#define kmapiter_methods      kwdsiter_methods      /* For "Iterator_advance" */
+#define kmapiter_method_hints kwdsiter_method_hints /* For "Iterator_advance" */
 
 PRIVATE struct type_iterator kmapiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&kmapiter_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kmapiter_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kmapiter_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&kmapiter_advance,
 };
 
 #define kmapiter_cmp     kwdsiter_cmp
@@ -1104,13 +1114,13 @@ PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ kmapiter_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ kmapiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ kmapiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

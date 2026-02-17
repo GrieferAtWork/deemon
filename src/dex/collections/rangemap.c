@@ -3139,7 +3139,6 @@ PRIVATE struct type_iterator proxy_mapitems_iterator_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&proxy_mapitems_iterator_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_mapitems_iterator_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_mapitems_iterator_nextvalue,
-	/* .tp_advance   = */ NULL, // TODO: (size_t (DCALL *)(DeeObject *__restrict, size_t))&proxy_mapitems_iterator_advance,
 };
 
 INTERN DeeTypeObject RangeMapKeysIterator_Type = {

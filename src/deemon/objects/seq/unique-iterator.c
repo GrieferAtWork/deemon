@@ -637,7 +637,6 @@ PRIVATE struct type_iterator dmi_iterator = {
 	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, /*out*/ DREF DeeObject *[2]))&dmi_nextpair,
 	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__nextpair),
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextpair),
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

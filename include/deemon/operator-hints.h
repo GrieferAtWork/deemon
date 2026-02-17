@@ -70,7 +70,6 @@ typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_iter_next_t)(DeeO
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_nextpair_t)(DeeObject *__restrict self, DREF DeeObject *key_and_value[2]);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_nextkey_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_nextvalue_t)(DeeObject *__restrict self);
-typedef WUNUSED_T NONNULL_T((1)) size_t (DCALL *DeeNO_advance_t)(DeeObject *__restrict self, size_t step);
 typedef WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *DeeNO_int_t)(DeeObject *__restrict self);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_int32_t)(DeeObject *__restrict self, int32_t *__restrict p_result);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeNO_int64_t)(DeeObject *__restrict self, int64_t *__restrict p_result);
@@ -201,7 +200,6 @@ enum Dee_tno_id {
 	Dee_TNO_nextpair,
 	Dee_TNO_nextkey,
 	Dee_TNO_nextvalue,
-	Dee_TNO_advance,
 	Dee_TNO_int,
 	Dee_TNO_int32,
 	Dee_TNO_int64,
@@ -406,7 +404,6 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
 #define _Dee_TNO_PATH_nextpair(_)                   PATH2(_, tp_iterator, tp_nextpair)
 #define _Dee_TNO_PATH_nextkey(_)                    PATH2(_, tp_iterator, tp_nextkey)
 #define _Dee_TNO_PATH_nextvalue(_)                  PATH2(_, tp_iterator, tp_nextvalue)
-#define _Dee_TNO_PATH_advance(_)                    PATH2(_, tp_iterator, tp_advance)
 #define _Dee_TNO_PATH_int(_)                        PATH2(_, tp_math, tp_int)
 #define _Dee_TNO_PATH_int32(_)                      PATH2(_, tp_math, tp_int32)
 #define _Dee_TNO_PATH_int64(_)                      PATH2(_, tp_math, tp_int64)
@@ -772,19 +769,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__nextvalue__with__iter
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__nextvalue__with__nextpair(DeeObject *__restrict self);
 #define isdefault__nextvalue(tp_nextvalue) ((tp_nextvalue) == &default__nextvalue__with__iter_next || (tp_nextvalue) == &default__nextvalue__with__nextpair)
 #define maketyped__nextvalue(tp_nextvalue) ((tp_nextvalue) == &default__nextvalue__with__iter_next ? &tdefault__nextvalue__with__iter_next : (tp_nextvalue) == &default__nextvalue__with__nextpair ? &tdefault__nextvalue__with__nextpair : &tdefault__nextvalue)
-
-/* tp_iterator->tp_advance */
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__advance__with__nextkey(DeeTypeObject *tp_self, DeeObject *self, size_t step);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__advance__with__nextvalue(DeeTypeObject *tp_self, DeeObject *self, size_t step);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__advance__with__nextpair(DeeTypeObject *tp_self, DeeObject *self, size_t step);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__advance__with__iter_next(DeeTypeObject *tp_self, DeeObject *self, size_t step);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL tdefault__advance(DeeTypeObject *tp_self, DeeObject *self, size_t step);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__nextkey(DeeObject *__restrict self, size_t step);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__nextvalue(DeeObject *__restrict self, size_t step);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__nextpair(DeeObject *__restrict self, size_t step);
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__advance__with__iter_next(DeeObject *__restrict self, size_t step);
-#define isdefault__advance(tp_advance) ((tp_advance) == &default__advance__with__nextkey || (tp_advance) == &default__advance__with__nextvalue || (tp_advance) == &default__advance__with__nextpair || (tp_advance) == &default__advance__with__iter_next)
-#define maketyped__advance(tp_advance) ((tp_advance) == &default__advance__with__nextkey ? &tdefault__advance__with__nextkey : (tp_advance) == &default__advance__with__nextvalue ? &tdefault__advance__with__nextvalue : (tp_advance) == &default__advance__with__nextpair ? &tdefault__advance__with__nextpair : (tp_advance) == &default__advance__with__iter_next ? &tdefault__advance__with__iter_next : &tdefault__advance)
 
 /* tp_math->tp_int */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL tusrtype__int__with__INT(DeeTypeObject *tp_self, DeeObject *self);

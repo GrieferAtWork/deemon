@@ -242,7 +242,7 @@ err:
 	}
 
 	/* Check to make sure that the iterator actually ends here. */
-	remainder = DeeObject_IterAdvance(iter, (size_t)-2);
+	remainder = DeeObject_InvokeMethodHint(iter_advance, iter, (size_t)-2);
 	if unlikely(remainder != 0) {
 		if unlikely(remainder == (size_t)-1)
 			goto err_iter_result_i;
@@ -433,7 +433,7 @@ err:
 	}
 
 	/* Check to make sure that the iterator actually ends here. */
-	remainder = DeeObject_IterAdvance(iter, (size_t)-2);
+	remainder = DeeObject_InvokeMethodHint(iter_advance, iter, (size_t)-2);
 	if unlikely(remainder != 0) {
 		if unlikely(remainder == (size_t)-1)
 			goto err_iter_result_i;

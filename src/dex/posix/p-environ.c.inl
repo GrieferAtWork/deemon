@@ -2003,7 +2003,6 @@ PRIVATE struct type_iterator environ_iterator_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&environ_iterator_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&environ_iterator_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&environ_iterator_nextvalue,
-	/* .tp_advance   = */ NULL,
 };
 
 

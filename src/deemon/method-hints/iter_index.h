@@ -59,12 +59,14 @@ __iter_index__.iter_getindex([[nonnull]] DeeObject *__restrict self)
 	size_t result;
 	DREF DeeObject *scan;
 	DREF DeeObject *seq = CALL_DEPENDENCY(iter_getseq, self);
+	DeeMH_iter_advance_t iter_advance;
 	if unlikely(!seq)
 		goto err;
 	scan = DeeObject_Iter(seq);
 	Dee_Decref_unlikely(seq);
 	if unlikely(!scan)
 		goto err;
+	iter_advance = DeeObject_RequireMethodHint(scan, iter_advance);
 	for (result = 0;;) {
 		size_t step;
 		int temp = DeeObject_CompareEq(self, scan); /* TODO: CALL_DEPENDENCY(iter_operator_compare_eq) */
@@ -72,7 +74,7 @@ __iter_index__.iter_getindex([[nonnull]] DeeObject *__restrict self)
 			goto err_scan;
 		if (Dee_COMPARE_ISEQ(temp))
 			break;
-		step = DeeObject_IterAdvance(scan, 1);
+		step = (*iter_advance)(scan, 1);
 		if unlikely(step == (size_t)-1)
 			goto err_scan;
 		if unlikely(!step)
@@ -131,7 +133,7 @@ __iter_index__.iter_setindex([[nonnull]] DeeObject *self, size_t index)
 	Dee_Decref_unlikely(seq);
 	if unlikely(!scan)
 		goto err;
-	if (DeeObject_IterAdvance(scan, index) == (size_t)-1)
+	if (DeeObject_InvokeMethodHint(iter_advance, scan, index) == (size_t)-1)
 		goto err_scan;
 	result = DeeObject_Assign(self, scan); /* TODO: CALL_DEPENDENCY(iter_operator_assign) */
 	Dee_Decref_likely(scan);

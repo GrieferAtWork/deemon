@@ -74,8 +74,6 @@ INTDEF int DCALL default__nextpair__badalloc(void*, void*);
 INTDEF int DCALL _default__nextpair__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__nextkey__badalloc(void*);
 #define default__nextvalue__badalloc default__nextkey__badalloc
-INTDEF Dee_ssize_t DCALL default__advance__badalloc(void*, void*);
-INTDEF Dee_ssize_t DCALL _default__advance__unsupported(DeeObject*, void*);
 INTDEF void*DCALL default__int__badalloc(void*);
 #define default__inv__badalloc default__int__badalloc
 #define default__pos__badalloc default__int__badalloc
@@ -275,7 +273,6 @@ INTDEF int DCALL default__setattr_string_len_hash__badalloc(void*, void*, void*,
 #define default__nextpair__unsupported                   (*(DeeNO_nextpair_t)&_default__nextpair__unsupported)
 #define default__nextkey__unsupported                    (*(DeeNO_nextkey_t)&_default__nextkey__unsupported)
 #define default__nextvalue__unsupported                  (*(DeeNO_nextvalue_t)&_default__nextvalue__unsupported)
-#define default__advance__unsupported                    (*(DeeNO_advance_t)&_default__advance__unsupported)
 #define default__int__unsupported                        (*(DeeNO_int_t)&_default__int__unsupported)
 #define default__int32__unsupported                      (*(DeeNO_int32_t)&_default__int32__unsupported)
 #define default__int64__unsupported                      (*(DeeNO_int64_t)&_default__int64__unsupported)

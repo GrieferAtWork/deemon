@@ -221,7 +221,6 @@ PRIVATE struct type_iterator coti_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&coti_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&coti_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&coti_advance,
 };
 
 STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_desc) == offsetof(ProxyObject, po_obj));
@@ -302,6 +301,16 @@ PRIVATE struct type_cmp coti_cmp = {
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 
+PRIVATE struct type_method tpconst coti_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst coti_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &coti_advance),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_getset tpconst coti_getsets[] = {
 	TYPE_GETTER_AB_F(STR_seq, &coti_getseq, METHOD_FNOREFESCAPE,
 	                 "->?Ert:ClassOperatorTable"),
@@ -358,13 +367,13 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ coti_methods,
 	/* .tp_getsets       = */ coti_getsets,
 	/* .tp_members       = */ coti_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ coti_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -821,7 +830,6 @@ PRIVATE struct type_iterator cati_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&cati_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&cati_advance,
 };
 
 
@@ -926,6 +934,16 @@ done:
 	return result;
 }
 
+PRIVATE struct type_method tpconst cati_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst cati_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &cati_advance),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_getset tpconst cati_getsets[] = {
 	TYPE_GETTER_AB_F(STR_seq, &cati_getseq, METHOD_FNOREFESCAPE,
 	                 "->?AAttributeTable?Ert:ClassDescriptor"),
@@ -1028,7 +1046,7 @@ struct attr_flag_entry {
 	char     fe_name[14];
 };
 
-#define CLASS_ATTRIBUTE_FLAGS_DB_KNOWN                     \
+#define CLASS_ATTRIBUTE_FLAGS_DB_KNOWN                             \
 	(Dee_CLASS_ATTRIBUTE_FPRIVATE | Dee_CLASS_ATTRIBUTE_FFINAL |   \
 	 Dee_CLASS_ATTRIBUTE_FREADONLY | Dee_CLASS_ATTRIBUTE_FMETHOD | \
 	 Dee_CLASS_ATTRIBUTE_FGETSET | Dee_CLASS_ATTRIBUTE_FCLASSMEM)
@@ -1274,13 +1292,13 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ cati_methods,
 	/* .tp_getsets       = */ cati_getsets,
 	/* .tp_members       = */ cati_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ cati_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

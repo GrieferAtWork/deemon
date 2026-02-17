@@ -1288,22 +1288,14 @@ struct Dee_type_iterator {
 	 * @return: 0 : Success
 	 * @return: 1 : Iterator has been exhausted
 	 * @return: -1: Error */
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_nextpair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]); /* DEPRECATED -- use method-hint: "iter_nextpair" */
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_nextpair)(DeeObject *__restrict self, /*out*/ DREF DeeObject *key_and_value[2]);
 
 	/* Fast-pass for `DeeSeq_Unpack(DeeObject_IterNext(self), 2).first[key]/last[value]'
 	 * In the case of mapping iterators, these can be used to iterate only the
 	 * key/value part of the map, without needing to construct a temporary tuple
 	 * holding both values (as needs to be done by `tp_iter_next'). */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextkey)(DeeObject *__restrict self);   /* DEPRECATED -- use method-hint: "iter_nextkey" */
-	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextvalue)(DeeObject *__restrict self); /* DEPRECATED -- use method-hint: "iter_nextvalue" */
-
-	/* Advance an iterator by "step" items.
-	 * @return: step:       Success.
-	 * @return: < step:     Success, but advancing was stopped prematurely because ITER_DONE
-	 *                      was encountered. Return value is the # of successfully skipped
-	 *                      entries before "ITER_DONE" was encountered.
-	 * @return: (size_t)-1: Error. */
-	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_advance)(DeeObject *__restrict self, size_t step); /* DEPRECATED -- use method-hint: "iter_advance" */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextkey)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_nextvalue)(DeeObject *__restrict self);
 };
 
 #if 0
@@ -1339,18 +1331,10 @@ myob_nextvalue(MyObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-myob_advance(MyObject *__restrict self, size_t step) {
-	(void)self;
-	(void)step;
-	return (size_t)DeeError_NOTIMPLEMENTED();
-}
-
 PRIVATE struct type_iterator myob_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&myob_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&myob_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&myob_advance,
 };
 #endif
 

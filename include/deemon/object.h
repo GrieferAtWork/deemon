@@ -1773,15 +1773,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_IterNextPair)(DeeObject *__
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNextKey)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNextValue)(DeeObject *__restrict self);
 
-/* Advance an iterator by "step" items.
- * @return: step:       Success.
- * @return: < step:     Success, but advancing was stopped prematurely because ITER_DONE
- *                      was encountered. Return value is the # of successfully skipped
- *                      entries before "ITER_DONE" was encountered.
- * @return: (size_t)-1: Error. */
-/*!DEPRECATED -- use DeeObject_InvokeMethodHint(iter_advance)*/
-DFUNDEF WUNUSED NONNULL((1)) size_t (DCALL DeeObject_IterAdvance)(DeeObject *__restrict self, size_t step);
-
 /* Invoke `proc' for each element of a general-purpose sequence.
  * When `*proc' returns < 0, that value is propagated.
  * Otherwise, return the sum of all calls to it.

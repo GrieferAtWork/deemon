@@ -419,7 +419,6 @@ PRIVATE struct type_iterator jmapiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&jmapiter_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmapiter_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmapiter_nextvalue,
-	/* .tp_advance   = */ NULL, // TODO: (size_t (DCALL *)(DeeObject *__restrict, size_t))&jmapiter_advance,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

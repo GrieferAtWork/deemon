@@ -400,7 +400,6 @@ PRIVATE struct type_iterator refaiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&refaiter_nextpair,
 	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__nextpair),
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextpair),
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -448,7 +447,6 @@ PRIVATE struct type_iterator rebfaiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&rebfaiter_nextpair,
 	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__nextpair),
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextpair),
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

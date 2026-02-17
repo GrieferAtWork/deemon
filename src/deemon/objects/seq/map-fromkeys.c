@@ -173,16 +173,26 @@ PRIVATE struct type_iterator mfkvi_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&mfkvi_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkvi_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkvi_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&mfkvi_advance,
 };
 
 PRIVATE struct type_iterator mfkci_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&mfkci_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkci_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mfkci_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&mfkci_advance,
 };
 
+
+PRIVATE struct type_method tpconst mfkvi_methods[] = {
+#define mfkci_methods mfkvi_methods
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst mfkvi_method_hints[] = {
+#define mfkci_method_hints mfkvi_method_hints
+	TYPE_METHOD_HINT(iter_advance, &mfkvi_advance),
+	TYPE_METHOD_HINT_END
+};
 
 PRIVATE struct type_member tpconst mfkvi_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(MapFromKeysIterator, mfki_base), "->?Ert:MapFromKeysAndValue"),
@@ -242,13 +252,13 @@ INTERN DeeTypeObject MapFromKeysAndValueIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ mfkvi_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ mfkvi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ mfkvi_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -294,13 +304,13 @@ INTERN DeeTypeObject MapFromKeysAndCallbackIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ mfkci_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ mfkci_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ mfkci_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

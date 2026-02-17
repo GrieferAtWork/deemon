@@ -167,7 +167,7 @@ err:
 	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
-	result = DeeObject_IterAdvance(iter, (size_t)-1);
+	result = DeeObject_InvokeMethodHint(iter_advance, iter, (size_t)-1);
 	Dee_Decref_likely(iter);
 	return result;
 err:

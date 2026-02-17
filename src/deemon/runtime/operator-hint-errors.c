@@ -115,12 +115,6 @@ INTERN void*DCALL default__nextkey__badalloc(void*UNUSED(self)) {
 	Dee_BadAlloc(sizeof(struct type_iterator));
 	return NULL;
 }
-INTERN Dee_ssize_t DCALL default__advance__badalloc(void*UNUSED(self), void*UNUSED(arg1)) {
-	return Dee_BadAlloc(sizeof(struct type_iterator));
-}
-INTERN Dee_ssize_t DCALL _default__advance__unsupported(DeeObject*self, void*UNUSED(arg1)) {
-	return err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERNEXT);
-}
 INTERN void*DCALL default__int__badalloc(void*UNUSED(self)) {
 	Dee_BadAlloc(sizeof(struct type_math));
 	return NULL;
@@ -464,7 +458,6 @@ _DeeType_GetNativeOperatorOOM[Dee_TNO_COUNT] = {
 	/* [Dee_TNO_nextpair]                   = */ (Dee_funptr_t)&default__nextpair__badalloc,
 	/* [Dee_TNO_nextkey]                    = */ (Dee_funptr_t)&default__nextkey__badalloc,
 	/* [Dee_TNO_nextvalue]                  = */ (Dee_funptr_t)&default__nextvalue__badalloc,
-	/* [Dee_TNO_advance]                    = */ (Dee_funptr_t)&default__advance__badalloc,
 	/* [Dee_TNO_int]                        = */ (Dee_funptr_t)&default__int__badalloc,
 	/* [Dee_TNO_int32]                      = */ (Dee_funptr_t)&default__int32__badalloc,
 	/* [Dee_TNO_int64]                      = */ (Dee_funptr_t)&default__int64__badalloc,
@@ -596,7 +589,6 @@ _DeeType_GetNativeOperatorUnsupported[Dee_TNO_COUNT] = {
 	/* [Dee_TNO_nextpair]                   = */ (Dee_funptr_t)&default__nextpair__unsupported,
 	/* [Dee_TNO_nextkey]                    = */ (Dee_funptr_t)&default__nextkey__unsupported,
 	/* [Dee_TNO_nextvalue]                  = */ (Dee_funptr_t)&default__nextvalue__unsupported,
-	/* [Dee_TNO_advance]                    = */ (Dee_funptr_t)&default__advance__unsupported,
 	/* [Dee_TNO_int]                        = */ (Dee_funptr_t)&default__int__unsupported,
 	/* [Dee_TNO_int32]                      = */ (Dee_funptr_t)&default__int32__unsupported,
 	/* [Dee_TNO_int64]                      = */ (Dee_funptr_t)&default__int64__unsupported,

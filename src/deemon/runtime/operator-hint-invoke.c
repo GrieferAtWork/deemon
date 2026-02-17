@@ -186,15 +186,6 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
 	return (*tp_nextvalue)(self);
 }
 
-PUBLIC ATTR_HOT WUNUSED NONNULL((1)) size_t
-(DCALL DeeObject_IterAdvance)(DeeObject *__restrict self, size_t step) {
-	__register DeeNO_advance_t tp_advance;
-	__register DeeTypeObject *tp_self = Dee_TYPE(self);
-	if unlikely(!tp_self->tp_iterator || (tp_advance = tp_self->tp_iterator->tp_advance) == NULL)
-		tp_advance = _DeeType_RequireNativeOperator(tp_self, advance);
-	return (*tp_advance)(self, step);
-}
-
 PUBLIC ATTR_HOT WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_Int)(DeeObject *__restrict self) {
 	__register DeeNO_int_t tp_int;
@@ -1114,18 +1105,6 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 			return (*tp_nextvalue)(self);
 	}
 	return (*maketyped__nextvalue(tp_nextvalue))(tp_self, self);
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) size_t
-(DCALL DeeObject_TIterAdvance)(DeeTypeObject *tp_self, DeeObject *self, size_t step) {
-	__register DeeNO_advance_t tp_advance;
-	if unlikely(!tp_self->tp_iterator || (tp_advance = tp_self->tp_iterator->tp_advance) == NULL) {
-		tp_advance = _DeeType_RequireNativeOperator(tp_self, advance);
-		if unlikely(tp_advance == (DeeNO_advance_t)&default__advance__badalloc ||
-		            tp_advance == (DeeNO_advance_t)&default__advance__unsupported)
-			return (*tp_advance)(self, step);
-	}
-	return (*maketyped__advance(tp_advance))(tp_self, self, step);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *

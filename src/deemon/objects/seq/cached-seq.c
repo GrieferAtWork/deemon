@@ -720,7 +720,16 @@ PRIVATE struct type_iterator cswiiter_iterator = {
 	/* .tp_nextpair  = */ DEFIMPL(&default__nextpair__with__iter_next),
 	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__iter_next),
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__iter_next),
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&cswiiter_advance,
+};
+
+PRIVATE struct type_method tpconst cswiiter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst cswiiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &cswiiter_advance),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst cswiiter_members[] = {
@@ -771,13 +780,13 @@ INTERN DeeTypeObject CachedSeq_WithIter_Iterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ cswiiter_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ cswiiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ cswiiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

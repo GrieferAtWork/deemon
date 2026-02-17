@@ -733,17 +733,17 @@ muiter_advance(MapUnionIterator *__restrict self, size_t step) {
 	MapUnionIterator_LockRead(self);
 	if (self->mui_in2nd) {
 		MapUnionIterator_LockEndRead(self);
-		return default__advance__with__nextkey(Dee_AsObject(self), step);
+		return default__iter_advance__with__iter_nextkey(Dee_AsObject(self), step);
 	}
 	iter = self->mui_iter;
 	Dee_Incref(iter);
 	MapUnionIterator_LockEndRead(self);
-	result = DeeObject_IterAdvance(iter, step);
+	result = DeeObject_InvokeMethodHint(iter_advance, iter, step);
 	Dee_Decref(iter);
 	if (result >= step /* || unlikely(result == (size_t)-1)*/)
 		return result; /* Error, or fully "step" was fully applied */
 	/* Must use default for remaining steps. */
-	temp = default__advance__with__nextkey(Dee_AsObject(self), step - result);
+	temp = default__iter_advance__with__iter_nextkey(Dee_AsObject(self), step - result);
 	if unlikely(temp == (size_t)-1)
 		goto err;
 	return result + temp;
@@ -844,7 +844,6 @@ PRIVATE struct type_iterator muiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&muiter_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&muiter_nextkey,
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&muiter_advance,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -871,6 +870,16 @@ muiter_bool(MapUnionIterator *__restrict self) {
 
 PRIVATE struct type_gc tpconst muiter_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *))&muiter_clear
+};
+
+PRIVATE struct type_method tpconst muiter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst muiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &muiter_advance),
+	TYPE_METHOD_HINT_END
 };
 
 INTERN DeeTypeObject MapUnionIterator_Type = {
@@ -912,13 +921,13 @@ INTERN DeeTypeObject MapUnionIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ muiter_methods,
 	/* .tp_getsets       = */ muiter_getsets,
 	/* .tp_members       = */ muiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ muiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -1299,7 +1308,6 @@ PRIVATE struct type_iterator miiter_iterator = {
 	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&miiter_nextpair,
 	/* .tp_nextkey  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&miiter_nextkey,
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 PRIVATE struct type_member tpconst miiter_members[] = {
@@ -1667,7 +1675,6 @@ PRIVATE struct type_iterator mditer_iterator = {
 	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&mditer_nextpair,
 	/* .tp_nextkey  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mditer_nextkey,
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 PRIVATE struct type_member tpconst mditer_members[] = {
@@ -2698,7 +2705,6 @@ PRIVATE struct type_iterator msditer_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&msditer_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&msditer_nextkey,
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 PRIVATE struct type_gc tpconst msditer_gc = {

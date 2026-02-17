@@ -301,7 +301,6 @@ global final STRUCT_INITIALIZERS: {string: InitializerSpecs} = {
 		NativeOperator("tp_nextpair"),
 		NativeOperator("tp_nextkey"),
 		NativeOperator("tp_nextvalue"),
-		NativeOperator("tp_advance"),
 	},
 	"type_attr": {
 		NativeOperator("tp_getattr"),

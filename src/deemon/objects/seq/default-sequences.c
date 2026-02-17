@@ -2021,7 +2021,7 @@ ds_ial_iter(DefaultSequence_WithIterAndLimit *__restrict self) {
 	iter = (*self->dsial_tp_iter)(self->dsial_seq);
 	if unlikely(!iter)
 		goto err;
-	iter_status = DeeObject_IterAdvance(iter, self->dsial_start);
+	iter_status = DeeObject_InvokeMethodHint(iter_advance, iter, self->dsial_start);
 	if (iter_status != self->dsial_start) {
 		if unlikely(iter_status == (size_t)-1)
 			goto err_iter;
@@ -2055,13 +2055,13 @@ ds_ial_size(DefaultSequence_WithIterAndLimit *__restrict self) {
 		iter = (*self->dsial_tp_iter)(self->dsial_seq);
 		if unlikely(!iter)
 			goto err;
-		iter_status = DeeObject_IterAdvance(iter, self->dsial_start);
+		iter_status = DeeObject_InvokeMethodHint(iter_advance, iter, self->dsial_start);
 		if (iter_status != self->dsial_start) {
 			if unlikely(iter_status == (size_t)-1)
 				goto err_iter;
 			/* Exhausted iterator... */
 		} else {
-			result = DeeObject_IterAdvance(iter, self->dsial_limit);
+			result = DeeObject_InvokeMethodHint(iter_advance, iter, self->dsial_limit);
 		}
 		Dee_Decref(iter);
 	}
@@ -2083,7 +2083,7 @@ ds_ial_getitem_index(DefaultSequence_WithIterAndLimit *__restrict self, size_t i
 	iter = (*self->dsial_tp_iter)(self->dsial_seq);
 	if unlikely(!iter)
 		goto err;
-	iter_status = DeeObject_IterAdvance(iter, abs_index);
+	iter_status = DeeObject_InvokeMethodHint(iter_advance, iter, abs_index);
 	if (iter_status != abs_index) {
 		if unlikely(iter_status == (size_t)-1)
 			goto err_iter;

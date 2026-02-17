@@ -1760,10 +1760,6 @@ PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_advance[2
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_advance, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_advance__with_callattr_advance),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
 };
-PRIVATE struct mh_init_spec_operator tpconst mh_operators_iter_advance[2] = {
-	MH_INIT_SPEC_OPERATOR_INIT(Dee_TNO_advance, NULL, Dee_SEQCLASS_UNKNOWN),
-	MH_INIT_SPEC_OPERATOR_END
-};
 PRIVATE struct mh_init_spec_secondary_attrib tpconst mh_secondary_iter_prev[2] = {
 	MH_INIT_SPEC_SECONDARY_ATTRIB_INIT(&str_prev, &DeeIterator_Type, Dee_SEQCLASS_UNKNOWN, &default__iter_prev__with_callattr_prev),
 	MH_INIT_SPEC_SECONDARY_ATTRIB_END
@@ -2051,7 +2047,7 @@ INTERN_TPCONST struct mh_init_spec tpconst mh_init_specs[263] = {
 	MH_INIT_SPEC_INIT(&str___map_pop__, mh_secondary_map_pop, NULL, NULL, &default__map_pop__with_callattr___map_pop__, offsetof(struct Dee_type_mh_cache, mhc___map_pop__), MH_KIND_METHOD, &default__map_pop__with_callobjectcache___map_pop__, &mh_select_map_pop),
 	MH_INIT_SPEC_INIT(&str___map_pop__, mh_secondary_map_pop_with_default, NULL, NULL, &default__map_pop_with_default__with_callattr___map_pop__, offsetof(struct Dee_type_mh_cache, mhc___map_pop__), MH_KIND_METHOD, &default__map_pop_with_default__with_callobjectcache___map_pop__, &mh_select_map_pop_with_default),
 	MH_INIT_SPEC_INIT(&str___map_popitem__, mh_secondary_map_popitem, NULL, NULL, &default__map_popitem__with_callattr___map_popitem__, offsetof(struct Dee_type_mh_cache, mhc___map_popitem__), MH_KIND_METHOD, &default__map_popitem__with_callobjectcache___map_popitem__, &mh_select_map_popitem),
-	MH_INIT_SPEC_INIT(&str___iter_advance__, mh_secondary_iter_advance, NULL, mh_operators_iter_advance, &default__iter_advance__with_callattr___iter_advance__, offsetof(struct Dee_type_mh_cache, mhc___iter_advance__), MH_KIND_METHOD, &default__iter_advance__with_callobjectcache___iter_advance__, &mh_select_iter_advance),
+	MH_INIT_SPEC_INIT(&str___iter_advance__, mh_secondary_iter_advance, NULL, NULL, &default__iter_advance__with_callattr___iter_advance__, offsetof(struct Dee_type_mh_cache, mhc___iter_advance__), MH_KIND_METHOD, &default__iter_advance__with_callobjectcache___iter_advance__, &mh_select_iter_advance),
 	MH_INIT_SPEC_INIT(&str___iter_prev__, mh_secondary_iter_prev, NULL, NULL, &default__iter_prev__with_callattr___iter_prev__, offsetof(struct Dee_type_mh_cache, mhc___iter_prev__), MH_KIND_METHOD, &default__iter_prev__with_callobjectcache___iter_prev__, &mh_select_iter_prev),
 	MH_INIT_SPEC_INIT(&str___iter_revert__, mh_secondary_iter_revert, NULL, NULL, &default__iter_revert__with_callattr___iter_revert__, offsetof(struct Dee_type_mh_cache, mhc___iter_revert__), MH_KIND_METHOD, &default__iter_revert__with_callobjectcache___iter_revert__, &mh_select_iter_revert),
 	MH_INIT_SPEC_INIT(&str___iter_bool__, NULL, NULL, mh_operators_iter_operator_bool, &default__iter_operator_bool__with_callattr___iter_bool__, offsetof(struct Dee_type_mh_cache, mhc___iter_bool__), MH_KIND_METHOD, &default__iter_operator_bool__with_callobjectcache___iter_bool__, &mh_select_iter_operator_bool),

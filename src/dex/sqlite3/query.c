@@ -31,6 +31,7 @@
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPu64 */
 #include <deemon/bytes.h>           /* DeeBytesObject, DeeBytes_TryNewBufferData */
 #include <deemon/format.h>          /* DeeFormat_Printf */
+#include <deemon/method-hints.h>          /* DeeFormat_Printf */
 #include <deemon/int.h>             /* DeeInt_NewUInt64 */
 #include <deemon/none.h>            /* DeeNone_NewRef */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref_unlikely, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT */
@@ -104,11 +105,14 @@ qiter_advance(QueryIterator *__restrict self, size_t step) {
 	return (size_t)Query_Skip(self->qi_query, (uint64_t)step);
 }
 
-PRIVATE struct Dee_type_iterator qiter_iterator = {
-	/* .tp_nextpair  = */ NULL,
-	/* .tp_nextkey   = */ NULL,
-	/* .tp_nextvalue = */ NULL,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&qiter_advance,
+PRIVATE struct type_method tpconst qiter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst qiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &qiter_advance),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst qiter_members[] = {
@@ -150,17 +154,17 @@ INTERN DeeTypeObject QueryIterator_Type = {
 	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&qiter_next,
-	/* .tp_iterator      = */ &qiter_iterator,
+	/* .tp_iterator      = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ qiter_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ qiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ qiter_method_hints,
 	/* .tp_call          = */ NULL,
 	/* .tp_callable      = */ NULL,
 };

@@ -850,16 +850,10 @@ super_nextvalue(Super *__restrict self) {
 	return DeeObject_TIterNextValue(self->s_type, self->s_self);
 }
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-super_advance(Super *__restrict self, size_t step) {
-	return DeeObject_TIterAdvance(self->s_type, self->s_self, step);
-}
-
 PRIVATE struct type_iterator super_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&super_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&super_advance,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

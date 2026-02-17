@@ -278,7 +278,6 @@ INTERN struct type_iterator default__tp_iterator__863AC70046E4B6B0 = {
 	/* .tp_nextpair  = */ &default__nextpair__with__iter_next,
 	/* .tp_nextkey   = */ &default__nextkey__with__iter_next,
 	/* .tp_nextvalue = */ &default__nextvalue__with__iter_next,
-	/* .tp_advance   = */ &default__advance__with__iter_next,
 };
 INTERN struct type_math default__tp_math__22D95991F3D69B20 = {
 	/* .tp_int32       = */ UNSUPPORTED(&default__int32__unsupported),
@@ -639,7 +638,6 @@ INTERN struct type_iterator default__tp_iterator__1806D264FE42CE33 = {
 	/* .tp_nextpair  = */ UNSUPPORTED(&default__nextpair__unsupported),
 	/* .tp_nextkey   = */ UNSUPPORTED(&default__nextkey__unsupported),
 	/* .tp_nextvalue = */ UNSUPPORTED(&default__nextvalue__unsupported),
-	/* .tp_advance   = */ UNSUPPORTED(&default__advance__unsupported),
 };
 INTERN struct type_math default__tp_math__AE7A38D3B0C75E4B = {
 	/* .tp_int32       = */ UNSUPPORTED(&default__int32__unsupported),

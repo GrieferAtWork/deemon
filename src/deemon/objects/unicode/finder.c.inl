@@ -384,7 +384,6 @@ PRIVATE struct type_iterator scfi_iterator = {
 	/* .tp_nextpair = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&scfi_nextpair,
 	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__nextpair),
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__nextpair),
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextpair),
 };
 
 STATIC_ASSERT(offsetof(StringFindIterator, sfi_find) == offsetof(ProxyObject, po_obj));

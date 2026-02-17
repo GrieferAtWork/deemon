@@ -836,7 +836,6 @@ PRIVATE struct type_iterator funcsymbolsbynameiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&funcsymbolsbynameiter_nextpair,
 	/* .tp_nextkey   = */ NULL,
 	/* .tp_nextvalue = */ NULL,
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 PRIVATE struct type_cmp funcsymbolsbynameiter_cmp = {
@@ -2063,7 +2062,6 @@ PRIVATE struct type_iterator yfuncsymbolsbynameiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&yfuncsymbolsbynameiter_nextpair,
 	/* .tp_nextkey   = */ NULL,
 	/* .tp_nextvalue = */ NULL,
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 PRIVATE struct type_cmp yfuncsymbolsbynameiter_cmp = {
@@ -4450,7 +4448,6 @@ PRIVATE struct type_iterator framesymbolsbynameiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&framesymbolsbynameiter_nextpair,
 	/* .tp_nextkey   = */ NULL,
 	/* .tp_nextvalue = */ NULL,
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextvalue),
 };
 
 PRIVATE struct type_cmp framesymbolsbynameiter_cmp = {

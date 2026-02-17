@@ -264,7 +264,6 @@ PRIVATE struct type_iterator diter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&diter_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diter_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&diter_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&diter_advance,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -314,6 +313,16 @@ PRIVATE struct type_cmp diter_cmp = {
 };
 
 
+PRIVATE struct type_method tpconst diter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst diter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &diter_advance),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_member tpconst diter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(DictIterator, di_dict), "->?DDict"),
 	TYPE_MEMBER_END
@@ -360,13 +369,13 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ diter_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ diter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ diter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

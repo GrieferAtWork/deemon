@@ -228,10 +228,7 @@ PRIVATE struct type_iterator smapiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&smapiter_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_smapiter_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))PTR_smapiter_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&smapiter_advance,
 };
-
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 smapiter_ctor(SharedMapIterator *__restrict self,
@@ -296,6 +293,16 @@ PRIVATE struct type_cmp smapiter_cmp = {
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
 };
 
+PRIVATE struct type_method tpconst smapiter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst smapiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &smapiter_advance),
+	TYPE_METHOD_HINT_END
+};
+
 PRIVATE struct type_member tpconst smapiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(SharedMapIterator, smi_seq), "->?Ert:SharedMap"),
 	TYPE_MEMBER_FIELD("__index__", STRUCT_SIZE_T, offsetof(SharedMapIterator, smi_index)),
@@ -341,13 +348,13 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ smapiter_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ smapiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ smapiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

@@ -902,7 +902,7 @@ dewif_soi__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	if unlikely(!result->dincl_iter)
 		goto err_r;
 	result->dincl_tp_next = DeeType_RequireNativeOperator(Dee_TYPE(result->dincl_iter), iter_next);
-	if (DeeObject_IterAdvance(result->dincl_iter, self->dewif_start) == (size_t)-1)
+	if (DeeObject_InvokeMethodHint(iter_advance, result->dincl_iter, self->dewif_start) == (size_t)-1)
 		goto err_r_iter;
 	result->dincl_counter = self->dewif_start;
 	result->dincl_limit   = self->dewif_end;

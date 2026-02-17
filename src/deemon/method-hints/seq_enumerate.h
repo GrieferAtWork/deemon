@@ -629,7 +629,7 @@ err:
 	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
-	skip = DeeObject_IterAdvance(iter, start);
+	skip = DeeObject_InvokeMethodHint(iter_advance, iter, start);
 	ASSERT(skip <= start || skip == (size_t)-1);
 	if unlikely(skip != start) {
 		if (skip != (size_t)-1)

@@ -2522,7 +2522,7 @@ sfi_advance(SeqFlatIterator *__restrict self, size_t step) {
 		curriter = self->sfi_curriter;
 		Dee_Incref(curriter);
 		SeqFlatIterator_LockRelease(self);
-		part = DeeObject_IterAdvance(curriter, step);
+		part = DeeObject_InvokeMethodHint(iter_advance, curriter, step);
 		Dee_Decref_unlikely(curriter);
 		if unlikely(part == (size_t)-1)
 			goto err;
@@ -2557,7 +2557,16 @@ PRIVATE struct type_iterator sfi_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&sfi_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sfi_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sfi_nextvalue,
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&sfi_advance,
+};
+
+PRIVATE struct type_method tpconst sfi_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst sfi_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &sfi_advance),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member sfi_members[] = {
@@ -2646,13 +2655,13 @@ INTERN DeeTypeObject SeqFlatIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ sfi_methods,
 	/* .tp_getsets       = */ sfi_getsets,
 	/* .tp_members       = */ sfi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ sfi_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

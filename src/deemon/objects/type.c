@@ -432,11 +432,10 @@ type_fini(DeeTypeObject *__restrict self) {
 	cb(_, 0x2c, tp_trygetitemnr_string_hash, Dee_TNO_UNDEF)                        \
 	cb(_, 0x2d, tp_trygetitemnr_string_len_hash, Dee_TNO_UNDEF)
 
-#define VTABLE_DESC__tp_iterator(cb, _)          \
-	cb(_, 0x00, tp_nextpair, Dee_TNO_nextpair)   \
-	cb(_, 0x01, tp_nextkey, Dee_TNO_nextkey)     \
-	cb(_, 0x02, tp_nextvalue, Dee_TNO_nextvalue) \
-	cb(_, 0x03, tp_advance, Dee_TNO_advance)
+#define VTABLE_DESC__tp_iterator(cb, _)        \
+	cb(_, 0x00, tp_nextpair, Dee_TNO_nextpair) \
+	cb(_, 0x01, tp_nextkey, Dee_TNO_nextkey)   \
+	cb(_, 0x02, tp_nextvalue, Dee_TNO_nextvalue)
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define IF_CONFIG_CALLTUPLE_OPTIMIZATIONS(x) x

@@ -2816,7 +2816,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__se
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__map_popitem__with__seq_pop(DeeObject *self);
 
 /* iter_advance */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_advance(DeeObject *__restrict self, size_t step);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_advance__with_callattr_advance(DeeObject *__restrict self, size_t step);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_advance__with_callattr___iter_advance__(DeeObject *__restrict self, size_t step);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_advance__with_callobjectcache___iter_advance__(DeeObject *__restrict self, size_t step);

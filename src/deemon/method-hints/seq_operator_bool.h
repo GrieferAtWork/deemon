@@ -81,7 +81,7 @@ int __seq_bool__.seq_operator_bool([[nonnull]] DeeObject *__restrict self)
 	DREF DeeObject *iter = CALL_DEPENDENCY(seq_operator_iter, self);
 	if unlikely(!iter)
 		goto err;
-	skip = DeeObject_IterAdvance(iter, 1);
+	skip = DeeObject_InvokeMethodHint(iter_advance, iter, 1);
 	Dee_Decref_likely(iter);
 	ASSERT(skip == 0 || skip == 1 || skip == (size_t)-1);
 	return (int)(Dee_ssize_t)skip;

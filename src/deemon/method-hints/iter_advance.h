@@ -38,7 +38,6 @@ err:
  *                      was encountered. Return value is the # of successfully skipped
  *                      entries before "ITER_DONE" was encountered.
  * @return: (size_t)-1: Error. */
-[[operator(*: tp_iterator->tp_advance)]] /* TODO: Remove this (only here because "tp_advance" still exists) */
 [[wunused]] size_t
 __iter_advance__.iter_advance([[nonnull]] DeeObject *__restrict self, size_t step)
 %{unsupported_alias("default__iter_advance__with__operator_next")}

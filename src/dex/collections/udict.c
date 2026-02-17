@@ -274,7 +274,6 @@ PRIVATE struct type_iterator udictiterator_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&udictiterator_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udictiterator_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udictiterator_nextvalue,
-	/* .tp_advance   = */ NULL, // TODO: (size_t (DCALL *)(DeeObject *__restrict, size_t))&udictiterator_advance,
 };
 
 
@@ -1506,7 +1505,6 @@ PRIVATE struct type_iterator urodictiterator_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&urodictiterator_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodictiterator_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodictiterator_nextvalue,
-	/* .tp_advance   = */ NULL, // TODO: (size_t (DCALL *)(DeeObject *__restrict, size_t))&urodictiterator_advance,
 };
 
 PRIVATE struct type_member tpconst urodictiterator_members[] = {

@@ -180,7 +180,6 @@ PRIVATE struct type_iterator blvi_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&blvi_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blvi_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blvi_nextvalue,
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 
@@ -1200,7 +1199,6 @@ PRIVATE struct type_iterator blmi_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&blmi_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blmi_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blmi_nextvalue,
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject, po_obj));

@@ -602,7 +602,6 @@ PRIVATE struct type_iterator rbtreeiter_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&rbtreeiter_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rbtreeiter_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rbtreeiter_nextvalue,
-	/* .tp_advance   = */ NULL,
 };
 
 

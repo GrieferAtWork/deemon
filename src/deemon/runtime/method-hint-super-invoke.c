@@ -3969,8 +3969,7 @@ PRIVATE struct mh_super_map_typed tpconst msm_with_type__map_popitem[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__map_popitem__with_callobjectcache___map_popitem__, &tdefault__map_popitem__with_callobjectcache___map_popitem__),
 	MH_SUPER_MAP_TYPED_END
 };
-PRIVATE Dee_funptr_t tpconst msm_with_super__iter_advance[10] = {
-	(Dee_funptr_t)&default__iter_advance,
+PRIVATE Dee_funptr_t tpconst msm_with_super__iter_advance[9] = {
 	(Dee_funptr_t)&default__iter_advance__with_callattr_advance,
 	(Dee_funptr_t)&default__iter_advance__with_callattr___iter_advance__,
 	(Dee_funptr_t)&default__iter_advance__unsupported,
@@ -3981,12 +3980,8 @@ PRIVATE Dee_funptr_t tpconst msm_with_super__iter_advance[10] = {
 	(Dee_funptr_t)&default__iter_advance__with__operator_next,
 	NULL
 };
-PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_advance[6] = {
+PRIVATE struct mh_super_map_typed tpconst msm_with_type__iter_advance[2] = {
 	MH_SUPER_MAP_TYPED_INIT(&default__iter_advance__with_callobjectcache___iter_advance__, &tdefault__iter_advance__with_callobjectcache___iter_advance__),
-	MH_SUPER_MAP_TYPED_INIT(&default__advance__with__nextkey, &tdefault__advance__with__nextkey),
-	MH_SUPER_MAP_TYPED_INIT(&default__advance__with__nextvalue, &tdefault__advance__with__nextvalue),
-	MH_SUPER_MAP_TYPED_INIT(&default__advance__with__nextpair, &tdefault__advance__with__nextpair),
-	MH_SUPER_MAP_TYPED_INIT(&default__advance__with__iter_next, &tdefault__advance__with__iter_next),
 	MH_SUPER_MAP_TYPED_END
 };
 PRIVATE Dee_funptr_t tpconst msm_with_super__iter_prev[8] = {

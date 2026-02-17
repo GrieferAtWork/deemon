@@ -2920,7 +2920,6 @@ PRIVATE struct type_iterator di_nuf_iterator = {
 	/* .tp_nextpair  = */ (int (DCALL *)(DeeObject *__restrict, DREF DeeObject *[2]))&di_nuf_nextpair,
 	/* .tp_nextkey   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nuf_nextkey,
 	/* .tp_nextvalue = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_nuf_nextvalue,
-	/* .tp_advance   = */ DEFIMPL(&default__advance__with__nextkey),
 };
 
 PRIVATE struct type_member tpconst di_nuf_members[] = {
@@ -3062,7 +3061,18 @@ PRIVATE struct type_iterator di_nk_iterator = {
 	/* .tp_nextpair  = */ DEFIMPL(&default__nextpair__with__iter_next),
 	/* .tp_nextkey   = */ DEFIMPL(&default__nextkey__with__iter_next),
 	/* .tp_nextvalue = */ DEFIMPL(&default__nextvalue__with__iter_next),
-	/* .tp_advance   = */ (size_t (DCALL *)(DeeObject *__restrict, size_t))&di_nk_advance,
+};
+
+PRIVATE struct type_method tpconst di_nk_methods[] = {
+#define di_nv_methods di_nk_methods
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst di_nk_method_hints[] = {
+#define di_nv_method_hints di_nk_method_hints
+	TYPE_METHOD_HINT(iter_advance, &di_nk_advance),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_MapProxy *DCALL
@@ -3146,13 +3156,13 @@ INTERN DeeTypeObject DefaultIterator_WithNextKey = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ di_nk_methods,
 	/* .tp_getsets       = */ di_nk_getsets,
 	/* .tp_members       = */ di_nk_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ di_nk_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -3195,13 +3205,13 @@ INTERN DeeTypeObject DefaultIterator_WithNextValue = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ di_nv_methods,
 	/* .tp_getsets       = */ di_nv_getsets,
 	/* .tp_members       = */ di_nv_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ di_nv_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

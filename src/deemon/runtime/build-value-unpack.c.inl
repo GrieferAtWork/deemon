@@ -30,6 +30,7 @@
 #include <deemon/kwds.h>            /* DeeKw_TryGetItemNRStringHash, DeeKwdsObject, DeeKwds_Check, Dee_kwds_entry */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_Decref, Dee_hash_t, Dee_int128_t, Dee_uint128_t, ITER_DONE */
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t, WSTR_LENGTH */
+#include <deemon/method-hints.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp */
 #include <deemon/util/hash.h>       /* Dee_HashStr */
@@ -370,7 +371,7 @@ invalid_argc:
 		++argc;
 		{
 			size_t remaining;
-			remaining = DeeObject_IterAdvance(iterator, (size_t)-1);
+			remaining = DeeObject_InvokeMethodHint(iter_advance, iterator, (size_t)-1);
 			if unlikely(remaining == (size_t)-1)
 				goto err_iter;
 			argc += remaining;

@@ -383,7 +383,6 @@ PRIVATE struct type_iterator none_iterator = {
 	/* .tp_nextpair  = */ &DeeNone_OperatorNextPair,
 	/* .tp_nextkey   = */ &DeeNone_OperatorIterNext,
 	/* .tp_nextvalue = */ &DeeNone_OperatorIterNext,
-	/* .tp_advance   = */ &DeeNone_OperatorAdvance,
 };
 
 PRIVATE struct type_math none_math = {
