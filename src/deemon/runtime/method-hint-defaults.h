@@ -2836,7 +2836,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_prev__unsupporte
 #define default__iter_prev__none (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_NewRef1)
 #define default__iter_prev__empty (*(DREF DeeObject *(DCALL *)(DeeObject *))&_DeeNone_retsm1_1)
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_prev__with__iter_revert__and__iter_peek(DeeObject *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL default__iter_prev__with__iter_getindex__and_operator_next__and__iter_setindex(DeeObject *self);
 
 /* iter_revert */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL default__iter_revert__with_callattr_revert(DeeObject *__restrict self, size_t step);

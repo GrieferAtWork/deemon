@@ -30,7 +30,7 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
 #include <deemon/method-hints.h>       /* DeeMA_*, DeeObject_InvokeMethodHint */
 #include <deemon/none-operator.h>      /* DeeNone_Operator*, _DeeNone_retsm1_1 */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeNO_nextpair_t, DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/string.h>             /* DeeString_STR */

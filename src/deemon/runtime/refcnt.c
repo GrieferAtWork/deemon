@@ -519,21 +519,14 @@ PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 
 PRIVATE NONNULL((1)) size_t DCALL
 print_refchange_len(struct Dee_refchange *__restrict item) {
-	size_t result;
+	size_t result = strlen(item->rc_file);
 	int line = item->rc_line;
 	if (line < 0)
 		line = -line;
-	result = strlen(item->rc_file);
-	if (line > 10)
+	while (line > 10) {
 		++result;
-	if (line > 100)
-		++result;
-	if (line > 1000)
-		++result;
-	if (line > 10000)
-		++result;
-	if (line > 100000)
-		++result;
+		line /= 10;
+	}
 	return result;
 }
 

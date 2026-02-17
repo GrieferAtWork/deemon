@@ -28,9 +28,9 @@
 #include <deemon/error-rt.h>        /* DeeRT_ErrIntegerOverflowU32, DeeRT_ErrUnpackErrorEx */
 #include <deemon/format.h>          /* Dee_UnpackStruct, Dee_VPUnpackf, Dee_VUnpackf, Dee_va_list_struct */
 #include <deemon/kwds.h>            /* DeeKw_TryGetItemNRStringHash, DeeKwdsObject, DeeKwds_Check, Dee_kwds_entry */
+#include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_Decref, Dee_hash_t, Dee_int128_t, Dee_uint128_t, ITER_DONE */
 #include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t, WSTR_LENGTH */
-#include <deemon/method-hints.h>          /* DeeString*, Dee_STRING_ERROR_FSTRICT, Dee_wchar_t, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* DeeString_GetChar */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp */
 #include <deemon/util/hash.h>       /* Dee_HashStr */

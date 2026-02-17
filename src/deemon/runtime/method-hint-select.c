@@ -25,7 +25,7 @@
 #include <deemon/method-hints.h>   /* DeeMH_*_t, DeeType_*MethodHint*, DeeType_HasExplicitTrait, DeeType_TRAIT___map_getitem_always_bound__, DeeType_TRAIT___seq_getitem_always_bound__ */
 #include <deemon/none-operator.h>  /* _DeeNone_reti1_1, _DeeNone_reti1_3 */
 #include <deemon/object.h>         /* DeeTypeObject */
-#include <deemon/operator-hints.h> /* DeeType_RequireSupportedNativeOperator */
+#include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutDefaults, DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>            /* DeeType_GetSeqClass, Dee_SEQCLASS_* */
 #include <deemon/type.h>           /* DeeType_IsCopyable */
 
@@ -4477,17 +4477,12 @@ mh_select_iter_prev(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_iter_peek_t iter_peek = (DeeMH_iter_peek_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_peek);
 	if (iter_peek == &default__iter_peek__empty)
 		return &default__iter_prev__empty;
-	if (iter_peek == &default__iter_peek__with__operator_next__and__iter_revert)
-		return &default__iter_prev__with__iter_revert__and__iter_peek;
-	if (iter_peek == &default__iter_peek__with__iter_getindex__and_operator_next__and__iter_setindex)
-		return &default__iter_prev__with__iter_getindex__and_operator_next__and__iter_setindex;
 	if (iter_peek) {
 		DeeMH_iter_revert_t iter_revert = (DeeMH_iter_revert_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_iter_revert);
 		if (iter_revert == &default__iter_revert__empty)
 			return &default__iter_prev__empty;
-		if (iter_revert == &default__iter_revert__with__iter_getindex__and__iter_setindex)
-			return &default__iter_prev__with__iter_getindex__and_operator_next__and__iter_setindex;
-		return &default__iter_prev__with__iter_revert__and__iter_peek;
+		if (iter_revert)
+			return &default__iter_prev__with__iter_revert__and__iter_peek;
 	}
 	return NULL;
 }

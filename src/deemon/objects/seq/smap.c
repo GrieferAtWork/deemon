@@ -26,13 +26,13 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/map.h>                /* DeeMapping_Type, DeeSharedItem */
+#include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_foreach_pair_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* memcpyc, strcmp */
-#include <deemon/method-hints.h>    /* memcpyc, strcmp */
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visitv, STRUCT_OBJECT_AB, STRUCT_SIZE_T, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */

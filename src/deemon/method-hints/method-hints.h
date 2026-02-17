@@ -264,7 +264,7 @@
 %[include("iter_advance.h")]            /* "iter += step" */
 %[include("iter_prev.h")]               /* "*--iter" */
 %[include("iter_revert.h")]             /* "iter -= step" */
-%[include("iter_operator_bool.h")]      /* "*iter != ITER_DONE" */
+%[include("iter_operator_bool.h")]      /* "iter != ITER_DONE" */
 %[include("iter_index.h")]              /* "iter = BASE + index" */
 %[include("iter_peek.h")]               /* "*iter" */
 /* TODO: operator ==|!=|<|<=|>|>= */

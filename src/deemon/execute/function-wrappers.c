@@ -26,16 +26,15 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw, UNPu16, UNPx16 */
 #include <deemon/bool.h>               /* Dee_True, return_bool */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Type, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FLENIENT, Dee_DDI_*, Dee_code_*, Dee_ddi_*, code_addr_t */
-#include <deemon/pair.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, DeeDDI_Type, DeeFunctionObject, DeeFunction_*, DeeYieldFunctionObject, DeeYieldFunction_Type, Dee_CODE_FLENIENT, Dee_DDI_*, Dee_code_*, Dee_ddi_*, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* PRFxSIZ */
 #include <deemon/int.h>                /* DeeInt_NEWU, DeeInt_NewUInt16 */
 #include <deemon/map.h>                /* DeeMapping_Type */
-#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_funptr_t, Dee_hash_t, Dee_return_*, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_hash_t, Dee_return_*, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp_n, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmpz, bcmp, memcpy*, memmovedownc, memmoveupc, strlen */

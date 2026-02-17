@@ -35,18 +35,17 @@
 #include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_TRACK, DeeGC_Track */
 #include <deemon/int.h>             /* DeeInt_Check, DeeInt_NewSize */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_Incref_n, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref*, Dee_XIncref, Dee_XMovrefv, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_EmptySeq, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_Incref_n, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref*, Dee_XIncref, Dee_XMovrefv, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzeroc, memcpyc */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/type.h>            /* DeeObject_GCPriority, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 #include <deemon/util/weakref.h>    /* Dee_weakref */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
-#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_USUB */
 #include <hybrid/typecore.h>  /* __UINTPTR_TYPE__ */
 
 #include "kwlist.h"
@@ -1618,124 +1617,11 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
-fli_getseq(FixedListIterator *__restrict self) {
-	return_reference_(self->li_list);
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-fli_getindex(FixedListIterator *__restrict self) {
-	return FLI_GETITER(self);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-fli_setindex(FixedListIterator *__restrict self, size_t new_index) {
-	atomic_write(&self->li_iter, new_index);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-fli_rewind(FixedListIterator *__restrict self) {
-	atomic_write(&self->li_iter, 0);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-fli_revert(FixedListIterator *__restrict self, size_t step) {
-	size_t oldpos, newpos;
-	do {
-		oldpos = atomic_read(&self->li_iter);
-		if (OVERFLOW_USUB(oldpos, step, &newpos))
-			newpos = 0;
-	} while (!atomic_cmpxch_weak_or_write(&self->li_iter, oldpos, newpos));
-	if (newpos == 0)
-		return 1;
-	return 2;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-fli_advance(FixedListIterator *__restrict self, size_t step) {
-	size_t oldpos, newpos;
-	do {
-		oldpos = atomic_read(&self->li_iter);
-		if (OVERFLOW_UADD(oldpos, step, &newpos))
-			newpos = (size_t)-1;
-	} while (!atomic_cmpxch_weak_or_write(&self->li_iter, oldpos, newpos));
-	if (newpos >= self->li_list->fl_size)
-		return 1;
-	return 2;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fli_peek(FixedListIterator *__restrict self) {
-	DREF DeeObject *result;
-	size_t iter, newiter;
-	FixedList *list = self->li_list;
-	iter = FLI_GETITER(self);
-	if (iter >= list->fl_size)
-		return ITER_DONE;
-	newiter = iter;
-	FixedList_LockRead(list);
-	for (;; ++newiter) {
-		if (newiter >= list->fl_size) {
-			FixedList_LockEndRead(list);
-			return ITER_DONE;
-		}
-		result = list->fl_elem[newiter];
-		if (result)
-			break;
-	}
-	Dee_Incref(result);
-	FixedList_LockEndRead(list);
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_bool(FixedListIterator *__restrict self) {
 	size_t pos = FLI_GETITER(self);
 	return pos < self->li_list->fl_size;
 }
-
-
-PRIVATE struct type_nii tpconst fli_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&fli_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&fli_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&fli_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&fli_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)&fli_revert,
-			/* .nii_advance  = */ (Dee_funptr_t)&fli_advance,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)&fli_peek,
-		}
-	}
-};
-
-PRIVATE struct type_cmp fli_cmp = {
-	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&fli_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&fli_compare,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL,
-	/* .tp_nii           = */ &fli_nii,
-};
-
-
-PRIVATE struct type_member tpconst fli_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(FixedListIterator, li_list), "->?GFixedList"),
-	TYPE_MEMBER_FIELD("__index__", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(FixedListIterator, li_iter)),
-	TYPE_MEMBER_END
-};
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fli_next(FixedListIterator *__restrict self) {
@@ -1768,6 +1654,58 @@ again:
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+fli_mh_iter_peek(FixedListIterator *__restrict self) {
+	DREF DeeObject *result;
+	size_t iter, newiter;
+	FixedList *list = self->li_list;
+	iter = FLI_GETITER(self);
+	if (iter >= list->fl_size)
+		return ITER_DONE;
+	newiter = iter;
+	FixedList_LockRead(list);
+	for (;; ++newiter) {
+		if (newiter >= list->fl_size) {
+			FixedList_LockEndRead(list);
+			return ITER_DONE;
+		}
+		result = list->fl_elem[newiter];
+		if (result)
+			break;
+	}
+	Dee_Incref(result);
+	FixedList_LockEndRead(list);
+	return result;
+}
+
+PRIVATE struct type_cmp fli_cmp = {
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&fli_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&fli_compare,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
+};
+
+PRIVATE struct type_method tpconst fli_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst fli_method_hints[] = {
+	TYPE_METHOD_HINT(iter_peek, &fli_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_member tpconst fli_members[] = {
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT_AB, offsetof(FixedListIterator, li_list), "->?GFixedList"),
+	TYPE_MEMBER_FIELD("index", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(FixedListIterator, li_iter)),
+	TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject FixedListIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1805,12 +1743,13 @@ INTERN DeeTypeObject FixedListIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ fli_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ fli_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ fli_method_hints,
 };
 
 DECL_END

@@ -33,7 +33,7 @@
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_Track */
 #include <deemon/int.h>                 /* DeeIntObject, DeeInt_* */
 #include <deemon/map.h>                 /* Dee_EmptyMapping */
-#include <deemon/method-hints.h>        /* DeeMH_*_t, DeeObject_InvokeMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
+#include <deemon/method-hints.h>        /* DeeMH_*_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
 #include <deemon/module.h>              /* DeeModule_CallExternStringf */
 #include <deemon/none.h>                /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>              /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Setrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_pair_t, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
@@ -22683,29 +22683,6 @@ default__iter_prev__with__iter_revert__and__iter_peek(DeeObject *self) {
 	if (count == 0)
 		return ITER_DONE;
 	return (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_peek))(self);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-default__iter_prev__with__iter_getindex__and_operator_next__and__iter_setindex(DeeObject *self) {
-	DREF DeeObject *result;
-	size_t new_index, old_index = (*DeeType_RequireMethodHint(Dee_TYPE(self), iter_getindex))(self);
-	if unlikely(old_index == (size_t)-1)
-		goto err;
-	if (old_index == 0)
-		return ITER_DONE;
-	new_index = old_index - 1;
-	if ((*DeeType_RequireMethodHint(Dee_TYPE(self), iter_setindex))(self, new_index))
-		goto err;
-	result = DeeObject_IterNext(self);
-	if (ITER_ISOK(result)) {
-		if ((*DeeType_RequireMethodHint(Dee_TYPE(self), iter_setindex))(self, new_index))
-			goto err_r;
-	}
-	return result;
-err_r:
-	Dee_Decref(result);
 err:
 	return NULL;
 }

@@ -28,8 +28,9 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/format.h>             /* PRFuSIZ */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpy */
 #include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_*, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
@@ -220,27 +221,8 @@ typebasesiter_getseq(TypeMROIterator *__restrict self) {
 	return TypeBases_New((DeeTypeObject *)self->tmi_mro.tp_mro_orig);
 }
 
-PRIVATE struct type_getset tpconst typemroiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &typemroiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:TypeMRO"),
-	TYPE_GETSET_END
-};
-
-PRIVATE struct type_getset tpconst typebasesiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &typebasesiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:TypeBases"),
-	TYPE_GETSET_END
-};
-
-#define typebasesiter_members typemroiter_members
-PRIVATE struct type_member tpconst typemroiter_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT_AB, offsetof(TypeMROIterator, tmi_mro.tp_mro_orig), "->?DType"),
-	TYPE_MEMBER_END
-};
-
-#define typemroiter_nii_getseq   typemroiter_getseq
-#define typebasesiter_nii_getseq typebasesiter_getseq
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-typemroiter_nii_rewind(TypeMROIterator *__restrict self) {
+typemroiter_mh_iter_rewind(TypeMROIterator *__restrict self) {
 	TypeMROIterator_LockAcquire(self);
 	self->tmi_iter = NULL;
 	TypeMROIterator_LockRelease(self);
@@ -248,7 +230,7 @@ typemroiter_nii_rewind(TypeMROIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-typebasesiter_nii_rewind(TypeMROIterator *__restrict self) {
+typebasesiter_mh_iter_rewind(TypeMROIterator *__restrict self) {
 	TypeMROIterator_LockAcquire(self);
 	self->tmi_iter = (DeeTypeObject *)self->tmi_mro.tp_mro_orig;
 	TypeMROIterator_LockRelease(self);
@@ -256,7 +238,7 @@ typebasesiter_nii_rewind(TypeMROIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-typemroiter_nii_peek(TypeMROIterator *__restrict self) {
+typemroiter_mh_iter_peek(TypeMROIterator *__restrict self) {
 	DeeTypeObject *result;
 	TypeMROIterator_LockAcquire(self);
 	result = self->tmi_iter;
@@ -276,7 +258,7 @@ typemroiter_nii_peek(TypeMROIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-typebasesiter_nii_peek(TypeMROIterator *__restrict self) {
+typebasesiter_mh_iter_peek(TypeMROIterator *__restrict self) {
 	DeeTypeObject *result;
 	DeeTypeMRO mro;
 	TypeMROIterator_LockAcquire(self);
@@ -289,43 +271,43 @@ typebasesiter_nii_peek(TypeMROIterator *__restrict self) {
 	return_reference_(result);
 }
 
-PRIVATE struct type_nii tpconst typemroiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&typemroiter_nii_getseq,
-			/* .nii_getindex = */ NULL,
-			/* .nii_setindex = */ NULL,
-			/* .nii_rewind   = */ (Dee_funptr_t)&typemroiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)&typemroiter_nii_peek
-		}
-	}
+
+PRIVATE struct type_getset tpconst typemroiter_getsets[] = {
+	TYPE_GETTER_F(STR_seq, &typemroiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:TypeMRO"),
+	TYPE_GETSET_END
 };
 
-PRIVATE struct type_nii tpconst typebasesiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&typebasesiter_nii_getseq,
-			/* .nii_getindex = */ NULL,
-			/* .nii_setindex = */ NULL,
-			/* .nii_rewind   = */ (Dee_funptr_t)&typebasesiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ NULL,
-			/* .nii_next     = */ NULL,
-			/* .nii_hasprev  = */ NULL,
-			/* .nii_peek     = */ (Dee_funptr_t)&typebasesiter_nii_peek
-		}
-	}
+PRIVATE struct type_getset tpconst typebasesiter_getsets[] = {
+	TYPE_GETTER_F(STR_seq, &typebasesiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:TypeBases"),
+	TYPE_GETSET_END
 };
+
+PRIVATE struct type_method tpconst typemroiter_methods[] = {
+#define typebasesiter_methods typemroiter_methods
+	TYPE_METHOD_HINTREF(Iterator_rewind),
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst typemroiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_rewind, &typemroiter_mh_iter_rewind),
+	TYPE_METHOD_HINT(iter_peek, &typemroiter_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_method_hint tpconst typebasesiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_rewind, &typebasesiter_mh_iter_rewind),
+	TYPE_METHOD_HINT(iter_peek, &typebasesiter_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_member tpconst typemroiter_members[] = {
+#define typebasesiter_members typemroiter_members
+	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_OBJECT_AB, offsetof(TypeMROIterator, tmi_mro.tp_mro_orig), "->?DType"),
+	TYPE_MEMBER_END
+};
+
+
 
 #define typebasesiter_hash       typemroiter_hash
 #define typebasesiter_compare_eq typemroiter_compare_eq
@@ -358,7 +340,6 @@ PRIVATE struct type_cmp typemroiter_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &typemroiter_nii,
 };
 
 PRIVATE struct type_cmp typebasesiter_cmp = {
@@ -372,7 +353,6 @@ PRIVATE struct type_cmp typebasesiter_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &typebasesiter_nii,
 };
 
 INTERN DeeTypeObject TypeMROIterator_Type = {
@@ -414,13 +394,13 @@ INTERN DeeTypeObject TypeMROIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ typemroiter_methods,
 	/* .tp_getsets       = */ typemroiter_getsets,
 	/* .tp_members       = */ typemroiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ typemroiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
@@ -464,13 +444,13 @@ INTERN DeeTypeObject TypeBasesIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ typebasesiter_methods,
 	/* .tp_getsets       = */ typebasesiter_getsets,
 	/* .tp_members       = */ typebasesiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ typebasesiter_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

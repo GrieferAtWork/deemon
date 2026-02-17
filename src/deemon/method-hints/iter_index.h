@@ -22,6 +22,49 @@
 /* deemon.Iterator.index                                                */
 /************************************************************************/
 
+/* Iteration index of the iterator.
+ *
+ * - This index usually corresponds to indices within "this.seq as Sequence"
+ * - This value "Iterator.index" can be saved/restored to reset the iterator to old positions
+ * - Setting "Iterator.index" may or may not automatically clamp the assigned value,
+ *   meaning that "iter.index = int.SIZE_MAX; print iter.index;" will do one of:
+ *   - just print "int.SIZE_MAX" as-is
+ *   - clamp the index with some upper bound, then print that clamped index
+ *   But in both cases, the iterator will be fully exhausted
+ * - The setter for "Iterator.index" must be able to accept any arbitrary value, and
+ *   not throw any ValueError-style errors because it didn't like the index (other than
+ *   IntegerOverflow errors when the given index isn't in [0,int.SIZE_MAX])
+ * - This value "Iterator.index" can NOT be used to implemented revert() / advance() !!!
+ *   This is because "Iterator.index" may be allowed to include unbound indices when
+ *   enumerating a sequence without __seq_getitem_always_bound__. As such, "operator next"
+ *   may advance "Iterator.index" by many values.
+ * - "Iterator.index" must start at "0", and "Iterator.rewind()" is the same as "Iterator.index = 0"
+ * - "Iterator.index" always increases during "operator next", but may do so lots of times
+ * - `del Iterator.index' and `Iterator.rewind()' do the same thing, in that they both
+ *   reset the iterator's index to its initial position (like "Iterator.index = 0").
+ *
+ *
+ * TLDR: "Iterator.index" may be implemented as any of:
+ * - >> TYPE_MEMBER_FIELD("index", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(...));
+ *
+ * - >> public member index: int = 0;
+ *   >> public operator next() { local i = index++; if (i >= seq.length) throw StopIteration(); return seq[i]; }
+ *
+ * - >> public property index: int = { ... };
+ *
+ *
+ * The only valid use-cases are:
+ * - "peek"
+ *    >> local saved = iter.index;
+ *    >> local next = iter.operator next();
+ *    >> iter.index = saved;
+ * - "rewind"
+ *    >> iter.index = 0;
+ *    >> local first = iter.operator next(); // Same as "iter.seq.first" (assuming no unbound items)
+ * - "exhaust"
+ *    >> iter.index = int.SIZE_MAX;
+ *    >> local last = iter.prev();           // Same as "iter.seq.last" (assuming no unbound items)
+ */
 [[getset]]
 [[alias(Iterator.index)]]
 __iter_index__->?X2?DNumeric?Dint = {

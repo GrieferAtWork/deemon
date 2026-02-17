@@ -32,8 +32,8 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_Type */
 #include <deemon/kwds.h>               /* DeeBlackListKw_New, DeeBlackListKwds*, DeeKwArgs, DeeKwds*, DeeObject_IsKw, DeeType_IsKw, Dee_kwds_entry */
-#include <deemon/method-hints.h>               /* DeeBlackListKw_New, DeeBlackListKwds*, DeeKwArgs, DeeKwds*, DeeObject_IsKw, DeeType_IsKw, Dee_kwds_entry */
 #include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/rodict.h>             /* DeeRoDict_NewEmpty, Dee_EmptyRoDict */
 #include <deemon/seq.h>                /* DeeIterator_Type */
@@ -41,7 +41,7 @@
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy* */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_*, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

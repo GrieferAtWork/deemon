@@ -29,11 +29,11 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* PCKuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_retsm1_1 */
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Compare, Dee_CompareNe, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>     /* DeeNO_nextkey_t, DeeNO_nextpair_t, DeeType_RequireSupportedNativeOperator */
-#include <deemon/method-hints.h>     /* DeeNO_nextkey_t, DeeNO_nextpair_t, DeeType_RequireSupportedNativeOperator */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */

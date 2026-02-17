@@ -42,14 +42,15 @@
 #include <deemon/int.h>             /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FNOSEPS */
 #include <deemon/list.h>            /* DeeListObject, DeeList_Type, Dee_objectlist_packlist */
 #include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetExtern */
 #include <deemon/mro.h>             /* DeeObject_EnumAttr, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_nameobj, Dee_attrhint */
 #include <deemon/none.h>            /* DeeNone*, Dee_None, return_none */
 #include <deemon/numeric.h>         /* DeeNumeric_Type */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/pair.h>            /* DeeSeq_OfPairvInherited */
-#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, DeeSharedVector_Decref, DeeSharedVector_NewShared, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, type_nii */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString*, DeeUni_AsDigit, DeeUni_IsSymCont, Dee_ASCII_PRINTER_INIT, Dee_STRING_MUL_SIZEOF_WIDTH, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer*, Dee_string_utf, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
@@ -215,7 +216,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-jseqiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
+jseqiter_mh_iter_peek(DeeJsonIteratorObject *__restrict self) {
 	DeeJsonParser parser;
 	DeeJsonIterator_GetParserEx(self, &parser);
 	if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
@@ -224,7 +225,7 @@ jseqiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-jmapiter_nii_peek(DeeJsonIteratorObject *__restrict self) {
+jmapiter_mh_iter_peek(DeeJsonIteratorObject *__restrict self) {
 	DREF DeeObject *key_and_value[2];
 	DeeJsonParser parser;
 	DeeJsonIterator_GetParserEx(self, &parser);
@@ -507,7 +508,7 @@ err:
 }
 
 PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
-jseqiter_nii_rewind(DeeJsonIteratorObject *__restrict self) {
+jseqiter_mh_iter_rewind(DeeJsonIteratorObject *__restrict self) {
 	char const *orig_pos;
 	struct json_parser parser;
 again:
@@ -523,7 +524,7 @@ err_syntax:
 }
 
 PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
-jmapiter_nii_rewind(DeeJsonIteratorObject *__restrict self) {
+jmapiter_mh_iter_rewind(DeeJsonIteratorObject *__restrict self) {
 	char const *orig_pos;
 	struct json_parser parser;
 again:
@@ -538,123 +539,61 @@ err_syntax:
 	return err_json_syntax();
 }
 
-PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
-jiter_nii_prev(DeeJsonIteratorObject *__restrict self) {
-	int status;
+PRIVATE WUNUSED_T NONNULL_T((1)) size_t DCALL
+jiter_mh_iter_revert(DeeJsonIteratorObject *__restrict self, size_t step) {
+	size_t result;
 	char const *orig_pos;
 	struct json_parser parser;
 again:
 	DeeJsonIterator_GetParser(self, &parser);
 	orig_pos = parser.jp_pos;
-	status = libjson_parser_prev(&parser, false);
-	if (status == JSON_ERROR_NOOBJ)
-		return 1;
-	if (status == JSON_ERROR_SYNTAX)
-		goto err_syntax;
+	for (result = 0; result < step; ++result) {
+		char const *prev_pos = parser.jp_pos;
+		int status = libjson_parser_prev(&parser, false);
+		if (status == JSON_ERROR_NOOBJ) {
+			parser.jp_pos = prev_pos;
+			break;
+		}
+		if (status == JSON_ERROR_SYNTAX)
+			goto err_syntax;
+	}
 	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos, parser.jp_pos))
 		goto again;
-	return 0;
+	return result;
 err_syntax:
-	return err_json_syntax();
+	return (size_t)err_json_syntax();
 }
 
-PRIVATE WUNUSED_T NONNULL_T((1)) int DCALL
-jiter_nii_next(DeeJsonIteratorObject *__restrict self) {
-	int status;
+PRIVATE WUNUSED_T NONNULL_T((1)) size_t DCALL
+jiter_mh_iter_advance(DeeJsonIteratorObject *__restrict self, size_t step) {
+	size_t result;
 	char const *orig_pos;
 	struct json_parser parser;
 again:
 	DeeJsonIterator_GetParser(self, &parser);
 	orig_pos = parser.jp_pos;
-	status = libjson_parser_next(&parser);
-	if (status == JSON_ERROR_NOOBJ)
-		return 1;
-	if (status == JSON_ERROR_SYNTAX)
-		goto err_syntax;
+	for (result = 0; result < step; ++result) {
+		char const *prev_pos = parser.jp_pos;
+		int status = libjson_parser_next(&parser);
+		if (status == JSON_ERROR_NOOBJ) {
+			parser.jp_pos = prev_pos;
+			break;
+		}
+		if (status == JSON_ERROR_SYNTAX)
+			goto err_syntax;
+	}
 	if (!atomic_cmpxch_or_write(&self->ji_parser.jp_pos, orig_pos, parser.jp_pos))
 		goto again;
-	return 0;
+	return result;
 err_syntax:
-	return err_json_syntax();
+	return (size_t)err_json_syntax();
 }
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-jseqiter_nii_hasprev(DeeJsonIteratorObject *__restrict self) {
-	int tok;
-	struct json_parser parser;
-	DeeJsonIterator_GetParser(self, &parser);
-	tok = libjson_parser_peekprev(&parser);
-	if (tok == JSON_PARSER_ARRAY)
-		return 0;
-	if unlikely(tok == JSON_ERROR_SYNTAX)
-		return err_json_syntax();
-	return 1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-jmapiter_nii_hasprev(DeeJsonIteratorObject *__restrict self) {
-	int tok;
-	struct json_parser parser;
-	DeeJsonIterator_GetParser(self, &parser);
-	tok = libjson_parser_peekprev(&parser);
-	if (tok == JSON_PARSER_OBJECT)
-		return 0;
-	if unlikely(tok == JSON_ERROR_SYNTAX)
-		return err_json_syntax();
-	return 1;
-}
-
-
-PRIVATE struct type_nii tpconst jseqiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&jseqiter_getseq,
-			/* .nii_getindex = */ NULL,
-			/* .nii_setindex = */ NULL,
-			/* .nii_rewind   = */ (Dee_funptr_t)&jseqiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)&jiter_nii_prev,
-			/* .nii_next     = */ (Dee_funptr_t)&jiter_nii_next,
-			/* .nii_hasprev  = */ (Dee_funptr_t)&jseqiter_nii_hasprev,
-			/* .nii_peek     = */ (Dee_funptr_t)&jseqiter_nii_peek
-		}
-	}
-};
-
-PRIVATE struct type_nii tpconst jmapiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&jmapiter_getseq,
-			/* .nii_getindex = */ NULL,
-			/* .nii_setindex = */ NULL,
-			/* .nii_rewind   = */ (Dee_funptr_t)&jmapiter_nii_rewind,
-			/* .nii_revert   = */ NULL,
-			/* .nii_advance  = */ NULL,
-			/* .nii_prev     = */ (Dee_funptr_t)&jiter_nii_prev,
-			/* .nii_next     = */ (Dee_funptr_t)&jiter_nii_next,
-			/* .nii_hasprev  = */ (Dee_funptr_t)&jmapiter_nii_hasprev,
-			/* .nii_peek     = */ (Dee_funptr_t)&jmapiter_nii_peek
-		}
-	}
-};
 
 PRIVATE struct type_cmp jseqiter_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&jiter_hash,
 	/* .tp_compare_eq    = */ NULL,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&jiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL,
-	/* .tp_nii           = */ &jseqiter_nii,
 };
 
 PRIVATE struct type_cmp jmapiter_cmp = {
@@ -662,13 +601,16 @@ PRIVATE struct type_cmp jmapiter_cmp = {
 	/* .tp_compare_eq    = */ NULL,
 	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&jiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ NULL,
-	/* .tp_ne            = */ NULL,
-	/* .tp_lo            = */ NULL,
-	/* .tp_le            = */ NULL,
-	/* .tp_gr            = */ NULL,
-	/* .tp_ge            = */ NULL,
-	/* .tp_nii           = */ &jmapiter_nii,
+};
+
+PRIVATE struct type_method tpconst jiter_methods[] = {
+#define jseqiter_methods jiter_methods
+#define jmapiter_methods jiter_methods
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_HINTREF(Iterator_revert),
+	TYPE_METHOD_HINTREF(Iterator_rewind),
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst jseqiter_getsets[] = {
@@ -679,6 +621,22 @@ PRIVATE struct type_getset tpconst jseqiter_getsets[] = {
 PRIVATE struct type_getset tpconst jmapiter_getsets[] = {
 	TYPE_GETTER_F("seq", &jmapiter_getseq, METHOD_FNOREFESCAPE, "->?GMapping"),
 	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method_hint tpconst jseqiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &jiter_mh_iter_advance),
+	TYPE_METHOD_HINT(iter_revert, &jiter_mh_iter_revert),
+	TYPE_METHOD_HINT(iter_rewind, &jseqiter_mh_iter_rewind),
+	TYPE_METHOD_HINT(iter_peek, &jseqiter_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_method_hint tpconst jmapiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &jiter_mh_iter_advance),
+	TYPE_METHOD_HINT(iter_revert, &jiter_mh_iter_revert),
+	TYPE_METHOD_HINT(iter_rewind, &jmapiter_mh_iter_rewind),
+	TYPE_METHOD_HINT(iter_peek, &jmapiter_mh_iter_peek),
+	TYPE_METHOD_HINT_END
 };
 
 
@@ -1400,12 +1358,13 @@ INTERN DeeTypeObject DeeJsonSequenceIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ jseqiter_methods,
 	/* .tp_getsets       = */ jseqiter_getsets,
 	/* .tp_members       = */ jseqiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ jseqiter_method_hints,
 };
 
 INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
@@ -1444,12 +1403,13 @@ INTERN DeeTypeObject DeeJsonMappingIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ jmapiter_methods,
 	/* .tp_getsets       = */ jmapiter_getsets,
 	/* .tp_members       = */ jmapiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ jmapiter_method_hints,
 };
 
 INTERN DeeTypeObject DeeJsonSequence_Type = {

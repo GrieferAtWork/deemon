@@ -28,7 +28,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnknownKey */
 #include <deemon/map.h>                /* DeeMapping_Type */
-#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
+#include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_ERR, Dee_BOUND_FROMPRESENT_BOUND, Dee_Decref, Dee_Incref, Dee_foreach_pair_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type */

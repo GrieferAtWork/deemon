@@ -32,15 +32,15 @@
 #include <deemon/list.h>               /* DeeListObject, DeeList_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref*, Dee_Movprefv, Dee_Movrefv, Dee_REFTRACKER_UNTRACKED, Dee_Setrefv, Dee_TYPE, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref*, Dee_Movprefv, Dee_Movrefv, Dee_REFTRACKER_UNTRACKED, Dee_Setrefv, Dee_TYPE, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_foreach_t, DeeType_HasNativeOperator, DeeType_RequireNativeOperator */
-#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, DeeSeq_Unpack, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_Newf, DeeString_STR, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* bzeroc, memcpy*, mempcpyc, memset */
 #include <deemon/tuple.h>              /* DeeNullableTuple_NewEmpty, DeeTuple*, Dee_EmptyTuple, Dee_empty_tuple_struct, Dee_nullable_tuple_builder, Dee_nullable_tuple_builder_alloc, Dee_tuple_builder* */
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visitv, Dee_XVisitv, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/host.h>      /* __ARCH_VA_LIST_IS_STACK_POINTER */
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
@@ -939,12 +939,6 @@ tuple_iterator_next(TupleIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE struct type_member tpconst tuple_iterator_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
-	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(TupleIterator, ti_index)),
-	TYPE_MEMBER_END
-};
-
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 tuple_iterator_hash(TupleIterator *self) {
 	return READ_INDEX(self);
@@ -960,104 +954,42 @@ err:
 	return Dee_COMPARE_ERR;
 }
 
-STATIC_ASSERT(offsetof(TupleIterator, ti_tuple) == offsetof(ProxyObject, po_obj));
-#define tuple_iterator_nii_getseq generic_proxy__getobj
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+tuple_iterator_bool(TupleIterator *__restrict self) {
+	return READ_INDEX(self) < DeeTuple_SIZE(self->ti_tuple);
+}
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-tuple_iterator_nii_getindex(TupleIterator *__restrict self) {
-	return READ_INDEX(self);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_nii_setindex(TupleIterator *__restrict self, size_t new_index) {
-	atomic_write(&self->ti_index, new_index);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_nii_rewind(TupleIterator *__restrict self) {
-	atomic_write(&self->ti_index, 0);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_nii_revert(TupleIterator *__restrict self, size_t step) {
+tuple_iterator_mh_iter_revert(TupleIterator *__restrict self, size_t step) {
 	size_t old_index, new_index;
 	do {
 		old_index = atomic_read(&self->ti_index);
 		if (OVERFLOW_USUB(old_index, step, &new_index))
 			new_index = 0;
 	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, new_index));
-	return 0;
+	return old_index - new_index;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_nii_advance(TupleIterator *__restrict self, size_t step) {
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+tuple_iterator_mh_iter_advance(TupleIterator *__restrict self, size_t step) {
 	size_t old_index, new_index;
 	do {
 		old_index = atomic_read(&self->ti_index);
 		if (OVERFLOW_UADD(old_index, step, &new_index))
 			new_index = (size_t)-1;
+		if (new_index > DeeTuple_SIZE(self->ti_tuple))
+			new_index = DeeTuple_SIZE(self->ti_tuple);
 	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, new_index));
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_nii_prev(TupleIterator *__restrict self) {
-	size_t old_index;
-	do {
-		old_index = atomic_read(&self->ti_index);
-		if (!old_index)
-			return 1;
-	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, old_index - 1));
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_nii_next(TupleIterator *__restrict self) {
-	size_t old_index;
-	do {
-		old_index = atomic_read(&self->ti_index);
-		if (old_index >= DeeTuple_SIZE(self->ti_tuple))
-			return 1;
-	} while (!atomic_cmpxch_weak_or_write(&self->ti_index, old_index, old_index + 1));
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_nii_hasprev(TupleIterator *__restrict self) {
-	return READ_INDEX(self) != 0;
+	return new_index - old_index;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_iterator_nii_peek(TupleIterator *__restrict self) {
-	DREF DeeObject *result;
+tuple_iterator_mh_iter_peek(TupleIterator *__restrict self) {
 	size_t index = READ_INDEX(self);
-	result       = DeeTuple_GET(self->ti_tuple, index);
-	ASSERT_OBJECT(result);
+	DeeObject *result = DeeTuple_GET(self->ti_tuple, index);
 	Dee_Incref(result);
 	return result;
 }
-
-
-PRIVATE struct type_nii tpconst tuple_iterator_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&tuple_iterator_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&tuple_iterator_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&tuple_iterator_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&tuple_iterator_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)&tuple_iterator_nii_revert,
-			/* .nii_advance  = */ (Dee_funptr_t)&tuple_iterator_nii_advance,
-			/* .nii_prev     = */ (Dee_funptr_t)&tuple_iterator_nii_prev,
-			/* .nii_next     = */ (Dee_funptr_t)&tuple_iterator_nii_next,
-			/* .nii_hasprev  = */ (Dee_funptr_t)&tuple_iterator_nii_hasprev,
-			/* .nii_peek     = */ (Dee_funptr_t)&tuple_iterator_nii_peek
-		}
-	}
-};
 
 PRIVATE struct type_cmp tuple_iterator_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&tuple_iterator_hash,
@@ -1070,13 +1002,27 @@ PRIVATE struct type_cmp tuple_iterator_cmp = {
 	/* .tp_le            = */ DEFIMPL(&default__le__with__compare),
 	/* .tp_gr            = */ DEFIMPL(&default__gr__with__compare),
 	/* .tp_ge            = */ DEFIMPL(&default__ge__with__compare),
-	/* .tp_nii           = */ &tuple_iterator_nii,
 };
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-tuple_iterator_bool(TupleIterator *__restrict self) {
-	return READ_INDEX(self) < DeeTuple_SIZE(self->ti_tuple);
-}
+PRIVATE struct type_method tpconst tuple_iterator_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_advance),
+	TYPE_METHOD_HINTREF(Iterator_revert),
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst tuple_iterator_method_hints[] = {
+	TYPE_METHOD_HINT(iter_advance, &tuple_iterator_mh_iter_advance),
+	TYPE_METHOD_HINT(iter_revert, &tuple_iterator_mh_iter_revert),
+	TYPE_METHOD_HINT(iter_peek, &tuple_iterator_mh_iter_peek),
+	TYPE_METHOD_HINT_END
+};
+
+PRIVATE struct type_member tpconst tuple_iterator_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT_AB, offsetof(TupleIterator, ti_tuple), "->?DTuple"),
+	TYPE_MEMBER_FIELD(STR_index, STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(TupleIterator, ti_index)),
+	TYPE_MEMBER_END
+};
 
 INTERN DeeTypeObject DeeTupleIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1116,13 +1062,13 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ tuple_iterator_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ tuple_iterator_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
+	/* .tp_method_hints  = */ tuple_iterator_method_hints,
 	/* .tp_call          = */ DEFIMPL(&iterator_next),
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };

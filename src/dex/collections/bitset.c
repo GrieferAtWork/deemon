@@ -34,9 +34,10 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_* */
+#include <deemon/method-hints.h>    /* TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* DeeNone_Check, return_none */
-#include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_ERR, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL, Dee_TYPE_ITERX_FNORMAL, Dee_seq_range, type_nii */
+#include <deemon/object.h>          /* DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_ERR, Dee_Decref, Dee_DecrefDokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString_Check, DeeString_STR, WSTR_LENGTH */
@@ -49,7 +50,6 @@
 #include <hybrid/__bitset.h>  /*  */
 #include <hybrid/bitset.h>    /* BITSET_*, _BITSET_*, bitset_* */
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
-#include <hybrid/overflow.h>  /* OVERFLOW_UADD, OVERFLOW_USUB */
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -4253,100 +4253,26 @@ INTERN DeeTypeObject BitsetView_Type = {
 
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bsiter_nii_getseq(BitsetIterator *__restrict self) {
-	return_reference_(self->bsi_owner);
-}
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-bsiter_nii_getindex(BitsetIterator *__restrict self) {
+bsiter_mh_iter_getindex(BitsetIterator *__restrict self) {
 	size_t bitno = atomic_read(&self->bsi_bitno);
-	if (bitno >= self->bsi_startbit &&
-	    bitno <= self->bsi_endbit) /* NOTE: `<= endbit' due to final, exhausted position */
-		return bitno - self->bsi_startbit;
-	return (size_t)-2; /* Indeterminate */
+	return bitno - self->bsi_startbit;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsiter_nii_setindex(BitsetIterator *__restrict self, size_t index) {
-	size_t nbits = self->bsi_endbit - self->bsi_startbit;
-	if (index > nbits)
-		index = nbits;
+bsiter_mh_iter_setindex(BitsetIterator *__restrict self, size_t index) {
 	atomic_write(&self->bsi_bitno, self->bsi_startbit + index);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsiter_nii_rewind(BitsetIterator *__restrict self) {
-	size_t startbit = self->bsi_startbit;
-	atomic_write(&self->bsi_bitno, startbit);
+bsiter_mh_iter_rewind(BitsetIterator *__restrict self) {
+	atomic_write(&self->bsi_bitno, self->bsi_startbit);
 	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsiter_nii_revert(BitsetIterator *__restrict self, size_t step) {
-	size_t old_bitno, new_bitno;
-	do {
-		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno <= self->bsi_startbit)
-			return 1; /* Already at starting position */
-		if (OVERFLOW_USUB(old_bitno, step, &new_bitno) || new_bitno < self->bsi_startbit)
-			new_bitno = self->bsi_startbit;
-	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
-	if (new_bitno <= self->bsi_startbit)
-		return 1; /* Now at starting position */
-	return 2;     /* Iterator isn't at its starting position */
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsiter_nii_advance(BitsetIterator *__restrict self, size_t step) {
-	size_t old_bitno, new_bitno;
-	do {
-		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno >= self->bsi_endbit)
-			return 1; /* Already at end position */
-		if (OVERFLOW_UADD(old_bitno, step, &new_bitno) || new_bitno >= self->bsi_endbit)
-			new_bitno = self->bsi_endbit;
-	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
-	if (new_bitno >= self->bsi_endbit)
-		return 1; /* Now at end position */
-	return 2;     /* Iterator isn't at its end position */
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsiter_nii_prev(BitsetIterator *__restrict self) {
-	size_t old_bitno, new_bitno;
-	do {
-		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno <= self->bsi_startbit)
-			return 1; /* Already at starting position */
-		new_bitno = old_bitno - 1;
-	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsiter_nii_next(BitsetIterator *__restrict self) {
-	size_t old_bitno, new_bitno;
-	do {
-		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno >= self->bsi_endbit)
-			return 1; /* Already at end position */
-		new_bitno = old_bitno + 1;
-	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
-	return 0;
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsiter_nii_hasprev(BitsetIterator *__restrict self) {
-	size_t startbit = self->bsi_startbit;
-	size_t bitno    = atomic_read(&self->bsi_bitno);
-	return bitno > startbit ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bsiter_nii_peek(BitsetIterator *__restrict self) {
+bsiter_mh_iter_peek(BitsetIterator *__restrict self) {
 	size_t old_bitno, new_bitno;
 	old_bitno = atomic_read(&self->bsi_bitno);
 	if (old_bitno >= self->bsi_endbit)
@@ -4387,7 +4313,6 @@ bsiter_bool(BitsetIterator *__restrict self) {
 		return 0; /* End position reached */
 	return 1;
 }
-
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 bsiter_hash(BitsetIterator *self) {
@@ -4485,25 +4410,6 @@ bsiter_visit(BitsetIterator *__restrict self, Dee_visit_t proc, void *arg) {
 }
 
 
-PRIVATE struct type_nii tpconst bsiter_nii = {
-	/* .nii_class = */ Dee_TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ Dee_TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (Dee_funptr_t)&bsiter_nii_getseq,
-			/* .nii_getindex = */ (Dee_funptr_t)&bsiter_nii_getindex,
-			/* .nii_setindex = */ (Dee_funptr_t)&bsiter_nii_setindex,
-			/* .nii_rewind   = */ (Dee_funptr_t)&bsiter_nii_rewind,
-			/* .nii_revert   = */ (Dee_funptr_t)&bsiter_nii_revert,
-			/* .nii_advance  = */ (Dee_funptr_t)&bsiter_nii_advance,
-			/* .nii_prev     = */ (Dee_funptr_t)&bsiter_nii_prev,
-			/* .nii_next     = */ (Dee_funptr_t)&bsiter_nii_next,
-			/* .nii_hasprev  = */ (Dee_funptr_t)&bsiter_nii_hasprev,
-			/* .nii_peek     = */ (Dee_funptr_t)&bsiter_nii_peek
-		}
-	}
-};
-
 PRIVATE struct type_cmp bsiter_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&bsiter_hash,
 	/* .tp_compare_eq    = */ NULL,
@@ -4515,7 +4421,24 @@ PRIVATE struct type_cmp bsiter_cmp = {
 	/* .tp_le            = */ NULL,
 	/* .tp_gr            = */ NULL,
 	/* .tp_ge            = */ NULL,
-	/* .tp_nii           = */ &bsiter_nii
+};
+
+PRIVATE struct type_getset tpconst bsiter_getsets[] = {
+	TYPE_GETSET_HINTREF(Iterator_index),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_method tpconst bsiter_methods[] = {
+	TYPE_METHOD_HINTREF(Iterator_peek),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_method_hint tpconst bsiter_method_hints[] = {
+	TYPE_METHOD_HINT(iter_getindex, &bsiter_mh_iter_getindex),
+	TYPE_METHOD_HINT(iter_setindex, &bsiter_mh_iter_setindex),
+	TYPE_METHOD_HINT(iter_rewind, &bsiter_mh_iter_rewind),
+	TYPE_METHOD_HINT(iter_peek, &bsiter_mh_iter_peek),
+	TYPE_METHOD_HINT_END
 };
 
 PRIVATE struct type_member tpconst bsiter_members[] = {
@@ -4569,12 +4492,13 @@ INTERN DeeTypeObject BitsetIterator_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_methods       = */ bsiter_methods,
+	/* .tp_getsets       = */ bsiter_getsets,
 	/* .tp_members       = */ bsiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ bsiter_method_hints,
 };
 
 DECL_END
