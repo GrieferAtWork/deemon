@@ -300,6 +300,10 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            /**/ "	throw StopIteration();\n"
 	            /**/ "}"
 	            "}"),
+
+	TYPE_METHOD("__bool__", &DeeMA___iter_bool__,
+	            DeeMA___iter_bool___doc "\n"
+	            "Alias for ${!!(this as Iterator)} (s.a. ?#{op:bool})"),
 	TYPE_METHOD_END
 };
 
