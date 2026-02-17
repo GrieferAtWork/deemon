@@ -274,7 +274,7 @@ INTERN struct type_cmp default__tp_cmp__E2C81DE60D62A07B = {
 	/* .tp_ge            = */ UNSUPPORTED(&default__ge__unsupported),
 	/* .tp_nii           = */ NULL,
 };
-INTERN struct type_iterator default__tp_iterator__863AC70046E4B6B0 = {
+INTERN struct type_iterator default__tp_iterator__712535FF7E4C26E5 = {
 	/* .tp_nextpair  = */ &default__nextpair__with__iter_next,
 	/* .tp_nextkey   = */ &default__nextkey__with__iter_next,
 	/* .tp_nextvalue = */ &default__nextvalue__with__iter_next,
@@ -634,7 +634,7 @@ INTERN struct type_cmp default__tp_cmp__8F384E6A64571883 = {
 	/* .tp_ge            = */ UNSUPPORTED(&default__ge__unsupported),
 	/* .tp_nii           = */ NULL,
 };
-INTERN struct type_iterator default__tp_iterator__1806D264FE42CE33 = {
+INTERN struct type_iterator default__tp_iterator__C6F8E138F179B5AD = {
 	/* .tp_nextpair  = */ UNSUPPORTED(&default__nextpair__unsupported),
 	/* .tp_nextkey   = */ UNSUPPORTED(&default__nextkey__unsupported),
 	/* .tp_nextvalue = */ UNSUPPORTED(&default__nextvalue__unsupported),

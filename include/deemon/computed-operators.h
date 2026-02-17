@@ -145,7 +145,7 @@ INTDEF struct type_cmp default__tp_cmp__B8EC3298B952DF3A;
 INTDEF struct type_cmp default__tp_cmp__C2B62E6BCA44673D;
 INTDEF struct type_cmp default__tp_cmp__DC202CECA797EF15;
 INTDEF struct type_cmp default__tp_cmp__E2C81DE60D62A07B;
-INTDEF struct type_iterator default__tp_iterator__863AC70046E4B6B0;
+INTDEF struct type_iterator default__tp_iterator__712535FF7E4C26E5;
 INTDEF struct type_math default__tp_math__22D95991F3D69B20;
 INTDEF struct type_math default__tp_math__2E23147A197C0EE6;
 INTDEF struct type_math default__tp_math__47C97A4265F9F31F;
@@ -159,7 +159,7 @@ INTDEF struct type_math default__tp_math__F6E3D7B2219AE1EB;
 #ifdef CONFIG_CACHE_UNSUPPORTED_NATIVE_OPERATORS
 INTDEF struct type_callable default__tp_callable__EC3FFC1C149A47D0;
 INTDEF struct type_cmp default__tp_cmp__8F384E6A64571883;
-INTDEF struct type_iterator default__tp_iterator__1806D264FE42CE33;
+INTDEF struct type_iterator default__tp_iterator__C6F8E138F179B5AD;
 INTDEF struct type_math default__tp_math__AE7A38D3B0C75E4B;
 INTDEF struct type_seq default__tp_seq__A0A5A432B5FA58F3;
 INTDEF struct type_with default__tp_with__0476D7EDEFD2E7B7;
