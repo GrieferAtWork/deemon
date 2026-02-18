@@ -594,6 +594,16 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
+
+
+#if (!defined(CONFIG_EXPERIMENTAL_REWORKED_GC) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_GC))
+#if 0 /* TODO: Incomplete... */
+#define CONFIG_EXPERIMENTAL_REWORKED_GC
+#else
+#define CONFIG_NO_EXPERIMENTAL_REWORKED_GC
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_GC */
 /************************************************************************/
 
 
