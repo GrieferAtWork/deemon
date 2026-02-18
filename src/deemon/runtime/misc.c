@@ -152,37 +152,59 @@ DeeMem_ClearCaches(size_t max_collect) {
 /* Threshold before OOM is forced (without trying to collect memory) */
 #define FORCED_OOM_THRESHOLD ((size_t)-1 / 3)
 
-PRIVATE bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
+/* @return: 1 : Success
+ * @return: 0 : Failure
+ * @return: -1: Error was thrown */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+PRIVATE WUNUSED int DCALL Dee_TryCollectMemory(size_t req_bytes, bool allow_errors)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+PRIVATE int DCALL Dee_TryCollectMemory(size_t req_bytes, bool allow_errors)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+{
 	size_t collect_bytes;
 
 	/* Check for likely case: intentional allocation overflow.
 	 * In this case, don't try to do GC collect, etc., since
 	 * the OOM is probably intended by the caller. */
 	if likely(req_bytes >= FORCED_OOM_THRESHOLD)
-		return false;
+		return 0;
 
 	/* Clear caches and collect memory from various places. */
 	collect_bytes = DeeMem_ClearCaches(req_bytes);
 	if (collect_bytes >= req_bytes)
-		return true;
+		return 1;
 	req_bytes -= collect_bytes;
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	/* Collect GC objects. */
+	if (allow_errors) {
+		collect_bytes = DeeGC_Collect((size_t)-1);
+		if (collect_bytes == (size_t)-1)
+			return -1;
+	} else {
+		collect_bytes = DeeGC_TryCollect((size_t)-1);
+	}
+	if (collect_bytes != 0)
+		return 1;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	/* Collect GC objects.
 	 * NOTE: When optimizing, only try to collect a single object
 	 *       in order to prevent lag-time during memory shortages.
 	 *       However for debug-mode, always collect everything in
 	 *       order to try and harden the algorithm in times of need. */
+	(void)allow_errors;
 #if defined(NDEBUG) || defined(__OPTIMIZE__)
 	if (DeeGC_Collect(1))
-		return true;
+		return 1;
 #else /* NDEBUG || __OPTIMIZE__ */
 	if (DeeGC_Collect((size_t)-1))
-		return true;
+		return 1;
 #endif /* !NDEBUG && !__OPTIMIZE__ */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 	/* TODO: Call "tp_cc" of GC objects that are reachable */
 
-	return collect_bytes != 0;
+	return collect_bytes != 0 ? 1 : 0;
 }
 
 /* Try to clear caches and free up at most "req_bytes" memory. If
@@ -193,8 +215,12 @@ PRIVATE bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
  * @return: false: Nope. - We're completely out of memory... (error was thrown) */
 PUBLIC WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes) {
 	void *_test;
-	if unlikely(!Dee_TryCollectMemory(req_bytes))
+	int try_status = Dee_TryCollectMemory(req_bytes, true);
+	if unlikely(try_status <= 0) {
+		if (try_status < 0)
+			goto err;
 		goto err_badalloc;
+	}
 
 	/* Check if allocating "req_bytes" actually became
 	 * possible, or if "Dee_TryCollectMemory" lied or
@@ -208,8 +234,12 @@ PUBLIC WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes) {
 
 	/* Maybe "Dee_TryCollectMemory" just didn't try hard enough... */
 	if (req_bytes < (FORCED_OOM_THRESHOLD - 1)) {
-		if unlikely(!Dee_TryCollectMemory(FORCED_OOM_THRESHOLD - 1))
+		try_status = Dee_TryCollectMemory(FORCED_OOM_THRESHOLD - 1, true);
+		if unlikely(try_status <= 0) {
+			if (try_status < 0)
+				goto err;
 			goto err_badalloc;
+		}
 		_test = Dee_TryMalloc(req_bytes);
 		if likely(_test) {
 			Dee_Free(_test);
@@ -220,6 +250,7 @@ PUBLIC WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes) {
 	/* Nope: there's no way to free up that much memory... */
 err_badalloc:
 	Dee_BadAlloc(req_bytes);
+err:
 	return false;
 }
 
@@ -230,12 +261,12 @@ PUBLIC ATTR_COLD size_t DCALL Dee_TryReleaseSystemMemory(void) {
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	size_t trim = DeeHeap_Trim((size_t)-1);
 	if (trim == 0) {
-		Dee_TryCollectMemory((size_t)-1);
+		Dee_TryCollectMemory((size_t)-1, false);
 		trim = DeeHeap_Trim((size_t)-1);
 	}
 	return trim;
 #else /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
-	return Dee_TryCollectMemory((size_t)-1) ? 1 : 0;
+	return Dee_TryCollectMemory((size_t)-1, false) ? 1 : 0;
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 }
 
@@ -246,7 +277,8 @@ PUBLIC ATTR_COLD WUNUSED size_t DCALL Dee_ReleaseSystemMemory(void) {
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	size_t trim = DeeHeap_Trim((size_t)-1);
 	if unlikely(trim == 0) {
-		Dee_TryCollectMemory((size_t)-1);
+		if (Dee_TryCollectMemory((size_t)-1, true) < 0)
+			return 0;
 		trim = DeeHeap_Trim((size_t)-1);
 		if (trim == 0 && Dee_CollectMemory((size_t)-1)) {
 			trim = DeeHeap_Trim((size_t)-1);

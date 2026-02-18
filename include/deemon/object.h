@@ -1234,6 +1234,10 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
 #endif /* !Dee_visit_t_DEFINED */
 
 /* GC operator invocation. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+/* TODO: These 3 functions should no longer be directly exposed
+ *       (they should only be available from within- and by the GC) */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
 DFUNDEF NONNULL((1)) void (DCALL DeeObject_Clear)(DeeObject *__restrict self);
 DFUNDEF NONNULL((1)) void (DCALL DeeObject_PClear)(DeeObject *__restrict self, unsigned int gc_priority);

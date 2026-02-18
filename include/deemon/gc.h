@@ -59,22 +59,9 @@ DECL_BEGIN
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 /* Head of an object that is GC-able.
  *
- * GC objects are managed via generations:
- * - Whenever a generation becomes larger than a configurable threshold:
- *   - for every object of the generation: "gc_info.gi_refs = 0, gc_next |= 1"
- *   - for every object of the generation: tp_visit recursive, handle reachable
- *     GC objects "r" as: "if (r.gc_next & 1) { ++r.gc_info.gi_refs; }"
- *   - for every object of the generation "r":
- *     if (r.gc_info.gi_refs >= r.gc_self.ob_refcnt) {
- *         DeeObject_Clear(&r.gc_self);
- *         RE_INSERT_INTO_SAME_GENERATION(&r); // Also resets "gi_pself" and "gc_next"
- *     } else {
- *         INSERT_INTO_NEXT_GENERATION(&r);    // Also resets "gi_pself" and "gc_next"
- *     }
- *
  * gc.collect() mock:
  * >>again:
- * >> GC_LOCK(); // Shared lock -- errors are propagated
+ * >> GC_LOCK(); // Shared lock -- errors are propagated (for collect during DeeGC_Track, a special non-throwing version is used here)
  * >> struct Dee_gc_head *iter, **p_iter;
  * >> struct Dee_gc_head *generation = TAKE_ALL_OBJECTS_FROM_GENERATION();
  * >> struct Dee_gc_head *unreachable_fast; // w/o user-defined "~this"
@@ -91,63 +78,74 @@ DECL_BEGIN
  * >> //      Thread #1: Notices that GC1/GC2 both have ob_refcnt=1 and gi_refs=1,
  * >> //                 even though that's only the case because Thread #2 changed
  * >> //                 their reference counts during some very inconvenient moments
- * >> // NOTE: Instead of "DeeThread_SuspendAll", could also use OS-specifics like
- * >> //       "pthread_suspend_all()" here! (this doesn't need to be a synchronous
- * >> //       suspend!)
- * >> DeeThread_SuspendAll(); // Errors are propagated
- * >> for (iter = generation; iter; iter = iter->gc_next & ~3) {
- * >>     iter->gc_info.gi_refs = 0;
- * >>     iter->gc_next |= 1;
- * >> }
- * >> for (iter = generation; iter; iter = iter->gc_next & ~3) {
+ * >> DeeThread_SuspendAll(); // Errors are propagated (for collect during DeeGC_Track, a special non-throwing version is used here)
+ * >>
+ * >> // Mark objects from generation as being interesting during this can
+ * >> for (iter = generation; iter; iter = iter->gc_next)
+ * >>     iter->gc_info.gi_flag &= ~Dee_GC_FLAG_OTHERGEN;
+ * >>
+ * >> // Perform scan and adjust "ob_refcnt" such that anything
+ * >> // that happens to be unreachable ends with "ob_refcnt == 0"
+ * >> for (iter = generation; iter; iter = iter->gc_next) {
  * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *reachable) -> {
  * >>         if (DeeType_IsGC(Dee_TYPE(reachable))) {
  * >>             struct Dee_gc_head *head = headof(reachable);
- * >>             if (head->gc_next & 1)
- * >>                 ++head->gc_info.gi_refs;
- * >>         } else if (!ALREADY_VISITED_DURING_THIS_SCAN(reachable)) {
- * >>             // XXX: ^^How can this be represented?
- * >>             //      We mustn't visit the same non-GC object multiple times:
- * >>             //        GC1 -> NON_GC <- GC2
- * >>             //         ^       |        ^
- * >>             //         |       v        |
- * >>             //         +----- GC3 ------+
- * >>             //                 ^
- * >>             //                 |
- * >>             //         EXTERNALLY_VISIBLE
- * >>             // When "NON_GC" were to be visited twice via GC1 and GC2, then
- * >>             // the "GC3.gi_refs = 2", which would match its actual reference
- * >>             // count (as GC3 is referenced 2x by NON_GC and EXTERNALLY_VISIBLE)
- * >>             // But that would be wrong, since GC3 is "EXTERNALLY_VISIBLE".
- * >>             //
- * >>             // I don't really wanna have to use a heap-based bitset here,
- * >>             // since thus far: this new GC collect impl doesn't need heap
- * >>             // memory. But I can't see any other way thus far...
- * >>
- * >>             RECURSE(reachable); // Recurse on non-GC objects (e.g. "Tuple")
- * >>             // XXX: Could even limit the search-depth here based on the GC
- * >>             //      generation index. iow: max scan depth could just equal
- * >>             //      the generation's index (except for the last generation,
- * >>             //      which needs infinite depth)
- * >>             // -> By limiting ourselves here, the scan is faster, and GC
- * >>             //    objects with long self-reference-loops simply take longer
- * >>             //    before they're actually deleted (which is fine!)
+ * >>             if (!(head->gc_info.gi_flag & Dee_GC_FLAG_OTHERGEN)) {
+ * >>                 ASSERT(reachable->ob_refcnt != 0);
+ * >>                 --reachable->ob_refcnt;
+ * >>             }
+ * >>         } else {
+ * >>             ASSERT(reachable->ob_refcnt != 0);
+ * >>             --reachable->ob_refcnt;
+ * >>             if (reachable->ob_refcnt == 0) {
+ * >>                 // All references of non-gc object account-for -> cyclic references of this object should also go away
+ * >>                 RECURSE(reachable); // Recurse on non-GC objects (e.g. "Tuple")
+ * >>             }
  * >>         }
  * >>     });
  * >> }
+ * >>
+ * >> // Identify objects that can really be destroyed
+ * >> for (iter = generation; iter; iter = iter->gc_next) {
+ * >>     if (iter->gc_self.ob_refcnt == 0)
+ * >>         iter->gc_next |= 1; // Temporary flag that means "object is unreachable"
+ * >> }
+ * >>
+ * >> // Undo refcnt changes done by previous "DeeObject_Visit"
+ * >> for (iter = generation; iter; iter = iter->gc_next) {
+ * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *reachable) -> {
+ * >>         if (DeeType_IsGC(Dee_TYPE(reachable))) {
+ * >>             struct Dee_gc_head *head = headof(reachable);
+ * >>             if (!(head->gc_info.gi_flag & Dee_GC_FLAG_OTHERGEN))
+ * >>                 ++reachable->ob_refcnt;
+ * >>         } else {
+ * >>             if (reachable->ob_refcnt == 0)
+ * >>                 RECURSE(reachable);
+ * >>             ++reachable->ob_refcnt;
+ * >>         }
+ * >>     });
+ * >> }
+ * >>
+ * >> // Sort unreachable objects into "unreachable_fast" and "unreachable_slow", or move to next generation
  * >> for (iter = generation, unreachable_fast = unreachable_slow = NULL; iter;) {
- * >>     struct Dee_gc_head *next = iter->gc_next & ~3;
- * >>     ASSERT(iter->gc_info.gi_refs <= iter->gc_self.ob_refcnt);
- * >>     if (iter->gc_info.gi_refs >= iter->gc_self.ob_refcnt) {
+ * >>     struct Dee_gc_head *next = iter->gc_next & ~1;
+ * >>     if (iter->gc_next & 1) {
  * >>         // Unreachable
- * >>         struct Dee_gc_head **p_unreachable =
- * >>             !(iter->gc_next & 2) && // vvv aka: has user-defined "~this"
- * >>             HAS_REVIVING_DESTRUCTOR(iter->gc_self.ob_type)
- * >>             ? &unreachable_slow
- * >>             : &unreachable_fast;
- * >>         iter->gc_next = (iter->gc_next & 2) | *p_unreachable;
- * >>         *p_unreachable = iter;
+ * >>         if (!(iter->gc_info.gi_flag & Dee_GC_FLAG_FINALIZED) &&
+ * >>             HAS_REVIVING_DESTRUCTOR(iter->gc_self.ob_type)) { // << aka: has user-defined "~this"
+ * >>             iter->gc_info.gi_pself = &unreachable_slow;
+ * >>             if ((iter->gc_next = unreachable_slow) != NULL)
+ * >>                 unreachable_slow->gc_info.gi_pself = &iter->gc_next;
+ * >>             unreachable_slow = iter;
+ * >>         } else {
+ * >>             iter->gc_info.gi_pself = &unreachable_fast;
+ * >>             iter->gc_next = unreachable_fast | 1; // Must retain for weakref-kill code below
+ * >>             if (unreachable_fast)
+ * >>                 unreachable_fast->gc_info.gi_pself = &iter->gc_next;
+ * >>             unreachable_fast = iter;
+ * >>         }
  * >>     } else {
+ * >>         // Still reachable
  * >>         ATOMIC_INSERT_OBJECT_INTO_GENERATION(NEXT_GENERATION, iter);
  * >>     }
  * >>     iter = next;
@@ -155,28 +153,38 @@ DECL_BEGIN
  * >>
  * >> // Deal with "unreachable_slow" (which must be resolved before anything else can happen)
  * >> if (unreachable_slow) {
- * >>     // Restore 
- * >>     if (unreachable_fast)
- * >>         ATOMIC_INSERT_ALL_OBJECTS_INTO_GENERATION(FIRST_GENERATION, unreachable_fast);
- * >>     for (p_iter = &unreachable_slow; (iter = *p_iter & ~3) != NULL; p_iter = &iter->gc_next) {
- * >>         iter->gc_info.gi_pself = p_iter;
+ * >>     // Restore all "unreachable_fast" objects into the generation
+ * >>     if (unreachable_fast) {
+ * >>         CLEAR_1_BIT_FROM_GC_NEXT(unreachable_fast);
+ * >>         ATOMIC_INSERT_ALL_OBJECTS_INTO_GENERATION(THIS_GENERATION, unreachable_fast);
+ * >>     }
+ * >>     for (p_iter = &unreachable_slow; (iter = *p_iter) != NULL; p_iter = &iter->gc_next) {
+ * >>         iter->gc_info.gi_pself = p_iter | Dee_GC_FLAG_OTHERGEN;
  * >>         ++iter->gc_self.ob_refcnt;
  * >>     }
  * >>     DeeThread_ResumeAll();
  * >>     GC_UNLOCK();
  * >>     for (iter = atomic_read(&unreachable_slow); iter;) {
- * >>         struct Dee_gc_head *next = atomic_read(&iter->gc_next) & ~3;
- * >>         if (!(atomic_fetchor(&iter->gc_next, 2) & 2))
+ * >>         struct Dee_gc_head *next = atomic_read(&iter->gc_next);
+ * >>         if (!(atomic_fetchor(&iter->gc_info.gi_flag, Dee_GC_FLAG_FINALIZED) & Dee_GC_FLAG_FINALIZED))
  * >>             INVOKE_REVIVING_DESTRUCTOR(&iter->gc_self);
+ * >>         // If this causes an untrack, the object will simply unlink itself from
+ * >>         // our stack-lock "unreachable_slow". In that sense, "unreachable_slow"
+ * >>         // behaves similar to a small, self-contained GC generation
  * >>         Dee_Decref(&iter->gc_self);
  * >>         iter = next;
  * >>     }
- * >>     ATOMIC_INSERT_ALL_OBJECTS_INTO_GENERATION(CURRENT_GENERATION, unreachable_slow);
+ * >>     GC_LOCK();
+ * >>     SERVE_PENDING_GC_REMOVE_OPERATIONS(); // In case there are still danking untracks from above...
+ * >>     INSERT_ALL_OBJECTS_INTO_GENERATION(CURRENT_GENERATION, unreachable_slow);
+ * >>     GC_UNLOCK();
  * >>     goto again;
  * >> }
  * >>
  * >> // Kill all weak references to objects that hold references to unreachable GC objects
- * >> for (iter = unreachable_fast; iter; iter = iter->gc_next & ~3) {
+ * >> // This is only necessary if it was detected that some object during the previous visit
+ * >> // above was both able to support weak references, **and** also had some.
+ * >> for (iter = unreachable_fast; iter; iter = iter->gc_next & ~1) {
  * >>     KILL_WEAKREFS_IF_DEFINED(&iter->gc_self.ob_weakrefs);
  * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *reachable) -> {
  * >>         if (DeeType_IsGC(Dee_TYPE(reachable))) {
@@ -194,11 +202,10 @@ DECL_BEGIN
  * >> }
  * >>
  * >> // Prevent objects from being destroyed in some other way (since we're about to unlock)
- * >> // NOTE: Also repair the "gi_pself" link such that "DeeGC_Untrack()" works (though instead
- * >> //       of unlinking from some specific generation, it unlinks items from our on-stack
- * >> //       list of objects)
- * >> for (p_iter = &unreachable_fast; (iter = *p_iter & ~3) != NULL; p_iter = &iter->gc_next) {
- * >>     iter->gc_info.gi_pself = p_iter;
+ * >> // NOTE: Also repair the "gc_next" link by clearing the special "1" bit we had used to
+ * >> //       keep track of unreachable objects.
+ * >> for (iter = unreachable_fast; iter; iter = iter->gc_next) {
+ * >>     iter->gc_next &= ~1;
  * >>     ++iter->gc_self.ob_refcnt;
  * >> }
  * >> DeeThread_ResumeAll();
@@ -229,19 +236,72 @@ DECL_BEGIN
  */
 struct Dee_gc_head {
 	union {
-		Dee_refcnt_t gi_refs;  /* [valid_if(GC_COLLECTING)] # of references account-for by other GC objects */
-		DeeObject  **gi_pself; /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))][valid_if(...)] Self-pointer in GC generation. */
+		DeeObject  **gi_pself; /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))][valid_if(...)]
+		                        * Self-pointer in GC generation.
+		                        * Least significant 2 bits here have special meaning:
+		                        * - (gi_pself & 1) == 0: (outside of collect) object is part of generation#0
+		                        * - (gi_pself & 1) == 1: (outside of collect) object is part of generation#1-n
+		                        * - (gi_pself & 1) == 0: (inside of collect) Object is part of a generation that is currently being scanned
+		                        * - (gi_pself & 1) == 1: (inside of collect) Object part of some other generation
+		                        * - (gi_pself & 2) == 0: Default
+		                        * - (gi_pself & 2) == 1: A user-defined "~this" has already been invoked */
+#ifdef DEE_SOURCE
+#define Dee_GC_FLAG_GENN      1 /* Object belongs to some n'th generation (that isn't gen#0) */
+#define Dee_GC_FLAG_OTHERGEN  1 /* while collecting: object belongs to some other generation */
+#define Dee_GC_FLAG_FINALIZED 2 /* Object has already been finalized */
+#define Dee_GC_FLAG_MASK      3 /* Mask of special bits */
+#endif /* DEE_SOURCE */
+		uintptr_t    gi_flag;  /* GC Flags (set of `Dee_GC_FLAG_*') */
 	}                gc_info;  /* Misc. data, pending on context */
-	DeeObject       *gc_next;  /* [0..1][lock(INTERNAL(gc_lock))] Next GC object (possibly in pending chain).
-	                            * Least significant 2 bits here have special meaning:
-	                            * - (gc_next & 1) == 0: Default
-	                            * - (gc_next & 1) == 1: Object is part of a generation that is currently
-	                            *                       being scanned, meaning that tp_visit must increment
-	                            *                       "gc_info.gi_refs"
-	                            * - (gc_next & 2) == 0: Default
-	                            * - (gc_next & 2) == 1: A user-defined "~this" has already been invoked */
+	DeeObject       *gc_next;  /* [0..1][lock(INTERNAL(gc_lock))] Next GC object (possibly in pending chain). */
+#if 0
 	DeeObject        gc_self;  /* The object that is being controlled by the GC. */
+#endif
 };
+
+
+#define _Dee_GC_HEAD_UNTRACKED_INIT { NULL }, NULL
+
+#define Dee_GC_OBJECT_OFFSET sizeof(struct Dee_gc_head)
+#define Dee_GC_HEAD_SIZE     sizeof(struct Dee_gc_head)
+#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((__BYTE_TYPE__ *)Dee_AsObject(ob) - Dee_GC_OBJECT_OFFSET))
+#ifdef __INTELLISENSE__
+#define DeeGC_Object(head)   ((DeeObject *)((__BYTE_TYPE__ *)&(head)->gc_info + Dee_GC_OBJECT_OFFSET))
+#else /* __INTELLISENSE__ */
+#define DeeGC_Object(head)   ((DeeObject *)((__BYTE_TYPE__ *)(head) + Dee_GC_OBJECT_OFFSET))
+#endif /* !__INTELLISENSE__ */
+
+/* Begin tracking a given GC-allocated object. */
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL DeeGC_Track(DREF DeeObject *__restrict ob);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
+#define DeeGC_TRACK(T, ob) ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Try to untrack "ob" synchronously (and re-return "ob"), but if the necessary
+ * locks couldn't be acquired immediately, do the untrack asynchronously, followed
+ * by everything else that would have normally been done by `DeeObject_Destroy()'
+ * @return: ob:   Untrack happened synchronously -- remainder of object destruction must be done by caller
+ * @return: NULL: Untrack will happen asynchronously -- caller must not do any further object destruction */
+INTDEF NONNULL((1)) DeeObject *DCALL DeeGC_UntrackAsync(DeeObject *__restrict ob);
+#endif /* CONFIG_BUILDING_DEEMON */
+
+/* Track all GC objects in range [first,last], all of which have
+ * already been linked together using their `struct Dee_gc_head' */
+DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackAll(DeeObject *first, DeeObject *last);
+
+/* Try to collect `max_objects' GC-objects (though more than that
+ * may be collected), returning the actual amount collected.
+ *
+ * This function really only has 2 valid use-cases:
+ * - DeeGC_Collect(1)          -- Try to collect *sometime* from some generation
+ * - DeeGC_Collect((size_t)-1) -- Collect *all* generations
+ *
+ * @return: * :         The # of objects collected
+ * @return: (size_t)-1: An error was thrown. */
+DFUNDEF WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects);
+/* Same as `DeeGC_TryCollect()', but does not throw errors. */
+DFUNDEF WUNUSED size_t DCALL DeeGC_TryCollect(size_t max_objects);
+
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 struct Dee_gc_head;
 struct Dee_gc_head_link {
@@ -255,7 +315,6 @@ struct Dee_gc_head {
 	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 	DeeObject            gc_object; /* The object that is being controlled by the GC. */
 };
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4
@@ -289,14 +348,13 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Track(DeeObject *__r
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
 
 /* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct Dee_gc_head_link' */
+ * already been linked together using their `struct Dee_gc_head' */
 DFUNDEF WUNUSED bool DCALL DeeGC_TrackMany_TryLock(void);
 DFUNDEF void DCALL DeeGC_TrackMany_Lock(void);
 DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackMany_Exec(DeeObject *first, DeeObject *last);
 DFUNDEF void DCALL DeeGC_TrackMany_Unlock(void);
 
 #define DeeGC_TRACK(T, ob)   ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
-#define DeeGC_UNTRACK(T, ob) ((DREF T *)DeeGC_Untrack(Dee_AsObject(ob)))
 
 /* Try to collect at most `max_objects' GC-objects,
  * returning the actual amount collected. */
@@ -312,6 +370,7 @@ DFUNDEF size_t DCALL DeeGC_Collect(size_t max_objects);
  *       continue to run) */
 INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
 #endif /* CONFIG_BUILDING_DEEMON */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* GC object alloc/free.
  * Don't you think these functions allocate some magical memory

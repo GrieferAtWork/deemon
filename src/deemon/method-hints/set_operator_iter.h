@@ -50,7 +50,7 @@ __set_iter__.set_operator_iter([[nonnull]] DeeObject *__restrict self)
 	result->di_iter    = iter; /* Inherit reference */
 	Dee_simple_hashset_with_lock_init(&result->di_encountered);
 	DeeObject_Init(result, &DistinctIterator_Type);
-	return DeeGC_Track(Dee_AsObject(result));
+	return Dee_AsObject(DeeGC_TRACK(DistinctIterator, result));
 err_iter:
 	Dee_Decref(iter);
 err:

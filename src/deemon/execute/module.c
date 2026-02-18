@@ -3016,7 +3016,7 @@ module_dir_destroy(DeeModuleObject *__restrict self) {
 	ASSERT(self->mo_bucketm == 0);
 	ASSERT(self->mo_bucketv == empty_module_buckets);
 	ASSERT(self->mo_init == Dee_MODULE_INIT_INITIALIZED);
-	self = DeeGC_UNTRACK(DeeModuleObject, self);
+	self = (DeeModuleObject *)DeeGC_Untrack(Dee_AsObject(self));
 	module_common_destroy(self);
 	DeeGCObject_Free(self);
 }
@@ -3055,7 +3055,7 @@ module_dee_destroy(DeeModuleObject *__restrict self) {
 	ASSERT(Dee_TYPE(self) == &DeeModuleDee_Type);
 	ASSERT(self->mo_init == Dee_MODULE_INIT_INITIALIZED ||
 	       self->mo_init == Dee_MODULE_INIT_UNINITIALIZED);
-	self = DeeGC_UNTRACK(DeeModuleObject, self);
+	self = (DeeModuleObject *)DeeGC_Untrack(Dee_AsObject(self));
 
 	/* Unbind from `module_byaddr_tree' */
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
@@ -3321,7 +3321,7 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	       self->mo_init == Dee_MODULE_INIT_UNINITIALIZED);
 	ASSERT(self->mo_importc == 0);
 	ASSERT(self->mo_importv == NULL);
-	self = DeeGC_UNTRACK(DeeModuleObject, self);
+	self = (DeeModuleObject *)DeeGC_Untrack(Dee_AsObject(self));
 	dexdata = self->mo_moddata.mo_dexdata;
 	ASSERT(dexdata);
 	ASSERT(dexdata->mdx_module == self);
@@ -3685,7 +3685,11 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 
 struct Dee_empty_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	struct Dee_gc_head               m_head;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_gc_head_link          m_head;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	Dee_MODULE_STRUCT_EX(/**/, /**/) m_module;
 };
 

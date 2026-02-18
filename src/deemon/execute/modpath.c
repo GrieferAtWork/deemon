@@ -1192,6 +1192,9 @@ dexrange_union_object(DeeObject *__restrict ob, void *arg) {
 		 * Because in general: there should always be some OS-specific
 		 * was to determine which module some pointer is associated
 		 * with, which is all we need to not have to get here. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+		/* TODO: tp_visit requires that "DeeThread_SuspendAll()" has been called */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		DeeObject_Visit(ob, &dexrange_union_object_r, me);
 	}
 }
@@ -1373,7 +1376,11 @@ load_from_export_table:
 
 /* As defined by Dee_DEX_END()... */
 struct DEX {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	struct Dee_gc_head            m_head;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_gc_head_link       m_head;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	Dee_MODULE_STRUCT(/**/, 1024) m_dex;
 };
 
@@ -2286,6 +2293,21 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 #else /* __SIZEOF_SIZE_T__ == 4 */
 #define IMAGE_GC_HEADTAIL_MATCH_RELOC 0
 #endif /* __SIZEOF_SIZE_T__ == 4 */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
+		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
+		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
+		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
+		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
+		DeeGC_TrackAll(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+	} else {
+		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
+		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
+		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
+		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
+		DeeGC_TrackAll(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+	}
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DeeGC_TrackMany_Lock();
 	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
 		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
@@ -2301,6 +2323,7 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 		DeeGC_TrackMany_Exec(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
 	}
 	DeeGC_TrackMany_Unlock();
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #undef IMAGE_GC_HEADTAIL_MATCH_RELOC
 
 	/* Add debug info to every object from the module's heap (s.a. runtime/heap.c:gcscan__pointer())

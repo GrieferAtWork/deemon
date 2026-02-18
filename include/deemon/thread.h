@@ -509,6 +509,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeThread_Resume(DeeThreadObject *__restrict sel
  * @return: * :   Start of thread list
  * @return: NULL: An error was thrown */
 DFUNDEF WUNUSED DeeThreadObject *DCALL DeeThread_SuspendAll(void);
+DFUNDEF WUNUSED DeeThreadObject *DCALL DeeThread_TrySuspendAll(void);
 DFUNDEF void DCALL DeeThread_ResumeAll(void);
 #define DeeThread_FOREACH(x) for (; (x); (x) = (x)->t_global.le_next)
 

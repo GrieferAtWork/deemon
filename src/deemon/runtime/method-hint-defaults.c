@@ -816,7 +816,7 @@ default__seq_operator_iter__with__seq_operator_sizeob__and__seq_operator_getitem
 	result->disg_end        = sizeob; /* Inherit reference */
 	Dee_atomic_lock_init(&result->disg_lock);
 	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
-	return DeeGC_Track(Dee_AsObject(result));
+	return Dee_AsObject(DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result));
 err_size_ob:
 	Dee_Decref(sizeob);
 err:
@@ -835,7 +835,7 @@ default__seq_operator_iter__with__seq_operator_getitem(DeeObject *__restrict sel
 	result->dig_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), seq_operator_getitem);
 	Dee_atomic_lock_init(&result->dig_lock);
 	DeeObject_Init(result, &DefaultIterator_WithGetItem_Type);
-	return DeeGC_Track(Dee_AsObject(result));
+	return Dee_AsObject(DeeGC_TRACK(DefaultIterator_WithGetItem, result));
 err:
 	return NULL;
 }
@@ -15696,7 +15696,7 @@ default__set_operator_iter__with__seq_operator_iter(DeeObject *__restrict self) 
 	result->di_iter    = iter; /* Inherit reference */
 	Dee_simple_hashset_with_lock_init(&result->di_encountered);
 	DeeObject_Init(result, &DistinctIterator_Type);
-	return DeeGC_Track(Dee_AsObject(result));
+	return Dee_AsObject(DeeGC_TRACK(DistinctIterator, result));
 err_iter:
 	Dee_Decref(iter);
 err:
@@ -18315,7 +18315,7 @@ default__map_operator_iter__with__seq_operator_iter(DeeObject *__restrict self) 
 	result->dmi_iter        = iter; /* Inherit reference */
 	Dee_simple_hashset_with_lock_init(&result->dmi_encountered);
 	DeeObject_Init(result, &DistinctMappingIterator_Type);
-	return DeeGC_Track(Dee_AsObject(result));
+	return Dee_AsObject(DeeGC_TRACK(DistinctMappingIterator, result));
 err_iter:
 	Dee_Decref(iter);
 err:

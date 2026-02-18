@@ -649,6 +649,9 @@ visit_reachable_func(DeeObject *__restrict self,
 		int error = GCSetMaker_Insert(data, self);
 		if (error == 0) {
 			Dee_Incref(self);
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+			/* TODO: tp_visit requires that "DeeThread_SuspendAll()" has been called */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 			DeeObject_Visit(self, (Dee_visit_t)&visit_reachable_func, data);
 		}
 	}
@@ -710,6 +713,9 @@ DeeGC_ReferredBy(DeeObject *source,
 		return true;
 	data.target = target;
 	data.did    = false;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	/* TODO: tp_visit requires that "DeeThread_SuspendAll()" has been called */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DeeObject_Visit(source, (Dee_visit_t)&visit_referred_by_func, &data);
 	return data.did;
 }

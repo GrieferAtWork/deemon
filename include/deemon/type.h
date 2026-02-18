@@ -467,6 +467,20 @@ struct Dee_type_constructor {
 	 * `DeeType_RequireDestroy()', but can be overwritten with a
 	 * custom implementation). */
 	Dee_tp_destroy_t tp_destroy;
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	/* [0..1] Optional destructor callback that is called before "tp_dtor".
+	 * Also, unlike "tp_dtor", this callback is allowed to "revive" the
+	 * object by returning with its "ob_refcnt > 0". When this happens,
+	 * the object destruction is aborted and said "new" reference will
+	 * be kept around.
+	 *
+	 * Note that for GC objects, this operator is only invoked *once*,
+	 * even if it ended up reviving the object in question! */
+	NONNULL_T((1, 2))
+	void (DCALL *tp_finalize)(DeeTypeObject *__restrict tp_self,
+	                          DeeObject *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 struct Dee_type_cast {
@@ -2546,17 +2560,24 @@ struct Dee_type_operator {
 /*      Dee_TP_F                0x0200  * ... */
 #define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
 #define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 #define Dee_TP_FMAYREVIVE       0x1000 /* This type's `tp_dtor' may revive the object (return with the object's `ob_refcnt > 0')
                                         * Note that when reviving an object, `tp_dtor' must (in addition to an external reference)
                                         * gift the caller one further reference to the object that got revived (meaning that upon
                                         * return, `ob_refcnt >= 2', where at least 1 reference is caused by some global reference,
                                         * and 1 will be inherited by `DeeObject_Destroy()'). This is needed to prevent a potential
                                         * race condition where a GC-object isn't being tracked during destruction. */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define Dee_TP_FGC              0x2000 /* Instance of this type can be harvested by the Garbage Collector. */
 #define Dee_TP_FHEAP            0x4000 /* This type was allocated on the heap. */
 #define Dee_TP_FVARIABLE        0x8000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+#define Dee_TP_FINTERHITABLE    (Dee_TP_FINTERRUPT | Dee_TP_FGC | Dee_TP_FVARIABLE) \
+                                       /* Set of special flags that are inherited by sub-classes. */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define Dee_TP_FINTERHITABLE    (Dee_TP_FINTERRUPT | Dee_TP_FMAYREVIVE | Dee_TP_FGC | Dee_TP_FVARIABLE) \
                                        /* Set of special flags that are inherited by sub-classes. */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #define Dee_TF_NONE             0x00000000 /* No special features. */
 #define Dee_TF_NONLOOPING       0x00000001 /* The object's tp_visit function can be skipped when searching for conventional reference loops.
@@ -2585,7 +2606,9 @@ struct Dee_type_operator {
 #define TP_FABSTRACT        Dee_TP_FABSTRACT
 #define TP_FNAMEOBJECT      Dee_TP_FNAMEOBJECT
 #define TP_FDOCOBJECT       Dee_TP_FDOCOBJECT
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 #define TP_FMAYREVIVE       Dee_TP_FMAYREVIVE
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define TP_FVARIABLE        Dee_TP_FVARIABLE
 #define TP_FGC              Dee_TP_FGC
 #define TP_FHEAP            Dee_TP_FHEAP
@@ -2624,6 +2647,14 @@ struct Dee_type_object {
 	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
 	/* WARNING: When "Dee_TF_TPVISIT" is set, "tp_visit" is actually typed as:
 	 * >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg); */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	/* TODO: Change all "tp_visit" implementations to not acquire any object locks.
+	 *       Instead, "tp_visit" should be allowed to assume that DeeThread_SuspendAll
+	 *       has been called, meaning that the caller is the only running thread and
+	 *       that all other threads are paused at stable synchronization points (such
+	 *       that the internal locks of every object are currently available, and the
+	 *       state of all objects can be interacted with directly) */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
 	/* NOTE: Anything used by `DeeType_Inherit*' can't be made `Dee_tpconst' here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */
@@ -2716,7 +2747,11 @@ struct Dee_type_object {
 #define DeeType_IsSequence(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_seq != NULL)
 #define DeeType_IsIntTruncated(x)        (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FTRUNCATE)
 #define DeeType_HasMoveAny(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FMOVEANY)
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+#define DeeType_HasRevivingDestructor(x) (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_finalize != NULL)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define DeeType_HasRevivingDestructor(x) (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FMAYREVIVE)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define DeeType_IsDeepImmutable(x)       (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FDEEPIMMUTABLE)
 #define DeeType_IsIterator(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_iter_next != NULL)
 #define DeeType_IsTypeType(x)            DeeType_Extends(Dee_REQUIRES_OBJECT(DeeTypeObject const, x), &DeeType_Type)

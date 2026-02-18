@@ -857,10 +857,17 @@ do_kill_user:
 		must_continue |= shutdown_globals();
 
 		/* Collect as many GC objects as possible. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+		if (DeeGC_Collect((size_t)-1)) { /* TODO: This mustn't throw errors at this point! */
+			num_empty_gc = 0; /* Reset the empty-gc counter. */
+			continue;
+		}
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		if (DeeGC_Collect((size_t)-1)) {
 			num_empty_gc = 0; /* Reset the empty-gc counter. */
 			continue;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 		/* Make sure that nothing is hiding in globals,
 		 * now that the garbage has been collected. */

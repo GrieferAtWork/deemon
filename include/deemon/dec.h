@@ -381,11 +381,11 @@ typedef Dec_Ehdr DeeDec_Ehdr;
 
 /* Return a pointer to the `DeeModuleObject' that follow `Dec_Ehdr' */
 #define DeeDec_Ehdr_GetModule(self) \
-	((struct Dee_module_object *)&((struct Dee_gc_head *)(&(self)->e_heap.hr_first + 1))->gc_object)
+	((struct Dee_module_object *)DeeGC_Object((struct Dee_gc_head *)(&(self)->e_heap.hr_first + 1)))
 #define DeeDec_Ehdr_FromModule(self)                                               \
 	((Dec_Ehdr *)((uintptr_t)Dee_REQUIRES_TYPE(struct Dee_module_object *, self) - \
 	              (COMPILER_OFFSETAFTER(Dec_Ehdr, e_heap.hr_first) +               \
-	               __builtin_offsetof(struct Dee_gc_head, gc_object))))
+	               Dee_GC_OBJECT_OFFSET)))
 
 #else /* DEE_SOURCE */
 typedef char DeeDec_Ehdr;

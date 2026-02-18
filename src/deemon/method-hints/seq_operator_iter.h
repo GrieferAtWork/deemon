@@ -129,7 +129,7 @@ err:
 	result->disg_end        = sizeob; /* Inherit reference */
 	Dee_atomic_lock_init(&result->disg_lock);
 	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
-	return DeeGC_Track(Dee_AsObject(result));
+	return Dee_AsObject(DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result));
 err_size_ob:
 	Dee_Decref(sizeob);
 err:
@@ -146,7 +146,7 @@ err:
 	result->dig_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
 	Dee_atomic_lock_init(&result->dig_lock);
 	DeeObject_Init(result, &DefaultIterator_WithGetItem_Type);
-	return DeeGC_Track(Dee_AsObject(result));
+	return Dee_AsObject(DeeGC_TRACK(DefaultIterator_WithGetItem, result));
 err:
 	return NULL;
 }}

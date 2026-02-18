@@ -209,7 +209,7 @@ DeeList_NewWithHint(size_t n_prealloc) {
 	} else {
 		result->l_list.ol_elemv = NULL;
 	}
-	return DeeGC_Track((DeeObject *)result);
+	return Dee_AsObject(DeeGC_TRACK(List, result));
 err:
 	return NULL;
 }

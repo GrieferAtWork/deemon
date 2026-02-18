@@ -216,7 +216,7 @@ done_populate_result:;
 	/* Initialize and start tracking the new set. */
 	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &DeeHashSet_Type);
-	return DeeGC_Track((DeeObject *)result);
+	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err_r_elem:
 	Dee_Free(result->hs_elem);
 err_r:
@@ -336,7 +336,7 @@ return_empty_set:
 	/* Initialize and start tracking the new set. */
 	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &DeeHashSet_Type);
-	return DeeGC_Track((DeeObject *)result);
+	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err:
 	return NULL;
 }
@@ -350,7 +350,7 @@ DeeHashSet_FromSequence(DeeObject *__restrict self) {
 	if unlikely(hashset_init_sequence(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeHashSet_Type);
-	return DeeGC_Track((DeeObject *)result);
+	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -398,7 +398,7 @@ DeeHashSet_FromRoSet(DeeObject *__restrict self) {
 	Dee_atomic_rwlock_init(&result->hs_lock);
 	Dee_weakref_support_init(result);
 	DeeObject_Init(result, &DeeHashSet_Type);
-	return DeeGC_Track((DeeObject *)result);
+	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err_r:
 	DeeGCObject_FREE(result);
 err:
