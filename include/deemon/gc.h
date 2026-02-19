@@ -57,6 +57,10 @@ DECL_END
 DECL_BEGIN
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+
+#define Dee_gc_head_link Dee_gc_head /* Backwards compatibility (remove after "CONFIG_EXPERIMENTAL_REWORKED_GC") */
+
+
 /* Head of an object that is GC-able.
  *
  * gc.collect() mock:
@@ -139,8 +143,7 @@ DECL_BEGIN
  * >>             unreachable_slow = iter;
  * >>         } else {
  * >>             iter->gc_info.gi_pself = &unreachable_fast;
- * >>             iter->gc_next = unreachable_fast | 1; // Must retain for weakref-kill code below
- * >>             if (unreachable_fast)
+ * >>             if ((iter->gc_next = unreachable_fast) != NULL)
  * >>                 unreachable_fast->gc_info.gi_pself = &iter->gc_next;
  * >>             unreachable_fast = iter;
  * >>         }
@@ -155,8 +158,7 @@ DECL_BEGIN
  * >> if (unreachable_slow) {
  * >>     // Restore all "unreachable_fast" objects into the generation
  * >>     if (unreachable_fast) {
- * >>         CLEAR_1_BIT_FROM_GC_NEXT(unreachable_fast);
- * >>         ATOMIC_INSERT_ALL_OBJECTS_INTO_GENERATION(THIS_GENERATION, unreachable_fast);
+ * >>         INSERT_ALL_OBJECTS_INTO_GENERATION(THIS_GENERATION, unreachable_fast);
  * >>     }
  * >>     for (p_iter = &unreachable_slow; (iter = *p_iter) != NULL; p_iter = &iter->gc_next) {
  * >>         iter->gc_info.gi_pself = p_iter | Dee_GC_FLAG_OTHERGEN;
@@ -175,7 +177,6 @@ DECL_BEGIN
  * >>         iter = next;
  * >>     }
  * >>     GC_LOCK();
- * >>     SERVE_PENDING_GC_REMOVE_OPERATIONS(); // In case there are still danking untracks from above...
  * >>     INSERT_ALL_OBJECTS_INTO_GENERATION(CURRENT_GENERATION, unreachable_slow);
  * >>     GC_UNLOCK();
  * >>     goto again;
@@ -184,35 +185,17 @@ DECL_BEGIN
  * >> // Kill all weak references to objects that hold references to unreachable GC objects
  * >> // This is only necessary if it was detected that some object during the previous visit
  * >> // above was both able to support weak references, **and** also had some.
- * >> for (iter = unreachable_fast; iter; iter = iter->gc_next & ~1) {
- * >>     KILL_WEAKREFS_IF_DEFINED(&iter->gc_self.ob_weakrefs);
- * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *reachable) -> {
- * >>         if (DeeType_IsGC(Dee_TYPE(reachable))) {
- * >>             struct Dee_gc_head *head = headof(reachable);
- * >>             if (head->gc_next & 1)
- * >>                 return MUST_KILL_CALLER_WEAKREFS;
- * >>         } else if (MAYBE_NOT_ALREADY_VISITED_DURING_THIS_WEAKREF_KILL(reachable)) {
- * >>             if (RECURSE(reachable) == MUST_KILL_CALLER_WEAKREFS) {
- * >>                 KILL_WEAKREFS_IF_DEFINED(&iter->gc_self.ob_weakrefs);
- * >>                 return MUST_KILL_CALLER_WEAKREFS;
- * >>             }
- * >>         }
- * >>         return DONT_KILL_CALLER_WEAKREFS;
- * >>     });
- * >> }
+ * >> // ... // Repeat above to decref objects that will end up destroyed...
+ * >> // ... // Then, incref them all again but kill weakrefs of objects that had ob_refcnt==0
  * >>
  * >> // Prevent objects from being destroyed in some other way (since we're about to unlock)
- * >> // NOTE: Also repair the "gc_next" link by clearing the special "1" bit we had used to
- * >> //       keep track of unreachable objects.
- * >> for (iter = unreachable_fast; iter; iter = iter->gc_next) {
- * >>     iter->gc_next &= ~1;
+ * >> for (iter = unreachable_fast; iter; iter = iter->gc_next)
  * >>     ++iter->gc_self.ob_refcnt;
- * >> }
  * >> DeeThread_ResumeAll();
  * >> GC_UNLOCK();
  * >>
  * >> for (iter = atomic_read(&unreachable_fast); iter;) {
- * >>     struct Dee_gc_head *next = atomic_read(&iter->gc_next) & ~3;
+ * >>     struct Dee_gc_head *next = atomic_read(&iter->gc_next);
  * >>     DeeObject_Clear(&iter->gc_self);
  * >>     Dee_Decref(&iter->gc_self);
  * >>     iter = next;
@@ -223,7 +206,10 @@ DECL_BEGIN
  * >>     // GC objects from a reference loop that we identified as being self-contained
  * >>     // are still alive, even after being closed. (here: handle this by re-inserting
  * >>     // those objects into the original generation)
- * >>     ATOMIC_INSERT_ALL_OBJECTS_INTO_GENERATION(FIRST_GENERATION, unreachable_fast);
+ * >>     GC_LOCK();
+ * >>     SERVE_PENDING_GC_REMOVE_OPERATIONS(); // In case there are still pending untracks from above...
+ * >>     INSERT_ALL_OBJECTS_INTO_GENERATION(FIRST_GENERATION, unreachable_fast);
+ * >>     GC_UNLOCK();
  * >> }
  *
  * Requirements:
@@ -279,7 +265,7 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *_
 #ifdef CONFIG_BUILDING_DEEMON
 /* Try to untrack "ob" synchronously (and re-return "ob"), but if the necessary
  * locks couldn't be acquired immediately, do the untrack asynchronously, followed
- * by everything else that would have normally been done by `DeeObject_Destroy()'
+ * by everything else that would have normally been done in `DeeObject_Destroy()'
  * @return: ob:   Untrack happened synchronously -- remainder of object destruction must be done by caller
  * @return: NULL: Untrack will happen asynchronously -- caller must not do any further object destruction */
 INTDEF NONNULL((1)) DeeObject *DCALL DeeGC_UntrackAsync(DeeObject *__restrict ob);
@@ -301,6 +287,17 @@ DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackAll(DeeObject *first, DeeObject *l
 DFUNDEF WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects);
 /* Same as `DeeGC_TryCollect()', but does not throw errors. */
 DFUNDEF WUNUSED size_t DCALL DeeGC_TryCollect(size_t max_objects);
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Return `true' if any GC objects with a non-zero reference
+ * counter is being tracked.
+ * NOTE: In addition, this function does not return `true' when
+ *       all that's left are dex objects (which are destroyed
+ *       at a later point during deemon shutdown, than the point
+ *       when this function is called to determine if the GC must
+ *       continue to run) */
+INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
+#endif /* CONFIG_BUILDING_DEEMON */
 
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 struct Dee_gc_head;

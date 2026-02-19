@@ -709,12 +709,8 @@ err_args:
 			return result;
 		/* Translate a NotImplement error to indicate that the buffer
 		 * interface is missing, rather than the sequence interface. */
-		if (DeeError_Catch(&DeeError_NotImplemented)) {
-			tp_iter = Dee_TYPE(argv[0]);
-			if (tp_iter == &DeeSuper_Type)
-				tp_iter = DeeSuper_TYPE(argv[0]);
-			err_unimplemented_operator(tp_iter, OPERATOR_GETBUF); /* TODO: Pass orig error as "cause" */
-		}
+		if (DeeError_Catch(&DeeError_NotImplemented))
+			DeeRT_ErrNoBufferInterface(argv[0]); /* TODO: Pass orig error as "cause" */
 		goto err;
 err_r:
 		DeeObject_Free(result);
@@ -1858,7 +1854,7 @@ PRIVATE struct type_operator const bytes_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES),
-	TYPE_OPERATOR_FLAGS(OPERATOR_8003_GETBUF, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES),
+	TYPE_OPERATOR_FLAGS(OPERATOR_8000_GETBUF, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES),
 };
 
 INTDEF struct type_method tpconst bytes_methods[];

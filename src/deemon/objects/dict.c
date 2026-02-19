@@ -3156,8 +3156,10 @@ err:
 
 PRIVATE struct type_gc tpconst dict_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear,
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* .tp_pclear = */ NULL,
 	/* .tp_gcprio = */ 0,
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	/* .tp_cc     = */ (bool (DCALL *)(DeeObject *__restrict))&dict_cc,
 };
 

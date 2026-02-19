@@ -3021,11 +3021,16 @@ module_dir_destroy(DeeModuleObject *__restrict self) {
 	DeeGCObject_Free(self);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
+#define PTR_module_dir_gc &module_dir_gc
 PRIVATE struct type_gc tpconst module_dir_gc = {
 	/* .tp_clear  = */ NULL,
 	/* .tp_pclear = */ NULL,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
 };
+#else /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+#define PTR_module_dir_gc NULL /* TODO: Remove after "CONFIG_EXPERIMENTAL_REWORKED_GC" */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 
@@ -3127,6 +3132,7 @@ module_dee_clear(DeeModuleObject *__restrict self) {
 	Dee_Decref_likely(code);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 PRIVATE NONNULL((1)) void DCALL
 module_dee_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
 	uint16_t i;
@@ -3159,11 +3165,14 @@ module_dee_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
 		DeeModule_LockEndWrite(self);
 	}
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 PRIVATE struct type_gc tpconst module_dee_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_clear,
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_dee_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 
@@ -3425,17 +3434,25 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 #endif
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 PRIVATE NONNULL((1)) void DCALL
 module_dex_clear_common(DeeModuleObject *__restrict self) {
 	struct Dee_module_dexdata *dexdata = self->mo_moddata.mo_dexdata;
 	if (dexdata->mdx_clear)
 		(*dexdata->mdx_clear)();
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 PRIVATE NONNULL((1)) void DCALL
 module_dex_clear(DeeModuleObject *__restrict self) {
 	uint16_t i;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	struct Dee_module_dexdata *dexdata = self->mo_moddata.mo_dexdata;
+	if (dexdata->mdx_clear)
+		(*dexdata->mdx_clear)();
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	module_dex_clear_common(self);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DeeModule_LockWrite(self);
 	for (i = self->mo_globalc; i--;) {
 		/* Operate in reverse order, better mirrors the
@@ -3455,16 +3472,20 @@ module_dex_clear(DeeModuleObject *__restrict self) {
 	DeeModule_LockEndWrite(self);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 PRIVATE NONNULL((1)) void DCALL
 module_dex_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
 	module_dex_clear_common(self);
 	module_dee_pclear(self, priority);
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 PRIVATE struct type_gc tpconst module_dex_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_clear,
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_dex_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 #endif /* !CONFIG_NO_DEX */
 
@@ -3558,7 +3579,7 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
 	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_dir_visit, /* Wouldn't have anything to visit! */ 
-	/* .tp_gc            = */ &module_dir_gc,
+	/* .tp_gc            = */ PTR_module_dir_gc,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__FEC430738D08383C),
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),

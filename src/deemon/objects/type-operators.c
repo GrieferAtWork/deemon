@@ -167,7 +167,12 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor, &do_inherit_noop) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_finalize, &do_inherit_noop)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor, &do_inherit_noop)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+{
 	(void)self;
 	(void)p_self;
 	(void)argc;
@@ -303,6 +308,34 @@ err:
 	return NULL;
 }
 
+DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL, &do_inherit_buffer) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getbuf") "', params: "
+	bool writable = false;
+	size_t start = 0;
+	size_t end = (size_t)-1;
+");]]]*/
+	struct {
+		bool writable;
+		size_t start;
+		size_t end;
+	} args;
+	args.writable = false;
+	args.start = 0;
+	args.end = (size_t)-1;
+	if (DeeArg_UnpackStruct(argc, argv, "|b" UNPuSIZ UNPxSIZ ":" OPNAME("getbuf"), &args))
+		goto err;
+/*[[[end]]]*/
+	(void)p_self;
+	(void)opname;
+	return DeeObject_TBytes(tp_self, self,
+	                        args.writable ? Dee_BUFFER_FWRITABLE
+	                                      : Dee_BUFFER_FREADONLY,
+	                        args.start, args.end);
+err:
+	return NULL;
+}
+
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 DEFINE_OPERATOR_INVOKE(operator_visit, &instance_visit, &do_inherit_noop) {
 	DREF GCSet *result;
 	(void)p_self;
@@ -340,33 +373,7 @@ DEFINE_OPERATOR_INVOKE(operator_pclear, &instance_pclear, &do_inherit_noop) {
 err:
 	return NULL;
 }
-
-DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL, &do_inherit_buffer) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)('" OPNAME("getbuf") "', params: "
-	bool writable = false;
-	size_t start = 0;
-	size_t end = (size_t)-1;
-");]]]*/
-	struct {
-		bool writable;
-		size_t start;
-		size_t end;
-	} args;
-	args.writable = false;
-	args.start = 0;
-	args.end = (size_t)-1;
-	if (DeeArg_UnpackStruct(argc, argv, "|b" UNPuSIZ UNPxSIZ ":" OPNAME("getbuf"), &args))
-		goto err;
-/*[[[end]]]*/
-	(void)p_self;
-	(void)opname;
-	return DeeObject_TBytes(tp_self, self,
-	                        args.writable ? Dee_BUFFER_FWRITABLE
-	                                      : Dee_BUFFER_FREADONLY,
-	                        args.start, args.end);
-err:
-	return NULL;
-}
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* >> operator str(): string;
  * >> operator str(fp: File); */
@@ -1183,7 +1190,11 @@ INTERN_CONST struct type_operator tpconst type_operators[LENGTHOF_type_operators
 	TYPE_OPERATOR_DECL(OPERATOR_0000_CONSTRUCTOR, /**/ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_alloc.tp_any_ctor), /* */ OPCC_SPECIAL, /*         */ "this", /*    */ "constructor", /**/ "tp_any_ctor", &operator_constructor),
 	TYPE_OPERATOR_DECL(OPERATOR_0001_COPY, /*       */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_alloc.tp_copy_ctor), /**/ OPCC_SPECIAL, /*         */ "copy", /*    */ "copy", /*       */ "tp_copy_ctor", &operator_copy),
 	TYPE_OPERATOR_DECL(OPERATOR_0002_SERIALIZE, /*  */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_alloc.tp_serialize), /**/ OPCC_SPECIAL, /*         */ "serialize", /**/ "serialize", /* */ "tp_serialize", &operator_serialize),
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	TYPE_OPERATOR_DECL(OPERATOR_0003_DESTRUCTOR, /* */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_finalize), /*          */ OPCC_SPECIAL, /*         */ "~this", /*   */ "destructor", /* */ "tp_finalize", &operator_destructor),
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	TYPE_OPERATOR_DECL(OPERATOR_0003_DESTRUCTOR, /* */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_dtor), /*              */ OPCC_UNARY_VOID, /*      */ "~this", /*   */ "destructor", /* */ "tp_dtor", &operator_destructor),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	TYPE_OPERATOR_DECL(OPERATOR_0004_ASSIGN, /*     */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_assign), /*            */ OPCC_BINARY_INT, /*      */ ":=", /*      */ "assign", /*     */ "tp_assign", &operator_assign),
 	TYPE_OPERATOR_DECL(OPERATOR_0005_MOVEASSIGN, /* */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_init.tp_move_assign), /*       */ OPCC_SPECIAL, /*         */ "move:=", /*  */ "moveassign", /* */ "tp_move_assign", &operator_moveassign),
 	TYPE_OPERATOR_DECL(OPERATOR_0006_STR, /*        */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_cast.tp_str), /*               */ OPCC_UNARY_OBJECT, /*    */ "str", /*     */ "str", /*        */ "tp_str", &operator_str),
@@ -1243,10 +1254,12 @@ INTERN_CONST struct type_operator tpconst type_operators[LENGTHOF_type_operators
 	TYPE_OPERATOR_DECL(OPERATOR_003B_ENUMATTR, /*   */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_iterattr), /*      */ OPCC_SPECIAL, /*         */ "...", /*     */ "enumattr", /*   */ "tp_iterattr", &operator_enumattr),
 	TYPE_OPERATOR_DECL(OPERATOR_003C_ENTER, /*      */ offsetof(Type, tp_with), /*  */ offsetof(struct type_with, tp_enter), /*         */ OPCC_UNARY_INT, /*       */ "enter", /*   */ "enter", /*      */ "tp_enter", &operator_enter),
 	TYPE_OPERATOR_DECL(OPERATOR_003D_LEAVE, /*      */ offsetof(Type, tp_with), /*  */ offsetof(struct type_with, tp_leave), /*         */ OPCC_UNARY_INT, /*       */ "leave", /*   */ "leave", /*      */ "tp_leave", &operator_leave),
-	TYPE_OPERATOR_DECL(OPERATOR_8000_VISIT, /*      */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_visit), /*                     */ OPCC_SPECIAL, /*         */ "", /*        */ "", /*           */ "tp_visit", &operator_visit),
-	TYPE_OPERATOR_DECL(OPERATOR_8001_CLEAR, /*      */ offsetof(Type, tp_gc), /*    */ offsetof(struct type_gc, tp_clear), /*           */ OPCC_UNARY_VOID, /*      */ "", /*        */ "", /*           */ "tp_clear", &operator_clear),
-	TYPE_OPERATOR_DECL(OPERATOR_8002_PCLEAR, /*     */ offsetof(Type, tp_gc), /*    */ offsetof(struct type_gc, tp_pclear), /*          */ OPCC_SPECIAL, /*         */ "", /*        */ "", /*           */ "tp_pclear", &operator_pclear),
-	TYPE_OPERATOR_DECL(OPERATOR_8003_GETBUF, /*     */ offsetof(Type, tp_buffer), /**/ offsetof(struct type_buffer, tp_getbuf), /*      */ OPCC_SPECIAL, /*         */ "", /*        */ "", /*           */ "tp_getbuf", &operator_getbuf)
+	TYPE_OPERATOR_DECL(OPERATOR_8000_GETBUF, /*     */ offsetof(Type, tp_buffer), /**/ offsetof(struct type_buffer, tp_getbuf), /*      */ OPCC_SPECIAL, /*         */ "", /*        */ "", /*           */ "tp_getbuf", &operator_getbuf),
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
+	TYPE_OPERATOR_DECL(OPERATOR_8001_VISIT, /*      */ OPCLASS_TYPE, /*             */ offsetof(Type, tp_visit), /*                     */ OPCC_SPECIAL, /*         */ "", /*        */ "", /*           */ "tp_visit", &operator_visit),
+	TYPE_OPERATOR_DECL(OPERATOR_8002_CLEAR, /*      */ offsetof(Type, tp_gc), /*    */ offsetof(struct type_gc, tp_clear), /*           */ OPCC_UNARY_VOID, /*      */ "", /*        */ "", /*           */ "tp_clear", &operator_clear),
+	TYPE_OPERATOR_DECL(OPERATOR_8003_PCLEAR, /*     */ offsetof(Type, tp_gc), /*    */ offsetof(struct type_gc, tp_pclear), /*          */ OPCC_SPECIAL, /*         */ "", /*        */ "", /*           */ "tp_pclear", &operator_pclear)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 DECL_END

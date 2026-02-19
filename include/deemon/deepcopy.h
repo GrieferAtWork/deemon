@@ -155,8 +155,13 @@ typedef struct {
 	struct Dee_deepcopy_mapitem *dcc_ptrmapv;    /* [0..dcc_ptrmapc][owned][SORT(dcmi_old_minaddr ASC)] mapping of source range to target ranges. */
 	size_t                       dcc_ptrmapc;    /* # of used elements in `dcc_ptrmapv' */
 	size_t                       dcc_ptrmapa;    /* # of allocated elements in `dcc_ptrmapv' */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeObject                   *dcc_gc_head;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] First GC object to track in `DeeDeepCopy_Pack()' */
+	DeeObject                   *dcc_gc_tail;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] Last GC object to track in `DeeDeepCopy_Pack()' */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_gc_head          *dcc_gc_head;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] First GC object to track in `DeeDeepCopy_Pack()' */
 	struct Dee_gc_head          *dcc_gc_tail;    /* [0..1][(!= NULL) == (dcc_gc_tail != NULL)] Last GC object to track in `DeeDeepCopy_Pack()' */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	union {
 		DREF DeeObject         **dcc_immutablev; /* [1..1][0..dcc_immutablec][valid_if(dcc_immutablec != 1)][owned]
 		                                          * Vector of references to immutable objects that were returned by

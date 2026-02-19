@@ -46,6 +46,7 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
+#include "../objects/type-operators.h"
 #include "method-hint-defaults.h"
 #include "strings.h"
 
@@ -75,9 +76,6 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 #endif /* !CONFIG_HAVE_strcmp */
 
 typedef DeeTypeObject Type;
-
-#define LENGTHOF_type_operators (OPERATOR_USERCOUNT + ((OPERATOR_PRIVMAX - OPERATOR_PRIVMIN) + 1))
-INTDEF struct type_operator const type_operators[LENGTHOF_type_operators];
 
 /* Lookup information about operator `id', as defined by `typetype'
  * Returns NULL if the given operator is not known.
@@ -910,9 +908,11 @@ check_effective_opname_with_copy:
 
 	case OPERATOR_DESTRUCTOR:
 	case OPERATOR_HASH:
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	case OPERATOR_VISIT:
 	case OPERATOR_CLEAR:
 	case OPERATOR_PCLEAR:
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 		return METHOD_FNOTHROW;
 	default: break;
 	}

@@ -276,7 +276,9 @@ fallback:
 INTDEF NONNULL((1)) void DCALL class_fini(DeeTypeObject *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL class_clear(DeeTypeObject *__restrict self);
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTDEF NONNULL((1)) void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 PRIVATE NONNULL((1)) void DCALL
 type_fini(DeeTypeObject *__restrict self) {
@@ -769,12 +771,14 @@ type_clear(DeeTypeObject *__restrict self) {
 		class_clear(self);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 PRIVATE NONNULL((1)) void DCALL
 type_pclear(DeeTypeObject *__restrict self,
             unsigned int gc_priority) {
 	if (DeeType_IsClass(self))
 		class_pclear(self, gc_priority);
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_baseof(DeeTypeObject *self, size_t argc,
@@ -2491,10 +2495,12 @@ type_isconstcastable(DeeTypeObject *__restrict self) {
 	return_bool(DeeType_IsConstCastable(self));
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_gcpriority(DeeTypeObject *__restrict self) {
 	return DeeInt_NewUInt(DeeType_GCPriority(self));
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 PRIVATE struct type_member tpconst type_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc),
@@ -2647,7 +2653,9 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	                 "->?Dbool\n"
 	                 "Allow constant propagation when instances of this type as used as arguments "
 	                 /**/ "to functions marked as #C{METHOD_FCONSTCALL_IF_ARGS_CONSTCAST}."),
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	TYPE_GETTER_AB_F("__gcpriority__", &type_gcpriority, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	TYPE_GETSET_END
 };
 
@@ -2859,8 +2867,10 @@ PRIVATE struct type_attr type_attr_data = {
 
 PRIVATE struct type_gc tpconst type_gc_data = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&type_clear,
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&type_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_CLASS
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 PRIVATE DeeTypeObject *tpconst type_mro[] = {

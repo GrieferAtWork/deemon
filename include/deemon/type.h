@@ -502,6 +502,7 @@ struct Dee_type_gc {
 	 * statically allocated stub-object (e.g.: `Dee_None') */
 	NONNULL_T((1)) void (DCALL *tp_clear)(DeeObject *__restrict self);
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* Same as `tp_clear', but only clear reachable objects with a `tp_gcprio'
 	 * priority that is `>= prio'. (non-gc types have a priority of `Dee_GC_PRIORITY_LATE')
 	 * @assume(prio != 0);
@@ -614,6 +615,7 @@ struct Dee_type_gc {
 	 *     longer be done at some point.
 	 */
 	unsigned int tp_gcprio;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 	/* Clear unused heap caches of the object. Called when deemon is
 	 * running low on memory (iow: from "Dee_CollectMemory") */
@@ -621,12 +623,14 @@ struct Dee_type_gc {
 };
 
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 /* GC destruction priority levels of builtin types. */
 #define Dee_GC_PRIORITY_LATE     0x0000 /* (Preferably) destroyed last. */
 #define Dee_GC_PRIORITY_CLASS    0xfd00 /* User-classes. */
 #define Dee_GC_PRIORITY_INSTANCE 0xfe00 /* Instances of user-classes. */
 #define Dee_GC_PRIORITY_MODULE   0xff00 /* Module objects. */
 #define Dee_GC_PRIORITY_EARLY    0xffff /* (Preferably) destroyed before anything else. */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 /* Return values for `tp_int32' and `tp_int64' */
@@ -2231,10 +2235,12 @@ typedef uint16_t Dee_operator_t;
 #define OPERATOR_ISINPLACE(x) ((x) >= OPERATOR_INC && (x) <= OPERATOR_INPLACE_POW)
 
 /* Operators not exposed to user-code. */
-#define OPERATOR_VISIT        0x8000 /* `tp_visit'. */
-#define OPERATOR_CLEAR        0x8001 /* `tp_clear'. */
-#define OPERATOR_PCLEAR       0x8002 /* `tp_pclear'. */
-#define OPERATOR_GETBUF       0x8003 /* `tp_getbuf'. */
+#define OPERATOR_GETBUF       0x8000 /* `tp_getbuf'. */
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
+#define OPERATOR_VISIT        0x8001 /* `tp_visit'. */
+#define OPERATOR_CLEAR        0x8002 /* `tp_clear'. */
+#define OPERATOR_PCLEAR       0x8003 /* `tp_pclear'. */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* Fake operators (for use with `DeeFormat_PrintOperatorRepr()'). */
 #define FAKE_OPERATOR_IS          0xff00 /* `a is b' */
@@ -2243,8 +2249,12 @@ typedef uint16_t Dee_operator_t;
 #define FAKE_OPERATOR_NOT         0xff03 /* `!a' */
 
 /* Operator association ranges. */
-#define OPERATOR_PRIVMIN    OPERATOR_VISIT
+#define OPERATOR_PRIVMIN    OPERATOR_GETBUF
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 #define OPERATOR_PRIVMAX    OPERATOR_GETBUF
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+#define OPERATOR_PRIVMAX    OPERATOR_PCLEAR
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* Aliases that should be used when operators need to appear sorted by ID.
  *
@@ -2312,10 +2322,12 @@ typedef uint16_t Dee_operator_t;
 #define OPERATOR_003B_ENUMATTR     OPERATOR_ENUMATTR
 #define OPERATOR_003C_ENTER        OPERATOR_ENTER
 #define OPERATOR_003D_LEAVE        OPERATOR_LEAVE
-#define OPERATOR_8000_VISIT        OPERATOR_VISIT
-#define OPERATOR_8001_CLEAR        OPERATOR_CLEAR
-#define OPERATOR_8002_PCLEAR       OPERATOR_PCLEAR
-#define OPERATOR_8003_GETBUF       OPERATOR_GETBUF
+#define OPERATOR_8000_GETBUF       OPERATOR_GETBUF
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
+#define OPERATOR_8001_VISIT        OPERATOR_VISIT
+#define OPERATOR_8002_CLEAR        OPERATOR_CLEAR
+#define OPERATOR_8003_PCLEAR       OPERATOR_PCLEAR
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #endif /* DEE_SOURCE */
 
 
@@ -2622,7 +2634,7 @@ struct Dee_type_operator {
 
 #ifndef Dee_visit_t_DEFINED
 #define Dee_visit_t_DEFINED /*!export-*/
-typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
+typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
 #endif /* !Dee_visit_t_DEFINED */
 
 struct Dee_class_desc;
@@ -2763,8 +2775,10 @@ struct Dee_type_object {
 #define DeeType_IsCopyable(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_copy_ctor != NULL) /* TODO: What about inherited copyability? (Dee_TP_FINHERITCTOR) */
 #define DeeType_IsNamespace(x)           ((Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & (Dee_TP_FFINAL | Dee_TP_FABSTRACT)) == (Dee_TP_FFINAL | Dee_TP_FABSTRACT) && (((DeeTypeObject const *)(x))->tp_features & Dee_TF_SINGLETON))
 #define DeeType_Base(x)                  (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_base)
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 #define DeeType_GCPriority(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_gc ? ((DeeTypeObject const *)(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)          DeeType_GCPriority(Dee_TYPE(x))
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define DeeObject_IsInterrupt(x)         DeeType_IsInterrupt(Dee_TYPE(x))
 
 #ifdef CONFIG_BUILDING_DEEMON

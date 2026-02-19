@@ -3760,12 +3760,12 @@ PUBLIC void (DCALL Dee_Free)(void *mem)
 #define INDEXOF_WORD(T, field) (offsetof(T, field) / sizeof(Dee_refcnt_t))
 			size_t usize = chunksize(p) - overhead_for(p);
 			STATIC_ASSERT(IS_ALIGNED(offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
-			STATIC_ASSERT(IS_ALIGNED(offsetof(struct Dee_gc_head, gc_object.ob_refcnt), sizeof(Dee_refcnt_t)));
+			STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
 			size_t i, n_words = usize / sizeof(Dee_refcnt_t);
 			Dee_refcnt_t *iter = (Dee_refcnt_t *)mem;
 			for (i = 0; i < n_words; ++i, ++iter) {
-				if ((i == INDEXOF_WORD(DeeObject, ob_refcnt) ||
-				     i == INDEXOF_WORD(struct Dee_gc_head, gc_object.ob_refcnt)) &&
+				if ((i == ((offsetof(DeeObject, ob_refcnt)) / sizeof(Dee_refcnt_t)) ||
+				     i == ((Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt)) / sizeof(Dee_refcnt_t))) &&
 				    (atomic_read(iter) == 0)) {
 					/* Skip this word */
 				} else {

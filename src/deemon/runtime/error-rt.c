@@ -2740,7 +2740,15 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeRT_ErrCannotSerialize)(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Cannot serialize instance of `%s'",
-	                       DeeType_GetName(Dee_TYPE(self)));
+	                       DeeType_GetName(DeeObject_Class(self)));
+}
+
+/* Throws a `DeeError_NotImplemented' indicating that `self' has no buffer interface */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrNoBufferInterface)(DeeObject *__restrict self) {
+	return DeeError_Throwf(&DeeError_NotImplemented,
+	                       "Type `%s' does not implement the buffer interface",
+	                       DeeType_GetName(DeeObject_Class(self)));
 }
 
 

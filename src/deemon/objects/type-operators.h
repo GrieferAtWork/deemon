@@ -24,7 +24,6 @@
 
 #include <deemon/type.h> /* OPERATOR_*, type_operator */
 
-
 DECL_BEGIN
 
 #define LENGTHOF_type_operators (OPERATOR_USERCOUNT + ((OPERATOR_PRIVMAX - OPERATOR_PRIVMIN) + 1))

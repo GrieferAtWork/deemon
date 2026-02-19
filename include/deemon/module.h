@@ -781,7 +781,11 @@ DDATDEF DeeTypeObject DeeModuleDex_Type; /* ./net.so   (".so/.dll"; native modul
 
 struct Dee_static_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	struct Dee_gc_head        m_head;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_gc_head_link   m_head;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_module_object  m_module;
 };
 

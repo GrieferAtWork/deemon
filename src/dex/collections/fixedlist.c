@@ -341,6 +341,7 @@ again:
 	Dee_Decrefv(buf, buflen);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 PRIVATE void DCALL
 fl_pclear(FixedList *__restrict self, unsigned int gc_priority) {
 	size_t i, buflen = 0;
@@ -367,11 +368,14 @@ again:
 	/* Drop all of the references we took. */
 	Dee_Decrefv(buf, buflen);
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 PRIVATE struct type_gc tpconst fl_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&fl_clear_impl,
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&fl_pclear
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 

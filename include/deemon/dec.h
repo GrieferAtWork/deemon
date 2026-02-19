@@ -273,8 +273,13 @@ typedef struct {
 #if __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4
 			size_t                _ei_pad[2];   /* So "ei_offsetof_gchead" has the same offset as "er_offsetof_gchead" */
 #endif /* __SIZEOF_SIZE_T__ == 4 && __SIZEOF_POINTER__ == 4 */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+			Dee_seraddr_t          ei_offsetof_gchead; /* [1..1] Offset to first `struct Dee_gc_head::gc_self' */
+			Dee_seraddr_t          ei_offsetof_gctail; /* [1..1] Offset to last `struct Dee_gc_head::gc_self' */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 			Dee_seraddr_t          ei_offsetof_gchead; /* [1..1] Offset to first `struct Dee_gc_head_link' */
 			Dee_seraddr_t          ei_offsetof_gctail; /* [1..1] Offset to last `struct Dee_gc_head_link' */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 		}                 td_image;             /* [valid_if(e_type == Dee_DEC_TYPE_IMAGE)] */
 
 	}                     e_typedata;         /* Data dependent on `e_type' */
@@ -500,8 +505,13 @@ typedef struct Dee_dec_writer {
 	struct Dee_dec_rrelatab dw_drrela; /* Table of incref-relocations against deemon-core objects (increfs already happened here) */
 	struct Dee_dec_deptab   dw_deps;   /* Table of dependent modules */
 	struct Dee_dec_fdeptab  dw_fdeps;  /* Table of dependent files */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	Dee_seraddr_t           dw_gchead; /* [0..1] Offset to first `struct Dee_gc_head::gc_self' (tracking for these objects must begin after relocations were done) */
+	Dee_seraddr_t           dw_gctail; /* [0..1] Offset to last `struct Dee_gc_head::gc_self' (links between these objects were already established via `dw_srel') */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	Dee_seraddr_t           dw_gchead; /* [0..1] Offset to first `struct Dee_gc_head_link' (tracking for these objects must begin after relocations were done) */
 	Dee_seraddr_t           dw_gctail; /* [0..1] Offset to last `struct Dee_gc_head_link' (links between these objects were already established via `dw_srel') */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_dec_ptrtab   dw_known;  /* Table of known, already-encoded pointers */
 	unsigned int            dw_flags;  /* Dec writer flags (set of `DeeDecWriter_F_*') */
 } DeeDecWriter;

@@ -336,6 +336,7 @@ again:
 	}
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTERN NONNULL((1)) void DCALL
 class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
 	struct Dee_class_desc *my_class;
@@ -403,6 +404,7 @@ again:
 		goto again;
 	}
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 PRIVATE NONNULL((1, 3)) void DCALL
@@ -837,6 +839,24 @@ err:
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+INTERN NONNULL((1, 2)) void DCALL
+instance_finalize(DeeTypeObject *tp_self, DeeObject *self) {
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	DREF DeeObject *callback, *result;
+	callback = class_desc_get_known_operator(tp_self, desc, OPERATOR_DESTRUCTOR);
+	if unlikely(!callback)
+		goto err;
+	result = DeeObject_ThisCallInherited(callback, self, 0, NULL);
+	if unlikely(!result)
+		goto err;
+	Dee_Decref_unlikely(result); /* *_unlikely because it's probably "Dee_None" */
+	return;
+err:
+	DeeError_Print("Unhandled error in destructor",
+	               ERROR_PRINT_DOHANDLE);
+}
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 INTERN NONNULL((1)) void DCALL
 instance_destructor(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -879,6 +899,7 @@ instance_destructor(DeeObject *__restrict self) {
 	instance_clear_members(DeeInstance_DESC(desc, self),
 	                       desc->cd_desc->cd_imemb_size);
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
@@ -3632,6 +3653,7 @@ again_i:
 	Dee_Decrefv(buffer, buflen);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTERN NONNULL((1, 2)) void DCALL
 instance_tpclear(DeeTypeObject *tp_self,
                  DeeObject *__restrict self,
@@ -3666,7 +3688,9 @@ again_i:
 	Dee_instance_desc_lock_endwrite(instance);
 	Dee_Decrefv(buffer, buflen);
 }
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTERN NONNULL((1, 2)) void DCALL
 instance_visit(DeeObject *__restrict self,
                Dee_visit_t proc, void *arg) {
@@ -3676,6 +3700,7 @@ instance_visit(DeeObject *__restrict self,
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
 	         DeeType_IsClass(tp_self));
 }
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 INTERN NONNULL((1)) void DCALL
 instance_clear(DeeObject *__restrict self) {
@@ -3686,6 +3711,7 @@ instance_clear(DeeObject *__restrict self) {
 	         DeeType_IsClass(tp_self));
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTERN NONNULL((1)) void DCALL
 instance_pclear(DeeObject *__restrict self,
                 unsigned int gc_priority) {
@@ -3695,11 +3721,14 @@ instance_pclear(DeeObject *__restrict self,
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
 	         DeeType_IsClass(tp_self));
 }
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 INTERN struct type_gc tpconst instance_gc = {
 	/* .tp_clear  = */ &instance_clear,
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* .tp_pclear = */ &instance_pclear,
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_INSTANCE
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 
@@ -4119,6 +4148,9 @@ err_custom_allocator:
 	result->tp_flags = ((TP_FHEAP | TP_FGC) |
 	                    (desc->cd_flags & (TP_FFINAL | TP_FTRUNCATE |
 	                                       TP_FINTERRUPT | TP_FMOVEANY)));
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	result->tp_features = Dee_TF_TPVISIT;
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	result->tp_mro = cbases.cb_mro; /* Inherit reference */
 	if (cbases.cb_base == NULL) {
 		/*result->tp_base = NULL;*/
@@ -4181,7 +4213,11 @@ err_custom_allocator:
 	result->tp_init.tp_assign             = &instance_builtin_assign;
 	result->tp_init.tp_move_assign        = &instance_builtin_moveassign;
 	result->tp_init.tp_dtor               = &instance_builtin_destructor;
-	result->tp_visit                      = &instance_visit;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	result->tp_visit = (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&instance_tvisit;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	result->tp_visit = &instance_visit;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	result->tp_gc                         = &instance_gc;
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 	if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type)
@@ -4384,11 +4420,13 @@ err_custom_allocator:
 	if (result->tp_init.tp_move_assign == &instance_builtin_moveassign)
 		result->tp_flags &= ~TP_FMOVEANY;
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* If the class has a custom destructor, it *may* be able to revive itself during destruction.
 	 * XXX: Technically only needed if the dtor function doesn't support "METHOD_FNOREFESCAPE",
 	 *      but we don't keep track of attributes like that for user-functions (yet?) */
 	if (result->tp_init.tp_dtor == &instance_destructor)
 		result->tp_flags |= TP_FMAYREVIVE;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 	/* Assign the declaring module (if given) */
 	if likely(declaring_module != NULL)

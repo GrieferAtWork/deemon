@@ -31,6 +31,12 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+
+/* TODO */
+
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+
 /* GC inspection provides things such as sequences implemented using the `tp_visit'
  * interface, allowing user-code to determine if object `a' is reachable from `b',
  * as well as enumerate objects reachable from some point, as well as determine how
@@ -115,6 +121,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeGC_CollectGCReferred(GCSetMaker *__r
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeGC_ReferredBy(DeeObject *source, DeeObject *target);
 #define DeeGC_IsReachable(object, from) DeeGC_ReferredBy(from, object)
 
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 DECL_END
 

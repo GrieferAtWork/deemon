@@ -488,13 +488,15 @@ corrupt_dep_index_reloc_rrel:
 #if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
 	if (self->e_typedata.td_reloc.er_offsetof_gchead) {
 		/* Link in GC objects (if there are any) */
-		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
-		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-		DeeGC_TrackAll(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+		DeeObject *gc_head = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
+		DeeObject *gc_tail = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
+		DeeGC_TrackAll(gc_head, gc_tail);
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+		struct Dee_gc_head *gc_head = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
+		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
 		DeeGC_TrackMany_Lock();
-		DeeGC_TrackMany_Exec(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 		DeeGC_TrackMany_Unlock();
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	}
@@ -1938,7 +1940,11 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
                                DeeObject *__restrict ref, unsigned int flags) {
 	size_t total;
 	Dee_seraddr_t result;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeObject *copy;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_gc_head *copy;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use decwriter_object_malloc_impl()");
 	if (OVERFLOW_UADD(num_bytes, Dee_GC_OBJECT_OFFSET, &total))
 		total = (size_t)-1;
@@ -1946,6 +1952,47 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	if unlikely(!result)
 		goto err;
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	/* Initialize GC head/tail link pointers */
+	ASSERT((self->dw_gchead == 0) ==
+	       (self->dw_gctail == 0));
+	result += Dee_GC_OBJECT_OFFSET;
+	if (self->dw_gctail == 0) {
+		/* First GC object... */
+		struct Dee_gc_head_link *link;
+		self->dw_gchead = result;
+		link = DeeDecWriter_Addr2Mem(self, result - Dee_GC_OBJECT_OFFSET,
+		                             struct Dee_gc_head_link);
+		link->gc_info.gi_pself = NULL;
+		link->gc_next          = NULL;
+	} else {
+		/* Append to end of GC list. */
+		if (decwriter_putaddr(self,
+		                      (result - Dee_GC_OBJECT_OFFSET) +
+		                      offsetof(struct Dee_gc_head_link, gc_info.gi_pself),
+		                      (self->dw_gctail - Dee_GC_OBJECT_OFFSET) +
+		                      offsetof(struct Dee_gc_head_link, gc_next)))
+			goto err_r;
+		if (decwriter_putaddr(self,
+		                      (self->dw_gctail - Dee_GC_OBJECT_OFFSET) +
+		                      offsetof(struct Dee_gc_head_link, gc_next),
+		                      result))
+			goto err_r;
+	}
+	self->dw_gctail = result;
+
+	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
+	copy = DeeDecWriter_Addr2Mem(self, result, DeeObject);
+	copy->ob_refcnt = 1;
+#ifdef CONFIG_TRACE_REFCHANGES
+	copy->ob_trace = NULL;
+#endif /* CONFIG_TRACE_REFCHANGES */
+	if unlikely(decwriter_putobject(self,
+	                                result +
+	                                offsetof(DeeObject, ob_type),
+	                                Dee_AsObject(Dee_TYPE(ref))))
+		goto err_r;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	/* Initialize GC head/tail link pointers */
 	ASSERT((self->dw_gchead == 0) ==
 	       (self->dw_gctail == 0));
@@ -1978,6 +2025,7 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	                                Dee_AsObject(Dee_TYPE(ref))))
 		goto err_r;
 	result += Dee_GC_OBJECT_OFFSET;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return result;
 err_r:
 	decwriter_free(self, result, ref);

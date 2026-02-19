@@ -991,15 +991,23 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL instance_builtin_auto_printrepr
 /* Hooks when the user-class overrides the associated operator. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_copy(DeeObject *__restrict self, DeeObject *__restrict other);
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+INTDEF NONNULL((1, 2)) void DCALL instance_finalize(DeeTypeObject *tp_self, DeeObject *self);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 INTDEF NONNULL((1)) void DCALL instance_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* GC support for class objects. */
 INTDEF NONNULL((1, 2, 3)) void DCALL instance_tvisit(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg);
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTDEF NONNULL((1, 2)) void DCALL instance_visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 INTDEF NONNULL((1, 2)) void DCALL instance_tclear(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL instance_clear(DeeObject *__restrict self);
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTDEF NONNULL((1, 2)) void DCALL instance_tpclear(DeeTypeObject *tp_self, DeeObject *__restrict self, unsigned int gc_priority);
 INTDEF NONNULL((1)) void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 INTDEF struct type_gc Dee_tpconst instance_gc;
 
 struct Dee_attrhint;

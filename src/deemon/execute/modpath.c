@@ -1194,8 +1194,9 @@ dexrange_union_object(DeeObject *__restrict ob, void *arg) {
 		 * with, which is all we need to not have to get here. */
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 		/* TODO: tp_visit requires that "DeeThread_SuspendAll()" has been called */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		DeeObject_Visit(ob, &dexrange_union_object_r, me);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	}
 }
 
@@ -2295,32 +2296,32 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 #endif /* __SIZEOF_SIZE_T__ == 4 */
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
-		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
-		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
+		DeeObject *gc_head = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
+		DeeObject *gc_tail = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
-		DeeGC_TrackAll(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackAll(gc_head, gc_tail);
 	} else {
-		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
-		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
+		DeeObject *gc_head = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
+		DeeObject *gc_tail = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackAll(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackAll(gc_head, gc_tail);
 	}
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DeeGC_TrackMany_Lock();
 	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
-		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
+		struct Dee_gc_head *gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
 		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
-		DeeGC_TrackMany_Exec(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 	} else {
-		struct Dee_gc_head *Dee_gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
+		struct Dee_gc_head *gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
 		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackMany_Exec(DeeGC_Object(Dee_gc_head), DeeGC_Object(gc_tail));
+		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
 	}
 	DeeGC_TrackMany_Unlock();
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */

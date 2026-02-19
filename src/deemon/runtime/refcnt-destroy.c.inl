@@ -336,14 +336,15 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #if LOCAL_HAS_Rev
 	/* Invoke "tp_finalize" operators */
 #if LOCAL_HAS_GC
-	if (!(atomic_fetchor(&DeeGC_Head(self)->gc_stat.gs_word,
+	if (!(atomic_fetchor(&DeeGC_Head(self)->gc_info.gi_flag,
 	                     Dee_GC_FLAG_FINALIZED) &
 	      Dee_GC_FLAG_FINALIZED))
 #endif /* LOCAL_HAS_GC */
 	{
 		DeeTypeObject *type = Dee_TYPE((GenericObject *)self);
+		ASSERT(self->ob_refcnt == 0);
+		atomic_inc(&self->ob_refcnt);
 		do {
-			ASSERT(self->ob_refcnt == 0);
 			if (type->tp_init.tp_finalize) {
 				COMPILER_WRITE_BARRIER();
 				(*type->tp_init.tp_finalize)(type, self);
@@ -355,7 +356,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 		} while ((type = type->tp_base) != NULL);
 
 		/* After finalizers were invoked: check if object has been revived */
-		if unlikely(self->ob_refcnt != 0)
+		if unlikely(atomic_decfetch(&self->ob_refcnt) != 0)
 			return;
 	}
 #endif /* LOCAL_HAS_Rev */

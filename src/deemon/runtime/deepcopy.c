@@ -317,7 +317,12 @@ deepcopy_gcobject_malloc_impl(DeeDeepCopyContext *__restrict self,
                               size_t num_bytes, DeeObject *__restrict ref,
                               bool do_try, bool do_bzero) {
 	GenericObject *result;
-	struct Dee_gc_head *result_head, *next;
+	struct Dee_gc_head *result_head;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeObject *next;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	struct Dee_gc_head *next;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	ASSERT_OBJECT(ref);
 	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use deepcopy_object_malloc_impl()");
 	if (OVERFLOW_UADD(num_bytes, Dee_GC_HEAD_SIZE, &num_bytes))
@@ -331,6 +336,20 @@ deepcopy_gcobject_malloc_impl(DeeDeepCopyContext *__restrict self,
 	DeeObject_Init(result, Dee_TYPE(ref));
 
 	/* Insert GC head */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	result_head->gc_info.gi_pself = NULL;
+	if ((next = self->dcc_gc_head) != NULL) {
+		struct Dee_gc_head *next_head;
+		ASSERT(self->dcc_gc_tail != NULL);
+		next_head = DeeGC_Head(next);
+		next_head->gc_info.gi_pself = &result_head->gc_next;
+	} else {
+		ASSERT(self->dcc_gc_tail == NULL);
+		self->dcc_gc_tail = Dee_AsObject(result);
+	}
+	result_head->gc_next = next;
+	self->dcc_gc_head = Dee_AsObject(result);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	result_head->gc_pself = NULL;
 	if ((next = self->dcc_gc_head) != NULL) {
 		ASSERT(self->dcc_gc_tail != NULL);
@@ -341,6 +360,7 @@ deepcopy_gcobject_malloc_impl(DeeDeepCopyContext *__restrict self,
 	}
 	result_head->gc_next = next;
 	self->dcc_gc_head = result_head;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return deepcopy_ptr2ser(self, result);
 err_r:
 	deepcopy_heap_free(&self->dcc_gcheap, result_head);
@@ -396,8 +416,30 @@ deepcopy_object_free(DeeDeepCopyContext *__restrict self,
 PRIVATE ATTR_COLD NONNULL((1, 3)) void DCALL
 deepcopy_gcobject_free(DeeDeepCopyContext *__restrict self,
                        Dee_seraddr_t addr, DeeObject *__restrict ref) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeObject *next, *obj;
+	struct Dee_gc_head *head;
+	obj  = deepcopy_ser2ptr(self, addr, DeeObject);
+	head = DeeGC_Head(obj);
+	deepcopy_unmappointer(self, ref);
+	ASSERT(self->dcc_gc_head == DeeGC_Object(head));
+	if ((next = head->gc_next) == NULL) {
+		ASSERT(self->dcc_gc_tail == obj);
+		self->dcc_gc_head = NULL;
+		self->dcc_gc_tail = NULL;
+	} else {
+		struct Dee_gc_head *next_head;
+		ASSERT(self->dcc_gc_tail != obj);
+		self->dcc_gc_head = next;
+		next_head = DeeGC_Head(next);
+		next_head->gc_info.gi_pself = NULL;
+	}
+	Dee_Decref_unlikely(obj->ob_type);
+	deepcopy_heap_free(&self->dcc_gcheap, head);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_gc_head *next;
-	struct Dee_gc_head *out = deepcopy_ser2ptr(self, addr, struct Dee_gc_head);
+	struct Dee_gc_head *out;
+	out = deepcopy_ser2ptr(self, addr - Dee_GC_OBJECT_OFFSET, struct Dee_gc_head);
 	deepcopy_unmappointer(self, ref);
 	ASSERT(self->dcc_gc_head == out);
 	if ((next = out->gc_next) == NULL) {
@@ -411,6 +453,7 @@ deepcopy_gcobject_free(DeeDeepCopyContext *__restrict self,
 	}
 	Dee_Decref_unlikely(out->gc_object.ob_type);
 	deepcopy_heap_free(&self->dcc_gcheap, out);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 }
 
 
@@ -727,6 +770,22 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 
 			if (DeeType_IsGC(tp)) {
 				/* Insert GC head */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+				struct Dee_gc_head *result_head;
+				DeeObject *next;
+				result_head = DeeGC_Head(object_buffer);
+				result_head->gc_info.gi_pself = NULL;
+				if ((next = self->dcc_gc_head) != NULL) {
+					struct Dee_gc_head *next_head = DeeGC_Head(next);
+					ASSERT(self->dcc_gc_tail != NULL);
+					next_head->gc_info.gi_pself = &result_head->gc_next;
+				} else {
+					ASSERT(self->dcc_gc_tail == NULL);
+					self->dcc_gc_tail = Dee_AsObject(object_buffer);
+				}
+				result_head->gc_next = next;
+				self->dcc_gc_head = Dee_AsObject(object_buffer);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 				struct Dee_gc_head *result_head, *next;
 				result_head = DeeGC_Head(object_buffer);
 				result_head->gc_pself = NULL;
@@ -739,6 +798,8 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 				}
 				result_head->gc_next = next;
 				self->dcc_gc_head = result_head;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+
 				/* Only able to map the object's basic header */
 				instance_size = Dee_GC_OBJECT_OFFSET + sizeof(DeeObject);
 				if unlikely(deepcopy_mappointer(self, DeeGC_Head(ob),
@@ -835,7 +896,7 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 		Dee_weakref_initmany_lock(self->dcc_weakrefv, self->dcc_weakrefc);
 		Dee_weakref_initmany_exec(self->dcc_weakrefv, self->dcc_weakrefc);
-		DeeGC_TrackAll(DeeGC_Object(self->dcc_gc_head), DeeGC_Object(self->dcc_gc_tail));
+		DeeGC_TrackAll(self->dcc_gc_head, self->dcc_gc_tail);
 		objv = Dee_weakref_initmany_unlock_and_inherit(self->dcc_weakrefv, self->dcc_weakrefc);
 		Dee_Decrefv_unlikely(objv, self->dcc_weakrefc);
 		ASSERT(objv == (DeeObject **)self->dcc_weakrefv);
@@ -854,7 +915,7 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	} else if (self->dcc_gc_head) {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-		DeeGC_TrackAll(DeeGC_Object(self->dcc_gc_head), DeeGC_Object(self->dcc_gc_tail));
+		DeeGC_TrackAll(self->dcc_gc_head, self->dcc_gc_tail);
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		DeeGC_TrackMany_Lock();
 		DeeGC_TrackMany_Exec(DeeGC_Object(self->dcc_gc_head), DeeGC_Object(self->dcc_gc_tail));

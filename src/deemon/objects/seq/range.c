@@ -326,10 +326,14 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ri_index_set(RangeIterator *__restrict self,
              DeeObject *__restrict value) {
 	DREF DeeObject *old_index;
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	if (DeeGC_ReferredBy(value, Dee_AsObject(self)))
 		return err_reference_loop(Dee_AsObject(self), value);
 	/* XXX: Race condition: What if `value' starts referencing
 	 *      us before we acquire the following lock? */
+#else /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+	/* XXX: Counter-point to the above: why do we even care? "RangeIterator" is a GC object! */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	RangeIterator_LockWrite(self);
 	old_index = self->ri_index;
 	/* Assign the given value. */

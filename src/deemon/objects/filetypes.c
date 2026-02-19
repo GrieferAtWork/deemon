@@ -563,36 +563,6 @@ reader_getowner(DeeFileReaderObject *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-reader_setowner(DeeFileReaderObject *__restrict self,
-                DeeObject *__restrict value) {
-	DeeObject *old_value;
-	DeeBuffer new_buffer, old_buffer;
-	if (DeeGC_IsReachable(Dee_AsObject(self), value))
-		return err_reference_loop(Dee_AsObject(self), value);
-	if (DeeObject_GetBuf(value, &new_buffer, Dee_BUFFER_FREADONLY))
-		goto err;
-	Dee_Incref(value);
-	DeeFileReader_LockWrite(self);
-	old_value     = self->r_owner;
-	self->r_owner = value;
-
-	/* Setup pointers to read from the entire string. */
-	self->r_begin = (byte_t const *)new_buffer.bb_base;
-	self->r_ptr   = (byte_t const *)new_buffer.bb_base;
-	self->r_end   = (byte_t const *)new_buffer.bb_base + new_buffer.bb_size;
-	memcpy(&old_buffer, &self->r_buffer, sizeof(DeeBuffer));
-	memcpy(&self->r_buffer, &new_buffer, sizeof(DeeBuffer));
-	DeeFileReader_LockEndWrite(self);
-	if (old_value) {
-		DeeBuffer_Fini(&old_buffer);
-		Dee_Decref(old_value);
-	}
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_getc(DeeFileReaderObject *__restrict self, Dee_ioflag_t UNUSED(flags)) {
 	int result;
@@ -788,8 +758,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst reader_getsets[] = {
-	TYPE_GETSET_F("owner", &reader_getowner, &reader_close, &reader_setowner, METHOD_FNOREFESCAPE,
-	              "Assign the object from which data is being read"),
+	TYPE_GETSET_F("__owner__", &reader_getowner, &reader_close, NULL, METHOD_FNOREFESCAPE,
+	              "The object from which data is being read"),
 	TYPE_GETSET_END
 };
 

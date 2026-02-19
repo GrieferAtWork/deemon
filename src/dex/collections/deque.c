@@ -1066,6 +1066,7 @@ deq_clear(Deque *__restrict self) {
 	deq_fini(&bData);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 PRIVATE NONNULL((1)) void DCALL
 deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
 	Deque_LockWrite(self);
@@ -1096,11 +1097,14 @@ deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
 	}
 	Deque_LockEndWrite(self);
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 PRIVATE struct type_gc tpconst deq_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&deq_clear,
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&deq_pclear
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 

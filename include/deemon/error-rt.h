@@ -55,6 +55,11 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrCannotSerialize)(DeeObject *_
 #define DeeRT_ErrCannotSerialize(self) Dee_ASSUMED_VALUE((DeeRT_ErrCannotSerialize)(Dee_AsObject(self)), -1)
 
 
+/* Throws a `DeeError_NotImplemented' indicating that `self' has no buffer interface */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNoBufferInterface)(DeeObject *__restrict self);
+#define DeeRT_ErrNoBufferInterface(self) Dee_ASSUMED_VALUE((DeeRT_ErrNoBufferInterface)(Dee_AsObject(self)), -1)
+
+
 /* Throws a `DeeError_IntegerOverflow' indicating that some an integer
  * object or native (C) value cannot be used/processed because its value
  * exceeds the maximum supported value bounds within some context-of-use.

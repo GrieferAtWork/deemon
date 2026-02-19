@@ -1228,19 +1228,17 @@ DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_XHashv)
 #define DeeObject_Hash(self)          DeeObject_Hash(Dee_AsObject(self))
 #define DeeObject_HashInherited(self) DeeObject_HashInherited(Dee_AsObject(self))
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 #ifndef Dee_visit_t_DEFINED
 #define Dee_visit_t_DEFINED /*!export-*/
-typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
+typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
 #endif /* !Dee_visit_t_DEFINED */
 
 /* GC operator invocation. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-/* TODO: These 3 functions should no longer be directly exposed
- *       (they should only be available from within- and by the GC) */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
 DFUNDEF NONNULL((1)) void (DCALL DeeObject_Clear)(DeeObject *__restrict self);
 DFUNDEF NONNULL((1)) void (DCALL DeeObject_PClear)(DeeObject *__restrict self, unsigned int gc_priority);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* Integral value lookup operators.
  * @return: Dee_INT_SIGNED:   The value stored in `result' must be interpreted as signed.

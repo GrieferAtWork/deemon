@@ -385,6 +385,7 @@ DFUNDEF void DCALL Dee_Shutdown(unsigned int flags);
                                       *   care about the memory leaks that this flag causes. */
 
 #ifdef CONFIG_BUILDING_DEEMON
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 /* Used internally to prevent any further execution of user-code
  * and is called during `Dee_Shutdown()' when it becomes obvious
  * that deemon cannot be shutdown through conventional means.
@@ -454,6 +455,7 @@ DFUNDEF void DCALL Dee_Shutdown(unsigned int flags);
  *     least hope to be able to trust) not to cause something like this.
  * @return: * : The amount of code objects that were affected. */
 INTDEF size_t DCALL DeeExec_KillUserCode(void);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 

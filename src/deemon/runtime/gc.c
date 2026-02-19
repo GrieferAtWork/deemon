@@ -27,7 +27,9 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
 #include <deemon/asm.h>                /* ASM_RET_NONE, instruction_t */
 #include <hybrid/sched/yield.h>                /* ASM_RET_NONE, instruction_t */
+#include <deemon/error.h>                /* ASM_RET_NONE, instruction_t */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
+#include <deemon/class.h>               /* return_bool, return_false, return_true */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_CODE_FFINALLY, instruction_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/exec.h>               /*  */
@@ -244,7 +246,8 @@ gc_do_untrack_locked(DeeObject *__restrict ob) {
 #define REAP_STATUS_UNLOCKED_RETRY_LATER 2 /* Lock was released; caller should set "gc_mustreap" but not retry (unless "gc_mustreap" was already "true") */
 
 /* @return: * : one of `REAP_STATUS_*' */
-PRIVATE ATTR_NOINLINE unsigned int DCALL _gc_lock_reap_and_maybe_unlock(void) {
+PRIVATE ATTR_NOINLINE unsigned int DCALL
+_gc_lock_reap_and_maybe_unlock(bool allow_collect) {
 	bool should_collect = false;
 	DeeObject *pending_remove, *removeme;
 	struct gc_generation *iter;
@@ -284,6 +287,8 @@ PRIVATE ATTR_NOINLINE unsigned int DCALL _gc_lock_reap_and_maybe_unlock(void) {
 
 	/* Collect garbage if there are generations with `gg_collect_on < 0' */
 	if (should_collect) {
+		if (!allow_collect)
+			return REAP_STATUS_UNLOCKED_RETRY_LATER;
 		if (!gc_trycollect_after_collect_on_reached())
 			return REAP_STATUS_UNLOCKED_RETRY_LATER;
 	}
@@ -292,11 +297,11 @@ PRIVATE ATTR_NOINLINE unsigned int DCALL _gc_lock_reap_and_maybe_unlock(void) {
 	return REAP_STATUS_UNLOCKED;
 }
 
-PRIVATE void DCALL gc_lock_release(void) {
+PRIVATE void DCALL gc_lock_release(bool allow_collect) {
 	if (atomic_read(&gc_mustreap)) {
 		unsigned int status;
 again_reap:
-		status = _gc_lock_reap_and_maybe_unlock();
+		status = _gc_lock_reap_and_maybe_unlock(allow_collect);
 		switch (status) {
 		case REAP_STATUS_RETAINED:
 			_gc_lock_release();
@@ -316,10 +321,10 @@ again_reap:
 		goto again_reap;
 }
 
-PRIVATE void DCALL gc_lock_reap_and_release(void) {
+PRIVATE void DCALL gc_lock_reap_and_release(bool allow_collect) {
 	do {
 		unsigned int status;
-		status = _gc_lock_reap_and_maybe_unlock();
+		status = _gc_lock_reap_and_maybe_unlock(allow_collect);
 		switch (status) {
 		case REAP_STATUS_RETAINED:
 			_gc_lock_release();
@@ -335,16 +340,40 @@ PRIVATE void DCALL gc_lock_reap_and_release(void) {
 	} while (atomic_read(&gc_mustreap) && gc_lock_tryacquire());
 }
 
-PRIVATE void DCALL gc_lock_reap(void) {
+PRIVATE void DCALL gc_lock_reap(bool allow_collect) {
 	if (gc_lock_tryacquire())
-		gc_lock_reap_and_release();
+		gc_lock_reap_and_release(allow_collect);
 }
+
+PRIVATE void DCALL gc_lock_acquire_and_reap(bool allow_collect) {
+	unsigned int status;
+again:
+	gc_lock_acquire();
+	if (!atomic_read(&gc_mustreap))
+		return; /* Nothing to reap! */
+	status = _gc_lock_reap_and_maybe_unlock(allow_collect);
+	switch (status) {
+	case REAP_STATUS_RETAINED:
+		return;
+	case REAP_STATUS_UNLOCKED:
+		goto again;
+	case REAP_STATUS_UNLOCKED_RETRY_LATER:
+		if (atomic_xch(&gc_mustreap, true))
+			goto again;
+		gc_lock_acquire();
+		/* In this case, everything that has happened before has been reaped! */
+		return;
+	default: __builtin_unreachable();
+	}
+}
+
 
 /* Begin tracking a given GC-allocated object. */
 PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL
 DeeGC_Track(DREF DeeObject *__restrict ob) {
 	bool must_collect;
 	struct Dee_gc_head *head = DeeGC_Head(ob);
+	ASSERT(!((uintptr_t)&head->gc_next & Dee_GC_FLAG_MASK));
 	if (!gc_lock_tryacquire()) {
 		/* Setup as a pending insert */
 		DeeObject *next;
@@ -354,7 +383,7 @@ DeeGC_Track(DREF DeeObject *__restrict ob) {
 			COMPILER_WRITE_BARRIER();
 		} while (!atomic_cmpxch(&gc_gen0.gg_insert, next, ob));
 		atomic_write(&gc_mustreap, true);
-		gc_lock_reap();
+		gc_lock_reap(true);
 		return ob;
 	}
 
@@ -376,14 +405,14 @@ DeeGC_Track(DREF DeeObject *__restrict ob) {
 	must_collect = gc_gen0.gg_collect_on < 0;
 
 	/* Release GC lock */
-	gc_lock_release();
+	gc_lock_release(true);
 
 	/* If necessary, *try* to collect GC objects from generation #0 */
 	if (must_collect) {
 		if (!gc_trycollect_gen0()) {
 			/* If collect failed, let someone else try again later... */
 			if (atomic_xch(&gc_mustreap, true))
-				gc_lock_reap();
+				gc_lock_reap(true);
 		}
 	}
 	return ob;
@@ -395,13 +424,13 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 	/* Synchronous object untracking */
 	gc_lock_acquire();
 	gc_do_untrack_locked(ob);
-	gc_lock_release();
+	gc_lock_release(true);
 	return ob;
 }
 
 /* Try to untrack "ob" synchronously (and re-return "ob"), but if the necessary
  * locks couldn't be acquired immediately, do the untrack asynchronously, followed
- * by everything else that would have normally been done by `DeeObject_Destroy()'
+ * by everything else that would have normally been done in `DeeObject_Destroy()'
  * @return: ob:   Untrack happened synchronously -- remainder of object destruction must be done by caller
  * @return: NULL: Untrack will happen asynchronously -- caller must not do any further object destruction */
 INTERN NONNULL((1)) DeeObject *DCALL
@@ -413,7 +442,7 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 	ASSERT(ob->ob_refcnt == 0);
 	if (gc_lock_tryacquire()) {
 		gc_do_untrack_locked(ob);
-		gc_lock_release();
+		gc_lock_release(true);
 		return ob;
 	}
 
@@ -477,7 +506,7 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 	atomic_dec(&gc_remove_modifying);
 
 	/* Attempt an initial reap ourselves */
-	gc_lock_reap();
+	gc_lock_reap(true);
 
 	/* Indicate to caller that *we're* going to deal with the object's remaining destruction */
 	return NULL;
@@ -503,6 +532,8 @@ DeeGC_TrackAll(DeeObject *first, DeeObject *last) {
 	size_t count;
 	struct Dee_gc_head *first_head = DeeGC_Head(first);
 	struct Dee_gc_head *last_head  = DeeGC_Head(last);
+	ASSERT(!((uintptr_t)&first_head->gc_next & Dee_GC_FLAG_MASK));
+	ASSERT(!((uintptr_t)&last_head->gc_next & Dee_GC_FLAG_MASK));
 	if (!gc_lock_tryacquire()) {
 		/* Setup as pending inserts */
 		DeeObject *next;
@@ -512,7 +543,7 @@ DeeGC_TrackAll(DeeObject *first, DeeObject *last) {
 			COMPILER_WRITE_BARRIER();
 		} while (!atomic_cmpxch(&gc_gen0.gg_insert, next, first));
 		atomic_write(&gc_mustreap, true);
-		gc_lock_reap();
+		gc_lock_reap(true);
 		return;
 	}
 
@@ -534,14 +565,14 @@ DeeGC_TrackAll(DeeObject *first, DeeObject *last) {
 	must_collect = gc_gen0.gg_collect_on < 0;
 
 	/* Release GC lock */
-	gc_lock_release();
+	gc_lock_release(true);
 
 	/* If necessary, *try* to collect GC objects from generation #0 */
 	if (must_collect) {
 		if (!gc_trycollect_gen0()) {
 			/* If collect failed, let someone else try again later... */
 			if (atomic_xch(&gc_mustreap, true))
-				gc_lock_reap();
+				gc_lock_reap(true);
 		}
 	}
 }
@@ -569,7 +600,7 @@ again:
 		if (!atomic_read(&gc_mustreap))
 			break;
 		gc_lock_acquire();
-		gc_lock_reap_and_release();
+		gc_lock_reap_and_release(false);
 	}
 
 	/* Suspend all other threads (or at least *try* to) */
@@ -609,6 +640,8 @@ again:
 	 * start collecting memory) */
 	if unlikely(pending_remove) {
 		DeeObject *removeme;
+		DeeThread_ResumeAll();
+
 		for (removeme = pending_remove; removeme;
 		     removeme = *gc_remove__p_link(removeme))
 			gc_do_untrack_locked(removeme);
@@ -639,7 +672,7 @@ PRIVATE void DCALL gc_collect_release(void) {
 	_gc_lock_release();
 	DeeThread_ResumeAll();
 	if (atomic_read(&gc_mustreap))
-		gc_lock_reap();
+		gc_lock_reap(false);
 }
 
 
@@ -648,18 +681,19 @@ PRIVATE void DCALL gc_collect_release(void) {
 
 /* Nothing could be collected; everything from "self" appears reachable.
  * Caller may move everything still within this generation into the next.
- * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON' was handled
+ * - Calculate a new value for `gg_collect_on' (set to the # of reachable objects)
  * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE' was handled */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING 0
 
 /* Success:
  * - `gc_collect_release()' was called
- * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON' was handled
+ * - Calculate a new value for `gg_collect_on' (set to the # of reachable objects;
+ *   when 'GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE' is set == # of objects moved)
  * - `GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE' was handled
  * - `*p_num_collected' was populated */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__SUCCESS 1
 
-/* Had to `gc_collect_release()' due to temporary error; try again */
+/* Had to `gc_collect_release()' for temporary (one-time) reasons; try again */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__RETRY 2
 
 /* `gc_collect_release()' was called and an error was thrown
@@ -671,7 +705,7 @@ PRIVATE void DCALL gc_collect_release(void) {
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL         0
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_ERRORS         1 /* Allow errors to be thrown */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE 2 /* Move reachable objects to next generation (caller must ensure that "gg_next != NULL") */
-#define GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON 4 /* Calculate a new value for `gg_collect_on' (set to the # of reachable objects; when 'GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE' is set == # of objects moved) */
+#define GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON 4 /* */
 
 /* Set the "Dee_GC_FLAG_OTHERGEN" flag for objects from "self" */
 PRIVATE NONNULL((1)) void DCALL
@@ -699,9 +733,83 @@ gc_generation_clear__GC_FLAG_OTHERGEN(struct gc_generation *__restrict self) {
 	}
 }
 
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+DeeType_HasFinalize(DeeTypeObject *__restrict self) {
+	/* XXX: Maybe cache this property? */
+	do {
+		if (self->tp_init.tp_finalize)
+			return true;
+	} while ((self = DeeType_Base(self)) != NULL);
+	return false;
+}
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+DeeObject_HasWeakrefs(DeeObject *__restrict ob) {
+	DeeTypeObject *tp = Dee_TYPE(ob);
+	struct Dee_weakref_list *list;
+	while (!tp->tp_weakrefs && DeeType_Base(tp))
+		tp = DeeType_Base(tp);
+	if (!tp->tp_weakrefs)
+		return false;
+	list = (struct Dee_weakref_list *)((uintptr_t)ob + tp->tp_weakrefs);
+	return atomic_read(&list->wl_nodes) != NULL;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+DeeObject_KillWeakrefs(DeeObject *__restrict ob) {
+	DeeTypeObject *tp = Dee_TYPE(ob);
+	while (!tp->tp_weakrefs && DeeType_Base(tp))
+		tp = DeeType_Base(tp);
+	if (tp->tp_weakrefs) {
+		struct Dee_weakref_list *list;
+		list = (struct Dee_weakref_list *)((uintptr_t)ob + tp->tp_weakrefs);
+		/* NOTE: "Dee_weakref_support_fini()" is actually more of a "Dee_weakref_support_clear()",
+		 *       in that it leaves the list in a status where it appears empty, which is exactly
+		 *       what we want here! */
+		(Dee_weakref_support_fini)(list);
+	}
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+DeeObject_GCVisit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	do {
+		if (tp_self->tp_visit) {
+			if (tp_self->tp_features & TF_TPVISIT) {
+				typedef void (DCALL *tp_tvisit_t)(DeeTypeObject *tp_self, DeeObject *self,
+				                                  Dee_visit_t proc, void *arg);
+				(*(tp_tvisit_t)tp_self->tp_visit)(tp_self, self, proc, arg);
+			} else {
+				(*tp_self->tp_visit)(self, proc, arg);
+			}
+		}
+	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+
+	/* Only visit heap-allocated types. */
+	if (DeeType_IsHeapType(Dee_TYPE(self)))
+		(*proc)((DeeObject *)Dee_TYPE(self), arg);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+DeeObject_GCClear(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	do {
+		if (tp_self->tp_gc && tp_self->tp_gc->tp_clear) {
+			if (tp_self->tp_gc->tp_clear == &instance_clear) {
+				/* XXX: "instance_clear" is never actually called -- maybe merge with "Dee_TF_TPVISIT"? */
+				instance_tclear(tp_self, self);
+			} else {
+				(*tp_self->tp_gc->tp_clear)(self);
+			}
+		}
+	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+}
+
+
 
 PRIVATE NONNULL((1)) void DCALL
 gc_visit__decref__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
+	ASSERT(gc_remove_modifying == 0);
 	if (DeeType_IsGC(Dee_TYPE(self))) {
 		struct Dee_gc_head *head = DeeGC_Head(self);
 		if (!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN)) {
@@ -716,23 +824,90 @@ gc_visit__decref__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
 			 * -> cyclic references of this object should also go away
 			 *
 			 * Recurse on non-GC objects (e.g. "Tuple") */
-			DeeObject_Visit(self, &gc_visit__decref__cb, NULL);
+			DeeObject_GCVisit(self, &gc_visit__decref__cb, NULL);
 		}
 	}
 }
 
 PRIVATE NONNULL((1)) void DCALL
-gc_visit__incref__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
+gc_visit__incref__with_weakref_detect__cb(DeeObject *__restrict self, void *arg) {
+	ASSERT(gc_remove_modifying == 0);
 	if (DeeType_IsGC(Dee_TYPE(self))) {
 		struct Dee_gc_head *head = DeeGC_Head(self);
 		if (!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN))
 			++self->ob_refcnt;
 	} else {
-		if (self->ob_refcnt == 0)
-			DeeObject_Visit(self, &gc_visit__incref__cb, NULL);
+		if (self->ob_refcnt == 0) {
+			/* This non-gc object will also have to be destroyed.
+			 * If it has weak references, then  */
+			bool *p_must_kill_nested_weakrefs = (bool *)arg;
+			if (!*p_must_kill_nested_weakrefs)
+				*p_must_kill_nested_weakrefs = DeeObject_HasWeakrefs(self);
+			DeeObject_GCVisit(self, &gc_visit__incref__with_weakref_detect__cb, arg);
+		}
 		++self->ob_refcnt;
 	}
 }
+
+PRIVATE NONNULL((1)) void DCALL
+gc_visit__incref__with_weakref_kill__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
+	ASSERT(gc_remove_modifying == 0);
+	if (DeeType_IsGC(Dee_TYPE(self))) {
+		struct Dee_gc_head *head = DeeGC_Head(self);
+		if (!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN))
+			++self->ob_refcnt;
+	} else {
+		if (self->ob_refcnt == 0) {
+			/* Kill weak references of this object (if it has any) */
+			DeeObject_KillWeakrefs(self);
+			DeeObject_GCVisit(self, &gc_visit__incref__with_weakref_kill__cb, NULL);
+		}
+		++self->ob_refcnt;
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+DeeObject_DoInvokeFinalize(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	do {
+		if (tp_self->tp_init.tp_finalize != NULL)
+			(*tp_self->tp_init.tp_finalize)(tp_self, self);
+	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+}
+
+
+/* Insert objects starting at "first" into "self".
+ * Assumes that the "Dee_GC_FLAG_GENN" flag is set for all objects. */
+PRIVATE NONNULL((1, 2)) void DCALL
+gc_generation_insert_temp_list(struct gc_generation *__restrict self,
+                               DeeObject *first) {
+	size_t count = 1;
+	DeeObject *last;
+	struct Dee_gc_head *first_head;
+	struct Dee_gc_head *last_head;
+	for (last = first;;) {
+		struct Dee_gc_head *head = DeeGC_Head(last);
+		ASSERT(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
+		if (self == &gc_gen0)
+			atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_GENN);
+		if (!head->gc_next)
+			break;
+		last = head->gc_next;
+		++count;
+	}
+
+	/* Insert all remaining objects into "self" */
+	first_head = DeeGC_Head(first);
+	last_head  = DeeGC_Head(last);
+	gc_object_set_pself(&first_head->gc_info.gi_pself, &self->gg_objects); /* This **must** be atomic! */
+	if ((last_head->gc_next = self->gg_objects) != NULL) {
+		struct Dee_gc_head *next_head = DeeGC_Head(self->gg_objects);
+		gc_object_set_pself(&next_head->gc_info.gi_pself, &last_head->gc_next); /* This **must** be atomic! */
+	}
+	self->gg_objects = first;
+	self->gg_count += count;
+}
+
 
 /* Heart-piece of GC collect
  * @return: * : One of `GC_GENERATION_COLLECT_OR_UNLOCK__*' */
@@ -740,8 +915,12 @@ PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) unsigned int DCALL
 gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
                                 size_t *__restrict p_num_collected,
                                 unsigned int flags) {
-	unsigned int result;
-	DeeObject *iter;
+	DeeObject *iter, **p_iter;
+	DeeObject *unreachable_slow;
+	DeeObject *unreachable_fast;
+	size_t num_reachable, num_unreachable;
+	bool must_kill_weakrefs;
+	bool must_kill_nested_weakrefs;
 	if unlikely(!self->gg_objects) {
 		if (flags & GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON)
 			self->gg_collect_on = 128; /* TODO: Use initial configuration for generation */
@@ -762,42 +941,317 @@ gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
 	 * that happens to be unreachable ends with "ob_refcnt == 0" */
 	for (iter = self->gg_objects; iter;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
-		ASSERT(iter->ob_refcnt > 0);
-		DeeObject_Visit(iter, &gc_visit__decref__cb, NULL);
+		ASSERT(gc_remove_modifying == 0);
+		DeeObject_GCVisit(iter, &gc_visit__decref__cb, NULL);
 		iter = head->gc_next;
 	}
 
 	/* Identify objects that can really be destroyed */
+	must_kill_weakrefs = false;
 	for (iter = self->gg_objects; iter; iter) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
+		ASSERT(gc_remove_modifying == 0);
 		if (iter->ob_refcnt == 0) {
 			/* Temporary flag that means "object is unreachable" */
 			head->gc_next = (DeeObject *)((uintptr_t)head->gc_next | 1);
+			if (!must_kill_weakrefs)
+				must_kill_weakrefs = DeeObject_HasWeakrefs(iter);
 		}
 		iter = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 	}
 
-	/* Undo refcnt changes done by previous "DeeObject_Visit" */
+	/* Undo refcnt changes done by previous "DeeObject_GCVisit" */
+	must_kill_nested_weakrefs = false;
 	for (iter = self->gg_objects; iter;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
-		DeeObject_Visit(iter, &gc_visit__incref__cb, NULL);
-		iter = head->gc_next;
+		DeeObject_GCVisit(iter, &gc_visit__incref__with_weakref_detect__cb, &must_kill_nested_weakrefs);
+		iter = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 	}
 
 	/* Sort unreachable objects into "unreachable_fast" and "unreachable_slow",
-	 * or move to next generation / keep in current generation. */
-	/* TODO: Rest of implementation ~ala pseudo-code from header */
+	 * or move to next generation / keep in current generation. At this point
+	 * everything unreachable is identifiable via "gc_next & 1" */
+	unreachable_slow = NULL;
+	unreachable_fast = NULL;
+	num_reachable = 0;
+	for (p_iter = &self->gg_objects; (iter = *p_iter) != NULL;) {
+		struct Dee_gc_head *head = DeeGC_Head(iter);
+		ASSERT(((uintptr_t)atomic_read(&head->gc_info.gi_pself) & ~Dee_GC_FLAG_MASK) == (uintptr_t)p_iter);
+		if ((uintptr_t)head->gc_next & 1) {
+			/* Unreachable object. */
+			DeeObject **p_unreachable_x;
 
-	result = GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING;
+			/* Remove from own generation */
+			if ((*p_iter = head->gc_next) != NULL) {
+				struct Dee_gc_head *next_head = DeeGC_Head(head->gc_next);
+				gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
+			}
+			--self->gg_count;
 
-unlock_result:
-	if (self != &gc_gen0) {
+			/* Check if object requires invocation of a "tp_finalize" operator... */
+			if ((atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_FINALIZED) ||
+			    (!DeeType_HasFinalize(Dee_TYPE(iter)))) {
+				p_unreachable_x = &unreachable_fast; /* Object can be fast-destroyed! */
+			} else {
+				p_unreachable_x = &unreachable_slow; /* Object must be slow-destroyed */
+			}
+			gc_object_set_pself(&head->gc_info.gi_pself, p_unreachable_x);
+			if ((head->gc_next = *p_unreachable_x) != NULL) {
+				struct Dee_gc_head *next_head = DeeGC_Head(*p_unreachable_x);
+				gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
+			}
+			*p_unreachable_x = iter;
+		} else {
+			/* Still reachable */
+			++num_reachable;
+			if (flags & GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE) {
+				/* Move to next generation */
+				struct gc_generation *target;
+
+				/* Remove from own generation */
+				if ((*p_iter = head->gc_next) != NULL) {
+					struct Dee_gc_head *next_head = DeeGC_Head(head->gc_next);
+					gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
+				}
+				--self->gg_count;
+
+				/* Add to next generation */
+				target = self->gg_next;
+				ASSERT(target);
+				gc_object_set_pself(&head->gc_info.gi_pself, &target->gg_objects);
+				if ((head->gc_next = target->gg_objects) != NULL) {
+					struct Dee_gc_head *next_head = DeeGC_Head(target->gg_objects);
+					gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
+				}
+				target->gg_objects = iter;
+				++target->gg_count;
+//				++target->gg_collect_on; /* Don't adjust since we know that this object is still reachable! */
+			} else {
+				/* Just leave within our own generation */
+				p_iter = &head->gc_next;
+			}
+		}
+	}
+
+	/* Deal with "unreachable_slow" (which must be resolved before anything else can happen) */
+	if unlikely(unreachable_slow) {
 		/* Restore old flags */
+		if (self != &gc_gen0) {
+			gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
+			gc_generation_set__GC_FLAG_OTHERGEN(self);
+		}
+
+		/* Restore all "unreachable_fast" objects into the generation */
+		while (unreachable_fast) {
+			struct Dee_gc_head *head = DeeGC_Head(unreachable_fast);
+			DeeObject *next = head->gc_next;
+			gc_object_set_pself(&head->gc_info.gi_pself, &self->gg_objects);
+			ASSERT(!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
+			if (self != &gc_gen0)
+				atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
+			if ((head->gc_next = self->gg_objects) != NULL) {
+				struct Dee_gc_head *next_head = DeeGC_Head(self->gg_objects);
+				gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
+			}
+			self->gg_objects = unreachable_fast;
+			++self->gg_count;
+			unreachable_fast = next;
+		}
+
+		/* Set the "Dee_GC_FLAG_GENN" flag for all objects from "unreachable_slow" */
+		for (iter = unreachable_slow; iter;) {
+			struct Dee_gc_head *head = DeeGC_Head(iter);
+			atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
+			ASSERT(gc_remove_modifying == 0);
+			ASSERT(iter->ob_refcnt != 0);
+			/* Reference needed for when we're about to invoke "tp_finalize" for these objects! */
+			++iter->ob_refcnt;
+			iter = head->gc_next;
+		}
+
+		/* Reduce the chance of recursive GC collect happening... */
+		self->gg_collect_on = self->gg_count;
+		if (self->gg_collect_on < 128)
+			self->gg_collect_on = 128; /* TODO: Use initial configuration for generation */
+
+		/* At this point, "unreachable_slow" exists in a sort-of "fake" generation
+		 * defined by "unreachable_slow" itself. If anything causes these objects to
+		 * be destroyed after this point, `DeeGC_Untrack()' and `DeeGC_UntrackAsync()'
+		 * will remove them from *that* linked list. */
+		COMPILER_BARRIER();
+		gc_collect_release();
+
+		/* Enumerate slow-unreachable objects to invoke their "tp_finalize" callbacks.
+		 * Note that for this purpose, we know that objects will *NOT* be removed from
+		 * "unreachable_slow" until we drop the references we acquired above! */
+		for (iter = atomic_read(&unreachable_slow); iter;) {
+			struct Dee_gc_head *head = DeeGC_Head(iter);
+			DeeObject *next = atomic_read(&head->gc_next);
+			if (!(atomic_fetchor(&head->gc_info.gi_flag, Dee_GC_FLAG_FINALIZED) & Dee_GC_FLAG_FINALIZED)) {
+				/* Invoke "tp_finalize"
+				 * If this causes an untrack, the object will simply unlink itself from
+				 * our stack-lock "unreachable_slow" (or will at least do so as soon as
+				 * pending remove operations are reaped). In that sense, "unreachable_slow"
+				 * behaves similar to a small, self-contained GC generation */
+				DeeObject_DoInvokeFinalize(iter);
+			}
+
+			/* Drop the reference created above */
+			Dee_Decref(iter);
+			iter = next;
+		}
+
+		/* In the likely case that the user-defined "tp_finalize" **didn't** resolve *every*
+		 * reference loop (which it could in theory do by manually breaking those loops), then
+		 * we have to re-add */
+		if likely(atomic_read(&unreachable_slow)) {
+			DeeObject *first;
+			gc_lock_acquire();
+			first = atomic_read(&unreachable_slow);
+			if likely(first != NULL)
+				gc_generation_insert_temp_list(self, first);
+			_gc_lock_release(); /* Don't reap here -- caller will just retry which will do that for us */
+		}
+
+		/* Tell caller to try again (the second time around, none of the objects we just finalized
+		 * will still appear in the "unreachable_slow" queue since 'Dee_GC_FLAG_FINALIZED' has been
+		 * set for every one of them). */
+		return GC_GENERATION_COLLECT_OR_UNLOCK__RETRY;
+	}
+
+	/* Figure out a new threshold that must be reached before another collect happens. */
+	self->gg_collect_on = num_reachable;
+	if (self->gg_collect_on < 128)
+		self->gg_collect_on = 128; /* TODO: Use initial configuration for generation */
+
+	if (!unreachable_fast) {
+		/* Restore old flags */
+		if (self != &gc_gen0) {
+			gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
+			gc_generation_set__GC_FLAG_OTHERGEN(self);
+		}
+
+		/* Everything is reachable -> nothing to do */
+		return GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING;
+	}
+
+	/* At this point, generations have been updated and everything that should go away
+	 * is count within "unreachable_fast". Additionally, elements of "unreachable_fast"
+	 * all have bit#0 of "gc_next" set (so we can identify these objects in what we're
+	 * about to do next):
+	 * - If we discovered any weak references during the initial scan, then that means
+	 *   that there might still be weak references out there that *could* (in theory)
+	 *   revive the objects from "unreachable_fast".
+	 * - We don't want that, so we have to identify those weak references (should they
+	 *   actually exist) proper, and kill them **BEFORE** we can unlock the GC and
+	 *   resume other threads.
+	 *
+	 * For this purpose, we must:
+	 * - Kill weak references that may be directly attached to something from "unreachable_fast"
+	 * - Kill weak references of non-GC objects that should get also destroyed also */
+	if (must_kill_nested_weakrefs) {
+		for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next)
+			DeeObject_GCVisit(iter, &gc_visit__decref__cb, NULL);
+		for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next)
+			DeeObject_GCVisit(iter, &gc_visit__incref__with_weakref_kill__cb, NULL);
+	}
+	if (must_kill_weakrefs) {
+		for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next)
+			DeeObject_KillWeakrefs(iter);
+	}
+
+	/* Restore old flags */
+	if (self != &gc_gen0) {
 		gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
 		gc_generation_set__GC_FLAG_OTHERGEN(self);
 	}
+
+	/* Get some references to objects that are about to be destroyed.
+	 * This is needed, because similarly to "unreachable_slow", we have
+	 * to invoke some operators on those objects ("tp_clear"), which
+	 * just goes way easier if we're not actively suspending all other
+	 * threads.
+	 *
+	 * This is also a pretty good spot to count "num_unreachable" */
+	num_unreachable = 0;
+	for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next) {
+		++iter->ob_refcnt;
+		++num_unreachable;
+	}
+	*p_num_collected = num_unreachable;
+
+	/* Release lock */
+	COMPILER_BARRIER();
 	gc_collect_release();
-	return result;
+
+	/* Clear unreachable objects (this is where everything should die for real) */
+	for (iter = atomic_read(&unreachable_fast); iter;) {
+		struct Dee_gc_head *head = DeeGC_Head(iter);
+		DeeObject *next = atomic_read(&head->gc_next);
+		DeeObject_GCClear(iter);
+		Dee_Decref(iter);
+		iter = next;
+	}
+
+	/* At this point, our "unreachable_fast" chain may not be fully clear, yet.
+	 * This can have 2 reasons:
+	 *  #1: One of the objects destroyed by the clear+decref above is still
+	 *      dangling in "gc_remove"
+	 *  #2: Something weird is going on with the GC and somehow, some way, one
+	 *      of those objects that **really** should have been destroyed, didn't
+	 *      end up going away properly
+	 *
+	 * In either case, we can't return yet: because the address of "unreachable_fast"
+	 * may still be linked into the "Dee_gc_head" of objects that have to be fully
+	 * destroyed (or moved) before that can happen.
+	 *
+	 * Also: both of those problems can simply be solved by adding "unreachable_fast"
+	 *       to "gc_gen0".
+	 */
+	if unlikely(atomic_read(&unreachable_fast)) {
+		DeeObject *first;
+		gc_lock_acquire_and_reap(false); /* Reap here *should* normally cause everything to disappear */
+		COMPILER_BARRIER();
+		first = atomic_read(&unreachable_fast);
+		if unlikely(first != NULL) {
+			size_t count = 1;
+			DeeObject *last;
+			struct Dee_gc_head *first_head;
+			struct Dee_gc_head *last_head;
+			for (last = first;;) {
+				struct Dee_gc_head *head = DeeGC_Head(last);
+#ifndef Dee_DPRINT_IS_NOOP
+				Dee_refcnt_t refcnt = atomic_read(&last->ob_refcnt);
+				if (refcnt > 0) {
+					Dee_DPRINTF("[gc] Warning: instance of %q at %p has "
+					            "ob_refcnt=%" PRFuSIZ " but is unreachable\n",
+					            DeeType_GetName(Dee_TYPE(last)), last, refcnt);
+				}
+#endif /* !Dee_DPRINT_IS_NOOP */
+				ASSERT(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
+				atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_GENN);
+				if (!head->gc_next)
+					break;
+				last = head->gc_next;
+				++count;
+			}
+
+			/* Insert all remaining objects into "&gc_gen0" */
+			first_head = DeeGC_Head(first);
+			last_head  = DeeGC_Head(last);
+			gc_object_set_pself(&first_head->gc_info.gi_pself, &gc_gen0.gg_objects); /* This **must** be atomic! */
+			if ((last_head->gc_next = gc_gen0.gg_objects) != NULL) {
+				struct Dee_gc_head *next_head = DeeGC_Head(gc_gen0.gg_objects);
+				gc_object_set_pself(&next_head->gc_info.gi_pself, &last_head->gc_next); /* This **must** be atomic! */
+			}
+			gc_gen0.gg_objects = first;
+			gc_gen0.gg_count += count;
+		}
+		COMPILER_BARRIER();
+		gc_lock_release(false);
+	}
+
+	return GC_GENERATION_COLLECT_OR_UNLOCK__SUCCESS;
 }
 
 
@@ -833,7 +1287,6 @@ gc_collect_threshold_generations_r(struct gc_generation *__restrict self) {
  * @return: false: Failure (collect failed; caller must set "gc_mustreap"
  *                 to true, but not try again right now...) */
 PRIVATE ATTR_NOINLINE bool DCALL gc_trycollect_after_collect_on_reached(void) {
-	size_t count;
 	bool has_collectable_generations;
 	unsigned int status;
 	struct gc_generation *iter;
@@ -937,7 +1390,6 @@ again:
 	iter = &gc_gen0;
 continue_with_iter:
 	flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL |
-	        /* Update  */
 	        GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON;
 #if 0 /* Don't move objects in this mode */
 	if (iter->gg_next)
@@ -997,6 +1449,42 @@ PUBLIC WUNUSED size_t DCALL DeeGC_TryCollect(size_t max_objects) {
 	return gc_collect(false, max_objects);
 }
 
+
+
+/* Return `true' if any GC objects with a non-zero reference
+ * counter is being tracked.
+ * NOTE: In addition, this function does not return `true' when
+ *       all that's left are dex objects (which are destroyed
+ *       at a later point during deemon shutdown, than the point
+ *       when this function is called to determine if the GC must
+ *       continue to run) */
+INTERN bool DCALL DeeGC_IsEmptyWithoutDex(void) {
+	struct gc_generation *gen;
+	gc_lock_acquire_and_reap(true);
+	for (gen = &gc_gen0; gen; gen = gen->gg_next) {
+		DeeObject *iter;
+		for (iter = gen->gg_objects; iter;
+		     iter = DeeGC_Head(iter)->gc_next) {
+			if (!iter->ob_refcnt)
+				continue;
+#ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			if (Dee_TYPE(iter) == &DeeModuleDex_Type)
+				continue;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+			if (DeeDex_Check(iter))
+				continue;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_NO_DEX */
+			goto no;
+		}
+	}
+	gc_lock_release(true);
+	return true;
+no:
+	gc_lock_release(true);
+	return false;
+}
 
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 #ifndef NDEBUG
@@ -2241,6 +2729,583 @@ collect_restart_with_pending_hint:
 	return result;
 }
 
+/* GC objects referring to X */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeGC_CollectGCReferred(GCSetMaker *__restrict self,
+                        DeeObject *__restrict target) {
+	struct Dee_gc_head *iter;
+again:
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err;
+	for (iter = gc_root; iter; iter = iter->gc_next) {
+		DREF DeeObject *obj;
+		ASSERT(iter != iter->gc_next);
+		obj = &iter->gc_object;
+		if (!Dee_IncrefIfNotZero(obj))
+			continue;
+		if (DeeGC_ReferredBy(obj, target)) {
+			int error = GCSetMaker_Insert(self, obj);
+			if (error == 0)
+				continue;
+			if (error > 0)
+				goto decref_obj;
+			GCLOCK_RELEASE_READ();
+			Dee_Decref_unlikely(obj);
+			if (Dee_CollectMemory(self->gs_err))
+				goto again;
+			goto err;
+		} else {
+decref_obj:
+			if (!Dee_DecrefIfNotOne(obj)) {
+				GCLOCK_RELEASE_READ();
+				Dee_Decref_likely(obj);
+				goto again;
+			}
+		}
+	}
+	GCLOCK_RELEASE_READ();
+	return 0;
+err:
+	return -1;
+}
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject   *gi_next; /* [0..1][lock(gi_lock)]
+	                            * The next GC object to-be iterated, or
+	                            * NULL when the iterator has been exhausted. */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_lock_t gi_lock; /* Lock for `gi_next' */
+#endif /* !CONFIG_NO_THREADS */
+} GCIter;
+
+#define GCIter_LockAvailable(self)  Dee_atomic_lock_available(&(self)->gi_lock)
+#define GCIter_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->gi_lock)
+#define GCIter_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->gi_lock)
+#define GCIter_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->gi_lock)
+#define GCIter_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->gi_lock)
+#define GCIter_LockRelease(self)    Dee_atomic_lock_release(&(self)->gi_lock)
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+gciter_copy(GCIter *__restrict self,
+            GCIter *__restrict other) {
+	GCIter_LockAcquire(other);
+	self->gi_next = other->gi_next;
+	Dee_XIncref(self->gi_next);
+	GCIter_LockRelease(other);
+	Dee_atomic_lock_init(&self->gi_lock);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+gciter_serialize(GCIter *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(GCIter, field))
+	DREF DeeObject *self__gi_next;
+	GCIter_LockAcquire(self);
+	self__gi_next = self->gi_next;
+	Dee_XIncref(self__gi_next);
+	GCIter_LockRelease(self);
+	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, GCIter)->gi_lock);
+	return DeeSerial_XPutObjectInherited(writer, ADDROF(gi_next), self__gi_next);
+#undef ADDROF
+}
+
+PRIVATE NONNULL((1)) void DCALL
+gciter_fini(GCIter *__restrict self) {
+	Dee_XDecref(self->gi_next);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+gciter_visit(GCIter *__restrict self, Dee_visit_t proc, void *arg) {
+	Dee_XVisit(self->gi_next);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+gciter_bool(GCIter *__restrict self) {
+	return atomic_read(&self->gi_next) != NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gciter_next(GCIter *__restrict self) {
+	DREF DeeObject *result;
+	struct Dee_gc_head *next;
+	GCIter_LockAcquire(self);
+	result = self->gi_next; /* Inherit reference. */
+	if unlikely(!result) {
+		/* Iterator has been exhausted. */
+		GCIter_LockRelease(self);
+		return ITER_DONE;
+	}
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err_unlock_iter;
+
+	/* Skip ZERO-ref entries. */
+	next = DeeGC_Head(result)->gc_next;
+	ASSERT(DeeGC_Head(result) != next);
+
+	/* Find the next object that we can actually incref()
+	 * (The GC chain may contain dangling (aka. weak) objects) */
+	while (next && !Dee_IncrefIfNotZero(&next->gc_object)) {
+		ASSERT(next != next->gc_next);
+		next = next->gc_next;
+	}
+	GCLOCK_RELEASE_READ();
+	self->gi_next = next ? &next->gc_object : NULL; /* Inherit reference. */
+	GCIter_LockRelease(self);
+
+	/* Return the extracted item. */
+	return result;
+err_unlock_iter:
+	GCIter_LockRelease(self);
+	return NULL;
+}
+
+
+PRIVATE struct type_member tpconst gciter_members[] = {
+	TYPE_MEMBER_CONST(STR_seq, &DeeGCEnumTracked_Singleton),
+	TYPE_MEMBER_END
+};
+
+PRIVATE DeeTypeObject GCIter_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_GCIter",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ GCIter,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ &gciter_copy,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &gciter_serialize
+		),
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gciter_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&gciter_bool,
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
+	},
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&gciter_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__27F47A9BEBC0B992),
+	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gciter_next,
+	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ gciter_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL(&iterator_next),
+	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
+};
+
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_iter(DeeObject *__restrict UNUSED(self)) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	DREF GCIter *result;
+	struct Dee_gc_head *first;
+	result = DeeObject_MALLOC(GCIter);
+	if unlikely(!result)
+		goto done;
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err_r;
+	first = gc_root;
+	/*  Find the first object that we can actually incref()
+	 * (The GC chain may contain dangling (aka. weak) objects) */
+	while (first && !Dee_IncrefIfNotZero(&first->gc_object)) {
+		ASSERT(first != first->gc_next);
+		first = first->gc_next;
+	}
+	GCLOCK_RELEASE_READ();
+	Dee_atomic_lock_init(&result->gi_lock);
+	/* Save the first object in the iterator. */
+	result->gi_next = first ? &first->gc_object : NULL;
+	DeeObject_Init(result, &GCIter_Type);
+done:
+	return Dee_AsObject(result);
+err_r:
+	DeeObject_FREE(result);
+	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_size(DeeObject *__restrict UNUSED(self)) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	size_t result = 0;
+	struct Dee_gc_head *iter;
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err;
+	for (iter = gc_root; iter; iter = iter->gc_next) {
+		ASSERT(iter != iter->gc_next);
+		++result;
+	}
+	GCLOCK_RELEASE_READ();
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_contains(DeeObject *__restrict UNUSED(self),
+                DeeObject *__restrict ob) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	return_bool(DeeType_IsGC(Dee_TYPE(ob)));
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	if (!DeeType_IsGC(Dee_TYPE(ob)))
+		return_false;
+#if defined(GCHEAD_ISTRACKED)
+	return_bool(GCHEAD_ISTRACKED(DeeGC_Head(ob)));
+#else /* GCHEAD_ISTRACKED */
+	{
+		struct Dee_gc_head *iter;
+		if unlikely(GCLOCK_ACQUIRE_READ())
+			goto err;
+		for (iter = gc_root; iter; iter = iter->gc_next) {
+			ASSERT(iter != iter->gc_next);
+			if (&iter->gc_object == ob) {
+				GCLOCK_RELEASE_READ();
+				return_true;
+			}
+		}
+		GCLOCK_RELEASE_READ();
+	}
+	return_false;
+err:
+	return NULL;
+#endif /* !GCHEAD_ISTRACKED */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+}
+
+PRIVATE struct type_seq gcenum_seq = {
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcenum_contains,
+	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
+	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
+	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
+	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
+	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
+	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
+	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
+	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
+	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
+	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_sizeob),
+	/* .tp_size                       = */ DEFIMPL(&default__size__with__sizeob),
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
+	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
+	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
+	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_size),
+	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
+	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
+	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
+	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
+	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
+	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
+	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach),
+	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
+	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
+	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
+	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
+	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
+	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
+	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
+	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
+	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
+	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
+	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
+	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
+};
+
+PRIVATE struct type_member tpconst gcenum_class_members[] = {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+//	TYPE_MEMBER_CONST(STR_Iterator, &GCIter_Type), /* TODO */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	TYPE_MEMBER_CONST(STR_Iterator, &GCIter_Type),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+	TYPE_MEMBER_END
+};
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_collect(DeeObject *UNUSED(self),
+               size_t argc, DeeObject *const *argv) {
+	size_t result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("collect", params: """
+	size_t max = (size_t)-1;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_collect_params "max=!-1"
+	struct {
+		size_t max_;
+	} args;
+	args.max_ = (size_t)-1;
+	DeeArg_Unpack0Or1X(err, argc, argv, "collect", &args.max_, UNPxSIZ, DeeObject_AsSizeM1);
+/*[[[end]]]*/
+	result = DeeGC_Collect(args.max_);
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	if (result == (size_t)-1)
+		goto err;
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_referred(DeeObject *UNUSED(self),
+                size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referred", params: """
+	DeeObject *start;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_referred_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "referred", &args.start);
+/*[[[end]]]*/
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	return Dee_AsObject(DeeGC_NewReferred(args.start));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_referredgc(DeeObject *UNUSED(self),
+                  size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referredgc", params: """
+	DeeObject *start;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_referredgc_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "referredgc", &args.start);
+/*[[[end]]]*/
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	return Dee_AsObject(DeeGC_NewReferredGC(args.start));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_reachable(DeeObject *UNUSED(self),
+                 size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("reachable", params: """
+	DeeObject *start;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_reachable_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "reachable", &args.start);
+/*[[[end]]]*/
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	return Dee_AsObject(DeeGC_NewReachable(args.start));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_reachablegc(DeeObject *UNUSED(self),
+                   size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("reachablegc", params: """
+	DeeObject *start;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_reachablegc_params "start"
+	struct {
+		DeeObject *start;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "reachablegc", &args.start);
+/*[[[end]]]*/
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	return Dee_AsObject(DeeGC_NewReachableGC(args.start));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_referring(DeeObject *UNUSED(self),
+                 size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referring", params: """
+	DeeObject *to;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_referring_params "to"
+	struct {
+		DeeObject *to;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "referring", &args.to);
+/*[[[end]]]*/
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	return Dee_AsObject(DeeGC_NewGCReferred(args.to));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_isreferring(DeeObject *UNUSED(self),
+                   size_t argc, DeeObject *const *argv) {
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isreferring", params: """
+	DeeObject *from;
+	DeeObject *to;
+""", docStringPrefix: "gcenum");]]]*/
+#define gcenum_isreferring_params "from,to"
+	struct {
+		DeeObject *from;
+		DeeObject *to;
+	} args;
+	DeeArg_UnpackStruct2(err, argc, argv, "isreferring", &args, &args.from, &args.to);
+/*[[[end]]]*/
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	DeeError_NOTIMPLEMENTED(); /* TODO */
+	return NULL;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	return_bool(DeeGC_ReferredBy(args.from, args.to));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+err:
+	return NULL;
+}
+
+
+PRIVATE struct type_method tpconst gcenum_methods[] = {
+	TYPE_METHOD_F("collect", &gcenum_collect, METHOD_FNOREFESCAPE,
+	              "(" gcenum_collect_params ")->?Dint\n"
+	              "Try to collect at most @max GC objects and return the actual number collected\n"
+	              "Note that more than @max objects may be collected if sufficiently large reference cycles exist"),
+	TYPE_METHOD_F("referred", &gcenum_referred, METHOD_FNOREFESCAPE,
+	              "(" gcenum_referred_params ")->?DSet\n"
+	              "Returns a set of objects that are immediately referred to by @start"),
+	TYPE_METHOD_F("referredgc", &gcenum_referredgc, METHOD_FNOREFESCAPE,
+	              "(" gcenum_referredgc_params ")->?DSet\n"
+	              "Same as ?#referred, but only include gc-objects (s.a. :Type.__isgc__)"),
+	TYPE_METHOD_F("reachable", &gcenum_reachable, METHOD_FNOREFESCAPE,
+	              "(" gcenum_reachable_params ")->?DSet\n"
+	              "Returns a set of objects that are reachable from @start"),
+	TYPE_METHOD_F("reachablegc", &gcenum_reachablegc, METHOD_FNOREFESCAPE,
+	              "(" gcenum_reachablegc_params ")->?DSet\n"
+	              "Same as ?#reachable, but only include gc-objects (s.a. :Type.__isgc__)"),
+	TYPE_METHOD_F("referring", &gcenum_referring, METHOD_FNOREFESCAPE,
+	              "(" gcenum_referring_params ")->?DSet\n"
+	              "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to"),
+	TYPE_METHOD_F("isreferring", &gcenum_isreferring, METHOD_FNOREFESCAPE,
+	              "(" gcenum_isreferring_params ")->?Dbool\n"
+	              "Returns ?t if @to is referred to by @from, or ?f otherwise"),
+	TYPE_METHOD_END
+};
+
+PRIVATE DeeTypeObject GCEnum_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_GCEnum",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FABSTRACT,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_SINGLETON,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+			/* T:              */ DeeObject,
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL /* Static singleton, so no serial needed */
+		),
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ DEFIMPL(&object_str),
+		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
+		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_sizeob),
+		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
+		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
+	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__96C7A3207FAE93E2),
+	/* .tp_seq           = */ &gcenum_seq,
+	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
+	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__C6F8E138F179B5AD),
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ gcenum_methods,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ gcenum_class_members,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
+	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
+};
+
+
+/* An generic sequence singleton that can be
+ * iterated to yield all tracked GC objects.
+ * This object also offers a hand full of member functions
+ * that user-space an invoke to trigger various GC-related
+ * functionality:
+ *   - collect(max: int = -1): int;
+ * Also: remember that this derives from `Sequence', so you
+ *       can use all its attributes, like `empty', etc.
+ * NOTE: This object is exported as `gc from deemon' */
+PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
+	OBJECT_HEAD_INIT(&GCEnum_Type)
+};
+
 
 /* GC object alloc/free. */
 LOCAL void *gc_initob(void *ptr) {
@@ -2496,559 +3561,54 @@ dump_reference_history(DeeObject *__restrict obj);
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 INTERN void DCALL gc_dump_all(void) {
-	struct Dee_gc_head *iter;
-	for (iter = gc_root; iter; iter = iter->gc_next) {
-		DeeObject *ob = &iter->gc_object;
-		DeeTypeObject *ob_type;
-		ASSERT(iter != iter->gc_next);
-		ob_type = ob->ob_type;
-		Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
-		            ob, ob_type->tp_name, ob->ob_refcnt);
-		/* Print the name of a select set of types. */
-		if (ob_type == &DeeType_Type) {
-			Dee_DPRINTF(" {tp_name:%q}", ((DeeTypeObject *)ob)->tp_name);
-		} else if (ob_type == &DeeCode_Type) {
-			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(ob));
-		} else if (ob_type == &DeeFunction_Type) {
-			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(DeeFunction_CODE(ob)));
-		} else if (ob_type == &DeeModule_Type) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	struct gc_generation *gen;
+	for (gen = &gc_gen0; gen; gen = gen->gg_next)
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	{
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+		DeeObject *ob;
+		for (ob = gen->gg_objects; ob; ob = DeeGC_Head(ob)->gc_next)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+		struct Dee_gc_head *iter;
+		for (iter = gc_root; iter; iter = iter->gc_next)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+		{
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
+			DeeObject *ob = &iter->gc_object;
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+			DeeTypeObject *ob_type;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+			ASSERT(ob != DeeGC_Head(ob)->gc_next);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+			ASSERT(iter != iter->gc_next);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+			ob_type = ob->ob_type;
+			Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
+			            ob, ob_type->tp_name, ob->ob_refcnt);
+			/* Print the name of a select set of types. */
+			if (ob_type == &DeeType_Type) {
+				Dee_DPRINTF(" {tp_name:%q}", ((DeeTypeObject *)ob)->tp_name);
+			} else if (ob_type == &DeeCode_Type) {
+				Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(ob));
+			} else if (ob_type == &DeeFunction_Type) {
+				Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(DeeFunction_CODE(ob)));
+			} else if (ob_type == &DeeModule_Type) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-			Dee_DPRINTF(" {mo_absname:%q}", ((DeeModuleObject *)ob)->mo_absname);
-#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			Dee_DPRINTF(" {mo_name:%r}", ((DeeModuleObject *)ob)->mo_name);
+				Dee_DPRINTF(" {mo_absname:%q}", ((DeeModuleObject *)ob)->mo_absname);
+#else  /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+				Dee_DPRINTF(" {mo_name:%r}", ((DeeModuleObject *)ob)->mo_name);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		}
-		Dee_DPRINT("\n");
+			}
+			Dee_DPRINT("\n");
 #ifdef CONFIG_TRACE_REFCHANGES
-		dump_reference_history(&iter->gc_object);
+			dump_reference_history(&iter->gc_object);
 #endif /* CONFIG_TRACE_REFCHANGES */
+		}
 	}
 }
 #endif /* !NDEBUG */
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject   *gi_next; /* [0..1][lock(gi_lock)]
-	                            * The next GC object to-be iterated, or
-	                            * NULL when the iterator has been exhausted. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t gi_lock; /* Lock for `gi_next' */
-#endif /* !CONFIG_NO_THREADS */
-} GCIter;
-
-#define GCIter_LockAvailable(self)  Dee_atomic_lock_available(&(self)->gi_lock)
-#define GCIter_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->gi_lock)
-#define GCIter_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->gi_lock)
-#define GCIter_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->gi_lock)
-#define GCIter_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->gi_lock)
-#define GCIter_LockRelease(self)    Dee_atomic_lock_release(&(self)->gi_lock)
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-gciter_copy(GCIter *__restrict self,
-            GCIter *__restrict other) {
-	GCIter_LockAcquire(other);
-	self->gi_next = other->gi_next;
-	Dee_XIncref(self->gi_next);
-	GCIter_LockRelease(other);
-	Dee_atomic_lock_init(&self->gi_lock);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-gciter_serialize(GCIter *__restrict self,
-                 DeeSerial *__restrict writer,
-                 Dee_seraddr_t addr) {
-#define ADDROF(field) (addr + offsetof(GCIter, field))
-	DREF DeeObject *self__gi_next;
-	GCIter_LockAcquire(self);
-	self__gi_next = self->gi_next;
-	Dee_XIncref(self__gi_next);
-	GCIter_LockRelease(self);
-	Dee_atomic_lock_init(&DeeSerial_Addr2Mem(writer, addr, GCIter)->gi_lock);
-	return DeeSerial_XPutObjectInherited(writer, ADDROF(gi_next), self__gi_next);
-#undef ADDROF
-}
-
-PRIVATE NONNULL((1)) void DCALL
-gciter_fini(GCIter *__restrict self) {
-	Dee_XDecref(self->gi_next);
-}
-
-PRIVATE NONNULL((1, 2)) void DCALL
-gciter_visit(GCIter *__restrict self, Dee_visit_t proc, void *arg) {
-	Dee_XVisit(self->gi_next);
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-gciter_bool(GCIter *__restrict self) {
-	return atomic_read(&self->gi_next) != NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-gciter_next(GCIter *__restrict self) {
-	DREF DeeObject *result;
-	struct Dee_gc_head *next;
-	GCIter_LockAcquire(self);
-	result = self->gi_next; /* Inherit reference. */
-	if unlikely(!result) {
-		/* Iterator has been exhausted. */
-		GCIter_LockRelease(self);
-		return ITER_DONE;
-	}
-	if unlikely(GCLOCK_ACQUIRE_READ())
-		goto err_unlock_iter;
-
-	/* Skip ZERO-ref entries. */
-	next = DeeGC_Head(result)->gc_next;
-	ASSERT(DeeGC_Head(result) != next);
-
-	/* Find the next object that we can actually incref()
-	 * (The GC chain may contain dangling (aka. weak) objects) */
-	while (next && !Dee_IncrefIfNotZero(&next->gc_object)) {
-		ASSERT(next != next->gc_next);
-		next = next->gc_next;
-	}
-	GCLOCK_RELEASE_READ();
-	self->gi_next = next ? &next->gc_object : NULL; /* Inherit reference. */
-	GCIter_LockRelease(self);
-
-	/* Return the extracted item. */
-	return result;
-err_unlock_iter:
-	GCIter_LockRelease(self);
-	return NULL;
-}
-
-
-PRIVATE struct type_member tpconst gciter_members[] = {
-	TYPE_MEMBER_CONST(STR_seq, &DeeGCEnumTracked_Singleton),
-	TYPE_MEMBER_END
-};
-
-PRIVATE DeeTypeObject GCIter_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_GCIter",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-			/* T:              */ GCIter,
-			/* tp_ctor:        */ NULL,
-			/* tp_copy_ctor:   */ &gciter_copy,
-			/* tp_any_ctor:    */ NULL,
-			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ &gciter_serialize
-		),
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gciter_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
-		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&gciter_bool,
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&iterator_printrepr),
-	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&gciter_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__EFED4BCD35433C3C),
-	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__27F47A9BEBC0B992),
-	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gciter_next,
-	/* .tp_iterator      = */ DEFIMPL(&default__tp_iterator__712535FF7E4C26E5),
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ gciter_members,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL(&iterator_next),
-	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
-};
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF GCIter *DCALL
-gcenum_iter(DeeObject *__restrict UNUSED(self)) {
-	DREF GCIter *result;
-	struct Dee_gc_head *first;
-	result = DeeObject_MALLOC(GCIter);
-	if unlikely(!result)
-		goto done;
-	if unlikely(GCLOCK_ACQUIRE_READ())
-		goto err_r;
-	first = gc_root;
-	/*  Find the first object that we can actually incref()
-	 * (The GC chain may contain dangling (aka. weak) objects) */
-	while (first && !Dee_IncrefIfNotZero(&first->gc_object)) {
-		ASSERT(first != first->gc_next);
-		first = first->gc_next;
-	}
-	GCLOCK_RELEASE_READ();
-	Dee_atomic_lock_init(&result->gi_lock);
-	/* Save the first object in the iterator. */
-	result->gi_next = first ? &first->gc_object : NULL;
-	DeeObject_Init(result, &GCIter_Type);
-done:
-	return result;
-err_r:
-	DeeObject_FREE(result);
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-gcenum_size(DeeObject *__restrict UNUSED(self)) {
-	size_t result = 0;
-	struct Dee_gc_head *iter;
-	if unlikely(GCLOCK_ACQUIRE_READ())
-		goto err;
-	for (iter = gc_root; iter; iter = iter->gc_next) {
-		ASSERT(iter != iter->gc_next);
-		++result;
-	}
-	GCLOCK_RELEASE_READ();
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-gcenum_contains(DeeObject *__restrict UNUSED(self),
-                DeeObject *__restrict ob) {
-	if (!DeeType_IsGC(Dee_TYPE(ob)))
-		return_false;
-#if defined(GCHEAD_ISTRACKED)
-	return_bool(GCHEAD_ISTRACKED(DeeGC_Head(ob)));
-#else /* GCHEAD_ISTRACKED */
-	{
-		struct Dee_gc_head *iter;
-		if unlikely(GCLOCK_ACQUIRE_READ())
-			goto err;
-		for (iter = gc_root; iter; iter = iter->gc_next) {
-			ASSERT(iter != iter->gc_next);
-			if (&iter->gc_object == ob) {
-				GCLOCK_RELEASE_READ();
-				return_true;
-			}
-		}
-		GCLOCK_RELEASE_READ();
-	}
-	return_false;
-err:
-	return NULL;
-#endif /* !GCHEAD_ISTRACKED */
-}
-
-PRIVATE struct type_seq gcenum_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcenum_contains,
-	/* .tp_getitem                    = */ DEFIMPL(&default__seq_operator_getitem__with__seq_operator_getitem_index),
-	/* .tp_delitem                    = */ DEFIMPL(&default__seq_operator_delitem__unsupported),
-	/* .tp_setitem                    = */ DEFIMPL(&default__seq_operator_setitem__unsupported),
-	/* .tp_getrange                   = */ DEFIMPL(&default__seq_operator_getrange__with__seq_operator_getrange_index__and__seq_operator_getrange_index_n),
-	/* .tp_delrange                   = */ DEFIMPL(&default__seq_operator_delrange__unsupported),
-	/* .tp_setrange                   = */ DEFIMPL(&default__seq_operator_setrange__unsupported),
-	/* .tp_foreach                    = */ DEFIMPL(&default__foreach__with__iter),
-	/* .tp_foreach_pair               = */ DEFIMPL(&default__foreach_pair__with__iter),
-	/* .tp_bounditem                  = */ DEFIMPL(&default__seq_operator_bounditem__with__seq_operator_getitem),
-	/* .tp_hasitem                    = */ DEFIMPL(&default__seq_operator_hasitem__with__seq_operator_sizeob),
-	/* .tp_size                       = */ DEFIMPL(&default__size__with__sizeob),
-	/* .tp_size_fast                  = */ NULL,
-	/* .tp_getitem_index              = */ DEFIMPL(&default__seq_operator_getitem_index__with__seq_operator_foreach),
-	/* .tp_getitem_index_fast         = */ NULL,
-	/* .tp_delitem_index              = */ DEFIMPL(&default__seq_operator_delitem_index__unsupported),
-	/* .tp_setitem_index              = */ DEFIMPL(&default__seq_operator_setitem_index__unsupported),
-	/* .tp_bounditem_index            = */ DEFIMPL(&default__seq_operator_bounditem_index__with__seq_operator_getitem_index),
-	/* .tp_hasitem_index              = */ DEFIMPL(&default__seq_operator_hasitem_index__with__seq_operator_size),
-	/* .tp_getrange_index             = */ DEFIMPL(&default__seq_operator_getrange_index__with__seq_operator_size__and__seq_operator_iter),
-	/* .tp_delrange_index             = */ DEFIMPL(&default__seq_operator_delrange_index__unsupported),
-	/* .tp_setrange_index             = */ DEFIMPL(&default__seq_operator_setrange_index__unsupported),
-	/* .tp_getrange_index_n           = */ DEFIMPL(&default__seq_operator_getrange_index_n__with__seq_operator_size__and__seq_operator_iter),
-	/* .tp_delrange_index_n           = */ DEFIMPL(&default__seq_operator_delrange_index_n__unsupported),
-	/* .tp_setrange_index_n           = */ DEFIMPL(&default__seq_operator_setrange_index_n__unsupported),
-	/* .tp_trygetitem                 = */ DEFIMPL(&default__seq_operator_trygetitem__with__seq_operator_trygetitem_index),
-	/* .tp_trygetitem_index           = */ DEFIMPL(&default__seq_operator_trygetitem_index__with__seq_operator_foreach),
-	/* .tp_trygetitem_string_hash     = */ DEFIMPL(&default__trygetitem_string_hash__with__trygetitem),
-	/* .tp_getitem_string_hash        = */ DEFIMPL(&default__getitem_string_hash__with__getitem),
-	/* .tp_delitem_string_hash        = */ DEFIMPL(&default__delitem_string_hash__with__delitem),
-	/* .tp_setitem_string_hash        = */ DEFIMPL(&default__setitem_string_hash__with__setitem),
-	/* .tp_bounditem_string_hash      = */ DEFIMPL(&default__bounditem_string_hash__with__bounditem),
-	/* .tp_hasitem_string_hash        = */ DEFIMPL(&default__hasitem_string_hash__with__hasitem),
-	/* .tp_trygetitem_string_len_hash = */ DEFIMPL(&default__trygetitem_string_len_hash__with__trygetitem),
-	/* .tp_getitem_string_len_hash    = */ DEFIMPL(&default__getitem_string_len_hash__with__getitem),
-	/* .tp_delitem_string_len_hash    = */ DEFIMPL(&default__delitem_string_len_hash__with__delitem),
-	/* .tp_setitem_string_len_hash    = */ DEFIMPL(&default__setitem_string_len_hash__with__setitem),
-	/* .tp_bounditem_string_len_hash  = */ DEFIMPL(&default__bounditem_string_len_hash__with__bounditem),
-	/* .tp_hasitem_string_len_hash    = */ DEFIMPL(&default__hasitem_string_len_hash__with__hasitem),
-};
-
-PRIVATE struct type_member tpconst gcenum_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &GCIter_Type),
-	TYPE_MEMBER_END
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-gcenum_collect(DeeObject *UNUSED(self),
-               size_t argc, DeeObject *const *argv) {
-	size_t result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("collect", params: """
-	size_t max = (size_t)-1;
-""", docStringPrefix: "gcenum");]]]*/
-#define gcenum_collect_params "max=!-1"
-	struct {
-		size_t max_;
-	} args;
-	args.max_ = (size_t)-1;
-	DeeArg_Unpack0Or1X(err, argc, argv, "collect", &args.max_, UNPxSIZ, DeeObject_AsSizeM1);
-/*[[[end]]]*/
-	result = DeeGC_Collect(args.max_);
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
-gcenum_referred(DeeObject *UNUSED(self),
-                size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referred", params: """
-	DeeObject *start;
-""", docStringPrefix: "gcenum");]]]*/
-#define gcenum_referred_params "start"
-	struct {
-		DeeObject *start;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "referred", &args.start);
-/*[[[end]]]*/
-	return DeeGC_NewReferred(args.start);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
-gcenum_referredgc(DeeObject *UNUSED(self),
-                  size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referredgc", params: """
-	DeeObject *start;
-""", docStringPrefix: "gcenum");]]]*/
-#define gcenum_referredgc_params "start"
-	struct {
-		DeeObject *start;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "referredgc", &args.start);
-/*[[[end]]]*/
-	return DeeGC_NewReferredGC(args.start);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
-gcenum_reachable(DeeObject *UNUSED(self),
-                 size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("reachable", params: """
-	DeeObject *start;
-""", docStringPrefix: "gcenum");]]]*/
-#define gcenum_reachable_params "start"
-	struct {
-		DeeObject *start;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "reachable", &args.start);
-/*[[[end]]]*/
-	return DeeGC_NewReachable(args.start);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
-gcenum_reachablegc(DeeObject *UNUSED(self),
-                   size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("reachablegc", params: """
-	DeeObject *start;
-""", docStringPrefix: "gcenum");]]]*/
-#define gcenum_reachablegc_params "start"
-	struct {
-		DeeObject *start;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "reachablegc", &args.start);
-/*[[[end]]]*/
-	return DeeGC_NewReachableGC(args.start);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
-gcenum_referring(DeeObject *UNUSED(self),
-                 size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("referring", params: """
-	DeeObject *to;
-""", docStringPrefix: "gcenum");]]]*/
-#define gcenum_referring_params "to"
-	struct {
-		DeeObject *to;
-	} args;
-	DeeArg_Unpack1(err, argc, argv, "referring", &args.to);
-/*[[[end]]]*/
-	return DeeGC_NewGCReferred(args.to);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-gcenum_isreferring(DeeObject *UNUSED(self),
-                   size_t argc, DeeObject *const *argv) {
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("isreferring", params: """
-	DeeObject *from;
-	DeeObject *to;
-""", docStringPrefix: "gcenum");]]]*/
-#define gcenum_isreferring_params "from,to"
-	struct {
-		DeeObject *from;
-		DeeObject *to;
-	} args;
-	DeeArg_UnpackStruct2(err, argc, argv, "isreferring", &args, &args.from, &args.to);
-/*[[[end]]]*/
-	return_bool(DeeGC_ReferredBy(args.from, args.to));
-err:
-	return NULL;
-}
-
-
-PRIVATE struct type_method tpconst gcenum_methods[] = {
-	TYPE_METHOD_F("collect", &gcenum_collect, METHOD_FNOREFESCAPE,
-	              "(" gcenum_collect_params ")->?Dint\n"
-	              "Try to collect at most @max GC objects and return the actual number collected\n"
-	              "Note that more than @max objects may be collected if sufficiently large reference cycles exist"),
-	TYPE_METHOD_F("referred", &gcenum_referred, METHOD_FNOREFESCAPE,
-	              "(" gcenum_referred_params ")->?DSet\n"
-	              "Returns a set of objects that are immediately referred to by @start"),
-	TYPE_METHOD_F("referredgc", &gcenum_referredgc, METHOD_FNOREFESCAPE,
-	              "(" gcenum_referredgc_params ")->?DSet\n"
-	              "Same as ?#referred, but only include gc-objects (s.a. :Type.__isgc__)"),
-	TYPE_METHOD_F("reachable", &gcenum_reachable, METHOD_FNOREFESCAPE,
-	              "(" gcenum_reachable_params ")->?DSet\n"
-	              "Returns a set of objects that are reachable from @start"),
-	TYPE_METHOD_F("reachablegc", &gcenum_reachablegc, METHOD_FNOREFESCAPE,
-	              "(" gcenum_reachablegc_params ")->?DSet\n"
-	              "Same as ?#reachable, but only include gc-objects (s.a. :Type.__isgc__)"),
-	TYPE_METHOD_F("referring", &gcenum_referring, METHOD_FNOREFESCAPE,
-	              "(" gcenum_referring_params ")->?DSet\n"
-	              "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to"),
-	TYPE_METHOD_F("isreferring", &gcenum_isreferring, METHOD_FNOREFESCAPE,
-	              "(" gcenum_isreferring_params ")->?Dbool\n"
-	              "Returns ?t if @to is referred to by @from, or ?f otherwise"),
-	TYPE_METHOD_END
-};
-
-PRIVATE DeeTypeObject GCEnum_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_GCEnum",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FABSTRACT,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_SINGLETON,
-	/* .tp_base     = */ &DeeSeq_Type,
-	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
-			/* T:              */ DeeObject,
-			/* tp_ctor:        */ NULL,
-			/* tp_copy_ctor:   */ NULL,
-			/* tp_any_ctor:    */ NULL,
-			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL /* Static singleton, so no serial needed */
-		),
-		/* .tp_dtor        = */ NULL,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ DEFIMPL(&object_str),
-		/* .tp_repr = */ DEFIMPL(&default__repr__with__printrepr),
-		/* .tp_bool = */ DEFIMPL(&default__seq_operator_bool__with__seq_operator_sizeob),
-		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
-		/* .tp_printrepr = */ DEFIMPL(&default_seq_printrepr),
-	},
-	/* .tp_visit         = */ NULL,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ DEFIMPL(&default__tp_math__6AAE313158D20BA0),
-	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__96C7A3207FAE93E2),
-	/* .tp_seq           = */ &gcenum_seq,
-	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
-	/* .tp_iterator      = */ DEFIMPL_UNSUPPORTED(&default__tp_iterator__C6F8E138F179B5AD),
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ DEFIMPL_UNSUPPORTED(&default__tp_with__0476D7EDEFD2E7B7),
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ gcenum_methods,
-	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ gcenum_class_members,
-	/* .tp_method_hints  = */ NULL,
-	/* .tp_call          = */ DEFIMPL_UNSUPPORTED(&default__call__unsupported),
-	/* .tp_callable      = */ DEFIMPL_UNSUPPORTED(&default__tp_callable__EC3FFC1C149A47D0),
-};
-
-
-/* An generic sequence singleton that can be
- * iterated to yield all tracked GC objects.
- * This object also offers a hand full of member functions
- * that user-space an invoke to trigger various GC-related
- * functionality:
- *   - collect(max: int = -1): int;
- * Also: remember that this derives from `Sequence', so you
- *       can use all its attributes, like `empty', etc.
- * NOTE: This object is exported as `gc from deemon' */
-PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
-	OBJECT_HEAD_INIT(&GCEnum_Type)
-};
-
-/* GC objects referring to X */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeGC_CollectGCReferred(GCSetMaker *__restrict self,
-                        DeeObject *__restrict target) {
-	struct Dee_gc_head *iter;
-again:
-	if unlikely(GCLOCK_ACQUIRE_READ())
-		goto err;
-	for (iter = gc_root; iter; iter = iter->gc_next) {
-		DREF DeeObject *obj;
-		ASSERT(iter != iter->gc_next);
-		obj = &iter->gc_object;
-		if (!Dee_IncrefIfNotZero(obj))
-			continue;
-		if (DeeGC_ReferredBy(obj, target)) {
-			int error = GCSetMaker_Insert(self, obj);
-			if (error == 0)
-				continue;
-			if (error > 0)
-				goto decref_obj;
-			GCLOCK_RELEASE_READ();
-			Dee_Decref_unlikely(obj);
-			if (Dee_CollectMemory(self->gs_err))
-				goto again;
-			goto err;
-		} else {
-decref_obj:
-			if (!Dee_DecrefIfNotOne(obj)) {
-				GCLOCK_RELEASE_READ();
-				Dee_Decref_likely(obj);
-				goto again;
-			}
-		}
-	}
-	GCLOCK_RELEASE_READ();
-	return 0;
-err:
-	return -1;
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 DECL_END

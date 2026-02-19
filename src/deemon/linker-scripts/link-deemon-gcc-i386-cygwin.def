@@ -339,10 +339,6 @@ EXPORTS
 	_DeeGCObject_TryRealloc@8=DeeGCObject_TryRealloc@8
 	_DeeGC_Collect@4=DeeGC_Collect@4
 	_DeeGC_Track@4=DeeGC_Track@4
-	_DeeGC_TrackMany_Exec@8=DeeGC_TrackMany_Exec@8
-	_DeeGC_TrackMany_Lock@0=DeeGC_TrackMany_Lock@0
-	_DeeGC_TrackMany_TryLock@0=DeeGC_TrackMany_TryLock@0
-	_DeeGC_TrackMany_Unlock@0=DeeGC_TrackMany_Unlock@0
 	_DeeGC_Untrack@4=DeeGC_Untrack@4
 	_DeeHashSet_Contains@8=DeeHashSet_Contains@8
 	_DeeHashSet_FromRoSet@4=DeeHashSet_FromRoSet@4
@@ -821,7 +817,6 @@ EXPORTS
 	_DeeObject_CallTupleKw@12=DeeObject_CallTupleKw@12
 	_DeeObject_CallTupleKwInherited@12=DeeObject_CallTupleKwInherited@12
 	_DeeObject_Class@4=DeeObject_Class@4
-	_DeeObject_Clear@4=DeeObject_Clear@4
 	_DeeObject_CmpEq@8=DeeObject_CmpEq@8
 	_DeeObject_CmpEqAsBool@8=DeeObject_CmpEqAsBool@8
 	_DeeObject_CmpGe@8=DeeObject_CmpGe@8
@@ -954,7 +949,6 @@ EXPORTS
 	_DeeObject_NewTupleKw@12=DeeObject_NewTupleKw@12
 	_DeeObject_Or@8=DeeObject_Or@8
 	_DeeObject_OrUInt32@8=DeeObject_OrUInt32@8
-	_DeeObject_PClear@8=DeeObject_PClear@8
 	_DeeObject_PInvokeOperator@16=DeeObject_PInvokeOperator@16
 	_DeeObject_PTInvokeOperator@20=DeeObject_PTInvokeOperator@20
 	_DeeObject_Pos@4=DeeObject_Pos@4
@@ -1017,7 +1011,6 @@ EXPORTS
 	_DeeObject_TCallKw@20=DeeObject_TCallKw@20
 	_DeeObject_TCallTuple@12=DeeObject_TCallTuple@12
 	_DeeObject_TCallTupleKw@16=DeeObject_TCallTupleKw@16
-	_DeeObject_TClear@8=DeeObject_TClear@8
 	_DeeObject_TCmpEq@12=DeeObject_TCmpEq@12
 	_DeeObject_TCmpGe@12=DeeObject_TCmpGe@12
 	_DeeObject_TCmpGr@12=DeeObject_TCmpGr@12
@@ -1110,7 +1103,6 @@ EXPORTS
 	_DeeObject_TMul@12=DeeObject_TMul@12
 	_DeeObject_TNeg@8=DeeObject_TNeg@8
 	_DeeObject_TOr@12=DeeObject_TOr@12
-	_DeeObject_TPClear@12=DeeObject_TPClear@12
 	_DeeObject_TPos@8=DeeObject_TPos@8
 	_DeeObject_TPow@12=DeeObject_TPow@12
 	_DeeObject_TPrint@16=DeeObject_TPrint@16
@@ -1144,7 +1136,6 @@ EXPORTS
 	_DeeObject_TTryGetItemStringLenHash@20=DeeObject_TTryGetItemStringLenHash@20
 	_DeeObject_TVCallAttrStringHashf@24=DeeObject_TVCallAttrStringHashf@24
 	_DeeObject_TVCallAttrf@20=DeeObject_TVCallAttrf@20
-	_DeeObject_TVisit@16=DeeObject_TVisit@16
 	_DeeObject_TXor@12=DeeObject_TXor@12
 	_DeeObject_ThisCall@16=DeeObject_ThisCall@16
 	_DeeObject_ThisCallInherited@16=DeeObject_ThisCallInherited@16
@@ -1181,7 +1172,6 @@ EXPORTS
 	_DeeObject_VTInvokeOperatorf@20=DeeObject_VTInvokeOperatorf@20
 	_DeeObject_VThisCallInheritedf@16=DeeObject_VThisCallInheritedf@16
 	_DeeObject_VThisCallf@16=DeeObject_VThisCallf@16
-	_DeeObject_Visit@12=DeeObject_Visit@12
 	_DeeObject_XHashv@8=DeeObject_XHashv@8
 	_DeeObject_Xor@8=DeeObject_Xor@8
 	_DeeObject_XorUInt32@8=DeeObject_XorUInt32@8

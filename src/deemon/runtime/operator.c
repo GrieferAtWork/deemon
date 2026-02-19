@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>          /* DeeObject_FreeTracker */
 #include <deemon/class.h>          /* instance_* */
 #include <deemon/error.h>          /* DeeError_BufferError, DeeError_Throwf */
+#include <deemon/error-rt.h>          /* DeeError_BufferError, DeeError_Throwf */
 #include <deemon/gc.h>             /* DeeGC_Track */
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE, DeeObject_IsKw */
@@ -966,6 +967,7 @@ recursion:
 #undef Xrepr_frame
 
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, Dee_visit_t proc, void *arg)) {
 	LOAD_TP_SELF;
 	do {
@@ -1030,6 +1032,7 @@ DEFINE_OPERATOR(void, PClear, (DeeObject *__restrict self, unsigned int gc_prior
 		}
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1345,7 +1348,7 @@ DEFINE_OPERATOR(int, GetBuf, (DeeObject *RESTRICT_IF_NOTYPE self,
 		}
 		return (*tp_self->tp_buffer->tp_getbuf)(self, info, flags);
 	}
-	err_unimplemented_operator(tp_self, OPERATOR_GETBUF);
+	DeeRT_ErrNoBufferInterface(tp_self);
 err:
 	return -1;
 }
