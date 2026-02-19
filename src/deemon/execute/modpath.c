@@ -2300,13 +2300,13 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 		DeeObject *gc_tail = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
-		DeeGC_TrackAll(gc_head, gc_tail);
+		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NOCOLLECT);
 	} else {
 		DeeObject *gc_head = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
 		DeeObject *gc_tail = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackAll(gc_head, gc_tail);
+		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NOCOLLECT);
 	}
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DeeGC_TrackMany_Lock();
@@ -2967,6 +2967,14 @@ remember_dir_module:
 			result = DeeGC_TRACK(DeeModuleObject, result);
 		}
 		module_abstree_lock_endwrite();
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
+#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+		/* ... because we called `DeeGC_TrackAll(..., DeeGC_TRACK_F_NOCOLLECT)' above */
+		DeeGC_CollectAsNecessary();
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	} else {
 free_abs_filename_and_return_result:
 		if (!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME))

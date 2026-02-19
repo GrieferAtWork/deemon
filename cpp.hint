@@ -1524,6 +1524,8 @@
 #define memval_foreach_obj(...) for(;;)
 #define memval_foreach_obj_end
 
+#define LOCAL_foreach_generation() for(;;)
+
 #define LOCAL_seq_compare__(x) seq_compare__##x
 #define LOCAL_seq_docompare__(x) seq_docompare__##x
 #define LOCAL_NONNULL

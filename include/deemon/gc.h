@@ -257,10 +257,16 @@ struct Dee_gc_head {
 #define DeeGC_Object(head)   ((DeeObject *)((__BYTE_TYPE__ *)(head) + Dee_GC_OBJECT_OFFSET))
 #endif /* !__INTELLISENSE__ */
 
+/* Possible flags for `DeeGC_TrackEx()' and `DeeGC_TrackAll()' */
+#define DeeGC_TRACK_F_NORMAL    0x0000 /* Normal tracking flags */
+#define DeeGC_TRACK_F_NOCOLLECT 0x0001 /* Don't collect garbage as part of tracking (caller must `DeeGC_CollectAsNecessary()' once ready) */
+
 /* Begin tracking a given GC-allocated object. */
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL DeeGC_Track(DREF DeeObject *__restrict ob);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *DCALL DeeGC_TrackEx(DREF DeeObject *__restrict ob, unsigned int flags);
 DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
-#define DeeGC_TRACK(T, ob) ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
+#define DeeGC_TRACK(T, ob)           ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
+#define DeeGC_TRACK_EX(T, ob, flags) ((DREF T *)DeeGC_TrackEx(Dee_AsObject(ob), flags))
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Try to untrack "ob" synchronously (and re-return "ob"), but if the necessary
@@ -272,8 +278,13 @@ INTDEF NONNULL((1)) DeeObject *DCALL DeeGC_UntrackAsync(DeeObject *__restrict ob
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct Dee_gc_head' */
-DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackAll(DeeObject *first, DeeObject *last);
+ * already been linked together using their `struct Dee_gc_head'
+ * @param: flags: Set of `DeeGC_TRACK_F_*' */
+DFUNDEF NONNULL((1, 2)) void DCALL
+DeeGC_TrackAll(DeeObject *first, DeeObject *last, unsigned int flags);
+
+/* Call this function (once no more locks are held) after using `DeeGC_TRACK_F_NOCOLLECT' */
+DFUNDEF void DCALL DeeGC_CollectAsNecessary(void);
 
 /* Try to collect `max_objects' GC-objects (though more than that
  * may be collected), returning the actual amount collected.
@@ -351,7 +362,9 @@ DFUNDEF void DCALL DeeGC_TrackMany_Lock(void);
 DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackMany_Exec(DeeObject *first, DeeObject *last);
 DFUNDEF void DCALL DeeGC_TrackMany_Unlock(void);
 
-#define DeeGC_TRACK(T, ob)   ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
+#define DeeGC_TRACK(T, ob)           ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
+#define DeeGC_TRACK_EX(T, ob, flags) DeeGC_TRACK(T, ob) /* Forward compat */
+
 
 /* Try to collect at most `max_objects' GC-objects,
  * returning the actual amount collected. */

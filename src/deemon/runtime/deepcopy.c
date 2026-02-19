@@ -896,10 +896,12 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 		Dee_weakref_initmany_lock(self->dcc_weakrefv, self->dcc_weakrefc);
 		Dee_weakref_initmany_exec(self->dcc_weakrefv, self->dcc_weakrefc);
-		DeeGC_TrackAll(self->dcc_gc_head, self->dcc_gc_tail);
+		DeeGC_TrackAll(self->dcc_gc_head, self->dcc_gc_tail, DeeGC_TRACK_F_NOCOLLECT);
 		objv = Dee_weakref_initmany_unlock_and_inherit(self->dcc_weakrefv, self->dcc_weakrefc);
 		Dee_Decrefv_unlikely(objv, self->dcc_weakrefc);
 		ASSERT(objv == (DeeObject **)self->dcc_weakrefv);
+		/* ... because we called `DeeGC_TrackAll(..., DeeGC_TRACK_F_NOCOLLECT)' above */
+		DeeGC_CollectAsNecessary();
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		struct Dee_unlockinfo unlock;
 		unlock.dui_unlock = &gc_trackmany_unlockinfo_cb;
@@ -915,7 +917,7 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	} else if (self->dcc_gc_head) {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-		DeeGC_TrackAll(self->dcc_gc_head, self->dcc_gc_tail);
+		DeeGC_TrackAll(self->dcc_gc_head, self->dcc_gc_tail, DeeGC_TRACK_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		DeeGC_TrackMany_Lock();
 		DeeGC_TrackMany_Exec(DeeGC_Object(self->dcc_gc_head), DeeGC_Object(self->dcc_gc_tail));

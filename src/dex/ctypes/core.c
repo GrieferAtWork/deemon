@@ -599,10 +599,12 @@ ptype_fini(DeePointerTypeObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 ptype_visit(DeePointerTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	ASSERTF(DeeObject_Check(DeeSType_AsType(self->pt_orig)),
 	        "Missing base type for %p:%s",
 	        self,
 	        self->pt_base.st_base.tp_name);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	Dee_Visit(DeeSType_AsType(self->pt_orig));
 }
 

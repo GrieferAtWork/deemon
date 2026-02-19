@@ -491,7 +491,7 @@ corrupt_dep_index_reloc_rrel:
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 		DeeObject *gc_head = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
 		DeeObject *gc_tail = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackAll(gc_head, gc_tail);
+		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		struct Dee_gc_head *gc_head = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
 		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
