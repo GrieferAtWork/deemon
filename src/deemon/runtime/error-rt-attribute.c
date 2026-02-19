@@ -33,14 +33,14 @@
 #include <deemon/kwds.h>               /* DeeKwArgs* */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_FDIDINIT, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/mro.h>                /* DeeObject_FindAttrInfoStringLenHash, DeeObject_TFindPrivateAttrInfoStringLenHash, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_*, Dee_attrinfo */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/objmethod.h>          /* DeeClsMemberObject, DeeClsMember_Type, DeeClsMethodObject, DeeClsMethod_Type, DeeClsPropertyObject, DeeClsProperty_Type, DeeKwClsMethod_Type, DeeKwObjMethod_Type, DeeObjMethodObject, DeeObjMethod_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* access, memcmp, memset, stpcpy, strlen */
 #include <deemon/system.h>             /* DeeSystem_IsStaticPointer */
-#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_type_member, Dee_type_member_desc, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_type_member, Dee_type_member_desc, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_Hash* */
 

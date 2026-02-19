@@ -26,37 +26,38 @@
 #include <deemon/alloc.h>              /* DeeDbgObject_*, DeeMem_ClearCaches, DeeObject_*, DeeSlab_ENUMERATE, DeeSlab_Invoke, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
 #include <deemon/asm.h>                /* ASM_RET_NONE, instruction_t */
-#include <hybrid/sched/yield.h>                /* ASM_RET_NONE, instruction_t */
-#include <deemon/error.h>                /* ASM_RET_NONE, instruction_t */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
-#include <deemon/class.h>               /* return_bool, return_false, return_true */
+#include <deemon/class.h>              /* instance_clear, instance_tclear */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_CODE_FFINALLY, instruction_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/error.h>              /* DeeError_NOTIMPLEMENTED */
 #include <deemon/exec.h>               /*  */
 #include <deemon/format.h>             /* PRFuSIZ */
-#include <deemon/gc.h>                 /* DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_gc_head */
-#include <deemon/thread.h>                 /* DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_gc_head */
+#include <deemon/gc.h>                 /* DeeGC_*, Dee_GC_*, Dee_gc_head */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/module.h>             /* DeeModule* */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref*, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_refcnt_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t, Dee_weakref_list, Dee_weakref_support_fini, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* bzeroc, link, memcpy*, memmovedownc, memmoveupc, memset */
-#include <deemon/type.h>               /* DeeObject_GCPriority, DeeObject_Init, DeeType_IsGC, DeeType_Type, Dee_GC_PRIORITY_EARLY, Dee_GC_PRIORITY_LATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_ResumeAll, DeeThread_SuspendAll, DeeThread_TrySuspendAll */
+#include <deemon/type.h>               /* DeeObject_GCPriority, DeeObject_Init, DeeType_*, Dee_GC_PRIORITY_EARLY, Dee_GC_PRIORITY_LATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
+#include <deemon/util/weakref.h>       /* Dee_weakref_list_transfer_to_dummy */
 
-#include <hybrid/overflow.h> /* OVERFLOW_UADD */
-#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+#include <hybrid/overflow.h>    /* OVERFLOW_UADD */
+#include <hybrid/sched/yield.h> /* SCHED_YIELD */
+#include <hybrid/typecore.h>    /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include "../objects/gc_inspect.h"
 #include "strings.h"
 
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* offsetof, size_t */
-#include <stdint.h>  /* UINT32_C, uint16_t */
+#include <stdint.h>  /* UINT32_C, uint16_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEX

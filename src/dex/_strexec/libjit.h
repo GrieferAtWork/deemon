@@ -24,10 +24,10 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FFree, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC */
 #include <deemon/module.h>          /* DeeModuleObject, Dee_module_symbol */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_XDecref, Dee_hash_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_XDecref, Dee_hash_t, ITER_DONE, OBJECT_HEAD */
 #include <deemon/string.h>          /* Dee_unicode_printer */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, bzero */
-#include <deemon/type.h>            /* Dee_XVisit, Dee_operator_t */
+#include <deemon/type.h>            /* Dee_XVisit, Dee_operator_t, Dee_visit_t */
 #include <deemon/util/rlock.h>      /* Dee_rshared_lock_* */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */

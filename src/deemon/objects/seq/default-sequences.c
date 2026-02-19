@@ -31,12 +31,12 @@
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>             /* DeeModule_CallExternStringf */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_MISSING, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_foreach_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_MISSING, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_foreach_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */

@@ -30,7 +30,7 @@
 #include "api.h"
 
 #include <hybrid/int128.h>   /* __hybrid_int128_t, __hybrid_uint128_t */
-#include <hybrid/typecore.h> /* __*_TYPE__, __SIZEOF_POINTER__, __UINT32_C, __UINT64_C */
+#include <hybrid/typecore.h> /* __*_TYPE__, __SIZEOF_POINTER__, __UINT*_C */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uintptr_t */

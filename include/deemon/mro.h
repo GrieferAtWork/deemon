@@ -64,7 +64,7 @@
 
 #include "system-features.h" /* access, memcpy */
 #include "tuple.h"           /* DeeTuple_ELEM, DeeTuple_SIZE */
-#include "type.h"            /* Dee_kwobjmethod_t, Dee_membercache, TYPE_METHOD_FKWDS, type_* */
+#include "type.h"            /* Dee_kwobjmethod_t, Dee_membercache, Dee_visit_t, TYPE_METHOD_FKWDS, type_* */
 #include "types.h"           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
 #include "util/hash.h"       /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h"       /* Dee_shared_rwlock_t */
@@ -76,7 +76,7 @@
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "error-rt.h" /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_Err* */
-#include "object.h"   /* Dee_BOUND_FROMPRESENT_BOUND, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_visit_t */
+#include "object.h"   /* Dee_BOUND_FROMPRESENT_BOUND, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref */
 #ifndef __INTELLISENSE__
 #include "alloc.h" /* Dee_Free */
 #endif /* !__INTELLISENSE__ */

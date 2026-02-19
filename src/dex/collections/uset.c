@@ -36,14 +36,14 @@
 #include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_* */
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/roset.h>           /* DeeRoSetObject, DeeRoSet_Type */
 #include <deemon/seq.h>             /* DeeIterator_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* memcpyc */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */

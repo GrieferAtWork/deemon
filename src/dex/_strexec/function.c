@@ -33,13 +33,13 @@
 #include <deemon/dict.h>            /* DeeDictObject, DeeDict_* */
 #include <deemon/error.h>           /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/none.h>            /* DeeNone_NewRef, return_none */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_TryCompareEq, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Clear, Dee_CompareFromDiff, Dee_CompareNe, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_TryCompareEq, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Clear, Dee_CompareFromDiff, Dee_CompareNe, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_hash_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcmp, memcpy*, mempcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, METHOD_F*, STRUCT_*, TF_NONE, TP_FFINAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_FFINAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */

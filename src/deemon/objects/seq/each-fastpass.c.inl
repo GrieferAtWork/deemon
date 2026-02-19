@@ -33,13 +33,13 @@
 #include <deemon/map.h>                /* DeeMapping_NewEmpty, Dee_EmptyMapping */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
 #include <deemon/mro.h>                /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attrspec */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* mempcpyc, strlen */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, OPERATOR_CALL, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, OPERATOR_CALL, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"

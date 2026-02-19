@@ -36,7 +36,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/exec.h>            /* DeeExec_GetTimestamp */
 #include <deemon/format.h>          /* PRF* */
-#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_Head, DeeGC_Track, Dee_gc_head, Dee_gc_head_link */
+#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_*, Dee_GC_OBJECT_OFFSET, Dee_gc_head, Dee_gc_head_link */
 #include <deemon/heap.h>            /* DeeHeap_GetRegionOf, Dee_HEAPCHUNK_*, Dee_heapchunk, Dee_heapregion, Dee_heaptail */
 #include <deemon/module.h>          /* DeeModule*, Dee_DEC_FLOADOUTDATED, Dee_DEC_FUNTRUSTED, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_module_buildid, Dee_module_symbol */
 #include <deemon/string.h>          /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
@@ -52,7 +52,7 @@
 #include <hybrid/typecore.h>         /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
+#include <stddef.h>  /* offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* int32_t, uintN_t, uintptr_t */
 
 #undef byte_t

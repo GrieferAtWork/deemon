@@ -32,9 +32,9 @@
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/instancemethod.h>     /* DeeInstanceMethodObject */
 #include <deemon/none.h>               /* DeeNone_Singleton, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_YES, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_YES, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"

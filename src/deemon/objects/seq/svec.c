@@ -29,11 +29,11 @@
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_MISSING, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_foreach_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_MISSING, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_foreach_t, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpyc */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visitv, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_atomic_rwlock_t */
 

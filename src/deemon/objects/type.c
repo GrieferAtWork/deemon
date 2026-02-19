@@ -42,7 +42,7 @@
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_OfPointer, Dee_module_object */
 #include <deemon/mro.h>                /* DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_FindAttr, DeeType_FindAttrInfoStringLenHash, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_IterAttr, DeeType_QueryAttributeHash, DeeType_QueryInstanceAttributeHash, DeeType_Set*Attr*, DeeType_VCallAttrStringHashf, DeeType_VCallAttrf, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attrspec, Dee_membercache_fini, Dee_membercache_init */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecref_unlikely, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecref_unlikely, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeType_GetNativeOperator, DeeType_GetNativeOperatorWithoutUnsupported, Dee_tno_id */
 #include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
 #include <deemon/rodict.h>             /* DeeRoDictObject, DeeRoDict_Type */
@@ -54,7 +54,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* bzero*, memcpyc */
 #include <deemon/tuple.h>              /* DeeNullableTuple_Type, DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_UndoConstruction, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeTypeType_GetOperatorByName, DeeType_*, Dee_GC_PRIORITY_CLASS, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_type_*, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_*, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_UndoConstruction, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeTypeType_GetOperatorByName, DeeType_*, Dee_GC_PRIORITY_CLASS, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_type_*, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash-io.h>       /* Dee_hash_vidx_t */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 #include <deemon/util/weakref.h>       /* Dee_weakref_* */

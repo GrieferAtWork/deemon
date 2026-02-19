@@ -18,7 +18,23 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
+#include <deemon/api.h>
+
+#include <deemon/format.h>       /* PRFuSIZ */
+#include <deemon/gc.h>           /* DeeGC_Head, DeeGC_TRACK_F_NOCOLLECT, Dee_GC_*, Dee_gc_head */
+#include <deemon/object.h>       /* DeeObject, Dee_Decref, Dee_TYPE, Dee_refcnt_t */
+#include <deemon/type.h>         /* DeeType_GetName */
+#include <deemon/types.h>        /* DeeObject, Dee_TYPE, Dee_refcnt_t */
+#include <deemon/util/atomic.h>  /* atomic_* */
+#include <deemon/util/weakref.h> /* Dee_weakref_list_kill_dummy */
+
+#include <hybrid/compiler.h>
+
 #include "gc.c"
+
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uintptr_t */
 #define DEFINE_gc_generation_collect_or_unlock
 //#define DEFINE_gc_collectall_collect_or_unlock
 #endif /* __INTELLISENSE__ */

@@ -27,8 +27,8 @@
 #include <deemon/bool.h>     /* return_bool */
 #include <deemon/callable.h> /* DeeCallable_Type */
 #include <deemon/format.h>   /* DeeFormat_Printf */
-#include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_*, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
-#include <deemon/type.h>     /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_cmp, type_member */
+#include <deemon/object.h>   /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_*, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/type.h>     /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_cmp, type_member */
 
 #include "../generic-proxy.h"
 #include "removeif-cb.h"

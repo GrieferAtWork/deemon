@@ -28,7 +28,7 @@
 #include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_load, __hybrid_atomic_store */
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__, __UINT32_C, __UINT64_C */
 
-#include "../types.h" /* DREF, DeeObject, Dee_unlockinfo */
+#include "../types.h" /* DREF, DeeObject, Dee_unlockinfo, Dee_weakref_list */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

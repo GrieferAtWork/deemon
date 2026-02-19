@@ -33,7 +33,7 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_*, Dee_Compare, Dee_CompareFromDiff, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_COMPARE_*, Dee_Compare, Dee_CompareFromDiff, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_AsDigit, DeeUni_IsSpace, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
@@ -41,7 +41,7 @@
 #include <deemon/super.h>              /* DeeObject_TGetBuf, DeeSuper* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, bcmp, bzero, memcmp, memcpy, memmove, mempcpy, memset, memsetb, memsetl, memsetq, memsetw */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_InheritBuffer, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_InheritBuffer, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_Hash* */
 

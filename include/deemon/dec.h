@@ -48,7 +48,7 @@
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __FLOAT_WORD_ORDER__, __ORDER_BIG_ENDIAN__, __ORDER_LITTLE_ENDIAN__, __ORDER_PDP_ENDIAN__ */
 #include <hybrid/host.h>      /* __arm__, __i386__, __x86_64__ */
 
-#include "gc.h"      /* Dee_gc_head */
+#include "gc.h"      /* DeeGC_Object, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include "heap.h"    /* Dee_HEAPCHUNK_ALIGN, Dee_heapregion */
 #include "mapfile.h" /* DeeMapFile_Fini, Dee_SIZEOF_DeeMapFile */
 #endif /* DEE_SOURCE */

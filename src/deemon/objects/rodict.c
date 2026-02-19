@@ -34,7 +34,7 @@
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* Dee_None */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_neT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_neT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/pair.h>               /* DeeSeqPair*, DeeSeq_* */
 #include <deemon/rodict.h>             /* DeeRoDict*, Dee_EmptyRoDict, Dee_empty_rodict_object, Dee_rodict_builder*, _DeeRoDict_* */
@@ -42,7 +42,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* bzero*, memcpy, memmovedownc, mempcpyc, memset */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_F*, OPERATOR_*, STRUCT_*, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
 

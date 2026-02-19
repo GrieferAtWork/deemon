@@ -35,9 +35,9 @@
 #include <deemon/error.h>       /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/format.h>      /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/none.h>        /* return_none */
-#include <deemon/object.h>      /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/object.h>      /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/tuple.h>       /* DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>        /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>        /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h> /* atomic_* */
 #include <deemon/util/once.h>   /* Dee_once_* */
 

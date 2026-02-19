@@ -34,13 +34,13 @@
 #include <deemon/list.h>               /* DeeListObject, DeeList_*, _DeeList_SetAlloc */
 #include <deemon/method-hints.h>       /* DeeMA_*, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_Incref*, Dee_Movrefv, Dee_Setrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Clear, Dee_Compare, Dee_Decref*, Dee_Incref*, Dee_Movrefv, Dee_Setrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* memcpyc, memmovec, memmovedownc, memmoveupc, mempcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visitv, METHOD_FNOREFESCAPE, METHOD_FNOTHROW, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visitv, Dee_visit_t, METHOD_FNOREFESCAPE, METHOD_FNOTHROW, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */

@@ -29,11 +29,11 @@
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpy */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_*, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_*, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */

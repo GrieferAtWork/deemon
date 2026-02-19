@@ -27,11 +27,11 @@
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_StackDepth, DeeCode_Type, DeeDDIObject, DeeDDI_Empty, Dee_DDI_*, Dee_code_addr_t, Dee_ddi_*, code_addr_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* DeeFormat_Printf */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_*, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_COMPARE_*, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/system-features.h>    /* bcmp, bcmpc, memcpy* */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPtr */
 
 #include <hybrid/minmax.h>   /* MIN */

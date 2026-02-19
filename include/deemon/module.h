@@ -30,7 +30,7 @@
 
 #include "api.h"
 
-#include "gc.h"              /* Dee_gc_head_link */
+#include "gc.h"              /* Dee_gc_head, Dee_gc_head_link */
 #include "object.h"          /* DeeObject_NewRef */
 #include "string.h"          /* DeeString*, Dee_STRING_ERROR_FIGNORE */
 #include "system-features.h" /* bcmp, strlen */

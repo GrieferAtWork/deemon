@@ -35,10 +35,10 @@
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/mro.h>             /* Dee_ATTRINFO_CUSTOM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attriter_init, Dee_attriter_type */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* access, bzero, memcpy */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_member, type_method */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_member, type_method */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_cinit */
 

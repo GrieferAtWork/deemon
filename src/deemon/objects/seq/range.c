@@ -32,10 +32,10 @@
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Singleton */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 

@@ -31,14 +31,14 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_rets1_1 */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, DeeSeqOneObject, DeeSeq_OfPair */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* remainder */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UADD */

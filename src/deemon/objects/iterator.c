@@ -30,12 +30,12 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_PrintObjectRepr */
 #include <deemon/method-hints.h>       /* DeeMA_*, DeeObject_InvokeMethodHint */
 #include <deemon/none-operator.h>      /* DeeNone_Operator*, _DeeNone_retsm1_1 */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_return_compare, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeNO_iter_next_t, DeeNO_nextpair_t, DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"

@@ -50,7 +50,7 @@ ClCompile.BasicRuntimeChecks = Default
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #include <deemon/alloc.h>           /* Dee_CollectMemory */
 #include <deemon/format.h>          /* PRF* */
-#include <deemon/gc.h>              /* Dee_gc_head */
+#include <deemon/gc.h>              /* Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/heap.h>            /* DeeHeap_*, Dee_HEAPCHUNK_ALIGN, Dee_HEAP_M_*, Dee_heap_mallinfo, Dee_heapchunk, Dee_heapchunk_getnext, Dee_heapregion, Dee_heapregion_*, Dee_heaptail */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_libentry, Dee_module_object, _Dee_MODULE_FNOADDR */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANONYMOUS, MREMAP_MAYMOVE, O_RDWR, bzero, calloc, fprintf, free, getpagesize, malloc, memcpy, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */

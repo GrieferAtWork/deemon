@@ -25,11 +25,12 @@
 #include <deemon/float.h>           /* DeeFloatObject, DeeFloat_New, DeeFloat_Type */
 #include <deemon/format.h>          /* DeeFormat_Printf, PRF* */
 #include <deemon/int.h>             /* DeeInt_* */
-#include <deemon/object.h>          /* DeeObject_*, Dee_COMPARE_*, Dee_CompareFromDiff, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_return_compareT, Dee_visit_t */
+#include <deemon/object.h>          /* DeeObject_*, Dee_COMPARE_*, Dee_CompareFromDiff, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_return_compareT */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* bcmp, memcmp, memcpy, strcmp, strlen */
 #include <deemon/system.h>          /* DeeSystem_IsStaticPointer */
+#include <deemon/type.h>            /* Dee_visit_t */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_write, atomic_xch */
 #include <deemon/util/hash.h>       /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashPtr, Dee_HashStr */

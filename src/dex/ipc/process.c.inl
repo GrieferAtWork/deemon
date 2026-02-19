@@ -40,14 +40,14 @@
 #include <deemon/module.h>          /* DeeModule* */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/notify.h>          /* DeeNotify_*, Dee_GetEnv, Dee_NOTIFICATION_CLASS_ENVIRON, Dee_NOTIFICATION_CLASS_PWD */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_XClear, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_XClear, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>             /* DeeSeq_AsHeapVector, Dee_EmptySeq */
 #include <deemon/string.h>          /* DEFINE_STRING, DeeString*, Dee_UNICODE_PRINTER_*, Dee_string_utf_fini, Dee_string_utf_free, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_WIDTH_2BYTE, WSTR_LENGTH */
 #include <deemon/system-features.h> /* *_FILENO, *exec*, *spawn*, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_SetErrno, F_OK, O_CLOEXEC, WNOHANG, X_OK, _Exit, access, bzero*, chdir, close, cwait, detach, dup, dup2, environ, errno, fchdir, fork, getcwd, getpid, kill, memchr, memcpyc, mempcpyc, pipe2, read, strend, strlen, syscall, vfork, waccess, wait, wait4, waitpid, wchdir, wenviron, wgetcwd, write */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_Sleep */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_XVisitv, METHOD_FNOREFESCAPE, STRUCT_CONST, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_CONST, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_rwlock_* */
 

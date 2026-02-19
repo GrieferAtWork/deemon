@@ -30,12 +30,12 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/exec.h>               /* DeeExec_GetHome, DeeModule_*, Dee_GetArgv */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
-#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_UNTRACK, Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_gc_head, Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include <deemon/int.h>                /* DeeInt_NewUInt128 */
 #include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_MODULE_STRUCT_EX, Dee_MODULE_SYMBOL_EQUALS_STR, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_*, Dee_static_module_struct, _Dee_MODULE_* */
 #include <deemon/mro.h>                /* DeeObject_GenericFindAttrInfoStringLenHash, DeeObject_TGenericFindAttr, DeeObject_TGenericIterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRINFO_MODSYM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrperm_t, Dee_attrspec */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_uint128_t, Dee_visit_t, Dee_weakref_support_fini, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_uint128_t, Dee_weakref_support_fini, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FIGNORE, WSTR_LENGTH */
@@ -43,7 +43,7 @@
 #include <deemon/system.h>             /* DeeSystem_HAVE_FS_ICASE, DeeSystem_IsSep */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_*, DeeType_Type, Dee_GC_PRIORITY_MODULE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, METHOD_F*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_*, DeeType_Type, Dee_GC_PRIORITY_MODULE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQUIRE, Dee_atomic_cmpxch_val, atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_init */

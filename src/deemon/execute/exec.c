@@ -29,7 +29,7 @@
 #include <deemon/exec.h>            /* DeeExec_*, DeeModule_ClearLibPath, Dee_RUNATEXIT_FDONTRUN, Dee_RUNATEXIT_FRUNALL, Dee_SHUTDOWN_F_FAST */
 #include <deemon/file.h>            /* DeeFile_* */
 #include <deemon/filetypes.h>       /* DeeMemoryFile_Close, DeeMemoryFile_New */
-#include <deemon/gc.h>              /* DeeGC_Collect, DeeGC_IsEmptyWithoutDex */
+#include <deemon/gc.h>              /* DeeGC_* */
 #include <deemon/heap.h>            /* DeeHeap_Trim */
 #include <deemon/module.h>          /* DeeModule*, Dee_compiler_options, Dee_module_object */
 #include <deemon/notify.h>          /* DeeNotify_Shutdown */

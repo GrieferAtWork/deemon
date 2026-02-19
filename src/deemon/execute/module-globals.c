@@ -31,11 +31,11 @@
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>             /* DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_GET, Dee_module_* */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/pair.h>               /* DeeSeq_OfPairInherited */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include "../objects/generic-proxy.h"

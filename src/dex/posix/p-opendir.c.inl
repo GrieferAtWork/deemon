@@ -33,13 +33,13 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/file.h>            /* DeeFile_Check, DeeFile_Close */
 #include <deemon/int.h>             /* DEFINE_*INT*, DeeInt_* */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsUInt, DeeObject_AsUIntX, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_visit_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsUInt, DeeObject_AsUIntX, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /*  */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FREPLAC, WSTR_LENGTH */
 #include <deemon/system-features.h> /* *stat*, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DTTOIF, DT_*, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, IFTODT, close, closedir, dirfd, dup, fdopendir, opendir, readdir, readdir64, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_SEP, DeeUnixSystem_* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, METHOD_FNOREFESCAPE, METHOD_FNORMAL, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, METHOD_FNORMAL, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 

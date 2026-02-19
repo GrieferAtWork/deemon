@@ -38,11 +38,11 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/mro.h>             /* DeeObject_TGenericIterAttr, Dee_attrhint, Dee_attriter, Dee_attriter_initempty, Dee_attriterchain_builder, Dee_attriterchain_builder_* */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type, Dee_None */
-#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeBuffer, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_hash_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeBuffer, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_hash_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
 #include <deemon/system-features.h> /* bcmp, bzero, memcmp, memcpy */
-#include <deemon/type.h>            /* DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 

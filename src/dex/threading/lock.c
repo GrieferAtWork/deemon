@@ -35,7 +35,7 @@
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/none-operator.h>   /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_XDecref_unlikely, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_XDecref_unlikely, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/objmethod.h>       /* DeeCMethodObject */
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -43,7 +43,7 @@
 #include <deemon/system-features.h> /* memset */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t, _Dee_semaphore_waiting_wakemany */
 #include <deemon/util/rlock.h>      /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_t, Dee_rshared_lock_t, Dee_rshared_rwlock_t */

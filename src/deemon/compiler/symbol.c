@@ -31,10 +31,10 @@
 #include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, ast_loc, decl_ast_fini, symbol, symbol_*, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>            /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
-#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_visit_t, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>            /* DeeStringObject */
 #include <deemon/system-features.h>   /* bzero, memcpy, memset */
-#include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, TF_NONE, TP_FNORMAL */
+#include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FNORMAL */
 #include <deemon/util/cache.h>        /* DEFINE_STRUCT_CACHE_EX */
 
 #include <hybrid/minmax.h> /* MAX_C */

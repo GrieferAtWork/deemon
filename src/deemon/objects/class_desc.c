@@ -38,7 +38,7 @@
 #include <deemon/module.h>             /* Dee_module_object */
 #include <deemon/mro.h>                /* DeeType_Query*Attribute*, Dee_ATTRINFO_ATTR, Dee_ATTRINFO_INSTANCE_ATTR, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrspec */
 #include <deemon/none.h>               /* Dee_None, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_*, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -47,7 +47,7 @@
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, strchr, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock */

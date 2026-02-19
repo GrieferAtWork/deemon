@@ -25,11 +25,11 @@
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_*alloc*, Dee_Free, _Dee_MallococBufsize */
 #include <deemon/bytes.h>           /* DeeBytesObject */
 #include <deemon/error_types.h>     /* DeeSystemErrorObject */
-#include <deemon/object.h>          /* Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_XDecref, Dee_visit_t */
+#include <deemon/object.h>          /* Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_XDecref */
 #include <deemon/string.h>          /* DeeStringObject, Dee_string_fini_hook */
 #include <deemon/system-features.h> /* memmovedownc, memmoveupc */
 #include <deemon/thread.h>          /* DeeThreadObject, Dee_thread_interrupt_hook */
-#include <deemon/type.h>            /* DeeObject_Init, Dee_Visit */
+#include <deemon/type.h>            /* DeeObject_Init, Dee_Visit, Dee_visit_t */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_WEAKREF_SUPPORT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */

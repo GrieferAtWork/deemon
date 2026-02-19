@@ -30,7 +30,7 @@
 #include <deemon/error-rt.h>            /* DeeRT_Err* */
 #include <deemon/error.h>               /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>              /* PCKdSIZ, PCKuSIZ, PRFdSIZ, PRFuSIZ */
-#include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_Track */
+#include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>                 /* DeeIntObject, DeeInt_* */
 #include <deemon/map.h>                 /* Dee_EmptyMapping */
 #include <deemon/method-hints.h>        /* DeeMH_*_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */

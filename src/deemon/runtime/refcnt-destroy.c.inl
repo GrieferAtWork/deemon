@@ -87,10 +87,10 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>       /* DeeObject_Free */
-#include <deemon/gc.h>          /* DeeGCObject_Free, DeeGC_Track, DeeGC_Untrack */
+#include <deemon/gc.h>          /* DeeGCObject_Free, DeeGC_*, Dee_GC_FLAG_FINALIZED */
 #include <deemon/object.h>      /* DeeObject, DeeObject_Destroy, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_refcnt_t, OBJECT_HEAD */
 #include <deemon/type.h>        /* DeeType_IsFinal, DeeType_IsGC */
-#include <deemon/util/atomic.h> /* atomic_fetchdec */
+#include <deemon/util/atomic.h> /* atomic_* */
 
 #include <stddef.h> /* NULL */
 

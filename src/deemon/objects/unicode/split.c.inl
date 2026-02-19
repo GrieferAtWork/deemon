@@ -26,13 +26,13 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compare, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compare, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_IsLF, Dee_STRING_DIV_SIZEOF_WIDTH, Dee_charptr_const, STRING_WIDTH_COMMON, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memmeml, memmemw */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 

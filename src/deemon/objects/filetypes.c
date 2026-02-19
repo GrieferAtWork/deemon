@@ -34,13 +34,13 @@
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/mapfile.h>            /* DeeMapFile* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Incref, Dee_SIZEOF_POS_T, Dee_XDecref_likely, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Incref, Dee_SIZEOF_POS_T, Dee_XDecref_likely, Dee_XIncref, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_CASE_WIDTH_nBYTE, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_MAXLEN, Dee_unicode_readutf8_chk, Dee_unicode_utf8seqlen */
 #include <deemon/system-features.h>    /* bzero, memcmp, memcpy*, mempcpy, strcmp */
 #include <deemon/system.h>             /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, METHOD_FNOREFESCAPE, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_add, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */
 

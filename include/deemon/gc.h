@@ -33,7 +33,7 @@
 
 #include "api.h"
 
-#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+#include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include "types.h" /* DREF, DeeObject, Dee_AsObject */
 

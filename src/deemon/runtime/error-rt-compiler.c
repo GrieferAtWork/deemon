@@ -27,11 +27,11 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeErrorObject, DeeError_Error, DeeError_NOTIMPLEMENTED */
 #include <deemon/error_types.h>        /* DeeCompilerErrorObject, DeeCompilerError_Print, Dee_compiler_error_loc */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_init, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_REQUIRES_OBJECT, Dee_formatprinter_t, Dee_ssize_t, Dee_weakref_support_init, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>     /* DeeNO_print_t */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
 #include <deemon/struct.h>             /* DeeStructObject_Cmp, DeeStructObject_PrintRepr */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, TF_NONE, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, TF_NONE, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_member */
 #include <deemon/util/weakref.h>       /* Dee_weakref_fini, Dee_weakref_initempty */
 
 #include <stddef.h> /* NULL, size_t */

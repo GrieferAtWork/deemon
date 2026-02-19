@@ -24,20 +24,20 @@
 
 #include <deemon/alloc.h>          /* DeeObject_FreeTracker */
 #include <deemon/class.h>          /* instance_* */
+#include <deemon/error-rt.h>       /* DeeRT_ErrNoBufferInterface */
 #include <deemon/error.h>          /* DeeError_BufferError, DeeError_Throwf */
-#include <deemon/error-rt.h>          /* DeeError_BufferError, DeeError_Throwf */
 #include <deemon/gc.h>             /* DeeGC_Track */
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE, DeeObject_IsKw */
 #include <deemon/list.h>           /* DeeList_* */
-#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD, return_reference_ */
+#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_Inherit*, DeeType_InvokeCastPrint, DeeType_InvokeCastPrintRepr, DeeType_InvokeCastRepr, DeeType_InvokeCastStr, DeeType_InvokeCmpHash */
 #include <deemon/seq.h>            /* DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>         /* DeeString_PrintAscii, DeeString_Type */
 #include <deemon/super.h>          /* DeeObject_TClear */
 #include <deemon/thread.h>         /* DeeThreadObject, DeeThread_Self, Dee_repr_frame, Dee_trepr_frame */
 #include <deemon/tuple.h>          /* DeeTuple* */
-#include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, Dee_GC_PRIORITY_LATE, OPERATOR_*, TF_TPVISIT */
+#include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, Dee_GC_PRIORITY_LATE, Dee_visit_t, OPERATOR_*, TF_TPVISIT */
 #include <deemon/util/hash.h>      /* DeeObject_HashGeneric, Dee_HASHOF_RECURSIVE_ITEM */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */

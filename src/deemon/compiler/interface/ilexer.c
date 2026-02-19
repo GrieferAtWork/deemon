@@ -36,14 +36,14 @@
 #include <deemon/int.h>                /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FESCAPED */
 #include <deemon/map.h>                /* DeeMapping_Type */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FIGNORE, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
 #include <deemon/system-features.h>    /* memcpyc, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple_Newf */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashPtr, Dee_HashUtf8 */
 
 #include <hybrid/limitcore.h> /* __INT_MAX__ */

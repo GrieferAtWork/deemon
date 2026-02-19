@@ -36,12 +36,12 @@
 #include <deemon/int.h>             /* DeeInt_NewInt64 */
 #include <deemon/map.h>             /* DeeMapping_Type */
 #include <deemon/none.h>            /* DeeNone_NewRef, return_none */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_visit_t, Dee_weakref_support_fini, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_fini, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* strcmp */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TP_FVARIABLE, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TP_FVARIABLE, TYPE_*, type_* */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int64_t */

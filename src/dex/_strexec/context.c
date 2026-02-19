@@ -34,11 +34,11 @@
 #include <deemon/instancemethod.h>  /* DeeInstanceMethod_NewInherited */
 #include <deemon/kwds.h>            /* DeeKw_ForceWrap, DeeObject_IsKw */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
-#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_HAS_ISERR, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_visit_t, ITER_DONE */
+#include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_HAS_ISERR, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, ITER_DONE */
 #include <deemon/seq.h>             /* DeeSeq_Unpack */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h> /* bcmpc, memcpy */
-#include <deemon/type.h>            /* DeeType_*, Dee_Visit */
+#include <deemon/type.h>            /* DeeType_*, Dee_Visit, Dee_visit_t */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 #include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_alloc */

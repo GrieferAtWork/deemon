@@ -30,11 +30,11 @@
 #include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_NewSize */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_CompareFromDiff, Dee_Decref, Dee_Incref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare_if_neT, Dee_ssize_t, Dee_visit_t, OBJECT_HEAD_INIT */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_CompareFromDiff, Dee_Decref, Dee_Incref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare_if_neT, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcmp, memcpy */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 
 #include <stddef.h> /* NULL, offsetof, size_t */

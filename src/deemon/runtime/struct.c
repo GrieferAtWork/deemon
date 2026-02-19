@@ -29,11 +29,11 @@
 #include <deemon/kwds.h>            /* DeeKwArgs* */
 #include <deemon/mro.h>             /* Dee_type_member_tryget */
 #include <deemon/none.h>            /* DeeNone_Check, Dee_None */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DeeObject_*, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_return_compareT, Dee_visit_t */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DeeObject_*, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_return_compareT */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_seraddr_t, Dee_serial */
 #include <deemon/struct.h>          /* Dee_struct_object_foreach_field_cb_t, Dee_struct_object_foreach_field_undo_t */
 #include <deemon/system-features.h> /* bzero, memcpy */
-#include <deemon/type.h>            /* DeeType_*, Dee_Visit, Dee_XVisit, Dee_type_member, STRUCT_*, TYPE_MEMBER_ISFIELD, type_cmp, type_member */
+#include <deemon/type.h>            /* DeeType_*, Dee_Visit, Dee_XVisit, Dee_type_member, Dee_visit_t, STRUCT_*, TYPE_MEMBER_ISFIELD, type_cmp, type_member */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/hash.h>       /* DeeObject_HashGeneric, Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine, Dee_HashPtr */

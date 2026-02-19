@@ -28,12 +28,12 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/int.h>                /* DeeInt_* */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AsUInt32, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Incref, Dee_visit_t, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AsUInt32, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Incref, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_charptr_const, STRING_WIDTH_1BYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* memchr* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_member, type_seq */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_member, type_seq */
 
 #include "../generic-proxy.h"
 #include "string_functions.h"

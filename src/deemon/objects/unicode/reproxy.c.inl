@@ -30,13 +30,13 @@
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_visit_t, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/regex.h>              /* DeeRegex*, DeeString_GetRegex, DeeString_GetRegexFlags, Dee_RE_* */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h>    /* bzero, memcpy */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
