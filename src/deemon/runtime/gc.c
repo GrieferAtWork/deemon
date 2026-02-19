@@ -161,11 +161,11 @@ PRIVATE struct gc_generation gc_gen2 = GC_GENERATION_INIT(64 * 512, &gc_genn);
 PRIVATE struct gc_generation gc_gen1 = GC_GENERATION_INIT(64 * 256, &gc_gen2);
 PRIVATE struct gc_generation gc_gen0 = GC_GENERATION_INIT(64 * 128, &gc_gen1); /* XXX: Tune these! */
 
-/* Lock for the GC system */
-PRIVATE Dee_atomic_lock_t gc_lock = Dee_ATOMIC_LOCK_INIT;
-
 /* [lock(ATOMIC)] true if "_gc_lock_reap_and_maybe_unlock" must be called */
 PRIVATE bool gc_mustreap = false;
+
+/* Lock for the GC system */
+PRIVATE Dee_atomic_lock_t gc_lock = Dee_ATOMIC_LOCK_INIT;
 
 #define gc_lock_available()  Dee_atomic_lock_available(&gc_lock)
 #define gc_lock_acquired()   Dee_atomic_lock_acquired(&gc_lock)
@@ -271,13 +271,6 @@ gc_generation_reap_insert(struct gc_generation *__restrict self) {
 		gc_generation_fixcount(self);
 }
 
-#ifndef GenericObject_DEFINED
-#define GenericObject_DEFINED
-typedef struct {
-	OBJECT_HEAD
-} GenericObject;
-#endif /* !GenericObject_DEFINED */
-
 PRIVATE NONNULL((1)) void DCALL
 gc_do_untrack_locked(DeeObject *__restrict ob) {
 	struct Dee_gc_head *head = DeeGC_Head(ob);
@@ -297,6 +290,15 @@ gc_do_untrack_locked(DeeObject *__restrict ob) {
 	DBG_memset(&head->gc_next, 0xcc, sizeof(head->gc_next));
 }
 
+
+#ifndef GenericObject_DEFINED
+#define GenericObject_DEFINED
+typedef struct {
+	OBJECT_HEAD
+} GenericObject;
+#endif /* !GenericObject_DEFINED */
+
+/* Possible return values for `_gc_lock_reap_and_maybe_unlock()' */
 #define REAP_STATUS_RETAINED             0 /* Lock wasn't released */
 #define REAP_STATUS_UNLOCKED             1 /* Lock was released */
 #define REAP_STATUS_UNLOCKED_RETRY_LATER 2 /* Lock was released; caller should set "gc_mustreap" but not retry (unless "gc_mustreap" was already "true") */
@@ -825,28 +827,43 @@ PRIVATE void DCALL gc_collect_release(void) {
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL         0
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE 1 /* Move reachable objects to next generation (caller must ensure that "gg_next != NULL") */
 
+#if 1 /* SIngleTHReaDed_* */
+#define sithrd_atomic_read(p)           *(p)
+#define sithrd_atomic_write(p, value)   (void)(*(p) = (value))
+#define sithrd_atomic_and(p, value)     (void)(*(p) &= (value))
+#define sithrd_atomic_or(p, value)      (void)(*(p) |= (value))
+#define sithrd_gc_object_set_pself(p_p_self, p_self) \
+	(void)(ASSERT(!((uintptr_t)(p_self) & Dee_GC_FLAG_MASK)), \
+	       *(p_p_self) = (DeeObject **)(((uintptr_t)(*(p_p_self)) & Dee_GC_FLAG_MASK) | (uintptr_t)(p_self)))
+#else
+#define sithrd_atomic_read(p)           Dee_atomic_read(p)
+#define sithrd_atomic_write(p, value)   Dee_atomic_write(p, value)
+#define sithrd_atomic_and(p, value)     Dee_atomic_and(p, value)
+#define sithrd_atomic_or(p, value)      Dee_atomic_or(p, value)
+#define sithrd_gc_object_set_pself      gc_object_set_pself
+#endif
+
+
+
+
 /* Set the "Dee_GC_FLAG_OTHERGEN" flag for objects from "self" */
 PRIVATE NONNULL((1)) void DCALL
-gc_generation_set__GC_FLAG_OTHERGEN(struct gc_generation *__restrict self) {
+sithrd_gc_generation_set__GC_FLAG_OTHERGEN(struct gc_generation *__restrict self) {
 	DeeObject *iter;
 	for (iter = self->gg_objects; iter;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
-		/* XXX: I don't think "atomic_*" calls are necessary in anything below
-		 *      -- after all: every other thread has been suspended! */
-		atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_OTHERGEN);
+		sithrd_atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_OTHERGEN);
 		iter = head->gc_next;
 	}
 }
 
 /* Clear the "Dee_GC_FLAG_OTHERGEN" flag for objects from "self" */
 PRIVATE NONNULL((1)) void DCALL
-gc_generation_clear__GC_FLAG_OTHERGEN(struct gc_generation *__restrict self) {
+sithrd_gc_generation_clear__GC_FLAG_OTHERGEN(struct gc_generation *__restrict self) {
 	DeeObject *iter;
 	for (iter = self->gg_objects; iter;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
-		/* XXX: I don't think "atomic_*" calls are necessary in anything below
-		 *      -- after all: every other thread has been suspended! */
-		atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_OTHERGEN);
+		sithrd_atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_OTHERGEN);
 		iter = head->gc_next;
 	}
 }
@@ -862,7 +879,7 @@ DeeType_HasFinalize(DeeTypeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
-DeeObject_HasWeakrefs(DeeObject *__restrict ob) {
+sithrd_DeeObject_HasWeakrefs(DeeObject *__restrict ob) {
 	DeeTypeObject *tp = Dee_TYPE(ob);
 	struct Dee_weakref_list *list;
 	while (!tp->tp_weakrefs && DeeType_Base(tp))
@@ -870,7 +887,7 @@ DeeObject_HasWeakrefs(DeeObject *__restrict ob) {
 	if (!tp->tp_weakrefs)
 		return false;
 	list = (struct Dee_weakref_list *)((uintptr_t)ob + tp->tp_weakrefs);
-	return atomic_read(&list->wl_nodes) != NULL;
+	return sithrd_atomic_read(&list->wl_nodes) != NULL;
 }
 
 
@@ -929,7 +946,7 @@ gc_visit__decref__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
 	ASSERT(gc_remove_modifying == 0);
 	if (DeeType_IsGC(Dee_TYPE(self))) {
 		struct Dee_gc_head *head = DeeGC_Head(self);
-		if (!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN)) {
+		if (!(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN)) {
 			ASSERT(self->ob_refcnt != 0);
 			--self->ob_refcnt;
 		}
@@ -951,7 +968,7 @@ gc_visit__incref__with_weakref_detect__cb(DeeObject *__restrict self, void *arg)
 	ASSERT(gc_remove_modifying == 0);
 	if (DeeType_IsGC(Dee_TYPE(self))) {
 		struct Dee_gc_head *head = DeeGC_Head(self);
-		if (!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN))
+		if (!(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN))
 			++self->ob_refcnt;
 	} else {
 		if (self->ob_refcnt == 0) {
@@ -959,7 +976,7 @@ gc_visit__incref__with_weakref_detect__cb(DeeObject *__restrict self, void *arg)
 			 * If it has weak references, then  */
 			bool *p_must_kill_nested_weakrefs = (bool *)arg;
 			if (!*p_must_kill_nested_weakrefs)
-				*p_must_kill_nested_weakrefs = DeeObject_HasWeakrefs(self);
+				*p_must_kill_nested_weakrefs = sithrd_DeeObject_HasWeakrefs(self);
 			DeeObject_GCVisit(self, &gc_visit__incref__with_weakref_detect__cb, arg);
 		}
 		++self->ob_refcnt;
@@ -971,7 +988,7 @@ gc_visit__incref__with_weakref_kill__cb(DeeObject *__restrict self, void *UNUSED
 	ASSERT(gc_remove_modifying == 0);
 	if (DeeType_IsGC(Dee_TYPE(self))) {
 		struct Dee_gc_head *head = DeeGC_Head(self);
-		if (!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN))
+		if (!(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_OTHERGEN))
 			++self->ob_refcnt;
 	} else {
 		if (self->ob_refcnt == 0) {
@@ -1005,7 +1022,7 @@ gc_visit__incref_all__with_weakref_detect__cb(DeeObject *__restrict self, void *
 		 * If it has weak references, then  */
 		bool *p_must_kill_nested_weakrefs = (bool *)arg;
 		if (!*p_must_kill_nested_weakrefs)
-			*p_must_kill_nested_weakrefs = DeeObject_HasWeakrefs(self);
+			*p_must_kill_nested_weakrefs = sithrd_DeeObject_HasWeakrefs(self);
 		DeeObject_GCVisit(self, &gc_visit__incref_all__with_weakref_detect__cb, arg);
 	}
 	++self->ob_refcnt;
@@ -1059,17 +1076,17 @@ DeeObject_DoInvokeFinalize(DeeObject *__restrict self) {
 /* Insert objects starting at "first" into "self".
  * Assumes that the "Dee_GC_FLAG_GENN" flag is set for all objects. */
 PRIVATE NONNULL((1, 2)) void DCALL
-gc_generation_insert_temp_list(struct gc_generation *__restrict self,
-                               DeeObject *first) {
+sithrd_gc_generation_insert_temp_list(struct gc_generation *__restrict self,
+                                               DeeObject *first) {
 	size_t count = 1;
 	DeeObject *last;
 	struct Dee_gc_head *first_head;
 	struct Dee_gc_head *last_head;
 	for (last = first;;) {
 		struct Dee_gc_head *head = DeeGC_Head(last);
-		ASSERT(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
+		ASSERT(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
 		if (self == &gc_gen0)
-			atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_GENN);
+			sithrd_atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_GENN);
 		if (!head->gc_next)
 			break;
 		last = head->gc_next;
@@ -1079,10 +1096,10 @@ gc_generation_insert_temp_list(struct gc_generation *__restrict self,
 	/* Insert all remaining objects into "self" */
 	first_head = DeeGC_Head(first);
 	last_head  = DeeGC_Head(last);
-	gc_object_set_pself(&first_head->gc_info.gi_pself, &self->gg_objects); /* This **must** be atomic! */
+	sithrd_gc_object_set_pself(&first_head->gc_info.gi_pself, &self->gg_objects); /* This **must** be atomic! */
 	if ((last_head->gc_next = self->gg_objects) != NULL) {
 		struct Dee_gc_head *next_head = DeeGC_Head(self->gg_objects);
-		gc_object_set_pself(&next_head->gc_info.gi_pself, &last_head->gc_next); /* This **must** be atomic! */
+		sithrd_gc_object_set_pself(&next_head->gc_info.gi_pself, &last_head->gc_next); /* This **must** be atomic! */
 	}
 	self->gg_objects = first;
 	self->gg_count += count;
@@ -1112,7 +1129,7 @@ DECL_BEGIN
 /* Collect (in reverse order) objects from all generations
  * where "gg_collect_on < 0". If a collectible generation
  * is found, at least its "gg_collect_on" is always reset! */
-PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) unsigned int DCALL
+PRIVATE WUNUSED NONNULL((1)) unsigned int DCALL
 gc_collect_threshold_generations_r(struct gc_generation *__restrict self) {
 	size_t count;
 	unsigned int status, flags;
@@ -1139,7 +1156,7 @@ gc_collect_threshold_generations_r(struct gc_generation *__restrict self) {
  * @return: true:  Success
  * @return: false: Failure (collect failed; caller must set "gc_mustreap"
  *                 to true, but not try again right now...) */
-PRIVATE ATTR_NOINLINE bool DCALL gc_trycollect_after_collect_on_reached(void) {
+PRIVATE bool DCALL gc_trycollect_after_collect_on_reached(void) {
 	bool has_collectable_generations;
 	unsigned int status;
 	struct gc_generation *iter;
@@ -1151,6 +1168,9 @@ again:
 	iter = &gc_gen0;
 	do {
 		if (iter->gg_collect_on < 0) {
+#ifndef CONFIG_NO_THREADS
+			/* TODO: GC pre-collect (see "gc.h" for description) */
+#endif /* !CONFIG_NO_THREADS */
 			has_collectable_generations = true;
 			break;
 		}
@@ -1191,6 +1211,9 @@ PRIVATE ATTR_NOINLINE WUNUSED bool DCALL gc_trycollect_gen0(void) {
 again:
 	gc_lock_acquire();
 	should_collect = gc_gen0.gg_collect_on < 0;
+#ifndef CONFIG_NO_THREADS
+	/* TODO: GC pre-collect (see "gc.h" for description) */
+#endif /* !CONFIG_NO_THREADS */
 	_gc_lock_release();
 	if (!should_collect)
 		return true;
@@ -1262,7 +1285,7 @@ continue_with_iter:
 			gc_collect_release();
 		} else {
 			/* Attempt a special collect across *all* generations */
-attempt_collect_all:;
+attempt_collect_all:
 			status = gc_collectall_collect_or_unlock(&count);
 			switch (status) {
 			case GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING:

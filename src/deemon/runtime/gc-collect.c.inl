@@ -22,7 +22,7 @@
 
 #include <deemon/format.h>       /* PRFuSIZ */
 #include <deemon/gc.h>           /* DeeGC_Head, DeeGC_TRACK_F_NOCOLLECT, Dee_GC_*, Dee_gc_head */
-#include <deemon/object.h>       /* DeeObject, Dee_Decref, Dee_TYPE, Dee_refcnt_t */
+#include <deemon/object.h>       /* Dee_Decref */
 #include <deemon/type.h>         /* DeeType_GetName */
 #include <deemon/types.h>        /* DeeObject, Dee_TYPE, Dee_refcnt_t */
 #include <deemon/util/atomic.h>  /* atomic_* */
@@ -94,8 +94,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		 * - ... because it's the same bit as "Dee_GC_FLAG_GENN"...
 		 * - ... which is clear because we're not GENN (but gen#0) */
 	} else {
-		gc_generation_set__GC_FLAG_OTHERGEN(&gc_gen0);
-		gc_generation_clear__GC_FLAG_OTHERGEN(gen);
+		sithrd_gc_generation_set__GC_FLAG_OTHERGEN(&gc_gen0);
+		sithrd_gc_generation_clear__GC_FLAG_OTHERGEN(gen);
 	}
 #endif /* DEFINE_gc_generation_collect_or_unlock */
 
@@ -120,7 +120,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 				/* Temporary flag that means "object is unreachable" */
 				head->gc_next = (DeeObject *)((uintptr_t)head->gc_next | 1);
 				if (!must_kill_weakrefs)
-					must_kill_weakrefs = DeeObject_HasWeakrefs(iter);
+					must_kill_weakrefs = sithrd_DeeObject_HasWeakrefs(iter);
 			}
 			iter = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 		}
@@ -185,7 +185,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		for (p_iter = &gen->gg_objects; (iter = *p_iter) != NULL;) {
 			struct Dee_gc_head *head = DeeGC_Head(iter);
 			ASSERT(!((uintptr_t)iter & 1));
-			ASSERT(((uintptr_t)atomic_read(&head->gc_info.gi_pself) & ~Dee_GC_FLAG_MASK) == (uintptr_t)p_iter);
+			ASSERT(((uintptr_t)sithrd_atomic_read(&head->gc_info.gi_pself) & ~Dee_GC_FLAG_MASK) == (uintptr_t)p_iter);
 			if ((uintptr_t)head->gc_next & 1) {
 				/* Unreachable object. */
 				DeeObject **p_unreachable_x;
@@ -194,21 +194,21 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 				/* Remove from own generation */
 				if ((*p_iter = next) != NULL) {
 					struct Dee_gc_head *next_head = DeeGC_Head(next);
-					gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
+					sithrd_gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
 				}
 				--gen->gg_count;
 	
 				/* Check if object requires invocation of a "tp_finalize" operator... */
-				if ((atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_FINALIZED) ||
+				if ((sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_FINALIZED) ||
 				    (!DeeType_HasFinalize(Dee_TYPE(iter)))) {
 					p_unreachable_x = &unreachable_fast; /* Object can be fast-destroyed! */
 				} else {
 					p_unreachable_x = &unreachable_slow; /* Object must be slow-destroyed */
 				}
-				gc_object_set_pself(&head->gc_info.gi_pself, p_unreachable_x);
+				sithrd_gc_object_set_pself(&head->gc_info.gi_pself, p_unreachable_x);
 				if ((head->gc_next = *p_unreachable_x) != NULL) {
 					struct Dee_gc_head *next_head = DeeGC_Head(*p_unreachable_x);
-					gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
+					sithrd_gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
 				}
 				*p_unreachable_x = iter;
 			} else {
@@ -222,7 +222,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 					/* Remove from own generation */
 					if ((*p_iter = head->gc_next) != NULL) {
 						struct Dee_gc_head *next_head = DeeGC_Head(head->gc_next);
-						gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
+						sithrd_gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
 					}
 					ASSERT(gen->gg_count);
 					--gen->gg_count;
@@ -231,13 +231,13 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 					target = gen->gg_next;
 					ASSERT(target);
 					ASSERT(target != &gc_gen0);
-					atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
-					gc_object_set_pself(&head->gc_info.gi_pself, &target->gg_objects);
+					sithrd_atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
+					sithrd_gc_object_set_pself(&head->gc_info.gi_pself, &target->gg_objects);
 					if ((head->gc_next = target->gg_objects) != NULL) {
 						struct Dee_gc_head *next_head = DeeGC_Head(target->gg_objects);
-						gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
+						sithrd_gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
 					}
-					ASSERT(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
+					ASSERT(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
 					target->gg_objects = iter;
 					++target->gg_count;
 					--target->gg_collect_on;
@@ -256,8 +256,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 #ifndef DEFINE_gc_collectall_collect_or_unlock
 		/* Restore old flags */
 		if (gen != &gc_gen0) {
-			gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
-			gc_generation_set__GC_FLAG_OTHERGEN(gen);
+			sithrd_gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
+			sithrd_gc_generation_set__GC_FLAG_OTHERGEN(gen);
 		}
 #endif /* !DEFINE_gc_collectall_collect_or_unlock */
 
@@ -270,17 +270,17 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		while (unreachable_fast) {
 			struct Dee_gc_head *head = DeeGC_Head(unreachable_fast);
 			DeeObject *next = head->gc_next;
-			gc_object_set_pself(&head->gc_info.gi_pself, &LOCAL_gen->gg_objects);
-			ASSERT(!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
+			sithrd_gc_object_set_pself(&head->gc_info.gi_pself, &LOCAL_gen->gg_objects);
+			ASSERT(!(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
 #ifndef DEFINE_gc_collectall_collect_or_unlock
 			if (LOCAL_gen != &gc_gen0)
 #endif /* !DEFINE_gc_collectall_collect_or_unlock */
 			{
-				atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
+				sithrd_atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
 			}
 			if ((head->gc_next = LOCAL_gen->gg_objects) != NULL) {
 				struct Dee_gc_head *next_head = DeeGC_Head(LOCAL_gen->gg_objects);
-				gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
+				sithrd_gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
 			}
 			LOCAL_gen->gg_objects = unreachable_fast;
 			++LOCAL_gen->gg_count;
@@ -291,7 +291,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		/* Set the "Dee_GC_FLAG_GENN" flag for all objects from "unreachable_slow" */
 		for (iter = unreachable_slow; iter;) {
 			struct Dee_gc_head *head = DeeGC_Head(iter);
-			atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
+			sithrd_atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
 			ASSERT(gc_remove_modifying == 0);
 			ASSERT(iter->ob_refcnt != 0);
 			/* Reference needed for when we're about to invoke "tp_finalize" for these objects! */
@@ -342,9 +342,9 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 			first = atomic_read(&unreachable_slow);
 			if likely(first != NULL) {
 #ifdef DEFINE_gc_collectall_collect_or_unlock
-				gc_generation_insert_temp_list(&gc_gen0, first);
+				sithrd_gc_generation_insert_temp_list(&gc_gen0, first);
 #else /* DEFINE_gc_collectall_collect_or_unlock */
-				gc_generation_insert_temp_list(gen, first);
+				sithrd_gc_generation_insert_temp_list(gen, first);
 #endif /* !DEFINE_gc_collectall_collect_or_unlock */
 			}
 			_gc_lock_release(); /* Don't reap here -- caller will just retry which will do that for us */
@@ -367,8 +367,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		/* Restore old flags */
 #ifndef DEFINE_gc_collectall_collect_or_unlock
 		if (gen != &gc_gen0) {
-			gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
-			gc_generation_set__GC_FLAG_OTHERGEN(gen);
+			sithrd_gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
+			sithrd_gc_generation_set__GC_FLAG_OTHERGEN(gen);
 		}
 #endif /* !DEFINE_gc_collectall_collect_or_unlock */
 
@@ -404,8 +404,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 	/* Restore old flags */
 #ifndef DEFINE_gc_collectall_collect_or_unlock
 	if (gen != &gc_gen0) {
-		gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
-		gc_generation_set__GC_FLAG_OTHERGEN(gen);
+		sithrd_gc_generation_clear__GC_FLAG_OTHERGEN(&gc_gen0);
+		sithrd_gc_generation_set__GC_FLAG_OTHERGEN(gen);
 	}
 #endif /* !DEFINE_gc_collectall_collect_or_unlock */
 
@@ -421,9 +421,9 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		struct Dee_gc_head *head = DeeGC_Head(iter);
 		/* We're emulating some "nth" generation, so we have to set this flag! */
 #ifndef DEFINE_gc_collectall_collect_or_unlock
-		ASSERT(!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
+		ASSERT(!(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
 #endif /* !DEFINE_gc_collectall_collect_or_unlock */
-		atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
+		sithrd_atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
 		++iter->ob_refcnt;
 		++num_unreachable;
 		iter = head->gc_next;
