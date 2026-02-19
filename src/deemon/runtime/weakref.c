@@ -24,6 +24,7 @@
 
 #include <deemon/object.h>       /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeTypeObject, Dee_IncrefIfNotZero, Dee_TYPE, Dee_refcnt_t, Dee_unlockinfo, Dee_unlockinfo_xunlock, Dee_weakref_list, ITER_DONE, OBJECT_HEAD */
 #include <deemon/type.h>         /* DeeType_Base */
+#include <deemon/none.h>         /* DeeType_Base */
 #include <deemon/util/atomic.h>  /* atomic_* */
 #include <deemon/util/weakref.h> /* Dee_weakref, Dee_weakref_callback_t */
 
@@ -1122,6 +1123,110 @@ restart_clear_weakrefs:
 		goto restart_clear_weakrefs;
 	}
 	atomic_write(&list->wl_nodes, NULL); /* WEAKREF_UNLOCK(list) */
+}
+
+
+/* Special "dummy" object used to  */
+PRIVATE DeeNoneObject weakref_dummy = {
+	/* .ob_refcnt = */ 0,
+	/* .ob_type   = */ &DeeNone_Type,
+#ifdef CONFIG_TRACE_REFCHANGES
+	Dee_REFTRACKER_UNTRACKED,
+#endif /* CONFIG_TRACE_REFCHANGES */
+	Dee_WEAKREF_SUPPORT_INIT
+};
+
+
+
+/* Transfer all weak references of "self" to an always-dead dummy object.
+ * Weak references with callbacks are **NOT** executed immediately, and
+ * will only be invoked once `Dee_weakref_list_kill_dummy()' is called. */
+INTERN NONNULL((1)) void DCALL
+Dee_weakref_list_transfer_to_dummy(struct Dee_weakref_list *__restrict self) {
+	struct Dee_weakref *iter, *next;
+restart_clear_weakrefs:
+	LOCK_POINTER(self->wl_nodes);
+	iter = (struct Dee_weakref *)GET_POINTER(self->wl_nodes);
+#ifdef __OPTIMIZE_SIZE__
+	if (iter != NULL)
+#else /* __OPTIMIZE_SIZE__ */
+	if likely(iter != NULL)
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+		if (!WEAKREF_TRYLOCK(iter)) {
+			/* Prevent deadlock. */
+			UNLOCK_POINTER(self->wl_nodes);
+			SCHED_YIELD();
+			goto restart_clear_weakrefs;
+		}
+		ASSERT(iter->wr_pself == &self->wl_nodes);
+		next = (struct Dee_weakref *)GET_POINTER(iter->wr_next);
+
+		if (iter->wr_del) {
+			/* Transfer weakref to "weakref_dummy". Caller will
+			 * eventually call "Dee_weakref_list_kill_dummy"! */
+			uintptr_t nextval;
+			struct Dee_weakref *next_dummy;
+			if (next && !WEAKREF_TRYLOCK(next))
+				goto restart__self__iter;
+			if unlikely(!TRYLOCK_POINTER(weakref_dummy.ob_weakrefs.wl_nodes)) {
+restart__self__iter__next:
+				if (next)
+					WEAKREF_UNLOCK(next);
+				goto restart__self__iter;
+			}
+			nextval = (uintptr_t)weakref_dummy.ob_weakrefs.wl_nodes;
+			ASSERT(nextval & PTRLOCK_LOCK_MASK);
+			next_dummy = (struct Dee_weakref *)GET_POINTER(nextval);
+			if (nextval != PTRLOCK_LOCK_MASK) {
+				if unlikely(!WEAKREF_TRYLOCK(next_dummy)) {
+/*restart__self__iter__next__dummy:*/
+					UNLOCK_POINTER(weakref_dummy.ob_weakrefs.wl_nodes);
+					goto restart__self__iter__next;
+				}
+				next_dummy->wr_pself = &iter->wr_next;
+				WEAKREF_UNLOCK(next_dummy); /* Unlock "next_dummy" */
+			}
+			iter->wr_pself = &weakref_dummy.ob_weakrefs.wl_nodes;
+			iter->wr_obj = Dee_AsObject(&weakref_dummy);
+			atomic_write(&iter->wr_next, next_dummy);                /* Unlock "iter" */
+			atomic_write(&weakref_dummy.ob_weakrefs.wl_nodes, iter); /* Unlock "dummy" */
+			if (next) {
+				next->wr_pself = &self->wl_nodes;
+				WEAKREF_UNLOCK(next); /* Unlock "next" */
+			}
+			atomic_write(&self->wl_nodes, next); /* Unlock "self" */
+			goto restart_clear_weakrefs;
+		}
+
+		if (next) {
+			if (!WEAKREF_TRYLOCK(next)) {
+				/* Prevent deadlock. */
+restart__self__iter:
+				WEAKREF_UNLOCK(iter);           /* WEAKREF_UNLOCK(self->FIRST) */
+				UNLOCK_POINTER(self->wl_nodes); /* WEAKREF_UNLOCK(self) */
+				SCHED_YIELD();
+				goto restart_clear_weakrefs;
+			}
+			next->wr_pself = &self->wl_nodes;
+			WEAKREF_UNLOCK(next);
+		}
+
+		/* Overwrite the weakly referenced object with NULL,
+		 * indicating that the link has been severed. */
+		atomic_write(&self->wl_nodes, next);
+		WEAKREF_SETBAD(iter->wr_pself, struct Dee_weakref **);
+		iter->wr_obj = NULL;
+		COMPILER_WRITE_BARRIER();
+		atomic_write(&iter->wr_next, WEAKREF_EMPTY_NEXTVAL);
+		goto restart_clear_weakrefs;
+	}
+	atomic_write(&self->wl_nodes, NULL); /* WEAKREF_UNLOCK(self) */
+}
+
+INTERN void DCALL
+Dee_weakref_list_kill_dummy(void) {
+	Dee_weakref_support_fini(&weakref_dummy);
 }
 
 

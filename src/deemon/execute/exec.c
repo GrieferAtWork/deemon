@@ -810,6 +810,50 @@ extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
  * This function can be called any number of times, but
  * is intended to be called once before deemon gets unloaded. */
 PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	for (;;) {
+		bool must_continue = false;
+#ifndef CONFIG_NO_THREADS
+		/* Make sure that no secondary threads could enter an
+		 * undefined state by us tinkering with their code. */
+		must_continue |= DeeThread_InterruptAndJoinAll();
+#endif /* !CONFIG_NO_THREADS */
+
+		/* TODO: Even better would be "DeeGC_CollectNoInt" */
+		must_continue |= DeeGC_TryCollect((size_t)-1) != 0;
+		if (must_continue)
+			continue;
+
+		/* Make sure that nothing is hiding in globals,
+		 * now that the garbage has been collected. */
+		must_continue |= shutdown_globals();
+		if (must_continue)
+			continue;
+
+		if (!DeeGC_IsEmptyWithoutDex()) {
+			/* Well... shit!
+			 * If we've gotten here, that probably means that there is some sort of
+			 * resource leak caused by deemon itself, meaning it's probably my fault... */
+#ifndef NDEBUG
+#ifdef CONFIG_HOST_WINDOWS
+			if (!IsDebuggerPresent())
+				break;
+#endif /* CONFIG_HOST_WINDOWS */
+			/* Log all GC objects still alive */
+			gc_dump_all();
+				
+#ifdef CONFIG_TRACE_REFCHANGES
+			Dee_DPRINT("\n\n\nReference Leaks:\n");
+			Dee_DumpReferenceLeaks();
+#endif /* CONFIG_TRACE_REFCHANGES */
+			Dee_BREAKPOINT();
+#else /* !NDEBUG */
+			/* Silently hide the shame when not built for debug mode... */
+#endif /* NDEBUG */
+		}
+		break;
+	}
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	size_t num_gc = 0, num_empty_gc = 0;
 	for (;;) {
 		bool must_continue = false;
@@ -895,6 +939,7 @@ do_kill_user:
 		if (!must_continue)
 			break;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX

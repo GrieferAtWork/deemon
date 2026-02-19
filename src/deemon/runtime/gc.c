@@ -83,6 +83,7 @@ struct gc_generation {
 	                                      * (only an exact number for generation #0; in other
 	                                      * generation, this represents an upper bound) */
 	Dee_ssize_t           gg_collect_on; /* [lock(gc_lock)] Decremented on each object add -- when this becomes negative, collect objects of this generation */
+	/* XXX: "gg_insert" is only really needed for "gc_gen0"! */
 	DeeObject            *gg_insert;     /* [0..1][lock(ATOMIC)] Objects that are pending insertion (linked via `gc_next')
 	                                      * NOTE: "gc_info.gi_flag & Dee_GC_FLAG_GENN" is already set correctly for these objects. */
 	struct gc_generation *gg_next;       /* [0..1][const] Next generation (or "NULL" if this is the last one) */
@@ -255,7 +256,7 @@ _gc_lock_reap_and_maybe_unlock(bool allow_collect) {
 	atomic_write(&gc_mustreap, false);
 
 	/* Consume list of pending remove operations */
-	pending_remove = atomic_xch(&pending_remove, NULL);
+	pending_remove = atomic_xch(&gc_remove, NULL);
 
 	/* Reap pending inserts for every generation */
 	iter = &gc_gen0;
@@ -390,10 +391,10 @@ DeeGC_Track(DREF DeeObject *__restrict ob) {
 	/* Insert new GC object into generation #0 */
 	head->gc_info.gi_pself = &gc_gen0.gg_objects;
 	if ((head->gc_next = gc_gen0.gg_objects) != NULL) {
-		struct Dee_gc_head *next = DeeGC_Head(gc_gen0.gg_objects);
-		ASSERT((DeeObject **)((uintptr_t)atomic_read(&next->gc_info.gi_pself) & ~Dee_GC_FLAG_MASK) ==
+		struct Dee_gc_head *next_head = DeeGC_Head(gc_gen0.gg_objects);
+		ASSERT((DeeObject **)((uintptr_t)atomic_read(&next_head->gc_info.gi_pself) & ~Dee_GC_FLAG_MASK) ==
 		       &gc_gen0.gg_objects);
-		gc_object_set_pself(&next->gc_info.gi_pself, &head->gc_next);
+		gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
 	}
 	gc_gen0.gg_objects = ob;
 
@@ -440,7 +441,7 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 
 	/* Check if we can untrack "ob" synchronously */
 	ASSERT(ob->ob_refcnt == 0);
-	if (gc_lock_tryacquire()) {
+	if likely(gc_lock_tryacquire()) {
 		gc_do_untrack_locked(ob);
 		gc_lock_release(true);
 		return ob;
@@ -629,7 +630,7 @@ again:
 	 * This part is somewhat similar to "_gc_lock_reap_and_maybe_unlock",
 	 * but needs to be distinct because we've suspended other threads. */
 	atomic_write(&gc_mustreap, false);
-	pending_remove = atomic_xch(&pending_remove, NULL);
+	pending_remove = atomic_xch(&gc_remove, NULL);
 	iter = &gc_gen0;
 	do {
 		gc_generation_reap_insert(iter);
@@ -705,7 +706,6 @@ PRIVATE void DCALL gc_collect_release(void) {
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL         0
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_ERRORS         1 /* Allow errors to be thrown */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE 2 /* Move reachable objects to next generation (caller must ensure that "gg_next != NULL") */
-#define GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON 4 /* */
 
 /* Set the "Dee_GC_FLAG_OTHERGEN" flag for objects from "self" */
 PRIVATE NONNULL((1)) void DCALL
@@ -713,8 +713,8 @@ gc_generation_set__GC_FLAG_OTHERGEN(struct gc_generation *__restrict self) {
 	DeeObject *iter;
 	for (iter = self->gg_objects; iter;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
-		/* TODO: I don't think "atomic_*" calls are necessary in anything below
-		 *       -- after all: every other thread has been suspended! */
+		/* XXX: I don't think "atomic_*" calls are necessary in anything below
+		 *      -- after all: every other thread has been suspended! */
 		atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_OTHERGEN);
 		iter = head->gc_next;
 	}
@@ -726,8 +726,8 @@ gc_generation_clear__GC_FLAG_OTHERGEN(struct gc_generation *__restrict self) {
 	DeeObject *iter;
 	for (iter = self->gg_objects; iter;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
-		/* TODO: I don't think "atomic_*" calls are necessary in anything below
-		 *       -- after all: every other thread has been suspended! */
+		/* XXX: I don't think "atomic_*" calls are necessary in anything below
+		 *      -- after all: every other thread has been suspended! */
 		atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_OTHERGEN);
 		iter = head->gc_next;
 	}
@@ -755,6 +755,8 @@ DeeObject_HasWeakrefs(DeeObject *__restrict ob) {
 	return atomic_read(&list->wl_nodes) != NULL;
 }
 
+
+
 PRIVATE NONNULL((1)) void DCALL
 DeeObject_KillWeakrefs(DeeObject *__restrict ob) {
 	DeeTypeObject *tp = Dee_TYPE(ob);
@@ -763,10 +765,7 @@ DeeObject_KillWeakrefs(DeeObject *__restrict ob) {
 	if (tp->tp_weakrefs) {
 		struct Dee_weakref_list *list;
 		list = (struct Dee_weakref_list *)((uintptr_t)ob + tp->tp_weakrefs);
-		/* NOTE: "Dee_weakref_support_fini()" is actually more of a "Dee_weakref_support_clear()",
-		 *       in that it leaves the list in a status where it appears empty, which is exactly
-		 *       what we want here! */
-		(Dee_weakref_support_fini)(list);
+		Dee_weakref_list_transfer_to_dummy(list);
 	}
 }
 
@@ -922,8 +921,7 @@ gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
 	bool must_kill_weakrefs;
 	bool must_kill_nested_weakrefs;
 	if unlikely(!self->gg_objects) {
-		if (flags & GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON)
-			self->gg_collect_on = 128; /* TODO: Use initial configuration for generation */
+		self->gg_collect_on = 128; /* XXX: Use initial configuration for generation */
 		return GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING;
 	}
 
@@ -976,14 +974,16 @@ gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
 	num_reachable = 0;
 	for (p_iter = &self->gg_objects; (iter = *p_iter) != NULL;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
+		ASSERT(!((uintptr_t)iter & 1));
 		ASSERT(((uintptr_t)atomic_read(&head->gc_info.gi_pself) & ~Dee_GC_FLAG_MASK) == (uintptr_t)p_iter);
 		if ((uintptr_t)head->gc_next & 1) {
 			/* Unreachable object. */
 			DeeObject **p_unreachable_x;
+			DeeObject *next = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 
 			/* Remove from own generation */
-			if ((*p_iter = head->gc_next) != NULL) {
-				struct Dee_gc_head *next_head = DeeGC_Head(head->gc_next);
+			if ((*p_iter = next) != NULL) {
+				struct Dee_gc_head *next_head = DeeGC_Head(next);
 				gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
 			}
 			--self->gg_count;
@@ -1013,19 +1013,23 @@ gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
 					struct Dee_gc_head *next_head = DeeGC_Head(head->gc_next);
 					gc_object_set_pself(&next_head->gc_info.gi_pself, p_iter);
 				}
+				ASSERT(self->gg_count);
 				--self->gg_count;
 
 				/* Add to next generation */
 				target = self->gg_next;
 				ASSERT(target);
+				ASSERT(target != &gc_gen0);
+				atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
 				gc_object_set_pself(&head->gc_info.gi_pself, &target->gg_objects);
 				if ((head->gc_next = target->gg_objects) != NULL) {
 					struct Dee_gc_head *next_head = DeeGC_Head(target->gg_objects);
 					gc_object_set_pself(&next_head->gc_info.gi_pself, &head->gc_next);
 				}
+				ASSERT(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
 				target->gg_objects = iter;
 				++target->gg_count;
-//				++target->gg_collect_on; /* Don't adjust since we know that this object is still reachable! */
+				--target->gg_collect_on;
 			} else {
 				/* Just leave within our own generation */
 				p_iter = &head->gc_next;
@@ -1072,7 +1076,7 @@ gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
 		/* Reduce the chance of recursive GC collect happening... */
 		self->gg_collect_on = self->gg_count;
 		if (self->gg_collect_on < 128)
-			self->gg_collect_on = 128; /* TODO: Use initial configuration for generation */
+			self->gg_collect_on = 128; /* XXX: Use initial configuration for generation */
 
 		/* At this point, "unreachable_slow" exists in a sort-of "fake" generation
 		 * defined by "unreachable_slow" itself. If anything causes these objects to
@@ -1122,7 +1126,7 @@ gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
 	/* Figure out a new threshold that must be reached before another collect happens. */
 	self->gg_collect_on = num_reachable;
 	if (self->gg_collect_on < 128)
-		self->gg_collect_on = 128; /* TODO: Use initial configuration for generation */
+		self->gg_collect_on = 128; /* XXX: Use initial configuration for generation */
 
 	if (!unreachable_fast) {
 		/* Restore old flags */
@@ -1174,15 +1178,26 @@ gc_generation_collect_or_unlock(struct gc_generation *__restrict self,
 	 *
 	 * This is also a pretty good spot to count "num_unreachable" */
 	num_unreachable = 0;
-	for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next) {
+	for (iter = unreachable_fast; iter;) {
+		struct Dee_gc_head *head = DeeGC_Head(iter);
+		/* We're emulating some "nth" generation, so we have to set this flag! */
+		ASSERT(!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
+		atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_GENN);
 		++iter->ob_refcnt;
 		++num_unreachable;
+		iter = head->gc_next;
 	}
 	*p_num_collected = num_unreachable;
 
 	/* Release lock */
 	COMPILER_BARRIER();
 	gc_collect_release();
+
+	/* Invoke weakref callbacks scheduled by `Dee_weakref_list_transfer_to_dummy()'
+	 * This can only happen now that the GC lock has been released, since no user-
+	 * code can be executed while said lock is held. */
+	if (must_kill_nested_weakrefs || must_kill_weakrefs)
+		Dee_weakref_list_kill_dummy();
 
 	/* Clear unreachable objects (this is where everything should die for real) */
 	for (iter = atomic_read(&unreachable_fast); iter;) {
@@ -1269,8 +1284,7 @@ gc_collect_threshold_generations_r(struct gc_generation *__restrict self) {
 	}
 	if (self->gg_collect_on >= 0)
 		return GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING;
-	flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL |
-	        GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON;
+	flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL;
 	if (self->gg_next) {
 		/* If there is a next generation, move reachable objects into it */
 		flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE;
@@ -1349,8 +1363,7 @@ again:
 continue_with_iter:
 	if (iter->gg_collect_on < 0) {
 		unsigned int flags;
-		flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL |
-		        GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON;
+		flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL;
 		if (iter->gg_next)
 			flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE;
 		status = gc_generation_collect_or_unlock(iter, &count, flags);
@@ -1389,8 +1402,7 @@ again:
 	/* Collect garbage in every generation until we hit "max_objects" or scanned them all */
 	iter = &gc_gen0;
 continue_with_iter:
-	flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL |
-	        GC_GENERATION_COLLECT_OR_UNLOCK__F_SET_COLLECT_ON;
+	flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL;
 #if 0 /* Don't move objects in this mode */
 	if (iter->gg_next)
 		flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE;

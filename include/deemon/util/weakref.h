@@ -254,6 +254,15 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_weakref_cmpxch)(struct Dee_weakref *__restrict self,
                            DeeObject *old_ob, DeeObject *new_ob);
 
+#ifdef CONFIG_BUILDING_DEEMON
+/* Transfer all weak references of "self" to an always-dead dummy object.
+ * Weak references with callbacks are **NOT** executed immediately, and
+ * will only be invoked once `Dee_weakref_list_kill_dummy()' is called. */
+INTDEF NONNULL((1)) void DCALL
+Dee_weakref_list_transfer_to_dummy(struct Dee_weakref_list *__restrict self);
+INTDEF void DCALL Dee_weakref_list_kill_dummy(void);
+#endif /* CONFIG_BUILDING_DEEMON */
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_UTIL_WEAKREF_H */
