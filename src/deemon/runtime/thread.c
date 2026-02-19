@@ -1020,6 +1020,12 @@ INTDEF NONNULL((1)) void DCALL thread_heap_destroy(void *heap);
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
 
+/* True if `DeeThread_Start()' has been used, and `DeeThread_SuspendAll()' hasn't been called.
+ * iow: when this is true, some other thread may be running and giving you a hard time. */
+#ifndef CONFIG_NO_THREADS
+PUBLIC bool DeeThread_IsMultiThreaded = false;
+#endif /* !CONFIG_NO_THREADS */
+
 
 
 /* Suspend/resume execution of the given thread.
@@ -1187,6 +1193,7 @@ again_wait_for_suspend:
 	} while ((iter = iter->t_global.le_next) != NULL);
 
 	/* Expose the global thread list to allow the caller to enumerate it. */
+	atomic_write(&DeeThread_IsMultiThreaded, false);
 	return &DeeThread_Main.ot_thread;
 err:
 	/* Resume execution in all threads. */
@@ -1257,6 +1264,7 @@ again_wait_for_suspend:
 	} while ((iter = iter->t_global.le_next) != NULL);
 
 	/* Expose the global thread list to allow the caller to enumerate it. */
+	atomic_write(&DeeThread_IsMultiThreaded, false);
 	return &DeeThread_Main.ot_thread;
 err:
 	/* Resume execution in all threads. */
@@ -1275,6 +1283,7 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 	iter = &DeeThread_Main.ot_thread;
 	do {
 		if (iter != caller && !(atomic_read(&iter->t_state) & Dee_THREAD_STATE_TERMINATED)) {
+			atomic_write(&DeeThread_IsMultiThreaded, true);
 			ASSERT(atomic_read(&iter->t_state) & Dee_THREAD_STATE_SUSPENDED);
 			ASSERT(atomic_read(&iter->t_state) & Dee_THREAD_STATE_SUSPENDING);
 			atomic_and(&iter->t_state, ~(Dee_THREAD_STATE_SUSPENDING |
@@ -2430,6 +2439,9 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 #endif /* !LOCAL_thread_entry_did_set__ot_pid */
 	_DeeThread_ReleaseSetup(&self->ot_thread);
 	thread_list_lock_release();
+
+	/* Remember that deemon is now running in SMP-mode! */
+	atomic_write(&DeeThread_IsMultiThreaded, true);
 
 	/* Tell our creator that we're now up-and-running.
 	 * NOTE: We use `DeeFutex_WakeAll()' here instead of `_DeeThread_WakeWaiting()',
@@ -4306,7 +4318,11 @@ thread_current_get(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_threaded_get(DeeObject *__restrict UNUSED(self)) {
+#if 1
+	return_bool(DeeThread_IsMultiThreaded);
+#else
 	return_bool(atomic_read(&DeeThread_Main.ot_thread.t_global.le_next) != NULL);
+#endif
 }
 
 #define HAVE_thread_class_getsets

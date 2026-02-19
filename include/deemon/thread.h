@@ -513,6 +513,26 @@ DFUNDEF WUNUSED DeeThreadObject *DCALL DeeThread_TrySuspendAll(void);
 DFUNDEF void DCALL DeeThread_ResumeAll(void);
 #define DeeThread_FOREACH(x) for (; (x); (x) = (x)->t_global.le_next)
 
+/* True if `DeeThread_Start()' has been used, and `DeeThread_SuspendAll()' hasn't been called.
+ * iow: when this is true, some other thread may be running and giving you a hard time.
+ *
+ * This variable is intentionally not volatile or anything like that.
+ * Reason is that:
+ * - It can only ever become "true" as a result of calling "DeeThread_Start()"
+ * - It can only ever become "false" again (though only temporarily) after "DeeThread_SuspendAll"
+ * - There is no chance of another thread setting this to...
+ *   - ... true, because what other thread could there be to do that?
+ *   - ... false, because that only happens in `DeeThread_SuspendAll()'
+ *     and is always undone by `DeeThread_ResumeAll()', and for the time
+ *     that it is "false" in some other thread, **your** thread would be
+ *     one of the suspended thread, meaning you wouldn't even notice.
+ * -> As such, no atomic/volatile semantics are necessary when reading this! */
+#ifdef CONFIG_NO_THREADS
+#define DeeThread_IsMultiThreaded false
+#else /* CONFIG_NO_THREADS */
+DDATDEF bool DeeThread_IsMultiThreaded;
+#endif /* !CONFIG_NO_THREADS */
+
 
 /* Sleep for the specified number of microseconds (1/1000000 seconds). */
 DFUNDEF WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds);

@@ -1126,6 +1126,15 @@ DECL_BEGIN
 
 
 
+#ifndef CONFIG_NO_THREADS
+PRIVATE void DCALL
+gc_generation_try_precollect(struct gc_generation *__restrict self) {
+	/* TODO: GC pre-collect (see "gc.h" for description) */
+	(void)self;
+}
+#endif /* !CONFIG_NO_THREADS */
+
+
 /* Collect (in reverse order) objects from all generations
  * where "gg_collect_on < 0". If a collectible generation
  * is found, at least its "gg_collect_on" is always reset! */
@@ -1169,11 +1178,18 @@ again:
 	do {
 		if (iter->gg_collect_on < 0) {
 #ifndef CONFIG_NO_THREADS
-			/* TODO: GC pre-collect (see "gc.h" for description) */
+			if (DeeThread_IsMultiThreaded) {
+				gc_generation_try_precollect(iter);
+				if (iter->gg_collect_on >= 0)
+					goto continue_with_next_generation;
+			}
 #endif /* !CONFIG_NO_THREADS */
 			has_collectable_generations = true;
 			break;
 		}
+#ifndef CONFIG_NO_THREADS
+continue_with_next_generation:;
+#endif /* !CONFIG_NO_THREADS */
 	} while ((iter = iter->gg_next) != NULL);
 	_gc_lock_release();
 
@@ -1212,7 +1228,10 @@ again:
 	gc_lock_acquire();
 	should_collect = gc_gen0.gg_collect_on < 0;
 #ifndef CONFIG_NO_THREADS
-	/* TODO: GC pre-collect (see "gc.h" for description) */
+	if (should_collect && DeeThread_IsMultiThreaded) {
+		gc_generation_try_precollect(&gc_gen0);
+		should_collect = gc_gen0.gg_collect_on < 0;
+	}
 #endif /* !CONFIG_NO_THREADS */
 	_gc_lock_release();
 	if (!should_collect)
