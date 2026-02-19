@@ -1107,6 +1107,23 @@ DeeThread_Resume(DeeThreadObject *__restrict self) {
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
+#ifndef DeeThread_USE_SINGLE_THREADED
+PRIVATE void DCALL DeeThread_UndoSuspendAll(void) {
+	DeeThreadObject *iter, *caller = DeeThread_Self();
+	ASSERT(thread_list_lock_acquired());
+	iter = &DeeThread_Main.ot_thread;
+	do {
+		if (iter != caller && !(atomic_read(&iter->t_state) & Dee_THREAD_STATE_TERMINATED)) {
+			ASSERT(atomic_read(&iter->t_state) & Dee_THREAD_STATE_SUSPENDING);
+			atomic_and(&iter->t_state, ~(Dee_THREAD_STATE_SUSPENDING |
+			                             Dee_THREAD_STATE_WAITING));
+			DeeFutex_WakeAll(&iter->t_state);
+		}
+	} while ((iter = iter->t_global.le_next) != NULL);
+}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+
+
 /* Safely suspend/resume all threads but the calling.
  * The same restrictions that apply to `DeeThread_Suspend()'
  * and `DeeThread_Resume()' also apply to this function pair.
@@ -1121,6 +1138,7 @@ PUBLIC WUNUSED DeeThreadObject *DCALL DeeThread_SuspendAll(void) {
 
 	/* NOTE: Acquire (and keep) a lock to ensure that only
 	 *       a single thread is ever able to suspend all others. */
+again:
 	if (thread_list_lock_acquire())
 		return NULL;
 	iter = &DeeThread_Main.ot_thread;
@@ -1150,9 +1168,20 @@ again_wait_for_suspend:
 					break;
 				if (DeeFutex_Wait32Timed(&iter->t_state, state, THREAD_WAKE_DELAY) < 0)
 					goto err;
-
-				/* Wake up the thread (in case it's currently inside of a blocking system call) */
-				DeeThread_Wake((DeeObject *)iter);
+#ifndef _Dee_SHARED_WAITWORD_IS_NOOP
+				if (atomic_read(&thread_list_lock.s_waiting) == 0) {
+					/* Wake up the thread (in case it's currently inside of a blocking system call) */
+					DeeThread_Wake((DeeObject *)iter);
+				} else
+#endif /* !_Dee_SHARED_WAITWORD_IS_NOOP */
+				{
+					/* There may be someone trying to interact with the all-threads-list
+					 * -> let them do their work and then try again. */
+					DeeThread_UndoSuspendAll();
+					thread_list_lock_release();
+					SCHED_YIELD();
+					goto again;
+				}
 			}
 		}
 	} while ((iter = iter->t_global.le_next) != NULL);
@@ -1161,15 +1190,7 @@ again_wait_for_suspend:
 	return &DeeThread_Main.ot_thread;
 err:
 	/* Resume execution in all threads. */
-	iter = &DeeThread_Main.ot_thread;
-	do {
-		if (iter != caller && !(atomic_read(&iter->t_state) & Dee_THREAD_STATE_TERMINATED)) {
-			ASSERT(atomic_read(&iter->t_state) & Dee_THREAD_STATE_SUSPENDING);
-			atomic_and(&iter->t_state, ~(Dee_THREAD_STATE_SUSPENDING |
-			                             Dee_THREAD_STATE_WAITING));
-			DeeFutex_WakeAll(&iter->t_state);
-		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	DeeThread_UndoSuspendAll();
 	thread_list_lock_release();
 	return NULL;
 #endif /* !DeeThread_USE_SINGLE_THREADED */
@@ -1184,6 +1205,7 @@ PUBLIC WUNUSED DeeThreadObject *DCALL DeeThread_TrySuspendAll(void) {
 
 	/* NOTE: Acquire (and keep) a lock to ensure that only
 	 *       a single thread is ever able to suspend all others. */
+again:
 	if (!thread_list_lock_tryacquire())
 		return NULL;
 	iter = &DeeThread_Main.ot_thread;
@@ -1216,8 +1238,20 @@ again_wait_for_suspend:
 					goto err;
 				DeeFutex_Wait32NoIntTimed(&iter->t_state, state, THREAD_WAKE_DELAY);
 
-				/* Wake up the thread (in case it's currently inside of a blocking system call) */
-				DeeThread_Wake((DeeObject *)iter);
+#ifndef _Dee_SHARED_WAITWORD_IS_NOOP
+				if (atomic_read(&thread_list_lock.s_waiting) == 0) {
+					/* Wake up the thread (in case it's currently inside of a blocking system call) */
+					DeeThread_Wake((DeeObject *)iter);
+				} else
+#endif /* !_Dee_SHARED_WAITWORD_IS_NOOP */
+				{
+					/* There may be someone trying to interact with the all-threads-list
+					 * -> let them do their work and then try again. */
+					DeeThread_UndoSuspendAll();
+					thread_list_lock_release();
+					SCHED_YIELD();
+					goto again;
+				}
 			}
 		}
 	} while ((iter = iter->t_global.le_next) != NULL);
@@ -1226,15 +1260,7 @@ again_wait_for_suspend:
 	return &DeeThread_Main.ot_thread;
 err:
 	/* Resume execution in all threads. */
-	iter = &DeeThread_Main.ot_thread;
-	do {
-		if (iter != caller && !(atomic_read(&iter->t_state) & Dee_THREAD_STATE_TERMINATED)) {
-			ASSERT(atomic_read(&iter->t_state) & Dee_THREAD_STATE_SUSPENDING);
-			atomic_and(&iter->t_state, ~(Dee_THREAD_STATE_SUSPENDING |
-			                             Dee_THREAD_STATE_WAITING));
-			DeeFutex_WakeAll(&iter->t_state);
-		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	DeeThread_UndoSuspendAll();
 	thread_list_lock_release();
 	return NULL;
 #endif /* !DeeThread_USE_SINGLE_THREADED */
