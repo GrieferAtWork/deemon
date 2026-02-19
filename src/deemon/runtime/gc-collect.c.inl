@@ -68,7 +68,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 
 #ifdef DEFINE_gc_generation_collect_or_unlock
 	if unlikely(!gen->gg_objects) {
-		gen->gg_collect_on = 128; /* XXX: Use initial configuration for generation */
+		gen->gg_collect_on = gen->gg_mindim;
 		return GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING;
 	}
 
@@ -286,8 +286,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		/* Reduce the chance of recursive GC collect happening... */
 		LOCAL_foreach_generation() {
 			gen->gg_collect_on = gen->gg_count;
-			if (gen->gg_collect_on < 128)
-				gen->gg_collect_on = 128; /* XXX: Use initial configuration for generation */
+			if (gen->gg_collect_on < gen->gg_mindim)
+				gen->gg_collect_on = gen->gg_mindim;
 		}
 
 		/* At this point, "unreachable_slow" exists in a sort-of "fake" generation
@@ -343,8 +343,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 	/* Figure out a new threshold that must be reached before another collect happens. */
 	LOCAL_foreach_generation() {
 		gen->gg_collect_on = num_reachable;
-		if (gen->gg_collect_on < 128)
-			gen->gg_collect_on = 128; /* XXX: Use initial configuration for generation */
+		if (gen->gg_collect_on < gen->gg_mindim)
+			gen->gg_collect_on = gen->gg_mindim;
 	}
 
 	if (!unreachable_fast) {
@@ -428,6 +428,12 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 	for (iter = atomic_read(&unreachable_fast); iter;) {
 		struct Dee_gc_head *head = DeeGC_Head(iter);
 		DeeObject *next = atomic_read(&head->gc_next);
+#if !defined(NDEBUG) && 0
+		Dee_DPRINTF("[gc] Clearing unreachable instance of %q at %p",
+		            DeeType_GetName(Dee_TYPE(iter)), iter);
+		gc_dprint_object_info(Dee_TYPE(iter), iter);
+		Dee_DPRINT("\n");
+#endif /* !NDEBUG */
 		DeeObject_GCClear(iter);
 		Dee_Decref(iter);
 		iter = next;

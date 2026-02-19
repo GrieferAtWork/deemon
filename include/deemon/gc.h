@@ -91,19 +91,19 @@ DECL_BEGIN
  * >> // Perform scan and adjust "ob_refcnt" such that anything
  * >> // that happens to be unreachable ends with "ob_refcnt == 0"
  * >> for (iter = generation; iter; iter = iter->gc_next) {
- * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *reachable) -> {
- * >>         if (DeeType_IsGC(Dee_TYPE(reachable))) {
- * >>             struct Dee_gc_head *head = headof(reachable);
+ * >>     DeeObject_GCVisit(&iter->gc_self, (DeeObject *referenced) -> {
+ * >>         if (DeeType_IsGC(Dee_TYPE(referenced))) {
+ * >>             struct Dee_gc_head *head = headof(referenced);
  * >>             if (!(head->gc_info.gi_flag & Dee_GC_FLAG_OTHERGEN)) {
- * >>                 ASSERT(reachable->ob_refcnt != 0);
- * >>                 --reachable->ob_refcnt;
+ * >>                 ASSERT(referenced->ob_refcnt != 0);
+ * >>                 --referenced->ob_refcnt;
  * >>             }
  * >>         } else {
- * >>             ASSERT(reachable->ob_refcnt != 0);
- * >>             --reachable->ob_refcnt;
- * >>             if (reachable->ob_refcnt == 0) {
+ * >>             ASSERT(referenced->ob_refcnt != 0);
+ * >>             --referenced->ob_refcnt;
+ * >>             if (referenced->ob_refcnt == 0) {
  * >>                 // All references of non-gc object account-for -> cyclic references of this object should also go away
- * >>                 RECURSE(reachable); // Recurse on non-GC objects (e.g. "Tuple")
+ * >>                 RECURSE(referenced); // Recurse on non-GC objects (e.g. "Tuple")
  * >>             }
  * >>         }
  * >>     });
@@ -115,17 +115,40 @@ DECL_BEGIN
  * >>         iter->gc_next |= 1; // Temporary flag that means "object is unreachable"
  * >> }
  * >>
- * >> // Undo refcnt changes done by previous "DeeObject_Visit"
+ * >> // GC objects that are referenced by reachable GC objects must themselves be reachable.
+ * >> // The above ob_refcnt trick was only able to identify objects that aren't externally
+ * >> // referenced (which is only enough to identify objects that **ARE** reachable, but is
+ * >> // those whose reference count hit "0" may be internally referenced by something that
+ * >> // has been determined to be externally referenced).
  * >> for (iter = generation; iter; iter = iter->gc_next) {
- * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *reachable) -> {
- * >>         if (DeeType_IsGC(Dee_TYPE(reachable))) {
- * >>             struct Dee_gc_head *head = headof(reachable);
+ * >>     if (iter->gc_self.ob_refcnt != 0) {
+ * >>         DeeObject_GCVisit(&iter->gc_self, (DeeObject *referenced) -> {
+ * >>             if (referenced->ob_refcnt != 0)
+ * >>                 return; // Already reachable...
+ * >>             if (DeeType_IsGC(Dee_TYPE(referenced))) {
+ * >>                 struct Dee_gc_head *head = headof(referenced);
+ * >>                 if (!((uintptr_t)head->gc_next & 1))
+ * >>                     return; // Already marked as "actually-is-reachable"
+ * >>                 // Found a GC object that was marked as unreachable,
+ * >>                 // but is actually transitively reachable!
+ * >>                 head->gc_next = (DeeObject *)((uintptr_t)head->gc_next & ~1);
+ * >>             }
+ * >>             RECURSE(referenced);
+ * >>         });
+ * >>     }
+ * >> }
+ * >>
+ * >> // Undo refcnt changes done by previous "DeeObject_GCVisit"
+ * >> for (iter = generation; iter; iter = iter->gc_next) {
+ * >>     DeeObject_GCVisit(&iter->gc_self, (DeeObject *referenced) -> {
+ * >>         if (DeeType_IsGC(Dee_TYPE(referenced))) {
+ * >>             struct Dee_gc_head *head = headof(referenced);
  * >>             if (!(head->gc_info.gi_flag & Dee_GC_FLAG_OTHERGEN))
- * >>                 ++reachable->ob_refcnt;
+ * >>                 ++referenced->ob_refcnt;
  * >>         } else {
- * >>             if (reachable->ob_refcnt == 0)
- * >>                 RECURSE(reachable);
- * >>             ++reachable->ob_refcnt;
+ * >>             if (referenced->ob_refcnt == 0)
+ * >>                 RECURSE(referenced);
+ * >>             ++referenced->ob_refcnt;
  * >>         }
  * >>     });
  * >> }

@@ -75,6 +75,49 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+PRIVATE NONNULL((1, 2)) void DCALL
+gc_dprint_object_info(DeeTypeObject *tp, DeeObject *ob) {
+	if (tp == &DeeType_Type) {
+		Dee_DPRINTF(" {tp_name:%q}", ((DeeTypeObject *)ob)->tp_name);
+	} else if (tp == &DeeCode_Type) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		DeeCodeObject *me;
+		DeeModuleObject *mod;
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+print_code:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		me  = (DeeCodeObject *)ob;
+		mod = me->co_module;
+		if (mod && (Dee_TYPE(mod) == &DeeModuleDee_Type ||
+		            Dee_TYPE(mod) == &DeeModuleDex_Type ||
+		            Dee_TYPE(mod) == &DeeModuleDir_Type)) {
+			Dee_DPRINTF(" {co_module:%q, co_name:%q}",
+			            DeeModule_GetShortName(mod),
+			            DeeCode_NAME(ob));
+		} else
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		{
+			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(ob));
+		}
+	} else if (tp == &DeeFunction_Type) {
+		ob = (DeeObject *)DeeFunction_CODE(ob);
+		if (ob && Dee_TYPE(ob) == &DeeCode_Type)
+			goto print_code;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	} else if (tp == &DeeModuleDee_Type ||
+	           tp == &DeeModuleDex_Type ||
+	           tp == &DeeModuleDir_Type) {
+		Dee_DPRINTF(" {mo_absname:%q}", ((DeeModuleObject *)ob)->mo_absname);
+#else  /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	} else if (tp == &DeeModule_Type) {
+		Dee_DPRINTF(" {mo_name:%r}", ((DeeModuleObject *)ob)->mo_name);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	}
+}
+#endif /* !NDEBUG */
+
+
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 
 struct gc_generation {
@@ -83,11 +126,15 @@ struct gc_generation {
 	                                      * (only an exact number for generation #0; in other
 	                                      * generation, this represents an upper bound) */
 	Dee_ssize_t           gg_collect_on; /* [lock(gc_lock)] Decremented on each object add -- when this becomes negative, collect objects of this generation */
+	Dee_ssize_t           gg_mindim;     /* [lock(gc_lock)] Lower bound for `gg_collect_on' */
 	/* XXX: "gg_insert" is only really needed for "gc_gen0"! */
 	DeeObject            *gg_insert;     /* [0..1][lock(ATOMIC)] Objects that are pending insertion (linked via `gc_next')
 	                                      * NOTE: "gc_info.gi_flag & Dee_GC_FLAG_GENN" is already set correctly for these objects. */
-	struct gc_generation *gg_next;       /* [0..1][const] Next generation (or "NULL" if this is the last one) */
+	struct gc_generation *gg_next;       /* [0..1][lock(gc_lock)] Next generation (or "NULL" if this is the last one) */
 };
+#define GC_GENERATION_INIT(mindim, next) \
+	{ NULL, 0, mindim, mindim, NULL, next }
+
 
 /* [0..1][lock(ATOMIC)] Objects that are pending removal (linked via `ob_refcnt')
  * (weakrefs of these objects have already been killed, and user-defined "tp_finalize" has
@@ -106,11 +153,18 @@ PRIVATE DeeObject *gc_remove = NULL;
  * becomes "0". */
 PRIVATE unsigned int gc_remove_modifying = 0;
 
-PRIVATE struct gc_generation gc_genn = { NULL, 0, 1024, NULL, NULL };
-PRIVATE struct gc_generation gc_gen1 = { NULL, 0, 512, NULL, &gc_genn };
-PRIVATE struct gc_generation gc_gen0 = { NULL, 0, 128, NULL, &gc_gen1 };
+/* [lock(gc_lock)] GC generations */
+PRIVATE struct gc_generation gc_genn = GC_GENERATION_INIT(1024, NULL);
+/* More generations could go here... */
+PRIVATE struct gc_generation gc_gen2 = GC_GENERATION_INIT(512, &gc_genn);
+PRIVATE struct gc_generation gc_gen1 = GC_GENERATION_INIT(256, &gc_gen2);
+PRIVATE struct gc_generation gc_gen0 = GC_GENERATION_INIT(128, &gc_gen1); /* XXX: Tune these! */
+
+/* Lock for the GC system */
 PRIVATE Dee_atomic_lock_t gc_lock = Dee_ATOMIC_LOCK_INIT;
-PRIVATE bool gc_mustreap = false; /* [lock(ATOMIC)] true if "_gc_lock_reap_and_maybe_unlock" must be called */
+
+/* [lock(ATOMIC)] true if "_gc_lock_reap_and_maybe_unlock" must be called */
+PRIVATE bool gc_mustreap = false;
 
 #define gc_lock_available()  Dee_atomic_lock_available(&gc_lock)
 #define gc_lock_acquired()   Dee_atomic_lock_acquired(&gc_lock)
@@ -344,6 +398,11 @@ PRIVATE void DCALL gc_lock_reap_and_release(unsigned int flags) {
 PRIVATE void DCALL gc_lock_reap(unsigned int flags) {
 	if (gc_lock_tryacquire())
 		gc_lock_reap_and_release(flags);
+}
+
+PRIVATE void DCALL gc_lock_force_reap(unsigned int flags) {
+	gc_lock_acquire();
+	gc_lock_reap_and_release(flags);
 }
 
 PRIVATE void DCALL gc_lock_acquire_and_reap(unsigned int flags) {
@@ -665,8 +724,7 @@ again:
 			SCHED_YIELD();
 		if (!atomic_read(&gc_mustreap))
 			break;
-		gc_lock_acquire();
-		gc_lock_reap_and_release(DeeGC_TRACK_F_NOCOLLECT);
+		gc_lock_force_reap(DeeGC_TRACK_F_NOCOLLECT);
 	}
 
 	/* Suspend all other threads (or at least *try* to) */
@@ -762,15 +820,9 @@ PRIVATE void DCALL gc_collect_release(void) {
 /* Had to `gc_collect_release()' for temporary (one-time) reasons; try again */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__RETRY 2
 
-/* `gc_collect_release()' was called and an error was thrown
- * (only if `GC_GENERATION_COLLECT_OR_UNLOCK__F_ERRORS' is set) */
-#define GC_GENERATION_COLLECT_OR_UNLOCK__ERROR 3
-
-
 /* Possible flags for `gc_generation_collect_or_unlock()' */
 #define GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL         0
-#define GC_GENERATION_COLLECT_OR_UNLOCK__F_ERRORS         1 /* Allow errors to be thrown */
-#define GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE 2 /* Move reachable objects to next generation (caller must ensure that "gg_next != NULL") */
+#define GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE 1 /* Move reachable objects to next generation (caller must ensure that "gg_next != NULL") */
 
 /* Set the "Dee_GC_FLAG_OTHERGEN" flag for objects from "self" */
 PRIVATE NONNULL((1)) void DCALL
@@ -1193,8 +1245,7 @@ continue_with_iter:
 	if (iter->gg_next)
 		flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE;
 #endif
-	if (allow_interrupts_and_errors)
-		flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_ERRORS;
+
 	/* NOTE: This won't work properly to identify unreachable objects
 	 *       that are only referenced by other objects from other generations.
 	 *
@@ -1211,7 +1262,6 @@ continue_with_iter:
 		} else {
 			/* Attempt a special collect across *all* generations */
 attempt_collect_all:;
-#if 1 /* TODO */
 			status = gc_collectall_collect_or_unlock(&count);
 			switch (status) {
 			case GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING:
@@ -1224,13 +1274,8 @@ attempt_collect_all:;
 				break;
 			case GC_GENERATION_COLLECT_OR_UNLOCK__RETRY:
 				goto again;
-			case GC_GENERATION_COLLECT_OR_UNLOCK__ERROR:
-				goto err;
 			default: __builtin_unreachable();
 			}
-#else
-			gc_collect_release();
-#endif
 		}
 		break;
 	case GC_GENERATION_COLLECT_OR_UNLOCK__SUCCESS:
@@ -1247,8 +1292,6 @@ attempt_collect_all:;
 		break;
 	case GC_GENERATION_COLLECT_OR_UNLOCK__RETRY:
 		goto again;
-	case GC_GENERATION_COLLECT_OR_UNLOCK__ERROR:
-		goto err;
 	default: __builtin_unreachable();
 	}
 	if unlikely(result == (size_t)-1)
@@ -3416,19 +3459,7 @@ INTERN void DCALL gc_dump_all(void) {
 			Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
 			            ob, ob_type->tp_name, ob->ob_refcnt);
 			/* Print the name of a select set of types. */
-			if (ob_type == &DeeType_Type) {
-				Dee_DPRINTF(" {tp_name:%q}", ((DeeTypeObject *)ob)->tp_name);
-			} else if (ob_type == &DeeCode_Type) {
-				Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(ob));
-			} else if (ob_type == &DeeFunction_Type) {
-				Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(DeeFunction_CODE(ob)));
-			} else if (ob_type == &DeeModule_Type) {
-#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-				Dee_DPRINTF(" {mo_absname:%q}", ((DeeModuleObject *)ob)->mo_absname);
-#else  /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				Dee_DPRINTF(" {mo_name:%r}", ((DeeModuleObject *)ob)->mo_name);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-			}
+			gc_dprint_object_info(ob_type, ob);
 			Dee_DPRINT("\n");
 #ifdef CONFIG_TRACE_REFCHANGES
 			dump_reference_history(&iter->gc_object);
