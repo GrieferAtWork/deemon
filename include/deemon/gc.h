@@ -70,6 +70,7 @@ DECL_BEGIN
  * >> struct Dee_gc_head *generation = TAKE_ALL_OBJECTS_FROM_GENERATION();
  * >> struct Dee_gc_head *unreachable_fast; // w/o user-defined "~this"
  * >> struct Dee_gc_head *unreachable_slow; // w user-defined "~this"
+ * >>
  * >> // Must suspend all threads that could potentially modify reference counts:
  * >> //           >> GC1(ob_refcnt=1)        GC2(ob_refcnt=1)
  * >> //      Thread #1: start GC enum: read GC1.ob_refcnt=1, GC2.ob_refcnt=1  (references owned by Thread #2)
@@ -242,6 +243,41 @@ DECL_BEGIN
  * - For GC objects, this operator only gets called when "!(Dee_gc_head::gc_next & 2)"
  * - Only this operator is allowed to revive an already-destroyed object ("tp_dtor"
  *   isn't allowed to do so anymore)
+ *
+ *
+ * TODO: I feel like there should be a way to (at least in some cases) determine
+ *       (at least certain kinds of) cyclic reference loops **without** having to
+ *       suspend all threads every time.
+ *   Or: There might be a way to determine (with some degree of likelihood) which
+ *       objects are probably deletable, and which aren't (such that there'd be a
+ *       sort of GC pre-collect that sorts objects into "probably unreferenced"
+ *       and "probably still referenced"). Then, threads only need to be suspended
+ *       when the "probably unreferenced" pile becomes too large (rather than
+ *       every time any sort of GC collect is performed).
+ *
+ * Idea: Have a secondary pre-collect that function that:
+ * - Re-uses the upper bits of "gi_pself" (2..N-1) as a temporary reference counter "gi_gcrefs"
+ * - Do essentially the same as the decref "DeeObject_GCVisit" above, but increment
+ *   the special "gi_gcrefs" counter.
+ *   - For non-GC objects, this part will need an out-of-band, heap-based mapping to store
+ *     the "gcrefs" for such objects (but any allocation failure here can simply be handled
+ *     by forgoing the idea of a pre-collect and just doing a full collect instead (iow: by
+ *     doing `DeeThread_SuspendAll()' and everything else detailed above))
+ * - Any object where "gi_gcrefs >= ob_refcnt" is *probably* only internally referenced.
+ * - Do a second "DeeObject_GCVisit" of all objects where "gi_gcrefs < ob_refcnt" to find
+ *   transitive references (~ala "gc_visit__mark_internally_reachable__cb"). Any GC object
+ *   found to be referenced transitively is marked with "gi_gcrefs = 0".
+ * - At this point, for every object that was scanned, we can say (with some level of certainty):
+ *   - "gi_gcrefs <  ob_refcnt" --> object is probably referenced
+ *   - "gi_gcrefs == ob_refcnt" --> object is probably unreferenced
+ *   - "gi_gcrefs >  ob_refcnt" --> object is weird or in heavy use (so probably still referenced)
+ * - Using this info, anything "probably referenced" or "weird" can be moved to the next generation,
+ *   such that only "probably unreferenced" objects are kept in the same generation. Only if the
+ *   generation's "gg_count" is still greater than some secondary threshold should a full collect
+ *   actually happen.
+ * - NOTES:
+ *   - When no secondary threads have been created yet, or when built with `CONFIG_NO_THREADS',
+ *     none of this "pre-collect" code is used, and full collects will happen every time.
  */
 struct Dee_gc_head {
 	union {
