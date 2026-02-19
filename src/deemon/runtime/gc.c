@@ -155,11 +155,11 @@ PRIVATE DeeObject *gc_remove = NULL;
 PRIVATE unsigned int gc_remove_modifying = 0;
 
 /* [lock(gc_lock)] GC generations */
-PRIVATE struct gc_generation gc_genn = GC_GENERATION_INIT(1024, NULL);
+PRIVATE struct gc_generation gc_genn = GC_GENERATION_INIT(64 * 1024, NULL);
 /* More generations could go here... */
-PRIVATE struct gc_generation gc_gen2 = GC_GENERATION_INIT(512, &gc_genn);
-PRIVATE struct gc_generation gc_gen1 = GC_GENERATION_INIT(256, &gc_gen2);
-PRIVATE struct gc_generation gc_gen0 = GC_GENERATION_INIT(128, &gc_gen1); /* XXX: Tune these! */
+PRIVATE struct gc_generation gc_gen2 = GC_GENERATION_INIT(64 * 512, &gc_genn);
+PRIVATE struct gc_generation gc_gen1 = GC_GENERATION_INIT(64 * 256, &gc_gen2);
+PRIVATE struct gc_generation gc_gen0 = GC_GENERATION_INIT(64 * 128, &gc_gen1); /* XXX: Tune these! */
 
 /* Lock for the GC system */
 PRIVATE Dee_atomic_lock_t gc_lock = Dee_ATOMIC_LOCK_INIT;
