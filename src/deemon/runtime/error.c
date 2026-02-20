@@ -264,6 +264,21 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	return DeeError_ThrowInherited(error);
 }
 
+#ifndef Dee_DPRINT_IS_NOOP
+PRIVATE WUNUSED ATTR_INS(2, 3) Dee_ssize_t DPRINTER_CC
+dprintf_limited_printer(void *arg, char const *__restrict data, size_t datalen) {
+	size_t *p_remaining = (size_t *)arg;
+	if (datalen >= *p_remaining) {
+		*p_remaining = 0;
+		(*Dee_DPRINTER)(NULL, data, datalen);
+		return -2;
+	}
+	*p_remaining -= datalen;
+	return (*Dee_DPRINTER)(NULL, data, datalen);
+}
+#endif /* !Dee_DPRINT_IS_NOOP */
+
+
 PUBLIC ATTR_COLD NONNULL((1)) int
 (DCALL DeeError_ThrowInherited)(/*inherit(always)*/ DREF DeeObject *__restrict error) {
 	struct Dee_except_frame *frame;
@@ -292,7 +307,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	ts->t_except    = frame;
 	++ts->t_exceptsz;
 #ifndef Dee_DPRINT_IS_NOOP
-	if (ts->t_exceptsz == 1) {
+	if (ts->t_exceptsz == 1 && _Dee_dprint_enabled) {
 		/* Only print first-level exceptions to prevent recursion if the error's "repr"
 		 * is implemented like:
 		 * >> class MyError {
@@ -301,11 +316,23 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 		 * >>     }
 		 * >> }
 		 *
-		 * TODO: Limit amount of characters printed of repr to 1024. User-defined classes
+		 * Also: Limit amount of characters printed of repr to 1024. User-defined classes
 		 *       have a default "operator repr" that includes the nested "repr" of every
 		 *       contained member. And while this is guarantied to terminate (eventually),
 		 *       it can *very* easily spiral out of control before then. */
-		Dee_DPRINTF("[RT] Throw exception: %r (%" PRFu16 ")\n", error, ts->t_exceptsz);
+		size_t limit = 1024;
+		Dee_ssize_t status;
+		_Dee_dprint("[RT] Throw exception: ");
+		status = DeeObject_PrintRepr(error, &dprintf_limited_printer, &limit);
+		if (status < 0) {
+			ASSERT(status == -1 || status == -2);
+			if (status == -1) {
+				DeeError_Handled(ERROR_HANDLED_RESTORE);
+			} else {
+				_Dee_dprint("[...]");
+			}
+		}
+		Dee_DPRINTF(" (%" PRFu16 ")\n", ts->t_exceptsz);
 	}
 #endif /* !Dee_DPRINT_IS_NOOP */
 	return -1;
