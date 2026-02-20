@@ -420,7 +420,7 @@ again_reap:
 		goto again_reap;
 }
 
-PRIVATE void DCALL gc_lock_reap_and_release(unsigned int flags) {
+PRIVATE bool DCALL gc_lock_reap_and_release(unsigned int flags) {
 	do {
 		unsigned int status;
 		status = _gc_lock_reap_and_maybe_unlock(flags);
@@ -432,11 +432,12 @@ PRIVATE void DCALL gc_lock_reap_and_release(unsigned int flags) {
 			break;
 		case REAP_STATUS_UNLOCKED_RETRY_LATER:
 			if (!atomic_xch(&gc_mustreap, true))
-				return;
+				return false;
 			break;
 		default: __builtin_unreachable();
 		}
 	} while (atomic_read(&gc_mustreap) && gc_lock_tryacquire());
+	return true;
 }
 
 PRIVATE void DCALL gc_lock_reap(unsigned int flags) {
@@ -444,9 +445,9 @@ PRIVATE void DCALL gc_lock_reap(unsigned int flags) {
 		gc_lock_reap_and_release(flags);
 }
 
-PRIVATE void DCALL gc_lock_force_reap(unsigned int flags) {
+PRIVATE bool DCALL gc_lock_force_reap(unsigned int flags) {
 	gc_lock_acquire();
-	gc_lock_reap_and_release(flags);
+	return gc_lock_reap_and_release(flags);
 }
 
 PRIVATE void DCALL gc_lock_acquire_and_reap(unsigned int flags) {
@@ -798,7 +799,8 @@ again:
 			SCHED_YIELD();
 		if (!atomic_read(&gc_mustreap))
 			break;
-		gc_lock_force_reap(DeeGC_TRACK_F_NOCOLLECT);
+		if (!gc_lock_force_reap(DeeGC_TRACK_F_NOCOLLECT))
+			break;
 	}
 
 	/* Suspend all other threads (or at least *try* to) */
@@ -1251,7 +1253,7 @@ continue_with_next_generation:;
 		gc_collect_prelock_release();
 		return true; /* Nothing left to do! */
 	}
-	if (!gc_collect_acquire(DeeGC_TRACK_F_NOCOLLECT)) {
+	if (!gc_collect_acquire(false)) {
 		gc_collect_prelock_release();
 		return false;
 	}
@@ -1298,7 +1300,7 @@ again:
 		gc_collect_prelock_release();
 		return true;
 	}
-	if (!gc_collect_acquire(DeeGC_TRACK_F_NOCOLLECT)) {
+	if (!gc_collect_acquire(false)) {
 		gc_collect_prelock_release();
 		return false;
 	}
