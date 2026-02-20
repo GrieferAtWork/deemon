@@ -824,8 +824,12 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			Dee_Incref(&DeeString_Type); /* Finalize initialization of the buffer. */
 
 			/* Check for errors that may have occurred during `DeeFile_Open()' */
-			if unlikely(!stream)
+			if unlikely(!stream) {
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				Dee_Decref_unlikely(libpath);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				goto err_streamopen_failed;
+			}
 
 			/* Use the stream to open a new TPP file descriptor. */
 			result = TPPFile_OpenStream((stream_t)stream, DeeString_STR(buffer));
@@ -833,6 +837,9 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			if unlikely(!result) {
 				/* Failed to create the TPP descriptor. */
 				Dee_Decref(stream);
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+				Dee_Decref_unlikely(libpath);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 				goto err;
 			}
 
@@ -844,12 +851,12 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			if (!keyword_entry) {
 				keyword_entry = TPPLexer_LookupKeyword(buffer->s_str, req_length, 1);
 				if unlikely(!keyword_entry)
-					goto err_r;
+					goto err_r_path;
 			}
 
 			/* Ensure that rare data has been allocated for the keyword. */
 			if unlikely(!TPPKeyword_API_MAKERARE(keyword_entry))
-				goto err_r;
+				goto err_r_path;
 			ASSERT(!keyword_entry->k_rare->kr_file);
 			keyword_entry->k_rare->kr_file = result; /* Inherit reference. */
 #ifdef HAVE_CALLBACK_NEW_TEXTFILE
@@ -857,11 +864,14 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			if (HAVE_CALLBACK_NEW_TEXTFILE &&
 			    !CALLBACK_NEW_TEXTFILE(result, is_system_header)) {
 				kwd_entry->k_rare->kr_file = NULL;
-				goto err_r;
+				goto err_r_path;
 			}
 #endif /* HAVE_CALLBACK_NEW_TEXTFILE */
 			if (p_keyword_entry)
 				*p_keyword_entry = keyword_entry;
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			Dee_Decref_unlikely(libpath);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 			return result;
 		}
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
@@ -900,7 +910,11 @@ err_streamopen_failed:
 err:
 	result = NULL;
 	goto done_result;
-err_r:
+err_r_path:
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	Dee_Decref_unlikely(libpath);
+#endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+/*err_r:*/
 	TPPFile_Decref(result);
 	goto err;
 }
