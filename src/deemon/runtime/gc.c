@@ -156,14 +156,15 @@ struct gc_generation {
 	size_t                gg_fixed_count;/* [lock(gc_lock)][valid_if(self != &gc_gen0)] Same as `gg_count', but used to speed up `gc_generation_fixcount()' */
 	Dee_ssize_t           gg_collect_on; /* [lock(gc_lock)] Decremented on each object add -- when this becomes negative, collect objects of this generation */
 	Dee_ssize_t           gg_mindim;     /* [lock(gc_lock)] Lower bound for `gg_collect_on' */
-	/* XXX: "gg_insert" is only really needed for "gc_gen0"! */
-	DeeObject            *gg_insert;     /* [0..1][lock(ATOMIC)] Objects that are pending insertion (linked via `gc_next')
-	                                      * NOTE: "gc_info.gi_flag & Dee_GC_FLAG_GENN" is already set correctly for these objects. */
 	struct gc_generation *gg_next;       /* [0..1][lock(gc_lock)] Next generation (or "NULL" if this is the last one) */
 };
 #define GC_GENERATION_INIT(mindim, next) \
-	{ NULL, 0, 0, mindim, mindim, NULL, next }
+	{ NULL, 0, 0, mindim, mindim, next }
 
+
+/* [0..1][lock(ATOMIC)] Objects that are pending insertion into "gc_gen0" (linked via `gc_next') */
+PRIVATE DeeObject *gc_insert = NULL;
+#define gc_insert__p_link(ob) (&DeeGC_Head(ob)->gc_next)
 
 /* [0..1][lock(ATOMIC)] Objects that are pending removal (linked via `ob_refcnt')
  * (weakrefs of these objects have already been killed, and user-defined "tp_finalize" has
@@ -268,23 +269,21 @@ gc_object_set_pself(DeeObject ***p_p_self, DeeObject **p_self) {
 	} while (!atomic_cmpxch_weak_or_write(p_p_self, oldval, newval));
 }
 
-PRIVATE NONNULL((1)) void DCALL
-gc_generation_reap_insert(struct gc_generation *__restrict self) {
+PRIVATE void DCALL gc_reap_insert(void) {
 	struct Dee_gc_head *head;
 	size_t pending_count;
 	DeeObject *iter, **p_iter;
-	DeeObject *pending_insert = atomic_xch(&self->gg_insert, NULL);
+	DeeObject *pending_insert = atomic_xch(&gc_insert, NULL);
 	if (!pending_insert)
 		return;
 
 	/* Count pending objects and fill in their "gi_pself" pointers */
-	p_iter = &self->gg_objects;
+	p_iter = &gc_gen0.gg_objects;
 	iter = pending_insert;
 	for (pending_count = 0;;) {
 		++pending_count;
 		head = DeeGC_Head(iter);
-		ASSERT(!!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN) ==
-		       !!(self != &gc_gen0));
+		ASSERT(!(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
 		gc_object_set_pself(&head->gc_info.gi_pself, p_iter);
 		p_iter = &head->gc_next;
 		if (!head->gc_next)
@@ -293,21 +292,15 @@ gc_generation_reap_insert(struct gc_generation *__restrict self) {
 	}
 
 	/* Link new objects into "self->gg_objects" */
-	head->gc_next = self->gg_objects;
-	if (self->gg_objects) {
-		head = DeeGC_Head(self->gg_objects);
+	if ((head->gc_next = gc_gen0.gg_objects) != NULL) {
+		head = DeeGC_Head(gc_gen0.gg_objects);
 		gc_object_set_pself(&head->gc_info.gi_pself, p_iter);
 	}
-	self->gg_objects = pending_insert;
+	gc_gen0.gg_objects = pending_insert;
 
 	/* Adjust counters based on pending-object counts. */
-	self->gg_count += pending_count;
-	self->gg_collect_on -= pending_count;
-
-	/* If GC should be triggered, fix true object count
-	 * first (to see if a collect is really necessary) */
-	if (self->gg_collect_on < 0 && (self != &gc_gen0))
-		gc_generation_fixcount(self);
+	gc_gen0.gg_count += pending_count;
+	gc_gen0.gg_collect_on -= pending_count;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -347,7 +340,6 @@ PRIVATE ATTR_NOINLINE unsigned int DCALL
 _gc_lock_reap_and_maybe_unlock(unsigned int flags) {
 	bool should_collect = false;
 	DeeObject *pending_remove, *removeme;
-	struct gc_generation *iter;
 	/* Clear the must-reap flag */
 	atomic_write(&gc_mustreap, false);
 
@@ -355,12 +347,7 @@ _gc_lock_reap_and_maybe_unlock(unsigned int flags) {
 	pending_remove = atomic_xch(&gc_remove, NULL);
 
 	/* Reap pending inserts for every generation */
-	iter = &gc_gen0;
-	do {
-		gc_generation_reap_insert(iter);
-		if (iter->gg_collect_on < 0)
-			should_collect = true;
-	} while ((iter = iter->gg_next) != NULL);
+	gc_reap_insert();
 
 	if (!pending_remove && !should_collect)
 		return REAP_STATUS_RETAINED; /* Didn't have to release lock */
@@ -480,10 +467,10 @@ DeeGC_Track(DREF DeeObject *__restrict ob) {
 		/* Setup as a pending insert */
 		DeeObject *next;
 		do {
-			next = atomic_read(&gc_gen0.gg_insert);
+			next = atomic_read(&gc_insert);
 			head->gc_next = next;
 			COMPILER_WRITE_BARRIER();
-		} while (!atomic_cmpxch(&gc_gen0.gg_insert, next, ob));
+		} while (!atomic_cmpxch(&gc_insert, next, ob));
 		atomic_write(&gc_mustreap, true);
 		gc_lock_reap(DeeGC_TRACK_F_NORMAL);
 		return ob;
@@ -530,10 +517,10 @@ DeeGC_TrackEx(DREF DeeObject *__restrict ob, unsigned int flags) {
 		/* Setup as a pending insert */
 		DeeObject *next;
 		do {
-			next = atomic_read(&gc_gen0.gg_insert);
+			next = atomic_read(&gc_insert);
 			head->gc_next = next;
 			COMPILER_WRITE_BARRIER();
-		} while (!atomic_cmpxch(&gc_gen0.gg_insert, next, ob));
+		} while (!atomic_cmpxch(&gc_insert, next, ob));
 		atomic_write(&gc_mustreap, true);
 		gc_lock_reap(flags);
 		return ob;
@@ -701,10 +688,10 @@ DeeGC_TrackAll(DeeObject *first, DeeObject *last, unsigned int flags) {
 		/* Setup as pending inserts */
 		DeeObject *next;
 		do {
-			next = atomic_read(&gc_gen0.gg_insert);
+			next = atomic_read(&gc_insert);
 			last_head->gc_next = next;
 			COMPILER_WRITE_BARRIER();
-		} while (!atomic_cmpxch(&gc_gen0.gg_insert, next, first));
+		} while (!atomic_cmpxch(&gc_insert, next, first));
 		atomic_write(&gc_mustreap, true);
 		gc_lock_reap(flags);
 		return;
@@ -759,7 +746,6 @@ PUBLIC void DCALL DeeGC_CollectAsNecessary(void) {
 PRIVATE WUNUSED bool DCALL
 gc_collect_acquire(bool allow_interrupts_and_errors) {
 	DeeObject *pending_remove;
-	struct gc_generation *iter;
 	DeeThreadObject *threads;
 again:
 	/* Wait for "gc_lock" and "gc_remove_modifying" to settle.
@@ -802,10 +788,9 @@ again:
 	 * but needs to be distinct because we've suspended other threads. */
 	atomic_write(&gc_mustreap, false);
 	pending_remove = atomic_xch(&gc_remove, NULL);
-	iter = &gc_gen0;
-	do {
-		gc_generation_reap_insert(iter);
-	} while ((iter = iter->gg_next) != NULL);
+
+	/* Reap inserts */
+	gc_reap_insert();
 
 	/* Deal with pending remove operations (ugh -- this means we'll
 	 * have to resume other threads again before we can *actually*
