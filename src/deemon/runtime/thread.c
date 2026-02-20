@@ -2141,7 +2141,10 @@ again_read_state:
 #ifndef DeeThread_USE_SINGLE_THREADED
 	atomic_inc(&self->t_int_vers); /* Indicate that we're checking for interrupts */
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-	atomic_and(&self->t_state, ~Dee_THREAD_STATE_INTERRUPTED);
+
+	/* Clear the interrupt flag (whilst ensuring that we got the most up-to-date "state") */
+	if (!atomic_cmpxch_weak(&self->t_state, state, state & ~Dee_THREAD_STATE_INTERRUPTED))
+		goto again_read_state;
 
 	/* Someone may be waiting for us to start handling our interrupts.
 	 * If that is the case, then we must wake them. */
