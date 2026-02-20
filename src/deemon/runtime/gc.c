@@ -590,6 +590,15 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 	/* Check if we can untrack "ob" synchronously */
 	ASSERT(ob->ob_refcnt == 0);
 	if likely(gc_lock_tryacquire()) {
+		/* If there are pending inserts, they *must* be reaped first.
+		 *
+		 * If "ob" was a *really* short-lived object, then it may be getting
+		 * untracked before it ever was being tracked for real. If that is
+		 * what's happening, then in order for the untrack to even work, the
+		 * object has to be tracked first. */
+		if (atomic_read(&gc_insert) != NULL)
+			gc_reap_insert();
+
 		gc_do_untrack_locked(ob);
 		gc_lock_release(DeeGC_TRACK_F_NORMAL);
 		return ob;
