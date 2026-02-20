@@ -343,8 +343,10 @@ typedef struct {
 /* @return: * : one of `REAP_STATUS_*' */
 PRIVATE ATTR_NOINLINE unsigned int DCALL
 _gc_lock_reap_and_maybe_unlock(unsigned int flags) {
-	bool should_collect = false;
+	bool should_collect;
 	DeeObject *pending_remove, *removeme;
+	struct gc_generation *iter;
+
 	/* Clear the must-reap flag */
 	atomic_write(&gc_mustreap, false);
 
@@ -353,6 +355,14 @@ _gc_lock_reap_and_maybe_unlock(unsigned int flags) {
 
 	/* Reap pending inserts for every generation */
 	gc_reap_insert();
+
+	/* Check if objects should be collected in any generation. */
+	iter = &gc_gen0;
+	should_collect = false;
+	do {
+		if (iter->gg_collect_on < 0)
+			should_collect = true;
+	} while ((iter = iter->gg_next) != NULL);
 
 	if (!pending_remove && !should_collect)
 		return REAP_STATUS_RETAINED; /* Didn't have to release lock */

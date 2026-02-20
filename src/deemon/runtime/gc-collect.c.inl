@@ -511,6 +511,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 			}
 			gc_gen0.gg_objects = first;
 			gc_gen0.gg_count += count;
+			gc_gen0.gg_collect_on -= count;
 		}
 		COMPILER_BARRIER();
 		gc_lock_release(DeeGC_TRACK_F_NOCOLLECT);
