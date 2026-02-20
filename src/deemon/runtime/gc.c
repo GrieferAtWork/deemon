@@ -1310,6 +1310,7 @@ PUBLIC WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects) {
 	size_t count, result = 0;
 	struct gc_generation *iter;
 	unsigned int status, flags;
+	Dee_DPRINT("[gc.collect] Starting collect\n");
 again:
 	if (!gc_collect_acquire(true))
 		goto err;
@@ -1371,10 +1372,12 @@ attempt_collect_all:
 		goto again;
 	default: __builtin_unreachable();
 	}
+	Dee_DPRINTF("[gc.collect] Done. Collected %" PRFuSIZ " objects\n", result);
 	if unlikely(result == (size_t)-1)
 		result = (size_t)-2;
 	return result;
 err:
+	Dee_DPRINT("[gc.collect] Error\n");
 	return (size_t)-1;
 }
 
