@@ -61,7 +61,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
-#include <stdbool.h> /* bool, false, true */
+#include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* offsetof, size_t */
 #include <stdint.h>  /* UINT16_C, UINT32_C, int64_t, uintN_t, uintptr_t */
 

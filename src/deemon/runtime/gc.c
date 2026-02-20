@@ -30,19 +30,18 @@
 #include <deemon/class.h>              /* instance_clear, instance_tclear */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_CODE_FFINALLY, instruction_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/error.h>              /* DeeError_NOTIMPLEMENTED */
 #include <deemon/exec.h>               /*  */
 #include <deemon/format.h>             /* PRFuSIZ */
 #include <deemon/gc.h>                 /* DeeGC_*, Dee_GC_*, Dee_gc_head */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/module.h>             /* DeeModule* */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t, Dee_weakref_list, Dee_weakref_support_fini, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref*, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t, Dee_weakref_list, Dee_weakref_support_fini, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/system-features.h>    /* bzeroc, link, memcpy*, memmovedownc, memmoveupc, memset */
-#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_ResumeAll, DeeThread_SuspendAll, DeeThread_TrySuspendAll */
+#include <deemon/system-features.h>    /* bzeroc, link, memcpy*, memmovedownc, memmoveupc, memset, remove */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_IsMultiThreaded, DeeThread_ResumeAll, DeeThread_SuspendAll, DeeThread_TrySuspendAll */
 #include <deemon/type.h>               /* DeeObject_GCPriority, DeeObject_Init, DeeType_*, Dee_GC_PRIORITY_EARLY, Dee_GC_PRIORITY_LATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_*, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/atomic.h>        /* Dee_atomic_*, atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
 #include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
@@ -61,7 +60,7 @@
 
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifndef CONFIG_NO_DEX
-#include <deemon/dex.h> /* DeeDex_Check */
+#include <deemon/dex.h> /* DeeDex_Check, DeeDex_Type */
 #endif /* !CONFIG_NO_DEX */
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 

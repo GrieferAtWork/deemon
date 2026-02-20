@@ -26,13 +26,30 @@
 
 #include <deemon/api.h>
 
-#include <deemon/util/once.h>
-#include <deemon/serial.h>
-#include <deemon/set.h>
+#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc */
+#include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
+#include <deemon/bool.h>               /* return_false, return_true */
+#include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/gc.h>                 /* DeeGC_*, Dee_gc_head */
+#include <deemon/int.h>                /* DeeInt_NewSize */
+#include <deemon/object.h>             /* DeeObject_*, Dee_Decref*, Dee_Incref, Dee_XDecrefv_unlikely, return_reference */
+#include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
+#include <deemon/set.h>                /* DeeSet_Type */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_IsGC, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
+#include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/hash.h>          /* DeeObject_HashGeneric */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
+#include <deemon/util/once.h>          /* Dee_once_* */
 
 #include "../objects/generic-proxy.h"
-#include "method-hint-defaults.h"
 #include "kwlist.h"
+#include "method-hint-defaults.h"
+
+#include <stdbool.h> /* bool, false, true */
+#include <stddef.h>  /* NULL, offsetof, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 #undef container_of
 #define container_of COMPILER_CONTAINER_OF

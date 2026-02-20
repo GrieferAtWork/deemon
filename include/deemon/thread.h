@@ -38,7 +38,7 @@
 #include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_refcnt_t, ITER_DONE */
 #include "util/futex.h" /* DeeFutex_WakeAll */
 
-#include <stdbool.h> /* bool */
+#include <stdbool.h> /* bool, false */
 #include <stdint.h>  /* uint16_t, uint32_t, uint64_t, uintptr_t */
 
 #ifndef __INTELLISENSE__

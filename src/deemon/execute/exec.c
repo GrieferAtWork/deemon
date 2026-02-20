@@ -25,11 +25,11 @@
 #include <deemon/alloc.h>           /* DeeMem_ClearCaches, Dee_CollectMemoryc, Dee_Free, Dee_TryReallocc */
 #include <deemon/code.h>            /* DeeFunctionObject, DeeFunction_Call */
 #include <deemon/dex.h>             /* DeeDex_Cleanup, DeeDex_Finalize, DeeModule_ClearDexModuleCaches, DeeModule_UnloadAllDexModules */
-#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_PRINT_HANDLEINTR, ERROR_PRINT_HANDLEINTR */
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE, Dee_ERROR_PRINT_HANDLEINTR, ERROR_PRINT_HANDLEINTR */
 #include <deemon/exec.h>            /* DeeExec_*, DeeModule_ClearLibPath, Dee_RUNATEXIT_FDONTRUN, Dee_RUNATEXIT_FRUNALL, Dee_SHUTDOWN_F_FAST */
 #include <deemon/file.h>            /* DeeFile_* */
 #include <deemon/filetypes.h>       /* DeeMemoryFile_Close, DeeMemoryFile_New */
-#include <deemon/gc.h>              /* DeeGC_* */
+#include <deemon/gc.h>              /* DeeGC_Collect, DeeGC_IsEmptyWithoutDex */
 #include <deemon/heap.h>            /* DeeHeap_Trim */
 #include <deemon/module.h>          /* DeeModule*, Dee_compiler_options, Dee_module_object */
 #include <deemon/notify.h>          /* DeeNotify_Shutdown */
