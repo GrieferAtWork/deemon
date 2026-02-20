@@ -45,11 +45,7 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-
-/* TODO */
-
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 
 /* GC inspection provides things such as sequences implemented using the `tp_visit'
  * interface, allowing user-code to determine if object `a' is reachable from `b',

@@ -74,6 +74,7 @@ assertTraits(collections.BitsetView, seq_getitem: true);
 import rt;
 
 local CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
+local CONFIG_EXPERIMENTAL_REWORKED_GC = hasattr(rt, "GCCollection");
 
 assertTraits(rt.SeqCombinations, seq_getitem: true);
 assertTraits(rt.SeqRepeatCombinations, seq_getitem: true);
@@ -206,7 +207,11 @@ assertTraits(rt.TypeBases, seq_getitem: true);
 
 assertTraits(rt.TypeOperators, seq_getitem: true);
 
-assertTraits(rt.GCSet, seq_getitem: true);
+if (CONFIG_EXPERIMENTAL_REWORKED_GC) {
+	assertTraits(rt.GCCollection, seq_getitem: true);
+} else {
+	assertTraits(rt.GCSet, seq_getitem: true);
+}
 
 assertTraits(rt.BlackListKwds, seq_getitem: true, map_getitem: true);
 /* TODO: BlackListKw should should be "seq_getitem: false", but

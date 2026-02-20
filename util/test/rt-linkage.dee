@@ -27,6 +27,7 @@ import deemon;
 import .common.test;
 
 local CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
+local CONFIG_EXPERIMENTAL_REWORKED_GC = hasattr(rt, "GCCollection");
 
 function assertRtTypeName(gName: string, tNames: {string...} | string | none = none) {
 	if (tNames is none)
@@ -287,8 +288,14 @@ assertRtTypeName("TypeBasesIterator");
 assertRtTypeName("TypeOperators");
 assertRtTypeName("TypeOperatorsIterator");
 
-assertRtTypeName("GCSet");
-assertRtTypeName("GCSetIterator");
+if (CONFIG_EXPERIMENTAL_REWORKED_GC) {
+	assertRtTypeName("GCCollection");
+	assertRtTypeName("GCCollectionIterator");
+	assertRtTypeName("GCIter");
+} else {
+	assertRtTypeName("GCSet");
+	assertRtTypeName("GCSetIterator");
+}
 
 assertRtTypeName("BlackListKwds");
 assertRtTypeName("BlackListKwdsIterator");
@@ -365,7 +372,8 @@ test.assertEqualsTyped(1, rt.Int_1);
 test.assertEqualsTyped(-1, rt.Int_m1);
 test.assertSame(rt.NullableTuple(), rt.NullableTuple_empty);
 test.assertSame(rt.Code(), rt.Code_empty);
-test.assertSame(rt.GCSet(), rt.GCSet_empty);
+if (!CONFIG_EXPERIMENTAL_REWORKED_GC) 
+	test.assertSame(rt.GCSet(), rt.GCSet_empty);
 test.assertSame(rt.GCEnum, type rt.GCEnum_singleton);
 test.assertSame(rt.Traceback, type rt.Traceback_empty);
 test.assertSame(deemon, rt.Module_deemon);

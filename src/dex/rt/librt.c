@@ -674,6 +674,24 @@ librt_get_Traceback_empty_f(void) {
 	return_cached(librt_get_Traceback_empty_uncached_f());
 }
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_GCCollection_instance_uncached_f(void) {
+	DeeObject *argv[] = { Dee_None };
+	return DeeObject_CallAttrStringHash(&DeeGCEnumTracked_Singleton, STR_AND_HASH(reachable), 1, argv);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_GCCollection_f(void) {
+	return_cached(get_type_of(librt_get_GCCollection_instance_uncached_f()));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_GCCollectionIterator_f(void) {
+	return_cached(get_Iterator_of(librt_get_GCCollection_f()));
+}
+
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_GCSet_empty_uncached_f(void) {
 	DeeObject *argv[] = { Dee_None };
@@ -694,6 +712,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_GCSetIterator_f(void) {
 	return_cached(get_Iterator_of(get_type_of(librt_get_GCSet_empty_f())));
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_NullableTuple_empty_f(void) {
@@ -2957,9 +2976,14 @@ PRIVATE DEFINE_CMETHOD0(librt_get_DictIterator, &librt_get_DictIterator_f, METHO
 PRIVATE DEFINE_CMETHOD0(librt_get_TracebackIterator, &librt_get_TracebackIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_FunctionComposition, &librt_get_FunctionComposition_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_FunctionComposition_identity, &librt_get_FunctionComposition_identity_f, METHOD_FCONSTCALL);
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+PRIVATE DEFINE_CMETHOD0(librt_get_GCCollection, &librt_get_GCCollection_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD0(librt_get_GCCollectionIterator, &librt_get_GCCollectionIterator_f, METHOD_FCONSTCALL);
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 PRIVATE DEFINE_CMETHOD0(librt_get_GCSet, &librt_get_GCSet_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_GCSetIterator, &librt_get_GCSetIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_GCSet_empty, &librt_get_GCSet_empty_f, METHOD_FCONSTCALL);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 PRIVATE DEFINE_CMETHOD0(librt_get_NullableTuple_empty, &librt_get_NullableTuple_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_Code_empty, &librt_get_Code_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_BlackListKwdsIterator, &librt_get_BlackListKwdsIterator_f, METHOD_FCONSTCALL);
@@ -3452,10 +3476,16 @@ DEX_GETTER_F("TypeOperators", &librt_get_TypeOperators, DEXSYM_CONSTEXPR, /* Typ
 DEX_GETTER_F_NODOC("TypeOperatorsIterator", &librt_get_TypeOperatorsIterator, DEXSYM_CONSTEXPR), /* TypeOperatorsIterator_Type */
 
 /* Internal types used to drive the garbage collector */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+DEX_GETTER_F("GCCollection", &librt_get_GCCollection, DEXSYM_CONSTEXPR, /* GCCollection_Type */
+             "The set-like type returned by ?Areachable?Dgc and ?Areferring?Dgc"),
+DEX_GETTER_F_NODOC("GCCollectionIterator", &librt_get_GCCollectionIterator, DEXSYM_CONSTEXPR), /* GCCollectionIterator_Type */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 DEX_GETTER_F("GCSet", &librt_get_GCSet, DEXSYM_CONSTEXPR, /* DeeGCSet_Type */
              "The set-like type returned by ?Areferred?Dgc, ?Areferredgc?Dgc, "
              /**/ "?Areachable?Dgc, ?Areachablegc?Dgc and ?Areferring?Dgc"),
 DEX_GETTER_F_NODOC("GCSetIterator", &librt_get_GCSetIterator, DEXSYM_CONSTEXPR), /* DeeGCSetIterator_Type */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* Internal types used to drive variable keyword arguments */
 DEX_MEMBER_F_NODOC("BlackListKwds", &DeeBlackListKwds_Type, DEXSYM_READONLY),
@@ -3606,9 +3636,11 @@ DEX_GETTER_F("NullableTuple_empty", &librt_get_NullableTuple_empty, DEXSYM_CONST
 DEX_GETTER_F("Code_empty", &librt_get_Code_empty, DEXSYM_CONSTEXPR,
              "->?GCode\n"
              "Special instance of ?GCode that immediately returns ?N"), /* DeeCode_Empty */
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 DEX_GETTER_F("GCSet_empty", &librt_get_GCSet_empty, DEXSYM_CONSTEXPR,
              "->?GGCSet\n"
              "Special instance of ?GGCSet that is used to describe an empty set of objects"), /* DeeGCSet_Empty */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 DEX_MEMBER_F("GCEnum_singleton", &DeeGCEnumTracked_Singleton, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "The gc-singleton which can also be found under ?Dgc"), /* DeeGCEnumTracked_Singleton */
 DEX_GETTER_F("GCEnum", &librt_get_GCEnum, DEXSYM_CONSTEXPR,

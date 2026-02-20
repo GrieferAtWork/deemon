@@ -141,6 +141,8 @@ local kw_lists = {
 	{"reason", "error", "fp", "traceback"},
 	{"to", "libname", "todir"},
 	{"data", "hint"},
+	{"from", "transitive"},
+	{"to", "transitive"},
 
 	// For runtime errors...
 	{"value", "minval", "maxval", "positive"},
@@ -203,6 +205,7 @@ DECLARE_KWLIST(kwlist__extend_binary_nonblocking, { KEX("extend", 0x960b75e7, 0x
 DECLARE_KWLIST(kwlist__fd_minbytes_maxbytes_offset_nulbytes_readall_mustmmap_mapshared, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("minbytes", 0xa6327ad1, 0x36d31d85046534af), KEX("maxbytes", 0x3b196fc0, 0x93d3b3615fcacd4a), KEX("offset", 0xa97063e7, 0x2381bd4159ebe8a7), KEX("nulbytes", 0xf6256f, 0x164a29d88f8ebaa3), KEX("readall", 0x331ceae8, 0x8ad608764266c76d), KEX("mustmmap", 0x720e751d, 0x10d9f32721af9f8d), KEX("mapshared", 0xcb3dd03e, 0xc9af3c3e0ad0fc85), KEND });
 DECLARE_KWLIST(kwlist__find_replace_max, { KEX("find", 0x9e66372, 0x2b65fe03bbdde5b2), KEX("replace", 0x54b94882, 0x2d4ba4f8cfd63bc6), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEND });
 DECLARE_KWLIST(kwlist__frame_argc_ridstart_ridend_localc_stackc, { KEX("frame", 0x84d7f989, 0x2d577bebe8cb9d1f), KEX("argc", 0xe5c6c120, 0xd96a642eb89eed13), KEX("ridstart", 0x1948fbda, 0xf5df625781b6632b), KEX("ridend", 0x815ea972, 0x9fd191cbcc2b1731), KEX("localc", 0x37633c82, 0x192c5e324b6944a3), KEX("stackc", 0x758638f3, 0x8336c39ba9094fa8), KEND });
+DECLARE_KWLIST(kwlist__from_transitive, { KEX("from", 0xa43aef94, 0xca0e4580c4843a99), KEX("transitive", 0xc5abfcfa, 0x35d133792654d652), KEND });
 DECLARE_KWLIST(kwlist__fully, { KEX("fully", 0xe8a99a63, 0xa054d5734992b1fc), KEND });
 DECLARE_KWLIST(kwlist__func_ridstart_ridend, { KEX("func", 0x85f1f7f7, 0x33c744efe63d8c2d), KEX("ridstart", 0x1948fbda, 0xf5df625781b6632b), KEX("ridend", 0x815ea972, 0x9fd191cbcc2b1731), KEND });
 DECLARE_KWLIST(kwlist__func_thisarg, { KEX("func", 0x85f1f7f7, 0x33c744efe63d8c2d), KEX("thisarg", 0xfeb6b4f, 0xd3f418e6f91d6ac1), KEND });
@@ -272,6 +275,7 @@ DECLARE_KWLIST(kwlist__text_module_constants_except_nlocal_nstack_nref_nstatic_a
 DECLARE_KWLIST(kwlist__thisarg, { KEX("thisarg", 0xfeb6b4f, 0xd3f418e6f91d6ac1), KEND });
 DECLARE_KWLIST(kwlist__thisarg_value, { KEX("thisarg", 0xfeb6b4f, 0xd3f418e6f91d6ac1), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEND });
 DECLARE_KWLIST(kwlist__to_libname_todir, { KEX("to", 0x912a85b, 0x17de168783fb672d), KEX("libname", 0x32598baa, 0xb2f989a293116ac3), KEX("todir", 0x85239856, 0xf4df4864111e59f9), KEND });
+DECLARE_KWLIST(kwlist__to_transitive, { KEX("to", 0x912a85b, 0x17de168783fb672d), KEX("transitive", 0xc5abfcfa, 0x35d133792654d652), KEND });
 DECLARE_KWLIST(kwlist__total_more, { KEX("total", 0x48601e35, 0xd63cdba353c9c786), KEX("more", 0x8a39c376, 0xff9278cf274776cc), KEND });
 DECLARE_KWLIST(kwlist__total_more_weak, { KEX("total", 0x48601e35, 0xd63cdba353c9c786), KEX("more", 0x8a39c376, 0xff9278cf274776cc), KEX("weak", 0x41118332, 0xc8855a0749fb5152), KEND });
 DECLARE_KWLIST(kwlist__tuple_kwds, { KEX("tuple", 0x8abf5ca6, 0x32af754eabcdc75a), KEX("kwds", 0x6dfae69b, 0x66fee9115d75f3ef), KEND });

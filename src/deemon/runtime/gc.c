@@ -136,7 +136,12 @@ DeeObject_Visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
 		}
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 
-	/* Only visit heap-allocated types. */
+	/* Only visit heap-allocated types.
+	 *
+	 * While technically we'd also need to visit statically allocated
+	 * types, since objects *do* hold proper references to them, those
+	 * types can never be destroyed, and thus *really* aren't of any
+	 * interest to GC visitation. */
 	if (DeeType_IsHeapType(Dee_TYPE(self)))
 		(*proc)((DeeObject *)Dee_TYPE(self), arg);
 }
@@ -148,6 +153,7 @@ struct gc_generation {
 	size_t                gg_count;      /* [lock(gc_lock)] # of objects within this generation
 	                                      * (only an exact number for generation #0; in other
 	                                      * generation, this represents an upper bound) */
+	size_t                gg_fixed_count;/* [lock(gc_lock)][valid_if(self != &gc_gen0)] Same as `gg_count', but used to speed up `gc_generation_fixcount()' */
 	Dee_ssize_t           gg_collect_on; /* [lock(gc_lock)] Decremented on each object add -- when this becomes negative, collect objects of this generation */
 	Dee_ssize_t           gg_mindim;     /* [lock(gc_lock)] Lower bound for `gg_collect_on' */
 	/* XXX: "gg_insert" is only really needed for "gc_gen0"! */
@@ -156,13 +162,18 @@ struct gc_generation {
 	struct gc_generation *gg_next;       /* [0..1][lock(gc_lock)] Next generation (or "NULL" if this is the last one) */
 };
 #define GC_GENERATION_INIT(mindim, next) \
-	{ NULL, 0, mindim, mindim, NULL, next }
+	{ NULL, 0, 0, mindim, mindim, NULL, next }
 
 
 /* [0..1][lock(ATOMIC)] Objects that are pending removal (linked via `ob_refcnt')
  * (weakrefs of these objects have already been killed, and user-defined "tp_finalize" has
  * also already been invoked for these objects). Only used by special implementations of
- * `DeeObject_Destroy()', such that object destruction continues when this list is reaped. */
+ * `DeeObject_Destroy()', such that object destruction continues when this list is reaped.
+ *
+ * NOTE: All objects within this linked list have the `Dee_GC_FLAG_FINALIZED' flag set.
+ *       As such: when trying to incref objects found in the GC, anything that has a non-
+ *       zero reference count and does not have the `Dee_GC_FLAG_FINALIZED' flag set can
+ *       be incref'd, without needing to reap/search the "gc_remove" list. */
 PRIVATE DeeObject *gc_remove = NULL;
 #define gc_remove__p_link(ob) ((DeeObject **)((byte_t *)(ob) + offsetof(DeeObject, ob_refcnt)))
 
@@ -228,8 +239,11 @@ DECL_BEGIN
 PRIVATE NONNULL((1)) void DCALL
 gc_generation_fixcount(struct gc_generation *__restrict self) {
 	DeeObject *iter;
-	size_t actual_count = 0;
+	size_t actual_count;
 	ASSERTF(self != &gc_gen0, "Count of gen#0 never needs fixing");
+	if (self->gg_fixed_count == self->gg_count)
+		return; /* Fixed count is still up-to-date */
+	actual_count = 0;
 	for (iter = self->gg_objects; iter; iter = DeeGC_Head(iter)->gc_next)
 		++actual_count;
 
@@ -241,6 +255,7 @@ gc_generation_fixcount(struct gc_generation *__restrict self) {
 	/* Push back the GC collection threshold */
 	self->gg_collect_on += (self->gg_count - actual_count);
 	self->gg_count = actual_count;
+	self->gg_fixed_count = actual_count;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -614,6 +629,12 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 	ASSERT(ob->ob_refcnt == 0);
 	atomic_inc(&gc_remove_modifying);
 	COMPILER_BARRIER();
+
+	/* The `Dee_GC_FLAG_FINALIZED' flag must be set for "gc_remove" to be used. */
+	{
+		struct Dee_gc_head *head = DeeGC_Head(ob);
+		atomic_or(&head->gc_info.gi_flag, Dee_GC_FLAG_FINALIZED);
+	}
 
 	/* This is the point where we're free to (ab-) use "ob_refcnt" for other purposes! */
 	do {
@@ -1393,6 +1414,45 @@ no:
 	gc_lock_release(DeeGC_TRACK_F_NORMAL);
 	return false;
 }
+
+
+/* Try to acquire a reference to "ob", which was found within the GC.
+ * @return: true:  Success -- you've gained a reference to "ob"
+ *                 CAUTION: This reference may only be dropped
+ * @return: false: Failure -- object has been destroyed to the point
+ *                 where no reference can be claimed anymore. */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+gc_tryincref(DeeObject *__restrict ob) {
+	Dee_refcnt_t refcnt;
+	struct Dee_gc_head *head = DeeGC_Head(ob);
+again:
+	do {
+		refcnt = atomic_read(&ob->ob_refcnt);
+		if (refcnt == 0)
+			goto nope; /* Object is obviously dead */
+		if (atomic_read(&gc_remove_modifying) != 0) {
+			/* Object may be in the process of being async-removed */
+			SCHED_YIELD();
+			goto again;
+		}
+		if (atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_FINALIZED) {
+			/* Object may have been enqueue within "gc_remove",
+			 * in which case it must no longer be incref'd. In
+			 * this case the only thing we can do is manually
+			 * search through "gc_remove" */
+			DeeObject *remove = atomic_read(&gc_remove);
+			for (; remove; remove = *gc_remove__p_link(remove)) {
+				if (remove == ob)
+					goto nope;
+			}
+		}
+		/* Try to increment the reference counter by 1. */
+	} while (!atomic_cmpxch_or_write(&ob->ob_refcnt, refcnt, refcnt + 1));
+	return true;
+nope:
+	return false;
+}
+
 
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 #ifndef NDEBUG

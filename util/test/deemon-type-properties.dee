@@ -56,7 +56,6 @@ test.assertAttributes(string, {
 	"__iscopyable__": true,
 	"__isnamespace__": false,
 	"__isconstcastable__": true,
-	"__gcpriority__": 0,
 });
 
 test.assertSequence(Type.__bases__(Type), {Object, Callable});
