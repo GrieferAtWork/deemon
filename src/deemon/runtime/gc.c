@@ -753,6 +753,22 @@ PUBLIC void DCALL DeeGC_CollectAsNecessary(void) {
 
 
 
+/* Have a pre-lock that is acquired first prior to actual GC collect attempts.
+ * This lock prevents a situation where all threads try to be the one to collect
+ * memory at the same time, which does work, but also results in all threads
+ * trying to re-attempt the GC collect once it has already been performed, thus
+ * resulting in every thread needing to suspend every other, only to notice that
+ * GC collect isn't necessary anymore, and resuming everyone else again. */
+#if !defined(CONFIG_NO_THREADS) && 1
+PRIVATE Dee_shared_lock_t gc_collect_prelock = Dee_SHARED_LOCK_INIT;
+#define gc_collect_prelock_tryacquire() Dee_shared_lock_tryacquire(&gc_collect_prelock)
+#define gc_collect_prelock_acquire()    Dee_shared_lock_acquire(&gc_collect_prelock)
+#define gc_collect_prelock_release()    Dee_shared_lock_release(&gc_collect_prelock)
+#else
+#define gc_collect_prelock_tryacquire() 1
+#define gc_collect_prelock_acquire()    0
+#define gc_collect_prelock_release()    (void)0
+#endif
 
 /* @return: true:  Success
  * @return: false: [allow_interrupts_and_errors] An error was thrown
@@ -1194,7 +1210,8 @@ PRIVATE bool DCALL gc_trycollect_after_collect_on_reached(void) {
 	bool has_collectable_generations;
 	unsigned int status;
 	struct gc_generation *iter;
-
+	if (!gc_collect_prelock_tryacquire())
+		return false; /* Some other thread is already doing GC stuff... */
 again:
 	/* Check if any generation *actually* wants to be collected */
 	has_collectable_generations = false;
@@ -1218,10 +1235,14 @@ continue_with_next_generation:;
 	} while ((iter = iter->gg_next) != NULL);
 	_gc_lock_release();
 
-	if (!has_collectable_generations)
+	if (!has_collectable_generations) {
+		gc_collect_prelock_release();
 		return true; /* Nothing left to do! */
-	if (!gc_collect_acquire(DeeGC_TRACK_F_NOCOLLECT))
+	}
+	if (!gc_collect_acquire(DeeGC_TRACK_F_NOCOLLECT)) {
+		gc_collect_prelock_release();
 		return false;
+	}
 
 	/* Collect memory in GC generations */
 	status = gc_collect_threshold_generations_r(&gc_gen0);
@@ -1249,6 +1270,8 @@ PRIVATE ATTR_NOINLINE WUNUSED bool DCALL gc_trycollect_gen0(void) {
 	size_t count;
 	unsigned int status;
 	struct gc_generation *iter;
+	if (!gc_collect_prelock_tryacquire())
+		return false;
 again:
 	gc_lock_acquire();
 	should_collect = gc_gen0.gg_collect_on < 0;
@@ -1259,10 +1282,14 @@ again:
 	}
 #endif /* !CONFIG_NO_THREADS */
 	_gc_lock_release();
-	if (!should_collect)
+	if (!should_collect) {
+		gc_collect_prelock_release();
 		return true;
-	if (!gc_collect_acquire(DeeGC_TRACK_F_NOCOLLECT))
+	}
+	if (!gc_collect_acquire(DeeGC_TRACK_F_NOCOLLECT)) {
+		gc_collect_prelock_release();
 		return false;
+	}
 
 	/* Collect generation #0 */
 	iter = &gc_gen0;
@@ -1311,9 +1338,11 @@ PUBLIC WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects) {
 	struct gc_generation *iter;
 	unsigned int status, flags;
 	Dee_DPRINT("[gc.collect] Starting collect\n");
+	if (gc_collect_prelock_acquire())
+		goto err;
 again:
 	if (!gc_collect_acquire(true))
-		goto err;
+		goto err_prelock;
 
 	/* Collect garbage in every generation until we hit "max_objects" or scanned them all */
 	iter = &gc_gen0;
@@ -1362,7 +1391,7 @@ attempt_collect_all:
 			result = (size_t)-1;
 		if unlikely(count == 0) {
 			if (!gc_collect_acquire(true))
-				goto err;
+				goto err_prelock;
 			goto attempt_collect_all;
 		}
 		if (result < max_objects)
@@ -1375,7 +1404,10 @@ attempt_collect_all:
 	Dee_DPRINTF("[gc.collect] Done. Collected %" PRFuSIZ " objects\n", result);
 	if unlikely(result == (size_t)-1)
 		result = (size_t)-2;
+	gc_collect_prelock_release();
 	return result;
+err_prelock:
+	gc_collect_prelock_release();
 err:
 	Dee_DPRINT("[gc.collect] Error\n");
 	return (size_t)-1;
