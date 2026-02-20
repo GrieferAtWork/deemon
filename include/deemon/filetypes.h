@@ -410,7 +410,7 @@ typedef struct Dee_file_printer_object {
 	Dee_FILE_OBJECT_HEAD
 	Dee_formatprinter_t fp_printer; /* [0..1][lock(fp_lock)] Output printer. (must hold a read-lock when printing) */
 	void               *fp_arg;     /* [?..?][valid_if(fp_printer)] Cookie for `fp_printer' */
-	size_t              fp_result;  /* [lock(fp_lock && ATOMIC)][const_if(fp_printer == NULL)]
+	Dee_ssize_t         fp_result;  /* [lock(fp_lock && ATOMIC)][const_if(fp_printer == NULL)]
 	                                 * Sum of positive return values of `fp_printer' */
 #ifndef CONFIG_NO_THREADS
 	Dee_shared_rwlock_t fp_lock;    /* Lock used for closing a file-printer. */
@@ -448,8 +448,10 @@ DeeFilePrinter_New(Dee_formatprinter_t printer, void *arg);
  * `self' (without serving interrupts), and then proceed to delete
  * the linked printer.
  * 
- * @return: * : The total sum of return values of the underlying printer. */
-DFUNDEF NONNULL((1)) size_t DCALL
+ * @return: * : The total sum of return values of the underlying printer,
+ *              or the first negative return value where no error was also
+ *              thrown at the same time. */
+DFUNDEF NONNULL((1)) Dee_ssize_t DCALL
 DeeFilePrinter_Close(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self);
 
 

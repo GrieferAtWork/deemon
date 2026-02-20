@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_CollectMemoryoc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMalloc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP* */
 #include <deemon/bool.h>               /* return_bool, return_false */
+#include <deemon/thread.h>               /* return_bool, return_false */
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
@@ -3187,7 +3188,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 printer_write(DeeFilePrinterObject *__restrict self,
               uint8_t const *__restrict buffer,
               size_t bufsize, Dee_ioflag_t UNUSED(flags)) {
-	Dee_ssize_t status;
 	if (DeeFilePrinter_LockRead(self))
 		goto err;
 	if unlikely(!self->fp_printer) {
@@ -3195,13 +3195,26 @@ printer_write(DeeFilePrinterObject *__restrict self,
 		DeeFilePrinter_LockEndRead(self);
 		goto err_closed;
 	}
-	/* Write to the underlying printer. */
-	status = (*self->fp_printer)(self->fp_arg, (char const *)buffer, bufsize);
-	if likely(status > 0)
-		atomic_add(&self->fp_result, (size_t)status);
+	if (atomic_read(&self->fp_result) >= 0) {
+		/* Write to the underlying printer. */
+		DeeThreadObject *caller = DeeThread_Self();
+		uint16_t num_except = caller->t_exceptsz;
+		Dee_ssize_t status = (*self->fp_printer)(self->fp_arg, (char const *)buffer, bufsize);
+		if likely(status > 0) {
+			atomic_add(&self->fp_result, status);
+		} else {
+			ASSERT(caller->t_exceptsz >= num_except);
+			/* Check how negative return values should be propagated:
+			 * - As errors
+			 * - Or as forced printer stops */
+			if (caller->t_exceptsz > num_except) {
+				DeeFilePrinter_LockEndRead(self);
+				goto err;
+			}
+			atomic_write(&self->fp_result, status);
+		}
+	}
 	DeeFilePrinter_LockEndRead(self);
-	if unlikely(status < 0)
-		goto err;
 	return bufsize;
 err_closed:
 	err_file_closed();
@@ -3306,11 +3319,13 @@ done:
  * `self' (without serving interrupts), and then proceed to delete
  * the linked printer.
  * 
- * @return: * : The total sum of return values of the underlying printer. */
-PUBLIC NONNULL((1)) size_t DCALL
+ * @return: * : The total sum of return values of the underlying printer,
+ *              or the first negative return value where no error was also
+ *              thrown at the same time. */
+PUBLIC NONNULL((1)) Dee_ssize_t DCALL
 DeeFilePrinter_Close(/*inherit(always)*/ DREF /*FilePrinter*/ DeeObject *__restrict self) {
 	DREF DeeFilePrinterObject *me = (DREF DeeFilePrinterObject *)self;
-	size_t result = atomic_read(&me->fp_result); /* TODO: _with_shared_rwlock */
+	Dee_ssize_t result = atomic_read(&me->fp_result); /* TODO: _with_shared_rwlock */
 	ASSERT_OBJECT_TYPE_EXACT((DeeObject *)me, (DeeTypeObject *)&DeeFilePrinter_Type);
 	if (!Dee_DecrefIfOne(me)) {
 		DeeFilePrinter_LockWriteNoInt(me);

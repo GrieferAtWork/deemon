@@ -125,7 +125,7 @@ instance_call_with_file_printer(DeeObject *self, DeeObject *func,
 	if unlikely(!status)
 		goto err_printer_file;
 	Dee_Decref(status);
-	return (Dee_ssize_t)DeeFilePrinter_Close(printer_file);
+	return DeeFilePrinter_Close(printer_file);
 err_printer_file:
 	Dee_Decref(printer_file);
 err:
