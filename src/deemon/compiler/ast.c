@@ -984,7 +984,9 @@ INTERN NONNULL((2)) void DCALL
 visit_switch_cases(struct text_label *switch_cases,
                    Dee_visit_t proc, void *arg) {
 	while (switch_cases) {
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 		ASSERT_AST(switch_cases->tl_expr);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 		ast_visit(switch_cases->tl_expr);
 		switch_cases = switch_cases->tl_next;
 	}

@@ -2661,7 +2661,14 @@ struct Dee_type_object {
 	 * - When "Dee_TF_TPVISIT" is set, "tp_visit" is actually typed as:
 	 *   >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
 	 * - "tp_visit" may be invoked while "self->ob_refcnt == 0"! 
-	 * - "tp_visit" must never throw errors or invoke user-code in any form */
+	 * - "tp_visit" must never throw errors or invoke user-code in any form
+	 * - "tp_visit" can skip visiting references that can never lead to GC objects:
+	 *   - DeeString_Type
+	 *   - DeeInt_Type
+	 *   - DeeBool_Type
+	 *   - ... anything that can't be used as a container for potential GC objects,
+	 *     ... or could be a GC object itself
+	 */
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
 	/* NOTE: Anything used by `DeeType_Inherit*' can't be made `Dee_tpconst' here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */

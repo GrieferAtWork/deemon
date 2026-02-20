@@ -211,7 +211,9 @@ DeeCompiler_End(void) {
 
 PUBLIC NONNULL((1)) void DCALL
 DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 	ASSERT(DeeCompiler_Check(compiler));
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DeeCompiler_LockWriteNoInt();
 	ASSERT(compiler != DeeCompiler_Current);
 	ASSERT(compiler->cp_recursion == 0);

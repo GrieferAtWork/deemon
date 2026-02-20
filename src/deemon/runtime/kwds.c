@@ -516,12 +516,17 @@ kwds_fini(Kwds *__restrict self) {
 		Dee_XDecref(self->kw_map[i].ke_name);
 }
 
+#if 1 /* Only references string objects, which don't need to be visited */
+#define PTR_kwds_visit NULL
+#else
+#define PTR_kwds_visit &kwds_visit
 PRIVATE NONNULL((1, 2)) void DCALL
 kwds_visit(Kwds *__restrict self, Dee_visit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->kw_mask; ++i)
 		Dee_XVisit(self->kw_map[i].ke_name);
 }
+#endif
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 kwds_serialize(Kwds *__restrict self, DeeSerial *__restrict writer) {
@@ -834,7 +839,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&kwds_printrepr,
 	},
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&kwds_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))PTR_kwds_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL(&default__tp_math__2E23147A197C0EE6),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__4CF94EE41850B0EF), /* TODO */

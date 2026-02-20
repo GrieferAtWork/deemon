@@ -1046,8 +1046,8 @@ err:
 
 #define cswsogi_clear cswgi_clear
 #define cswsgi_clear  cswgi_clear
-PRIVATE NONNULL((1, 2)) void DCALL
-cswgi_clear(CachedSeq_WithGetItem *__restrict self, Dee_visit_t proc, void *arg) {
+PRIVATE NONNULL((1)) void DCALL
+cswgi_clear(CachedSeq_WithGetItem *__restrict self) {
 	size_t i;
 	DREF DeeObject *old_seq;
 	DREF DeeIntObject *old_sizeob;

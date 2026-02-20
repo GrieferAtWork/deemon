@@ -599,8 +599,10 @@ traceback_visit(DeeTracebackObject *__restrict self,
 	Dee_Visit(self->tb_thread);
 	end = (iter = self->tb_frames) + self->tb_numframes;
 	for (; iter < end; ++iter) {
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 		ASSERT_OBJECT_TYPE(iter->cf_func, &DeeFunction_Type);
 		ASSERT_OBJECT_TYPE(iter->cf_func->fo_code, &DeeCode_Type);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 		/* Visit local variables. */
 		if (iter->cf_frame)

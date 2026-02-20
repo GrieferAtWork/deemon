@@ -1222,11 +1222,12 @@ writer_fini(DeeFileWriterObject *__restrict self) {
 	}
 }
 
+#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
+#define PTR_writer_visit &writer_visit
 PRIVATE NONNULL((1, 2)) void DCALL
 writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) {
 	DeeFileWriter_LockRead(self);
 	if (self->w_string) {
-#ifdef CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES
 		if (self->w_string == (DREF DeeStringObject *)ITER_DONE) {
 			DeeBytesObject *bytes = self->w_printer.wp_byt.bp_bytes;
 			if (bytes) {
@@ -1234,11 +1235,34 @@ writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) 
 				if (bytes->b_orig != Dee_AsObject(bytes))
 					Dee_Visit(bytes->b_orig);
 			}
-		} else
-#endif /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-		{
+		} else {
+#if 0 /* String objects don't need to be visited */
 			Dee_Visit(self->w_string);
+#endif
 		}
+#if 0 /* String objects don't need to be visited */
+	} else if (!self->w_printer.wp_uni.up_buffer) {
+		/* ... */
+	} else if ((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		Dee_Visit(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
+		                                DeeStringObject,
+		                                s_str));
+	} else {
+		/* ... */
+#endif
+	}
+	DeeFileWriter_LockEndRead(self);
+}
+#else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
+#if 1 /* String objects don't need to be visited */
+#define PTR_writer_visit NULL
+#else
+#define PTR_writer_visit &writer_visit
+PRIVATE NONNULL((1, 2)) void DCALL
+writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) {
+	DeeFileWriter_LockRead(self);
+	if (self->w_string) {
+		Dee_Visit(self->w_string);
 	} else if (!self->w_printer.wp_uni.up_buffer) {
 		/* ... */
 	} else if ((self->w_printer.wp_uni.up_flags & Dee_UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
@@ -1250,6 +1274,8 @@ writer_visit(DeeFileWriterObject *__restrict self, Dee_visit_t proc, void *arg) 
 	}
 	DeeFileWriter_LockEndRead(self);
 }
+#endif
+#endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 
 PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
 writer_printrepr(DeeFileWriterObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
@@ -3096,7 +3122,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 			/* .tp_print     = */ NULL,
 			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&writer_printrepr,
 		},
-		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&writer_visit,
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))PTR_writer_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
