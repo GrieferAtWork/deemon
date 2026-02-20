@@ -598,7 +598,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 
 #if (!defined(CONFIG_EXPERIMENTAL_REWORKED_GC) && \
      !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_GC))
-#if 0 /* TODO: Implementation is (mostly) complete (only `gc.operator iter()' is missing) but untested */
+#if 0 /* TODO: Implementation is complete, but untested */
 #define CONFIG_EXPERIMENTAL_REWORKED_GC
 #else
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_GC

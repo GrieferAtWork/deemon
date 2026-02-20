@@ -1053,7 +1053,9 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 	/* DDI String */
 	DeeDDIObject const *ddi;
+#if 0 /* Can't assert -- used in some debug messages logged while "ob_refcnt == 0" */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
+#endif
 	ddi = ((DeeCodeObject const *)self)->co_ddi;
 	if (id < ddi->d_nstring)
 		return DeeString_STR(ddi->d_strtab) + ddi->d_strings[id];

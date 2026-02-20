@@ -596,6 +596,23 @@ again:
 
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+gccoll_serialize(GCCollection *__restrict self,
+                 DeeSerial *__restrict writer,
+                 Dee_seraddr_t addr) {
+#define ADDROF(field) (addr + offsetof(GCCollection, field))
+	GCCollection *out = DeeSerial_Addr2Mem(writer, addr, GCCollection);
+	/* The contents of the cache aren't serialized! */
+	GCSet_Init(&out->gcc_cache);
+	Dee_once_init(&out->gcc_loaded);
+	if (DeeSerial_PutFuncPtr(writer, ADDROF(gcc_populate), self->gcc_populate))
+		goto err;
+	return DeeSerial_PutObject(writer, ADDROF(gcc_obj), self->gcc_obj);
+err:
+	return -1;
+#undef ADDROF
+}
+
 PRIVATE NONNULL((1)) void DCALL
 gccoll_fini(GCCollection *__restrict self) {
 	GCSet_Fini(&self->gcc_cache);
@@ -672,10 +689,6 @@ err:
 
 
 
-
-
-
-
 PRIVATE struct type_seq gccoll_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gccoll_iter,
 	/* .tp_sizeob                     = */ NULL,
@@ -739,8 +752,8 @@ INTERN DeeTypeObject GCCollection_Type = {
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
-			/* tp_any_ctor_kw: */ NULL, /* TODO */
-			/* tp_serialize:   */ NULL  /* TODO */
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ &gccoll_serialize
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&gccoll_fini,
 		/* .tp_assign      = */ NULL,
@@ -764,7 +777,7 @@ INTERN DeeTypeObject GCCollection_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ NULL, /* TODO: cached=return_self;  frozen=gccoll_loadcache()+return_self */
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -780,37 +793,110 @@ INTERN DeeTypeObject GCCollection_Type = {
 /* Iterator for enumerating the set of active GC objects. */
 typedef struct {
 	OBJECT_HEAD
-	/* TODO */
+	DREF struct gc_generation *gci_gen; /* [0..1] Current GC generation, or "NULL" if enumeration has finished. */
+	DREF DeeObject            *gci_obj; /* [1..1][valid_if(gci_gen)] Next object to enumerate (object exists within `gci_gen') */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_lock_t          gci_lck; /* Lock for this iterator. */
+#endif /* !CONFIG_NO_THREADS */
 } GCIter;
+
+#define gc_iter_available(self)  Dee_atomic_lock_available(&(self)->gci_lck)
+#define gc_iter_acquired(self)   Dee_atomic_lock_acquired(&(self)->gci_lck)
+#define gc_iter_tryacquire(self) Dee_atomic_lock_tryacquire(&(self)->gci_lck)
+#define gc_iter_acquire(self)    Dee_atomic_lock_acquire(&(self)->gci_lck)
+#define gc_iter_waitfor(self)    Dee_atomic_lock_waitfor(&(self)->gci_lck)
+#define gc_iter_release(self)    Dee_atomic_lock_release(&(self)->gci_lck)
+
+
+/* Update "gci_gen" and "gci_obj" to acquire a reference to the next object. */
+PRIVATE NONNULL((1)) void DCALL
+gciter_find_next_object(GCIter *__restrict self) {
+	struct Dee_gc_head *head;
+	DeeObject *obj = self->gci_obj;
+select_next:
+	ASSERT(obj);
+	head = DeeGC_Head(obj);
+	obj  = head->gc_next;
+	while (!obj) {
+		struct gc_generation *nextgen;
+		nextgen = self->gci_gen->gg_next;
+		if (nextgen == NULL) {
+			gc_generation_decref(self->gci_gen);
+			self->gci_gen = NULL;
+			self->gci_obj = NULL;
+			return;
+		}
+		gc_generation_incref(nextgen);
+		gc_generation_decref(self->gci_gen);
+		self->gci_gen = nextgen;
+		obj = nextgen->gg_objects;
+	}
+	if (!gc_tryincref(obj))
+		goto select_next;
+	self->gci_obj = obj;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+gciter_setup(GCIter *__restrict self) {
+	gc_lock_acquire_and_reap(DeeGC_TRACK_F_NORMAL);
+	self->gci_gen = &gc_gen0;
+	gc_generation_incref(&gc_gen0);
+	self->gci_obj = gc_gen0.gg_objects;
+	while (self->gci_obj == NULL) {
+		struct gc_generation *nextgen;
+		nextgen = self->gci_gen->gg_next;
+		if (nextgen == NULL) {
+			gc_generation_decref(self->gci_gen);
+			self->gci_gen = NULL;
+			goto done;
+		}
+		gc_generation_incref(nextgen);
+		gc_generation_decref(self->gci_gen);
+		self->gci_gen = nextgen;
+		self->gci_obj = self->gci_gen->gg_objects;
+	}
+	if (!gc_tryincref(self->gci_obj))
+		gciter_find_next_object(self);
+done:
+	gc_lock_release(DeeGC_TRACK_F_NORMAL);
+	Dee_atomic_lock_init(&self->gci_lck);
+}
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gciter_init(GCIter *__restrict self) {
-	(void)self;
-	/* TODO */
+	gciter_setup(self);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 gciter_copy(GCIter *__restrict self,
             GCIter *__restrict other) {
-	(void)self;
-	(void)other;
-	/* TODO */
+	gc_iter_acquire(other);
+	self->gci_gen = other->gci_gen;
+	self->gci_obj = other->gci_obj;
+	if (self->gci_gen) {
+		ASSERT(self->gci_obj);
+		Dee_Incref(self->gci_obj);
+		gc_generation_incref(self->gci_gen);
+	}
+	gc_iter_release(other);
+	Dee_atomic_lock_init(&self->gci_lck);
 	return 0;
 }
 
 PRIVATE NONNULL((1)) void DCALL
 gciter_fini(GCIter *__restrict self) {
-	(void)self;
-	/* TODO */
+	if (self->gci_gen) {
+		Dee_Decref(self->gci_obj);
+		gc_generation_decref(self->gci_gen);
+	}
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 gciter_visit(GCIter *__restrict self, Dee_visit_t proc, void *arg) {
-	(void)self;
-	(void)proc;
-	(void)arg;
-	/* TODO */
+	gc_iter_acquire(self);
+	Dee_XVisit(self->gci_obj);
+	gc_iter_release(self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -818,26 +904,49 @@ gciter_serialize(GCIter *__restrict self,
                  DeeSerial *__restrict writer,
                  Dee_seraddr_t addr) {
 #define ADDROF(field) (addr + offsetof(GCIter, field))
-	(void)self;
-	(void)writer;
-	(void)addr;
-	/* TODO */
-//	GCIter *out = DeeSerial_Addr2Mem(writer, addr, GCIter);
-	/* ... */
-	return 0;
-//err:
-//	return -1;
+	DREF struct gc_generation *out__gci_gen;
+	DREF DeeObject *out__gci_obj;
+	gc_iter_acquire(self);
+	out__gci_gen = self->gci_gen;
+	out__gci_obj = self->gci_obj;
+	if (out__gci_gen) {
+		gc_generation_incref(out__gci_gen);
+		Dee_Incref(out__gci_obj);
+	}
+	gc_iter_release(self);
+	if (!out__gci_gen) {
+		GCIter *out;
+		out = DeeSerial_Addr2Mem(writer, addr, GCIter);
+		out->gci_gen = NULL;
+		out->gci_obj = NULL;
+		Dee_atomic_lock_init(&out->gci_lck);
+		return 0;
+	}
+	if (DeeSerial_PutObjectInherited(writer, ADDROF(gci_obj), out__gci_obj))
+		goto err_gen;
+	/* XXX: This here assumes that "struct gc_generation" are statically allocated */
+	return DeeSerial_PutPointer(writer, ADDROF(gci_gen), out__gci_gen);
+err_gen:
+	gc_generation_decref(out__gci_gen);
+/*err:*/
+	return -1;
 #undef ADDROF
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gciter_next(GCIter *__restrict self) {
-	(void)self;
-	/* TODO */
-	return ITER_DONE;
+	DREF DeeObject *result;
+	gc_iter_acquire(self);
+	if (!self->gci_gen) {
+		gc_iter_release(self);
+		return ITER_DONE;
+	}
+	result = self->gci_obj; /* Inherit reference */
+	gciter_find_next_object(self);
+	gc_iter_release(self);
+	return result;
 }
-
 
 
 INTERN DeeTypeObject GCIter_Type = {
@@ -898,6 +1007,7 @@ gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 	DREF GCIter *result = DeeObject_MALLOC(GCIter);
 	if unlikely(!result)
 		goto err;
+	gciter_setup(result);
 	DeeObject_Init(result, &GCIter_Type);
 	return result;
 err:

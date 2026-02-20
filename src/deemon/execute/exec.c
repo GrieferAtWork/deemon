@@ -764,7 +764,7 @@ PRIVATE bool DCALL shutdown_globals(void) {
 #define MAX_NONEMPTY_GC_ITERATIONS_BEFORE_KILL 128
 
 #ifndef NDEBUG
-INTDEF void DCALL gc_dump_all(void);
+INTDEF void DCALL gc_dump_all_except_dex(void);
 #endif /* !NDEBUG */
 
 #ifndef CONFIG_NO_OBJECT_SLABS
@@ -846,7 +846,7 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 				break;
 #endif /* CONFIG_HOST_WINDOWS */
 			/* Log all GC objects still alive */
-			gc_dump_all();
+			gc_dump_all_except_dex();
 				
 #ifdef CONFIG_TRACE_REFCHANGES
 			Dee_DPRINT("\n\n\nReference Leaks:\n");
@@ -889,7 +889,7 @@ do_kill_user:
 					break;
 #endif /* CONFIG_HOST_WINDOWS */
 				/* Log all GC objects still alive */
-				gc_dump_all();
+				gc_dump_all_except_dex();
 				
 #ifdef CONFIG_TRACE_REFCHANGES
 				Dee_DPRINT("\n\n\nReference Leaks:\n");

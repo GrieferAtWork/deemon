@@ -161,6 +161,12 @@ struct gc_generation {
 #define GC_GENERATION_INIT(mindim, next) \
 	{ NULL, 0, 0, mindim, mindim, next }
 
+/* Use these macros to ensure that a pointer to some `struct gc_generation'
+ * remains valid, even after `gc_lock_release()' has been called. Calls to
+ * these macros can also be made without `gc_lock' being held. */
+#define gc_generation_incref(self) (void)0
+#define gc_generation_decref(self) (void)0
+
 
 /* [0..1][lock(ATOMIC)] Objects that are pending insertion into "gc_gen0" (linked via `gc_next') */
 PRIVATE DeeObject *gc_insert = NULL;
@@ -3461,31 +3467,73 @@ INTDEF NONNULL((1)) void DCALL
 dump_reference_history(DeeObject *__restrict obj);
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
-INTERN void DCALL gc_dump_all(void) {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+
+#undef DBG_PRINT_EXTERNAL_ROOTS_FIRST
+#if 1
+#define DBG_PRINT_EXTERNAL_ROOTS_FIRST
+#endif
+
+#ifdef DBG_PRINT_EXTERNAL_ROOTS_FIRST
+PRIVATE NONNULL((1)) void DCALL
+dbg__gc_visit__decref_all__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
+	--self->ob_refcnt;
+	if (!DeeType_IsGC(Dee_TYPE(self)) && self->ob_refcnt == 0)
+		DeeObject_Visit(self, &dbg__gc_visit__decref_all__cb, NULL);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dbg__gc_visit__incref_all__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
+	if (!DeeType_IsGC(Dee_TYPE(self)) && self->ob_refcnt == 0)
+		DeeObject_Visit(self, &dbg__gc_visit__incref_all__cb, NULL);
+	++self->ob_refcnt;
+}
+
+
+/* Drop all internal object references */
+PRIVATE void DCALL dbg__gc_decref_internal_references(void) {
 	struct gc_generation *gen;
-	for (gen = &gc_gen0; gen; gen = gen->gg_next)
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	{
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	for (gen = &gc_gen0; gen; gen = gen->gg_next) {
+		DeeObject *iter;
+		for (iter = gen->gg_objects; iter; iter = DeeGC_Head(iter)->gc_next)
+			DeeObject_Visit(iter, &dbg__gc_visit__decref_all__cb, NULL);
+	}
+}
+
+/* Restore all internal object references */
+PRIVATE void DCALL dbg__gc_incref_internal_references(void) {
+	struct gc_generation *gen;
+	for (gen = &gc_gen0; gen; gen = gen->gg_next) {
+		DeeObject *iter;
+		for (iter = gen->gg_objects; iter; iter = DeeGC_Head(iter)->gc_next)
+			DeeObject_Visit(iter, &dbg__gc_visit__incref_all__cb, NULL);
+	}
+}
+#endif /* DBG_PRINT_EXTERNAL_ROOTS_FIRST */
+
+INTERN void DCALL gc_dump_all_except_dex(void) {
+	struct gc_generation *gen;
+#ifdef DBG_PRINT_EXTERNAL_ROOTS_FIRST
+	dbg__gc_decref_internal_references();
+	Dee_DPRINT("=== External roots\n");
+	for (gen = &gc_gen0; gen; gen = gen->gg_next) {
 		DeeObject *ob;
-		for (ob = gen->gg_objects; ob; ob = DeeGC_Head(ob)->gc_next)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-		struct Dee_gc_head *iter;
-		for (iter = gc_root; iter; iter = iter->gc_next)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-		{
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-			DeeObject *ob = &iter->gc_object;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+		for (ob = gen->gg_objects; ob; ob = DeeGC_Head(ob)->gc_next) {
 			DeeTypeObject *ob_type;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 			ASSERT(ob != DeeGC_Head(ob)->gc_next);
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-			ASSERT(iter != iter->gc_next);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 			ob_type = ob->ob_type;
-			Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
+			if (ob->ob_refcnt == 0)
+				continue; /* Internal-only */
+#ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			if (ob_type == &DeeModuleDex_Type)
+				continue;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+			if (DeeType_Extends(ob_type, &DeeDex_Type))
+				continue;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_NO_DEX */
+			Dee_DPRINTF("%p: %q [%" PRFuSIZ " unaccounted refs]",
 			            ob, ob_type->tp_name, ob->ob_refcnt);
 			/* Print the name of a select set of types. */
 			gc_dprint_object_info(ob_type, ob);
@@ -3495,7 +3543,72 @@ INTERN void DCALL gc_dump_all(void) {
 #endif /* CONFIG_TRACE_REFCHANGES */
 		}
 	}
+	Dee_DPRINT("\n=== Internal objects\n");
+#endif /* DBG_PRINT_EXTERNAL_ROOTS_FIRST */
+
+	for (gen = &gc_gen0; gen; gen = gen->gg_next) {
+		DeeObject *ob;
+		for (ob = gen->gg_objects; ob; ob = DeeGC_Head(ob)->gc_next) {
+			DeeTypeObject *ob_type;
+			ASSERT(ob != DeeGC_Head(ob)->gc_next);
+			ob_type = ob->ob_type;
+#ifdef DBG_PRINT_EXTERNAL_ROOTS_FIRST
+			if (ob->ob_refcnt != 0)
+				continue; /* External root */
+			Dee_DPRINTF("%p: %q", ob, ob_type->tp_name);
+#else /* DBG_PRINT_EXTERNAL_ROOTS_FIRST */
+#ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+			if (ob_type == &DeeModuleDex_Type)
+				continue;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+			if (DeeType_Extends(ob_type, &DeeDex_Type))
+				continue;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_NO_DEX */
+			Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
+			            ob, ob_type->tp_name, ob->ob_refcnt);
+#endif /* !DBG_PRINT_EXTERNAL_ROOTS_FIRST */
+			/* Print the name of a select set of types. */
+			gc_dprint_object_info(ob_type, ob);
+			Dee_DPRINT("\n");
+#ifdef CONFIG_TRACE_REFCHANGES
+			dump_reference_history(&iter->gc_object);
+#endif /* CONFIG_TRACE_REFCHANGES */
+		}
+	}
+#ifdef DBG_PRINT_EXTERNAL_ROOTS_FIRST
+	dbg__gc_incref_internal_references();
+#endif /* DBG_PRINT_EXTERNAL_ROOTS_FIRST */
 }
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+INTERN void DCALL gc_dump_all_except_dex(void) {
+	struct Dee_gc_head *iter;
+	for (iter = gc_root; iter; iter = iter->gc_next) {
+		DeeObject *ob = &iter->gc_object;
+		DeeTypeObject *ob_type;
+		ASSERT(iter != iter->gc_next);
+		ob_type = ob->ob_type;
+#ifndef CONFIG_NO_DEX
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+		if (ob_type == &DeeModuleDex_Type)
+			continue;
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+		if (DeeType_Extends(ob_type, &DeeDex_Type))
+			continue;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_NO_DEX */
+		Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
+		            ob, ob_type->tp_name, ob->ob_refcnt);
+		/* Print the name of a select set of types. */
+		gc_dprint_object_info(ob_type, ob);
+		Dee_DPRINT("\n");
+#ifdef CONFIG_TRACE_REFCHANGES
+		dump_reference_history(&iter->gc_object);
+#endif /* CONFIG_TRACE_REFCHANGES */
+	}
+}
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #endif /* !NDEBUG */
 
 DECL_END
