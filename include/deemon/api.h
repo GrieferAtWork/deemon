@@ -596,6 +596,10 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 
 
+/* A re-worked implementation of the deemon garbage collector.
+ * This new implementation's main purpose is to the solve the O(n^2)
+ * time complexity issue of the old GC when it comes to implementing
+ * "gc.collect()". This new implementation's gc.collect() is O(n). */
 #if (!defined(CONFIG_EXPERIMENTAL_REWORKED_GC) && \
      !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_GC))
 #if 0 /* TODO: Implementation is complete, but untested */
