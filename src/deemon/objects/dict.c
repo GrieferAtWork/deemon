@@ -2072,10 +2072,11 @@ dict_serialize(Dict *__restrict self,
 again:
 	out = DeeSerial_Addr2Mem(writer, addr, Dict);
 	DeeDict_LockRead(self);
-	out->d_valloc  = self__d_valloc = self->d_valloc;
-	out->d_vsize   = self->d_vsize;
-	out->d_vused   = self->d_vused;
-	out->d_hmask   = self->d_hmask;
+	out->d_valloc = self__d_valloc = self->d_valloc;
+	out->d_vsize  = self->d_vsize;
+	out->d_vused  = self->d_vused;
+	out->d_hmask  = self->d_hmask;
+	Dee_weakref_support_init(out);
 	out__d_hidxops = self->d_hidxops; /* Relocated later... */
 	Dee_atomic_rwlock_init(&out->d_lock);
 	if (self->d_vtab == DeeDict_EmptyVTab) {
