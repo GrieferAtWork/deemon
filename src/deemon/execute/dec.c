@@ -1439,7 +1439,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			ehdr->e_heap.hr_destroy = NULL;
 			bzero(&ehdr->e_mapping, sizeof(ehdr->e_mapping));
 #if ((DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile) % Dee_HEAPCHUNK_ALIGN) != 0
-			memset(ehdr->_e_heap_pad, 0xff, sizeof(ehdr->_e_heap_pad));
+			memset(ehdr->_e_heap_pad, 0xfe, sizeof(ehdr->_e_heap_pad)); /* Padding byte */
 #endif /* (Dee_SIZEOF_DeeMapFile % Dee_HEAPCHUNK_ALIGN) != 0 */
 			DeeMD5_Init(&md5);
 			DeeMD5_Update(&md5, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
@@ -1850,13 +1850,13 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	if (flags & decwriter_malloc_impl_F_BZERO) {
 		bzero(payload, num_bytes);
 	} else {
-		/* Pre-initialize heap user-data to FF bytes (to prevent
+		/* Pre-initialize heap user-data to FD bytes (to prevent
 		 * uninitialized bytes from appearing in ".dec" files)
 		 *
 		 * If it is known that no ".dec" file can/will be created,
 		 * then this step is simply skipped. */
 		if (!(self->dw_flags & DeeDecWriter_F_NRELOC))
-			memset(payload, 0xff, num_bytes);
+			memset(payload, 0xfd, num_bytes);
 	}
 
 	/* Fill in padding tail area with FE bytes */

@@ -2174,6 +2174,9 @@
 		<None Include="..\include\deemon\dec.md">
 			<Filter>include</Filter>
 		</None>
+		<None Include="..\include\deemon\heap.md">
+			<Filter>include</Filter>
+		</None>
 		<None Include="..\src\deemon\compiler\asm\userdb.def">
 			<Filter>src\compiler\asm</Filter>
 		</None>

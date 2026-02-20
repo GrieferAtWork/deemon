@@ -746,6 +746,7 @@
 		<None Include="..\cpp.hint" />
 		<None Include="..\include\deemon\compiler\lexer.def" />
 		<None Include="..\include\deemon\dec.md" />
+		<None Include="..\include\deemon\heap.md" />
 		<None Include="..\src\deemon\compiler\asm\userdb.def" />
 		<CustomBuild Include="..\src\deemon\execute\asm\altstack.ms-x64.S">
 			<FileType>Document</FileType>
