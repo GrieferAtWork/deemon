@@ -482,17 +482,100 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 			struct Dee_gc_head *last_head;
 			for (last = first;;) {
 				struct Dee_gc_head *head = DeeGC_Head(last);
-				Dee_refcnt_t refcnt = atomic_read(&last->ob_refcnt);
-				if (refcnt > 0) {
-					Dee_DPRINTF("[gc] Warning: instance of %q at %p has "
-					            "ob_refcnt=%" PRFuSIZ " but is unreachable\n",
-					            DeeType_GetName(Dee_TYPE(last)), last, refcnt);
+				/* This check here is a good idea to detect bad GC behavior (which could also
+				 * happen as a result of bad "tp_visit" / "tp_clear"), but fails in practice:
+				 *
+				 * Given the following code:
+				 *    >> class MyClass { public member v; };
+				 *    >> local INSTANCE = MyClass();
+				 *    >> INSTANCE.v = INSTANCE;
+				 *    >> del INSTANCE;
+				 *    >> gc.collect();
+				 * And assuming execution in a system with 2 threads, using the following sequence:
+				 *
+				 *  [0] Thread #1:   unreachable_fast = {INSTANCE,MyClass}
+				 *  [1] Thread #1:   DeeObject_GCClear(INSTANCE)        -- This clears "INSTANCE.v", thus resolving the reference loop
+				 *  [2] Thread #1:   Dee_Decref(INSTANCE);              -- ob_refcnt=0
+				 *  [3] Thread #2: gc_lock_acquire();                   -- Oops: Thread #1 will have to untrack asynchronously now...
+				 *  [4] Thread #1:      DeeGC_UntrackAsync(INSTANCE);
+				 *  [5] Thread #1:      gc_lock_tryacquire() -> false   -- Nope: Thread #2 has that lock
+				 *  [6] Thread #1:      gc_remove.insert(INSTANCE);     -- Correct: do async untrack
+				 *  [7] Thread #1:   DeeObject_GCClear(MyClass);
+				 *  [8] Thread #1:   Dee_Decref(MyClass);               -- ob_refcnt=1 (because still referenced by "INSTANCE->ob_type")
+				 *  [9] Thread #2: _gc_lock_reap_and_maybe_unlock();
+				 * [10] Thread #2: pending_remove = CONSUME(gc_remove); -- Consume "INSTANCE" from [6]
+				 * [11] Thread #2: gc_do_untrack_locked(INSTANCE);      -- This removes "INSTANCE" from Thread #1's "unreachable_fast"
+				 * [12] Thread #2: _gc_lock_release();
+				 * [13] Thread #1:   unreachable_fast != NULL;          -- Still non-NULL because "MyClass" hasn't been removed, yet
+				 * [14] Thread #1:   gc_lock_acquire_and_reap();        -- Can't reap "gc_remove" to finish destruction of "MyClass" because Thread #2 is already doing that
+				 *
+				 * At this point, it would appear that "MyClass" hasn't been destroyed
+				 * ("MyClass->ob_refcnt == 1") when it really should have been, because
+				 * at this point:
+				 * >> unreachable_fast = {MyClass}
+				 * But that's only because destruction of it hasn't completed, yet. If
+				 * we were to wait, "Thread #2" will continue its work and eventually
+				 * destroy (or rather: enqueue the untracking of) "MyClass":
+				 *
+				 * [15] Thread #2: DeeGCObject_FinishDestroyAfterUntrack(INSTANCE);
+				 * [16] Thread #2: Dee_Decref(INSTANCE->ob_type) == Dee_Decref(MyClass); -- ob_refcnt=0
+				 * [17] Thread #2: DeeGC_UntrackAsync(MyClass);
+				 * [18] Thread #2: gc_lock_tryacquire() -> false        -- Nope: Thread #1 acquired this in [14]
+				 * [19] Thread #2: gc_remove.insert(MyClass);
+				 * [20] Thread #1:   if (atomic_read(&MyClass->ob_refcnt) > 0) { WARNING(); }
+				 *
+				 * At step [20], the "ob_refcnt" read is actually the linked-list pointer
+				 * used by "gc_remove", causing us to read a very larger number instead.
+				 *
+				 * Similarly, if step [20] happened between [14]-[15], we'd still be
+				 * reading "MyClass->ob_refcnt = 1", because at that point "INSTANCE"
+				 * hadn't been fully destroyed yet. After all: this is the kind-of
+				 * situation this debug-check was supposed to detect: "an object that
+				 * *should* have been destroyed, still being used by other threads"
+				 * (only that the word "used" here actually means "is in the process
+				 * of being destroyed [by other threads]", which is something that's
+				 * supposed to be allowed)
+				 *
+				 * ---
+				 *
+				 * So in other words:
+				 * - If another thread acquires "gc_lock" while we do "DeeObject_GCClear()"...
+				 * - then our thread will be forced to use "gc_remove" to complete the untrack...
+				 * - and that pending remove-task can then be served by another thread...
+				 * - such that the actual "tp_dtor" / "Dee_Decref(ob_type)" finalization also
+				 *   happens in another thread...
+				 * - which means that anything that is only decref's in "tp_dtor" (or "ob_type"
+				 *   itself) may happen asynchronously to our thread, and we have no way to
+				 *   ensure that any async destruction of objects from "unreachable_fast" has
+				 *   already completed.
+				 *
+				 * ---
+				 *
+				 * However: luckily none of this is actually detrimental in terms of semantics.
+				 *          Sure, it means we have less capabilities when it comes to debugging
+				 *          bad DeeObject_GCClear() calls, but...
+				 *
+				 * -> The below fallback-handling of "simply moving 'unreachable_fast' to 'gc_gen0'"
+				 *    really **does** still work, **and** will allow us to return since it kills
+				 *    any dependency between objects being destroyed and 'unreachable_fast'.
+				 */
 #ifndef NDEBUG
-					Dee_BREAKPOINT();
-#endif /* !NDEBUG */
-					ASSERT(*p_num_collected);
-					--*p_num_collected;
+				if (!DeeThread_IsMultiThreaded) {
+					/* The above race condition making this debug-check
+					 * impossible can only happen in SMP-mode */
+					Dee_refcnt_t refcnt = atomic_read(&last->ob_refcnt);
+					if (refcnt > 0) {
+						Dee_DPRINTF("[gc] Warning: instance of %q at %p has "
+						            "ob_refcnt=%" PRFuSIZ " but is unreachable",
+						            DeeType_GetName(Dee_TYPE(last)), last, refcnt);
+						gc_dprint_object_info(Dee_TYPE(last), last);
+						Dee_DPRINT("\n");
+						Dee_BREAKPOINT();
+						ASSERT(*p_num_collected);
+						--*p_num_collected;
+					}
 				}
+#endif /* !NDEBUG */
 				ASSERT(atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN);
 				atomic_and(&head->gc_info.gi_flag, ~Dee_GC_FLAG_GENN);
 				if (!head->gc_next)
