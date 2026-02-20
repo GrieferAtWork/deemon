@@ -31,7 +31,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/system-features.h>    /* bcmp, bcmpc, memcpy* */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_cmp, type_member */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPtr */
 
 #include <hybrid/minmax.h>   /* MIN */

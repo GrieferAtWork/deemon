@@ -25,7 +25,6 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_CollectMemory, Dee_CollectMemoryoc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMalloc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNP* */
 #include <deemon/bool.h>               /* return_bool, return_false */
-#include <deemon/thread.h>               /* return_bool, return_false */
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
@@ -41,8 +40,9 @@
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_MAXLEN, Dee_unicode_readutf8_chk, Dee_unicode_utf8seqlen */
 #include <deemon/system-features.h>    /* bzero, memcmp, memcpy*, mempcpy, strcmp */
 #include <deemon/system.h>             /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_add, atomic_read */
+#include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */

@@ -43,7 +43,7 @@
 #include <deemon/type.h>               /* DeeObject_GCPriority, DeeObject_Init, DeeType_*, Dee_GC_PRIORITY_EARLY, Dee_GC_PRIORITY_LATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_atomic_*, atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
-#include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_*, Dee_shared_lock_* */
 #include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
 #include <deemon/util/weakref.h>       /* Dee_weakref_list_transfer_to_dummy */
 
@@ -799,6 +799,7 @@ again:
 	}
 	if unlikely(!threads)
 		goto err;
+	ASSERT(!DeeThread_IsMultiThreaded);
 
 	/* Check if the GC become unsettled while we were suspending threads. */
 	if unlikely(atomic_read(&gc_remove_modifying))
@@ -847,6 +848,7 @@ again:
 		goto again;
 	}
 
+	ASSERT(!DeeThread_IsMultiThreaded);
 	return true;
 resume_threads_and_try_again:
 	DeeThread_ResumeAll();
@@ -1290,6 +1292,7 @@ again:
 		gc_collect_prelock_release();
 		return false;
 	}
+	ASSERT(!DeeThread_IsMultiThreaded);
 
 	/* Collect generation #0 */
 	iter = &gc_gen0;
@@ -1299,6 +1302,7 @@ continue_with_iter:
 		flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL;
 		if (iter->gg_next)
 			flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE;
+		ASSERT(!DeeThread_IsMultiThreaded);
 		status = gc_generation_collect_or_unlock(iter, &count, flags);
 	} else {
 		/* Stop once all overflowing objects have been settled into appropriate generations */
@@ -1336,7 +1340,7 @@ continue_with_iter:
 PUBLIC WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects) {
 	size_t count, result = 0;
 	struct gc_generation *iter;
-	unsigned int status, flags;
+	unsigned int status;
 	Dee_DPRINT("[gc.collect] Starting collect\n");
 	if (gc_collect_prelock_acquire())
 		goto err;
@@ -1344,21 +1348,20 @@ again:
 	if (!gc_collect_acquire(true))
 		goto err_prelock;
 
+	/* Fast-pass: if we're supposed to collect everything anyways: just start with that! */
+	if (max_objects == (size_t)-1)
+		goto attempt_collect_all;
+
 	/* Collect garbage in every generation until we hit "max_objects" or scanned them all */
 	iter = &gc_gen0;
-continue_with_iter:
-	flags = GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL;
-#if 0 /* Don't move objects in this mode */
-	if (iter->gg_next)
-		flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE;
-#endif
 
 	/* NOTE: This won't work properly to identify unreachable objects
 	 *       that are only referenced by other objects from other generations.
 	 *
 	 * Instead, there needs to be a secondary gc collection function
 	 * that scans and collects objects across **all** generations. */
-	status = gc_generation_collect_or_unlock(iter, &count, flags);
+continue_with_iter:
+	status = gc_generation_collect_or_unlock(iter, &count, GC_GENERATION_COLLECT_OR_UNLOCK__F_NORMAL);
 	switch (status) {
 	case GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING:
 		/* Empty generation -> move on to next */
