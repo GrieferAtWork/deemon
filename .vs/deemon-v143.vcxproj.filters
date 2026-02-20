@@ -1419,6 +1419,9 @@
 		<ClInclude Include="..\src\deemon\runtime\gc-collect.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\gc-inspect.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>

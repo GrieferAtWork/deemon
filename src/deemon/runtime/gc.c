@@ -1276,13 +1276,22 @@ continue_with_iter:
 	goto again;
 }
 
-PRIVATE WUNUSED size_t DCALL
-gc_collect(bool allow_interrupts_and_errors, size_t max_objects) {
+
+/* Try to collect `max_objects' GC-objects (though more than that
+ * may be collected), returning the actual amount collected.
+ *
+ * This function really only has 2 valid use-cases:
+ * - DeeGC_Collect(1)          -- Try to collect *sometime* from some generation
+ * - DeeGC_Collect((size_t)-1) -- Collect *all* generations
+ *
+ * @return: * :         The # of objects collected
+ * @return: (size_t)-1: An error was thrown. */
+PUBLIC WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects) {
 	size_t count, result = 0;
 	struct gc_generation *iter;
 	unsigned int status, flags;
 again:
-	if (!gc_collect_acquire(allow_interrupts_and_errors))
+	if (!gc_collect_acquire(true))
 		goto err;
 
 	/* Collect garbage in every generation until we hit "max_objects" or scanned them all */
@@ -1331,7 +1340,7 @@ attempt_collect_all:
 		if (OVERFLOW_UADD(result, count, &result))
 			result = (size_t)-1;
 		if unlikely(count == 0) {
-			if (!gc_collect_acquire(allow_interrupts_and_errors))
+			if (!gc_collect_acquire(true))
 				goto err;
 			goto attempt_collect_all;
 		}
@@ -1346,29 +1355,8 @@ attempt_collect_all:
 		result = (size_t)-2;
 	return result;
 err:
-	if (allow_interrupts_and_errors)
-		return (size_t)-1;
-	return result;
+	return (size_t)-1;
 }
-
-/* Try to collect `max_objects' GC-objects (though more than that
- * may be collected), returning the actual amount collected.
- *
- * This function really only has 2 valid use-cases:
- * - DeeGC_Collect(1)          -- Try to collect *sometime* from some generation
- * - DeeGC_Collect((size_t)-1) -- Collect *all* generations
- *
- * @return: * :         The # of objects collected
- * @return: (size_t)-1: An error was thrown. */
-PUBLIC WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects) {
-	return gc_collect(true, max_objects);
-}
-
-/* Same as `DeeGC_TryCollect()', but does not throw errors. */
-PUBLIC WUNUSED size_t DCALL DeeGC_TryCollect(size_t max_objects) {
-	return gc_collect(false, max_objects);
-}
-
 
 
 /* Return `true' if any GC objects with a non-zero reference
@@ -2837,15 +2825,10 @@ PRIVATE DeeTypeObject GCIter_Type = {
 	/* .tp_callable      = */ DEFIMPL(&default__tp_callable__83C59FA7626CABBE),
 };
 
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_iter(DeeObject *__restrict UNUSED(self)) {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DREF GCIter *result;
 	struct Dee_gc_head *first;
 	result = DeeObject_MALLOC(GCIter);
@@ -2870,15 +2853,10 @@ done:
 err_r:
 	DeeObject_FREE(result);
 	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_size(DeeObject *__restrict UNUSED(self)) {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	size_t result = 0;
 	struct Dee_gc_head *iter;
 	if unlikely(GCLOCK_ACQUIRE_READ())
@@ -2891,15 +2869,11 @@ gcenum_size(DeeObject *__restrict UNUSED(self)) {
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_contains(DeeObject *__restrict UNUSED(self),
                 DeeObject *__restrict ob) {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	return_bool(DeeType_IsGC(Dee_TYPE(ob)));
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	if (!DeeType_IsGC(Dee_TYPE(ob)))
 		return_false;
 #if defined(GCHEAD_ISTRACKED)
@@ -2922,7 +2896,6 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 err:
 	return NULL;
 #endif /* !GCHEAD_ISTRACKED */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 }
 
 PRIVATE struct type_seq gcenum_seq = {
@@ -2970,11 +2943,7 @@ PRIVATE struct type_seq gcenum_seq = {
 };
 
 PRIVATE struct type_member tpconst gcenum_class_members[] = {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-//	TYPE_MEMBER_CONST(STR_Iterator, &GCIter_Type), /* TODO */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	TYPE_MEMBER_CONST(STR_Iterator, &GCIter_Type),
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	TYPE_MEMBER_END
 };
 
@@ -2993,10 +2962,6 @@ gcenum_collect(DeeObject *UNUSED(self),
 	DeeArg_Unpack0Or1X(err, argc, argv, "collect", &args.max_, UNPxSIZ, DeeObject_AsSizeM1);
 /*[[[end]]]*/
 	result = DeeGC_Collect(args.max_);
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	if (result == (size_t)-1)
-		goto err;
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return DeeInt_NewSize(result);
 err:
 	return NULL;
@@ -3014,12 +2979,7 @@ gcenum_referred(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "referred", &args.start);
 /*[[[end]]]*/
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return Dee_AsObject(DeeGC_NewReferred(args.start));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 err:
 	return NULL;
 }
@@ -3036,12 +2996,7 @@ gcenum_referredgc(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "referredgc", &args.start);
 /*[[[end]]]*/
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return Dee_AsObject(DeeGC_NewReferredGC(args.start));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 err:
 	return NULL;
 }
@@ -3058,12 +3013,7 @@ gcenum_reachable(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "reachable", &args.start);
 /*[[[end]]]*/
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return Dee_AsObject(DeeGC_NewReachable(args.start));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 err:
 	return NULL;
 }
@@ -3080,12 +3030,7 @@ gcenum_reachablegc(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "reachablegc", &args.start);
 /*[[[end]]]*/
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return Dee_AsObject(DeeGC_NewReachableGC(args.start));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 err:
 	return NULL;
 }
@@ -3102,12 +3047,7 @@ gcenum_referring(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_Unpack1(err, argc, argv, "referring", &args.to);
 /*[[[end]]]*/
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return Dee_AsObject(DeeGC_NewGCReferred(args.to));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 err:
 	return NULL;
 }
@@ -3126,12 +3066,7 @@ gcenum_isreferring(DeeObject *UNUSED(self),
 	} args;
 	DeeArg_UnpackStruct2(err, argc, argv, "isreferring", &args, &args.from, &args.to);
 /*[[[end]]]*/
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	DeeError_NOTIMPLEMENTED(); /* TODO */
-	return NULL;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return_bool(DeeGC_ReferredBy(args.from, args.to));
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 err:
 	return NULL;
 }
@@ -3225,6 +3160,7 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
 	OBJECT_HEAD_INIT(&GCEnum_Type)
 };
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 /* GC object alloc/free. */
@@ -3517,8 +3453,12 @@ INTERN void DCALL gc_dump_all(void) {
 }
 #endif /* !NDEBUG */
 
-
-
 DECL_END
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+#ifndef __INTELLISENSE__
+#include "gc-inspect.c.inl"
+#endif /* !__INTELLISENSE__ */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #endif /* !GUARD_DEEMON_RUNTIME_GC_C */

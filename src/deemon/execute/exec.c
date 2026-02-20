@@ -813,6 +813,7 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	for (;;) {
 		bool must_continue = false;
+		size_t collected;
 #ifndef CONFIG_NO_THREADS
 		/* Make sure that no secondary threads could enter an
 		 * undefined state by us tinkering with their code. */
@@ -820,7 +821,12 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 #endif /* !CONFIG_NO_THREADS */
 
 		/* TODO: Even better would be "DeeGC_CollectNoInt" */
-		must_continue |= DeeGC_TryCollect((size_t)-1) != 0;
+		collected = DeeGC_Collect((size_t)-1);
+		if (collected == (size_t)-1) {
+			DeeError_Print("Error during final GC collect", Dee_ERROR_PRINT_DOHANDLE);
+		} else {
+			must_continue |= collected != 0;
+		}
 		if (must_continue)
 			continue;
 

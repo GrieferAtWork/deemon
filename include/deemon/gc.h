@@ -355,8 +355,6 @@ DFUNDEF void DCALL DeeGC_CollectAsNecessary(void);
  * @return: * :         The # of objects collected
  * @return: (size_t)-1: An error was thrown. */
 DFUNDEF WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects);
-/* Same as `DeeGC_TryCollect()', but does not throw errors. */
-DFUNDEF WUNUSED size_t DCALL DeeGC_TryCollect(size_t max_objects);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Return `true' if any GC objects with a non-zero reference

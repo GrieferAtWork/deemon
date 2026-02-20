@@ -481,6 +481,7 @@
 		<ClInclude Include="..\src\deemon\runtime\build-value-unpack.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\builtin.h" />
 		<ClInclude Include="..\src\deemon\runtime\gc-collect.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\gc-inspect.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h" />
 		<ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h" />
