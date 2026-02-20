@@ -145,6 +145,10 @@ DeeSystem_IsNormalAndAbsolute(/*utf-8*/ char const *filename, size_t filename_le
 
 /* Return the current UTC realtime in microseconds since 01-01-1970T00:00:00+00:00 */
 DFUNDEF WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void);
+#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
+/* TODO: DeeSystem_GetWalltime() isn't used by anything anymore
+ *       (only "import.time" uses it as a fallback for "gmtime()") */
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 /* Return the last modified timestamp of `filename'
  * > uses the same format as `DeeSystem_GetWalltime()'

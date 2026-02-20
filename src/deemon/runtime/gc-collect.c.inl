@@ -105,7 +105,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		for (iter = gen->gg_objects; iter;) {
 			struct Dee_gc_head *head = DeeGC_Head(iter);
 			ASSERT(gc_remove_modifying == 0);
-			DeeObject_GCVisit(iter, &LOCAL_gc_visit__decref__cb, NULL);
+			DeeObject_Visit(iter, &LOCAL_gc_visit__decref__cb, NULL);
 			iter = head->gc_next;
 		}
 	}
@@ -159,17 +159,17 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 			struct Dee_gc_head *head = DeeGC_Head(iter);
 			ASSERT(gc_remove_modifying == 0);
 			if (iter->ob_refcnt != 0)
-				DeeObject_GCVisit(iter, &gc_visit__mark_internally_reachable__cb, NULL);
+				DeeObject_Visit(iter, &gc_visit__mark_internally_reachable__cb, NULL);
 			iter = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 		}
 	}
 
-	/* Undo refcnt changes done by previous "DeeObject_GCVisit" */
+	/* Undo refcnt changes done by previous "DeeObject_Visit" */
 	must_kill_nested_weakrefs = false;
 	LOCAL_foreach_generation() {
 		for (iter = gen->gg_objects; iter;) {
 			struct Dee_gc_head *head = DeeGC_Head(iter);
-			DeeObject_GCVisit(iter, &LOCAL_gc_visit__incref__with_weakref_detect__cb,
+			DeeObject_Visit(iter, &LOCAL_gc_visit__incref__with_weakref_detect__cb,
 			                  &must_kill_nested_weakrefs);
 			iter = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 		}
@@ -392,9 +392,9 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 	 * - Kill weak references of non-GC objects that should get also destroyed also */
 	if (must_kill_nested_weakrefs) {
 		for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next)
-			DeeObject_GCVisit(iter, &LOCAL_gc_visit__decref__cb, NULL);
+			DeeObject_Visit(iter, &LOCAL_gc_visit__decref__cb, NULL);
 		for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next)
-			DeeObject_GCVisit(iter, &LOCAL_gc_visit__incref__with_weakref_kill__cb, NULL);
+			DeeObject_Visit(iter, &LOCAL_gc_visit__incref__with_weakref_kill__cb, NULL);
 	}
 	if (must_kill_weakrefs) {
 		for (iter = unreachable_fast; iter; iter = DeeGC_Head(iter)->gc_next)

@@ -252,29 +252,13 @@ err:
 
 INTERN NONNULL((1, 2)) void DCALL
 class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
+	struct Dee_class_desc *my_class;
+	uint16_t i, size;
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	struct Dee_class_desc *my_class;
-	uint16_t i, size;
 	my_class = self->tp_class;
-	size     = my_class->cd_desc->cd_cmemb_size;
-	/*Dee_class_desc_lock_read(my_class);*/
-	Dee_XVisitv(my_class->cd_members, size);
-
-	/* Also free all cached operators. */
-	for (i = 0; i < Dee_CLASS_HEADER_OPC1; ++i) {
-		struct Dee_class_optable *table;
-		table = my_class->cd_ops[i];
-		if (!table)
-			continue;
-		Dee_XVisitv(table->co_operators, Dee_CLASS_HEADER_OPC2);
-	}
-	/*Dee_class_desc_lock_endread(my_class);*/
-	/* Only ever references strings itself, so no point in visiting this one! */
-	/*Dee_Visit(my_class->cd_desc);*/
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	struct Dee_class_desc *my_class;
-	uint16_t i, size;
 	my_class = DeeClass_DESC(self);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	size     = my_class->cd_desc->cd_cmemb_size;
 	Dee_class_desc_lock_read(my_class);
 	Dee_XVisitv(my_class->cd_members, size);
@@ -290,7 +274,6 @@ class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	Dee_class_desc_lock_endread(my_class);
 	/* Only ever references strings itself, so no point in visiting this one! */
 	/*Dee_Visit(my_class->cd_desc);*/
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 }
 
 INTERN NONNULL((1)) void DCALL
@@ -3637,17 +3620,13 @@ instance_tvisit(DeeTypeObject *tp_self,
                 Dee_visit_t proc, void *arg) {
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	struct Dee_class_desc *desc = tp_self->tp_class;
-	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
-	/*Dee_instance_desc_lock_read(instance);*/
-	Dee_XVisitv(instance->id_vtab, desc->cd_desc->cd_imemb_size);
-	/*Dee_instance_desc_lock_endread(instance);*/
 #else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
 	Dee_XVisitv(instance->id_vtab, desc->cd_desc->cd_imemb_size);
 	Dee_instance_desc_lock_endread(instance);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 }
 
 INTERN NONNULL((1, 2)) void DCALL

@@ -2657,16 +2657,11 @@ struct Dee_type_object {
 	                                                  * NOTE: When the `TP_FINHERITCTOR' flag is set, then this field must be non-NULL. */
 	struct Dee_type_constructor         tp_init;     /* Constructor/destructor operators. */
 	struct Dee_type_cast                tp_cast;     /* Type casting operators. */
-	/* WARNING: When "Dee_TF_TPVISIT" is set, "tp_visit" is actually typed as:
-	 * >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg); */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* TODO: Change all "tp_visit" implementations to not acquire any object locks.
-	 *       Instead, "tp_visit" should be allowed to assume that DeeThread_SuspendAll
-	 *       has been called, meaning that the caller is the only running thread and
-	 *       that all other threads are paused at stable synchronization points (such
-	 *       that the internal locks of every object are currently available, and the
-	 *       state of all objects can be interacted with directly) */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
+	/* WARNINGS:
+	 * - When "Dee_TF_TPVISIT" is set, "tp_visit" is actually typed as:
+	 *   >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
+	 * - "tp_visit" may be invoked while "self->ob_refcnt == 0"! 
+	 * - "tp_visit" must never throw errors or invoke user-code in any form */
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
 	/* NOTE: Anything used by `DeeType_Inherit*' can't be made `Dee_tpconst' here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */

@@ -869,14 +869,11 @@ do_kill_user:
 			must_continue |= DeeThread_InterruptAndJoinAll();
 #endif /* !CONFIG_NO_THREADS */
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 			/* Tell the user about what's happening (stddbg is forwarded to stderr) */
 			if (DeeFile_Printf(DeeFile_DefaultStddbg,
 			                   "Stop executing user-code to fix unresolvable reference loop\n") < 0)
 				DeeError_Print(NULL, Dee_ERROR_PRINT_HANDLEINTR);
-			if (!DeeExec_KillUserCode())
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-			{
+			if (!DeeExec_KillUserCode()) {
 				/* Well... shit!
 				 * If we've gotten here, that probably means that there is some sort of
 				 * resource leak caused by deemon itself, meaning it's probably my fault... */
@@ -904,17 +901,10 @@ do_kill_user:
 		must_continue |= shutdown_globals();
 
 		/* Collect as many GC objects as possible. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-		if (DeeGC_TryCollect((size_t)-1)) { /* TODO: Even better would be "DeeGC_CollectNoInt" */
-			num_empty_gc = 0; /* Reset the empty-gc counter. */
-			continue;
-		}
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		if (DeeGC_Collect((size_t)-1)) {
 			num_empty_gc = 0; /* Reset the empty-gc counter. */
 			continue;
 		}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 		/* Make sure that nothing is hiding in globals,
 		 * now that the garbage has been collected. */

@@ -121,6 +121,28 @@ print_code:
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 
+PUBLIC NONNULL((1, 2)) void DCALL
+DeeObject_Visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	do {
+		if (tp_self->tp_visit) {
+			if (tp_self->tp_features & TF_TPVISIT) {
+				typedef void (DCALL *tp_tvisit_t)(DeeTypeObject *tp_self, DeeObject *self,
+				                                  Dee_visit_t proc, void *arg);
+				(*(tp_tvisit_t)tp_self->tp_visit)(tp_self, self, proc, arg);
+			} else {
+				(*tp_self->tp_visit)(self, proc, arg);
+			}
+		}
+	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+
+	/* Only visit heap-allocated types. */
+	if (DeeType_IsHeapType(Dee_TYPE(self)))
+		(*proc)((DeeObject *)Dee_TYPE(self), arg);
+}
+
+
+
 struct gc_generation {
 	DeeObject            *gg_objects;    /* [0..gg_count][lock(gc_lock)] Chain of GC objects within this generation */
 	size_t                gg_count;      /* [lock(gc_lock)] # of objects within this generation
@@ -165,7 +187,9 @@ PRIVATE struct gc_generation gc_gen0 = GC_GENERATION_INIT(64 * 128, &gc_gen1); /
 PRIVATE bool gc_mustreap = false;
 
 /* Lock for the GC system */
+#ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_lock_t gc_lock = Dee_ATOMIC_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
 
 #define gc_lock_available()  Dee_atomic_lock_available(&gc_lock)
 #define gc_lock_acquired()   Dee_atomic_lock_acquired(&gc_lock)
@@ -904,26 +928,6 @@ DeeObject_KillWeakrefs(DeeObject *__restrict ob) {
 	}
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-DeeObject_GCVisit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	do {
-		if (tp_self->tp_visit) {
-			if (tp_self->tp_features & TF_TPVISIT) {
-				typedef void (DCALL *tp_tvisit_t)(DeeTypeObject *tp_self, DeeObject *self,
-				                                  Dee_visit_t proc, void *arg);
-				(*(tp_tvisit_t)tp_self->tp_visit)(tp_self, self, proc, arg);
-			} else {
-				(*tp_self->tp_visit)(self, proc, arg);
-			}
-		}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
-
-	/* Only visit heap-allocated types. */
-	if (DeeType_IsHeapType(Dee_TYPE(self)))
-		(*proc)((DeeObject *)Dee_TYPE(self), arg);
-}
-
 PRIVATE NONNULL((1)) void DCALL
 DeeObject_GCClear(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -958,7 +962,7 @@ gc_visit__decref__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
 			 * -> cyclic references of this object should also go away
 			 *
 			 * Recurse on non-GC objects (e.g. "Tuple") */
-			DeeObject_GCVisit(self, &gc_visit__decref__cb, NULL);
+			DeeObject_Visit(self, &gc_visit__decref__cb, NULL);
 		}
 	}
 }
@@ -977,7 +981,7 @@ gc_visit__incref__with_weakref_detect__cb(DeeObject *__restrict self, void *arg)
 			bool *p_must_kill_nested_weakrefs = (bool *)arg;
 			if (!*p_must_kill_nested_weakrefs)
 				*p_must_kill_nested_weakrefs = sithrd_DeeObject_HasWeakrefs(self);
-			DeeObject_GCVisit(self, &gc_visit__incref__with_weakref_detect__cb, arg);
+			DeeObject_Visit(self, &gc_visit__incref__with_weakref_detect__cb, arg);
 		}
 		++self->ob_refcnt;
 	}
@@ -994,7 +998,7 @@ gc_visit__incref__with_weakref_kill__cb(DeeObject *__restrict self, void *UNUSED
 		if (self->ob_refcnt == 0) {
 			/* Kill weak references of this object (if it has any) */
 			DeeObject_KillWeakrefs(self);
-			DeeObject_GCVisit(self, &gc_visit__incref__with_weakref_kill__cb, NULL);
+			DeeObject_Visit(self, &gc_visit__incref__with_weakref_kill__cb, NULL);
 		}
 		++self->ob_refcnt;
 	}
@@ -1010,7 +1014,7 @@ gc_visit__decref_all__cb(DeeObject *__restrict self, void *UNUSED(arg)) {
 		 * -> cyclic references of this object should also go away
 		 *
 		 * Recurse on non-GC objects (e.g. "Tuple") */
-		DeeObject_GCVisit(self, &gc_visit__decref_all__cb, NULL);
+		DeeObject_Visit(self, &gc_visit__decref_all__cb, NULL);
 	}
 }
 
@@ -1023,7 +1027,7 @@ gc_visit__incref_all__with_weakref_detect__cb(DeeObject *__restrict self, void *
 		bool *p_must_kill_nested_weakrefs = (bool *)arg;
 		if (!*p_must_kill_nested_weakrefs)
 			*p_must_kill_nested_weakrefs = sithrd_DeeObject_HasWeakrefs(self);
-		DeeObject_GCVisit(self, &gc_visit__incref_all__with_weakref_detect__cb, arg);
+		DeeObject_Visit(self, &gc_visit__incref_all__with_weakref_detect__cb, arg);
 	}
 	++self->ob_refcnt;
 }
@@ -1034,7 +1038,7 @@ gc_visit__incref_all__with_weakref_kill__cb(DeeObject *__restrict self, void *UN
 	if (!DeeType_IsGC(Dee_TYPE(self)) && self->ob_refcnt == 0) {
 		/* Kill weak references of this object (if it has any) */
 		DeeObject_KillWeakrefs(self);
-		DeeObject_GCVisit(self, &gc_visit__incref_all__with_weakref_kill__cb, NULL);
+		DeeObject_Visit(self, &gc_visit__incref_all__with_weakref_kill__cb, NULL);
 	}
 	++self->ob_refcnt;
 }
@@ -1060,7 +1064,7 @@ gc_visit__mark_internally_reachable__cb(DeeObject *__restrict self, void *UNUSED
 		 * object that was previously found to be *externally* reachable. */
 		head->gc_next = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 	}
-	DeeObject_GCVisit(self, &gc_visit__mark_internally_reachable__cb, NULL);
+	DeeObject_Visit(self, &gc_visit__mark_internally_reachable__cb, NULL);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1130,6 +1134,7 @@ DECL_BEGIN
 PRIVATE void DCALL
 gc_generation_try_precollect(struct gc_generation *__restrict self) {
 	/* TODO: GC pre-collect (see "gc.h" for description) */
+	/* TODO: Since this function may be rather slow, change "gc_lock" to a "Dee_shared_lock_t" */
 	(void)self;
 }
 #endif /* !CONFIG_NO_THREADS */

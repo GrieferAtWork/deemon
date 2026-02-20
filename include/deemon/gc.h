@@ -92,7 +92,7 @@ DECL_BEGIN
  * >> // Perform scan and adjust "ob_refcnt" such that anything
  * >> // that happens to be unreachable ends with "ob_refcnt == 0"
  * >> for (iter = generation; iter; iter = iter->gc_next) {
- * >>     DeeObject_GCVisit(&iter->gc_self, (DeeObject *referenced) -> {
+ * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *referenced) -> {
  * >>         if (DeeType_IsGC(Dee_TYPE(referenced))) {
  * >>             struct Dee_gc_head *head = headof(referenced);
  * >>             if (!(head->gc_info.gi_flag & Dee_GC_FLAG_OTHERGEN)) {
@@ -123,7 +123,7 @@ DECL_BEGIN
  * >> // has been determined to be externally referenced).
  * >> for (iter = generation; iter; iter = iter->gc_next) {
  * >>     if (iter->gc_self.ob_refcnt != 0) {
- * >>         DeeObject_GCVisit(&iter->gc_self, (DeeObject *referenced) -> {
+ * >>         DeeObject_Visit(&iter->gc_self, (DeeObject *referenced) -> {
  * >>             if (referenced->ob_refcnt != 0)
  * >>                 return; // Already reachable...
  * >>             if (DeeType_IsGC(Dee_TYPE(referenced))) {
@@ -139,9 +139,9 @@ DECL_BEGIN
  * >>     }
  * >> }
  * >>
- * >> // Undo refcnt changes done by previous "DeeObject_GCVisit"
+ * >> // Undo refcnt changes done by previous "DeeObject_Visit"
  * >> for (iter = generation; iter; iter = iter->gc_next) {
- * >>     DeeObject_GCVisit(&iter->gc_self, (DeeObject *referenced) -> {
+ * >>     DeeObject_Visit(&iter->gc_self, (DeeObject *referenced) -> {
  * >>         if (DeeType_IsGC(Dee_TYPE(referenced))) {
  * >>             struct Dee_gc_head *head = headof(referenced);
  * >>             if (!(head->gc_info.gi_flag & Dee_GC_FLAG_OTHERGEN))
@@ -257,14 +257,14 @@ DECL_BEGIN
  *
  * Idea: Have a secondary pre-collect that function that:
  * - Re-uses the upper bits of "gi_pself" (2..N-1) as a temporary reference counter "gi_gcrefs"
- * - Do essentially the same as the decref "DeeObject_GCVisit" above, but increment
+ * - Do essentially the same as the decref "DeeObject_Visit" above, but increment
  *   the special "gi_gcrefs" counter.
  *   - For non-GC objects, this part will need an out-of-band, heap-based mapping to store
  *     the "gcrefs" for such objects (but any allocation failure here can simply be handled
  *     by forgoing the idea of a pre-collect and just doing a full collect instead (iow: by
  *     doing `DeeThread_SuspendAll()' and everything else detailed above))
  * - Any object where "gi_gcrefs >= ob_refcnt" is *probably* only internally referenced.
- * - Do a second "DeeObject_GCVisit" of all objects where "gi_gcrefs < ob_refcnt" to find
+ * - Do a second "DeeObject_Visit" of all objects where "gi_gcrefs < ob_refcnt" to find
  *   transitive references (~ala "gc_visit__mark_internally_reachable__cb"). Any GC object
  *   found to be referenced transitively is marked with "gi_gcrefs = 0".
  * - At this point, for every object that was scanned, we can say (with some level of certainty):

@@ -635,10 +635,10 @@ again:
 	if (SleepEx((DWORD)(microseconds / 1000), TRUE)) {
 		uint64_t now;
 		DBG_ALIGNMENT_ENABLE();
-		now = DeeThread_GetTimeMicroSeconds();
 		if (DeeThread_CheckInterrupt())
 			goto err;
 		/* Continue sleeping for the remainder of the given time. */
+		now = DeeThread_GetTimeMicroSeconds();
 		if (now < end_time) {
 			microseconds = end_time - now;
 			goto again;
@@ -4325,7 +4325,6 @@ thread_threaded_get(DeeObject *__restrict UNUSED(self)) {
 #endif
 }
 
-#define HAVE_thread_class_getsets
 PRIVATE struct type_getset tpconst thread_class_getsets[] = {
 	TYPE_GETTER_AB("current", &thread_current_get,
 	               "->?.\n"

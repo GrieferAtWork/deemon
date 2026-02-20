@@ -1228,7 +1228,6 @@ DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_XHashv)
 #define DeeObject_Hash(self)          DeeObject_Hash(Dee_AsObject(self))
 #define DeeObject_HashInherited(self) DeeObject_HashInherited(Dee_AsObject(self))
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 #ifndef Dee_visit_t_DEFINED
 #define Dee_visit_t_DEFINED /*!export-*/
 typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
@@ -1236,6 +1235,8 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
 
 /* GC operator invocation. */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
+
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 DFUNDEF NONNULL((1)) void (DCALL DeeObject_Clear)(DeeObject *__restrict self);
 DFUNDEF NONNULL((1)) void (DCALL DeeObject_PClear)(DeeObject *__restrict self, unsigned int gc_priority);
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */

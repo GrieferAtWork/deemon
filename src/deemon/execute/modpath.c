@@ -1192,11 +1192,7 @@ dexrange_union_object(DeeObject *__restrict ob, void *arg) {
 		 * Because in general: there should always be some OS-specific
 		 * was to determine which module some pointer is associated
 		 * with, which is all we need to not have to get here. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-		/* TODO: tp_visit requires that "DeeThread_SuspendAll()" has been called */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 		DeeObject_Visit(ob, &dexrange_union_object_r, me);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	}
 }
 

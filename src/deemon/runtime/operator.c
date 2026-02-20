@@ -993,7 +993,9 @@ DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, Dee_visit_t proc, void
 	if (DeeType_IsHeapType(Dee_TYPE(self)))
 		(*proc)((DeeObject *)Dee_TYPE(self), arg);
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 DEFINE_OPERATOR(void, Clear, (DeeObject *__restrict self)) {
 	LOAD_TP_SELF;
 	do {
