@@ -20,11 +20,34 @@
 
 import * from deemon;
 
+
+#if 0 /* TODO: Enable once new GC becomes more robust (disabled because this won't use the GC at all) */
+#define REUSE_KEY_CLASSES
+#endif
+
+#ifdef REUSE_KEY_CLASSES
+local final class KeyCmpClass {
+	private member m_cmp;
+	private member m_self;
+	this(cmp, self): m_cmp(cmp), m_self(self) {}
+
+	public operator <  (other) -> m_cmp(m_self, other.m_self) <  0;
+	public operator <= (other) -> m_cmp(m_self, other.m_self) <= 0;
+	public operator == (other) -> m_cmp(m_self, other.m_self) == 0;
+	public operator != (other) -> m_cmp(m_self, other.m_self) != 0;
+	public operator >  (other) -> m_cmp(m_self, other.m_self) >  0;
+	public operator >= (other) -> m_cmp(m_self, other.m_self) >= 0;
+}
+#endif /* REUSE_KEY_CLASSES */
+
 @@Convert an old-style compare predicate to a new-style key function
 @@When called as @(cmp(lhs, rhs)), the given @cmp function should
 @@return @(return < 0) when @(lhs < rhs), return @(return == 0)
 @@when @(lhs == rhs) and return @(return > 0) when @(lhs > rhs)
 function predcmp2key(cmp: Callable): Callable {
+#ifdef REUSE_KEY_CLASSES
+	return self -> KeyCmpClass(cmp, self);
+#else /* REUSE_KEY_CLASSES */
 	class KeyClass {
 		private member m_self;
 		this(self): m_self(self) {}
@@ -36,7 +59,23 @@ function predcmp2key(cmp: Callable): Callable {
 		public operator >= (other) -> cmp(this.m_self, other.m_self) >= 0;
 	}
 	return KeyClass;
+#endif /* !REUSE_KEY_CLASSES */
 }
+
+#ifdef REUSE_KEY_CLASSES
+local final class KeyLoClass {
+	private member m_pred_lo;
+	private member m_self;
+	this(pred_lo, self): m_pred_lo(pred_lo), m_self(self) {}
+	operator == (other) -> !m_pred_lo(m_self, other.m_self) && !m_pred_lo(other.m_self, m_self);
+	operator != (other) -> m_pred_lo(m_self, other.m_self) || m_pred_lo(other.m_self, m_self);
+	operator <  (other) -> m_pred_lo(m_self, other.m_self);
+	operator <= (other) -> !m_pred_lo(other.m_self, m_self);
+	operator >  (other) -> m_pred_lo(other.m_self, m_self);
+	operator >= (other) -> !m_pred_lo(m_self, other.m_self);
+}
+#endif /* REUSE_KEY_CLASSES */
+
 
 @@Convert an old-style compare-lo predicate to a new-style key function
 @@>import string from deemon;
@@ -46,6 +85,9 @@ function predcmp2key(cmp: Callable): Callable {
 @@>x.sort(key: x -> x.lower()); /* Same as this */
 @@>x.sort(key: string.lower);   /* Same as this */
 function predlo2key(pred_lo: Callable): Callable {
+#ifdef REUSE_KEY_CLASSES
+	return self -> KeyLoClass(pred_lo, self);
+#else /* REUSE_KEY_CLASSES */
 	class KeyClass {
 		private member m_self;
 		this(self): m_self(self) {}
@@ -57,7 +99,19 @@ function predlo2key(pred_lo: Callable): Callable {
 		operator >= (other) -> !pred_lo(this.m_self, other.m_self);
 	}
 	return KeyClass;
+#endif /* !REUSE_KEY_CLASSES */
 }
+
+
+#ifdef REUSE_KEY_CLASSES
+local final class KeyEqClass {
+	private member m_pred_eq;
+	private member m_self;
+	this(pred_eq, self): m_pred_eq(pred_eq), m_self(self) {}
+	operator == (other) -> m_pred_eq(m_self, other.m_self);
+	operator != (other) -> !m_pred_eq(m_self, other.m_self);
+}
+#endif /* REUSE_KEY_CLASSES */
 
 @@Convert an old-style compare-eq predicate to a new-style key function
 @@>import string from deemon;
@@ -67,6 +121,9 @@ function predlo2key(pred_lo: Callable): Callable {
 @@>print x.find("foo", key: x -> x.lower()); /* Same as this */
 @@>print x.find("foo", key: string.lower);   /* Same as this */
 function predeq2key(pred_eq: Callable): Callable {
+#ifdef REUSE_KEY_CLASSES
+	return self -> KeyEqClass(pred_eq, self);
+#else /* REUSE_KEY_CLASSES */
 	class KeyClass {
 		private member m_self;
 		this(self): m_self(self) {}
@@ -74,6 +131,7 @@ function predeq2key(pred_eq: Callable): Callable {
 		operator != (other) -> !pred_eq(this.m_self, other.m_self);
 	}
 	return KeyClass;
+#endif /* !REUSE_KEY_CLASSES */
 }
 
 

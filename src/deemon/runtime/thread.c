@@ -2818,7 +2818,21 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 #else /* DeeThread_USE_SINGLE_THREADED */
 	uint32_t state;
 	DeeOSThreadObject *me = DeeThread_AsOSThread((DeeThreadObject *)self);
+	/* Validity cannot be asserted here:
+	 *
+	 * [1] Thread #1:   Dee_Decref(dead_thread);
+	 * [2] Thread #1:   dead_thread->ob_refcnt = 0;
+	 * [3] Thread #1:   thread_fini(dead_thread);
+	 * [4]   Main thread: DeeThread_InterruptAndJoinAll();
+	 * [5]   Main thread: thread_list_lock_acquire_noint()
+	 * [6] Thread #1:   if (LIST_ISBOUND(self, t_global)) {
+	 * [7] Thread #1:   thread_list_lock_acquire_noint();         // Blocked -- acquired by "Main thread"
+	 * [8]   Main thread: DeeThread_Wake(dead_thread);            // Because still part of thread list
+	 * [9]   Main thread: Get here with a (kind-of) dead thread
+	 */
+#if 0
 	ASSERT_OBJECT_TYPE(&me->ot_thread, &DeeThread_Type);
+#endif
 
 	/* Wake up all threads that are currently waiting on a futex.
 	 * This is required for (some of) the futex implementations,
