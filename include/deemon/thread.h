@@ -99,10 +99,10 @@ struct Dee_except_frame {
 #define Dee_except_frame_free(ptr)  (void)(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
 #define Dee_except_frame_xfree(ptr) (void)(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
 #else /* __INTELLISENSE__ */
-#define Dee_except_frame_tryalloc() DeeSlab_TRYMALLOC(struct Dee_except_frame)
-#define Dee_except_frame_alloc()    DeeSlab_MALLOC(struct Dee_except_frame)
-#define Dee_except_frame_free(ptr)  DeeSlab_FREE(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
-#define Dee_except_frame_xfree(ptr) DeeSlab_XFREE(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
+#define Dee_except_frame_tryalloc() DeeObject_TRYMALLOC(struct Dee_except_frame)
+#define Dee_except_frame_alloc()    DeeObject_MALLOC(struct Dee_except_frame)
+#define Dee_except_frame_free(ptr)  DeeObject_FREE(Dee_REQUIRES_TYPE(struct Dee_except_frame *, ptr))
+#define Dee_except_frame_xfree(ptr) ((ptr) ? Dee_except_frame_free(ptr) : (void)0)
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -170,8 +170,8 @@ struct Dee_thread_interrupt {
 #define Dee_thread_interrupt_alloc()     ((struct Dee_thread_interrupt *)sizeof(struct Dee_thread_interrupt))
 #define _Dee_thread_interrupt_free(self) (void)(self)
 #else /* __INTELLISENSE__ */
-#define Dee_thread_interrupt_alloc()     DeeSlab_MALLOC(struct Dee_thread_interrupt)
-#define _Dee_thread_interrupt_free(self) DeeSlab_FREE(self)
+#define Dee_thread_interrupt_alloc()     DeeObject_MALLOC(struct Dee_thread_interrupt)
+#define _Dee_thread_interrupt_free(self) DeeObject_FREE(self)
 #endif /* !__INTELLISENSE__ */
 #define Dee_thread_interrupt_free(self)  (likely((self)->ti_args != (DREF struct Dee_tuple_object *)ITER_DONE) ? _Dee_thread_interrupt_free(self) : (void)0)
 #define Dee_thread_interrupt_xfree(self) (void)((self) && (Dee_thread_interrupt_free(self), 0))

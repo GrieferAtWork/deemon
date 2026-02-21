@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_FFree, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC */
+#include <deemon/alloc.h>           /* DeeObject_FFree, DeeObject_MALLOC */
 #include <deemon/module.h>          /* DeeModuleObject, Dee_module_symbol */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_XDecref, Dee_hash_t, ITER_DONE, OBJECT_HEAD */
 #include <deemon/string.h>          /* Dee_unicode_printer */
@@ -1599,8 +1599,8 @@ struct jit_state {
 };
 
 INTDEF NONNULL((1)) void DCALL jit_state_fini(struct jit_state *__restrict self);
-#define jit_state_alloc()       DeeSlab_MALLOC(struct jit_state)
-#define jit_state_free(self)    DeeSlab_FREE(self)
+#define jit_state_alloc()       DeeObject_MALLOC(struct jit_state)
+#define jit_state_free(self)    DeeObject_FREE(self)
 #define jit_state_destroy(self) (jit_state_fini(self), jit_state_free(self))
 
 

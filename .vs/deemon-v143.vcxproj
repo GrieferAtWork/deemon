@@ -244,6 +244,7 @@
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\rlock.h" />
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h" />
+		<ClInclude Include="..\include\deemon\util\slab-config.h" />
 		<ClInclude Include="..\include\deemon\util\weakref.h" />
 		<ClInclude Include="..\include\deemon\variant.h" />
 		<ClInclude Include="..\include\deemon\weakref.h" />
@@ -726,6 +727,7 @@
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />
 		<ClCompile Include="..\src\deemon\runtime\serial.c" />
 		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c" />
+		<ClCompile Include="..\src\deemon\runtime\slab.c" />
 		<ClCompile Include="..\src\deemon\runtime\strings.c" />
 		<ClCompile Include="..\src\deemon\runtime\struct.c" />
 		<ClCompile Include="..\src\deemon\runtime\thread.c" />
@@ -747,6 +749,7 @@
 		<None Include="..\include\deemon\compiler\lexer.def" />
 		<None Include="..\include\deemon\dec.md" />
 		<None Include="..\include\deemon\heap.md" />
+		<None Include="..\include\deemon\object.md" />
 		<None Include="..\src\deemon\compiler\asm\userdb.def" />
 		<CustomBuild Include="..\src\deemon\execute\asm\altstack.ms-x64.S">
 			<FileType>Document</FileType>

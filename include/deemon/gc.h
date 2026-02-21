@@ -35,7 +35,8 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
-#include "types.h" /* DREF, DeeObject, Dee_AsObject */
+#include "types.h"            /* DREF, DeeObject, Dee_AsObject */
+#include "util/slab-config.h" /* DREF, DeeObject, Dee_AsObject */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
@@ -552,6 +553,133 @@ DFUNDEF void (DCALL DeeDbgGCObject_Free)(void *p, char const *file, int line);
 #endif /* NDEBUG */
 
 
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#define _Dee_PRIVATE_DeeGCObject_API(n, _)                                                         \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeGCSlab_Malloc##n(void);                             \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeGCSlab_Calloc##n(void);                             \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeGCSlab_TryMalloc##n(void);                          \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeGCSlab_TryCalloc##n(void);                          \
+	DFUNDEF NONNULL((1)) void DCALL DeeGCSlab_Free##n(void *__restrict p);                         \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeDbgGCSlab_Malloc##n(char const *file, int line);    \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeDbgGCSlab_Calloc##n(char const *file, int line);    \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeDbgGCSlab_TryMalloc##n(char const *file, int line); \
+	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeDbgGCSlab_TryCalloc##n(char const *file, int line); \
+	DFUNDEF NONNULL((1)) void DCALL DeeDbgGCSlab_Free##n(void *__restrict p, char const *file, int line);
+Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
+#undef _Dee_PRIVATE_DeeGCObject_API
+
+
+#ifndef _Dee_PRIVATE_SLAB_SELECT_X
+#define _Dee_PRIVATE_SLAB_SELECT_UNPACK(N, PREFIX, f, SUFFIX) N, PREFIX, f, SUFFIX
+#define _Dee_PRIVATE_SLAB_SELECT_Z(n, N, PREFIX, f, SUFFIX)   n >= (N) ? (PREFIX f##n SUFFIX):
+#define _Dee_PRIVATE_SLAB_SELECT_Y(args)                      _Dee_PRIVATE_SLAB_SELECT_Z args
+#define _Dee_PRIVATE_SLAB_SELECT_X(n, args)                   _Dee_PRIVATE_SLAB_SELECT_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
+#endif /* !_Dee_PRIVATE_SLAB_SELECT_X */
+#define _Dee_PRIVATE_SLAB_GC_SELECT(N, PREFIX, f, SUFFIX, else) \
+	(Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_SLAB_SELECT_X, (N, PREFIX, f, SUFFIX)) else)
+
+/* Check if an object-size of "N" is supported for slab allocation */
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
+#define DeeGCSlab_IsSupported(N) ((N) <= (Dee_SLAB_CHUNKSIZE_MAX - 2 * __SIZEOF_POINTER__))
+#else /* Dee_SLAB_CHUNKSIZE_MAX */
+#define DeeGCSlab_IsSupported(N) 0
+#endif /* !Dee_SLAB_CHUNKSIZE_MAX */
+
+
+/* Return a function pointer for the relevant slab function for allocations of size "N"
+ * If the given "N" isn't supported, returns "else" instead. */
+#define DeeGCSlab_GetMalloc(N, else)       _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeGCSlab_Malloc, , else)
+#define DeeGCSlab_GetCalloc(N, else)       _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeGCSlab_Calloc, , else)
+#define DeeGCSlab_GetTryMalloc(N, else)    _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeGCSlab_TryMalloc, , else)
+#define DeeGCSlab_GetTryCalloc(N, else)    _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeGCSlab_TryCalloc, , else)
+#define DeeGCSlab_GetFree(N, else)         _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeGCSlab_Free, , else)
+#define DeeDbgGCSlab_GetMalloc(N, else)    _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeDbgGCSlab_Malloc, , else)
+#define DeeDbgGCSlab_GetCalloc(N, else)    _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeDbgGCSlab_Calloc, , else)
+#define DeeDbgGCSlab_GetTryMalloc(N, else) _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeDbgGCSlab_TryMalloc, , else)
+#define DeeDbgGCSlab_GetTryCalloc(N, else) _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeDbgGCSlab_TryCalloc, , else)
+#define DeeDbgGCSlab_GetFree(N, else)      _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeDbgGCSlab_Free, , else)
+
+/* Invoke the relevant slab function. If no slab function exists, "else" is evaluated and returned instead. */
+#define _DeeGCSlab_Malloc(N, else)                   _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeGCSlab_Malloc, (), else)
+#define _DeeGCSlab_Calloc(N, else)                   _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeGCSlab_Calloc, (), else)
+#define _DeeGCSlab_TryMalloc(N, else)                _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeGCSlab_TryMalloc, (), else)
+#define _DeeGCSlab_TryCalloc(N, else)                _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeGCSlab_TryCalloc, (), else)
+#define _DeeGCSlab_Free(N, p, else)                  _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeGCSlab_Free, (p), else)
+#define _DeeDbgGCSlab_Malloc(N, file, line, else)    _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeDbgGCSlab_Malloc, (file, line), else)
+#define _DeeDbgGCSlab_Calloc(N, file, line, else)    _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeDbgGCSlab_Calloc, (file, line), else)
+#define _DeeDbgGCSlab_TryMalloc(N, file, line, else) _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeDbgGCSlab_TryMalloc, (file, line), else)
+#define _DeeDbgGCSlab_TryCalloc(N, file, line, else) _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeDbgGCSlab_TryCalloc, (file, line), else)
+#define _DeeDbgGCSlab_Free(N, p, file, line, else)   _Dee_PRIVATE_SLAB_GC_SELECT(N, , DeeDbgGCSlab_Free, (p, file, line), else)
+#ifdef NDEBUG
+#define DeeGCSlab_Malloc(N, else)                   _DeeGCSlab_Malloc(N, else)
+#define DeeGCSlab_Calloc(N, else)                   _DeeGCSlab_Calloc(N, else)
+#define DeeGCSlab_TryMalloc(N, else)                _DeeGCSlab_TryMalloc(N, else)
+#define DeeGCSlab_TryCalloc(N, else)                _DeeGCSlab_TryCalloc(N, else)
+#define DeeGCSlab_Free(N, p, else)                  _DeeGCSlab_Free(N, p, else)
+#define DeeDbgGCSlab_Malloc(N, file, line, else)    _DeeGCSlab_Malloc(N, else)
+#define DeeDbgGCSlab_Calloc(N, file, line, else)    _DeeGCSlab_Calloc(N, else)
+#define DeeDbgGCSlab_TryMalloc(N, file, line, else) _DeeGCSlab_TryMalloc(N, else)
+#define DeeDbgGCSlab_TryCalloc(N, file, line, else) _DeeGCSlab_TryCalloc(N, else)
+#define DeeDbgGCSlab_Free(N, p, file, line, else)   _DeeGCSlab_Free(N, p, else)
+#else /* NDEBUG */
+#define DeeGCSlab_Malloc(N, else)                   _DeeDbgGCSlab_Malloc(N, __FILE__, __LINE__, else)
+#define DeeGCSlab_Calloc(N, else)                   _DeeDbgGCSlab_Calloc(N, __FILE__, __LINE__, else)
+#define DeeGCSlab_TryMalloc(N, else)                _DeeDbgGCSlab_TryMalloc(N, __FILE__, __LINE__, else)
+#define DeeGCSlab_TryCalloc(N, else)                _DeeDbgGCSlab_TryCalloc(N, __FILE__, __LINE__, else)
+#define DeeGCSlab_Free(N, p, else)                  _DeeDbgGCSlab_Free(N, p, __FILE__, __LINE__, else)
+#define DeeDbgGCSlab_Malloc(N, file, line, else)    _DeeDbgGCSlab_Malloc(N, file, line, else)
+#define DeeDbgGCSlab_Calloc(N, file, line, else)    _DeeDbgGCSlab_Calloc(N, file, line, else)
+#define DeeDbgGCSlab_TryMalloc(N, file, line, else) _DeeDbgGCSlab_TryMalloc(N, file, line, else)
+#define DeeDbgGCSlab_TryCalloc(N, file, line, else) _DeeDbgGCSlab_TryCalloc(N, file, line, else)
+#define DeeDbgGCSlab_Free(N, p, file, line, else)   _DeeDbgGCSlab_Free(N, p, file, line, else)
+#endif /* !NDEBUG */
+
+/* Allocate fixed-size, object-purposed memory (using slabs if possible, but using regular heap memory otherwise). */
+#define DeeGCObject_FMalloc(size)                   DeeGCSlab_Malloc(size, DeeGCObject_Malloc(size))
+#define DeeGCObject_FCalloc(size)                   DeeGCSlab_Calloc(size, DeeGCObject_Calloc(size))
+#define DeeGCObject_FTryMalloc(size)                DeeGCSlab_TryMalloc(size, DeeGCObject_TryMalloc(size))
+#define DeeGCObject_FTryCalloc(size)                DeeGCSlab_TryCalloc(size, DeeGCObject_TryCalloc(size))
+#define DeeGCObject_FFree(ptr, size)                DeeGCSlab_Free(size, ptr, DeeGCObject_Free(ptr))
+#define DeeDbgGCObject_FMalloc(size, file, line)    DeeDbgGCSlab_Malloc(size, file, line, DeeDbgGCObject_Malloc(size, file, line))
+#define DeeDbgGCObject_FCalloc(size, file, line)    DeeDbgGCSlab_Calloc(size, file, line, DeeDbgGCObject_Calloc(size, file, line))
+#define DeeDbgGCObject_FTryMalloc(size, file, line) DeeDbgGCSlab_TryMalloc(size, file, line, DeeDbgGCObject_TryMalloc(size, file, line))
+#define DeeDbgGCObject_FTryCalloc(size, file, line) DeeDbgGCSlab_TryCalloc(size, file, line, DeeDbgGCObject_TryCalloc(size, file, line))
+#define DeeDbgGCObject_FFree(ptr, size, file, line) DeeDbgGCSlab_Free(size, ptr, file, line, DeeDbgGCObject_Free(ptr, file, line))
+
+/* Same as the regular malloc functions, but use the same allocation methods that would be
+ * used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC' and `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S',
+ * meaning that pointers returned by these macros have binary compatibility with them. */
+#define DeeGCObject_MALLOC(T)       ((T *)DeeGCObject_FMalloc(sizeof(T)))
+#define DeeGCObject_CALLOC(T)       ((T *)DeeGCObject_FCalloc(sizeof(T)))
+#define DeeGCObject_TRYMALLOC(T)    ((T *)DeeGCObject_FTryMalloc(sizeof(T)))
+#define DeeGCObject_TRYCALLOC(T)    ((T *)DeeGCObject_FTryCalloc(sizeof(T)))
+#define DeeGCObject_FREE(typed_ptr)       DeeGCObject_FFree(typed_ptr, sizeof(*(typed_ptr)))
+
+#ifdef GUARD_DEEMON_TYPE_H
+/* Specifies an allocator that may provides optimizations
+ * for types with a FIXED size (which most objects have). */
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(include("type.h"))*/
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(include("type.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)           \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                    \
+	                                DeeGCSlab_GetMalloc(tp_instance_size, (void *(DCALL *)(void))(void *)(uintptr_t)(tp_instance_size)), \
+	                                DeeGCSlab_GetFree(tp_instance_size, (void (DCALL *)(void *))(Dee_funptr_t)NULL))
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+
+/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link against
+ * dedicated allocator functions when doing so would require the creation
+ * of relocations that might cause loading times to become larger. */
+#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("type.h"))*/
+#else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   /*!export(include("type.h"))*/
+#endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+#endif /* GUARD_DEEMON_TYPE_H */
+
+
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 /* Allocate fixed-size, gc-object-purposed slab memory.
  * NOTE: This memory must be freed by one of:
  *   - DeeGCObject_FFree(return, size2)    | size2 <= size
@@ -593,20 +721,8 @@ DeeSlab_ENUMERATE(_Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #define DeeGCObject_TRYMALLOC(T)    ((T *)DeeGCObject_FTryMalloc(sizeof(T)))
 #define DeeGCObject_TRYCALLOC(T)    ((T *)DeeGCObject_FTryCalloc(sizeof(T)))
 #define DeeGCObject_FREE(typed_ptr)       DeeGCObject_FFree(typed_ptr, sizeof(*(typed_ptr)))
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
-#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define DeeGCObject_MALLOC_S(T)    ((T *)DeeGCObject_Malloc(sizeof(T)))
-#define DeeGCObject_CALLOC_S(T)    ((T *)DeeGCObject_Calloc(sizeof(T)))
-#define DeeGCObject_TRYMALLOC_S(T) ((T *)DeeGCObject_TryMalloc(sizeof(T)))
-#define DeeGCObject_TRYCALLOC_S(T) ((T *)DeeGCObject_TryCalloc(sizeof(T)))
-#define DeeGCObject_FREE_S               DeeGCObject_Free
-#else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-#define DeeGCObject_MALLOC_S      DeeGCObject_MALLOC
-#define DeeGCObject_CALLOC_S      DeeGCObject_CALLOC
-#define DeeGCObject_TRYMALLOC_S   DeeGCObject_TRYMALLOC
-#define DeeGCObject_TRYCALLOC_S   DeeGCObject_TRYCALLOC
-#define DeeGCObject_FREE_S        DeeGCObject_FREE
-#endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
 
 /* An generic sequence singleton that can be
  * iterated to yield all tracked GC objects.

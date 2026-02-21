@@ -308,9 +308,26 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 		{ (Dee_funptr_t)(void *)(uintptr_t)(tp_instance_size) }     \
 	}}
 
+#undef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#if (!defined(CONFIG_BUILDING_DEEMON) || defined(__PIE__) ||     \
+     defined(__PIC__) || defined(__pie__) || defined(__pic__) || \
+     defined(CONFIG_NO_OBJECT_SLABS))
+#define CONFIG_FIXED_ALLOCATOR_S_IS_AUTO /*!export*/
+#endif /* CONFIG_BUILDING_DEEMON && !__pic__ */
+
 /* Specifies an allocator that may provides optimizations
  * for types with a FIXED size (which most objects have). */
 #ifdef GUARD_DEEMON_ALLOC_H
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_SIZED(include("alloc.h"))*/
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_FIXED(include("alloc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)            \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                  \
+	                                DeeSlab_GetMalloc(tp_instance_size, (void *(DCALL *)(void))(void *)(uintptr_t)(tp_instance_size)), \
+	                                DeeSlab_GetFree(tp_instance_size, (void (DCALL *)(void *))(Dee_funptr_t)NULL))
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #ifdef CONFIG_NO_OBJECT_SLABS
 #define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("alloc.h"))*/
 #define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC_R Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTOSIZED_R /*!export(include("alloc.h"))*/
@@ -336,18 +353,46 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
 	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
 #endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 /* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link against
  * dedicated allocator functions when doing so would require the creation
  * of relocations that might cause loading times to become larger. */
 #ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("alloc.h"))*/
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("alloc.h"))*/
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S    Dee_TYPE_CONSTRUCTOR_INIT_FIXED    /*!export(include("alloc.h"))*/
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC /*!export(include("alloc.h"))*/
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
 #endif /* GUARD_DEEMON_ALLOC_H */
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef GUARD_DEEMON_GC_H
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(include("gc.h"))*/
+/*!export Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(include("gc.h"))*/
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(tp_instance_size, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)           \
+	Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize,                                    \
+	                                DeeGCSlab_GetMalloc(tp_instance_size, (void *(DCALL *)(void))(void *)(uintptr_t)(tp_instance_size)), \
+	                                DeeGCSlab_GetFree(tp_instance_size, (void (DCALL *)(void *))(Dee_funptr_t)NULL))
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
+
+/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link against
+ * dedicated allocator functions when doing so would require the creation
+ * of relocations that might cause loading times to become larger. */
+#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("alloc.h"))*/
+#else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC /*!export(include("alloc.h"))*/
+#endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
+#endif /* GUARD_DEEMON_GC_H */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
 
 
 typedef NONNULL_T((1)) void (DCALL *Dee_tp_destroy_t)(DeeObject *__restrict self);

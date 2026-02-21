@@ -23,7 +23,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeDbgSlab_MALLOC, DeeObject_Free, DeeObject_MALLOC, DeeSlab_FREE, DeeSlab_MALLOC, Dee_*alloc*, Dee_CollectMemory*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/alloc.h>              /* DeeObject_Free, DeeObject_MALLOC, DeeObject_FREE, Dee_*alloc*, Dee_CollectMemory*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/asm.h>                /* ASM16_*, ASM32_JMP, ASM_*, DeeAsm_NextInstr, instruction_t */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_*, DeeDDIObject, Dee_CODE_*, Dee_EXCEPTION_HANDLER_FFINALLY, Dee_code_metrics_init, Dee_except_handler, Dee_hostasm_code_init, code_addr_t, code_size_t, instruction_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER, DeeRelIntObject, RELINT_MODE_FADDR, RELINT_MODE_FSTCK, REL_HASSYM, R_DMN_*, SECTION_*, asm_*, assembler, ast_genasm, ast_genasm_one, ddi_*, handler_frame, userassembler_fini, userassembler_init */
@@ -485,7 +485,7 @@ INTERN void DCALL assembler_fini(void) {
 	{
 		struct asm_sym *iter, *next;
 		SLIST_FOREACH_SAFE(iter, &current_assembler.a_syms, as_link, next)
-			DeeSlab_FREE(iter);
+			DeeObject_FREE(iter);
 	}
 
 	/* Free up constant variables. */
@@ -524,7 +524,7 @@ INTERN bool DCALL asm_delunusedsyms(void) {
 	SLIST_REMOVEALL(&current_assembler.a_syms, &iter,
 	                asm_sym, as_link,
 	                iter->as_used == 0, {
-		DeeSlab_FREE(iter);
+		DeeObject_FREE(iter);
 		result = true;
 	});
 	return result;
@@ -540,9 +540,9 @@ asm_newsym_dbg(char const *file, int line)
 {
 	struct asm_sym *result;
 #ifdef NDEBUG
-	result = DeeSlab_MALLOC(struct asm_sym);
+	result = DeeObject_MALLOC(struct asm_sym);
 #else /* NDEBUG */
-	result = DeeDbgSlab_MALLOC(struct asm_sym, file, line);
+	result = DeeDbgObject_MALLOC(struct asm_sym, file, line);
 #endif /* !NDEBUG */
 	if unlikely(!result)
 		goto done;

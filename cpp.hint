@@ -953,6 +953,36 @@
 #define DeeSystem_IF_E3(errno,e1,e2,e3,...)
 #define DeeSystem_IF_E4(errno,e1,e2,e3,e4,...)
 
+
+
+//#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#define Dee_SLAB_CHUNKSIZE_FOREACH(cb,_) cb(12,_) cb(16,_) cb(20,_) cb(24,_) cb(32,_) cb(40,_)
+#define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) cb(12,_) cb(16,_) cb(24,_) cb(32,_)
+#define _Dee_PRIVATE_DeeSlab_API(n,_)\
+	void*DeeSlab_Malloc##n(void);\
+	void*DeeSlab_Calloc##n(void);\
+	void*DeeSlab_TryMalloc##n(void);\
+	void*DeeSlab_TryCalloc##n(void);\
+	void DeeSlab_Free##n(void*p);\
+	void*DeeDbgSlab_Malloc##n(char const*file,int line);\
+	void*DeeDbgSlab_Calloc##n(char const*file,int line);\
+	void*DeeDbgSlab_TryMalloc##n(char const*file,int line);\
+	void*DeeDbgSlab_TryCalloc##n(char const*file,int line);\
+	void DeeDbgSlab_Free##n(void*p,char const*file,int line);
+#define _Dee_PRIVATE_DeeGCObject_API(n,_)\
+	void*DeeGCSlab_Malloc##n(void);\
+	void*DeeGCSlab_Calloc##n(void);\
+	void*DeeGCSlab_TryMalloc##n(void);\
+	void*DeeGCSlab_TryCalloc##n(void);\
+	void DeeGCSlab_Free##n(void*p);\
+	void*DeeDbgGCSlab_Malloc##n(char const*file,int line);\
+	void*DeeDbgGCSlab_Calloc##n(char const*file,int line);\
+	void*DeeDbgGCSlab_TryMalloc##n(char const*file,int line);\
+	void*DeeDbgGCSlab_TryCalloc##n(char const*file,int line);\
+	void DeeDbgGCSlab_Free##n(void*p,char const*file,int line);
+
+//#else // CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+
 #define DeeSlab_ENUMERATE(func) func(0,4) func(1,5) func(2,6) func(3,8) func(4,10)
 #define _Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS(index,size) \
 	void*DeeSlab_Malloc##size(void);\
@@ -981,6 +1011,7 @@
 	void*DeeDbgGCObject_SlabTryMalloc##size(char const*file,int line){}\
 	void*DeeDbgGCObject_SlabTryCalloc##size(char const*file,int line){}\
 	void DeeDbgGCObject_SlabFree##size(void*restrict ptr,char const*file,int line){}
+//#endif // !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 
 #define DREF
 #define DWEAK
