@@ -1357,6 +1357,7 @@ continue_with_iter:
 	} else {
 		/* All done! */
 		gc_collect_release();
+		gc_collect_prelock_release();
 		return true;
 	}
 	switch (status) {
