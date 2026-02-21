@@ -2266,6 +2266,52 @@ err:
 	return -1;
 }
 
+INTERN NONNULL((1)) void
+(DCALL DeeThread_CheckInterruptNoIntSelf)(DeeThreadObject *__restrict self) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	(void)self;
+#else /* DeeThread_USE_SINGLE_THREADED */
+	uint32_t state;
+again_read_state:
+	state = atomic_read(&self->t_state);
+
+	/* Check if we're supposed to become suspended. */
+	if ((state & (Dee_THREAD_STATE_SUSPENDING |
+	              Dee_THREAD_STATE_SUSPENDED |
+	              Dee_THREAD_STATE_INTERRUPTED)) ==
+	    (Dee_THREAD_STATE_SUSPENDING | Dee_THREAD_STATE_INTERRUPTED)) {
+		atomic_inc(&self->t_int_vers); /* Indicate that we're checking for interrupts */
+
+		/* Enter the suspend-state */
+		atomic_or(&self->t_state, Dee_THREAD_STATE_SUSPENDED);
+		if (!atomic_cmpxch_weak(&self->t_state, state,
+		                        (state & ~Dee_THREAD_STATE_INTERRUPTED) |
+		                        Dee_THREAD_STATE_SUSPENDED))
+			goto again_read_state;
+		/* Preserve system errors across interrupt checks */
+		DeeSystemError_Push();
+		DeeFutex_WakeAll(&self->t_state);
+
+		/* Wait until the suspend-state ends */
+		for (;;) {
+			state = atomic_read(&self->t_state);
+			if (!(state & Dee_THREAD_STATE_SUSPENDING))
+				break;
+			DeeFutex_Wait32NoInt(&self->t_state, state);
+		}
+
+		/* Leave the suspend state */
+		atomic_and(&self->t_state, ~Dee_THREAD_STATE_SUSPENDED);
+		DeeFutex_WakeAll(&self->t_state);
+
+		/* Restore the system error context */
+		DeeSystemError_Pop();
+		goto again_read_state;
+	}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+}
+
+
 /* Check for an interrupt exception and throw it if there is one.
  * This function should be called before any blocking system call and is
  * invoked by the interpreter before execution of any JMP-instruction, or
@@ -2273,6 +2319,15 @@ err:
  * periodically during execution of any kind of infinite-loop). */
 PUBLIC WUNUSED int (DCALL DeeThread_CheckInterrupt)(void) {
 	return DeeThread_CheckInterruptSelf(DeeThread_Self());
+}
+
+/* Same as `DeeThread_CheckInterrupt()', but only handle interrupts that
+ * will not invoke user-code or throw errors. (e.g.: this can be used to
+ * handle thread suspend requests) */
+PUBLIC void (DCALL DeeThread_CheckInterruptNoInt)(void) {
+#ifndef DeeThread_USE_SINGLE_THREADED
+	DeeThread_CheckInterruptNoIntSelf(DeeThread_Self());
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 
@@ -2340,7 +2395,7 @@ forward_appexit_to_main_thread(/*inherit(always)*/ struct Dee_thread_interrupt *
 			atomic_or(&DeeThread_Main.ot_thread.t_state, Dee_THREAD_STATE_WAITING);
 			state |= Dee_THREAD_STATE_WAITING;
 		}
-	
+
 		/* Keep waking the thread in case it just went inside of a blocking system call. */
 		DeeFutex_Wait32NoIntTimed(&DeeThread_Main.ot_thread.t_state, state, THREAD_WAKE_DELAY);
 		if (version != atomic_read(&DeeThread_Main.ot_thread.t_int_vers))
@@ -2552,7 +2607,7 @@ handle_thread_error:
 			DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 			while (DeeError_Catch(&DeeError_Interrupt))
 				;
-	
+
 			/* If no further exceptions have occurred, set the thread-exit return value. */
 			if (!DeeError_Current()) {
 				_DeeThread_AcquireInterrupt(&self->ot_thread);
@@ -3040,7 +3095,7 @@ again:
 				atomic_or(&me->t_state, Dee_THREAD_STATE_WAITING);
 				state |= Dee_THREAD_STATE_WAITING;
 			}
-	
+
 			/* Keep waking the thread in case it just went inside of a blocking system call. */
 			DeeFutex_Wait32NoIntTimed(&me->t_state, state, THREAD_WAKE_DELAY);
 			if (version != atomic_read(&me->t_int_vers))

@@ -19,11 +19,11 @@
  */
 #ifdef __INTELLISENSE__
 #include "futex.c"
-#define DEFINE_DeeFutex_Wait32
+//#define DEFINE_DeeFutex_Wait32
 //#define DEFINE_DeeFutex_Wait64
 //#define DEFINE_DeeFutex_Wait32Timed
 //#define DEFINE_DeeFutex_Wait64Timed
-//#define DEFINE_DeeFutex_Wait32NoInt
+#define DEFINE_DeeFutex_Wait32NoInt
 //#define DEFINE_DeeFutex_Wait64NoInt
 //#define DEFINE_DeeFutex_Wait32NoIntTimed
 //#define DEFINE_DeeFutex_Wait64NoIntTimed
@@ -147,16 +147,16 @@ PUBLIC WUNUSED NONNULL((1)) int
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
                              )
 {
-#ifndef LOCAL_IS_NO_INTERRUPT
 #ifndef DeeFutex_USE_STUB
 	DeeThreadObject *caller = DeeThread_Self();
+#ifdef LOCAL_IS_NO_INTERRUPT
+#define LOCAL_interrupted_test() unlikely(DeeThread_WasInterruptedNoInt(caller))
+#define LOCAL_interrupted_work() DeeThread_CheckInterruptNoIntSelf(caller)
+#else /* LOCAL_IS_NO_INTERRUPT */
 #define LOCAL_interrupted_test() unlikely(DeeThread_WasInterrupted(caller))
 #define LOCAL_interrupted_work() __builtin_expect(DeeThread_CheckInterruptSelf(caller), 0)
-#else /* !DeeFutex_USE_STUB */
-#define LOCAL_interrupted_test() 0
-#define LOCAL_interrupted_work() 0
-#endif /* DeeFutex_USE_STUB */
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+#endif /* !DeeFutex_USE_STUB */
 
 #ifdef LOCAL_return_type_is_void
 #define LOCAL_return_0           return
@@ -194,7 +194,9 @@ PUBLIC WUNUSED NONNULL((1)) int
 #ifdef LOCAL_HAVE_timeout_nanoseconds
 	(void)timeout_nanoseconds;
 #endif /* LOCAL_HAVE_timeout_nanoseconds */
+#ifdef LOCAL_interrupted_work
 #ifdef LOCAL_IS_NO_INTERRUPT
+	LOCAL_interrupted_work();
 	SCHED_YIELD();
 	LOCAL_return_0;
 #else /* LOCAL_IS_NO_INTERRUPT */
@@ -205,6 +207,10 @@ PUBLIC WUNUSED NONNULL((1)) int
 		return result;
 	}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+#else /* LOCAL_interrupted_work */
+	SCHED_YIELD();
+	LOCAL_return_0;
+#endif /* !LOCAL_interrupted_work */
 
 #elif (defined(DeeFutex_USE_os_futex) || \
        (defined(DeeFutex_USE_os_futex_32_only) && LOCAL_sizeof_expected == 4))
@@ -213,21 +219,24 @@ PUBLIC WUNUSED NONNULL((1)) int
 	/* LINUX FUTEX IMPLEMENTATION                                           */
 	/************************************************************************/
 	int error;
-#if defined(EINTR) || defined(ENOMEM) || !defined(LOCAL_IS_NO_INTERRUPT)
 again_futex_wait:
-#endif /* EINTR || ENOMEM || !LOCAL_IS_NO_INTERRUPT */
 	os_futex_wait_begin(addr) {
 
 		/* Check for interrupts _while_ our thread is registered as being inside of a futex operation. */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifdef LOCAL_interrupted_work
 		if (LOCAL_interrupted_test()) {
 			os_futex_wait_break();
 			(void)os_futex_wakeall(addr);
+#ifdef LOCAL_IS_NO_INTERRUPT
+			LOCAL_interrupted_work();
+			goto again_futex_wait;
+#else /* LOCAL_IS_NO_INTERRUPT */
 			if (LOCAL_interrupted_work() == 0)
 				goto again_futex_wait;
 			return -1;
-		}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+		}
+#endif /* LOCAL_interrupted_work */
 		
 		/* Do the actual futex operation */
 #ifdef LOCAL_HAVE_timeout_nanoseconds
@@ -286,15 +295,20 @@ again_switch_nt_futex_implementation:
 again_futex_wait:
 		os_futex_wait_begin(addr) {
 			/* Check for interrupts _while_ our thread is registered as being inside of a futex operation. */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifdef LOCAL_interrupted_work
 			if (LOCAL_interrupted_test()) {
 				os_futex_wait_break();
 				(void)WakeByAddressAll(addr);
+#ifdef LOCAL_IS_NO_INTERRUPT
+				LOCAL_interrupted_work();
+				goto again_futex_wait;
+#else /* LOCAL_IS_NO_INTERRUPT */
 				if (LOCAL_interrupted_work() == 0)
 					goto again_futex_wait;
 				return -1;
-			}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+			}
+#endif /* LOCAL_interrupted_work */
 
 			bOK = WaitOnAddress(addr, &expected, LOCAL_sizeof_expected, LOCAL_dwTimeout);
 		}
@@ -327,16 +341,21 @@ again_call_AcquireSRWLockShared:
 		AcquireSRWLockShared(&ctrl->fc_nt_cond_crit.cc_lock);
 
 		/* Check for interrupts _while_ we're holding the SRW-lock */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifdef LOCAL_interrupted_work
 		if (LOCAL_interrupted_test()) {
 			ReleaseSRWLockShared(&ctrl->fc_nt_cond_crit.cc_lock);
 			WakeAllConditionVariable(&ctrl->fc_nt_cond_crit.cc_cond);
+#ifdef LOCAL_IS_NO_INTERRUPT
+			LOCAL_interrupted_work();
+			goto again_call_AcquireSRWLockShared;
+#else /* LOCAL_IS_NO_INTERRUPT */
 			if (LOCAL_interrupted_work() == 0)
 				goto again_call_AcquireSRWLockShared;
 			futex_controller_decref(ctrl);
 			return -1;
-		}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+		}
+#endif /* LOCAL_interrupted_work */
 
 		/* Check the condition which we're supposed to wait on. */
 		if (!LOCAL_should_wait()) {
@@ -388,15 +407,20 @@ again_call_inc_dwThreads:
 		atomic_inc(&ctrl->fc_nt_sem.sm_dwThreads);
 
 		/* Check for interrupts _while_ we're registered as a receiver */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifdef LOCAL_interrupted_work
 		if (LOCAL_interrupted_test()) {
 			atomic_dec(&ctrl->fc_nt_sem.sm_dwThreads);
+#ifdef LOCAL_IS_NO_INTERRUPT
+			LOCAL_interrupted_work();
+			goto again_call_inc_dwThreads;
+#else /* LOCAL_IS_NO_INTERRUPT */
 			if (LOCAL_interrupted_work() == 0)
 				goto again_call_inc_dwThreads;
 			futex_controller_decref(ctrl);
 			return -1;
-		}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+		}
+#endif /* LOCAL_interrupted_work */
 
 		/* Check the condition which we're supposed to wait on. */
 		if (!LOCAL_should_wait()) {
@@ -471,9 +495,7 @@ again_call_inc_dwThreads:
 		LOCAL_return_error(-1);
 
 #ifdef DeeFutex_USE_os_futex_32_only
-#if defined(EINTR) || defined(ENOMEM) || !defined(LOCAL_IS_NO_INTERRUPT)
 again_read_ctrl_word:
-#endif /* EINTR || ENOMEM || !LOCAL_IS_NO_INTERRUPT */
 	ctrl_word = atomic_read(&ctrl->fc_word);
 	/* NOTE: No need to set-up a OS futex wait list entry. Because we're using the
 	 *       control word of the futex controller for synchronization, an interrupting
@@ -485,15 +507,20 @@ again_read_ctrl_word:
 	 * sender incrementing `fc_word')! */
 
 	/* Check for interrupts _while_ our thread is registered as being inside of a futex operation. */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifdef LOCAL_interrupted_work
 	if (LOCAL_interrupted_test()) {
 		(void)os_futex_wakeall(&ctrl->fc_word);
+#ifdef LOCAL_IS_NO_INTERRUPT
+		LOCAL_interrupted_work();
+		goto again_read_ctrl_word;
+#else /* LOCAL_IS_NO_INTERRUPT */
 		if (LOCAL_interrupted_work() == 0)
 			goto again_read_ctrl_word;
 		futex_controller_decref(ctrl);
 		return -1;
-	}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+	}
+#endif /* LOCAL_interrupted_work */
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
@@ -538,22 +565,25 @@ again_read_ctrl_word:
 #endif /* DeeFutex_USE_os_futex_32_only */
 
 #ifdef DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t
-#if defined(EINTR) || defined(ENOMEM) || !defined(LOCAL_IS_NO_INTERRUPT)
 again_pthread_mutex_lock:
-#endif /* EINTR || ENOMEM || !LOCAL_IS_NO_INTERRUPT */
 	(void)pthread_mutex_lock(&ctrl->fc_mutx);
 
 	/* Check for interrupts _while_ we're holding a lock to `fc_mutx'. */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifdef LOCAL_interrupted_work
 	if (LOCAL_interrupted_test()) {
 		(void)pthread_mutex_unlock(&ctrl->fc_mutx);
 		(void)pthread_cond_broadcast(&ctrl->fc_cond);
+#ifdef LOCAL_IS_NO_INTERRUPT
+		LOCAL_interrupted_work();
+		goto again_pthread_mutex_lock;
+#else /* LOCAL_IS_NO_INTERRUPT */
 		if (LOCAL_interrupted_work() == 0)
 			goto again_pthread_mutex_lock;
 		futex_controller_decref(ctrl);
 		return -1;
-	}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+	}
+#endif /* LOCAL_interrupted_work */
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
@@ -639,23 +669,25 @@ again_pthread_mutex_lock:
 #endif /* DeeFutex_USE_pthread_cond_t_AND_pthread_mutex_t */
 
 #ifdef DeeFutex_USE_cnd_t_AND_mtx_t
-#if (defined(CONFIG_HAVE_thrd_nomem) || !defined(LOCAL_IS_NO_INTERRUPT) || \
-     (defined(CONFIG_HAVE_thrd_error) && (defined(EINTR) || defined(ENOMEM))))
 again_mtx_lock:
-#endif /* CONFIG_HAVE_thrd_nomem || !LOCAL_IS_NO_INTERRUPT || (CONFIG_HAVE_thrd_error && (EINTR || ENOMEM)) */
 	(void)mtx_lock(&ctrl->fc_mutx);
 
 	/* Check for interrupts _while_ we're holding a lock to `fc_mutx'. */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifdef LOCAL_interrupted_work
 	if (LOCAL_interrupted_test()) {
 		(void)mtx_unlock(&ctrl->fc_mutx);
 		(void)cnd_broadcast(&ctrl->fc_cond);
+#ifdef LOCAL_IS_NO_INTERRUPT
+		LOCAL_interrupted_work();
+		goto again_mtx_lock;
+#else /* LOCAL_IS_NO_INTERRUPT */
 		if (LOCAL_interrupted_work() == 0)
 			goto again_mtx_lock;
 		futex_controller_decref(ctrl);
 		return -1;
-	}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+	}
+#endif /* LOCAL_interrupted_work */
 
 	/* Check if we're actually supposed to wait */
 	if (!LOCAL_should_wait()) {
@@ -777,15 +809,20 @@ again_inc_n_threads:
 	atomic_inc(&ctrl->fc_n_threads);
 
 	/* Check for interrupts _while_ we're registered as a receiver */
-#ifndef LOCAL_IS_NO_INTERRUPT
+#ifndef LOCAL_interrupted_work
 	if (LOCAL_interrupted_test()) {
 		atomic_dec(&ctrl->fc_n_threads);
+#ifdef LOCAL_IS_NO_INTERRUPT
+		LOCAL_interrupted_work();
+		goto again_inc_n_threads;
+#else /* LOCAL_IS_NO_INTERRUPT */
 		if (LOCAL_interrupted_work() == 0)
 			goto again_inc_n_threads;
 		futex_controller_decref(ctrl);
 		return -1;
-	}
 #endif /* !LOCAL_IS_NO_INTERRUPT */
+	}
+#endif /* !LOCAL_interrupted_work */
 
 	/* Check the condition which we're supposed to wait on. */
 	if (!LOCAL_should_wait()) {

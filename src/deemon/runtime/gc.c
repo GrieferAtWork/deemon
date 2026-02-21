@@ -27,6 +27,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
 #include <deemon/asm.h>                /* ASM_RET_NONE, instruction_t */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
+#include <deemon/system.h>               /* return_bool, return_false, return_true */
 #include <deemon/class.h>              /* instance_clear, instance_tclear */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunctionObject, DeeFunction_*, Dee_CODE_FFINALLY, instruction_t */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -72,6 +73,17 @@
 #else /* !NDEBUG */
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
+
+#if !defined(NDEBUG) && 0
+#if 0
+#define GC_TRACE(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define GC_TRACE(...) Dee_DPRINTF(__VA_ARGS__)
+#endif
+#else
+#define GC_TRACE(...) (void)0
+#define GC_TRACE_IS_NOOP
+#endif
 
 DECL_BEGIN
 
@@ -211,9 +223,15 @@ PRIVATE Dee_atomic_lock_t gc_lock = Dee_ATOMIC_LOCK_INIT;
 #define gc_lock_available()  Dee_atomic_lock_available(&gc_lock)
 #define gc_lock_acquired()   Dee_atomic_lock_acquired(&gc_lock)
 #define gc_lock_tryacquire() Dee_atomic_lock_tryacquire(&gc_lock)
-#define gc_lock_acquire()    Dee_atomic_lock_acquire(&gc_lock)
 #define gc_lock_waitfor()    Dee_atomic_lock_waitfor(&gc_lock)
 #define _gc_lock_release()   Dee_atomic_lock_release(&gc_lock)
+
+PRIVATE void DCALL gc_lock_acquire(void) {
+	while (!gc_lock_tryacquire()) {
+		DeeThread_CheckInterruptNoInt();
+		SCHED_YIELD();
+	}
+}
 
 /* Called to (try to) collect GC objects after "gg_collect_on" of some
  * GC generation was reached. This function is must be called without
@@ -445,11 +463,6 @@ PRIVATE void DCALL gc_lock_reap(unsigned int flags) {
 		gc_lock_reap_and_release(flags);
 }
 
-PRIVATE bool DCALL gc_lock_force_reap(unsigned int flags) {
-	gc_lock_acquire();
-	return gc_lock_reap_and_release(flags);
-}
-
 PRIVATE void DCALL gc_lock_acquire_and_reap(unsigned int flags) {
 	unsigned int status;
 again:
@@ -479,6 +492,14 @@ DeeGC_Track(DREF DeeObject *__restrict ob) {
 	bool must_collect;
 	struct Dee_gc_head *head = DeeGC_Head(ob);
 	ASSERT(!((uintptr_t)&head->gc_next & Dee_GC_FLAG_MASK));
+#ifndef GC_TRACE_IS_NOOP
+	if (atomic_read(&DeeThread_Self()->t_state) & Dee_THREAD_STATE_SHUTDOWNINTR) {
+		GC_TRACE("%llu: %p: DeeGC_Track(%s, %p)\n",
+		         DeeSystem_GetWalltime(), DeeThread_Self(),
+		         ob->ob_type->tp_name, ob);
+	}
+#endif /* !GC_TRACE_IS_NOOP */
+
 	if (!gc_lock_tryacquire()) {
 		/* Setup as a pending insert */
 		DeeObject *next;
@@ -788,6 +809,8 @@ PRIVATE WUNUSED bool DCALL
 gc_collect_acquire(bool allow_interrupts_and_errors) {
 	DeeObject *pending_remove;
 	DeeThreadObject *threads;
+	GC_TRACE("%llu: %p: %s(%d) : HERE%s\n", DeeSystem_GetWalltime(), DeeThread_Self(), __FILE__, __LINE__,
+	         DeeThread_WasInterrupted(DeeThread_Self()) ? " [INTERRUPT]" : "");
 again:
 	/* Wait for "gc_lock" and "gc_remove_modifying" to settle.
 	 *
@@ -795,12 +818,21 @@ again:
 	 * probability of the GC needing to be reaped once we've
 	 * suspended other threads below! */
 	for (;;) {
-		while (!gc_lock_available() || atomic_read(&gc_remove_modifying))
+		while (!gc_lock_available() || atomic_read(&gc_remove_modifying)) {
+			if (allow_interrupts_and_errors) {
+				if (DeeThread_CheckInterrupt())
+					goto err;
+			} else {
+				DeeThread_CheckInterruptNoInt();
+			}
 			SCHED_YIELD();
+		}
 		if (!atomic_read(&gc_mustreap))
 			break;
-		if (!gc_lock_force_reap(DeeGC_TRACK_F_NOCOLLECT))
-			break;
+		if (!gc_lock_tryacquire())
+			continue;
+		gc_lock_reap_and_release(DeeGC_TRACK_F_NOCOLLECT);
+		break;
 	}
 
 	/* Suspend all other threads (or at least *try* to) */
@@ -861,11 +893,15 @@ again:
 	}
 
 	ASSERT(!DeeThread_IsMultiThreaded);
+	GC_TRACE("%llu: %p: %s(%d) : HERE%s\n", DeeSystem_GetWalltime(), DeeThread_Self(), __FILE__, __LINE__,
+	         DeeThread_WasInterrupted(DeeThread_Self()) ? " [INTERRUPT]" : "");
 	return true;
 resume_threads_and_try_again:
 	DeeThread_ResumeAll();
 	goto again;
 err:
+	GC_TRACE("%llu: %p: %s(%d) : HERE%s\n", DeeSystem_GetWalltime(), DeeThread_Self(), __FILE__, __LINE__,
+	         DeeThread_WasInterrupted(DeeThread_Self()) ? " [INTERRUPT]" : "");
 	return false;
 }
 
@@ -1260,6 +1296,7 @@ continue_with_next_generation:;
 
 	/* Collect memory in GC generations */
 	status = gc_collect_threshold_generations_r(&gc_gen0);
+	GC_TRACE("%llu: %p: %s(%d) : COLLECTED: %u\n", DeeSystem_GetWalltime(), DeeThread_Self(), __FILE__, __LINE__, status);
 	switch (status) {
 	case GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING:
 		/* Nothing could be collected (must objects were moved as they should) */
@@ -1316,10 +1353,11 @@ continue_with_iter:
 			flags |= GC_GENERATION_COLLECT_OR_UNLOCK__F_MOVE_REACHABLE;
 		ASSERT(!DeeThread_IsMultiThreaded);
 		status = gc_generation_collect_or_unlock(iter, &count, flags);
+		GC_TRACE("%llu: %p: %s(%d) : COLLECTED: %u: %lu\n", DeeSystem_GetWalltime(), DeeThread_Self(), __FILE__, __LINE__, status, (unsigned long)count);
 	} else {
-		/* Stop once all overflowing objects have been settled into appropriate generations */
-		status = GC_GENERATION_COLLECT_OR_UNLOCK__SUCCESS;
+		/* All done! */
 		gc_collect_release();
+		return true;
 	}
 	switch (status) {
 	case GC_GENERATION_COLLECT_OR_UNLOCK__NOTHING:

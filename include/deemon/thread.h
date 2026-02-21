@@ -362,6 +362,12 @@ typedef struct Dee_thread_object {
 #define DeeThread_WasInterrupted(self) (__hybrid_atomic_load(&(self)->t_state, __ATOMIC_ACQUIRE) & Dee_THREAD_STATE_INTERRUPTED)
 #define DeeThread_WasDetached(self)    (!(__hybrid_atomic_load(&(self)->t_state, __ATOMIC_ACQUIRE) & Dee_THREAD_STATE_HASTHREAD))
 #define DeeThread_HasCrashed(self)     ((DeeThread_HasTerminated(self) || (self) == DeeThread_Self()) && (self)->t_exceptsz > 0)
+/* Check if there's work to-be done that can be handled by `DeeThread_CheckInterruptNoInt()' */
+#define DeeThread_WasInterruptedNoInt(self)                       \
+	((__hybrid_atomic_load(&(self)->t_state, __ATOMIC_ACQUIRE) &  \
+	  (Dee_THREAD_STATE_SUSPENDING | Dee_THREAD_STATE_SUSPENDED | \
+	   Dee_THREAD_STATE_INTERRUPTED)) ==                          \
+	 (Dee_THREAD_STATE_SUSPENDING | Dee_THREAD_STATE_INTERRUPTED))
 #endif /* !CONFIG_NO_THREADS */
 
 #define _DeeThread_AcquireInterrupt(self) _DeeThread__AcquireStateLock(self, Dee_THREAD_STATE_INTERRUPTING)
@@ -473,21 +479,36 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self);
  * only those that jump backwards in code (aka. is guarantied to be checked
  * periodically during execution of any kind of infinite-loop). */
 DFUNDEF WUNUSED int (DCALL DeeThread_CheckInterrupt)(void);
+/* Same as `DeeThread_CheckInterrupt()', but only handle interrupts that
+ * will not invoke user-code or throw errors. (e.g.: this can be used to
+ * handle thread suspend requests) */
+DFUNDEF void (DCALL DeeThread_CheckInterruptNoInt)(void);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Same as `DeeThread_CheckInterrupt()', but faster
  * if the caller already knows their own thread object. */
 INTDEF WUNUSED NONNULL((1)) int
-(DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict thread_self);
+(DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict self);
+INTDEF NONNULL((1)) void
+(DCALL DeeThread_CheckInterruptNoIntSelf)(DeeThreadObject *__restrict self);
 #ifndef __OPTIMIZE_SIZE__
 /* Since `DeeThread_Self()' is marked as ATTR_CONST, in many cases where the calling function
  * already knows about its current thread from a previous call to `DeeThread_Self()', the compiler
  * will be able to optimize the secondary lookup away, making the code slightly faster. */
-#define DeeThread_CheckInterrupt() DeeThread_CheckInterruptSelf(DeeThread_Self())
+#define DeeThread_CheckInterrupt()      DeeThread_CheckInterruptSelf(DeeThread_Self())
+#define DeeThread_CheckInterruptNoInt() DeeThread_CheckInterruptNoIntSelf(DeeThread_Self())
 #endif /* !__OPTIMIZE_SIZE__ */
 #else /* CONFIG_BUILDING_DEEMON */
-#define DeeThread_CheckInterruptSelf(self) DeeThread_CheckInterrupt()
+#define DeeThread_CheckInterruptSelf(self)      DeeThread_CheckInterrupt()
+#define DeeThread_CheckInterruptNoIntSelf(self) DeeThread_CheckInterruptNoInt()
 #endif /* !CONFIG_BUILDING_DEEMON */
+
+#ifdef CONFIG_NO_THREADS
+#undef DeeThread_CheckInterruptNoInt
+#undef DeeThread_CheckInterruptNoIntSelf
+#define DeeThread_CheckInterruptNoInt()         (void)0
+#define DeeThread_CheckInterruptNoIntSelf(self) (void)0
+#endif /* CONFIG_NO_THREADS */
 
 /* Suspend/resume execution of the given thread.
  * WARNING: Do _NOT_ expose these functions to user-code.

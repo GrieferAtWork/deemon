@@ -220,7 +220,7 @@ GCSet_GetMarker(GCSet *self, DeeObject *ob) {
 /* @return: 1 : Already present
  * @return: 0 : Success, or already present
  * @return: -1: OOM failure (no error was thrown) */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE NONNULL((1, 2)) int DCALL
 GCSet_SetMarker(GCSet *self, DeeObject *ob, bool marker) {
 	Dee_hash_t i, perturb, hash = DeeObject_HashGeneric(ob);
 	ASSERT((uintptr_t)marker == 0 || (uintptr_t)marker == 1);
