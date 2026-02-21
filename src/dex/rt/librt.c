@@ -45,7 +45,7 @@
 #include <deemon/file.h>              /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
 #include <deemon/filetypes.h>         /* DeeFilePrinter_Type, DeeFileReader_Type, DeeFileWriter_Type, DeeMemoryFile_Type */
 #include <deemon/float.h>             /* DeeFloat_Type */
-#include <deemon/gc.h>                /* DeeGCEnumTracked_Singleton, Dee_gc_head_link */
+#include <deemon/gc.h>                /* DeeGCEnumTracked_Singleton, Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include <deemon/hashset.h>           /* DeeHashSet_Type */
 #include <deemon/instancemethod.h>    /* DeeInstanceMethod_Type */
 #include <deemon/int.h>               /* DeeInt_* */

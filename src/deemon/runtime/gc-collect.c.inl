@@ -28,6 +28,7 @@
 #include <deemon/format.h>       /* PRFuSIZ */
 #include <deemon/gc.h>           /* DeeGC_Head, DeeGC_TRACK_F_NOCOLLECT, Dee_GC_*, Dee_gc_head */
 #include <deemon/object.h>       /* DeeObject_Visit, Dee_Decref */
+#include <deemon/thread.h>       /* DeeThread_IsMultiThreaded */
 #include <deemon/type.h>         /* DeeType_GetName */
 #include <deemon/types.h>        /* DeeObject, Dee_TYPE, Dee_refcnt_t */
 #include <deemon/util/atomic.h>  /* atomic_* */

@@ -34,7 +34,7 @@
 #include <deemon/alloc.h>           /* Dee_ReleaseSystemMemory, Dee_TryReleaseSystemMemory */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E3, cnd_*, gettimeofday, gettimeofday64, mtx_lock, mtx_unlock, pthread_*, sem_*, thrd_* */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterruptSelf, DeeThread_Self, DeeThread_WasInterrupted */
+#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterruptNoIntSelf, DeeThread_CheckInterruptSelf, DeeThread_Self, DeeThread_WasInterrupted, DeeThread_WasInterruptedNoInt */
 #include <deemon/types.h>           /* DREF */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/futex.h>      /* DeeFutex_* */
