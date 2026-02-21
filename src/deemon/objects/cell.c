@@ -29,7 +29,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
-#include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_Track */
+#include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */

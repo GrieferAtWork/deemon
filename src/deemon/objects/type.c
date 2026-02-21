@@ -34,7 +34,7 @@
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>               /* DeeFileType_Type */
 #include <deemon/format.h>             /* DeeFormat_PrintStr, DeeFormat_Printf */
-#include <deemon/gc.h>                 /* DeeGC_Track */
+#include <deemon/gc.h>                 /* DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_NewUInt */
 #include <deemon/kwds.h>               /* DeeKwds*, Dee_kwds_entry */
 #include <deemon/map.h>                /* DeeMapping_Type */

@@ -25,7 +25,7 @@
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 
-#include <hybrid/typecore.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #if __SIZEOF_POINTER__ == 4
 #define Dee_SLAB_CHUNKSIZE_MIN 12

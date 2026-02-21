@@ -35,15 +35,18 @@
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
-#include "types.h"            /* DREF, DeeObject, Dee_AsObject */
-#include "util/slab-config.h" /* DREF, DeeObject, Dee_AsObject */
+#include "types.h"            /* DREF, DeeObject, Dee_AsObject, Dee_funptr_t */
+#include "util/slab-config.h" /* Dee_SLAB_CHUNKSIZE_GC_FOREACH, Dee_SLAB_CHUNKSIZE_MAX */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
 
+/* To satisfy "fixincludes" (these includes are intentionally missing) */
+/*!fixincludes fake_include "type.h" // CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO */
+
 #ifndef __INTELLISENSE__
-#include "alloc.h" /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, DeeSlab_ENUMERATE, DeeSlab_Invoke */
+#include "alloc.h" /* DeeSlab_ENUMERATE, DeeSlab_Invoke */
 #else /* !__INTELLISENSE__ */
 DECL_BEGIN
 #define _Dee_MalloccBufsize(elem_count, elem_size)                              ((elem_count) * (elem_size))                             /*!export-*/

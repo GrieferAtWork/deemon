@@ -34,7 +34,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/float.h>           /* DeeFloat_Type */
 #include <deemon/format.h>          /* PRFuSIZ */
-#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_FREE, DeeGC_TRACK */
+#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_FREE, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/mro.h>             /* DeeObject_TGenericIterAttr, Dee_attrhint, Dee_attriter, Dee_attriter_initempty, Dee_attriterchain_builder, Dee_attriterchain_builder_* */
 #include <deemon/none.h>            /* DeeNone_Check, DeeNone_Type, Dee_None */

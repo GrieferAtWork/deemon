@@ -29,7 +29,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/format.h>             /* DeeFormat_Printf, PRFdSIZ */
-#include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Singleton */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */

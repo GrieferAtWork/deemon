@@ -42,7 +42,7 @@
 #include <stdint.h>  /* uint16_t, uint32_t, uint64_t, uintptr_t */
 
 #ifndef __INTELLISENSE__
-#include "alloc.h"  /* DeeSlab_* */
+#include "alloc.h"  /* DeeObject_* */
 #include "object.h" /* DeeObject_NewPack, _DeeRefcnt_* */
 #endif /* !__INTELLISENSE__ */
 

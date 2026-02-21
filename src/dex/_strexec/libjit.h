@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_FFree, DeeObject_MALLOC */
+#include <deemon/alloc.h>           /* DeeObject_* */
 #include <deemon/module.h>          /* DeeModuleObject, Dee_module_symbol */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_XDecref, Dee_hash_t, ITER_DONE, OBJECT_HEAD */
 #include <deemon/string.h>          /* Dee_unicode_printer */

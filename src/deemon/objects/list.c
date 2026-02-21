@@ -29,7 +29,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/format.h>             /* PRFuSIZ */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, DeeGC_Track */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_Check, DeeInt_NewSize */
 #include <deemon/list.h>               /* DeeListObject, DeeList_*, _DeeList_SetAlloc */
 #include <deemon/method-hints.h>       /* DeeMA_*, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */

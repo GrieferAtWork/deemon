@@ -32,7 +32,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnboundAttr, DeeRT_ErrUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>             /* DeeFormat_*, PRFu16 */
-#include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/kwds.h>               /* DeeKwBlackList_Decref */
 #include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_module_* */

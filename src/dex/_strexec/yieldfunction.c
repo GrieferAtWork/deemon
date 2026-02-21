@@ -29,7 +29,7 @@
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, _Dee_MallococBufsize */
 #include <deemon/error.h>           /* DeeError_*, ERROR_HANDLED_INTERRUPT, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>          /* PRFu16 */
-#include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>              /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/none.h>            /* DeeNone_Check */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_XDecref, Dee_XIncref, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */

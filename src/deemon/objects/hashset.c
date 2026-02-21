@@ -30,7 +30,7 @@
 #include <deemon/error-rt.h>           /* DeeRT_ErrEmptySequence */
 #include <deemon/float.h>              /*  */
 #include <deemon/format.h>             /* DeeFormat_PRINT */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/hashset.h>            /* DeeHashSetObject, DeeHashSet_*, Dee_hashset_item */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/method-hints.h>       /* DeeMA_*, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */

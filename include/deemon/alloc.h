@@ -52,17 +52,17 @@
 
 #include "api.h"
 
-#include "types.h" /* Dee_AsObject, Dee_funptr_t */
-#include "util/slab-config.h"
+#include "types.h"            /* Dee_AsObject, Dee_funptr_t */
+#include "util/slab-config.h" /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_MAX */
 
 #ifdef __CC__
 #include <hybrid/__debug-alignment.h> /* __NO_hybrid_dbg_alignment, __hybrid_dbg_alignment_disable, __hybrid_dbg_alignment_enable */
 #include <hybrid/__overflow.h>        /* __hybrid_overflow_uadd, __hybrid_overflow_umul */
-#include <hybrid/host.h>              /* __linux__, __pic__, __unix__ */
+#include <hybrid/host.h>              /* __linux__, __unix__ */
 #include <hybrid/typecore.h>          /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 /*!fixincludes fake_include "system-features.h" // _alloca, _msize, malloc, malloc_usable_size */
-/*!fixincludes fake_include "type.h"            // Dee_TYPE_CONSTRUCTOR_INIT_* */
+/*!fixincludes fake_include "type.h"            // CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_* */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */

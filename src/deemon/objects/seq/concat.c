@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrIndexOutOfBounds, DeeRT_ErrIntegerOverflowUAdd */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_MISSING, Dee_COMPARE_ERR, Dee_CompareNe, Dee_Decref*, Dee_HAS_*, Dee_Incref, Dee_Movprefv, Dee_Movrefv, Dee_foreach_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */

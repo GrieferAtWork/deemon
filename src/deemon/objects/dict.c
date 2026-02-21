@@ -29,7 +29,7 @@
 #include <deemon/dict.h>               /* DeeDictObject, DeeDict_*, Dee_dict_item, _DeeDict_* */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/map.h>                /* DeeMapping_Type */

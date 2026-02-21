@@ -32,7 +32,7 @@
 #include <deemon/error_types.h>        /* DeeError_Interrupt_instance, DeeSignalObject */
 #include <deemon/file.h>               /* Dee_fd_osfhandle_GETSET */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFd64 */
-#include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_CALLOC, DeeGC_Track */
+#include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_CALLOC, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/module.h>             /* DeeModule_GetShortName */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */

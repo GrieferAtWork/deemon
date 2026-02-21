@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/method-hints.h>       /* DeeMH_seq_enumerate_index_reverse_t, DeeMH_seq_foreach_reverse_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_XDecref, Dee_foreach_pair_t, Dee_foreach_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptyIterator */

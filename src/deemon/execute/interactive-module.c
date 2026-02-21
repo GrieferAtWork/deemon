@@ -37,7 +37,7 @@
 #include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeRootScopeObject, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, current_scope, symbol */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INTERACTIVE_MODE_FONLYBASEFILE, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTEXPR, Dee_MODULE_INTERACTIVE_MODE_FYIELDROOTSTMT, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_compiler_options, Dee_module_* */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/string.h>             /* DeeString*, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */

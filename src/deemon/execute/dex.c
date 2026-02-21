@@ -34,7 +34,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, Dee_ERROR_HANDLED_RESTORE */
 #include <deemon/format.h>             /* Dee_sprintf, PRFuSIZ */
-#include <deemon/gc.h>                 /* DeeGCObject_CALLOC, DeeGC_Track */
+#include <deemon/gc.h>                 /* DeeGCObject_CALLOC, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, DeeSystem_DlOpen_USE_LoadLibrary, DeeSystem_DlOpen_USE_dlopen, dl*, memcpyc, strcmp, strlen */
 #include <deemon/system.h>             /* DeeSystem_DlClose, DeeSystem_DlSym */

@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* return_bool, return_false */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
-#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
+#include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/map.h>                /* DeeMap_OperatorContainsAsBool, DeeMapping_NewEmpty, DeeMapping_Type, Dee_EmptyMapping */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef */

@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/exec.h>               /* DeeExec_GetHome, DeeModule_*, Dee_GetArgv */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
-#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_gc_head, Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_gc_head, Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include <deemon/int.h>                /* DeeInt_NewUInt128 */
 #include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_MODULE_STRUCT_EX, Dee_MODULE_SYMBOL_EQUALS_STR, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_*, Dee_static_module_struct, _Dee_MODULE_* */
 #include <deemon/mro.h>                /* DeeObject_GenericFindAttrInfoStringLenHash, DeeObject_TGenericFindAttr, DeeObject_TGenericIterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRINFO_MODSYM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrperm_t, Dee_attrspec */
