@@ -624,32 +624,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 
-
-/* TODO: "CONFIG_EXPERIMENTAL_REWORKED_GC" now means that:
- * - "tp_free" is **always** called on an object's original type
- * - Previously "tp_free" always had to be able to also free objects of sub-classes,
- *   where there was a possibility that those objects were larger than the object
- *   some "tp_free" was actually designed for.
- * - This put a **HUGE** dampener on our slab allocator, since free functions still
- *   had to check the actual object size, and forward to a different free function
- *   if the size doesn't match
- * --> This is no longer necessary now, meaning that:
- *
- * "CONFIG_EXPERIMENTAL_REWORKED_GC" has just (inadvertently) opened the
- * floodgates for a new slab allocator implementation, and more importantly:
- * - one that doesn't need to be able to safely handle non-slab memory...
- * - ... or slab memory from slabs of greater size
- * - And thinking this a bit further: that also means there's no NO REASON
- *   AT ALL to needing to be able to detect slab memory!
- *
- * XXX: Nope nope nope... Yes, there *should* be a new slab allocator, and
- *      slab-free functions don't have to work with slabs of larger sizes,
- *      but they **DO** have to work with `DeeHeap_GetRegionOf()', since
- *      objects allocated by slabs should probably stay serializable as
- *      they are right now (iow: they need to be able to live in a DEC
- *      file mapping, meaning they have to be able to forward pointers to
- *      `Dee_Free()' (at least) when those pointers are FLAG4 heap blocks)
- */
 /************************************************************************/
 
 
