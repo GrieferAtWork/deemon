@@ -393,7 +393,20 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 				 *       implementors of `tp_free' are aware of its volatile
 				 *       nature that may only be interpreted as a free-hint).
 				 * NOTE: This even applies to the slab allocators used by `DeeObject_MALLOC'! */
+#if 1 /* TODO: This is only really needed for `DeeStructObject_Fini()', which is honestly quite annoying.
+       *       Why not keep going with `Dee_TF_TPVISIT' and have that flag also add a type-argument to
+       *       this operator? It would make sense, allow us to skip the check by just having a different
+       *       default `tp_destroy' impl, and mean that this write isn't necessary for normal types.
+       * -> It would also open up the door where we could guaranty that "ob_type" is **NEVER** changed,
+       *    not even during object destruction (since "tp_finalize" has already done the heavy lifting
+       *    there in terms of user-defined destructors being invoked with an object's original type)
+       * -> It would also give even more power to "tp_free" and slab-based allocators, since there would
+       *    no longer be a requirement for `DeeSlab_FreeN' to be able to free `DeeSlab_FreeM' | M > N,
+       *    since (CONFIG_EXPERIMENTAL_REWORKED_GC already allows this) we can now guaranty that custom
+       *    object allocator tp_free functions are **always** invoked for the **original** type (i.e.:
+       *    the one that originally allocated the object)! */
 				((GenericObject *)self)->ob_type = type;
+#endif
 				COMPILER_WRITE_BARRIER();
 				(*type->tp_init.tp_dtor)(self);
 				COMPILER_READ_BARRIER();
