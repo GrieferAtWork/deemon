@@ -44,7 +44,9 @@ ClCompile.BasicRuntimeChecks = Default
 #define ATTR_ALLOC_ALIGN(pari) /* Nothing */
 
 #ifndef __INTELLISENSE__
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #include "old-slab.c.inl"
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
@@ -8501,10 +8503,12 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) voi
  * - If `ptr' is `NULL' or a heap pointer that does not belong
  *   to a custom heap region, `NULL' is returned instead.
  * - If `ptr' isn't a heap pointer, behavior is undefined.
+ * #ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
  * - Unlike `Dee_MallocUsableSize()', this function has another special
  *   case where behavior is also well-defined: if deemon was built with
  *   object slabs enabled (!CONFIG_NO_OBJECT_SLABS), and the given `ptr'
  *   points into the special slab-heap, then `NULL' is always returned.
+ * #endif // !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
  *
  * @return: * :   The heap region belonging to `ptr'
  * @return: NULL: Given `ptr' is `NULL' or does not belong to a custom heap region */
@@ -8512,9 +8516,11 @@ PUBLIC ATTR_PURE WUNUSED struct Dee_heapregion *DCALL
 DeeHeap_GetRegionOf(void *ptr) {
 #if FLAG4_BIT_INDICATES_HEAP_REGION
 	struct Dee_heapregion *result = NULL;
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef IS_SLAB_POINTER
 	if (!IS_SLAB_POINTER(ptr))
 #endif /* IS_SLAB_POINTER */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	{
 		mchunkptr p = mem2chunk(ptr);
 		if (flag4inuse(p)) {

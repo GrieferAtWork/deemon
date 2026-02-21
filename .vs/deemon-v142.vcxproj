@@ -245,6 +245,7 @@
 		<ClInclude Include="..\include\deemon\util\rlock.h" />
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h" />
 		<ClInclude Include="..\include\deemon\util\slab-config.h" />
+		<ClInclude Include="..\include\deemon\util\slab.h" />
 		<ClInclude Include="..\include\deemon\util\weakref.h" />
 		<ClInclude Include="..\include\deemon\variant.h" />
 		<ClInclude Include="..\include\deemon\weakref.h" />
@@ -496,6 +497,7 @@
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h" />
 		<ClInclude Include="..\src\deemon\runtime\refcnt-destroy.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h" />
+		<ClInclude Include="..\src\deemon\runtime\slab-sized.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\strings.h" />
 		<ClInclude Include="..\src\deemon\system\futex-controller-new.c.inl" />
 		<ClInclude Include="..\src\deemon\system\futex-wait.c.inl" />

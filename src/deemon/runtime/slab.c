@@ -22,262 +22,341 @@
 
 #include <deemon/api.h>
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
+#include <deemon/alloc.h>
+#include <deemon/gc.h>
+#include <hybrid/host.h>
+#include <hybrid/align.h>
+#include <deemon/util/slab.h>
+#include <deemon/util/slab-config.h>
+
+#if defined(Dee_SLAB_CHUNKSIZE_MAX) || defined(__DEEMON__)
 DECL_BEGIN
 
-/* ==== Discussion on slabs
- *
- * "CONFIG_EXPERIMENTAL_REWORKED_GC" now means that:
- * - "tp_free" is **always** called on an object's original type
- * - Previously "tp_free" always had to be able to also free objects of sub-classes,
- *   where there was a possibility that those objects were larger than the object
- *   some "tp_free" was actually designed for.
- * - This put a **HUGE** dampener on our slab allocator, since free functions still
- *   had to check the actual object size, and forward to a different free function
- *   if the size doesn't match
- * --> This is no longer necessary now, meaning that:
- *
- * "CONFIG_EXPERIMENTAL_REWORKED_GC" has just (inadvertently) opened the
- * floodgates for a new slab allocator implementation, and more importantly:
- * - one that doesn't need to be able to safely handle non-slab memory...
- * - ... or slab memory from slabs of greater size
- * - And thinking this a bit further: that also means there's no NO REASON
- *   AT ALL to needing to be able to detect slab memory!
- *
- * XXX: Nope nope nope... Yes, there *should* be a new slab allocator, and
- *      slab-free functions don't have to work with slabs of larger sizes,
- *      but they **DO** have to work with `DeeHeap_GetRegionOf()', since
- *      objects allocated by slabs should probably stay serializable as
- *      they are right now (iow: they need to be able to live in a DEC
- *      file mapping, meaning they have to be able to forward pointers to
- *      `Dee_Free()' (at least) when those pointers are FLAG4 heap blocks)
- *      Alternatively, dec writers need special handling for objects using
- *      slab allocators, and lay out the produced file such that offsets
- *      will line up with expected slab offset, and on-top of that, file
- *      mappings loaded via heap would also need to fulfill some minimum
- *      alignment requirements... (Ugh: none of that sounds good, though)
- * But I really want the new slab allocator to **NOT** require a function
- * like `IS_SLAB_POINTER()', which is what's preventing the current slab
- * allocator from growing beyond a specific memory region pre-defined when
- * deemon starts.
- *
- * Hmm. The more I think about it, the only real possibility here is to
- * have a slab allocation system that is also serializable, because:
- * - the only other way to have free function that would also work on
- *   a dec file mapping would be to use out-of-band data to determine
- *   if a pointer belongs to a slab, or a dec file, which would imply
- *   a new `IS_SLAB_POINTER()' function (which I don't want).
- * - However: by serializing slabs into dec files, those slabs would
- *   need to be written as whole pages, which would also imply:
- *   1. Lots of wasted space (since at least 4096 bytes for every distinct
- *      slab size used by an object written to a dec file)
- *   2. The fallback malloc()+read() impl of DeeMapFile would need to
- *      enforce proper alignment of the loaded dec file instead of being
- *      able to just use the heap's natural alignment, and the internal
- *      buffer of `DeeDecWriter' would have to do the same.
- *   - The second point isn't that big of a deal
- *   - The first point *maybe* could be resolved if the this new slab
- *     format could support mixed-size slabs (should be doable so-long
- *     the slab doesn't get a free/usable_size function, by simply always
- *     allocating (e.g.) pointer-sized slab pages, and only marking the
- *     first word of any larger allocation as in-use, even though the
- *     other words are actually also in-use)
- */
+#define _DeeSlab_EXISTS_CB(n, N) || n == (N)
+#define DeeSlab_EXISTS(N)    (0 Dee_SLAB_CHUNKSIZE_FOREACH(_DeeSlab_EXISTS_CB, N))
+#define DeeSlab_GC_EXISTS(N) (0 Dee_SLAB_CHUNKSIZE_GC_FOREACH(_DeeSlab_EXISTS_CB, N))
+
+/* Do some sanity assertions on the slab configuration */
+STATIC_ASSERT(IS_POWER_OF_TWO(Dee_SLAB_PAGESIZE));
+STATIC_ASSERT(Dee_SLAB_PAGESIZE > Dee_SLAB_CHUNKSIZE_MAX);
+
+
+/* TODO: Slab page allocator / free function (try to use os-specific
+ *       mmap() / munmap() if allowed by configured `Dee_SLAB_PAGESIZE',
+ *       but fall back to simply using `Dee_TryMemalign()' / `Dee_free()') */
 
 
 
-
-/* =========== General-purpose, serializable slab implementation ===========
- *
- * The following describes how this slab allocator is implemented, and
- * how it is able to interface with serializability, and dec files.
- *
- * >> #define SLAB_PAGESIZE 4096 // Any number-of-2 is fine, but value must be known at compile-time
- * >>
- * >> template<size_t CHUNK_SIZE> alignas(SLAB_PAGESIZE) struct slab_page {
- * >>     // Bitset of allocated chunk base addresses
- * >>     typedef uintptr_t bitword_t; // More appropriate would be something like "uint_fastptr_t"
- * >>     bitword_t sp_used[CEILDIV(SLAB_PAGESIZE - sizeof(sp_used), CHUNK_SIZE * BITSOF(bitword_t))];
- * >>     byte_t sp_data[SLAB_PAGESIZE - sizeof(sp_used) - sizeof(sp_meta)];
- * >>
- * >>     // Configuration bits...
- * >>     enum { MAX_CHUNK_COUNT = sizeof(sp_data) / CHUNK_SIZE };
- * >>     STATIC_ASSERT(BITSOF(sp_used) >= MAX_CHUNK_COUNT);
- * >>     enum { UNUSED_TRAILING_BITS = BITSOF(sp_used) - MAX_CHUNK_COUNT };
- * >>     enum { USED_TRAILING_BITS = BITSOF(bitword_t) - UNUSED_TRAILING_BITS };
- * >>     enum { LAST_USED_MASK = ((bitword_t)1 << USED_TRAILING_BITS) - 1 };
- * >>
- * >>     // Metadata for the slab page
- * >>     struct {
- * >>         size_t                sm_used;   // [<= MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used"
- * >>                                          // Must be holding "slab_lock<CHUNK_SIZE>" to change to/from 0/MAX_CHUNK_COUNT
- * >>         LIST_ENTRY(slab_page) sm_link;   // [0..1][lock(slab_lock<CHUNK_SIZE>)] Next page with free chunks,
- * >>                                          // or ITER_DONE if some custom free mechanism must be used because
- * >>                                          // this page exists within a dec file mapping.
- * >>     } sp_meta;
- * >> };
- * >>
- * >> LIST_HEAD(slab_page_list, slab_page);
- * >>
- * >> // Pages containing at least 1 free, and at least 1 allocated chunk.
- * >> // - fully allocated pages aren't tracked anywhere
- * >> // - fully free pages are stored in a global free-list (so they can be used by all slab allocators)
- * >> template<size_t CHUNK_SIZE> static struct slab_page_list slab_pages = LIST_HEAD_INITIALIZER(slab_pages);
- * >> template<size_t CHUNK_SIZE> static struct Dee_atomic_rwlock_t slab_lock = Dee_ATOMIC_RWLOCK_INIT;
- * >>
- * >> template<size_t CHUNK_SIZE> void *slab_malloc_in_page(slab_page<CHUNK_SIZE> *page) {
- * >>     // Caller guaranties that something is free (since they reserved a spot for us)
- * >>     // -- we just need to find that spot!
- * >>     for (;;) {
- * >>         size_t i;
- * >>         constexpr for (i = 0; i < lengthof(page->sp_used); ++i) {
- * >>             constexpr slab_page<CHUNK_SIZE>::bitword_t full_mask =
- * >>                 i >= (lengthof(page->sp_used) - 1)
- * >>                 ? LAST_USED_MASK
- * >>                 : ((slab_page<CHUNK_SIZE>::bitword_t)-1);
- * >>             slab_page<CHUNK_SIZE>::bitword_t word;
- * >> again_read_word:
- * >>             word = atomic_read(&page->ps_used[i]);
- * >>             if (word != full_mask) {
- * >>                 // There seems to be something free here!
- * >>                 size_t index, offset;
- * >>                 shift_t free_bit = CTZ(word);
- * >>                 slab_page<CHUNK_SIZE>::bitword_t alloc_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << free_bit;
- * >>                 if (!atomic_cmpxch_weak(&page->ps_used[i], word, word | alloc_mask))
- * >>                     goto again_read_word;
- * >>                 // Got it! -- now just calculate the pointer we need to return
- * >>                 index  = i * BITSOF(slab_page<CHUNK_SIZE>::bitword_t) + free_bit;
- * >>                 offset = index * CHUNK_SIZE;
- * >>                 return page->sp_data + offset;
- * >>             }
- * >>         }
- * >>     }
- * >> }
- * >>
- * >> template<size_t CHUNK_SIZE> void *slab_malloc(void) {
- * >>     void *result;
- * >>     slab_page<CHUNK_SIZE> *page;
- * >> again:
- * >>     Dee_atomic_rwlock_read(&slab_lock<CHUNK_SIZE>);
- * >> again_locked:
- * >>     page = LIST_FIRST(&slab_pages<CHUNK_SIZE>);
- * >>     if (page) {
- * >>         size_t old__sm_used;
- * >>         for (;;) {
- * >>             old__sm_used = atomic_read(&page->sp_meta.sm_used);
- * >>             ASSERT(old__sm_used >= 1);
- * >>             ASSERT(old__sm_used <= (slab_page<CHUNK_SIZE>::MAX_CHUNK_COUNT - 1));
- * >>             if unlikely(old__sm_used >= (slab_page<CHUNK_SIZE>::MAX_CHUNK_COUNT - 1)) {
- * >>                 // About to allocate last free chunk of page
- * >>                 Dee_atomic_rwlock_endread(&slab_lock<CHUNK_SIZE>);
- * >>                 while (!Dee_atomic_rwlock_trywrite(&slab_lock<CHUNK_SIZE>)) {
- * >>                     SCHED_YIELD();
- * >>                     if (page != atomic_read(&slab_pages<CHUNK_SIZE>.lh_first))
- * >>                         goto again;
- * >>                 }
- * >>                 if (LIST_FIRST(&slab_pages<CHUNK_SIZE>) != page ||
- * >>                     !atomic_cmpxch(&page->sp_meta.sm_used, slab_page<CHUNK_SIZE>::MAX_CHUNK_COUNT - 1, slab_page<CHUNK_SIZE>::MAX_CHUNK_COUNT)) {
- * >>                     Dee_atomic_rwlock_downgrade(&slab_lock<CHUNK_SIZE>);
- * >>                     goto again_locked;
- * >>                 }
- * >>                 // Remove page from "slab_pages"
- * >>                 LIST_REMOVE(page, sp_meta.sm_link);
- * >>                 Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
- * >>                 break;
- * >>             } else if (atomic_cmpxch(&page->sp_meta.sm_used, old__sm_used, old__sm_used + 1)) {
- * >>                 Dee_atomic_rwlock_endread(&slab_lock<CHUNK_SIZE>);
- * >>                 break;
- * >>             }
- * >>         }
- * >>         // Since we were able to increment "sm_used", that also means that the page
- * >>         // is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset!
- * >>         return slab_malloc_in_page(page);
- * >>     }
- * >>     Dee_atomic_rwlock_endread(&slab_lock<CHUNK_SIZE>);
- * >>
- * >>     // Get a new page (global)
- * >>     page = SLAB_ALLOC_PAGE(page);
- * >>     if (!page)
- * >>         return NULL;
- * >>     bzero(page->sp_used, sizeof(page->sp_used));
- * >>     page->sp_used[0] = 1;
- * >>     page->sp_meta.sm_used = 1;
- * >>     result = &page->sp_data[0];
- * >>
- * >>     // In theory, this lock acquire could be made non-
- * >>     // blocking by having a insert-reap-list for `slab_pages'
- * >>     Dee_atomic_rwlock_write(&slab_lock<CHUNK_SIZE>);
- * >>     LIST_INSERT(&slab_pages, page, sp_meta.sm_link);
- * >>     Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
- * >>     return result;
- * >> }
- * >>
- * >> template<size_t CHUNK_SIZE> void slab_free(void *p) {
- * >>     slab_page<CHUNK_SIZE> *page = (slab_page<CHUNK_SIZE> *)((uintptr_t)p & ~(SLAB_PAGESIZE - 1));
- * >>     size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
- * >>     size_t index = offset / CHUNK_SIZE;
- * >>     size_t bit_indx = index / sizeof(slab_page<CHUNK_SIZE>::bitword_t);
- * >>     size_t old__sm_used;
- * >>     slab_page<CHUNK_SIZE>::bitword_t bit_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << (index % sizeof(slab_page<CHUNK_SIZE>::bitword_t));
- * >>     ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated");
- * >>     atomic_or(&page->sp_used[bit_indx]) & bit_mask);
- * >>     do {
- * >> again_read__sm_used:
- * >>         old__sm_used = atomic_read(&page->sp_meta.sm_used);
- * >>         ASSERT(old__sm_used >= 1);
- * >>         if (old__sm_used == 1) {
- * >>             // Last chunk of page is being deleted
- * >>             Dee_atomic_rwlock_write(&slab_lock<CHUNK_SIZE>);
- * >>             if (page->sp_meta.sm_link.le_prev == ITER_DONE) {
- * >>                 Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
- * >>                 // Special case: free a custom slab page within a dec file mapping
- * >>                 ...
- * >>                 return;
- * >>             }
- * >>             if (!atomic_cmpxch(&page->sp_meta.sm_used, 1, 0)) {
- * >>                 Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
- * >>                 goto again_read__sm_used;
- * >>             }
- * >>             ASSERT(LIST_ISBOUND(page, sp_meta.sm_link));
- * >>             LIST_REMOVE(page, sp_meta.sm_link);
- * >>             Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
- * >>             SLAB_FREE_PAGE(page); // Probably add to some global cache of free slab pages...
- * >>             break;
- * >>         } else if (old__sm_used == slab_page<CHUNK_SIZE>::MAX_CHUNK_COUNT) {
- * >>             // First free in previously fully allocated slab (may not actually
- * >>             // be the case when this is a dec chunk, but in that case, we simply
- * >>             // acquire "slab_lock<CHUNK_SIZE>" for no reason, and don't end up
- * >>             // doing anything with it below)
- * >>             Dee_atomic_rwlock_write(&slab_lock<CHUNK_SIZE>);
- * >>             if (!atomic_cmpxch(&page->sp_meta.sm_used, slab_page<CHUNK_SIZE>::MAX_CHUNK_COUNT, slab_page<CHUNK_SIZE>::MAX_CHUNK_COUNT - 1)) {
- * >>                 Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
- * >>                 goto again_read__sm_used;
- * >>             }
- * >>             if (page->sp_meta.sm_link.le_prev != ITER_DONE)
- * >>                 LIST_INSERT(page, sp_meta.sm_link);
- * >>             Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
- * >>             break;
- * >>         }
- * >>     } while (!atomic_cmpxch_weak(&page->sp_meta.sm_used, old__sm_used, old__sm_used - 1));
- * >> }
- *
- * Though it may not look like it, but so-long as the effective bit-positions
- * indicating that a chunk is allocated in "sp_used" don't overlap (and don't
- * conflict with 'sp_data' of some other already-allocated object), it is
- * possible to put objects of different sizes into the same "slab_page".
- * -> The dec writer can then implement an allocation function for slab memory
- *    that would allocate memory top-down within slab pages, whilst skipping
- *    chunks where previous (possibly differently-sized) allocations already
- *    caused the relevant bit in `sp_used' to be set to `1'
- * -> Since "sp_meta" is stored at the end of a page, its position is always
- *    the same, meaning that differently-sized allocations can still share the
- *    same set meta-data.
- * -> By allowing special values to be used in "sp_meta.sm_link", it becomes
- *    possible to serialize the entire page and execute custom code once all
- *    of the page's chunks have been free'd.
- */
+/* TODO: Define slab GC allocators (use "Dee_SLAB_CHUNKSIZE_GC_FOREACH()" to
+ *       enumerate and call-forward to the relevant, matching slab function) */
 
 DECL_END
+
+/* Slab implementations... */
+#ifndef __INTELLISENSE__
+/*[[[deemon
+local minsize = 12;
+local maxsize = 80;
+print("#if Dee_SLAB_CHUNKSIZE_MIN < ", minsize);
+print("#error \"Configured value 'Dee_SLAB_CHUNKSIZE_MIN' is less than supported minimum ", minsize, "\"");
+print("#endif /" "* Dee_SLAB_CHUNKSIZE_MIN < ", minsize, " *" "/");
+print("#if Dee_SLAB_CHUNKSIZE_MAX > ", maxsize);
+print("#error \"Configured value 'Dee_SLAB_CHUNKSIZE_MAX' is greater than supported maximum ", maxsize, "\"");
+print("#endif /" "* Dee_SLAB_CHUNKSIZE_MAX > ", maxsize, " *" "/");
+for (local n: [minsize:maxsize+1]) {
+	print("#if DeeSlab_EXISTS(", n, ")");
+	print("#define DEFINE_CHUNK_SIZE ", n);
+	print("#include \"slab-sized.c.inl\"");
+	print("#endif /" "* DeeSlab_EXISTS(", n, ") *"  "/");
+}
+]]]*/
+#if Dee_SLAB_CHUNKSIZE_MIN < 12
+#error "Configured value 'Dee_SLAB_CHUNKSIZE_MIN' is less than supported minimum 12"
+#endif /* Dee_SLAB_CHUNKSIZE_MIN < 12 */
+#if Dee_SLAB_CHUNKSIZE_MAX > 80
+#error "Configured value 'Dee_SLAB_CHUNKSIZE_MAX' is greater than supported maximum 80"
+#endif /* Dee_SLAB_CHUNKSIZE_MAX > 80 */
+#if DeeSlab_EXISTS(12)
+#define DEFINE_CHUNK_SIZE 12
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(12) */
+#if DeeSlab_EXISTS(13)
+#define DEFINE_CHUNK_SIZE 13
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(13) */
+#if DeeSlab_EXISTS(14)
+#define DEFINE_CHUNK_SIZE 14
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(14) */
+#if DeeSlab_EXISTS(15)
+#define DEFINE_CHUNK_SIZE 15
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(15) */
+#if DeeSlab_EXISTS(16)
+#define DEFINE_CHUNK_SIZE 16
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(16) */
+#if DeeSlab_EXISTS(17)
+#define DEFINE_CHUNK_SIZE 17
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(17) */
+#if DeeSlab_EXISTS(18)
+#define DEFINE_CHUNK_SIZE 18
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(18) */
+#if DeeSlab_EXISTS(19)
+#define DEFINE_CHUNK_SIZE 19
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(19) */
+#if DeeSlab_EXISTS(20)
+#define DEFINE_CHUNK_SIZE 20
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(20) */
+#if DeeSlab_EXISTS(21)
+#define DEFINE_CHUNK_SIZE 21
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(21) */
+#if DeeSlab_EXISTS(22)
+#define DEFINE_CHUNK_SIZE 22
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(22) */
+#if DeeSlab_EXISTS(23)
+#define DEFINE_CHUNK_SIZE 23
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(23) */
+#if DeeSlab_EXISTS(24)
+#define DEFINE_CHUNK_SIZE 24
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(24) */
+#if DeeSlab_EXISTS(25)
+#define DEFINE_CHUNK_SIZE 25
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(25) */
+#if DeeSlab_EXISTS(26)
+#define DEFINE_CHUNK_SIZE 26
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(26) */
+#if DeeSlab_EXISTS(27)
+#define DEFINE_CHUNK_SIZE 27
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(27) */
+#if DeeSlab_EXISTS(28)
+#define DEFINE_CHUNK_SIZE 28
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(28) */
+#if DeeSlab_EXISTS(29)
+#define DEFINE_CHUNK_SIZE 29
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(29) */
+#if DeeSlab_EXISTS(30)
+#define DEFINE_CHUNK_SIZE 30
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(30) */
+#if DeeSlab_EXISTS(31)
+#define DEFINE_CHUNK_SIZE 31
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(31) */
+#if DeeSlab_EXISTS(32)
+#define DEFINE_CHUNK_SIZE 32
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(32) */
+#if DeeSlab_EXISTS(33)
+#define DEFINE_CHUNK_SIZE 33
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(33) */
+#if DeeSlab_EXISTS(34)
+#define DEFINE_CHUNK_SIZE 34
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(34) */
+#if DeeSlab_EXISTS(35)
+#define DEFINE_CHUNK_SIZE 35
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(35) */
+#if DeeSlab_EXISTS(36)
+#define DEFINE_CHUNK_SIZE 36
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(36) */
+#if DeeSlab_EXISTS(37)
+#define DEFINE_CHUNK_SIZE 37
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(37) */
+#if DeeSlab_EXISTS(38)
+#define DEFINE_CHUNK_SIZE 38
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(38) */
+#if DeeSlab_EXISTS(39)
+#define DEFINE_CHUNK_SIZE 39
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(39) */
+#if DeeSlab_EXISTS(40)
+#define DEFINE_CHUNK_SIZE 40
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(40) */
+#if DeeSlab_EXISTS(41)
+#define DEFINE_CHUNK_SIZE 41
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(41) */
+#if DeeSlab_EXISTS(42)
+#define DEFINE_CHUNK_SIZE 42
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(42) */
+#if DeeSlab_EXISTS(43)
+#define DEFINE_CHUNK_SIZE 43
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(43) */
+#if DeeSlab_EXISTS(44)
+#define DEFINE_CHUNK_SIZE 44
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(44) */
+#if DeeSlab_EXISTS(45)
+#define DEFINE_CHUNK_SIZE 45
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(45) */
+#if DeeSlab_EXISTS(46)
+#define DEFINE_CHUNK_SIZE 46
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(46) */
+#if DeeSlab_EXISTS(47)
+#define DEFINE_CHUNK_SIZE 47
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(47) */
+#if DeeSlab_EXISTS(48)
+#define DEFINE_CHUNK_SIZE 48
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(48) */
+#if DeeSlab_EXISTS(49)
+#define DEFINE_CHUNK_SIZE 49
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(49) */
+#if DeeSlab_EXISTS(50)
+#define DEFINE_CHUNK_SIZE 50
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(50) */
+#if DeeSlab_EXISTS(51)
+#define DEFINE_CHUNK_SIZE 51
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(51) */
+#if DeeSlab_EXISTS(52)
+#define DEFINE_CHUNK_SIZE 52
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(52) */
+#if DeeSlab_EXISTS(53)
+#define DEFINE_CHUNK_SIZE 53
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(53) */
+#if DeeSlab_EXISTS(54)
+#define DEFINE_CHUNK_SIZE 54
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(54) */
+#if DeeSlab_EXISTS(55)
+#define DEFINE_CHUNK_SIZE 55
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(55) */
+#if DeeSlab_EXISTS(56)
+#define DEFINE_CHUNK_SIZE 56
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(56) */
+#if DeeSlab_EXISTS(57)
+#define DEFINE_CHUNK_SIZE 57
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(57) */
+#if DeeSlab_EXISTS(58)
+#define DEFINE_CHUNK_SIZE 58
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(58) */
+#if DeeSlab_EXISTS(59)
+#define DEFINE_CHUNK_SIZE 59
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(59) */
+#if DeeSlab_EXISTS(60)
+#define DEFINE_CHUNK_SIZE 60
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(60) */
+#if DeeSlab_EXISTS(61)
+#define DEFINE_CHUNK_SIZE 61
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(61) */
+#if DeeSlab_EXISTS(62)
+#define DEFINE_CHUNK_SIZE 62
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(62) */
+#if DeeSlab_EXISTS(63)
+#define DEFINE_CHUNK_SIZE 63
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(63) */
+#if DeeSlab_EXISTS(64)
+#define DEFINE_CHUNK_SIZE 64
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(64) */
+#if DeeSlab_EXISTS(65)
+#define DEFINE_CHUNK_SIZE 65
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(65) */
+#if DeeSlab_EXISTS(66)
+#define DEFINE_CHUNK_SIZE 66
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(66) */
+#if DeeSlab_EXISTS(67)
+#define DEFINE_CHUNK_SIZE 67
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(67) */
+#if DeeSlab_EXISTS(68)
+#define DEFINE_CHUNK_SIZE 68
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(68) */
+#if DeeSlab_EXISTS(69)
+#define DEFINE_CHUNK_SIZE 69
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(69) */
+#if DeeSlab_EXISTS(70)
+#define DEFINE_CHUNK_SIZE 70
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(70) */
+#if DeeSlab_EXISTS(71)
+#define DEFINE_CHUNK_SIZE 71
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(71) */
+#if DeeSlab_EXISTS(72)
+#define DEFINE_CHUNK_SIZE 72
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(72) */
+#if DeeSlab_EXISTS(73)
+#define DEFINE_CHUNK_SIZE 73
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(73) */
+#if DeeSlab_EXISTS(74)
+#define DEFINE_CHUNK_SIZE 74
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(74) */
+#if DeeSlab_EXISTS(75)
+#define DEFINE_CHUNK_SIZE 75
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(75) */
+#if DeeSlab_EXISTS(76)
+#define DEFINE_CHUNK_SIZE 76
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(76) */
+#if DeeSlab_EXISTS(77)
+#define DEFINE_CHUNK_SIZE 77
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(77) */
+#if DeeSlab_EXISTS(78)
+#define DEFINE_CHUNK_SIZE 78
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(78) */
+#if DeeSlab_EXISTS(79)
+#define DEFINE_CHUNK_SIZE 79
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(79) */
+#if DeeSlab_EXISTS(80)
+#define DEFINE_CHUNK_SIZE 80
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(80) */
+/*[[[end]]]*/
+#endif /* !__INTELLISENSE__ */
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
+
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEEMON_RUNTIME_SLAB_C */

@@ -711,6 +711,9 @@
 		<ClInclude Include="..\include\deemon\util\slab-config.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\slab.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\weakref.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
@@ -1462,6 +1465,9 @@
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\slab-sized.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\strings.h">

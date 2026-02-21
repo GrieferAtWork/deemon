@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #include <deemon/alloc.h>           /* DeeObject_Free, DeeSlab*, Dee_*alloc*, Dee_Free, Dee_SLAB_COUNT */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANON, O_RDONLY, PROT_READ, PROT_WRITE, bzero, close, getenv, memcpy, memset, mmap, munmap, open */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_t */
@@ -475,5 +476,6 @@ disable_slabs:
 
 DECL_END
 #endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEEMON_RUNTIME_OLD_SLAB_C_INL */

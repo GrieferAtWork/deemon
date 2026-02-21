@@ -25,6 +25,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #include <deemon/alloc.h>           /* DeeDbg_*, DeeSlabInfo, DeeSlab_IndexOf, Dee_*alloc*, Dee_Free, Dee_SLAB_MINSIZE */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/system-features.h> /* bzero*, memset */
@@ -743,3 +744,4 @@ DECL_END
 #undef SIZE
 #undef ITEMSIZE
 #undef LOG_SLAB
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */

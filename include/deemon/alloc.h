@@ -587,9 +587,9 @@ Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_PRIVATE_DeeSlab_API, ~)
 
 /* Check if an object-size of "N" is supported for slab allocation */
 #ifdef Dee_SLAB_CHUNKSIZE_MAX
-#define DeeSlab_IsSupported(N)   ((N) <= Dee_SLAB_CHUNKSIZE_MAX)
+#define DeeSlab_IsSupported(N) ((N) <= Dee_SLAB_CHUNKSIZE_MAX)
 #else /* Dee_SLAB_CHUNKSIZE_MAX */
-#define DeeSlab_IsSupported(N)   0
+#define DeeSlab_IsSupported(N) 0
 #endif /* !Dee_SLAB_CHUNKSIZE_MAX */
 
 /* Return a function pointer for the relevant slab function for allocations of size "N"

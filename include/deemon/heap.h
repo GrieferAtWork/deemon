@@ -194,10 +194,12 @@ DFUNDEF size_t DCALL DeeHeap_SetAllocBreakpoint(size_t id);
  * - If `ptr' is `NULL' or a heap pointer that does not belong
  *   to a custom heap region, `NULL' is returned instead.
  * - If `ptr' isn't a heap pointer, behavior is undefined.
+ * #ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
  * - Unlike `Dee_MallocUsableSize()', this function has another special
  *   case where behavior is also well-defined: if deemon was built with
  *   object slabs enabled (!CONFIG_NO_OBJECT_SLABS), and the given `ptr'
  *   points into the special slab-heap, then `NULL' is always returned.
+ * #endif // !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
  *
  * @return: * :   The heap region belonging to `ptr'
  * @return: NULL: Given `ptr' is `NULL' or does not belong to a custom heap region */
