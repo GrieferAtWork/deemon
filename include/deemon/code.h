@@ -1085,7 +1085,7 @@ typedef struct Dee_function_object {
 			DREF DeeObject *fo_refv[fo_refc_];             \
 		} ob;                                              \
 	} name = {                                             \
-		{ NULL, NULL },                                    \
+		{ _Dee_GC_HEAD_UNTRACKED_INIT },                   \
 		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),         \
 		  fo_code_,                                        \
 		  _Dee_PRIVATE_FUNCTION_FO_HOSTASM_INIT            \
@@ -1102,7 +1102,7 @@ typedef struct Dee_function_object {
 			_Dee_PRIVATE_FUNCTION_FO_REFLOCK_FIELD \
 		} ob;                                      \
 	} name = {                                     \
-		{ NULL, NULL },                            \
+		{ _Dee_GC_HEAD_UNTRACKED_INIT },           \
 		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type), \
 		  fo_code_,                                \
 		  _Dee_PRIVATE_FUNCTION_FO_HOSTASM_INIT    \

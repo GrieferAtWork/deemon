@@ -602,7 +602,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * "gc.collect()". This new implementation's gc.collect() is O(n). */
 #if (!defined(CONFIG_EXPERIMENTAL_REWORKED_GC) && \
      !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_GC))
-#if 1 /* TODO: Implementation is complete, but untested */
+#if 1
 #define CONFIG_EXPERIMENTAL_REWORKED_GC
 #else
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_GC

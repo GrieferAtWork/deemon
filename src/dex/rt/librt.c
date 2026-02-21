@@ -2582,7 +2582,7 @@ PRIVATE struct {
 	struct Dee_gc_head_link _gc_head_data;
 	DeeYieldFunctionIteratorObject ob;
 } DeeYieldFunctionIterator_Empty = {
-	{ NULL, NULL },
+	{ _Dee_GC_HEAD_UNTRACKED_INIT },
 	{
 		OBJECT_HEAD_INIT(&DeeYieldFunctionIterator_Type),
 		/* .yi_func = */ (DeeYieldFunctionObject *)&DeeYieldFunction_Empty,
