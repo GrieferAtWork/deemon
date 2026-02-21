@@ -468,7 +468,7 @@ AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 			if likely(sym >= (mod->mo_bucketv) &&
 			          sym <= (mod->mo_bucketv + mod->mo_bucketm)) {
 				Dee_Incref(mod);
-				return (DeeObject *)mod;
+				return Dee_AsObject(mod);
 			}
 		}
 		goto fail_no_clear_name;
@@ -505,7 +505,7 @@ AttributeError_GetDecl_impl(AttributeError *__restrict self) {
 return_decl_type_ref:
 		Dee_Incref(decl_type);
 return_decl_type:
-		return (DeeObject *)decl_type;
+		return Dee_AsObject(decl_type);
 	}	break;
 
 	case Dee_ATTRINFO_METHOD:
@@ -609,7 +609,7 @@ got_member_from_buffer:
 			Dee_Incref(Dee_attrdesc_nameobj(&self->ae_desc));
 			self->ae_desc.ad_perm = Dee_ATTRPERM_F_NAMEOBJ;
 			Dee_Incref(class_type);
-			return (DeeObject *)class_type;
+			return Dee_AsObject(class_type);
 		}
 		goto fail_clear_name;
 	}	break;
@@ -628,7 +628,7 @@ got_member_from_buffer:
 			Dee_Incref(Dee_attrdesc_nameobj(&self->ae_desc));
 			self->ae_desc.ad_perm = Dee_ATTRPERM_F_NAMEOBJ;
 			Dee_Incref(class_type);
-			return (DeeObject *)class_type;
+			return Dee_AsObject(class_type);
 		}
 		goto fail_clear_name;
 	}	break;
@@ -1498,7 +1498,7 @@ AttributeError_printrepr(AttributeError *__restrict self,
 				DO(err_temp, attr_printrepr_impl(&self->ae_desc, printer, arg));
 			} else {
 				DO(err_temp, (self->ae_desc.ad_perm & Dee_ATTRPERM_F_NAMEOBJ)
-				   ? DeeString_PrintRepr((DeeObject *)Dee_attrdesc_nameobj(&self->ae_desc), printer, arg)
+				   ? DeeString_PrintRepr(Dee_AsObject(Dee_attrdesc_nameobj(&self->ae_desc)), printer, arg)
 				   : DeeFormat_Printf(printer, arg, "%q", self->ae_desc.ad_name));
 				if (decl != NULL)
 					DO(err_temp, DeeFormat_Printf(printer, arg, ", decl: %r", decl));
@@ -1931,7 +1931,7 @@ DeeRT_ErrAttributeError_impl(DeeTypeObject *error_type, DeeObject *decl,
 	result->ae_desc.ad_info.ai_decl = decl;
 	result->ae_flags = flags;
 	DeeObject_Init(result, error_type);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	Dee_XDecref(cause);
 	return -1;
@@ -1960,7 +1960,7 @@ DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
 	result->ae_desc.ad_info.ai_decl = decl;
 	result->ae_flags = flags;
 	DeeObject_Init(result, error_type);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	Dee_XDecref(cause);
 	return -1;
@@ -1986,7 +1986,7 @@ DeeRT_ErrAttributeErrorEx_impl(DeeTypeObject *error_type, DeeObject *ob,
 	Dee_Incref(result->ae_desc.ad_info.ai_decl);
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_DESCLOADED;
 	DeeObject_Init(result, error_type);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	return -1;
 }
@@ -2010,7 +2010,7 @@ DeeRT_ErrAttributeErrorCA_impl(DeeTypeObject *error_type, DeeObject *ob,
 	result->ae_desc.ad_info.ai_value.v_attr = attr;
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	DeeObject_Init(result, error_type);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	return -1;
 }
@@ -2034,7 +2034,7 @@ DeeRT_ErrAttributeErrorMethod_impl(DeeTypeObject *error_type, DeeObject *ob,
 	result->ae_desc.ad_info.ai_value.v_method = attr;
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	DeeObject_Init(result, error_type);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	return -1;
 }
@@ -2058,7 +2058,7 @@ DeeRT_ErrAttributeErrorGetSet_impl(DeeTypeObject *error_type, DeeObject *ob,
 	result->ae_desc.ad_info.ai_value.v_getset = attr;
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	DeeObject_Init(result, error_type);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	return -1;
 }
@@ -2090,7 +2090,7 @@ DeeRT_ErrAttributeErrorMember_impl(DeeTypeObject *error_type, DeeObject *ob,
 	 * lazily when the attribute error's declaration location is loaded. */
 	type_member_buffer_init(buffer, attr);
 	DeeObject_Init(result, error_type);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	return -1;
 }
@@ -2196,7 +2196,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 	result->ae_desc.ad_info.ai_value.v_any = (void *)(uintptr_t)addr;
 	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	DeeObject_Init(result, &DeeError_UnboundAttribute);
-	DeeError_ThrowInherited((DeeObject *)result);
+	DeeError_ThrowInherited(result);
 err:
 	return NULL;
 }
@@ -2217,7 +2217,7 @@ PUBLIC ATTR_COLD NONNULL((1)) DeeObject *
 	result->ae_desc.ad_info.ai_value.v_any = (void *)(uintptr_t)addr;
 	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	DeeObject_Init(result, &DeeError_UnboundAttribute);
-	DeeError_ThrowInherited((DeeObject *)result);
+	DeeError_ThrowInherited(result);
 err:
 	return NULL;
 }
@@ -2471,7 +2471,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->ae_desc.ad_info.ai_value.v_any = (void *)(uintptr_t)addr;
 	result->ae_flags = AttributeError_F_SET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
 	DeeObject_Init(result, &DeeError_RestrictedAttribute);
-	return DeeError_ThrowInherited((DeeObject *)result);
+	return DeeError_ThrowInherited(result);
 err:
 	return -1;
 }

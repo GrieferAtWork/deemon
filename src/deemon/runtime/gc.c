@@ -101,7 +101,7 @@ print_code:
 			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(ob));
 		}
 	} else if (tp == &DeeFunction_Type) {
-		ob = (DeeObject *)DeeFunction_CODE(ob);
+		ob = Dee_AsObject(DeeFunction_CODE(ob));
 		if (ob && Dee_TYPE(ob) == &DeeCode_Type)
 			goto print_code;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
@@ -142,7 +142,7 @@ DeeObject_Visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	 * types can never be destroyed, and thus *really* aren't of any
 	 * interest to GC visitation. */
 	if (DeeType_IsHeapType(Dee_TYPE(self)))
-		(*proc)((DeeObject *)Dee_TYPE(self), arg);
+		(*proc)(Dee_AsObject(Dee_TYPE(self)), arg);
 }
 
 
@@ -2130,9 +2130,9 @@ again:
 	}
 	/* In case of a user-defined type, we must still check for visiting that type itself! */
 	tp_self = Dee_TYPE(self);
-	if ((DeeObject *)tp_self == self)
+	if (Dee_AsObject(tp_self) == self)
 		return;
-	self = (DeeObject *)tp_self;
+	self = Dee_AsObject(tp_self);
 	goto again;
 do_the_visit:
 	/*Dee_DPRINTF("VISIT: %k at %p (%u refs)\n", tp_self, self, self->ob_refcnt);*/

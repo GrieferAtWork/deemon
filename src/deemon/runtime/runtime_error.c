@@ -63,7 +63,7 @@ PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 	nomem_error->e_cause      = NULL;
 	nomem_error->nm_allocsize = req_bytes;
 	/* Throw the no-memory error. */
-	return DeeError_ThrowInherited((DeeObject *)nomem_error);
+	return DeeError_ThrowInherited(nomem_error);
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int

@@ -18,6 +18,11 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
+#include "gc.c"
+#define DEFINE_gc_generation_collect_or_unlock
+//#define DEFINE_gc_collectall_collect_or_unlock
+#endif /* __INTELLISENSE__ */
+
 #include <deemon/api.h>
 
 #include <deemon/format.h>       /* PRFuSIZ */
@@ -30,14 +35,9 @@
 
 #include <hybrid/compiler.h>
 
-#include "gc.c"
-
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uintptr_t */
-#define DEFINE_gc_generation_collect_or_unlock
-//#define DEFINE_gc_collectall_collect_or_unlock
-#endif /* __INTELLISENSE__ */
 
 #if (defined(DEFINE_gc_generation_collect_or_unlock) + \
      defined(DEFINE_gc_collectall_collect_or_unlock)) != 1
@@ -510,9 +510,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 				 * [14] Thread #1:   gc_lock_acquire_and_reap();        -- Can't reap "gc_remove" to finish destruction of "MyClass" because Thread #2 is already doing that
 				 *
 				 * At this point, it would appear that "MyClass" hasn't been destroyed
-				 * ("MyClass->ob_refcnt == 1") when it really should have been, because
-				 * at this point:
-				 * >> unreachable_fast = {MyClass}
+				 * ("MyClass->ob_refcnt == 1") when it really should have been, which
+				 * is further corroborated by "unreachable_fast = {MyClass}".
 				 * But that's only because destruction of it hasn't completed, yet. If
 				 * we were to wait, "Thread #2" will continue its work and eventually
 				 * destroy (or rather: enqueue the untracking of) "MyClass":
@@ -534,7 +533,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 				 * *should* have been destroyed, still being used by other threads"
 				 * (only that the word "used" here actually means "is in the process
 				 * of being destroyed [by other threads]", which is something that's
-				 * supposed to be allowed)
+				 * allowed to be happen, but can't be differentiated from bad uses)
 				 *
 				 * ---
 				 *

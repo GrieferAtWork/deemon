@@ -1154,7 +1154,7 @@ again:
 			ASSERT(!(atomic_read(&iter->t_state) & Dee_THREAD_STATE_SUSPENDING));
 			atomic_or(&iter->t_state, Dee_THREAD_STATE_SUSPENDING |
 			                          Dee_THREAD_STATE_INTERRUPTED);
-			DeeThread_Wake((DeeObject *)iter);
+			DeeThread_Wake(Dee_AsObject(iter));
 		}
 	} while ((iter = iter->t_global.le_next) != NULL);
 
@@ -1177,7 +1177,7 @@ again_wait_for_suspend:
 #ifndef _Dee_SHARED_WAITWORD_IS_NOOP
 				if (atomic_read(&thread_list_lock.s_waiting) == 0) {
 					/* Wake up the thread (in case it's currently inside of a blocking system call) */
-					DeeThread_Wake((DeeObject *)iter);
+					DeeThread_Wake(Dee_AsObject(iter));
 				} else
 #endif /* !_Dee_SHARED_WAITWORD_IS_NOOP */
 				{
@@ -1222,7 +1222,7 @@ again:
 			ASSERT(!(atomic_read(&iter->t_state) & Dee_THREAD_STATE_SUSPENDING));
 			atomic_or(&iter->t_state, Dee_THREAD_STATE_SUSPENDING |
 			                          Dee_THREAD_STATE_INTERRUPTED);
-			DeeThread_Wake((DeeObject *)iter);
+			DeeThread_Wake(Dee_AsObject(iter));
 		}
 	} while ((iter = iter->t_global.le_next) != NULL);
 
@@ -1248,7 +1248,7 @@ again_wait_for_suspend:
 #ifndef _Dee_SHARED_WAITWORD_IS_NOOP
 				if (atomic_read(&thread_list_lock.s_waiting) == 0) {
 					/* Wake up the thread (in case it's currently inside of a blocking system call) */
-					DeeThread_Wake((DeeObject *)iter);
+					DeeThread_Wake(Dee_AsObject(iter));
 				} else
 #endif /* !_Dee_SHARED_WAITWORD_IS_NOOP */
 				{
@@ -1377,7 +1377,7 @@ again:
 	     thread != NULL; thread = thread->t_global.le_next) {
 		atomic_or(&thread->t_state, Dee_THREAD_STATE_SHUTDOWNINTR |
 		                            Dee_THREAD_STATE_INTERRUPTED);
-		DeeThread_Wake((DeeObject *)thread);
+		DeeThread_Wake(Dee_AsObject(thread));
 		result = true;
 	}
 
@@ -1435,7 +1435,7 @@ again_find_running_thread:
 			state |= Dee_THREAD_STATE_WAITING;
 		}
 		DeeFutex_Wait32NoIntTimed(&thread->t_state, state, THREAD_WAKE_DELAY);
-		DeeThread_Wake((DeeObject *)thread);
+		DeeThread_Wake(Dee_AsObject(thread));
 	}
 
 	/* Assert that the thread has no exited. */
@@ -2196,7 +2196,7 @@ again_check_for_interrupts:
 				continue;
 			}
 			DeeObject_Init(keyboard_interrupt, &DeeError_KeyboardInterrupt);
-			DeeError_ThrowInherited((DeeObject *)keyboard_interrupt);
+			DeeError_ThrowInherited(Dee_AsObject(keyboard_interrupt));
 			goto err;
 		}
 	}
@@ -2235,7 +2235,7 @@ again_check_for_interrupts:
 				error = DeeError_Throw(intr);
 			} else if likely(args != (DREF DeeTupleObject *)ITER_DONE) {
 				DREF DeeObject *result;
-				result = DeeObject_CallTuple(intr, (DeeObject *)args);
+				result = DeeObject_CallTuple(intr, Dee_AsObject(args));
 				Dee_Decref(args);
 				error = -1;
 				if likely(result != NULL) {
@@ -3032,7 +3032,7 @@ again:
 #ifndef DeeThread_USE_SINGLE_THREADED
 	if (me != caller) {
 		for (;;) {
-			DeeThread_Wake((DeeObject *)me);
+			DeeThread_Wake(Dee_AsObject(me));
 			state = atomic_read(&me->t_state);
 			if (!(state & Dee_THREAD_STATE_INTERRUPTED))
 				break;
@@ -3287,7 +3287,7 @@ DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
 	DeeThreadObject *me = (DeeThreadObject *)self;
 
 	/* Wait for the thread to terminate. */
-	waitfor_status = DeeThread_WaitFor((DeeObject *)me, timeout_nanoseconds);
+	waitfor_status = DeeThread_WaitFor(Dee_AsObject(me), timeout_nanoseconds);
 	if (waitfor_status != 0) {
 		if (waitfor_status > 0)
 			return ITER_DONE;
@@ -4241,10 +4241,8 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_self(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
-	DeeThreadObject *result;
 	DeeArg_Unpack0(err, argc, argv, "self");
-	result = DeeThread_Self();
-	return_reference_((DeeObject *)result);
+	return_reference(DeeThread_Self());
 err:
 	return NULL;
 }
@@ -4321,7 +4319,7 @@ thread_exit(DeeObject *UNUSED(self),
 	error->te_result = result;
 	Dee_Incref(result);
 	DeeObject_Init(error, &DeeError_ThreadExit);
-	DeeError_ThrowInherited((DeeObject *)error);
+	DeeError_ThrowInherited(error);
 err:
 	return NULL;
 }
@@ -4329,8 +4327,7 @@ err:
 #ifndef DeeThread_USE_SINGLE_THREADED
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_current_get(DeeObject *__restrict UNUSED(self)) {
-	DeeThreadObject *result = DeeThread_Self();
-	return_reference_((DeeObject *)result);
+	return_reference(DeeThread_Self());
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -4594,12 +4591,12 @@ again:
 		DeeObject *trace;
 		ASSERT(frame_iter != NULL);
 		error = frame_iter->ef_error;
-		trace = (DeeObject *)frame_iter->ef_trace;
+		trace = Dee_AsObject(frame_iter->ef_trace);
 		if (trace == ITER_DONE) {
 			trace = NULL;
 			if (self == caller) {
 				frame_iter->ef_trace = except_frame_gettb(frame_iter);
-				trace = (DeeObject *)frame_iter->ef_trace;
+				trace = Dee_AsObject(frame_iter->ef_trace);
 			}
 		}
 		if (trace == NULL)
@@ -5237,7 +5234,7 @@ done_traceback:
 			DeeObject_Init(result, &DeeTraceback_Type);
 
 			/* Tracebacks are GC objects, so we need to start tracking it here. */
-			return DeeGC_Track((DeeObject *)result);
+			return DeeGC_Track(Dee_AsObject(result));
 err_free_result:
 			Dee_Free(heap.lh_base);
 			DeeObject_Free(result);

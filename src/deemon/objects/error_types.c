@@ -691,7 +691,7 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 			error->ae_exitcode = exitcode;
 			DeeObject_Init(error, &DeeError_AppExit);
 			/* Throw the appexit error. */
-			DeeError_ThrowInherited((DeeObject *)error);
+			DeeError_ThrowInherited(error);
 		}
 	}
 	return -1;
