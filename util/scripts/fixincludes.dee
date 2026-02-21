@@ -23,7 +23,6 @@ import posix;
 import * from deemon;
 
 function main() {
-	Error.AppExit.atexit(() -> Error.AppExit.exit(0));
 	local final ROOTDIR = posix.resolvepath(
 		posix.joinpath(posix.headof(__FILE__), r"../.."));
 
