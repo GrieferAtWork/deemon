@@ -44,7 +44,7 @@ ClCompile.BasicRuntimeChecks = Default
 #define ATTR_ALLOC_ALIGN(pari) /* Nothing */
 
 #ifndef __INTELLISENSE__
-#include "slab.c.inl"
+#include "old-slab.c.inl"
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP

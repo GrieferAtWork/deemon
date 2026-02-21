@@ -1449,6 +1449,12 @@
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\old-slab-impl.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\old-slab.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
@@ -1456,12 +1462,6 @@
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\runtime_error.h">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\slab-impl.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\slab.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\strings.h">

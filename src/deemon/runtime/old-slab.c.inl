@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_RUNTIME_SLAB_C_INL
-#define GUARD_DEEMON_RUNTIME_SLAB_C_INL 1
+#ifndef GUARD_DEEMON_RUNTIME_OLD_SLAB_C_INL
+#define GUARD_DEEMON_RUNTIME_OLD_SLAB_C_INL 1
 
 #include <deemon/api.h>
 
@@ -147,7 +147,7 @@ DECL_END
 for (local x = 20; x >= 2; x = x - 1) {
 	print "#if DeeSlab_HasSize(" + x + ")";
 	print "#define SIZE", x;
-	print "#include \"slab-impl.c.inl\"";
+	print "#include \"old-slab-impl.c.inl\"";
 	print "#define NEXT_LARGER", x;
 	print "#endif /" "* DeeSlab_HasSize(" + x + ") *" "/";
 }
@@ -155,97 +155,97 @@ print "#undef NEXT_LARGER";
 ]]]*/
 #if DeeSlab_HasSize(20)
 #define SIZE 20
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 20
 #endif /* DeeSlab_HasSize(20) */
 #if DeeSlab_HasSize(19)
 #define SIZE 19
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 19
 #endif /* DeeSlab_HasSize(19) */
 #if DeeSlab_HasSize(18)
 #define SIZE 18
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 18
 #endif /* DeeSlab_HasSize(18) */
 #if DeeSlab_HasSize(17)
 #define SIZE 17
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 17
 #endif /* DeeSlab_HasSize(17) */
 #if DeeSlab_HasSize(16)
 #define SIZE 16
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 16
 #endif /* DeeSlab_HasSize(16) */
 #if DeeSlab_HasSize(15)
 #define SIZE 15
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 15
 #endif /* DeeSlab_HasSize(15) */
 #if DeeSlab_HasSize(14)
 #define SIZE 14
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 14
 #endif /* DeeSlab_HasSize(14) */
 #if DeeSlab_HasSize(13)
 #define SIZE 13
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 13
 #endif /* DeeSlab_HasSize(13) */
 #if DeeSlab_HasSize(12)
 #define SIZE 12
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 12
 #endif /* DeeSlab_HasSize(12) */
 #if DeeSlab_HasSize(11)
 #define SIZE 11
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 11
 #endif /* DeeSlab_HasSize(11) */
 #if DeeSlab_HasSize(10)
 #define SIZE 10
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 10
 #endif /* DeeSlab_HasSize(10) */
 #if DeeSlab_HasSize(9)
 #define SIZE 9
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 9
 #endif /* DeeSlab_HasSize(9) */
 #if DeeSlab_HasSize(8)
 #define SIZE 8
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 8
 #endif /* DeeSlab_HasSize(8) */
 #if DeeSlab_HasSize(7)
 #define SIZE 7
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 7
 #endif /* DeeSlab_HasSize(7) */
 #if DeeSlab_HasSize(6)
 #define SIZE 6
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 6
 #endif /* DeeSlab_HasSize(6) */
 #if DeeSlab_HasSize(5)
 #define SIZE 5
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 5
 #endif /* DeeSlab_HasSize(5) */
 #if DeeSlab_HasSize(4)
 #define SIZE 4
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 4
 #endif /* DeeSlab_HasSize(4) */
 #if DeeSlab_HasSize(3)
 #define SIZE 3
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 3
 #endif /* DeeSlab_HasSize(3) */
 #if DeeSlab_HasSize(2)
 #define SIZE 2
-#include "slab-impl.c.inl"
+#include "old-slab-impl.c.inl"
 #define NEXT_LARGER 2
 #endif /* DeeSlab_HasSize(2) */
 #undef NEXT_LARGER
@@ -476,4 +476,4 @@ disable_slabs:
 DECL_END
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
-#endif /* !GUARD_DEEMON_RUNTIME_SLAB_C_INL */
+#endif /* !GUARD_DEEMON_RUNTIME_OLD_SLAB_C_INL */

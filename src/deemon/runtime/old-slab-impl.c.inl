@@ -18,7 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#include "slab.c.inl"
+#include "old-slab.c.inl"
 #define SIZE 4
 #define NEXT_LARGER  5
 #endif /* __INTELLISENSE__ */
