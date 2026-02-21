@@ -343,7 +343,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 	{
 		DeeTypeObject *type = Dee_TYPE((GenericObject *)self);
 		ASSERT(self->ob_refcnt == 0);
-		atomic_inc(&self->ob_refcnt);
+		atomic_write(&self->ob_refcnt, 1);
 		do {
 			if (type->tp_init.tp_finalize) {
 				COMPILER_WRITE_BARRIER();

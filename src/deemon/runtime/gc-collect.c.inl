@@ -558,6 +558,37 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 				 * -> The below fallback-handling of "simply moving 'unreachable_fast' to 'gc_gen0'"
 				 *    really **does** still work, **and** will allow us to return since it kills
 				 *    any dependency between objects being destroyed and 'unreachable_fast'.
+				 *
+				 * Code to reproduce:
+				 * >>import * from deemon;
+				 * >>function predcmp2key(cmp: Callable): Callable {
+				 * >>	class KeyClass {
+				 * >>		private member m_self;
+				 * >>		this(self): m_self(self) {}
+				 * >>		public operator <  (other) -> cmp(this.m_self, other.m_self) <  0;
+				 * >>		public operator <= (other) -> cmp(this.m_self, other.m_self) <= 0;
+				 * >>		public operator == (other) -> cmp(this.m_self, other.m_self) == 0;
+				 * >>		public operator != (other) -> cmp(this.m_self, other.m_self) != 0;
+				 * >>		public operator >  (other) -> cmp(this.m_self, other.m_self) >  0;
+				 * >>		public operator >= (other) -> cmp(this.m_self, other.m_self) >= 0;
+				 * >>	}
+				 * >>	return KeyClass;
+				 * >>}
+				 * >>local threads = [];
+				 * >>for (none: [:10]) {
+				 * >>	local t = Thread(() -> {
+				 * >>		for (;;) {
+				 * >>			local items = ["Foo", "BAR", "foobar"];
+				 * >>			items.sort(predcmp2key(string.casecompare));
+				 * >>			assert items == {"BAR", "Foo", "foobar"};
+				 * >>//			gc.collect();
+				 * >>		}
+				 * >>	});
+				 * >>	t.start();
+				 * >>	threads.append(t);
+				 * >>}
+				 * >>for (local t: threads)
+				 * >>	t.join();
 				 */
 #ifndef NDEBUG
 				if (!DeeThread_IsMultiThreaded) {
