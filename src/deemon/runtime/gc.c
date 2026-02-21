@@ -152,7 +152,8 @@ DeeObject_Visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg) {
 	 * While technically we'd also need to visit statically allocated
 	 * types, since objects *do* hold proper references to them, those
 	 * types can never be destroyed, and thus *really* aren't of any
-	 * interest to GC visitation. */
+	 * interest to GC visitation (since the GC only cares about stuff
+	 * that it can actually destroy/clear). */
 	if (DeeType_IsHeapType(Dee_TYPE(self)))
 		(*proc)(Dee_AsObject(Dee_TYPE(self)), arg);
 }
@@ -1019,10 +1020,17 @@ DeeObject_GCClear(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_gc && tp_self->tp_gc->tp_clear) {
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
+			if (tp_self->tp_features & TF_TPVISIT) {
+				typedef void (DCALL *tp_tclear_t)(DeeTypeObject *tp_self, DeeObject *self);
+				(*(tp_tclear_t)tp_self->tp_gc->tp_clear)(tp_self, self);
+			} else
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 			if (tp_self->tp_gc->tp_clear == &instance_clear) {
-				/* XXX: "instance_clear" is never actually called -- maybe merge with "Dee_TF_TPVISIT"? */
 				instance_tclear(tp_self, self);
-			} else {
+			} else
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
+			{
 				(*tp_self->tp_gc->tp_clear)(self);
 			}
 		}

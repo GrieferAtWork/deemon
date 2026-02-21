@@ -608,6 +608,21 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_GC
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_GC */
+
+
+/* When "Dee_TF_TPVISIT" is set, "tp_clear" also gets an extra, leading "DeeTypeObject *" argument */
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
+#undef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
+#undef CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
+#define CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
+#elif (!defined(CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR) && \
+       !defined(CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR))
+#if 1
+#define CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
+#else
+#define CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 /************************************************************************/
 
 

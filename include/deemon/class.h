@@ -1003,7 +1003,9 @@ INTDEF NONNULL((1, 2, 3)) void DCALL instance_tvisit(DeeTypeObject *tp_self, Dee
 INTDEF NONNULL((1, 2)) void DCALL instance_visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 INTDEF NONNULL((1, 2)) void DCALL instance_tclear(DeeTypeObject *tp_self, DeeObject *__restrict self);
+#ifndef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
 INTDEF NONNULL((1)) void DCALL instance_clear(DeeObject *__restrict self);
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 #ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTDEF NONNULL((1, 2)) void DCALL instance_tpclear(DeeTypeObject *tp_self, DeeObject *__restrict self, unsigned int gc_priority);
 INTDEF NONNULL((1)) void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);

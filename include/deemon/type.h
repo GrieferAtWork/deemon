@@ -502,7 +502,10 @@ struct Dee_type_gc {
 	 * statically allocated stub-object (e.g.: `Dee_None') */
 	NONNULL_T((1)) void (DCALL *tp_clear)(DeeObject *__restrict self);
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
+	/* TODO: Once `CONFIG_EXPERIMENTAL_REWORKED_GC' becomes mandatory, consider inlining `tp_clear'
+	 *       into `DeeTypeObject' by getting rid of `tp_gc'. `tp_cc' could then become a method hint */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	/* Same as `tp_clear', but only clear reachable objects with a `tp_gcprio'
 	 * priority that is `>= prio'. (non-gc types have a priority of `Dee_GC_PRIORITY_LATE')
 	 * @assume(prio != 0);
@@ -2600,7 +2603,13 @@ struct Dee_type_operator {
                                             * or any sort of container object capable of holding instances of the same type. */
 #define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()')
                                             * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*' */
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
+#define Dee_TF_TPVISIT          0x00000004 /* Adds an extra `DeeTypeObject *tp_self' argument o "tp_visit" and "tp_cleaar":
+                                            * >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
+                                            * >> void (DCALL *tp_clear)(DeeTypeObject *tp_self, DeeObject *self); */
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 #define Dee_TF_TPVISIT          0x00000004 /* "tp_visit" is actually typed as "void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg)" */
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 #define Dee_TF_SEQCLASS_SHFT    26         /* [INTERNAL] Shift for `Dee_TF_SEQCLASS_MASK' */
 #define Dee_TF_SEQCLASS_MASK    0x1c000000 /* [INTERNAL] Mask for cached `Dee_SEQCLASS_*' */
 #define Dee_TF_NOTCONSTCASTABLE 0x20000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': false */
