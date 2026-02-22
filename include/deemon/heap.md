@@ -6,6 +6,8 @@ By knowing these mappings, it becomes easier to understand the state of the memo
 
 | Pattern    | Meaning | Debug-only | Reference |
 | ---------- | ------- | ---------- | --------- |
+| `BAADF00D` | Slab-heap memory after `DeeSlab_Free()` | y | `SLAB_DEBUG_MEMSET_FREE` |
+| `CACACACA` | Uninitialized slab-heap memory by `DeeSlab_Malloc` | y | `SLAB_DEBUG_MEMSET_ALLOC` |
 | `CCCCCCCC` | Uninitialized heap memory by `Dee_Malloc`<br/>Various instances of `DBG_memset()` to explicitly trash uninitialized memory | y | `DL_DEBUG_MEMSET_ALLOC` |
 | `CDCDCDCD` | Uninitialized stack memory by `Dee_Malloca` | y | `Dee_MALLOCA_SKEW_ALLOCA` |
 | `DEADBEEF` | Heap memory after `Dee_Free()` | y | `DL_DEBUG_MEMSET_FREE` |
