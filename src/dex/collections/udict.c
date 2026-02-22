@@ -30,9 +30,9 @@
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
 #include <deemon/bool.h>            /* Dee_True, return_false, return_true */
 #include <deemon/dict.h>            /* DeeDict_Dummy */
-#include <deemon/gc.h>            /* DeeDict_Dummy */
 #include <deemon/error-rt.h>        /* DeeRT_ErrEmptySequence, DeeRT_ErrUnknownKey */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/gc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/map.h>             /* DeeMapping_Type */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */

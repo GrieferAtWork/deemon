@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeSlab_ENUMERATE, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/alloc.h>              /* DeeSlab_ENUMERATE, DeeSlab_Free, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPuSIZ */
 #include <deemon/bool.h>               /* return_bool, return_bool01, return_false, return_true */
 #include <deemon/callable.h>           /* DeeCallable_Type */
@@ -34,7 +34,7 @@
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/file.h>               /* DeeFileType_Type */
 #include <deemon/format.h>             /* DeeFormat_PrintStr, DeeFormat_Printf */
-#include <deemon/gc.h>                 /* DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
+#include <deemon/gc.h>                 /* DeeGCSlab_Free, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_NewUInt */
 #include <deemon/kwds.h>               /* DeeKwds*, Dee_kwds_entry */
 #include <deemon/map.h>                /* DeeMapping_Type */
@@ -57,6 +57,7 @@
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_UndoConstruction, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeTypeType_GetOperatorByName, DeeType_*, Dee_GC_PRIORITY_CLASS, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_type_*, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash-io.h>       /* Dee_hash_vidx_t */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
+#include <deemon/util/slab-config.h>   /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
 #include <deemon/util/weakref.h>       /* Dee_weakref_* */
 
 #include "../runtime/kwlist.h"

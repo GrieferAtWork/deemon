@@ -29,10 +29,10 @@
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>             /* DeeArg_Unpack* */
 #include <deemon/bool.h>            /* Dee_False, Dee_True, return_bool */
-#include <deemon/gc.h>            /* Dee_False, Dee_True, return_bool */
 #include <deemon/error-rt.h>        /* DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
+#include <deemon/gc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_NewSize, DeeInt_Type, Dee_DIGIT_MASK, Dee_digit_t */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* return_none */

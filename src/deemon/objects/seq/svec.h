@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h>     /* DeeObject_FREE, DeeObject_MALLOC */
 #include <deemon/object.h>    /* DREF, DeeObject, DeeTypeObject, OBJECT_HEAD */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 

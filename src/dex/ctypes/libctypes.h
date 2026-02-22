@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>     /* DeeObject_Free, DeeObject_Malloc */
+#include <deemon/alloc.h>     /* DeeObject_*, DeeSlab_GetFree, DeeSlab_GetMalloc */
 #include <deemon/mro.h>       /* Dee_attrhint, Dee_attriter */
 #include <deemon/object.h>    /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_TYPE, Dee_hash_t, Dee_int128_t, Dee_uint128_t, OBJECT_HEAD */
 #include <deemon/string.h>    /* Dee_wchar_t */

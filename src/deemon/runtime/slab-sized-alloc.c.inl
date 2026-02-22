@@ -24,7 +24,14 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
-#include <hybrid/sched/yield.h>
+
+#include <deemon/system-features.h> /* bzero */
+#include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
+
+#include <hybrid/sched/yield.h>   /* SCHED_YIELD */
+#include <hybrid/sequence/list.h> /* LIST_* */
+
+#include <stddef.h> /* NULL, size_t */
 
 #if (defined(DEFINE_LOCAL_DeeSlab_Malloc) + \
      defined(DEFINE_LOCAL_DeeSlab_TryMalloc)) != 1

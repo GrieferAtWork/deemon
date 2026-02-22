@@ -27,25 +27,26 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_*alloc*, DeeSlab_ENUMERATE, Dee_Calloca, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
-#include <deemon/asm.h>             /* Dee_instruction_t */
-#include <deemon/bool.h>            /* DeeBool_Check, DeeBool_For, Dee_False, Dee_True */
-#include <deemon/class.h>           /* DeeClassDescriptorObject, DeeClass_*, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endwrite, Dee_class_desc_lock_write, Dee_instance_desc */
-#include <deemon/code.h>            /* DeeCodeObject, DeeFunctionObject, Dee_CODE_FVARARGS, Dee_CODE_FVARKWDS, Dee_instruction_t */
-#include <deemon/error.h>           /* DeeError_* */
-#include <deemon/file.h>            /* DeeFile_GetStd, Dee_STDOUT */
-#include <deemon/format.h>          /* PRFuSIZ */
-#include <deemon/gc.h>              /* DeeGCObject_Calloc, DeeGCObject_Malloc */
-#include <deemon/list.h>            /* DeeListObject */
-#include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_FPROPERTY, Dee_MODSYM_FREADONLY, Dee_module_* */
-#include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XIncref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
-#include <deemon/super.h>           /* DeeSuperObject */
-#include <deemon/system-features.h> /* bzero, memmoveupc, memset */
-#include <deemon/thread.h>          /* DeeThreadObject, Dee_except_frame */
-#include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewVector, Dee_EmptyTuple */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, OPERATOR_*, TF_NONE, TP_F* */
-#include <deemon/util/atomic.h>     /* atomic_read */
+#include <deemon/alloc.h>            /* DeeObject_*alloc*, DeeSlab_*, Dee_Calloca, Dee_Freea, Dee_Mallocac, _Dee_MallococBufsize */
+#include <deemon/asm.h>              /* Dee_instruction_t */
+#include <deemon/bool.h>             /* DeeBool_Check, DeeBool_For, Dee_False, Dee_True */
+#include <deemon/class.h>            /* DeeClassDescriptorObject, DeeClass_*, DeeInstance_*, Dee_CLASS_*, Dee_class_attribute, Dee_class_desc, Dee_class_desc_lock_endwrite, Dee_class_desc_lock_write, Dee_instance_desc */
+#include <deemon/code.h>             /* DeeCodeObject, DeeFunctionObject, Dee_CODE_FVARARGS, Dee_CODE_FVARKWDS, Dee_instruction_t */
+#include <deemon/error.h>            /* DeeError_* */
+#include <deemon/file.h>             /* DeeFile_GetStd, Dee_STDOUT */
+#include <deemon/format.h>           /* PRFuSIZ */
+#include <deemon/gc.h>               /* DeeGCObject_Calloc, DeeGCObject_Malloc */
+#include <deemon/list.h>             /* DeeListObject */
+#include <deemon/module.h>           /* DeeModule*, Dee_MODSYM_FPROPERTY, Dee_MODSYM_FREADONLY, Dee_module_* */
+#include <deemon/none.h>             /* DeeNone_Type, Dee_None */
+#include <deemon/object.h>           /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_XIncref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/super.h>            /* DeeSuperObject */
+#include <deemon/system-features.h>  /* bzero, memmoveupc, memset */
+#include <deemon/thread.h>           /* DeeThreadObject, Dee_except_frame */
+#include <deemon/tuple.h>            /* DeeTupleObject, DeeTuple_NewVector, Dee_EmptyTuple */
+#include <deemon/type.h>             /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, OPERATOR_*, TF_NONE, TP_F* */
+#include <deemon/util/atomic.h>      /* atomic_read */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH */
 
 #include <hybrid/align.h>    /* CEILDIV */
 #include <hybrid/bitset.h>   /* BITSET_SIZEOF, bitset_* */

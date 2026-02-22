@@ -23,13 +23,18 @@
 #include <deemon/api.h>
 
 #if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
-#include <deemon/alloc.h>
-#include <deemon/gc.h>
-#include <hybrid/host.h>
-#include <hybrid/align.h>
-#include <deemon/system-features.h>
-#include <deemon/util/slab.h>
-#include <deemon/util/slab-config.h>
+#include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_*, Dee_Free, Dee_Memalign, Dee_TryMemalign, Dee_UntrackAlloc */
+#include <deemon/gc.h>               /* DeeDbgGCSlab_Calloc, DeeDbgGCSlab_Free, DeeDbgGCSlab_Malloc, DeeDbgGCSlab_TryCalloc, DeeDbgGCSlab_TryMalloc, DeeDbgGCSlab_UntrackAlloc, DeeGCSlab_Calloc, DeeGCSlab_Free, DeeGCSlab_Malloc, DeeGCSlab_TryCalloc, DeeGCSlab_TryMalloc, DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
+#include <deemon/system-features.h>  /* memset */
+#include <deemon/types.h>            /* DeeObject */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH, Dee_SLAB_CHUNKSIZE_MAX, Dee_SLAB_CHUNKSIZE_MIN */
+#include <deemon/util/slab.h>        /* Dee_SLAB_PAGESIZE */
+
+#include <hybrid/align.h>    /* IS_POWER_OF_TWO */
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+
+#include <stddef.h> /* NULL, size_t */
+#include <stdint.h> /* UINT32_C, UINT64_C */
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset

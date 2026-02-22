@@ -23,12 +23,22 @@
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
-#include <hybrid/typecore.h>
-#include <hybrid/bit.h>
-#include <hybrid/sequence/list.h>
-#include <deemon/util/lock.h>
-#include <deemon/error.h>
-#include <deemon/util/atomic.h>
+
+#include <deemon/alloc.h>           /* DeeSlab_*, Dee_Free */
+#include <deemon/system-features.h> /* bzero */
+#include <deemon/types.h>           /* ITER_DONE */
+#include <deemon/util/atomic.h>     /* atomic_* */
+#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
+#include <deemon/util/slab.h>       /* Dee_SLAB_PAGESIZE */
+
+#include <hybrid/align.h>         /* CEILDIV */
+#include <hybrid/bit.h>           /* CTZ */
+#include <hybrid/sequence/list.h> /* LIST_* */
+#include <hybrid/typecore.h>      /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_INT_FASTn_T__, __SIZEOF_POINTER__, __UINTPTR_C, __UINTn_C */
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* offsetof, size_t */
+#include <stdint.h>  /* uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

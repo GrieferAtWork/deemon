@@ -31,7 +31,7 @@
 
 #ifndef CONFIG_NO_DEC
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/alloc.h>           /* DeeObject_Callocc, DeeObject_Free, Dee_*alloc*, Dee_BadAlloc, Dee_Free, _Dee_MallococBufsize */
+#include <deemon/alloc.h>           /* DeeObject_Callocc, DeeObject_Free, Dee_*alloc*, Dee_BadAlloc, Dee_Free, Dee_Memalign, _Dee_MallococBufsize */
 #include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/exec.h>            /* DeeExec_GetTimestamp */
@@ -45,7 +45,7 @@
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/md5.h>        /* DeeMD5_* */
 
-#include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED */
+#include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED, IS_POWER_OF_TWO */
 #include <hybrid/limitcore.h>        /* __UINT32_MAX__ */
 #include <hybrid/overflow.h>         /* OVERFLOW_UADD, OVERFLOW_USUB */
 #include <hybrid/sequence/bsearch.h> /* BSEARCH */

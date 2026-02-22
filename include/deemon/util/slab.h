@@ -24,7 +24,7 @@
 #include "../api.h"
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#include <hybrid/host.h>
+#include <hybrid/host.h> /* __ARCH_PAGESIZE */
 
 /* ==== Discussion on slabs
  *
