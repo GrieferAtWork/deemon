@@ -27,6 +27,8 @@
 /*!export Dee_GC_**/
 /*!export DeeGC_**/
 /*!export _Dee_GC_HEAD_UNTRACKED_**/
+/*!export DeeGCSlab_**/
+/*!export DeeDbgGCSlab_**/
 /*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_GC_H
 #define GUARD_DEEMON_GC_H 1 /*!export-*/

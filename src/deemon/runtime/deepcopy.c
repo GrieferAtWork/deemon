@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>            /* DeeSlab_*, Dee_*alloc*, Dee_Free */
 #include <deemon/deepcopy.h>         /* DeeDeepCopyContext, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem, Dee_deepcopy_uheap, Dee_deepcopy_uheap_alloc, Dee_deepcopy_uheap_destroy, Dee_deepcopy_uheap_destroy_ob, Dee_deepcopy_uheap_free, Dee_deepcopy_uheap_tryalloc */
 #include <deemon/error-rt.h>         /* DeeRT_ErrCannotSerialize */
-#include <deemon/gc.h>               /* DeeGCSlab_Free, DeeGCSlab_Malloc, DeeGCSlab_TryMalloc, DeeGC_*, Dee_GC_HEAD_SIZE, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
+#include <deemon/gc.h>               /* DeeGCSlab_*, DeeGC_*, Dee_GC_HEAD_SIZE, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/object.h>           /* ASSERT_OBJECT, Dee_Decref_unlikely, Dee_Decrefv_unlikely, Dee_Incref */
 #include <deemon/serial.h>           /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
 #include <deemon/system-features.h>  /* bzero, memmovedownc, memmoveupc, memset */

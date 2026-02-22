@@ -18,6 +18,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export **/
+/*!export Dee_SLAB_**/
 #ifndef GUARD_DEEMON_UTIL_SLAB_CONFIG_H
 #define GUARD_DEEMON_UTIL_SLAB_CONFIG_H 1 /*!export-*/
 
