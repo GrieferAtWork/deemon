@@ -1345,7 +1345,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		ehdr->e_typedata.td_reloc.er_offsetof_xrel = 0;
 
 		/* Alignment is important for embedded slab allocators */
-		ehdr->e_typedata.td_reloc.er_alignment = self->dw_align;
+		ehdr->e_typedata.td_reloc.er_alignment = seraddr32(self->dw_align);
 
 		/* Assert that the image won't be too large */
 		if unlikely(total_need > DFILE_LIMIT)

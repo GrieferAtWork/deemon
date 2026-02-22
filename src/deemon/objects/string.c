@@ -990,20 +990,7 @@ string_fini(String *__restrict self) {
 		if unlikely(utf->u_flags & Dee_STRING_UTF_FFINIHOOK)
 			DeeString_InvokeFiniHooks(self);
 
-		do {
-			unsigned int _i;
-			for (_i = 1; _i < 3u; ++_i) {
-				if ((utf)->u_data[_i])
-					DeeDbg_Free((utf)->u_data[_i] - 1, "E:\\c\\dexmon\\deemon\\src\\deemon\\objects\\string.c", 993);
-			}
-			if ((utf)->u_data[0u] && (utf)->u_data[0u] != (size_t *)(self)->s_str)
-				DeeDbg_Free(((size_t *)(utf)->u_data[0u]) - 1, "E:\\c\\dexmon\\deemon\\src\\deemon\\objects\\string.c", 993);
-			if ((utf)->u_utf8 && (utf)->u_utf8 != (char *)(self)->s_str && (utf)->u_utf8 != (char *)(utf)->u_data[0u])
-				DeeDbg_Free(((size_t *)(utf)->u_utf8) - 1, "E:\\c\\dexmon\\deemon\\src\\deemon\\objects\\string.c", 993);
-			if ((utf)->u_utf16 && (uint16_t *)(utf)->u_utf16 != (uint16_t *)(utf)->u_data[1u])
-				DeeDbg_Free(((size_t *)(utf)->u_utf16) - 1, "E:\\c\\dexmon\\deemon\\src\\deemon\\objects\\string.c", 993);
-		}
-		__pragma(warning(suppress: 4127)) while (0);
+		Dee_string_utf_fini(utf, self);
 		Dee_string_utf_free(utf);
 	}
 }
