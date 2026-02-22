@@ -27,6 +27,11 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+/* TODO: New introspection API for:
+ * - The reworked slab allocator (does not even have a C API for this, yet)
+ * - The new "CONFIG_EXPERIMENTAL_CUSTOM_HEAP" heap: DeeHeap_MallInfo() */
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 /* Types for accessing slab allocator statistics. */
 
 typedef struct {
@@ -42,7 +47,7 @@ typedef struct {
 
 INTDEF DeeTypeObject SlabStat_Type;
 INTDEF DeeTypeObject SlabInfo_Type;
-
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 INTDEF DeeTypeObject StringFiniHook_Type;
 

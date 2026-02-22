@@ -3418,7 +3418,7 @@ PUBLIC void
 	}
 }
 
-DFUNDEF ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_Malloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
 	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
@@ -3426,7 +3426,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 	return gc_initob((DeeDbgObject_Malloc)(whole_size, file, line));
 }
 
-DFUNDEF ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_Calloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
 	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
@@ -3434,7 +3434,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 	return gc_initob((DeeDbgObject_Calloc)(whole_size, file, line));
 }
 
-DFUNDEF WUNUSED void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbgGCObject_Realloc)(void *p, size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
 	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
@@ -3453,7 +3453,7 @@ DFUNDEF WUNUSED void *
 	return gc_initob(p);
 }
 
-DFUNDEF ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_TryMalloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
 	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
@@ -3461,7 +3461,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 	return gc_initob((DeeDbgObject_TryMalloc)(whole_size, file, line));
 }
 
-DFUNDEF ATTR_MALLOC WUNUSED void *
+PUBLIC ATTR_MALLOC WUNUSED void *
 (DCALL DeeDbgGCObject_TryCalloc)(size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
 	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
@@ -3469,7 +3469,7 @@ DFUNDEF ATTR_MALLOC WUNUSED void *
 	return gc_initob((DeeDbgObject_TryCalloc)(whole_size, file, line));
 }
 
-DFUNDEF WUNUSED void *
+PUBLIC WUNUSED void *
 (DCALL DeeDbgGCObject_TryRealloc)(void *p, size_t n_bytes, char const *file, int line) {
 	size_t whole_size;
 	if unlikely(OVERFLOW_UADD(Dee_GC_HEAD_SIZE, n_bytes, &whole_size))
@@ -3488,12 +3488,21 @@ DFUNDEF WUNUSED void *
 	return gc_initob(p);
 }
 
-DFUNDEF void
+PUBLIC void
 (DCALL DeeDbgGCObject_Free)(void *p, char const *file, int line) {
 	if (p) {
 		ASSERT_UNTRACKED(p);
 		(DeeDbgObject_Free)(DeeGC_Head((DeeObject *)p), file, line);
 	}
+}
+
+PUBLIC void *
+(DCALL DeeDbgGCObject_UntrackAlloc)(void *p, char const *file, int line) {
+	if (p) {
+		ASSERT_UNTRACKED(p);
+		(DeeDbgObject_UntrackAlloc)(DeeGC_Head((DeeObject *)p), file, line);
+	}
+	return p;
 }
 
 

@@ -4154,6 +4154,20 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vcall_DeeObject_MALLOC(struct fungen *__restrict self,
                           size_t alloc_size, bool do_calloc) {
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	void const *api_function = NULL;
+#define LOCAL_checkfit(N, _)                                         \
+	if (N >= alloc_size) {                                           \
+		api_function = do_calloc ? (void const *)&DeeSlab_Calloc##N  \
+		                         : (void const *)&DeeSlab_Malloc##N; \
+	} else
+	Dee_SLAB_CHUNKSIZE_FOREACH(LOCAL_checkfit, ~)
+#undef LOCAL_checkfit
+	{}
+	if (api_function != NULL) {
+		DO(fg_vcallapi(self, api_function, VCALL_CC_OBJECT, 0));
+	} else
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #ifndef CONFIG_NO_OBJECT_SLABS
 	void const *api_function = NULL;
 	size_t alloc_pointers = CEILDIV(alloc_size, sizeof(void *));
@@ -4168,6 +4182,7 @@ fg_vcall_DeeObject_MALLOC(struct fungen *__restrict self,
 		DO(fg_vcallapi(self, api_function, VCALL_CC_OBJECT, 0));
 	} else
 #endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	{
 		DO(fg_vpush_immSIZ(self, alloc_size));
 		DO(fg_vcallapi(self,

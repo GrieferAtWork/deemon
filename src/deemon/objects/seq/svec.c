@@ -1141,7 +1141,7 @@ PUBLIC DeeTypeObject DeeSharedVector_Type = {
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	DREF SharedVector *result;
-	result = DeeObject_MALLOC(SharedVector);
+	result = SharedVector_Malloc();
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &DeeSharedVector_Type);
@@ -1180,7 +1180,7 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 		Dee_Decrefv(me->sv_vector, me->sv_length);
 		Dee_DecrefNokill(&DeeSharedVector_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
-		DeeObject_Free(me);
+		SharedVector_Free(me);
 		return;
 	}
 
@@ -1231,7 +1231,7 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
 		/* Simple case: The vector isn't being shared. */
 		Dee_DecrefNokill(&DeeSharedVector_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
-		DeeObject_Free(me);
+		SharedVector_Free(me);
 		return;
 	}
 

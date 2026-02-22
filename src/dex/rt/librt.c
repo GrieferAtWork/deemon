@@ -3181,8 +3181,10 @@ DEX_MEMBER_F("setcalloptimizethreshold", &librt_setcalloptimizethreshold, DEXSYM
              "Set the threshold specifying how often a ?DFunction or ?GCode object "
              /**/ "needs to be called before deemon will automatically try to optimize it."),
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 /* Access to slab allocator statistics. */
 DEX_MEMBER_F_NODOC("SlabStat", &SlabStat_Type, DEXSYM_READONLY),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 /* Definition of user-defined string finalization hooks. */
 DEX_MEMBER_F_NODOC("StringFiniHook", &StringFiniHook_Type, DEXSYM_READONLY),

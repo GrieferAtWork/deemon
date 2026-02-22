@@ -282,9 +282,9 @@ PRIVATE struct type_member tpconst pointer_members[] = {
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_deref_func(DeeObject *self, size_t argc, DeeObject *const *argv) {
+struct_deref_func(struct pointer_object *self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack0(err, argc, argv, "__deref__");
-	return Dee_AsObject(pointer_get_deref((struct pointer_object *)self));
+	return Dee_AsObject(pointer_get_deref(self));
 err:
 	return NULL;
 }
@@ -733,7 +733,6 @@ PRIVATE struct type_buffer lvalue_buffer = {
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 
-
 INTERN DeeLValueTypeObject DeeLValue_Type = {
 	/* .pt_base = */ {
 		/* .st_base = */ {
@@ -751,7 +750,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 					/* tp_any_ctor:    */ NULL,
 					/* tp_any_ctor_kw: */ NULL,
 					/* tp_serialize:   */ NULL /* TODO */,
-					/* tp_free:        */ NULL
+					/* tp_free:        */ PTR_lvalue_tp_free
 				),
 				/* .tp_dtor        = */ NULL,
 				/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&lvalue_tp_assign,

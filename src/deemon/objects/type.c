@@ -2278,6 +2278,25 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 	 * The only solution I can see here is to just always disable slab-based alloc
 	 * functions in DEX modules, but then the deemon core should be able to lazily
 	 * assign slab allocators for DEX types, as those types are used. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	if (DeeType_IsGC(self)) {
+#define CHECK_ALLOCATOR(N, _)                \
+		if (tp_free == &DeeGCSlab_Free##N) { \
+			return N;                        \
+		} else
+		Dee_SLAB_CHUNKSIZE_GC_FOREACH(CHECK_ALLOCATOR, ~)
+#undef CHECK_ALLOCATOR
+		{}
+	} else {
+#define CHECK_ALLOCATOR(N, _)              \
+		if (tp_free == &DeeSlab_Free##N) { \
+			return N;                      \
+		} else
+		Dee_SLAB_CHUNKSIZE_FOREACH(CHECK_ALLOCATOR, ~)
+#undef CHECK_ALLOCATOR
+		{}
+	}
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #ifndef CONFIG_NO_OBJECT_SLABS
 	if (DeeType_IsGC(self)) {
 #define CHECK_ALLOCATOR(index, size)                  \
@@ -2297,6 +2316,7 @@ PUBLIC ATTR_PURE WUNUSED NONNULL((1)) size_t
 		{}
 	}
 #endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	return 0;
 }
 

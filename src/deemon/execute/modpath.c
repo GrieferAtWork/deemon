@@ -9249,6 +9249,26 @@ PUBLIC void DCALL DeeModule_InitPath(void) {
 
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+
+/* Super-hacky work-around to test if the new slab allocator works, without having to integrate proper DEC support */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+INTERN bool DCALL is_dec_pointer(void *ptr) {
+	DeeModuleObject *mod;
+	module_byaddr_lock_read();
+	mod = module_byaddr_locate(module_byaddr_tree, (byte_t const *)ptr);
+	if (mod) {
+		ASSERT(Dee_TYPE(mod) == &DeeModuleDee_Type ||
+		       Dee_TYPE(mod) == &DeeModuleDex_Type);
+		if (Dee_TYPE(mod) == &DeeModuleDee_Type) {
+			module_byaddr_lock_endread();
+			return true;
+		}
+	}
+	module_byaddr_lock_endread();
+	return false;
+}
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
 /* Given a pointer `ptr' that is either for some statically allocated variable/symbol
  * (as in: a pointer to some statically allocated structure), or is part of some user
  * module's statically allocated memory blob (e.g. the address of a 'DeeStringObject'

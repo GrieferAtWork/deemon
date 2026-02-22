@@ -58,6 +58,7 @@ again_locked:
 	page = LIST_FIRST(&LOCAL_slab_pages);
 	if (page) {
 		size_t old__sm_used;
+		ASSERT(page->sp_meta.sm_link.le_next != page);
 		for (;;) {
 			old__sm_used = atomic_read(&page->sp_meta.sm_used);
 			ASSERT(old__sm_used >= 1);
@@ -90,7 +91,12 @@ again_locked:
 
 		/* Since we were able to increment "sm_used", that also means that the page
 		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
+#ifdef SLAB_DEBUG_MEMSET_ALLOC
+		result = LOCAL_slab_malloc_in_page(page);
+		goto done;
+#else /* SLAB_DEBUG_MEMSET_ALLOC */
 		return LOCAL_slab_malloc_in_page(page);
+#endif /* !SLAB_DEBUG_MEMSET_ALLOC */
 	}
 	LOCAL_slab_lock_endread();
 
@@ -101,13 +107,17 @@ again_locked:
 	bzero(page->sp_used, sizeof(page->sp_used));
 	page->sp_used[0]      = 1;
 	page->sp_meta.sm_used = 1;
-	result                = &page->sp_data[0];
+	result = page->sp_data;
 
 	/* In theory, this lock acquire could be made non-blocking
 	 * by having a insert-reap-list for `LOCAL_slab_pages'. */
 	LOCAL_slab_lock_write();
 	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.sm_link);
 	LOCAL_slab_lock_endwrite();
+#ifdef SLAB_DEBUG_MEMSET_ALLOC
+done:
+#endif /* SLAB_DEBUG_MEMSET_ALLOC */
+	slab_setalloc_data(result, DEFINE_CHUNK_SIZE);
 	return result;
 }
 

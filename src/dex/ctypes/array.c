@@ -94,7 +94,7 @@ aiter_next(ArrayIterator *__restrict self) {
 	                                      result_pointer.uint + self->ai_siz));
 
 	/* Construct an l-value object for the array item. */
-	result = DeeObject_MALLOC(struct lvalue_object);
+	result = lvalue_object_malloc();
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, DeeLValueType_AsType(self->ai_type));
@@ -228,7 +228,7 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 		/* Construct a temporary l-value to use in comparisons against `other'. */
 		if (!temp || DeeObject_IsShared(temp)) {
 			Dee_XDecref(temp);
-			temp = DeeObject_MALLOC(struct lvalue_object);
+			temp = lvalue_object_malloc();
 			if unlikely(!temp)
 				goto err_lval_type;
 			DeeObject_Init(temp, DeeLValueType_AsType(lval_type));

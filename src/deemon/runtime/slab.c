@@ -47,6 +47,44 @@ DECL_BEGIN
 /* Do some sanity assertions on the slab configuration */
 STATIC_ASSERT(IS_POWER_OF_TWO(Dee_SLAB_PAGESIZE));
 STATIC_ASSERT(Dee_SLAB_PAGESIZE > Dee_SLAB_CHUNKSIZE_MAX);
+STATIC_ASSERT(DeeSlab_EXISTS(Dee_SLAB_CHUNKSIZE_MIN));
+STATIC_ASSERT(DeeSlab_EXISTS(Dee_SLAB_CHUNKSIZE_MAX));
+
+#if __SIZEOF_POINTER__ > 4
+#define WORD_4BYTE(x) UINT64_C(0x##x##x)
+#else /* __SIZEOF_POINTER__ > 4 */
+#define WORD_4BYTE(x) UINT32_C(0x##x)
+#endif /*__SIZEOF_POINTER__ <= 4 */
+
+#if !defined(NDEBUG) && 1
+#define SLAB_DEBUG_MEMSET_ALLOC WORD_4BYTE(CACACACA) /* Set by DeeSlab_Malloc() */
+#define SLAB_DEBUG_MEMSET_FREE  WORD_4BYTE(BAADF00D) /* Set by DeeSlab_Free() */
+#endif
+
+#ifdef SLAB_DEBUG_MEMSET_ALLOC
+PRIVATE void DCALL slab_setalloc_data(void *p, size_t n) {
+	size_t *iter = (size_t *)p;
+	while (n >= sizeof(size_t)) {
+		*iter++ = SLAB_DEBUG_MEMSET_ALLOC;
+		n -= sizeof(size_t);
+	}
+}
+#else /* SLAB_DEBUG_MEMSET_ALLOC */
+#define slab_setalloc_data(p, n) (void)0
+#endif /* !SLAB_DEBUG_MEMSET_ALLOC */
+
+#ifdef SLAB_DEBUG_MEMSET_FREE
+PRIVATE void DCALL slab_setfree_data(void *p, size_t n) {
+	size_t *iter = (size_t *)p;
+	while (n >= sizeof(size_t)) {
+		*iter++ = SLAB_DEBUG_MEMSET_FREE;
+		n -= sizeof(size_t);
+	}
+}
+#else /* SLAB_DEBUG_MEMSET_FREE */
+#define slab_setfree_data(p, n) (void)0
+#endif /* !SLAB_DEBUG_MEMSET_FREE */
+
 
 
 /* Low-level slab allocator functions. -- These functions imply have
@@ -64,11 +102,11 @@ PRIVATE ATTR_MALLOC WUNUSED void *DCALL slab_page_malloc(void) {
 	 * already allocated in previous passes.
 	 *
 	 * This cache system should also be cleared by `DeeHeap_Trim()' */
-	return Dee_Memalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE);
+	return Dee_UntrackAlloc(Dee_Memalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE));
 }
 
 PRIVATE ATTR_MALLOC WUNUSED void *DCALL slab_page_trymalloc(void) {
-	return Dee_TryMemalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE);
+	return Dee_UntrackAlloc(Dee_TryMemalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE));
 }
 
 PRIVATE NONNULL((1)) void DCALL slab_page_free(void *page) {
@@ -129,6 +167,14 @@ dbg_slab__detach(void *p, size_t n, char const *file, int line) {
 		(void)file;                                                      \
 		(void)line;                                                      \
 		return dbg_slab__attach(DeeSlab_TryCalloc##n(), n, file, line);  \
+	}                                                                    \
+	PUBLIC void *DCALL                                                   \
+	DeeDbgSlab_UntrackAlloc##n(void *p, char const *file, int line) {    \
+		(void)file;                                                      \
+		(void)line;                                                      \
+		if (p)                                                           \
+			p = dbg_slab__detach(p, n, file, line);                      \
+		return p;                                                        \
 	}                                                                    \
 	PUBLIC NONNULL((1)) void DCALL                                       \
 	DeeDbgSlab_Free##n(void *__restrict p, char const *file, int line) { \
@@ -192,10 +238,22 @@ LOCAL void *gc_initob(void *ptr) {
 	DeeDbgGCSlab_TryCalloc##n(char const *file, int line) {                         \
 		return gc_initob(call_gc_slab(n, DeeDbgSlab_TryCalloc, (file, line)));      \
 	}                                                                               \
+	PUBLIC void *DCALL                                                              \
+	DeeDbgGCSlab_UntrackAlloc##n(void *p, char const *file, int line) {             \
+		(void)file;                                                                 \
+		(void)line;                                                                 \
+		if (p) {                                                                    \
+			(void)dbg_slab__detach(DeeGC_Head((DeeObject *)p),                      \
+			                       n + Dee_GC_OBJECT_OFFSET,                        \
+			                       file, line);                                     \
+		}                                                                           \
+		return p;                                                                   \
+	}                                                                               \
 	PUBLIC NONNULL((1)) void DCALL                                                  \
 	DeeDbgGCSlab_Free##n(void *__restrict p, char const *file, int line) {          \
 		call_gc_slab(n, DeeDbgSlab_Free, (DeeGC_Head((DeeObject *)p), file, line)); \
 	}
+
 Dee_SLAB_CHUNKSIZE_GC_FOREACH(DEFINE_DeeGCSlab_API, ~)
 #undef DEFINE_DeeGCSlab_API
 

@@ -29,6 +29,7 @@
 
 #include <deemon/alloc.h>       /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>         /* DEFINE_KWLIST, DeeArg_Unpack0Or1, DeeArg_UnpackStructKw */
+#include <deemon/gc.h>         /* DEFINE_KWLIST, DeeArg_Unpack0Or1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>        /* return_bool */
 #include <deemon/callable.h>    /* DeeCallable_Type */
 #include <deemon/error-rt.h>    /* DeeRT_ErrTUnboundAttrCStr */

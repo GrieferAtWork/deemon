@@ -115,6 +115,9 @@ STATIC_ASSERT(LOCAL_SIZEOF__sp_data == (LOCAL__MAX_CHUNK_COUNT * DEFINE_CHUNK_SI
 STATIC_ASSERT(LOCAL__MAX_CHUNK_COUNT <= LOCAL_BITSOF__sp_used);
 STATIC_ASSERT((LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data +
                LOCAL_SIZEOF__sp_pad + _LOCAL_SIZEOF__sp_meta) == Dee_SLAB_PAGESIZE);
+STATIC_ASSERT_MSG(LOCAL_SIZEOF__sp_pad < (DEFINE_CHUNK_SIZE + LOCAL_SIZEOF_bitword_t),
+                  "More padding than this wouldn't make sense, because "
+                  "then 1 extra item in `sp_data' should have been used");
 
 /* Define the "slab_page" structure */
 struct LOCAL_slab_page {
@@ -137,9 +140,6 @@ STATIC_ASSERT(sizeof(struct LOCAL_slab_page) == Dee_SLAB_PAGESIZE);
 STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_used) == 0);
 STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_data) == LOCAL_SIZEOF__sp_used);
 STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_meta) == (Dee_SLAB_PAGESIZE - _LOCAL_SIZEOF__sp_meta));
-STATIC_ASSERT_MSG(LOCAL_SIZEOF__sp_pad < (DEFINE_CHUNK_SIZE + LOCAL_SIZEOF_bitword_t),
-                  "More padding than this wouldn't make sense, because "
-                  "then 1 extra item in `sp_data' should have been used");
 
 LIST_HEAD(LOCAL_slab_page_list, LOCAL_slab_page);
 
@@ -197,8 +197,9 @@ LOCAL_slab_malloc_in_page(LOCAL_slab_page *__restrict page) {
 		if (word == (full_mask))                                              \
 			break;                                                            \
 		/* There seems to be something free here! */                          \
-		free_bit   = CTZ(word);                                               \
+		free_bit   = CTZ(~word);                                              \
 		alloc_mask = (LOCAL_bitword_t)1 << free_bit;                          \
+		ASSERT(!(word & alloc_mask));                                         \
 		if (atomic_cmpxch_weak(&page->sp_used[i], word, word | alloc_mask)) { \
 			/* Got it! -- now just calculate the pointer we need to return */ \
 			size_t index  = i * LOCAL_BITSOF_bitword_t + free_bit;            \
@@ -308,20 +309,35 @@ DECL_END
 DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
+
+#if 1 /* Super-hacky work-around to test if the new slab allocator works, without having to integrate proper DEC support */
+INTDEF bool DCALL is_dec_pointer(void *ptr);
+#endif
+
 LOCAL_DECL NONNULL((1)) void DCALL
 LOCAL_DeeSlab_Free(void *__restrict p) {
 	LOCAL_slab_page *page = (LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
 	size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
 	size_t index = offset / DEFINE_CHUNK_SIZE;
-	size_t bit_indx = index / sizeof(LOCAL_bitword_t);
-	LOCAL_bitword_t bit_mask = (LOCAL_bitword_t)1 << (index % sizeof(LOCAL_bitword_t));
+	size_t bit_indx = index / LOCAL_BITSOF_bitword_t;
+	LOCAL_bitword_t bit_mask = (LOCAL_bitword_t)1 << (index % LOCAL_BITSOF_bitword_t);
 	size_t old__sm_used;
-	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated");
-	atomic_or(&page->sp_used[bit_indx], bit_mask);
+#if 1 /* Super-hacky work-around to test if the new slab allocator works, without having to integrate proper DEC support */
+	if (is_dec_pointer(p)) {
+		Dee_Free(p);
+		return;
+	}
+#endif
+	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0, "Badly aligned slab pointer: %p", p);
+	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated: %p", p);
+	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
+	ASSERT(page->sp_meta.sm_link.le_next != page);
+	slab_setfree_data(p, DEFINE_CHUNK_SIZE);
 	do {
 again_read__sm_used:
 		old__sm_used = atomic_read(&page->sp_meta.sm_used);
 		ASSERT(old__sm_used >= 1);
+		ASSERT(old__sm_used <= LOCAL__MAX_CHUNK_COUNT);
 		if (old__sm_used == 1) {
 			/* Last chunk of page is being deleted.
 			 *
@@ -345,13 +361,15 @@ again_read__sm_used:
 			/* Ensure page is now free */
 			slab_page_free(page);
 			break;
-		} else if (old__sm_used == DEFINE_CHUNK_SIZE) {
+		} else if (old__sm_used == LOCAL__MAX_CHUNK_COUNT) {
 			/* First free in previously fully allocated slab (may not actually
 			 * be the case when this is a dec chunk, but in that case, we simply
 			 * acquire "LOCAL_slab_lock" for no reason, and don't end up doing
 			 * anything with it below) */
 			LOCAL_slab_lock_write();
-			if (!atomic_cmpxch(&page->sp_meta.sm_used, DEFINE_CHUNK_SIZE, DEFINE_CHUNK_SIZE - 1)) {
+			if (!atomic_cmpxch(&page->sp_meta.sm_used,
+			                   LOCAL__MAX_CHUNK_COUNT,
+			                   LOCAL__MAX_CHUNK_COUNT - 1)) {
 				LOCAL_slab_lock_endwrite();
 				goto again_read__sm_used;
 			}

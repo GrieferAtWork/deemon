@@ -548,8 +548,8 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #elif LOCAL_HAS_Free
 	/* Static type, so allowed to decref it before calling "tp_free"
 	 * (doing it this way allows compiler to optimize tail recursion) */
-	LOCAL_decref_orig_type();
 	(*orig_type->tp_init.tp_alloc.tp_free)(self);
+	LOCAL_decref_orig_type();
 #elif LOCAL_HAS_GC
 	LOCAL_decref_orig_type();
 	DeeGCObject_Free(self);

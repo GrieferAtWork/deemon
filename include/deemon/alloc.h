@@ -571,6 +571,7 @@ DFUNDEF NONNULL((1)) void
 	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeDbgSlab_Calloc##n(char const *file, int line);    \
 	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeDbgSlab_TryMalloc##n(char const *file, int line); \
 	DFUNDEF ATTR_MALLOC WUNUSED void *DCALL DeeDbgSlab_TryCalloc##n(char const *file, int line); \
+	DFUNDEF void *DCALL DeeDbgSlab_UntrackAlloc##n(void *p, char const *file, int line);         \
 	DFUNDEF NONNULL((1)) void DCALL DeeDbgSlab_Free##n(void *__restrict p, char const *file, int line);
 Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_PRIVATE_DeeSlab_API, ~)
 #undef _Dee_PRIVATE_DeeSlab_API
@@ -594,77 +595,70 @@ Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_PRIVATE_DeeSlab_API, ~)
 
 /* Return a function pointer for the relevant slab function for allocations of size "N"
  * If the given "N" isn't supported, returns "else" instead. */
-#define DeeSlab_GetMalloc(N, else)         _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_Malloc, , else)
-#define DeeSlab_GetCalloc(N, else)         _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_Calloc, , else)
-#define DeeSlab_GetTryMalloc(N, else)      _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_TryMalloc, , else)
-#define DeeSlab_GetTryCalloc(N, else)      _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_TryCalloc, , else)
-#define DeeSlab_GetFree(N, else)           _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_Free, , else)
-#define DeeDbgSlab_GetMalloc(N, else)      _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_Malloc, , else)
-#define DeeDbgSlab_GetCalloc(N, else)      _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_Calloc, , else)
-#define DeeDbgSlab_GetTryMalloc(N, else)   _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_TryMalloc, , else)
-#define DeeDbgSlab_GetTryCalloc(N, else)   _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_TryCalloc, , else)
-#define DeeDbgSlab_GetFree(N, else)        _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_Free, , else)
+#define DeeSlab_GetMalloc(N, else)          _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_Malloc, , else)
+#define DeeSlab_GetCalloc(N, else)          _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_Calloc, , else)
+#define DeeSlab_GetTryMalloc(N, else)       _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_TryMalloc, , else)
+#define DeeSlab_GetTryCalloc(N, else)       _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_TryCalloc, , else)
+#define DeeSlab_GetFree(N, else)            _Dee_PRIVATE_SLAB_SELECT(N, &, DeeSlab_Free, , else)
+#define DeeDbgSlab_GetMalloc(N, else)       _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_Malloc, , else)
+#define DeeDbgSlab_GetCalloc(N, else)       _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_Calloc, , else)
+#define DeeDbgSlab_GetTryMalloc(N, else)    _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_TryMalloc, , else)
+#define DeeDbgSlab_GetTryCalloc(N, else)    _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_TryCalloc, , else)
+#define DeeDbgSlab_GetUntrackAlloc(N, else) _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_UntrackAlloc, , else)
+#define DeeDbgSlab_GetFree(N, else)         _Dee_PRIVATE_SLAB_SELECT(N, &, DeeDbgSlab_Free, , else)
 
 /* Invoke the relevant slab function. If no slab function exists, "else" is evaluated and returned instead. */
-#define _DeeSlab_Malloc(N, else)                     _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_Malloc, (), else)
-#define _DeeSlab_Calloc(N, else)                     _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_Calloc, (), else)
-#define _DeeSlab_TryMalloc(N, else)                  _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_TryMalloc, (), else)
-#define _DeeSlab_TryCalloc(N, else)                  _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_TryCalloc, (), else)
-#define _DeeSlab_Free(N, p, else)                    _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_Free, (p), else)
-#define _DeeDbgSlab_Malloc(N, file, line, else)      _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_Malloc, (file, line), else)
-#define _DeeDbgSlab_Calloc(N, file, line, else)      _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_Calloc, (file, line), else)
-#define _DeeDbgSlab_TryMalloc(N, file, line, else)   _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_TryMalloc, (file, line), else)
-#define _DeeDbgSlab_TryCalloc(N, file, line, else)   _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_TryCalloc, (file, line), else)
-#define _DeeDbgSlab_Free(N, p, file, line, else)     _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_Free, (p, file, line), else)
+#define _DeeSlab_Malloc(N, else)                         _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_Malloc, (), else)
+#define _DeeSlab_Calloc(N, else)                         _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_Calloc, (), else)
+#define _DeeSlab_TryMalloc(N, else)                      _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_TryMalloc, (), else)
+#define _DeeSlab_TryCalloc(N, else)                      _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_TryCalloc, (), else)
+#define _DeeSlab_Free(N, p, else)                        _Dee_PRIVATE_SLAB_SELECT(N, , DeeSlab_Free, (p), else)
+#define _DeeDbgSlab_Malloc(N, file, line, else)          _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_Malloc, (file, line), else)
+#define _DeeDbgSlab_Calloc(N, file, line, else)          _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_Calloc, (file, line), else)
+#define _DeeDbgSlab_TryMalloc(N, file, line, else)       _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_TryMalloc, (file, line), else)
+#define _DeeDbgSlab_TryCalloc(N, file, line, else)       _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_TryCalloc, (file, line), else)
+#define _DeeDbgSlab_UntrackAlloc(N, p, file, line, else) _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_UntrackAlloc, (p, file, line), else)
+#define _DeeDbgSlab_Free(N, p, file, line, else)         _Dee_PRIVATE_SLAB_SELECT(N, , DeeDbgSlab_Free, (p, file, line), else)
 #ifdef NDEBUG
-#define DeeSlab_Malloc(N, else)                     _DeeSlab_Malloc(N, else)
-#define DeeSlab_Calloc(N, else)                     _DeeSlab_Calloc(N, else)
-#define DeeSlab_TryMalloc(N, else)                  _DeeSlab_TryMalloc(N, else)
-#define DeeSlab_TryCalloc(N, else)                  _DeeSlab_TryCalloc(N, else)
-#define DeeSlab_Free(N, p, else)                    _DeeSlab_Free(N, p, else)
-#define DeeDbgSlab_Malloc(N, file, line, else)      _DeeSlab_Malloc(N, else)
-#define DeeDbgSlab_Calloc(N, file, line, else)      _DeeSlab_Calloc(N, else)
-#define DeeDbgSlab_TryMalloc(N, file, line, else)   _DeeSlab_TryMalloc(N, else)
-#define DeeDbgSlab_TryCalloc(N, file, line, else)   _DeeSlab_TryCalloc(N, else)
-#define DeeDbgSlab_Free(N, p, file, line, else)     _DeeSlab_Free(N, p, else)
+#define DeeSlab_Malloc(N, else)                         _DeeSlab_Malloc(N, else)
+#define DeeSlab_Calloc(N, else)                         _DeeSlab_Calloc(N, else)
+#define DeeSlab_TryMalloc(N, else)                      _DeeSlab_TryMalloc(N, else)
+#define DeeSlab_TryCalloc(N, else)                      _DeeSlab_TryCalloc(N, else)
+#define DeeSlab_Free(N, p, else)                        _DeeSlab_Free(N, p, else)
+#define DeeDbgSlab_Malloc(N, file, line, else)          _DeeSlab_Malloc(N, else)
+#define DeeDbgSlab_Calloc(N, file, line, else)          _DeeSlab_Calloc(N, else)
+#define DeeDbgSlab_TryMalloc(N, file, line, else)       _DeeSlab_TryMalloc(N, else)
+#define DeeDbgSlab_TryCalloc(N, file, line, else)       _DeeSlab_TryCalloc(N, else)
+#define DeeDbgSlab_UntrackAlloc(N, p, file, line, else) (p)
+#define DeeDbgSlab_Free(N, p, file, line, else)         _DeeSlab_Free(N, p, else)
 #else /* NDEBUG */
-#define DeeSlab_Malloc(N, else)                     _DeeDbgSlab_Malloc(N, __FILE__, __LINE__, else)
-#define DeeSlab_Calloc(N, else)                     _DeeDbgSlab_Calloc(N, __FILE__, __LINE__, else)
-#define DeeSlab_TryMalloc(N, else)                  _DeeDbgSlab_TryMalloc(N, __FILE__, __LINE__, else)
-#define DeeSlab_TryCalloc(N, else)                  _DeeDbgSlab_TryCalloc(N, __FILE__, __LINE__, else)
-#define DeeSlab_Free(N, p, else)                    _DeeDbgSlab_Free(N, p, __FILE__, __LINE__, else)
-#define DeeDbgSlab_Malloc(N, file, line, else)      _DeeDbgSlab_Malloc(N, file, line, else)
-#define DeeDbgSlab_Calloc(N, file, line, else)      _DeeDbgSlab_Calloc(N, file, line, else)
-#define DeeDbgSlab_TryMalloc(N, file, line, else)   _DeeDbgSlab_TryMalloc(N, file, line, else)
-#define DeeDbgSlab_TryCalloc(N, file, line, else)   _DeeDbgSlab_TryCalloc(N, file, line, else)
-#define DeeDbgSlab_Free(N, p, file, line, else)     _DeeDbgSlab_Free(N, p, file, line, else)
+#define DeeSlab_Malloc(N, else)                         _DeeDbgSlab_Malloc(N, __FILE__, __LINE__, else)
+#define DeeSlab_Calloc(N, else)                         _DeeDbgSlab_Calloc(N, __FILE__, __LINE__, else)
+#define DeeSlab_TryMalloc(N, else)                      _DeeDbgSlab_TryMalloc(N, __FILE__, __LINE__, else)
+#define DeeSlab_TryCalloc(N, else)                      _DeeDbgSlab_TryCalloc(N, __FILE__, __LINE__, else)
+#define DeeSlab_Free(N, p, else)                        _DeeDbgSlab_Free(N, p, __FILE__, __LINE__, else)
+#define DeeDbgSlab_Malloc(N, file, line, else)          _DeeDbgSlab_Malloc(N, file, line, else)
+#define DeeDbgSlab_Calloc(N, file, line, else)          _DeeDbgSlab_Calloc(N, file, line, else)
+#define DeeDbgSlab_TryMalloc(N, file, line, else)       _DeeDbgSlab_TryMalloc(N, file, line, else)
+#define DeeDbgSlab_TryCalloc(N, file, line, else)       _DeeDbgSlab_TryCalloc(N, file, line, else)
+#define DeeDbgSlab_UntrackAlloc(N, p, file, line, else) _DeeDbgSlab_UntrackAlloc(N, p, file, line, else)
+#define DeeDbgSlab_Free(N, p, file, line, else)         _DeeDbgSlab_Free(N, p, file, line, else)
 #endif /* !NDEBUG */
+#define DeeSlab_UntrackAlloc(N, p, else) DeeDbgSlab_UntrackAlloc(N, p, __FILE__, __LINE__, else)
 
 /* Allocate fixed-size, object-purposed memory (using slabs if possible, but using regular heap memory otherwise). */
-#define DeeObject_FMalloc(size)                   DeeSlab_Malloc(size, DeeObject_Malloc(size))
-#define DeeObject_FCalloc(size)                   DeeSlab_Calloc(size, DeeObject_Calloc(size))
-#define DeeObject_FTryMalloc(size)                DeeSlab_TryMalloc(size, DeeObject_TryMalloc(size))
-#define DeeObject_FTryCalloc(size)                DeeSlab_TryCalloc(size, DeeObject_TryCalloc(size))
-#define DeeObject_FFree(ptr, size)                DeeSlab_Free(size, ptr, DeeObject_Free(ptr))
-#define DeeDbgObject_FMalloc(size, file, line)    DeeDbgSlab_Malloc(size, file, line, DeeDbgObject_Malloc(size, file, line))
-#define DeeDbgObject_FCalloc(size, file, line)    DeeDbgSlab_Calloc(size, file, line, DeeDbgObject_Calloc(size, file, line))
-#define DeeDbgObject_FTryMalloc(size, file, line) DeeDbgSlab_TryMalloc(size, file, line, DeeDbgObject_TryMalloc(size, file, line))
-#define DeeDbgObject_FTryCalloc(size, file, line) DeeDbgSlab_TryCalloc(size, file, line, DeeDbgObject_TryCalloc(size, file, line))
-#define DeeDbgObject_FFree(ptr, size, file, line) DeeDbgSlab_Free(size, ptr, file, line, DeeDbgObject_Free(ptr, file, line))
-
-/* Same as the regular malloc functions, but use the same allocation methods that would
- * be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED' and `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S',
- * meaning that pointers returned by these macros have binary compatibility with them. */
-#define DeeObject_MALLOC(T)                      ((T *)DeeObject_FMalloc(sizeof(T)))
-#define DeeObject_CALLOC(T)                      ((T *)DeeObject_FCalloc(sizeof(T)))
-#define DeeObject_TRYMALLOC(T)                   ((T *)DeeObject_FTryMalloc(sizeof(T)))
-#define DeeObject_TRYCALLOC(T)                   ((T *)DeeObject_FTryCalloc(sizeof(T)))
-#define DeeObject_FREE(typed_ptr)                      DeeObject_FFree(typed_ptr, sizeof(*(typed_ptr)))
-#define DeeDbgObject_MALLOC(T, file, line)       ((T *)DeeDbgObject_FMalloc(sizeof(T), file, line))
-#define DeeDbgObject_CALLOC(T, file, line)       ((T *)DeeDbgObject_FCalloc(sizeof(T), file, line))
-#define DeeDbgObject_TRYMALLOC(T, file, line)    ((T *)DeeDbgObject_FTryMalloc(sizeof(T), file, line))
-#define DeeDbgObject_TRYCALLOC(T, file, line)    ((T *)DeeDbgObject_FTryCalloc(sizeof(T), file, line))
-#define DeeDbgObject_FREE(typed_ptr, file, line)       DeeDbgObject_FFree(typed_ptr, sizeof(*(typed_ptr)), file, line)
+#define DeeObject_FMalloc(size)                           DeeSlab_Malloc(size, DeeObject_Malloc(size))
+#define DeeObject_FCalloc(size)                           DeeSlab_Calloc(size, DeeObject_Calloc(size))
+#define DeeObject_FTryMalloc(size)                        DeeSlab_TryMalloc(size, DeeObject_TryMalloc(size))
+#define DeeObject_FTryCalloc(size)                        DeeSlab_TryCalloc(size, DeeObject_TryCalloc(size))
+#define DeeObject_FUntrackAlloc(ptr, size)                DeeSlab_UntrackAlloc(size, ptr, DeeObject_UntrackAlloc(ptr))
+#define DeeObject_FFree(ptr, size)                        DeeSlab_Free(size, ptr, DeeObject_Free(ptr))
+#define DeeDbgObject_FMalloc(size, file, line)            DeeDbgSlab_Malloc(size, file, line, DeeDbgObject_Malloc(size, file, line))
+#define DeeDbgObject_FCalloc(size, file, line)            DeeDbgSlab_Calloc(size, file, line, DeeDbgObject_Calloc(size, file, line))
+#define DeeDbgObject_FTryMalloc(size, file, line)         DeeDbgSlab_TryMalloc(size, file, line, DeeDbgObject_TryMalloc(size, file, line))
+#define DeeDbgObject_FTryCalloc(size, file, line)         DeeDbgSlab_TryCalloc(size, file, line, DeeDbgObject_TryCalloc(size, file, line))
+#define DeeDbgObject_FUntrackAlloc(ptr, size, file, line) DeeDbgSlab_UntrackAlloc(size, ptr, file, line, DeeDbgObject_UntrackAlloc(ptr, file, line))
+#define DeeDbgObject_FFree(ptr, size, file, line)         DeeDbgSlab_Free(size, ptr, file, line, DeeDbgObject_Free(ptr, file, line))
 
 #else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 #ifdef __CC__
@@ -1262,23 +1256,27 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #define DeeDbgObject_FTryCalloc(size, file, line) DeeSlab_Invoke(DeeDbgObject_SlabTryCalloc, size, (file, line), DeeDbgObject_TryCalloc(size, file, line))
 #define DeeDbgObject_FFree(ptr, size, file, line) DeeSlab_Invoke(DeeDbgObject_SlabFree, size, (ptr, file, line), DeeDbgObject_Free(ptr, file, line))
 #endif /* !CONFIG_NO_OBJECT_SLABS */
+#define DeeObject_FUntrackAlloc(ptr, size)                DeeObject_UntrackAlloc(ptr)
+#define DeeDbgObject_FUntrackAlloc(ptr, size, file, line) DeeDbgObject_UntrackAlloc(ptr, file, line)
+
+#endif /* __CC__ */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 /* Same as the regular malloc functions, but use the same allocation methods that would
  * be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED' and `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S',
  * meaning that pointers returned by these macros have binary compatibility with them. */
-#define DeeObject_MALLOC(T)                      ((T *)DeeObject_FMalloc(sizeof(T)))
-#define DeeObject_CALLOC(T)                      ((T *)DeeObject_FCalloc(sizeof(T)))
-#define DeeObject_TRYMALLOC(T)                   ((T *)DeeObject_FTryMalloc(sizeof(T)))
-#define DeeObject_TRYCALLOC(T)                   ((T *)DeeObject_FTryCalloc(sizeof(T)))
-#define DeeObject_FREE(typed_ptr)                      DeeObject_FFree(typed_ptr, sizeof(*(typed_ptr)))
-#define DeeDbgObject_MALLOC(T, file, line)       ((T *)DeeDbgObject_FMalloc(sizeof(T), file, line))
-#define DeeDbgObject_CALLOC(T, file, line)       ((T *)DeeDbgObject_FCalloc(sizeof(T), file, line))
-#define DeeDbgObject_TRYMALLOC(T, file, line)    ((T *)DeeDbgObject_FTryMalloc(sizeof(T), file, line))
-#define DeeDbgObject_TRYCALLOC(T, file, line)    ((T *)DeeDbgObject_FTryCalloc(sizeof(T), file, line))
-#define DeeDbgObject_FREE(typed_ptr, file, line)       DeeDbgObject_FFree(typed_ptr, sizeof(*(typed_ptr)), file, line)
-#endif /* __CC__ */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-
+#define DeeObject_MALLOC(T)                               ((T *)DeeObject_FMalloc(sizeof(T)))
+#define DeeObject_CALLOC(T)                               ((T *)DeeObject_FCalloc(sizeof(T)))
+#define DeeObject_TRYMALLOC(T)                            ((T *)DeeObject_FTryMalloc(sizeof(T)))
+#define DeeObject_TRYCALLOC(T)                            ((T *)DeeObject_FTryCalloc(sizeof(T)))
+#define DeeObject_UNTRACK_ALLOC(T, ptr)                   ((T *)DeeObject_FUntrackAlloc(ptr, sizeof(T)))
+#define DeeObject_FREE(typed_ptr)                         DeeObject_FFree(typed_ptr, sizeof(*(typed_ptr)))
+#define DeeDbgObject_MALLOC(T, file, line)                ((T *)DeeDbgObject_FMalloc(sizeof(T), file, line))
+#define DeeDbgObject_CALLOC(T, file, line)                ((T *)DeeDbgObject_FCalloc(sizeof(T), file, line))
+#define DeeDbgObject_TRYMALLOC(T, file, line)             ((T *)DeeDbgObject_FTryMalloc(sizeof(T), file, line))
+#define DeeDbgObject_TRYCALLOC(T, file, line)             ((T *)DeeDbgObject_FTryCalloc(sizeof(T), file, line))
+#define DeeDbgObject_UNTRACK_ALLOC(typed_ptr, file, line) ((T *)DeeDbgObject_FUntrackAlloc(ptr, sizeof(T), file, line))
+#define DeeDbgObject_FREE(T, ptr, file, line)             DeeDbgObject_FFree(typed_ptr, sizeof(*(typed_ptr)), file, line)
 
 /* Helpers for type-safe allocation of variable-length objects:
  * >> typedef struct {

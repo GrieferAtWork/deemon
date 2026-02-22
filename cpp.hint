@@ -968,6 +968,7 @@
 	void*DeeDbgSlab_Calloc##n(char const*file,int line);\
 	void*DeeDbgSlab_TryMalloc##n(char const*file,int line);\
 	void*DeeDbgSlab_TryCalloc##n(char const*file,int line);\
+	void*DeeDbgSlab_UntrackAlloc##n(void*p,char const*file,int line);\
 	void DeeDbgSlab_Free##n(void*p,char const*file,int line);
 #define _Dee_PRIVATE_DeeGCObject_API(n,_)\
 	void*DeeGCSlab_Malloc##n(void);\
@@ -979,6 +980,7 @@
 	void*DeeDbgGCSlab_Calloc##n(char const*file,int line);\
 	void*DeeDbgGCSlab_TryMalloc##n(char const*file,int line);\
 	void*DeeDbgGCSlab_TryCalloc##n(char const*file,int line);\
+	void*DeeDbgGCSlab_UntrackAlloc##n(void*p,char const*file,int line);\
 	void DeeDbgGCSlab_Free##n(void*p,char const*file,int line);
 #define DEFINE_DeeGCSlab_API(n,_)\
 	void*DeeGCSlab_Malloc##n(void){}\
@@ -990,12 +992,14 @@
 	void*DeeDbgGCSlab_Calloc##n(char const*file,int line){}\
 	void*DeeDbgGCSlab_TryMalloc##n(char const*file,int line){}\
 	void*DeeDbgGCSlab_TryCalloc##n(char const*file,int line){}\
+	void*DeeDbgGCSlab_UntrackAlloc##n(void*p,char const*file,int line){}\
 	void DeeDbgGCSlab_Free##n(void *p,char const*file,int line){}
 #define DEFINE_DeeDbgSlab_API(n,_)\
 	void*DeeDbgSlab_Malloc##n(char const*file,int line){}\
 	void*DeeDbgSlab_Calloc##n(char const*file,int line){}\
 	void*DeeDbgSlab_TryMalloc##n(char const*file,int line){}\
 	void*DeeDbgSlab_TryCalloc##n(char const*file,int line){}\
+	void*DeeDbgSlab_UntrackAlloc##n(void*p,char const*file,int line){}\
 	void DeeDbgSlab_Free##n(void*p,char const*file,int line){}
 
 //#else // CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR

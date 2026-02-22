@@ -104,10 +104,10 @@ deepcopy_mappointer(DeeDeepCopyContext *__restrict self,
 			lo = mid + 1;
 		} else {
 			ASSERTF(((byte_t *)optr + num_bytes - 1) < ent->dcmi_old_minaddr,
-			        "Cannot map address range %p-%p is supported to %p: "
+			        "Cannot map address range %p-%p to %p: "
 			        /**/ "range %p-%p is already mapped to %p",
-			        (byte_t *)optr, (byte_t *)optr + num_bytes - 1,
-			        ent->dcmi_old_minaddr, ent->dcmi_old_maxaddr);
+			        (byte_t *)optr, (byte_t *)optr + num_bytes - 1, nptr,
+			        ent->dcmi_old_minaddr, ent->dcmi_old_maxaddr, ent->dcmi_new);
 			hi = mid;
 		}
 	}
@@ -741,8 +741,16 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 			goto err;
 	} else {
 		int status;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+		/* Don't use `DeeType_GetInstanceSize()' here -- if the type uses slab
+		 * allocators, then we have to call **those** and can't just use default
+		 * allocators instead! */
+		if unlikely(tp->tp_init.tp_alloc.tp_free)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 		size_t instance_size = DeeType_GetInstanceSize(tp);
-		if unlikely(!instance_size) {
+		if unlikely(!instance_size)
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+		{
 			GenericObject *object_buffer;
 			struct Dee_deepcopy_uheap *uheap;
 			if (!tp->tp_init.tp_alloc.tp_free) {
@@ -801,19 +809,22 @@ DeeDeepCopy_CopyObject(DeeDeepCopyContext *__restrict self,
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 				/* Only able to map the object's basic header */
-				instance_size = Dee_GC_OBJECT_OFFSET + sizeof(DeeObject);
-				if unlikely(deepcopy_mappointer(self, DeeGC_Head(ob),
-				                                result_head, instance_size, false))
+				if unlikely(deepcopy_mappointer(self, DeeGC_Head(ob), result_head,
+				                                Dee_GC_OBJECT_OFFSET + sizeof(DeeObject),
+				                                false))
 					goto err;
 			} else {
 				/* Only able to map the object's basic header */
-				instance_size = sizeof(DeeObject);
-				if unlikely(deepcopy_mappointer(self, ob, object_buffer, instance_size, false))
+				if unlikely(deepcopy_mappointer(self, ob, object_buffer,
+				                                sizeof(DeeObject), false))
 					goto err;
 			}
 			out_addr = deepcopy_ptr2ser(self, object_buffer);
 		} else {
 			/* Allocate buffer for object. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+			size_t instance_size = tp->tp_init.tp_alloc.tp_instance_size;
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 			out_addr = DeeType_IsGC(tp)
 			           ? deepcopy_gcobject_malloc(self, instance_size, ob)
 			           : deepcopy_object_malloc(self, instance_size, ob);

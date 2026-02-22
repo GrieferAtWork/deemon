@@ -454,11 +454,11 @@ struct Dee_string_utf {
 #define Dee_string_utf_alloc()                     DeeObject_MALLOC(struct Dee_string_utf)
 #define Dee_string_utf_tryalloc()                  DeeObject_TRYMALLOC(struct Dee_string_utf)
 #define Dee_string_utf_free(ptr)                   DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
-#define Dee_string_utf_untrack(ptr)                (struct Dee_string_utf *)DeeObject_UntrackAlloc(ptr)
+#define Dee_string_utf_untrack(ptr)                DeeObject_UNTRACK_ALLOC(struct Dee_string_utf, ptr)
 #define DeeDbg_string_utf_alloc(file, line)        DeeDbgObject_MALLOC(struct Dee_string_utf, file, line)
 #define DeeDbg_string_utf_tryalloc(file, line)     DeeDbgObject_TRYMALLOC(struct Dee_string_utf, file, line)
 #define DeeDbg_string_utf_free(ptr, file, line)    DeeDbgObject_FFree(ptr, sizeof(struct Dee_string_utf), file, line)
-#define DeeDbg_string_utf_untrack(ptr, file, line) (struct Dee_string_utf *)DeeDbgObject_UntrackAlloc(ptr, file, line)
+#define DeeDbg_string_utf_untrack(ptr, file, line) DeeDbgObject_UNTRACK_ALLOC(struct Dee_string_utf, ptr, file, line)
 #else
 #define Dee_string_utf_alloc()                     ((struct Dee_string_utf *)Dee_Malloc(sizeof(struct Dee_string_utf)))
 #define Dee_string_utf_tryalloc()                  ((struct Dee_string_utf *)Dee_TryMalloc(sizeof(struct Dee_string_utf)))

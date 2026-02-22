@@ -120,6 +120,9 @@ typedef struct {
 #endif /* !CONFIG_NO_THREADS */
 } SharedVector;
 
+#define SharedVector_Malloc() DeeObject_MALLOC(SharedVector)
+#define SharedVector_Free(p)  DeeObject_FREE(Dee_REQUIRES_TYPE(SharedVector *, p))
+
 #define SharedVector_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->sv_lock)
 #define SharedVector_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->sv_lock)
 #define SharedVector_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->sv_lock)

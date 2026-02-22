@@ -144,7 +144,7 @@
  * >>             if (word != full_mask) {
  * >>                 // There seems to be something free here!
  * >>                 size_t index, offset;
- * >>                 shift_t free_bit = CTZ(word);
+ * >>                 shift_t free_bit = CTZ(~word);
  * >>                 slab_page<CHUNK_SIZE>::bitword_t alloc_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << free_bit;
  * >>                 if (!atomic_cmpxch_weak(&page->sp_used[i], word, word | alloc_mask))
  * >>                     goto again_read_word;
@@ -219,11 +219,11 @@
  * >>     slab_page<CHUNK_SIZE> *page = (slab_page<CHUNK_SIZE> *)((uintptr_t)p & ~(SLAB_PAGESIZE - 1));
  * >>     size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
  * >>     size_t index = offset / CHUNK_SIZE;
- * >>     size_t bit_indx = index / sizeof(slab_page<CHUNK_SIZE>::bitword_t);
+ * >>     size_t bit_indx = index / BITSOF(slab_page<CHUNK_SIZE>::bitword_t);
  * >>     size_t old__sm_used;
- * >>     slab_page<CHUNK_SIZE>::bitword_t bit_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << (index % sizeof(slab_page<CHUNK_SIZE>::bitword_t));
+ * >>     slab_page<CHUNK_SIZE>::bitword_t bit_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << (index % BITSOF(slab_page<CHUNK_SIZE>::bitword_t));
  * >>     ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated");
- * >>     atomic_or(&page->sp_used[bit_indx], bit_mask);
+ * >>     atomic_and(&page->sp_used[bit_indx], ~bit_mask);
  * >>     do {
  * >> again_read__sm_used:
  * >>         old__sm_used = atomic_read(&page->sp_meta.sm_used);

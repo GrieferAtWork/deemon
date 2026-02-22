@@ -644,7 +644,8 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #elif (!defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) && \
        !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR))
-#if 0 /* TODO: Incomplete... */
+#if 0 /* TODO: Works, but integration into dec files is incomplete (requiring a dirty workaround)
+       * Also: hasn't really been tested in a multi-threaded environment */
 #define CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #else
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR

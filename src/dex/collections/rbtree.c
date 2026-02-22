@@ -29,6 +29,7 @@
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>             /* DeeArg_Unpack* */
 #include <deemon/bool.h>            /* Dee_False, Dee_True, return_bool */
+#include <deemon/gc.h>            /* Dee_False, Dee_True, return_bool */
 #include <deemon/error-rt.h>        /* DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */

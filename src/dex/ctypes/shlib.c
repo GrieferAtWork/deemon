@@ -219,7 +219,7 @@ shlib_getitem(Shlib *self, DeeObject *name) {
 	result_type = get_void_pointer();
 	if unlikely(!result_type)
 		goto err;
-	result = DeeObject_MALLOC(struct pointer_object);
+	result = pointer_object_malloc();
 	if unlikely(!result)
 		goto err_type;
 	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
@@ -274,7 +274,7 @@ shlib_getattr(Shlib *self,
 	result_type = DeePointerType_AsSType(DeeSType_Pointer(&DeeCVoid_Type));
 	if unlikely(!result_type)
 		goto err;
-	result = DeeObject_MALLOC(struct pointer_object);
+	result = pointer_object_malloc();
 	if unlikely(!result) {
 		Dee_Decref(DeeSType_AsType(result_type));
 		goto err;
@@ -301,7 +301,7 @@ shlib_getattr(Shlib *self,
 			Dee_DecrefNokill(DeeSType_AsType(result_type));
 		ASSERT(self->sh_vfunptr == result_type);
 	}
-	result = DeeObject_MALLOC(struct pointer_object);
+	result = pointer_object_malloc();
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(result, DeeSType_AsType(result_type));
@@ -335,7 +335,7 @@ shlib_base(Shlib *self, size_t argc,
 	result_type = get_void_pointer();
 	if unlikely(!result_type)
 		goto err;
-	result = DeeObject_MALLOC(struct pointer_object);
+	result = pointer_object_malloc();
 	if unlikely(!result)
 		goto err_type;
 	DeeObject_InitInherited(result, DeeSType_AsType(result_type));

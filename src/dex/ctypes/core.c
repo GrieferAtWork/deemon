@@ -712,7 +712,7 @@ ltype_frombytes(DeeLValueTypeObject *self, size_t argc, DeeObject *const *argv) 
 		goto err_bad_size;
 	if unlikely(type_size > data_size)
 		goto err_bad_size;
-	result = DeeObject_MALLOC(struct lvalue_object);
+	result = lvalue_object_malloc();
 	if unlikely(!result)
 		goto err;
 	result->l_ptr.ptr = DeeBytes_DATA(args.data) + args.offset;
@@ -843,7 +843,12 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 	result->pt_base.st_sizeof       = sizeof(void *);
 	result->pt_base.st_align        = CONFIG_CTYPES_ALIGNOF_POINTER;
 	result->pt_base.st_base.tp_name = DeeString_STR(name); /* Inherit reference. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	result->pt_base.st_base.tp_init.tp_alloc.tp_alloc = PTR_pointer_tp_alloc;
+	result->pt_base.st_base.tp_init.tp_alloc.tp_free  = PTR_pointer_tp_free;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	result->pt_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(struct pointer_object);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	result->pt_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;
 	result->pt_base.st_base.tp_base  = DeePointerType_AsType(&DeePointer_Type); /* Inherit reference. */
 	result->pt_size                  = DeeSType_Sizeof(self);
@@ -891,7 +896,11 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	result->lt_base.st_sizeof       = sizeof(void *);
 	result->lt_base.st_align        = CONFIG_CTYPES_ALIGNOF_LVALUE;
 	result->lt_base.st_base.tp_name = DeeString_STR(name); /* Inherit reference. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	result->lt_base.st_base.tp_init.tp_alloc.tp_free = PTR_lvalue_tp_free;
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	result->lt_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(struct lvalue_object);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	result->lt_base.st_base.tp_flags = (TP_FTRUNCATE | TP_FVARIABLE | TP_FINHERITCTOR |
 	                                    TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY);
 	result->lt_base.st_base.tp_base = DeeLValueType_AsType(&DeeLValue_Type); /* Inherit reference. */
@@ -1588,7 +1597,7 @@ DeePointer_New(DeePointerTypeObject *pointer_type,
 	ASSERT(DeePointerType_Check(pointer_type));
 
 	/* Allocate a new pointer object. */
-	result = DeeObject_MALLOC(struct pointer_object);
+	result = pointer_object_malloc();
 	if unlikely(!result)
 		goto done;
 
@@ -1607,7 +1616,7 @@ DeePointer_NewInherited(/*inherit(always)*/ DREF DeePointerTypeObject *pointer_t
 	ASSERT(DeePointerType_Check(pointer_type));
 
 	/* Allocate a new pointer object. */
-	result = DeeObject_MALLOC(struct pointer_object);
+	result = pointer_object_malloc();
 	if unlikely(!result)
 		goto err;
 
@@ -1639,7 +1648,7 @@ DeeLValue_NewInherited(/*inherit(always)*/ DREF DeeLValueTypeObject *lvalue_type
 	ASSERT(DeeLValueType_Check(lvalue_type));
 
 	/* Allocate a new lvalue object. */
-	result = DeeObject_MALLOC(struct lvalue_object);
+	result = lvalue_object_malloc();
 	if unlikely(!result)
 		goto err;
 

@@ -520,6 +520,22 @@ struct lvalue_object {
 	union pointer l_ptr;
 };
 
+#define pointer_object_malloc() DeeObject_MALLOC(struct pointer_object)
+#define pointer_object_free(p)  DeeObject_FREE(Dee_REQUIRES_TYPE(struct pointer_object *, p))
+#define lvalue_object_malloc()  DeeObject_MALLOC(struct lvalue_object)
+#define lvalue_object_free(p)   DeeObject_FREE(Dee_REQUIRES_TYPE(struct lvalue_object *, p))
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#define PTR_pointer_tp_alloc DeeSlab_GetMalloc(sizeof(struct pointer_object), (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(struct pointer_object))
+#define PTR_pointer_tp_free  DeeSlab_GetFree(sizeof(struct pointer_object), NULL)
+#define PTR_lvalue_tp_free   DeeSlab_GetFree(sizeof(struct lvalue_object), NULL)
+#else /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+#define PTR_pointer_tp_alloc (void *(DCALL *)(void))(void *)(uintptr_t)sizeof(struct pointer_object)
+#define PTR_pointer_tp_free  NULL
+#define PTR_lvalue_tp_free   NULL
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
+
 
 /* Derived from `DeeStructured_Type', these types are the base
  * classes of all pointer/lvalue types that are be generated

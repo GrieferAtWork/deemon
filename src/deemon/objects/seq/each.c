@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStruct */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/gc.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>             /* DeeFormat_PrintOperatorRepr, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/method-hints.h>       /* DeeMH_seq_operator_getitem_index_t, DeeMH_seq_operator_setitem_index_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
@@ -3388,6 +3389,23 @@ PRIVATE struct type_callable sew_callable = {
 	/* .tp_thiscall_tuple_kw = */ DEFIMPL(&default__thiscall_tuple_kw__with__thiscall_kw),
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+/* Backwards compat (remove once 'CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR' becomes mandatory) */
+#define Dee_TYPE_CONSTRUCTOR_INIT_SIZED_R(min_tp_instance_size_, \
+                                          max_tp_instance_size_, \
+                                          tp_ctor_,              \
+                                          tp_copy_ctor_,         \
+                                          tp_any_ctor_,          \
+                                          tp_any_ctor_kw_,       \
+                                          tp_serialize_)         \
+	Dee_TYPE_CONSTRUCTOR_INIT_SIZED(max_tp_instance_size_,       \
+	                                tp_ctor_,                    \
+	                                tp_copy_ctor_,               \
+	                                tp_any_ctor_,                \
+	                                tp_any_ctor_kw_,             \
+	                                tp_serialize_)
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 INTERN DeeTypeObject SeqEachOperator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),

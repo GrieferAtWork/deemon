@@ -26,6 +26,7 @@
 
 #include <deemon/api.h>
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #include <deemon/alloc.h>           /* DeeObject_*, DeeSlab*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, _Dee_MalloccBufsize, _Dee_MallococBufsize */
 #include <deemon/error-rt.h>        /* DeeRT_ErrIndexOutOfBounds */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
@@ -402,5 +403,6 @@ INTERN DeeTypeObject SlabInfo_Type = {
 };
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEX_RT_SLAB_C */
