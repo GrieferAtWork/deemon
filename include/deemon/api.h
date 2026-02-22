@@ -537,12 +537,13 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * >> local mySeq = ["foo", "foobar", "foobarbar"];
  * >> local findMe = 6;
  * >> #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
- * >> // Given "key" is only allowed to items of "mySeq", but not to "findMe"
+ * >> // Given "key" is only applied to items of "mySeq", but not to "findMe"
  * >> local index = mySeq.find(item: findMe, key: e -> e.length);
  * >> #else
  * >> // Without this feature switch, "key" is also applied to "findMe",
- * >> // meaning either the entire sequence must be mapped (which is always
- * >> // possible in the case of "find", but for "__seq_remove__")
+ * >> // meaning either the entire sequence must be mapped (which is
+ * >> // always possible in the case of "find", but for not for something
+ * >> // like "__seq_remove__")
  * >> local index = mySeq.map(e -> e.length).find(item: findMe);
  * >> local index = mySeq.find(item: findMe, key: e -> e === findMe ? e : e.length);
  * >> #endif

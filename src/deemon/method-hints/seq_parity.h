@@ -119,7 +119,7 @@ err:
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_cb, NULL);
 	ASSERT(foreach_status >= -1);
-	if (foreach_status >= 0)
+	if (foreach_status >= 2)
 		foreach_status &= 1;
 	return (int)foreach_status;
 }} {
@@ -156,7 +156,7 @@ int __seq_parity__.seq_parity_with_key([[nonnull]] DeeObject *self,
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_parity_foreach_with_key_cb, key);
 	ASSERT(foreach_status >= -1);
-	if (foreach_status >= 0)
+	if (foreach_status >= 2)
 		foreach_status &= 1;
 	return (int)foreach_status;
 }} {
@@ -204,7 +204,7 @@ err:
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_cb, NULL, start, end);
 	ASSERT(foreach_status >= -1);
-	if (foreach_status >= 0)
+	if (foreach_status >= 2)
 		foreach_status &= 1;
 	return (int)foreach_status;
 }} {
@@ -240,7 +240,7 @@ int __seq_parity__.seq_parity_with_range_and_key([[nonnull]] DeeObject *self,
 	Dee_ssize_t foreach_status;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_parity_enumerate_with_key_cb, key, start, end);
 	ASSERT(foreach_status >= -1);
-	if (foreach_status >= 0)
+	if (foreach_status >= 2)
 		foreach_status &= 1;
 	return (int)foreach_status;
 }} {
