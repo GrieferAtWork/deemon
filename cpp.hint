@@ -1001,6 +1001,12 @@
 	void*DeeDbgSlab_TryCalloc##n(char const*file,int line){}\
 	void*DeeDbgSlab_UntrackAlloc##n(void*p,char const*file,int line){}\
 	void DeeDbgSlab_Free##n(void*p,char const*file,int line){}
+#define Dee_SLAB_PAGE_META_FIELDS(pt)\
+	size_t spm_used;\
+	union{\
+		struct{struct pt*le_next,**le_prev;}t_link;\
+		struct{void(*c_free)(struct pt*self);void*c_marker;}t_custom;\
+	}spm_type;
 
 //#else // CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 
@@ -1583,6 +1589,7 @@
 #define LOCAL_NONNULL
 #define LOCAL_MAYBE_PUBLIC
 #define LOCAL_DECL
+#define LOCAL_ASSERT_GC_SLAB_EXISTS(...)
 
 #define SQLITE_EXTERN extern
 #define SQLITE_API

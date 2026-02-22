@@ -24,7 +24,14 @@
 #include "../api.h"
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#include <hybrid/host.h> /* __ARCH_PAGESIZE */
+#include <hybrid/host.h>          /* __ARCH_PAGESIZE */
+#include <hybrid/sequence/list.h> /* LIST_ENTRY */
+#include <hybrid/typecore.h>      /* __*_TYPE__, __SIZEOF_*__ */
+
+#include "../system-features.h" /* bzero */
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uintptr_t */
 
 /* ==== Discussion on slabs
  *
@@ -298,11 +305,117 @@
 #endif /* !__ARCH_PAGESIZE_MIN */
 #endif /* !Dee_SLAB_PAGESIZE */
 
+#define Dee_SIZEOF_SLAB_PAGE_META (3 * __SIZEOF_POINTER__) /* `sizeof(struct Dee_slab_page_meta)' */
+#define Dee_OFFSET_SLAB_PAGE_META (Dee_SLAB_PAGESIZE - Dee_SIZEOF_SLAB_PAGE_META)
+
 #ifdef __CC__
 DECL_BEGIN
 
+#define Dee_SLAB_PAGE_META_CUSTOM_MARKER ((void *)-1)
+
+#if __SIZEOF_INT_FAST16_T__ <= __SIZEOF_POINTER__
+#define Dee_slab_page_builder_offset_t __UINT_FAST16_TYPE__
+#elif __SIZEOF_INT__ <= __SIZEOF_POINTER__
+#define Dee_slab_page_builder_offset_t unsigned int
+#else /* ... */
+#define Dee_slab_page_builder_offset_t __UINTPTR_TYPE__
+#endif /* !... */
+
+struct Dee_slab_page_builder {
+	Dee_slab_page_builder_offset_t spb_unused_lo; /* byte-offset into page to start of unused memory */
+	Dee_slab_page_builder_offset_t spb_unused_hi; /* byte-offset into page to end of unused memory */
+};
+
+#define Dee_SLAB_PAGE_META_FIELDS(page_type)                                                         \
+	size_t  spm_used; /* [<= LOCAL__MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used" Must be  \
+	                   * holding "LOCAL_slab_lock" to change to/from 0/LOCAL__MAX_CHUNK_COUNT. */    \
+	union {                                                                                          \
+		LIST_ENTRY(page_type)        t_link;   /* [0..1][lock(INTERNAL(LOCAL_slab_lock))]            \
+		                                        * [valid_if(Dee_slab_page_isnormal(:self))]          \
+		                                        * Link in list of pages with free chunks. */         \
+		struct {                                                                                     \
+			/* [1..1][const] Custom callback to free this page once `spm_used' hits `0' */           \
+			NONNULL_T((1)) void (DCALL *c_free)(struct page_type *__restrict self);                  \
+			void                       *c_marker; /* [== Dee_SLAB_PAGE_META_CUSTOM_MARKER][const] */ \
+		}                            t_custom;  /* [valid_if(Dee_slab_page_iscustom(:self))] */      \
+		struct Dee_slab_page_builder t_builder; /* For when you're building a custom page */         \
+	}       spm_type; /* Link/type of page */
+
+struct Dee_slab_page {
+	/* Slab page in-use bitset, followed by slab payload data.
+	 * The size and encoding of the in-use bitset depends on the
+	 * size of chunks in the page's "sp_data" area. */
+#if 0
+	__BYTE_TYPE__ sp_used[?]; /* Bitset of allocated chunk base addresses */
+	__BYTE_TYPE__ sp_data[?]; /* Slab payload data */
+#else
+	__BYTE_TYPE__ sp_used_and_data[Dee_OFFSET_SLAB_PAGE_META];
+#endif
+	struct {
+		Dee_SLAB_PAGE_META_FIELDS(Dee_slab_page)
+	} sp_meta; /* Slab footer/metadata */
+};
+
+/* Helper macros to check what kind of page a give slab is. */
+#define Dee_slab_page_iscustom(self) ((self)->sp_meta.spm_type.t_custom.c_marker == Dee_SLAB_PAGE_META_CUSTOM_MARKER)
+#define Dee_slab_page_isnormal(self) (!Dee_slab_page_iscustom(self))
 
 
+/* Helper functions for building custom slab pages. These functions
+ * are used by dec file writers to generate serializable dec files:
+ * >> struct Dee_slab_page *my_page = ...;
+ * >> Dee_slab_page_buildinit(my_page);
+ * >> void *p1 = Dee_slab_page_buildmalloc(my_page, 32);
+ * >> void *p2 = Dee_slab_page_buildmalloc(my_page, 32);
+ * >> void *p3 = Dee_slab_page_buildmalloc(my_page, 24);
+ * >> ...
+ * >>
+ * >> // Pack the custom slab page into a proper one.
+ * >> //
+ * >> // This part may only be done when "my_page" is properly aligned,
+ * >> // which is something that `Dee_slab_page_buildmalloc()' and its
+ * >> // parter `Dee_slab_page_buildfree()' has NOT asserted until this
+ * >> // point.
+ * >> Dee_slab_page_buildpack(my_page, &free_my_page);
+ * >>
+ * >> DeeSlab_Free32(p1);
+ * >> DeeSlab_Free32(p2);
+ * >> DeeSlab_Free24(p3); // Last free will invoke "free_my_page(my_page)"
+ */
+#define Dee_slab_page_buildinit(self) \
+	(void)(bzero(self, Dee_SLAB_PAGESIZE), (self)->sp_meta.spm_type.t_builder.spb_unused_hi = Dee_OFFSET_SLAB_PAGE_META)
+#define Dee_slab_page_buildpack(self, free_fun)                                           \
+	(void)(Dee_ASSERT(((uintptr_t)(self) & (Dee_SLAB_PAGESIZE - 1)) == 0),                \
+	       (self)->sp_meta.spm_type.t_custom.c_marker = Dee_SLAB_PAGE_META_CUSTOM_MARKER, \
+	       (self)->sp_meta.spm_type.t_custom.c_free   = (free_fun))
+
+/* Allocate/free custom chunks within a custom slab-page.
+ * Also note that using these builder functions, you can
+ * even mix-and-match chunks of different sizes, and it
+ * will just work (though you have to remember which chunk
+ * has which size, since the chunk's size is always needed
+ * in order to safely free that chunk)
+ *
+ * NOTE: These function intentionally do *NOT* assert alignment of "self",
+ *       meaning you can use these functions to build a custom slab page
+ *       in unaligned memory, before simply memcpy-ing the page into a new
+ *       memory location (that is probably) aligned, and keep working with
+ *       it without any other relocation-work needed (assuming that payload
+ *       area being moved don't require relocations).
+ *
+ * WARNING: The caller of these functions is responsible to ensure that
+ *          `DeeSlab_EXISTS(n)' (or `DeeGCSlab_EXISTS(n - Dee_GC_OBJECT_OFFSET)')
+ *          This requirement is asserted internally, so you'll get an assert
+ *          failure if you don't comply with this requirement!
+ *
+ * @return: * :   Pointer into `self->sp_data' to an n-byte payload area
+ * @return: NULL: Insufficient memory -- given slab page "self" does not
+ *                have space for another "n"-byte large slab. (you should
+ *                probably allocate another ) */
+DFUNDEF WUNUSED NONNULL((1)) void *DCALL
+Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n);
+DFUNDEF NONNULL((1, 2)) void DCALL
+Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n);
 
 DECL_END
 #endif /* __CC__ */

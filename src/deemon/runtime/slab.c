@@ -24,14 +24,16 @@
 
 #if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
 #include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_*, Dee_Free, Dee_Memalign, Dee_TryMemalign, Dee_UntrackAlloc */
-#include <deemon/gc.h>               /* DeeDbgGCSlab_Calloc, DeeDbgGCSlab_Free, DeeDbgGCSlab_Malloc, DeeDbgGCSlab_TryCalloc, DeeDbgGCSlab_TryMalloc, DeeDbgGCSlab_UntrackAlloc, DeeGCSlab_Calloc, DeeGCSlab_Free, DeeGCSlab_Malloc, DeeGCSlab_TryCalloc, DeeGCSlab_TryMalloc, DeeGC_Head, DeeGC_Object, Dee_GC_HEAD_SIZE, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
+#include <deemon/format.h>           /* PRFuSIZ */
+#include <deemon/gc.h>               /* DeeDbgGCSlab_Calloc, DeeDbgGCSlab_Free, DeeDbgGCSlab_Malloc, DeeDbgGCSlab_TryCalloc, DeeDbgGCSlab_TryMalloc, DeeDbgGCSlab_UntrackAlloc, DeeGCSlab_Calloc, DeeGCSlab_Free, DeeGCSlab_Malloc, DeeGCSlab_TryCalloc, DeeGCSlab_TryMalloc, DeeGC_Head, DeeGC_Object, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/system-features.h>  /* memset */
 #include <deemon/types.h>            /* DeeObject */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH, Dee_SLAB_CHUNKSIZE_MAX, Dee_SLAB_CHUNKSIZE_MIN */
-#include <deemon/util/slab.h>        /* Dee_SLAB_PAGESIZE */
+#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_builder_offset_t */
 
-#include <hybrid/align.h>    /* IS_POWER_OF_TWO */
-#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
+#include <hybrid/align.h>    /* CEILDIV, IS_POWER_OF_TWO */
+#include <hybrid/overflow.h> /* OVERFLOW_USUB */
+#include <hybrid/typecore.h> /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_INT_FASTn_T__, __SIZEOF_POINTER__, __UINTPTR_C, __UINTn_C */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* UINT32_C, UINT64_C */
@@ -42,18 +44,24 @@
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 #if defined(Dee_SLAB_CHUNKSIZE_MAX) || defined(__DEEMON__)
 DECL_BEGIN
-
-#define _DeeSlab_EXISTS_CB(n, N) || n == (N)
-#define DeeSlab_EXISTS(N)    (0 Dee_SLAB_CHUNKSIZE_FOREACH(_DeeSlab_EXISTS_CB, N))
-#define DeeSlab_GC_EXISTS(N) (0 Dee_SLAB_CHUNKSIZE_GC_FOREACH(_DeeSlab_EXISTS_CB, N))
 
 /* Do some sanity assertions on the slab configuration */
 STATIC_ASSERT(IS_POWER_OF_TWO(Dee_SLAB_PAGESIZE));
 STATIC_ASSERT(Dee_SLAB_PAGESIZE > Dee_SLAB_CHUNKSIZE_MAX);
 STATIC_ASSERT(DeeSlab_EXISTS(Dee_SLAB_CHUNKSIZE_MIN));
 STATIC_ASSERT(DeeSlab_EXISTS(Dee_SLAB_CHUNKSIZE_MAX));
+
+/* Assert that all GC slabs exist when adjust for their actual size */
+#define LOCAL_ASSERT_GC_SLAB_EXISTS(n, _) \
+	STATIC_ASSERT(DeeSlab_EXISTS(n + Dee_GC_OBJECT_OFFSET));
+Dee_SLAB_CHUNKSIZE_GC_FOREACH(LOCAL_ASSERT_GC_SLAB_EXISTS, ~)
+#undef LOCAL_ASSERT_GC_SLAB_EXISTS
+
 
 #if __SIZEOF_POINTER__ > 4
 #define WORD_4BYTE(x) UINT64_C(0x##x##x)
@@ -196,7 +204,7 @@ Dee_SLAB_CHUNKSIZE_FOREACH(DEFINE_DeeDbgSlab_API, ~)
  * enumerate and call-forward to the relevant, matching slab function) */
 LOCAL void *gc_initob(void *ptr) {
 	if likely(ptr) {
-		DBG_memset(ptr, 0xcc, Dee_GC_HEAD_SIZE);
+		DBG_memset(ptr, 0xcc, Dee_GC_OBJECT_OFFSET);
 		ptr = DeeGC_Object((struct Dee_gc_head *)ptr);
 	}
 	return ptr;
@@ -261,6 +269,48 @@ LOCAL void *gc_initob(void *ptr) {
 
 Dee_SLAB_CHUNKSIZE_GC_FOREACH(DEFINE_DeeGCSlab_API, ~)
 #undef DEFINE_DeeGCSlab_API
+
+
+/* Select "bitword_t" data type. */
+#if __SIZEOF_POINTER__ <= 1
+#define bitword_t        __UINT_FAST8_TYPE__
+#define BITWORD_C(v)     __UINT8_C(v)
+#define SIZEOF_bitword_t __SIZEOF_INT_FAST8_T__
+#elif __SIZEOF_POINTER__ <= 2
+#define bitword_t        __UINT_FAST16_TYPE__
+#define BITWORD_C(v)     __UINT16_C(v)
+#define SIZEOF_bitword_t __SIZEOF_INT_FAST16_T__
+#elif __SIZEOF_POINTER__ <= 4
+#define bitword_t        __UINT_FAST32_TYPE__
+#define BITWORD_C(v)     __UINT32_C(v)
+#define SIZEOF_bitword_t __SIZEOF_INT_FAST32_T__
+#elif __SIZEOF_POINTER__ <= 8
+#define bitword_t        __UINT_FAST64_TYPE__
+#define BITWORD_C(v)     __UINT64_C(v)
+#define SIZEOF_bitword_t __SIZEOF_INT_FAST64_T__
+#else /* __SIZEOF_POINTER__ <= ... */
+#define bitword_t        __UINTPTR_TYPE__
+#define BITWORD_C(v)     __UINTPTR_C(v)
+#define SIZEOF_bitword_t __SIZEOF_POINTER__
+#endif /* __SIZEOF_POINTER__ > ... */
+#define BITSOF_bitword_t (SIZEOF_bitword_t * __CHAR_BIT__)
+
+
+/* Calculate the # of chunks that fit into a slab page, given the size of those chunks.
+ * Since the formula for this is self-dependent, we use 3 consecutive approximations,
+ * which seems to produce optimial results in all situations. */
+#define _UPPER__MAX_CHUNK_COUNT(n) (Dee_OFFSET_SLAB_PAGE_META / n)
+#define _UPPER_ELEMOF__sp_used(n)  CEILDIV(_UPPER__MAX_CHUNK_COUNT(n), BITSOF_bitword_t)
+#define _UPPER_SIZEOF__sp_used(n)  (_UPPER_ELEMOF__sp_used(n) * SIZEOF_bitword_t)
+#define _LOWER_SIZEOF__sp_data(n)  (Dee_OFFSET_SLAB_PAGE_META - _UPPER_SIZEOF__sp_used(n))
+#define _LOWER__MAX_CHUNK_COUNT(n) (_LOWER_SIZEOF__sp_data(n) / n)
+#define _LOWER_ELEMOF__sp_used(n)  CEILDIV(_LOWER__MAX_CHUNK_COUNT(n), BITSOF_bitword_t)
+#define _LOWER_SIZEOF__sp_used(n)  (_LOWER_ELEMOF__sp_used(n) * SIZEOF_bitword_t)
+#define _LOWER_BITSOF__sp_used(n)  (_LOWER_ELEMOF__sp_used(n) * BITSOF_bitword_t)
+#define _FINAL_SIZEOF__sp_data(n)  (Dee_OFFSET_SLAB_PAGE_META - _LOWER_SIZEOF__sp_used(n))
+#define _MAX_CHUNK_COUNT(n)        (_FINAL_SIZEOF__sp_data(n) / n)
+#define MAX_CHUNK_COUNT(n)        (_MAX_CHUNK_COUNT(n) > _LOWER_BITSOF__sp_used(n) ? _LOWER_BITSOF__sp_used(n) : _MAX_CHUNK_COUNT(n))
+
 
 DECL_END
 
@@ -567,6 +617,141 @@ for (local n: [minsize:maxsize+1]) {
 /*[[[end]]]*/
 #endif /* !__INTELLISENSE__ */
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
+
+DECL_BEGIN
+
+struct page_format {
+	unsigned int pf__max_chunk_count; /* max # of chunks that may exist in the page */
+	unsigned int pf__sizeof__sp_used; /* [== sizeof(sp_used) == SIZEOF_bitword_t * CEILDIV(pf__max_chunk_count, BITSOF_bitword_t)]
+	                                   * aka "offsetof__sp_data" */
+};
+#define PAGE_FORMAT_INIT(n)                                                                           \
+	{                                                                                                 \
+		/* .pf__max_chunk_count = */ MAX_CHUNK_COUNT(n),                                              \
+		/* .pf__sizeof__sp_used = */ SIZEOF_bitword_t * CEILDIV(MAX_CHUNK_COUNT(n), BITSOF_bitword_t) \
+	}
+
+
+PRIVATE ATTR_RETNONNULL ATTR_CONST WUNUSED
+struct page_format const *DCALL get_page_format(size_t n) {
+	ASSERTF(DeeSlab_EXISTS(n), "Invalid size slab: %" PRFuSIZ, n);
+	switch (n) {
+#define DEFINE_FORMAT(n, _)                                       \
+	case n: {                                                     \
+		static struct page_format const pf = PAGE_FORMAT_INIT(n); \
+		return &pf;                                               \
+	}	break;
+	Dee_SLAB_CHUNKSIZE_FOREACH(DEFINE_FORMAT, ~)
+#undef PAGE_FORMAT_INIT
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+
+/* Allocate/free custom chunks within a custom slab-page.
+ * Also note that using these builder functions, you can
+ * even mix-and-match chunks of different sizes, and it
+ * will just work (though you have to remember which chunk
+ * has which size, since the chunk's size is always needed
+ * in order to safely free that chunk)
+ *
+ * NOTE: These function intentionally do *NOT* assert alignment of "self",
+ *       meaning you can use these functions to build a custom slab page
+ *       in unaligned memory, before simply memcpy-ing the page into a new
+ *       memory location (that is probably) aligned, and keep working with
+ *       it without any other relocation-work needed (assuming that payload
+ *       area being moved don't require relocations).
+ *
+ * WARNING: The caller of these functions is responsible to ensure that
+ *          `DeeSlab_EXISTS(n)' (or `DeeGCSlab_EXISTS(n - Dee_GC_OBJECT_OFFSET)')
+ *          This requirement is asserted internally, so you'll get an assert
+ *          failure if you don't comply with this requirement!
+ *
+ * @return: * :   Pointer into `self->sp_data' to an n-byte payload area
+ * @return: NULL: Insufficient memory -- given slab page "self" does not
+ *                have space for another "n"-byte large slab. (you should
+ *                probably allocate another ) */
+PUBLIC WUNUSED NONNULL((1)) void *DCALL
+Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
+	struct page_format const *fmt = get_page_format(n);
+	bitword_t *self__sp_used = (bitword_t *)self;
+	Dee_slab_page_builder_offset_t lo_offset = self->sp_meta.spm_type.t_builder.spb_unused_lo;
+	Dee_slab_page_builder_offset_t hi_offset = self->sp_meta.spm_type.t_builder.spb_unused_hi;
+	if (lo_offset < fmt->pf__sizeof__sp_used) {
+		lo_offset = fmt->pf__sizeof__sp_used;
+	}
+	/* Align "hi_offset" */
+	if (OVERFLOW_USUB(hi_offset, fmt->pf__sizeof__sp_used, &hi_offset))
+		goto fail;
+	lo_offset -= fmt->pf__sizeof__sp_used;
+	for (;;) {
+		size_t bitno, bit_indx;
+		bitword_t bit_mask;
+		if (hi_offset <= lo_offset)
+			goto fail;
+		hi_offset -= n; /* Allocate memory */
+		bitno = hi_offset / n;
+		ASSERT(bitno < fmt->pf__max_chunk_count);
+		bit_indx = bitno / BITSOF_bitword_t;
+		bit_mask = BITWORD_C(1) << (bitno % BITSOF_bitword_t);
+		if (self__sp_used[bit_indx] & bit_mask)
+			continue; /* Conflict with some other allocation -> cannot use this position (try the next one) */
+
+		/* Mark location as allocated */
+		self__sp_used[bit_indx] |= bit_mask;
+		break;
+	}
+
+	/* Adjust offsets to be independent of "sizeof(sp_used)" */
+	lo_offset += fmt->pf__sizeof__sp_used;
+	hi_offset += fmt->pf__sizeof__sp_used;
+
+	/* Remember offsets of new unused-area (the unused-area can only ever shrink btw) */
+	ASSERT(self->sp_meta.spm_type.t_builder.spb_unused_lo <= lo_offset);
+	ASSERT(self->sp_meta.spm_type.t_builder.spb_unused_hi >= hi_offset);
+	self->sp_meta.spm_type.t_builder.spb_unused_lo = lo_offset;
+	self->sp_meta.spm_type.t_builder.spb_unused_hi = hi_offset;
+
+	/* Freshly allocated location is at the far end of the (now smaller) free-area. */
+	return (byte_t *)self + hi_offset;
+fail:
+	return NULL;
+}
+
+PUBLIC NONNULL((1, 2)) void DCALL
+Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
+	bitword_t *self__sp_used = (bitword_t *)self;
+	struct page_format const *fmt = get_page_format(n);
+	Dee_slab_page_builder_offset_t offsetof__p_from_self    = (size_t)((byte_t *)p - (byte_t *)self);
+	Dee_slab_page_builder_offset_t offsetof__p_from_sp_data = offsetof__p_from_self - fmt->pf__sizeof__sp_used;
+	size_t bitno_of__p_in_sp_used = offsetof__p_from_sp_data / n;
+	size_t indx_of__p_in_sp_used;
+	bitword_t word_of__p_in_sp_used;
+	ASSERTF(offsetof__p_from_self >= fmt->pf__sizeof__sp_used,
+	        "Given 'p' is too close to the start of the page for this chunk-size");
+	ASSERTF(offsetof__p_from_self >= self->sp_meta.spm_type.t_builder.spb_unused_hi,
+	        "Given 'p' is not in allocated area of page");
+	ASSERTF((offsetof__p_from_sp_data % n) == 0,
+	        "Given 'p' is incorrectly aligned for this chunk-size");
+	ASSERTF(bitno_of__p_in_sp_used < fmt->pf__max_chunk_count,
+	        "Given 'p' is too close to the end of the page for this chunk-size");
+
+	indx_of__p_in_sp_used = bitno_of__p_in_sp_used / BITSOF_bitword_t;
+	word_of__p_in_sp_used = BITWORD_C(1) << (bitno_of__p_in_sp_used % BITSOF_bitword_t);
+	ASSERTF(self__sp_used[indx_of__p_in_sp_used] & word_of__p_in_sp_used,
+	        "Given 'p' is not marked as allocated within this page");
+
+	/* Mark the location as not-allocated within the slab's in-use bitset. */
+	self__sp_used[indx_of__p_in_sp_used] &= ~word_of__p_in_sp_used;
+
+	/* If the given 'p' was most-recently allocated from 'self',
+	 * we can give back memory to the page's unused area. */
+	if (self->sp_meta.spm_type.t_builder.spb_unused_hi == offsetof__p_from_self)
+		self->sp_meta.spm_type.t_builder.spb_unused_hi += n;
+}
+
+DECL_END
 
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 

@@ -501,7 +501,7 @@ typedef struct Dee_dec_writer {
 	size_t                  dw_align;  /* Minimum alignment requirements for the resulting dec file */
 	size_t                  dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-	/* TODO: Integration of slab pages */
+	/* TODO: Integration of slab pages (s.a. `Dee_slab_page_buildmalloc()') */
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	struct Dee_dec_reltab   dw_srel;   /* Table of self-relocations */
 	struct Dee_dec_reltab   dw_drel;   /* Table of relocations against deemon-core objects */

@@ -24,17 +24,17 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeSlab_*, Dee_Free */
-#include <deemon/system-features.h> /* bzero */
-#include <deemon/types.h>           /* ITER_DONE */
-#include <deemon/util/atomic.h>     /* atomic_* */
-#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
-#include <deemon/util/slab.h>       /* Dee_SLAB_PAGESIZE */
+#include <deemon/alloc.h>            /* DeeSlab_*, Dee_Free */
+#include <deemon/system-features.h>  /* bzero */
+#include <deemon/util/atomic.h>      /* atomic_* */
+#include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX, Dee_SLAB_CHUNKSIZE_MIN */
+#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS, Dee_slab_page_iscustom, Dee_slab_page_isnormal */
 
 #include <hybrid/align.h>         /* CEILDIV */
 #include <hybrid/bit.h>           /* CTZ */
 #include <hybrid/sequence/list.h> /* LIST_* */
-#include <hybrid/typecore.h>      /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_INT_FASTn_T__, __SIZEOF_POINTER__, __UINTPTR_C, __UINTn_C */
+#include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_BIT__, __SHIFT_TYPE__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* offsetof, size_t */
@@ -65,91 +65,73 @@
 
 #define LOCAL_DECL PUBLIC
 
+/* Assert that the chunk size is valid as far as the slab configuration is concerned */
+#if DEFINE_CHUNK_SIZE < Dee_SLAB_CHUNKSIZE_MIN
+#error "Bad configuration: some chunk sizes are enabled that are less than 'Dee_SLAB_CHUNKSIZE_MIN'"
+#endif /* DEFINE_CHUNK_SIZE < Dee_SLAB_CHUNKSIZE_MIN */
+#if DEFINE_CHUNK_SIZE > Dee_SLAB_CHUNKSIZE_MAX
+#error "Bad configuration: some chunk sizes are enabled that are greater than 'Dee_SLAB_CHUNKSIZE_MAX'"
+#endif /* DEFINE_CHUNK_SIZE > Dee_SLAB_CHUNKSIZE_MAX */
+#if !DeeSlab_EXISTS(DEFINE_CHUNK_SIZE)
+#error "INTERNAL ERROR: Tried to define implementation for some non-existant 'DEFINE_CHUNK_SIZE'"
+#endif /* !DeeSlab_EXISTS(DEFINE_CHUNK_SIZE) */
+
+/* Assert that the chunk size makes sense from a logical point-of-view (note that this isn't
+ * actually a requirement as far as semantics are concerned; the slab allocator could happily
+ * define slabs for e.g. 3-byte chunks, and that would work just fine).
+ *
+ * -> But from a practical point-of-view, only chunks producing memory that is at least aligned
+ *    by the alignment requirements of pointers would ever make sense (because anything less
+ *    than that would mean that the memory is pretty much useless, as it couldn't even be used
+ *    to store pointers). */
+#if (DEFINE_CHUNK_SIZE % __ALIGNOF_POINTER__) != 0
+#error "Bad configuration: chunks produced by 'DEFINE_CHUNK_SIZE' would not even be pointer-aligned"
+#endif /* (DEFINE_CHUNK_SIZE % __ALIGNOF_POINTER__) != 0 */
+
 DECL_BEGIN
 
-/* Select "bitword_t" data type. */
-#if __SIZEOF_POINTER__ <= 1
-#define LOCAL_bitword_t        __UINT_FAST8_TYPE__
-#define LOCAL_BITWORD_C(v)     __UINT8_C(v)
-#define LOCAL_SIZEOF_bitword_t __SIZEOF_INT_FAST8_T__
-#elif __SIZEOF_POINTER__ <= 2
-#define LOCAL_bitword_t        __UINT_FAST16_TYPE__
-#define LOCAL_BITWORD_C(v)     __UINT16_C(v)
-#define LOCAL_SIZEOF_bitword_t __SIZEOF_INT_FAST16_T__
-#elif __SIZEOF_POINTER__ <= 4
-#define LOCAL_bitword_t        __UINT_FAST32_TYPE__
-#define LOCAL_BITWORD_C(v)     __UINT32_C(v)
-#define LOCAL_SIZEOF_bitword_t __SIZEOF_INT_FAST32_T__
-#elif __SIZEOF_POINTER__ <= 8
-#define LOCAL_bitword_t        __UINT_FAST64_TYPE__
-#define LOCAL_BITWORD_C(v)     __UINT64_C(v)
-#define LOCAL_SIZEOF_bitword_t __SIZEOF_INT_FAST64_T__
-#else /* __SIZEOF_POINTER__ <= ... */
-#define LOCAL_bitword_t        __UINTPTR_TYPE__
-#define LOCAL_BITWORD_C(v)     __UINTPTR_C(v)
-#define LOCAL_SIZEOF_bitword_t __SIZEOF_POINTER__
-#endif /* __SIZEOF_POINTER__ > ... */
-#define LOCAL_BITSOF_bitword_t (LOCAL_SIZEOF_bitword_t * __CHAR_BIT__)
+/* Calculate "LOCAL_MAX_CHUNK_COUNT"  */
+#define LOCAL_MAX_CHUNK_COUNT _MAX_CHUNK_COUNT(DEFINE_CHUNK_SIZE)
+#if LOCAL_MAX_CHUNK_COUNT > _LOWER_BITSOF__sp_used(DEFINE_CHUNK_SIZE)
+#undef LOCAL_MAX_CHUNK_COUNT
+#define LOCAL_MAX_CHUNK_COUNT _LOWER_BITSOF__sp_used(DEFINE_CHUNK_SIZE)
+#endif /* LOCAL_MAX_CHUNK_COUNT > _LOWER_BITSOF__sp_used(DEFINE_CHUNK_SIZE) */
 
-
-/* >> sizeof(struct slab_page::sp_meta) */
-#define _LOCAL_SIZEOF__sp_meta (3 * __SIZEOF_POINTER__)
-
-/* Calculate "LOCAL__MAX_CHUNK_COUNT" using 3 successive approximations */
-#define _LOCAL_SIZEOF__sp_used__plus__sp_data (Dee_SLAB_PAGESIZE - _LOCAL_SIZEOF__sp_meta)
-#define _LOCAL_UPPER__MAX_CHUNK_COUNT         (_LOCAL_SIZEOF__sp_used__plus__sp_data / DEFINE_CHUNK_SIZE)
-#define _LOCAL_UPPER_ELEMOF__sp_used          CEILDIV(_LOCAL_UPPER__MAX_CHUNK_COUNT, LOCAL_BITSOF_bitword_t)
-#define _LOCAL_UPPER_SIZEOF__sp_used          (_LOCAL_UPPER_ELEMOF__sp_used * LOCAL_SIZEOF_bitword_t)
-#define _LOCAL_LOWER_SIZEOF__sp_data          (_LOCAL_SIZEOF__sp_used__plus__sp_data - _LOCAL_UPPER_SIZEOF__sp_used)
-#define _LOCAL_LOWER__MAX_CHUNK_COUNT         (_LOCAL_LOWER_SIZEOF__sp_data / DEFINE_CHUNK_SIZE)
-#define _LOCAL_LOWER_ELEMOF__sp_used          CEILDIV(_LOCAL_LOWER__MAX_CHUNK_COUNT, LOCAL_BITSOF_bitword_t)
-#define _LOCAL_LOWER_SIZEOF__sp_used          (_LOCAL_LOWER_ELEMOF__sp_used * LOCAL_SIZEOF_bitword_t)
-#define _LOCAL_LOWER_BITSOF__sp_used          (_LOCAL_LOWER_ELEMOF__sp_used * LOCAL_BITSOF_bitword_t)
-#define _LOCAL_FINAL_SIZEOF__sp_data          (_LOCAL_SIZEOF__sp_used__plus__sp_data - _LOCAL_LOWER_SIZEOF__sp_used)
-#define LOCAL__MAX_CHUNK_COUNT               (_LOCAL_FINAL_SIZEOF__sp_data / DEFINE_CHUNK_SIZE)
-#if LOCAL__MAX_CHUNK_COUNT > _LOCAL_LOWER_BITSOF__sp_used
-#undef LOCAL__MAX_CHUNK_COUNT
-#define LOCAL__MAX_CHUNK_COUNT _LOCAL_LOWER_BITSOF__sp_used
-#endif /* LOCAL__MAX_CHUNK_COUNT > _LOCAL_LOWER_BITSOF__sp_used */
-#define LOCAL_ELEMOF__sp_used CEILDIV(LOCAL__MAX_CHUNK_COUNT, LOCAL_BITSOF_bitword_t)
-#define LOCAL_SIZEOF__sp_data (LOCAL__MAX_CHUNK_COUNT * DEFINE_CHUNK_SIZE)
-#define LOCAL_SIZEOF__sp_used (LOCAL_ELEMOF__sp_used * LOCAL_SIZEOF_bitword_t)
-#define LOCAL_BITSOF__sp_used (LOCAL_ELEMOF__sp_used * LOCAL_BITSOF_bitword_t)
-#define LOCAL_SIZEOF__sp_pad  (Dee_SLAB_PAGESIZE - (_LOCAL_SIZEOF__sp_meta + LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data))
-
-
+/* Macros for some other constants */
+#define LOCAL_ELEMOF__sp_used CEILDIV(LOCAL_MAX_CHUNK_COUNT, BITSOF_bitword_t)
+#define LOCAL_SIZEOF__sp_data (LOCAL_MAX_CHUNK_COUNT * DEFINE_CHUNK_SIZE)
+#define LOCAL_SIZEOF__sp_used (LOCAL_ELEMOF__sp_used * SIZEOF_bitword_t)
+#define LOCAL_BITSOF__sp_used (LOCAL_ELEMOF__sp_used * BITSOF_bitword_t)
+#define LOCAL_SIZEOF__sp_pad  (Dee_SLAB_PAGESIZE - (Dee_SIZEOF_SLAB_PAGE_META + LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data))
 
 /* Sanity check the calculation above */
 STATIC_ASSERT(LOCAL_BITSOF__sp_used == (LOCAL_SIZEOF__sp_used * __CHAR_BIT__));
-STATIC_ASSERT(LOCAL_SIZEOF__sp_data == (LOCAL__MAX_CHUNK_COUNT * DEFINE_CHUNK_SIZE));
-STATIC_ASSERT(LOCAL__MAX_CHUNK_COUNT <= LOCAL_BITSOF__sp_used);
+STATIC_ASSERT(LOCAL_SIZEOF__sp_data == (LOCAL_MAX_CHUNK_COUNT * DEFINE_CHUNK_SIZE));
+STATIC_ASSERT(LOCAL_MAX_CHUNK_COUNT <= LOCAL_BITSOF__sp_used);
 STATIC_ASSERT((LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data +
-               LOCAL_SIZEOF__sp_pad + _LOCAL_SIZEOF__sp_meta) == Dee_SLAB_PAGESIZE);
-STATIC_ASSERT_MSG(LOCAL_SIZEOF__sp_pad < (DEFINE_CHUNK_SIZE + LOCAL_SIZEOF_bitword_t),
+               LOCAL_SIZEOF__sp_pad + Dee_SIZEOF_SLAB_PAGE_META) == Dee_SLAB_PAGESIZE);
+STATIC_ASSERT_MSG(LOCAL_SIZEOF__sp_pad < (DEFINE_CHUNK_SIZE + SIZEOF_bitword_t),
                   "More padding than this wouldn't make sense, because "
                   "then 1 extra item in `sp_data' should have been used");
 
 /* Define the "slab_page" structure */
 struct LOCAL_slab_page {
-	LOCAL_bitword_t sp_used[LOCAL_ELEMOF__sp_used]; /* Bitset of allocated chunk base addresses */
-	byte_t          sp_data[LOCAL_SIZEOF__sp_data]; /* Slab payload data */
+	bitword_t sp_used[LOCAL_ELEMOF__sp_used]; /* Bitset of allocated chunk base addresses */
+	byte_t    sp_data[LOCAL_SIZEOF__sp_data]; /* Slab payload data */
 #if LOCAL_SIZEOF__sp_pad != 0
-	byte_t         _sp_pad[LOCAL_SIZEOF__sp_pad];   /* Unused padding */
+	byte_t   _sp_pad[LOCAL_SIZEOF__sp_pad];   /* Unused padding */
 #endif /* LOCAL_SIZEOF__sp_pad != 0 */
 	struct {
-		size_t                      sm_used; /* [<= LOCAL__MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used" Must be
-		                                      * holding "LOCAL_slab_lock" to change to/from 0/LOCAL__MAX_CHUNK_COUNT. */
-		LIST_ENTRY(LOCAL_slab_page) sm_link; /* [0..1][lock(LOCAL_slab_lock)] Next page with free chunks,
-		                                      * or ITER_DONE if some custom free mechanism must be used because
-		                                      * this page exists within a dec file mapping. */
-	} sp_meta; /* Slab metadata */
+		Dee_SLAB_PAGE_META_FIELDS(LOCAL_slab_page)
+	} sp_meta; /* Slab footer/metadata */
 };
 
 /* Sanity check the page-struct definition */
 STATIC_ASSERT(sizeof(struct LOCAL_slab_page) == Dee_SLAB_PAGESIZE);
 STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_used) == 0);
 STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_data) == LOCAL_SIZEOF__sp_used);
-STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_meta) == (Dee_SLAB_PAGESIZE - _LOCAL_SIZEOF__sp_meta));
+STATIC_ASSERT(offsetof(struct LOCAL_slab_page, sp_meta) == Dee_OFFSET_SLAB_PAGE_META);
+STATIC_ASSERT(sizeof(((struct LOCAL_slab_page *)0)->sp_meta) == Dee_SIZEOF_SLAB_PAGE_META);
 
 LIST_HEAD(LOCAL_slab_page_list, LOCAL_slab_page);
 
@@ -184,9 +166,9 @@ PRIVATE struct LOCAL_slab_page_list LOCAL_slab_pages = LIST_HEAD_INITIALIZER(LOC
 
 
 /* Calculate the last-word mask for "sp_used" */
-#define LOCAL_sp_used__UNUSED_TRAILING_BITS (LOCAL_BITSOF__sp_used - LOCAL__MAX_CHUNK_COUNT)
-#define LOCAL_sp_used__USED_TRAILING_BITS   (LOCAL_BITSOF_bitword_t - LOCAL_sp_used__UNUSED_TRAILING_BITS)
-#define LOCAL_sp_used__LAST_USED_MASK       ((LOCAL_BITWORD_C(1) << LOCAL_sp_used__USED_TRAILING_BITS) - 1)
+#define LOCAL_sp_used__UNUSED_TRAILING_BITS (LOCAL_BITSOF__sp_used - LOCAL_MAX_CHUNK_COUNT)
+#define LOCAL_sp_used__USED_TRAILING_BITS   (BITSOF_bitword_t - LOCAL_sp_used__UNUSED_TRAILING_BITS)
+#define LOCAL_sp_used__LAST_USED_MASK       ((BITWORD_C(1) << LOCAL_sp_used__USED_TRAILING_BITS) - 1)
 
 
 
@@ -198,21 +180,21 @@ LOCAL_slab_malloc_in_page(LOCAL_slab_page *__restrict page) {
 #define LOCAL_maskfor(i)                \
 	((i) >= (LOCAL_ELEMOF__sp_used - 1) \
 	 ? LOCAL_sp_used__LAST_USED_MASK    \
-	 : (LOCAL_bitword_t) - 1)
+	 : (bitword_t) - 1)
 #define LOCAL_alloc_from(i, full_mask)                                        \
 	for (;;) {                                                                \
 		shift_t free_bit;                                                     \
-		LOCAL_bitword_t word, alloc_mask;                                     \
+		bitword_t word, alloc_mask;                                     \
 		word = atomic_read(&page->sp_used[i]);                                \
 		if (word == (full_mask))                                              \
 			break;                                                            \
 		/* There seems to be something free here! */                          \
 		free_bit   = CTZ(~word);                                              \
-		alloc_mask = (LOCAL_bitword_t)1 << free_bit;                          \
+		alloc_mask = (bitword_t)1 << free_bit;                          \
 		ASSERT(!(word & alloc_mask));                                         \
 		if (atomic_cmpxch_weak(&page->sp_used[i], word, word | alloc_mask)) { \
 			/* Got it! -- now just calculate the pointer we need to return */ \
-			size_t index  = i * LOCAL_BITSOF_bitword_t + free_bit;            \
+			size_t index  = i * BITSOF_bitword_t + free_bit;            \
 			size_t offset = index * DEFINE_CHUNK_SIZE;                        \
 			return page->sp_data + offset;                                    \
 		}                                                                     \
@@ -299,7 +281,7 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 	for (;;) {
 		size_t i;
 		for (i = 0; i < LOCAL_ELEMOF__sp_used; ++i) {
-			LOCAL_bitword_t full_mask = LOCAL_maskfor(i);
+			bitword_t full_mask = LOCAL_maskfor(i);
 			LOCAL_alloc_from(i, full_mask);
 		}
 	}
@@ -329,9 +311,9 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	LOCAL_slab_page *page = (LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
 	size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
 	size_t index = offset / DEFINE_CHUNK_SIZE;
-	size_t bit_indx = index / LOCAL_BITSOF_bitword_t;
-	LOCAL_bitword_t bit_mask = (LOCAL_bitword_t)1 << (index % LOCAL_BITSOF_bitword_t);
-	size_t old__sm_used;
+	size_t bit_indx = index / BITSOF_bitword_t;
+	bitword_t bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
+	size_t old__spm_used;
 #if 1 /* Super-hacky work-around to test if the new slab allocator works, without having to integrate proper DEC support */
 	if (is_dec_pointer(p)) {
 		Dee_Free(p);
@@ -341,54 +323,55 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0, "Badly aligned slab pointer: %p", p);
 	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated: %p", p);
 	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
-	ASSERT(page->sp_meta.sm_link.le_next != page);
+	ASSERT(page->sp_meta.spm_type.t_link.le_next != page);
 	slab_setfree_data(p, DEFINE_CHUNK_SIZE);
 	do {
-again_read__sm_used:
-		old__sm_used = atomic_read(&page->sp_meta.sm_used);
-		ASSERT(old__sm_used >= 1);
-		ASSERT(old__sm_used <= LOCAL__MAX_CHUNK_COUNT);
-		if (old__sm_used == 1) {
-			/* Last chunk of page is being deleted.
-			 *
-			 * In theory, this lock acquire could be made non-blocking by having a pending-free-list
+again_read__spm_used:
+		old__spm_used = atomic_read(&page->sp_meta.spm_used);
+		ASSERT(old__spm_used >= 1);
+		ASSERT(old__spm_used <= LOCAL_MAX_CHUNK_COUNT);
+		if (old__spm_used == 1) {
+			/* Last chunk of page is being deleted. */
+			if (Dee_slab_page_iscustom(page)) {
+				/* Invoke custom page-free callback */
+				(*page->sp_meta.spm_type.t_custom.c_free)(page);
+				return;
+			}
+
+			/* In theory, this lock acquire could be made non-blocking by having a pending-free-list
 			 * However, this part will be left out initially, unless it turns out that this ends up
 			 * being a bottleneck once the new impl is being run in a heavily parallelized environment */
 			LOCAL_slab_lock_write();
-			if (page->sp_meta.sm_link.le_prev == (LOCAL_slab_page **)ITER_DONE) {
+			ASSERT(!Dee_slab_page_iscustom(page));
+			if (!atomic_cmpxch(&page->sp_meta.spm_used, 1, 0)) {
 				LOCAL_slab_lock_endwrite();
-				/* Special case: free a custom slab page within a dec file mapping */
-				/* TODO */
-				return;
+				goto again_read__spm_used;
 			}
-			if (!atomic_cmpxch(&page->sp_meta.sm_used, 1, 0)) {
-				LOCAL_slab_lock_endwrite();
-				goto again_read__sm_used;
-			}
-			ASSERT(LIST_ISBOUND(page, sp_meta.sm_link));
-			LIST_REMOVE(page, sp_meta.sm_link);
+			ASSERT(LIST_ISBOUND(page, sp_meta.spm_type.t_link));
+			LIST_REMOVE(page, sp_meta.spm_type.t_link);
 			LOCAL_slab_lock_endwrite();
 			/* Ensure page is now free */
 			slab_page_free(page);
 			break;
-		} else if (old__sm_used == LOCAL__MAX_CHUNK_COUNT) {
+		} else if (old__spm_used == LOCAL_MAX_CHUNK_COUNT &&
+		           Dee_slab_page_isnormal(page)) {
 			/* First free in previously fully allocated slab (may not actually
 			 * be the case when this is a dec chunk, but in that case, we simply
 			 * acquire "LOCAL_slab_lock" for no reason, and don't end up doing
 			 * anything with it below) */
 			LOCAL_slab_lock_write();
-			if (!atomic_cmpxch(&page->sp_meta.sm_used,
-			                   LOCAL__MAX_CHUNK_COUNT,
-			                   LOCAL__MAX_CHUNK_COUNT - 1)) {
+			if (!atomic_cmpxch(&page->sp_meta.spm_used,
+			                   LOCAL_MAX_CHUNK_COUNT,
+			                   LOCAL_MAX_CHUNK_COUNT - 1)) {
 				LOCAL_slab_lock_endwrite();
-				goto again_read__sm_used;
+				goto again_read__spm_used;
 			}
-			if (page->sp_meta.sm_link.le_prev != (LOCAL_slab_page **)ITER_DONE)
-				LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.sm_link);
+			ASSERT(Dee_slab_page_isnormal(page));
+			LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
 			LOCAL_slab_lock_endwrite();
 			break;
 		}
-	} while (!atomic_cmpxch_weak(&page->sp_meta.sm_used, old__sm_used, old__sm_used - 1));
+	} while (!atomic_cmpxch_weak(&page->sp_meta.spm_used, old__spm_used, old__spm_used - 1));
 }
 
 
@@ -409,26 +392,12 @@ LOCAL_DeeSlab_TryCalloc(void) {
 }
 
 #ifndef __INTELLISENSE__
-#undef _LOCAL_SIZEOF__sp_used__plus__sp_data
-#undef _LOCAL_UPPER__MAX_CHUNK_COUNT
-#undef _LOCAL_UPPER_ELEMOF__sp_used
-#undef _LOCAL_UPPER_SIZEOF__sp_used
-#undef _LOCAL_LOWER_SIZEOF__sp_data
-#undef _LOCAL_LOWER__MAX_CHUNK_COUNT
-#undef _LOCAL_LOWER_ELEMOF__sp_used
-#undef _LOCAL_LOWER_SIZEOF__sp_used
-#undef _LOCAL_LOWER_BITSOF__sp_used
-#undef _LOCAL_FINAL_SIZEOF__sp_data
-#undef LOCAL__MAX_CHUNK_COUNT
+#undef LOCAL_MAX_CHUNK_COUNT
 #undef LOCAL_ELEMOF__sp_used
 #undef LOCAL_SIZEOF__sp_data
 #undef LOCAL_SIZEOF__sp_used
 #undef LOCAL_BITSOF__sp_used
 #undef LOCAL_SIZEOF__sp_pad
-#undef LOCAL_bitword_t
-#undef LOCAL_SIZEOF_bitword_t
-#undef LOCAL_BITSOF_bitword_t
-#undef LOCAL_BITWORD_C
 
 #undef LOCAL_slab_lock_reading
 #undef LOCAL_slab_lock_writing

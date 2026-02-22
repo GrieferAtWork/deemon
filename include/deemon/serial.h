@@ -26,7 +26,8 @@
 
 #include "api.h"
 
-#include "types.h" /* DREF, DeeObject, Dee_AsObject, Dee_funptr_t */
+#include "types.h"            /* DREF, DeeObject, Dee_AsObject, Dee_funptr_t */
+#include "util/slab-config.h" /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
 
 #include <stddef.h> /* ptrdiff_t, size_t */
 

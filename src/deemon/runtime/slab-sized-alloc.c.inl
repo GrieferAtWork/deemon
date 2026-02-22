@@ -27,6 +27,7 @@
 
 #include <deemon/system-features.h> /* bzero */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
+#include <deemon/util/slab.h>       /* Dee_slab_page_isnormal */
 
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h> /* LIST_* */
@@ -64,13 +65,13 @@ again:
 again_locked:
 	page = LIST_FIRST(&LOCAL_slab_pages);
 	if (page) {
-		size_t old__sm_used;
-		ASSERT(page->sp_meta.sm_link.le_next != page);
+		size_t old__spm_used;
+		ASSERT(page->sp_meta.spm_type.t_link.le_next != page);
 		for (;;) {
-			old__sm_used = atomic_read(&page->sp_meta.sm_used);
-			ASSERT(old__sm_used >= 1);
-			ASSERT(old__sm_used <= (LOCAL__MAX_CHUNK_COUNT - 1));
-			if unlikely (old__sm_used >= (LOCAL__MAX_CHUNK_COUNT - 1)) {
+			old__spm_used = atomic_read(&page->sp_meta.spm_used);
+			ASSERT(old__spm_used >= 1);
+			ASSERT(old__spm_used <= (LOCAL_MAX_CHUNK_COUNT - 1));
+			if unlikely (old__spm_used >= (LOCAL_MAX_CHUNK_COUNT - 1)) {
 				/* About to allocate last free chunk of page */
 				LOCAL_slab_lock_endread();
 				while (!LOCAL_slab_lock_trywrite()) {
@@ -79,24 +80,24 @@ again_locked:
 						goto again;
 				}
 				if (LIST_FIRST(&LOCAL_slab_pages) != page ||
-				    !atomic_cmpxch(&page->sp_meta.sm_used,
-				                   LOCAL__MAX_CHUNK_COUNT - 1,
-				                   LOCAL__MAX_CHUNK_COUNT)) {
+				    !atomic_cmpxch(&page->sp_meta.spm_used,
+				                   LOCAL_MAX_CHUNK_COUNT - 1,
+				                   LOCAL_MAX_CHUNK_COUNT)) {
 					LOCAL_slab_lock_downgrade();
 					goto again_locked;
 				}
 
 				/* Remove page from "LOCAL_slab_pages" */
-				LIST_REMOVE(page, sp_meta.sm_link);
+				LIST_REMOVE(page, sp_meta.spm_type.t_link);
 				LOCAL_slab_lock_endwrite();
 				break;
-			} else if (atomic_cmpxch(&page->sp_meta.sm_used, old__sm_used, old__sm_used + 1)) {
+			} else if (atomic_cmpxch(&page->sp_meta.spm_used, old__spm_used, old__spm_used + 1)) {
 				LOCAL_slab_lock_endread();
 				break;
 			}
 		}
 
-		/* Since we were able to increment "sm_used", that also means that the page
+		/* Since we were able to increment "spm_used", that also means that the page
 		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
 #ifdef SLAB_DEBUG_MEMSET_ALLOC
 		result = LOCAL_slab_malloc_in_page(page);
@@ -112,14 +113,15 @@ again_locked:
 	if unlikely(!page)
 		return NULL;
 	bzero(page->sp_used, sizeof(page->sp_used));
-	page->sp_used[0]      = 1;
-	page->sp_meta.sm_used = 1;
+	page->sp_used[0]       = 1;
+	page->sp_meta.spm_used = 1;
 	result = page->sp_data;
 
 	/* In theory, this lock acquire could be made non-blocking
 	 * by having a insert-reap-list for `LOCAL_slab_pages'. */
 	LOCAL_slab_lock_write();
-	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.sm_link);
+	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
+	ASSERT(Dee_slab_page_isnormal(page));
 	LOCAL_slab_lock_endwrite();
 #ifdef SLAB_DEBUG_MEMSET_ALLOC
 done:

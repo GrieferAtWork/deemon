@@ -22,21 +22,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dec.h>          /* DBUILTINS_MAX, DECMAG*, DEC_BUILTINID_MAKE, DEC_BUILTINID_UNKNOWN, DFILE_LIMIT, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_NONE, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_BUILTIN_MAX, DTYPE_BUILTIN_MIN, DTYPE_BUILTIN_NUM, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_EXTENDED, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_Ehdr, DeeDec_Ehdr_*, Dee_ALIGNOF_DEC_*, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_dec_* */
-#include <deemon/object.h>       /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XDecrefv, Dee_funptr_t, Dee_hash_t, Dee_uint128_t, Dee_weakref_support_cinit, ITER_DONE, ITER_ISOK */
-#include <deemon/serial.h>       /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
-#include <deemon/type.h>         /* DeeObject_Init, DeeType_*, Dee_operator_t */
-#include <deemon/util/hash.h>    /* Dee_HashPtr, Dee_HashStr */
-#include <deemon/util/weakref.h> /* Dee_weakref, Dee_weakref_callback_t, Dee_weakref_initempty */
+#include <deemon/dec.h>              /* DBUILTINS_MAX, DECMAG*, DEC_BUILTINID_MAKE, DEC_BUILTINID_UNKNOWN, DFILE_LIMIT, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_NONE, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_BUILTIN_MAX, DTYPE_BUILTIN_MIN, DTYPE_BUILTIN_NUM, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_EXTENDED, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_Ehdr, DeeDec_Ehdr_*, Dee_ALIGNOF_DEC_*, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_dec_* */
+#include <deemon/object.h>           /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_OBJECT_OFFSETOF_DATA, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XDecrefv, Dee_funptr_t, Dee_hash_t, Dee_uint128_t, Dee_weakref_support_cinit, ITER_DONE, ITER_ISOK */
+#include <deemon/serial.h>           /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
+#include <deemon/type.h>             /* DeeObject_Init, DeeType_*, Dee_operator_t */
+#include <deemon/util/hash.h>        /* Dee_HashPtr, Dee_HashStr */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
+#include <deemon/util/weakref.h>     /* Dee_weakref, Dee_weakref_callback_t, Dee_weakref_initempty */
 
 #ifndef CONFIG_NO_DEC
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#include <deemon/alloc.h>           /* DeeObject_Callocc, DeeObject_Free, Dee_*alloc*, Dee_BadAlloc, Dee_Free, Dee_Memalign, _Dee_MallococBufsize */
+#include <deemon/alloc.h>           /* DeeObject_Callocc, DeeObject_Free, DeeSlab_Free, Dee_*alloc*, Dee_BadAlloc, Dee_Free, Dee_Memalign, _Dee_MallococBufsize */
 #include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/exec.h>            /* DeeExec_GetTimestamp */
 #include <deemon/format.h>          /* PRF* */
-#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGC_*, Dee_GC_OBJECT_OFFSET, Dee_gc_head, Dee_gc_head_link */
+#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGCSlab_Free, DeeGC_*, Dee_GC_OBJECT_OFFSET, Dee_gc_head, Dee_gc_head_link */
 #include <deemon/heap.h>            /* DeeHeap_GetRegionOf, Dee_HEAPCHUNK_*, Dee_heapchunk, Dee_heapregion, Dee_heaptail */
 #include <deemon/module.h>          /* DeeModule*, Dee_DEC_FLOADOUTDATED, Dee_DEC_FUNTRUSTED, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_module_buildid, Dee_module_symbol */
 #include <deemon/string.h>          /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
@@ -2210,14 +2211,14 @@ decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
 decwriter_slab_malloc_impl(DeeDecWriter *__restrict self, size_t n, bool do_try) {
-	/* TODO: Implement proper slab allocation */
+	/* TODO: Dee_slab_page_buildmalloc() */
 	return do_try ? decwriter_trymalloc(self, n, NULL)
 	              : decwriter_malloc(self, n, NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) void DCALL
 decwriter_slab_free_impl(DeeDecWriter *__restrict self, Dee_seraddr_t addr, size_t n) {
-	/* TODO: Implement proper slab allocation */
+	/* TODO: Dee_slab_page_buildfree() */
 	(void)n;
 	decwriter_free(self, addr, NULL);
 }

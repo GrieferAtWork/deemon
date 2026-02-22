@@ -33,7 +33,7 @@
 #include <stddef.h> /* size_t */
 
 #ifndef __INTELLISENSE__
-#include "alloc.h"  /* DeeObject_FREE, DeeObject_MALLOC, Dee_*alloc*, Dee_Free */
+#include "alloc.h"  /* DeeObject_*, Dee_*alloc*, Dee_Free */
 #include "object.h" /* Dee_Decref_unlikely */
 #endif /* !__INTELLISENSE__ */
 
