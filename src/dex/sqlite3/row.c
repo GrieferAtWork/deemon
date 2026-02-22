@@ -382,7 +382,7 @@ rowfmt_serialize(RowFmt *__restrict self,
 	size_t sizeof_self = _Dee_MallococBufsize(offsetof(RowFmt, rf_cols),
 	                                          self->rf_ncol,
 	                                          sizeof(struct cellfmt));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 #define ADDROF(field) (out_addr + offsetof(RowFmt, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;

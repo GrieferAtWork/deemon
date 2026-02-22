@@ -1253,7 +1253,7 @@ LOCAL_seX(serialize)(LOCAL_SeqEach *__restrict self,
 	size_t i, sizeof_self;
 	sizeof_self = _Dee_MallococBufsize(offsetof(LOCAL_SeqEach, sg_argv),
 	                                   self->sg_argc, sizeof(DREF DeeObject *));
-	out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 #define ADDROF(field) (out_addr + offsetof(LOCAL_SeqEach, field))

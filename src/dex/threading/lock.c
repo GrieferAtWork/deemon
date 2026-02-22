@@ -2323,7 +2323,7 @@ lock_union_serialize(LockUnion *__restrict self,
 	size_t sizeof_self = _Dee_MallococBufsize(offsetof(LockUnion, lu_elem),
 	                                          self->lu_size,
 	                                          sizeof(DREF DeeObject *));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 #define ADDROF(field) (out_addr + offsetof(LockUnion, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;

@@ -595,6 +595,12 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
 #endif /* !Dee_SLAB_CHUNKSIZE_MAX */
 
 
+/* Check if a GC-slab size size "N" exists */
+#define DeeGCSlab_EXISTS(N) (0 Dee_SLAB_CHUNKSIZE_GC_FOREACH(_DeeSlab_EXISTS_CB, N))
+#ifndef _DeeSlab_EXISTS_CB
+#define _DeeSlab_EXISTS_CB(n, N) || n == (N) /*!export-*/
+#endif /* !_DeeSlab_EXISTS_CB */
+
 /* Return a function pointer for the relevant slab function for allocations of size "N"
  * If the given "N" isn't supported, returns "else" instead. */
 #define DeeGCSlab_GetMalloc(N, else)          _Dee_PRIVATE_SLAB_GC_SELECT(N, &, DeeGCSlab_Malloc, , else)

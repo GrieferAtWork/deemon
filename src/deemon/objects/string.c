@@ -541,7 +541,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 	String *out;
 	size_t sizeof_string = offsetof(String, s_str) + (self->s_len + 1) * sizeof(char);
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_string, self);
+	Dee_seraddr_t addr = DeeSerial_Object_Malloc(writer, sizeof_string, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, String);
@@ -562,7 +562,7 @@ string_serialize(String *__restrict self, DeeSerial *__restrict writer) {
 		Dee_seraddr_t addrof_data;
 		struct Dee_string_utf *out_data;
 		struct Dee_string_utf *in_data = self->s_data;
-		addrof_data = DeeSerial_Malloc(writer, sizeof(struct Dee_string_utf), in_data);
+		addrof_data = DeeSerial_MALLOC(writer, struct Dee_string_utf, in_data);
 		if (!Dee_SERADDR_ISOK(addrof_data))
 			goto err;
 		if (DeeSerial_PutAddr(writer, addr + offsetof(String, s_data), addrof_data))

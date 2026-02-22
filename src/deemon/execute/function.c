@@ -1038,7 +1038,7 @@ function_serialize(Function *__restrict self, DeeSerial *__restrict writer) {
 	Function *out;
 	size_t i, refc = self->fo_code->co_refstaticc;
 	size_t sizeof_function = offsetof(Function, fo_refv) + refc * sizeof(DREF DeeObject *);
-	Dee_seraddr_t addr = DeeSerial_GCObjectMalloc(writer, sizeof_function, self);
+	Dee_seraddr_t addr = DeeSerial_GCObject_Malloc(writer, sizeof_function, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, Function);
@@ -1463,7 +1463,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 yf_serialize(YFunction *__restrict self, DeeSerial *__restrict writer) {
 	YFunction *out;
 	size_t i, sizeof_yfunc = offsetof(YFunction, yf_argv) + (self->yf_argc * sizeof(DREF DeeObject *));
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_yfunc, self);
+	Dee_seraddr_t addr = DeeSerial_Object_Malloc(writer, sizeof_yfunc, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, YFunction);

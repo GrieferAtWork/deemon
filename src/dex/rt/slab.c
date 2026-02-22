@@ -90,7 +90,7 @@ ss_serialize(SlabStatObject *__restrict self,
 	size_t sizeof_slab = _Dee_MallococBufsize(offsetof(DeeSlabStat, st_slabs),
 	                                          self->st_stat.st_slabcount, sizeof(DeeSlabInfo));
 	size_t sizeof_self = sizeof_slab + offsetof(SlabStatObject, st_stat);
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 #define ADDROF(field) (out_addr + offsetof(SlabStatObject, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;

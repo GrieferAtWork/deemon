@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_*alloc*, Dee_Free */
-#include <deemon/deepcopy.h>        /* DeeDeepCopyContext, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem, Dee_deepcopy_uheap, Dee_deepcopy_uheap_alloc, Dee_deepcopy_uheap_destroy, Dee_deepcopy_uheap_free */
+#include <deemon/deepcopy.h>        /* DeeDeepCopyContext, Dee_deepcopy_heap_*, Dee_deepcopy_mapitem, Dee_deepcopy_uheap, Dee_deepcopy_uheap_alloc, Dee_deepcopy_uheap_destroy_ob, Dee_deepcopy_uheap_free */
 #include <deemon/error-rt.h>        /* DeeRT_ErrCannotSerialize */
 #include <deemon/gc.h>              /* DeeGC_*, Dee_GC_HEAD_SIZE, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/object.h>          /* ASSERT_OBJECT, Dee_Decref_unlikely, Dee_Decrefv_unlikely, Dee_Incref */
@@ -540,28 +540,317 @@ deepcopy_putweakref_ex(DeeDeepCopyContext *__restrict self,
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+PRIVATE WUNUSED NONNULL((2)) void *DCALL
+slab_do_gcmalloc(size_t n, void (DCALL **p_free)(void *__restrict ob), bool do_try) {
+	switch (n) {
+#define HANDLE_N(N, _)                           \
+	case N:                                      \
+		*p_free = &DeeGCSlab_Free##N;            \
+		return do_try ? DeeGCSlab_TryMalloc##N() \
+		              : DeeGCSlab_Malloc##N();
+	Dee_SLAB_CHUNKSIZE_GC_FOREACH(HANDLE_N, ~)
+#undef HANDLE_N
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+PRIVATE WUNUSED NONNULL((2)) void *DCALL
+slab_do_malloc(size_t n, void (DCALL **p_free)(void *__restrict ob), bool do_try) {
+	switch (n) {
+#define HANDLE_N(N, _)                         \
+	case N:                                    \
+		*p_free = &DeeSlab_Free##N;            \
+		return do_try ? DeeSlab_TryMalloc##N() \
+		              : DeeSlab_Malloc##N();
+	Dee_SLAB_CHUNKSIZE_FOREACH(HANDLE_N, ~)
+#undef HANDLE_N
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+PRIVATE WUNUSED NONNULL((1)) void *DCALL
+deepcopy_slab_do_malloc(struct Dee_deepcopy_uheap **p_heap,
+                        size_t n, bool do_try, bool do_gc) {
+	void *result;
+	struct Dee_deepcopy_uheap *uh;
+	uh = do_try ? Dee_deepcopy_uheap_tryalloc()
+	            : Dee_deepcopy_uheap_alloc();
+	if unlikely(!uh)
+		goto err;
+	result = do_gc ? slab_do_gcmalloc(n, &uh->ddcuh_free, do_try)
+	               : slab_do_malloc(n, &uh->ddcuh_free, do_try);
+	if unlikely(!result) {
+		Dee_deepcopy_uheap_free(uh);
+		goto err;
+	}
+	uh->ddcuh_base = (DeeObject *)result;
+	uh->ddcuh_next = *p_heap;
+	*p_heap = uh;
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+deepcopy_slab_malloc_impl(DeeDeepCopyContext *__restrict self,
+                          size_t n, void const *ref, bool do_try) {
+	void *result = deepcopy_slab_do_malloc(&self->dcc_sheap, n, do_try, false);
+	if unlikely(!result)
+		goto err;
+	if (ref && unlikely(deepcopy_mappointer(self, ref, result, n, do_try)))
+		goto err_r;
+	return deepcopy_ptr2ser(self, result);
+err_r:
+	deepcopy_heap_free(&self->dcc_heap, result);
+err:
+	return Dee_SERADDR_INVALID;
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+deepcopy_slab_free_impl(struct Dee_deepcopy_uheap **p_heap, void *ptr, size_t n) {
+	struct Dee_deepcopy_uheap *uh = *p_heap;
+	(void)ptr;
+	(void)n;
+	ASSERT(uh);
+	ASSERTF(uh->ddcuh_base == ptr, "Only ever allowed to free the most-recent allocation!");
+	*p_heap = uh->ddcuh_next;
+	Dee_deepcopy_uheap_destroy(uh);
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+deepcopy_slab_malloc(DeeDeepCopyContext *__restrict self,
+                     size_t n, /*0..1*/ void const *ref) {
+	return deepcopy_slab_malloc_impl(self, n, ref, false);
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+deepcopy_slab_trymalloc(DeeDeepCopyContext *__restrict self,
+                        size_t n, /*0..1*/ void const *ref) {
+	return deepcopy_slab_malloc_impl(self, n, ref, true);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+deepcopy_slab_free(DeeDeepCopyContext *__restrict self, Dee_seraddr_t addr,
+                   size_t n, /*0..1*/ void const *ref) {
+	if (ref)
+		deepcopy_unmappointer(self, ref);
+	deepcopy_slab_free_impl(&self->dcc_sheap, deepcopy_ser2ptr(self, addr, void), n);
+}
+
+
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_object_malloc_impl(DeeDeepCopyContext *__restrict self,
+                                 size_t n, DeeObject *__restrict ref, bool do_try) {
+	GenericObject *result;
+	ASSERT_OBJECT(ref);
+	ASSERTF(!DeeType_IsGC(Dee_TYPE(ref)), "Use deepcopy_gcobject_malloc_impl()");
+	result = (GenericObject *)deepcopy_slab_do_malloc(&self->dcc_uheap, n, do_try, false);
+	if unlikely(!result)
+		goto err;
+	if unlikely(deepcopy_mappointer(self, ref, result, n, do_try))
+		goto err_r;
+	DeeObject_Init(result, Dee_TYPE(ref));
+	return deepcopy_ptr2ser(self, result);
+err_r:
+	deepcopy_slab_free_impl(&self->dcc_uheap, result, n);
+err:
+	return Dee_SERADDR_INVALID;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_object_malloc(DeeDeepCopyContext *__restrict self,
+                            size_t n, DeeObject *__restrict ref) {
+	return deepcopy_slab_object_malloc_impl(self, n, ref, false);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_object_trymalloc(DeeDeepCopyContext *__restrict self,
+                               size_t n, DeeObject *__restrict ref) {
+	return deepcopy_slab_object_malloc_impl(self, n, ref, true);
+}
+
+PRIVATE NONNULL((1, 4)) void DCALL
+deepcopy_slab_object_free(DeeDeepCopyContext *__restrict self, Dee_seraddr_t addr,
+                          size_t n, DeeObject *__restrict ref) {
+	DeeObject *out = deepcopy_ser2ptr(self, addr, DeeObject);
+	deepcopy_unmappointer(self, ref);
+	Dee_Decref_unlikely(out->ob_type);
+	deepcopy_slab_free_impl(&self->dcc_uheap, out, n);
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_gcobject_malloc_impl(DeeDeepCopyContext *__restrict self, size_t n,
+                                   DeeObject *__restrict ref, bool do_try) {
+	GenericObject *result;
+	struct Dee_gc_head *result_head;
+	DeeObject *next;
+	ASSERT_OBJECT(ref);
+	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use deepcopy_object_malloc_impl()");
+	result = (GenericObject *)deepcopy_slab_do_malloc(&self->dcc_uheap, n, do_try, true);
+	if unlikely(!result)
+		goto err;
+	result_head = DeeGC_Head(result);
+	if unlikely(deepcopy_mappointer(self, DeeGC_Head(ref), result_head, n, do_try))
+		goto err_r;
+	DeeObject_Init(result, Dee_TYPE(ref));
+
+	/* Insert GC head */
+	result_head->gc_info.gi_pself = NULL;
+	if ((next = self->dcc_gc_head) != NULL) {
+		struct Dee_gc_head *next_head;
+		ASSERT(self->dcc_gc_tail != NULL);
+		next_head = DeeGC_Head(next);
+		next_head->gc_info.gi_pself = &result_head->gc_next;
+	} else {
+		ASSERT(self->dcc_gc_tail == NULL);
+		self->dcc_gc_tail = Dee_AsObject(result);
+	}
+	result_head->gc_next = next;
+	self->dcc_gc_head = Dee_AsObject(result);
+	return deepcopy_ptr2ser(self, result);
+err_r:
+	deepcopy_slab_free_impl(&self->dcc_uheap, result, n);
+err:
+	return Dee_SERADDR_INVALID;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_gcobject_malloc(DeeDeepCopyContext *__restrict self,
+                              size_t n, DeeObject *__restrict ref) {
+	return deepcopy_slab_gcobject_malloc_impl(self, n, ref, false);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_gcobject_trymalloc(DeeDeepCopyContext *__restrict self,
+                                 size_t n, DeeObject *__restrict ref) {
+	return deepcopy_slab_gcobject_malloc_impl(self, n, ref, true);
+}
+
+PRIVATE NONNULL((1, 4)) void DCALL
+deepcopy_slab_gcobject_free(DeeDeepCopyContext *__restrict self, Dee_seraddr_t addr,
+                            size_t n, DeeObject *__restrict ref) {
+	DeeObject *next, *obj;
+	struct Dee_gc_head *head;
+	obj  = deepcopy_ser2ptr(self, addr, DeeObject);
+	head = DeeGC_Head(obj);
+	deepcopy_unmappointer(self, ref);
+	ASSERT(self->dcc_gc_head == DeeGC_Object(head));
+	if ((next = head->gc_next) == NULL) {
+		ASSERT(self->dcc_gc_tail == obj);
+		self->dcc_gc_head = NULL;
+		self->dcc_gc_tail = NULL;
+	} else {
+		struct Dee_gc_head *next_head;
+		ASSERT(self->dcc_gc_tail != obj);
+		self->dcc_gc_head = next;
+		next_head = DeeGC_Head(next);
+		next_head->gc_info.gi_pself = NULL;
+	}
+	Dee_Decref_unlikely(obj->ob_type);
+	deepcopy_slab_free_impl(&self->dcc_uheap, obj, n);
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+deepcopy_slab_calloc(DeeDeepCopyContext *__restrict self,
+                     size_t n, /*0..1*/ void const *ref) {
+	Dee_seraddr_t result = deepcopy_slab_malloc(self, n, ref);
+	if (Dee_SERADDR_ISOK(result))
+		bzero(deepcopy_ser2ptr(self, result, void), n);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+deepcopy_slab_trycalloc(DeeDeepCopyContext *__restrict self,
+                        size_t n, /*0..1*/ void const *ref) {
+	Dee_seraddr_t result = deepcopy_slab_trymalloc(self, n, ref);
+	if (Dee_SERADDR_ISOK(result))
+		bzero(deepcopy_ser2ptr(self, result, void), n);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_object_calloc(DeeDeepCopyContext *__restrict self,
+                            size_t n, DeeObject *__restrict ref) {
+	Dee_seraddr_t result = deepcopy_slab_object_malloc(self, n, ref);
+	if (Dee_SERADDR_ISOK(result))
+		bzero(deepcopy_ser2ptr(self, result, byte_t) + Dee_OBJECT_OFFSETOF_DATA, n - Dee_OBJECT_OFFSETOF_DATA);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_object_trycalloc(DeeDeepCopyContext *__restrict self,
+                               size_t n, DeeObject *__restrict ref) {
+	Dee_seraddr_t result = deepcopy_slab_object_trymalloc(self, n, ref);
+	if (Dee_SERADDR_ISOK(result))
+		bzero(deepcopy_ser2ptr(self, result, byte_t) + Dee_OBJECT_OFFSETOF_DATA, n - Dee_OBJECT_OFFSETOF_DATA);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_gcobject_calloc(DeeDeepCopyContext *__restrict self,
+                              size_t n, DeeObject *__restrict ref) {
+	Dee_seraddr_t result = deepcopy_slab_gcobject_malloc(self, n, ref);
+	if (Dee_SERADDR_ISOK(result))
+		bzero(deepcopy_ser2ptr(self, result, byte_t) + Dee_OBJECT_OFFSETOF_DATA, n - Dee_OBJECT_OFFSETOF_DATA);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) Dee_seraddr_t DCALL
+deepcopy_slab_gcobject_trycalloc(DeeDeepCopyContext *__restrict self,
+                                 size_t n, DeeObject *__restrict ref) {
+	Dee_seraddr_t result = deepcopy_slab_gcobject_trymalloc(self, n, ref);
+	if (Dee_SERADDR_ISOK(result))
+		bzero(deepcopy_ser2ptr(self, result, byte_t) + Dee_OBJECT_OFFSETOF_DATA, n - Dee_OBJECT_OFFSETOF_DATA);
+	return result;
+}
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
 PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
-	/* .set_addr2mem           = */ (void *(DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&deepcopy_addr2mem,
-	/* .set_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_malloc,
-	/* .set_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_calloc,
-	/* .set_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_trymalloc,
-	/* .set_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_trycalloc,
-	/* .set_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void const *))&deepcopy_free,
-	/* .set_object_malloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_malloc,
-	/* .set_object_calloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_calloc,
-	/* .set_object_trymalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_trymalloc,
-	/* .set_object_trycalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_trycalloc,
-	/* .set_object_free        = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_object_free,
-	/* .set_gcobject_malloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_malloc,
-	/* .set_gcobject_calloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_calloc,
-	/* .set_gcobject_trymalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_trymalloc,
-	/* .set_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_trycalloc,
-	/* .set_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_gcobject_free,
-	/* .set_putaddr            = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, Dee_seraddr_t))&deepcopy_putaddr,
-	/* .set_putobject          = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_putobject,
-	/* .set_putobject_ex       = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, ptrdiff_t))&deepcopy_putobject_ex,
-	/* .set_putpointer         = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void const *__restrict))&deepcopy_putpointer,
-	/* .set_putweakref_ex      = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, Dee_weakref_callback_t))&deepcopy_putweakref_ex,
+	/* .set_addr2mem                = */ (void *(DCALL *)(DeeSerial *__restrict, Dee_seraddr_t))&deepcopy_addr2mem,
+	/* .set_malloc                  = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_malloc,
+	/* .set_calloc                  = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_calloc,
+	/* .set_trymalloc               = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_trymalloc,
+	/* .set_trycalloc               = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_trycalloc,
+	/* .set_free                    = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void const *))&deepcopy_free,
+	/* .set_object_malloc           = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_malloc,
+	/* .set_object_calloc           = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_calloc,
+	/* .set_object_trymalloc        = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_trymalloc,
+	/* .set_object_trycalloc        = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_object_trycalloc,
+	/* .set_object_free             = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_object_free,
+	/* .set_gcobject_malloc         = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_malloc,
+	/* .set_gcobject_calloc         = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_calloc,
+	/* .set_gcobject_trymalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_trymalloc,
+	/* .set_gcobject_trycalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_trycalloc,
+	/* .set_gcobject_free           = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_gcobject_free,
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	/* .set_slab_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_malloc,
+	/* .set_slab_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_calloc,
+	/* .set_slab_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_trymalloc,
+	/* .set_slab_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_trycalloc,
+	/* .set_slab_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, void const *))&deepcopy_slab_free,
+	/* .set_slab_object_malloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_object_malloc,
+	/* .set_slab_object_calloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_object_calloc,
+	/* .set_slab_object_trymalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_object_trymalloc,
+	/* .set_slab_object_trycalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_object_trycalloc,
+	/* .set_slab_object_free        = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))&deepcopy_slab_object_free,
+	/* .set_slab_gcobject_malloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_malloc,
+	/* .set_slab_gcobject_calloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_calloc,
+	/* .set_slab_gcobject_trymalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_trymalloc,
+	/* .set_slab_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_trycalloc,
+	/* .set_slab_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_free,
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+	/* .set_putaddr                 = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, Dee_seraddr_t))&deepcopy_putaddr,
+	/* .set_putobject               = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_putobject,
+	/* .set_putobject_ex            = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, ptrdiff_t))&deepcopy_putobject_ex,
+	/* .set_putpointer              = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, void const *__restrict))&deepcopy_putpointer,
+	/* .set_putweakref_ex           = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict, Dee_weakref_callback_t))&deepcopy_putweakref_ex,
 };
 
 
@@ -573,6 +862,9 @@ DeeDeepCopy_Init(DeeDeepCopyContext *__restrict self) {
 	self->dcc_obheap     = NULL;
 	self->dcc_gcheap     = NULL;
 	self->dcc_uheap      = NULL;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	self->dcc_sheap      = NULL;
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	self->dcc_ptrmapv    = NULL;
 	self->dcc_ptrmapc    = 0;
 	self->dcc_ptrmapa    = 0;
@@ -607,6 +899,17 @@ destroy_obheap(Dee_deepcopy_heap_t *heap, ptrdiff_t offsetof_object) {
 }
 
 PRIVATE void DCALL
+destroy_uheap_ob(struct Dee_deepcopy_uheap *heap) {
+	while (heap) {
+		struct Dee_deepcopy_uheap *next;
+		next = heap->ddcuh_next;
+		Dee_deepcopy_uheap_destroy_ob(heap);
+		heap = next;
+	}
+}
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+PRIVATE void DCALL
 destroy_uheap(struct Dee_deepcopy_uheap *heap) {
 	while (heap) {
 		struct Dee_deepcopy_uheap *next;
@@ -615,6 +918,7 @@ destroy_uheap(struct Dee_deepcopy_uheap *heap) {
 		heap = next;
 	}
 }
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 PUBLIC NONNULL((1)) void DCALL
 DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self) {
@@ -638,7 +942,10 @@ DeeDeepCopy_Fini(DeeDeepCopyContext *__restrict self) {
 	destroy_heap(self->dcc_heap);
 	destroy_obheap(self->dcc_obheap, 0);
 	destroy_obheap(self->dcc_gcheap, Dee_GC_OBJECT_OFFSET);
-	destroy_uheap(self->dcc_uheap);
+	destroy_uheap_ob(self->dcc_uheap);
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	destroy_uheap(self->dcc_sheap);
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* For safety... */
 	DBG_memset(self, 0xcc, sizeof(*self));
@@ -896,6 +1203,9 @@ DeeDeepCopy_Pack(/*inherit(always)*/DeeDeepCopyContext *__restrict self) {
 	cleanup_heap(self->dcc_gcheap);
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	cleanup_uheap(self->dcc_uheap);
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	cleanup_uheap(self->dcc_sheap);
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Free map tables. */
 	Dee_Free(self->dcc_ptrmapv);

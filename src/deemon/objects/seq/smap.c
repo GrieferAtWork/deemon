@@ -382,7 +382,7 @@ smap_serialize(SharedMap *__restrict self,
 	Dee_seraddr_t out__sm_vector;
 	size_t sizeof_self = SHAREDMAP_SIZEOF(self->sm_mask);
 	DeeSharedItem *ou__sm_vector;
-	out_addr = DeeSerial_ObjectCalloc(writer, sizeof_self, self);
+	out_addr = DeeSerial_Object_Calloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 again_read:

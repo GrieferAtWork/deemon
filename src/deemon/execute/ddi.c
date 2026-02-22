@@ -656,7 +656,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 ddi_serialize(DeeDDIObject *__restrict self, DeeSerial *__restrict writer) {
 	DeeDDIObject *out;
 	size_t sizeof_ddi  = offsetof(DeeDDIObject, d_ddi) + self->d_ddisize;
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_ddi, self);
+	Dee_seraddr_t addr = DeeSerial_Object_Malloc(writer, sizeof_ddi, self);
 	ASSERT(self != (DeeDDIObject *)&DeeDDI_Empty);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;

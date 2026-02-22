@@ -67,19 +67,24 @@ struct Dee_deepcopy_uheap {
 	NONNULL_T((1)) void      (DCALL *ddcuh_free)(void *__restrict ob); /* [1..1][const] Free function for `ddcuh_base' */
 };
 #ifdef __INTELLISENSE__
+#define Dee_deepcopy_uheap_tryalloc() ((struct Dee_deepcopy_uheap *)sizeof(struct Dee_deepcopy_uheap))
 #define Dee_deepcopy_uheap_alloc()    ((struct Dee_deepcopy_uheap *)sizeof(struct Dee_deepcopy_uheap))
 #define Dee_deepcopy_uheap_free(self) (void)Dee_REQUIRES_TYPE(struct Dee_deepcopy_uheap *, self)
-#define Dee_deepcopy_uheap_destroy(self)        \
+#define Dee_deepcopy_uheap_destroy_ob(self)     \
 	((*(self)->ddcuh_free)((self)->ddcuh_base), \
 	 Dee_deepcopy_uheap_free(self))
 #else /* __INTELLISENSE__ */
+#define Dee_deepcopy_uheap_tryalloc() DeeObject_TRYMALLOC(struct Dee_deepcopy_uheap)
 #define Dee_deepcopy_uheap_alloc()    DeeObject_MALLOC(struct Dee_deepcopy_uheap)
 #define Dee_deepcopy_uheap_free(self) DeeObject_FREE(Dee_REQUIRES_TYPE(struct Dee_deepcopy_uheap *, self))
-#define Dee_deepcopy_uheap_destroy(self)               \
+#define Dee_deepcopy_uheap_destroy_ob(self)               \
 	(Dee_Decref_unlikely((self)->ddcuh_base->ob_type), \
 	 (*(self)->ddcuh_free)((self)->ddcuh_base),        \
 	 Dee_deepcopy_uheap_free(self))
 #endif /* !__INTELLISENSE__ */
+#define Dee_deepcopy_uheap_destroy(self)        \
+	((*(self)->ddcuh_free)((self)->ddcuh_base), \
+	 Dee_deepcopy_uheap_free(self))
 
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
@@ -152,6 +157,9 @@ typedef struct {
 	Dee_deepcopy_heap_t         *dcc_obheap;     /* [0..N][owned] Deepcopy heap for objects */
 	Dee_deepcopy_heap_t         *dcc_gcheap;     /* [0..N][owned] Deepcopy heap for gc objects */
 	struct Dee_deepcopy_uheap   *dcc_uheap;      /* [0..N][owned] Deepcopy heap for objects with custom allocators */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	struct Dee_deepcopy_uheap   *dcc_sheap;      /* [0..N][owned] Deepcopy heap for slab allocations */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	struct Dee_deepcopy_mapitem *dcc_ptrmapv;    /* [0..dcc_ptrmapc][owned][SORT(dcmi_old_minaddr ASC)] mapping of source range to target ranges. */
 	size_t                       dcc_ptrmapc;    /* # of used elements in `dcc_ptrmapv' */
 	size_t                       dcc_ptrmapa;    /* # of allocated elements in `dcc_ptrmapv' */

@@ -3183,7 +3183,7 @@ module_dee_serialize(DeeModuleObject *__restrict self,
 	uint16_t globalc = self->mo_globalc;
 	size_t sizeof_module = offsetof(DeeModuleObject, mo_globalv) +
 	                       globalc * sizeof(DREF DeeObject *);
-	Dee_seraddr_t out_addr = DeeSerial_GCObjectMalloc(writer, sizeof_module, self);
+	Dee_seraddr_t out_addr = DeeSerial_GCObject_Malloc(writer, sizeof_module, self);
 	DeeModuleObject *out;
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;

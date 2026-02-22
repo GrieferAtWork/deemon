@@ -690,7 +690,7 @@ sci_serialize(SeqCombinationsIterator *__restrict self,
 	SeqCombinationsIterator *out;
 	size_t i, idx_count = self->sci_com->sc_rparam;
 	size_t sizeof_self = offsetof(SeqCombinationsIterator, sci_idx) + (idx_count * sizeof(size_t));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	if (generic_proxy__serialize((ProxyObject *)self, writer, out_addr))

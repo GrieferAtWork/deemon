@@ -1436,7 +1436,7 @@ cd_serialize(ClassDescriptor *__restrict self, DeeSerial *__restrict writer) {
 	sizeof_self = offsetof(ClassDescriptor, cd_iattr_list) +
 	              (self->cd_iattr_mask + 1) *
 	              sizeof(struct Dee_class_attribute);
-	out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, out_addr, ClassDescriptor);

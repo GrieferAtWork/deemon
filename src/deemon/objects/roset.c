@@ -655,7 +655,7 @@ roset_serialize(RoSet *__restrict self, DeeSerial *__restrict writer) {
 	Dee_seraddr_t addr;
 	size_t i, sizeof_set;
 	sizeof_set = offsetof(RoSet, rs_elem) + (self->rs_mask + 1) * sizeof(struct Dee_roset_item);
-	addr = DeeSerial_ObjectMalloc(writer, sizeof_set, self);
+	addr = DeeSerial_Object_Malloc(writer, sizeof_set, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, RoSet);

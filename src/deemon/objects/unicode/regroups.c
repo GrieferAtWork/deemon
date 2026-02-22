@@ -61,7 +61,7 @@ rg_serialize(ReGroups *__restrict self, DeeSerial *__restrict writer) {
 	size_t sizeof_self = _Dee_MallococBufsize(offsetof(ReGroups, rg_groups),
 	                                          self->rg_ngroups,
 	                                          sizeof(struct DeeRegexMatch));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, out_addr, ReGroups);
@@ -156,7 +156,7 @@ rss_serialize(ReSubStrings *__restrict self,
 	                                          self->rss_ngroups,
 	                                          sizeof(struct DeeRegexMatch));
 #define ADDROF(field) (out_addr + offsetof(ReSubStrings, field))
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	if (DeeSerial_PutObject(writer, ADDROF(rss_baseown), self->rss_baseown))

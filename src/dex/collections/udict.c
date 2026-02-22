@@ -1747,7 +1747,7 @@ urodict_serialize(URoDict *__restrict self,
 	size_t sizeof_self = _Dee_MallococBufsize(offsetof(URoDict, urd_elem),
 	                                          self->urd_mask + 1,
 	                                          sizeof(struct udict_item));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 #define ADDROF(field) (out_addr + offsetof(URoDict, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;

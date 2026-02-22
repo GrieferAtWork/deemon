@@ -2578,7 +2578,7 @@ code_serialize(DeeCodeObject *__restrict self, DeeSerial *__restrict writer) {
 #define ADDROF(field) (addr + offsetof(DeeCodeObject, field))
 	DeeCodeObject *out;
 	size_t sizeof_code = offsetof(DeeCodeObject, co_code) + self->co_codebytes;
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_code, self);
+	Dee_seraddr_t addr = DeeSerial_Object_Malloc(writer, sizeof_code, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, DeeCodeObject);

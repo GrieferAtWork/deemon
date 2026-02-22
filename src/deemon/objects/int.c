@@ -4052,7 +4052,7 @@ int_serialize(DeeIntObject *__restrict self, DeeSerial *__restrict writer) {
 	if ((Dee_ssize_t)int_size < 0)
 		int_size = (size_t)(-(Dee_ssize_t)int_size);
 	obj_size = _Dee_MallococBufsize(offsetof(DeeIntObject, ob_digit), int_size, sizeof(digit));
-	result = DeeSerial_ObjectMalloc(writer, obj_size, self);
+	result = DeeSerial_Object_Malloc(writer, obj_size, self);
 	if likely(Dee_SERADDR_ISOK(result)) {
 		DeeIntObject *ret = DeeSerial_Addr2Mem(writer, result, DeeIntObject);
 		memcpy(DeeObject_DATA(ret), DeeObject_DATA(self), obj_size - sizeof(DeeObject));

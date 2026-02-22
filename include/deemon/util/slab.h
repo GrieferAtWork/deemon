@@ -298,6 +298,15 @@
 #endif /* !__ARCH_PAGESIZE_MIN */
 #endif /* !Dee_SLAB_PAGESIZE */
 
+#ifdef __CC__
+DECL_BEGIN
+
+
+
+
+DECL_END
+#endif /* __CC__ */
+
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 #endif /* !GUARD_DEEMON_UTIL_SLAB_H */

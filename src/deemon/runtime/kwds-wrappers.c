@@ -912,7 +912,7 @@ blv_serialize(DeeBlackListKwdsObject *__restrict self,
 	size_t sizeof_self = offsetof(DeeBlackListKwdsObject, blkd_blck) +
 	                     (self__blkd_mask + 1) * sizeof(DeeBlackListKwdsEntry) +
 	                     (argc) * sizeof(DREF DeeObject *);
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 
@@ -1788,7 +1788,7 @@ blkw_serialize(DeeBlackListKwObject *__restrict self,
 	size_t i, self__blkw_mask;
 	size_t sizeof_self = offsetof(DeeBlackListKwObject, blkw_blck) +
 	                     (self->blkw_mask + 1) * sizeof(DeeBlackListKwdsEntry);
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	if (DeeSerial_PutObject(writer, ADDROF(blkw_kw), self->blkw_kw))

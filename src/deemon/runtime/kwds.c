@@ -532,7 +532,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 kwds_serialize(Kwds *__restrict self, DeeSerial *__restrict writer) {
 	Kwds *out;
 	size_t i, sizeof_kwds = offsetof(Kwds, kw_map) + (self->kw_mask + 1) * sizeof(struct Dee_kwds_entry);
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_kwds, self);
+	Dee_seraddr_t addr = DeeSerial_Object_Malloc(writer, sizeof_kwds, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, Kwds);
@@ -1180,7 +1180,7 @@ kmap_serialize(KwdsMapping *__restrict self,
 	size_t argc = self->kmo_kwds->kw_size;
 	size_t sizeof_self = _Dee_MallococBufsize(offsetof(KwdsMapping, kmo_args),
 	                                          argc, sizeof(DREF DeeObject *));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	if (DeeSerial_PutObject(writer, ADDROF(kmo_kwds), self->kmo_kwds))

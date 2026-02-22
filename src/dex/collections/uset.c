@@ -1905,7 +1905,7 @@ uroset_serialize(URoSet *__restrict self,
 	size_t sizeof_self = _Dee_MallococBufsize(offsetof(URoSet, urs_elem),
 	                                          self->urs_mask + 1,
 	                                          sizeof(struct uset_item));
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 #define ADDROF(field) (out_addr + offsetof(URoSet, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;

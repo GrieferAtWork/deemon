@@ -530,7 +530,7 @@ traceback_serialize(DeeTracebackObject *__restrict self,
 	uint16_t i;
 	size_t sizeof_self = offsetof(DeeTracebackObject, tb_frames) +
 	                     self->tb_numframes * sizeof(struct Dee_code_frame);
-	out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 	if (!Dee_SERADDR_ISOK(out_addr))
 		goto err;
 	if (DeeSerial_PutObject(writer, ADDROF(tb_thread), self->tb_thread))

@@ -1226,7 +1226,7 @@ bs_serialize(Bitset *__restrict self,
 	Bitset *out;
 	size_t sizeof_bits = BITSET_SIZEOF(self->bs_nbits);
 	size_t sizeof_self = offsetof(Bitset, bs_bitset) + sizeof_bits;
-	Dee_seraddr_t out_addr = DeeSerial_ObjectMalloc(writer, sizeof_self, self);
+	Dee_seraddr_t out_addr = DeeSerial_Object_Malloc(writer, sizeof_self, self);
 #define ADDROF(field) (out_addr + offsetof(Bitset, field))
 	if unlikely(!Dee_SERADDR_ISOK(out_addr))
 		goto err;

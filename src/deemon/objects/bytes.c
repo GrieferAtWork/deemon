@@ -738,7 +738,7 @@ bytes_serialize(Bytes *__restrict self, DeeSerial *__restrict writer) {
 		sizeof_bytes = offsetof(Bytes, b_buffer);
 		sizeof_bytes += DeeBytes_SIZE(self);
 		sizeof_bytes += buffer_offset;
-		out_addr = DeeSerial_ObjectMalloc(writer, sizeof_bytes, self);
+		out_addr = DeeSerial_Object_Malloc(writer, sizeof_bytes, self);
 		if (!Dee_SERADDR_ISOK(out_addr))
 			goto err;
 		if (DeeSerial_PutAddr(writer, ADDROF(b_orig), out_addr))
@@ -748,7 +748,7 @@ bytes_serialize(Bytes *__restrict self, DeeSerial *__restrict writer) {
 	} else {
 		/* Externally-referenced bytes object */
 		ASSERT(self->b_orig != (DeeObject *)self);
-		out_addr = DeeSerial_ObjectMalloc(writer, offsetof(Bytes, b_buffer), self);
+		out_addr = DeeSerial_Object_Malloc(writer, offsetof(Bytes, b_buffer), self);
 		if (!Dee_SERADDR_ISOK(out_addr))
 			goto err;
 		if (DeeSerial_PutObject(writer, ADDROF(b_orig), self->b_orig))

@@ -882,7 +882,7 @@ rodict_serialize(RoDict *__restrict self, DeeSerial *__restrict writer) {
 	Dee_hash_hidxio_t hidxio = Dee_HASH_HIDXIO_FROM_VALLOC(self->rd_vsize);
 	sizeof__rd_htab = (self->rd_hmask + 1) << hidxio;
 	sizeof_dict = _RoDict_SizeOf3(self->rd_vsize, self->rd_hmask, hidxio);
-	addrof_out  = DeeSerial_ObjectMalloc(writer, sizeof_dict, self);
+	addrof_out  = DeeSerial_Object_Malloc(writer, sizeof_dict, self);
 	if (!Dee_SERADDR_ISOK(addrof_out))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addrof_out, RoDict);

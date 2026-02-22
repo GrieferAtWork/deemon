@@ -1109,7 +1109,7 @@ INTERN WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 tuple_serialize(Tuple *__restrict self, DeeSerial *__restrict writer) {
 	Tuple *out;
 	size_t i, sizeof_tuple = offsetof(Tuple, t_elem) + (self->t_size * sizeof(DREF DeeObject *));
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_tuple, self);
+	Dee_seraddr_t addr = DeeSerial_Object_Malloc(writer, sizeof_tuple, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, Tuple);
@@ -2397,7 +2397,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL
 nullable_tuple_serialize(Tuple *__restrict self, DeeSerial *__restrict writer) {
 	Tuple *out;
 	size_t i, sizeof_tuple = offsetof(Tuple, t_elem) + (self->t_size * sizeof(DREF DeeObject *));
-	Dee_seraddr_t addr = DeeSerial_ObjectMalloc(writer, sizeof_tuple, self);
+	Dee_seraddr_t addr = DeeSerial_Object_Malloc(writer, sizeof_tuple, self);
 	if (!Dee_SERADDR_ISOK(addr))
 		goto err;
 	out = DeeSerial_Addr2Mem(writer, addr, Tuple);

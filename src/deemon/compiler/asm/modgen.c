@@ -104,7 +104,7 @@ module_compile(struct Dee_serial *__restrict writer,
 	/* Allocate the primary buffer for the module object */
 	sizeof_module = offsetof(DeeModuleObject, mo_globalv) +
 	                current_rootscope->rs_globalc * sizeof(DREF DeeObject *);
-	addrof_module = DeeSerial_GCObjectCalloc(writer, sizeof_module, &current_module_marker);
+	addrof_module = DeeSerial_GCObject_Calloc(writer, sizeof_module, &current_module_marker);
 	if (!Dee_SERADDR_ISOK(addrof_module))
 		goto err;
 #define ADDROF(field) (addrof_module + offsetof(DeeModuleObject, field))
