@@ -208,14 +208,19 @@ typedef struct Dee_dec_xrel Dec_XRel;
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrela  60
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_deps    64
 #define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_files   68
-#define DeeDec_Ehdr_OFFSETOF__e_mapping                                 72
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_xrel    72
+#define DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_alignment        76
+#define DeeDec_Ehdr_OFFSETOF__e_mapping                                 80
 #define DeeDec_Ehdr_OFFSETOF__e_heap                             \
 	(DeeDec_Ehdr_OFFSETOF__e_mapping + Dee_SIZEOF_DeeMapFile +   \
 	 ((Dee_HEAPCHUNK_ALIGN - ((DeeDec_Ehdr_OFFSETOF__e_mapping + \
 	                           Dee_SIZEOF_DeeMapFile) %          \
 	                          Dee_HEAPCHUNK_ALIGN)) %            \
 	  Dee_HEAPCHUNK_ALIGN))
-#if DeeDec_Ehdr_OFFSETOF__e_heap == 112
+#if DeeDec_Ehdr_OFFSETOF__e_heap == 120
+#undef DeeDec_Ehdr_OFFSETOF__e_heap
+#define DeeDec_Ehdr_OFFSETOF__e_heap 120
+#elif DeeDec_Ehdr_OFFSETOF__e_heap == 112
 #undef DeeDec_Ehdr_OFFSETOF__e_heap
 #define DeeDec_Ehdr_OFFSETOF__e_heap 112
 #elif DeeDec_Ehdr_OFFSETOF__e_heap == 104
@@ -227,9 +232,6 @@ typedef struct Dee_dec_xrel Dec_XRel;
 #elif DeeDec_Ehdr_OFFSETOF__e_heap == 88
 #undef DeeDec_Ehdr_OFFSETOF__e_heap
 #define DeeDec_Ehdr_OFFSETOF__e_heap 88
-#elif DeeDec_Ehdr_OFFSETOF__e_heap == 80
-#undef DeeDec_Ehdr_OFFSETOF__e_heap
-#define DeeDec_Ehdr_OFFSETOF__e_heap 80
 #endif /* DeeDec_Ehdr_OFFSETOF__e_heap == ... */
 
 /* Main header for `.dec` files. For more details, see file ./dec.md */
@@ -256,11 +258,9 @@ typedef struct {
 			Dee_dec_addr32_t  er_offsetof_drrel;     /* [1..1] Offset to array of `Dec_RRel[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
 			Dee_dec_addr32_t  er_offsetof_drrela;    /* [1..1] Offset to array of `Dec_RRela[]' (terminated by a r_addr==0-entry) of relocations with "REL_BASE=(uintptr_t)&DeeModule_Deemon" */
 			Dee_dec_addr32_t  er_offsetof_deps;      /* [1..1] Offset to array of `Dec_Dhdr[]' (terminated by a d_modspec.d_mod==NULL-entry) of other dependent deemon modules */
-#if 0 /* TODO */
-			Dee_dec_addr32_t  er_offsetof_xrel;      /* [0..1] Offset to array of `Dec_XRel[]' (terminated by a xr_addr==0-entry) of extended relocations */
-#else
 			Dee_dec_addr32_t  er_offsetof_files;     /* [0..1] Offset to array of `Dec_Dstr[]' (terminated by a ds_length==0-entry, each aligned to Dee_ALIGNOF_DEC_DSTR) of extra filenames relative to the directory containing the .dec-file. If any of these files is newer than `e_build_timestamp', don't load dec file */
-#endif
+			Dee_dec_addr32_t  er_offsetof_xrel;      /* [0..1] Offset to array of `Dec_XRel[]' (terminated by a xr_addr==0-entry) of extended relocations */
+			Dee_dec_addr32_t  er_alignment;          /* Minimum alignment with which the dec file must be loaded in memory. */
 		}                 td_reloc;                  /* [valid_if(e_type == Dee_DEC_TYPE_RELOC)] */
 
 		struct {
@@ -498,6 +498,7 @@ typedef struct Dee_dec_writer {
 #endif /* !DEE_SOURCE */
 	size_t                  dw_alloc;  /* Allocated buffer size for `dw_base' */
 	Dee_seraddr_t           dw_used;   /* [<= dw_alloc] Used buffer size for `dw_base' */
+	size_t                  dw_align;  /* Minimum alignment requirements for the resulting dec file */
 	size_t                  dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
 	struct Dee_dec_reltab   dw_srel;   /* Table of self-relocations */
 	struct Dee_dec_reltab   dw_drel;   /* Table of relocations against deemon-core objects */
@@ -600,23 +601,23 @@ DeeDecWriter_AddFileDep(DeeDecWriter *__restrict self,
                         char const *filename,
                         size_t filename_len);
 
-/* Execute relocations on `self' and return a pointer to the
+/* Execute relocations on `*p_self' and return a pointer to the
  * first object of the dec file's heap (which is always the
  * `DeeModuleObject' describing the dec file itself).
- * NOTE: Can only be used when `self->e_type == Dee_DEC_TYPE_RELOC'
+ * NOTE: Can only be used when `(*p_self)->e_type == Dee_DEC_TYPE_RELOC'
  *
- * On success, `self' is inherited by `return', such that rather than calling
- * `DeeDec_Ehdr_Destroy(self)', you must `DeeDec_DestroyUntracked(return)'
+ * On success, `*p_self' is inherited by `return', such that rather than calling
+ * `DeeDec_Ehdr_Destroy(*p_self)', you must `DeeDec_DestroyUntracked(return)'
  *
  * @param: flags: Set of `0 | DeeModule_IMPORT_F_CTXDIR':
  *                - DeeModule_IMPORT_F_CTXDIR: When set, "context_absname...+=context_absname_size" is
- *                                             the directory containing the .dec file mapped by "self",
+ *                                             the directory containing the .dec file mapped by "*p_self",
  *                                             rather than the .dec file itself.
- * @return: * :   The module object described by `self'
+ * @return: * :   The module object described by `*p_self'
  * @return: NULL: An error was thrown
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
-DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
+DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr **__restrict p_self,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
                 unsigned int flags, struct Dee_compiler_options *options,
                 uint64_t dee_file_last_modified);

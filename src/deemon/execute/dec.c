@@ -86,6 +86,8 @@ ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrel, DeeDec_Ehdr_OFFSET
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_drrela, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_drrela, 4);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_deps, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_deps, 4);
 ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_files, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_files, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_offsetof_xrel, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_offsetof_xrel, 4);
+ASSERT_FIELD(Dec_Ehdr, e_typedata.td_reloc.er_alignment, DeeDec_Ehdr_OFFSETOF__e_typedata__td_reloc__er_alignment, 4);
 ASSERT_FIELD(Dec_Ehdr, e_mapping, DeeDec_Ehdr_OFFSETOF__e_mapping, Dee_SIZEOF_DeeMapFile);
 ASSERT_FIELD(Dec_Ehdr, e_heap, DeeDec_Ehdr_OFFSETOF__e_heap, sizeof(struct Dee_heapregion));
 STATIC_ASSERT(IS_ALIGNED(DeeDec_Ehdr_OFFSETOF__e_heap, Dee_HEAPCHUNK_ALIGN));
@@ -345,29 +347,30 @@ DeeDec_RELOC_undo_rrel_and_decref_deps(DeeDec_Ehdr *__restrict self,
 
 
 
-/* Execute relocations on `self' and return a pointer to the
+/* Execute relocations on `*p_self' and return a pointer to the
  * first object of the dec file's heap (which is always the
  * `DeeModuleObject' describing the dec file itself).
- * NOTE: Can only be used when `self->e_type == Dee_DEC_TYPE_RELOC'
+ * NOTE: Can only be used when `(*p_self)->e_type == Dee_DEC_TYPE_RELOC'
  *
- * On success, `self' is inherited by `return', such that rather than calling
- * `DeeDec_Ehdr_Destroy(self)', you must `DeeDec_DestroyUntracked(return)'
+ * On success, `*p_self' is inherited by `return', such that rather than calling
+ * `DeeDec_Ehdr_Destroy(*p_self)', you must `DeeDec_DestroyUntracked(return)'
  *
  * @param: flags: Set of `0 | DeeModule_IMPORT_F_CTXDIR':
  *                - DeeModule_IMPORT_F_CTXDIR: When set, "context_absname...+=context_absname_size" is
- *                                             the directory containing the .dec file mapped by "self",
+ *                                             the directory containing the .dec file mapped by "*p_self",
  *                                             rather than the .dec file itself.
- * @return: * :   The module object described by `self'
+ * @return: * :   The module object described by `*p_self'
  * @return: NULL: An error was thrown
  * @return: ITER_DONE: The DEC file was out of date or had been corrupted */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF /*untracked*/ struct Dee_module_object *DCALL
-DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
+DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr **__restrict p_self,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
                 unsigned int flags, struct Dee_compiler_options *options,
                 uint64_t dee_file_last_modified) {
 	DREF DeeModuleObject *result;
 	Dec_Dhdr *dhdr;
 	size_t dep_index;
+	DeeDec_Ehdr *self = *p_self;
 	ASSERTF(self->e_type == Dee_DEC_TYPE_RELOC,
 	        "Bad API usage -- Only use this function with 'DeeDec_OpenFile()', "
 	        "which should have already asserted that 'e_type == Dee_DEC_TYPE_RELOC'");
@@ -395,6 +398,28 @@ DeeDec_Relocate(/*inherit(on_success)*/ DeeDec_Ehdr *__restrict self,
 			dep_files = (Dec_Dstr const *)(dep_files->ds_string + dep_files->ds_length + 1);
 			dep_files = (Dec_Dstr const *)CEIL_ALIGN((uintptr_t)dep_files, Dee_ALIGNOF_DEC_DSTR);
 		}
+	}
+
+	/* Enforce alignment requirements specified by header
+	 *
+	 * This is actually rather unlikely, since normally the required alignment
+	 * should also be matched by "self". When embedded slab allocators are used,
+	 * the requirement becomes PAGESIZE, and if "self" is a file-mapping, then
+	 * it already supports that alignment natively. */
+	if unlikely(!IS_ALIGNED((uintptr_t)self, self->e_typedata.td_reloc.er_alignment)) {
+		/* Allocate properly aligned buffer for image */
+		void *aligned_image;
+		size_t image_size;
+		image_size    = self->e_typedata.td_reloc.er_offsetof_eof;
+		aligned_image = Dee_Memalign(self->e_typedata.td_reloc.er_alignment, image_size);
+		if unlikely(!aligned_image)
+			goto err;
+		aligned_image = memcpy(aligned_image, self, image_size);
+		DeeMapFile_Fini(&self->e_mapping);
+		*p_self = self = (DeeDec_Ehdr *)aligned_image;
+		DeeMapFile_SETHEAP(&self->e_mapping);
+		DeeMapFile_SETADDR(&self->e_mapping, aligned_image);
+		DeeMapFile_SETSIZE(&self->e_mapping, image_size);
 	}
 
 	/* Load dependencies */
@@ -471,6 +496,11 @@ corrupt_dep_index_reloc_rrel:
 		}
 	}
 
+	/* Extended relocations */
+	if (self->e_typedata.td_reloc.er_offsetof_xrel) {
+		/* TODO */
+	}
+
 	/* At this point, the dec file should be fully initialized, and the
 	 * first contained object should be the relevant DeeModuleObject! */
 	result = DeeDec_Ehdr_GetModule(self);
@@ -510,7 +540,7 @@ corrupt_dep_index_reloc:
 err_dep_index:
 	while (dep_index--)
 		Dee_Decref(dhdr[dep_index].d_modspec.d_mod);
-/*err:*/
+err:
 	return NULL;
 corrupt_dep_index:
 	while (dep_index--)
@@ -933,6 +963,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
                 /*utf-8*/ char const *context_absname, size_t context_absname_size,
                 unsigned int flags, struct Dee_compiler_options *options,
                 uint64_t dee_file_last_modified) {
+	DREF /*untracked*/ struct Dee_module_object *result;
 #ifndef Dee_DPRINT_IS_NOOP
 	char const *fail_reason;
 #define goto_fail(reason)     \
@@ -1000,12 +1031,17 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	if unlikely(/*ehdr->e_typedata.td_reloc.er_offsetof_files != 0 &&*/
 	            ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
 		goto_fail("Bad 'er_offsetof_files'");
+	if unlikely(/*ehdr->e_typedata.td_reloc.er_offsetof_xrel != 0 &&*/
+	            ehdr->e_typedata.td_reloc.er_offsetof_xrel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
+		goto_fail("Bad 'er_offsetof_xrel'");
+	if unlikely(!IS_POWER_OF_TWO(ehdr->e_typedata.td_reloc.er_alignment))
+		goto_fail("Bad 'er_alignment'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_gchead == 0 || ehdr->e_typedata.td_reloc.er_offsetof_gchead >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'e_offsetof_gchead'");
+		goto_fail("Bad 'er_offsetof_gchead'");
 	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_gctail == 0 || ehdr->e_typedata.td_reloc.er_offsetof_gctail >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'e_offsetof_gctail'");
+		goto_fail("Bad 'er_offsetof_gctail'");
 	if unlikely((ehdr->e_typedata.td_reloc.er_offsetof_gchead != 0) != (ehdr->e_typedata.td_reloc.er_offsetof_gctail != 0))
-		goto_fail("Presence of 'e_offsetof_gchead' and 'e_offsetof_gctail' do not match");
+		goto_fail("Presence of 'er_offsetof_gchead' and 'er_offsetof_gctail' do not match");
 	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_typedata.td_reloc.er_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
 		goto_fail("Bad 'e_heap.hr_size' points past EOF");
 
@@ -1059,8 +1095,13 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	ehdr->e_heap.hr_destroy = &DeeDec_heapregion_destroy;
 
 	/* Relocate the dec file to turn it into the embedded module object. */
-	return DeeDec_Relocate(ehdr, context_absname, context_absname_size,
-	                       flags, options, dee_file_last_modified);
+	result = DeeDec_Relocate(&ehdr, context_absname, context_absname_size,
+	                         flags, options, dee_file_last_modified);
+	if unlikely(!ITER_ISOK(result) && (ehdr != (Dec_Ehdr *)DeeMapFile_GetAddr(fmap))) {
+		/* Must update "fmap" to reflect the relocated "ehdr" */
+		*fmap = ehdr->e_mapping; /* Inherit */
+	}
+	return result;
 #undef goto_fail
 fail:
 #ifndef Dee_DPRINT_IS_NOOP
@@ -1300,6 +1341,12 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			ehdr->e_typedata.td_reloc.er_offsetof_files = 0;
 		}
 
+		/* Extended relocations aren't used (yet) */
+		ehdr->e_typedata.td_reloc.er_offsetof_xrel = 0;
+
+		/* Alignment is important for embedded slab allocators */
+		ehdr->e_typedata.td_reloc.er_alignment = self->dw_align;
+
 		/* Assert that the image won't be too large */
 		if unlikely(total_need > DFILE_LIMIT)
 			goto output_image;
@@ -1307,10 +1354,19 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		/* EOF marker */
 		ehdr->e_typedata.td_reloc.er_offsetof_eof = (Dee_dec_addr32_t)total_need;
 
-		/* Resize the main buffer to fit. */
-		ehdr = (Dec_Ehdr *)Dee_Realloc(ehdr, total_need);
-		if unlikely(!ehdr)
-			goto err;
+		/* Resize the main buffer to fit (and satisfy extended alignment requirements if there are any) */
+		if (self->dw_align > Dee_HEAPCHUNK_ALIGN) {
+			Dec_Ehdr *final_ehdr = (Dec_Ehdr *)Dee_Memalign(self->dw_align, total_need);
+			if unlikely(!final_ehdr)
+				goto err;
+			final_ehdr = (Dec_Ehdr *)memcpy(final_ehdr, ehdr, self->dw_used);
+			Dee_Free(ehdr);
+			ehdr = final_ehdr;
+		} else {
+			ehdr = (Dec_Ehdr *)Dee_Realloc(ehdr, total_need);
+			if unlikely(!ehdr)
+				goto err;
+		}
 		self->dw_ehdr = ehdr;
 
 		/* With the buffer resized to its final size, and offsets all determined, copy data. */
@@ -1465,10 +1521,19 @@ output_image:
 		 * with space for temporary relocation vectors. */
 		ehdr->e_type = Dee_DEC_TYPE_IMAGE;
 
-		/* Resize the main buffer to fit. */
-		ehdr = (Dec_Ehdr *)Dee_Realloc(ehdr, total_need);
-		if unlikely(!ehdr)
-			goto err;
+		/* Resize the main buffer to fit (and satisfy extended alignment requirements if there are any) */
+		if (self->dw_align > Dee_HEAPCHUNK_ALIGN) {
+			Dec_Ehdr *final_ehdr = (Dec_Ehdr *)Dee_Memalign(self->dw_align, total_need);
+			if unlikely(!final_ehdr)
+				goto err;
+			final_ehdr = (Dec_Ehdr *)memcpy(final_ehdr, ehdr, self->dw_used);
+			Dee_Free(ehdr);
+			ehdr = final_ehdr;
+		} else {
+			ehdr = (Dec_Ehdr *)Dee_Realloc(ehdr, total_need);
+			if unlikely(!ehdr)
+				goto err;
+		}
 		self->dw_ehdr = ehdr;
 
 		/* NOTE: Leave the zero-initialized build-id, as well as
@@ -2432,6 +2497,7 @@ _DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	/* The header struct ends at the start of the first heap chunk's user-area */
 	self->dw_used  = offsetof(Dec_Ehdr, e_heap.hr_first);
 	self->dw_hlast = 0;
+	self->dw_align = Dee_HEAPCHUNK_ALIGN;
 	Dee_dec_reltab_init(&self->dw_srel);
 	Dee_dec_reltab_init(&self->dw_drel);
 	Dee_dec_rreltab_init(&self->dw_drrel);
