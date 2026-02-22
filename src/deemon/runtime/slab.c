@@ -27,8 +27,15 @@
 #include <deemon/gc.h>
 #include <hybrid/host.h>
 #include <hybrid/align.h>
+#include <deemon/system-features.h>
 #include <deemon/util/slab.h>
 #include <deemon/util/slab-config.h>
+
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
 
 #if defined(Dee_SLAB_CHUNKSIZE_MAX) || defined(__DEEMON__)
 DECL_BEGIN
@@ -42,14 +49,155 @@ STATIC_ASSERT(IS_POWER_OF_TWO(Dee_SLAB_PAGESIZE));
 STATIC_ASSERT(Dee_SLAB_PAGESIZE > Dee_SLAB_CHUNKSIZE_MAX);
 
 
-/* TODO: Slab page allocator / free function (try to use os-specific
- *       mmap() / munmap() if allowed by configured `Dee_SLAB_PAGESIZE',
- *       but fall back to simply using `Dee_TryMemalign()' / `Dee_free()') */
+/* Low-level slab allocator functions. -- These functions imply have
+ * to allocate/free "Dee_SLAB_PAGESIZE"-sized, and aligned chunks of
+ * memory. -- Where that memory comes from, or the address ranges it
+ * resides in doesn't matter. */
+PRIVATE ATTR_MALLOC WUNUSED void *DCALL slab_page_malloc(void) {
+	/* TODO: OS-specific implementations for (so-long as "Dee_SLAB_PAGESIZE <= __ARCH_PAGESIZE"):
+	 * - VirtualAlloc()
+	 * - mmap()
+	 *
+	 * These impls should then also allocate more than a single slab
+	 * page at-a-time, and keep a global cache of free'd / unused slab
+	 * pages so-as to be able to more quickly hand out pages that were
+	 * already allocated in previous passes.
+	 *
+	 * This cache system should also be cleared by `DeeHeap_Trim()' */
+	return Dee_Memalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE);
+}
+
+PRIVATE ATTR_MALLOC WUNUSED void *DCALL slab_page_trymalloc(void) {
+	return Dee_TryMemalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE);
+}
+
+PRIVATE NONNULL((1)) void DCALL slab_page_free(void *page) {
+	Dee_Free(page);
+}
 
 
 
-/* TODO: Define slab GC allocators (use "Dee_SLAB_CHUNKSIZE_GC_FOREACH()" to
- *       enumerate and call-forward to the relevant, matching slab function) */
+
+/* Debug debug versions of slab allocator functions */
+#ifdef NDEBUG
+#define dbg_slab__attach(p, n, file, line) (p) /* Attach debug info and either free, */
+#define dbg_slab__detach(p, n, file, line) (p)
+#else /* NDEBUG */
+PRIVATE WUNUSED void *DCALL
+dbg_slab__attach(void *p, size_t n, char const *file, int line) {
+	if (p) {
+		/* TODO: Attach debug info (for leaks and such...)
+		 * On error, can free "p" which is guarantied to
+		 * be an "n"-byte large slab, then return "NULL" */
+		(void)n;
+		(void)file;
+		(void)line;
+	}
+	return p;
+}
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) void *DCALL
+dbg_slab__detach(void *p, size_t n, char const *file, int line) {
+	/* TODO: Free debug info if it exists for "p" (which is an "n"-byte large slab) */
+	(void)n;
+	(void)file;
+	(void)line;
+	return p;
+}
+#endif /* !NDEBUG */
+
+#define DEFINE_DeeDbgSlab_API(n, _)                                      \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
+	DeeDbgSlab_Malloc##n(char const *file, int line) {                   \
+		(void)file;                                                      \
+		(void)line;                                                      \
+		return dbg_slab__attach(DeeSlab_Malloc##n(), n, file, line);     \
+	}                                                                    \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
+	DeeDbgSlab_Calloc##n(char const *file, int line) {                   \
+		(void)file;                                                      \
+		(void)line;                                                      \
+		return dbg_slab__attach(DeeSlab_Calloc##n(), n, file, line);     \
+	}                                                                    \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
+	DeeDbgSlab_TryMalloc##n(char const *file, int line) {                \
+		(void)file;                                                      \
+		(void)line;                                                      \
+		return dbg_slab__attach(DeeSlab_TryMalloc##n(), n, file, line);  \
+	}                                                                    \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
+	DeeDbgSlab_TryCalloc##n(char const *file, int line) {                \
+		(void)file;                                                      \
+		(void)line;                                                      \
+		return dbg_slab__attach(DeeSlab_TryCalloc##n(), n, file, line);  \
+	}                                                                    \
+	PUBLIC NONNULL((1)) void DCALL                                       \
+	DeeDbgSlab_Free##n(void *__restrict p, char const *file, int line) { \
+		(void)file;                                                      \
+		(void)line;                                                      \
+		DeeSlab_Free##n(dbg_slab__detach(p, n, file, line));             \
+	}
+Dee_SLAB_CHUNKSIZE_FOREACH(DEFINE_DeeDbgSlab_API, ~)
+#undef DEFINE_DeeDbgSlab_API
+
+
+
+/* Define slab GC allocators (use "Dee_SLAB_CHUNKSIZE_GC_FOREACH()" to
+ * enumerate and call-forward to the relevant, matching slab function) */
+LOCAL void *gc_initob(void *ptr) {
+	if likely(ptr) {
+		DBG_memset(ptr, 0xcc, Dee_GC_HEAD_SIZE);
+		ptr = DeeGC_Object((struct Dee_gc_head *)ptr);
+	}
+	return ptr;
+}
+
+#define call_gc_slab(N, f, args)                                                            \
+	_Dee_PRIVATE_SLAB_SELECT(N + Dee_GC_OBJECT_OFFSET, , f, args,                           \
+	                         ((int(*)[DeeSlab_EXISTS(N + Dee_GC_OBJECT_OFFSET) ? 1 : -1])0, \
+	                          __builtin_unreachable(), NULL))
+#define DEFINE_DeeGCSlab_API(n, _)                                                  \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeGCSlab_Malloc##n(void) {                                                     \
+		return gc_initob(call_gc_slab(n, DeeSlab_Malloc, ()));                      \
+	}                                                                               \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeGCSlab_Calloc##n(void) {                                                     \
+		return gc_initob(call_gc_slab(n, DeeSlab_Calloc, ()));                      \
+	}                                                                               \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeGCSlab_TryMalloc##n(void) {                                                  \
+		return gc_initob(call_gc_slab(n, DeeSlab_TryMalloc, ()));                   \
+	}                                                                               \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeGCSlab_TryCalloc##n(void) {                                                  \
+		return gc_initob(call_gc_slab(n, DeeSlab_TryCalloc, ()));                   \
+	}                                                                               \
+	PUBLIC NONNULL((1)) void DCALL                                                  \
+	DeeGCSlab_Free##n(void *__restrict p) {                                         \
+		call_gc_slab(n, DeeSlab_Free, (DeeGC_Head((DeeObject *)p)));                \
+	}                                                                               \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeDbgGCSlab_Malloc##n(char const *file, int line) {                            \
+		return gc_initob(call_gc_slab(n, DeeDbgSlab_Malloc, (file, line)));         \
+	}                                                                               \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeDbgGCSlab_Calloc##n(char const *file, int line) {                            \
+		return gc_initob(call_gc_slab(n, DeeDbgSlab_Calloc, (file, line)));         \
+	}                                                                               \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeDbgGCSlab_TryMalloc##n(char const *file, int line) {                         \
+		return gc_initob(call_gc_slab(n, DeeDbgSlab_TryMalloc, (file, line)));      \
+	}                                                                               \
+	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
+	DeeDbgGCSlab_TryCalloc##n(char const *file, int line) {                         \
+		return gc_initob(call_gc_slab(n, DeeDbgSlab_TryCalloc, (file, line)));      \
+	}                                                                               \
+	PUBLIC NONNULL((1)) void DCALL                                                  \
+	DeeDbgGCSlab_Free##n(void *__restrict p, char const *file, int line) {          \
+		call_gc_slab(n, DeeDbgSlab_Free, (DeeGC_Head((DeeObject *)p), file, line)); \
+	}
+Dee_SLAB_CHUNKSIZE_GC_FOREACH(DEFINE_DeeGCSlab_API, ~)
+#undef DEFINE_DeeGCSlab_API
 
 DECL_END
 

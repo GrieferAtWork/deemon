@@ -3322,9 +3322,11 @@ PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
 /* GC object alloc/free. */
 LOCAL void *gc_initob(void *ptr) {
 	if likely(ptr) {
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
 		/* NOTE: This `DBG_memset()' is important for `GCHEAD_ISTRACKED()' to work properly!
 		 * The 0xcc pattern set here is checked for by `GCHEAD_ISTRACKED()', and if found:
 		 * treated as meaning that the associated object isn't being tracked. */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 		DBG_memset(ptr, 0xcc, Dee_GC_HEAD_SIZE);
 		ptr = DeeGC_Object((struct Dee_gc_head *)ptr);
 	}
@@ -3495,6 +3497,7 @@ DFUNDEF void
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifndef CONFIG_NO_OBJECT_SLABS
 #define DEFINE_GC_SLAB_FUNCTIONS(index, size)                                                                               \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                                                                  \
@@ -3564,6 +3567,7 @@ DFUNDEF void
 DeeSlab_ENUMERATE(DEFINE_GC_SLAB_FUNCTIONS)
 #undef DEFINE_GC_SLAB_FUNCTIONS
 #endif /* !CONFIG_NO_OBJECT_SLABS */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 
 #ifndef NDEBUG

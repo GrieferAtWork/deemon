@@ -128,7 +128,7 @@
  * >> template<size_t CHUNK_SIZE> static struct slab_page_list slab_pages = LIST_HEAD_INITIALIZER(slab_pages);
  * >> template<size_t CHUNK_SIZE> struct Dee_atomic_rwlock_t slab_lock = Dee_ATOMIC_RWLOCK_INIT;
  * >>
- * >> template<size_t CHUNK_SIZE> void *slab_malloc_in_page(slab_page<CHUNK_SIZE> *page) {
+ * >> template<size_t CHUNK_SIZE> void *slab_malloc_in_page(slab_page<CHUNK_SIZE> *__restrict page) {
  * >>     // Caller guaranties that something is free (since they reserved a spot for us)
  * >>     // -- we just need to find that spot!
  * >>     for (;;) {
@@ -140,13 +140,13 @@
  * >>                 : ((slab_page<CHUNK_SIZE>::bitword_t)-1);
  * >>             slab_page<CHUNK_SIZE>::bitword_t word;
  * >> again_read_word:
- * >>             word = atomic_read(&page->ps_used[i]);
+ * >>             word = atomic_read(&page->sp_used[i]);
  * >>             if (word != full_mask) {
  * >>                 // There seems to be something free here!
  * >>                 size_t index, offset;
  * >>                 shift_t free_bit = CTZ(word);
  * >>                 slab_page<CHUNK_SIZE>::bitword_t alloc_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << free_bit;
- * >>                 if (!atomic_cmpxch_weak(&page->ps_used[i], word, word | alloc_mask))
+ * >>                 if (!atomic_cmpxch_weak(&page->sp_used[i], word, word | alloc_mask))
  * >>                     goto again_read_word;
  * >>                 // Got it! -- now just calculate the pointer we need to return
  * >>                 index  = i * BITSOF(slab_page<CHUNK_SIZE>::bitword_t) + free_bit;
@@ -199,7 +199,7 @@
  * >>     Dee_atomic_rwlock_endread(&slab_lock<CHUNK_SIZE>);
  * >>
  * >>     // Get a new page (global)
- * >>     page = SLAB_ALLOC_PAGE(page);
+ * >>     page = SLAB_ALLOC_PAGE();
  * >>     if (!page)
  * >>         return NULL;
  * >>     bzero(page->sp_used, sizeof(page->sp_used));
@@ -210,7 +210,7 @@
  * >>     // In theory, this lock acquire could be made non-
  * >>     // blocking by having a insert-reap-list for `slab_pages'
  * >>     Dee_atomic_rwlock_write(&slab_lock<CHUNK_SIZE>);
- * >>     LIST_INSERT(&slab_pages, page, sp_meta.sm_link);
+ * >>     LIST_INSERT_HEAD(&slab_pages<CHUNK_SIZE>, page, sp_meta.sm_link);
  * >>     Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
  * >>     return result;
  * >> }
@@ -223,7 +223,7 @@
  * >>     size_t old__sm_used;
  * >>     slab_page<CHUNK_SIZE>::bitword_t bit_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << (index % sizeof(slab_page<CHUNK_SIZE>::bitword_t));
  * >>     ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated");
- * >>     atomic_or(&page->sp_used[bit_indx]) & bit_mask);
+ * >>     atomic_or(&page->sp_used[bit_indx], bit_mask);
  * >>     do {
  * >> again_read__sm_used:
  * >>         old__sm_used = atomic_read(&page->sp_meta.sm_used);
@@ -260,7 +260,7 @@
  * >>                 goto again_read__sm_used;
  * >>             }
  * >>             if (page->sp_meta.sm_link.le_prev != ITER_DONE)
- * >>                 LIST_INSERT(page, sp_meta.sm_link);
+ * >>                 LIST_INSERT_HEAD(&slab_pages<CHUNK_SIZE>, page, sp_meta.sm_link);
  * >>             Dee_atomic_rwlock_endwrite(&slab_lock<CHUNK_SIZE>);
  * >>             break;
  * >>         }

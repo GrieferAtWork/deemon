@@ -1,0 +1,122 @@
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifdef __INTELLISENSE__
+#include "slab-sized.c.inl"
+//#define DEFINE_LOCAL_DeeSlab_Malloc
+#define DEFINE_LOCAL_DeeSlab_TryMalloc
+#endif /* __INTELLISENSE__ */
+
+#include <deemon/api.h>
+#include <hybrid/sched/yield.h>
+
+#if (defined(DEFINE_LOCAL_DeeSlab_Malloc) + \
+     defined(DEFINE_LOCAL_DeeSlab_TryMalloc)) != 1
+#error "Must #define exactly one of these"
+#endif /* ... */
+
+DECL_BEGIN
+
+#ifdef DEFINE_LOCAL_DeeSlab_Malloc
+#define LOCAL_MY_DeeSlab_Malloc LOCAL_DeeSlab_Malloc
+#elif defined(DEFINE_LOCAL_DeeSlab_TryMalloc)
+#define LOCAL_MY_DeeSlab_Malloc LOCAL_DeeSlab_TryMalloc
+#define LOCAL_IS_TRY_MALLOC
+#else /* ... */
+#error "Invalid configuration"
+#endif /* !... */
+
+#ifdef LOCAL_IS_TRY_MALLOC
+#define LOCAL_slab_page_malloc slab_page_trymalloc
+#else /* LOCAL_IS_TRY_MALLOC */
+#define LOCAL_slab_page_malloc slab_page_malloc
+#endif /* !LOCAL_IS_TRY_MALLOC */
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL_MY_DeeSlab_Malloc(void) {
+	void *result;
+	struct LOCAL_slab_page *page;
+again:
+	LOCAL_slab_lock_read();
+again_locked:
+	page = LIST_FIRST(&LOCAL_slab_pages);
+	if (page) {
+		size_t old__sm_used;
+		for (;;) {
+			old__sm_used = atomic_read(&page->sp_meta.sm_used);
+			ASSERT(old__sm_used >= 1);
+			ASSERT(old__sm_used <= (LOCAL__MAX_CHUNK_COUNT - 1));
+			if unlikely (old__sm_used >= (LOCAL__MAX_CHUNK_COUNT - 1)) {
+				/* About to allocate last free chunk of page */
+				LOCAL_slab_lock_endread();
+				while (!LOCAL_slab_lock_trywrite()) {
+					SCHED_YIELD();
+					if (page != atomic_read(&LOCAL_slab_pages.lh_first))
+						goto again;
+				}
+				if (LIST_FIRST(&LOCAL_slab_pages) != page ||
+				    !atomic_cmpxch(&page->sp_meta.sm_used,
+				                   LOCAL__MAX_CHUNK_COUNT - 1,
+				                   LOCAL__MAX_CHUNK_COUNT)) {
+					LOCAL_slab_lock_downgrade();
+					goto again_locked;
+				}
+
+				/* Remove page from "LOCAL_slab_pages" */
+				LIST_REMOVE(page, sp_meta.sm_link);
+				LOCAL_slab_lock_endwrite();
+				break;
+			} else if (atomic_cmpxch(&page->sp_meta.sm_used, old__sm_used, old__sm_used + 1)) {
+				LOCAL_slab_lock_endread();
+				break;
+			}
+		}
+
+		/* Since we were able to increment "sm_used", that also means that the page
+		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
+		return LOCAL_slab_malloc_in_page(page);
+	}
+	LOCAL_slab_lock_endread();
+
+	/* Get a new page (global) */
+	page = (struct LOCAL_slab_page *)LOCAL_slab_page_malloc();
+	if unlikely(!page)
+		return NULL;
+	bzero(page->sp_used, sizeof(page->sp_used));
+	page->sp_used[0]      = 1;
+	page->sp_meta.sm_used = 1;
+	result                = &page->sp_data[0];
+
+	/* In theory, this lock acquire could be made non-blocking
+	 * by having a insert-reap-list for `LOCAL_slab_pages'. */
+	LOCAL_slab_lock_write();
+	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.sm_link);
+	LOCAL_slab_lock_endwrite();
+	return result;
+}
+
+#undef LOCAL_slab_page_malloc
+
+#undef LOCAL_IS_TRY_MALLOC
+#undef LOCAL_MY_DeeSlab_Malloc
+
+DECL_END
+
+#undef DEFINE_LOCAL_DeeSlab_Malloc
+#undef DEFINE_LOCAL_DeeSlab_TryMalloc

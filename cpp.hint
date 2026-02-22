@@ -980,6 +980,23 @@
 	void*DeeDbgGCSlab_TryMalloc##n(char const*file,int line);\
 	void*DeeDbgGCSlab_TryCalloc##n(char const*file,int line);\
 	void DeeDbgGCSlab_Free##n(void*p,char const*file,int line);
+#define DEFINE_DeeGCSlab_API(n,_)\
+	void*DeeGCSlab_Malloc##n(void){}\
+	void*DeeGCSlab_Calloc##n(void){}\
+	void*DeeGCSlab_TryMalloc##n(void){}\
+	void*DeeGCSlab_TryCalloc##n(void){}\
+	void DeeGCSlab_Free##n(void*p){}\
+	void*DeeDbgGCSlab_Malloc##n(char const*file,int line){}\
+	void*DeeDbgGCSlab_Calloc##n(char const*file,int line){}\
+	void*DeeDbgGCSlab_TryMalloc##n(char const*file,int line){}\
+	void*DeeDbgGCSlab_TryCalloc##n(char const*file,int line){}\
+	void DeeDbgGCSlab_Free##n(void *p,char const*file,int line){}
+#define DEFINE_DeeDbgSlab_API(n,_)\
+	void*DeeDbgSlab_Malloc##n(char const*file,int line){}\
+	void*DeeDbgSlab_Calloc##n(char const*file,int line){}\
+	void*DeeDbgSlab_TryMalloc##n(char const*file,int line){}\
+	void*DeeDbgSlab_TryCalloc##n(char const*file,int line){}\
+	void DeeDbgSlab_Free##n(void*p,char const*file,int line){}
 
 //#else // CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 
@@ -1561,6 +1578,7 @@
 #define LOCAL_seq_docompare__(x) seq_docompare__##x
 #define LOCAL_NONNULL
 #define LOCAL_MAYBE_PUBLIC
+#define LOCAL_DECL
 
 #define SQLITE_EXTERN extern
 #define SQLITE_API
