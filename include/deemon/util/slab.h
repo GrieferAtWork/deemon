@@ -31,6 +31,7 @@
 #include <hybrid/typecore.h>      /* __*_TYPE__, __SIZEOF_*__ */
 
 #include "../system-features.h" /* bzero */
+#include "slab-config.h"        /* Dee_SLAB_CHUNKSIZE_MAX */
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* uintptr_t */
@@ -392,6 +393,7 @@ struct Dee_slab_page {
 	       (self)->sp_meta.spm_type.t_custom.c_marker = Dee_SLAB_PAGE_META_CUSTOM_MARKER, \
 	       (self)->sp_meta.spm_type.t_custom.c_free   = (free_fun))
 
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
 /* Allocate/free custom chunks within a custom slab-page.
  * Also note that using these builder functions, you can
  * even mix-and-match chunks of different sizes, and it
@@ -419,6 +421,7 @@ DFUNDEF WUNUSED NONNULL((1)) void *DCALL
 Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n);
 DFUNDEF NONNULL((1, 2)) void DCALL
 Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n);
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
 
 DECL_END
 #endif /* __CC__ */

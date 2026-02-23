@@ -27,7 +27,7 @@
 #include <deemon/serial.h>           /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
 #include <deemon/type.h>             /* DeeObject_Init, DeeType_*, Dee_operator_t */
 #include <deemon/util/hash.h>        /* Dee_HashPtr, Dee_HashStr */
-#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_* */
 #include <deemon/util/slab.h>        /* Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_CUSTOM_MARKER, Dee_slab_page, Dee_slab_page_buildinit, Dee_slab_page_buildmalloc */
 #include <deemon/util/weakref.h>     /* Dee_weakref, Dee_weakref_callback_t, Dee_weakref_initempty */
 
@@ -2464,6 +2464,7 @@ decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
 
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
 
 /* Allocate a new slab-page and return its base-address, or `Dee_SERADDR_INVALID' on error.
  * The returned base-address is always aligned by `Dee_SLAB_PAGESIZE', and spans a total of
@@ -2840,6 +2841,7 @@ decwriter_slab_gcobject_trycalloc(DeeDecWriter *__restrict self,
 		bzero(DeeDecWriter_Addr2Mem(self, result, byte_t) + Dee_OBJECT_OFFSETOF_DATA, n - Dee_OBJECT_OFFSETOF_DATA);
 	return result;
 }
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 
@@ -2870,6 +2872,7 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 			goto err;
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	} else if (tp->tp_init.tp_alloc.tp_free != NULL) {
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
 		int status;
 		size_t slab_instance_size;
 		void (DCALL *tp_free)(void *__restrict ob);
@@ -2911,6 +2914,9 @@ decwriter_appendobject(DeeDecWriter *__restrict self,
 		status = (*(Dee_tp_serialize_obj_t)tp_serialize)(obj, (DeeSerial *)self, out_addr);
 		if unlikely(status)
 			goto err;
+#else /* Dee_SLAB_CHUNKSIZE_MAX */
+		goto cannot_serialize;
+#endif /* !Dee_SLAB_CHUNKSIZE_MAX */
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	} else {
 		/* Figure out instance size (with support for slab allocators). */
@@ -3164,6 +3170,7 @@ PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 	/* .set_gcobject_trycalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_gcobject_trycalloc,
 	/* .set_gcobject_free           = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_gcobject_free,
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
 	/* .set_slab_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_slab_malloc,
 	/* .set_slab_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_slab_calloc,
 	/* .set_slab_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&decwriter_slab_trymalloc,
@@ -3179,6 +3186,23 @@ PRIVATE struct Dee_serial_type tpconst decwriter_serial_type = {
 	/* .set_slab_gcobject_trymalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_slab_gcobject_trymalloc,
 	/* .set_slab_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&decwriter_slab_gcobject_trycalloc,
 	/* .set_slab_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))&decwriter_slab_gcobject_free,
+#else /* Dee_SLAB_CHUNKSIZE_MAX */
+	/* .set_slab_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_malloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_calloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_trymalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_trycalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_free        = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_malloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_calloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_trymalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+#endif /* !Dee_SLAB_CHUNKSIZE_MAX */
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	/* .set_putaddr                 = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, Dee_seraddr_t))&decwriter_putaddr,
 	/* .set_putobject               = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&decwriter_putobject,

@@ -657,7 +657,6 @@ for (local n: [minsize:maxsize+1]) {
 #endif /* DeeSlab_EXISTS(80) */
 /*[[[end]]]*/
 #endif /* !__INTELLISENSE__ */
-#endif /* Dee_SLAB_CHUNKSIZE_MAX */
 
 DECL_BEGIN
 
@@ -796,6 +795,7 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 }
 
 DECL_END
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
 
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 

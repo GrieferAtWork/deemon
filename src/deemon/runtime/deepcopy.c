@@ -31,7 +31,7 @@
 #include <deemon/system-features.h>  /* bzero, memmovedownc, memmoveupc, memset */
 #include <deemon/type.h>             /* DeeObject_Init, DeeObject_IsDeepImmutable, DeeType_* */
 #include <deemon/types.h>            /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_OFFSETOF_DATA, Dee_TYPE, Dee_funptr_t, Dee_unlockinfo, OBJECT_HEAD */
-#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_* */
 #include <deemon/util/weakref.h>     /* Dee_weakref, Dee_weakref_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
@@ -542,6 +542,7 @@ deepcopy_putweakref_ex(DeeDeepCopyContext *__restrict self,
 
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
 PRIVATE WUNUSED NONNULL((2)) void *DCALL
 slab_do_gcmalloc(size_t n, void (DCALL **p_free)(void *__restrict ob), bool do_try) {
 	switch (n) {
@@ -811,6 +812,7 @@ deepcopy_slab_gcobject_trycalloc(DeeDeepCopyContext *__restrict self,
 		bzero(deepcopy_ser2ptr(self, result, byte_t) + Dee_OBJECT_OFFSETOF_DATA, n - Dee_OBJECT_OFFSETOF_DATA);
 	return result;
 }
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
@@ -831,6 +833,7 @@ PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
 	/* .set_gcobject_trycalloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_gcobject_trycalloc,
 	/* .set_gcobject_free           = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_gcobject_free,
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
 	/* .set_slab_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_malloc,
 	/* .set_slab_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_calloc,
 	/* .set_slab_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))&deepcopy_slab_trymalloc,
@@ -846,6 +849,23 @@ PRIVATE struct Dee_serial_type tpconst deepcopy_serial_type = {
 	/* .set_slab_gcobject_trymalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_trymalloc,
 	/* .set_slab_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_trycalloc,
 	/* .set_slab_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))&deepcopy_slab_gcobject_free,
+#else /* Dee_SLAB_CHUNKSIZE_MAX */
+	/* .set_slab_malloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_calloc             = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_trymalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_trycalloc          = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_free               = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, void const *))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_malloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_calloc      = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_trymalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_trycalloc   = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_object_free        = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_malloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_calloc    = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_trymalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_trycalloc = */ (Dee_seraddr_t (DCALL *)(DeeSerial *__restrict, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+	/* .set_slab_gcobject_free      = */ (void (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, size_t, DeeObject *__restrict))(Dee_funptr_t)(void const *)(uintptr_t)-1,
+#endif /* !Dee_SLAB_CHUNKSIZE_MAX */
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	/* .set_putaddr                 = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, Dee_seraddr_t))&deepcopy_putaddr,
 	/* .set_putobject               = */ (int (DCALL *)(DeeSerial *__restrict, Dee_seraddr_t, DeeObject *__restrict))&deepcopy_putobject,

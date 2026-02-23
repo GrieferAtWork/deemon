@@ -28,6 +28,36 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
+/* Host-specific slab configuration:
+ *
+ * >> #define Dee_SLAB_CHUNKSIZE_MIN               <Smallest slab size from Dee_SLAB_CHUNKSIZE_FOREACH()>
+ * >> #define Dee_SLAB_CHUNKSIZE_MAX               <Greatest slab size from Dee_SLAB_CHUNKSIZE_FOREACH()>
+ * >> #define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    <Invoke 'cb(n, _)' for every supported slab size>
+ * >> #define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) <Invoke 'cb(n, _)' for every supported GC slab size>
+ *
+ * Notes on GC slabs:
+ * - GC slabs aren't actually distinct from regular slabs, they only need
+ *   a different enumeration and name because they allocate slabs that have
+ *   some extra space for a leading `struct Dee_gc_head'
+ * - As such (with 32-bit pointers), `DeeGCSlab_Malloc16()' would just be a
+ *   wrapper around `DeeSlab_Malloc24()' that adjusts the returned pointer
+ *   by an offset of `8' bytes (on success).
+ * - Also as a consequence, the macro `Dee_SLAB_CHUNKSIZE_GC_FOREACH()'
+ *   doesn't actually add anything new (the set of supported GC slabs is
+ *   already defined by `Dee_SLAB_CHUNKSIZE_FOREACH()'), only that another
+ *   macro is needed because the preprocessor can't evaluate the logic:
+ *   >> SLABS    = {<some set of integers>}
+ *   >> GC_SLABS = SOME_SUBSET_OF((
+ *   >>     for (local n: SLABS)
+ *   >>         if (n > sizeof(struct Dee_gc_head))
+ *   >>             n - sizeof(struct Dee_gc_head)
+ *   >> ).asset)
+ *   iow: every slab (can) have a GC sibling after subtracting
+ *        `sizeof(struct Dee_gc_head)' from the slab's size.
+ */
+
+#undef Dee_SLAB_CHUNKSIZE_MIN
+#undef Dee_SLAB_CHUNKSIZE_MAX
 #if __SIZEOF_POINTER__ == 4
 #define Dee_SLAB_CHUNKSIZE_MIN 12
 #define Dee_SLAB_CHUNKSIZE_MAX 40
