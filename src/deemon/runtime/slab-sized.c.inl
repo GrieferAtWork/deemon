@@ -211,11 +211,11 @@ print("	for (;;) {");
 print("#define LOCAL_HAVE_slab_malloc_in_page");
 print("		LOCAL_alloc_from(0, LOCAL_maskfor(0));");
 for (local i: [1:maxInline+1]) {
-	print("#if LOCAL_ELEMOF__sp_used >= ", i);
+	print("#if LOCAL_ELEMOF__sp_used >= ", i+1);
 	print("		LOCAL_alloc_from(", i, ", LOCAL_maskfor(", i, "));");
 }
 for (local i: [maxInline:0,-1])
-	print("#endif /" "* LOCAL_ELEMOF__sp_used >= ", i, " *" "/");
+	print("#endif /" "* LOCAL_ELEMOF__sp_used >= ", i+1, " *" "/");
 print("	}");
 print("#endif /" "* LOCAL_ELEMOF__sp_used <= ", maxInline, " *" "/");
 print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
@@ -225,38 +225,39 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 	for (;;) {
 #define LOCAL_HAVE_slab_malloc_in_page
 		LOCAL_alloc_from(0, LOCAL_maskfor(0));
-#if LOCAL_ELEMOF__sp_used >= 1
-		LOCAL_alloc_from(1, LOCAL_maskfor(1));
 #if LOCAL_ELEMOF__sp_used >= 2
-		LOCAL_alloc_from(2, LOCAL_maskfor(2));
+		LOCAL_alloc_from(1, LOCAL_maskfor(1));
 #if LOCAL_ELEMOF__sp_used >= 3
-		LOCAL_alloc_from(3, LOCAL_maskfor(3));
+		LOCAL_alloc_from(2, LOCAL_maskfor(2));
 #if LOCAL_ELEMOF__sp_used >= 4
-		LOCAL_alloc_from(4, LOCAL_maskfor(4));
+		LOCAL_alloc_from(3, LOCAL_maskfor(3));
 #if LOCAL_ELEMOF__sp_used >= 5
-		LOCAL_alloc_from(5, LOCAL_maskfor(5));
+		LOCAL_alloc_from(4, LOCAL_maskfor(4));
 #if LOCAL_ELEMOF__sp_used >= 6
-		LOCAL_alloc_from(6, LOCAL_maskfor(6));
+		LOCAL_alloc_from(5, LOCAL_maskfor(5));
 #if LOCAL_ELEMOF__sp_used >= 7
-		LOCAL_alloc_from(7, LOCAL_maskfor(7));
+		LOCAL_alloc_from(6, LOCAL_maskfor(6));
 #if LOCAL_ELEMOF__sp_used >= 8
-		LOCAL_alloc_from(8, LOCAL_maskfor(8));
+		LOCAL_alloc_from(7, LOCAL_maskfor(7));
 #if LOCAL_ELEMOF__sp_used >= 9
-		LOCAL_alloc_from(9, LOCAL_maskfor(9));
+		LOCAL_alloc_from(8, LOCAL_maskfor(8));
 #if LOCAL_ELEMOF__sp_used >= 10
-		LOCAL_alloc_from(10, LOCAL_maskfor(10));
+		LOCAL_alloc_from(9, LOCAL_maskfor(9));
 #if LOCAL_ELEMOF__sp_used >= 11
-		LOCAL_alloc_from(11, LOCAL_maskfor(11));
+		LOCAL_alloc_from(10, LOCAL_maskfor(10));
 #if LOCAL_ELEMOF__sp_used >= 12
-		LOCAL_alloc_from(12, LOCAL_maskfor(12));
+		LOCAL_alloc_from(11, LOCAL_maskfor(11));
 #if LOCAL_ELEMOF__sp_used >= 13
-		LOCAL_alloc_from(13, LOCAL_maskfor(13));
+		LOCAL_alloc_from(12, LOCAL_maskfor(12));
 #if LOCAL_ELEMOF__sp_used >= 14
-		LOCAL_alloc_from(14, LOCAL_maskfor(14));
+		LOCAL_alloc_from(13, LOCAL_maskfor(13));
 #if LOCAL_ELEMOF__sp_used >= 15
-		LOCAL_alloc_from(15, LOCAL_maskfor(15));
+		LOCAL_alloc_from(14, LOCAL_maskfor(14));
 #if LOCAL_ELEMOF__sp_used >= 16
+		LOCAL_alloc_from(15, LOCAL_maskfor(15));
+#if LOCAL_ELEMOF__sp_used >= 17
 		LOCAL_alloc_from(16, LOCAL_maskfor(16));
+#endif /* LOCAL_ELEMOF__sp_used >= 17 */
 #endif /* LOCAL_ELEMOF__sp_used >= 16 */
 #endif /* LOCAL_ELEMOF__sp_used >= 15 */
 #endif /* LOCAL_ELEMOF__sp_used >= 14 */
@@ -272,7 +273,6 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 #endif /* LOCAL_ELEMOF__sp_used >= 4 */
 #endif /* LOCAL_ELEMOF__sp_used >= 3 */
 #endif /* LOCAL_ELEMOF__sp_used >= 2 */
-#endif /* LOCAL_ELEMOF__sp_used >= 1 */
 	}
 #endif /* LOCAL_ELEMOF__sp_used <= 16 */
 #endif /* !__OPTIMIZE_SIZE__ */
