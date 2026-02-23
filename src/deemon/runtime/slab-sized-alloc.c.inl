@@ -115,6 +115,9 @@ again_locked:
 	if unlikely(!page)
 		return NULL;
 	bzero(page->sp_used, sizeof(page->sp_used));
+#if LOCAL_SIZEOF__sp_pad != 0
+	DBG_memset(page->_sp_pad, 0xcc, sizeof(page->_sp_pad));
+#endif /* LOCAL_SIZEOF__sp_pad != 0 */
 	slab_setfree_data(page->sp_data, sizeof(page->sp_data));
 	page->sp_used[0]       = 1;
 	page->sp_meta.spm_used = 1;
