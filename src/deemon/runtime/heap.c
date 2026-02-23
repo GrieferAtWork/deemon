@@ -3980,7 +3980,7 @@ dl_freelist_do_reap_item(PARAM_mstate_m_ void *__restrict mem) {
 				mstate_dvsize(m) = 0;
 			}
 			if (should_trim(m, tsize))
-				sys_trim(ARG_mstate_X_(m) 0);
+				sys_trim(ARG_mstate_m_ 0);
 			goto postaction;
 		} else if (next == mstate_dv(m)) {
 			size_t dsize  = mstate_dvsize(m) += psize;
@@ -4012,7 +4012,7 @@ dl_freelist_do_reap_item(PARAM_mstate_m_ void *__restrict mem) {
 		insert_large_chunk(m, tp, psize);
 		check_free_chunk(m, p);
 		if (--mstate_release_checks(m) == 0)
-			release_unused_segments(ARG_mstate_X(m));
+			release_unused_segments(ARG_mstate_m);
 	}
 postaction:
 	/* END: Copy-paste from `dlfree()' above */
@@ -4192,41 +4192,15 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 #else /* ... */
 #define fm m
 #endif /* !... */
-#if 1 /* Use regular `dlfree()' so we don't have to block on "PREACTION(fm)" */
-			if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
-				char *br        = (char *)mem2chunk((size_t)(((size_t)((char *)mem + alignment - SIZE_T_ONE)) & ~(alignment - SIZE_T_ONE)));
-				char *pos       = ((size_t)(br - (char *)(p)) >= MIN_CHUNK_SIZE) ? br : br + alignment;
-				mchunkptr newp  = (mchunkptr)pos;
-				size_t leadsize = pos - (char *)(p);
-				size_t newsize  = chunksize(p) - leadsize;
-				if (is_mmapped(p)) { /* For mmapped chunks, just adjust offset */
-					newp->prev_foot = p->prev_foot + leadsize;
-					newp->head      = newsize;
-				} else { /* Otherwise, give back leader, use the rest */
-					newp->head = 0;
-					set_inuse(fm, p, leadsize);
-					set_inuse(fm, newp, newsize); /* OG dlmalloc had these in a weird order, where "newp->head" was left partially uninitialized... */
-					dlfree(chunk2mem(p));
-				}
-				p = newp;
-			}
-
-			/* Give back spare room at the end */
-			if (!is_mmapped(p)) {
-				size_t size = chunksize(p);
-				if (size > nb + MIN_CHUNK_SIZE) {
-					size_t remainder_size = size - nb;
-					mchunkptr remainder   = chunk_plus_offset(p, nb);
-					set_inuse(fm, p, nb);
-					set_inuse(fm, remainder, remainder_size);
-					dlfree(chunk2mem(remainder));
-				}
-			}
-
-			mem = chunk2mem(p);
-			dl_assert(chunksize(p) >= nb);
-			dl_assert(((size_t)mem & (alignment - 1)) == 0);
-#else
+			/* Must re-acquire lock to relevant mstate. This shouldn't normally
+			 * block, since our thread just had that lock a few moments ago when
+			 * we were in `internal_malloc()'.
+			 *
+			 * Also: this part **must** happen while holding the lock, since we
+			 *       can only modify our "p->head" with the lock, as another
+			 *       thread may be looking at that field while consolidating
+			 *       free heap chunks! (no unused parts here *CAN'T* be free'd
+			 *       asynchronously) */
 			PREACTION(fm);
 			if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
 				/*
@@ -4251,7 +4225,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 					set_inuse(fm, newp, newsize); /* OG dlmalloc had these in a weird order, where "newp->head" was left partially uninitialized... */
 					dl_setfree_data_untested((char *)p + TWO_SIZE_T_SIZES,
 					                         leadsize - CHUNK_OVERHEAD);
-					dispose_chunk(ARG_mstate_m_ p, leadsize);
+					dispose_chunk(ARG_mstate_X_(fm) p, leadsize);
 				}
 				p = newp;
 			}
@@ -4266,7 +4240,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 					set_inuse(fm, remainder, remainder_size);
 					dl_setfree_data_untested((char *)remainder + TWO_SIZE_T_SIZES,
 					                         remainder_size - CHUNK_OVERHEAD);
-					dispose_chunk(ARG_mstate_m_ remainder, remainder_size);
+					dispose_chunk(ARG_mstate_X_(fm) remainder, remainder_size);
 				}
 			}
 
@@ -4275,7 +4249,6 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 			dl_assert(((size_t)mem & (alignment - 1)) == 0);
 			check_inuse_chunk(fm, p);
 			POSTACTION(fm);
-#endif
 #undef fm
 		}
 	}
