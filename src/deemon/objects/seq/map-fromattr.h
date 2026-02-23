@@ -22,12 +22,13 @@
 
 #include <deemon/api.h>
 
+#include <deemon/alloc.h>  /* DeeObject_*alloc*, DeeObject_Free */
 #include <deemon/mro.h>    /* Dee_attriter */
 #include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, OBJECT_HEAD */
 
 #include "../generic-proxy.h"
 
-#include <stddef.h> /* size_t */
+#include <stddef.h> /* offsetof, size_t */
 
 DECL_BEGIN
 

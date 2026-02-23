@@ -28,7 +28,7 @@
 #include <deemon/type.h>             /* DeeObject_Init, DeeType_*, Dee_operator_t */
 #include <deemon/util/hash.h>        /* Dee_HashPtr, Dee_HashStr */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
-#include <deemon/util/slab.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
+#include <deemon/util/slab.h>        /* Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_CUSTOM_MARKER, Dee_slab_page, Dee_slab_page_buildinit, Dee_slab_page_buildmalloc */
 #include <deemon/util/weakref.h>     /* Dee_weakref, Dee_weakref_callback_t, Dee_weakref_initempty */
 
 #ifndef CONFIG_NO_DEC
@@ -49,7 +49,7 @@
 
 #include <hybrid/align.h>            /* CEIL_ALIGN, IS_ALIGNED, IS_POWER_OF_TWO */
 #include <hybrid/limitcore.h>        /* __UINT32_MAX__ */
-#include <hybrid/overflow.h>         /* OVERFLOW_UADD, OVERFLOW_USUB */
+#include <hybrid/overflow.h>         /* OVERFLOW_UADD */
 #include <hybrid/sequence/bsearch.h> /* BSEARCH */
 #include <hybrid/typecore.h>         /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
@@ -3291,7 +3291,7 @@ DECL_END
 #include <deemon/traceback.h> /* DeeTraceback_Type */
 #include <deemon/tuple.h>     /* DeeTuple* */
 #include <deemon/util/atomic.h>
-#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 #include <deemon/weakref.h>   /* DeeWeakRefAble_Type, DeeWeakRef_Type */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */

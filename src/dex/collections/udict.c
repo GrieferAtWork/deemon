@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_*ALLOC*, DeeObject_Free, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryCallocc, Dee_TryMallocc, _Dee_MallococBufsize */
+#include <deemon/alloc.h>           /* DeeObject_*, Dee_CollectMemory, Dee_CollectMemoryc, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TryCallocc, Dee_TryMallocc, _Dee_MallococBufsize */
 #include <deemon/arg.h>             /* DeeArg_Unpack1 */
 #include <deemon/bool.h>            /* Dee_True, return_false, return_true */
 #include <deemon/dict.h>            /* DeeDict_Dummy */

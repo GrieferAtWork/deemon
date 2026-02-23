@@ -24,7 +24,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* DeeSlab_*, Dee_Free */
+#include <deemon/alloc.h>            /* DeeSlab_* */
 #include <deemon/system-features.h>  /* bzero */
 #include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
@@ -36,9 +36,8 @@
 #include <hybrid/sequence/list.h> /* LIST_* */
 #include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_BIT__, __SHIFT_TYPE__ */
 
-#include <stdbool.h> /* bool */
-#include <stddef.h>  /* offsetof, size_t */
-#include <stdint.h>  /* uintptr_t */
+#include <stddef.h> /* offsetof, size_t */
+#include <stdint.h> /* uintptr_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
