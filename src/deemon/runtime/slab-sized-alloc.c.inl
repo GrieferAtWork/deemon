@@ -99,12 +99,14 @@ again_locked:
 
 		/* Since we were able to increment "spm_used", that also means that the page
 		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
-#ifdef SLAB_DEBUG_MEMSET_ALLOC
+#if defined(SLAB_DEBUG_MEMSET_ALLOC) || defined(SLAB_DEBUG_MEMSET_FREE)
 		result = LOCAL_slab_malloc_in_page(page);
+		/* Verify that the slab chunk still matches the SLAB_DEBUG_MEMSET_FREE-pattern */
+		slab_chkfree_data(result, DEFINE_CHUNK_SIZE);
 		goto done;
-#else /* SLAB_DEBUG_MEMSET_ALLOC */
+#else /* SLAB_DEBUG_MEMSET_ALLOC || SLAB_DEBUG_MEMSET_FREE */
 		return LOCAL_slab_malloc_in_page(page);
-#endif /* !SLAB_DEBUG_MEMSET_ALLOC */
+#endif /* !SLAB_DEBUG_MEMSET_ALLOC && !SLAB_DEBUG_MEMSET_FREE */
 	}
 	LOCAL_slab_lock_endread();
 
@@ -113,6 +115,7 @@ again_locked:
 	if unlikely(!page)
 		return NULL;
 	bzero(page->sp_used, sizeof(page->sp_used));
+	slab_setfree_data(page->sp_data, sizeof(page->sp_data));
 	page->sp_used[0]       = 1;
 	page->sp_meta.spm_used = 1;
 	result = page->sp_data;
@@ -123,9 +126,9 @@ again_locked:
 	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
 	ASSERT(Dee_slab_page_isnormal(page));
 	LOCAL_slab_lock_endwrite();
-#ifdef SLAB_DEBUG_MEMSET_ALLOC
+#if defined(SLAB_DEBUG_MEMSET_ALLOC) || defined(SLAB_DEBUG_MEMSET_FREE)
 done:
-#endif /* SLAB_DEBUG_MEMSET_ALLOC */
+#endif /* SLAB_DEBUG_MEMSET_ALLOC || SLAB_DEBUG_MEMSET_FREE */
 	slab_setalloc_data(result, DEFINE_CHUNK_SIZE);
 	return result;
 }

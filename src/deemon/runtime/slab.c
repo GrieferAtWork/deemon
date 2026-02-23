@@ -94,8 +94,24 @@ PRIVATE void DCALL slab_setfree_data(void *p, size_t n) {
 		n -= sizeof(size_t);
 	}
 }
+
+PRIVATE void DCALL slab_chkfree_data(void *p, size_t n) {
+	size_t *iter = (size_t *)p;
+	size_t rem = n;
+	while (rem >= sizeof(size_t)) {
+		size_t actual = *iter;
+		ASSERTF(actual == SLAB_DEBUG_MEMSET_FREE,
+		        "in %" PRFuSIZ "-sized slap chunk at %p: word at %p (offset: %" PRFuSIZ ") "
+		        /**/ "was modified after it was freed. Expected %#" PRFxSIZ ", but got %#" PRFxSIZ,
+		        n, p, iter, (size_t)((byte_t *)iter - (byte_t *)p),
+		        (size_t)SLAB_DEBUG_MEMSET_FREE, actual);
+		rem -= sizeof(size_t);
+		++iter;
+	}
+}
 #else /* SLAB_DEBUG_MEMSET_FREE */
 #define slab_setfree_data(p, n) (void)0
+#define slab_chkfree_data(p, n) (void)0
 #endif /* !SLAB_DEBUG_MEMSET_FREE */
 
 

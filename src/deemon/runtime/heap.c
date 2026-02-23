@@ -4192,6 +4192,41 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 #else /* ... */
 #define fm m
 #endif /* !... */
+#if 1 /* Use regular `dlfree()' so we don't have to block on "PREACTION(fm)" */
+			if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
+				char *br        = (char *)mem2chunk((size_t)(((size_t)((char *)mem + alignment - SIZE_T_ONE)) & ~(alignment - SIZE_T_ONE)));
+				char *pos       = ((size_t)(br - (char *)(p)) >= MIN_CHUNK_SIZE) ? br : br + alignment;
+				mchunkptr newp  = (mchunkptr)pos;
+				size_t leadsize = pos - (char *)(p);
+				size_t newsize  = chunksize(p) - leadsize;
+				if (is_mmapped(p)) { /* For mmapped chunks, just adjust offset */
+					newp->prev_foot = p->prev_foot + leadsize;
+					newp->head      = newsize;
+				} else { /* Otherwise, give back leader, use the rest */
+					newp->head = 0;
+					set_inuse(fm, p, leadsize);
+					set_inuse(fm, newp, newsize); /* OG dlmalloc had these in a weird order, where "newp->head" was left partially uninitialized... */
+					dlfree(chunk2mem(p));
+				}
+				p = newp;
+			}
+
+			/* Give back spare room at the end */
+			if (!is_mmapped(p)) {
+				size_t size = chunksize(p);
+				if (size > nb + MIN_CHUNK_SIZE) {
+					size_t remainder_size = size - nb;
+					mchunkptr remainder   = chunk_plus_offset(p, nb);
+					set_inuse(fm, p, nb);
+					set_inuse(fm, remainder, remainder_size);
+					dlfree(chunk2mem(remainder));
+				}
+			}
+
+			mem = chunk2mem(p);
+			dl_assert(chunksize(p) >= nb);
+			dl_assert(((size_t)mem & (alignment - 1)) == 0);
+#else
 			PREACTION(fm);
 			if ((((size_t)(mem)) & (alignment - 1)) != 0) { /* misaligned */
 				/*
@@ -4212,10 +4247,10 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 					newp->prev_foot = p->prev_foot + leadsize;
 					newp->head      = newsize;
 				} else { /* Otherwise, give back leader, use the rest */
+					set_inuse(fm, p, leadsize);
+					set_inuse(fm, newp, newsize); /* OG dlmalloc had these in a weird order, where "newp->head" was left partially uninitialized... */
 					dl_setfree_data_untested((char *)p + TWO_SIZE_T_SIZES,
 					                         leadsize - CHUNK_OVERHEAD);
-					set_inuse(fm, newp, newsize);
-					set_inuse(fm, p, leadsize);
 					dispose_chunk(ARG_mstate_m_ p, leadsize);
 				}
 				p = newp;
@@ -4227,10 +4262,10 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 				if (size > nb + MIN_CHUNK_SIZE) {
 					size_t remainder_size = size - nb;
 					mchunkptr remainder   = chunk_plus_offset(p, nb);
-					dl_setfree_data_untested((char *)remainder + TWO_SIZE_T_SIZES,
-					                         remainder_size - CHUNK_OVERHEAD);
 					set_inuse(fm, p, nb);
 					set_inuse(fm, remainder, remainder_size);
+					dl_setfree_data_untested((char *)remainder + TWO_SIZE_T_SIZES,
+					                         remainder_size - CHUNK_OVERHEAD);
 					dispose_chunk(ARG_mstate_m_ remainder, remainder_size);
 				}
 			}
@@ -4240,6 +4275,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 			dl_assert(((size_t)mem & (alignment - 1)) == 0);
 			check_inuse_chunk(fm, p);
 			POSTACTION(fm);
+#endif
 #undef fm
 		}
 	}

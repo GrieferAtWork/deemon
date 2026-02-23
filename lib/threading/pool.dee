@@ -147,9 +147,13 @@ insert_current_and_again:
 	}
 
 	public runTask(task: Task): Task {
+#if 0
+		task._run();
+#else
 		tasks.append(task);
 		allTasksDone.clear();
 		maybeSpawnThread();
+#endif
 		return task;
 	}
 
