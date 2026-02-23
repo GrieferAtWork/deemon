@@ -46,6 +46,14 @@ typedef struct {
 	struct Dee_attriter mfai_iter; /* Attribute enumerator. */
 } MapFromAttrIterator;
 
+#define MapFromAttrIterator_Malloc(itsz) \
+	((DREF MapFromAttrIterator *)DeeObject_Malloc(offsetof(MapFromAttrIterator, mfai_iter) + (itsz)))
+#define MapFromAttrIterator_Realloc(p, itsz) \
+	((DREF MapFromAttrIterator *)DeeObject_Realloc(p, offsetof(MapFromAttrIterator, mfai_iter) + (itsz)))
+#define MapFromAttrIterator_TryRealloc(p, itsz) \
+	((DREF MapFromAttrIterator *)DeeObject_TryRealloc(p, offsetof(MapFromAttrIterator, mfai_iter) + (itsz)))
+#define MapFromAttrIterator_Free(p) DeeObject_Free(Dee_REQUIRES_TYPE(MapFromAttrIterator *, p))
+
 INTDEF DeeTypeObject MapFromAttr_Type;             /* type(Mapping.fromattr(ob)); */
 INTDEF DeeTypeObject MapFromAttrKeysIterator_Type; /* type(Mapping.fromattr(ob).__map_iterkeys__()); */
 

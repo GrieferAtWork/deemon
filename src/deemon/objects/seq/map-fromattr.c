@@ -80,8 +80,7 @@ mfaki_ofobj(DeeObject *__restrict ob) {
 	DREF MapFromAttrIterator *result;
 	size_t req_bufsize;
 	size_t cur_bufsize = Dee_ITERATTR_DEFAULT_BUFSIZE;
-	result = (DREF MapFromAttrIterator *)DeeObject_Malloc(offsetof(MapFromAttrIterator, mfai_iter) +
-	                                                      cur_bufsize);
+	result = MapFromAttrIterator_Malloc(cur_bufsize);
 	if unlikely(!result)
 		goto err;
 	Dee_attrhint_initall(&hint);
@@ -91,9 +90,7 @@ again_iterattr:
 		goto err_r;
 	if (req_bufsize > cur_bufsize) {
 		DREF MapFromAttrIterator *new_result;
-		new_result = (DREF MapFromAttrIterator *)DeeObject_Realloc(result,
-		                                                           offsetof(MapFromAttrIterator, mfai_iter) +
-		                                                           req_bufsize);
+		new_result = MapFromAttrIterator_Realloc(result, req_bufsize);
 		if unlikely(!new_result)
 			goto err_r;
 		result      = new_result;
@@ -102,9 +99,7 @@ again_iterattr:
 	} else if (req_bufsize < cur_bufsize) {
 		/* Free unused memory */
 		DREF MapFromAttrIterator *new_result;
-		new_result = (DREF MapFromAttrIterator *)DeeObject_TryRealloc(result,
-		                                                              offsetof(MapFromAttrIterator, mfai_iter) +
-		                                                              req_bufsize);
+		new_result = MapFromAttrIterator_TryRealloc(result, req_bufsize);
 		if (likely(new_result) && unlikely(result != new_result)) {
 			/* Special case: must update pointers within the iterator
 			 *               to reflect the new memory location. */
@@ -120,7 +115,7 @@ again_iterattr:
 	DeeObject_Init(result, &MapFromAttrKeysIterator_Type);
 	return result;
 err_r:
-	DeeObject_Free(result);
+	MapFromAttrIterator_Free(result);
 err:
 	return NULL;
 }
@@ -128,8 +123,7 @@ err:
 PRIVATE NONNULL((1)) DREF MapFromAttrIterator *DCALL
 mfaki_copy(MapFromAttrIterator *__restrict self) {
 	DREF MapFromAttrIterator *result;
-	result = (DREF MapFromAttrIterator *)DeeObject_Malloc(offsetof(MapFromAttrIterator, mfai_iter) +
-	                                                      self->mfai_itsz);
+	result = MapFromAttrIterator_Malloc(self->mfai_itsz);
 	if unlikely(!result)
 		goto err;
 	if unlikely(Dee_attriter_copy(&result->mfai_iter, &self->mfai_iter, self->mfai_itsz))
@@ -140,7 +134,7 @@ mfaki_copy(MapFromAttrIterator *__restrict self) {
 	DeeObject_Init(result, &MapFromAttrKeysIterator_Type);
 	return result;
 err_r:
-	DeeObject_Free(result);
+	MapFromAttrIterator_Free(result);
 err:
 	return NULL;
 }

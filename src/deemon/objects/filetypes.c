@@ -346,7 +346,7 @@ DeeMemoryFile_Close(DREF /*File*/ DeeObject *__restrict self) {
 		/* The file also went away, so we can simply not free its data! */
 		Dee_DecrefNokill(DeeFileType_AsType(&DeeMemoryFile_Type));
 		DeeObject_FreeTracker(me);
-		DeeObject_Free(me);
+		DeeObject_FREE(me);
 	} else {
 		/* Try to copy the data of the file in question. */
 		void *data_copy;

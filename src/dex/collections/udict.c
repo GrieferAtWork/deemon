@@ -1563,9 +1563,9 @@ INTERN DeeTypeObject URoDictIterator_Type = {
 STATIC_ASSERT(offsetof(URoDict, urd_size) == offsetof(UDict, ud_used));
 #define urodict_bool udict_bool
 
-#define URoDict_MALLOC(mask)   DeeObject_MALLOCC_SAFE(URoDict, urd_elem, (mask) + 1)
-#define URoDict_ALLOC(mask)    DeeObject_CALLOCC_SAFE(URoDict, urd_elem, (mask) + 1)
-#define URoDict_TRYALLOC(mask) DeeObject_TRYCALLOCC_SAFE(URoDict, urd_elem, (mask) + 1)
+#define URoDict_MALLOC(mask)   ((URoDict *)DeeObject_MalloccSafe(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item)))
+#define URoDict_ALLOC(mask)    ((URoDict *)DeeObject_CalloccSafe(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item)))
+#define URoDict_TRYALLOC(mask) ((URoDict *)DeeObject_TryCalloccSafe(offsetof(URoDict, urd_elem), (mask) + 1, sizeof(struct udict_item)))
 #define URODICT_INITIAL_MASK   0x03
 
 INTERN WUNUSED DREF URoDict *DCALL URoDict_New(void) {

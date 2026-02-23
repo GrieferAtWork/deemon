@@ -43,6 +43,9 @@ DECL_BEGIN
 #define DEFINE_OBJECT_CACHE_EX       Dee_DEFINE_OBJECT_CACHE_EX
 #endif /* DEE_SOURCE */
 
+/* TODO: Get rid of all this stuff -- slabs do a way better job, and if your
+ *       type isn't represented by them, just add your type's size as a slab! */
+
 struct Dee_cache_struct {
 	struct Dee_cache_struct *cs_next; /* [0..1][owned] Next cached structure. */
 };
