@@ -2144,6 +2144,9 @@
 		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\slab-rawmalloc.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\slab.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>

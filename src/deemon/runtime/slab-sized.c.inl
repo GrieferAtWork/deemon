@@ -29,7 +29,7 @@
 #include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX, Dee_SLAB_CHUNKSIZE_MIN */
-#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS, Dee_slab_page_iscustom, Dee_slab_page_isnormal */
+#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS, Dee_slab_page, Dee_slab_page_* */
 
 #include <hybrid/align.h>         /* CEILDIV */
 #include <hybrid/bit.h>           /* CTZ */
@@ -352,7 +352,7 @@ again_read__spm_used:
 			LIST_REMOVE(page, sp_meta.spm_type.t_link);
 			LOCAL_slab_lock_endwrite();
 			/* Ensure page is now free */
-			slab_page_free(page);
+			Dee_slab_page_rawfree((struct Dee_slab_page *)page);
 			break;
 		} else if (old__spm_used == LOCAL_MAX_CHUNK_COUNT &&
 		           Dee_slab_page_isnormal(page)) {

@@ -1,3 +1,10 @@
+/*[[[vs
+ClCompile.Optimization = MaxSpeed
+ClCompile.InlineFunctionExpansion = AnySuitable
+ClCompile.FavorSizeOrSpeed = Speed
+ClCompile.OmitFramePointers = true
+ClCompile.BasicRuntimeChecks = Default
+]]]*/
 /* Copyright (c) 2018-2026 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
@@ -23,7 +30,7 @@
 #include <deemon/api.h>
 
 #if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
-#include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_*, Dee_Free, Dee_Memalign, Dee_TryMemalign, Dee_UntrackAlloc */
+#include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_* */
 #include <deemon/format.h>           /* PRFuSIZ, PRFxSIZ */
 #include <deemon/gc.h>               /* DeeDbgGCSlab_*, DeeGCSlab_*, DeeGC_Head, DeeGC_Object, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/system-features.h>  /* memset */
@@ -46,6 +53,11 @@
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+
+/* Always enable optimizations for this file... */
+#ifdef _MSC_VER
+#pragma optimize("ts", on)
+#endif /* _MSC_VER */
 
 #if defined(Dee_SLAB_CHUNKSIZE_MAX) || defined(__DEEMON__)
 DECL_BEGIN
@@ -138,36 +150,6 @@ PRIVATE void DCALL slab_chkfree_data(void *p, size_t n) {
 #define slab_setfree_data(p, n) (void)0
 #define slab_chkfree_data(p, n) (void)0
 #endif /* !SLAB_DEBUG_MEMSET_FREE */
-
-
-
-/* Low-level slab allocator functions. -- These functions imply have
- * to allocate/free "Dee_SLAB_PAGESIZE"-sized, and aligned chunks of
- * memory. -- Where that memory comes from, or the address ranges it
- * resides in doesn't matter. */
-PRIVATE ATTR_MALLOC WUNUSED void *DCALL slab_page_malloc(void) {
-	/* TODO: OS-specific implementations for (so-long as "Dee_SLAB_PAGESIZE <= __ARCH_PAGESIZE"):
-	 * - VirtualAlloc()
-	 * - mmap()
-	 *
-	 * These impls should then also allocate more than a single slab
-	 * page at-a-time, and keep a global cache of free'd / unused slab
-	 * pages so-as to be able to more quickly hand out pages that were
-	 * already allocated in previous passes.
-	 *
-	 * This cache system should also be cleared by `DeeHeap_Trim()' */
-	return Dee_UntrackAlloc(Dee_Memalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE));
-}
-
-PRIVATE ATTR_MALLOC WUNUSED void *DCALL slab_page_trymalloc(void) {
-	return Dee_UntrackAlloc(Dee_TryMemalign(Dee_SLAB_PAGESIZE, Dee_SLAB_PAGESIZE));
-}
-
-PRIVATE NONNULL((1)) void DCALL slab_page_free(void *page) {
-	Dee_Free(page);
-}
-
-
 
 
 /* Debug debug versions of slab allocator functions */

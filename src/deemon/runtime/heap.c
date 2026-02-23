@@ -50,17 +50,19 @@ ClCompile.BasicRuntimeChecks = Default
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#include <deemon/alloc.h>           /* Dee_CollectMemory */
-#include <deemon/format.h>          /* PRF* */
-#include <deemon/gc.h>              /* Dee_GC_OBJECT_OFFSET, Dee_gc_head */
-#include <deemon/heap.h>            /* DeeHeap_*, Dee_HEAPCHUNK_ALIGN, Dee_HEAP_M_*, Dee_heap_mallinfo, Dee_heapchunk, Dee_heapchunk_getnext, Dee_heapregion, Dee_heapregion_*, Dee_heaptail */
-#include <deemon/module.h>          /* DeeModule*, Dee_module_libentry, Dee_module_object, _Dee_MODULE_FNOADDR */
-#include <deemon/system-features.h> /* CONFIG_HAVE_*, MAP_ANONYMOUS, MREMAP_MAYMOVE, O_RDWR, bzero, calloc, fprintf, free, getpagesize, malloc, memcpy, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */
-#include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self */
-#include <deemon/types.h>           /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t */
-#include <deemon/util/atomic.h>     /* atomic_* */
-#include <deemon/util/lock.h>       /* Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
-#include <deemon/util/rlock.h>      /* Dee_ratomic_lock_*, Dee_rshared_lock_* */
+#include <deemon/alloc.h>            /* Dee_CollectMemory */
+#include <deemon/format.h>           /* PRF* */
+#include <deemon/gc.h>               /* Dee_GC_OBJECT_OFFSET, Dee_gc_head */
+#include <deemon/heap.h>             /* DeeHeap_*, Dee_HEAPCHUNK_ALIGN, Dee_HEAP_M_*, Dee_heap_mallinfo, Dee_heapchunk, Dee_heapchunk_getnext, Dee_heapregion, Dee_heapregion_*, Dee_heaptail */
+#include <deemon/module.h>           /* DeeModule*, Dee_module_libentry, Dee_module_object, _Dee_MODULE_FNOADDR */
+#include <deemon/system-features.h>  /* CONFIG_HAVE_*, MAP_ANONYMOUS, MREMAP_MAYMOVE, O_RDWR, bzero, calloc, fprintf, free, getpagesize, malloc, memcpy, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */
+#include <deemon/thread.h>           /* DeeThreadObject, DeeThread_Self */
+#include <deemon/types.h>            /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t */
+#include <deemon/util/atomic.h>      /* atomic_* */
+#include <deemon/util/lock.h>        /* Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/rlock.h>       /* Dee_ratomic_lock_*, Dee_rshared_lock_* */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX */
+#include <deemon/util/slab.h>        /* Dee_slab_page_rawtrim */
 
 #include <hybrid/align.h>           /* CEILDIV, IS_ALIGNED */
 #include <hybrid/bit.h>             /* CLZ, CTZ */
@@ -4789,7 +4791,7 @@ static int dlmalloc_trim(size_t pad)
 PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
 #endif /* EXPOSE_AS_DEEMON_API */
 {
-	sys_trim_return_t result;
+	sys_trim_return_t result = 0;
 #ifdef HOOK_AFTER_INIT_MALLOC_TRIM
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOC_TRIM(pad));
 #else /* HOOK_AFTER_INIT_MALLOC_TRIM */
@@ -4797,7 +4799,17 @@ PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
 	ensure_initialization();
 #endif /* !GM_STATIC_INIT_MUTEX */
 #endif /* !HOOK_AFTER_INIT_MALLOC_TRIM */
-	result = do_mspace_sys_trim(ARG_mstate_gm_ pad);
+
+	/* Trim the slab page cache (do this first, in case said cache has
+	 * been implemented in terms of the fallback `Dee_Memalign()' impl) */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
+	result += Dee_slab_page_rawtrim(pad);
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
+	/* Trim the main (global) heap */
+	result += do_mspace_sys_trim(ARG_mstate_gm_ pad);
 
 	/* Also trim every "tls_mspace()" (add sum from that to result) */
 #if USE_PER_THREAD_MSTATE

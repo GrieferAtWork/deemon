@@ -27,7 +27,7 @@
 
 #include <deemon/system-features.h> /* bzero */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
-#include <deemon/util/slab.h>       /* Dee_slab_page_isnormal */
+#include <deemon/util/slab.h>       /* Dee_slab_page_* */
 
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h> /* LIST_* */
@@ -51,9 +51,9 @@ DECL_BEGIN
 #endif /* !... */
 
 #ifdef LOCAL_IS_TRY_MALLOC
-#define LOCAL_slab_page_malloc slab_page_trymalloc
+#define LOCAL_Dee_slab_page_rawmalloc Dee_slab_page_tryrawmalloc
 #else /* LOCAL_IS_TRY_MALLOC */
-#define LOCAL_slab_page_malloc slab_page_malloc
+#define LOCAL_Dee_slab_page_rawmalloc Dee_slab_page_rawmalloc
 #endif /* !LOCAL_IS_TRY_MALLOC */
 
 LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
@@ -113,7 +113,7 @@ again_locked:
 	LOCAL_slab_lock_endread();
 
 	/* Get a new page (global) */
-	page = (struct LOCAL_slab_page *)LOCAL_slab_page_malloc();
+	page = (struct LOCAL_slab_page *)LOCAL_Dee_slab_page_rawmalloc();
 	if unlikely(!page)
 		return NULL;
 	bzero(page->sp_used, sizeof(page->sp_used));
@@ -138,7 +138,7 @@ done:
 	return result;
 }
 
-#undef LOCAL_slab_page_malloc
+#undef LOCAL_Dee_slab_page_rawmalloc
 
 #undef LOCAL_IS_TRY_MALLOC
 #undef LOCAL_MY_DeeSlab_Malloc

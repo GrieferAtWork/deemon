@@ -421,6 +421,38 @@ DFUNDEF WUNUSED NONNULL((1)) void *DCALL
 Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n);
 DFUNDEF NONNULL((1, 2)) void DCALL
 Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n);
+
+
+/* Raw alloc/free functions for slab pages. These form the back-bone of
+ * the actual slab page allocator and are used whenever a special-purpose
+ * slab allocator...
+ * - ... requires a new slab page because there are no more pages with free chunk
+ * - ... determines that the last allocated chunk of some slab page has been free'd
+ *       (and the page doesn't have a custom free function), so it wants to give
+ *       the page back to the underlying page allocator.
+ *
+ * WARNING: The memory of the pages returned these malloc functions is entirely
+ *          uninitialized (similarly, `Dee_slab_page_rawfree()' does not care
+ *          about the contents of memory within the pages it's given). As such,
+ *          the caller is responsible for doing all initialization/finalization
+ * WARNING: Do not pass custom slab pages to `Dee_slab_page_rawfree()'! These
+ *          are just the dumb, low-level page allocation functions. If you want
+ *          to support custom free function, that's up to you! */
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
+struct Dee_slab_page *DCALL Dee_slab_page_rawmalloc(void);
+DFUNDEF ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
+struct Dee_slab_page *DCALL Dee_slab_page_tryrawmalloc(void);
+DFUNDEF NONNULL((1)) void DCALL
+Dee_slab_page_rawfree(struct Dee_slab_page *__restrict page);
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Clear caches kept by the raw slab page allocator.
+ * This function is automatically called by `DeeHeap_Trim()'
+ * @param: pad: Try to keep at least this many bytes within the cache
+ * @return: * : The # of bytes free'd from the cache. */
+INTDEF size_t DCALL Dee_slab_page_rawtrim(size_t pad);
+#endif /* CONFIG_BUILDING_DEEMON */
+
 #endif /* Dee_SLAB_CHUNKSIZE_MAX */
 
 DECL_END

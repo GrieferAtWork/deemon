@@ -730,7 +730,14 @@
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />
 		<ClCompile Include="..\src\deemon\runtime\serial.c" />
 		<ClCompile Include="..\src\deemon\runtime\simple-hashset.c" />
-		<ClCompile Include="..\src\deemon\runtime\slab.c" />
+		<ClCompile Include="..\src\deemon\runtime\slab-rawmalloc.c" />
+		<ClCompile Include="..\src\deemon\runtime\slab.c">
+			<Optimization>MaxSpeed</Optimization>
+			<InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+			<FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+			<OmitFramePointers>true</OmitFramePointers>
+			<BasicRuntimeChecks>Default</BasicRuntimeChecks>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\strings.c" />
 		<ClCompile Include="..\src\deemon\runtime\struct.c" />
 		<ClCompile Include="..\src\deemon\runtime\thread.c" />
