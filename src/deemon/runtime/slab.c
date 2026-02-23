@@ -63,16 +63,41 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(LOCAL_ASSERT_GC_SLAB_EXISTS, ~)
 #undef LOCAL_ASSERT_GC_SLAB_EXISTS
 
 
+/* Implementation configuration */
+#if !defined(NDEBUG) && 1
+#define SLAB_DEBUG_INTERNAL 1
+#else
+#define SLAB_DEBUG_INTERNAL 0
+#endif
+
+#if !defined(NDEBUG) && 1
+#define SLAB_DEBUG_EXTERNAL 1
+#else
+#define SLAB_DEBUG_EXTERNAL 0
+#endif
+
 #if __SIZEOF_POINTER__ > 4
 #define WORD_4BYTE(x) UINT64_C(0x##x##x)
 #else /* __SIZEOF_POINTER__ > 4 */
 #define WORD_4BYTE(x) UINT32_C(0x##x)
 #endif /*__SIZEOF_POINTER__ <= 4 */
 
-#if !defined(NDEBUG) && 1
+#if SLAB_DEBUG_EXTERNAL
 #define SLAB_DEBUG_MEMSET_ALLOC WORD_4BYTE(CACACACA) /* Set by DeeSlab_Malloc() */
 #define SLAB_DEBUG_MEMSET_FREE  WORD_4BYTE(BAADF00D) /* Set by DeeSlab_Free() */
-#endif
+#endif /* SLAB_DEBUG_EXTERNAL */
+
+#if SLAB_DEBUG_INTERNAL
+#define slab_assert  Dee_ASSERT
+#define slab_assertf Dee_ASSERTF
+#elif !defined(__NO_builtin_assume)
+#define slab_assert(expr)       __builtin_assume(expr)
+#define slab_assertf(expr, ...) __builtin_assume(expr)
+#else /* ... */
+#define slab_assert(expr)       (void)0
+#define slab_assertf(expr, ...) (void)0
+#endif /* !... */
+
 
 #ifdef SLAB_DEBUG_MEMSET_ALLOC
 PRIVATE void DCALL slab_setalloc_data(void *p, size_t n) {
@@ -709,7 +734,7 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 			goto fail;
 		hi_offset -= n; /* Allocate memory */
 		bitno = hi_offset / n;
-		ASSERT(bitno < fmt->pf__max_chunk_count);
+		slab_assert(bitno < fmt->pf__max_chunk_count);
 		bit_indx = bitno / BITSOF_bitword_t;
 		bit_mask = BITWORD_C(1) << (bitno % BITSOF_bitword_t);
 		if (self__sp_used[bit_indx] & bit_mask)
@@ -725,8 +750,8 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	hi_offset += fmt->pf__sizeof__sp_used;
 
 	/* Remember offsets of new unused-area (the unused-area can only ever shrink btw) */
-	ASSERT(self->sp_meta.spm_type.t_builder.spb_unused_lo <= lo_offset);
-	ASSERT(self->sp_meta.spm_type.t_builder.spb_unused_hi >= hi_offset);
+	slab_assert(self->sp_meta.spm_type.t_builder.spb_unused_lo <= lo_offset);
+	slab_assert(self->sp_meta.spm_type.t_builder.spb_unused_hi >= hi_offset);
 	self->sp_meta.spm_type.t_builder.spb_unused_lo = lo_offset;
 	self->sp_meta.spm_type.t_builder.spb_unused_hi = hi_offset;
 	++self->sp_meta.spm_used;

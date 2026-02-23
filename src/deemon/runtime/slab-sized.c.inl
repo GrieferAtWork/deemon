@@ -192,7 +192,7 @@ LOCAL_slab_malloc_in_page(LOCAL_slab_page *__restrict page) {
 		/* There seems to be something free here! */                          \
 		shift_t free_bit     = CTZ(~word);                                    \
 		bitword_t alloc_mask = (bitword_t)1 << free_bit;                      \
-		ASSERT(!(word & alloc_mask));                                         \
+		slab_assert(!(word & alloc_mask));                                    \
 		if (LOCAL_alloc_in_word(&page->sp_used[i], word, alloc_mask)) {       \
 			/* Got it! -- now just calculate the pointer we need to return */ \
 			size_t index  = i * BITSOF_bitword_t + free_bit;                  \
@@ -314,6 +314,7 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	size_t old__spm_used;
 	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0, "Badly aligned slab pointer: %p", p);
 	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated: %p", p);
+
 	/* Fill chunk with the free-memory pattern */
 #ifdef SLAB_DEBUG_MEMSET_FREE
 	slab_setfree_data(p, DEFINE_CHUNK_SIZE);
@@ -324,12 +325,12 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
 
 	/* Update the page's `spm_used' counter. */
-	ASSERT(page->sp_meta.spm_type.t_link.le_next != page);
+	slab_assert(page->sp_meta.spm_type.t_link.le_next != page);
 	do {
 again_read__spm_used:
 		old__spm_used = atomic_read(&page->sp_meta.spm_used);
-		ASSERT(old__spm_used >= 1);
-		ASSERT(old__spm_used <= LOCAL_MAX_CHUNK_COUNT);
+		slab_assert(old__spm_used >= 1);
+		slab_assert(old__spm_used <= LOCAL_MAX_CHUNK_COUNT);
 		if (old__spm_used == 1) {
 			/* Last chunk of page is being deleted. */
 			if (Dee_slab_page_iscustom(page)) {
@@ -342,12 +343,12 @@ again_read__spm_used:
 			 * However, this part will be left out initially, unless it turns out that this ends up
 			 * being a bottleneck once the new impl is being run in a heavily parallelized environment */
 			LOCAL_slab_lock_write();
-			ASSERT(!Dee_slab_page_iscustom(page));
+			slab_assert(!Dee_slab_page_iscustom(page));
 			if (!atomic_cmpxch(&page->sp_meta.spm_used, 1, 0)) {
 				LOCAL_slab_lock_endwrite();
 				goto again_read__spm_used;
 			}
-			ASSERT(LIST_ISBOUND(page, sp_meta.spm_type.t_link));
+			slab_assert(LIST_ISBOUND(page, sp_meta.spm_type.t_link));
 			LIST_REMOVE(page, sp_meta.spm_type.t_link);
 			LOCAL_slab_lock_endwrite();
 			/* Ensure page is now free */
@@ -366,7 +367,7 @@ again_read__spm_used:
 				LOCAL_slab_lock_endwrite();
 				goto again_read__spm_used;
 			}
-			ASSERT(Dee_slab_page_isnormal(page));
+			slab_assert(Dee_slab_page_isnormal(page));
 			LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
 			LOCAL_slab_lock_endwrite();
 			break;

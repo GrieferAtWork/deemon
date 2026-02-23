@@ -3280,8 +3280,8 @@ static void dispose_chunk(PARAM_mstate_m_ mchunkptr p, size_t psize) {
 			size_t tsize  = mstate_topsize(m) += psize;
 			mstate_top(m) = p;
 			p->head       = tsize | PINUSE_BIT;
-			dl_setfree_word(next->prev_foot, size_t); 
-			dl_setfree_word(next->head, size_t); 
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
 			if (p == mstate_dv(m)) {
 				mstate_dv(m)     = 0;
 				mstate_dvsize(m) = 0;
@@ -3290,16 +3290,16 @@ static void dispose_chunk(PARAM_mstate_m_ mchunkptr p, size_t psize) {
 		} else if (next == mstate_dv(m)) {
 			size_t dsize = mstate_dvsize(m) += psize;
 			mstate_dv(m) = p;
-			dl_setfree_word(next->prev_foot, size_t); 
-			dl_setfree_word(next->head, size_t); 
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
 			set_size_and_pinuse_of_free_chunk(p, dsize);
 			return;
 		} else {
 			size_t nsize = chunksize(next);
 			psize += nsize;
 			unlink_chunk(m, next, nsize);
-			dl_setfree_word(next->prev_foot, size_t); 
-			dl_setfree_word(next->head, size_t); 
+			dl_setfree_word(next->prev_foot, size_t);
+			dl_setfree_word(next->head, size_t);
 			set_size_and_pinuse_of_free_chunk(p, psize);
 			if (p == mstate_dv(m)) {
 				mstate_dvsize(m) = psize;
@@ -3938,8 +3938,8 @@ dl_freelist_do_reap_item(PARAM_mstate_m_ void *__restrict mem) {
 	psize = chunksize(p);
 	next  = chunk_plus_offset(p, psize);
 	if (!pinuse(p)) {
-		size_t prevsize = p->prev_foot;
 		mchunkptr prev;
+		size_t prevsize = p->prev_foot;
 		if unlikely(is_mmapped(p)) {
 #ifndef DL_MUNMAP_ALWAYS_FAILS
 			psize += prevsize + MMAP_FOOT_PAD;

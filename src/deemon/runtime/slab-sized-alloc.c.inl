@@ -66,12 +66,12 @@ again_locked:
 	page = LIST_FIRST(&LOCAL_slab_pages);
 	if (page) {
 		size_t old__spm_used;
-		ASSERT(page->sp_meta.spm_type.t_link.le_next != page);
+		slab_assert(page->sp_meta.spm_type.t_link.le_next != page);
 		for (;;) {
 			old__spm_used = atomic_read(&page->sp_meta.spm_used);
-			ASSERT(old__spm_used >= 1);
-			ASSERT(old__spm_used <= (LOCAL_MAX_CHUNK_COUNT - 1));
-			if unlikely (old__spm_used >= (LOCAL_MAX_CHUNK_COUNT - 1)) {
+			slab_assert(old__spm_used >= 1);
+			slab_assert(old__spm_used <= (LOCAL_MAX_CHUNK_COUNT - 1));
+			if unlikely(old__spm_used >= (LOCAL_MAX_CHUNK_COUNT - 1)) {
 				/* About to allocate last free chunk of page */
 				LOCAL_slab_lock_endread();
 				while (!LOCAL_slab_lock_trywrite()) {
@@ -101,8 +101,8 @@ again_locked:
 		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
 #if defined(SLAB_DEBUG_MEMSET_ALLOC) || defined(SLAB_DEBUG_MEMSET_FREE)
 		result = LOCAL_slab_malloc_in_page(page);
-		ASSERT(result >= page->sp_data);
-		ASSERT(result <= (page->sp_data + sizeof(page->sp_data) - DEFINE_CHUNK_SIZE));
+		slab_assert(result >= page->sp_data);
+		slab_assert(result <= (page->sp_data + sizeof(page->sp_data) - DEFINE_CHUNK_SIZE));
 		/* Verify that the slab chunk still matches the SLAB_DEBUG_MEMSET_FREE-pattern */
 		slab_chkfree_data(result, DEFINE_CHUNK_SIZE);
 		goto done;
@@ -129,7 +129,7 @@ again_locked:
 	 * by having a insert-reap-list for `LOCAL_slab_pages'. */
 	LOCAL_slab_lock_write();
 	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
-	ASSERT(Dee_slab_page_isnormal(page));
+	slab_assert(Dee_slab_page_isnormal(page));
 	LOCAL_slab_lock_endwrite();
 #if defined(SLAB_DEBUG_MEMSET_ALLOC) || defined(SLAB_DEBUG_MEMSET_FREE)
 done:
