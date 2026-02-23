@@ -28,6 +28,7 @@
 #include <deemon/type.h>             /* DeeObject_Init, DeeType_*, Dee_operator_t */
 #include <deemon/util/hash.h>        /* Dee_HashPtr, Dee_HashStr */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
+#include <deemon/util/slab.h> /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_GC_FOREACH */
 #include <deemon/util/weakref.h>     /* Dee_weakref, Dee_weakref_callback_t, Dee_weakref_initempty */
 
 #ifndef CONFIG_NO_DEC
@@ -1165,6 +1166,172 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+decwriter_putpointer(DeeDecWriter *__restrict self,
+                     Dee_seraddr_t addrof_pointer,
+                     void const *pointer);
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+
+/* Free a singular, stand-alone dec slab page */
+#if 1
+#define decslab_free1 (Dee_Free)
+#else
+PRIVATE NONNULL((1)) void DCALL
+decslab_free1(struct Dee_slab_page *__restrict self) {
+	Dee_Free(self);
+}
+#endif
+
+#ifndef CONFIG_NO_THREADS
+PRIVATE Dee_atomic_lock_t decslab_freeN_lock = Dee_ATOMIC_LOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
+#define decslab_freeN_lock_available()  Dee_atomic_lock_available(&decslab_freeN_lock)
+#define decslab_freeN_lock_acquired()   Dee_atomic_lock_acquired(&decslab_freeN_lock)
+#define decslab_freeN_lock_tryacquire() Dee_atomic_lock_tryacquire(&decslab_freeN_lock)
+#define decslab_freeN_lock_acquire()    Dee_atomic_lock_acquire(&decslab_freeN_lock)
+#define decslab_freeN_lock_waitfor()    Dee_atomic_lock_waitfor(&decslab_freeN_lock)
+#define decslab_freeN_lock_release()    Dee_atomic_lock_release(&decslab_freeN_lock)
+
+PRIVATE NONNULL((1)) void DCALL decslab_freeN_first(struct Dee_slab_page *__restrict self);
+PRIVATE NONNULL((1)) void DCALL decslab_freeN_middle(struct Dee_slab_page *__restrict self);
+PRIVATE NONNULL((1)) void DCALL decslab_freeN_last(struct Dee_slab_page *__restrict self);
+
+/* Need some value that is distinct from "Dee_SLAB_PAGE_META_CUSTOM_MARKER"
+ * to mark decslab-N pages that have already been free'd. To accomplish that,
+ * simply derive a distinct value from "Dee_SLAB_PAGE_META_CUSTOM_MARKER". */
+#define decslab_freeN_FREE_MAKER ((void *)((uintptr_t)Dee_SLAB_PAGE_META_CUSTOM_MARKER - 1))
+
+/* Helper macros for interacting with decslab-N pages */
+#define decslab_freeN_gettype(self) ((self)->sp_meta.spm_type.t_custom.c_free)
+#define decslab_freeN_hasnext(self) (decslab_freeN_gettype(self) != &decslab_freeN_last)
+#define decslab_freeN_hasprev(self) (decslab_freeN_gettype(self) != &decslab_freeN_first)
+#define decslab_freeN_isfree(self)  ((self)->sp_meta.spm_type.t_custom.c_marker == decslab_freeN_FREE_MAKER)
+#define decslab_freeN_mkfree(self)  (void)((self)->sp_meta.spm_type.t_custom.c_marker = decslab_freeN_FREE_MAKER)
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+decslab_freeN_allfree_locked(struct Dee_slab_page *__restrict self) {
+	struct Dee_slab_page *iter;
+	ASSERTF(decslab_freeN_isfree(self), "Caller should have marked this one as free");
+	for (iter = self; decslab_freeN_hasprev(iter);) {
+		--iter;
+		if (!decslab_freeN_isfree(iter))
+			goto nope;
+	}
+	for (iter = self; decslab_freeN_hasnext(iter);) {
+		++iter;
+		if (!decslab_freeN_isfree(iter))
+			goto nope;
+	}
+	return true;
+nope:
+	return false;
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+decslab_freeN(struct Dee_slab_page *__restrict self) {
+	bool all_free;
+	decslab_freeN_lock_acquire();
+	decslab_freeN_mkfree(self); /* Mark as free */
+	all_free = decslab_freeN_allfree_locked(self);
+	decslab_freeN_lock_release();
+	if (all_free) {
+		while (decslab_freeN_hasprev(self))
+			--self;
+		Dee_Free(self);
+	}
+}
+
+/* NOTE: We mark these functions with 'ATTR_NOINLINE' to signify that they must
+ *       not alias each other (even though they are implemented identically). I
+ *       know that C already guaranties that functions with identical impls will
+ *       still have distinct addresses, but that is actually something I don't
+ *       want to rely on in deemon, since a (potential) compiler switch to make
+ *       this requirement go away could result in some very nice optimizations.
+ *
+ * A better attribute (if it existed) would be something like "ATTR_NOALIAS" */
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+decslab_freeN_first(struct Dee_slab_page *__restrict self) {
+	decslab_freeN(self);
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+decslab_freeN_middle(struct Dee_slab_page *__restrict self) {
+	decslab_freeN(self);
+}
+
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+decslab_freeN_last(struct Dee_slab_page *__restrict self) {
+	decslab_freeN(self);
+}
+
+
+/* Finish build the currently active set of slab
+ * pages (~ala `Dee_slab_page_buildpack()') */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+decwriter_build_slab_pages(DeeDecWriter *__restrict self) {
+	struct Dee_heapchunk *slab_chunk;
+	Dee_seraddr_t addrof_first_page;
+	size_t i, num_pages;
+	ASSERT(self->dw_slabs != 0);
+	ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+	ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+	slab_chunk = DeeDecWriter_Addr2Mem(self, self->dw_slabb, struct Dee_heapchunk);
+	slab_chunk->hc_head = Dee_HEAPCHUNK_HEAD(self->dw_slabs - sizeof(struct Dee_heapchunk));
+
+	/* Use static relocations to replicate `Dee_slab_page_buildpack()' such that
+	 * each slab page can be free'd individually, and once all slab pages have
+	 * been freed, the last free operation will call `Dee_Free()' on the base
+	 * address of the first slab page (since that page has been preceded by a
+	 * heap chunk header spanning the entirety of the slab segment).
+	 *
+	 * This way, once all slab pages are free, the slab system will automatically
+	 * call forward into Dee_Free()'s "flag4" system, which will eventually allow
+	 * the dec file's mapping to be unloaded once all parts of it have been free'd. */
+	addrof_first_page = self->dw_slabb + sizeof(struct Dee_heapchunk);
+	num_pages = (self->dw_slabs - sizeof(struct Dee_heapchunk)) / Dee_SLAB_PAGESIZE;
+
+	/* This part here replicates what is done by `Dee_slab_page_buildpack()'
+	 * (only that instead of directly initializing the slab page, it writes
+	 * the relevant pointers to the dec file) */
+	for (i = 0; i < num_pages; ++i) {
+		typedef void (DCALL *slab_page_free_t)(struct Dee_slab_page *__restrict self);
+		slab_page_free_t c_free;
+		Dee_seraddr_t addrof_page;
+		struct Dee_slab_page *page;
+		if (i == 0) {
+			c_free = num_pages == 1 ? (slab_page_free_t)&decslab_free1
+			                        : &decslab_freeN_first;
+		} else if (i == (num_pages - 1)) {
+			c_free = &decslab_freeN_middle;
+		} else {
+			c_free = &decslab_freeN_last;
+		}
+		addrof_page = addrof_first_page + i * Dee_SLAB_PAGESIZE;
+		page = DeeDecWriter_Addr2Mem(self, addrof_page, struct Dee_slab_page);
+		if (page->sp_meta.spm_type.t_builder.spb_unused_lo <
+		    page->sp_meta.spm_type.t_builder.spb_unused_hi) {
+			byte_t *unused_base = (byte_t *)page + page->sp_meta.spm_type.t_builder.spb_unused_lo;
+			size_t unused_size = (size_t)(page->sp_meta.spm_type.t_builder.spb_unused_hi -
+			                              page->sp_meta.spm_type.t_builder.spb_unused_lo);
+			memset(unused_base, 0xfe, unused_size);
+		}
+
+		page->sp_meta.spm_type.t_custom.c_marker = Dee_SLAB_PAGE_META_CUSTOM_MARKER;
+
+		/* Encode free-function pointer */
+		if unlikely(decwriter_putpointer(self,
+		                                 addrof_page + offsetof(struct Dee_slab_page,
+		                                                        sp_meta.spm_type.t_custom.c_free),
+		                                 (void const *)(Dee_funptr_t)c_free))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
 /* Pack the dec file into a format where it can easily be written to a file:
  * >> DeeDec_Ehdr *ehdr = DeeDecWriter_PackEhdr(&writer);
  * >> DeeFile_WriteAll(fp, ehdr, ehdr->e_typedata.td_reloc.er_offsetof_eof);
@@ -1210,6 +1377,47 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		ASSERT(mod->mo_buildid.mbi_word64[1] == 0);
 	}
 #endif /* !NDEBUG */
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	/* Update `dw_used' to include memory reserved for the currently-allocated page */
+	if (self->dw_slabs) {
+		ASSERT(self->dw_slabs > sizeof(Dee_heapchunk));
+		ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(Dee_heapchunk), Dee_SLAB_PAGESIZE));
+		ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(Dee_heapchunk), Dee_SLAB_PAGESIZE));
+		if (self->dw_used < self->dw_slabb) {
+			struct Dee_heapchunk *slab_chunk;
+			/* Extend the last heap-chunk t */
+			size_t avail_before_slab = (self->dw_slabb - self->dw_used);
+			/* Extend the previous heap-chunk to go up to the slab page. */
+			Dee_seraddr_t addrof_prev_heapchunk;
+			struct Dee_heapchunk *prev_chunk;
+			ASSERTF(self->dw_hlast != 0, "The first thing that's allocated should "
+			                             "already be regular heap memory, so there "
+			                             "should always be a preceding allocation");
+			ASSERT(self->dw_used >= self->dw_hlast);
+			addrof_prev_heapchunk = self->dw_used;
+			addrof_prev_heapchunk -= sizeof(struct Dee_heapchunk);
+			addrof_prev_heapchunk -= (self->dw_hlast - Dee_HEAPCHUNK_PREV(0));
+			prev_chunk = DeeDecWriter_Addr2Mem(self, addrof_prev_heapchunk, struct Dee_heapchunk);
+			prev_chunk->hc_head += avail_before_slab;
+			memset(DeeDecWriter_Addr2Mem(self, self->dw_used, void), 0xfe, avail_before_slab);
+			self->dw_hlast += avail_before_slab;
+			self->dw_used += avail_before_slab;
+			ASSERT(self->dw_used == self->dw_slabb);
+			/* Fill in the heap-chunk descriptor for the slab area */
+			slab_chunk = DeeDecWriter_Addr2Mem(self, self->dw_used, struct Dee_heapchunk);
+			slab_chunk->hc_prevsize = self->dw_hlast;
+			self->dw_used += self->dw_slabs;
+			self->dw_hlast = Dee_HEAPCHUNK_PREV(self->dw_slabs - sizeof(struct Dee_heapchunk));
+			ASSERT(self->dw_used == (self->dw_slabb + self->dw_slabs));
+		}
+		ASSERT(self->dw_used >= (self->dw_slabb + self->dw_slabs));
+		if unlikely(decwriter_build_slab_pages(self))
+			goto err;
+		DBG_memset(&self->dw_slabb, 0xcc, sizeof(self->dw_slabb));
+		self->dw_slabs = 0;
+	}
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Space for the heap tail is always pre-allocated! */
 	{
@@ -1360,7 +1568,8 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			Dec_Ehdr *final_ehdr = (Dec_Ehdr *)Dee_Memalign(self->dw_align, total_need);
 			if unlikely(!final_ehdr)
 				goto err;
-			final_ehdr = (Dec_Ehdr *)memcpy(final_ehdr, ehdr, self->dw_used);
+			ASSERT(total_need >= (self->dw_used + sizeof(struct Dee_heaptail)));
+			final_ehdr = (Dec_Ehdr *)memcpy(final_ehdr, ehdr, self->dw_used + sizeof(struct Dee_heaptail));
 			Dee_Free(ehdr);
 			ehdr = final_ehdr;
 		} else {
@@ -1527,7 +1736,8 @@ output_image:
 			Dec_Ehdr *final_ehdr = (Dec_Ehdr *)Dee_Memalign(self->dw_align, total_need);
 			if unlikely(!final_ehdr)
 				goto err;
-			final_ehdr = (Dec_Ehdr *)memcpy(final_ehdr, ehdr, self->dw_used);
+			ASSERT(total_need >= (self->dw_used + sizeof(struct Dee_heaptail)));
+			final_ehdr = (Dec_Ehdr *)memcpy(final_ehdr, ehdr, self->dw_used + sizeof(struct Dee_heaptail));
 			Dee_Free(ehdr);
 			ehdr = final_ehdr;
 		} else {
@@ -1546,6 +1756,10 @@ output_image:
 	self->dw_ehdr  = NULL;
 	self->dw_used  = 0;
 	self->dw_alloc = 0;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	DBG_memset(&self->dw_slabb, 0xcc, sizeof(self->dw_slabb));
+	self->dw_slabs = 0;
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Finish initialization of "ehdr" by setting it up as a HEAP mapping */
 	DeeMapFile_SETADDR(&ehdr->e_mapping, ehdr);
@@ -1877,7 +2091,7 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	void *payload;
 	Dee_seraddr_t result;
 	struct Dee_heapchunk *chunk;
-	size_t avail, nb, req, unused;
+	size_t cur_avail, nb, req_avail, unused;
 	if unlikely(num_bytes > DFILE_LIMIT)
 		goto err_too_much;
 
@@ -1885,15 +2099,53 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	unused = CEIL_ALIGN(num_bytes, Dee_HEAPCHUNK_ALIGN) - num_bytes;
 	num_bytes += unused;
 	nb = sizeof(struct Dee_heapchunk) + num_bytes;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	if (self->dw_slabs) {
+		ASSERT(self->dw_alloc >= (self->dw_slabb + self->dw_slabs + sizeof(struct Dee_heaptail)));
+		if (self->dw_used < self->dw_slabb) {
+			struct Dee_heapchunk *slab_chunk;
+			size_t avail_before_slab = (self->dw_slabb - self->dw_used);
+			if (avail_before_slab >= nb)
+				goto do_allocate; /* Can just allocate ahead of slab page! */
+			if (avail_before_slab != 0) {
+				/* Extend the previous heap-chunk to go up to the slab page. */
+				Dee_seraddr_t addrof_prev_heapchunk;
+				struct Dee_heapchunk *prev_chunk;
+				ASSERTF(self->dw_hlast != 0, "The first thing that's allocated should "
+				                             "already be regular heap memory, so there "
+				                             "should always be a preceding allocation");
+				ASSERT(self->dw_used >= self->dw_hlast);
+				addrof_prev_heapchunk = self->dw_used;
+				addrof_prev_heapchunk -= sizeof(struct Dee_heapchunk);
+				addrof_prev_heapchunk -= (self->dw_hlast - Dee_HEAPCHUNK_PREV(0));
+				prev_chunk = DeeDecWriter_Addr2Mem(self, addrof_prev_heapchunk, struct Dee_heapchunk);
+				prev_chunk->hc_head += avail_before_slab;
+				memset(DeeDecWriter_Addr2Mem(self, self->dw_used, void), 0xfe, avail_before_slab);
+				self->dw_hlast += avail_before_slab;
+				self->dw_used += avail_before_slab;
+			}
+			ASSERT(self->dw_used == self->dw_slabb);
+
+			/* Fill in the heap-chunk descriptor for the slab area */
+			slab_chunk = DeeDecWriter_Addr2Mem(self, self->dw_used, struct Dee_heapchunk);
+			slab_chunk->hc_prevsize = self->dw_hlast;
+
+			/* Must continue after slab page(s) */
+			self->dw_used += self->dw_slabs;
+			self->dw_hlast = Dee_HEAPCHUNK_PREV(self->dw_slabs - sizeof(struct Dee_heapchunk));
+		}
+		ASSERT(self->dw_used >= (self->dw_slabb + self->dw_slabs));
+	}
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* Ensure that enough space has been allocated.
 	 * Always include space for the eventual `struct Dee_heaptail'! */
-	if (OVERFLOW_USUB(self->dw_alloc, self->dw_used, &avail))
-		avail = 0;
-	req = nb + sizeof(struct Dee_heaptail);
-	if likely(avail < req) {
+	ASSERT(self->dw_alloc >= self->dw_used);
+	cur_avail = self->dw_alloc - self->dw_used;
+	req_avail = nb + sizeof(struct Dee_heaptail);
+	if likely(cur_avail < req_avail) {
 		byte_t *new_base;
-		size_t min_alloc = (self->dw_used + req);
+		size_t min_alloc = (self->dw_used + req_avail);
 		size_t new_alloc = CEIL_ALIGN(min_alloc * 2, __SIZEOF_POINTER__ * 4 * 1024);
 		if (new_alloc < min_alloc)
 			new_alloc = min_alloc;
@@ -1912,6 +2164,9 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	}
 
 	/* Initialize the heap chunk for the newly made allocation */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+do_allocate:
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	result = self->dw_used;
 	ASSERT(IS_ALIGNED(result, Dee_HEAPCHUNK_ALIGN));
 	ASSERT(IS_ALIGNED(nb, Dee_HEAPCHUNK_ALIGN));
@@ -2209,18 +2464,154 @@ decwriter_gcobject_free(DeeDecWriter *__restrict self, Dee_seraddr_t addr,
 
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+
+/* Allocate a new slab-page and return its base-address, or `Dee_SERADDR_INVALID' on error.
+ * The returned base-address is always aligned by `Dee_SLAB_PAGESIZE', and spans a total of
+ * `Dee_SLAB_PAGESIZE' bytes of memory.
+ *
+ * WARNING: While the returned address is properly aligned, note that the dec writer's buffer
+ *          probably isn't. However, that is fine since the writer's buffer is only indirectly
+ *          accessible, and its only purpose is to construct the contents of a dec file. It is
+ *          only after `DeeDecWriter_PackEhdr()' was called that the buffer becomes a proper
+ *          dec file memory mapping, and any bad alignment of buffers will finally be fixed
+ *          by `DeeDec_Relocate()'. */
+PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
+decwriter_slab_malloc_newpage_impl(DeeDecWriter *__restrict self, bool do_try) {
+	Dee_seraddr_t result;
+	size_t min_alloc, cur_alloc;
+	if (self->dw_slabs) {
+		if (self->dw_used <= self->dw_slabb) {
+			/* Can extend the current slab-heap-segment by another page. */
+			ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+			ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+			min_alloc = self->dw_slabb + self->dw_slabs + Dee_SLAB_PAGESIZE + sizeof(struct Dee_heaptail);
+			cur_alloc = self->dw_alloc;
+			if (min_alloc > cur_alloc) {
+				byte_t *new_base;
+				size_t new_alloc = CEIL_ALIGN(min_alloc * 2, __SIZEOF_POINTER__ * 4 * 1024);
+				if (new_alloc < min_alloc)
+					new_alloc = min_alloc;
+				new_base = (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc);
+				if unlikely(!new_base) {
+					new_alloc = min_alloc;
+					new_base = do_try
+					           ? (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc)
+					           : (byte_t *)Dee_Realloc(self->dw_base, new_alloc);
+					if unlikely(!new_base)
+						goto err;
+				}
+				self->dw_base  = new_base;
+				self->dw_alloc = Dee_MallocUsableSize(new_base);
+				ASSERT(self->dw_alloc >= new_alloc);
+			}
+			result = self->dw_slabb + self->dw_slabs;
+			self->dw_slabs += Dee_SLAB_PAGESIZE;
+			ASSERT(IS_ALIGNED(result, Dee_SLAB_PAGESIZE));
+			return result;
+		}
+
+		/* Must terminate (pack) the current slab segment */
+		if unlikely(decwriter_build_slab_pages(self))
+			goto err;
+		self->dw_slabs = 0;
+		DBG_memset(&self->dw_slabb, 0xcc, sizeof(self->dw_slabb));
+	}
+
+	/* Create a new slab segment at the next properly-aligned address */
+	result = CEIL_ALIGN(self->dw_used, Dee_SLAB_PAGESIZE);
+
+	/* Ensure that the output buffer is large enough */
+	min_alloc = result + Dee_SLAB_PAGESIZE + sizeof(struct Dee_heaptail);
+	cur_alloc = self->dw_alloc;
+	if (min_alloc > cur_alloc) {
+		byte_t *new_base;
+		size_t new_alloc = CEIL_ALIGN(min_alloc * 2, __SIZEOF_POINTER__ * 4 * 1024);
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc;
+		new_base = (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc);
+		if unlikely(!new_base) {
+			new_alloc = min_alloc;
+			new_base = do_try
+			           ? (byte_t *)Dee_TryRealloc(self->dw_base, new_alloc)
+			           : (byte_t *)Dee_Realloc(self->dw_base, new_alloc);
+			if unlikely(!new_base)
+				goto err;
+		}
+		self->dw_base  = new_base;
+		self->dw_alloc = Dee_MallocUsableSize(new_base);
+		ASSERT(self->dw_alloc >= new_alloc);
+	}
+
+	/* Remember the new slab segment */
+	self->dw_slabb = result - sizeof(struct Dee_heapchunk);
+	self->dw_slabs = sizeof(struct Dee_heapchunk) + Dee_SLAB_PAGESIZE;
+
+	/* Ensure that the resulting dec file will be properly aligned */
+	if (self->dw_align < Dee_SLAB_PAGESIZE)
+		self->dw_align = Dee_SLAB_PAGESIZE;
+	ASSERT(IS_ALIGNED(result, Dee_SLAB_PAGESIZE));
+	return result;
+err:
+	return Dee_SERADDR_INVALID;
+}
+
 PRIVATE WUNUSED NONNULL((1)) Dee_seraddr_t DCALL
 decwriter_slab_malloc_impl(DeeDecWriter *__restrict self, size_t n, bool do_try) {
-	/* TODO: Dee_slab_page_buildmalloc() */
+#if 1
+#define ptr2addr(p) ((Dee_seraddr_t)((byte_t *)(p) - (self)->dw_base))
+	void *result_ptr;
+	struct Dee_slab_page *page;
+	Dee_seraddr_t addrof_page;
+	if (self->dw_slabs) {
+		/* Try every slab page currently allocated
+		 * to see if it can be used to allocate "n" */
+		Dee_seraddr_t addrof_pages;
+		struct Dee_slab_page *pages;
+		size_t i, num_pages;
+		ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+		ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+		addrof_pages = self->dw_slabb + sizeof(struct Dee_heapchunk);
+		pages = DeeDecWriter_Addr2Mem(self, addrof_pages, struct Dee_slab_page);
+		num_pages = (self->dw_slabs - sizeof(struct Dee_heapchunk)) / Dee_SLAB_PAGESIZE;
+		ASSERT(num_pages >= 1);
+		for (i = 0; i < num_pages; ++i) {
+			STATIC_ASSERT(sizeof(struct Dee_slab_page) == Dee_SLAB_PAGESIZE);
+			page = &pages[i];
+			result_ptr = Dee_slab_page_buildmalloc(page, n);
+			if (result_ptr != NULL)
+				return ptr2addr(result_ptr); /* Got it! */
+		}
+	}
+
+	/* None of the existing slab pages allow us to allocate an "n"-byte slab chunk
+	 * -> use `decwriter_slab_malloc_newpage_impl()' to allocate a new slab page. */
+	addrof_page = decwriter_slab_malloc_newpage_impl(self, do_try);
+	if (!Dee_SERADDR_ISOK(addrof_page))
+		goto err;
+	page = DeeDecWriter_Addr2Mem(self, addrof_page, struct Dee_slab_page);
+	Dee_slab_page_buildinit(page);
+	result_ptr = Dee_slab_page_buildmalloc(page, n);
+	ASSERTF(result_ptr, "How can allocation fail on an entirely empty page?");
+	return ptr2addr(result_ptr);
+err:
+	return Dee_SERADDR_INVALID;
+#undef ptr2addr
+#else
 	return do_try ? decwriter_trymalloc(self, n, NULL)
 	              : decwriter_malloc(self, n, NULL);
+#endif
 }
 
 PRIVATE WUNUSED NONNULL((1)) void DCALL
 decwriter_slab_free_impl(DeeDecWriter *__restrict self, Dee_seraddr_t addr, size_t n) {
+#if 1
 	/* TODO: Dee_slab_page_buildfree() */
+	(void)self;
+	(void)addr;
 	(void)n;
+#else
 	decwriter_free(self, addr, NULL);
+#endif
 }
 
 
@@ -2819,6 +3210,10 @@ _DeeDecWriter_Init(DeeDecWriter *__restrict self) {
 	self->dw_used  = offsetof(Dec_Ehdr, e_heap.hr_first);
 	self->dw_hlast = 0;
 	self->dw_align = Dee_HEAPCHUNK_ALIGN;
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+	DBG_memset(&self->dw_slabb, 0xcc, sizeof(self->dw_slabb));
+	self->dw_slabs = 0;
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	Dee_dec_reltab_init(&self->dw_srel);
 	Dee_dec_reltab_init(&self->dw_drel);
 	Dee_dec_rreltab_init(&self->dw_drrel);

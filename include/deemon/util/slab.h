@@ -313,6 +313,7 @@
 #ifdef __CC__
 DECL_BEGIN
 
+/* Type-marker for slab pages with custom "c_free" functions */
 #define Dee_SLAB_PAGE_META_CUSTOM_MARKER ((void *)-1)
 
 #if __SIZEOF_INT_FAST16_T__ <= __SIZEOF_POINTER__

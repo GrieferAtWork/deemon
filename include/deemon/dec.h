@@ -501,7 +501,19 @@ typedef struct Dee_dec_writer {
 	size_t                  dw_align;  /* Minimum alignment requirements for the resulting dec file */
 	size_t                  dw_hlast;  /* Chunk size during the previous call to `DeeDecWriter_Malloc()' */
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-	/* TODO: Integration of slab pages (s.a. `Dee_slab_page_buildmalloc()') */
+	Dee_seraddr_t           dw_slabb;   /* [<= dw_alloc][valid_if(dw_slabs != 0)] Address of the `Dee_heapchunk' preceding
+	                                     * the properly aligned base of the most-recently allocated section of slab pages.
+	                                     * When valid, this value is `IS_ALIGNED(. + sizeof(Dee_heapchunk), Dee_SLAB_PAGESIZE)'
+	                                     * During allocation, `dw_used' is *NOT* adjusted to point after the slab chunk.
+	                                     * Instead, heap allocation checks if it might collide with slab pages, and if it does,
+	                                     * the last preceding heap allocation is only extended to join up with the allocation
+	                                     * of the slab pages themselves, before then continuing on after the slabs:
+	                                     * >> 0          4096    8182
+	                                     * >> HDR HEAP...SLAB....HEAP */
+	size_t                  dw_slabs;   /* # of bytes reserved at `dw_slabb' for slab memory (always 'sizeof(Dee_heapchunk)' plus a
+	                                     * multiple of `Dee_SLAB_PAGESIZE'). When more slab pages are needed, check if `dw_used' has
+	                                     * grown beyond the last slab page, and if so: start a new chunk of slab pages. Otherwise,
+	                                     * extend the previous slab segment by one more page. */
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 	struct Dee_dec_reltab   dw_srel;   /* Table of self-relocations */
 	struct Dee_dec_reltab   dw_drel;   /* Table of relocations against deemon-core objects */

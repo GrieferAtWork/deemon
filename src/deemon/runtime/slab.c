@@ -678,13 +678,14 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	bitword_t *self__sp_used = (bitword_t *)self;
 	Dee_slab_page_builder_offset_t lo_offset = self->sp_meta.spm_type.t_builder.spb_unused_lo;
 	Dee_slab_page_builder_offset_t hi_offset = self->sp_meta.spm_type.t_builder.spb_unused_hi;
-	if (lo_offset < fmt->pf__sizeof__sp_used) {
+	if (lo_offset < fmt->pf__sizeof__sp_used)
 		lo_offset = fmt->pf__sizeof__sp_used;
-	}
+
 	/* Align "hi_offset" */
 	if (OVERFLOW_USUB(hi_offset, fmt->pf__sizeof__sp_used, &hi_offset))
 		goto fail;
 	lo_offset -= fmt->pf__sizeof__sp_used;
+	hi_offset = (hi_offset / n) * n; /* floor-align to nearest, valid slab-chunk */
 	for (;;) {
 		size_t bitno, bit_indx;
 		bitword_t bit_mask;
@@ -712,6 +713,7 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	ASSERT(self->sp_meta.spm_type.t_builder.spb_unused_hi >= hi_offset);
 	self->sp_meta.spm_type.t_builder.spb_unused_lo = lo_offset;
 	self->sp_meta.spm_type.t_builder.spb_unused_hi = hi_offset;
+	++self->sp_meta.spm_used;
 
 	/* Freshly allocated location is at the far end of the (now smaller) free-area. */
 	return (byte_t *)self + hi_offset;
@@ -744,6 +746,7 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 
 	/* Mark the location as not-allocated within the slab's in-use bitset. */
 	self__sp_used[indx_of__p_in_sp_used] &= ~word_of__p_in_sp_used;
+	--self->sp_meta.spm_used;
 
 	/* If the given 'p' was most-recently allocated from 'self',
 	 * we can give back memory to the page's unused area. */

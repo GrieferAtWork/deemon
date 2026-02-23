@@ -177,24 +177,26 @@ PRIVATE WUNUSED NONNULL((1)) void *DCALL
 LOCAL_slab_malloc_in_page(LOCAL_slab_page *__restrict page) {
 	/* Caller guaranties that something is free (since they reserved a spot for us)
 	 * -- we just need to find that spot! */
+	bitword_t word;
+
 #define LOCAL_maskfor(i)                \
 	((i) >= (LOCAL_ELEMOF__sp_used - 1) \
 	 ? LOCAL_sp_used__LAST_USED_MASK    \
 	 : (bitword_t) - 1)
+#if 1 /* Both impls here work the same */
+#define LOCAL_alloc_in_word(p, word, mask) atomic_cmpxch_weak(p, word, word | mask)
+#else
+#define LOCAL_alloc_in_word(p, word, mask) (!(atomic_fetchor(p, mask) & mask))
+#endif
 #define LOCAL_alloc_from(i, full_mask)                                        \
-	for (;;) {                                                                \
-		shift_t free_bit;                                                     \
-		bitword_t word, alloc_mask;                                     \
-		word = atomic_read(&page->sp_used[i]);                                \
-		if (word == (full_mask))                                              \
-			break;                                                            \
+	if ((word = atomic_read(&page->sp_used[i])) != (full_mask)) {             \
 		/* There seems to be something free here! */                          \
-		free_bit   = CTZ(~word);                                              \
-		alloc_mask = (bitword_t)1 << free_bit;                          \
+		shift_t free_bit     = CTZ(~word);                                    \
+		bitword_t alloc_mask = (bitword_t)1 << free_bit;                      \
 		ASSERT(!(word & alloc_mask));                                         \
-		if (atomic_cmpxch_weak(&page->sp_used[i], word, word | alloc_mask)) { \
+		if (LOCAL_alloc_in_word(&page->sp_used[i], word, alloc_mask)) {       \
 			/* Got it! -- now just calculate the pointer we need to return */ \
-			size_t index  = i * BITSOF_bitword_t + free_bit;            \
+			size_t index  = i * BITSOF_bitword_t + free_bit;                  \
 			size_t offset = index * DEFINE_CHUNK_SIZE;                        \
 			return page->sp_data + offset;                                    \
 		}                                                                     \
@@ -288,6 +290,7 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 #endif /* !LOCAL_HAVE_slab_malloc_in_page */
 #undef LOCAL_HAVE_slab_malloc_in_page
 #undef LOCAL_alloc_from
+#undef LOCAL_alloc_in_word
 #undef LOCAL_maskfor
 }
 
@@ -316,8 +319,12 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	size_t old__spm_used;
 #if 1 /* Super-hacky work-around to test if the new slab allocator works, without having to integrate proper DEC support */
 	if (is_dec_pointer(p)) {
+#if 1
+		Dee_DPRINTF("Free dec-based slab pointer: %p\n", p);
+#else
 		Dee_Free(p);
 		return;
+#endif
 	}
 #endif
 	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0, "Badly aligned slab pointer: %p", p);
