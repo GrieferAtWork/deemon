@@ -305,10 +305,6 @@ DECL_BEGIN
 #endif /* !__INTELLISENSE__ */
 
 
-#if 1 /* Super-hacky work-around to test if the new slab allocator works, without having to integrate proper DEC support */
-INTDEF bool DCALL is_dec_pointer(void *ptr);
-#endif
-
 LOCAL_DECL NONNULL((1)) void DCALL
 LOCAL_DeeSlab_Free(void *__restrict p) {
 	LOCAL_slab_page *page = (LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
@@ -317,16 +313,6 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	size_t bit_indx = index / BITSOF_bitword_t;
 	bitword_t bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
 	size_t old__spm_used;
-#if 1 /* Super-hacky work-around to test if the new slab allocator works, without having to integrate proper DEC support */
-	if (is_dec_pointer(p)) {
-#if 1
-		Dee_DPRINTF("Free dec-based slab pointer: %p\n", p);
-#else
-		Dee_Free(p);
-		return;
-#endif
-	}
-#endif
 	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0, "Badly aligned slab pointer: %p", p);
 	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated: %p", p);
 	atomic_and(&page->sp_used[bit_indx], ~bit_mask);

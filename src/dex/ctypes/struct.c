@@ -433,7 +433,7 @@ struct_getattr(DeeStructTypeObject *tp_self,
 			continue;
 
 		/* Found it! (return an l-value to the field in question) */
-		result = DeeObject_MALLOC(struct lvalue_object);
+		result = lvalue_object_malloc();
 		if unlikely(!result)
 			goto err;
 		DeeObject_Init(result, DeeLValueType_AsType(field->sf_type));
