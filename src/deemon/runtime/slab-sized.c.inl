@@ -315,9 +315,17 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	size_t old__spm_used;
 	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0, "Badly aligned slab pointer: %p", p);
 	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated: %p", p);
-	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
-	ASSERT(page->sp_meta.spm_type.t_link.le_next != page);
+	/* Fill chunk with the free-memory pattern */
+#ifdef SLAB_DEBUG_MEMSET_FREE
 	slab_setfree_data(p, DEFINE_CHUNK_SIZE);
+	COMPILER_WRITE_BARRIER();
+#endif /* SLAB_DEBUG_MEMSET_FREE */
+
+	/* Mark chunk as available */
+	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
+
+	/* Update the page's `spm_used' counter. */
+	ASSERT(page->sp_meta.spm_type.t_link.le_next != page);
 	do {
 again_read__spm_used:
 		old__spm_used = atomic_read(&page->sp_meta.spm_used);
