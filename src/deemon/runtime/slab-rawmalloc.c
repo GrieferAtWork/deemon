@@ -115,7 +115,7 @@
 
 #undef USE_psegment
 #undef USE_fslab
-#if !defined(__OPTIMIZE_SIZE__) && 0
+#if !defined(__OPTIMIZE_SIZE__) && 1
 #define USE_psegment /* Allocate slab pages in larger segments */
 #define USE_fslab    /* Use s small cache of recently free'd slab pages */
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -128,7 +128,7 @@ DECL_BEGIN
 #undef cslab_malloc_USE_Dee_Memalign
 #undef cslab_malloc_USE_Dee_Memalign_MAYBE
 #undef cslab_malloc_CAN_COALESCE /* randomly adjacent segments can be coalesced (else: must remember base address of every segment for `Dee_slab_page_rawfree_impl()') */
-#if 1
+#if 0
 #define cslab_malloc_USE_Dee_Memalign
 #elif defined(__ARCH_PAGESIZE_MIN) && (Dee_SLAB_PAGESIZE > __ARCH_PAGESIZE_MIN)
 #define cslab_malloc_USE_Dee_Memalign
