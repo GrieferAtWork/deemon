@@ -642,9 +642,9 @@ for (local n: [minsize:maxsize+1]) {
 DECL_BEGIN
 
 struct page_format {
-	unsigned int pf__max_chunk_count; /* max # of chunks that may exist in the page */
-	unsigned int pf__sizeof__sp_used; /* [== sizeof(sp_used) == SIZEOF_bitword_t * CEILDIV(pf__max_chunk_count, BITSOF_bitword_t)]
-	                                   * aka "offsetof__sp_data" */
+	Dee_slab_page_builder_offset_t pf__max_chunk_count; /* max # of chunks that may exist in the page */
+	Dee_slab_page_builder_offset_t pf__sizeof__sp_used; /* [== sizeof(sp_used) == SIZEOF_bitword_t * CEILDIV(pf__max_chunk_count, BITSOF_bitword_t)]
+	                                                     * aka "offsetof__sp_data" */
 };
 #define PAGE_FORMAT_INIT(n)                                                                           \
 	{                                                                                                 \
@@ -706,14 +706,15 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	if (OVERFLOW_USUB(hi_offset, fmt->pf__sizeof__sp_used, &hi_offset))
 		goto fail;
 	lo_offset -= fmt->pf__sizeof__sp_used;
-	hi_offset = (hi_offset / n) * n; /* floor-align to nearest, valid slab-chunk */
+	/* floor-align to nearest, valid slab-chunk */
+	hi_offset = (hi_offset / (Dee_slab_page_builder_offset_t)n) * (Dee_slab_page_builder_offset_t)n;
 	for (;;) {
 		size_t bitno, bit_indx;
 		bitword_t bit_mask;
 		if (hi_offset <= lo_offset)
 			goto fail;
-		hi_offset -= n; /* Allocate memory */
-		bitno = hi_offset / n;
+		hi_offset -= (Dee_slab_page_builder_offset_t)n; /* Allocate memory */
+		bitno = hi_offset / (Dee_slab_page_builder_offset_t)n;
 		slab_assert(bitno < fmt->pf__max_chunk_count);
 		bit_indx = bitno / BITSOF_bitword_t;
 		bit_mask = BITWORD_C(1) << (bitno % BITSOF_bitword_t);
@@ -746,16 +747,16 @@ PUBLIC NONNULL((1, 2)) void DCALL
 Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 	bitword_t *self__sp_used = (bitword_t *)self;
 	struct page_format const *fmt = get_page_format(n);
-	Dee_slab_page_builder_offset_t offsetof__p_from_self    = (size_t)((byte_t *)p - (byte_t *)self);
+	Dee_slab_page_builder_offset_t offsetof__p_from_self    = (Dee_slab_page_builder_offset_t)((byte_t *)p - (byte_t *)self);
 	Dee_slab_page_builder_offset_t offsetof__p_from_sp_data = offsetof__p_from_self - fmt->pf__sizeof__sp_used;
-	size_t bitno_of__p_in_sp_used = offsetof__p_from_sp_data / n;
+	size_t bitno_of__p_in_sp_used = offsetof__p_from_sp_data / (Dee_slab_page_builder_offset_t)n;
 	size_t indx_of__p_in_sp_used;
 	bitword_t word_of__p_in_sp_used;
 	ASSERTF(offsetof__p_from_self >= fmt->pf__sizeof__sp_used,
 	        "Given 'p' is too close to the start of the page for this chunk-size");
 	ASSERTF(offsetof__p_from_self >= self->sp_meta.spm_type.t_builder.spb_unused_hi,
 	        "Given 'p' is not in allocated area of page");
-	ASSERTF((offsetof__p_from_sp_data % n) == 0,
+	ASSERTF((offsetof__p_from_sp_data % (Dee_slab_page_builder_offset_t)n) == 0,
 	        "Given 'p' is incorrectly aligned for this chunk-size");
 	ASSERTF(bitno_of__p_in_sp_used < fmt->pf__max_chunk_count,
 	        "Given 'p' is too close to the end of the page for this chunk-size");
@@ -773,7 +774,7 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 	/* If the given 'p' was most-recently allocated from 'self',
 	 * we can give back memory to the page's unused area. */
 	if (self->sp_meta.spm_type.t_builder.spb_unused_hi == offsetof__p_from_self)
-		self->sp_meta.spm_type.t_builder.spb_unused_hi += n;
+		self->sp_meta.spm_type.t_builder.spb_unused_hi += (Dee_slab_page_builder_offset_t)n;
 }
 
 DECL_END
