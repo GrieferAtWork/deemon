@@ -51,16 +51,22 @@
 #define LOCAL_SYM(x) PP_CAT2(x, DEFINE_CHUNK_SIZE)
 
 /* Local symbol names */
-#define LOCAL_slab_page           LOCAL_SYM(slab_page)
-#define LOCAL_slab_page_list      LOCAL_SYM(slab_page_list)
-#define LOCAL_slab_pages          LOCAL_SYM(slab_pages)
-#define LOCAL_slab_lock           LOCAL_SYM(slab_lock)
-#define LOCAL_slab_malloc_in_page LOCAL_SYM(slab_malloc_in_page)
-#define LOCAL_DeeSlab_Malloc      LOCAL_SYM(DeeSlab_Malloc)
-#define LOCAL_DeeSlab_Calloc      LOCAL_SYM(DeeSlab_Calloc)
-#define LOCAL_DeeSlab_TryMalloc   LOCAL_SYM(DeeSlab_TryMalloc)
-#define LOCAL_DeeSlab_TryCalloc   LOCAL_SYM(DeeSlab_TryCalloc)
-#define LOCAL_DeeSlab_Free        LOCAL_SYM(DeeSlab_Free)
+#define LOCAL_slab_page               LOCAL_SYM(slab_page)
+#define LOCAL_slab_page_list          LOCAL_SYM(slab_page_list)
+#define LOCAL_slab_pages              LOCAL_SYM(slab_pages)
+#define LOCAL_slab_lock               LOCAL_SYM(slab_lock)
+#define LOCAL_slab_malloc_in_page     LOCAL_SYM(slab_malloc_in_page)
+#define LOCAL__DeeSlab_Malloc         LOCAL_SYM(DeeSlab_Malloc)
+#define LOCAL__DeeSlab_Calloc         LOCAL_SYM(DeeSlab_Calloc)
+#define LOCAL__DeeSlab_TryMalloc      LOCAL_SYM(DeeSlab_TryMalloc)
+#define LOCAL__DeeSlab_TryCalloc      LOCAL_SYM(DeeSlab_TryCalloc)
+#define LOCAL__DeeSlab_Free           LOCAL_SYM(DeeSlab_Free)
+#define LOCAL__DeeDbgSlab_Malloc      LOCAL_SYM(DeeDbgSlab_Malloc)
+#define LOCAL__DeeDbgSlab_Calloc      LOCAL_SYM(DeeDbgSlab_Calloc)
+#define LOCAL__DeeDbgSlab_TryMalloc   LOCAL_SYM(DeeDbgSlab_TryMalloc)
+#define LOCAL__DeeDbgSlab_TryCalloc   LOCAL_SYM(DeeDbgSlab_TryCalloc)
+#define LOCAL__DeeDbgSlab_Free        LOCAL_SYM(DeeDbgSlab_Free)
+#define LOCAL_DeeDbgSlab_UntrackAlloc LOCAL_SYM(DeeDbgSlab_UntrackAlloc)
 
 #define LOCAL_DECL PUBLIC
 
@@ -293,6 +299,97 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 #undef LOCAL_maskfor
 }
 
+
+/* Select primary malloc implementation */
+#if SLAB_DEBUG_LEAKS
+/* Because of how much non-debug slab allocators are used, also directly define them here */
+#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__) && 1
+#define LOCAL_DeeSlab_Malloc            LOCAL__DeeSlab_Malloc
+#define LOCAL_DeeSlab_Calloc            LOCAL__DeeSlab_Calloc
+#define LOCAL_DeeSlab_TryMalloc         LOCAL__DeeSlab_TryMalloc
+#define LOCAL_DeeSlab_TryCalloc         LOCAL__DeeSlab_TryCalloc
+#define LOCAL_DeeSlab_Malloc_DBG_PARAMS void
+#define LOCAL_DeeSlab_Malloc_DBG_ARGS   /* nothing */
+#undef LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT
+DECL_END
+#define DEFINE_LOCAL_DeeSlab_Malloc
+#include "slab-sized-alloc.c.inl"
+#define DEFINE_LOCAL_DeeSlab_TryMalloc
+#include "slab-sized-alloc.c.inl"
+DECL_BEGIN
+#undef LOCAL_DeeSlab_Malloc
+#undef LOCAL_DeeSlab_Calloc
+#undef LOCAL_DeeSlab_TryMalloc
+#undef LOCAL_DeeSlab_TryCalloc
+#undef LOCAL_DeeSlab_Malloc_DBG_PARAMS
+#undef LOCAL_DeeSlab_Malloc_DBG_ARGS
+#else /* !__OPTIMIZE_SIZE__ */
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeSlab_Malloc(void) {
+	return LOCAL__DeeDbgSlab_Malloc(NULL, 0);
+}
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeSlab_Calloc(void) {
+	return LOCAL__DeeDbgSlab_Calloc(NULL, 0);
+}
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeSlab_TryMalloc(void) {
+	return LOCAL__DeeDbgSlab_TryMalloc(NULL, 0);
+}
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeSlab_TryCalloc(void) {
+	return LOCAL__DeeDbgSlab_TryCalloc(NULL, 0);
+}
+#endif /* __OPTIMIZE_SIZE__ */
+
+#define LOCAL_DeeSlab_Malloc            LOCAL__DeeDbgSlab_Malloc
+#define LOCAL_DeeSlab_Calloc            LOCAL__DeeDbgSlab_Calloc
+#define LOCAL_DeeSlab_TryMalloc         LOCAL__DeeDbgSlab_TryMalloc
+#define LOCAL_DeeSlab_TryCalloc         LOCAL__DeeDbgSlab_TryCalloc
+#define LOCAL_DeeSlab_Malloc_DBG_PARAMS char const *file, int line
+#define LOCAL_DeeSlab_Malloc_DBG_ARGS   file, line
+#define LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT
+#else /* SLAB_DEBUG_LEAKS */
+#define LOCAL_DeeSlab_Malloc            LOCAL__DeeSlab_Malloc
+#define LOCAL_DeeSlab_Calloc            LOCAL__DeeSlab_Calloc
+#define LOCAL_DeeSlab_TryMalloc         LOCAL__DeeSlab_TryMalloc
+#define LOCAL_DeeSlab_TryCalloc         LOCAL__DeeSlab_TryCalloc
+#define LOCAL_DeeSlab_Malloc_DBG_PARAMS void
+#define LOCAL_DeeSlab_Malloc_DBG_ARGS   /* nothing */
+#undef LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeDbgSlab_Malloc(char const *file, int line) {
+	(void)file;
+	(void)line;
+	return LOCAL__DeeSlab_Malloc();
+}
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeDbgSlab_Calloc(char const *file, int line) {
+	(void)file;
+	(void)line;
+	return LOCAL__DeeSlab_Calloc();
+}
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeDbgSlab_TryMalloc(char const *file, int line) {
+	(void)file;
+	(void)line;
+	return LOCAL__DeeSlab_TryMalloc();
+}
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL__DeeDbgSlab_TryCalloc(char const *file, int line) {
+	(void)file;
+	(void)line;
+	return LOCAL__DeeSlab_TryCalloc();
+}
+#endif /* !SLAB_DEBUG_LEAKS */
+
 /* Implementation of slab malloc functions... */
 #ifndef __INTELLISENSE__
 DECL_END
@@ -301,97 +398,74 @@ DECL_END
 #define DEFINE_LOCAL_DeeSlab_TryMalloc
 #include "slab-sized-alloc.c.inl"
 DECL_BEGIN
+
+#undef LOCAL_DeeSlab_Malloc
+#undef LOCAL_DeeSlab_Calloc
+#undef LOCAL_DeeSlab_TryMalloc
+#undef LOCAL_DeeSlab_TryCalloc
+#undef LOCAL_DeeSlab_Malloc_DBG_PARAMS
+#undef LOCAL_DeeSlab_Malloc_DBG_ARGS
+#undef LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT
 #endif /* !__INTELLISENSE__ */
 
 
+
+
+/* Select primary free implementation */
+#if SLAB_DEBUG_LEAKS || SLAB_DEBUG_EXTERNAL
+/* Because of how much non-debug slab allocators are used, also directly define them here */
+#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__) && 1
+#define LOCAL_DeeSlab_Free           LOCAL__DeeSlab_Free
+#define LOCAL_DeeSlab_Free__DBG_PARAMS /* nothing */
+#undef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
+DECL_END
+#include "slab-sized-free.c.inl"
+DECL_BEGIN
+#undef LOCAL_DeeSlab_Free
+#undef LOCAL_DeeSlab_Free__DBG_PARAMS
+#else /* !__OPTIMIZE_SIZE__ */
 LOCAL_DECL NONNULL((1)) void DCALL
-LOCAL_DeeSlab_Free(void *__restrict p) {
-	struct LOCAL_slab_page *page = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
-	size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
-	size_t index = offset / DEFINE_CHUNK_SIZE;
-	size_t bit_indx = index / BITSOF_bitword_t;
-	bitword_t bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
-	size_t old__spm_used;
-	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0,
-	        PP_STR(LOCAL_DeeSlab_Free) ": Badly aligned slab pointer: %p", p);
-	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0,
-	        PP_STR(LOCAL_DeeSlab_Free) ": Pointer not allocated: %p", p);
-
-	/* Fill chunk with the free-memory pattern */
-#ifdef SLAB_DEBUG_MEMSET_FREE
-	slab_setfree_data(p, DEFINE_CHUNK_SIZE);
-	COMPILER_WRITE_BARRIER();
-#endif /* SLAB_DEBUG_MEMSET_FREE */
-
-	/* Mark chunk as available */
-	atomic_and(&page->sp_used[bit_indx], ~bit_mask);
-
-	/* Update the page's `spm_used' counter. */
-	slab_assert(page->sp_meta.spm_type.t_link.le_next != page);
-	do {
-again_read__spm_used:
-		old__spm_used = atomic_read(&page->sp_meta.spm_used);
-		slab_assert(old__spm_used >= 1);
-		slab_assert(old__spm_used <= LOCAL_MAX_CHUNK_COUNT);
-		if (old__spm_used == 1) {
-			/* Last chunk of page is being deleted. */
-			if (Dee_slab_page_iscustom(page)) {
-				/* Invoke custom page-free callback */
-				(*page->sp_meta.spm_type.t_custom.c_free)(page);
-				return;
-			}
-
-			/* In theory, this lock acquire could be made non-blocking by having a pending-free-list
-			 * However, this part will be left out initially, unless it turns out that this ends up
-			 * being a bottleneck once the new impl is being run in a heavily parallelized environment */
-			LOCAL_slab_lock_write();
-			slab_assert(!Dee_slab_page_iscustom(page));
-			if (!atomic_cmpxch(&page->sp_meta.spm_used, 1, 0)) {
-				LOCAL_slab_lock_endwrite();
-				goto again_read__spm_used;
-			}
-			slab_assert(LIST_ISBOUND(page, sp_meta.spm_type.t_link));
-			LIST_REMOVE(page, sp_meta.spm_type.t_link);
-			LOCAL_slab_lock_endwrite();
-			/* Ensure page is now free */
-			Dee_slab_page_rawfree((struct Dee_slab_page *)page);
-			break;
-		} else if (old__spm_used == LOCAL_MAX_CHUNK_COUNT &&
-		           Dee_slab_page_isnormal(page)) {
-			/* First free in previously fully allocated slab (may not actually
-			 * be the case when this is a dec chunk, but in that case, we simply
-			 * acquire "LOCAL_slab_lock" for no reason, and don't end up doing
-			 * anything with it below) */
-			LOCAL_slab_lock_write();
-			if (!atomic_cmpxch(&page->sp_meta.spm_used,
-			                   LOCAL_MAX_CHUNK_COUNT,
-			                   LOCAL_MAX_CHUNK_COUNT - 1)) {
-				LOCAL_slab_lock_endwrite();
-				goto again_read__spm_used;
-			}
-			slab_assert(Dee_slab_page_isnormal(page));
-			LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
-			LOCAL_slab_lock_endwrite();
-			break;
-		}
-	} while (!atomic_cmpxch_weak(&page->sp_meta.spm_used, old__spm_used, old__spm_used - 1));
+LOCAL__DeeSlab_Free(void *__restrict p) {
+	LOCAL__DeeDbgSlab_Free(p, NULL, 0);
 }
+#endif /* __OPTIMIZE_SIZE__ */
 
+#define LOCAL_DeeSlab_Free           LOCAL__DeeDbgSlab_Free
+#define LOCAL_DeeSlab_Free__DBG_PARAMS , char const *file, int line
+#define LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
+#else /* SLAB_DEBUG_LEAKS || SLAB_DEBUG_EXTERNAL */
+#define LOCAL_DeeSlab_Free           LOCAL__DeeSlab_Free
+#define LOCAL_DeeSlab_Free__DBG_PARAMS /* nothing */
+#undef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
 
-LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
-LOCAL_DeeSlab_Calloc(void) {
-	void *result = LOCAL_DeeSlab_Malloc();
-	if likely(result)
-		bzero(result, DEFINE_CHUNK_SIZE);
-	return result;
+LOCAL_DECL NONNULL((1)) void DCALL
+LOCAL__DeeDbgSlab_Free(void *__restrict p, char const *file, int line) {
+	(void)file;
+	(void)line;
+	LOCAL__DeeSlab_Free(p);
 }
+#endif /* !SLAB_DEBUG_LEAKS && !SLAB_DEBUG_EXTERNAL */
 
-LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
-LOCAL_DeeSlab_TryCalloc(void) {
-	void *result = LOCAL_DeeSlab_TryMalloc();
-	if likely(result)
-		bzero(result, DEFINE_CHUNK_SIZE);
-	return result;
+#ifndef __INTELLISENSE__
+DECL_END
+#include "slab-sized-free.c.inl"
+DECL_BEGIN
+#undef LOCAL_DeeSlab_Free
+#undef LOCAL_DeeSlab_Free__DBG_PARAMS
+#undef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
+#endif /* !__INTELLISENSE__ */
+
+
+
+LOCAL_DECL void *DCALL
+LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
+	(void)file;
+	(void)line;
+#if SLAB_DEBUG_LEAKS
+	if likely(p != NULL)
+		p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, file, line);
+#endif /* SLAB_DEBUG_LEAKS */
+	return p;
 }
 
 #ifndef __INTELLISENSE__
@@ -428,11 +502,17 @@ DECL_END
 #undef LOCAL_slab_pages
 #undef LOCAL_slab_lock
 #undef LOCAL_slab_malloc_in_page
-#undef LOCAL_DeeSlab_Malloc
-#undef LOCAL_DeeSlab_Calloc
-#undef LOCAL_DeeSlab_TryMalloc
-#undef LOCAL_DeeSlab_TryCalloc
-#undef LOCAL_DeeSlab_Free
+#undef LOCAL__DeeSlab_Malloc
+#undef LOCAL__DeeSlab_Calloc
+#undef LOCAL__DeeSlab_TryMalloc
+#undef LOCAL__DeeSlab_TryCalloc
+#undef LOCAL__DeeSlab_Free
+#undef LOCAL__DeeDbgSlab_Malloc
+#undef LOCAL__DeeDbgSlab_Calloc
+#undef LOCAL__DeeDbgSlab_TryMalloc
+#undef LOCAL__DeeDbgSlab_TryCalloc
+#undef LOCAL__DeeDbgSlab_Free
+#undef LOCAL_DeeDbgSlab_UntrackAlloc
 #undef LOCAL_DECL
 #undef LOCAL_SYM
 

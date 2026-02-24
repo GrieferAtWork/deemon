@@ -43,8 +43,10 @@ DECL_BEGIN
 
 #ifdef DEFINE_LOCAL_DeeSlab_Malloc
 #define LOCAL_MY_DeeSlab_Malloc LOCAL_DeeSlab_Malloc
+#define LOCAL_MY_DeeSlab_Calloc LOCAL_DeeSlab_Calloc
 #elif defined(DEFINE_LOCAL_DeeSlab_TryMalloc)
 #define LOCAL_MY_DeeSlab_Malloc LOCAL_DeeSlab_TryMalloc
+#define LOCAL_MY_DeeSlab_Calloc LOCAL_DeeSlab_TryCalloc
 #define LOCAL_IS_TRY_MALLOC
 #else /* ... */
 #error "Invalid configuration"
@@ -57,7 +59,7 @@ DECL_BEGIN
 #endif /* !LOCAL_IS_TRY_MALLOC */
 
 LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
-LOCAL_MY_DeeSlab_Malloc(void) {
+LOCAL_MY_DeeSlab_Malloc(LOCAL_DeeSlab_Malloc_DBG_PARAMS) {
 	void *result;
 	struct LOCAL_slab_page *page;
 again:
@@ -99,16 +101,15 @@ again_locked:
 
 		/* Since we were able to increment "spm_used", that also means that the page
 		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
-#if defined(SLAB_DEBUG_MEMSET_ALLOC) || defined(SLAB_DEBUG_MEMSET_FREE)
 		result = LOCAL_slab_malloc_in_page(page);
 		slab_assert((byte_t *)result >= (page->sp_data));
 		slab_assert((byte_t *)result <= (page->sp_data + sizeof(page->sp_data) - DEFINE_CHUNK_SIZE));
+
+#ifdef SLAB_DEBUG_MEMSET_FREE
 		/* Verify that the slab chunk still matches the SLAB_DEBUG_MEMSET_FREE-pattern */
 		slab_chkfree_data(result, DEFINE_CHUNK_SIZE);
+#endif /* SLAB_DEBUG_MEMSET_FREE */
 		goto done;
-#else /* SLAB_DEBUG_MEMSET_ALLOC || SLAB_DEBUG_MEMSET_FREE */
-		return LOCAL_slab_malloc_in_page(page);
-#endif /* !SLAB_DEBUG_MEMSET_ALLOC && !SLAB_DEBUG_MEMSET_FREE */
 	}
 	LOCAL_slab_lock_endread();
 
@@ -131,10 +132,20 @@ again_locked:
 	LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
 	slab_assert(Dee_slab_page_isnormal(page));
 	LOCAL_slab_lock_endwrite();
-#if defined(SLAB_DEBUG_MEMSET_ALLOC) || defined(SLAB_DEBUG_MEMSET_FREE)
 done:
-#endif /* SLAB_DEBUG_MEMSET_ALLOC || SLAB_DEBUG_MEMSET_FREE */
 	slab_setalloc_data(result, DEFINE_CHUNK_SIZE);
+#ifdef LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT
+	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE, file, line);
+#else /* LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT */
+	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE, NULL, 0);
+#endif /* !LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT */
+}
+
+LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
+LOCAL_MY_DeeSlab_Calloc(LOCAL_DeeSlab_Malloc_DBG_PARAMS) {
+	void *result = LOCAL_MY_DeeSlab_Malloc(LOCAL_DeeSlab_Malloc_DBG_ARGS);
+	if likely(result)
+		bzero(result, DEFINE_CHUNK_SIZE);
 	return result;
 }
 
@@ -142,6 +153,7 @@ done:
 
 #undef LOCAL_IS_TRY_MALLOC
 #undef LOCAL_MY_DeeSlab_Malloc
+#undef LOCAL_MY_DeeSlab_Calloc
 
 DECL_END
 

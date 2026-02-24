@@ -30,6 +30,56 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/api.h>
 
 #if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
+
+/* Implementation configuration */
+#if !defined(NDEBUG) && 1 /* TODO: Disable by default in the near future */
+#define SLAB_DEBUG_INTERNAL 1
+#else
+#define SLAB_DEBUG_INTERNAL 0
+#endif
+
+#if !defined(NDEBUG) && 1
+#define SLAB_DEBUG_EXTERNAL 1
+#else
+#define SLAB_DEBUG_EXTERNAL 0
+#endif
+
+#if SLAB_DEBUG_EXTERNAL && 1
+#define SLAB_DEBUG_LEAKS 1
+#else
+#define SLAB_DEBUG_LEAKS 0
+#endif
+
+#if __SIZEOF_POINTER__ > 4
+#define WORD_4BYTE(x) UINT64_C(0x##x##x)
+#else /* __SIZEOF_POINTER__ > 4 */
+#define WORD_4BYTE(x) UINT32_C(0x##x)
+#endif /*__SIZEOF_POINTER__ <= 4 */
+
+#if SLAB_DEBUG_EXTERNAL
+#define SLAB_DEBUG_MEMSET_ALLOC WORD_4BYTE(CACACACA) /* Set by DeeSlab_Malloc() */
+#define SLAB_DEBUG_MEMSET_FREE  WORD_4BYTE(BAADF00D) /* Set by DeeSlab_Free() */
+#endif /* SLAB_DEBUG_EXTERNAL */
+
+#if SLAB_DEBUG_INTERNAL
+#define slab_assert  Dee_ASSERT
+#define slab_assertf Dee_ASSERTF
+#elif !defined(__NO_builtin_assume)
+#define slab_assert(expr)       __builtin_assume(expr)
+#define slab_assertf(expr, ...) __builtin_assume(expr)
+#else /* ... */
+#define slab_assert(expr)       (void)0
+#define slab_assertf(expr, ...) (void)0
+#endif /* !... */
+
+
+/* Disable NONNULL attributes -- needed so debug NULL-checks in DeeDbgSlab_Free() work */
+#if SLAB_DEBUG_EXTERNAL
+#undef NONNULL
+#define NONNULL(x)
+#endif /* SLAB_DEBUG_EXTERNAL */
+
+
 #include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_* */
 #include <deemon/format.h>           /* PRFuSIZ, PRFxSIZ */
 #include <deemon/gc.h>               /* DeeDbgGCSlab_*, DeeGCSlab_*, DeeGC_Head, DeeGC_Object, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
@@ -75,42 +125,6 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(LOCAL_ASSERT_GC_SLAB_EXISTS, ~)
 #undef LOCAL_ASSERT_GC_SLAB_EXISTS
 
 
-/* Implementation configuration */
-#if !defined(NDEBUG) && 1 /* TODO: Disable by default in the near future */
-#define SLAB_DEBUG_INTERNAL 1
-#else
-#define SLAB_DEBUG_INTERNAL 0
-#endif
-
-#if !defined(NDEBUG) && 1
-#define SLAB_DEBUG_EXTERNAL 1
-#else
-#define SLAB_DEBUG_EXTERNAL 0
-#endif
-
-#if __SIZEOF_POINTER__ > 4
-#define WORD_4BYTE(x) UINT64_C(0x##x##x)
-#else /* __SIZEOF_POINTER__ > 4 */
-#define WORD_4BYTE(x) UINT32_C(0x##x)
-#endif /*__SIZEOF_POINTER__ <= 4 */
-
-#if SLAB_DEBUG_EXTERNAL
-#define SLAB_DEBUG_MEMSET_ALLOC WORD_4BYTE(CACACACA) /* Set by DeeSlab_Malloc() */
-#define SLAB_DEBUG_MEMSET_FREE  WORD_4BYTE(BAADF00D) /* Set by DeeSlab_Free() */
-#endif /* SLAB_DEBUG_EXTERNAL */
-
-#if SLAB_DEBUG_INTERNAL
-#define slab_assert  Dee_ASSERT
-#define slab_assertf Dee_ASSERTF
-#elif !defined(__NO_builtin_assume)
-#define slab_assert(expr)       __builtin_assume(expr)
-#define slab_assertf(expr, ...) __builtin_assume(expr)
-#else /* ... */
-#define slab_assert(expr)       (void)0
-#define slab_assertf(expr, ...) (void)0
-#endif /* !... */
-
-
 #ifdef SLAB_DEBUG_MEMSET_ALLOC
 LOCAL void DCALL slab_setalloc_data(void *p, size_t n) {
 	size_t *iter = (size_t *)p;
@@ -153,20 +167,18 @@ PRIVATE void DCALL slab_chkfree_data(void *p, size_t n) {
 
 
 /* Debug debug versions of slab allocator functions */
-#ifdef NDEBUG
+#if !SLAB_DEBUG_LEAKS
 #define dbg_slab__attach(p, n, file, line) (p) /* Attach debug info and either free, */
 #define dbg_slab__detach(p, n, file, line) (p)
-#else /* NDEBUG */
-PRIVATE WUNUSED void *DCALL
-dbg_slab__attach(void *p, size_t n, char const *file, int line) {
-	if (p) {
-		/* TODO: Attach debug info (for leaks and such...)
-		 * On error, can free "p" which is guarantied to
-		 * be an "n"-byte large slab, then return "NULL" */
-		(void)n;
-		(void)file;
-		(void)line;
-	}
+#else /* !SLAB_DEBUG_LEAKS */
+PRIVATE WUNUSED NONNULL((1)) void *DCALL
+dbg_slab__attach(void *__restrict p, size_t n, char const *file, int line) {
+	/* TODO: Attach debug info (for leaks and such...)
+	 * On error, can free "p" which is guarantied to
+	 * be an "n"-byte large slab, then return "NULL" */
+	(void)n;
+	(void)file;
+	(void)line;
 	return p;
 }
 PRIVATE ATTR_RETNONNULL NONNULL((1)) void *DCALL
@@ -177,50 +189,7 @@ dbg_slab__detach(void *p, size_t n, char const *file, int line) {
 	(void)line;
 	return p;
 }
-#endif /* !NDEBUG */
-
-#define DEFINE_DeeDbgSlab_API(n, _)                                      \
-	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
-	DeeDbgSlab_Malloc##n(char const *file, int line) {                   \
-		(void)file;                                                      \
-		(void)line;                                                      \
-		return dbg_slab__attach(DeeSlab_Malloc##n(), n, file, line);     \
-	}                                                                    \
-	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
-	DeeDbgSlab_Calloc##n(char const *file, int line) {                   \
-		(void)file;                                                      \
-		(void)line;                                                      \
-		return dbg_slab__attach(DeeSlab_Calloc##n(), n, file, line);     \
-	}                                                                    \
-	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
-	DeeDbgSlab_TryMalloc##n(char const *file, int line) {                \
-		(void)file;                                                      \
-		(void)line;                                                      \
-		return dbg_slab__attach(DeeSlab_TryMalloc##n(), n, file, line);  \
-	}                                                                    \
-	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                               \
-	DeeDbgSlab_TryCalloc##n(char const *file, int line) {                \
-		(void)file;                                                      \
-		(void)line;                                                      \
-		return dbg_slab__attach(DeeSlab_TryCalloc##n(), n, file, line);  \
-	}                                                                    \
-	PUBLIC void *DCALL                                                   \
-	DeeDbgSlab_UntrackAlloc##n(void *p, char const *file, int line) {    \
-		(void)file;                                                      \
-		(void)line;                                                      \
-		if (p)                                                           \
-			p = dbg_slab__detach(p, n, file, line);                      \
-		return p;                                                        \
-	}                                                                    \
-	PUBLIC NONNULL((1)) void DCALL                                       \
-	DeeDbgSlab_Free##n(void *__restrict p, char const *file, int line) { \
-		(void)file;                                                      \
-		(void)line;                                                      \
-		DeeSlab_Free##n(dbg_slab__detach(p, n, file, line));             \
-	}
-Dee_SLAB_CHUNKSIZE_FOREACH(DEFINE_DeeDbgSlab_API, ~)
-#undef DEFINE_DeeDbgSlab_API
-
+#endif /* SLAB_DEBUG_LEAKS */
 
 
 /* Define slab GC allocators (use "Dee_SLAB_CHUNKSIZE_GC_FOREACH()" to
@@ -277,7 +246,7 @@ LOCAL void *gc_initob(void *ptr) {
 	DeeDbgGCSlab_UntrackAlloc##n(void *p, char const *file, int line) {             \
 		(void)file;                                                                 \
 		(void)line;                                                                 \
-		if (p) {                                                                    \
+		if likely(p) {                                                              \
 			(void)dbg_slab__detach(DeeGC_Head((DeeObject *)p),                      \
 			                       n + Dee_GC_OBJECT_OFFSET,                        \
 			                       file, line);                                     \

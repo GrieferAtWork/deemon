@@ -1470,6 +1470,9 @@
 		<ClInclude Include="..\src\deemon\runtime\slab-sized-alloc.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\slab-sized-free.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\slab-sized.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
