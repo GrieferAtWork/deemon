@@ -894,7 +894,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->dbz_base.e_cause = NULL;
 	Dee_variant_init_object(&result->dbz_base.ve_value, lhs);
 	Dee_variant_init_object(&result->dbz_rhs, rhs);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->dbz_base);
 err:
 	return -1;
 }
@@ -909,7 +909,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->dbz_base.e_cause = NULL;
 	Dee_variant_init_copy(&result->dbz_base.ve_value, lhs);
 	Dee_variant_init_copy(&result->dbz_rhs, rhs);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->dbz_base);
 err:
 	return -1;
 }
@@ -1117,7 +1117,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
 	Dee_variant_init_size(&result->ie_base.ke_key, index);
 	Dee_variant_init_size(&result->ie_length, length);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ie_base.ke_base);
 err:
 	return -1;
 }
@@ -1133,7 +1133,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
 	Dee_variant_init_object(&result->ie_base.ke_key, index);
 	Dee_variant_init_object_or_unbound(&result->ie_length, length);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ie_base.ke_base);
 err:
 	return -1;
 }
@@ -1194,7 +1194,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	Dee_variant_init_object(&result->ie_base.ke_base.ve_value, seq);
 	Dee_variant_init_unbound(&result->ie_base.ke_key);
 	Dee_variant_init_unbound(&result->ie_length);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ie_base.ke_base);
 err:
 	return -1;
 }
@@ -1233,7 +1233,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_object(&result->ke_key, key);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err:
 	return -1;
 }
@@ -1249,7 +1249,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	result->ke_base.e_cause = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_object(&result->ke_key, key);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err:
 	Dee_Decref(cause); /* Always inherited */
 	return -1;
@@ -1265,7 +1265,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	result->ke_base.e_cause = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_size(&result->ke_key, key);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err:
 	return -1;
 }
@@ -1281,7 +1281,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->ke_base.e_cause = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1300,7 +1300,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	result->ke_base.e_cause = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1319,7 +1319,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->ke_base.e_cause = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1338,7 +1338,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 4)) int
 	result->ke_base.e_cause = cause; /* Inherit reference */
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_UnknownKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1379,7 +1379,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_object(&result->ke_key, key);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err:
 	return -1;
 }
@@ -1394,7 +1394,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	Dee_variant_init_size(&result->ke_key, key);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err:
 	return -1;
 }
@@ -1410,7 +1410,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->ke_base.e_cause = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1428,7 +1428,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->ke_base.e_cause = NULL;
 	Dee_variant_init_object(&result->ke_base.ve_value, map);
 	DeeObject_Init(&result->ke_base, &DeeError_ReadOnlyKey);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1486,7 +1486,7 @@ DeeRT_ErrUnboundItemImpl(DeeObject *seq, DeeObject *key_or_index, bool is_key) {
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	Dee_variant_init_object(&result->ui_base.ke_key, key_or_index);
 	result->ui_iskey = is_key;
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ui_base.ke_base);
 err:
 	return -1;
 }
@@ -1502,7 +1502,7 @@ PRIVATE ATTR_COLD NONNULL((1)) int
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	Dee_variant_init_size(&result->ui_base.ke_key, key_or_index);
 	result->ui_iskey = is_key;
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ui_base.ke_base);
 err:
 	return -1;
 }
@@ -1524,7 +1524,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	Dee_variant_init_object(&result->ui_base.ke_key, key);
 	result->ui_iskey = true;
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ui_base.ke_base);
 err:
 	Dee_Decref(cause); /* Always inherited */
 	return -1;
@@ -1542,7 +1542,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ui_base.ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1562,7 +1562,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 3)) int
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ui_base.ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1583,7 +1583,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ui_base.ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1603,7 +1603,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2, 4)) int
 	Dee_variant_init_object(&result->ui_base.ke_base.ve_value, seq);
 	result->ui_iskey = true;
 	DeeObject_Init(&result->ui_base.ke_base, &DeeError_UnboundItem);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ui_base.ke_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -1716,7 +1716,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	Dee_XIncref(key);
 	result->inf_key = key;
 	DeeObject_Init(&result->inf_base, &DeeError_ItemNotFound);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->inf_base);
 err:
 	return -1;
 }
@@ -1819,7 +1819,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->rnf_range = range;
 	(void)eflags; /* TODO: Once user-code can set these, must also save them here! */
 	DeeObject_Init(&result->rnf_base.inf_base, &DeeError_RegexNotFound);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->rnf_base.inf_base);
 err:
 	return -1;
 }
@@ -1927,7 +1927,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	Dee_variant_init_size(&result->ue_maxcount, expected_size);
 	Dee_variant_init_size(&result->ue_count, actual_size);
 	DeeObject_Init(&result->ue_base, &DeeError_UnpackError);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ue_base);
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
@@ -1949,7 +1949,7 @@ PUBLIC ATTR_COLD NONNULL((1, 4)) int
 	Dee_variant_init_size(&result->ue_maxcount, expected_size);
 	Dee_variant_init_size(&result->ue_count, actual_size);
 	DeeObject_Init(&result->ue_base, &DeeError_UnpackError);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ue_base);
 err_cause:
 	Dee_Decref(cause);
 	return -1;
@@ -1969,7 +1969,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	Dee_variant_init_size(&result->ue_maxcount, expected_size_max);
 	Dee_variant_init_size(&result->ue_count, actual_size);
 	DeeObject_Init(&result->ue_base, &DeeError_UnpackError);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ue_base);
 err:
 	return -1;
 }
@@ -1988,7 +1988,7 @@ PUBLIC ATTR_COLD NONNULL((1, 5)) int
 	Dee_variant_init_size(&result->ue_maxcount, expected_size_max);
 	Dee_variant_init_size(&result->ue_count, actual_size);
 	DeeObject_Init(&result->ue_base, &DeeError_UnpackError);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->ue_base);
 err_cause:
 	Dee_Decref(cause);
 	return -1;
@@ -2169,7 +2169,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	Dee_variant_init_object_or_unbound(&result->io_maxval, maxval);
 	result->io_positive = positive;
 	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->io_base);
 err:
 	return -1;
 }
@@ -2253,7 +2253,7 @@ err_r_maxval:
 	Dee_variant_init_object(&result->io_base.ve_value, value);
 	result->io_positive = (flags & DeeRT_ErrIntegerOverflowEx_F_POSITIVE) != 0;
 	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->io_base);
 err_r:
 	DeeObject_FREE(result);
 err:
@@ -2283,7 +2283,7 @@ PRIVATE ATTR_COLD int
 		result->io_positive = true;
 	}
 	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->io_base);
 err:
 	return -1;
 }
@@ -2310,7 +2310,7 @@ PRIVATE ATTR_COLD int
 		result->io_positive = true;
 	}
 	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->io_base);
 err:
 	return -1;
 }
@@ -2336,7 +2336,7 @@ PRIVATE ATTR_COLD int
 		result->io_positive = true;
 	}
 	DeeObject_Init(&result->io_base, &DeeError_IntegerOverflow);
-	return DeeError_ThrowInherited(result);
+	return DeeError_ThrowInherited(&result->io_base);
 err:
 	return -1;
 }
