@@ -36,12 +36,26 @@ DECL_BEGIN
 
 LOCAL_DECL NONNULL((1)) void DCALL
 LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
-	struct LOCAL_slab_page *page = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
-	size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
-	size_t index = offset / DEFINE_CHUNK_SIZE;
-	size_t bit_indx = index / BITSOF_bitword_t;
-	bitword_t bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
+	struct LOCAL_slab_page *page;
+	size_t offset;
+	size_t index;
+	size_t bit_indx;
+	bitword_t bit_mask;
 	size_t old__spm_used;
+#if SLAB_DEBUG_LEAKS
+#ifdef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
+	p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, file, line);
+#else /* LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
+	p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, NULL, 0);
+#endif /* !LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
+#endif /* SLAB_DEBUG_LEAKS */
+
+	/* Figure out the slab-context of "p" */
+	page     = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
+	offset   = (byte_t *)p - (byte_t *)&page->sp_data;
+	index    = offset / DEFINE_CHUNK_SIZE;
+	bit_indx = index / BITSOF_bitword_t;
+	bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
 #if SLAB_DEBUG_EXTERNAL
 #ifdef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
 	if unlikely((offset % DEFINE_CHUNK_SIZE) != 0) {

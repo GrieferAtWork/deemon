@@ -183,7 +183,8 @@ dbg_slab__attach(void *__restrict p, size_t n, char const *file, int line) {
 }
 PRIVATE ATTR_RETNONNULL NONNULL((1)) void *DCALL
 dbg_slab__detach(void *p, size_t n, char const *file, int line) {
-	/* TODO: Free debug info if it exists for "p" (which is an "n"-byte large slab) */
+	/* TODO: Free debug info if it exists for "p" (which is an "n"-byte large slab)
+	 * NOTE: Debug info might not exist when "p" is part of a custom slab page. */
 	(void)n;
 	(void)file;
 	(void)line;
