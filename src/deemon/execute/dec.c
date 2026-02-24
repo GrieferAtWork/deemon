@@ -2102,7 +2102,7 @@ decwriter_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	if (self->dw_slabs) {
 		ASSERT(self->dw_alloc >= (self->dw_slabb + self->dw_slabs + sizeof(struct Dee_heaptail)));
-		if (self->dw_used < self->dw_slabb) {
+		if (self->dw_used <= self->dw_slabb) {
 			struct Dee_heapchunk *slab_chunk;
 			size_t avail_before_slab = (self->dw_slabb - self->dw_used);
 			if (avail_before_slab >= nb)
