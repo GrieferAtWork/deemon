@@ -1295,7 +1295,12 @@ Dee_module_dexdata_fini(struct Dee_module_dexdata *__restrict self) {
 	(void)self;
 	COMPILER_IMPURE();
 #ifdef Dee_module_dexinfo_alloc
-	Dee_module_dexinfo_free(Dee_module_dexdata__getinfo(self));
+	{
+		struct Dee_module_dexinfo *info;
+		info = Dee_module_dexdata__getinfo(self);
+		if (info)
+			Dee_module_dexinfo_free(info);
+	}
 #endif /* Dee_module_dexinfo_alloc */
 }
 

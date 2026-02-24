@@ -312,8 +312,10 @@ LOCAL_DeeSlab_Free(void *__restrict p) {
 	size_t bit_indx = index / BITSOF_bitword_t;
 	bitword_t bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
 	size_t old__spm_used;
-	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0, "Badly aligned slab pointer: %p", p);
-	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated: %p", p);
+	ASSERTF((offset % DEFINE_CHUNK_SIZE) == 0,
+	        PP_STR(LOCAL_DeeSlab_Free) ": Badly aligned slab pointer: %p", p);
+	ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0,
+	        PP_STR(LOCAL_DeeSlab_Free) ": Pointer not allocated: %p", p);
 
 	/* Fill chunk with the free-memory pattern */
 #ifdef SLAB_DEBUG_MEMSET_FREE
