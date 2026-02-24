@@ -2451,11 +2451,13 @@ type_get_instancesize(DeeTypeObject *__restrict self) {
 	size_t instance_size;
 	if (DeeType_IsVariable(self))
 		goto unknown;
+#if 0
 	if (!self->tp_init.tp_alloc.tp_ctor &&
 	    !self->tp_init.tp_alloc.tp_copy_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor_kw)
 		goto unknown;
+#endif
 	instance_size = DeeType_GetInstanceSize(self);
 	if unlikely(!instance_size)
 		goto unknown;
@@ -2469,11 +2471,13 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 type_bound_instancesize(DeeTypeObject *__restrict self) {
 	if (DeeType_IsVariable(self))
 		goto unknown;
+#if 0
 	if (!self->tp_init.tp_alloc.tp_ctor &&
 	    !self->tp_init.tp_alloc.tp_copy_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor &&
 	    !self->tp_init.tp_alloc.tp_any_ctor_kw)
 		goto unknown;
+#endif
 	if (DeeType_GetInstanceSize(self) == 0)
 		goto unknown;
 	return Dee_BOUND_YES;
@@ -2559,6 +2563,8 @@ PRIVATE struct type_member tpconst type_members[] = {
 	                         /**/ "#Idoes support ?#__iskw__ (s.a. ?Ert:kw)"),
 	TYPE_MEMBER_FIELD("__isnoargconstructible__", STRUCT_CONST | STRUCT_BOOLPTR,
 	                  offsetof(DeeTypeObject, tp_init.tp_alloc.tp_ctor)),
+	TYPE_MEMBER_FIELD("__hascustomallocator__", STRUCT_CONST | STRUCT_BOOLPTR,
+	                  offsetof(DeeTypeObject, tp_init.tp_alloc.tp_free)),
 	TYPE_MEMBER_END
 };
 
