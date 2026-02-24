@@ -666,9 +666,6 @@
 		<ClInclude Include="..\include\deemon\util\bytewriter.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
-		<ClInclude Include="..\include\deemon\util\cache.h">
-			<Filter>include\util</Filter>
-		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\futex.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
@@ -2232,9 +2229,6 @@
 			<Filter>src\objects\unicode\db</Filter>
 		</None>
 		<None Include="..\src\deemon\runtime\builtins.def">
-			<Filter>src\runtime</Filter>
-		</None>
-		<None Include="..\src\deemon\runtime\caches.def">
 			<Filter>src\runtime</Filter>
 		</None>
 	</ItemGroup>

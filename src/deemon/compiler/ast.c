@@ -22,12 +22,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc */
+#include <deemon/alloc.h>             /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/code.h>              /* Dee_EXCEPTION_HANDLER_FFINALLY */
 #include <deemon/compiler/ast.h>      /* ASM_OPERAND_IS_INOUT, ASSERT_AST, ASSERT_AST_OPT, AST_*, CONFIG_NO_AST_DEBUG, PRIVATE_AST_GENERATOR_UNPACK_ARGS, asm_operand, ast, ast_*, catch_expr, class_member */
 #include <deemon/compiler/compiler.h> /* DeeCompiler_DelItem, DeeCompiler_LockReading */
 #include <deemon/compiler/lexer.h>    /* current_tags */
-#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, ast_loc, current_scope, symbol, text_label */
+#include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, ast_loc, current_scope, lbl_free, symbol, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/map.h>               /* Dee_EmptyMapping */
 #include <deemon/none.h>              /* Dee_None */
@@ -35,29 +35,12 @@
 #include <deemon/seq.h>               /* Dee_EmptySeq */
 #include <deemon/set.h>               /* Dee_EmptySet */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
-#include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC, Dee_Visit, Dee_operator_t, Dee_visit_t, OPERATOR_ISINPLACE, TF_NONE, TP_FNORMAL */
-#include <deemon/util/cache.h>        /* DECLARE_STRUCT_CACHE, DEFINE_OBJECT_CACHE, DEFINE_STRUCT_CACHE */
+#include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_operator_t, Dee_visit_t, OPERATOR_ISINPLACE, TF_NONE, TP_FNORMAL */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
 
 DECL_BEGIN
-
-#ifdef CONFIG_AST_IS_STRUCT
-DEFINE_STRUCT_CACHE(ast, struct ast, 512)
-#else /* CONFIG_AST_IS_STRUCT */
-DEFINE_OBJECT_CACHE(ast, struct ast, 512)
-#endif /* !CONFIG_AST_IS_STRUCT */
-DECLARE_STRUCT_CACHE(sym, struct symbol)
-
-#ifndef NDEBUG
-#define sym_alloc() sym_dbgalloc(__FILE__, __LINE__)
-#endif /* !NDEBUG */
-
-/* Re-use the symbol cache for labels. (As rare as they are, this is the best way to allocate them) */
-#define lbl_alloc() ((struct text_label *)sym_alloc())
-#define lbl_free(p) sym_free((struct symbol *)(p))
-
 
 #ifdef CONFIG_TRACE_REFCHANGES
 #define INIT_REF(x) (Dee_Incref(x), Dee_DecrefNokill(x))
@@ -1267,14 +1250,13 @@ INTERN DeeTypeObject DeeAst_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ NULL, /*&DeeObject_Type*/
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ struct ast,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
 			/* tp_any_ctor_kw: */ NULL,
-			/* tp_serialize:   */ NULL,
-			/* tp_alloc:       */ &ast_tp_alloc,
-			/* tp_free:        */ &ast_tp_free
+			/* tp_serialize:   */ NULL
 		),
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ast_fini,
 		/* .tp_assign      = */ NULL,

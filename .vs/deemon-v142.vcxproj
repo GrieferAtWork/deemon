@@ -230,7 +230,6 @@
 		<ClInclude Include="..\include\deemon\util\atomic-ref.h" />
 		<ClInclude Include="..\include\deemon\util\atomic.h" />
 		<ClInclude Include="..\include\deemon\util\bytewriter.h" />
-		<ClInclude Include="..\include\deemon\util\cache.h" />
 		<ClInclude Include="..\include\deemon\util\futex.h" />
 		<ClInclude Include="..\include\deemon\util\hash-io.h" />
 		<ClInclude Include="..\include\deemon\util\hash.h" />
@@ -803,7 +802,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\src-deemon-execute-asm-altstack.m
 		<None Include="..\src\deemon\objects\unicode\db\ctype.dee" />
 		<None Include="..\src\deemon\objects\unicode\db\db.dat" />
 		<None Include="..\src\deemon\runtime\builtins.def" />
-		<None Include="..\src\deemon\runtime\caches.def" />
 	</ItemGroup>
 	<PropertyGroup Label="Globals">
 		<ProjectGuid>{86D226C5-EF62-4562-AC06-E6A753DFA7CF}</ProjectGuid>

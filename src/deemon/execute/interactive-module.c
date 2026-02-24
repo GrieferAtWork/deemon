@@ -34,7 +34,7 @@
 #include <deemon/compiler/error.h>     /* parser_rethrow, parser_start */
 #include <deemon/compiler/lexer.h>     /* PARSE_FLFSTMT, ast_parse_statement */
 #include <deemon/compiler/optimize.h>  /* OPTIMIZE_FENABLED, ast_optimize_all, optimizer_flags */
-#include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeRootScopeObject, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, current_scope, symbol */
+#include <deemon/compiler/symbol.h>    /* CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeRootScopeObject, DeeScopeObject, SYMBOL_*, current_basescope, current_rootscope, current_scope, sym_alloc, sym_free, symbol */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_*, ERROR_HANDLED_RESTORE */
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
@@ -48,7 +48,6 @@
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FGC, TP_FNORMAL, type_gc, type_seq */
 #include <deemon/util/atomic.h>        /* atomic_inc, atomic_read */
-#include <deemon/util/cache.h>         /* DECLARE_STRUCT_CACHE */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 #include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_* */
 
@@ -67,13 +66,6 @@ DECL_BEGIN
 #else /* !NDEBUG */
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
-
-
-DECLARE_STRUCT_CACHE(sym, struct symbol)
-#ifndef NDEBUG
-#define sym_alloc() sym_dbgalloc(__FILE__, __LINE__)
-#endif /* !NDEBUG */
-
 
 struct compiler_options_mapping {
 	struct Dee_compiler_options  com_opt; /* The compiler options copy. */

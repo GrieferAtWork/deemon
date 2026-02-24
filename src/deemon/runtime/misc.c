@@ -81,14 +81,6 @@ DECL_BEGIN
 STATIC_ASSERT(sizeof(Dee_uint128_t) == 16);
 STATIC_ASSERT(sizeof(Dee_int128_t) == 16);
 
-#define Cs(x) INTDEF size_t DCALL x##_clear(size_t max_clear);
-#define Co(x) INTDEF size_t DCALL x##_clear(size_t max_clear);
-#include "caches.def"
-#undef Co
-#undef Cs
-
-
-/* TODO: CONFIG_NO_CACHES */
 typedef size_t (DCALL *pcacheclr)(size_t max_clear);
 INTDEF size_t DCALL Dee_intcache_clearall(size_t max_clear);
 INTDEF size_t DCALL Dee_tuplecache_clearall(size_t max_clear);
@@ -101,11 +93,6 @@ INTDEF size_t DCALL Dee_futex_clearall(size_t max_clear);
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE pcacheclr caches[] = {
-#define Cs(x) &x##_clear,
-#define Co(x) &x##_clear,
-#include "caches.def"
-#undef Co
-#undef Cs
 	/* Custom object/data cache clear functions. */
 	&Dee_intcache_clearall,
 	&Dee_tuplecache_clearall,
@@ -121,7 +108,6 @@ PRIVATE pcacheclr caches[] = {
 #ifndef CONFIG_NO_THREADS
 	&Dee_futex_clearall,
 #endif /* !CONFIG_NO_THREADS */
-
 	NULL
 };
 

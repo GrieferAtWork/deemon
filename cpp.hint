@@ -1284,50 +1284,6 @@
 
 #define Dee_ATTRITER_HEAD struct Dee_attriter_type const *ai_type;
 
-#define cache_struct Dee_cache_struct
-#define cache_object Dee_cache_object
-#define DEFINE_STRUCT_CACHE            DEE_DEFINE_STRUCT_CACHE
-#define DEFINE_OBJECT_CACHE            DEE_DEFINE_OBJECT_CACHE
-#define DECLARE_STRUCT_CACHE           DEE_DECLARE_STRUCT_CACHE
-#define DECLARE_OBJECT_CACHE           DEE_DECLARE_OBJECT_CACHE
-#define DEFINE_STRUCT_CACHE_TRYALLOC   DEE_DEFINE_STRUCT_CACHE_TRYALLOC
-#define DEFINE_STRUCT_CACHE_EX         DEE_DEFINE_STRUCT_CACHE_EX
-#define DEFINE_OBJECT_CACHE_EX         DEE_DEFINE_OBJECT_CACHE_EX
-#define DEE_DEFINE_STRUCT_CACHE(n,T,l) DEE_DEFINE_STRUCT_CACHE_EX(n,T,,)
-#define DEE_DEFINE_OBJECT_CACHE(n,T,l) DEE_DEFINE_OBJECT_CACHE_EX(n,T,,)
-#define DEE_DECLARE_STRUCT_CACHE(n,T) \
-	struct Dee_cache_struct*structcache_##n##_list;\
-	size_t structcache_##n##_size;\
-	size_t n##_clear(size_t max_clear);\
-	void n##_free(T*ob);\
-	T*n##_alloc(void);\
-	T*n##_dbgalloc(char const*file,int line);
-#define DEE_DECLARE_OBJECT_CACHE(n,T) \
-	struct Dee_cache_object*obcache_##n##_list;\
-	size_t obcache_##n##_size;\
-	size_t n##_clear(size_t max_clear);\
-	void n##_free(T*ob);\
-	T*n##_alloc(void);\
-	T*n##_dbgalloc(char const*file,int line);\
-	void n##_tp_free(void*ob);\
-	void*n##_tp_alloc(void);
-#define DEE_DEFINE_STRUCT_CACHE_EX(n,T,s,l) \
-	struct Dee_cache_struct*structcache_##n##_list=0;\
-	size_t structcache_##n##_size=0;\
-	size_t n##_clear(size_t max_clear){}\
-	void n##_free(T*ob){}\
-	T*DCALL n##_alloc(){}\
-	T*DCALL n##_dbgalloc(char const*file,int line){}
-#define DEE_DEFINE_OBJECT_CACHE_EX(n,T,s,l) \
-	struct Dee_cache_object*obcache_##n##_list=0;\
-	size_t obcache_##n##_size=0;\
-	size_t n##_clear(size_t max_clear){}\
-	void n##_free(T*ob){}\
-	T*n##_alloc(){}\
-	T*n##_dbgalloc(char const*file,int line){}\
-	void n##_tp_free(void*ob){}\
-	void*n##_tp_alloc(){}
-
 #define DECLARE_DeeTime_NewUnix() DeeObject*DeeTime_NewUnix(int64_t seconds_since_01_01_1970,uint32_t extra_nanoseconds)
 #define DEFINE_DeeTime_NewUnix(get_time_module) DeeObject*DeeTime_NewUnix(int64_t seconds_since_01_01_1970,uint32_t extra_nanoseconds){}
 #define DECLARE_DeeTime_NewFILETIME() DeeObject*DeeTime_NewFILETIME(void const*p_filetime)

@@ -28,16 +28,13 @@
 #include <deemon/code.h>              /* Dee_CODE_F* */
 #include <deemon/compiler/ast.h>      /* ASSERT_AST, ast, ast_incref, loc_here */
 #include <deemon/compiler/compiler.h> /* DeeCompiler* */
-#include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, ast_loc, decl_ast_fini, symbol, symbol_*, text_label */
+#include <deemon/compiler/symbol.h>   /* BASESCOPE_FSWITCH, CONFIG_SYMBOL_HAS_REFCNT, DAST_NONE, DeeBaseScopeObject, DeeClassScopeObject, DeeRootScopeObject, DeeScopeObject, DeeScope_IsClassScope, LOOKUP_SYM_*, SYMBOL_*, ast_loc, decl_ast_fini, lbl_alloc, lbl_free, sym_alloc, sym_free, symbol, symbol_*, text_label */
 #include <deemon/compiler/tpp.h>
 #include <deemon/module.h>            /* DeeModuleObject, DeeModule_Type, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_symbol */
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>            /* DeeStringObject */
 #include <deemon/system-features.h>   /* bzero, memcpy, memset */
 #include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FNORMAL */
-#include <deemon/util/cache.h>        /* DEFINE_STRUCT_CACHE_EX */
-
-#include <hybrid/minmax.h> /* MAX_C */
 
 #include "../runtime/strings.h"
 
@@ -55,18 +52,6 @@ DECL_BEGIN
 #endif /* NDEBUG */
 
 INTDEF struct Dee_module_symbol empty_module_buckets[];
-DEFINE_STRUCT_CACHE_EX(sym, struct symbol,
-                       MAX_C(sizeof(struct symbol),
-                             sizeof(struct text_label)),
-                       64)
-#ifndef NDEBUG
-#define sym_alloc() sym_dbgalloc(__FILE__, __LINE__)
-#endif /* !NDEBUG */
-
-/* Re-use the symbol cache for labels. (As rare as they are, this is the best way to allocate them) */
-#define lbl_alloc() ((struct text_label *)sym_alloc()) /* TODO: Use slabs for this! */
-#define lbl_free(p) sym_free((struct symbol *)(p))
-
 
 INTERN DREF DeeScopeObject *current_scope     = NULL;
 INTERN DeeBaseScopeObject  *current_basescope = NULL;

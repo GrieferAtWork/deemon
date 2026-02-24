@@ -45,7 +45,6 @@
 #include <deemon/system-features.h>    /* bcmp, bcmpc, bzero, strchr, strend */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
 #include <deemon/type.h>               /* DeeObject_Init, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TYPE_*, type_* */
-#include <deemon/util/cache.h>         /* DECLARE_OBJECT_CACHE, DECLARE_STRUCT_CACHE */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
 
 #include "../../runtime/kwlist.h"
@@ -57,13 +56,6 @@
 #include <stdint.h>  /* int32_t, uint8_t, uint16_t */
 
 DECL_BEGIN
-
-#ifdef CONFIG_AST_IS_STRUCT
-DECLARE_STRUCT_CACHE(ast, struct ast)
-#else /* CONFIG_AST_IS_STRUCT */
-DECLARE_OBJECT_CACHE(ast, struct ast)
-#endif /* !CONFIG_AST_IS_STRUCT */
-
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 compiler_init(DeeCompilerObject *__restrict self,

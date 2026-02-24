@@ -41,6 +41,7 @@
 
 #include "../api.h"
 
+#include "../alloc.h"           /* DeeObject_FREE, DeeObject_MALLOC */
 #include "../code.h"            /* DeeCodeObject */
 #include "../module.h"          /* Dee_module_symbol */
 #include "../object.h"          /* Dee_Incref */
@@ -540,6 +541,10 @@ struct text_label {
 	unsigned int           tl_goto; /* The number of times this label is used as a goto target. */
 };
 
+#define lbl_alloc() DeeObject_MALLOC(struct text_label)
+#define lbl_free(p) DeeObject_FREE(Dee_REQUIRES_TYPE(struct text_label *, p))
+
+
 #define text_label_name(self, is_case)        \
 	((is_case)                                \
 	 ? ((self)->tl_expr ? "case" : "default") \
@@ -663,6 +668,10 @@ struct symbol {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
+
+#define sym_alloc() DeeObject_MALLOC(struct symbol)
+#define sym_free(p) DeeObject_FREE(Dee_REQUIRES_TYPE(struct symbol *, p))
+
 
 
 /* Return the alias of a `SYMBOL_TYPE_ALIAS'-typed symbol

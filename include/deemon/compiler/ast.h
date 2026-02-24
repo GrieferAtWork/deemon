@@ -37,6 +37,7 @@
 
 #include "../api.h"
 
+#include "../alloc.h"  /* DeeDbgObject_MALLOC, DeeObject_FREE, DeeObject_MALLOC */
 #include "../module.h" /* DeeModule_Deemon, Dee_module_symbol_getindex */
 #include "../none.h"   /* DeeNone_Check */
 #include "../object.h" /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_EXACT_OPT, Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
@@ -618,6 +619,11 @@ struct ast {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
+
+#define ast_alloc()              DeeObject_MALLOC(struct ast)
+#define ast_dbgalloc(file, line) DeeDbgObject_MALLOC(struct ast, file, line)
+#define ast_free(p)              DeeObject_FREE(Dee_REQUIRES_TYPE(struct ast *, p))
+
 
 /* Helper macros to identify asts */
 #define ast_isoperator1(self, op)                                                            \
