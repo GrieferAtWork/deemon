@@ -24,20 +24,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>            /* DeeSlab_* */
-#include <deemon/system-features.h>  /* bzero */
+#include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_* */
 #include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX, Dee_SLAB_CHUNKSIZE_MIN */
-#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS, Dee_slab_page, Dee_slab_page_* */
+#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS */
 
 #include <hybrid/align.h>         /* CEILDIV */
 #include <hybrid/bit.h>           /* CTZ */
-#include <hybrid/sequence/list.h> /* LIST_* */
+#include <hybrid/sequence/list.h> /*  */
 #include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_BIT__, __SHIFT_TYPE__ */
 
-#include <stddef.h> /* offsetof, size_t */
-#include <stdint.h> /* uintptr_t */
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__

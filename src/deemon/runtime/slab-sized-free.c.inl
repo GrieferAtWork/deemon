@@ -23,11 +23,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/system-features.h> /* bzero */
-#include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
-#include <deemon/util/slab.h>       /* Dee_slab_page_* */
+#include <deemon/util/atomic.h> /* atomic_* */
+#include <deemon/util/slab.h>   /* Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_* */
 
-#include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h> /* LIST_* */
 
 #include <stddef.h> /* NULL, size_t */
