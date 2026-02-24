@@ -123,7 +123,7 @@ repeatiter_serialize(RepeatIterator *__restrict self,
 	Dee_atomic_rwlock_init(&out->rpi_lock);
 	if (DeeSerial_PutObjectInherited(writer, ADDROF(rpi_iter), self__rpi_iter))
 		goto err;
-	return DeeSerial_PutObjectInherited(writer, ADDROF(rpi_rep), self->rpi_rep);
+	return DeeSerial_PutObject(writer, ADDROF(rpi_rep), self->rpi_rep);
 err:
 	return -1;
 #undef ADDROF
