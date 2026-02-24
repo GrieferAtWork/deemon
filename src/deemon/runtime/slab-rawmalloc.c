@@ -747,6 +747,12 @@ struct Dee_slab_page *DCALL Dee_slab_page_tryrawmalloc(void) {
 
 PUBLIC NONNULL((1)) void DCALL
 Dee_slab_page_rawfree(struct Dee_slab_page *__restrict page) {
+	/* TODO: Debug checks for use-after-free (fill "page" with a
+	 *       known debug pattern, probably the same pattern as
+	 *       also used by the actual slab allocator, and define
+	 *       a function called by `DeeHeap_CheckMemory()' to
+	 *       verify that this pattern is still in-place in all
+	 *       places it should be) */
 #ifdef USE_fslab
 	struct fslab_page *fpage;
 	fpage = container_of(page, struct fslab_page, fsp_data.d_page);

@@ -1539,6 +1539,7 @@
 #define LOCAL_MAYBE_PUBLIC
 #define LOCAL_DECL
 #define LOCAL_ASSERT_GC_SLAB_EXISTS(...)
+#define LOCAL_DEFINE_SLAB_FORMAT(n, _) struct page_format const slab_format##n={};
 
 #define SQLITE_EXTERN extern
 #define SQLITE_API

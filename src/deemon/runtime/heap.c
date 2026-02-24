@@ -8591,6 +8591,12 @@ PRIVATE size_t lock_and_do_check_malloc_state_foreach_cb(mspace ms, void *arg) {
 }
 #endif /* USE_PER_THREAD_MSTATE */
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
+INTDEF void DCALL DeeSlab_CheckMemory(void);
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
 /* Validate heap memory, asserting the absence of corruptions from
  * various common heap mistakes (write-past-end, use-after-free, etc.).
  *
@@ -8601,7 +8607,12 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
 #if USE_PER_THREAD_MSTATE
 	tls_mspace_foreach(&lock_and_do_check_malloc_state_foreach_cb, NULL);
 #endif /* USE_PER_THREAD_MSTATE */
-	/* TODO: Also check slab memory (~ala `slab_chkfree_data()') */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
+	/* Also check slab memory (~ala `slab_chkfree_data()') */
+	DeeSlab_CheckMemory();
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 }
 #endif /* DL_DEBUG_EXTERNAL */
 
