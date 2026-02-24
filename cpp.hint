@@ -1600,3 +1600,10 @@
 #define SQLITE_STDCALL
 #define SQLITE_CALLBACK
 #define SQLITE_SYSAPI
+
+#define PARAM_mstate_m_  mstate m,
+#define PARAM_mstate_m   mstate m
+#define ARG_mstate_m_    m,
+#define ARG_mstate_m     m
+#define ARG_mstate_X_(x) x,
+#define ARG_mstate_X(x)  x

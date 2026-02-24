@@ -3423,11 +3423,11 @@ static void *tmalloc_small(PARAM_mstate_m_ size_t nb) {
 
 #if !ONLY_MSPACES
 
-#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlmalloc(size_t bytes)
-#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
 #define Dee_TryMalloc_DEFINED
 PUBLIC ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryMalloc)(size_t bytes)
+#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlmalloc(size_t bytes)
 #endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 {
 	/*
@@ -3713,12 +3713,12 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 }
 #endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
 
-#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-static void dlfree(void *mem)
-#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
 #define Dee_Free_DEFINED
 PUBLIC void (DCALL Dee_Free)(void *mem)
-#endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+static void dlfree(void *mem)
+#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 {
 #ifndef DLFREE_CHECKS_NULL
 #define DLFREE_CHECKS_NULL 1
@@ -4033,12 +4033,12 @@ dl_freelist_do_reap(PARAM_mstate_m_ struct freelist_entry *__restrict flist) {
 #endif /* NEED_dl_freelist_do_reap */
 
 #if 1
-#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlcalloc(size_t req)
-#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
 #define Dee_TryCalloc_DEFINED
 PUBLIC ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryCalloc)(size_t req)
-#endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlcalloc(size_t req)
+#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 {
 	void *mem = dlmalloc(req);
 	if (mem != 0 && calloc_must_clear(mem2chunk(mem))) {
@@ -4472,12 +4472,12 @@ static void internal_inspect_all(PARAM_mstate_m_
 
 #if !ONLY_MSPACES
 
-#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-static WUNUSED void *dlrealloc(void *oldmem, size_t bytes)
-#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
 #define Dee_TryRealloc_DEFINED
 PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
-#endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+static WUNUSED void *dlrealloc(void *oldmem, size_t bytes)
+#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 {
 #ifndef DLREALLOC_CHECKS_NULL
 #define DLREALLOC_CHECKS_NULL 1
@@ -4602,12 +4602,12 @@ after_internal_malloc:
 	return mem;
 }
 
-#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL)
-static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
-#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL) */
+#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API || (LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL)
 #define Dee_TryReallocInPlace_DEFINED
 PUBLIC WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *oldmem, size_t bytes)
-#endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API || (LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL) */
+#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API || (LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL) */
+static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
+#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL) */
 {
 	void *mem = 0;
 #ifndef DLREALLOC_IN_PLACE_CHECKS_NULL
@@ -4661,14 +4661,14 @@ PUBLIC WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *oldmem, size_t bytes)
 	return mem;
 }
 
-#if !DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *
-dlmemalign(size_t alignment, size_t bytes)
-#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
 #define Dee_TryMemalign_DEFINED
 PUBLIC ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *
 (DCALL Dee_TryMemalign)(size_t alignment, size_t bytes)
-#endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+static ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *
+dlmemalign(size_t alignment, size_t bytes)
+#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
 {
 #ifdef HOOK_AFTER_INIT_MEMALIGN
 	ensure_initialization_for(HOOK_AFTER_INIT_MEMALIGN(alignment, bytes));
@@ -4773,9 +4773,9 @@ static void dlmalloc_inspect_all(void (*handler)(void *start,
 
 PRIVATE sys_trim_return_t do_mspace_sys_trim(PARAM_mstate_m_ size_t pad) {
 	sys_trim_return_t result;
-	PREACTION(gm);
+	PREACTION(m);
 	result = sys_trim(ARG_mstate_m_ pad);
-	POSTACTION(gm);
+	POSTACTION(m);
 	return result;
 }
 
@@ -8601,6 +8601,7 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
 #if USE_PER_THREAD_MSTATE
 	tls_mspace_foreach(&lock_and_do_check_malloc_state_foreach_cb, NULL);
 #endif /* USE_PER_THREAD_MSTATE */
+	/* TODO: Also check slab memory (~ala `slab_chkfree_data()') */
 }
 #endif /* DL_DEBUG_EXTERNAL */
 
