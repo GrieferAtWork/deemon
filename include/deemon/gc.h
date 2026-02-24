@@ -45,7 +45,7 @@
 #include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
 
 /* To satisfy "fixincludes" (these includes are intentionally missing) */
-/*!fixincludes fake_include "type.h" // CONFIG_FIXED_ALLOCATOR_S_IS_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO */
+/*!fixincludes fake_include "type.h" // Dee_TYPE_CONSTRUCTOR_INIT_ALLOC */
 
 #ifndef __INTELLISENSE__
 #include "alloc.h" /* DeeSlab_ENUMERATE, DeeSlab_Invoke */

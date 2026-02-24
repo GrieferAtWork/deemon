@@ -23,7 +23,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeDbgObject_*, DeeMem_ClearCaches, DeeObject_*, DeeSlab_ENUMERATE, DeeSlab_Invoke, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc, Dee_TryReallocc */
+#include <deemon/alloc.h>              /* DeeDbgObject_*, DeeMem_ClearCaches, DeeObject_*, DeeSlab_ENUMERATE, DeeSlab_Invoke, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc, Dee_TryReallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
 #include <deemon/asm.h>                /* ASM_RET_NONE, instruction_t */
 #include <deemon/bool.h>               /* return_bool, return_false, return_true */
@@ -41,7 +41,7 @@
 #include <deemon/system-features.h>    /* bzeroc, link, memcpy*, memmovedownc, memmoveupc, memset, remove */
 #include <deemon/system.h>             /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_CheckInterruptNoInt, DeeThread_IsMultiThreaded, DeeThread_ResumeAll, DeeThread_Self, DeeThread_SuspendAll, DeeThread_TrySuspendAll, DeeThread_WasInterrupted, Dee_THREAD_STATE_SHUTDOWNINTR */
-#include <deemon/type.h>               /* DeeObject_GCPriority, DeeObject_Init, DeeType_*, Dee_GC_PRIORITY_EARLY, Dee_GC_PRIORITY_LATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_*, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_GCPriority, DeeObject_Init, DeeType_*, Dee_GC_PRIORITY_EARLY, Dee_GC_PRIORITY_LATE, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_atomic_*, atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_*, Dee_shared_lock_* */

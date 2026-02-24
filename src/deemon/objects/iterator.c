@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
+#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack0Or1 */
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/computed-operators.h> /* DEFAULT_OPDEF, DEFAULT_OPIMP, DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -35,7 +35,7 @@
 #include <deemon/seq.h>                /* DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/method-hints.h"

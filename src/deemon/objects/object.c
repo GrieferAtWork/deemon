@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_BadArgc0, DeeArg_Unpack* */
 #include <deemon/attribute.h>          /* DeeEnumAttr_Type */
 #include <deemon/bool.h>               /* DeeBool_Type, Dee_return_bool01, return_bool */
@@ -40,7 +39,7 @@
 #include <deemon/string.h>             /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_IsDeepImmutable, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_IsDeepImmutable, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_Id */
 
 #include "../runtime/runtime_error.h"

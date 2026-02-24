@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TryCallocc */
+#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryCallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPxSIZ */
 #include <deemon/bool.h>               /* return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -36,7 +36,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_IsGC, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_IsGC, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric */

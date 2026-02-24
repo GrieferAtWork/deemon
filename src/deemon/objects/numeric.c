@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
 #include <deemon/bool.h>               /* DeeBool_NewFalse, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -34,7 +33,7 @@
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, isgreater, isgreaterequal, isless, islessequal, islessgreater */
-#include <deemon/type.h>               /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_HasPrivateOperator, DeeType_Type, Dee_INT_ISERR, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, METHOD_FCONSTCALL, OPERATOR_FLOAT, OPERATOR_INT, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_getset, type_method */
+#include <deemon/type.h>               /* DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_HasPrivateOperator, DeeType_Type, Dee_INT_ISERR, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, METHOD_FCONSTCALL, OPERATOR_FLOAT, OPERATOR_INT, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_getset, type_method */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/byteswap.h>  /* BSWAP* */

@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
+#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc */
 #include <deemon/arg.h>             /* DeeArg_UnpackStruct2, DeeArg_UnpackStructKw */
 #include <deemon/callable.h>        /* DeeCallable_Type */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODULE_FABSFILE */
@@ -32,7 +32,7 @@
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_DEFINE_*, memmovedownc, strlen, to(lower|upper) */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewEmpty, Dee_tuple_builder* */
-#include <deemon/type.h>            /* DeeObject_GenericCmpByAddr, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, TF_NONE, TP_F*, type_attr, type_callable */
+#include <deemon/type.h>            /* DeeObject_GenericCmpByAddr, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, TF_NONE, TP_F*, type_attr, type_callable */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */

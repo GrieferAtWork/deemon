@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
+#include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_BadArgcEx, DeeArg_Unpack*, UNPuSIZ, UNPxSIZ */
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/callable.h>           /* DeeCallable_Check */
@@ -41,7 +41,7 @@
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_Type, Dee_TF_SEQCLASS_MASK, Dee_TF_SEQCLASS_SHFT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_Type, Dee_TF_SEQCLASS_MASK, Dee_TF_SEQCLASS_SHFT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
 #include "../runtime/kwlist.h"

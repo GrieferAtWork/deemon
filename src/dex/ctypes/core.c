@@ -26,7 +26,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
+#include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>             /* DeeArg_Unpack*, UNPuSIZ, _DeeArg_AsObject */
 #include <deemon/bool.h>            /* DeeBool_Type, Dee_False, Dee_True, return_bool */
 #include <deemon/bytes.h>           /* DeeBytes* */
@@ -42,7 +42,7 @@
 #include <deemon/seq.h>             /* DeeRefVector_NewReadonly */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer*, STRING_ERROR_FREPLAC */
 #include <deemon/system-features.h> /* bcmp, bzero, memcmp, memcpy */
-#include <deemon/type.h>            /* DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 

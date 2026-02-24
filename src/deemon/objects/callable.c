@@ -22,7 +22,6 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/callable.h>           /*  */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -34,7 +33,7 @@
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_FCONSTCALL, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_FCONSTCALL, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/strings.h"
 

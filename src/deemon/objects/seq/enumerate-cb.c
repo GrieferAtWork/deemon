@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S */
+#include <deemon/alloc.h>              /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack1Or2 */
 #include <deemon/callable.h>           /* DeeCallable_Type */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
@@ -32,7 +32,7 @@
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S, Dee_XVisit, Dee_visit_t, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_member */
+#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_member */
 #include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
