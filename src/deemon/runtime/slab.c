@@ -112,7 +112,7 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(LOCAL_ASSERT_GC_SLAB_EXISTS, ~)
 
 
 #ifdef SLAB_DEBUG_MEMSET_ALLOC
-PRIVATE void DCALL slab_setalloc_data(void *p, size_t n) {
+LOCAL void DCALL slab_setalloc_data(void *p, size_t n) {
 	size_t *iter = (size_t *)p;
 	while (n >= sizeof(size_t)) {
 		*iter++ = SLAB_DEBUG_MEMSET_ALLOC;
@@ -124,7 +124,7 @@ PRIVATE void DCALL slab_setalloc_data(void *p, size_t n) {
 #endif /* !SLAB_DEBUG_MEMSET_ALLOC */
 
 #ifdef SLAB_DEBUG_MEMSET_FREE
-PRIVATE void DCALL slab_setfree_data(void *p, size_t n) {
+LOCAL void DCALL slab_setfree_data(void *p, size_t n) {
 	size_t *iter = (size_t *)p;
 	while (n >= sizeof(size_t)) {
 		*iter++ = SLAB_DEBUG_MEMSET_FREE;
@@ -765,6 +765,7 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 	word_of__p_in_sp_used = BITWORD_C(1) << (bitno_of__p_in_sp_used % BITSOF_bitword_t);
 	ASSERTF(self__sp_used[indx_of__p_in_sp_used] & word_of__p_in_sp_used,
 	        "Given 'p' is not marked as allocated within this page");
+	ASSERTF(self->sp_meta.spm_used, "Nothing marked as allocated");
 
 	/* Mark the location as not-allocated within the slab's in-use bitset. */
 	self__sp_used[indx_of__p_in_sp_used] &= ~word_of__p_in_sp_used;
