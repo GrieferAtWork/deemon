@@ -173,7 +173,7 @@ PRIVATE struct LOCAL_slab_page_list LOCAL_slab_pages = LIST_HEAD_INITIALIZER(LOC
 
 /* Helper function to find+allocate a previously reserved chunk within a given slab page. */
 PRIVATE WUNUSED NONNULL((1)) void *DCALL
-LOCAL_slab_malloc_in_page(LOCAL_slab_page *__restrict page) {
+LOCAL_slab_malloc_in_page(struct LOCAL_slab_page *__restrict page) {
 	/* Caller guaranties that something is free (since they reserved a spot for us)
 	 * -- we just need to find that spot! */
 	bitword_t word;
@@ -306,7 +306,7 @@ DECL_BEGIN
 
 LOCAL_DECL NONNULL((1)) void DCALL
 LOCAL_DeeSlab_Free(void *__restrict p) {
-	LOCAL_slab_page *page = (LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
+	struct LOCAL_slab_page *page = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
 	size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
 	size_t index = offset / DEFINE_CHUNK_SIZE;
 	size_t bit_indx = index / BITSOF_bitword_t;

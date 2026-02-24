@@ -76,7 +76,7 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(LOCAL_ASSERT_GC_SLAB_EXISTS, ~)
 
 
 /* Implementation configuration */
-#if !defined(NDEBUG) && 1
+#if !defined(NDEBUG) && 1 /* TODO: Disable by default in the near future */
 #define SLAB_DEBUG_INTERNAL 1
 #else
 #define SLAB_DEBUG_INTERNAL 0
@@ -169,7 +169,7 @@ dbg_slab__attach(void *p, size_t n, char const *file, int line) {
 	}
 	return p;
 }
-PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) void *DCALL
+PRIVATE ATTR_RETNONNULL NONNULL((1)) void *DCALL
 dbg_slab__detach(void *p, size_t n, char const *file, int line) {
 	/* TODO: Free debug info if it exists for "p" (which is an "n"-byte large slab) */
 	(void)n;
@@ -233,11 +233,10 @@ LOCAL void *gc_initob(void *ptr) {
 	return ptr;
 }
 
-#define call_gc_slab(N, f, args)                                                            \
-	_Dee_PRIVATE_SLAB_SELECT(N + Dee_GC_OBJECT_OFFSET, , f, args,                           \
-	                         ((int(*)[DeeSlab_EXISTS(N + Dee_GC_OBJECT_OFFSET) ? 1 : -1])0, \
-	                          __builtin_unreachable(), NULL))
+#define call_gc_slab(N, f, args) \
+	_Dee_PRIVATE_SLAB_SELECT(N + Dee_GC_OBJECT_OFFSET, , f, args, (__builtin_unreachable(), NULL))
 #define DEFINE_DeeGCSlab_API(n, _)                                                  \
+	STATIC_ASSERT(DeeSlab_EXISTS(n + Dee_GC_OBJECT_OFFSET));                        \
 	PUBLIC ATTR_MALLOC WUNUSED void *DCALL                                          \
 	DeeGCSlab_Malloc##n(void) {                                                     \
 		return gc_initob(call_gc_slab(n, DeeSlab_Malloc, ()));                      \

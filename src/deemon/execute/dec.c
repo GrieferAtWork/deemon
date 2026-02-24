@@ -1381,9 +1381,9 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 	/* Update `dw_used' to include memory reserved for the currently-allocated page */
 	if (self->dw_slabs) {
-		ASSERT(self->dw_slabs > sizeof(Dee_heapchunk));
-		ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(Dee_heapchunk), Dee_SLAB_PAGESIZE));
-		ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(Dee_heapchunk), Dee_SLAB_PAGESIZE));
+		ASSERT(self->dw_slabs > sizeof(struct Dee_heapchunk));
+		ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+		ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
 		if (self->dw_used < self->dw_slabb) {
 			struct Dee_heapchunk *slab_chunk;
 			/* Extend the last heap-chunk t */
@@ -2603,7 +2603,7 @@ err:
 #endif
 }
 
-PRIVATE WUNUSED NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 decwriter_slab_free_impl(DeeDecWriter *__restrict self, Dee_seraddr_t addr, size_t n) {
 #if 1
 	/* TODO: Dee_slab_page_buildfree() */

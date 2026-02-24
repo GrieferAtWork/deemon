@@ -101,8 +101,8 @@ again_locked:
 		 * is **GUARANTIED** to have at least 1 0-bit in its `sp_used' bitset! */
 #if defined(SLAB_DEBUG_MEMSET_ALLOC) || defined(SLAB_DEBUG_MEMSET_FREE)
 		result = LOCAL_slab_malloc_in_page(page);
-		slab_assert(result >= page->sp_data);
-		slab_assert(result <= (page->sp_data + sizeof(page->sp_data) - DEFINE_CHUNK_SIZE));
+		slab_assert((byte_t *)result >= (page->sp_data));
+		slab_assert((byte_t *)result <= (page->sp_data + sizeof(page->sp_data) - DEFINE_CHUNK_SIZE));
 		/* Verify that the slab chunk still matches the SLAB_DEBUG_MEMSET_FREE-pattern */
 		slab_chkfree_data(result, DEFINE_CHUNK_SIZE);
 		goto done;
