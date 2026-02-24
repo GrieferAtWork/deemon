@@ -310,7 +310,7 @@ DECL_END
 #ifndef __INTELLISENSE__
 /*[[[deemon
 local minsize = 12;
-local maxsize = 80;
+local maxsize = 128;
 print("#if Dee_SLAB_CHUNKSIZE_MIN < ", minsize);
 print("#error \"Configured value 'Dee_SLAB_CHUNKSIZE_MIN' is less than supported minimum ", minsize, "\"");
 print("#endif /" "* Dee_SLAB_CHUNKSIZE_MIN < ", minsize, " *" "/");
@@ -327,9 +327,9 @@ for (local n: [minsize:maxsize+1]) {
 #if Dee_SLAB_CHUNKSIZE_MIN < 12
 #error "Configured value 'Dee_SLAB_CHUNKSIZE_MIN' is less than supported minimum 12"
 #endif /* Dee_SLAB_CHUNKSIZE_MIN < 12 */
-#if Dee_SLAB_CHUNKSIZE_MAX > 80
-#error "Configured value 'Dee_SLAB_CHUNKSIZE_MAX' is greater than supported maximum 80"
-#endif /* Dee_SLAB_CHUNKSIZE_MAX > 80 */
+#if Dee_SLAB_CHUNKSIZE_MAX > 128
+#error "Configured value 'Dee_SLAB_CHUNKSIZE_MAX' is greater than supported maximum 128"
+#endif /* Dee_SLAB_CHUNKSIZE_MAX > 128 */
 #if DeeSlab_EXISTS(12)
 #define DEFINE_CHUNK_SIZE 12
 #include "slab-sized.c.inl"
@@ -606,6 +606,198 @@ for (local n: [minsize:maxsize+1]) {
 #define DEFINE_CHUNK_SIZE 80
 #include "slab-sized.c.inl"
 #endif /* DeeSlab_EXISTS(80) */
+#if DeeSlab_EXISTS(81)
+#define DEFINE_CHUNK_SIZE 81
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(81) */
+#if DeeSlab_EXISTS(82)
+#define DEFINE_CHUNK_SIZE 82
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(82) */
+#if DeeSlab_EXISTS(83)
+#define DEFINE_CHUNK_SIZE 83
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(83) */
+#if DeeSlab_EXISTS(84)
+#define DEFINE_CHUNK_SIZE 84
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(84) */
+#if DeeSlab_EXISTS(85)
+#define DEFINE_CHUNK_SIZE 85
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(85) */
+#if DeeSlab_EXISTS(86)
+#define DEFINE_CHUNK_SIZE 86
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(86) */
+#if DeeSlab_EXISTS(87)
+#define DEFINE_CHUNK_SIZE 87
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(87) */
+#if DeeSlab_EXISTS(88)
+#define DEFINE_CHUNK_SIZE 88
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(88) */
+#if DeeSlab_EXISTS(89)
+#define DEFINE_CHUNK_SIZE 89
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(89) */
+#if DeeSlab_EXISTS(90)
+#define DEFINE_CHUNK_SIZE 90
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(90) */
+#if DeeSlab_EXISTS(91)
+#define DEFINE_CHUNK_SIZE 91
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(91) */
+#if DeeSlab_EXISTS(92)
+#define DEFINE_CHUNK_SIZE 92
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(92) */
+#if DeeSlab_EXISTS(93)
+#define DEFINE_CHUNK_SIZE 93
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(93) */
+#if DeeSlab_EXISTS(94)
+#define DEFINE_CHUNK_SIZE 94
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(94) */
+#if DeeSlab_EXISTS(95)
+#define DEFINE_CHUNK_SIZE 95
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(95) */
+#if DeeSlab_EXISTS(96)
+#define DEFINE_CHUNK_SIZE 96
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(96) */
+#if DeeSlab_EXISTS(97)
+#define DEFINE_CHUNK_SIZE 97
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(97) */
+#if DeeSlab_EXISTS(98)
+#define DEFINE_CHUNK_SIZE 98
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(98) */
+#if DeeSlab_EXISTS(99)
+#define DEFINE_CHUNK_SIZE 99
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(99) */
+#if DeeSlab_EXISTS(100)
+#define DEFINE_CHUNK_SIZE 100
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(100) */
+#if DeeSlab_EXISTS(101)
+#define DEFINE_CHUNK_SIZE 101
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(101) */
+#if DeeSlab_EXISTS(102)
+#define DEFINE_CHUNK_SIZE 102
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(102) */
+#if DeeSlab_EXISTS(103)
+#define DEFINE_CHUNK_SIZE 103
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(103) */
+#if DeeSlab_EXISTS(104)
+#define DEFINE_CHUNK_SIZE 104
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(104) */
+#if DeeSlab_EXISTS(105)
+#define DEFINE_CHUNK_SIZE 105
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(105) */
+#if DeeSlab_EXISTS(106)
+#define DEFINE_CHUNK_SIZE 106
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(106) */
+#if DeeSlab_EXISTS(107)
+#define DEFINE_CHUNK_SIZE 107
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(107) */
+#if DeeSlab_EXISTS(108)
+#define DEFINE_CHUNK_SIZE 108
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(108) */
+#if DeeSlab_EXISTS(109)
+#define DEFINE_CHUNK_SIZE 109
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(109) */
+#if DeeSlab_EXISTS(110)
+#define DEFINE_CHUNK_SIZE 110
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(110) */
+#if DeeSlab_EXISTS(111)
+#define DEFINE_CHUNK_SIZE 111
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(111) */
+#if DeeSlab_EXISTS(112)
+#define DEFINE_CHUNK_SIZE 112
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(112) */
+#if DeeSlab_EXISTS(113)
+#define DEFINE_CHUNK_SIZE 113
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(113) */
+#if DeeSlab_EXISTS(114)
+#define DEFINE_CHUNK_SIZE 114
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(114) */
+#if DeeSlab_EXISTS(115)
+#define DEFINE_CHUNK_SIZE 115
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(115) */
+#if DeeSlab_EXISTS(116)
+#define DEFINE_CHUNK_SIZE 116
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(116) */
+#if DeeSlab_EXISTS(117)
+#define DEFINE_CHUNK_SIZE 117
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(117) */
+#if DeeSlab_EXISTS(118)
+#define DEFINE_CHUNK_SIZE 118
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(118) */
+#if DeeSlab_EXISTS(119)
+#define DEFINE_CHUNK_SIZE 119
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(119) */
+#if DeeSlab_EXISTS(120)
+#define DEFINE_CHUNK_SIZE 120
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(120) */
+#if DeeSlab_EXISTS(121)
+#define DEFINE_CHUNK_SIZE 121
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(121) */
+#if DeeSlab_EXISTS(122)
+#define DEFINE_CHUNK_SIZE 122
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(122) */
+#if DeeSlab_EXISTS(123)
+#define DEFINE_CHUNK_SIZE 123
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(123) */
+#if DeeSlab_EXISTS(124)
+#define DEFINE_CHUNK_SIZE 124
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(124) */
+#if DeeSlab_EXISTS(125)
+#define DEFINE_CHUNK_SIZE 125
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(125) */
+#if DeeSlab_EXISTS(126)
+#define DEFINE_CHUNK_SIZE 126
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(126) */
+#if DeeSlab_EXISTS(127)
+#define DEFINE_CHUNK_SIZE 127
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(127) */
+#if DeeSlab_EXISTS(128)
+#define DEFINE_CHUNK_SIZE 128
+#include "slab-sized.c.inl"
+#endif /* DeeSlab_EXISTS(128) */
 /*[[[end]]]*/
 #endif /* !__INTELLISENSE__ */
 

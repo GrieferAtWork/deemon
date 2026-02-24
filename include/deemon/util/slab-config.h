@@ -56,18 +56,67 @@
  *        `sizeof(struct Dee_gc_head)' from the slab's size.
  */
 
+/* To tune GC slab sizes (and to figure out which types use slab allocators),
+ * you can use the following deemon script:
+ * ```deemon
+import rt;
+import * from deemon;
+local typesBySize: {int: Type} = Dict();
+for (local t: rt.__globals__) {
+	if (t is rt.CMethod0)
+		t = t();
+	if (t is Type && !Type.__isvariable__(t)) {
+		local s = try ( // Not completely right: assumes that "sizeof(DeeObject) == sizeof(Dee_gc_head)"
+			Type.__instancesize__(t) + (Type.__isgc__(t) ? Object.__instancesize__ : 0)
+		) catch (...) -1;
+		typesBySize.setdefault(s, []).append(t);
+	}
+}
+for (local s: typesBySize.keys.sorted())
+	print(s, ": ", #typesBySize[s], " types");
+for (local s: typesBySize.keys.sorted()) {
+	local tps = typesBySize[s];
+	print(s, ":");
+	for (local t: tps)
+		print("\t", Type.__hascustomallocator__(t), " ", repr t);
+}
+```
+ * Currently, this slab size configuration covers pretty much all internals,
+ * with a fairly even spread of types using the different allocators:
+ * >> 12: 47 types
+ * >> 16: 81 types
+ * >> 20: 41 types
+ * >> 24: 36 types
+ * >> 32: 30 types
+ * >> 40: 29 types
+ * >> 52: 12 types
+ *
+ * The only types (where adding slab support might improve
+ * performance) that don't fall into any slab allocator are:
+ * - 88:  _FileBuffer              (as returned by `File.open()')
+ * - 92:  _YieldFunctionIterator   (as produced by `operator iter()' on user-defined yield functions)
+ *
+ * Some more types where performance gains wouldn't
+ * matter (due to the type only being used rarely):
+ * - 100: Thread    (wouldn't matter: thread's aren't created/destroyed that often)
+ * - 252: Type      (wouldn't matter: creating user-defined types on-the-fly has a
+ *                   far greater GC-overhead, than any overhead from not having a
+ *                   slab. Plus: types change size quite often)
+ * - 296: _FileType (...)
+ * - 408: _Compiler (Compilation only happens once)
+ */
 #undef Dee_SLAB_CHUNKSIZE_MIN
 #undef Dee_SLAB_CHUNKSIZE_MAX
 #if __SIZEOF_POINTER__ == 4
 #define Dee_SLAB_CHUNKSIZE_MIN 12
-#define Dee_SLAB_CHUNKSIZE_MAX 40
-#define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    cb(12, _) cb(16, _) cb(20, _) cb(24, _) cb(32, _) cb(40, _)
-#define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) cb(12/*20*/, _) cb(16/*24*/, _) cb(24/*32*/, _) cb(32/*40*/, _)
+#define Dee_SLAB_CHUNKSIZE_MAX 52
+#define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    cb(12, _) cb(16, _) cb(20, _) cb(24, _) cb(32, _) cb(40, _) cb(52, _)
+#define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) cb(12/*20*/, _) cb(16/*24*/, _) cb(24/*32*/, _) cb(32/*40*/, _) cb(44/*52*/, _)
 #elif __SIZEOF_POINTER__ == 8
 #define Dee_SLAB_CHUNKSIZE_MIN 24
-#define Dee_SLAB_CHUNKSIZE_MAX 80
-#define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    cb(24, _) cb(32, _) cb(40, _) cb(48, _) cb(64, _) cb(80, _)
-#define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) cb(24/*40*/, _) cb(32/*48*/, _) cb(48/*64*/, _) cb(64/*80*/, _)
+#define Dee_SLAB_CHUNKSIZE_MAX 104
+#define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    cb(24, _) cb(32, _) cb(40, _) cb(48, _) cb(64, _) cb(80, _) cb(104, _)
+#define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) cb(24/*40*/, _) cb(32/*48*/, _) cb(48/*64*/, _) cb(64/*80*/, _) cb(88/*104*/, _)
 #else /* __SIZEOF_POINTER__ == ... */
 #define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    /* nothing */
 #define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) /* nothing */
