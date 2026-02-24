@@ -695,7 +695,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,

@@ -1352,7 +1352,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ NULL,    /* No base */
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,

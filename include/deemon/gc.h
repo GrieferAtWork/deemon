@@ -681,15 +681,6 @@ Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
 	                                DeeGCSlab_GetFree(tp_instance_size, (void (DCALL *)(void *))(Dee_funptr_t)NULL))
 #define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(T, tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize) \
 	Dee_TYPE_CONSTRUCTOR_INIT_SIZED_GC(sizeof(T), tp_ctor, tp_copy_ctor, tp_any_ctor, tp_any_ctor_kw, tp_serialize)
-
-/* Same as `Dee_TYPE_CONSTRUCTOR_INIT_FIXED()', but don't link against
- * dedicated allocator functions when doing so would require the creation
- * of relocations that might cause loading times to become larger. */
-#ifdef CONFIG_FIXED_ALLOCATOR_S_IS_AUTO
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO /*!export(include("type.h"))*/
-#else /* CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
-#define Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC   /*!export(include("type.h"))*/
-#endif /* !CONFIG_FIXED_ALLOCATOR_S_IS_AUTO */
 #endif /* GUARD_DEEMON_TYPE_H */
 
 
@@ -728,9 +719,9 @@ DeeSlab_ENUMERATE(_Dee_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 #endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
-/* Same as the regular malloc functions, but use the same allocation methods that would be
- * used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC' and `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC_S',
- * meaning that pointers returned by these macros have binary compatibility with them. */
+/* Same as the regular malloc functions, but use the same allocation methods
+ * that would be used by `Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC', meaning that
+ * pointers returned by these macros have binary compatibility with them. */
 #define DeeGCObject_MALLOC(T)                            ((T *)DeeGCObject_FMalloc(sizeof(T)))
 #define DeeGCObject_CALLOC(T)                            ((T *)DeeGCObject_FCalloc(sizeof(T)))
 #define DeeGCObject_TRYMALLOC(T)                         ((T *)DeeGCObject_FTryMalloc(sizeof(T)))

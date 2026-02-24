@@ -3263,7 +3263,7 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 	/* .tp_features = */ TF_SINGLETON,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,

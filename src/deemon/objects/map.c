@@ -883,7 +883,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_MAP << Dee_TF_SEQCLASS_SHFT),
 	/* .tp_base     = */ &DeeSeq_Type, /* XXX: Shouldn't this be "DeeSet_Type"? */
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeObject, /* Allow default-construction of sequence objects. */
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,

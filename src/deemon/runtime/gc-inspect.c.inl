@@ -367,7 +367,7 @@ INTERN DeeTypeObject GCCollectionIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ GCCollectionIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ &gccolliter_copy,
@@ -764,7 +764,7 @@ INTERN DeeTypeObject GCCollection_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSet_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ GCCollection,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
@@ -975,7 +975,7 @@ INTERN DeeTypeObject GCIter_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ GCIter,
 			/* tp_ctor:        */ &gciter_init,
 			/* tp_copy_ctor:   */ &gciter_copy,
@@ -1211,7 +1211,7 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 	/* .tp_features = */ TF_SINGLETON,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
 			/* T:              */ DeeObject,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,

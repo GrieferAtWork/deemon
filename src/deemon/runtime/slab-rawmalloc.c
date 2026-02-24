@@ -115,7 +115,7 @@
 
 #undef USE_psegment
 #undef USE_fslab
-#if !defined(__OPTIMIZE_SIZE__) && 1
+#if !defined(__OPTIMIZE_SIZE__) && 0
 #define USE_psegment /* Allocate slab pages in larger segments */
 #define USE_fslab    /* Use s small cache of recently free'd slab pages */
 #endif /* !__OPTIMIZE_SIZE__ */

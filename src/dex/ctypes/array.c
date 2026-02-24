@@ -145,8 +145,8 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
-			/* T:              */ DeeObject,
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+			/* T:              */ ArrayIterator,
 			/* tp_ctor:        */ NULL,
 			/* tp_copy_ctor:   */ NULL,
 			/* tp_any_ctor:    */ NULL,
@@ -597,7 +597,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 			/* .tp_init = */ {
-				Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+				Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
 					/* T:              */ DeeObject,
 					/* tp_ctor:        */ NULL,
 					/* tp_copy_ctor:   */ NULL,

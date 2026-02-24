@@ -4108,7 +4108,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_SEQ << Dee_TF_SEQCLASS_SHFT),
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
-		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_S(
+		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeObject, /* Allow default-construction of Sequence objects. */
 			/* tp_ctor:        */ &DeeNone_OperatorCtor,
 			/* tp_copy_ctor:   */ &DeeNone_OperatorCopy,
