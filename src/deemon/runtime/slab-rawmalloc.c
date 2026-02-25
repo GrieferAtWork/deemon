@@ -167,10 +167,12 @@ PRIVATE void *DCALL cslab_trymalloc(size_t size) {
 		DBG_ALIGNMENT_DISABLE();
 		ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 		DBG_ALIGNMENT_ENABLE();
-		if (Dee_TryReleaseSystemMemory()) {
-			DBG_ALIGNMENT_DISABLE();
-			ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-			DBG_ALIGNMENT_ENABLE();
+		if unlikely(!ptr) {
+			if (Dee_TryReleaseSystemMemory()) {
+				DBG_ALIGNMENT_DISABLE();
+				ptr = VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+				DBG_ALIGNMENT_ENABLE();
+			}
 		}
 		return ptr;
 	}
@@ -212,7 +214,7 @@ PRIVATE void *DCALL cslab_malloc(size_t size) {
 #else /* cslab_malloc_USE_Dee_Memalign */
 	for (;;) {
 		void *result = cslab_trymalloc(size);
-		if (result != NULL)
+		if likely(result != NULL)
 			return result;
 		if (!Dee_ReleaseSystemMemory())
 			return NULL;

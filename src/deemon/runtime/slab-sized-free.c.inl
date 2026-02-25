@@ -101,7 +101,7 @@ again_read__spm_used:
 			 * being a bottleneck once the new impl is being run in a heavily parallelized environment */
 			LOCAL_slab_lock_write();
 			slab_assert(!Dee_slab_page_iscustom(page));
-			if (!atomic_cmpxch(&page->sp_meta.spm_used, 1, 0)) {
+			if unlikely(!atomic_cmpxch(&page->sp_meta.spm_used, 1, 0)) {
 				LOCAL_slab_lock_endwrite();
 				goto again_read__spm_used;
 			}
@@ -118,9 +118,9 @@ again_read__spm_used:
 			 * acquire "LOCAL_slab_lock" for no reason, and don't end up doing
 			 * anything with it below) */
 			LOCAL_slab_lock_write();
-			if (!atomic_cmpxch(&page->sp_meta.spm_used,
-			                   LOCAL_MAX_CHUNK_COUNT,
-			                   LOCAL_MAX_CHUNK_COUNT - 1)) {
+			if unlikely(!atomic_cmpxch(&page->sp_meta.spm_used,
+			                           LOCAL_MAX_CHUNK_COUNT,
+			                           LOCAL_MAX_CHUNK_COUNT - 1)) {
 				LOCAL_slab_lock_endwrite();
 				goto again_read__spm_used;
 			}

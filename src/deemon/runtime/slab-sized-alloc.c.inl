@@ -76,15 +76,15 @@ again_locked:
 			if unlikely(old__spm_used >= (LOCAL_MAX_CHUNK_COUNT - 1)) {
 				/* About to allocate last free chunk of page */
 				LOCAL_slab_lock_endread();
-				while (!LOCAL_slab_lock_trywrite()) {
+				while unlikely(!LOCAL_slab_lock_trywrite()) {
 					SCHED_YIELD();
 					if (page != atomic_read(&LOCAL_slab_pages.lh_first))
 						goto again;
 				}
-				if (LIST_FIRST(&LOCAL_slab_pages) != page ||
-				    !atomic_cmpxch(&page->sp_meta.spm_used,
-				                   LOCAL_MAX_CHUNK_COUNT - 1,
-				                   LOCAL_MAX_CHUNK_COUNT)) {
+				if unlikely(LIST_FIRST(&LOCAL_slab_pages) != page ||
+				            !atomic_cmpxch(&page->sp_meta.spm_used,
+				                           LOCAL_MAX_CHUNK_COUNT - 1,
+				                           LOCAL_MAX_CHUNK_COUNT)) {
 					LOCAL_slab_lock_downgrade();
 					goto again_locked;
 				}

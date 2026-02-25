@@ -213,11 +213,11 @@ print("#if LOCAL_ELEMOF__sp_used <= ", maxInline);
 print("	for (;;) {");
 print("#define LOCAL_HAVE_slab_malloc_in_page");
 print("		LOCAL_alloc_from(0, LOCAL_maskfor(0));");
-for (local i: [1:maxInline+1]) {
+for (local i: [1:maxInline]) {
 	print("#if LOCAL_ELEMOF__sp_used >= ", i+1);
 	print("		LOCAL_alloc_from(", i, ", LOCAL_maskfor(", i, "));");
 }
-for (local i: [maxInline:0,-1])
+for (local i: [maxInline-1:0,-1])
 	print("#endif /" "* LOCAL_ELEMOF__sp_used >= ", i+1, " *" "/");
 print("	}");
 print("#endif /" "* LOCAL_ELEMOF__sp_used <= ", maxInline, " *" "/");
@@ -258,9 +258,6 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 		LOCAL_alloc_from(14, LOCAL_maskfor(14));
 #if LOCAL_ELEMOF__sp_used >= 16
 		LOCAL_alloc_from(15, LOCAL_maskfor(15));
-#if LOCAL_ELEMOF__sp_used >= 17
-		LOCAL_alloc_from(16, LOCAL_maskfor(16));
-#endif /* LOCAL_ELEMOF__sp_used >= 17 */
 #endif /* LOCAL_ELEMOF__sp_used >= 16 */
 #endif /* LOCAL_ELEMOF__sp_used >= 15 */
 #endif /* LOCAL_ELEMOF__sp_used >= 14 */
