@@ -1532,7 +1532,7 @@ PRIVATE void dl_freelist_release_and_reap(PARAM_mstate_m) {
 	struct freelist pending;
 again:
 	pending.slh_first = SLIST_ATOMIC_CLEAR(&mstate_flist(m));
-	if unlikely(pending.slh_first)
+	if (pending.slh_first)
 		dl_freelist_do_reap(ARG_mstate_m_ pending.slh_first);
 	Dee_atomic_lock_release(&mstate_mutex(m));
 	if unlikely(atomic_read(&mstate_flist(m).slh_first) != NULL) {
@@ -1541,7 +1541,16 @@ again:
 	}
 }
 
-#define TRY_PREACTION(M)  Dee_atomic_lock_tryacquire(&mstate_mutex(M))
+#if 1 /* Do a (read-only) check if lock is available so our
+       * CPU doesn't need to write-lock a highly shared part
+       * of the memory bus all the time. */
+#define TRY_PREACTION(M)                            \
+	(Dee_atomic_lock_available(&mstate_mutex(M)) && \
+	 Dee_atomic_lock_tryacquire(&mstate_mutex(M)))
+#else
+#define TRY_PREACTION(M) Dee_atomic_lock_tryacquire(&mstate_mutex(M))
+#endif
+
 #define PREACTION(M)      Dee_atomic_lock_acquire(&mstate_mutex(M))
 #define POSTACTION(M)     dl_freelist_release_and_reap(ARG_mstate_X(M))
 
