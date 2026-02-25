@@ -1208,7 +1208,7 @@ err:
 }
 
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-INTDEF DeeObject current_module_marker;
+INTDEF DeeTypeObject DeeModuleCurrent_Type;
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1216,7 +1216,7 @@ code_fini(DeeCodeObject *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
 	ASSERTF((self->co_module == NULL) ||
-	        (self->co_module == (DeeModuleObject *)&current_module_marker) ||
+	        (Dee_TYPE(self->co_module) == &DeeModuleCurrent_Type) ||
 	        !DeeModule_Check(self->co_module) ||
 	        self != atomic_read(&self->co_module->mo_moddata.mo_rootcode) ||
 	        self->co_module->ob_refcnt == 0,

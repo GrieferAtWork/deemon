@@ -65,9 +65,89 @@ INTDEF struct Dee_module_symbol empty_module_buckets[];
  * @param: flags: Set of `ASM_F*' (Assembly flags; see above)
  * #endif // !CONFIG_EXPERIMENTAL_MMAP_DEC */
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-INTERN DeeObject current_module_marker = {
-	OBJECT_HEAD_INIT(&DeeModuleDee_Type)
+typedef struct {
+	OBJECT_HEAD
+} ModuleCurrent;
+
+INTERN DeeTypeObject DeeModuleCurrent_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ NULL,
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FVARIABLE | TP_FFINAL | TP_FDEEPIMMUTABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_init = */ {
+		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
+			/* tp_ctor:        */ NULL,
+			/* tp_copy_ctor:   */ NULL,
+			/* tp_any_ctor:    */ NULL,
+			/* tp_any_ctor_kw: */ NULL,
+			/* tp_serialize:   */ NULL,
+			/* tp_free:        */ NULL
+		),
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+		/* .tp_destroy     = */ NULL,
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ NULL,
+	},
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_iterator      = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL,
+	/* .tp_method_hints  = */ NULL,
+	/* .tp_call          = */ NULL,
+	/* .tp_callable      = */ NULL,
 };
+
+/* Create a dummy object of "size" bytes that can be used as the "current-module-marker"
+ * We used to use a statically allocated object for this, and that (seemed to) work fine,
+ * until someone built deemon with a long-untested build environment.
+ *
+ * If this was a statically allocated object, it would have a fixed, maximum object size,
+ * so when `DeeSerial_GCObject_Calloc()' allocates the dec version of the module, it might
+ * end up mapping some other (unrelated) statically allocated objects from the deemon core
+ * to "current_module_marker" also. And well... that ended up happening (in that case: it
+ * ended up overlapping with `DeeCode_Type', which then broke the module root initializer
+ * function of any user-code module with a sufficiently great number of global variables,
+ * since the size of the root module, und thus "current_module_marker" depends on the #
+ * of global variables)
+ *
+ * The solution for all of this is to just dynamically allocated "current_module_marker",
+ * so it always reserves (at least) as much memory as it needs to reserve.
+ *
+ * However: things are still a little more complicated than that, since modules need to
+ *          be GC objects, so the "current_module_marker", also needs to be a GC object. */
+PRIVATE WUNUSED DREF ModuleCurrent *DCALL
+create_current_module_marker(size_t size) {
+	DREF ModuleCurrent *result;
+	result = (DREF ModuleCurrent *)DeeGCObject_Malloc(size);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeModuleCurrent_Type);
+	return DeeGC_TRACK(ModuleCurrent, result);
+err:
+	return NULL;
+}
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(struct Dee_serial *__restrict writer,
@@ -75,11 +155,19 @@ module_compile(struct Dee_serial *__restrict writer,
 	DeeModuleObject *out_module;
 	Dee_seraddr_t addrof_module;
 	size_t sizeof_module;
+	DREF ModuleCurrent *current_module_marker;
 	ASSERT(DeeCompiler_LockWriting());
 	ASSERT_OBJECT_TYPE_EXACT(root_code, &DeeCode_Type);
 	ASSERT_OBJECT_TYPE(&current_rootscope->rs_scope.bs_scope, &DeeRootScope_Type);
 	ASSERT(current_rootscope->rs_code == root_code);
 	ASSERT(root_code->ob_refcnt == 2);
+
+	/* Allocate the placeholder buffer for the module object */
+	sizeof_module = offsetof(DeeModuleObject, mo_globalv) +
+	                current_rootscope->rs_globalc * sizeof(DREF DeeObject *);
+	current_module_marker = create_current_module_marker(sizeof_module);
+	if unlikely(!current_module_marker)
+		goto err;
 
 	/* Resolve the "co_module" fields of code objects to "current_module_marker"
 	 * This is a hacky work-around so we have something that can be linked against-,
@@ -93,18 +181,20 @@ module_compile(struct Dee_serial *__restrict writer,
 			if (Dee_DecrefIfOne(iter)) {
 				/* Unused code object? */
 			} else {
-				iter->co_module = (DeeModuleObject *)&current_module_marker;
-				Dee_Incref(&current_module_marker);
+				iter->co_module = (DeeModuleObject *)current_module_marker;
+				Dee_Incref(current_module_marker);
 				Dee_Decref_unlikely(iter);
 			}
 			iter = next;
 		}
 	}
 
-	/* Allocate the primary buffer for the module object */
-	sizeof_module = offsetof(DeeModuleObject, mo_globalv) +
-	                current_rootscope->rs_globalc * sizeof(DREF DeeObject *);
-	addrof_module = DeeSerial_GCObject_Calloc(writer, sizeof_module, &current_module_marker);
+	/* Allocate the primary buffer for the module object.
+	 * Really hacky: we need to allocate it as a deemon-module object */
+	current_module_marker->ob_type = &DeeModuleDee_Type;
+	addrof_module = DeeSerial_GCObject_Calloc(writer, sizeof_module, current_module_marker);
+	current_module_marker->ob_type = &DeeModuleCurrent_Type;
+	Dee_Decref_unlikely(current_module_marker);
 	if (!Dee_SERADDR_ISOK(addrof_module))
 		goto err;
 #define ADDROF(field) (addrof_module + offsetof(DeeModuleObject, field))
