@@ -1037,18 +1037,9 @@ template<class __ITS_T> typename ::__intern::____INTELLISENSE_enableif< ::__inte
 #include "__atomic-complete.h"
 #elif defined(_MSC_VER)
 /* _InterlockedXXX() */
-#ifdef __cplusplus
-#pragma warning(push) /* Keep `4197' disabled in C because of its use in macros. */
-#endif /* __cplusplus */
-#pragma warning(disable: 4197) /* Casting away `volatile' */
-#pragma warning(disable: 4047) /* Differing number of dereferences. */
-#pragma warning(disable: 4310) /* Cast truncates constant value */
 #include "__atomic-msvc.h"
 /**/
 #include "__atomic-complete.h"
-#ifdef __cplusplus
-#pragma warning(pop)
-#endif /* __cplusplus */
 #else /* ... */
 #ifdef __COMPILER_HAVE_GCC_ASM
 #include "host.h"
