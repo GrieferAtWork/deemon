@@ -5545,7 +5545,6 @@ again_waitfor:
 			goto again_waitfor;
 		}
 	} while ((iter = iter->t_global.le_next) != NULL);
-	DeeThread_Self();
 	thread_list_lock_release();
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
