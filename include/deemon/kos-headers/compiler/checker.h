@@ -402,6 +402,7 @@
 
 #define __ATTR_NORETURN                      __checker_attribute__(__noreturn__)
 #define __ATTR_NOINLINE                      /* Nothing */
+#define __ATTR_NOICF                         /* Nothing */
 #define __ATTR_FALLTHROUGH                   /* Nothing */
 #define __ATTR_W64                           /* Nothing */
 #define __ATTR_FASTCALL                      /* Nothing */

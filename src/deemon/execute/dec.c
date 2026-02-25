@@ -1242,35 +1242,35 @@ decslab_freeN(struct Dee_slab_page *__restrict self) {
 	}
 }
 
-/* NOTE: We mark these functions with 'ATTR_NOINLINE' to signify that they must
- *       not alias each other (even though they are implemented identically). I
- *       know that C already guaranties that functions with identical impls will
- *       still have distinct addresses, but that is actually something I don't
- *       want to rely on in deemon, since a (potential) compiler switch to make
- *       this requirement go away could result in some very nice optimizations.
- *
- * A better attribute (if it existed) would be something like "ATTR_NOALIAS"
- *
- * FIXME: Well... Apparently MSVC actually **does** do this kind of aliasing!
+#ifdef __NO_ATTR_NOICF
+/* Well... MSVC does ICF, but doesn't have an attribute to prevent it!
  * >> decslab_freeN_first  0x0056ddb0 {deemon.exe!decslab_freeN_middle(Dee_slab_page *)} void (Dee_slab_page *)
  * >> decslab_freeN_middle 0x0056ddb0 {deemon.exe!decslab_freeN_middle(Dee_slab_page *)} void (Dee_slab_page *)
  * >> decslab_freeN_last   0x0056ddb0 {deemon.exe!decslab_freeN_middle(Dee_slab_page *)} void (Dee_slab_page *)
  *
- * ... And it does so even with the "ATTR_NOINLINE" attributes.
- * So the question becomes: how does one prevent it from doing so?
- */
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+ * To prevent that from happening, we have to inject some unoptimizable dummy code... */
+PRIVATE ATTR_NOINLINE void DCALL noicf_dummy(void) {
+	Dee_funptr_t volatile x = (Dee_funptr_t)&noicf_dummy;
+	(void)x;
+}
+#else /* __NO_ATTR_NOICF */
+#define noicf_dummy() (void)0
+#endif /* !__NO_ATTR_NOICF */
+
+PRIVATE ATTR_NOICF NONNULL((1)) void DCALL
 decslab_freeN_first(struct Dee_slab_page *__restrict self) {
 	decslab_freeN(self);
 }
 
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+PRIVATE ATTR_NOICF NONNULL((1)) void DCALL
 decslab_freeN_middle(struct Dee_slab_page *__restrict self) {
 	decslab_freeN(self);
+	noicf_dummy(); /* Dummy to ensure function differs from "decslab_freeN_first()" */
 }
 
-PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+PRIVATE ATTR_NOICF NONNULL((1)) void DCALL
 decslab_freeN_last(struct Dee_slab_page *__restrict self) {
+	noicf_dummy(); /* Dummy to ensure function differs from "decslab_freeN_first()" */
 	decslab_freeN(self);
 }
 
@@ -1285,6 +1285,10 @@ decwriter_build_slab_pages(DeeDecWriter *__restrict self) {
 	ASSERT(self->dw_slabs != 0);
 	ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
 	ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
+#ifdef __NO_ATTR_NOICF
+	ASSERT(&decslab_freeN_first != &decslab_freeN_middle);
+	ASSERT(&decslab_freeN_middle != &decslab_freeN_last);
+#endif /* __NO_ATTR_NOICF */
 	slab_chunk = DeeDecWriter_Addr2Mem(self, self->dw_slabb, struct Dee_heapchunk);
 	slab_chunk->hc_head = Dee_HEAPCHUNK_HEAD(self->dw_slabs - sizeof(struct Dee_heapchunk));
 

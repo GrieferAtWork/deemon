@@ -332,6 +332,14 @@
 #define __ATTR_NOINLINE /* Nothing */
 #endif /* !... */
 
+/* Prevent IdenticalCodeFolding */
+#if __has_attribute(__no_icf__)
+#define __ATTR_NOICF __attribute__((__no_icf__))
+#else /* ... */
+#define __NO_ATTR_NOICF
+#define __ATTR_NOICF /* Nothing */
+#endif /* !... */
+
 #if __has_attribute(__noreturn__)
 #define __ATTR_NORETURN_IS___attribute_____noreturn__
 #define __ATTR_NORETURN __attribute__((__noreturn__))

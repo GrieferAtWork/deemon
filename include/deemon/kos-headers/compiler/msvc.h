@@ -136,6 +136,10 @@
 #define __extension__ /* Nothing */
 #define __ATTR_NOINLINE __declspec(noinline)
 
+/* MS actually has ICF, but doesn't provide an attribute to prevent it from happening :( */
+#define __NO_ATTR_NOICF
+#define __ATTR_NOICF /* Nothing */
+
 #if _MSC_VER >= 1200
 #define __ATTR_NORETURN_IS___declspec_noreturn
 #define __ATTR_NORETURN __declspec(noreturn)

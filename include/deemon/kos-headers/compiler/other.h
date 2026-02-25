@@ -154,6 +154,8 @@
 
 #define __NO_ATTR_NOINLINE
 #define __ATTR_NOINLINE /* Nothing */
+#define __NO_ATTR_NOICF
+#define __ATTR_NOICF /* Nothing */
 #define __NO_ATTR_NORETURN
 #define __ATTR_NORETURN /* Nothing */
 #define __NO_ATTR_W64

@@ -47,29 +47,30 @@
  *
  */
 
-#define ATTR_NOINLINE           __ATTR_NOINLINE
-#define ATTR_NORETURN           __ATTR_NORETURN
-#define ATTR_NORETURN_T         __ATTR_NORETURN_T
-#define ATTR_FASTCALL           __ATTR_FASTCALL
-#define ATTR_STDCALL            __ATTR_STDCALL
-#define ATTR_CDECL              __ATTR_CDECL
-#define ATTR_SYSVABI            __ATTR_SYSVABI
-#define ATTR_MSABI              __ATTR_MSABI
-#define ATTR_PURE               __ATTR_PURE
-#define ATTR_PURE_T             __ATTR_PURE_T
-#define ATTR_CONST              __ATTR_CONST
-#define ATTR_CONST_T            __ATTR_CONST_T
-#define ATTR_LEAF               __ATTR_LEAF
-#define ATTR_LEAF_T             __ATTR_LEAF_T
-#define ATTR_FLATTEN            __ATTR_FLATTEN
-#define ATTR_MALLOC             __ATTR_MALLOC
-#define ATTR_MALLOC_T           __ATTR_MALLOC_T
-#define ATTR_HOT                __ATTR_HOT
-#define ATTR_HOT_T              __ATTR_HOT_T
-#define ATTR_COLD               __ATTR_COLD
-#define ATTR_COLD_T             __ATTR_COLD_T
+#define ATTR_NOINLINE           __ATTR_NOINLINE    /* Never inline this function */
+#define ATTR_NOICF              __ATTR_NOICF       /* Prevent IdenticalCodeFolding */
+#define ATTR_NORETURN           __ATTR_NORETURN    /* Function does not return (normally) */
+#define ATTR_NORETURN_T         __ATTR_NORETURN_T  /* typedef "ATTR_NORETURN" */
+#define ATTR_FASTCALL           __ATTR_FASTCALL    /* i386: fastcall calling convention */
+#define ATTR_STDCALL            __ATTR_STDCALL     /* i386: stdcall calling convention */
+#define ATTR_CDECL              __ATTR_CDECL       /* i386: cdecl calling convention */
+#define ATTR_SYSVABI            __ATTR_SYSVABI     /* x86_64: sysvabi calling convention */
+#define ATTR_MSABI              __ATTR_MSABI       /* x86_64: msabi calling convention */
+#define ATTR_PURE               __ATTR_PURE        /* Function does not modify any state */
+#define ATTR_PURE_T             __ATTR_PURE_T      /* typedef "ATTR_PURE" */
+#define ATTR_CONST              __ATTR_CONST       /* Function only uses parameters (if those are pointers, it doesn't even dereference them) */
+#define ATTR_CONST_T            __ATTR_CONST_T     /* typedef "ATTR_CONST" */
+#define ATTR_LEAF               __ATTR_LEAF        /* Function does not call anything that might call back into the caller's compilation unit */
+#define ATTR_LEAF_T             __ATTR_LEAF_T      /* typedef "ATTR_LEAF" */
+#define ATTR_FLATTEN            __ATTR_FLATTEN     /* Inline as many calls made by this function as possible */
+#define ATTR_MALLOC             __ATTR_MALLOC      /* Function returns non-aligned pointer, or NULL */
+#define ATTR_MALLOC_T           __ATTR_MALLOC_T    /* typedef "ATTR_MALLOC" */
+#define ATTR_HOT                __ATTR_HOT         /* Function is part of a "hot" path (calls are likely / function is frequently called) */
+#define ATTR_HOT_T              __ATTR_HOT_T       /* typedef "ATTR_HOT" */
+#define ATTR_COLD               __ATTR_COLD        /* Function is part of a "cold" path (calls are unlikely / function is rarely called) */
+#define ATTR_COLD_T             __ATTR_COLD_T      /* typedef "ATTR_COLD" */
 #define ATTR_WEAK               __ATTR_WEAK
-#define ATTR_ALLOC_SIZE         __ATTR_ALLOC_SIZE
+#define ATTR_ALLOC_SIZE         __ATTR_ALLOC_SIZE  /* Function returns newly malloc'd memory of "{ppars} * ..." bytes. */
 #define ATTR_ALLOC_SIZE_T       __ATTR_ALLOC_SIZE_T
 #define ATTR_ASSUME_ALIGNED     __ATTR_ASSUME_ALIGNED
 #define ATTR_ASSUME_ALIGNED_T   __ATTR_ASSUME_ALIGNED_T

@@ -267,6 +267,20 @@
 #define __ATTR_NOINLINE /* Nothing */
 #endif /* !... */
 
+/* Prevent IdenticalCodeFolding */
+#if __has_attribute(__no_icf__)
+#define __ATTR_NOICF __attribute__((__no_icf__))
+#elif __has_attribute(__noicf__)
+#define __ATTR_NOICF __attribute__((__noicf__))
+#elif __has_declspec_attribute(no_icf)
+#define __ATTR_NOICF __declspec(no_icf)
+#elif __has_declspec_attribute(noicf)
+#define __ATTR_NOICF __declspec(noicf)
+#else /* ... */
+#define __NO_ATTR_NOICF
+#define __ATTR_NOICF /* Nothing */
+#endif /* !... */
+
 #if (__has_attribute(__noreturn__) || defined(__TINYC__) || \
      (defined(__SUNPRO_C) && __SUNPRO_C >= 0x5110))
 #define __ATTR_NORETURN_IS___attribute_____noreturn__

@@ -290,6 +290,8 @@
 #define __ATTR_W64
 #define ATTR_NOINLINE
 #define __ATTR_NOINLINE
+#define ATTR_NOICF
+#define __ATTR_NOICF
 #define ATTR_NORETURN
 #define ATTR_NORETURN_T
 #define __ATTR_NORETURN
