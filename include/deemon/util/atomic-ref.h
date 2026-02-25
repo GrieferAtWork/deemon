@@ -130,9 +130,9 @@ DECL_BEGIN
                                                  /*inherit(always) DREF[0..1] out*/ p_oldval) \
 	(void)(*(p_oldval) = T(__hybrid_atomic_xch(&(self)->axr_obj, newval, __ATOMIC_ACQ_REL)))
 #define _Dee_atomic_ref_unsynched_cmpxch_inherited(self, oldval, newval) \
-	__hybrid_atomic_cmpxch(&(self)->ar_obj, oldval, newval, __ATOMIC_ACQ_REL, __ATOMIC_RELEASE)
+	__hybrid_atomic_cmpxch(&(self)->ar_obj, oldval, newval, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)
 #define _Dee_atomic_xref_unsynched_cmpxch_inherited(self, oldval, newval) \
-	__hybrid_atomic_cmpxch(&(self)->axr_obj, oldval, newval, __ATOMIC_ACQ_REL, __ATOMIC_RELEASE)
+	__hybrid_atomic_cmpxch(&(self)->axr_obj, oldval, newval, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)
 #endif /* !CONFIG_NO_THREADS */
 
 /* >> void Dee_atomic_ref_get(Dee_ATOMIC_REF(T) *self, DREF[1..1] T **p_result); */
