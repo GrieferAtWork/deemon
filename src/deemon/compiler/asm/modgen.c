@@ -28,14 +28,14 @@
 #include <deemon/compiler/assembler.h> /* ASM_FNODEC */
 #include <deemon/compiler/compiler.h>  /* DeeCompiler_LockWriting */
 #include <deemon/compiler/symbol.h>    /* DeeRootScope_Type, current_rootscope */
-#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free */
+#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK */
 #include <deemon/module.h>             /* DeeModuleDee_Type, DeeModuleObject, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_FHASBUILDID, Dee_MODULE_FHASCTIME, Dee_module_object, Dee_module_symbol */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_Movrefv, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial */
 #include <deemon/string.h>             /* DeeStringObject */
 #include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/system.h>             /* DeeSystem_GetWalltime */
-#include <deemon/type.h>               /* DeeObject_Init */
+#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
 #include <hybrid/int128.h> /* __hybrid_uint128_set64 */

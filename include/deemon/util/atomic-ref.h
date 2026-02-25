@@ -19,22 +19,24 @@
  */
 /*!export **/
 /*!export Dee_atomic_ref_**/
+/*!export Dee_atomic_xref_**/
 /*!export Dee_ATOMIC_REF_**/
-/*!export -_Dee_private_atomic_ref_**/
-/*!export -_Dee_PRIVATE_ATOMIC_REF_**/
+/*!export Dee_ATOMIC_XREF_**/
+/*!export -_Dee_private_**/
+/*!export -_Dee_PRIVATE_**/
 #ifndef GUARD_DEEMON_UTIL_ATOMIC_REF_H
 #define GUARD_DEEMON_UTIL_ATOMIC_REF_H 1 /*!export-*/
 
 #include "../api.h"
 
-#include "../object.h" /* Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref */
-#include "../types.h"  /* DREF, DeeObject, Dee_AsObject, Dee_refcnt_t */
+#include "../object.h" /* Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
+#include "../thread.h" /* DeeRCU_Lock, DeeRCU_Synchronize, DeeRCU_Unlock */
+#include "../types.h"  /* DREF, DeeObject, Dee_AsObject */
 
 #include <stddef.h> /* NULL */
 
 #ifndef CONFIG_NO_THREADS
-#include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELAXED, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
-#include <hybrid/sched/__yield.h> /* __hybrid_yield */
+#include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED, __hybrid_atomic_* */
 #endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN

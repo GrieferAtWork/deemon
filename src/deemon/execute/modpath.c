@@ -48,7 +48,7 @@
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */
 #include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_TYPE_MEMBER_ISCONST, type_* */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
-#include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_REF, Dee_atomic_ref_* */
+#include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/hash.h>       /* Dee_Hash* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */

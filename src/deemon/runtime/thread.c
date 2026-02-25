@@ -5528,7 +5528,7 @@ again_waitfor:
 		if (thread_version == old_version) {
 			ASSERTF(iter != DeeThread_Self(),
 			        "Illegal: call to 'DeeRCU_Synchronize()' while calling "
-			        "thread has itself made a call to 'DeeRCU_Lock()'");
+			        /**/ "thread has itself made a call to 'DeeRCU_Lock()'");
 
 			/* Yield so the other thread will hopefully get a quantum */
 			SCHED_YIELD();
