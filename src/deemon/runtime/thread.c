@@ -992,6 +992,7 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 		/* .t_interrupt  = */ { NULL, NULL, NULL },
 #ifndef CONFIG_NO_THREADS
 		/* .t_int_vers   = */ 0,
+		/* .t_rcu_vers   = */ 0,
 		/* .t_global     = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .t_threadname = */ (DeeStringObject *)&main_thread_name,
 		/* .t_inout      = */ { NULL },
@@ -1018,6 +1019,173 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 INTDEF NONNULL((1)) void DCALL thread_heap_destroy(void *heap);
 #endif /* !CONFIG_NO_THREADS */
 #endif /* CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
+
+
+/* Check if `pthread_key_t' is supported */
+#undef CONFIG_HAVE_pthread_key_t
+#if (defined(CONFIG_HAVE_pthread_key_create) &&  \
+     defined(CONFIG_HAVE_pthread_getspecific) && \
+     defined(CONFIG_HAVE_pthread_setspecific))
+#define CONFIG_HAVE_pthread_key_t
+#endif /* ... */
+
+/* Check if `tss_t' is supported */
+#undef CONFIG_HAVE_tss_t
+#if (defined(CONFIG_HAVE_tss_create) && \
+     defined(CONFIG_HAVE_tss_get) &&    \
+     defined(CONFIG_HAVE_tss_set))
+#define CONFIG_HAVE_tss_t
+#endif /* ... */
+
+
+/* Figure out how to implement the `thread_self_tls' */
+#undef thread_self_tls_USE_DeeThread_Main
+#undef thread_self_tls_USE_ATTR_THREAD
+#undef thread_self_tls_USE_TlsAlloc
+#undef thread_self_tls_USE_pthread_key_t
+#undef thread_self_tls_USE_tss_t
+#undef thread_self_tls_USE_errno_address
+#undef thread_self_tls_USE_sp_address
+#ifdef DeeThread_USE_SINGLE_THREADED
+#define thread_self_tls_USE_DeeThread_Main
+#elif !defined(__NO_ATTR_THREAD)
+#define thread_self_tls_USE_ATTR_THREAD
+#elif defined(DeeThread_USE_CreateThread)
+#define thread_self_tls_USE_TlsAlloc
+#elif defined(DeeThread_USE_pthread_create) && defined(CONFIG_HAVE_pthread_key_t)
+#define thread_self_tls_USE_pthread_key_t
+#elif defined(DeeThread_USE_thrd_create) && defined(CONFIG_HAVE_tss_t)
+#define thread_self_tls_USE_tss_t
+#elif defined(CONFIG_HOST_WINDOWS)
+#define thread_self_tls_USE_TlsAlloc
+#elif defined(CONFIG_HAVE_pthread_key_t)
+#define thread_self_tls_USE_pthread_key_t
+#elif defined(CONFIG_HAVE_tss_t)
+#define thread_self_tls_USE_tss_t
+#elif defined(CONFIG_HAVE_errno)
+#define thread_self_tls_USE_errno_address
+#else /* ... */
+#ifdef PTHREAD_STACK_MIN
+#define SYSTEM_STACK_SIZE PTHREAD_STACK_MIN
+#else /* PTHREAD_STACK_MIN */
+#define SYSTEM_STACK_SIZE 16384
+#endif /* !PTHREAD_STACK_MIN */
+#define thread_self_tls_USE_sp_address_MASK (~(SYSTEM_STACK_SIZE - 1))
+#define thread_self_tls_USE_sp_address
+#endif /* !... */
+
+
+
+
+#ifdef thread_self_tls_USE_DeeThread_Main
+#define thread_tls_get() (&DeeThread_Main.ot_thread)
+#endif /* thread_self_tls_USE_DeeThread_Main */
+
+#ifdef thread_self_tls_USE_ATTR_THREAD
+PRIVATE ATTR_THREAD DREF DeeThreadObject *thread_self_tls = NULL;
+#define thread_tls_get()  (thread_self_tls)
+#define thread_tls_set(v) (void)(thread_self_tls = (v))
+#endif /* thread_self_tls_USE_ATTR_THREAD */
+
+#ifdef thread_self_tls_USE_TlsAlloc
+PRIVATE DWORD thread_self_tls;
+
+#if defined(__i386__) && !defined(__x86_64__)
+/* Considering how often we need to read this TLS, here's
+ * an inline implementation that does the same.
+ * Microsoft doesn't guaranty that this will work forever, but
+ * I don't see a reason why this should ever break short of them
+ * intentionally breaking it so only their stuff can continue to
+ * work with whatever offsets they choose to go for then.
+ * https://en.wikipedia.org/wiki/Win32_Thread_Information_Block */
+#ifdef _MSC_VER
+#define thread_tls_get() thread_tls_get()
+FORCELOCAL DeeThreadObject *(thread_tls_get)(void) {
+	void *result;
+	__asm {
+		MOV EAX, thread_self_tls
+		MOV EAX, DWORD PTR FS:[0xe10 + EAX * 4]
+		MOV result, EAX
+	}
+	return (DeeThreadObject *)result;
+}
+#define thread_tls_set(value) thread_tls_set(value)
+FORCELOCAL void (thread_tls_set)(void *value) {
+	__asm {
+		MOV ECX, value
+		MOV EAX, thread_self_tls
+		MOV DWORD PTR FS:[0xe10 + EAX * 4], ECX
+	}
+}
+#elif defined(__COMPILER_HAVE_GCC_ASM)
+#define thread_tls_get()  thread_tls_get()
+FORCELOCAL DeeThreadObject *(thread_tls_get)(void) {
+	register void *result;
+	__asm__("movl %%fs:0xe10(,%1,4), %0\n"
+	        : "=r" (result)
+	        : "r" (thread_self_tls));
+	return (DeeThreadObject *)result;
+}
+#define thread_tls_set(value) thread_tls_set(value)
+FORCELOCAL void(thread_tls_set)(void *value) {
+	__asm__("movl %1, %%fs:0xe10(,%0,4)\n"
+	        :
+	        : "r" (thread_self_tls)
+	        , "r" (value));
+}
+#endif /* ... */
+#endif /* __i386__ && !__x86_64__ */
+
+#ifndef thread_tls_get
+#define thread_tls_get()  (DeeThreadObject *)TlsGetValue(thread_self_tls)
+#define thread_tls_set(v) (void)TlsSetValue(thread_self_tls, (LPVOID)(v))
+#endif /* !thread_tls_get */
+#endif /* thread_self_tls_USE_TlsAlloc */
+
+
+#ifdef thread_self_tls_USE_pthread_key_t
+PRIVATE pthread_key_t thread_self_tls;
+#define thread_tls_get()  (DeeThreadObject *)pthread_getspecific(thread_self_tls)
+#define thread_tls_set(v) (void)pthread_setspecific(thread_self_tls, (void *)(v))
+#endif /* thread_self_tls_USE_pthread_key_t */
+
+#ifdef thread_self_tls_USE_tss_t
+PRIVATE tss_t thread_self_tls;
+#define thread_tls_get()  (DeeThreadObject *)tss_get(thread_self_tls)
+#define thread_tls_set(v) (void)tss_set(thread_self_tls, (void *)(v))
+#endif /* thread_self_tls_USE_tss_t */
+
+#if (defined(thread_self_tls_USE_errno_address) || \
+     defined(thread_self_tls_USE_sp_address))
+/* TODO */
+#error "TODO: Unimplemented TLS method"
+#endif /* ... */
+
+
+
+/* Return the thread controller object for the calling thread.
+ * If the calling thread wasn't created by `DeeThread_Start()',
+ * the caller must call `DeeThread_Accede()' at least once in
+ * order to affiliate their thread with deemon. */
+#undef DeeThread_Self
+PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL
+DeeThreadObject *(DCALL DeeThread_Self)(void) {
+#ifdef thread_self_tls_USE_DeeThread_Main
+	return &DeeThread_Main.ot_thread;
+#define DeeThread_Self() (&DeeThread_Main.ot_thread)
+#else /* thread_self_tls_USE_DeeThread_Main */
+	DeeThreadObject *result;
+	DBG_ALIGNMENT_DISABLE();
+	result = thread_tls_get();
+	DBG_ALIGNMENT_ENABLE();
+	ASSERTF(result, "Your thread is not affiliated with deemon. "
+	                "You have to call `DeeThread_Accede()' first");
+	return result;
+#if defined(NDEBUG) || 1
+#define DeeThread_Self() thread_tls_get() /* Allow for better inlining */
+#endif /* NDEBUG */
+#endif /* !thread_self_tls_USE_DeeThread_Main */
+}
 
 
 /* True if `DeeThread_Start()' has been used, and `DeeThread_SuspendAll()' hasn't been called.
@@ -1445,168 +1613,6 @@ again_find_running_thread:
 	/* Continue joining all the other threads. */
 	goto again;
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-}
-
-
-
-/* Check if `pthread_key_t' is supported */
-#undef CONFIG_HAVE_pthread_key_t
-#if (defined(CONFIG_HAVE_pthread_key_create) &&  \
-     defined(CONFIG_HAVE_pthread_getspecific) && \
-     defined(CONFIG_HAVE_pthread_setspecific))
-#define CONFIG_HAVE_pthread_key_t
-#endif /* ... */
-
-/* Check if `tss_t' is supported */
-#undef CONFIG_HAVE_tss_t
-#if (defined(CONFIG_HAVE_tss_create) && \
-     defined(CONFIG_HAVE_tss_get) &&    \
-     defined(CONFIG_HAVE_tss_set))
-#define CONFIG_HAVE_tss_t
-#endif /* ... */
-
-
-/* Figure out how to implement the `thread_self_tls' */
-#undef thread_self_tls_USE_DeeThread_Main
-#undef thread_self_tls_USE_ATTR_THREAD
-#undef thread_self_tls_USE_TlsAlloc
-#undef thread_self_tls_USE_pthread_key_t
-#undef thread_self_tls_USE_tss_t
-#undef thread_self_tls_USE_errno_address
-#undef thread_self_tls_USE_sp_address
-#ifdef DeeThread_USE_SINGLE_THREADED
-#define thread_self_tls_USE_DeeThread_Main
-#elif !defined(__NO_ATTR_THREAD)
-#define thread_self_tls_USE_ATTR_THREAD
-#elif defined(DeeThread_USE_CreateThread)
-#define thread_self_tls_USE_TlsAlloc
-#elif defined(DeeThread_USE_pthread_create) && defined(CONFIG_HAVE_pthread_key_t)
-#define thread_self_tls_USE_pthread_key_t
-#elif defined(DeeThread_USE_thrd_create) && defined(CONFIG_HAVE_tss_t)
-#define thread_self_tls_USE_tss_t
-#elif defined(CONFIG_HOST_WINDOWS)
-#define thread_self_tls_USE_TlsAlloc
-#elif defined(CONFIG_HAVE_pthread_key_t)
-#define thread_self_tls_USE_pthread_key_t
-#elif defined(CONFIG_HAVE_tss_t)
-#define thread_self_tls_USE_tss_t
-#elif defined(CONFIG_HAVE_errno)
-#define thread_self_tls_USE_errno_address
-#else /* ... */
-#ifdef PTHREAD_STACK_MIN
-#define SYSTEM_STACK_SIZE PTHREAD_STACK_MIN
-#else /* PTHREAD_STACK_MIN */
-#define SYSTEM_STACK_SIZE 16384
-#endif /* !PTHREAD_STACK_MIN */
-#define thread_self_tls_USE_sp_address_MASK (~(SYSTEM_STACK_SIZE - 1))
-#define thread_self_tls_USE_sp_address
-#endif /* !... */
-
-
-
-
-#ifdef thread_self_tls_USE_DeeThread_Main
-#define thread_tls_get() (&DeeThread_Main.ot_thread)
-#endif /* thread_self_tls_USE_DeeThread_Main */
-
-#ifdef thread_self_tls_USE_ATTR_THREAD
-PRIVATE ATTR_THREAD DREF DeeThreadObject *thread_self_tls = NULL;
-#define thread_tls_get()  (thread_self_tls)
-#define thread_tls_set(v) (void)(thread_self_tls = (v))
-#endif /* thread_self_tls_USE_ATTR_THREAD */
-
-#ifdef thread_self_tls_USE_TlsAlloc
-PRIVATE DWORD thread_self_tls;
-
-#if defined(__i386__) && !defined(__x86_64__)
-/* Considering how often we need to read this TLS, here's
- * an inline implementation that does the same.
- * Microsoft doesn't guaranty that this will work forever, but
- * I don't see a reason why this should ever break short of them
- * intentionally breaking it so only their stuff can continue to
- * work with whatever offsets they choose to go for then.
- * https://en.wikipedia.org/wiki/Win32_Thread_Information_Block */
-#ifdef _MSC_VER
-#define thread_tls_get() thread_tls_get()
-FORCELOCAL DeeThreadObject *(thread_tls_get)(void) {
-	void *result;
-	__asm {
-		MOV EAX, thread_self_tls
-		MOV EAX, DWORD PTR FS:[0xe10 + EAX * 4]
-		MOV result, EAX
-	}
-	return (DeeThreadObject *)result;
-}
-#define thread_tls_set(value) thread_tls_set(value)
-FORCELOCAL void (thread_tls_set)(void *value) {
-	__asm {
-		MOV ECX, value
-		MOV EAX, thread_self_tls
-		MOV DWORD PTR FS:[0xe10 + EAX * 4], ECX
-	}
-}
-#elif defined(__COMPILER_HAVE_GCC_ASM)
-#define thread_tls_get()  thread_tls_get()
-FORCELOCAL DeeThreadObject *(thread_tls_get)(void) {
-	register void *result;
-	__asm__("movl %%fs:0xe10(,%1,4), %0\n"
-	        : "=r" (result)
-	        : "r" (thread_self_tls));
-	return (DeeThreadObject *)result;
-}
-#define thread_tls_set(value) thread_tls_set(value)
-FORCELOCAL void(thread_tls_set)(void *value) {
-	__asm__("movl %1, %%fs:0xe10(,%0,4)\n"
-	        :
-	        : "r" (thread_self_tls)
-	        , "r" (value));
-}
-#endif /* ... */
-#endif /* __i386__ && !__x86_64__ */
-
-#ifndef thread_tls_get
-#define thread_tls_get()  (DeeThreadObject *)TlsGetValue(thread_self_tls)
-#define thread_tls_set(v) (void)TlsSetValue(thread_self_tls, (LPVOID)(v))
-#endif /* !thread_tls_get */
-#endif /* thread_self_tls_USE_TlsAlloc */
-
-
-#ifdef thread_self_tls_USE_pthread_key_t
-PRIVATE pthread_key_t thread_self_tls;
-#define thread_tls_get()  (DeeThreadObject *)pthread_getspecific(thread_self_tls)
-#define thread_tls_set(v) (void)pthread_setspecific(thread_self_tls, (void *)(v))
-#endif /* thread_self_tls_USE_pthread_key_t */
-
-#ifdef thread_self_tls_USE_tss_t
-PRIVATE tss_t thread_self_tls;
-#define thread_tls_get()  (DeeThreadObject *)tss_get(thread_self_tls)
-#define thread_tls_set(v) (void)tss_set(thread_self_tls, (void *)(v))
-#endif /* thread_self_tls_USE_tss_t */
-
-#if (defined(thread_self_tls_USE_errno_address) || \
-     defined(thread_self_tls_USE_sp_address))
-/* TODO */
-#error "TODO: Unimplemented TLS method"
-#endif /* ... */
-
-
-/* Return the thread controller object for the calling thread.
- * If the calling thread wasn't created by `DeeThread_Start()',
- * the caller must call `DeeThread_Accede()' at least once in
- * order to affiliate their thread with deemon. */
-PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL
-DeeThreadObject *DCALL DeeThread_Self(void) {
-#ifdef thread_self_tls_USE_DeeThread_Main
-	return &DeeThread_Main.ot_thread;
-#else /* thread_self_tls_USE_DeeThread_Main */
-	DeeThreadObject *result;
-	DBG_ALIGNMENT_DISABLE();
-	result = thread_tls_get();
-	DBG_ALIGNMENT_ENABLE();
-	ASSERTF(result, "Your thread is not affiliated with deemon. "
-	                "You have to call `DeeThread_Accede()' first");
-	return result;
-#endif /* !thread_self_tls_USE_DeeThread_Main */
 }
 
 
@@ -2337,7 +2343,7 @@ PUBLIC void (DCALL DeeThread_CheckInterruptNoInt)(void) {
 PRIVATE NONNULL((1)) void DCALL
 forward_appexit_to_main_thread(/*inherit(always)*/ struct Dee_thread_interrupt *__restrict interrupt) {
 	uint32_t state;
-	uintptr_t version;
+	Dee_thread_intvers_t version;
 	for (;;) {
 		state = atomic_fetchor(&DeeThread_Main.ot_thread.t_state,
 		                       Dee_THREAD_STATE_INTERRUPTING);
@@ -2997,7 +3003,7 @@ DeeThread_Interrupt(/*Thread*/ DeeObject *self,
                     DeeObject *interrupt_args) {
 	uint32_t state;
 #ifndef DeeThread_USE_SINGLE_THREADED
-	uintptr_t version;
+	Dee_thread_intvers_t version;
 	DeeThreadObject *caller = DeeThread_Self();
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 	struct Dee_thread_interrupt *interrupt = NULL;
@@ -3841,6 +3847,7 @@ thread_init(DeeThreadObject *__restrict self,
 		me->ot_thread.t_interrupt.ti_args      = NULL;
 #ifndef CONFIG_NO_THREADS
 		me->ot_thread.t_int_vers       = 0;
+		me->ot_thread.t_rcu_vers       = 0;
 		me->ot_thread.t_global.le_prev = NULL;
 		DBG_memset(&me->ot_thread.t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
 		me->ot_thread.t_threadname = NULL;
@@ -3912,6 +3919,7 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_hash_curr         = NULL;
 	self->t_state             = Dee_THREAD_STATE_INITIAL;
 	self->t_int_vers          = 0;
+	self->t_rcu_vers          = 0;
 	self->t_interrupt.ti_next = NULL;
 	self->t_interrupt.ti_intr = NULL;
 	self->t_interrupt.ti_args = NULL;
@@ -5455,6 +5463,93 @@ DeeThread_InvokeUserInterruptHooks(DeeThreadObject *__restrict self) {
 	}
 	thread_interrupt_hooks_lock_endread();
 }
+
+
+
+/************************************************************************/
+/* RCU SUPPORT                                                          */
+/************************************************************************/
+
+
+/* Enter/leave an RCU section (where references
+ * read are always either the old, or new state) */
+PUBLIC void (DCALL DeeRCU_Lock)(void) {
+#ifndef DeeThread_USE_SINGLE_THREADED
+	DeeThreadObject *me = DeeThread_Self();
+	me->t_rcu_vers = atomic_read(&_DeeRCU_Version);
+	COMPILER_BARRIER();
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+}
+
+PUBLIC void (DCALL DeeRCU_Unlock)(void) {
+#ifndef DeeThread_USE_SINGLE_THREADED
+	DeeThreadObject *me = DeeThread_Self();
+	COMPILER_BARRIER();
+	me->t_rcu_vers = 0;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+}
+
+#ifndef CONFIG_NO_THREADS
+/* [lock(READ(ATOMIC), WRITE(ATOMIC && INTERNAL(thread_list_lock)))]
+ * Global RCU "version" number (only here for reading;
+ * only `DeeRCU_Synchronize()' is allowed to write this!) */
+PUBLIC Dee_thread_rcuvers_t _DeeRCU_Version = 1;
+#endif /* !CONFIG_NO_THREADS */
+
+/* Synchronize RCU, blocking until all threads that
+ * locked an older RCU version will have left their
+ * RCU section (by calling `DeeRCU_Unlock()')
+ *
+ * This function must be called before the old state
+ * of some variable protected by RCU may be destroyed */
+PUBLIC void (DCALL DeeRCU_Synchronize)(void) {
+#ifndef DeeThread_USE_SINGLE_THREADED
+	DeeThreadObject *iter;
+	Dee_thread_rcuvers_t old_version, new_version;
+	thread_list_lock_acquire_noint();
+
+	/* Increment the RCU version counter (but make sure it never becomes "0") */
+	do {
+		old_version = atomic_read(&_DeeRCU_Version);
+		new_version = old_version + 1;
+		if unlikely(new_version == 0)
+			new_version = 1;
+	} while (!atomic_cmpxch_weak(&_DeeRCU_Version, old_version, new_version));
+
+	/* Check if there is any thread still using "old_version" */
+again_waitfor:
+	iter = &DeeThread_Main.ot_thread;
+	do {
+		Dee_thread_rcuvers_t thread_version;
+		thread_version = atomic_read(&iter->t_rcu_vers);
+		ASSERT(thread_version == 0 ||           /* No RCU lock */
+		       thread_version == old_version || /* RCU lock on old version (this is what we want to wait for) */
+		       thread_version == new_version);  /* RCU lock on new version */
+		if (thread_version == old_version) {
+			ASSERTF(iter != DeeThread_Self(),
+			        "Illegal: call to 'DeeRCU_Synchronize()' while calling "
+			        "thread has itself made a call to 'DeeRCU_Lock()'");
+
+			/* Yield so the other thread will hopefully get a quantum */
+			SCHED_YIELD();
+
+			/* Try again. Note that we *CAN'T* release "thread_list_lock_release()"
+			 * and then re-acquire it before repeating the search. If we did that,
+			 * threads might fail the "ASSERT(thread_version == ...)" check above,
+			 * since then another thread might make another "DeeRCU_Synchronize()"
+			 * call in the mean-time.
+			 *
+			 * However, since RCU locks are kind-of on par with "atomic" locks, this
+			 * is actually OK (because we have an implicit guaranty that all threads
+			 * still holding RCU locks will eventually release those locks). */
+			goto again_waitfor;
+		}
+	} while ((iter = iter->t_global.le_next) != NULL);
+	DeeThread_Self();
+	thread_list_lock_release();
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+}
+
 
 DECL_END
 

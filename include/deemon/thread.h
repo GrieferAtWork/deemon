@@ -297,10 +297,15 @@ typedef struct Dee_thread_object {
 	                                              * Chain of pending interrupts and synchronous callbacks
 	                                              * to-be executed in the context of this thread. */
 #ifndef CONFIG_NO_THREADS
-	uintptr_t                      t_int_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
+#define Dee_thread_rcuvers_t uintptr_t
+#define Dee_thread_intvers_t uintptr_t
+	Dee_thread_intvers_t           t_int_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
 	                                              * Incremented each time the thread calls `DeeThread_CheckInterrupt()' while
 	                                              * its `Dee_THREAD_STATE_INTERRUPTED' flag is set. Used in order to sync the
 	                                              * thread receiving interrupt requests by `DeeThread_Interrupt()'. */
+	Dee_thread_rcuvers_t           t_rcu_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
+	                                              * RCU version that this thread is currently waiting for
+	                                              * (or `0' when not holding an RCU lock) */
 	struct { /* Structure that is API-compatible with `LIST_ENTRY()' */
 		struct Dee_thread_object  *le_next;
 		struct Dee_thread_object **le_prev;
@@ -566,7 +571,7 @@ DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void);
  * If the calling thread wasn't created by `DeeThread_Start()',
  * the caller must call `DeeThread_Accede()' at least once in
  * order to affiliate their thread with deemon. */
-DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(void);
+DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *(DCALL DeeThread_Self)(void);
 
 /* Hand over control of the calling thread to deemon until a call is
  * made to `DeeThread_Secede'. Note however that (since the caller's
@@ -718,6 +723,69 @@ DDATDEF uint16_t DeeExec_StackLimit; /* TODO: Change this to uint32_t (we want t
 #endif /* !DeeThread_Sleep */
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
+
+
+/*
+ * RCU usage:
+ *
+ * >> DREF DeeObject *getref() {
+ * >>     DREF DeeObject *result;
+ * >>     DeeRCU_Lock();
+ * >>     result = atomic_read(&global_ref);
+ * >>     Dee_Incref(result);
+ * >>     DeeRCU_Unlock();
+ * >>     return result;
+ * >> }
+ * >>
+ * >> void setref(DREF DeeObject *ob) {
+ * >>     DREF DeeObject *old;
+ * >>     old = atomic_xch(&global_ref, ob);
+ * >>     DeeRCU_Synchronize();
+ * >>     Dee_Decref(old);
+ * >> }
+ *
+ *
+ * NOTES:
+ * - It's basically the same as the idea of an "in-use" counter to
+ *   prevent premature destruction of references, only that instead
+ *   of having a global (and thus prone to cache conflicts) counter
+ *   of in-use threads, every reader thread has only a single thread-
+ *   local "rcu version" field.
+ * - As such, if you already understood the idea of in-use counters:
+ *   - "atomic_inc(&in_use);"                   -- Replace with "DeeRCU_Lock()"
+ *   - "atomic_dec(&in_use);"                   -- Replace with "DeeRCU_Unlock()"
+ *   - "while (atomic_read(&in_use)) yield();"  -- Replace with "DeeRCU_Synchronize()"
+ */
+
+/* Enter/leave an RCU section (where references
+ * read are always either the old, or new state) */
+DFUNDEF void (DCALL DeeRCU_Lock)(void);
+DFUNDEF void (DCALL DeeRCU_Unlock)(void);
+
+/* Synchronize RCU, blocking until all threads that
+ * locked an older RCU version will have left their
+ * RCU section (by calling `DeeRCU_Unlock()')
+ *
+ * This function must be called before the old state
+ * of some variable protected by RCU may be destroyed */
+DFUNDEF void (DCALL DeeRCU_Synchronize)(void);
+
+#ifdef CONFIG_NO_THREADS
+#define DeeRCU_Lock()        (void)0
+#define DeeRCU_Unlock()      (void)0
+#define DeeRCU_Synchronize() (void)0
+#elif !defined(__OPTIMIZE_SIZE__)
+/* [lock(READ(ATOMIC), WRITE(ATOMIC && INTERNAL(thread_list_lock)))]
+ * Global RCU "version" number (only here for reading;
+ * only `DeeRCU_Synchronize()' is allowed to write this!) */
+DDATDEF Dee_thread_rcuvers_t _DeeRCU_Version;
+#define DeeRCU_Lock()                                                                               \
+	(void)(DeeThread_Self()->t_rcu_vers = __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), \
+	       COMPILER_BARRIER())
+#define DeeRCU_Unlock()        \
+	(void)(COMPILER_BARRIER(), \
+	       DeeThread_Self()->t_rcu_vers = 0)
+#endif /* ... */
 
 DECL_END
 
