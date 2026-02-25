@@ -25,12 +25,12 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>      /* DeeBool_For, Dee_False, Dee_True */
+#include <deemon/bool.h>      /* DeeBool* */
 #include <deemon/dict.h>      /* DeeDict_New, DeeDict_SetItemStringLen */
 #include <deemon/error.h>     /* DeeError_NOTIMPLEMENTED */
 #include <deemon/int.h>       /* DeeInt_FromString, Dee_INT_STRING*, Dee_TAtoiu */
 #include <deemon/kwds.h>      /* DeeKw_ForceWrap */
-#include <deemon/none.h>      /* DeeNone_Check, Dee_None */
+#include <deemon/none.h>      /* DeeNone_Check, DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>    /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_hash_t */
 #include <deemon/string.h>    /* DeeString_FromBackslashEscaped, STRING_ERROR_FSTRICT */
 #include <deemon/super.h>     /* DeeSuper* */
@@ -370,20 +370,17 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 	}	break;
 
 	case SFA_TOK_D_TRUE:
-		LOCAL_IFEVAL(result = Dee_True);
-		LOCAL_IFEVAL(Dee_Incref(result));
+		LOCAL_IFEVAL(result = DeeBool_NewTrue());
 		sfa_yield(self);
 		break;
 
 	case SFA_TOK_D_FALSE:
-		LOCAL_IFEVAL(result = Dee_False);
-		LOCAL_IFEVAL(Dee_Incref(result));
+		LOCAL_IFEVAL(result = DeeBool_NewFalse());
 		sfa_yield(self);
 		break;
 
 	case SFA_TOK_D_NONE:
-		LOCAL_IFEVAL(result = Dee_None);
-		LOCAL_IFEVAL(Dee_Incref(result));
+		LOCAL_IFEVAL(result = DeeNone_NewRef());
 		sfa_yield(self);
 		break;
 
@@ -1373,7 +1370,7 @@ LOCAL_sfa_evalland_operand(struct string_format_advanced *__restrict self LOCAL_
 		if (!lhs_bool) {
 			if unlikely(sfa_skipor(self))
 				goto err;
-			lhs = Dee_False;
+			lhs = DeeBool_NewFalse();
 		} else {
 			lhs = sfa_evalor(self);
 			if unlikely(!lhs)
@@ -1381,9 +1378,8 @@ LOCAL_sfa_evalland_operand(struct string_format_advanced *__restrict self LOCAL_
 			lhs_bool = DeeObject_BoolInherited(lhs);
 			if unlikely(lhs_bool < 0)
 				goto err;
-			lhs = DeeBool_For(lhs_bool);
+			lhs = DeeBool_New(lhs_bool);
 		}
-		Dee_Incref(lhs);
 #endif /* !DEFINE_sfa_skipexpr */
 	} while (self->sfa_exprtok == SFA_TOK_LAND);
 	return LOCAL_OK__or__lhs;
@@ -1407,7 +1403,7 @@ LOCAL_sfa_evallor_operand(struct string_format_advanced *__restrict self LOCAL__
 		if (lhs_bool) {
 			if unlikely(sfa_skiplor(self))
 				goto err;
-			lhs = Dee_True;
+			lhs = DeeBool_NewTrue();
 		} else {
 			lhs = sfa_evallor(self);
 			if unlikely(!lhs)
@@ -1415,9 +1411,8 @@ LOCAL_sfa_evallor_operand(struct string_format_advanced *__restrict self LOCAL__
 			lhs_bool = DeeObject_BoolInherited(lhs);
 			if unlikely(lhs_bool < 0)
 				goto err;
-			lhs = DeeBool_For(lhs_bool);
+			lhs = DeeBool_New(lhs_bool);
 		}
-		Dee_Incref(lhs);
 #endif /* !DEFINE_sfa_skipexpr */
 	} while (self->sfa_exprtok == SFA_TOK_LOR);
 	return LOCAL_OK__or__lhs;

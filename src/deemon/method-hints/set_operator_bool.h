@@ -78,13 +78,15 @@ err:
 err:
 	return -1;
 }} {
+	int retval;
 	DREF DeeObject *result = LOCAL_CALLATTR(self, 0, NULL);
 	if unlikely(!result)
 		goto err;
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	Dee_DecrefNokill(result);
-	return DeeBool_IsTrue(result);
+	retval = DeeBool_IsTrue(result) ? 1 : 0;
+	DeeBool_Decref(result);
+	return retval;
 err_r:
 	Dee_Decref(result);
 err:

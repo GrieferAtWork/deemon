@@ -651,6 +651,43 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 
+
+
+/* Make it so "true" / "false" are no longer global singletons, but
+ * rather per-thread constants. The advantage of this is that when
+ * lots of threads are running, boolean constants tend to be used
+ * extremely often, to the point where the penalty of conflicts
+ * caused by needing to incref/decref them all them time becomes a
+ * significant bottle-neck (such that a heavily parallel deemon
+ * program will spend 20-30% sitting there and invalidating memory
+ * caches because some other thread wanted to incref/decref one of
+ * the boolean constants, while your thread wanted to do the same)
+ *
+ * This feature actually breaks a promise deemon made a long time
+ * ago: that "===" and "!==" can be used to safely detect the boolean
+ * constants. With this enabled, the true/false objects need to be
+ * detected as:
+ * >> #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+ * >> local isTrue  = ob is bool && !!ob;
+ * >> local isFalse = ob is bool && !ob;
+ * >> #else
+ * >> local isTrue  = ob === true;
+ * >> local isFalse = ob === false;
+ * >> #endif
+ *
+ * Even once this has been fully implemented and tested, this feature
+ * will NOT become mandatory, but will simply be renamed. Reason is
+ * that under "CONFIG_NO_THREADS", there is absolutely no reason to
+ * have boolean constants be per-thread (since there can only be 1 of
+ * them) */
+#if (!defined(CONFIG_EXPERIMENTAL_PER_THREAD_BOOL) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL))
+#if 0 /* TODO: Incomplete */
+#define CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#else
+#define CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_PER_THREAD_BOOL */
 /************************************************************************/
 
 

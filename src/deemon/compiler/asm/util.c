@@ -282,7 +282,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int
 (DCALL asm_gpush_constexpr_bool_inherited)(/*inherit(always)*/ DREF DeeBoolObject *__restrict value) {
-	Dee_DecrefNokill(value);
+	DeeBool_Decref(value);
 	return asm_gpush_bool(DeeBool_IsTrue(value));
 }
 

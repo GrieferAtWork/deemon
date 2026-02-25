@@ -24,13 +24,13 @@
 
 #include <deemon/alloc.h>              /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
-#include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool */
+#include <deemon/bool.h>               /* DeeBool*, Dee_True, return_bool */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/float.h>              /* CONFIG_HAVE_FPU, CONFIG_HAVE_IEEE754, CONFIG_HAVE_IEEE754_LE, DeeFloatObject, DeeFloat_PrintRepr, Dee_Strtod */
 #include <deemon/int.h>                /* DeeIntObject, DeeInt_*, Dee_DIGIT_BITS, Dee_digit_t */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AsDouble, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_DecrefNokill, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_AsDouble, DeeObject_NewRef, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, DBL_RADIX, DBL_ROUNDS, ceil, exp, fabs, floor, frexp, isfinite, isgreater, isgreaterequal, isinf, isless, islessequal, islessgreater, isnan, isnormal, isunordered, ldexp, nan, nextafter, nexttoward, round, trunc */
@@ -800,10 +800,10 @@ float_isunordered(Float *self, size_t argc, DeeObject *const *argv) {
 	{
 		DREF DeeObject *result;
 		result = float_get_isnan(self);
-		if (result != Dee_False)
+		ASSERT_OBJECT_TYPE_EXACT_OPT(result, &DeeBool_Type);
+		if (result == NULL || DeeBool_IsTrue(result))
 			return result;
-		ASSERT(result == Dee_True);
-		Dee_DecrefNokill(Dee_True);
+		DeeBool_Decref(result);
 		return float_get_isnan(COMPILER_CONTAINER_OF(&y, Float, f_value));
 	}
 #endif /* !CONFIG_HAVE_isunordered */

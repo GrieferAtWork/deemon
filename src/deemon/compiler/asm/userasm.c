@@ -43,7 +43,7 @@
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/asm.h>         /* ASM_*, DeeAsm_NextInstrEf, instruction_t */
-#include <deemon/bool.h>        /* DeeBool_Type, Dee_False, Dee_True */
+#include <deemon/bool.h>        /* DeeBool* */
 #include <deemon/dict.h>        /* DeeDictObject, DeeDict_*, _DeeDict_GetVirtVTab */
 #include <deemon/format.h>      /* Dee_sprintf, PRF* */
 #include <deemon/hashset.h>     /* DeeHashSet_Type */
@@ -1735,7 +1735,7 @@ write_regular_local:
 	case ASM_OP_TRUE:
 		if (self->a_type != AST_CONSTEXPR)
 			goto next_option;
-		if (self->a_constexpr != Dee_True)
+		if (!DeeBool_CheckTrue(self->a_constexpr))
 			goto next_option;
 		result = Dee_AsObject(&str_true);
 		Dee_Incref(result);
@@ -1744,7 +1744,7 @@ write_regular_local:
 	case ASM_OP_FALSE:
 		if (self->a_type != AST_CONSTEXPR)
 			goto next_option;
-		if (self->a_constexpr != Dee_False)
+		if (!DeeBool_CheckFalse(self->a_constexpr))
 			goto next_option;
 		result = Dee_AsObject(&str_false);
 		Dee_Incref(result);

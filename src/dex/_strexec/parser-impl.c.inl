@@ -2942,12 +2942,10 @@ DEFINE_SECONDARY(CmpEQOperand) {
 			merge = DeeObject_CmpNe(lhs, rhs);
 			break;
 		case TOK_EQUAL3:
-			merge = DeeBool_For(lhs == rhs);
-			Dee_Incref(merge);
+			merge = DeeBool_New(lhs == rhs);
 			break;
 		case TOK_NOT_EQUAL3:
-			merge = DeeBool_For(lhs != rhs);
-			Dee_Incref(merge);
+			merge = DeeBool_New(lhs != rhs);
 			break;
 		case TOK_QMARK_QMARK:
 			ASSERT(DeeNone_Check(lhs));

@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPu64 */
-#include <deemon/bool.h>               /* Dee_False, Dee_True, return_bool, return_false */
+#include <deemon/bool.h>               /* DeeBool*, Dee_False, Dee_True, return_bool, return_false */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeFunctionObject, DeeFunction_Check, Dee_CODE_FRAME_NOT_EXECUTING, Dee_CODE_FTHISCALL, Dee_code_frame */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrNoActiveException, DeeRT_ErrTUnboundAttrCStr */
@@ -37,6 +37,7 @@
 #include <deemon/module.h>             /* DeeModule_GetShortName */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/pair.h>               /* DeeSeq_OfPairInherited */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8 */
 #include <deemon/system-error.h>       /* DeeSystemError_Pop, DeeSystemError_Push */
@@ -990,6 +991,9 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 #endif /* DeeThread_GetCurrentTid */
 		                      0,
 		/* .t_interrupt  = */ { NULL, NULL, NULL },
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+		/* .t_bools      = */ { Dee_False, Dee_True },
+#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #ifndef CONFIG_NO_THREADS
 		/* .t_int_vers   = */ 0,
 		/* .t_rcu_vers   = */ 0,
@@ -2767,6 +2771,27 @@ again:
 }
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+PRIVATE NONNULL((1)) void DCALL
+thread_init_bools(DeeThreadObject *__restrict self) {
+	DREF DeeBoolObject *thrd_false;
+	DREF DeeBoolObject *thrd_true;
+
+	/* TODO: Allocate new objects (on failure: simply use Dee_True/Dee_False defaults) */
+	thrd_false = (DREF DeeBoolObject *)DeeBool_NewFalse();
+	thrd_true  = (DREF DeeBoolObject *)DeeBool_NewTrue();
+
+	self->t_bools[0] = Dee_AsObject(thrd_false);
+	self->t_bools[1] = Dee_AsObject(thrd_true);
+}
+
+PRIVATE NONNULL((1)) void DCALL
+thread_fini_bools(DeeThreadObject *__restrict self) {
+	Dee_Decref(self->t_bools[1]);
+	Dee_Decref(self->t_bools[0]);
+}
+#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
 /* Start execution of the given thread.
  * @return:  0: Successfully started the thread.
  * @return:  1: The thread had already been started.
@@ -2785,8 +2810,8 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 	/* Check if `me' has already been started. */
 again:
 	state = atomic_fetchor(&me->ot_thread.t_state, Dee_THREAD_STATE_STARTING);
-	if (state & Dee_THREAD_STATE_STARTING) {
-		if (state & Dee_THREAD_STATE_STARTED)
+	if (state & (Dee_THREAD_STATE_STARTING | Dee_THREAD_STATE_UNMANAGED)) {
+		if (state & (Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_UNMANAGED))
 			return 1;
 
 		/* Wait until the thread has either fully started,
@@ -2808,6 +2833,11 @@ again:
 		_DeeThread_WakeWaiting(&me->ot_thread);
 		return DeeError_Throw(&DeeError_Interrupt_instance);
 	}
+
+	/* Allocate boolean constants for the thread */
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+	thread_init_bools(&me->ot_thread);
+#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 
 	/* Create the reference that is passed to `DeeThread_Entry_func()'
 	 * and later stored in the thread's TLS self-pointer. */
@@ -2841,6 +2871,9 @@ again:
 	/* Indicate success: the thread is now running! */
 	return 0;
 err_abort:
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+	thread_fini_bools(&me->ot_thread);
+#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	Dee_DecrefNokill(&me->ot_thread);
 	atomic_and(&me->ot_thread.t_state, ~Dee_THREAD_STATE_STARTING);
 	/* Wake up other threads that may be trying to start the thread. */
@@ -3596,6 +3629,10 @@ thread_fini(DeeThreadObject *__restrict self) {
 
 	Dee_XDecref(self->t_threadname);
 	if (self->t_state & Dee_THREAD_STATE_STARTED) {
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+		if (!(self->t_state & Dee_THREAD_STATE_UNMANAGED))
+			thread_fini_bools(self);
+#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 		if (self->t_state & Dee_THREAD_STATE_TERMINATED) {
 			if (self->t_exceptsz) {
 				while (self->t_except) {
@@ -3972,6 +4009,8 @@ err:
 	return NULL;
 }
 
+PRIVATE DEFINE_TUPLE(thread_tryjoin_failure, 2, { Dee_False, Dee_None });
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_tryjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result;
@@ -3980,8 +4019,8 @@ thread_tryjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
-		return DeeTuple_Newf("oO", Dee_True, result);
-	return DeeTuple_Newf("oo", Dee_False, Dee_None);
+		return DeeSeq_OfPairInherited(DeeBool_NewTrue(), result);
+	return_reference(&thread_tryjoin_failure);
 err:
 	return NULL;
 }
@@ -4002,8 +4041,8 @@ thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(result == NULL)
 		goto err;
 	if (result != ITER_DONE)
-		return DeeTuple_Newf("oO", Dee_True, result);
-	return DeeTuple_Newf("oo", Dee_False, Dee_None);
+		return DeeSeq_OfPairInherited(DeeBool_NewTrue(), result);
+	return_reference(&thread_tryjoin_failure);
 err:
 	return NULL;
 }

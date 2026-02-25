@@ -22,9 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>            /* DeeBool_Type, Dee_False, Dee_True, return_bool */
+#include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_True, return_bool */
 #include <deemon/int.h>             /* DeeInt_Type */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref*, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, return_reference_ */
 #include <deemon/operator-hints.h>  /* DeeNO_*_t, _DeeType_RequireNativeOperator, maketyped__* */
 #include <deemon/super.h>           /*  */
 #include <deemon/system-features.h> /* pow */
@@ -66,10 +66,12 @@ PUBLIC ATTR_HOT WUNUSED NONNULL((1)) int
 	__register DeeNO_bool_t tp_bool;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
 #ifndef __OPTIMIZE_SIZE__
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type)
-		return self == Dee_True ? 1 : 0;
+		return DeeBool_IsTrue(self) ? 1 : 0;
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
 		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
@@ -950,10 +952,12 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_TBool)(DeeTypeObject *tp_self, DeeObject *self) {
 	__register DeeNO_bool_t tp_bool;
 #ifndef __OPTIMIZE_SIZE__
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type)
-		return self == Dee_True ? 1 : 0;
+		return DeeBool_IsTrue(self) ? 1 : 0;
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL) {
 		tp_bool = _DeeType_RequireNativeOperator(tp_self, bool);
@@ -2100,11 +2104,13 @@ DeeObject_BoolInherited(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 	__register DeeNO_bool_t tp_bool;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
 #ifndef __OPTIMIZE_SIZE__
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type) {
-		Dee_DecrefNokill(self);
-		return self == Dee_True ? 1 : 0;
+		DeeBool_Decref(self);
+		return DeeBool_IsTrue(self) ? 1 : 0;
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
@@ -2120,8 +2126,10 @@ DeeObject_BoolInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restr
 	__register DeeNO_bool_t tp_bool;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
 #ifndef __OPTIMIZE_SIZE__
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type) {
 		/* TODO: Because atomic of cache-conflicts arising from use of atomics,
 		 *       this is actually a decref right here is actually kind-of a
@@ -2141,8 +2149,8 @@ DeeObject_BoolInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restr
 		 * The only real problem here is the former, since lots of code exists
 		 * that relies on booleans being singletons, by including constructs
 		 * such as "expr === true" */
-		Dee_DecrefNokill(self);
-		return self == Dee_True ? 1 : 0;
+		DeeBool_Decref(self);
+		return DeeBool_IsTrue(self) ? 1 : 0;
 	}
 #endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
@@ -2158,8 +2166,10 @@ DeeObject_BoolOb(DeeObject *__restrict self) {
 	int result;
 	__register DeeNO_bool_t tp_bool;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type)
 		return_reference_(self);
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
@@ -2177,8 +2187,10 @@ DeeObject_BoolObInherited(/*inherit(always)*/ DREF DeeObject *__restrict self) {
 	int result;
 	__register DeeNO_bool_t tp_bool;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type)
 		return self;
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)
@@ -2197,8 +2209,10 @@ DeeObject_BoolObInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__res
 	int result;
 	__register DeeNO_bool_t tp_bool;
 	__register DeeTypeObject *tp_self = Dee_TYPE(self);
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type)
 		return self;
 	if unlikely((tp_bool = tp_self->tp_cast.tp_bool) == NULL)

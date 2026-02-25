@@ -29,7 +29,7 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack1, DeeArg_UnpackStructKw */
-#include <deemon/bool.h>            /* DeeBool_Type, Dee_False, Dee_True, return_false, return_true */
+#include <deemon/bool.h>            /* DeeBool*, return_false, return_true */
 #include <deemon/bytes.h>           /* DeeBytes* */
 #include <deemon/class.h>           /* DeeClassDesc_QueryInstanceAttribute, DeeClass_DESC, DeeInstance_DESC, DeeInstance_SetAttribute, Dee_class_attribute, Dee_class_desc, Dee_instance_desc */
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
@@ -1618,15 +1618,13 @@ DeeJson_ParseObject(DeeJsonParser *__restrict self,
 	case JSON_PARSER_TRUE: {
 		if (must_advance_parser && libjson_parser_yield(&self->djp_parser) != JSON_PARSER_TRUE)
 			goto err_syntax;
-		result = Dee_True;
-		Dee_Incref(result);
+		result = DeeBool_NewTrue();
 	}	break;
 
 	case JSON_PARSER_FALSE: {
 		if (must_advance_parser && libjson_parser_yield(&self->djp_parser) != JSON_PARSER_FALSE)
 			goto err_syntax;
-		result = Dee_False;
-		Dee_Incref(result);
+		result = DeeBool_NewFalse();
 	}	break;
 
 	default:

@@ -1647,7 +1647,7 @@ _host_section_gdecref_const(struct host_section *__restrict self,
 	if unlikely(host_section_reqx86(self, 2))
 		goto err;
 	/* Constants can never be destroyed, so decref'ing one is
-	 * like `Dee_DecrefNoKill()' (iow: doesn't need a zero-check) */
+	 * like `Dee_DecrefNokill()' (iow: doesn't need a zero-check) */
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
 	gen86_printf(self, "decref_nokill\t%s", gen86_addrname(value));

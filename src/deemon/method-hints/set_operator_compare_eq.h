@@ -92,8 +92,9 @@ err:
 	if unlikely(!resultob)
 		goto err;
 	if (DeeBool_Check(resultob)) {
-		Dee_DecrefNokill(resultob);
-		return Dee_COMPARE_FROMBOOL(DeeBool_IsTrue(resultob));
+		bool retval = DeeBool_IsTrue(resultob);
+		DeeBool_Decref(resultob);
+		return Dee_COMPARE_FROMBOOL(retval);
 	}
 	if (DeeObject_AssertTypeExact(resultob, &DeeInt_Type))
 		goto err_resultob;

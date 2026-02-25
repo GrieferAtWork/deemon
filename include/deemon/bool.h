@@ -29,9 +29,9 @@
 #include "api.h"
 
 #ifndef __INTELLISENSE__
-#include "object.h" /* Dee_Incref */
+#include "object.h" /* Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref */
 #endif /* !__INTELLISENSE__ */
-#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT */
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT */
 
 DECL_BEGIN
 
@@ -58,6 +58,25 @@ typedef struct Dee_bool_object {
 #define DeeBool_Check(x)      DeeObject_InstanceOfExact(x, &DeeBool_Type) /* `bool' is final. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBool_Type)
 #define DeeBool_IsTrue(x)     (Dee_REQUIRES_OBJECT(DeeBoolObject, x) != &Dee_FalseTrue[0])
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#define DeeBool_CheckTrue(x)  (DeeBool_Check(x) && DeeBool_IsTrue(x))
+#define DeeBool_CheckFalse(x) (DeeBool_Check(x) && !DeeBool_IsTrue(x))
+#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#define DeeBool_CheckTrue(x)  (Dee_REQUIRES_OBJECT(DeeBoolObject, x) == &Dee_FalseTrue[1])
+#define DeeBool_CheckFalse(x) (Dee_REQUIRES_OBJECT(DeeBoolObject, x) == &Dee_FalseTrue[0])
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
+#ifdef __INTELLISENSE__
+#define DeeBool_Incref(x) (void)Dee_AsObject(x)
+#define DeeBool_Decref(x) (void)Dee_AsObject(x)
+#else /* __INTELLISENSE__ */
+#define DeeBool_Incref(x) Dee_Incref(x)
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#define DeeBool_Decref(x) Dee_Decref_unlikely(x)
+#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#define DeeBool_Decref(x) Dee_DecrefNokill(x)
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* !__INTELLISENSE__ */
 
 DDATDEF DeeTypeObject DeeBool_Type;
 DDATDEF DeeBoolObject Dee_FalseTrue[2]; /*!export*/
@@ -69,33 +88,24 @@ DDATDEF DeeBoolObject Dee_FalseTrue[2]; /*!export*/
 #define Dee_True            ((DeeObject *)_DeeBool_True)  /*!export*/
 #define DeeBool_For(val)    ((DeeObject *)_DeeBool_For(val))
 #define DeeBool_For01(val)  ((DeeObject *)_DeeBool_For01(val))
-#ifdef __INTELLISENSE__
-#define DeeBool_NewFalse()     Dee_False
-#define DeeBool_NewTrue()      Dee_True
-#define DeeBool_New(val)       DeeBool_For(val)
-#define DeeBool_New01(val)     DeeBool_For01(val)
-#define Dee_return_bool(val)   return DeeBool_New(val)   /*!export*/
-#define Dee_return_bool01(val) return DeeBool_New01(val) /*!export*/
-#else /* __INTELLISENSE__ */
-#define DeeBool_NewFalse() (Dee_Incref(_DeeBool_False), (DeeObject *)_DeeBool_False)
-#define DeeBool_NewTrue()  (Dee_Incref(_DeeBool_True), (DeeObject *)_DeeBool_True)
-#define DeeBool_New(val)   (Dee_Incref(_DeeBool_For(val)), (DeeObject *)_DeeBool_For(val))
-#define DeeBool_New01(val) (Dee_Incref(_DeeBool_For01(val)), (DeeObject *)_DeeBool_For01(val))
+#define DeeBool_NewFalse()  (DeeBool_Incref(_DeeBool_False), (DeeObject *)_DeeBool_False)
+#define DeeBool_NewTrue()   (DeeBool_Incref(_DeeBool_True), (DeeObject *)_DeeBool_True)
+#define DeeBool_New(val)    (DeeBool_Incref(_DeeBool_For(val)), (DeeObject *)_DeeBool_For(val))
+#define DeeBool_New01(val)  (DeeBool_Incref(_DeeBool_For01(val)), (DeeObject *)_DeeBool_For01(val))
 #define Dee_return_bool(val)                                                     \
 	do {                                                                         \
 		__register struct Dee_bool_object *const _rb_result = _DeeBool_For(val); \
-		Dee_Incref(_rb_result);                                                  \
+		DeeBool_Incref(_rb_result);                                              \
 		return (DREF DeeObject *)_rb_result;                                     \
 	}	__WHILE0
 #define Dee_return_bool01(val)                                                     \
 	do {                                                                           \
 		__register struct Dee_bool_object *const _rb_result = _DeeBool_For01(val); \
-		Dee_Incref(_rb_result);                                                    \
+		DeeBool_Incref(_rb_result);                                                \
 		return (DREF DeeObject *)_rb_result;                                       \
 	}	__WHILE0
-#endif /* !__INTELLISENSE__ */
-#define Dee_return_true  return DeeBool_NewTrue()  /*!export*/
-#define Dee_return_false return DeeBool_NewFalse() /*!export*/
+#define Dee_return_true  Dee_return_bool01(1)
+#define Dee_return_false Dee_return_bool01(0)
 
 DECL_END
 

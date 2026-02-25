@@ -28,7 +28,7 @@
 
 #include <deemon/alloc.h>           /* DeeObject_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>             /* DeeArg_Unpack* */
-#include <deemon/bool.h>            /* Dee_False, Dee_True, return_bool */
+#include <deemon/bool.h>            /* return_bool, return_false, return_true */
 #include <deemon/error-rt.h>        /* DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
@@ -1825,16 +1825,14 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rbtree_contains(RBTree *self, DeeObject *key) {
 	DREF DeeObject *result;
 	result = rbtree_trygetitem(self, key);
-	if likely(result != NULL) {
-		if (result == ITER_DONE) {
-			result = Dee_False;
-		} else {
-			Dee_Decref(result);
-			result = Dee_True;
-		}
-		Dee_Incref(result);
-	}
-	return result;
+	if unlikely(!result)
+		goto err;
+	if (result == ITER_DONE)
+		return_false;
+	Dee_Decref(result);
+	return_true;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

@@ -27,10 +27,12 @@ operator {
 [[export("DeeObject_{|T}Bool")]]
 [[export_precheck(
 #ifndef __OPTIMIZE_SIZE__
+#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	if (tp_self == &DeeBool_Type)
-		return self == Dee_True ? 1 : 0;
+		return DeeBool_IsTrue(self) ? 1 : 0;
 #endif /* !__OPTIMIZE_SIZE__ */
 )]]
 [[wunused]] int
@@ -41,7 +43,7 @@ tp_cast.tp_bool([[nonnull]] DeeObject *__restrict self)
 	store_DeeClass_CallOperator_NoArgs(err, result, THIS_TYPE, self, OPERATOR_BOOL);
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
-	retval = DeeBool_IsTrue(result);
+	retval = DeeBool_IsTrue(result) ? 1 : 0;
 	Dee_DecrefNokill(result);
 	return retval;
 err_r:

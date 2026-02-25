@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>                /* DeeArg_Unpack0, DeeArg_UnpackStructKw */
-#include <deemon/bool.h>               /* DeeBool_For, Dee_False, return_bool */
+#include <deemon/bool.h>               /* return_bool */
 #include <deemon/compiler/ast.h>       /* ast, loc_here */
 #include <deemon/compiler/compiler.h>  /* COMPILER_BEGIN, COMPILER_END, DeeCompiler* */
 #include <deemon/compiler/interface.h> /* DR_*, DeeCompiler*, err_compiler_item_deleted, err_invalid_file_compiler */
@@ -43,7 +43,7 @@
 #include "../../runtime/kwlist.h"
 #include "../../runtime/strings.h"
 
-#include <stdbool.h> /* bool, true */
+#include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
 
 DECL_BEGIN
@@ -246,27 +246,26 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 scope_contains(DeeCompilerScopeObject *self,
                DeeObject *elem) {
-	DREF DeeObject *result;
+	bool result;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	if (DeeObject_InstanceOfExact(elem, &DeeCompilerSymbol_Type)) {
-		result = DeeBool_For((((DeeCompilerSymbolObject *)elem)->ci_compiler == self->ci_compiler &&
-		                      ((DeeCompilerSymbolObject *)elem)->ci_value != NULL &&
-		                      ((DeeCompilerSymbolObject *)elem)->ci_value->s_scope == self->ci_value));
+		DeeCompilerSymbolObject *e = (DeeCompilerSymbolObject *)elem;
+		result = (e->ci_compiler == self->ci_compiler &&
+		          e->ci_value != NULL &&
+		          e->ci_value->s_scope == self->ci_value);
 	} else if (DeeString_Check(elem)) {
 		char const *utf8 = DeeString_AsUtf8(elem);
-		if unlikely(!utf8) {
-			result = NULL;
-			goto done;
-		}
-		result = DeeBool_For(scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8)) != NULL);
+		if unlikely(!utf8)
+			goto err_end;
+		result = scope_lookup_str(self->ci_value, utf8, WSTR_LENGTH(utf8)) != NULL;
 	} else {
-		result = Dee_False;
+		result = false;
 	}
-	Dee_Incref(result);
-done:
 	COMPILER_END();
-	return result;
+	return_bool(result);
+err_end:
+	COMPILER_END();
 err:
 	return NULL;
 }

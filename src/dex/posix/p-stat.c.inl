@@ -30,7 +30,7 @@
 #include <deemon/abi/time.h>        /*  */
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack* */
-#include <deemon/bool.h>            /* DeeBool_For, DeeBool_NewFalse, Dee_False, return_bool, return_false, return_true */
+#include <deemon/bool.h>            /* DeeBool_New, DeeBool_NewFalse, return_bool, return_false, return_true */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/file.h>            /* DeeFile_Filename */
@@ -2200,11 +2200,10 @@ stat_class_ishidden(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
+		result = DeeBool_NewFalse();
 	} else {
-		result = DeeBool_For(st.st_info.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN);
+		result = DeeBool_New(st.st_info.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN);
 	}
-	Dee_Incref(result);
 	dee_stat_fini(&st);
 	return result;
 err:
@@ -2387,11 +2386,10 @@ err:
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0) {
-		result = Dee_False;
+		result = DeeBool_NewFalse();
 	} else {
-		result = DeeBool_For((st.st_info.st_mode & 0111) != 0);
+		result = DeeBool_New(st.st_info.st_mode & 0111);
 	}
-	Dee_Incref(result);
 	dee_stat_fini(&st);
 	return result;
 err:

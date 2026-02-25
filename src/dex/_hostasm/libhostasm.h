@@ -2045,9 +2045,9 @@ basic_block_trim_unused_exits(struct basic_block *__restrict self);
 #define MEMREF_F_NORMAL   0x00 /* Normal flags */
 #define MEMREF_F_NULLABLE 0x01 /* Location may contain NULL */
 #if 0 /* Leads to problems down the line... */
-#define MEMREF_F_DOKILL   0x02 /* Allowed to use Dee_DecrefDoKill() */
+#define MEMREF_F_DOKILL   0x02 /* Allowed to use Dee_DecrefDokill() */
 #endif
-#define MEMREF_F_NOKILL   0x04 /* Allowed to use Dee_DecrefNoKill() */
+#define MEMREF_F_NOKILL   0x04 /* Allowed to use Dee_DecrefNokill() */
 #define _MEMREF_F_DONE    0x40 /* Used internally */
 #define _MEMREF_F_NOSRC   0x80 /* Used internally */
 

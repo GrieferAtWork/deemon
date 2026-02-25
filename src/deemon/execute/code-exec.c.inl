@@ -25,7 +25,7 @@
 
 #include <deemon/alloc.h>           /* Dee_Mallocc, Dee_Reallocc */
 #include <deemon/asm.h>             /* ASM16_*, ASM32_JMP, ASM_*, instruction_t */
-#include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_FalseTrue, Dee_True */
+#include <deemon/bool.h>            /* DeeBool_For, Dee_False, Dee_FalseTrue, Dee_True */
 #include <deemon/class.h>           /* DeeClassDescriptor_Type, DeeClass_*, DeeInstance_* */
 #include <deemon/code.h>            /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeFunction_*, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_PERIOD, Dee_TRIGGER_BREAKPOINT_*, Dee_code_frame, Dee_except_handler, code_addr_t, instruction_t */
 #include <deemon/dict.h>            /* DeeDict_FromSequenceInheritedOnSuccess, DeeDict_NewKeyValuesInherited */
@@ -1012,11 +1012,19 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 #define READ_imm32()              UNALIGNED_GETLE32(ip.u32++)
 #define READ_Simm32()   ((int32_t)UNALIGNED_GETLE32(ip.u32++))
 	__register DeeObject **sp;
-	__register DeeCodeObject *code;
+	__register DeeCodeObject *const code = frame->cf_func->fo_code;
 	__register uint16_t imm_val;
 	uint16_t imm_val2;
-	DeeThreadObject *this_thread = DeeThread_Self();
-	uint16_t except_recursion    = this_thread->t_exceptsz;
+	DeeThreadObject *const this_thread = DeeThread_Self();
+	uint16_t const except_recursion    = this_thread->t_exceptsz;
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#define LOCAL_Dee_False this_thread->t_bools[0]
+#define LOCAL_Dee_True  this_thread->t_bools[1]
+#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#define LOCAL_Dee_False Dee_False
+#define LOCAL_Dee_True  Dee_True
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
 #ifdef _MSC_VER
 	/* MSVC is too dumb to take advantage of the C standard
 	 * and optimize away inner-scope variables that take the
@@ -1059,8 +1067,6 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 #define USING_PREFIX_OBJECT DREF DeeObject *prefix_ob;
 #endif /* !_MSC_VER */
 
-
-	code = frame->cf_func->fo_code;
 	ASSERT((this_thread->t_execsz != 0) ==
 	       (this_thread->t_exec != NULL));
 
@@ -3352,6 +3358,9 @@ do_setitem_c:
 			sp     = frame->cf_sp;
 			ip.ptr = frame->cf_ip;
 
+#if 1 /* If/when a debugger actually needs to do this, maybe re-consider. But until then, allow for more optimizations! */
+			ASSERT(code == frame->cf_func->fo_code);
+#else
 			/* Re-load the effective code object, allowing a
 			 * breakpoint handler to exchange the running code.
 			 * This can be happen if the breakpoint handler is supposed
@@ -3363,6 +3372,7 @@ do_setitem_c:
 			 * code, essentially giving even more freedom by literally
 			 * exchanging the assembly that should be executing. */
 			code = frame->cf_func->fo_code;
+#endif
 
 			/* Check if we're supposed to handle an exception now. */
 			switch (error) {
@@ -4357,12 +4367,11 @@ do_setattr_this_c:
 				}
 
 				TARGET(ASM_PUSH_TRUE, -0, +1) {
-					PUSHREF(Dee_True);
-					
+					PUSHREF(LOCAL_Dee_True);
 					DISPATCH();
 				}
 				TARGET(ASM_PUSH_FALSE, -0, +1) {
-					PUSHREF(Dee_False);
+					PUSHREF(LOCAL_Dee_False);
 					DISPATCH();
 				}
 
@@ -5340,7 +5349,7 @@ do_pack_dict:
 				}
 
 				TARGET(ASM_PUSH_VARKWDS_NE, -0, +1) {
-					DeeObject *value = Dee_False;
+					DeeObject *value = LOCAL_Dee_False;
 #ifdef EXEC_SAFE
 					if (!(code->co_flags & Dee_CODE_FVARKWDS))
 						goto err_requires_varkwds_code;
@@ -6942,7 +6951,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 								STATICimm = ITER_DONE;
 								STATIC_LOCKENDWRITE();
 								/* Special case: don't wake waiting threads here! */
-								value = Dee_True;
+								value = LOCAL_Dee_True;
 							} else if (value == ITER_DONE) {
 								STATIC_LOCKENDWRITE();
 								if unlikely(DeeFutex_WaitPtr(&STATICimm, (uintptr_t)(void *)ITER_DONE))
@@ -6950,7 +6959,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 								goto again_check_staticimm_for_cmpxch_ub_lock;
 							} else {
 								STATIC_LOCKENDWRITE();
-								value = Dee_False;
+								value = LOCAL_Dee_False;
 							}
 							PUSHREF(value);
 							DISPATCH();
@@ -6965,10 +6974,10 @@ again_check_staticimm_for_cmpxch_ub_lock:
 								HANDLE_EXCEPT();
 #endif /* !EXEC_FAST */
 							if (ok) {
-								FIRST = Dee_True;
+								FIRST = LOCAL_Dee_True;
 							} else {
 								Dee_Decref(FIRST);
-								FIRST = Dee_False;
+								FIRST = LOCAL_Dee_False;
 							}
 							Dee_Incref(FIRST);
 							DISPATCH();
@@ -6983,10 +6992,10 @@ again_check_staticimm_for_cmpxch_ub_lock:
 								HANDLE_EXCEPT();
 #endif /* !EXEC_FAST */
 							if (ok) {
-								FIRST = Dee_True;
+								FIRST = LOCAL_Dee_True;
 							} else {
 								Dee_Decref(FIRST);
-								FIRST = Dee_False;
+								FIRST = LOCAL_Dee_False;
 							}
 							Dee_Incref(FIRST);
 							DISPATCH();
@@ -7003,10 +7012,10 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							Dee_Decref(SECOND);
 							if (ok) {
 								(void)POP();
-								FIRST = Dee_True;
+								FIRST = LOCAL_Dee_True;
 							} else {
 								POPREF();
-								FIRST = Dee_False;
+								FIRST = LOCAL_Dee_False;
 							}
 							Dee_Incref(FIRST);
 							DISPATCH();
@@ -7105,13 +7114,15 @@ again_check_staticimm_for_cmpxch_ub_lock:
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_TRUE) {
-							if (set_prefix_object(DeeBool_NewTrue()))
+							Dee_Incref(LOCAL_Dee_True);
+							if (set_prefix_object(LOCAL_Dee_True))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_FALSE) {
-							if (set_prefix_object(DeeBool_NewFalse()))
+							Dee_Incref(LOCAL_Dee_False);
+							if (set_prefix_object(LOCAL_Dee_False))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
@@ -7567,6 +7578,8 @@ err_unbound_local:
 err_unbound_static:
 	err_unbound_static(code, frame->cf_ip, imm_val);
 	HANDLE_EXCEPT();
+#undef LOCAL_Dee_False
+#undef LOCAL_Dee_True
 }
 
 DECL_END

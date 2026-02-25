@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/asm.h>                /* ASM_* */
-#include <deemon/bool.h>               /* Dee_False, Dee_True */
+#include <deemon/bool.h>               /* DeeBool_Check, DeeBool_IsTrue */
 #include <deemon/class.h>              /* Dee_CLASS_ATTRIBUTE_*, Dee_CLASS_GETSET_SET, Dee_class_attribute */
 #include <deemon/code.h>               /* Dee_CODE_FFINALLY, Dee_CODE_FTHISCALL, Dee_EXCEPTION_HANDLER_FFINALLY, code_addr_t */
 #include <deemon/compiler/assembler.h> /* ASM_*, SECTION_COLD, SECTION_TEXTCOUNT, asm_*, ast_genasm, ast_genasm_one, current_assembler */
@@ -1224,16 +1224,12 @@ INTERN WUNUSED NONNULL((1, 2, 3)) int
 			DO(asm_putddi(dst_ast));
 			DO(asm_gprefix_symbol(dst_sym, dst_ast));
 			return asm_gpush_none_p();
-		} else if (constval == Dee_True) {
-			/* mov PREFIX, true */
+		} else if (DeeBool_Check(constval)) {
+			/* mov PREFIX, true|false */
 			DO(asm_putddi(dst_ast));
 			DO(asm_gprefix_symbol(dst_sym, dst_ast));
-			return asm_gpush_true_p();
-		} else if (constval == Dee_False) {
-			/* mov PREFIX, false */
-			DO(asm_putddi(dst_ast));
-			DO(asm_gprefix_symbol(dst_sym, dst_ast));
-			return asm_gpush_false_p();
+			return DeeBool_IsTrue(constval) ? asm_gpush_true_p()
+			                                : asm_gpush_false_p();
 		} else if (asm_allowconst(constval)) {
 			int32_t cid;
 			/* mov PREFIX, const <imm8/16> */
