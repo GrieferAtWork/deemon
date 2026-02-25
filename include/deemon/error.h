@@ -89,13 +89,13 @@ DDATDEF DeeTypeObject DeeError_Signal;
  * tag (yes: the same tag that's also used to mark interrupt-catch blocks):
  * >> @[interrupt]
  * >> class MyInterrupt { }
- * >> 
+ * >>
  * >> try {
  * >>     throw MyInterrupt();
  * >> } @[interrupt] catch (e...) {
  * >>     print e; // `MyInterrupt'
  * >> }
- * >> 
+ * >>
  * Note however that types derived from `Signal.Interrupt' still have a
  * minor special behavior in that a thread callback exiting by throwing
  * an instance of it or a derived class will not cause the thread to be

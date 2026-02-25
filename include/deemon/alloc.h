@@ -1663,7 +1663,7 @@ LOCAL WUNUSED NONNULL((1)) void *
 }
 
 #define Dee_Freea(p)  Dee_Freea(p)
-#define Dee_XFreea(p) Dee_XFreea(p) 
+#define Dee_XFreea(p) Dee_XFreea(p)
 LOCAL NONNULL((1)) void (DCALL Dee_Freea)(void *p) {
 	if (Dee_MALLOCA_MUSTFREE(p))
 		Dee_Free((void *)((__BYTE_TYPE__ *)p - Dee_MALLOCA_ALIGN));

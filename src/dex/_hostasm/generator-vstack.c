@@ -4020,7 +4020,7 @@ err:
  * there is an additional item "funcaddr" that contains the (possibly) runtime-
  * evaluated address of the function that should be called. Also note that said
  * "funcaddr" location is *always* popped.
- * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function' 
+ * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL

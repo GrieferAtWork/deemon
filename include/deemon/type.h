@@ -551,7 +551,7 @@ struct Dee_type_gc {
 	 * >>         print "MyClass.~this()", m_value;
 	 * >>     }
 	 * >> }
-	 * >> 
+	 * >>
 	 * >> global x = MyClass();
 	 * The global variable `x' is never unbound, meaning that
 	 * when deemon is shutting down, the following GC-cycle
@@ -663,7 +663,7 @@ struct Dee_type_gc {
 
 struct Dee_type_math {
 	/* Math related operators. */
-	/* @return: Dee_INT_SIGNED:   The value stored in `*result' is signed. 
+	/* @return: Dee_INT_SIGNED:   The value stored in `*result' is signed.
 	 * @return: Dee_INT_UNSIGNED: The value stored in `*result' is unsigned.
 	 * @return: Dee_INT_ERROR:    An error occurred. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_int32)(DeeObject *__restrict self, int32_t *__restrict result);
@@ -2679,7 +2679,7 @@ struct Dee_type_object {
 	/* WARNINGS:
 	 * - When "Dee_TF_TPVISIT" is set, "tp_visit" is actually typed as:
 	 *   >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
-	 * - "tp_visit" may be invoked while "self->ob_refcnt == 0"! 
+	 * - "tp_visit" may be invoked while "self->ob_refcnt == 0"!
 	 * - "tp_visit" must never throw errors or invoke user-code in any form
 	 * - "tp_visit" can skip visiting references that can never lead to GC objects:
 	 *   - DeeString_Type

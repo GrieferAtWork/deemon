@@ -1113,7 +1113,7 @@ typedef struct Dee_function_object {
 
 
 typedef struct Dee_yield_function_object {
-	Dee_OBJECT_HEAD 
+	Dee_OBJECT_HEAD
 	DREF struct Dee_function_object          *yf_func;  /* [1..1][const] The function we are derived from. */
 	struct Dee_code_frame_kwds               *yf_kw;    /* [0..1][owned][const] Keyword arguments. */
 	DREF DeeObject                           *yf_this;  /* [0..1][const] 'this' object during callback. */

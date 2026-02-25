@@ -768,7 +768,7 @@ jseq_or_map_init_parser(DeeJsonSequenceObject *__restrict self,
 			/* JSON is smart enough to automatically detect larger encodings,
 			 * so in the case of larger-than-utf-8, we can just pass with
 			 * width-representation of the string.
-			 * 
+			 *
 			 * Still though, if the string already has a utf-8 cache, then we
 			 * always use that one (simply because it's more compact, as well
 			 * as because libjson originating from KOS, is primarily optimized
@@ -3521,7 +3521,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjson_parse_f_impl(DeeOb
 			/* JSON is smart enough to automatically detect larger encodings,
 			 * so in the case of larger-than-utf-8, we can just pass with
 			 * width-representation of the string.
-			 * 
+			 *
 			 * Still though, if the string already has a utf-8 cache, then we
 			 * always use that one (simply because it's more compact, as well
 			 * as because libjson originating from KOS, is primarily optimized

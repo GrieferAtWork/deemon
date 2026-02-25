@@ -1028,7 +1028,7 @@ DeeModule_GetFileName(DeeModuleObject *__restrict self);
 
 /* Return the relative import name of `self' when accessed from a file or module
  * `context_absname'. For more information, see `DeeModule_GetRelNameEx()'.
- * 
+ *
  * @param: flags: Set of `DeeModule_RELNAME_F_*'
  * @return: * :        The module's name, written relative to `context_absname'
  * @return: ITER_DONE: The given module is anonymous or has its `Dee_MODULE_FABSFILE' flag set

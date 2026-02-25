@@ -5058,7 +5058,7 @@ localheap_malloc(struct localheap *__restrict self,
  * >> old_object = LOCALimm;
  * >> LOCALimm   = new_object;
  * >> Dee_Decref(old_object);
- * 
+ *
  * When the 4th line decrements the object, we may still see the
  * old object who's reference counter has already reached zero.
  */

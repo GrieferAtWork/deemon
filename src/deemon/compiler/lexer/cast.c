@@ -152,7 +152,7 @@ not_a_cast:
 		} else {
 			if (!second_paren && merge->a_multiple.m_astc == 1) {
 				/* Recursively parse cast suffix expressions:
-				 * >> (int)(float)get_value(); 
+				 * >> (int)(float)get_value();
 				 * Parse as:
 				 * >> int(float(get_value()));
 				 * Without this, it would be parsed as:

@@ -1868,7 +1868,7 @@ begin_init:
 	 *              >> import("module_a"); // see above...
 	 *        #1: `thread_1' gets here first and starts to
 	 *            run the initialization code of `module_a'
-	 *        #2: `thread_2' gets here second and start to 
+	 *        #2: `thread_2' gets here second and start to
 	 *            run the initialization code of `module_b'
 	 *        #3: `thread_1' executing `module_a' starts to import `module_b'
 	 *            It succeeds as the module is already in-cache and calls
@@ -1896,7 +1896,7 @@ begin_init:
 	 * ... Python could get away with something like that thanks to
 	 *     its GIL, but I would never stoop so low as to simply say:
 	 *        "Yeah. We've got threads... Only one of them can ever be
-	 *        executed at the same time, but it's still multi-threading..." 
+	 *        executed at the same time, but it's still multi-threading..."
 	 *     me: "NO!!! THAT'S NOT TREADING! THATS JUST MADNESS AND DEFEATS THE POINT!!!"
 	 * T0D0: Stop going off-topic...
 	 */
@@ -3578,7 +3578,7 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 		/* .tp_print     = */ DEFIMPL(&default__print__with__str),
 		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
-	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_dir_visit, /* Wouldn't have anything to visit! */ 
+	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_dir_visit, /* Wouldn't have anything to visit! */
 	/* .tp_gc            = */ PTR_module_dir_gc,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__FEC430738D08383C),

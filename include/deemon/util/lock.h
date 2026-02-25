@@ -789,7 +789,7 @@ typedef struct {
 	 *       result in a potential missing wakeup, as it would for the disabled "_Dee_SHARED_WAITWORD"
 	 *       implementation. Reason is that in step [6], Thread #1 won't start sleeping since the futex
 	 *       call will notice that the lock-word (here: "ev_state") would no longer be "2" following
-	 *       the other thread having 
+	 *       the other thread having
 	 */
 	unsigned int ev_state; /* 0: event has been triggered
 	                        * 1: event has NOT been triggered

@@ -34,7 +34,7 @@ DECL_BEGIN
  *  a number object (`float' or `int'), or a user-defined numeric
  *  type, similar to how `Sequence' and `Iterator' are builtin
  *  base classes for certain types of numbers.
- * 
+ *
  *  This type (might eventually) also provides some helpful member/class
  *  functions/getsets that can be used to query information on the number/type. */
 DDATDEF DeeTypeObject DeeNumeric_Type;

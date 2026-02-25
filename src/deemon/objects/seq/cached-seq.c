@@ -1115,7 +1115,7 @@ cswgi_loadsize(CachedSeq_WithGetItem *__restrict self) {
  * @param: end_index: when non-NULL, never return indices `>= end_index'.
  *                    Instead, temporarily act as if "self" ended at "end_index".
  * @return: 1 : No such index
- * @return: 0 : Success 
+ * @return: 0 : Success
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 cswgi_indexafter(CachedSeq_WithGetItem *__restrict self,

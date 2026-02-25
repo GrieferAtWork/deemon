@@ -861,7 +861,7 @@ struct su_foreach_if_contained_in_data {
 	void         *feicid_arg;  /* [?..?] Cookie for `feicid_proc' */
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 su_foreach_if_not_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
@@ -876,7 +876,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 su_foreach_if_contained_in_cb(void *arg, DeeObject *elem) {
 	struct su_foreach_if_contained_in_data *data;
 	int contains;
@@ -891,7 +891,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 su_foreach(SetUnion *__restrict self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t result;
 	result = DeeObject_InvokeMethodHint(set_operator_foreach, self->su_a, proc, arg);
@@ -909,7 +909,7 @@ su_foreach(SetUnion *__restrict self, Dee_foreach_t proc, void *arg) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 su_bool(SetUnion *__restrict self) {
 	int result = DeeObject_InvokeMethodHint(seq_operator_bool, self->su_a);
 	if likely(result == 0)
@@ -1231,7 +1231,7 @@ err:
 	goto done;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t r1, r2;
 	struct su_foreach_if_contained_in_data data;
@@ -1843,7 +1843,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 sd_foreach(SetDifference *__restrict self, Dee_foreach_t proc, void *arg) {
 	struct su_foreach_if_contained_in_data data;
 	data.feicid_seq  = self->sd_b;

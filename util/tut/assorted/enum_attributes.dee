@@ -42,7 +42,7 @@ for (local attr: enumattr(mod)) {
 	if (attr.isinstance)
 		perm += "I";
 	print "{}Attribute: {}.{} is {} (perm: {})".format({
-		attr.isinstance ? "Instance-" : 
+		attr.isinstance ? "Instance-" :
 		attr.isclass ? "Class-" : "",
 		attr.decl,
 		attr.name,

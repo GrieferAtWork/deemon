@@ -4259,7 +4259,7 @@ err:
  *       the same type. Doing this is the responsibility of the caller!
  * @param: argc:  Number of extra arguments (excluding the "this" argument)
  * @return: * :   The guarantied return type
- * @return: NULL: Return type could not be deduced 
+ * @return: NULL: Return type could not be deduced
  * @return: (DeeTypeObject *)ITER_DONE: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
 vget_operator_return_type(struct fungen *__restrict self,

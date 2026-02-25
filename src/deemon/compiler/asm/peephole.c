@@ -1686,7 +1686,7 @@ do_optimize_popmov_16bit:
 		case ASM16_GETMEMBER_THIS:
 		case ASM_GETMEMBER_THIS_R:
 		case ASM16_GETMEMBER_THIS_R:
-			/* Optimize the following: 
+			/* Optimize the following:
 			 *  >> dup
 			 *  >> *    // Any sequence of code that doesn't make use of absolute
 			 *  >>      // stack offsets >= the stacksz value before `dup' and

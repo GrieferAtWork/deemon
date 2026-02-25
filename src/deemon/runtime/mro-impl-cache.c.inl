@@ -739,7 +739,7 @@ dkwobjmethod_vcallf_len(Dee_kwobjmethod_t self,
 	if unlikely(!thisarg) {
 		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
-	} 
+	}
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err_thisarg;
 
@@ -772,7 +772,7 @@ dobjmethod_vcallf_len(Dee_objmethod_t self,
 	if unlikely(!thisarg) {
 		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
-	} 
+	}
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err_thisarg;
 
@@ -810,7 +810,7 @@ dkwobjmethod_vcallf(Dee_kwobjmethod_t self,
 	if unlikely(!thisarg) {
 		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
-	} 
+	}
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err_thisarg;
 
@@ -843,7 +843,7 @@ dobjmethod_vcallf(Dee_objmethod_t self,
 	if unlikely(!thisarg) {
 		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
-	} 
+	}
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err_thisarg;
 
@@ -950,7 +950,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL DREF DeeObject *
 #elif defined(LOCAL_IS_FINDINFO)
 /* @return: true:  Attribute was found.
  * @return: false: Attribute wasn't found. */
-INTDEF WUNUSED LOCAL_ATTR_NONNULL bool
+INTERN WUNUSED LOCAL_ATTR_NONNULL bool
 #elif defined(LOCAL_IS_FIND)
 INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #else /* ... */
@@ -1057,10 +1057,8 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 	 * Just... WOW! */
 	DeeRCU_FAST_Lock();
 	table = atomic_read(&tp_self->LOCAL_tp_cache.mc_table);
-	if unlikely(!table) {
-		DeeRCU_FAST_Unlock();
-		goto cache_miss;
-	}
+	if unlikely(!table)
+		goto rcu_unlock_and_return_cache_miss;
 
 	perturb = i = Dee_membercache_table_hashst(table, LOCAL_hash);
 	for (;; Dee_membercache_table_hashnx(i, perturb)) {
@@ -1955,8 +1953,8 @@ check_and_invoke_callback:
 	} /* for (;; Dee_membercache_table_hashnx(i, perturb)) */
 
 	/* Cache miss handler. */
+rcu_unlock_and_return_cache_miss:
 	DeeRCU_FAST_Unlock();
-cache_miss:
 #if (defined(LOCAL_IS_GET) || defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW) || \
      defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) || defined(LOCAL_IS_VCALLF))
 	return ITER_DONE;

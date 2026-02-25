@@ -55,7 +55,7 @@ DECL_BEGIN
 /* Execute source code from `source_stream' and return the result of invoking it.
  * @param: source_stream:   The input stream from which to take input arguments.
  * @param: mode:            One of `DeeExec_RUNMODE_*', optionally or'd with a set of `DeeExec_RUNMODE_F*'
- * @param: argv:            Variable arguments passed to user-code 
+ * @param: argv:            Variable arguments passed to user-code
  * @param: start_line:      The starting line number when compiling code. (zero-based)
  * @param: start_col:       The starting column number when compiling code. (zero-based)
  * @param: options:         A set of compiler options applicable for compiled code.
@@ -159,7 +159,7 @@ err:
 /* Execute source code from `source_stream' and return the result of invoking it.
  * @param: source_stream:   The input stream from which to take input arguments.
  * @param: mode:            One of `DeeExec_RUNMODE_*', optionally or'd with a set of `DeeExec_RUNMODE_F*'
- * @param: argv:            Variable arguments passed to user-code 
+ * @param: argv:            Variable arguments passed to user-code
  * @param: start_line:      The starting line number when compiling code. (zero-based)
  * @param: start_col:       The starting column number when compiling code. (zero-based)
  * @param: options:         A set of compiler options applicable for compiled code.

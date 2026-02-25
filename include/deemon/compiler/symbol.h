@@ -112,7 +112,7 @@ struct Dee_class_attribute;
  *            [":" "<ARGUMENT_TYPE>"]      // Type defaults to "Object" (encoded as "?O")
  *            ["=" ["<ARGUMENT_DEFAULT>"]]
  *        )...) ")" ["->" "<RETURN_TYPE>"] "<END_OF_LINE>"
- *    
+ *
  *    CONTENT-SPECIFIC:
  *      - When encountered in a function-doc, it contains information about the function's intended
  *        invocation. Unnamed arguments are automatically generated from abcdefghijklmnopqrstuvwxyz,
@@ -126,7 +126,7 @@ struct Dee_class_attribute;
  *        REMINDER: Using `none' as argument name sets the name to be undefined/reserved.
  *      - When encountered in a member-doc, the member is assumed to be a function
  *      - When encountered in a type-doc, it contains information about the type's constructor operator
- *    
+ *
  *    ARGUMENT_NAME: A user-defined identifier describing the name of an argument
  *                   This operand may be prefixed by one of "?", "!" or "!!" to describe
  *                   a variable amount of arguments being passed through this argument.
@@ -257,8 +257,8 @@ struct Dee_class_attribute;
  *   - Declarations can be grouped by having a section contain more than one line, matching either
  *     the "->" pattern, or the "<START_OF_LINE>(" one.
  *     This may be done to describe available overloads, with the associated human-readable
- *     texts then applying to 
- *     
+ *     texts then applying to
+ *
  *
  *
  *
@@ -308,7 +308,7 @@ struct Dee_class_attribute;
  *
  *
  * EXPR-ENCODING:  (How (simple) expressions are encoded)
- *   
+ *
  *   <EXPR>     --- Where `<EXPR>' contains the actual expression, which is encoded as follows:
  *
  *   <EXPR> ::= "!" (
@@ -963,22 +963,18 @@ INTDEF char const symclass_names[0x1f + 1][8];
 struct scope_object {
 	Dee_OBJECT_HEAD
 	Dee_WEAKREF_SUPPORT
-#ifdef __INTELLISENSE__
-	DeeScopeObject          *s_prev;  /* [0..1][const] Previous scope. */
-#else                                 
-	DREF DeeScopeObject     *s_prev;  /* [0..1][const] Previous scope. */
-#endif                                
-	DeeBaseScopeObject      *s_base;  /* [1..1][const] The base scope of the surrounding function.
-	                                   * HINT: If this is a self-pointer, this scope is actually a `DeeBaseScopeObject'  */
-	DeeClassScopeObject     *s_class; /* [0..1][const] A pointer to the nearest class scope, or NULL if outside of any. */
-	DREF struct symbol     **s_map;   /* [0..1][owned][0..s_mapa][owned] Hash-map of symbols defined in this scope.
-	                                   * HINT: Use the TPP keyword id modulated by `s_mapa' as index. */
-	size_t                   s_mapc;  /* Amount of symbols defined within the hash-map `s_map'. */
-	size_t                   s_mapa;  /* Allocated vector size of the symbol hash-map `s_map'. */
-	DREF struct symbol      *s_del;   /* [0..1][owned] Chain of symbols that have been deleted. (And thereby made invisible) */
+	DREF DeeScopeObject *s_prev;  /* [0..1][const] Previous scope. */
+	DeeBaseScopeObject  *s_base;  /* [1..1][const] The base scope of the surrounding function.
+	                               * HINT: If this is a self-pointer, this scope is actually a `DeeBaseScopeObject'  */
+	DeeClassScopeObject *s_class; /* [0..1][const] A pointer to the nearest class scope, or NULL if outside of any. */
+	DREF struct symbol **s_map;   /* [0..1][owned][0..s_mapa][owned] Hash-map of symbols defined in this scope.
+	                               * HINT: Use the TPP keyword id modulated by `s_mapa' as index. */
+	size_t               s_mapc;  /* Amount of symbols defined within the hash-map `s_map'. */
+	size_t               s_mapa;  /* Allocated vector size of the symbol hash-map `s_map'. */
+	DREF struct symbol  *s_del;   /* [0..1][owned] Chain of symbols that have been deleted. (And thereby made invisible) */
 #ifndef NDEBUG
-	uint16_t                 s_old_stack; /* Used by stack alignment assertions during assembly: The stack depth when the scope was entered. */
-	uint16_t                 s_pad[(sizeof(void *)-2)/2];
+	uint16_t             s_old_stack; /* Used by stack alignment assertions during assembly: The stack depth when the scope was entered. */
+	uint16_t             s_pad[(sizeof(void *)-2)/2];
 #endif /* !NDEBUG */
 };
 #define DeeScope_IsClassScope(x) ((x)->s_class == (DeeClassScopeObject *)(x))

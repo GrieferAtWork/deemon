@@ -352,7 +352,7 @@ struct Dee_va_list_struct {
  *              | '<' [object] '>'    // `Cell' (When `object')
  *     ;
  *     objects ::= (object | ',')...  // `,' is simply ignored, but can be used to prevent ambiguity
- *     
+ *
  *     ref_object ::= 'o' | 'O'; // `DeeObject *' (Uppercase `O' inherits a reference from `va_arg' and causes `Dee_Packf' to propagate an error when `NULL')
  *     ref_int    ::= ref_intlen ('d' | 'u' | 'i' | 'x'); // `u' and `x' create unsigned integers
  *     ref_intlen ::= 'I' ['8' | '16' | '32' | '64'] // Fixed-length / sizeof(size_t)

@@ -769,7 +769,7 @@ err_foreach_elem:
 		 * >> } @[interrupt] catch (...) {
 		 * >>     print "Error";
 		 * >> }
-		 * >> 
+		 * >>
 		 * >> @@Documentation text // We've already parsed this due to the chance of this being followed by `catch' or `finally'
 		 * >> global foo = 42;
 		 */

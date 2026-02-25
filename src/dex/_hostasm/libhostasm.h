@@ -2028,7 +2028,7 @@ basic_block_splitat(struct basic_block *__restrict self,
 /* Constrain or assign `self->bb_mem_start' with the memory state `state'
  * @param: self_start_addr: The starting-address of `self' (for error messages)
  * @return: 1 : State become more constrained
- * @return: 0 : State didn't change 
+ * @return: 0 : State didn't change
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 basic_block_constrainwith(struct basic_block *__restrict self,
@@ -2921,7 +2921,7 @@ fg_vcallapi_ex_(struct fungen *__restrict self,
  * there is an additional item "funcaddr" that contains the (possibly) runtime-
  * evaluated address of the function that should be called. Also note that said
  * "funcaddr" location is *always* popped.
- * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function' 
+ * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL

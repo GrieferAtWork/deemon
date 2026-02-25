@@ -545,7 +545,7 @@ typedef union {
 #endif /* !AF_INET */
 #ifdef AF_INET6
 	struct sockaddr_in6     sa_inet6;
-	struct sockaddr_storage storage; 
+	struct sockaddr_storage storage;
 #endif/* !AF_INET6 */
 #ifdef AF_UNIX
 	struct sockaddr_un      sa_un;

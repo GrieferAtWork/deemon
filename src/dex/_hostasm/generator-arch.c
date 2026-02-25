@@ -2180,7 +2180,7 @@ err:
 
 
 /* @return: 1 : %Pax was not pushed
- * @return: 0 : %Pax was pushed 
+ * @return: 0 : %Pax was pushed
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 _fungen_gpush_Pax_if_used(struct fungen *__restrict self) {

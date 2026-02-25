@@ -730,7 +730,7 @@ basic_block_clear_hcode_and_exits(struct basic_block *__restrict self) {
 /* Constrain or assign `self->bb_mem_start' with the memory state `state'
  * @param: self_start_addr: The starting-address of `self' (for error messages)
  * @return: 1 : State become more constrained
- * @return: 0 : State didn't change 
+ * @return: 0 : State didn't change
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 basic_block_constrainwith(struct basic_block *__restrict self,

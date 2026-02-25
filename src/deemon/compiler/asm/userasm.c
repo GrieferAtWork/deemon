@@ -2409,7 +2409,7 @@ create_assembly_file:
 	 *       parts of the compilation process (which are already done)
 	 *       With that in mind, resetting all of that stuff here will
 	 *       make it look like every user-assembly component is being
-	 *       executed in a kind-of sub-space that is independent from 
+	 *       executed in a kind-of sub-space that is independent from
 	 *       all the other parts. */
 	TPPLexer_Reset(TPPLexer_Current,
 	               (TPPLEXER_RESET_ESTATE | TPPLEXER_RESET_ESTACK |

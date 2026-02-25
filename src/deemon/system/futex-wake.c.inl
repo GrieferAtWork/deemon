@@ -173,7 +173,7 @@ PUBLIC NONNULL((1)) void
 		 * appear while we're waking existing threads, since this is
 		 * only about waking threads that were there at the time of
 		 * the signal being delivered.
-		 * 
+		 *
 		 * We also don't have to worry about any extra pending thread
 		 * wake-ups remaining after we're doing waking threads, since
 		 * 1: Futex controllers are constantly finalized and thrown

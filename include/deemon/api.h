@@ -252,7 +252,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #if !defined(NDEBUG) && 0
 #define CONFIG_TRACE_REFCHANGES
 #else /* !NDEBUG */
-#define CONFIG_NO_TRACE_REFCHANGES 
+#define CONFIG_NO_TRACE_REFCHANGES
 #endif /* NDEBUG */
 #endif /* !CONFIG_[NO_]TRACE_REFCHANGES */
 

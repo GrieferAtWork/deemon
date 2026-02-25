@@ -6576,7 +6576,7 @@ INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
 default__seq_unpack_ex__with__tp_asvector(DeeObject *__restrict self, size_t min_count, size_t max_count, DREF DeeObject *result[]) {
 	size_t real_count = (*Dee_TYPE(self)->tp_seq->tp_asvector)(self, max_count, result);
 	if unlikely(real_count < min_count || real_count > max_count) {
-		if (real_count < min_count) 
+		if (real_count < min_count)
 			Dee_Decrefv(result, real_count);
 		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}

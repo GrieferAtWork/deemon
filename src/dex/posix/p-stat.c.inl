@@ -814,7 +814,7 @@ again:
 					char buf[COMPILER_STRLEN("/proc/self/fd/-2147483648") + 1];
 					Dee_sprintf(buf, "/proc/self/fd/%d", file_fd);
 #ifdef posix_stat_USES_WCHAR
-					{ 
+					{
 						Dee_wchar_t wbuf[COMPILER_LENOF(buf)];
 						size_t i;
 						for (i = 0; i < COMPILER_LENOF(buf); ++i)

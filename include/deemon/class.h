@@ -64,17 +64,17 @@
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >> }                                    >>     this(): super() { }
  *                                         >> }
- * 
+ *
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     this = super;                    >>     this(args...): super(args...) { }
  * >> }                                    >> }
- * 
+ *
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     this = del;                      >>     this(args...) {
  * >> }                                    >>         import NotImplemented from errors;
  *                                         >>         throw NotImplemented("...");
  *                                         >>     }
- * 
+ *
  * >> class MyClass: Base {                >> class MyClass: Base {
  * >>     member foo = 42;                 >>     member foo;
  * >> }                                    >>     this(): super() {

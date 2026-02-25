@@ -1408,7 +1408,7 @@ again:
 }
 
 /* Lookup the node containing a given `key'
- * @return: 1 : No nodes overlap with `[minkey:maxkey]' 
+ * @return: 1 : No nodes overlap with `[minkey:maxkey]'
  * @return: 0 : Success (in this case, a read-lock to `self' is still being held)
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL

@@ -291,7 +291,7 @@ ReSequenceIterator__init(ReSequenceIterator *__restrict self,
 #define MATCH(Titer, Tseq)  \
 	if (tp_self == Titer) { \
 		tp_seq = Tseq;      \
-	} else 
+	} else
 	MATCH(&ReFindAllIterator_Type, &ReFindAll_Type)
 	MATCH(&RegFindAllIterator_Type, &RegFindAll_Type)
 	MATCH(&ReLocateAllIterator_Type, &ReLocateAll_Type)

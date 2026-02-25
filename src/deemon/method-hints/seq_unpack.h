@@ -306,7 +306,7 @@ size_t __seq_unpack__.seq_unpack_ex([[nonnull]] DeeObject *__restrict self,
 %{$with__tp_asvector = [[inherit_as($with__seq_operator_foreach)]] {
 	size_t real_count = (*THIS_TYPE->tp_seq->tp_asvector)(self, max_count, result);
 	if unlikely(real_count < min_count || real_count > max_count) {
-		if (real_count < min_count) 
+		if (real_count < min_count)
 			Dee_Decrefv(result, real_count);
 		return (size_t)DeeRT_ErrUnpackErrorEx(self, min_count, max_count, real_count);
 	}

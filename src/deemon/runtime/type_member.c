@@ -452,7 +452,7 @@ type_obmeth_vcallf(DeeTypeObject *cls_type,
 	if unlikely(!thisarg) {
 		Dee_VPPackf_Cleanup(format, ((struct Dee_va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
-	} 
+	}
 	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
 		goto err_thisarg;
 

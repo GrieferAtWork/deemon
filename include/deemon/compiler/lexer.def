@@ -124,13 +124,13 @@ DEF_K(F)
  * >>           //       that variable is referenced instead, meaning that `global' is not
  * >>           //       only used to reference global, but also extern variables.
  * >> x;        // Same as `global x', but warned due to missing visibility constraint.
- * >> 
+ * >>
  * >> function set_x() {
  * >>     x = 42;        // Ok
  * >>     global x = 42; // Ok (Does the same)
  * >>     local x = 10;  // this is a different "x"
  * >> }
- * >> 
+ * >>
  * >> local y;  // Define a local variable not exported by the module.
  * >>           // Note that this variable cannot be used as an l-value in sub-functions,
  * >>           // as it a global variable, but instead private to the global scope of

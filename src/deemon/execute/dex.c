@@ -682,7 +682,7 @@ DeeModule_OfPointer(void const *ptr) {
 	 * In Mk4, this is done by:
 	 * >> #define _KOS_SOURCE 1
 	 * >> #include <dlfcn.h>
-	 * >> 
+	 * >>
 	 * >> static int obj = 0;
 	 * >> char const *getNameOfMyModule() {
 	 * >> 	void *h;

@@ -125,7 +125,7 @@ fs_wstr_endswith_str(LPCWSTR wstr, size_t wstr_length,
 #define UTF16_HIGH_SURROGATE_MIN 0xd800
 #define UTF16_SURROGATE_SHIFT    0x10000
 
-PRIVATE WUNUSED uint16_t *DCALL 
+PRIVATE WUNUSED uint16_t *DCALL
 Dee_unicode_writeutf16(/*utf-16*/ uint16_t *__restrict dst, uint32_t ch) {
 	if likely(ch <= 0xffff && (ch < 0xd800 || ch > 0xdfff)) {
 		*dst++ = (uint16_t)ch;

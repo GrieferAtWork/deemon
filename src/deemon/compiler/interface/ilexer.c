@@ -4585,7 +4585,7 @@ file_getfunctionmacrovariant(DeeCompilerItemObject *__restrict self) {
 			char ch;
 			switch (file->f_macro.m_flags & TPP_MACROFILE_MASK_FUNC_STARTCH) {
 
-			case TPP_MACROFILE_FUNC_START_LANGLE: 
+			case TPP_MACROFILE_FUNC_START_LANGLE:
 				ch = '<';
 				break;
 

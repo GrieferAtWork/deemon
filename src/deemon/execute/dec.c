@@ -3367,7 +3367,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
  *    >> .Lexcept_1_start:
  *    >> ...
  *    >> .Lexcept_1_end:
- *    >> 
+ *    >>
  *    >> // Assembly for a catch-guard for `Error.FSError.UnsupportedAPI'
  *    >> .except .Lexcept_1_start, .Lexcept_1_end, .Lexcept_1_entry
  *    >> .Lexcept_1_entry:
@@ -3383,7 +3383,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
  *    >> .Lexcept_1_start:
  *    >> ...
  *    >> .Lexcept_1_end:
- *    >> 
+ *    >>
  *    >> // Handler for `Error'
  *    >> .except .Lexcept_2_start, .Lexcept_2_end, .Lexcept_2_entry, @mask(Error)
  *    >> .Lexcept_2_entry:

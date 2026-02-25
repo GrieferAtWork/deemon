@@ -53,7 +53,7 @@ typedef unsigned char Dee_once_t; /* 0: not yet run; 1: running; 2: did run. */
 typedef struct {
 	uint32_t oc_didrun; /* 0: Not run
 	                     * 1: running
-	                     * [2, _Dee_ONCE_COMPLETED_THRESHOLD - 1]: Running, and threads are waiting for completion 
+	                     * [2, _Dee_ONCE_COMPLETED_THRESHOLD - 1]: Running, and threads are waiting for completion
 	                     * [_Dee_ONCE_COMPLETED_THRESHOLD, (uint32_t)-1]: Did run */
 } Dee_once_t;
 #define Dee_ONCE_INIT { 0 }

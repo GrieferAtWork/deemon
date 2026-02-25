@@ -486,7 +486,7 @@ err_missing_rparen:
 		}
 		if (!second_paren && !(out_mode & JIT_AST_COMMA_OUT_FMULTIPLE)) {
 			/* Recursively parse cast suffix expressions:
-			 * >> (int)(float)get_value(); 
+			 * >> (int)(float)get_value();
 			 * Parse as:
 			 * >> int(float(get_value()));
 			 * Without this, it would be parsed as:

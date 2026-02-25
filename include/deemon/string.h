@@ -280,7 +280,7 @@ union Dee_charptr_const {
 #define Dee_STRING_WIDTH_4BYTE 2u /* All characters are within the range U+0000 - U+10FFFF (Full unicode; UTF-32) */
 #define Dee_STRING_WIDTH_COUNT 3u /* the number of of known string width encodings. */
 
-/* 
+/*
  *   00 | 00  -> 00 == a|b
  *   00 | 01  -> 01 == a|b
  *   00 | 10  -> 10 == a|b

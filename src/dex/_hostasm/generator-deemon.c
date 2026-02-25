@@ -213,7 +213,7 @@ fg_vpop_prefix(struct fungen *__restrict self,
 
 /* Push the prefixed object as a `DREF DeeObject *'. In case of ASM_STACK/ASM_LOCAL,
  * make sure that no other memory location is aliasing the prefixed location.
- * @return: 0 : Success 
+ * @return: 0 : Success
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fg_vpush_prefix_noalias(struct fungen *__restrict self,
@@ -912,7 +912,7 @@ fg_geninstr(struct fungen *__restrict self,
 
 	TARGET(ASM_PUSH_CONST)
 		return fg_vpush_cid(self, instr[1]);
-	TARGET(ASM16_PUSH_CONST) 
+	TARGET(ASM16_PUSH_CONST)
 		return fg_vpush_cid(self, UNALIGNED_GETLE16(instr + 2));
 
 	TARGET(ASM_PUSH_REF)
@@ -1309,7 +1309,7 @@ do_jcc:
 		 * is `jf' or `jt', and if so: generate a call to `DeeObject_Compare*'
 		 * without the *Object suffix. That way, we don't need DeeObject_Bool,
 		 * and also don't have to decref the comparison result!
-		 * 
+		 *
 		 * Similarly, we can do the same if `ASM_BOOL' appears next, in which
 		 * case we don't have to make 2 calls, or have the result be a reference */
 		/* TODO: Figure out the instruction that eventually pops the result of the CMP */
@@ -2375,7 +2375,7 @@ do_jcc:
 		}
 		DO(fg_vpush_this(self, instr));   /* this */
 		DO(fg_vpush_rid(self, type_rid)); /* this, type */
-		return fg_vdel_imember(self, addr, FG_CIMEMBER_F_NORMAL); 
+		return fg_vdel_imember(self, addr, FG_CIMEMBER_F_NORMAL);
 	}	break;
 
 	TARGET(ASM_SETMEMBER_THIS_R) {
@@ -2419,7 +2419,7 @@ do_jcc:
 		}
 		DO(fg_vpush_this(self, instr));   /* this */
 		DO(fg_vpush_rid(self, type_rid)); /* this, type */
-		return fg_vbound_imember(self, addr, FG_CIMEMBER_F_NORMAL); 
+		return fg_vbound_imember(self, addr, FG_CIMEMBER_F_NORMAL);
 	}	break;
 
 

@@ -564,7 +564,7 @@ PRIVATE NONNULL((1)) void DCALL
 GCCollection_PopulateReferringTransitive(GCCollection *__restrict self) {
 	GCSet visited, decref_later;
 	struct gc_generation *gen;
-	struct gc_is_referring_transitive_data data; 
+	struct gc_is_referring_transitive_data data;
 again:
 	GCSet_Init(&visited);
 	GCSet_Init(&decref_later);
@@ -585,7 +585,7 @@ again:
 			if (data.girtd_found) {
 				target_set = &self->gcc_cache;
 			} else {
-				if likely(Dee_DecrefIfNotOne(gc_obj)) 
+				if likely(Dee_DecrefIfNotOne(gc_obj))
 					continue;
 				/* Must decref "gc_obj" later... */
 				target_set = &decref_later;

@@ -393,7 +393,7 @@ DECL_BEGIN
  *       - Corners must be drawn using one of: + |
  *       - The number of columns cannot be altered half-way into a table. - In other words,
  *         the number of corner characters must remain consistent for every border throughout.
- *       - The actual number of Horizontal line characters 
+ *       - The actual number of Horizontal line characters
  *       - A new row with a thin separator can be started by inserting a line where all
  *         columns contain only space characters. If multiple such lines appear after
  *         one-another, all but the first line are simply ignored.
@@ -451,8 +451,6 @@ DECL_BEGIN
  *        >> @@@throws: Error: This time with ':'-characters
  *      - In the case of `@param' and `@throws', the referenced
  *        >> @@@throws: Error: This time with ':'-characters
- *     
- *
  */
 
 /* +=============================================================================+

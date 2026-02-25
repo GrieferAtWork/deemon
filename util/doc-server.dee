@@ -406,7 +406,7 @@ global final DEEMON_KEYWORD_CSS_CLASSES = {
 function checkDeecodeSourceCodePartForOperator(text: string): (string | none, string) {
 	for (local ch: text) {
 		if (ch in [
-			"=", "<", ">", "?", ":", "+", "-", "*", "/", "%", ".", ",", ";", 
+			"=", "<", ">", "?", ":", "+", "-", "*", "/", "%", ".", ",", ";",
 			"#", "(", ")", "[", "]", "{", "}", "~", "@", "&", "|", "^", "!"])
 			return ("h_symbol", text);
 		if (!ch.isspace())

@@ -62,13 +62,13 @@ JITLexer_SkipComma(JITLexer *__restrict self, uint16_t mode,
 	int error;
 #endif /* JIT_EVAL */
 	/* In: "foo, bar = 10, x, y = getvalue()..., 7"
-	 *               |      |                  | 
+	 *               |      |                  |
 	 *               +----------------------------  expr_batch = { }
 	 *                      |                  |    expr_comma = { foo, bar }
-	 *                      |                  | 
+	 *                      |                  |
 	 *                      +---------------------  expr_batch = { foo, (bar = 10) }
 	 *                                         |    expr_comma = { x }
-	 *                                         | 
+	 *                                         |
 	 *                                         +--  expr_batch = { foo, (bar = 10), (x, y = getvalue()...) }
 	 *                                              expr_comma = { }
 	 */

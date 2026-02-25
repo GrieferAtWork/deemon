@@ -477,7 +477,7 @@ fg_makeprolog(struct fungen *__restrict self) {
 	 * >>         DeeTuple_New(argc - {co_argc_max}, argv + {co_argc_max});
 	 * >>     }
 	 * >> });
-	 * 
+	 *
 	 */
 
 	(void)self;

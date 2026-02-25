@@ -4908,7 +4908,7 @@ err_bad_used_bufsize:
 		 * that the source-file was located at its beginning, yet due to us
 		 * possibly having been able to copy *some* file data using `sendfile',
 		 * that might no longer be the case.
-		 * 
+		 *
 		 * Instead, in this situation we can assume that the source-file's
 		 * file pointer is currently located at `transfer_total' bytes, so
 		 * we only have to map all of the file's contents starting from that

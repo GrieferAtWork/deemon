@@ -380,7 +380,7 @@ PRIVATE DEFINE_STRING_EX(str_DEFAULT_SHELL_C, "-c", 0x609d4fb4, 0xfea31f2416d3d4
  *     is prefixed with a `\' character
  *      - `foo"'  --> `foo\"'
  *   - Any number of `\' that are followed by a `"' is replaced
- *     with double that number of `\' characters, 
+ *     with double that number of `\' characters,
  *      - `foo\'  --> `foo\'
  *      - `foo\"' --> `foo\\\"'
  * HINT: The algorithm used by VC/VC++ is located
@@ -1390,7 +1390,7 @@ err_interrupt:
 #ifdef ipc_Process_WANT_ipc_exe2path_cache
 /* Cache for mapping from executable names to absolute paths.
  * This cache is cleared when $PATH or $PATHEXT is changed.
- * 
+ *
  * The first time that this cache is used, it is hooked into the
  * notify system via `DeeNotify_StartListen()', and once the ipc
  * dex is unloaded, that hook is deleted by `DeeNotify_EndListen()' */
@@ -4414,7 +4414,7 @@ err:
 #define wcslen dee_wcslen
 DeeSystem_DEFINE_wcslen(dee_wcslen)
 #endif /* !CONFIG_HAVE_wcslen */
-#endif /* ipc_Process_USE_cmdline && ipc_Process_USE_CreateProcessW */ 
+#endif /* ipc_Process_USE_cmdline && ipc_Process_USE_CreateProcessW */
 
 
 #ifdef ipc_Process_USE_cmdline

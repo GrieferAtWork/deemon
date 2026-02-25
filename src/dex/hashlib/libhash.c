@@ -294,7 +294,7 @@ def_crc(["CRC-16/PROFIBUS", "CRC-16/IEC-61158-2"], 16, 0x1dcf, 0xffff, false, fa
 //   NOTE: The wrong version is commented out, but kept as a reminder.
 //   NOTE: After looking at the numbers, I noticed that '0x554d
 //         is '0xb2aa' when reading the bits in reverse...
-//         Dunno why someone did that, though, but it might be 
+//         Dunno why someone did that, though, but it might be
 //   EDIT: Thank goodness I noticed that bit-order, because as
 //         it turns out, that bug is present in a bunch of algos.
 assert DEEMON_REFLECT(0xb2aa, 16) == 0x554d; // Just so you know...

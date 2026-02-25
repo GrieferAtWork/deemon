@@ -682,7 +682,7 @@ DeeSystem_DEFINE_memrend(dee_memrend)
  * >> print DeeSystem_BaseName(r"/foo/bar/file.txt");   // "file.txt"
  * >> print DeeSystem_BaseName(r"file.txt");            // "file.txt"
  * >> print DeeSystem_BaseName(r"E:\path\to\file.txt"); // "file.txt"  (Windows-only)
- * 
+ *
  * This function returns a pointer to 1 character past the
  * last `DeeSystem_SEP' or `DeeSystem_ALTSEP' in `path', or
  * just re-returns `path' when no such character exists. */

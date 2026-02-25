@@ -2299,7 +2299,7 @@ yield_again:
 					 *       not try to parse any additional in/is expressions:
 					 * >> local foo = "value";
 					 * >> local bar = f"foo = {foo!r}"; // << we mustn't parse the '!' here!
-					 * 
+					 *
 					 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM' warning needs to go away
 					 */
 					if (WARN(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))

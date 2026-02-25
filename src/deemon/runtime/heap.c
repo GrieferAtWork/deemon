@@ -8040,7 +8040,7 @@ _leaks_pending_reap_and_unlock(void) {
 			mchunkptr p = mem2chunk(ptr);
 			if (!flag4inuse(p)) {
 				/* X-X-X: This check right here has been seen to fail for unexplained reasons in the past
-				 *        When it failed, "file" was 0xCCCCCCCC or 0xDEADBEEF (or file=0xDEADBEEF, and 
+				 *        When it failed, "file" was 0xCCCCCCCC or 0xDEADBEEF (or file=0xDEADBEEF, and
 				 *        ptr->lfle_file=0xDEADBEEF, indicating another thread having free'd the pointer
 				 *        while our thread was trying to do the same).
 				 * It seemed to happen under:

@@ -212,7 +212,7 @@ for (local x: names) {
 
 /* clang-format off */
 
-/* NOTE: When multiple overloads could be used, 
+/* NOTE: When multiple overloads could be used,
  *       the first overload is always preferred.
  *       With that in mind, order overloads ascendingly
  *       when it comes to relaxed operand interpretation. */

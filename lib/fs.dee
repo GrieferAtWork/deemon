@@ -192,7 +192,7 @@ local final class _FsCopyFileProgress {
 @@@throw FileNotFound    The given @existing_file could not be found, or a parent directory
 @@                       of @new_file does not exist
 @@@throw IsDirectory     The given @existing_file is a directory
-@@@throw FileAccessError The current user does not have permissions to access 
+@@@throw FileAccessError The current user does not have permissions to access
 @@                       the file @existing_file for reading, or the directory
 @@                       containing the non-existent file @new_file for writing
 @@@throw ReadOnlyFile    The file-system or device hosting the directory

@@ -47,7 +47,7 @@ STATIC_ASSERT(offsetof(struct memval, mv_vmorph) == offsetof(struct memref, _mr_
 STATIC_ASSERT(offsetof(struct memval, mv_flags) == offsetof(struct memref, _mr_always0_4));
 
 /* Assign a score to the complexity of moving "from" to "to"
- * 
+ *
  * If the move is impossible (can happen if "to" is CONST and
  * differs from FROM), return `(size_t)-1' */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL

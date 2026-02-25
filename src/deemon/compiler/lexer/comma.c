@@ -253,13 +253,13 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	struct ast_loc loc;
 
 	/* In: "foo, bar = 10, x, y = getvalue()..., 7"
-	 *               |      |                  | 
+	 *               |      |                  |
 	 *               +----------------------------  expr_batch = { }
 	 *                      |                  |    expr_comma = { foo, bar }
-	 *                      |                  | 
+	 *                      |                  |
 	 *                      +---------------------  expr_batch = { foo, (bar = 10) }
 	 *                                         |    expr_comma = { x }
-	 *                                         | 
+	 *                                         |
 	 *                                         +--  expr_batch = { foo, (bar = 10), (x,y = getvalue()...) }
 	 *                                              expr_comma = { }
 	 */

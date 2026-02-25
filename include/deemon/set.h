@@ -48,11 +48,11 @@ DECL_BEGIN
  * difference(other: Set): Set;
  * operator - (other: Set): Set;
  *     Returns a set of all objects from @this, excluding those also found in @other
- * 
+ *
  * intersection(other: Set): Set;
  * operator & (other: Set): Set;
  *     Returns the intersection of @this and @other
- * 
+ *
  * isdisjoint(other: Set): bool;
  *     Returns ?t if ${##(this & other) == 0}
  *     In other words: If @this and @other have no items in common.
@@ -61,20 +61,20 @@ DECL_BEGIN
  * operator | (other: Set): Set;
  * operator + (other: Set): Set;
  *     Returns the union of @this and @other
- * 
+ *
  * symmetric_difference(other: Set): Set;
  * operator ^ (other: Set): Set;
  *     Returns a set containing objects only found in either
  *     @this or @other, but not those found in both.
- * 
+ *
  * issubset(other: Set): bool;
  * operator <= (other: Set): bool;
  *     Returns ?t if all items found in @this set can also be found in @other
- * 
+ *
  * operator == (other: Set): bool;
  *     Returns ?t if @this set contains the same
  *     items as @other, and not any more than that
- * 
+ *
  * operator < (other: Set): bool;
  *     The result of ${this <= other && this != other}
  *

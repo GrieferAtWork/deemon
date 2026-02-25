@@ -360,7 +360,7 @@ make_super(DeeSuperObject *__restrict buf, DeeFileTypeObject *tp_self, DeeFileOb
  * >> operator read(buf: <Buffer>, max_size: int): int;
  * >> operator read(buf: <Buffer>, start: int, end: int): int;
  * >> operator read(buf: <Buffer>, start: int, end: int, flags: int): int;
- * >> operator read(maxBytes: int): Bytes; 
+ * >> operator read(maxBytes: int): Bytes;
  * >> operator read(): Bytes; */
 DEFINE_OPERATOR_INVOKE(operator_read, &instance_read, &filetype_inherit_read) {
 	DeeBuffer buf;
@@ -577,7 +577,7 @@ err:
  * >> operator pread(buf: <Buffer>, max_size: int, pos: int): int;
  * >> operator pread(buf: <Buffer>, start: int, end: int, pos: int): int;
  * >> operator pread(buf: <Buffer>, start: int, end: int, pos: int, flags: int): int;
- * >> operator pread(maxBytes: int, pos: int): Bytes; 
+ * >> operator pread(maxBytes: int, pos: int): Bytes;
  * >> operator pread(pos: int): Bytes; */
 DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread) {
 	Dee_pos_t pos;

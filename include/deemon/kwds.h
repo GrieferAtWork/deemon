@@ -638,7 +638,7 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeBlackListKwds_IsBlackListedStringLe
 
 /* Construct a new mapping for keywords that follows the black-listing scheme.
  * The caller must decref the returned object using `DeeBlackListKwds_Decref()'
- * -> This function is used to filter keyword arguments from varkwds when 
+ * -> This function is used to filter keyword arguments from varkwds when
  *    kwargs argument protocol is used:
  *    >> function foo(x, y?, **kwds) {
  *    >>     print type kwds, repr kwds;

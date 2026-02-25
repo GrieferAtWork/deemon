@@ -3318,7 +3318,7 @@ done:
  * the object is still being shared), it will acquire a write-lock to
  * `self' (without serving interrupts), and then proceed to delete
  * the linked printer.
- * 
+ *
  * @return: * : The total sum of return values of the underlying printer,
  *              or the first negative return value where no error was also
  *              thrown at the same time. */

@@ -3347,7 +3347,7 @@ do_setitem_c:
 			 *       causing it to halt and pass control over to said utility which
 			 *       will then be able to restore the original byte that was replaced
 			 *       with the breakpoint instruction.
-			 *    >> Using this fairly simple trick, it is even possible to allow for 
+			 *    >> Using this fairly simple trick, it is even possible to allow for
 			 *       step-by-step execution of code, simply by always replacing the next
 			 *       instruction with a breakpoint (or in the case of a branch: the next
 			 *       instruction, as well as the branch target), allowing code to be
@@ -4858,7 +4858,7 @@ do_cmpxch_ub_c:
 						/* Special case: We must create an unsigned range, but
 						 *               the given target length doesn't fit.
 						 *               Therefor, we must create an object-style
-						 *               range in order to prevent the potential 
+						 *               range in order to prevent the potential
 						 *               overflow. */
 						DREF DeeObject *ob_end = DeeInt_NewUInt32(range_end);
 						if unlikely(!ob_end)

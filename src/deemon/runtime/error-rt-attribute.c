@@ -368,7 +368,6 @@ typedef struct {
 	 *   - uintptr_t                 ae_desc.ad_info.ai_type = <*LAZY_OBMETHOD or *LAZY_CLMETHOD>;
 	 *   - AttributeError_LazyMethod_SetMethod(., <relevant Dee_objmethod_t / Dee_kwobjmethod_t>);
 	 *   "Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_*METHOD" is changed to "Dee_ATTRINFO_METHOD".
-	 *   
 	 */
 #define Dee_ATTRINFO_ATTRIBUTEERROR_LAZY_CLMETHOD (Dee_ATTRINFO_COUNT + 5) /* Special type for "AttributeError_F_LAZYDECL": Similar to "Dee_ATTRINFO_METHOD", but with custom decl already pre-set */
 
