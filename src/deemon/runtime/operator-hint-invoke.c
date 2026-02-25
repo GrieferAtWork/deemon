@@ -2123,6 +2123,24 @@ DeeObject_BoolInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__restr
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
 	if (tp_self == &DeeBool_Type) {
+		/* TODO: Because atomic of cache-conflicts arising from use of atomics,
+		 *       this is actually a decref right here is actually kind-of a
+		 *       bottle-neck, accounting for ~15% of time that deemon spends
+		 *       executing `deemon util/scripts/fixincludes.dee`
+		 *
+		 * Combine that with the 15% caused by the various incref's that had
+		 * to precede the relevant boolean object, and fixing these cache
+		 * conflicts should result in a 20%-30% performance increase when
+		 * executing heavily parallelized deemon scripts.
+		 *
+		 * The obvious idea here would be to:
+		 * - Break the rule that true/false are singletons
+		 * - Give every thread its own thread-local true/false objects that
+		 *   are created when a thread is created.
+		 *
+		 * The only real problem here is the former, since lots of code exists
+		 * that relies on booleans being singletons, by including constructs
+		 * such as "expr === true" */
 		Dee_DecrefNokill(self);
 		return self == Dee_True ? 1 : 0;
 	}
