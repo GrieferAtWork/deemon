@@ -1037,6 +1037,32 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 
 	DREF struct Dee_membercache_table *table;
 	Dee_hash_t i, perturb;
+	/* FIXME: Despite the rework into using RCU locking, this right here is *STILL*
+	 *        one of the **BIGGEST** (by **a lot**) bottlenecks in all of deemon
+	 *        (if the metrics I'm getting are to-be trusted):
+	 * >> deemon util/scripts/fixincludes.dee
+	 *    completes after ~33.5 seconds
+	 *
+	 * - DeeType_GetCachedAttrStringHash():  58.07%    (61.88% while on-stack)
+	 * - DeeType_SetCachedAttrStringHash():   6.95%     (7.66% while on-stack)
+	 * - DeeType_CallCachedAttrStringHash():  5.67%    (93.28% while on-stack)
+	 *
+	 * iow: of those 33.5 seconds deemon takes to execute the "fixincludes" script,
+	 *      it's spending more than *HALF* of that time in this function right here,
+	 *      threads conflicting with each other to atomic_inc/dec the counters in:
+	 *      - struct Dee_membercache_table::mc_refcnt
+	 *
+	 * This MUST BE IMPROVED! */
+
+	/* According to profiling, 25.44% of time executing is spend executing in the very next line!
+	 * The only thing that can still be the reason for that slowdown is the:
+	 * >> atomic_inc(struct Dee_membercache_table::mc_refcnt)
+	 *
+	 * And since every one of those incref's must eventually be followed by a decref on the
+	 * same reference counter, you can multiply those 25% *2 and you'll that
+	 *
+	 * Deemon spends 50% of its runtime adjusting "struct Dee_membercache_table::mc_refcnt"
+	 */
 	if unlikely(!Dee_membercache_acquiretable(&tp_self->LOCAL_tp_cache, &table))
 		goto cache_miss;
 	perturb = i = Dee_membercache_table_hashst(table, LOCAL_hash);
