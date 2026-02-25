@@ -2167,10 +2167,7 @@ struct Dee_membercache {
 	}                                  mc_link;   /* [0..1][lock(INTERNAL(membercache_lock))]
 	                                               * Entry in global list of caches (or unbound if not yet
 	                                               * linked, in which case `mc_table == NULL') */
-	DREF struct Dee_membercache_table *mc_table;  /* [0..1][lock(mc_tabuse > 0)] Member cache table. */
-#ifndef CONFIG_NO_THREADS
-	size_t                             mc_tabuse; /* [lock(ATOMIC)] When non-zero, some thread is reading `mc_table'. */
-#endif /* !CONFIG_NO_THREADS */
+	DREF struct Dee_membercache_table *mc_table;  /* [0..1][lock(RCU)] Member cache table. */
 };
 
 

@@ -1037,33 +1037,6 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 
 	DREF struct Dee_membercache_table *table;
 	Dee_hash_t i, perturb;
-	/* FIXME: This "acquire" here is insanely expensive. If stats are to-be trusted, deemon spends
-	 *        approx 25% of "deemon util/scripts/fixincludes.dee" **RIGHT HERE**, with multiple
-	 *        threads all doing atomic operations on the same set of types!
-	 * e.g.: When multiple threads all call "string.join", every thread goes through here
-	 *       and (if you look at the impl of "Dee_membercache_acquiretable()"):
-	 * - Dee_membercache_tabuse_inc(...)   // __ATOMIC_ACQUIRE
-	 * - Dee_membercache_table_incref(...) // __ATOMIC_SEQ_CST
-	 * - Dee_membercache_tabuse_dec(...)   // __ATOMIC_RELEASE
-	 * (those 3 ops are all needed because they implement the in-use counters of an atomic ref,
-	 * so it's not like any of them are just for show or don't serve a real purpose)
-	 *
-	 * That 3 atomic operations happening on memory locations from only 2 different cache lines.
-	 * Scale that up to for modern processors with 32+ cores, and we have all those CPUs having
-	 * to constantly (on the same 2 cache lines):
-	 * - bus-lock
-	 * - invalidate
-	 * - synchronize
-	 * - busy-spin
-	 * ... All the nine yards when it comes to atomic ops in heavily parallelized environments.
-	 *
-	 *
-	 * After doing some research, it seems what I need is "RCU", which is basically
-	 * the same as what I'm already doing (and what <deemon/util/atomic-ref.h> is),
-	 * but instead of having a shared in-use counter, every thread has a thread-
-	 * local "in-rcu" field, and the "while (in_use != 0) yield()" loop during a
-	 * set is replaced with "while (threads.any(e -> e.rcu_in_use)) yield()"
-	 */
 	if unlikely(!Dee_membercache_acquiretable(&tp_self->LOCAL_tp_cache, &table))
 		goto cache_miss;
 	perturb = i = Dee_membercache_table_hashst(table, LOCAL_hash);

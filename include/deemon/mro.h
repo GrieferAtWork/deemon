@@ -58,9 +58,8 @@
 
 #include "api.h"
 
-#include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __ATOMIC_SEQ_CST, __hybrid_atomic_* */
-#include <hybrid/sched/__yield.h> /* __hybrid_yield */
-#include <hybrid/typecore.h>      /* __ALIGNOF_POINTER__, __SIZEOF_POINTER__ */
+#include <hybrid/__atomic.h> /* __ATOMIC_SEQ_CST, __hybrid_atomic_decfetch, __hybrid_atomic_inc */
+#include <hybrid/typecore.h> /* __ALIGNOF_POINTER__, __SIZEOF_POINTER__ */
 
 #include "system-features.h" /* access, memcpy */
 #include "tuple.h"           /* DeeTuple_ELEM, DeeTuple_SIZE */
@@ -78,7 +77,8 @@
 #include "error-rt.h" /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_Err* */
 #include "object.h"   /* Dee_BOUND_FROMPRESENT_BOUND, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref */
 #ifndef __INTELLISENSE__
-#include "alloc.h" /* Dee_Free */
+#include "alloc.h"  /* Dee_Free */
+#include "thread.h" /* DeeRCU_Lock, DeeRCU_Synchronize, DeeRCU_Unlock */
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */
 #ifndef __INTELLISENSE__
@@ -690,30 +690,20 @@ struct Dee_membercache_table {
 #define Dee_membercache_table_decref(self)  (void)(__hybrid_atomic_decfetch(&(self)->mc_refcnt, __ATOMIC_SEQ_CST) || (Dee_membercache_table_destroy(self), 0))
 
 /* Member-cache synchronization helpers. */
-#ifndef CONFIG_NO_THREADS
-#define Dee_membercache_waitfor(self)                                           \
-	do {                                                                        \
-		while (__hybrid_atomic_load(&(self)->mc_tabuse, __ATOMIC_ACQUIRE) != 0) \
-			__hybrid_yield();                                                   \
-	}	__WHILE0
-#define Dee_membercache_tabuse_inc(self) __hybrid_atomic_inc(&(self)->mc_tabuse, __ATOMIC_ACQUIRE)
-#define Dee_membercache_tabuse_dec(self) __hybrid_atomic_dec(&(self)->mc_tabuse, __ATOMIC_RELEASE)
-#else /* !CONFIG_NO_THREADS */
-#define Dee_membercache_waitfor(self)    (void)0
-#define Dee_membercache_tabuse_inc(self) (void)0
-#define Dee_membercache_tabuse_dec(self) (void)0
-#endif /* CONFIG_NO_THREADS */
+#ifdef __INTELLISENSE__
+extern NONNULL((1)) void (Dee_membercache_waitfor)(struct Dee_membercache *__restrict self);
+extern NONNULL((1)) void (Dee_membercache_tabuse_inc)(struct Dee_membercache *__restrict self);
+extern NONNULL((1)) void (Dee_membercache_tabuse_dec)(struct Dee_membercache *__restrict self);
+#else /* __INTELLISENSE__ */
+#define Dee_membercache_waitfor(self)    DeeRCU_Synchronize()
+#define Dee_membercache_tabuse_inc(self) DeeRCU_Lock()
+#define Dee_membercache_tabuse_dec(self) DeeRCU_Unlock()
+#endif /* !__INTELLISENSE__ */
 
-#ifndef CONFIG_NO_THREADS
-#define _Dee_membercache_init_tabuse(self) , (self)->mc_tabuse = 0
-#else /* !CONFIG_NO_THREADS */
-#define _Dee_membercache_init_tabuse(self) /* nothing */
-#endif /* CONFIG_NO_THREADS */
-#define Dee_membercache_init(self)   \
+#define Dee_membercache_init(self)         \
 	(void)((self)->mc_link.le_next = NULL, \
 	       (self)->mc_link.le_prev = NULL, \
-	       (self)->mc_table        = NULL  \
-	       _Dee_membercache_init_tabuse(self))
+	       (self)->mc_table        = NULL)
 
 /* Finalize a given member-cache. */
 INTDEF NONNULL((1)) void DCALL Dee_membercache_fini(struct Dee_membercache *__restrict self);
