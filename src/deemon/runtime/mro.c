@@ -38,7 +38,7 @@
 #include <deemon/property.h>        /* DeeProperty_Type */
 #include <deemon/string.h>          /* DeeString_New, DeeString_STR */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero*, memcpy, memset */
-#include <deemon/thread.h>          /* DeeRCU_Lock, DeeRCU_Synchronize, DeeRCU_Unlock */
+#include <deemon/thread.h>          /* DeeRCU_* */
 #include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_METHOD_FKWDS, Dee_kwobjmethod_t, Dee_membercache, Dee_visit_t, STRUCT_CONST, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/hash.h>       /* Dee_HashStr */
@@ -1474,27 +1474,28 @@ Dee_membercache_addslot_log_success(struct Dee_membercache *__restrict self,
 PRIVATE NONNULL((1, 2)) int DCALL
 Dee_membercache_addslot(struct Dee_membercache *__restrict self,
                         struct Dee_membercache_slot const *__restrict slot) {
+	DeeRCU_FAST_SETUP
 	struct Dee_membercache_table *old_table;
 	struct Dee_membercache_table *new_table;
 	size_t new_table_mask;
 
 	/* Get a reference to the current table. */
 again:
-	DeeRCU_Lock();
+	DeeRCU_FAST_Lock();
 	old_table = atomic_read(&self->mc_table);
 	if (old_table != NULL) {
 		int status;
 		/* Try to add the slot to an existing cache-table. */
 		status = Dee_membercache_table_addslot(old_table, slot, false);
 		if (status >= 0) {
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return status;
 		}
 		new_table_mask = old_table->mc_mask;
 		new_table_mask = (new_table_mask << 1) | 1;
-		DeeRCU_Unlock();
+		DeeRCU_FAST_Unlock();
 	} else {
-		DeeRCU_Unlock();
+		DeeRCU_FAST_Unlock();
 		new_table_mask = 16 - 1; /* Start out bigger than 2. */
 	}
 
@@ -1506,18 +1507,18 @@ again:
 		 * existing table, but ignore bad hash characteristics this
 		 * time around. */
 		int result = -1;
-		DeeRCU_Lock();
+		DeeRCU_FAST_Lock();
 		old_table = atomic_read(&self->mc_table);
 		if (old_table != NULL) {
 			/* It doesn't matter if this addslot() call succeeds or not... */
 			result = Dee_membercache_table_addslot(old_table, slot, true);
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifndef Dee_DPRINT_IS_NOOP
 			if (result == 0)
 				Dee_membercache_addslot_log_success(self, slot);
 #endif /* !Dee_DPRINT_IS_NOOP */
 		} else {
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 		}
 		return result;
 	}
@@ -1528,12 +1529,12 @@ again:
 
 	/* Migrate the old cache-table into the new one. */
 transfer_old_table:
-	DeeRCU_Lock();
+	DeeRCU_FAST_Lock();
 	old_table = atomic_read(&self->mc_table);
 	if (old_table != NULL) {
 		size_t i;
 		if unlikely(new_table_mask <= old_table->mc_mask) {
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			/* Some other thread allocated a larger table in the mean-time
 			 * -> go around and try to insert our new slot once again! */
 			Dee_membercache_table_destroy(new_table);
@@ -1553,7 +1554,7 @@ transfer_old_table:
 			Dee_membercache_table_do_addslot(new_table, existing_slot);
 		}
 	}
-	DeeRCU_Unlock();
+	DeeRCU_FAST_Unlock();
 
 	/* Add the caller's new slot. */
 	Dee_membercache_table_do_addslot(new_table, slot);
@@ -1701,10 +1702,10 @@ Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
  * >> void Dee_membercache_releasetable(struct Dee_membercache *self, [[in]] DREF struct Dee_membercache_table *table);
  * Helpers to acquire and release cache tables. */
 #define Dee_membercache_acquiretable(self, p_table)        \
-	(DeeRCU_Lock(),                                        \
+	(DeeRCU_FAST_Lock(),                                        \
 	 (*(p_table) = atomic_read(&(self)->mc_table)) != NULL \
 	 ? 1                                                   \
-	 : (DeeRCU_Unlock(), 0))
+	 : (DeeRCU_FAST_Unlock(), 0))
 
 /* Patch a member cache slot
  * @return:  1: Slot cannot be patched like that
@@ -1723,8 +1724,8 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 	DeeRCU_Lock();
 	table = atomic_read(&self->mc_table);
 	if unlikely(!table) {
-		DeeRCU_Unlock();
-		return -1;
+		result = -1;
+		goto done;
 	}
 	perturb = i = Dee_membercache_table_hashst(table, hash);
 	for (;; Dee_membercache_table_hashnx(i, perturb)) {
@@ -1743,7 +1744,7 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 
 		/* Ensure that the attribute type matches. */
 		if (type != attr_type)
-			return 1;
+			break;
 
 		/* Found it! -> now patch it */
 		if ((*do_patch)(item, new_data, old_data)) {
@@ -1757,6 +1758,7 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 		}
 		break;
 	}
+done:
 	DeeRCU_Unlock();
 	return result;
 }

@@ -178,7 +178,7 @@
 #include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMethod_New, DeeClsProperty_NewEx, DeeKwClsMethod_New, DeeKwObjMethod_New, DeeKwObjMethod_VCallFuncf, DeeObjMethod_New, DeeObjMethod_VCallFuncf */
 #include <deemon/string.h>          /* DeeStringObject, DeeString_STR */
 #include <deemon/system-features.h> /* memcmp, memcpy */
-#include <deemon/thread.h>          /* DeeRCU_Lock, DeeRCU_Unlock */
+#include <deemon/thread.h>          /* DeeRCU_* */
 #include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE */
 #include <deemon/type.h>            /* Dee_*method_t, Dee_type_*, STRUCT_CONST, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_member */
 #include <deemon/util/atomic.h>     /* atomic_read */
@@ -1035,7 +1035,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
       defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) || defined(LOCAL_IS_VCALLF)))
 	DREF DeeObject *callback;
 #endif /* ... */
-
+	DeeRCU_FAST_SETUP
 	DREF struct Dee_membercache_table *table;
 	Dee_hash_t i, perturb;
 
@@ -1055,10 +1055,10 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 	 *    real    0m20.075s
 	 *
 	 * Just... WOW! */
-	DeeRCU_Lock();
+	DeeRCU_FAST_Lock();
 	table = atomic_read(&tp_self->LOCAL_tp_cache.mc_table);
 	if unlikely(!table) {
-		DeeRCU_Unlock();
+		DeeRCU_FAST_Unlock();
 		goto cache_miss;
 	}
 
@@ -1086,7 +1086,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 
 		/* Referenced attribute found! */
 #ifdef LOCAL_IS_HAS
-		DeeRCU_Unlock();
+		DeeRCU_FAST_Unlock();
 		return true;
 #elif defined(LOCAL_IS_FINDINFO)
 		STATIC_ASSERT(Dee_ATTRINFO_METHOD == Dee_MEMBERCACHE_METHOD);
@@ -1106,7 +1106,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #endif /* LOCAL_IS_CLASS */
 		case Dee_MEMBERCACHE_ATTRIB:
 			retinfo->ai_value.v_attr = item->mcs_attrib.a_attr;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			break;
 
 			/* Because the cache only stores copies of method/getset/member items,
@@ -1122,7 +1122,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			struct Dee_type_method memb;
 			struct Dee_type_method const *iter;
 			memcpy(&memb, &item->mcs_method, sizeof(memb));
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_class_methods;
 			ASSERT(iter);
 			ASSERT(iter->m_name);
@@ -1137,7 +1137,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			struct Dee_type_getset memb;
 			struct Dee_type_getset const *iter;
 			memcpy(&memb, &item->mcs_getset, sizeof(memb));
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_class_getsets;
 			ASSERT(iter);
 			ASSERT(iter->gs_name);
@@ -1152,7 +1152,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			struct Dee_type_member memb;
 			struct Dee_type_member const *iter;
 			memcpy(&memb, &item->mcs_member, sizeof(memb));
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_class_members;
 			ASSERT(iter);
 			ASSERT(iter->m_name);
@@ -1173,7 +1173,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			struct Dee_type_method memb;
 			struct Dee_type_method const *iter;
 			memcpy(&memb, &item->mcs_method, sizeof(memb));
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_methods;
 			ASSERT(iter);
 			ASSERT(iter->m_name);
@@ -1193,7 +1193,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			struct Dee_type_getset memb;
 			struct Dee_type_getset const *iter;
 			memcpy(&memb, &item->mcs_getset, sizeof(memb));
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_getsets;
 			ASSERT(iter);
 			ASSERT(iter->gs_name);
@@ -1213,7 +1213,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			struct Dee_type_member memb;
 			struct Dee_type_member const *iter;
 			memcpy(&memb, &item->mcs_member, sizeof(memb));
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_members;
 			ASSERT(iter);
 			ASSERT(iter->m_name);
@@ -1239,18 +1239,18 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #ifdef LOCAL_IS_GET
 #ifdef LOCAL_HAS_self
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				return DeeKwObjMethod_New((Dee_kwobjmethod_t)func, LOCAL_self);
 			}
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return DeeObjMethod_New(func, LOCAL_self);
 #else /* LOCAL_HAS_self */
 			DeeTypeObject *decl = item->mcs_decl;
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				return DeeKwClsMethod_New(decl, (Dee_kwobjmethod_t)func);
 			}
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return DeeClsMethod_New(decl, func);
 #endif /* !LOCAL_HAS_self */
 #else /* LOCAL_IS_GET */
@@ -1259,27 +1259,27 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			DeeTypeObject *decl;
 #endif /* !LOCAL_assert_kw_empty_IS_NOOP */
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				return LOCAL_invoke_dkwobjmethod_thisarg((Dee_kwobjmethod_t)func, LOCAL_self);
 			}
 #ifndef LOCAL_assert_kw_empty_IS_NOOP
 			decl = item->mcs_decl;
 #endif /* !LOCAL_assert_kw_empty_IS_NOOP */
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			LOCAL_assert_kw_empty(decl);
 			return LOCAL_invoke_dobjmethod_thisarg(func, LOCAL_self);
 #else /* LOCAL_HAS_self */
 			DeeTypeObject *decl = item->mcs_decl;
 #ifdef LOCAL_MUST_ASSERT_ARGC
 			if unlikely(LOCAL_argc == 0) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				LOCAL_err_classmethod_requires_at_least_1_argument();
 				goto err;
 #define NEED_err
 			}
 #endif /* LOCAL_MUST_ASSERT_ARGC */
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 #ifdef LOCAL_MUST_ASSERT_ARGC
 				if (DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl))
 					goto err;
@@ -1287,7 +1287,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #endif /* LOCAL_MUST_ASSERT_ARGC */
 				return LOCAL_invoke_dkwobjmethod((Dee_kwobjmethod_t)func, decl);
 			}
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_MUST_ASSERT_ARGC
 			if (DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl))
 				goto err;
@@ -1307,18 +1307,18 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			Dee_setmethod_t set = item->mcs_getset.gs_set;
 			Dee_boundmethod_t bound = item->mcs_getset.gs_bound;
 			DeeTypeObject *decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return DeeClsProperty_NewEx(decl, get, del, set, bound);
 #else /* !LOCAL_HAS_self */
 			char const *getset_name;
 			DeeTypeObject *decl;
 			if likely(get) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				return (*get)(LOCAL_self);
 			}
 			getset_name = item->mcs_name;
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
@@ -1333,7 +1333,7 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #ifndef LOCAL_invoke_object_inherited
 				DREF DeeObject *result;
 #endif /* !LOCAL_invoke_object_inherited */
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				callback = (*getter)(LOCAL_self);
 check_and_invoke_callback:
 				if unlikely(!callback)
@@ -1350,7 +1350,7 @@ check_and_invoke_callback:
 				DREF DeeObject *result;
 				/*maybe:DREF*/ DeeObject *thisarg;
 				decl = item->mcs_decl;
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				LOCAL_unpack_one_for_getter(err, &thisarg);
 				if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 					result = NULL;
@@ -1363,7 +1363,7 @@ check_and_invoke_callback:
 			}
 			getset_name = item->mcs_name;
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_HAS_self
 			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 #else /* LOCAL_HAS_self */
@@ -1379,21 +1379,21 @@ check_and_invoke_callback:
 #ifdef LOCAL_HAS_self
 			struct type_member_buffer buf;
 			type_member_buffer_init(&buf, &item->mcs_member);
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return type_member_get(type_member_buffer_asmember(&buf), LOCAL_self);
 #else /* LOCAL_HAS_self */
 			struct type_member member;
 			DeeTypeObject *decl;
 			member = item->mcs_member;
 			decl   = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return DeeClsMember_New(decl, &member);
 #endif /* !LOCAL_HAS_self */
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_HAS_self
 			struct type_member_buffer buf;
 			type_member_buffer_init(&buf, &item->mcs_member);
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			callback = type_member_get(type_member_buffer_asmember(&buf), LOCAL_self);
 			goto check_and_invoke_callback;
 #else /* LOCAL_HAS_self */
@@ -1403,7 +1403,7 @@ check_and_invoke_callback:
 			DeeTypeObject *decl;
 			type_member_buffer_init(&buf, &item->mcs_member);
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			LOCAL_unpack_one_for_getter(err, &thisarg);
 #define NEED_err
 			if unlikely(DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl)) {
@@ -1425,7 +1425,7 @@ check_and_invoke_callback:
 #else /* LOCAL_HAS_self */
 			DeeTypeObject *decl = item->mcs_decl;
 #endif /* !LOCAL_HAS_self */
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_HAS_self
 			return DeeInstance_GetAttribute(desc,
 			                                LOCAL_DeeInstance_DESC(desc),
@@ -1439,7 +1439,7 @@ check_and_invoke_callback:
 			struct Dee_class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return LOCAL_invoke_attribute(desc, LOCAL_DeeInstance_DESC(desc),
 			                              LOCAL_self, catt);
 #else /* LOCAL_HAS_self */
@@ -1447,7 +1447,7 @@ check_and_invoke_callback:
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return LOCAL_invoke_instance_attribute(decl, catt);
 #endif /* !LOCAL_HAS_self */
 #endif /* !LOCAL_IS_GET */
@@ -1461,14 +1461,14 @@ check_and_invoke_callback:
 			decl = item->mcs_decl;
 #if !defined(LOCAL_IS_GET) && defined(LOCAL_MUST_ASSERT_ARGC)
 			if unlikely(LOCAL_argc == 0) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				LOCAL_err_classmethod_requires_at_least_1_argument();
 				goto err;
 #define NEED_err
 			}
 #endif /* !LOCAL_IS_GET && LOCAL_MUST_ASSERT_ARGC */
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 #ifdef LOCAL_IS_GET
 				return DeeKwClsMethod_New(decl, (Dee_kwobjmethod_t)func);
 #else /* LOCAL_IS_GET */
@@ -1480,7 +1480,7 @@ check_and_invoke_callback:
 				return LOCAL_invoke_dkwobjmethod((Dee_kwobjmethod_t)func, decl);
 #endif /* !LOCAL_IS_GET */
 			}
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_IS_GET
 			return DeeClsMethod_New(decl, func);
 #else /* LOCAL_IS_GET */
@@ -1501,7 +1501,7 @@ check_and_invoke_callback:
 			Dee_setmethod_t set = item->mcs_getset.gs_set;
 			Dee_boundmethod_t bound = item->mcs_getset.gs_bound;
 			DeeTypeObject *decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return DeeClsProperty_NewEx(decl, get, del, set, bound);
 #else /* LOCAL_IS_GET */
 			Dee_getmethod_t getter;
@@ -1512,7 +1512,7 @@ check_and_invoke_callback:
 				DREF DeeObject *result;
 				/*maybe:DREF*/ DeeObject *thisarg;
 				decl = item->mcs_decl;
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				LOCAL_unpack_one_for_getter(err, &thisarg);
 				if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 					result = NULL;
@@ -1524,7 +1524,7 @@ check_and_invoke_callback:
 			}
 			decl = item->mcs_decl;
 			getset_name = item->mcs_name;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			DeeRT_ErrRestrictedInstanceAttrCStr(decl, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
@@ -1537,7 +1537,7 @@ check_and_invoke_callback:
 			DeeTypeObject *decl;
 			member = item->mcs_member;
 			decl   = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return DeeClsMember_New(decl, &member);
 #else /* LOCAL_IS_GET */
 			struct type_member_buffer buf;
@@ -1546,7 +1546,7 @@ check_and_invoke_callback:
 			DeeTypeObject *decl;
 			type_member_buffer_init(&buf, &item->mcs_member);
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			LOCAL_unpack_one_for_getter(err, &thisarg);
 #define NEED_err
 			if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
@@ -1565,14 +1565,14 @@ check_and_invoke_callback:
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return DeeClass_GetInstanceAttribute(decl, catt);
 #else /* LOCAL_IS_GET */
 			struct Dee_class_attribute *catt;
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return LOCAL_invoke_instance_attribute(decl, catt);
 #endif /* !LOCAL_IS_GET */
 		}	break;
@@ -1594,12 +1594,12 @@ check_and_invoke_callback:
 #endif /* !LOCAL_HAS_self */
 		{
 #ifdef LOCAL_IS_BOUND
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return 1;
 #elif defined(LOCAL_IS_DEL) || defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
 			DeeTypeObject *decl = item->mcs_decl;
 			char const *item_name = item->mcs_name;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_HAS_self
 			return DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, item_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 #else /* LOCAL_HAS_self */
@@ -1618,7 +1618,7 @@ check_and_invoke_callback:
 			DREF DeeObject *temp;
 			bound  = item->mcs_getset.gs_bound;
 			getter = item->mcs_getset.gs_get;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			if (bound)
 				return (*bound)(LOCAL_self);
 			if unlikely(!getter)
@@ -1638,12 +1638,12 @@ check_and_invoke_callback:
 			char const *getset_name;
 			del = item->mcs_getset.gs_del;
 			if likely(del) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				return (*del)(LOCAL_self);
 			}
 			decl = item->mcs_decl;
 			getset_name = item->mcs_name;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
@@ -1653,12 +1653,12 @@ check_and_invoke_callback:
 			char const *getset_name;
 			set = item->mcs_getset.gs_set;
 			if likely(set) {
-				DeeRCU_Unlock();
+				DeeRCU_FAST_Unlock();
 				return (*set)(LOCAL_self, value);
 			}
 			decl = item->mcs_decl;
 			getset_name = item->mcs_name;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			DeeRT_ErrTRestrictedAttrCStr(decl, LOCAL_self, getset_name, LOCAL_DeeRT_ATTRIBUTE_ACCESS);
 			goto err;
 #define NEED_err
@@ -1673,7 +1673,7 @@ check_and_invoke_callback:
 		case Dee_MEMBERCACHE_MEMBER: {
 			struct type_member_buffer buf;
 			type_member_buffer_init(&buf, &item->mcs_member);
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_IS_BOUND
 			{
 				bool bound = type_member_bound(type_member_buffer_asmember(&buf), LOCAL_self);
@@ -1695,7 +1695,7 @@ check_and_invoke_callback:
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_IS_BOUND
 			return DeeClass_BoundInstanceAttribute(decl, catt);
 #elif defined(LOCAL_IS_DEL)
@@ -1710,7 +1710,7 @@ check_and_invoke_callback:
 			struct Dee_class_desc *desc;
 			catt = item->mcs_attrib.a_attr;
 			desc = item->mcs_attrib.a_desc;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_IS_BOUND
 			return DeeInstance_BoundAttribute(desc, LOCAL_DeeInstance_DESC(desc), LOCAL_self, catt);
 #elif defined(LOCAL_IS_DEL)
@@ -1729,7 +1729,7 @@ check_and_invoke_callback:
 			DeeTypeObject *decl;
 			catt = item->mcs_attrib.a_attr;
 			decl = item->mcs_decl;
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 #ifdef LOCAL_IS_BOUND
 			return DeeClass_BoundInstanceAttribute(decl, catt);
 #elif defined(LOCAL_IS_DEL)
@@ -1927,7 +1927,7 @@ check_and_invoke_callback:
 #ifdef LOCAL_IS_SET_BASIC
 		default:
 			/* Non-basic attribute */
-			DeeRCU_Unlock();
+			DeeRCU_FAST_Unlock();
 			return 2;
 #else /* LOCAL_IS_SET_BASIC */
 		default: __builtin_unreachable();
@@ -1948,14 +1948,14 @@ check_and_invoke_callback:
 
 		/* Found it! */
 		result->ad_info.ai_decl = (DeeObject *)item->mcs_decl;
-		DeeRCU_Unlock();
+		DeeRCU_FAST_Unlock();
 		result->ad_type = NULL;
 		return 0;
 #endif /* LOCAL_IS_FIND */
 	} /* for (;; Dee_membercache_table_hashnx(i, perturb)) */
 
 	/* Cache miss handler. */
-	DeeRCU_Unlock();
+	DeeRCU_FAST_Unlock();
 cache_miss:
 #if (defined(LOCAL_IS_GET) || defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW) || \
      defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) || defined(LOCAL_IS_VCALLF))

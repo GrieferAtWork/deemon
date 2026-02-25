@@ -30,7 +30,7 @@
 #include "../api.h"
 
 #include "../object.h" /* Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
-#include "../thread.h" /* DeeRCU_Lock, DeeRCU_Synchronize, DeeRCU_Unlock */
+#include "../thread.h" /* DeeRCU_* */
 #include "../types.h"  /* DREF, DeeObject, Dee_AsObject */
 
 #include <stddef.h> /* NULL */

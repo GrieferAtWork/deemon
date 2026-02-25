@@ -24,6 +24,7 @@
 /*!export Dee_except_frame*/
 /*!export Dee_pid_t_IS_**/
 /*!export Dee_thread_interrupt**/
+/*!export DeeRCU_**/
 /*!export _DeeThread_**/
 #ifndef GUARD_DEEMON_THREAD_H
 #define GUARD_DEEMON_THREAD_H 1 /*!export-*/
@@ -771,21 +772,43 @@ DFUNDEF void (DCALL DeeRCU_Unlock)(void);
 DFUNDEF void (DCALL DeeRCU_Synchronize)(void);
 
 #ifdef CONFIG_NO_THREADS
-#define DeeRCU_Lock()        (void)0
-#define DeeRCU_Unlock()      (void)0
-#define DeeRCU_Synchronize() (void)0
+#define DeeRCU_Lock()             (void)0
+#define DeeRCU_Unlock()           (void)0
+#define DeeRCU_Synchronize()      (void)0
 #elif !defined(__OPTIMIZE_SIZE__)
 /* [lock(READ(ATOMIC), WRITE(ATOMIC && INTERNAL(thread_list_lock)))]
  * Global RCU "version" number (only here for reading;
  * only `DeeRCU_Synchronize()' is allowed to write this!) */
 DDATDEF Dee_thread_rcuvers_t _DeeRCU_Version;
-#define DeeRCU_Lock()                                                                               \
-	(void)(DeeThread_Self()->t_rcu_vers = __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), \
+#define DeeRCU_LockSelf(caller)                                                             \
+	(void)((caller)->t_rcu_vers = __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), \
 	       COMPILER_BARRIER())
-#define DeeRCU_Unlock()        \
-	(void)(COMPILER_BARRIER(), \
-	       DeeThread_Self()->t_rcu_vers = 0)
+#define DeeRCU_UnlockSelf(caller) \
+	(void)(COMPILER_BARRIER(),    \
+	       (caller)->t_rcu_vers = 0)
+#define DeeRCU_Lock()   DeeRCU_LockSelf(DeeThread_Self())
+#define DeeRCU_Unlock() DeeRCU_UnlockSelf(DeeThread_Self())
+
+#define DeeRCU_FAST_SETUP    DeeThreadObject *_rcu_fast_caller = DeeThread_Self();
+#if defined(__NO_builtin_assume) || defined(__builtin_assume_has_sideeffects)
+#define DeeRCU_FAST_Lock()   DeeRCU_LockSelf(_rcu_fast_caller)
+#define DeeRCU_FAST_Unlock() DeeRCU_UnlockSelf(_rcu_fast_caller)
+#else /* __NO_builtin_assume || __builtin_assume_has_sideeffects */
+#define DeeRCU_FAST_Lock()   (__builtin_assume(_rcu_fast_caller == DeeThread_Self()), DeeRCU_LockSelf(_rcu_fast_caller))
+#define DeeRCU_FAST_Unlock() (__builtin_assume(_rcu_fast_caller == DeeThread_Self()), DeeRCU_UnlockSelf(_rcu_fast_caller))
+#endif /* !__NO_builtin_assume && !__builtin_assume_has_sideeffects */
 #endif /* ... */
+
+#ifndef DeeRCU_LockSelf
+#define DeeRCU_LockSelf(caller)   DeeRCU_Lock()
+#define DeeRCU_UnlockSelf(caller) DeeRCU_Unlock()
+#endif /* !DeeRCU_LockSelf */
+
+#ifndef DeeRCU_FAST_SETUP
+#define DeeRCU_FAST_SETUP    /* nothing */
+#define DeeRCU_FAST_Lock()   DeeRCU_Lock()
+#define DeeRCU_FAST_Unlock() DeeRCU_Unlock()
+#endif /* !DeeRCU_FAST_SETUP */
 
 DECL_END
 
