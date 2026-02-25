@@ -798,7 +798,7 @@ INTERN RBTREE_ROOT(Dee_module_object) module_abstree_root = NULL;
 INTERN RBTREE_ROOT(Dee_module_libentry) module_libtree_root = NULL;
 
 /* [0..1] The currently set deemon LIBPATH */
-PRIVATE Dee_ATOMIC_REF(DeeTupleObject) deemon_path = Dee_ATOMIC_REF_INIT(NULL);
+PRIVATE Dee_ATOMIC_XREF(DeeTupleObject) deemon_path = Dee_ATOMIC_XREF_INIT(NULL);
 
 
 
@@ -3703,7 +3703,7 @@ do_DeeModule_OpenGlobal(/*utf-8*/ char const *__restrict import_str, size_t impo
 			DeeModule_RemoveAllLibPathNodes_locked(existing_result);
 			ASSERT(module_libtree_locate(module_libtree_root, import_str_ob) == NULL);
 		}
-		if likely((DeeTupleObject *)Dee_atomic_ref_getaddr(&deemon_path) == libpath) {
+		if likely(Dee_atomic_xref_getaddr(&deemon_path) == libpath) {
 			if likely(result->mo_libname.mle_name == NULL) {
 				/* Can use primary libname slot of "result" */
 use_primary_slot:
@@ -3736,7 +3736,7 @@ use_primary_slot:
 						DeeModule_RemoveAllLibPathNodes_locked(existing_result);
 						ASSERT(module_libtree_locate(module_libtree_root, import_str_ob) == NULL);
 					}
-					if unlikely((DeeTupleObject *)Dee_atomic_ref_getaddr(&deemon_path) != libpath) {
+					if unlikely(Dee_atomic_xref_getaddr(&deemon_path) != libpath) {
 						module_libtree_lock_endwrite();
 						Dee_module_libentry_free(next);
 						return result;
@@ -4935,7 +4935,7 @@ again_lock_libtree:
 	if likely(!(atomic_read(&self->mo_flags) & _Dee_MODULE_FLIBALL)) {
 		int status;
 		/* Check that "libpath" is still up-to-date */
-		if unlikely((DeeTupleObject *)Dee_atomic_ref_getaddr(&deemon_path) != libpath)
+		if unlikely(Dee_atomic_xref_getaddr(&deemon_path) != libpath)
 			goto unlock_write_and_try_again;
 
 		/* Enumerate "libpath" and build missing "struct Dee_module_libentry" for
@@ -8297,7 +8297,8 @@ err:
 }
 
 
-PRIVATE Dee_ATOMIC_REF(DeeStringObject) deemon_home = Dee_ATOMIC_REF_INIT(NULL);
+PRIVATE Dee_ATOMIC_XREF(DeeStringObject)
+deemon_home = Dee_ATOMIC_XREF_INIT(NULL);
 
 /* Get/Set deemon's home path.
  * The home path is used to locate builtin libraries, as well as extensions.
@@ -8326,7 +8327,7 @@ PRIVATE Dee_ATOMIC_REF(DeeStringObject) deemon_home = Dee_ATOMIC_REF_INIT(NULL);
 PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL
 DeeExec_GetHome(void) {
 	DREF DeeStringObject *result;
-	result = (DREF DeeStringObject *)Dee_atomic_ref_xget(&deemon_home);
+	Dee_atomic_xref_get(&deemon_home, &result);
 	if (result)
 		return Dee_AsObject(result);
 
@@ -8336,9 +8337,9 @@ DeeExec_GetHome(void) {
 	/* Save the generated path in the global variable. */
 	if likely(result) {
 		Dee_Incref(result);
-		while (!Dee_atomic_ref_xcmpxch_inherited(&deemon_home, NULL, (DeeObject *)result)) {
+		while (!Dee_atomic_xref_cmpxch_inherited(&deemon_home, NULL, result)) {
 			DREF DeeStringObject *other;
-			other = (DREF DeeStringObject *)Dee_atomic_ref_xget(&deemon_home);
+			Dee_atomic_xref_get(&deemon_home, &other);
 			if (other) {
 				Dee_Decref(result);
 				result = other;
@@ -8353,8 +8354,9 @@ DeeExec_GetHome(void) {
  * HINT: You may pass `NULL' to cause the default home path to be re-created. */
 PUBLIC void DCALL
 DeeExec_SetHome(/*String*/ DeeObject *new_home) {
-	ASSERT_OBJECT_TYPE_EXACT_OPT(new_home, &DeeString_Type);
-	Dee_atomic_ref_xset(&deemon_home, new_home);
+	DeeStringObject *newval = (DeeStringObject *)new_home;
+	ASSERT_OBJECT_TYPE_EXACT_OPT(newval, &DeeString_Type);
+	Dee_atomic_xref_set(&deemon_home, newval);
 }
 
 
@@ -8792,8 +8794,8 @@ err:
 
 
 INTERN bool DCALL DeeModule_ClearLibPath(void) {
-	DREF DeeObject *oldval;
-	oldval = Dee_atomic_ref_xxch_inherited(&deemon_path, NULL);
+	DREF DeeTupleObject *oldval;
+	Dee_atomic_xref_xch_inherited(&deemon_path, NULL, &oldval);
 	if (!oldval)
 		return false;
 	Dee_Decref(oldval);
@@ -8857,10 +8859,10 @@ DeeModule_ApplyLibPath(DeeTupleObject *old_path,
 
 	if (remove_hint == (DeeStringObject *)ITER_DONE) {
 		if (old_path == NULL) {
-			Dee_atomic_ref_set_inherited(&deemon_path, (DeeObject *)new_path);
+			Dee_atomic_xref_set_inherited(&deemon_path, new_path);
 			return 0;
 		}
-		if (!Dee_atomic_ref_xcmpxch_inherited(&deemon_path, (DeeObject *)old_path, (DeeObject *)new_path))
+		if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, old_path, new_path))
 			return 1; /* "old_path" is no longer up-to-date */
 		Dee_Decref_likely(old_path);
 		return 0;
@@ -8874,8 +8876,8 @@ DeeModule_ApplyLibPath(DeeTupleObject *old_path,
 			goto err;
 		module_libtree_lock_write();
 		if (old_path == NULL) {
-			Dee_atomic_ref_set_inherited(&deemon_path, (DeeObject *)new_path);
-		} else if (Dee_atomic_ref_cmpxch_inherited(&deemon_path, (DeeObject *)old_path, (DeeObject *)new_path)) {
+			Dee_atomic_xref_set_inherited(&deemon_path, new_path);
+		} else if (Dee_atomic_xref_cmpxch_inherited(&deemon_path, old_path, new_path)) {
 			Dee_Decref_likely(old_path); /* Inherited from "Dee_atomic_ref_cmpxch_inherited" */
 		} else {
 			module_libtree_lock_endwrite();
@@ -8887,7 +8889,7 @@ DeeModule_ApplyLibPath(DeeTupleObject *old_path,
 	}
 
 again_load_assumed_old_path:
-	assumed_old_path = (DeeTupleObject *)Dee_atomic_ref_xget(&deemon_path);
+	Dee_atomic_xref_get(&deemon_path, &assumed_old_path);
 	if (old_path && (old_path != assumed_old_path)) {
 		Dee_XDecref_unlikely(assumed_old_path);
 		return 1; /* Wrong "old_path" */
@@ -8895,7 +8897,7 @@ again_load_assumed_old_path:
 
 	/* Check for special case: no path loaded. */
 	if (!assumed_old_path) {
-		if (!Dee_atomic_ref_xcmpxch_inherited(&deemon_path, NULL, (DeeObject *)new_path))
+		if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, NULL, new_path))
 			goto again_load_assumed_old_path;
 		return 0;
 	}
@@ -8921,9 +8923,7 @@ again_load_assumed_old_path:
 	module_libtree_lock_write();
 
 	/* Set new library path */
-	if (!Dee_atomic_ref_cmpxch_inherited(&deemon_path,
-	                                     (DeeObject *)assumed_old_path,
-	                                     (DeeObject *)new_path)) {
+	if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, assumed_old_path, new_path)) {
 		module_libtree_lock_endwrite();
 		goto again_load_assumed_old_path;
 	}
@@ -8951,21 +8951,21 @@ err:
  * @return: * :   The module path
  * @return: NULL: Error */
 PUBLIC WUNUSED DREF /*Tuple*/ DeeObject *DCALL DeeModule_GetLibPath(void) {
-	DREF DeeObject *result;
+	DREF DeeTupleObject *result;
 again:
-	result = Dee_atomic_ref_xget(&deemon_path);
+	Dee_atomic_xref_get(&deemon_path, &result);
 	if (result == NULL) {
 		/* Lazily generate+cache default path */
-		result = Dee_AsObject(DeeModule_NewDefaultPath());
+		result = DeeModule_NewDefaultPath();
 		if (result) {
 			Dee_Incref(result);
-			if (!Dee_atomic_ref_xcmpxch_inherited(&deemon_path, NULL, result)) {
+			if (!Dee_atomic_xref_cmpxch_inherited(&deemon_path, NULL, result)) {
 				Dee_Decref_n(result, 2);
 				goto again;
 			}
 		}
 	}
-	return result;
+	return Dee_AsObject(result);
 }
 
 /* Set (or reset when "new_libpath == NULL") the module path.

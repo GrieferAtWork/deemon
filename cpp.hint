@@ -1081,7 +1081,8 @@
 #define Dee_SERIAL_HEAD struct Dee_serial_type *ser_type;
 
 #define Dee_ONCE(...) __VA_ARGS__
-#define Dee_ATOMIC_REF(T) Dee_atomic_ref_t
+#define Dee_ATOMIC_REF(T)struct{T*ar_obj;}
+#define Dee_ATOMIC_XREF(T)struct{T*axr_obj;}
 #define _Dee_SHARED_WAITWORD(v) unsigned int v;
 
 #define Dee_CASE_WIDTH_1BYTE case 1
