@@ -31,14 +31,14 @@
 #include <deemon/instancemethod.h>  /* DeeInstanceMethod_Type */
 #include <deemon/kwds.h>            /* DeeKwds_Check, DeeKwds_SIZE */
 #include <deemon/module.h>          /* DeeModule*, Dee_MODSYM_F*, Dee_module_symbol, Dee_module_symbol_getindex */
-#include <deemon/mro.h>             /* CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT, DeeObject_IterAttr, Dee_ALIGNOF_ATTRITER, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_MEMBERCACHE_*, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrdesc_nameobj, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo, Dee_attriter, Dee_attriter_*, Dee_attriterchain, Dee_attriterchain_builder, Dee_attriterchain_builder_getbufsize, Dee_attriterchain_item, Dee_attriterchain_item_fromiter, Dee_attrspec, Dee_enumattr_t, Dee_membercache_*, Dee_type_member_* */
+#include <deemon/mro.h>             /* DeeObject_IterAttr, Dee_ALIGNOF_ATTRITER, Dee_ATTRINFO_*, Dee_ATTRPERM_F_*, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_MEMBERCACHE_*, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrdesc_nameobj, Dee_attrhint, Dee_attrhint_matches, Dee_attrinfo, Dee_attriter, Dee_attriter_*, Dee_attriterchain, Dee_attriterchain_builder, Dee_attriterchain_builder_getbufsize, Dee_attriterchain_item, Dee_attriterchain_item_fromiter, Dee_attrspec, Dee_enumattr_t, Dee_membercache_*, Dee_type_member_* */
 #include <deemon/none-operator.h>   /* _DeeNone_reti1_2 */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t */
 #include <deemon/objmethod.h>       /* DeeClsMember_New, DeeClsMember_Type, DeeClsMethod_New, DeeClsMethod_Type, DeeClsProperty_New, DeeClsProperty_Type, DeeKwClsMethod_New, DeeKwClsMethod_Type, DeeKwObjMethod_CallFunc, DeeKwObjMethod_New, DeeKwObjMethod_Type, DeeObjMethod* */
 #include <deemon/property.h>        /* DeeProperty_Type */
 #include <deemon/string.h>          /* DeeString_New, DeeString_STR */
 #include <deemon/system-features.h> /* CONFIG_HAVE_VA_LIST_IS_NOT_ARRAY, DeeSystem_DEFINE_strcmp, DeeSystem_DEFINE_strcmpz, bzero*, memcpy, memset */
-#include <deemon/thread.h>          /* DeeRCU_Lock, DeeRCU_Unlock */
+#include <deemon/thread.h>          /* DeeRCU_Lock, DeeRCU_Synchronize, DeeRCU_Unlock */
 #include <deemon/type.h>            /* DeeType_Type, Dee_TYPE_METHOD_FKWDS, Dee_kwobjmethod_t, Dee_membercache, Dee_visit_t, STRUCT_CONST, TYPE_MEMBER_ISCONST, TYPE_METHOD_FKWDS, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/hash.h>       /* Dee_HashStr */
@@ -1280,29 +1280,25 @@ again:
 	if (LIST_EMPTY(&membercache_list)) {
 		membercache_list_lock_release();
 	} else {
-		DREF struct Dee_membercache_table *table;
+		struct Dee_membercache_table *table;
 		cache = LIST_FIRST(&membercache_list);
 
 		/* Steal the table and wait for everyone to stop using it. */
 		table = atomic_xch(&cache->mc_table, NULL);
-		Dee_membercache_waitfor(cache);
 
 		/* Pop this entry from the global chain. */
 		ASSERT(LIST_ISBOUND(cache, mc_link));
 		LIST_UNBIND(cache, mc_link);
 		membercache_list_lock_release();
-
 		if (table) {
+			/* Ensure that no-one is using "table" anymore. */
+			DeeRCU_Synchronize();
+
 			/* Track how much member this operation will be freeing up. */
 			result += (table->mc_mask + 1) * sizeof(struct Dee_membercache);
 
-#ifdef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
 			/* Destroy the table */
 			Dee_membercache_table_destroy(table);
-#else /* CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
-			/* Drop the table reference that was held by the type. */
-			Dee_membercache_table_decref(table);
-#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
 		}
 
 		if (result < max_clear)
@@ -1337,54 +1333,6 @@ Dee_membercache_table_do_addslot(struct Dee_membercache_table *__restrict self,
 	memcpy(slot, item, sizeof(struct Dee_membercache_slot));
 	++self->mc_size;
 }
-
-
-#ifndef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
-/* Try to construct a new member-cache table */
-PRIVATE WUNUSED NONNULL((2)) DREF struct Dee_membercache_table *DCALL
-Dee_membercache_table_new(struct Dee_membercache_table const *old_table,
-                          struct Dee_membercache_slot const *__restrict item) {
-	DREF struct Dee_membercache_table *result;
-	size_t new_mask = 0;
-	if (old_table != NULL)
-		new_mask = old_table->mc_mask;
-	new_mask = (new_mask << 1) | 1;
-	if unlikely(new_mask == 1)
-		new_mask = 16 - 1; /* Start out bigger than 2. */
-	result = Dee_membercache_table_trycalloc(new_mask);
-	if unlikely(!result)
-		return NULL;
-
-	/* Fill in the basic characteristics of the new cache-table. */
-	result->mc_mask = new_mask;
-#ifndef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
-	result->mc_refcnt = 1;
-#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
-	ASSERTF(result->mc_size == 0, "Should be the case because of calloc()");
-
-	/* Migrate the old cache-table into the new one. */
-	if (old_table != NULL) {
-		size_t i;
-		for (i = 0; i <= old_table->mc_mask; ++i) {
-			uint16_t type;
-			struct Dee_membercache_slot const *slot;
-			slot = &old_table->mc_table[i];
-			type = atomic_read(&slot->mcs_type);
-			if (type == Dee_MEMBERCACHE_UNUSED)
-				continue;
-			if (type == Dee_MEMBERCACHE_UNINITIALIZED)
-				continue; /* Don't migrate slots that aren't fully initialized. */
-
-			/* Keep this cache-slot as part of the resulting cache-table. */
-			Dee_membercache_table_do_addslot(result, slot);
-		}
-	}
-
-	/* Add the caller's new item. */
-	Dee_membercache_table_do_addslot(result, item);
-	return result;
-}
-#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
 
 
 /* Try to add a slot to the given member-cache table.
@@ -1526,28 +1474,27 @@ Dee_membercache_addslot_log_success(struct Dee_membercache *__restrict self,
 PRIVATE NONNULL((1, 2)) int DCALL
 Dee_membercache_addslot(struct Dee_membercache *__restrict self,
                         struct Dee_membercache_slot const *__restrict slot) {
-#ifdef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
 	struct Dee_membercache_table *old_table;
 	struct Dee_membercache_table *new_table;
 	size_t new_table_mask;
 
 	/* Get a reference to the current table. */
 again:
-	Dee_membercache_tabuse_inc(self);
+	DeeRCU_Lock();
 	old_table = atomic_read(&self->mc_table);
 	if (old_table != NULL) {
 		int status;
 		/* Try to add the slot to an existing cache-table. */
 		status = Dee_membercache_table_addslot(old_table, slot, false);
 		if (status >= 0) {
-			Dee_membercache_tabuse_dec(self);
+			DeeRCU_Unlock();
 			return status;
 		}
 		new_table_mask = old_table->mc_mask;
 		new_table_mask = (new_table_mask << 1) | 1;
-		Dee_membercache_tabuse_dec(self);
+		DeeRCU_Unlock();
 	} else {
-		Dee_membercache_tabuse_dec(self);
+		DeeRCU_Unlock();
 		new_table_mask = 16 - 1; /* Start out bigger than 2. */
 	}
 
@@ -1559,18 +1506,18 @@ again:
 		 * existing table, but ignore bad hash characteristics this
 		 * time around. */
 		int result = -1;
-		Dee_membercache_tabuse_inc(self);
+		DeeRCU_Lock();
 		old_table = atomic_read(&self->mc_table);
 		if (old_table != NULL) {
 			/* It doesn't matter if this addslot() call succeeds or not... */
 			result = Dee_membercache_table_addslot(old_table, slot, true);
-			Dee_membercache_tabuse_dec(self);
+			DeeRCU_Unlock();
 #ifndef Dee_DPRINT_IS_NOOP
 			if (result == 0)
 				Dee_membercache_addslot_log_success(self, slot);
 #endif /* !Dee_DPRINT_IS_NOOP */
 		} else {
-			Dee_membercache_tabuse_dec(self);
+			DeeRCU_Unlock();
 		}
 		return result;
 	}
@@ -1581,12 +1528,12 @@ again:
 
 	/* Migrate the old cache-table into the new one. */
 transfer_old_table:
-	Dee_membercache_tabuse_inc(self);
+	DeeRCU_Lock();
 	old_table = atomic_read(&self->mc_table);
 	if (old_table != NULL) {
 		size_t i;
 		if unlikely(new_table_mask <= old_table->mc_mask) {
-			Dee_membercache_tabuse_dec(self);
+			DeeRCU_Unlock();
 			/* Some other thread allocated a larger table in the mean-time
 			 * -> go around and try to insert our new slot once again! */
 			Dee_membercache_table_destroy(new_table);
@@ -1606,7 +1553,7 @@ transfer_old_table:
 			Dee_membercache_table_do_addslot(new_table, existing_slot);
 		}
 	}
-	Dee_membercache_tabuse_dec(self);
+	DeeRCU_Unlock();
 
 	/* Add the caller's new slot. */
 	Dee_membercache_table_do_addslot(new_table, slot);
@@ -1624,7 +1571,7 @@ transfer_old_table:
 		/* At this point, "new_table" has been installed, but some threads
 		 * might still be using "old_table" -- wait for those threads to be
 		 * finished! */
-		Dee_membercache_waitfor(self);
+		DeeRCU_Synchronize();
 
 		/* Destroy the old table. */
 		Dee_membercache_table_destroy(old_table);
@@ -1640,93 +1587,6 @@ transfer_old_table:
 
 	Dee_membercache_addslot_log_success(self, slot);
 	return 0;
-#else /* CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
-	DREF struct Dee_membercache_table *old_table;
-	DREF struct Dee_membercache_table *new_table;
-
-	/* Get a reference to the current table. */
-	Dee_membercache_tabuse_inc(self);
-	old_table = atomic_read(&self->mc_table);
-	if (old_table != NULL) {
-		int status;
-		Dee_membercache_table_incref(old_table);
-		Dee_membercache_tabuse_dec(self);
-
-		/* Try to add the slot to an existing cache-table. */
-do_operate_with_old_table:
-		status = Dee_membercache_table_addslot(old_table, slot, false);
-		if (status >= 0) {
-			Dee_membercache_table_decref(old_table);
-			return status;
-		}
-	} else {
-		Dee_membercache_tabuse_dec(self);
-	}
-
-	/* Either there isn't a table, or we're unable to add more items
-	 * to the table. In either case, try to construct a new table! */
-	new_table = Dee_membercache_table_new(old_table, slot);
-	if (!new_table) {
-		/* Failed to create a new table -> try again to add to the
-		 * existing table, but ignore bad hash characteristics this
-		 * time around. */
-		int result = -1;
-		if (old_table != NULL) {
-			/* It doesn't matter if this addslot() call succeeds or not... */
-			result = Dee_membercache_table_addslot(old_table, slot, true);
-			Dee_membercache_table_decref(old_table);
-#ifndef Dee_DPRINT_IS_NOOP
-			if (result == 0)
-				Dee_membercache_addslot_log_success(self, slot);
-#endif /* !Dee_DPRINT_IS_NOOP */
-		}
-		return result;
-	}
-
-	/* Drop our original reference to the old table. */
-	if (old_table != NULL)
-		Dee_membercache_table_decref(old_table);
-
-	/* Got a new table -> now to store it within the type.
-	 * But: do one more check if the currently set table
-	 *      might actually be better than our `new_table' */
-	if (atomic_read(&self->mc_table) != old_table) {
-		Dee_membercache_tabuse_inc(self);
-		old_table = atomic_read(&self->mc_table);
-		if (old_table == NULL) {
-			Dee_membercache_tabuse_dec(self);
-		} else {
-			Dee_membercache_table_incref(old_table);
-			Dee_membercache_tabuse_dec(self);
-
-			/* Try not to override a larger table with a smaller one! */
-			if (old_table->mc_mask > new_table->mc_mask) {
-				Dee_membercache_table_destroy(new_table);
-				goto do_operate_with_old_table;
-			}
-			Dee_membercache_table_decref(old_table);
-		}
-	}
-
-	/* Store our new table within the member-cache. */
-	old_table = atomic_xch(&self->mc_table, new_table); /* Inherit reference */
-	Dee_membercache_waitfor(self);
-
-	/* Destroy the old table reference. */
-	if (old_table)
-		Dee_membercache_table_decref(old_table);
-
-	/* Make sure that the member-cache controller is linked into the global list. */
-	if (!LIST_ISBOUND(self, mc_link)) {
-		membercache_list_lock_acquire();
-		if likely(!LIST_ISBOUND(self, mc_link))
-			LIST_INSERT_HEAD(&membercache_list, self, mc_link);
-		membercache_list_lock_release();
-	}
-
-	Dee_membercache_addslot_log_success(self, slot);
-	return 0;
-#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
 }
 
 
@@ -1840,24 +1700,11 @@ Dee_membercache_addinstanceattrib(struct Dee_membercache *self,
 /* >> bool Dee_membercache_acquiretable(struct Dee_membercache *self, [[out]] DREF struct Dee_membercache_table **p_table);
  * >> void Dee_membercache_releasetable(struct Dee_membercache *self, [[in]] DREF struct Dee_membercache_table *table);
  * Helpers to acquire and release cache tables. */
-#ifdef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
 #define Dee_membercache_acquiretable(self, p_table)        \
 	(DeeRCU_Lock(),                                        \
 	 (*(p_table) = atomic_read(&(self)->mc_table)) != NULL \
 	 ? 1                                                   \
 	 : (DeeRCU_Unlock(), 0))
-#define Dee_membercache_releasetable(self, table) \
-	DeeRCU_Unlock()
-#else /* CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
-#define Dee_membercache_acquiretable(self, p_table)                   \
-	(Dee_membercache_tabuse_inc(self),                                \
-	 *(p_table) = atomic_read(&(self)->mc_table),                     \
-	 *(p_table) ? Dee_membercache_table_incref(*(p_table)) : (void)0, \
-	 Dee_membercache_tabuse_dec(self),                                \
-	 *(p_table) != NULL)
-#define Dee_membercache_releasetable(self, table) \
-	Dee_membercache_table_decref(table)
-#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
 
 /* Patch a member cache slot
  * @return:  1: Slot cannot be patched like that
@@ -1872,9 +1719,13 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
                       void const *new_data, void const *old_data) {
 	int result = 1;
 	Dee_hash_t i, perturb;
-	DREF struct Dee_membercache_table *table;
-	if unlikely(!Dee_membercache_acquiretable(self, &table))
+	struct Dee_membercache_table *table;
+	DeeRCU_Lock();
+	table = atomic_read(&self->mc_table);
+	if unlikely(!table) {
+		DeeRCU_Unlock();
 		return -1;
+	}
 	perturb = i = Dee_membercache_table_hashst(table, hash);
 	for (;; Dee_membercache_table_hashnx(i, perturb)) {
 		struct Dee_membercache_slot *item;
@@ -1906,7 +1757,7 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 		}
 		break;
 	}
-	Dee_membercache_releasetable(self, table);
+	DeeRCU_Unlock();
 	return result;
 }
 

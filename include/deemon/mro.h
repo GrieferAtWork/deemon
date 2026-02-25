@@ -58,13 +58,12 @@
 
 #include "api.h"
 
-#include <hybrid/__atomic.h> /* __ATOMIC_SEQ_CST, __hybrid_atomic_decfetch, __hybrid_atomic_inc */
 #include <hybrid/typecore.h> /* __ALIGNOF_POINTER__, __SIZEOF_POINTER__ */
 
 #include "system-features.h" /* access, memcpy */
 #include "tuple.h"           /* DeeTuple_ELEM, DeeTuple_SIZE */
 #include "type.h"            /* Dee_kwobjmethod_t, Dee_membercache, Dee_visit_t, TYPE_METHOD_FKWDS, type_* */
-#include "types.h"           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, Dee_refcnt_t, Dee_ssize_t */
+#include "types.h"           /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, Dee_ssize_t */
 #include "util/hash.h"       /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h"       /* Dee_shared_rwlock_t */
 
@@ -77,8 +76,7 @@
 #include "error-rt.h" /* DeeRT_ATTRIBUTE_ACCESS_DEL, DeeRT_ATTRIBUTE_ACCESS_SET, DeeRT_Err* */
 #include "object.h"   /* Dee_BOUND_FROMPRESENT_BOUND, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref */
 #ifndef __INTELLISENSE__
-#include "alloc.h"  /* Dee_Free */
-#include "thread.h" /* DeeRCU_Lock, DeeRCU_Synchronize, DeeRCU_Unlock */
+#include "alloc.h" /* Dee_Free */
 #endif /* !__INTELLISENSE__ */
 #endif /* CONFIG_BUILDING_DEEMON */
 #ifndef __INTELLISENSE__
@@ -668,15 +666,7 @@ struct Dee_membercache_slot {
 	;
 };
 
-#undef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
-#if 1 /* Disable reference counters of member cache tables -- instead, tables must be accessed while holding the RCU lock! */
-#define CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
-#endif
-
 struct Dee_membercache_table {
-#ifndef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
-	Dee_refcnt_t                                         mc_refcnt; /* [lock(ATOMIC)] Reference counter. */
-#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
 	size_t                                               mc_mask;   /* [const] Allocated table size -1. */
 	size_t                                               mc_size;   /* [lock(ATOMIC)] Amount of used table entries (always `<= mc_mask'). */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_membercache_slot, mc_table); /* [0..mc_mask+1] Member cache table. */
@@ -692,21 +682,6 @@ struct Dee_membercache_table {
 #define Dee_membercache_table_destroy(self) (void)(self)
 #else /* __INTELLISENSE__ */
 #define Dee_membercache_table_destroy(self) Dee_Free(self)
-#endif /* !__INTELLISENSE__ */
-#ifndef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
-#define Dee_membercache_table_incref(self)  __hybrid_atomic_inc(&(self)->mc_refcnt, __ATOMIC_SEQ_CST)
-#define Dee_membercache_table_decref(self)  (void)(__hybrid_atomic_decfetch(&(self)->mc_refcnt, __ATOMIC_SEQ_CST) || (Dee_membercache_table_destroy(self), 0))
-#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
-
-/* Member-cache synchronization helpers. */
-#ifdef __INTELLISENSE__
-extern NONNULL((1)) void (Dee_membercache_waitfor)(struct Dee_membercache *__restrict self);
-extern NONNULL((1)) void (Dee_membercache_tabuse_inc)(struct Dee_membercache *__restrict self);
-extern NONNULL((1)) void (Dee_membercache_tabuse_dec)(struct Dee_membercache *__restrict self);
-#else /* __INTELLISENSE__ */
-#define Dee_membercache_waitfor(self)    DeeRCU_Synchronize()
-#define Dee_membercache_tabuse_inc(self) DeeRCU_Lock()
-#define Dee_membercache_tabuse_dec(self) DeeRCU_Unlock()
 #endif /* !__INTELLISENSE__ */
 
 #define Dee_membercache_init(self)         \
