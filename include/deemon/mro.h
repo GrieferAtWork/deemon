@@ -668,8 +668,15 @@ struct Dee_membercache_slot {
 	;
 };
 
+#undef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
+#if 1 /* Disable reference counters of member cache tables -- instead, tables must be accessed while holding the RCU lock! */
+#define CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
+#endif
+
 struct Dee_membercache_table {
+#ifndef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
 	Dee_refcnt_t                                         mc_refcnt; /* [lock(ATOMIC)] Reference counter. */
+#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
 	size_t                                               mc_mask;   /* [const] Allocated table size -1. */
 	size_t                                               mc_size;   /* [lock(ATOMIC)] Amount of used table entries (always `<= mc_mask'). */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_membercache_slot, mc_table); /* [0..mc_mask+1] Member cache table. */
@@ -686,8 +693,10 @@ struct Dee_membercache_table {
 #else /* __INTELLISENSE__ */
 #define Dee_membercache_table_destroy(self) Dee_Free(self)
 #endif /* !__INTELLISENSE__ */
+#ifndef CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT
 #define Dee_membercache_table_incref(self)  __hybrid_atomic_inc(&(self)->mc_refcnt, __ATOMIC_SEQ_CST)
 #define Dee_membercache_table_decref(self)  (void)(__hybrid_atomic_decfetch(&(self)->mc_refcnt, __ATOMIC_SEQ_CST) || (Dee_membercache_table_destroy(self), 0))
+#endif /* !CONFIG_MEMBERCACHE_TABLE_WITHOUT_REFCNT */
 
 /* Member-cache synchronization helpers. */
 #ifdef __INTELLISENSE__
