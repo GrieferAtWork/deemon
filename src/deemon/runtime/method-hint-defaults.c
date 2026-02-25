@@ -17734,7 +17734,9 @@ default__set_delfirst__with_callobjectcache___set_first__(DeeObject *__restrict 
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__set_delfirst__unsupported(DeeObject *__restrict self) { return err_seq_unsupportedf(self, "del first"); }
+default__set_delfirst__unsupported(DeeObject *__restrict self) {
+	return err_set_unsupportedf(self, "del first");
+}
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__set_delfirst__with__seq_operator_size__and__seq_operator_bounditem_index__seq_operator_delitem_index(DeeObject *__restrict self) {
@@ -17836,7 +17838,7 @@ default__set_setfirst__with_callobjectcache___set_first__(DeeObject *self, DeeOb
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_setfirst__unsupported(DeeObject *self, DeeObject *value) {
-	return err_seq_unsupportedf(self, "first = %r", value);
+	return err_set_unsupportedf(self, "first = %r", value);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -18079,7 +18081,9 @@ default__set_dellast__with_callobjectcache___set_last__(DeeObject *__restrict se
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-default__set_dellast__unsupported(DeeObject *__restrict self) { return err_seq_unsupportedf(self, "del last"); }
+default__set_dellast__unsupported(DeeObject *__restrict self) {
+	return err_set_unsupportedf(self, "del last");
+}
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__set_dellast__with__seq_operator_size__and__seq_operator_bounditem_index__and__seq_operator_delitem_index(DeeObject *__restrict self) {
@@ -18194,7 +18198,7 @@ default__set_setlast__with_callobjectcache___set_last__(DeeObject *self, DeeObje
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 default__set_setlast__unsupported(DeeObject *self, DeeObject *value) {
-	return err_seq_unsupportedf(self, "last = %r", value);
+	return err_set_unsupportedf(self, "last = %r", value);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL

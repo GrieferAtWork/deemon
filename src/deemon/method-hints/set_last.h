@@ -147,7 +147,9 @@ __set_last__.set_boundlast([[nonnull]] DeeObject *__restrict self)
 /* Remove or unbound the last element of the sequence */
 [[wunused, getset_member("del")]] int
 __set_last__.set_dellast([[nonnull]] DeeObject *__restrict self)
-%{unsupported({ return err_seq_unsupportedf(self, "del last"); })}
+%{unsupported({
+	return err_set_unsupportedf(self, "del last");
+})}
 %{$empty = 0}
 %{$with__seq_operator_size__and__seq_operator_delitem_index_ab = "default__seq_dellast__with__seq_operator_size__and__seq_operator_delitem_index"}
 %{$with__seq_operator_size__and__seq_operator_bounditem_index__and__seq_operator_delitem_index = {
@@ -239,7 +241,7 @@ err:
 __set_last__.set_setlast([[nonnull]] DeeObject *self,
                          [[nonnull]] DeeObject *value)
 %{unsupported({
-	return err_seq_unsupportedf(self, "last = %r", value);
+	return err_set_unsupportedf(self, "last = %r", value);
 })}
 %{$none = 0}
 %{$empty = DeeRT_ErrEmptySequence(self)}

@@ -97,18 +97,35 @@ function Type_getImplName(typ: Type, hintOrOperator: string): string | none {
 	return none;
 }
 
+global final ICF_GROUPS: {{string...}...} = {
+	/* These equivalencies can happen as a result of ICF (IdenticalCodeFolding) */
+	Set.frozen({"list_nonempty_as_bound", "frame_bound_frame"}),
+	Set.frozen({"dict_bool", "hashset_bool"}),
+	Set.frozen({"dict_size", "hashset_size"}),
+	Set.frozen({"default__seq_contains__with__seq_operator_contains", "default__seq_count__with__set_operator_contains"}),
+	Set.frozen({"int_bool", "tuple_nonempty_as_bound"}),
+}.frozen;
+
+global final ICF_GROUPS_BY_MEMBER: {string: {string...}} = (() -> {
+	local result = Dict();
+	for (local group: ICF_GROUPS) {
+		for (local member: group)
+			result[member] = group;
+	}
+	return result.frozen;
+})();
+
 function Type_assert(typ: Type, impls: {string: string | {string...}}) {
 	local wrongImpls: {(string, string | {string...}, string)...} = [];
 	for (local hintOrOperator, expectedImpl: impls) {
 		local actualImpl: string | none = Type_getImplName(typ, hintOrOperator);
 		if (actualImpl !is none) {
-			if (!(
-				expectedImpl is string
-					? expectedImpl in actualImpl
-					: (for (local x: expectedImpl) x in actualImpl) || ...
-			)) {
+			local allValidImpls: {string...} = (
+				for (local impl: (expectedImpl is string ? {expectedImpl} : expectedImpl))
+					ICF_GROUPS_BY_MEMBER.get(impl, {impl})
+			).flatten;
+			if (!allValidImpls.any(actualImpl.contains))
 				wrongImpls.append((hintOrOperator, expectedImpl, actualImpl));
-			}
 		}
 	}
 	if (wrongImpls) {
@@ -198,7 +215,7 @@ Type_assert(deemon.List, {
 	"tp_trygetitem":                              "default__trygetitem__with__getitem",
 	"tp_trygetitem_index":                        "default__trygetitem_index__with__size__and__getitem_index_fast",
 	"tp_bounditem":                               "default__bounditem__with__size__and__getitem_index_fast",
-	"tp_bounditem_index":                         "list_bounditem_index",
+	"tp_bounditem_index":                         "list_hasitem_index",
 	"tp_hasitem":                                 "default__hasitem__with__hasitem_index",
 	"tp_hasitem_index":                           "list_hasitem_index",
 	"tp_delitem":                                 "list_delitem",
@@ -231,7 +248,7 @@ Type_assert(deemon.List, {
 	"mh_seq_operator_hasitem":                    "default__seq_operator_hasitem__with__seq_operator_hasitem_index",
 	"mh_seq_operator_hasitem_index":              "list_hasitem_index",
 	"mh_seq_operator_bounditem":                  "default__seq_operator_bounditem__with__seq_operator_bounditem_index",
-	"mh_seq_operator_bounditem_index":            "list_bounditem_index",
+	"mh_seq_operator_bounditem_index":            "list_hasitem_index",
 	"mh_seq_operator_delitem":                    "list_delitem",
 	"mh_seq_operator_delitem_index":              "list_delitem_index",
 	"mh_seq_operator_setitem":                    "list_setitem",

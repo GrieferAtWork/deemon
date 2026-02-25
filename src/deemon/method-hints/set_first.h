@@ -82,7 +82,9 @@ __set_first__.set_boundfirst([[nonnull]] DeeObject *__restrict self)
 /* Remove or unbound the first element of the sequence */
 [[wunused, getset_member("del")]] int
 __set_first__.set_delfirst([[nonnull]] DeeObject *__restrict self)
-%{unsupported({ return err_seq_unsupportedf(self, "del first"); })}
+%{unsupported({
+	return err_set_unsupportedf(self, "del first");
+})}
 %{$empty = 0}
 %{$with__seq_operator_delitem_index = "default__seq_delfirst__with__seq_operator_delitem_index"}
 %{$with__seq_operator_size__and__seq_operator_bounditem_index__seq_operator_delitem_index = {
@@ -160,7 +162,7 @@ err:
 __set_first__.set_setfirst([[nonnull]] DeeObject *self,
                            [[nonnull]] DeeObject *value)
 %{unsupported({
-	return err_seq_unsupportedf(self, "first = %r", value);
+	return err_set_unsupportedf(self, "first = %r", value);
 })}
 %{$none = 0}
 %{$empty = DeeRT_ErrEmptySequence(self)}

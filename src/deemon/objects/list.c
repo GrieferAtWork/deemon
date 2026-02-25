@@ -1351,11 +1351,6 @@ unlock_and_err_index:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_bounditem_index(List *me, size_t index) {
-	return Dee_BOUND_FROMPRESENT_BOUND(index < DeeList_SIZE_ATOMIC(me));
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_hasitem_index(List *me, size_t index) {
 	return index < DeeList_SIZE_ATOMIC(me) ? 1 : 0;
 }
@@ -2504,7 +2499,7 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&list_getitem_index_fast,
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&list_delitem_index,
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&list_setitem_index,
-	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&list_bounditem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&list_hasitem_index,
 	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&list_hasitem_index,
 	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&list_getrange_index,
 	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&list_delrange_index,

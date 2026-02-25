@@ -1249,7 +1249,16 @@ decslab_freeN(struct Dee_slab_page *__restrict self) {
  *       want to rely on in deemon, since a (potential) compiler switch to make
  *       this requirement go away could result in some very nice optimizations.
  *
- * A better attribute (if it existed) would be something like "ATTR_NOALIAS" */
+ * A better attribute (if it existed) would be something like "ATTR_NOALIAS"
+ *
+ * FIXME: Well... Apparently MSVC actually **does** do this kind of aliasing!
+ * >> decslab_freeN_first  0x0056ddb0 {deemon.exe!decslab_freeN_middle(Dee_slab_page *)} void (Dee_slab_page *)
+ * >> decslab_freeN_middle 0x0056ddb0 {deemon.exe!decslab_freeN_middle(Dee_slab_page *)} void (Dee_slab_page *)
+ * >> decslab_freeN_last   0x0056ddb0 {deemon.exe!decslab_freeN_middle(Dee_slab_page *)} void (Dee_slab_page *)
+ *
+ * ... And it does so even with the "ATTR_NOINLINE" attributes.
+ * So the question becomes: how does one prevent it from doing so?
+ */
 PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
 decslab_freeN_first(struct Dee_slab_page *__restrict self) {
 	decslab_freeN(self);
