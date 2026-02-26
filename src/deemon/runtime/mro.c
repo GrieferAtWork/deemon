@@ -1331,6 +1331,7 @@ Dee_membercache_table_do_addslot(struct Dee_membercache_table *__restrict self,
 
 	/* Found a free slot -> write to it! */
 	memcpy(slot, item, sizeof(struct Dee_membercache_slot));
+	ASSERT(slot->mcs_type < Dee_MEMBERCACHE_COUNT);
 	++self->mc_size;
 }
 
@@ -1427,7 +1428,7 @@ again_search_slots:
 }
 
 
-#ifndef Dee_DPRINT_IS_NOOP
+#if !defined(Dee_DPRINT_IS_NOOP) && 1
 PRIVATE char const membercache_type_names[][16] = {
 	/* [Dee_MEMBERCACHE_UNUSED         ] = */ "??UNUSED",
 	/* [Dee_MEMBERCACHE_UNINITIALIZED  ] = */ "??UNINITIALIZED",
@@ -1469,6 +1470,7 @@ Dee_membercache_addslot_log_success(struct Dee_membercache *__restrict self,
 }
 #else /* !Dee_DPRINT_IS_NOOP */
 #define Dee_membercache_addslot_log_success(self, slot) (void)0
+#define Dee_membercache_addslot_log_success_IS_NOOP
 #endif /* Dee_DPRINT_IS_NOOP */
 
 PRIVATE NONNULL((1, 2)) int DCALL
@@ -1750,11 +1752,13 @@ Dee_membercache_patch(struct Dee_membercache *self, DeeTypeObject *decl,
 		if ((*do_patch)(item, new_data, old_data)) {
 			atomic_write(&item->mcs_decl, decl);
 			result = 0;
+#ifndef Dee_membercache_addslot_log_success_IS_NOOP
 			Dee_DPRINTF("[RT] Patched %s `%k.%s' in `%s' (%s)\n",
 			            membercache_type_names[attr_type],
 			            decl, attr,
 			            MEMBERCACHE_GETTYPENAME(self),
 			            MEMBERCACHE_GETCLASSNAME(self));
+#endif /* !Dee_membercache_addslot_log_success_IS_NOOP */
 		}
 		break;
 	}

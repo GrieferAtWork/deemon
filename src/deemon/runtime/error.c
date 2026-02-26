@@ -306,7 +306,7 @@ PUBLIC ATTR_COLD NONNULL((1)) int
 	frame->ef_trace = (DREF DeeTracebackObject *)ITER_DONE;
 	ts->t_except    = frame;
 	++ts->t_exceptsz;
-#ifndef Dee_DPRINT_IS_NOOP
+#if !defined(Dee_DPRINT_IS_NOOP) && 1
 	if (ts->t_exceptsz == 1 && _Dee_dprint_enabled) {
 		/* Only print first-level exceptions to prevent recursion if the error's "repr"
 		 * is implemented like:

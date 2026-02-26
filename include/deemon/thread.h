@@ -34,7 +34,7 @@
 #include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_* */
 #include <hybrid/host.h>          /* __arm__, __i386__, __linux__, __unix__, __x86_64__ */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
-#include <hybrid/typecore.h>      /* __ULONG32_TYPE__ */
+#include <hybrid/typecore.h>      /* __UINT32_C, __ULONG32_TYPE__ */
 
 #include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_refcnt_t, ITER_DONE */
 #include "util/futex.h" /* DeeFutex_WakeAll */
@@ -48,6 +48,10 @@
 #endif /* !__INTELLISENSE__ */
 
 /*!fixincludes fake_include "system-features.h" // pid_t */
+
+#ifndef UINT32_C
+#define UINT32_C __UINT32_C /*!export-*/
+#endif /* !UINT32_C */
 
 #undef Dee_pid_t
 #ifdef CONFIG_HOST_WINDOWS
@@ -222,30 +226,30 @@ struct Dee_thread_interrupt {
  * - Dee_THREAD_STATE_WAITING:   Indicator that another thread is waiting for `t_state' to change
  */
 
-#define Dee_THREAD_STATE_INITIAL      0x0000 /* The initial (not-started) thread state */
-#define Dee_THREAD_STATE_STARTING     0x0001 /* [lock(SET(ATOMIC), CLEAR(SETTER)), if(Dee_THREAD_STATE_STARTED, [const][SET])] The thread is currently starting. */
-#define Dee_THREAD_STATE_STARTED      0x0002 /* [lock(WRITE_ONCE && Dee_THREAD_STATE_SETUP && DeeThread_Self())] The thread has started */
-#define Dee_THREAD_STATE_INTERRUPTING 0x0004 /* [lock(ATOMIC)] Lock-flag for `t_interrupt' */
-#define Dee_THREAD_STATE_INTERRUPTED  0x0008 /* [lock(SET(ATOMIC), CLEAR(DeeThread_Self()))] There may be unhandled interrupts. */
-#define Dee_THREAD_STATE_DETACHING    0x0010 /* [lock(ATOMIC)] Lock-flag for `Dee_THREAD_STATE_HASTHREAD' / `Dee_THREAD_STATE_HASTID'. */
-#define Dee_THREAD_STATE_SUSPENDING   0x0040 /* [lock(SET(thread_list_lock), CLEAR(thread_list_lock && SETTER))]
-                                              * The thread should suspend itself (NOTE: While this flag is set,
-                                              * `thread_list_lock' must not be released).
-                                              * NOTE: When cleared, do a futex broadcast on `t_state' */
-#define Dee_THREAD_STATE_SUSPENDED    0x0080 /* [lock(DeeThread_Self())] The thread is currently suspended.
-                                              * NOTE: When set, do a futex broadcast on `t_state' */
-#define Dee_THREAD_STATE_TERMINATING  0x0100 /* [lock(WRITE_ONCE && Dee_THREAD_STATE_INTERRUPTING && DeeThread_Self())] The thread is about to terminate (don't schedule new interrupts) */
-#define Dee_THREAD_STATE_TERMINATED   0x0200 /* [lock(WRITE_ONCE && Dee_THREAD_STATE_SETUP && DeeThread_Self())] The thread has exited (when set, do a futex broardcast on `t_state'). */
-#define Dee_THREAD_STATE_SHUTDOWNINTR 0x0400 /* [lock(WRITE_ONCE)] When set alongside `Dee_THREAD_STATE_INTERRUPTED', throw `DeeError_Interrupt_instance' */
-#define Dee_THREAD_STATE_SETUP        0x0800 /* [lock(ATOMIC), if(Dee_THREAD_STATE_STARTING, [const][CLEAR])] Lock-flag for configuring a thread prior to its lauch. */
-#define Dee_THREAD_STATE_HASTHREAD    0x1000 /* [lock(SET(Dee_THREAD_STATE_STARTING), CLEAR(Dee_THREAD_STATE_DETACHING))]
-                                              * We have the thread's OS-specific thread handle (always clear when `Dee_THREAD_STATE_DETACHED') */
+#define Dee_THREAD_STATE_INITIAL      UINT32_C(0x00000000) /* The initial (not-started) thread state */
+#define Dee_THREAD_STATE_STARTING     UINT32_C(0x00000001) /* [lock(SET(ATOMIC), CLEAR(SETTER)), if(Dee_THREAD_STATE_STARTED, [const][SET])] The thread is currently starting. */
+#define Dee_THREAD_STATE_STARTED      UINT32_C(0x00000002) /* [lock(WRITE_ONCE && Dee_THREAD_STATE_SETUP && DeeThread_Self())] The thread has started */
+#define Dee_THREAD_STATE_INTERRUPTING UINT32_C(0x00000004) /* [lock(ATOMIC)] Lock-flag for `t_interrupt' */
+#define Dee_THREAD_STATE_INTERRUPTED  UINT32_C(0x00000008) /* [lock(SET(ATOMIC), CLEAR(DeeThread_Self()))] There may be unhandled interrupts. */
+#define Dee_THREAD_STATE_DETACHING    UINT32_C(0x00000010) /* [lock(ATOMIC)] Lock-flag for `Dee_THREAD_STATE_HASTHREAD' / `Dee_THREAD_STATE_HASTID'. */
+#define Dee_THREAD_STATE_SUSPENDING   UINT32_C(0x00000040) /* [lock(SET(thread_list_lock), CLEAR(thread_list_lock && SETTER))]
+                                                            * The thread should suspend itself (NOTE: While this flag is set,
+                                                            * `thread_list_lock' must not be released).
+                                                            * NOTE: When cleared, do a futex broadcast on `t_state' */
+#define Dee_THREAD_STATE_SUSPENDED    UINT32_C(0x00000080) /* [lock(DeeThread_Self())] The thread is currently suspended.
+                                                            * NOTE: When set, do a futex broadcast on `t_state' */
+#define Dee_THREAD_STATE_TERMINATING  UINT32_C(0x00000100) /* [lock(WRITE_ONCE && Dee_THREAD_STATE_INTERRUPTING && DeeThread_Self())] The thread is about to terminate (don't schedule new interrupts) */
+#define Dee_THREAD_STATE_TERMINATED   UINT32_C(0x00000200) /* [lock(WRITE_ONCE && Dee_THREAD_STATE_SETUP && DeeThread_Self())] The thread has exited (when set, do a futex broardcast on `t_state'). */
+#define Dee_THREAD_STATE_SHUTDOWNINTR UINT32_C(0x00000400) /* [lock(WRITE_ONCE)] When set alongside `Dee_THREAD_STATE_INTERRUPTED', throw `DeeError_Interrupt_instance' */
+#define Dee_THREAD_STATE_SETUP        UINT32_C(0x00000800) /* [lock(ATOMIC), if(Dee_THREAD_STATE_STARTING, [const][CLEAR])] Lock-flag for configuring a thread prior to its launch. */
+#define Dee_THREAD_STATE_HASTHREAD    UINT32_C(0x00001000) /* [lock(SET(Dee_THREAD_STATE_STARTING), CLEAR(Dee_THREAD_STATE_DETACHING))]
+                                                            * We have the thread's OS-specific thread handle (always clear when `Dee_THREAD_STATE_DETACHED') */
 #ifdef Dee_pid_t
-#define Dee_THREAD_STATE_HASTID       0x2000 /* [lock(SET(Dee_THREAD_STATE_STARTING), CLEAR(Dee_THREAD_STATE_DETACHING))]
-                                              * We know the thread's TID (always clear when `Dee_THREAD_STATE_DETACHED') */
+#define Dee_THREAD_STATE_HASTID       UINT32_C(0x00002000) /* [lock(SET(Dee_THREAD_STATE_STARTING), CLEAR(Dee_THREAD_STATE_DETACHING))]
+                                                            * We know the thread's TID (always clear when `Dee_THREAD_STATE_DETACHED') */
 #endif /* Dee_pid_t */
-#define Dee_THREAD_STATE_UNMANAGED    0x4000 /* [const] Set if the thread is unmanaged (i.e. wasn't created by `DeeThread_Start()') */
-#define Dee_THREAD_STATE_WAITING      0x8000 /* [lock(ATOMIC)] Set is there may be threads waiting for the futex at `t_state' */
+#define Dee_THREAD_STATE_UNMANAGED    UINT32_C(0x00004000) /* [const] Set if the thread is unmanaged (i.e. wasn't created by `DeeThread_Start()') */
+#define Dee_THREAD_STATE_WAITING      UINT32_C(0x00008000) /* [lock(ATOMIC)] Set is there may be threads waiting for the futex at `t_state' */
 
 #ifdef CONFIG_NO_THREADS
 #undef Dee_THREAD_STATE_SUSPENDING
@@ -311,12 +315,27 @@ typedef struct Dee_thread_object {
 	                                              * Incremented each time the thread calls `DeeThread_CheckInterrupt()' while
 	                                              * its `Dee_THREAD_STATE_INTERRUPTED' flag is set. Used in order to sync the
 	                                              * thread receiving interrupt requests by `DeeThread_Interrupt()'. */
+#define Dee_THREAD_RCU_INACTIVE 0 /* Marker for inactive RCU */
 	Dee_thread_rcuvers_t           t_rcu_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
-	                                              * RCU version that this thread is currently waiting for
-	                                              * (or `0' when not holding an RCU lock) */
+	                                              * RCU version that this thread is currently waiting for (or
+	                                              * `Dee_THREAD_RCU_INACTIVE' when not holding an RCU lock) */
+#define Dee_THREAD_PRIV_STATE_NORMAL  UINT32_C(0x00000000) /* Normal private-state flags */
+#define Dee_THREAD_PRIV_STATE_LISTRCU UINT32_C(0x00000001) /* Thread is currently reading "t_global.le_next" of any thread without
+                                                            * having acquired "thread_list_lock" (not even necessarily their own). */
+	uintptr_t                      t_privstate;  /* [lock(READ(ATOMIC), WRITE(ATOMIC && DeeThread_Self()))]
+	                                              * Set of `Dee_THREAD_PRIV_STATE_*' (flags that can only
+	                                              * be modified by the thread itself, allowing the use of
+	                                              * `atomic_read' / `atomic_write' operations instead of
+	                                              * `atomic_or' / `atomic_and') */
+#define _DeeThread_SetPrivState(self, state)    __hybrid_atomic_store(&(self)->t_privstate, state, __ATOMIC_RELEASE)
+#define _DeeThread_EnablePrivState(self, flag)  _DeeThread_SetPrivState(self, (self)->t_privstate | (flag))
+#define _DeeThread_DisablePrivState(self, flag) _DeeThread_SetPrivState(self, (self)->t_privstate & ~(flag))
+
 	struct { /* Structure that is API-compatible with `LIST_ENTRY()' */
-		struct Dee_thread_object  *le_next;
-		struct Dee_thread_object **le_prev;
+		struct Dee_thread_object  *le_next;      /* [0..1][lock(READ (INTERNAL(thread_list_lock) || (ATOMIC && ANY_THREAD(Dee_THREAD_STATE_LISTRCU))),
+		                                          *             WRITE(INTERNAL(thread_list_lock)))]
+		                                          * Next thread in global list of threads. */
+		struct Dee_thread_object **le_prev;      /* [0..1][lock(INTERNAL(thread_list_lock))] Self-pointer (or "NULL" if thread isn't part of "thread_list") */
 	}                              t_global;     /* [0..1] Link in list of running threads.
 	                                              * [lock(INSERT(thread_list_lock && Dee_THREAD_STATE_STARTING))]
 	                                              * [lock(REMOVE(thread_list_lock && Dee_THREAD_STATE_TERMINATED))] */
@@ -787,12 +806,10 @@ DFUNDEF void (DCALL DeeRCU_Synchronize)(void);
  * Global RCU "version" number (only here for reading;
  * only `DeeRCU_Synchronize()' is allowed to write this!) */
 DDATDEF Dee_thread_rcuvers_t _DeeRCU_Version;
-#define DeeRCU_LockSelf(caller)                                                             \
-	(void)((caller)->t_rcu_vers = __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), \
-	       COMPILER_BARRIER())
+#define DeeRCU_LockSelf(caller) \
+	__hybrid_atomic_store(&(caller)->t_rcu_vers, __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), __ATOMIC_ACQUIRE)
 #define DeeRCU_UnlockSelf(caller) \
-	(void)(COMPILER_BARRIER(),    \
-	       (caller)->t_rcu_vers = 0)
+	__hybrid_atomic_store(&(caller)->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, __ATOMIC_RELEASE)
 #define DeeRCU_Lock()   DeeRCU_LockSelf(DeeThread_Self())
 #define DeeRCU_Unlock() DeeRCU_UnlockSelf(DeeThread_Self())
 

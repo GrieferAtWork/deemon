@@ -43,11 +43,11 @@
 #include <deemon/system-error.h>       /* DeeSystemError_Pop, DeeSystemError_Push */
 #include <deemon/system-features.h>    /* CLOCK_MONOTONIC, CLOCK_REALTIME, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, abort, bsd_signal, bzero*, clock_gettime, clock_gettime64, fprintf, getpid, gettid, gettimeofday, gettimeofday64, kill, memcpy*, memmovedownc, memmoveupc, memset, nanosleep, nanosleep64, pselect, pthread_*, select, sigaction, signal, stderr, strerror, strlen, syscall, sysv_signal, tgkill, thrd_*, time, time64, tss_*, usleep */
 #include <deemon/system.h>             /* DeeNTSystem_HandleGenericError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_intvers_t, Dee_thread_object, Dee_thread_rcuvers_t, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
+#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_PRIV_STATE_NORMAL, Dee_THREAD_RCU_INACTIVE, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_intvers_t, Dee_thread_object, Dee_thread_rcuvers_t, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
 #include <deemon/traceback.h>          /* DeeTraceback*, Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple, Dee_tuple_object */
 #include <deemon/type.h>               /* DeeObject_GenericCmpByAddr, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/atomic.h>        /* Dee_ATOMIC_*, atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init, Dee_atomic_rwlock_*, Dee_shared_lock_*, _Dee_SHARED_WAITWORD_IS_NOOP */
 #include <deemon/util/once.h>          /* Dee_ONCE */
@@ -996,7 +996,8 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 #endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #ifndef CONFIG_NO_THREADS
 		/* .t_int_vers   = */ 0,
-		/* .t_rcu_vers   = */ 0,
+		/* .t_rcu_vers   = */ Dee_THREAD_RCU_INACTIVE,
+		/* .t_privstate  = */ Dee_THREAD_PRIV_STATE_NORMAL,
 		/* .t_global     = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .t_threadname = */ (DeeStringObject *)&main_thread_name,
 		/* .t_inout      = */ { NULL },
@@ -1015,6 +1016,127 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 #endif /* DeeThread_USE_CreateThread */
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 };
+
+#ifdef DeeThread_USE_SINGLE_THREADED
+#define thread_list_insert(self)       LIST_INSERT_HEAD(&thread_list, self, t_global)
+#define thread_list_unbind(self)       LIST_UNBIND(self, t_global)
+#define thread_list_rcu_lock(caller)   (void)0
+#define thread_list_rcu_unlock(caller) (void)0
+#else /* DeeThread_USE_SINGLE_THREADED */
+/* Wait for "Dee_THREAD_PRIV_STATE_NORMAL" to disappear from all threads.
+ * Caller must be holding "thread_list_lock". */
+PRIVATE void DCALL thread_list_lock_await_rcu(void) {
+	DeeThreadObject *iter;
+	LIST_FOREACH (iter, &thread_list, t_global) {
+		while (atomic_read(&iter->t_privstate) & Dee_THREAD_PRIV_STATE_NORMAL)
+			SCHED_YIELD();
+	}
+}
+
+/* Insert/unbind impl here needs to be more complicated, since it has to
+ * involve "thread_list_lock_await_rcu()", and be atomic in regards to
+ * other threads (other than the just-inserted/removed one), when any of
+ * those threads have the "Dee_THREAD_PRIV_STATE_NORMAL" flag set.
+ *
+ * iow: when inserting a thread, any (unrelated) thread that also has the
+ *      "Dee_THREAD_PRIV_STATE_NORMAL" flag set must not be hindered in its
+ *      enumeration of the thread list using only `thread_list_*_atomic'.
+ */
+PRIVATE NONNULL((1)) void DCALL
+thread_list_insert(DeeThreadObject *__restrict self) {
+	DeeThreadObject *next;
+	ASSERT(!(self->t_privstate & Dee_THREAD_PRIV_STATE_NORMAL));
+	self->t_global.le_prev = &DeeThread_Main.ot_thread.t_global.le_next;
+	next = DeeThread_Main.ot_thread.t_global.le_next;
+	atomic_write_explicit(&self->t_global.le_next, next, Dee_ATOMIC_RELAXED);
+	if (next != NULL)
+		next->t_global.le_prev = &self->t_global.le_next;
+	atomic_write(&DeeThread_Main.ot_thread.t_global.le_next, self);
+	/* Ensure that waiters are gone */
+	thread_list_lock_await_rcu();
+}
+
+PRIVATE NONNULL((1)) void DCALL
+thread_list_unbind(DeeThreadObject *__restrict self) {
+	DeeThreadObject **p_self, *next;
+#if 0 /* Doesn't actually matter in this case (and might not be the case in some weird edge-case) */
+	ASSERT(!(self->t_privstate & Dee_THREAD_PRIV_STATE_NORMAL));
+#endif
+	ASSERT(self->t_global.le_prev != NULL);
+	p_self = self->t_global.le_prev;
+	next   = self->t_global.le_next;
+
+	/* This write already removes the thread, as far as other observers are concerned
+	 * However, below must still take care to deal with observers that are currently
+	 * observing "self" (i.e. the thread that is being unbound) */
+	atomic_write(p_self, next);
+
+	/* Update the next thread's self-pointer. This must still be done atomically to
+	 * prevent observers that use `thread_list_isbound_atomic()' from accidentally
+	 * seeing "false" (if memory were to-be written in a bad order that produced a
+	 * bunch of 0-bytes at inconvenient times), but since the next thread's old and
+	 * new states are both logically "bound", the ordering here doesn't matter and
+	 * we can use "RELAXED" semantics. */
+	if (next) {
+		atomic_write_explicit(&next->t_global.le_prev, p_self, Dee_ATOMIC_RELAXED);
+	}
+
+	/* Mark "self" as having been unbound -- this must be done atomically merely for
+	 * the sake of "thread_list_isbound_atomic()" producing the correct results when
+	 * applied to "self" by a concurrent observer. */
+	atomic_write(&self->t_global.le_prev, NULL);
+
+	/* Make sure that no observers might still be looking at "self" (must be done
+	 * before we can fully invalidate (with the DBG_memset) "self", followed by our
+	 * caller doing god-knows-what to "self") */
+	thread_list_lock_await_rcu();
+
+	/* Trash the next-pointer of "self" now that it is guarantied that "self" is no
+	 * longer being observed by some other thread. */
+	DBG_memset(&self->t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
+}
+
+/* Helper macros to acquire RCU locks to "thread_list" (such that the global
+ * thread list can be enumerated without the need to acquire "thread_list_lock"):
+ * >> DeeThreadObject *iter, *caller = DeeThread_Self();
+ * >> thread_list_rcu_lock(caller);
+ * >> for (iter = thread_list_head_atomic(); iter != NULL;
+ * >>      iter = thread_list_next_atomic(iter)) {
+ * >>     ...
+ * >> }
+ * >> thread_list_rcu_unlock(caller); */
+#define thread_list_rcu_lock(caller)   _DeeThread_EnablePrivState(caller, Dee_THREAD_PRIV_STATE_NORMAL)
+#define thread_list_rcu_unlock(caller) _DeeThread_DisablePrivState(caller, Dee_THREAD_PRIV_STATE_NORMAL)
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+
+/* Check if a given thread is part of "thread_list"
+ * NOTE: Unlike the other "thread_list_*_atomic" functions below,
+ *       "thread_list_next_atomic()" does *NOT* require the calling
+ *       thread to have its "Dee_THREAD_STATE_LISTRCU" flag set for
+ *       the duration of these calls. */
+#define thread_list_isbound_atomic(self) (atomic_read(&(self)->t_global.le_prev) != __NULLPTR)
+#define thread_list_isbound_locked(self) LIST_ISBOUND(self, t_global)
+
+/* Return a pointer to the next thread in "thread_list".
+ * - thread_list_next_atomic: Calling thread must have the "Dee_THREAD_STATE_LISTRCU" flag set
+ * - thread_list_next_locked: Calling thread must be holding "thread_list_lock" */
+#define thread_list_next_atomic(self) atomic_read(&(self)->t_global.le_next)
+#define thread_list_next_locked(self) LIST_NEXT(self, t_global)
+
+/* Returns the first thread entry from "thread_list" that isn't the main thread
+ * - thread_list_head_atomic: Calling thread must have the "Dee_THREAD_STATE_LISTRCU" flag set
+ * - thread_list_head_locked: Calling thread must be holding "thread_list_lock" */
+#define thread_list_head_atomic() atomic_read(&DeeThread_Main.ot_thread.t_global.le_next)
+#define thread_list_head_locked() (DeeThread_Main.ot_thread.t_global.le_next)
+
+/* Atomically check if there are registered threads other than the main thread (like
+ * `thread_list_isbound_atomic()', caller DOESN'T need `Dee_THREAD_STATE_LISTRCU'). */
+#define thread_list_isthreaded_atomic() (thread_list_head_atomic() != NULL)
+
+
+
+
+
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 #ifdef CONFIG_NO_THREADS
@@ -1297,7 +1419,7 @@ PRIVATE void DCALL DeeThread_UndoSuspendAll(void) {
 			                             Dee_THREAD_STATE_WAITING));
 			DeeFutex_WakeAll(&iter->t_state);
 		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	} while ((iter = thread_list_next_locked(iter)) != NULL);
 }
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 
@@ -1328,7 +1450,7 @@ again:
 			                          Dee_THREAD_STATE_INTERRUPTED);
 			DeeThread_Wake(Dee_AsObject(iter));
 		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	} while ((iter = thread_list_next_locked(iter)) != NULL);
 
 	/* Wait for all threads to become suspended. */
 again_wait_for_suspend:
@@ -1337,7 +1459,7 @@ again_wait_for_suspend:
 		if (iter != caller) {
 			if (atomic_read(&iter->t_state) & Dee_THREAD_STATE_TERMINATED) {
 				ASSERT(iter != &DeeThread_Main.ot_thread);
-				LIST_UNBIND(iter, t_global);
+				thread_list_unbind(iter);
 				goto again_wait_for_suspend;
 			}
 			for (;;) {
@@ -1362,7 +1484,7 @@ again_wait_for_suspend:
 				}
 			}
 		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	} while ((iter = thread_list_next_locked(iter)) != NULL);
 
 	/* Expose the global thread list to allow the caller to enumerate it. */
 	atomic_write(&DeeThread_IsMultiThreaded, false);
@@ -1396,7 +1518,7 @@ again:
 			                          Dee_THREAD_STATE_INTERRUPTED);
 			DeeThread_Wake(Dee_AsObject(iter));
 		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	} while ((iter = thread_list_next_locked(iter)) != NULL);
 
 	/* Wait for all threads to become suspended. */
 again_wait_for_suspend:
@@ -1406,7 +1528,7 @@ again_wait_for_suspend:
 			unsigned int attempt;
 			if (atomic_read(&iter->t_state) & Dee_THREAD_STATE_TERMINATED) {
 				ASSERT(iter != &DeeThread_Main.ot_thread);
-				LIST_UNBIND(iter, t_global);
+				thread_list_unbind(iter);
 				goto again_wait_for_suspend;
 			}
 			for (attempt = 0;; ++attempt) {
@@ -1433,7 +1555,7 @@ again_wait_for_suspend:
 				}
 			}
 		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	} while ((iter = thread_list_next_locked(iter)) != NULL);
 
 	/* Expose the global thread list to allow the caller to enumerate it. */
 	atomic_write(&DeeThread_IsMultiThreaded, false);
@@ -1462,7 +1584,7 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 			                             Dee_THREAD_STATE_WAITING));
 			DeeFutex_WakeAll(&iter->t_state);
 		}
-	} while ((iter = iter->t_global.le_next) != NULL);
+	} while ((iter = thread_list_next_locked(iter)) != NULL);
 
 	/* Release the lock acquired in `DeeThread_SuspendAll()' */
 	thread_list_lock_release();
@@ -1582,8 +1704,8 @@ again:
 	thread_list_lock_acquire_noint();
 
 	/* Mark all threads for shutdown, and wake them all */
-	for (thread = DeeThread_Main.ot_thread.t_global.le_next;
-	     thread != NULL; thread = thread->t_global.le_next) {
+	for (thread = thread_list_head_locked(); thread != NULL;
+	     thread = thread_list_next_locked(thread)) {
 		atomic_or(&thread->t_state, Dee_THREAD_STATE_SHUTDOWNINTR |
 		                            Dee_THREAD_STATE_INTERRUPTED);
 		DeeThread_Wake(Dee_AsObject(thread));
@@ -1592,7 +1714,7 @@ again:
 
 	/* Detach threads, unlink ones that have already terminated, and wait for one that hasn't */
 again_find_running_thread:
-	while ((thread = DeeThread_Main.ot_thread.t_global.le_next) != NULL) {
+	while ((thread = thread_list_head_locked()) != NULL) {
 		uint32_t state = atomic_read(&thread->t_state);
 #ifdef DeeThread_Detach_system_impl
 		if (state & Dee_THREAD_STATE_HASTHREAD) {
@@ -1603,8 +1725,8 @@ again_find_running_thread:
 
 		if (!(state & Dee_THREAD_STATE_TERMINATED))
 			break;
-		ASSERT(LIST_ISBOUND(thread, t_global));
-		LIST_UNBIND(thread, t_global);
+		ASSERT(thread_list_isbound_locked(thread));
+		thread_list_unbind(thread);
 	}
 	if (thread == NULL) {
 		thread_list_lock_release();
@@ -1625,8 +1747,8 @@ again_find_running_thread:
 	if (!Dee_IncrefIfNotZero(thread)) {
 		ASSERTF(atomic_read(&thread->t_state) & Dee_THREAD_STATE_TERMINATED,
 		        "STARTED thread with 0 references, but no TERMINATED flag?");
-		ASSERT(LIST_ISBOUND(thread, t_global));
-		LIST_UNBIND(thread, t_global);
+		ASSERT(thread_list_isbound_locked(thread));
+		thread_list_unbind(thread);
 		goto again_find_running_thread;
 	}
 	thread_list_lock_release();
@@ -1799,7 +1921,7 @@ DeeThread_AllocateCurrentThread(void) {
 
 	/* Add the thread to the global list of threads */
 	thread_list_lock_acquire_noint();
-	LIST_INSERT_HEAD(&thread_list, &result->at_os_thread.ot_thread, t_global);
+	thread_list_insert(&result->at_os_thread.ot_thread);
 	thread_list_lock_release();
 
 	return &result->at_os_thread.ot_thread;
@@ -1932,6 +2054,7 @@ DeeThread_Secede(DREF DeeObject *thread_result) {
 	ASSERTF(self->t_str_curr == NULL, "Calling thread still has active calls to `DeeObject_Str'");
 	ASSERTF(self->t_repr_curr == NULL, "Calling thread still has active calls to `DeeObject_Repr'");
 	ASSERTF(self->t_hash_curr == NULL, "Calling thread still has active calls to `DeeObject_Hash'");
+	ASSERTF(self->t_rcu_vers == Dee_THREAD_RCU_INACTIVE, "Calling thread is still holding an RCU lock");
 	ASSERT(!self->t_threadname || DeeString_Check(self->t_threadname));
 
 	/* Set the TERMINATING flag to prevent further interrupts from being scheduled. */
@@ -2011,10 +2134,10 @@ again_cleanup:
 	/* Wake up threads that may be waiting for our thread to terminate */
 	_DeeThread_WakeWaiting(self);
 
-	if (LIST_ISBOUND(self, t_global)) {
+	if (thread_list_isbound_atomic(self)) {
 		if (thread_list_lock_tryacquire()) {
-			if (LIST_ISBOUND(self, t_global))
-				LIST_UNBIND(self, t_global);
+			if (thread_list_isbound_locked(self))
+				thread_list_unbind(self);
 			thread_list_lock_release();
 		}
 	}
@@ -2490,7 +2613,7 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 	_DeeThread_AcquireSetup(&self->ot_thread);
 
 	/* Insert the thread into the global list of threads */
-	LIST_INSERT_HEAD(&thread_list, &self->ot_thread, t_global);
+	thread_list_insert(&self->ot_thread);
 	thread_main = Dee_AsObject(self->ot_thread.t_inout.io_main);  /* Inherit reference */
 	thread_args = Dee_AsObject(self->ot_thread.t_context.d_args); /* Inherit reference */
 	DBG_memset(&self->ot_thread.t_inout.io_main, 0xcc,
@@ -2633,10 +2756,10 @@ do_cleanup_and_set_result:
 	/* Wake up threads that may be waiting for our thread to terminate */
 	_DeeThread_WakeWaiting(&self->ot_thread);
 
-	if (LIST_ISBOUND(&self->ot_thread, t_global)) {
+	if (thread_list_isbound_atomic(&self->ot_thread)) {
 		if (thread_list_lock_tryacquire()) {
-			if (LIST_ISBOUND(&self->ot_thread, t_global))
-				LIST_UNBIND(&self->ot_thread, t_global);
+			if (thread_list_isbound_locked(&self->ot_thread))
+				thread_list_unbind(&self->ot_thread);
 			thread_list_lock_release();
 		}
 	}
@@ -2931,7 +3054,7 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 	 * [3] Thread #1:   thread_fini(dead_thread);
 	 * [4]   Main thread: DeeThread_InterruptAndJoinAll();
 	 * [5]   Main thread: thread_list_lock_acquire_noint()
-	 * [6] Thread #1:   if (LIST_ISBOUND(self, t_global)) {
+	 * [6] Thread #1:   if (thread_list_isbound_atomic(self)) {
 	 * [7] Thread #1:   thread_list_lock_acquire_noint();         // Blocked -- acquired by "Main thread"
 	 * [8]   Main thread: DeeThread_Wake(dead_thread);            // Because still part of thread list
 	 * [9]   Main thread: Get here with a (kind-of) dead thread
@@ -3614,17 +3737,19 @@ thread_fini(DeeThreadObject *__restrict self) {
 	/* Only unmanaged threads can get here */
 	ASSERT(self->t_state & Dee_THREAD_STATE_UNMANAGED);
 #ifndef CONFIG_NO_THREADS
-	ASSERT(!LIST_ISBOUND(self, t_global));
+	ASSERT(!thread_list_isbound_atomic(self));
 #endif /* !CONFIG_NO_THREADS */
 #ifndef CONFIG_NO_THREADS
 	ASSERT(self->t_threadname == NULL);
 #endif /* !CONFIG_NO_THREADS */
 #else /* DeeThread_USE_SINGLE_THREADED */
+	ASSERT(self->t_rcu_vers == Dee_THREAD_RCU_INACTIVE);
+
 	/* If the thread is still bound, then we must unlink it! */
-	if (LIST_ISBOUND(self, t_global)) {
+	if (thread_list_isbound_atomic(self)) {
 		thread_list_lock_acquire_noint();
-		if (LIST_ISBOUND(self, t_global))
-			LIST_UNBIND(self, t_global);
+		if (thread_list_isbound_locked(self))
+			thread_list_unbind(self);
 		thread_list_lock_release();
 	}
 
@@ -3896,7 +4021,8 @@ thread_init(DeeThreadObject *__restrict self,
 		thread_init_started(&me->ot_thread);
 #ifndef CONFIG_NO_THREADS
 		me->ot_thread.t_int_vers       = 0;
-		me->ot_thread.t_rcu_vers       = 0;
+		me->ot_thread.t_rcu_vers       = Dee_THREAD_RCU_INACTIVE;
+		me->ot_thread.t_privstate      = Dee_THREAD_PRIV_STATE_NORMAL;
 		me->ot_thread.t_global.le_prev = NULL;
 		DBG_memset(&me->ot_thread.t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
 		me->ot_thread.t_threadname = NULL;
@@ -3968,7 +4094,8 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_hash_curr         = NULL;
 	self->t_state             = Dee_THREAD_STATE_INITIAL;
 	self->t_int_vers          = 0;
-	self->t_rcu_vers          = 0;
+	self->t_rcu_vers          = Dee_THREAD_RCU_INACTIVE;
+	self->t_privstate         = Dee_THREAD_PRIV_STATE_NORMAL;
 	self->t_interrupt.ti_next = NULL;
 	self->t_interrupt.ti_intr = NULL;
 	self->t_interrupt.ti_args = NULL;
@@ -4449,7 +4576,7 @@ thread_threaded_get(DeeObject *__restrict UNUSED(self)) {
 #if 1
 	return_bool(DeeThread_IsMultiThreaded);
 #else
-	return_bool(atomic_read(&DeeThread_Main.ot_thread.t_global.le_next) != NULL);
+	return_bool(thread_list_isthreaded_atomic());
 #endif
 }
 
@@ -5521,30 +5648,108 @@ DeeThread_InvokeUserInterruptHooks(DeeThreadObject *__restrict self) {
 /* RCU SUPPORT                                                          */
 /************************************************************************/
 
+/* Here's some deemon user-code to torture the RCU lock system:
+ * ```deemon
+import * from deemon;
+
+function predcmp2key(cmp: Callable): Callable {
+	class KeyClass {
+		private member m_self;
+		this(self): m_self(self) {}
+		public operator <  (other) -> cmp(this.m_self, other.m_self) <  0;
+		public operator <= (other) -> cmp(this.m_self, other.m_self) <= 0;
+		public operator == (other) -> cmp(this.m_self, other.m_self) == 0;
+		public operator != (other) -> cmp(this.m_self, other.m_self) != 0;
+		public operator >  (other) -> cmp(this.m_self, other.m_self) >  0;
+		public operator >= (other) -> cmp(this.m_self, other.m_self) >= 0;
+		function f1() {}
+		function f2() {}
+		function f3() {}
+		function f4() {}
+		function f5() {}
+		function f6() {}
+		function f7() {}
+		function f8() {}
+		function f9() {}
+		function f10() {}
+	}
+	return KeyClass;
+}
+local keys = [];
+function getkey() {
+	try {
+		return keys.popfront();
+	} catch (...) {
+	}
+	local k = predcmp2key(string.vercompare);
+	keys.extend({k} * 512);
+	return k;
+}
+function work(id) {
+	for (;;) {
+		for (local i: [:1000]) {
+			local x = ["1a", "1c", "1b", "0a", "55b124", "55b123"];
+			local k = getkey();
+			local r = k(42);
+			// Bunch of functions that will populate KeyClass's "tp_cache"
+			// to the point where it needs to be resized (at which point
+			// the resized cache has to be published to other threads using
+			// the "DeeRCU_Synchronize()" mechanism)
+			r.f1();
+			r.f2();
+			r.f3();
+			r.f4();
+			r.f5();
+			r.f6();
+			r.f7();
+			r.f8();
+			r.f9();
+			r.f10();
+			x.sort(key: k);
+		}
+		gc.collect();
+	}
+}
+local threads = [];
+for (local x: [:16]) {
+	local t = Thread(work, (x,));
+	t.start();
+	threads.append(t);
+}
+for (local x: threads)
+	x.join();
+ * ```
+ */
+
 
 /* Enter/leave an RCU section (where references
  * read are always either the old, or new state) */
 PUBLIC void (DCALL DeeRCU_Lock)(void) {
 #ifndef DeeThread_USE_SINGLE_THREADED
 	DeeThreadObject *me = DeeThread_Self();
-	me->t_rcu_vers = atomic_read(&_DeeRCU_Version);
-	COMPILER_BARRIER();
+	Dee_thread_rcuvers_t version = atomic_read(&_DeeRCU_Version);
+	atomic_write_explicit(&me->t_rcu_vers, version, Dee_ATOMIC_ACQUIRE);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 PUBLIC void (DCALL DeeRCU_Unlock)(void) {
 #ifndef DeeThread_USE_SINGLE_THREADED
 	DeeThreadObject *me = DeeThread_Self();
-	COMPILER_BARRIER();
-	me->t_rcu_vers = 0;
+	atomic_write_explicit(&me->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
+
+STATIC_ASSERT_MSG(Dee_THREAD_RCU_INACTIVE == 0, "Logic in 'DeeRCU_Synchronize()' assumes that '0' is used here");
 
 #ifndef CONFIG_NO_THREADS
 /* [lock(READ(ATOMIC), WRITE(ATOMIC && INTERNAL(thread_list_lock)))]
  * Global RCU "version" number (only here for reading;
  * only `DeeRCU_Synchronize()' is allowed to write this!) */
 PUBLIC Dee_thread_rcuvers_t _DeeRCU_Version = 1;
+/* NOTE: Initializer of `_DeeRCU_Version' must be non-zero, because
+ *       if this was ever set to "0", we could no longer detect threads
+ *       holding RCU locks (because "Dee_THREAD_RCU_INACTIVE == 0",
+ *       which is used to indicate "no RCU lock held") */
 #endif /* !CONFIG_NO_THREADS */
 
 /* Synchronize RCU, blocking until all threads that
@@ -5556,33 +5761,64 @@ PUBLIC Dee_thread_rcuvers_t _DeeRCU_Version = 1;
 PUBLIC void (DCALL DeeRCU_Synchronize)(void) {
 #ifndef DeeThread_USE_SINGLE_THREADED
 	DeeThreadObject *iter;
+	DeeThreadObject *caller = DeeThread_Self();
 	Dee_thread_rcuvers_t old_version, new_version;
-	thread_list_lock_acquire_noint();
+	ASSERTF(caller->t_rcu_vers == Dee_THREAD_RCU_INACTIVE,
+	        "Illegal: call to 'DeeRCU_Synchronize()' while calling "
+	        /**/ "thread has itself made a call to 'DeeRCU_Lock()'");
 
 	/* Increment the RCU version counter (but make sure it never becomes "0") */
+again_increment_version:
 	do {
 		old_version = atomic_read(&_DeeRCU_Version);
 		new_version = old_version + 1;
-		if unlikely(new_version == 0)
-			new_version = 1;
+#if 0 /* To simulate early RCU overflow */
+		if unlikely(new_version >= 8)
+			goto handle_overflowing_version;
+#else
+		if unlikely(new_version == Dee_THREAD_RCU_INACTIVE)
+			goto handle_overflowing_version;
+#endif
 	} while (!atomic_cmpxch_weak(&_DeeRCU_Version, old_version, new_version));
 
+	/* Use a special kind of RCU lock that is specifically designed for
+	 * the purpose of giving us fast access to the list of threads. */
+	thread_list_rcu_lock(caller);
+
+	/* TODO: Find some way to narrow down the list of threads such that we can
+	 *       (somehow) skip (in O(1) time) threads that are known to not be
+	 *       holding any RCU locks. */
+
 	/* Check if there is any thread still using "old_version" */
-again_waitfor:
 	iter = &DeeThread_Main.ot_thread;
 	do {
-		Dee_thread_rcuvers_t thread_version;
-		thread_version = atomic_read(&iter->t_rcu_vers);
-		ASSERT(thread_version == 0 ||           /* No RCU lock */
-		       thread_version == old_version || /* RCU lock on old version (this is what we want to wait for) */
-		       thread_version == new_version);  /* RCU lock on new version */
-		if (thread_version == old_version) {
-			ASSERTF(iter != DeeThread_Self(),
-			        "Illegal: call to 'DeeRCU_Synchronize()' while calling "
-			        /**/ "thread has itself made a call to 'DeeRCU_Lock()'");
+		for (;;) {
+			Dee_thread_rcuvers_t current_rcu_version;
+			Dee_thread_rcuvers_t thread_version = atomic_read(&iter->t_rcu_vers);
+			if (thread_version == Dee_THREAD_RCU_INACTIVE)
+				break; /* Thread isn't doing any RCU -- can ignore */
+			if (thread_version > old_version)
+				break; /* Thread is waiting for some future event that we're not required to synchronize with */
+			ASSERTF(iter != caller, "Our own thread should have been filtered by "
+			                        "'thread_version == Dee_THREAD_RCU_INACTIVE'");
 
-			/* Yield so the other thread will hopefully get a quantum */
+			/* Yield so the other thread will hopefully get a quantum
+			 * NOTE: Yielding here while still holding "thread_list_rcu_lock" is OK! */
 			SCHED_YIELD();
+
+			/* Check for special case: if another thread caused the RCU version
+			 * counter to overflow in the mean-time, then we probably won't be
+			 * seeing our expected minimum "old_version" for a *very* long time.
+			 *
+			 * To make sure that we won't be waiting for another couple of years,
+			 * inherit such a known-newer RCU version and wait for *it* instead.
+			 * (since even though that number will be lower than what we've been
+			 * waiting for, semantically speaking it is actually more recent, so
+			 * by waiting for it, we're actually waiting for more than we'd have
+			 * to) */
+			current_rcu_version = atomic_read(&_DeeRCU_Version);
+			if unlikely(old_version > current_rcu_version)
+				old_version = current_rcu_version;
 
 			/* Try again. Note that we *CAN'T* release "thread_list_lock_release()"
 			 * and then re-acquire it before repeating the search. If we did that,
@@ -5593,10 +5829,59 @@ again_waitfor:
 			 * However, since RCU locks are kind-of on par with "atomic" locks, this
 			 * is actually OK (because we have an implicit guaranty that all threads
 			 * still holding RCU locks will eventually release those locks). */
-			goto again_waitfor;
 		}
-	} while ((iter = iter->t_global.le_next) != NULL);
-	thread_list_lock_release();
+	} while ((iter = thread_list_next_atomic(iter)) != NULL);
+	thread_list_rcu_unlock(caller);
+	return;
+
+handle_overflowing_version:
+	/* Somewhat more complicated case:
+	 * - The new version has to be less than the old version (since there is
+	 *   no more room for the version number to grow)
+	 * - Once the new (smaller) version has been assigned as the new version,
+	 *   any concurrent call to "DeeRCU_Synchronize()" will not be waiting for
+	 *   RCU locks that happened prior to the new version having been set.
+	 *
+	 * Solve this problem by:
+	 * 1. Setting our own thread's RCU version to "1" (so insert ourselves as
+	 *    an implicit dependency for anything that will come after this point)
+	 * 2. Set the new version to "2" (thus fixing the overflow whilst keeping
+	 *    our own thread as an artificial dependency)
+	 * 3. Make sure that each thread has reached "Dee_THREAD_RCU_INACTIVE" at
+	 *    least once (excluding the calling thread, or any other thread that
+	 *    is also using version "1" as its current RCU version).
+	 * 4. Set our own thread's RCU version back to "Dee_THREAD_RCU_INACTIVE".
+	 */
+
+	/* Step #1 */
+	atomic_write(&caller->t_rcu_vers, 1);
+
+	/* Step #2 */
+	new_version = 2;
+	if (!atomic_cmpxch_weak(&_DeeRCU_Version, old_version, new_version)) {
+		atomic_write(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE);
+		goto again_increment_version;
+	}
+
+	/* Step #3 */
+	thread_list_rcu_lock(caller);
+	iter = &DeeThread_Main.ot_thread;
+	do {
+		for (;;) {
+			Dee_thread_rcuvers_t thread_version = atomic_read(&iter->t_rcu_vers);
+			if (thread_version == Dee_THREAD_RCU_INACTIVE)
+				break; /* Thread isn't doing any RCU -- can ignore */
+			if (thread_version == 1)
+				break; /* Thread is like us (and probably even *is* us): waiting for an overflow to complete. */
+			ASSERT(iter != caller);
+			/* NOTE: Yielding here while still holding "thread_list_rcu_lock" is OK! */
+			SCHED_YIELD();
+		}
+	} while ((iter = thread_list_next_atomic(iter)) != NULL);
+	thread_list_rcu_unlock(caller);
+
+	/* Step #4 */
+	atomic_write(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
