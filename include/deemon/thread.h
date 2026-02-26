@@ -810,12 +810,12 @@ DFUNDEF void (DCALL DeeRCU_Synchronize)(void);
 #define DeeRCU_Unlock()           (void)0
 #define DeeRCU_Synchronize()      (void)0
 #elif !defined(__OPTIMIZE_SIZE__)
-/* [lock(READ(ATOMIC), WRITE(ATOMIC && INTERNAL(thread_list_lock)))]
- * Global RCU "version" number (only here for reading;
- * only `DeeRCU_Synchronize()' is allowed to write this!) */
+/* [lock(ATOMIC)] Global RCU "version" number (only here for
+ * reading; only `DeeRCU_Synchronize()' is allowed to write
+ * this!) */
 DDATDEF Dee_thread_rcuvers_t _DeeRCU_Version;
 #define DeeRCU_LockSelf(caller) \
-	__hybrid_atomic_store(&(caller)->t_rcu_vers, __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), __ATOMIC_ACQUIRE)
+	__hybrid_atomic_store(&(caller)->t_rcu_vers, __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), __ATOMIC_RELEASE)
 #define DeeRCU_UnlockSelf(caller) \
 	__hybrid_atomic_store(&(caller)->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, __ATOMIC_RELEASE)
 #define DeeRCU_Lock()   DeeRCU_LockSelf(DeeThread_Self())

@@ -5726,25 +5726,25 @@ for (local x: threads)
  * read are always either the old, or new state) */
 PUBLIC void (DCALL DeeRCU_Lock)(void) {
 #ifndef DeeThread_USE_SINGLE_THREADED
-	DeeThreadObject *me = DeeThread_Self();
-	Dee_thread_rcuvers_t version = atomic_read(&_DeeRCU_Version);
-	atomic_write_explicit(&me->t_rcu_vers, version, Dee_ATOMIC_ACQUIRE);
+	DeeThreadObject *caller = DeeThread_Self();
+	Dee_thread_rcuvers_t version = __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE);
+	__hybrid_atomic_store(&caller->t_rcu_vers, version, __ATOMIC_RELEASE);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 PUBLIC void (DCALL DeeRCU_Unlock)(void) {
 #ifndef DeeThread_USE_SINGLE_THREADED
-	DeeThreadObject *me = DeeThread_Self();
-	atomic_write_explicit(&me->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
+	DeeThreadObject *caller = DeeThread_Self();
+	__hybrid_atomic_store(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, __ATOMIC_RELEASE);
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
 STATIC_ASSERT_MSG(Dee_THREAD_RCU_INACTIVE == 0, "Logic in 'DeeRCU_Synchronize()' assumes that '0' is used here");
 
 #ifndef CONFIG_NO_THREADS
-/* [lock(READ(ATOMIC), WRITE(ATOMIC && INTERNAL(thread_list_lock)))]
- * Global RCU "version" number (only here for reading;
- * only `DeeRCU_Synchronize()' is allowed to write this!) */
+/* [lock(ATOMIC)] Global RCU "version" number (only here for
+ * reading; only `DeeRCU_Synchronize()' is allowed to write
+ * this!) */
 PUBLIC Dee_thread_rcuvers_t _DeeRCU_Version = 1;
 /* NOTE: Initializer of `_DeeRCU_Version' must be non-zero, because
  *       if this was ever set to "0", we could no longer detect threads

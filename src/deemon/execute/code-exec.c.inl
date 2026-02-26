@@ -1018,11 +1018,15 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 	DeeThreadObject *const this_thread = DeeThread_Self();
 	uint16_t const except_recursion    = this_thread->t_exceptsz;
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-#define LOCAL_Dee_False this_thread->t_bools[0]
-#define LOCAL_Dee_True  this_thread->t_bools[1]
+#define LOCAL_Dee_False          this_thread->t_bools[0]
+#define LOCAL_Dee_True           this_thread->t_bools[1]
+#define LOCAL_DeeBool_NewFalse() (Dee_Incref(LOCAL_Dee_False), LOCAL_Dee_False)
+#define LOCAL_DeeBool_NewTrue()  (Dee_Incref(LOCAL_Dee_True), LOCAL_Dee_True)
 #else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
-#define LOCAL_Dee_False Dee_False
-#define LOCAL_Dee_True  Dee_True
+#define LOCAL_Dee_False          Dee_False
+#define LOCAL_Dee_True           Dee_True
+#define LOCAL_DeeBool_NewFalse() DeeBool_NewFalse()
+#define LOCAL_DeeBool_NewTrue()  DeeBool_NewTrue()
 #endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 
 #ifdef _MSC_VER
@@ -4367,11 +4371,11 @@ do_setattr_this_c:
 				}
 
 				TARGET(ASM_PUSH_TRUE, -0, +1) {
-					PUSHREF(LOCAL_Dee_True);
+					PUSH(LOCAL_DeeBool_NewTrue());
 					DISPATCH();
 				}
 				TARGET(ASM_PUSH_FALSE, -0, +1) {
-					PUSHREF(LOCAL_Dee_False);
+					PUSH(LOCAL_DeeBool_NewFalse());
 					DISPATCH();
 				}
 
@@ -7114,15 +7118,13 @@ again_check_staticimm_for_cmpxch_ub_lock:
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_TRUE) {
-							Dee_Incref(LOCAL_Dee_True);
-							if (set_prefix_object(LOCAL_Dee_True))
+							if (set_prefix_object(LOCAL_DeeBool_NewTrue()))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
 						PREFIX_RAW_TARGET(ASM_PUSH_FALSE) {
-							Dee_Incref(LOCAL_Dee_False);
-							if (set_prefix_object(LOCAL_Dee_False))
+							if (set_prefix_object(LOCAL_DeeBool_NewFalse()))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
