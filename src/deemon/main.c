@@ -48,7 +48,7 @@
 #include <deemon/notify.h>             /* DeeNotify_BroadcastClass, Dee_NOTIFICATION_CLASS_PWD */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref*, Dee_XDecref, Dee_formatprinter_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/string.h>             /* DEFINE_STRING, DeeString*, DeeUni_IsSpace, STRING_ERROR_FIGNORE */
-#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, _Exit, bcmp, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
+#include <deemon/system-features.h>    /* CONFIG_HAVE_chdir, DeeSystem_DEFINE_strcmp, EXIT_FAILURE, EXIT_SUCCESS, bcmp, bcmpc, bzero, chdir, memcpy, mempcpyc, strchr, strend, strlen */
 #include <deemon/system.h>             /* DeeNTSystem_FixUncPath, DeeNTSystem_IsUncError, DeeSystem_IsSep, DeeSystem_SEP */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/type.h>               /* Dee_DumpReferenceLeaks */
@@ -1630,8 +1630,7 @@ INTERN struct Dee_compiler_options script_options = {
 #if defined(__SSP_FORTIFY_LEVEL) && (__SSP_FORTIFY_LEVEL + 0) > 0
 INTERN uintptr_t __stack_chk_guard = 0x1246ab1f;
 INTERN ATTR_NORETURN void __stack_chk_fail(void) {
-	ASSERT(0);
-	_Exit(1);
+	Dee_XFatal();
 }
 #endif /* __SSP_FORTIFY_LEVEL > 0 */
 

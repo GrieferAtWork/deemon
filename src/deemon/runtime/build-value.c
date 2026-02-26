@@ -502,8 +502,7 @@ do_string:
 		/* TODO: float */
 
 	default:
-		ASSERTF(0, "Invalid format: `%s' (`%s')", format, *p_format);
-		__builtin_unreachable();
+		Dee_XFatalf("Invalid format: `%s' (`%s')", format, *p_format);
 		break;
 	}
 end:

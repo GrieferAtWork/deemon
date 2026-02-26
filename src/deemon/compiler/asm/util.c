@@ -1253,7 +1253,8 @@ check_sym_class:
 		return asm_gpush_constexpr(sym->s_const);
 
 	default:
-		ASSERTF(0, "Unsupporetd variable type");
+		Dee_XFatalf("Unsupported variable type");
+		break;
 	}
 	__builtin_unreachable();
 err:

@@ -2428,7 +2428,8 @@ action_in_without_const:
 
 #undef ACTION
 		default:
-			ASSERTF(0, "Invalid action type: %x", (unsigned int)action_type);
+			Dee_XFatalf("Invalid action type: %x", (unsigned int)action_type);
+			break;
 		}
 	}	break;
 
@@ -2502,7 +2503,7 @@ action_in_without_const:
 		goto done_push_none;
 
 	default:
-		ASSERTF(0, "Invalid AST type: %x", (unsigned int)self->a_type);
+		Dee_XFatalf("Invalid AST type: %x", (unsigned int)self->a_type);
 		break;
 	}
 done:

@@ -299,9 +299,9 @@ typedef struct Dee_thread_object {
 	                                              * to-be executed in the context of this thread. */
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 #ifdef GUARD_DEEMON_RUNTIME_THREAD_C
-	DREF DeeObject                *t_bools[2];   /* [1..1][valif_if((t_state & (Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_UNMANAGED)) == Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
+	DREF DeeObject                *t_bools[2];   /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
 #else /* GUARD_DEEMON_RUNTIME_THREAD_C */
-	DREF DeeObject          *const t_bools[2];   /* [1..1][valif_if((t_state & (Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_UNMANAGED)) == Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
+	DREF DeeObject          *const t_bools[2];   /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
 #endif /* !GUARD_DEEMON_RUNTIME_THREAD_C */
 #endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #ifndef CONFIG_NO_THREADS

@@ -1469,6 +1469,43 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 
+
+/* Extra init/fini of threads that reached `Dee_THREAD_STATE_STARTED' */
+#if (!defined(DeeThread_USE_SINGLE_THREADED) && \
+     defined(CONFIG_EXPERIMENTAL_PER_THREAD_BOOL))
+#define thread_init_started thread_init_started
+PRIVATE NONNULL((1)) void DCALL
+thread_init_started(DeeThreadObject *__restrict self) {
+	DREF DeeBoolObject *thrd_false;
+	DREF DeeBoolObject *thrd_true;
+
+	/* TODO: Allocate new objects (on failure: simply use Dee_True/Dee_False defaults) */
+	thrd_false = (DREF DeeBoolObject *)DeeBool_NewFalse();
+	thrd_true  = (DREF DeeBoolObject *)DeeBool_NewTrue();
+
+	self->t_bools[0] = Dee_AsObject(thrd_false);
+	self->t_bools[1] = Dee_AsObject(thrd_true);
+}
+
+#define thread_visit_started(self)  \
+	(Dee_Visit((self)->t_bools[0]), \
+	 Dee_Visit((self)->t_bools[1]))
+
+#define thread_fini_started thread_fini_started
+PRIVATE NONNULL((1)) void DCALL
+thread_fini_started(DeeThreadObject *__restrict self) {
+	Dee_Decref(self->t_bools[1]);
+	Dee_Decref(self->t_bools[0]);
+}
+#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#ifndef thread_init_started
+#define thread_init_started(self) (void)0
+#define thread_fini_started(self) (void)0
+#define thread_visit_started(self) (void)0
+#endif /* !thread_init_started */
+
+
+
 #ifdef DeeThread_Detach_system_impl
 PRIVATE NONNULL((1)) void DCALL
 DeeThread_Detach_impl(DeeThreadObject *__restrict self) {
@@ -1756,6 +1793,9 @@ DeeThread_AllocateCurrentThread(void) {
 
 	/* Setup signal handlers. */
 	DeeThread_SetupSignalHandlers(result);
+
+	/* Do extra initialization */
+	thread_init_started(&result->at_os_thread.ot_thread);
 
 	/* Add the thread to the global list of threads */
 	thread_list_lock_acquire_noint();
@@ -2500,6 +2540,7 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 #endif /* DeeThread_SetName */
 
 	/* Confirm startup by setting the started-flag. */
+	thread_init_started(&self->ot_thread);
 #ifdef LOCAL_thread_entry_did_set__ot_pid
 	atomic_or(&self->ot_thread.t_state, Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID);
 #else /* LOCAL_thread_entry_did_set__ot_pid */
@@ -2771,27 +2812,6 @@ again:
 }
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-PRIVATE NONNULL((1)) void DCALL
-thread_init_bools(DeeThreadObject *__restrict self) {
-	DREF DeeBoolObject *thrd_false;
-	DREF DeeBoolObject *thrd_true;
-
-	/* TODO: Allocate new objects (on failure: simply use Dee_True/Dee_False defaults) */
-	thrd_false = (DREF DeeBoolObject *)DeeBool_NewFalse();
-	thrd_true  = (DREF DeeBoolObject *)DeeBool_NewTrue();
-
-	self->t_bools[0] = Dee_AsObject(thrd_false);
-	self->t_bools[1] = Dee_AsObject(thrd_true);
-}
-
-PRIVATE NONNULL((1)) void DCALL
-thread_fini_bools(DeeThreadObject *__restrict self) {
-	Dee_Decref(self->t_bools[1]);
-	Dee_Decref(self->t_bools[0]);
-}
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
-
 /* Start execution of the given thread.
  * @return:  0: Successfully started the thread.
  * @return:  1: The thread had already been started.
@@ -2834,11 +2854,6 @@ again:
 		return DeeError_Throw(&DeeError_Interrupt_instance);
 	}
 
-	/* Allocate boolean constants for the thread */
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-	thread_init_bools(&me->ot_thread);
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
-
 	/* Create the reference that is passed to `DeeThread_Entry_func()'
 	 * and later stored in the thread's TLS self-pointer. */
 	Dee_Incref(&me->ot_thread); /* Inherited by `DeeThread_Start_impl()' */
@@ -2871,9 +2886,6 @@ again:
 	/* Indicate success: the thread is now running! */
 	return 0;
 err_abort:
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-	thread_fini_bools(&me->ot_thread);
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 	Dee_DecrefNokill(&me->ot_thread);
 	atomic_and(&me->ot_thread.t_state, ~Dee_THREAD_STATE_STARTING);
 	/* Wake up other threads that may be trying to start the thread. */
@@ -3565,6 +3577,7 @@ thread_visit(DeeThreadObject *__restrict self, Dee_visit_t proc, void *arg) {
 	_DeeThread_AcquireSetup(self);
 	state = atomic_read(&self->t_state);
 	if (state & Dee_THREAD_STATE_STARTED) {
+		thread_visit_started(self);
 		if (state & Dee_THREAD_STATE_TERMINATED) {
 			if (self->t_exceptsz) {
 				struct Dee_except_frame *except_iter;
@@ -3629,10 +3642,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 
 	Dee_XDecref(self->t_threadname);
 	if (self->t_state & Dee_THREAD_STATE_STARTED) {
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-		if (!(self->t_state & Dee_THREAD_STATE_UNMANAGED))
-			thread_fini_bools(self);
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+		thread_fini_started(self);
 		if (self->t_state & Dee_THREAD_STATE_TERMINATED) {
 			if (self->t_exceptsz) {
 				while (self->t_except) {
@@ -3673,6 +3683,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	result->ot_thread.t_state = Dee_THREAD_STATE_STARTED |
 	                            Dee_THREAD_STATE_HASTID |
 	                            Dee_THREAD_STATE_UNMANAGED;
+	thread_init_started(&result->ot_thread);
 	result->ot_tid = tid;
 	DeeObject_Init(&result->ot_thread, &DeeThread_Type);
 	return DeeGC_Track(Dee_AsObject(&result->ot_thread));
@@ -3867,21 +3878,22 @@ thread_init(DeeThreadObject *__restrict self,
 	if (argc == 1 && DeeInt_Check(argv[0])) {
 		/* Construct unmanaged thread from TID */
 		DeeOSThreadObject *me = DeeThread_AsOSThread(self);
-		me->ot_thread.t_inthookon              = 0;
+		me->ot_thread.t_inthookon = 0;
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		me->ot_thread.t_import_curr            = NULL;
+		me->ot_thread.t_import_curr = NULL;
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		me->ot_thread.t_str_curr               = NULL;
-		me->ot_thread.t_repr_curr              = NULL;
-		me->ot_thread.t_hash_curr              = NULL;
-		me->ot_thread.t_exec                   = NULL;
-		me->ot_thread.t_except                 = NULL;
-		me->ot_thread.t_execsz                 = 0;
-		me->ot_thread.t_exceptsz               = 0;
-		me->ot_thread.t_state                  = Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID | Dee_THREAD_STATE_UNMANAGED;
-		me->ot_thread.t_interrupt.ti_next      = NULL;
-		me->ot_thread.t_interrupt.ti_intr      = NULL;
-		me->ot_thread.t_interrupt.ti_args      = NULL;
+		me->ot_thread.t_str_curr  = NULL;
+		me->ot_thread.t_repr_curr = NULL;
+		me->ot_thread.t_hash_curr = NULL;
+		me->ot_thread.t_exec      = NULL;
+		me->ot_thread.t_except    = NULL;
+		me->ot_thread.t_execsz    = 0;
+		me->ot_thread.t_exceptsz  = 0;
+		me->ot_thread.t_state     = Dee_THREAD_STATE_STARTED | Dee_THREAD_STATE_HASTID | Dee_THREAD_STATE_UNMANAGED;
+		me->ot_thread.t_interrupt.ti_next = NULL;
+		me->ot_thread.t_interrupt.ti_intr = NULL;
+		me->ot_thread.t_interrupt.ti_args = NULL;
+		thread_init_started(&me->ot_thread);
 #ifndef CONFIG_NO_THREADS
 		me->ot_thread.t_int_vers       = 0;
 		me->ot_thread.t_rcu_vers       = 0;

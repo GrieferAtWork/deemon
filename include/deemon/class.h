@@ -501,6 +501,7 @@ struct Dee_class_desc {
 	struct Dee_class_optable                 *cd_ops[Dee_CLASS_HEADER_OPC1];
 	                                                       /* [0..1][owned][lock(WRITE_ONCE)][*]
 	                                                        * Table of cached operator callbacks. */
+	/* XXX: Consider removing this lock here (and in `Dee_instance_desc') and using RCU locking instead... */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t                       cd_lock;     /* Lock for accessing the class member table. */
 #endif /* !CONFIG_NO_THREADS */
