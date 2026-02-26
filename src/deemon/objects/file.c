@@ -45,8 +45,8 @@
 #include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, stderr, stdin, stdout, strchr, strend, writeall */
 #include <deemon/thread.h>             /* CONFIG_PER_OBJECT_RCU_LOCKS */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, OPERATOR_REPR, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/util/atomic-ref.h>    /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
-#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 #include <deemon/util/rcu.h>           /* DeeRCU_*, Dee_rcu_lock_t */
 
 #include <hybrid/host.h>      /* __ARCH_PAGESIZE */
@@ -61,7 +61,7 @@
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* offsetof, size_t */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* uintN_t, uintptr_t */
 
 #undef byte_t
@@ -1653,36 +1653,15 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 }
 
 /* [0..1][lock(WRITE_ONCE)] The `files' module. */
-PRIVATE DREF DeeModuleObject *files_module = NULL;
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t files_module_lock = Dee_ATOMIC_RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-#define files_module_lock_reading()    Dee_atomic_rwlock_reading(&files_module_lock)
-#define files_module_lock_writing()    Dee_atomic_rwlock_writing(&files_module_lock)
-#define files_module_lock_tryread()    Dee_atomic_rwlock_tryread(&files_module_lock)
-#define files_module_lock_trywrite()   Dee_atomic_rwlock_trywrite(&files_module_lock)
-#define files_module_lock_canread()    Dee_atomic_rwlock_canread(&files_module_lock)
-#define files_module_lock_canwrite()   Dee_atomic_rwlock_canwrite(&files_module_lock)
-#define files_module_lock_waitread()   Dee_atomic_rwlock_waitread(&files_module_lock)
-#define files_module_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&files_module_lock)
-#define files_module_lock_read()       Dee_atomic_rwlock_read(&files_module_lock)
-#define files_module_lock_write()      Dee_atomic_rwlock_write(&files_module_lock)
-#define files_module_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&files_module_lock)
-#define files_module_lock_upgrade()    Dee_atomic_rwlock_upgrade(&files_module_lock)
-#define files_module_lock_downgrade()  Dee_atomic_rwlock_downgrade(&files_module_lock)
-#define files_module_lock_endwrite()   Dee_atomic_rwlock_endwrite(&files_module_lock)
-#define files_module_lock_endread()    Dee_atomic_rwlock_endread(&files_module_lock)
-#define files_module_lock_end()        Dee_atomic_rwlock_end(&files_module_lock)
+PRIVATE Dee_ATOMIC_XREF(DeeModuleObject) files_module = Dee_ATOMIC_XREF_INIT(NULL);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_files_object(DeeObject *__restrict name) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
 again:
-	files_module_lock_read();
-	mod = files_module;
+	Dee_atomic_xref_get(&files_module, &mod);
 	if unlikely(!mod) {
-		files_module_lock_endread();
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 		mod = DeeModule_Import(Dee_AsObject(&str_files), NULL, DeeModule_IMPORT_F_NORMAL);
 		if unlikely(!mod)
@@ -1694,21 +1673,13 @@ again:
 		if unlikely(DeeModule_RunInit(mod) < 0)
 			goto err_mod;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		files_module_lock_write();
-		if unlikely(atomic_read(&files_module)) {
-			files_module_lock_endwrite();
+		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&files_module, mod)) {
 			Dee_Decref(mod);
 			goto again;
 		}
-		Dee_Incref(mod);
-		files_module = mod;
-		files_module_lock_endwrite();
-	} else {
-		Dee_Incref(mod);
-		files_module_lock_endread();
 	}
 	result = DeeObject_GetAttr(Dee_AsObject(mod), name);
-	Dee_Decref(mod);
+	Dee_Decref_unlikely(mod);
 	return result;
 #ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 err_mod:
@@ -1720,10 +1691,7 @@ err:
 
 PRIVATE bool DCALL clear_files_module(void) {
 	DREF DeeModuleObject *mod;
-	files_module_lock_write();
-	mod = files_module;
-	files_module = NULL;
-	files_module_lock_endwrite();
+	Dee_atomic_xref_xch_newNULL(&files_module, &mod);
 	Dee_XDecref(mod);
 	return mod != NULL;
 }

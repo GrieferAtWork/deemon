@@ -29,7 +29,7 @@
 
 #include "../api.h"
 
-#include "../object.h" /* Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
+#include "../object.h" /* Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref */
 #include "../types.h"  /* DREF, DeeObject, Dee_AsObject */
 #include "rcu.h"       /* DeeRCU_*, Dee_RCU_LOCK_DECLARE, Dee_RCU_LOCK__INIT, Dee_rcu_lock_init */
 
@@ -192,6 +192,8 @@ DECL_BEGIN
 	(Dee_Incref(newval), Dee_atomic_ref_xch_inherited(self, newval, p_oldval))
 #define Dee_atomic_xref_xch(self, /*[0..1] in*/ newval, /*inherit(always) DREF[0..1] out*/ p_oldval) \
 	(Dee_XIncref(newval), Dee_atomic_xref_xch_inherited(self, newval, p_oldval))
+#define Dee_atomic_xref_xch_newNULL(self, /*inherit(always) DREF[0..1] out*/ p_oldval) \
+	(Dee_atomic_xref_xch_inherited(self, NULL, p_oldval))
 
 /* Set "newval" and drop reference to old value */
 #define Dee_atomic_ref_set(self, /*[1..1] in*/ newval)                  \
@@ -249,7 +251,17 @@ DECL_BEGIN
 	(Dee_XIncref(newval),                                              \
 	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, oldval, newval) \
 	 ? (_Dee_private_atomic_xref_sync(self), Dee_XDecref(oldval), 1)   \
-	 : (Dee_XDecref_unlikely(newval), 0))
+	 : (Dee_XDecrefNokill(newval), 0))
+#define Dee_atomic_xref_cmpxch_oldNULL(self, newval)                 \
+	(Dee_XIncref(newval),                                            \
+	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, NULL, newval) \
+	 ? (_Dee_private_atomic_xref_sync(self), 1)                      \
+	 : (Dee_XDecrefNokill(newval), 0))
+#define Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(self, newval)      \
+	(Dee_Incref(newval),                                             \
+	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, NULL, newval) \
+	 ? (_Dee_private_atomic_xref_sync(self), 1)                      \
+	 : (Dee_DecrefNokill(newval), 0))
 
 DECL_END
 
