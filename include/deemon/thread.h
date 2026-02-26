@@ -322,6 +322,7 @@ typedef struct Dee_thread_object {
 #define Dee_THREAD_PRIV_STATE_NORMAL  UINT32_C(0x00000000) /* Normal private-state flags */
 #define Dee_THREAD_PRIV_STATE_LISTRCU UINT32_C(0x00000001) /* Thread is currently reading "t_global.le_next" of any thread without
                                                             * having acquired "thread_list_lock" (not even necessarily their own). */
+#define Dee_THREAD_PRIV_STATE_ACTIVE  UINT32_C(0x00000002) /* Thread is in an "active" state (counts towards `rcu_tree_node::rtn_numactive') */
 	uintptr_t                      t_privstate;  /* [lock(READ(ATOMIC), WRITE(ATOMIC && DeeThread_Self()))]
 	                                              * Set of `Dee_THREAD_PRIV_STATE_*' (flags that can only
 	                                              * be modified by the thread itself, allowing the use of
@@ -783,6 +784,13 @@ DDATDEF uint16_t DeeExec_StackLimit; /* TODO: Change this to uint32_t (we want t
  *   - "atomic_dec(&in_use);"                   -- Replace with "DeeRCU_Unlock()"
  *   - "while (atomic_read(&in_use)) yield();"  -- Replace with "DeeRCU_Synchronize()"
  */
+
+/* XXX: Have a configuration where "DeeRCU_Lock()" (and the other methods) all take an
+ *      additional parameter "struct Dee_rculock" that encapsulates what is currently
+ *      done by `_DeeRCU_Version' -- in that version, every RCU use-case must then
+ *      supply its own "struct Dee_rculock" (though there can also still be some
+ *      default, global RCU lock, too) */
+
 
 /* Enter/leave an RCU section (where references
  * read are always either the old, or new state) */

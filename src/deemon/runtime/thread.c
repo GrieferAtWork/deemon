@@ -5779,7 +5779,8 @@ again_increment_version:
 		if unlikely(new_version == Dee_THREAD_RCU_INACTIVE)
 			goto handle_overflowing_version;
 #endif
-	} while (!atomic_cmpxch_weak(&_DeeRCU_Version, old_version, new_version));
+	} while (!atomic_cmpxch_weak_explicit(&_DeeRCU_Version, old_version, new_version,
+	                                      Dee_ATOMIC_SEQ_CST, Dee_ATOMIC_RELAXED));
 
 	/* Use a special kind of RCU lock that is specifically designed for
 	 * the purpose of giving us fast access to the list of threads. */
@@ -5787,7 +5788,130 @@ again_increment_version:
 
 	/* TODO: Find some way to narrow down the list of threads such that we can
 	 *       (somehow) skip (in O(1) time) threads that are known to not be
-	 *       holding any RCU locks. */
+	 *       holding any RCU locks.
+	 *
+	 * Have 2 new functions:
+	 * >> DFUNDEF void DCALL DeeRCU_EnterBlocking(void);
+	 * >> DFUNDEF void DCALL DeeRCU_LeaveBlocking(void);
+	 *
+	 * All potentially blocking system calls (should) then be wrapped by these
+	 * 2 functions (though if a system call is missed, that's actually perfectly
+	 * fine; it just means that concurrent `DeeRCU_Synchronize()' are a little
+	 * bit slower than they need to be).
+	 *
+	 * These 2 functions then interact with an unordered (position within has
+	 * no explicit meaning), fixed-width (each node has a fixed # of sub-nodes)
+	 * tree, with actual threads then appearing as leafs.
+	 *
+	 * The rebuilding of this tree is the protected by Dee_THREAD_PRIV_STATE_LISTRCU
+	 * being set in any thread (rather than "thread_list" being protected by that
+	 * flag), and all threads that have started and are (potentially) running deemon
+	 * user-code appear in this tree ALL THE TIME.
+	 *
+	 * >> struct rcu_tree_node {
+	 * >>     size_t                rtn_numactive;    // # of children in an "active" state
+	 * >>     struct rcu_tree_node *rtn_parent;       // [1..1][const] Parent node (overlaps with a
+	 * >>                                             // thread's "ob_type", so when this is actually
+	 * >>                                             // a thread, will be equal to "&DeeThread_Type")
+	 * >>     // - Array of leaf-threads when this is a bottom-most RCU tree node
+	 * >>     // - Array of child-nodes when this is an intermediate RCU tree node
+	 * >>     union {
+	 * >>         struct rcu_tree_node *rtn_children[16]; // [0..1][lock(READ(ATOMIC && Dee_THREAD_PRIV_STATE_LISTRCU),
+	 * >>                                                 //             WRITE(ATOMIC && thread_list_lock && Dee_THREAD_PRIV_STATE_LISTRCU))]
+	 * >>                                                 // Child nodes (this "16" is compile-time configurable)
+	 * >>         DeeThreadObject      *rtn_threads[16];  // [0..1][lock(READ(ATOMIC && Dee_THREAD_PRIV_STATE_LISTRCU),
+	 * >>                                                 //             WRITE(ATOMIC && thread_list_lock && Dee_THREAD_PRIV_STATE_LISTRCU))]
+	 * >>                                                 // Child threads
+	 * >>     };
+	 * >> #define rcu_tree_node_isthread(self) ((self)->rtn_parent == (struct rcu_tree_node *)&DeeThread_Type)
+	 * >> #define rcu_tree_node_asthread(self) ((DeeThreadObject *)(self))
+	 * >> };
+	 * >>
+	 * >> // [0..1][lock(READ(ATOMIC && Dee_THREAD_PRIV_STATE_LISTRCU),
+	 * >> //             WRITE(ATOMIC && thread_list_lock && Dee_THREAD_PRIV_STATE_LISTRCU))]
+	 * >> // Root for RCU tree. This tree always contains *all* threads that have been
+	 * >> // created and not yet destroyed. Whenever a thread is created, it is either
+	 * >> // added to the tree, or if the tree is completely full (contains no more
+	 * >> // "NULL" pointers), some thread that is closest to the tree's root is taken,
+	 * >> // wrapped in a newly allocated `struct rcu_tree_node' together with the thread
+	 * >> // that's supposed to be added, and then the existing thread's positions is
+	 * >> // exchanged with the newly allocated node.
+	 * >> PRIVATE struct rcu_tree_node *rcu_tree_root[16]; // this "16" is compile-time configurable (though could also be made runtime-configurable...)
+	 *
+	 * Then, the enter/leave blocking functions are implemented as:
+	 * >> PUBLIC void DCALL DeeRCU_EnterBlocking(void) {
+	 * >>     DeeThreadObject *me = DeeThread_Self();
+	 * >>     struct rcu_tree_node *parent;
+	 * >>     ASSERT(me->t_privstate & Dee_THREAD_PRIV_STATE_ACTIVE);
+	 * >>     _DeeThread_DisablePrivState(me, Dee_THREAD_PRIV_STATE_ACTIVE);
+	 * >>     thread_list_rcu_lock(me);
+	 * >>     for (parent = atomic_read(&me->t_rcu_tree_parent); parent != NULL;
+	 * >>          parent = atomic_read(&parent->rtn_parent)) {
+	 * >>         if (atomic_decfetch(&parent->rtn_numactive) != 0)
+	 * >>             break;
+	 * >>     }
+	 * >>     thread_list_rcu_unlock(me);
+	 * >> }
+	 * >>
+	 * >> PUBLIC void DCALL DeeRCU_LeaveBlocking(void) {
+	 * >>     DeeThreadObject *me = DeeThread_Self();
+	 * >>     struct rcu_tree_node *parent;
+	 * >>     ASSERT(!(me->t_privstate & Dee_THREAD_PRIV_STATE_ACTIVE));
+	 * >>     thread_list_rcu_lock(me);
+	 * >>     for (parent = atomic_read(&me->t_rcu_tree_parent); parent != NULL;
+	 * >>          parent = atomic_read(&parent->rtn_parent)) {
+	 * >>         if (atomic_fetchinc(&parent->rtn_numactive) != 0)
+	 * >>             break;
+	 * >>     }
+	 * >>     thread_list_rcu_unlock(me);
+	 * >>     _DeeThread_EnablePrivState(me, Dee_THREAD_PRIV_STATE_ACTIVE);
+	 * >> }
+	 *
+	 * And finally, now we can enumerate thread that could
+	 * (potentially) be holding RCU locks in O(log(N)) time:
+	 *
+	 * >> void synchronize_thread(DeeThreadObject *thread) {
+	 * >>     for (;;) {
+	 * >>         Dee_thread_rcuvers_t thread_version = atomic_read(&iter->t_rcu_vers);
+	 * >>         if (thread_version == Dee_THREAD_RCU_INACTIVE)
+	 * >>             break; // Thread isn't doing any RCU -- can ignore
+	 * >>         if (thread_version > old_version)
+	 * >>             break; // Thread is waiting for some future event that we're not required to synchronize with
+	 * >>         SCHED_YIELD();
+	 * >>         current_rcu_version = atomic_read(&_DeeRCU_Version);
+	 * >>         if unlikely(old_version > current_rcu_version)
+	 * >>             old_version = current_rcu_version;
+	 * >>     }
+	 * >> }
+	 * >>
+	 * >> size_t i;
+	 * >> thread_list_rcu_lock(me);
+	 * >> for (i = 0; i < lengthof(rcu_tree_root); ++i) {
+	 * >>     struct rcu_tree_node *node = atomic_read(&rcu_tree_root[i]);
+	 * >>     if (node == NULL)
+	 * >>         continue;
+	 * >>     if (rcu_tree_node_isthread(node)) {
+	 * >>         synchronize_thread(rcu_tree_node_asthread(node));
+	 * >>     } else if (atomic_read(&node->rtn_numactive) != 0) {
+	 * >>         void recurse(struct rcu_tree_node *node) {
+	 * >>             size_t j;
+	 * >>             for (j = 0; j < lengthof(node->rtn_children); ++j) {
+	 * >>                 struct rcu_tree_node *child = atomic_read(&node->rtn_children[i]);
+	 * >>                 if (child == NULL)
+	 * >>                     continue;
+	 * >>                 if (rcu_tree_node_isthread(child)) {
+	 * >>                     synchronize_thread(rcu_tree_node_asthread(child));
+	 * >>                 } else if (atomic_read(&child->rtn_numactive) != 0) {
+	 * >>                     recurse(child);
+	 * >>                 }
+	 * >>             }
+	 * >>         }
+	 * >>         recurse(node);
+	 * >>     }
+	 * >>     if (rcu_tree_node_isthread())
+	 * >> }
+	 * >> thread_list_rcu_unlock(me);
+	 */
 
 	/* Check if there is any thread still using "old_version" */
 	iter = &DeeThread_Main.ot_thread;
