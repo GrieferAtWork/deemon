@@ -26,10 +26,10 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_*, PRFuSIZ */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_CallAttrPack, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Incref, Dee_ssize_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_CallAttrPack, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_IsUpper, DeeUni_ToLower, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, STRING_ERROR_F*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcpy*, memmovedownc, mempcpyc */
-#include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
+#include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 #include <hybrid/typecore.h>  /* __BYTE_TYPE__ */
@@ -40,7 +40,7 @@
 #include "codec.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* size_t */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t
@@ -714,67 +714,33 @@ err:
 #define encode_utf32_be  encode_utf32
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
-PRIVATE DREF DeeModuleObject *g_libcodecs = NULL;
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t libcodecs_lock = Dee_ATOMIC_RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-#define libcodecs_lock_reading()    Dee_atomic_rwlock_reading(&libcodecs_lock)
-#define libcodecs_lock_writing()    Dee_atomic_rwlock_writing(&libcodecs_lock)
-#define libcodecs_lock_tryread()    Dee_atomic_rwlock_tryread(&libcodecs_lock)
-#define libcodecs_lock_trywrite()   Dee_atomic_rwlock_trywrite(&libcodecs_lock)
-#define libcodecs_lock_canread()    Dee_atomic_rwlock_canread(&libcodecs_lock)
-#define libcodecs_lock_canwrite()   Dee_atomic_rwlock_canwrite(&libcodecs_lock)
-#define libcodecs_lock_waitread()   Dee_atomic_rwlock_waitread(&libcodecs_lock)
-#define libcodecs_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&libcodecs_lock)
-#define libcodecs_lock_read()       Dee_atomic_rwlock_read(&libcodecs_lock)
-#define libcodecs_lock_write()      Dee_atomic_rwlock_write(&libcodecs_lock)
-#define libcodecs_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&libcodecs_lock)
-#define libcodecs_lock_upgrade()    Dee_atomic_rwlock_upgrade(&libcodecs_lock)
-#define libcodecs_lock_downgrade()  Dee_atomic_rwlock_downgrade(&libcodecs_lock)
-#define libcodecs_lock_endwrite()   Dee_atomic_rwlock_endwrite(&libcodecs_lock)
-#define libcodecs_lock_endread()    Dee_atomic_rwlock_endread(&libcodecs_lock)
-#define libcodecs_lock_end()        Dee_atomic_rwlock_end(&libcodecs_lock)
+PRIVATE Dee_ATOMIC_XREF(DeeModuleObject) g_libcodecs = Dee_ATOMIC_XREF_INIT(NULL);
 
 INTERN bool DCALL libcodecs_shutdown(void) {
 	DREF DeeModuleObject *old_lib;
-	libcodecs_lock_write();
-	old_lib = g_libcodecs;
-	g_libcodecs = NULL;
-	libcodecs_lock_endwrite();
-	if (!old_lib)
-		return false;
-	Dee_Decref(old_lib);
-	return true;
+	Dee_atomic_xref_xch_newNULL(&g_libcodecs, &old_lib);
+	Dee_XDecref(old_lib);
+	return old_lib != NULL;
 }
-
 
 PRIVATE WUNUSED DREF DeeModuleObject *DCALL libcodecs_get(void) {
 	DREF DeeModuleObject *result;
-	libcodecs_lock_read();
-	result = g_libcodecs;
-	if (result) {
-		Dee_Incref(result);
-		libcodecs_lock_endread();
+again:
+	Dee_atomic_xref_get(&g_libcodecs, &result);
+	if (result)
 		return result;
-	}
-	libcodecs_lock_endread();
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result = DeeModule_Import(Dee_AsObject(&str_codecs), NULL, DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	result = DeeModule_OpenGlobal(Dee_AsObject(&str_codecs), NULL, true);
+	if (result && unlikely(DeeModule_RunInit(result) < 0))
+		Dee_Clear(result);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	if likely(result) {
-		libcodecs_lock_write();
-		ASSERT(!g_libcodecs || g_libcodecs == result);
-		if (!g_libcodecs) {
-			Dee_Incref(result);
-			g_libcodecs = result;
+		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&g_libcodecs, result)) {
+			Dee_Decref_unlikely(result);
+			goto again;
 		}
-		libcodecs_lock_endwrite();
-#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		if unlikely(DeeModule_RunInit(result) < 0)
-			Dee_Clear(result);
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	}
 	return result;
 }
