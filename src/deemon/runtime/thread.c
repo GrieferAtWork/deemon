@@ -43,7 +43,7 @@
 #include <deemon/system-error.h>       /* DeeSystemError_Pop, DeeSystemError_Push */
 #include <deemon/system-features.h>    /* CLOCK_MONOTONIC, CLOCK_REALTIME, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, abort, bsd_signal, bzero*, clock_gettime, clock_gettime64, fprintf, getpid, gettid, gettimeofday, gettimeofday64, kill, memcpy*, memmovedownc, memmoveupc, memset, nanosleep, nanosleep64, pselect, pthread_*, select, sigaction, signal, stderr, strerror, strlen, syscall, sysv_signal, tgkill, thrd_*, time, time64, tss_*, usleep */
 #include <deemon/system.h>             /* DeeNTSystem_HandleGenericError, DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
-#include <deemon/thread.h>             /* DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_PRIV_STATE_NORMAL, Dee_THREAD_RCU_INACTIVE, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_intvers_t, Dee_thread_object, Dee_thread_rcuvers_t, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
+#include <deemon/thread.h>             /* CONFIG_PER_OBJECT_RCU_LOCKS, DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_PRIV_STATE_NORMAL, Dee_THREAD_RCU_INACTIVE, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_intvers_t, Dee_thread_object, Dee_thread_rcuvers_t, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
 #include <deemon/traceback.h>          /* DeeTraceback*, Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple, Dee_tuple_object */
 #include <deemon/type.h>               /* DeeObject_GenericCmpByAddr, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
@@ -51,6 +51,7 @@
 #include <deemon/util/futex.h>         /* DeeFutex_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init, Dee_atomic_rwlock_*, Dee_shared_lock_*, _Dee_SHARED_WAITWORD_IS_NOOP */
 #include <deemon/util/once.h>          /* Dee_ONCE */
+#include <deemon/util/rcu.h>           /* Dee_rcu_lock, Dee_rcu_lock_t, _DeeRCU_INVALID_LOCK */
 
 #include <hybrid/debug-alignment.h>  /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
 #include <hybrid/host.h>             /* __i386__, __x86_64__ */
@@ -997,6 +998,9 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 #ifndef CONFIG_NO_THREADS
 		/* .t_int_vers   = */ 0,
 		/* .t_rcu_vers   = */ Dee_THREAD_RCU_INACTIVE,
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+		/* .t_rcu_lock   = */ _DeeRCU_INVALID_LOCK,
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
 		/* .t_privstate  = */ Dee_THREAD_PRIV_STATE_NORMAL,
 		/* .t_global     = */ LIST_ENTRY_UNBOUND_INITIALIZER,
 		/* .t_threadname = */ (DeeStringObject *)&main_thread_name,
@@ -4020,8 +4024,13 @@ thread_init(DeeThreadObject *__restrict self,
 		me->ot_thread.t_interrupt.ti_args = NULL;
 		thread_init_started(&me->ot_thread);
 #ifndef CONFIG_NO_THREADS
-		me->ot_thread.t_int_vers       = 0;
-		me->ot_thread.t_rcu_vers       = Dee_THREAD_RCU_INACTIVE;
+		me->ot_thread.t_int_vers = 0;
+		me->ot_thread.t_rcu_vers = Dee_THREAD_RCU_INACTIVE;
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+#ifndef NDEBUG
+		me->ot_thread.t_rcu_lock = _DeeRCU_INVALID_LOCK;
+#endif /* !NDEBUG */
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
 		me->ot_thread.t_privstate      = Dee_THREAD_PRIV_STATE_NORMAL;
 		me->ot_thread.t_global.le_prev = NULL;
 		DBG_memset(&me->ot_thread.t_global.le_next, 0xcc, sizeof(self->t_global.le_next));
@@ -4095,6 +4104,11 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_state             = Dee_THREAD_STATE_INITIAL;
 	self->t_int_vers          = 0;
 	self->t_rcu_vers          = Dee_THREAD_RCU_INACTIVE;
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+#ifndef NDEBUG
+	self->t_rcu_lock          = _DeeRCU_INVALID_LOCK;
+#endif /* !NDEBUG */
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
 	self->t_privstate         = Dee_THREAD_PRIV_STATE_NORMAL;
 	self->t_interrupt.ti_next = NULL;
 	self->t_interrupt.ti_intr = NULL;
@@ -5694,7 +5708,7 @@ function work(id) {
 			// Bunch of functions that will populate KeyClass's "tp_cache"
 			// to the point where it needs to be resized (at which point
 			// the resized cache has to be published to other threads using
-			// the "DeeRCU_Synchronize()" mechanism)
+			// the "DeeRCU_SynchronizeDefault()" mechanism)
 			r.f1();
 			r.f2();
 			r.f3();
@@ -5722,55 +5736,124 @@ for (local x: threads)
  */
 
 
-/* Enter/leave an RCU section (where references
- * read are always either the old, or new state) */
-PUBLIC void (DCALL DeeRCU_Lock)(void) {
-#ifndef DeeThread_USE_SINGLE_THREADED
-	DeeThreadObject *caller = DeeThread_Self();
-	Dee_thread_rcuvers_t version = __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE);
-	__hybrid_atomic_store(&caller->t_rcu_vers, version, __ATOMIC_RELEASE);
-#endif /* !DeeThread_USE_SINGLE_THREADED */
-}
-
-PUBLIC void (DCALL DeeRCU_Unlock)(void) {
-#ifndef DeeThread_USE_SINGLE_THREADED
-	DeeThreadObject *caller = DeeThread_Self();
-	__hybrid_atomic_store(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, __ATOMIC_RELEASE);
-#endif /* !DeeThread_USE_SINGLE_THREADED */
-}
-
-STATIC_ASSERT_MSG(Dee_THREAD_RCU_INACTIVE == 0, "Logic in 'DeeRCU_Synchronize()' assumes that '0' is used here");
+STATIC_ASSERT_MSG(Dee_THREAD_RCU_INACTIVE == 0, "Logic in 'DeeRCU_SynchronizeDefault()' assumes that '0' is used here");
 
 #ifndef CONFIG_NO_THREADS
-/* [lock(ATOMIC)] Global RCU "version" number (only here for
- * reading; only `DeeRCU_Synchronize()' is allowed to write
- * this!) */
-PUBLIC Dee_thread_rcuvers_t _DeeRCU_Version = 1;
-/* NOTE: Initializer of `_DeeRCU_Version' must be non-zero, because
+/* [lock(ATOMIC)] Global RCU "version" number (only here for reading;
+ * only `DeeRCU_SynchronizeDefault()' is allowed to write this!) */
+PUBLIC struct Dee_rcu_lock _DeeRCU_Default = { 1 };
+/* NOTE: Initializer of `_DeeRCU_Default' must be non-zero, because
  *       if this was ever set to "0", we could no longer detect threads
  *       holding RCU locks (because "Dee_THREAD_RCU_INACTIVE == 0",
  *       which is used to indicate "no RCU lock held") */
 #endif /* !CONFIG_NO_THREADS */
 
+#ifdef DeeThread_USE_SINGLE_THREADED
+PUBLIC void (DCALL DeeRCU_LockDefault)(void) {
+}
+
+PUBLIC void (DCALL DeeRCU_UnlockDefault)(void) {
+}
+
+PUBLIC void (DCALL DeeRCU_SynchronizeDefault)(void) {
+}
+
+PUBLIC NONNULL((1)) void
+(DFCALL DeeRCU_Lock)(Dee_rcu_lock_t *__restrict self) {
+	(void)self;
+}
+
+PUBLIC NONNULL((1)) void
+(DFCALL DeeRCU_Unlock)(Dee_rcu_lock_t *__restrict self) {
+	(void)self;
+}
+
+PUBLIC NONNULL((1)) void
+(DFCALL DeeRCU_Synchronize)(Dee_rcu_lock_t *__restrict self) {
+	(void)self;
+}
+#else /* DeeThread_USE_SINGLE_THREADED */
+
+/* Enter/leave an RCU section (where references
+ * read are always either the old, or new state) */
+PUBLIC void (DCALL DeeRCU_LockDefault)(void) {
+	DeeThreadObject *caller = DeeThread_Self();
+	Dee_thread_rcuvers_t version = atomic_read_explicit(&_DeeRCU_Default.rcul_version, Dee_ATOMIC_ACQUIRE);
+	atomic_write_explicit(&caller->t_rcu_vers, version, Dee_ATOMIC_RELEASE);
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+	atomic_write_explicit(&caller->t_rcu_lock, &_DeeRCU_Default, Dee_ATOMIC_RELEASE);
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+}
+
+PUBLIC void (DCALL DeeRCU_UnlockDefault)(void) {
+	DeeThreadObject *caller = DeeThread_Self();
+	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+	ASSERT(caller->t_rcu_lock == &_DeeRCU_Default);
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+#ifndef NDEBUG
+	caller->t_rcu_lock = _DeeRCU_INVALID_LOCK;
+#endif /* !NDEBUG */
+}
+
+PUBLIC NONNULL((1)) void
+(DFCALL DeeRCU_Lock)(Dee_rcu_lock_t *__restrict self) {
+	DeeThreadObject *caller = DeeThread_Self();
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+	Dee_thread_rcuvers_t version = atomic_read_explicit(&self->rcul_version, Dee_ATOMIC_ACQUIRE);
+	atomic_write_explicit(&caller->t_rcu_vers, version, Dee_ATOMIC_RELEASE);
+	atomic_write_explicit(&caller->t_rcu_lock, self, Dee_ATOMIC_RELEASE);
+#else /* CONFIG_PER_OBJECT_RCU_LOCKS */
+	Dee_thread_rcuvers_t version = atomic_read_explicit(&_DeeRCU_Default.rcul_version, Dee_ATOMIC_ACQUIRE);
+	atomic_write_explicit(&caller->t_rcu_vers, version, Dee_ATOMIC_RELEASE);
+#endif /* !CONFIG_PER_OBJECT_RCU_LOCKS */
+	(void)self;
+}
+
+PUBLIC NONNULL((1)) void
+(DFCALL DeeRCU_Unlock)(Dee_rcu_lock_t *__restrict self) {
+	DeeThreadObject *caller = DeeThread_Self();
+	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+	ASSERT(caller->t_rcu_lock == self);
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+#ifndef NDEBUG
+	caller->t_rcu_lock = _DeeRCU_INVALID_LOCK;
+#endif /* !NDEBUG */
+	(void)self;
+}
+
+
 /* Synchronize RCU, blocking until all threads that
  * locked an older RCU version will have left their
- * RCU section (by calling `DeeRCU_Unlock()')
+ * RCU section (by calling `DeeRCU_UnlockDefault()')
  *
  * This function must be called before the old state
  * of some variable protected by RCU may be destroyed */
-PUBLIC void (DCALL DeeRCU_Synchronize)(void) {
-#ifndef DeeThread_USE_SINGLE_THREADED
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+PUBLIC void (DCALL DeeRCU_SynchronizeDefault)(void) {
+	DeeRCU_Synchronize(&_DeeRCU_Default);
+}
+
+PUBLIC NONNULL((1)) void
+(DFCALL DeeRCU_Synchronize)(Dee_rcu_lock_t *__restrict self)
+#define LOCAL_P_rcul_version (&self->rcul_version)
+#else /* CONFIG_PER_OBJECT_RCU_LOCKS */
+PUBLIC void (DCALL DeeRCU_SynchronizeDefault)(void)
+#define LOCAL_P_rcul_version (&_DeeRCU_Default.rcul_version)
+#endif /* !CONFIG_PER_OBJECT_RCU_LOCKS */
+{
 	DeeThreadObject *iter;
 	DeeThreadObject *caller = DeeThread_Self();
 	Dee_thread_rcuvers_t old_version, new_version;
 	ASSERTF(caller->t_rcu_vers == Dee_THREAD_RCU_INACTIVE,
-	        "Illegal: call to 'DeeRCU_Synchronize()' while calling "
-	        /**/ "thread has itself made a call to 'DeeRCU_Lock()'");
+	        "Illegal: call to 'DeeRCU_SynchronizeDefault()' while calling "
+	        /**/ "thread has itself made a call to 'DeeRCU_LockDefault()'");
 
 	/* Increment the RCU version counter (but make sure it never becomes "0") */
 again_increment_version:
 	do {
-		old_version = atomic_read(&_DeeRCU_Version);
+		old_version = atomic_read(LOCAL_P_rcul_version);
 		new_version = old_version + 1;
 #if 0 /* To simulate early RCU overflow */
 		if unlikely(new_version >= 8)
@@ -5779,7 +5862,7 @@ again_increment_version:
 		if unlikely(new_version == Dee_THREAD_RCU_INACTIVE)
 			goto handle_overflowing_version;
 #endif
-	} while (!atomic_cmpxch_weak_explicit(&_DeeRCU_Version, old_version, new_version,
+	} while (!atomic_cmpxch_weak_explicit(LOCAL_P_rcul_version, old_version, new_version,
 	                                      Dee_ATOMIC_SEQ_CST, Dee_ATOMIC_RELAXED));
 
 	/* Use a special kind of RCU lock that is specifically designed for
@@ -5796,7 +5879,7 @@ again_increment_version:
 	 *
 	 * All potentially blocking system calls (should) then be wrapped by these
 	 * 2 functions (though if a system call is missed, that's actually perfectly
-	 * fine; it just means that concurrent `DeeRCU_Synchronize()' are a little
+	 * fine; it just means that concurrent `DeeRCU_SynchronizeDefault()' are a little
 	 * bit slower than they need to be).
 	 *
 	 * These 2 functions then interact with an unordered (position within has
@@ -5878,7 +5961,7 @@ again_increment_version:
 	 * >>         if (thread_version > old_version)
 	 * >>             break; // Thread is waiting for some future event that we're not required to synchronize with
 	 * >>         SCHED_YIELD();
-	 * >>         current_rcu_version = atomic_read(&_DeeRCU_Version);
+	 * >>         current_rcu_version = atomic_read(LOCAL_P_rcul_version);
 	 * >>         if unlikely(old_version > current_rcu_version)
 	 * >>             old_version = current_rcu_version;
 	 * >>     }
@@ -5940,14 +6023,14 @@ again_increment_version:
 			 * waiting for, semantically speaking it is actually more recent, so
 			 * by waiting for it, we're actually waiting for more than we'd have
 			 * to) */
-			current_rcu_version = atomic_read(&_DeeRCU_Version);
+			current_rcu_version = atomic_read(LOCAL_P_rcul_version);
 			if unlikely(old_version > current_rcu_version)
 				old_version = current_rcu_version;
 
 			/* Try again. Note that we *CAN'T* release "thread_list_lock_release()"
 			 * and then re-acquire it before repeating the search. If we did that,
 			 * threads might fail the "ASSERT(thread_version == ...)" check above,
-			 * since then another thread might make another "DeeRCU_Synchronize()"
+			 * since then another thread might make another "DeeRCU_SynchronizeDefault()"
 			 * call in the mean-time.
 			 *
 			 * However, since RCU locks are kind-of on par with "atomic" locks, this
@@ -5963,7 +6046,7 @@ handle_overflowing_version:
 	 * - The new version has to be less than the old version (since there is
 	 *   no more room for the version number to grow)
 	 * - Once the new (smaller) version has been assigned as the new version,
-	 *   any concurrent call to "DeeRCU_Synchronize()" will not be waiting for
+	 *   any concurrent call to "DeeRCU_SynchronizeDefault()" will not be waiting for
 	 *   RCU locks that happened prior to the new version having been set.
 	 *
 	 * Solve this problem by:
@@ -5982,7 +6065,7 @@ handle_overflowing_version:
 
 	/* Step #2 */
 	new_version = 2;
-	if (!atomic_cmpxch_weak(&_DeeRCU_Version, old_version, new_version)) {
+	if (!atomic_cmpxch_weak(LOCAL_P_rcul_version, old_version, new_version)) {
 		atomic_write(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE);
 		goto again_increment_version;
 	}
@@ -6006,8 +6089,10 @@ handle_overflowing_version:
 
 	/* Step #4 */
 	atomic_write(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE);
-#endif /* !DeeThread_USE_SINGLE_THREADED */
+#undef LOCAL_P_rcul_version
 }
+
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 
 DECL_END

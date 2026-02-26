@@ -240,6 +240,7 @@
 		<ClInclude Include="..\include\deemon\util\nrlock.h" />
 		<ClInclude Include="..\include\deemon\util\objectlist.h" />
 		<ClInclude Include="..\include\deemon\util\once.h" />
+		<ClInclude Include="..\include\deemon\util\rcu.h" />
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h" />
 		<ClInclude Include="..\include\deemon\util\rlock.h" />
 		<ClInclude Include="..\include\deemon\util\simple-hashset.h" />

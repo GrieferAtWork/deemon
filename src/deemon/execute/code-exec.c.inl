@@ -25,7 +25,7 @@
 
 #include <deemon/alloc.h>           /* Dee_Mallocc, Dee_Reallocc */
 #include <deemon/asm.h>             /* ASM16_*, ASM32_JMP, ASM_*, instruction_t */
-#include <deemon/bool.h>            /* DeeBool_For, Dee_False, Dee_FalseTrue, Dee_True */
+#include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_FalseTrue, Dee_True */
 #include <deemon/class.h>           /* DeeClassDescriptor_Type, DeeClass_*, DeeInstance_* */
 #include <deemon/code.h>            /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeFunction_*, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_PERIOD, Dee_TRIGGER_BREAKPOINT_*, Dee_code_frame, Dee_except_handler, code_addr_t, instruction_t */
 #include <deemon/dict.h>            /* DeeDict_FromSequenceInheritedOnSuccess, DeeDict_NewKeyValuesInherited */

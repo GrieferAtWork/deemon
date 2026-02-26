@@ -696,6 +696,9 @@
 		<ClInclude Include="..\include\deemon\util\once.h">
 			<Filter>include\util</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\util\rcu.h">
+			<Filter>include\util</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\util\rlock-utils.h">
 			<Filter>include\util</Filter>
 		</ClInclude>

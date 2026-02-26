@@ -34,7 +34,7 @@
 #include <hybrid/__atomic.h>      /* __ATOMIC_ACQUIRE, __ATOMIC_RELEASE, __hybrid_atomic_* */
 #include <hybrid/host.h>          /* __arm__, __i386__, __linux__, __unix__, __x86_64__ */
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
-#include <hybrid/typecore.h>      /* __UINT32_C, __ULONG32_TYPE__ */
+#include <hybrid/typecore.h>      /* __UINT32_C, __UINT_FAST32_TYPE__, __ULONG32_TYPE__ */
 
 #include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_refcnt_t, ITER_DONE */
 #include "util/futex.h" /* DeeFutex_WakeAll */
@@ -83,6 +83,23 @@
 #endif /* !CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
+
+/* Instead of always (re-)using the same, global lock for RCU synchronization,
+ * users of RCU locking APIs can/must provide their own `struct Dee_rcu_lock'. */
+#ifdef CONFIG_NO_THREADS
+#undef CONFIG_PER_OBJECT_RCU_LOCKS
+#undef CONFIG_NO_PER_OBJECT_RCU_LOCKS
+#define CONFIG_NO_PER_OBJECT_RCU_LOCKS
+#elif (!defined(CONFIG_PER_OBJECT_RCU_LOCKS) && \
+       !defined(CONFIG_NO_PER_OBJECT_RCU_LOCKS))
+#if 1
+#define CONFIG_PER_OBJECT_RCU_LOCKS
+#else
+#define CONFIG_NO_PER_OBJECT_RCU_LOCKS
+#endif
+#endif /* !CONFIG_[NO_]PER_OBJECT_RCU_LOCKS */
+
+
 
 struct Dee_code_frame;
 struct Dee_tuple_object;
@@ -261,6 +278,12 @@ struct Dee_thread_interrupt {
 #endif /* !CONFIG_NO_THREADS */
 
 struct Dee_thread_object;
+#ifndef CONFIG_NO_THREADS
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+struct Dee_rcu_lock;
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+#endif /* !CONFIG_NO_THREADS */
+
 typedef struct Dee_thread_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD /* GC object. */
@@ -309,8 +332,8 @@ typedef struct Dee_thread_object {
 #endif /* !GUARD_DEEMON_RUNTIME_THREAD_C */
 #endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #ifndef CONFIG_NO_THREADS
-#define Dee_thread_rcuvers_t uintptr_t
-#define Dee_thread_intvers_t uintptr_t
+#define Dee_thread_rcuvers_t __UINT_FAST32_TYPE__
+#define Dee_thread_intvers_t __UINT_FAST32_TYPE__
 	Dee_thread_intvers_t           t_int_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
 	                                              * Incremented each time the thread calls `DeeThread_CheckInterrupt()' while
 	                                              * its `Dee_THREAD_STATE_INTERRUPTED' flag is set. Used in order to sync the
@@ -319,6 +342,13 @@ typedef struct Dee_thread_object {
 	Dee_thread_rcuvers_t           t_rcu_vers;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
 	                                              * RCU version that this thread is currently waiting for (or
 	                                              * `Dee_THREAD_RCU_INACTIVE' when not holding an RCU lock) */
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+	struct Dee_rcu_lock           *t_rcu_lock;   /* [lock(READ(ATOMIC), WRITE(PRIVATE(DeeThread_Self())))]
+	                                              * [1..1][valid_if(t_rcu_vers != Dee_THREAD_RCU_INACTIVE)]
+	                                              * RCU lock that the calling thread is attached to. Note that
+	                                              * any thread can only ever be attached to a single RCU lock. */
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+
 #define Dee_THREAD_PRIV_STATE_NORMAL  UINT32_C(0x00000000) /* Normal private-state flags */
 #define Dee_THREAD_PRIV_STATE_LISTRCU UINT32_C(0x00000001) /* Thread is currently reading "t_global.le_next" of any thread without
                                                             * having acquired "thread_list_lock" (not even necessarily their own). */
@@ -360,6 +390,7 @@ typedef struct Dee_thread_object {
 		                                       * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 		                                       * Thread TLS data controller. (Set to NULL during thread creation / clear) */
 	} t_context; /* Contextual data */
+
 #ifndef CONFIG_NO_THREADS
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
 	void *t_heap; /* [0..1][lock(WRITE_ONCE && PRIVATE(DeeThread_Self()))] Thread-local heap (for faster Dee_Malloc()) */
@@ -751,96 +782,6 @@ DDATDEF uint16_t DeeExec_StackLimit; /* TODO: Change this to uint32_t (we want t
 #endif /* !DeeThread_Sleep */
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
-
-
-/*
- * RCU usage:
- *
- * >> DREF DeeObject *getref() {
- * >>     DREF DeeObject *result;
- * >>     DeeRCU_Lock();
- * >>     result = atomic_read(&global_ref);
- * >>     Dee_Incref(result);
- * >>     DeeRCU_Unlock();
- * >>     return result;
- * >> }
- * >>
- * >> void setref(DREF DeeObject *ob) {
- * >>     DREF DeeObject *old;
- * >>     old = atomic_xch(&global_ref, ob);
- * >>     DeeRCU_Synchronize();
- * >>     Dee_Decref(old);
- * >> }
- *
- *
- * NOTES:
- * - It's basically the same as the idea of an "in-use" counter to
- *   prevent premature destruction of references, only that instead
- *   of having a global (and thus prone to cache conflicts) counter
- *   of in-use threads, every reader thread has only a single thread-
- *   local "rcu version" field.
- * - As such, if you already understood the idea of in-use counters:
- *   - "atomic_inc(&in_use);"                   -- Replace with "DeeRCU_Lock()"
- *   - "atomic_dec(&in_use);"                   -- Replace with "DeeRCU_Unlock()"
- *   - "while (atomic_read(&in_use)) yield();"  -- Replace with "DeeRCU_Synchronize()"
- */
-
-/* XXX: Have a configuration where "DeeRCU_Lock()" (and the other methods) all take an
- *      additional parameter "struct Dee_rculock" that encapsulates what is currently
- *      done by `_DeeRCU_Version' -- in that version, every RCU use-case must then
- *      supply its own "struct Dee_rculock" (though there can also still be some
- *      default, global RCU lock, too) */
-
-
-/* Enter/leave an RCU section (where references
- * read are always either the old, or new state) */
-DFUNDEF void (DCALL DeeRCU_Lock)(void);
-DFUNDEF void (DCALL DeeRCU_Unlock)(void);
-
-/* Synchronize RCU, blocking until all threads that
- * locked an older RCU version will have left their
- * RCU section (by calling `DeeRCU_Unlock()')
- *
- * This function must be called before the old state
- * of some variable protected by RCU may be destroyed */
-DFUNDEF void (DCALL DeeRCU_Synchronize)(void);
-
-#ifdef CONFIG_NO_THREADS
-#define DeeRCU_Lock()             (void)0
-#define DeeRCU_Unlock()           (void)0
-#define DeeRCU_Synchronize()      (void)0
-#elif !defined(__OPTIMIZE_SIZE__)
-/* [lock(ATOMIC)] Global RCU "version" number (only here for
- * reading; only `DeeRCU_Synchronize()' is allowed to write
- * this!) */
-DDATDEF Dee_thread_rcuvers_t _DeeRCU_Version;
-#define DeeRCU_LockSelf(caller) \
-	__hybrid_atomic_store(&(caller)->t_rcu_vers, __hybrid_atomic_load(&_DeeRCU_Version, __ATOMIC_ACQUIRE), __ATOMIC_RELEASE)
-#define DeeRCU_UnlockSelf(caller) \
-	__hybrid_atomic_store(&(caller)->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, __ATOMIC_RELEASE)
-#define DeeRCU_Lock()   DeeRCU_LockSelf(DeeThread_Self())
-#define DeeRCU_Unlock() DeeRCU_UnlockSelf(DeeThread_Self())
-
-#define DeeRCU_FAST_SETUP    DeeThreadObject *_rcu_fast_caller = DeeThread_Self();
-#if defined(__NO_builtin_assume) || defined(__builtin_assume_has_sideeffects)
-#define DeeRCU_FAST_Lock()   DeeRCU_LockSelf(_rcu_fast_caller)
-#define DeeRCU_FAST_Unlock() DeeRCU_UnlockSelf(_rcu_fast_caller)
-#else /* __NO_builtin_assume || __builtin_assume_has_sideeffects */
-#define DeeRCU_FAST_Lock()   (__builtin_assume(_rcu_fast_caller == DeeThread_Self()), DeeRCU_LockSelf(_rcu_fast_caller))
-#define DeeRCU_FAST_Unlock() (__builtin_assume(_rcu_fast_caller == DeeThread_Self()), DeeRCU_UnlockSelf(_rcu_fast_caller))
-#endif /* !__NO_builtin_assume && !__builtin_assume_has_sideeffects */
-#endif /* ... */
-
-#ifndef DeeRCU_LockSelf
-#define DeeRCU_LockSelf(caller)   DeeRCU_Lock()
-#define DeeRCU_UnlockSelf(caller) DeeRCU_Unlock()
-#endif /* !DeeRCU_LockSelf */
-
-#ifndef DeeRCU_FAST_SETUP
-#define DeeRCU_FAST_SETUP    /* nothing */
-#define DeeRCU_FAST_Lock()   DeeRCU_Lock()
-#define DeeRCU_FAST_Unlock() DeeRCU_Unlock()
-#endif /* !DeeRCU_FAST_SETUP */
 
 DECL_END
 

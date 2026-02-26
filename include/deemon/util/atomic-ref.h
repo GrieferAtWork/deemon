@@ -30,8 +30,8 @@
 #include "../api.h"
 
 #include "../object.h" /* Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref */
-#include "../thread.h" /* DeeRCU_* */
 #include "../types.h"  /* DREF, DeeObject, Dee_AsObject */
+#include "rcu.h"       /* DeeRCU_*, Dee_RCU_LOCK_DECLARE, Dee_RCU_LOCK__INIT, Dee_rcu_lock_init */
 
 #include <stddef.h> /* NULL */
 
@@ -46,17 +46,17 @@ DECL_BEGIN
  *
  * - read:
  *   >> DREF DeeObject *result;
- *   >> DeeRCU_Lock();
+ *   >> DeeRCU_Lock(&ar_lock);
  *   >> result = atomic_read(&ar_obj);
  *   >> Dee_XIncref(result); // Or "Dee_Incref" if known to be non-NULL
- *   >> DeeRCU_Unlock();
+ *   >> DeeRCU_Unlock(&ar_lock);
  *   >> return result;
  *
  * - write:
  *   >> DREF DeeObject *oldval;
  *   >> Dee_XIncref(newval); // Or "Dee_Incref" if known to be non-NULL
  *   >> oldval = atomic_xch(&ar_obj, newval);
- *   >> DeeRCU_Synchronize();
+ *   >> DeeRCU_Synchronize(&ar_lock);
  *   >> Dee_XDecref(oldval); // Or "Dee_Decref" if known to be non-NULL
  *
  * Explanation:
@@ -78,30 +78,28 @@ DECL_BEGIN
  *   be implemented analogous to regular writes.
  */
 
-#define Dee_ATOMIC_REF(T)                       \
-	struct {                                    \
-		DREF T *ar_obj; /* [1..1][lock(RCU)] */ \
+#define Dee_ATOMIC_REF(T)                           \
+	struct {                                        \
+		DREF T *ar_obj; /* [1..1][lock(ar_lock)] */ \
+		Dee_RCU_LOCK_DECLARE(ar_lock)               \
 	}
-#define Dee_ATOMIC_XREF(T)                       \
-	struct {                                     \
-		DREF T *axr_obj; /* [0..1][lock(RCU)] */ \
+#define Dee_ATOMIC_XREF(T)                            \
+	struct {                                          \
+		DREF T *axr_obj; /* [0..1][lock(axr_lock)] */ \
+		Dee_RCU_LOCK_DECLARE(axr_lock)                \
 	}
 
-#define _Dee_private_atomic_ref_incuse(self)  DeeRCU_Lock()
-#define _Dee_private_atomic_ref_decuse(self)  DeeRCU_Unlock()
-#define _Dee_private_atomic_ref_await(self)   DeeRCU_Synchronize()
-#define _Dee_private_atomic_xref_incuse(self) DeeRCU_Lock()
-#define _Dee_private_atomic_xref_decuse(self) DeeRCU_Unlock()
-#define _Dee_private_atomic_xref_await(self)  DeeRCU_Synchronize()
+#define _Dee_private_atomic_ref_sync(self)  DeeRCU_Synchronize(&(self)->ar_lock)
+#define _Dee_private_atomic_xref_sync(self) DeeRCU_Synchronize(&(self)->axr_lock)
 
-#define Dee_ATOMIC_REF_INIT(/*1..1*/ /*inherit(always)*/ obj)                 { obj }
-#define Dee_atomic_ref_init_inherited(self, /*1..1*/ /*inherit(always)*/ obj) (void)((self)->ar_obj = (obj), Dee_ASSERT((self)->ar_obj))
-#define Dee_atomic_ref_init(self, /*1..1*/ obj)                               (void)((self)->ar_obj = (obj), Dee_Incref((self)->ar_obj))
+#define Dee_ATOMIC_REF_INIT(/*1..1*/ /*inherit(always)*/ obj)                 { obj Dee_RCU_LOCK__INIT }
+#define Dee_atomic_ref_init_inherited(self, /*1..1*/ /*inherit(always)*/ obj) (void)((self)->ar_obj = (obj), Dee_ASSERT((self)->ar_obj), Dee_rcu_lock_init(&(self)->ar_lock))
+#define Dee_atomic_ref_init(self, /*1..1*/ obj)                               (void)((self)->ar_obj = (obj), Dee_Incref((self)->ar_obj), Dee_rcu_lock_init(&(self)->ar_lock))
 #define Dee_atomic_ref_fini(self)                                             Dee_Decref((self)->ar_obj)
 
-#define Dee_ATOMIC_XREF_INIT(/*0..1*/ /*inherit(always)*/ obj)                 { obj }
-#define Dee_atomic_xref_init_inherited(self, /*0..1*/ /*inherit(always)*/ obj) (void)((self)->axr_obj = (obj))
-#define Dee_atomic_xref_init(self, /*0..1*/ obj)                               (void)((self)->axr_obj = (obj), Dee_XIncref((self)->axr_obj))
+#define Dee_ATOMIC_XREF_INIT(/*0..1*/ /*inherit(always)*/ obj)                 { obj Dee_RCU_LOCK__INIT }
+#define Dee_atomic_xref_init_inherited(self, /*0..1*/ /*inherit(always)*/ obj) (void)((self)->axr_obj = (obj), Dee_rcu_lock_init(&(self)->axr_lock))
+#define Dee_atomic_xref_init(self, /*0..1*/ obj)                               (void)((self)->axr_obj = (obj), Dee_XIncref((self)->axr_obj), Dee_rcu_lock_init(&(self)->axr_lock))
 #define Dee_atomic_xref_fini(self)                                             Dee_XDecref((self)->axr_obj)
 
 
@@ -138,18 +136,24 @@ DECL_BEGIN
 #endif /* !CONFIG_NO_THREADS */
 
 /* >> void Dee_atomic_ref_get(Dee_ATOMIC_REF(T) *self, DREF[1..1] T **p_result); */
-#define Dee_atomic_ref_get(self, p_result)             \
-	(void)(_Dee_private_atomic_ref_incuse(self),       \
-	       *(p_result) = Dee_atomic_ref_getaddr(self), \
-	       Dee_Incref(*(p_result)),                    \
-	       _Dee_private_atomic_ref_decuse(self))
+#define Dee_atomic_ref_get(self, p_result)          \
+	do {                                            \
+		DeeRCU_FAST_SETUP                           \
+		DeeRCU_FAST_Lock(&(self)->ar_lock);         \
+		*(p_result) = Dee_atomic_ref_getaddr(self); \
+		Dee_Incref(*(p_result));                    \
+		DeeRCU_FAST_Unlock(&(self)->ar_lock);       \
+	}	__WHILE0
 
 /* >> void Dee_atomic_xref_get(Dee_ATOMIC_XREF(T) *self, DREF[0..1] T **p_result); */
-#define Dee_atomic_xref_get(self, p_result)             \
-	(void)(_Dee_private_atomic_xref_incuse(self),       \
-	       *(p_result) = Dee_atomic_xref_getaddr(self), \
-	       Dee_XIncref(*(p_result)),                    \
-	       _Dee_private_atomic_xref_decuse(self))
+#define Dee_atomic_xref_get(self, p_result)          \
+	do {                                             \
+		DeeRCU_FAST_SETUP                            \
+		DeeRCU_FAST_Lock(&(self)->axr_lock);         \
+		*(p_result) = Dee_atomic_xref_getaddr(self); \
+		Dee_XIncref(*(p_result));                    \
+		DeeRCU_FAST_Unlock(&(self)->axr_lock);       \
+	}	__WHILE0
 
 
 /* Set "newval" and store old value in `*p_oldval' */
@@ -157,12 +161,12 @@ DECL_BEGIN
                                      /*inherit(always) DREF[1..1] in*/ newval,    \
                                      /*inherit(always) DREF[1..1] out*/ p_oldval) \
 	(_Dee_atomic_ref_unsynched_xch_inherited(self, , newval, p_oldval),           \
-	 _Dee_private_atomic_ref_await(self))
+	 _Dee_private_atomic_ref_sync(self))
 #define Dee_atomic_xref_xch_inherited(self,                                        \
                                       /*inherit(always) DREF[0..1] in*/ newval,    \
                                       /*inherit(always) DREF[0..1] out*/ p_oldval) \
 	(_Dee_atomic_xref_unsynched_xch_inherited(self, , newval, p_oldval),           \
-	 _Dee_private_atomic_xref_await(self))
+	 _Dee_private_atomic_xref_sync(self))
 
 
 /* Set "newval" and drop reference to old value */
@@ -171,7 +175,7 @@ DECL_BEGIN
 		DREF DeeObject *_darsi_oldval;                                            \
 		_Dee_atomic_ref_unsynched_xch_inherited(self, Dee_AsObject,               \
 		                                        newval, &_darsi_oldval);          \
-		_Dee_private_atomic_ref_await(self);                                      \
+		_Dee_private_atomic_ref_sync(self);                                       \
 		Dee_Decref(_darsi_oldval);                                                \
 	}	__WHILE0
 #define Dee_atomic_xref_set_inherited(self, /*inherit(always) DREF[0..1]*/ newval) \
@@ -179,7 +183,7 @@ DECL_BEGIN
 		DREF DeeObject *_daxrsi_oldval;                                            \
 		_Dee_atomic_xref_unsynched_xch_inherited(self, Dee_AsObject,               \
 		                                         newval, &_daxrsi_oldval);         \
-		_Dee_private_atomic_xref_await(self);                                      \
+		_Dee_private_atomic_xref_sync(self);                                       \
 		Dee_XDecref(_daxrsi_oldval);                                               \
 	}	__WHILE0
 
@@ -196,7 +200,7 @@ DECL_BEGIN
 		Dee_Incref(newval);                                             \
 		_Dee_atomic_ref_unsynched_xch_inherited(self, Dee_AsObject,     \
 		                                        newval, &_dars_oldval); \
-		_Dee_private_atomic_ref_await(self);                            \
+		_Dee_private_atomic_ref_sync(self);                             \
 		Dee_Decref(_dars_oldval);                                       \
 	}	__WHILE0
 #define Dee_atomic_xref_set(self, /*[1..1] in*/ newval)                   \
@@ -205,7 +209,7 @@ DECL_BEGIN
 		Dee_XIncref(newval);                                              \
 		_Dee_atomic_xref_unsynched_xch_inherited(self, Dee_AsObject,      \
 		                                         newval, &_daxrs_oldval); \
-		_Dee_private_atomic_xref_await(self);                             \
+		_Dee_private_atomic_xref_sync(self);                              \
 		Dee_XDecref(_daxrs_oldval);                                       \
 	}	__WHILE0
 
@@ -215,7 +219,7 @@ DECL_BEGIN
 		DREF DeeObject *_daxrc_oldval;                                  \
 		_Dee_atomic_xref_unsynched_xch_inherited(self, Dee_AsObject,    \
 		                                         NULL, &_daxrc_oldval); \
-		_Dee_private_atomic_xref_await(self);                           \
+		_Dee_private_atomic_xref_sync(self);                            \
 		Dee_XDecref(_daxrc_oldval);                                     \
 	}	__WHILE0
 
@@ -226,11 +230,11 @@ DECL_BEGIN
  * @return: false: Value didn't change. */
 #define Dee_atomic_ref_cmpxch_inherited(self, oldval, newval)         \
 	(_Dee_atomic_ref_unsynched_cmpxch_inherited(self, oldval, newval) \
-	 ? (_Dee_private_atomic_ref_await(self), 1)                       \
+	 ? (_Dee_private_atomic_ref_sync(self), 1)                        \
 	 : 0)
 #define Dee_atomic_xref_cmpxch_inherited(self, oldval, newval)         \
 	(_Dee_atomic_xref_unsynched_cmpxch_inherited(self, oldval, newval) \
-	 ? (_Dee_private_atomic_xref_await(self), 1)                       \
+	 ? (_Dee_private_atomic_xref_sync(self), 1)                        \
 	 : 0)
 
 /* Set value to "newval", but only if current value is "oldval"
@@ -239,12 +243,12 @@ DECL_BEGIN
 #define Dee_atomic_ref_cmpxch(self, oldval, newval)                   \
 	(Dee_Incref(newval),                                              \
 	 _Dee_atomic_ref_unsynched_cmpxch_inherited(self, oldval, newval) \
-	 ? (_Dee_private_atomic_ref_await(self), Dee_Decref(oldval), 1)   \
+	 ? (_Dee_private_atomic_ref_sync(self), Dee_Decref(oldval), 1)    \
 	 : (Dee_Decref_unlikely(newval), 0))
 #define Dee_atomic_xref_cmpxch(self, oldval, newval)                   \
 	(Dee_XIncref(newval),                                              \
 	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, oldval, newval) \
-	 ? (_Dee_private_atomic_xref_await(self), Dee_XDecref(oldval), 1)  \
+	 ? (_Dee_private_atomic_xref_sync(self), Dee_XDecref(oldval), 1)   \
 	 : (Dee_XDecref_unlikely(newval), 0))
 
 DECL_END
