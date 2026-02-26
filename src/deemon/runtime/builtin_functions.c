@@ -378,7 +378,7 @@ err:
 	return NULL;
 }
 
-/* TODO: Use "Dee_atomic_ref_t" here */
+/* TODO: Use "Dee_ATOMIC_REF" here */
 PRIVATE DREF DeeModuleObject *strexec_module = NULL; /* import("_strexec") */
 PRIVATE DREF DeeObject *strexec_exec = NULL;         /* _strexec.exec */
 

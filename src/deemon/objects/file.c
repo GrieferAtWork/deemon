@@ -37,15 +37,17 @@
 #include <deemon/module.h>             /* DeeModule* */
 #include <deemon/none-operator.h>      /* DeeNone_OperatorCtor, DeeNone_OperatorSerialize */
 #include <deemon/none.h>               /* DeeNone_NewRef, return_none */
-#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_off_t, Dee_pos_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_XPutFuncPtr, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, DeeUni_ToLower, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen, Dee_unicode_writeutf8 */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, stderr, stdin, stdout, strchr, strend, writeall */
+#include <deemon/thread.h>             /* CONFIG_PER_OBJECT_RCU_LOCKS */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, OPERATOR_REPR, TF_NONE, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_read */
-#include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
+#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
+#include <deemon/util/rcu.h>           /* DeeRCU_*, Dee_rcu_lock_t */
 
 #include <hybrid/host.h>      /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h>    /* MIN */
@@ -1499,6 +1501,8 @@ PRIVATE struct type_method tpconst file_class_methods[] = {
 };
 
 
+
+/* [0..1][lock(dee_std_lock)][N] Standard files */
 #undef DEE_STDCNT
 #ifdef Dee_STDDBG_IS_UNIQUE
 #define DEE_STDCNT 4
@@ -1508,25 +1512,14 @@ PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE,
 PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE };
 #endif /* !Dee_STDDBG_IS_UNIQUE */
 
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t dee_std_lock = Dee_ATOMIC_RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-#define dee_std_lock_reading()    Dee_atomic_rwlock_reading(&dee_std_lock)
-#define dee_std_lock_writing()    Dee_atomic_rwlock_writing(&dee_std_lock)
-#define dee_std_lock_tryread()    Dee_atomic_rwlock_tryread(&dee_std_lock)
-#define dee_std_lock_trywrite()   Dee_atomic_rwlock_trywrite(&dee_std_lock)
-#define dee_std_lock_canread()    Dee_atomic_rwlock_canread(&dee_std_lock)
-#define dee_std_lock_canwrite()   Dee_atomic_rwlock_canwrite(&dee_std_lock)
-#define dee_std_lock_waitread()   Dee_atomic_rwlock_waitread(&dee_std_lock)
-#define dee_std_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&dee_std_lock)
-#define dee_std_lock_read()       Dee_atomic_rwlock_read(&dee_std_lock)
-#define dee_std_lock_write()      Dee_atomic_rwlock_write(&dee_std_lock)
-#define dee_std_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&dee_std_lock)
-#define dee_std_lock_upgrade()    Dee_atomic_rwlock_upgrade(&dee_std_lock)
-#define dee_std_lock_downgrade()  Dee_atomic_rwlock_downgrade(&dee_std_lock)
-#define dee_std_lock_endwrite()   Dee_atomic_rwlock_endwrite(&dee_std_lock)
-#define dee_std_lock_endread()    Dee_atomic_rwlock_endread(&dee_std_lock)
-#define dee_std_lock_end()        Dee_atomic_rwlock_end(&dee_std_lock)
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
+PRIVATE Dee_rcu_lock_t dee_std_rcu = Dee_RCU_LOCK_INIT;
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+
+#define dee_std_FAST_SETUP    DeeRCU_FAST_SETUP
+#define dee_std_FAST_lock()   DeeRCU_FAST_Lock(&dee_std_rcu)
+#define dee_std_FAST_unlock() DeeRCU_FAST_Unlock(&dee_std_rcu)
+#define dee_std_synchronize() DeeRCU_Synchronize(&dee_std_rcu)
 
 PRIVATE uint16_t const std_buffer_modes[DEE_STDCNT] = {
 	/* [Dee_STDIN ] = */ Dee_FILE_BUFFER_MODE_AUTO | Dee_FILE_BUFFER_FREADONLY,
@@ -1540,7 +1533,7 @@ PRIVATE uint16_t const std_buffer_modes[DEE_STDCNT] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 create_std_buffer(unsigned int id) {
-	DREF DeeObject *result, *new_result;
+	DREF DeeObject *result, *existing_result;
 	ASSERT(id < DEE_STDCNT);
 	/* Create a buffer for the standard stream. */
 #ifdef CONFIG_NATIVE_STD_FILES_ARE_BUFFERED
@@ -1560,23 +1553,34 @@ create_std_buffer(unsigned int id) {
 		Dee_Incref(result);
 	}
 #endif /* !CONFIG_NATIVE_STD_FILES_ARE_BUFFERED */
-	dee_std_lock_write();
+
 	/* Save the newly created buffer in the standard stream vector. */
-	new_result = dee_std[id];
-	if unlikely(new_result != ITER_DONE) {
-		Dee_XIncref(new_result);
-		dee_std_lock_endwrite();
-		Dee_Decref(result);
-		result = new_result;
-		if (!result) {
-			DeeError_Throwf(&DeeError_UnboundAttribute,
-			                "Unbound standard stream");
-		}
+again_save_result:
+	Dee_Incref(result);
+	if (atomic_cmpxch(&dee_std[id], ITER_DONE, result)) {
+		dee_std_synchronize();
 		goto done;
 	}
-	Dee_Incref(result);
-	dee_std[id] = result;
-	dee_std_lock_endwrite();
+	Dee_DecrefNokill(result);
+
+	/* Load currently assigned default STD file */
+	{
+		dee_std_FAST_SETUP
+		dee_std_FAST_lock();
+		existing_result = atomic_read(&dee_std[id]);
+		if unlikely(existing_result == ITER_DONE) {
+			dee_std_FAST_unlock();
+			goto again_save_result;
+		}
+		Dee_XIncref(existing_result);
+		dee_std_FAST_unlock();
+	}
+	Dee_Decref(result);
+	result = existing_result;
+	if unlikely(!result) {
+		DeeError_Throwf(&DeeError_UnboundAttribute,
+		                "Unbound standard stream");
+	}
 done:
 	return result;
 }
@@ -1589,43 +1593,45 @@ done:
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_GetStd(unsigned int id) {
 	DREF DeeObject *result;
+	dee_std_FAST_SETUP
 	ASSERT(id < DEE_STDCNT);
-	dee_std_lock_read();
-	result = dee_std[id];
-	if unlikely(!ITER_ISOK(result)) {
-		dee_std_lock_endread();
-		/* When the stream is `ITER_DONE', lazily create the STD stream. */
-		if (result == ITER_DONE)
-			return create_std_buffer(id);
-		DeeError_Throwf(&DeeError_UnboundAttribute,
-		                "Unbound standard stream");
-		goto done;
+	dee_std_FAST_lock();
+	result = atomic_read(&dee_std[id]);
+	if likely(ITER_ISOK(result)) {
+		Dee_Incref(result);
+		dee_std_FAST_unlock();
+		return result;
 	}
-	Dee_Incref(result);
-	dee_std_lock_endread();
-done:
-	return result;
+	dee_std_FAST_unlock();
+
+	/* When the stream is `ITER_DONE', lazily create the STD stream. */
+	if (result == ITER_DONE)
+		return create_std_buffer(id);
+	DeeError_Throwf(&DeeError_UnboundAttribute,
+	                "Unbound standard stream");
+	return NULL;
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_TryGetStd(unsigned int id) {
 	DREF DeeObject *result;
+	dee_std_FAST_SETUP
 	ASSERT(id < DEE_STDCNT);
-	dee_std_lock_read();
-	result = dee_std[id];
-	if unlikely(!ITER_ISOK(result)) {
-		dee_std_lock_endread();
-		/* When the stream is `ITER_DONE', lazily create the STD stream. */
-		if (result == ITER_DONE) {
-			result = create_std_buffer(id);
-			if unlikely(!result)
-				DeeError_Handled(ERROR_HANDLED_RESTORE);
-		}
-		goto done;
+	dee_std_FAST_lock();
+	result = atomic_read(&dee_std[id]);
+	if likely(ITER_ISOK(result)) {
+		Dee_Incref(result);
+		dee_std_FAST_unlock();
+		return result;
 	}
-	Dee_Incref(result);
-	dee_std_lock_endread();
-done:
+	dee_std_FAST_unlock();
+
+	/* When the stream is `ITER_DONE', lazily create the STD stream. */
+	if (result == ITER_DONE) {
+		result = create_std_buffer(id);
+		if unlikely(!result)
+			DeeError_Handled(ERROR_HANDLED_RESTORE);
+	}
 	return result;
 }
 
@@ -1639,11 +1645,10 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 		ASSERT_OBJECT(file);
 		Dee_Incref(file);
 	}
-	dee_std_lock_write();
+
 	/* Set the given stream. */
-	old_stream  = dee_std[id];
-	dee_std[id] = file;
-	dee_std_lock_endwrite();
+	old_stream = atomic_xch(&dee_std[id], file);
+	dee_std_synchronize();
 	return old_stream;
 }
 
@@ -1748,7 +1753,7 @@ PRIVATE WUNUSED int DCALL
 file_std_isbound(unsigned int id) {
 	DeeObject *result;
 	ASSERT(id < DEE_STDCNT);
-	result = Dee_atomic_read_with_atomic_rwlock(&dee_std[id], &dee_std_lock);
+	result = atomic_read(&dee_std[id]);
 	return Dee_BOUND_FROMBOOL(result != NULL);
 }
 
