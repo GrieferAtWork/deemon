@@ -30,7 +30,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* Dee_Free */
-#include <deemon/arg.h>       /* DeeArg_UnpackStruct1XOr2X, DeeArg_UnpackStruct1Or2, UNPuSIZ */
+#include <deemon/arg.h>       /* DeeArg_UnpackStruct1Or2, DeeArg_UnpackStruct1XOr2X, UNPuSIZ */
 #include <deemon/bytes.h>     /* DeeBytes_Check, DeeBytes_SIZE */
 #include <deemon/dex.h>       /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>     /* DeeError_* */

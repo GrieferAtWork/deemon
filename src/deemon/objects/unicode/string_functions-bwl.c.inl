@@ -28,7 +28,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Freea, Dee_Mallocac */
-#include <deemon/object.h>          /* Dee_COMPARE_*, Dee_Compare, Dee_CompareNe */
+#include <deemon/object.h>          /* Dee_COMPARE_*, Dee_CompareNe */
 #include <deemon/string.h>          /* DeeUni_*, Dee_UNICODE_FOLDED_MAX, Dee_UNICODE_ISDIGIT, Dee_unitraits */
 #include <deemon/stringutils.h>     /* DeeUni_FoldedLength */
 #include <deemon/system-features.h> /* bcmpb, bcmpl, bcmpq, bcmpw, memcasecmp, memcasemem, memcasermem, memcmpb, memcmpl, memcmpq, memcmpw, memcpy*, memmeml, memmemq, memmemw, mempcpy*, mempsetb, mempsetl, mempsetq, mempsetw, memrmeml, memrmemq, memrmemw, memsetb, memsetl, memsetq, memsetw, tolower */
@@ -38,7 +38,7 @@
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdint.h>  /* int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t */
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
@@ -667,142 +667,214 @@ err:
 #endif /* LOCAL_fuzzy_casecompare */
 
 
+#ifndef STRVERSCMP_STATE_MACHINE_DEFINED
+#define STRVERSCMP_STATE_MACHINE_DEFINED
+/* Disclaimer: this implementation of strverscmp() is derivevd from glibc.
+ * It has however been heavily modified so-as to function properly with
+ * explicit-length strings (and as such: strings containing NUL-characters) */
+
+#define STRVERSCMP_S_N 0x0
+#define STRVERSCMP_S_I 0x3
+#define STRVERSCMP_S_F 0x6
+#define STRVERSCMP_S_Z 0x9
+
+#define STRVERSCMP_CMP 2
+#define STRVERSCMP_LEN 3
+
+static uint8_t const strverscmp_next_state[] = {
+	/* state    x    d    0  */
+	/* S_N */ STRVERSCMP_S_N, STRVERSCMP_S_I, STRVERSCMP_S_Z,
+	/* S_I */ STRVERSCMP_S_N, STRVERSCMP_S_I, STRVERSCMP_S_I,
+	/* S_F */ STRVERSCMP_S_N, STRVERSCMP_S_F, STRVERSCMP_S_F,
+	/* S_Z */ STRVERSCMP_S_N, STRVERSCMP_S_F, STRVERSCMP_S_Z
+};
+
+static int8_t const strverscmp_result_type[] = {
+	/* state   x/x  x/d  x/0  d/x  d/d  d/0   0/x  0/d  0/0  */
+	/* S_N */ STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_LEN, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,
+	/* S_I */ STRVERSCMP_CMP, -1, -1,    +1,  STRVERSCMP_LEN, STRVERSCMP_LEN,  +1,  STRVERSCMP_LEN, STRVERSCMP_LEN,
+	/* S_F */ STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,  STRVERSCMP_CMP, STRVERSCMP_CMP, STRVERSCMP_CMP,
+	/* S_Z */ STRVERSCMP_CMP, +1, +1,    -1,  STRVERSCMP_CMP, STRVERSCMP_CMP,  -1,  STRVERSCMP_CMP, STRVERSCMP_CMP
+};
+#endif /* !STRVERSCMP_STATE_MACHINE_DEFINED */
 
 #ifdef LOCAL_strverscmp
 /* As found here: https://en.wikipedia.org/wiki/Levenshtein_distance */
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 LOCAL_strverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
                  LOCAL_uchar_t const *rhs, size_t rhs_size) {
-	LOCAL_uchar_t clhs, crhs;
-	LOCAL_uchar_t const *lhs_start = lhs;
-	while (lhs_size && rhs_size) {
-		if ((clhs = *lhs) != (crhs = *rhs)
-#ifndef LOCAL_TRANSFORM_IS_NOOP
-		    && ((clhs = LOCAL_TRANSFORM(clhs)) != (crhs = LOCAL_TRANSFORM(crhs)))
-#endif /* !LOCAL_TRANSFORM_IS_NOOP */
-		    ) {
-			struct Dee_unitraits const *arec;
-			struct Dee_unitraits const *brec;
-			uintptr_t vala, valb; /* Unwind common digits. */
-			while (lhs > lhs_start) {
-				if (!DeeUni_IsDigit(lhs[-1]))
-					break;
-				crhs = clhs = *--lhs;
-				--rhs;
-				++lhs_size;
-				++rhs_size;
+	LOCAL_uchar_t clhs;
+	LOCAL_uchar_t crhs;
+	int state, diff;
+#define APPLY_TO_STATE(ch)                         \
+	do {                                           \
+		struct Dee_unitraits const *rec;           \
+		rec = DeeUni_Descriptor(ch);               \
+		if (rec->ut_flags & Dee_UNICODE_ISDIGIT) { \
+			++state;                               \
+			if (rec->ut_digit_idx == 0)            \
+				++state;                           \
+		}                                          \
+	}	__WHILE0
+	
+	state = STRVERSCMP_S_N;
+	for (;;) {
+		/* Deal with EOF */
+		if (!lhs_size || !rhs_size) {
+			if (lhs_size == rhs_size)
+				return Dee_COMPARE_EQ;
+			if (lhs_size) {
+				clhs = *lhs++;
+				APPLY_TO_STATE(clhs);
+				diff = Dee_COMPARE_GR;
+				state *= 3;
+			} else {
+				crhs = *rhs++;
+				diff = Dee_COMPARE_LO;
+				state *= 3;
+				APPLY_TO_STATE(crhs);
 			}
-
-			/* Check if both strings have digit sequences in the same places. */
-			arec = DeeUni_Descriptor(clhs);
-			brec = DeeUni_Descriptor(crhs);
-			if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT) &&
-			    !(brec->ut_flags & Dee_UNICODE_ISDIGIT))
-				return Dee_Compare(clhs, crhs); /* Deal with leading zeros. */
-			if ((arec->ut_flags & Dee_UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
-				return Dee_COMPARE_LO;
-			if ((brec->ut_flags & Dee_UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
-				return Dee_COMPARE_GR;
-
-			/* Compare digits. */
-			vala = arec->ut_digit_idx;
-			valb = brec->ut_digit_idx;
-			while (--lhs_size) {
-				clhs   = *++lhs;
-				arec = DeeUni_Descriptor(clhs);
-				if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT))
-					break;
-				vala *= 10;
-				vala += arec->ut_digit_idx;
-			}
-			while (--rhs_size) {
-				crhs   = *++rhs;
-				brec = DeeUni_Descriptor(crhs);
-				if (!(brec->ut_flags & Dee_UNICODE_ISDIGIT))
-					break;
-				valb *= 10;
-				valb += brec->ut_digit_idx;
-			}
-			return Dee_Compare(vala, valb);
+			goto return_for_state;
 		}
-		++lhs;
+		clhs = *lhs++;
+		crhs = *rhs++;
 		--lhs_size;
-		++rhs;
 		--rhs_size;
+		APPLY_TO_STATE(clhs);
+		if (clhs != crhs) {
+#ifndef LOCAL_TRANSFORM_IS_NOOP
+			clhs = LOCAL_TRANSFORM(clhs);
+			crhs = LOCAL_TRANSFORM(crhs);
+			if (clhs != crhs)
+#endif /* !LOCAL_TRANSFORM_IS_NOOP */
+			{
+				diff = Dee_CompareNe(clhs, crhs);
+				state *= 3;
+				APPLY_TO_STATE(crhs);
+				goto return_for_state;
+			}
+		}
+		state = strverscmp_next_state[state];
 	}
-	if (lhs_size)
-		return Dee_COMPARE_GR;
-	if (rhs_size)
+
+return_for_state:
+	state = strverscmp_result_type[state];
+	switch (state) {
+	case STRVERSCMP_CMP:
+		return diff;
+	case STRVERSCMP_LEN:
+		while (lhs_size) {
+			clhs = *lhs++;
+			--lhs_size;
+			if (!DeeUni_IsDigit(clhs))
+				break;
+			if (!rhs_size)
+				return Dee_COMPARE_GR;
+			crhs = *rhs++;
+			--rhs_size;
+			if (!DeeUni_IsDigit(crhs))
+				return Dee_COMPARE_GR;
+		}
+		if (rhs_size) {
+			crhs = *rhs;
+			if (DeeUni_IsDigit(crhs))
+				return Dee_COMPARE_LO;
+		}
+		return diff;
+	case -1:
 		return Dee_COMPARE_LO;
-	return Dee_COMPARE_EQ;
+	case +1:
+		return Dee_COMPARE_GR;
+	default: __builtin_unreachable();
+	}
+#undef APPLY_TO_STATE
 }
 #endif /* LOCAL_strverscmp */
 
 
 
 #ifdef LOCAL_strcaseverscmp
-/* As found here: https://en.wikipedia.org/wiki/Levenshtein_distance */
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) ATTR_INS(3, 4) int DCALL
 LOCAL_strcaseverscmp(LOCAL_uchar_t const *lhs, size_t lhs_size,
                      LOCAL_uchar_t const *rhs, size_t rhs_size) {
-	LOCAL_uchar_t clhs, crhs;
-	LOCAL_uchar_t const *lhs_start = lhs;
-	while (lhs_size && rhs_size) {
-		if ((clhs = *lhs) != (crhs = *rhs) /* TODO: case-fold */
-		    && ((clhs = (LOCAL_uchar_t)DeeUni_ToLower(clhs)) !=
-		        (crhs = (LOCAL_uchar_t)DeeUni_ToLower(crhs)))) {
-			struct Dee_unitraits const *arec;
-			struct Dee_unitraits const *brec;
-			uintptr_t vala, valb; /* Unwind common digits. */
-			while (lhs > lhs_start) {
-				if (!DeeUni_IsDigit(lhs[-1]))
-					break;
-				crhs = clhs = *--lhs;
-				--rhs;
-				++lhs_size;
-				++rhs_size;
+	struct unicode_foldreader lhs_reader;
+	struct unicode_foldreader rhs_reader;
+	uint32_t clhs, crhs;
+	int state, diff;
+#define APPLY_TO_STATE(ch)                         \
+	do {                                           \
+		struct Dee_unitraits const *rec;           \
+		rec = DeeUni_Descriptor(ch);               \
+		if (rec->ut_flags & Dee_UNICODE_ISDIGIT) { \
+			++state;                               \
+			if (rec->ut_digit_idx == 0)            \
+				++state;                           \
+		}                                          \
+	}	__WHILE0
+	LOCAL_unicode_foldreader_init(&lhs_reader, lhs, lhs_size);
+	LOCAL_unicode_foldreader_init(&rhs_reader, rhs, rhs_size);
+	state = STRVERSCMP_S_N;
+	for (;;) {
+		/* Deal with EOF */
+		if (unicode_foldreader_empty(&lhs_reader) ||
+		    unicode_foldreader_empty(&rhs_reader)) {
+			if (!!unicode_foldreader_empty(&lhs_reader) ==
+			    !!unicode_foldreader_empty(&rhs_reader))
+				return Dee_COMPARE_EQ;
+			if (!unicode_foldreader_empty(&lhs_reader)) {
+				clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
+				APPLY_TO_STATE(clhs);
+				diff = Dee_COMPARE_GR;
+				state *= 3;
+			} else {
+				crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
+				diff = Dee_COMPARE_LO;
+				state *= 3;
+				APPLY_TO_STATE(crhs);
 			}
-
-			/* Check if both strings have digit sequences in the same places. */
-			arec = DeeUni_Descriptor(clhs);
-			brec = DeeUni_Descriptor(crhs);
-			if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT) &&
-			    !(brec->ut_flags & Dee_UNICODE_ISDIGIT))
-				return Dee_Compare(clhs, crhs); /* Deal with leading zeros. */
-			if ((arec->ut_flags & Dee_UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)
-				return Dee_COMPARE_LO;
-			if ((brec->ut_flags & Dee_UNICODE_ISDIGIT) && brec->ut_digit_idx == 0)
-				return Dee_COMPARE_GR; /* Compare digits. */
-			vala = arec->ut_digit_idx;
-			valb = brec->ut_digit_idx;
-			while (--lhs_size) {
-				clhs   = *++lhs;
-				arec = DeeUni_Descriptor(clhs);
-				if (!(arec->ut_flags & Dee_UNICODE_ISDIGIT))
-					break;
-				vala *= 10;
-				vala += arec->ut_digit_idx;
-			}
-			while (--rhs_size) {
-				crhs   = *++rhs;
-				brec = DeeUni_Descriptor(crhs);
-				if (!(brec->ut_flags & Dee_UNICODE_ISDIGIT))
-					break;
-				valb *= 10;
-				valb += brec->ut_digit_idx;
-			}
-			return Dee_Compare(vala, valb);
+			goto return_for_state;
 		}
-		++lhs;
-		--lhs_size;
-		++rhs;
-		--rhs_size;
+		clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
+		crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
+		APPLY_TO_STATE(clhs);
+		if (clhs != crhs) {
+			diff = Dee_CompareNe(clhs, crhs);
+			state *= 3;
+			APPLY_TO_STATE(crhs);
+			goto return_for_state;
+		}
+		state = strverscmp_next_state[state];
 	}
-	if (lhs_size)
-		return Dee_COMPARE_GR;
-	if (rhs_size)
+
+return_for_state:
+	state = strverscmp_result_type[state];
+	switch (state) {
+	case STRVERSCMP_CMP:
+		return diff;
+	case STRVERSCMP_LEN:
+		while (!unicode_foldreader_empty(&lhs_reader)) {
+			clhs = LOCAL_unicode_foldreader_getc(&lhs_reader);
+			if (!DeeUni_IsDigit(clhs))
+				break;
+			if (unicode_foldreader_empty(&rhs_reader))
+				return Dee_COMPARE_GR;
+			crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
+			if (!DeeUni_IsDigit(crhs))
+				return Dee_COMPARE_GR;
+		}
+		if (!unicode_foldreader_empty(&rhs_reader)) {
+			crhs = LOCAL_unicode_foldreader_getc(&rhs_reader);
+			if (DeeUni_IsDigit(crhs))
+				return Dee_COMPARE_LO;
+		}
+		return diff;
+	case -1:
 		return Dee_COMPARE_LO;
-	return Dee_COMPARE_EQ;
+	case +1:
+		return Dee_COMPARE_GR;
+	default: __builtin_unreachable();
+	}
+#undef APPLY_TO_STATE
 }
 #endif /* LOCAL_strcaseverscmp */
 

@@ -3209,7 +3209,7 @@ bytes_vercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "vercompare"))
 		goto err;
 	result = dee_strverscmpb(args.lhs_ptr, args.lhs_len,
-	                         args.rhs_ptr, args.lhs_len);
+	                         args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	return_reference(DeeInt_FromSign(result));
 err:
@@ -3223,7 +3223,7 @@ bytes_wildcompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "wildcompare"))
 		goto err;
 	result = dee_wildcompareb(args.lhs_ptr, args.lhs_len,
-	                          args.rhs_ptr, args.lhs_len);
+	                          args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	return_reference(DeeInt_FromSign(result));
 err:
@@ -3237,7 +3237,7 @@ bytes_fuzzycompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "fuzzycompare"))
 		goto err;
 	result = dee_fuzzy_compareb(args.lhs_ptr, args.lhs_len,
-	                            args.rhs_ptr, args.lhs_len);
+	                            args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -3253,7 +3253,7 @@ bytes_wmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "wmatch"))
 		goto err;
 	result = dee_wildcompareb(args.lhs_ptr, args.lhs_len,
-	                          args.rhs_ptr, args.lhs_len);
+	                          args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	return_bool(result == 0);
 err:
@@ -3294,7 +3294,7 @@ bytes_casevercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "casevercompare"))
 		goto err;
 	result = dee_strcaseverscmp_ascii(args.lhs_ptr, args.lhs_len,
-	                                  args.rhs_ptr, args.lhs_len);
+	                                  args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	return_reference(DeeInt_FromSign(result));
 err:
@@ -3308,7 +3308,7 @@ bytes_casewildcompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "casewildcompare"))
 		goto err;
 	result = dee_wildcasecompare_ascii(args.lhs_ptr, args.lhs_len,
-	                                   args.rhs_ptr, args.lhs_len);
+	                                   args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	return_reference(DeeInt_FromSign(result));
 err:
@@ -3322,7 +3322,7 @@ bytes_casefuzzycompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "casefuzzycompare"))
 		goto err;
 	result = dee_fuzzy_casecompare_ascii(args.lhs_ptr, args.lhs_len,
-	                                     args.rhs_ptr, args.lhs_len);
+	                                     args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	if unlikely(result == (Dee_ssize_t)-1)
 		goto err;
@@ -3338,7 +3338,7 @@ bytes_casewmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (acquire_bcompare_args(self, &args, argc, argv, "casewmatch"))
 		goto err;
 	result = dee_wildcasecompare_ascii(args.lhs_ptr, args.lhs_len,
-	                                   args.rhs_ptr, args.lhs_len);
+	                                   args.rhs_ptr, args.rhs_len);
 	release_bcompare_args(self, &args);
 	return_bool(result == 0);
 err:

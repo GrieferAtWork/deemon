@@ -1,0 +1,131 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import functools;
+import .common.test;
+
+function assertVercompare(a: string, b: string, result: int) {
+	test.assertEquals(result, a.vercompare(b));
+	test.assertEquals(-result, b.vercompare(a));
+	test.assertEquals(result, a.bytes().vercompare(b));
+	test.assertEquals(-result, b.bytes().vercompare(a));
+	test.assertEquals(result, a.bytes().vercompare(b.bytes()));
+	test.assertEquals(-result, b.bytes().vercompare(a.bytes()));
+
+	for (local usedA: { a, a.lower(), a.upper() }) {
+		test.assertEquals(0, a.casevercompare(usedA));
+		for (local usedB: { b, b.lower(), b.upper() }) {
+			test.assertEquals(0, b.casevercompare(usedB),
+				() -> f"{repr b}.casevercompare({repr usedB})");
+			test.assertEquals(result, usedA.casevercompare(usedB));
+			test.assertEquals(-result, usedB.casevercompare(usedA));
+			test.assertEquals(result, usedA.bytes().casevercompare(usedB));
+			test.assertEquals(-result, usedB.bytes().casevercompare(usedA));
+			test.assertEquals(result, usedA.bytes().casevercompare(usedB.bytes()));
+			test.assertEquals(-result, usedB.bytes().casevercompare(usedA.bytes()));
+		}
+	}
+
+	for (local prefixA, prefixB: {
+		{ "", "" },
+		{ "ß", "ss" },
+		{ "ss", "ß" },
+	}) {
+		local usedA = prefixA + a;
+		local usedB = prefixB + b;
+		test.assertEquals(result, usedA.casevercompare(usedB),
+			() -> f"{repr usedA}.casevercompare({repr usedB}) == {repr result}");
+		test.assertEquals(-result, usedB.casevercompare(usedA),
+			() -> f"{repr usedB}.casevercompare({repr usedA}) == {repr -result}");
+	}
+}
+
+/* Do some initial sanity tests */
+assertVercompare("1a", "1a", 0);
+assertVercompare("1a", "1b", -1);
+assertVercompare("abc99", "abc98", 1);
+assertVercompare("abc99", "abc99", 0);
+assertVercompare("abc99", "abc100", -1);
+
+
+
+/* This list here comes pre-sorted according to "vercompare" */
+local sortedValues: {string...} = {
+	"abc0000",
+	"abc0000_",
+	"abc0001",
+	"abc0001_",
+	"abc000",
+	"abc000_",
+	"abc001",
+	"abc001_",
+	"abc00",
+	"abc00_",
+	"abc01",
+	"abc010",
+	"abc010_",
+	"abc012",
+	"abc012_",
+	"abc01_",
+	"abc09",
+	"abc09_",
+	"abc0",
+	"abc0_",
+	"abc1",
+	"abc1_",
+	"abc9",
+	"abc9_",
+	"abc10",
+	"abc10_",
+	"abc11",
+	"abc11_",
+	"abc111",
+	"abc1112",     // EOF
+	"abc1112\0",   // NUL
+	"abc1112a",    // ASCII
+	"abc1112b",    // ...
+	"abc1112\x7f", // Big ASCII
+	"abc11120",    // More digits only come after everything else!
+	"abc11121",
+	"abc11128",
+	"abc11129",
+};
+
+/* Assert that every value from "sortedValues" correctly compares with every other value */
+for (local i: [:#sortedValues]) {
+	local x = sortedValues[i];
+	for (local j: [i+1:#sortedValues]) {
+		local y = sortedValues[j];
+		assertVercompare(x, y, -1);
+	}
+	prev = x;
+}
+
+/* Assert that using vercompare for sorting works. */
+test.assertSequence(
+	sortedValues.sorted(key: functools.predcmp2key(string.vercompare)),
+	sortedValues);
+test.assertSequence(
+	{"abc09", "abc10", "abc01", "abc9", "abc1", "abc0", "abc00", "abc000", "abc010"}
+		.sorted(key: functools.predcmp2key(string.vercompare)),
+	{"abc000", "abc00", "abc01", "abc010", "abc09", "abc0", "abc1", "abc9", "abc10"}
+);
