@@ -94,7 +94,11 @@ __pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
 #undef exec_dispatch_USE_switch
 #undef exec_dispatch_USE_goto
 #undef exec_dispatch_USE_switch_goto
-#ifdef CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
+#if defined(__GNUC__)
+/* Apparently, just checking __GNUC__ is the most portable way of checking
+ * support for `&&foo' and `goto *ptr'. This handles GCC, clang and ICC,
+ * and also works for all ancient version of those compilers, too, since
+ * addressable labels have been in GCC since the 2.0 days of the early 90s. */
 #define exec_dispatch_USE_goto
 #elif defined(_MSC_VER) && defined(NDEBUG)
 /* This forces msvc to *always* generate a *full* 256-word jump-table.

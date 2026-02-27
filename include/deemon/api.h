@@ -714,14 +714,6 @@ DECL_END
 
 
 
-#ifdef __GNUC__
-/* Define if the compiler allows labels to be
- * addressed: `foo: printf("foo = %p", &&foo);'
- * ... as well as such addresses to be used
- * by `goto': `void *ip = &&foo; goto *ip;' */
-#define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
-#endif /* __GNUC__ */
-
 /* Calling convention used for the deemon API
  * DCALL_CALLER_CLEANUP: When defined, a function:
  *                       >> int DCALL foo(int a, int b);
