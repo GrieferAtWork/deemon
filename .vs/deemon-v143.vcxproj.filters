@@ -1407,6 +1407,9 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\unicode-convert.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\unicode.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-generic.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>

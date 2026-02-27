@@ -287,40 +287,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]CACHE_UNSUPPORTED_NATIVE_OPERATORS */
 
 
-/* Config option: provide optimized code-paths for `foo(args...)' expressions */
-#if (!defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && \
-     !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS))
-#ifndef __OPTIMIZE_SIZE__
-#define CONFIG_CALLTUPLE_OPTIMIZATIONS
-#else /* !__OPTIMIZE_SIZE__ */
-#define CONFIG_NO_CALLTUPLE_OPTIMIZATIONS
-#endif /* __OPTIMIZE_SIZE__ */
-#endif /* !CONFIG_[NO_]CALLTUPLE_OPTIMIZATIONS */
-
-
-/* Config option: provide special optimizations for user-classes without bases */
-#if (!defined(CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
-     !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
-#ifndef __OPTIMIZE_SIZE__
-#define CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
-#else /* !__OPTIMIZE_SIZE__ */
-#define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS
-#endif /* __OPTIMIZE_SIZE__ */
-#endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
-
-/* Config option: how are latin-1 1-char strings cached? */
-#if (!defined(CONFIG_STRING_LATIN1_STATIC) && \
-     !defined(CONFIG_STRING_LATIN1_CACHED) && \
-     !defined(CONFIG_STRING_LATIN1_NORMAL))
-#if defined(__OPTIMIZE_SIZE__) && defined(__OPTIMIZE__)
-#define CONFIG_STRING_LATIN1_CACHED /* Latin-1 characters are created dynamically, but then cached */
-#elif defined(__OPTIMIZE_SIZE__)
-#define CONFIG_STRING_LATIN1_NORMAL /* Latin-1 characters are created dynamically */
-#else /* ... */
-#define CONFIG_STRING_LATIN1_STATIC /* Statically define all latin-1 characters */
-#endif /* !... */
-#endif /* !CONFIG_STRING_LATIN1_... */
-
 /* Config option: disable all semantically unnecessary overloads/fast-paths to reduce binary size
  * Carefully crafted code might be able to detect if this config option is enabled or disabled,
  * but only in terms of how/when user-defined operators are invoked, and only where both kinds of
@@ -343,6 +309,27 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !__OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]TINY_DEEMON */
 
+
+/* Config option: provide optimized code-paths for `foo(args...)' expressions */
+#if (!defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && \
+     !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS))
+#if !defined(CONFIG_TINY_DEEMON)
+#define CONFIG_CALLTUPLE_OPTIMIZATIONS
+#else /* !CONFIG_TINY_DEEMON */
+#define CONFIG_NO_CALLTUPLE_OPTIMIZATIONS
+#endif /* CONFIG_TINY_DEEMON */
+#endif /* !CONFIG_[NO_]CALLTUPLE_OPTIMIZATIONS */
+
+
+/* Config option: provide special optimizations for user-classes without bases */
+#if (!defined(CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
+     !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
+#if !defined(CONFIG_TINY_DEEMON)
+#define CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#else /* !CONFIG_TINY_DEEMON */
+#define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#endif /* CONFIG_TINY_DEEMON */
+#endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* Configure option:
  *     CONFIG_DEFAULT_MESSAGE_FORMAT_(MSVC|GCC)
@@ -427,13 +414,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_CODE_METRICS
 #endif /* !... */
 #endif /* !CONFIG_[HAVE|NO]CODE_METRICS */
-
-
-#if ((!defined(__i386__) && !defined(__x86_64__)) || \
-     (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
-#undef CONFIG_NO_OBJECT_SLABS
-#define CONFIG_NO_OBJECT_SLABS /* Unrecognized environment (disable slabs) */
-#endif /* ... */
 
 
 
@@ -690,6 +670,15 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_PER_THREAD_BOOL */
 /************************************************************************/
+
+
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#if ((!defined(__i386__) && !defined(__x86_64__)) || \
+     (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
+#undef CONFIG_NO_OBJECT_SLABS
+#define CONFIG_NO_OBJECT_SLABS /* Unrecognized environment (disable slabs) */
+#endif /* ... */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 
 #ifdef CONFIG_HOST_WINDOWS

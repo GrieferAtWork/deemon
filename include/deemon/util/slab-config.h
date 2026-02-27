@@ -111,7 +111,10 @@ for (local s: typesBySize.keys.sorted()) {
  */
 #undef Dee_SLAB_CHUNKSIZE_MIN
 #undef Dee_SLAB_CHUNKSIZE_MAX
-#if __SIZEOF_POINTER__ == 4
+#ifdef CONFIG_NO_OBJECT_SLABS
+#define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    /* nothing */
+#define Dee_SLAB_CHUNKSIZE_GC_FOREACH(cb, _) /* nothing */
+#elif __SIZEOF_POINTER__ == 4
 #define Dee_SLAB_CHUNKSIZE_MIN 12
 #define Dee_SLAB_CHUNKSIZE_MAX 52
 #define Dee_SLAB_CHUNKSIZE_FOREACH(cb, _)    cb(12, _) cb(16, _) cb(20, _) cb(24, _) cb(32, _) cb(40, _) cb(52, _)

@@ -5791,9 +5791,11 @@ PUBLIC void (DCALL DeeRCU_UnlockDefault)(void) {
 	ASSERT(caller->t_rcu_lock == &_DeeRCU_Default);
 #endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
 	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
 #ifndef NDEBUG
 	caller->t_rcu_lock = _DeeRCU_INVALID_LOCK;
 #endif /* !NDEBUG */
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
 }
 
 PUBLIC NONNULL((1)) void
@@ -5817,9 +5819,11 @@ PUBLIC NONNULL((1)) void
 	ASSERT(caller->t_rcu_lock == self);
 #endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
 	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
+#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
 #ifndef NDEBUG
 	caller->t_rcu_lock = _DeeRCU_INVALID_LOCK;
 #endif /* !NDEBUG */
+#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
 	(void)self;
 }
 

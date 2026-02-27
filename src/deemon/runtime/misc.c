@@ -39,6 +39,8 @@
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/typecore.h>        /* __BYTE_TYPE__, __SIZEOF_SIZE_T__ */
 
+#include "../objects/unicode/unicode.h" /* CONFIG_STRING_LATIN1_CACHED */
+
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, true */
 #include <stddef.h>  /* NULL, size_t */

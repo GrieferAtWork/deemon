@@ -477,6 +477,7 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions-strip.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\unicode-convert.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\unicode\unicode.h" />
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-generic.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-object.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\attribute-access-type-instance.c.inl" />
