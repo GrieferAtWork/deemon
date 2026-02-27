@@ -41,6 +41,7 @@
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewUninitialized */
 #include <deemon/type.h>            /* DeeObject_Init, DeeObject_InitInherited, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_METHOD_END, TYPE_METHOD_F, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
+#include <deemon/util/atomic-ref.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_SHARED_LOCK_INIT, Dee_atomic_rwlock_*, Dee_shared_lock_* */
 #include <deemon/util/once.h>       /* Dee_ONCE */
 
@@ -134,64 +135,29 @@ shlib_visit(Shlib *__restrict self, Dee_visit_t proc, void *arg) {
 }
 #endif /* !CONFIG_NO_CFUNCTION */
 
+PRIVATE Dee_ATOMIC_XREF(DeeTypeObject) void_ptr = Dee_ATOMIC_XREF_INIT(NULL); /* `void.ptr' */
 
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t static_type_lock = Dee_ATOMIC_RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-#define static_type_lock_reading()    Dee_atomic_rwlock_reading(&static_type_lock)
-#define static_type_lock_writing()    Dee_atomic_rwlock_writing(&static_type_lock)
-#define static_type_lock_tryread()    Dee_atomic_rwlock_tryread(&static_type_lock)
-#define static_type_lock_trywrite()   Dee_atomic_rwlock_trywrite(&static_type_lock)
-#define static_type_lock_canread()    Dee_atomic_rwlock_canread(&static_type_lock)
-#define static_type_lock_canwrite()   Dee_atomic_rwlock_canwrite(&static_type_lock)
-#define static_type_lock_waitread()   Dee_atomic_rwlock_waitread(&static_type_lock)
-#define static_type_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&static_type_lock)
-#define static_type_lock_read()       Dee_atomic_rwlock_read(&static_type_lock)
-#define static_type_lock_write()      Dee_atomic_rwlock_write(&static_type_lock)
-#define static_type_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&static_type_lock)
-#define static_type_lock_upgrade()    Dee_atomic_rwlock_upgrade(&static_type_lock)
-#define static_type_lock_downgrade()  Dee_atomic_rwlock_downgrade(&static_type_lock)
-#define static_type_lock_endwrite()   Dee_atomic_rwlock_endwrite(&static_type_lock)
-#define static_type_lock_endread()    Dee_atomic_rwlock_endread(&static_type_lock)
-#define static_type_lock_end()        Dee_atomic_rwlock_end(&static_type_lock)
-
-/* TODO: Use Dee_ATOMIC_REF */
-PRIVATE DREF DeeSTypeObject *void_ptr = NULL; /* `void.ptr' */
 INTERN bool DCALL clear_void_pointer(void) {
-	DREF DeeSTypeObject *ptr;
-	static_type_lock_write();
-	ptr      = void_ptr;
-	void_ptr = NULL;
-	static_type_lock_endwrite();
-	if (!ptr)
-		return false;
-	Dee_Decref_likely((DeeObject *)ptr);
-	return true;
+	DREF DeeTypeObject *ptr;
+	Dee_atomic_xref_xch_newNULL(&void_ptr, &ptr);
+	Dee_XDecref(ptr);
+	return ptr != NULL;
 }
 
 PRIVATE WUNUSED DREF DeeSTypeObject *DCALL get_void_pointer(void) {
-	DREF DeeSTypeObject *result;
-	static_type_lock_read();
-	result = void_ptr;
-	if (result) {
-		Dee_Incref((DeeObject *)result);
-		static_type_lock_endread();
-		goto done;
+	DREF DeeTypeObject *result;
+again:
+	Dee_atomic_xref_get(&void_ptr, &result);
+	if (result)
+		return DeeType_AsSType(result);
+	result = DeePointerType_AsType(DeeSType_Pointer(&DeeCVoid_Type));
+	if likely(result) {
+		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&void_ptr, result)) {
+			Dee_Decref(result);
+			goto again;
+		}
 	}
-	static_type_lock_endread();
-	result = (DREF DeeSTypeObject *)DeeSType_Pointer(&DeeCVoid_Type);
-	if unlikely(!result)
-		goto done;
-	static_type_lock_write();
-	if likely(!void_ptr) {
-		Dee_Incref((DeeObject *)result);
-		void_ptr = result;
-	} else {
-		ASSERT(void_ptr == result);
-	}
-	static_type_lock_endwrite();
-done:
-	return result;
+	return DeeType_AsSType(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
