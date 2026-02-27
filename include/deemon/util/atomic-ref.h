@@ -31,7 +31,7 @@
 
 #include "../object.h" /* Dee_Decref*, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref */
 #include "../types.h"  /* DREF, DeeObject, Dee_AsObject */
-#include "rcu.h"       /* DeeRCU_*, Dee_RCU_LOCK_DECLARE, Dee_RCU_LOCK__INIT, Dee_rcu_lock_init */
+#include "rcu.h"       /* DeeRCU_*, Dee_DECLARE_RCU_LOCK, Dee_RCU_LOCK__INIT, Dee_rcu_lock_init */
 
 #include <stddef.h> /* NULL */
 
@@ -81,12 +81,12 @@ DECL_BEGIN
 #define Dee_ATOMIC_REF(T)                           \
 	struct {                                        \
 		DREF T *ar_obj; /* [1..1][lock(ar_lock)] */ \
-		Dee_RCU_LOCK_DECLARE(ar_lock)               \
+		Dee_DECLARE_RCU_LOCK(ar_lock)               \
 	}
 #define Dee_ATOMIC_XREF(T)                            \
 	struct {                                          \
 		DREF T *axr_obj; /* [0..1][lock(axr_lock)] */ \
-		Dee_RCU_LOCK_DECLARE(axr_lock)                \
+		Dee_DECLARE_RCU_LOCK(axr_lock)                \
 	}
 
 #define _Dee_private_atomic_ref_sync(self)  DeeRCU_Synchronize(&(self)->ar_lock)
@@ -247,20 +247,24 @@ DECL_BEGIN
 	 _Dee_atomic_ref_unsynched_cmpxch_inherited(self, oldval, newval) \
 	 ? (_Dee_private_atomic_ref_sync(self), Dee_Decref(oldval), 1)    \
 	 : (Dee_Decref_unlikely(newval), 0))
-#define Dee_atomic_xref_cmpxch(self, oldval, newval)                   \
-	(Dee_XIncref(newval),                                              \
-	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, oldval, newval) \
-	 ? (_Dee_private_atomic_xref_sync(self), Dee_XDecref(oldval), 1)   \
+#define Dee_atomic_xref_cmpxch(self, oldval, newval)                                       \
+	(Dee_XIncref(newval),                                                                  \
+	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, oldval, newval)                     \
+	 ? ((oldval) ? (_Dee_private_atomic_xref_sync(self), Dee_Decref(oldval)) : (void)0, 1) \
 	 : (Dee_XDecrefNokill(newval), 0))
+
+/* These can get some special optimizations: when the old value was "NULL", then there
+ * is no old value that might potentially need to be decref'd, which also means that we
+ * don't have to synchronize the associated RCU lock, either! */
 #define Dee_atomic_xref_cmpxch_oldNULL(self, newval)                 \
 	(Dee_XIncref(newval),                                            \
 	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, NULL, newval) \
-	 ? (_Dee_private_atomic_xref_sync(self), 1)                      \
+	 ? (/*_Dee_private_atomic_xref_sync(self),*/ 1)                  \
 	 : (Dee_XDecrefNokill(newval), 0))
 #define Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(self, newval)      \
 	(Dee_Incref(newval),                                             \
 	 _Dee_atomic_xref_unsynched_cmpxch_inherited(self, NULL, newval) \
-	 ? (_Dee_private_atomic_xref_sync(self), 1)                      \
+	 ? (/*_Dee_private_atomic_xref_sync(self),*/ 1)                  \
 	 : (Dee_DecrefNokill(newval), 0))
 
 DECL_END

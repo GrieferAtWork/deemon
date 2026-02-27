@@ -43,11 +43,10 @@
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen, Dee_unicode_writeutf8 */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, stderr, stdin, stdout, strchr, strend, writeall */
-#include <deemon/thread.h>             /* CONFIG_PER_OBJECT_RCU_LOCKS */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, OPERATOR_REPR, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic-ref.h>    /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
-#include <deemon/util/rcu.h>           /* DeeRCU_*, Dee_rcu_lock_t */
+#include <deemon/util/rcu.h>           /* DeeRCU_*, Dee_DEFINE_RCU_LOCK */
 
 #include <hybrid/host.h>      /* __ARCH_PAGESIZE */
 #include <hybrid/minmax.h>    /* MIN */
@@ -1511,10 +1510,7 @@ PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE,
 #define DEE_STDCNT 3
 PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE };
 #endif /* !Dee_STDDBG_IS_UNIQUE */
-
-#ifdef CONFIG_PER_OBJECT_RCU_LOCKS
-PRIVATE Dee_rcu_lock_t dee_std_rcu = Dee_RCU_LOCK_INIT;
-#endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+Dee_DEFINE_RCU_LOCK(PRIVATE, dee_std_rcu)
 
 #define dee_std_FAST_SETUP    DeeRCU_FAST_SETUP
 #define dee_std_FAST_lock()   DeeRCU_FAST_Lock(&dee_std_rcu)

@@ -1085,7 +1085,8 @@
 #define Dee_ATOMIC_XREF(T)struct{T*axr_obj;}
 #define _Dee_SHARED_WAITWORD(v) unsigned int v;
 
-#define Dee_RCU_LOCK_DECLARE(n) Dee_rcu_lock_t n;
+#define Dee_DECLARE_RCU_LOCK(n) Dee_rcu_lock_t n;
+#define Dee_DEFINE_RCU_LOCK(v,n) v Dee_rcu_lock_t n={};
 
 #define Dee_CASE_WIDTH_1BYTE case 1
 #define CASE_WIDTH_1BYTE case 1

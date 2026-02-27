@@ -40,8 +40,8 @@
 #include <deemon/string.h>      /* DeeString*, Dee_EmptyString, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, WSTR_LENGTH */
 #include <deemon/thread.h>      /* DeeThreadObject, DeeThread_Self */
 #include <deemon/type.h>        /* DeeType_Check, Dee_operator_t, METHOD_FNORETURN, METHOD_FNORMAL */
-#include <deemon/util/atomic.h> /* atomic_read */
-#include <deemon/util/lock.h>   /* Dee_atomic_rwlock_* */
+#include <deemon/util/atomic.h> /* atomic_* */
+#include <deemon/util/rcu.h>    /* DeeRCU_*, Dee_DEFINE_RCU_LOCK */
 
 #include "kwlist.h"
 #include "runtime_error.h"
@@ -378,180 +378,79 @@ err:
 	return NULL;
 }
 
-/* TODO: Use "Dee_ATOMIC_REF" here */
-PRIVATE DREF DeeModuleObject *strexec_module = NULL; /* import._strexec */
-PRIVATE DREF DeeObject *strexec_exec = NULL;         /* import._strexec.exec */
-
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_rwlock_t strexec_access_lock = Dee_ATOMIC_RWLOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-
-#define strexec_access_lock_reading()    Dee_atomic_rwlock_reading(&strexec_access_lock)
-#define strexec_access_lock_writing()    Dee_atomic_rwlock_writing(&strexec_access_lock)
-#define strexec_access_lock_tryread()    Dee_atomic_rwlock_tryread(&strexec_access_lock)
-#define strexec_access_lock_trywrite()   Dee_atomic_rwlock_trywrite(&strexec_access_lock)
-#define strexec_access_lock_canread()    Dee_atomic_rwlock_canread(&strexec_access_lock)
-#define strexec_access_lock_canwrite()   Dee_atomic_rwlock_canwrite(&strexec_access_lock)
-#define strexec_access_lock_waitread()   Dee_atomic_rwlock_waitread(&strexec_access_lock)
-#define strexec_access_lock_waitwrite()  Dee_atomic_rwlock_waitwrite(&strexec_access_lock)
-#define strexec_access_lock_read()       Dee_atomic_rwlock_read(&strexec_access_lock)
-#define strexec_access_lock_write()      Dee_atomic_rwlock_write(&strexec_access_lock)
-#define strexec_access_lock_tryupgrade() Dee_atomic_rwlock_tryupgrade(&strexec_access_lock)
-#define strexec_access_lock_upgrade()    Dee_atomic_rwlock_upgrade(&strexec_access_lock)
-#define strexec_access_lock_downgrade()  Dee_atomic_rwlock_downgrade(&strexec_access_lock)
-#define strexec_access_lock_endwrite()   Dee_atomic_rwlock_endwrite(&strexec_access_lock)
-#define strexec_access_lock_endread()    Dee_atomic_rwlock_endread(&strexec_access_lock)
-#define strexec_access_lock_end()        Dee_atomic_rwlock_end(&strexec_access_lock)
-
-INTERN bool DCALL clear_strexec_cache(void) {
+PRIVATE WUNUSED DREF DeeObject *DCALL get_exec_uncached(void) {
+	DREF DeeObject *result;
 	DREF DeeModuleObject *mod;
-	DREF DeeObject *exec;
-	strexec_access_lock_write();
-	mod  = strexec_module;
-	exec = strexec_exec;
-	if (!ITER_ISOK(mod)) {
-		ASSERT(!ITER_ISOK(exec));
-		strexec_access_lock_endwrite();
-		return false;
-	}
-	strexec_module = NULL;
-	strexec_exec   = NULL;
-	strexec_access_lock_endwrite();
-	Dee_Decref(mod);
-	if (ITER_ISOK(exec))
-		Dee_Decref(exec);
-	return true;
-}
-
-PRIVATE WUNUSED DREF DeeModuleObject *DCALL get_strexec_module(void) {
-	DREF DeeModuleObject *result;
-again:
-	strexec_access_lock_read();
-	result = strexec_module;
-	if unlikely(!result) {
-		strexec_access_lock_endread();
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-		result = DeeModule_Import(Dee_AsObject(&str__strexec), NULL, DeeModule_IMPORT_F_ENOENT);
-		if unlikely(!ITER_ISOK(result)) {
-			if unlikely(!result)
-				return NULL;
-		} else {
-			Dee_Incref(result); /* The reference stored in `strexec_module' */
-		}
+	mod = DeeModule_Import(Dee_AsObject(&str__strexec), NULL, DeeModule_IMPORT_F_ENOENT);
+	if unlikely(!ITER_ISOK(mod))
+		return Dee_AsObject(mod);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		result = DeeModule_OpenGlobal(Dee_AsObject(&str__strexec), NULL, false);
-		if unlikely(!ITER_ISOK(result)) {
-			if (!result)
-				return NULL;
-		} else {
-			if unlikely(DeeModule_RunInit(result) < 0) {
-				Dee_Decref(result);
-				return NULL;
-			}
-			Dee_Incref(result); /* The reference stored in `strexec_module' */
-		}
-#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-		strexec_access_lock_write();
-		if unlikely(atomic_read(&strexec_module)) {
-			strexec_access_lock_endwrite();
-			if (ITER_ISOK(result))
-				Dee_Decref(result);
-			goto again;
-		}
-		strexec_module = result; /* Inherit reference. */
-		strexec_access_lock_endwrite();
-	} else {
-		if (result != (DREF DeeModuleObject *)ITER_DONE)
-			Dee_Incref(result);
-		strexec_access_lock_endread();
+	mod = DeeModule_OpenGlobal(Dee_AsObject(&str__strexec), NULL, false);
+	if unlikely(!ITER_ISOK(mod))
+		return Dee_AsObject(mod);
+	if unlikely(DeeModule_RunInit(mod) < 0) {
+		Dee_Decref(mod);
+		return NULL;
 	}
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	result = DeeObject_GetAttr(Dee_AsObject(mod), Dee_AsObject(&str_exec));
+	Dee_Decref_unlikely(mod);
 	return result;
 }
 
+/* [0..1][lock(strexec_exec_rcu)] */
+PRIVATE DREF DeeObject *strexec_exec = NULL; /* import._strexec.exec */
+Dee_DEFINE_RCU_LOCK(PRIVATE, strexec_exec_rcu)
+
+INTERN bool DCALL clear_strexec_cache(void) {
+	DREF DeeObject *old_call;
+	old_call = atomic_xch(&strexec_exec, NULL);
+	if (old_call == NULL)
+		return false;
+	DeeRCU_Synchronize(&strexec_exec_rcu);
+	if (old_call != ITER_DONE)
+		Dee_Decref(old_call);
+	return true;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL get_exec(void) {
+	DREF DeeObject *result;
+	DeeRCU_Lock(&strexec_exec_rcu);
+	result = atomic_read(&strexec_exec);
+	if (ITER_ISOK(result))
+		Dee_Incref(result);
+	DeeRCU_Unlock(&strexec_exec_rcu);
+	if (result == NULL) {
+		result = get_exec_uncached();
+		if (result != NULL) {
+			if (result != ITER_DONE)
+				Dee_Incref(result);
+			if (!atomic_cmpxch(&strexec_exec, NULL, result)) {
+				if (result != ITER_DONE)
+					Dee_DecrefNokill(result);
+			} else {
+#if 0 /* Not needed because nothing is getting destroyed! */
+				DeeRCU_Synchronize(&strexec_exec_rcu);
+#endif
+			}
+		}
+	}
+	return result;
+}
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_exec(size_t argc, DeeObject *const *argv, DeeObject *kw);
 PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Exec, &f_builtin_exec, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_exec(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	DREF DeeObject *exec;
-	strexec_access_lock_read();
-	exec = strexec_exec;
-	if likely(ITER_ISOK(exec)) {
-		Dee_Incref(exec);
-		strexec_access_lock_endread();
-do_exec:
+	DREF DeeObject *exec = get_exec();
+	if likely(ITER_ISOK(exec))
 		return DeeObject_CallKwInherited(exec, argc, argv, kw);
-	}
-	strexec_access_lock_endread();
-	if unlikely(exec == ITER_DONE)
-		goto fallback;
-	/* Load the exec function. */
-	{
-		DREF DeeModuleObject *module;
-		DREF DeeObject *old_exec;
-		module = get_strexec_module();
-		if unlikely(!ITER_ISOK(module)) {
-			if unlikely(!module)
-				goto err;
-			strexec_access_lock_write();
-			exec = atomic_read(&strexec_exec);
-			if (exec == NULL) {
-				strexec_exec = ITER_DONE;
-				strexec_access_lock_endwrite();
-				goto fallback;
-			}
-			if unlikely(ITER_ISOK(exec)) {
-				/* Shouldn't happen... */
-				Dee_Incref(exec);
-				strexec_access_lock_endwrite();
-				goto do_exec;
-			}
-			strexec_access_lock_endwrite();
-			goto fallback;
-		}
-		/* Load the exec function. */
-		exec = DeeObject_GetAttr(Dee_AsObject(module), Dee_AsObject(&str_exec));
-		Dee_Decref(module);
-		if unlikely(!exec)
-			goto err;
-		strexec_access_lock_write();
-		old_exec = atomic_read(&strexec_exec);
-		if likely(!old_exec) {
-set_exec_and_run:
-			strexec_exec = exec;
-			Dee_Incref(exec);
-			strexec_access_lock_endwrite();
-			goto do_exec;
-		}
-		if unlikely(old_exec == ITER_DONE)
-			goto set_exec_and_run;
-		Dee_Incref(old_exec);
-		strexec_access_lock_endwrite();
-		Dee_Decref(exec);
-		exec = old_exec;
-		goto do_exec;
-	}
-fallback:
+	if unlikely(!exec)
+		return NULL;
 	return builtin_exec_fallback(argc, argv, kw);
-err:
-	return NULL;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

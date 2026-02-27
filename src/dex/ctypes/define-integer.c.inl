@@ -47,9 +47,9 @@
 #include <deemon/variant.h>         /* Dee_variant, Dee_variant_* */
 
 #include <hybrid/int128.h>    /* __HYBRID_INT128_INIT32N, __HYBRID_UINT128_INIT32N, __hybrid_int128_*, __hybrid_uint128_* */
-#include <hybrid/typecore.h>  /* __*_TYPE__, __SIZEOF_INT__, __SIZEOF_LONG__ */
+#include <hybrid/limitcore.h> /* __INTn_MAX__, __INTn_MIN__, __UINTn_MAX__ */
+#include <hybrid/typecore.h>  /* __*_TYPE__, __INTn_C, __UINTn_C */
 #include <hybrid/unaligned.h> /* UNALIGNED_GET*, UNALIGNED_SET* */
-#include <hybrid/limitcore.h> /* UNALIGNED_GET*, UNALIGNED_SET* */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* intN_t, uintN_t */

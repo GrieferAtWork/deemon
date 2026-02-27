@@ -110,12 +110,13 @@ typedef struct Dee_rcu_lock {
  * only `DeeRCU_SynchronizeDefault()' is allowed to write this!) */
 DDATDEF Dee_rcu_lock_t _DeeRCU_Default;
 
-#define Dee_RCU_LOCK_INIT        {1}
-#define Dee_RCU_LOCK__INIT       ,{1}
-#define Dee_RCU_LOCK_INIT_       {1},
-#define Dee_rcu_lock_init(self)  (void)((self)->rcul_version = 1)
-#define Dee_rcu_lock_cinit(self) (void)((self)->rcul_version = 1)
-#define Dee_RCU_LOCK_DECLARE(n)  Dee_rcu_lock_t n;
+#define Dee_RCU_LOCK_INIT            {1}
+#define Dee_RCU_LOCK__INIT           ,{1}
+#define Dee_RCU_LOCK_INIT_           {1},
+#define Dee_rcu_lock_init(self)      (void)((self)->rcul_version = 1)
+#define Dee_rcu_lock_cinit(self)     (void)((self)->rcul_version = 1)
+#define Dee_DECLARE_RCU_LOCK(n)      Dee_rcu_lock_t n;
+#define Dee_DEFINE_RCU_LOCK(visi, n) visi Dee_rcu_lock_t n = Dee_RCU_LOCK_INIT;
 
 #else /* CONFIG_PER_OBJECT_RCU_LOCKS */
 typedef void Dee_rcu_lock_t;
@@ -128,12 +129,13 @@ DDATDEF struct Dee_rcu_lock {
 } _DeeRCU_Default;
 #endif /* !CONFIG_NO_THREADS */
 
-#define Dee_RCU_LOCK_INIT        /* nothing */
-#define Dee_RCU_LOCK__INIT       /* nothing */
-#define Dee_RCU_LOCK_INIT_       /* nothing */
-#define Dee_rcu_lock_init(self)  (void)0
-#define Dee_rcu_lock_cinit(self) (void)0
-#define Dee_RCU_LOCK_DECLARE(n)  /* nothing */
+#define Dee_RCU_LOCK_INIT            /* nothing */
+#define Dee_RCU_LOCK__INIT           /* nothing */
+#define Dee_RCU_LOCK_INIT_           /* nothing */
+#define Dee_rcu_lock_init(self)      (void)0
+#define Dee_rcu_lock_cinit(self)     (void)0
+#define Dee_DECLARE_RCU_LOCK(n)      /* nothing */
+#define Dee_DEFINE_RCU_LOCK(visi, n) /* nothing */
 
 #define DeeRCU_Lock(self)        DeeRCU_LockDefault()
 #define DeeRCU_Unlock(self)      DeeRCU_UnlockDefault()
