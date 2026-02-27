@@ -354,7 +354,14 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #define __builtin_constant_p(x) (__LINE__ == -1)
 #define __restrict_arr __restrict
 #define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS
+#if 0 && _MSC_VER >= 800 /* VC++ 2.0 and newer always allowed for 0-sized arrays as an extension */
+#pragma warning(disable: 4200) /* "nonstandard extension used: zero-sized array in struct/union" */
+#define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[0]
+#else /* _MSC_VER >= 800 */
+/* Use this version since it makes debugging easier -- the other version would be
+ * more correct, but doesn't let you expand flexible arrays within the debugger (ugh) */
 #define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[0xffff]
+#endif /* _MSC_VER < 800 */
 #define __attribute__(x)         /* Nothing */
 #define __NO_COMPILER_IGNORE_UNINITIALIZED
 #define __COMPILER_IGNORE_UNINITIALIZED(var) var

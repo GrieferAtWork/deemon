@@ -18,9 +18,6 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 /*!export **/
-/*!export Dee_cached_dict_**/
-/*!export DeeCachedDict**/
-/*!export Dee_bool_object*/
 /*!export DeeBool**/
 /*!export _DeeBool**/
 #ifndef GUARD_DEEMON_BOOL_H
@@ -36,10 +33,10 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
-#define return_bool   Dee_return_bool   /*!export*/
-#define return_bool01 Dee_return_bool01 /*!export*/
-#define return_true   Dee_return_true   /*!export*/
-#define return_false  Dee_return_false  /*!export*/
+#define return_bool   Dee_return_bool
+#define return_bool01 Dee_return_bool01
+#define return_true   Dee_return_true
+#define return_false  Dee_return_false
 #endif /* DEE_SOURCE */
 
 
@@ -51,7 +48,7 @@ DECL_BEGIN
  *       doesn't store its value in its structure, but rather in its
  *       self-address.
  * WARNING: Only possible when `CONFIG_TRACE_REFCHANGES' is disabled! */
-typedef struct Dee_bool_object {
+typedef struct {
 	Dee_OBJECT_HEAD
 } DeeBoolObject;
 
@@ -79,30 +76,33 @@ typedef struct Dee_bool_object {
 #endif /* !__INTELLISENSE__ */
 
 DDATDEF DeeTypeObject DeeBool_Type;
-DDATDEF DeeBoolObject Dee_FalseTrue[2]; /*!export*/
+DDATDEF DeeBoolObject Dee_FalseTrue[2];
 #define _DeeBool_False      (&Dee_FalseTrue[0])
 #define _DeeBool_True       (&Dee_FalseTrue[1])
 #define _DeeBool_For(val)   (&Dee_FalseTrue[!!(val)])
 #define _DeeBool_For01(val) (&Dee_FalseTrue[val])
-#define Dee_False           ((DeeObject *)_DeeBool_False) /*!export*/
-#define Dee_True            ((DeeObject *)_DeeBool_True)  /*!export*/
+
+
+/* General-purpose macros... */
+#define Dee_False           ((DeeObject *)_DeeBool_False)
+#define Dee_True            ((DeeObject *)_DeeBool_True)
 #define DeeBool_For(val)    ((DeeObject *)_DeeBool_For(val))
 #define DeeBool_For01(val)  ((DeeObject *)_DeeBool_For01(val))
 #define DeeBool_NewFalse()  (DeeBool_Incref(_DeeBool_False), (DeeObject *)_DeeBool_False)
 #define DeeBool_NewTrue()   (DeeBool_Incref(_DeeBool_True), (DeeObject *)_DeeBool_True)
 #define DeeBool_New(val)    (DeeBool_Incref(_DeeBool_For(val)), (DeeObject *)_DeeBool_For(val))
 #define DeeBool_New01(val)  (DeeBool_Incref(_DeeBool_For01(val)), (DeeObject *)_DeeBool_For01(val))
-#define Dee_return_bool(val)                                                     \
-	do {                                                                         \
-		__register struct Dee_bool_object *const _rb_result = _DeeBool_For(val); \
-		DeeBool_Incref(_rb_result);                                              \
-		return (DREF DeeObject *)_rb_result;                                     \
+#define Dee_return_bool(val)                                            \
+	do {                                                                \
+		__register DeeBoolObject *const _rb_result = _DeeBool_For(val); \
+		DeeBool_Incref(_rb_result);                                     \
+		return (DREF DeeObject *)_rb_result;                            \
 	}	__WHILE0
-#define Dee_return_bool01(val)                                                     \
-	do {                                                                           \
-		__register struct Dee_bool_object *const _rb_result = _DeeBool_For01(val); \
-		DeeBool_Incref(_rb_result);                                                \
-		return (DREF DeeObject *)_rb_result;                                       \
+#define Dee_return_bool01(val)                                            \
+	do {                                                                  \
+		__register DeeBoolObject *const _rb_result = _DeeBool_For01(val); \
+		DeeBool_Incref(_rb_result);                                       \
+		return (DREF DeeObject *)_rb_result;                              \
 	}	__WHILE0
 #define Dee_return_true  Dee_return_bool01(1)
 #define Dee_return_false Dee_return_bool01(0)

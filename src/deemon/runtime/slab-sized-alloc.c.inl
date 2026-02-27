@@ -53,7 +53,7 @@ DECL_BEGIN
 #endif /* !... */
 
 #ifdef LOCAL_IS_TRY_MALLOC
-#define LOCAL_Dee_slab_page_rawmalloc Dee_slab_page_tryrawmalloc
+#define LOCAL_Dee_slab_page_rawmalloc Dee_slab_page_rawtrymalloc
 #else /* LOCAL_IS_TRY_MALLOC */
 #define LOCAL_Dee_slab_page_rawmalloc Dee_slab_page_rawmalloc
 #endif /* !LOCAL_IS_TRY_MALLOC */

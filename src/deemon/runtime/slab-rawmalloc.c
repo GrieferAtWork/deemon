@@ -738,7 +738,7 @@ struct Dee_slab_page *DCALL Dee_slab_page_rawmalloc(void) {
 }
 
 PUBLIC ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
-struct Dee_slab_page *DCALL Dee_slab_page_tryrawmalloc(void) {
+struct Dee_slab_page *DCALL Dee_slab_page_rawtrymalloc(void) {
 #ifdef USE_fslab
 	struct fslab_page *fast = fslab_trymalloc();
 	if (fast)

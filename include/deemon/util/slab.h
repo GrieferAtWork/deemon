@@ -441,7 +441,7 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n);
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
 struct Dee_slab_page *DCALL Dee_slab_page_rawmalloc(void);
 DFUNDEF ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
-struct Dee_slab_page *DCALL Dee_slab_page_tryrawmalloc(void);
+struct Dee_slab_page *DCALL Dee_slab_page_rawtrymalloc(void);
 DFUNDEF NONNULL((1)) void DCALL
 Dee_slab_page_rawfree(struct Dee_slab_page *__restrict page);
 

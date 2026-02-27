@@ -471,7 +471,8 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 
 /* Experimental feature switch: Use custom heap implementation based on
  * dlmalloc, rather than the host system's native malloc(3). (needed in
- * order to support `DeeHeap_RegionOf()') */
+ * order to support `DeeHeap_RegionOf()', which is needed for the new
+ * dec file format, ~ala `CONFIG_EXPERIMENTAL_MMAP_DEC') */
 #if (!defined(CONFIG_EXPERIMENTAL_CUSTOM_HEAP) && \
      !defined(CONFIG_NO_EXPERIMENTAL_CUSTOM_HEAP))
 #if 1

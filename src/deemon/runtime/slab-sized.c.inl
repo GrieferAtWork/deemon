@@ -410,7 +410,7 @@ DECL_BEGIN
 #if SLAB_DEBUG_LEAKS || SLAB_DEBUG_EXTERNAL
 /* Because of how much non-debug slab allocators are used, also directly define them here */
 #if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__) && 1
-#define LOCAL_DeeSlab_Free           LOCAL__DeeSlab_Free
+#define LOCAL_DeeSlab_Free             LOCAL__DeeSlab_Free
 #define LOCAL_DeeSlab_Free__DBG_PARAMS /* nothing */
 #undef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
 DECL_END
@@ -425,11 +425,11 @@ LOCAL__DeeSlab_Free(void *__restrict p) {
 }
 #endif /* __OPTIMIZE_SIZE__ */
 
-#define LOCAL_DeeSlab_Free           LOCAL__DeeDbgSlab_Free
+#define LOCAL_DeeSlab_Free             LOCAL__DeeDbgSlab_Free
 #define LOCAL_DeeSlab_Free__DBG_PARAMS , char const *file, int line
 #define LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
 #else /* SLAB_DEBUG_LEAKS || SLAB_DEBUG_EXTERNAL */
-#define LOCAL_DeeSlab_Free           LOCAL__DeeSlab_Free
+#define LOCAL_DeeSlab_Free             LOCAL__DeeSlab_Free
 #define LOCAL_DeeSlab_Free__DBG_PARAMS /* nothing */
 #undef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
 
