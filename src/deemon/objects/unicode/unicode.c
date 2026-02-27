@@ -26,8 +26,8 @@
 #include <deemon/bytes.h>           /* Dee_bytes_* */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_*, PRFX32, PRFuSIZ */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD_INIT, Dee_formatprinter_t, Dee_ssize_t, _Dee_HashSelectC, return_reference_ */
-#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUniTrait_AsDigit, DeeUni_*, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_unitraits, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH, _Dee_string_utf_utf16_t */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_OBJECT_HEAD_INIT, Dee_formatprinter_t, Dee_ssize_t, _Dee_HashSelectC */
+#include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUniTrait_AsDigit, DeeUni_AsDigit, DeeUni_Descriptor, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_ISLF, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_unitraits, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH, _Dee_string_utf_utf16_t */
 #include <deemon/stringutils.h>     /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_skiputf8, Dee_unicode_skiputf8_c */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetl, DeeSystem_DEFINE_memsetw, bzero, memcpy*, memmove, memmoveb, memmovec, memmovedown, memmovedownc, memmovedownw, memmovel, memmovew, mempcpy*, memset, memsetb */
 #include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared */
@@ -38,7 +38,7 @@
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
-#include <stdint.h>  /* int32_t, uint8_t, uint16_t, uint32_t, uintptr_t */
+#include <stdint.h>  /* uint8_t, uint16_t, uint32_t */
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -3029,195 +3029,6 @@ PUBLIC WUNUSED DREF DeeObject *
 err:
 	return NULL;
 }
-
-
-INTERN WUNUSED NONNULL((1)) DREF String *DCALL
-DeeString_Convert(String *__restrict self,
-                  size_t start, size_t end,
-                  uintptr_t kind) {
-	unsigned int width;
-	union Dee_charptr_const str;
-	union Dee_charptr result;
-	size_t i, length;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	width   = DeeString_WIDTH(self);
-	str.ptr = DeeString_WSTR(self);
-	length  = WSTR_LENGTH(str.ptr);
-	if (start > length)
-		start = length;
-	if (end > length)
-		end = length;
-	if (start >= end)
-		return_reference_((String *)Dee_EmptyString);
-	end -= start;
-	result.ptr = DeeString_NewWidthBuffer(end, width);
-	if unlikely(!result.ptr)
-		goto err;
-	SWITCH_SIZEOF_WIDTH(width) {
-
-	CASE_WIDTH_1BYTE:
-		for (i = 0; i < end; ++i)
-			result.cp8[i] = (uint8_t)DeeUni_Convert(str.cp8[start + i], kind);
-		break;
-
-	CASE_WIDTH_2BYTE:
-		for (i = 0; i < end; ++i)
-			result.cp16[i] = (uint16_t)DeeUni_Convert(str.cp16[start + i], kind);
-		break;
-
-	CASE_WIDTH_4BYTE:
-		for (i = 0; i < end; ++i)
-			result.cp32[i] = (uint32_t)DeeUni_Convert(str.cp32[start + i], kind);
-		break;
-	}
-	return (DREF String *)DeeString_PackWidthBuffer(result.ptr, width);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF String *DCALL
-DeeString_ToTitle(String *__restrict self, size_t start, size_t end) {
-	uintptr_t kind = Dee_UNICODE_CONVERT_TITLE;
-	unsigned int width;
-	union Dee_charptr_const str;
-	union Dee_charptr result;
-	size_t i, length;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	width   = DeeString_WIDTH(self);
-	str.ptr = DeeString_WSTR(self);
-	length  = WSTR_LENGTH(str.ptr);
-	if (start > length)
-		start = length;
-	if (end > length)
-		end = length;
-	if (start >= end)
-		return_reference_((String *)Dee_EmptyString);
-	end -= start;
-	result.ptr = DeeString_NewWidthBuffer(end, width);
-	if unlikely(!result.ptr)
-		goto err;
-	SWITCH_SIZEOF_WIDTH(width) {
-
-	CASE_WIDTH_1BYTE:
-		for (i = 0; i < end; ++i) {
-			uint8_t ch = str.cp8[start + i];
-			struct Dee_unitraits const *desc = DeeUni_Descriptor(ch);
-			result.cp8[i] = (uint8_t)(ch + *(int32_t const *)((byte_t const *)desc + kind));
-			kind = (desc->ut_flags & Dee_UNICODE_ISSPACE) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
-		}
-		break;
-
-	CASE_WIDTH_2BYTE:
-		for (i = 0; i < end; ++i) {
-			uint16_t ch = str.cp16[start + i];
-			struct Dee_unitraits const *desc  = DeeUni_Descriptor(ch);
-			result.cp16[i] = (uint16_t)(ch + *(int32_t const *)((byte_t const *)desc + kind));
-			kind = (desc->ut_flags & Dee_UNICODE_ISSPACE) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
-		}
-		break;
-
-	CASE_WIDTH_4BYTE:
-		for (i = 0; i < end; ++i) {
-			uint32_t ch = str.cp32[start + i];
-			struct Dee_unitraits const *desc  = DeeUni_Descriptor(ch);
-			result.cp32[i] = (uint32_t)(ch + *(int32_t const *)((byte_t const *)desc + kind));
-			kind = (desc->ut_flags & Dee_UNICODE_ISSPACE) ? Dee_UNICODE_CONVERT_TITLE : Dee_UNICODE_CONVERT_LOWER;
-		}
-		break;
-	}
-	return (DREF String *)DeeString_PackWidthBuffer(result.ptr, width);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF String *DCALL
-DeeString_Capitalize(String *__restrict self, size_t start, size_t end) {
-	unsigned int width;
-	union Dee_charptr_const str;
-	union Dee_charptr result;
-	size_t i, length;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	width   = DeeString_WIDTH(self);
-	str.ptr = DeeString_WSTR(self);
-	length  = WSTR_LENGTH(str.ptr);
-	if (start > length)
-		start = length;
-	if (end > length)
-		end = length;
-	if (start >= end)
-		return_reference_((String *)Dee_EmptyString);
-	end -= start;
-	result.ptr = DeeString_NewWidthBuffer(end, width);
-	if unlikely(!result.ptr)
-		goto err;
-	SWITCH_SIZEOF_WIDTH(width) {
-
-	CASE_WIDTH_1BYTE:
-		result.cp8[0] = (uint8_t)DeeUni_ToUpper(str.cp8[start]);
-		for (i = 1; i < end; ++i)
-			result.cp8[i] = (uint8_t)DeeUni_ToLower(str.cp8[start + i]);
-		break;
-
-	CASE_WIDTH_2BYTE:
-		result.cp16[0] = (uint16_t)DeeUni_ToUpper(str.cp16[start]);
-		for (i = 1; i < end; ++i)
-			result.cp16[i] = (uint16_t)DeeUni_ToLower(str.cp16[start + i]);
-		break;
-
-	CASE_WIDTH_4BYTE:
-		result.cp32[0] = (uint32_t)DeeUni_ToUpper(str.cp32[start]);
-		for (i = 1; i < end; ++i)
-			result.cp32[i] = (uint32_t)DeeUni_ToLower(str.cp32[start + i]);
-		break;
-	}
-	return (DREF String *)DeeString_PackWidthBuffer(result.ptr, width);
-err:
-	return NULL;
-}
-
-INTERN WUNUSED NONNULL((1)) DREF String *DCALL
-DeeString_Swapcase(String *__restrict self, size_t start, size_t end) {
-	unsigned int width;
-	union Dee_charptr_const str;
-	union Dee_charptr result;
-	size_t i, length;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	width   = DeeString_WIDTH(self);
-	str.ptr = DeeString_WSTR(self);
-	length  = WSTR_LENGTH(str.ptr);
-	if (start > length)
-		start = length;
-	if (end > length)
-		end = length;
-	if (start >= end)
-		return_reference_((String *)Dee_EmptyString);
-	end -= start;
-	result.ptr = DeeString_NewWidthBuffer(end, width);
-	if unlikely(!result.ptr)
-		goto err;
-	SWITCH_SIZEOF_WIDTH(width) {
-
-	CASE_WIDTH_1BYTE:
-		for (i = 0; i < end; ++i)
-			result.cp8[i] = (uint8_t)DeeUni_SwapCase(str.cp8[start + i]);
-		break;
-
-	CASE_WIDTH_2BYTE:
-		for (i = 0; i < end; ++i)
-			result.cp16[i] = (uint16_t)DeeUni_SwapCase(str.cp16[start + i]);
-		break;
-
-	CASE_WIDTH_4BYTE:
-		for (i = 0; i < end; ++i)
-			result.cp32[i] = (uint32_t)DeeUni_SwapCase(str.cp32[start + i]);
-		break;
-	}
-	return (DREF String *)DeeString_PackWidthBuffer(result.ptr, width);
-err:
-	return NULL;
-}
-
-
 
 
 PUBLIC WUNUSED ATTR_INOUT(1) uint32_t
@@ -6749,5 +6560,16 @@ check_1byte:
 #undef DO
 
 DECL_END
+
+#ifndef __INTELLISENSE__
+#define DEFINE_DeeString_Convert
+#include "unicode-convert.c.inl"
+#define DEFINE_DeeString_ToTitle
+#include "unicode-convert.c.inl"
+#define DEFINE_DeeString_Capitalize
+#include "unicode-convert.c.inl"
+#define DEFINE_DeeString_Swapcase
+#include "unicode-convert.c.inl"
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_UNICODE_UNICODE_C */
