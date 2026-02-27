@@ -1654,7 +1654,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-			/* T:              */ ModuleExports,
+			/* T:              */ ModuleGlobals,
 			/* tp_ctor:        */ &modglobals_ctor,
 			/* tp_copy_ctor:   */ &modglobals_copy,
 			/* tp_any_ctor:    */ &modglobals_init,
@@ -1816,7 +1816,7 @@ INTERN DeeTypeObject ModuleLibNames_Type = {
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
-			/* T:              */ ModuleExports,
+			/* T:              */ ModuleLibNames,
 			/* tp_ctor:        */ &modlibnames_ctor,
 			/* tp_copy_ctor:   */ &modlibnames_copy,
 			/* tp_any_ctor:    */ &modlibnames_init,
