@@ -3345,6 +3345,26 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	 *       has to mean that the module has already been removed from that
 	 *       tree! */
 
+	/* Cleanup string object references in the module's symbol table.
+	 * Since "dex_add_symbol()" asserts that DEX modules can't pre-define
+	 * symbols that use string objects as their names, such strings could
+	 * only have been created lazily via `Dee_module_symbol_getnameobj()'
+	 *
+	 * The same obviously also goes for `Dee_module_symbol_getdocobj()'. */
+	{
+		struct Dee_module_symbol *buckets = self->mo_bucketv;
+		if (buckets != empty_module_buckets) {
+			uint16_t i;
+			for (i = 0; i <= self->mo_bucketm; ++i) {
+				struct Dee_module_symbol *sym = &buckets[i];
+				if (sym->ss_flags & Dee_MODSYM_FNAMEOBJ)
+					Dee_Decref(container_of(sym->ss_name, DeeStringObject, s_str));
+				if (sym->ss_flags & Dee_MODSYM_FDOCOBJ)
+					Dee_Decref(container_of(sym->ss_doc, DeeStringObject, s_str));
+			}
+		}
+	}
+
 	/* Cleanup globals and dex data. */
 	Dee_XDecrefv(self->mo_globalv, self->mo_globalc);
 	Dee_module_dexdata_fini(dexdata);
