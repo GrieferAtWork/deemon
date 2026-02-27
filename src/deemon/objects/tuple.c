@@ -1595,33 +1595,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 tuple_mh_find_with_key(Tuple *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (end > self->t_size)
 		end = self->t_size;
 	for (; start < end; ++start) {
 		int temp = DeeObject_TryCompareKeyEq(item, self->t_elem[start], key);
 		if (Dee_COMPARE_ISERR(temp))
-			goto err_item;
-		if (Dee_COMPARE_ISEQ(temp)) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-			Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+			goto err;
+		if (Dee_COMPARE_ISEQ(temp))
 			return start;
-		}
 	}
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
 err:
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 
@@ -1645,11 +1629,6 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 tuple_mh_rfind_with_key(Tuple *self, DeeObject *item, size_t start, size_t end, DeeObject *key) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (end > self->t_size)
 		end = self->t_size;
 	while (end > start) {
@@ -1657,23 +1636,12 @@ tuple_mh_rfind_with_key(Tuple *self, DeeObject *item, size_t start, size_t end, 
 		--end;
 		temp = DeeObject_TryCompareKeyEq(item, self->t_elem[end], key);
 		if (Dee_COMPARE_ISERR(temp))
-			goto err_item;
-		if (Dee_COMPARE_ISEQ(temp)) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-			Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+			goto err;
+		if (Dee_COMPARE_ISEQ(temp))
 			return end;
-		}
 	}
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
 err:
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 

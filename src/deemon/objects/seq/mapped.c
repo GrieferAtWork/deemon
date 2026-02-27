@@ -1446,7 +1446,6 @@ err:
 
 
 
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 /* Can implement pretty much all find(), remove(), etc.
  * functions by injecting "sm_mapper" as an (additional) key */
 
@@ -1796,7 +1795,6 @@ err:
 	return -1;
 }
 #endif /* WANT_mapped_mh_seq_brange */
-#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 
 
 #ifndef NEED_mapped_getsets
@@ -1908,7 +1906,6 @@ PRIVATE struct type_method tpconst mapped_methods[] = {
 	TYPE_METHOD_HINTREF(__map_popitem__),
 #endif /* WANT_mapped_mh_map_popitem */
 
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 #ifdef WANT_mapped_mh_seq_count
 	TYPE_METHOD_HINTREF(Sequence_count),
 #endif /* WANT_mapped_mh_seq_count */
@@ -1945,7 +1942,6 @@ PRIVATE struct type_method tpconst mapped_methods[] = {
 #ifdef WANT_mapped_mh_seq_brange
 	TYPE_METHOD_HINTREF(Sequence_brange),
 #endif /* WANT_mapped_mh_seq_brange */
-#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	TYPE_METHOD_END
 };
 #endif /* NEED_mapped_methods */
@@ -2070,7 +2066,6 @@ PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(map_popitem, &mapped_mh_map_popitem),
 #endif /* WANT_mapped_mh_map_popitem */
 
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	/* Can implement pretty much all find(), remove(), etc.
 	 * functions by injecting "sm_mapper" as an (additional) key */
 #ifdef WANT_mapped_mh_seq_count
@@ -2129,7 +2124,6 @@ PRIVATE struct type_method_hint tpconst mapped_method_hints[] = {
 	TYPE_METHOD_HINT(seq_brange, &mapped_mh_seq_brange),
 	TYPE_METHOD_HINT(seq_brange_with_key, &mapped_mh_seq_brange_with_key),
 #endif /* WANT_mapped_mh_seq_brange */
-#endif /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	TYPE_METHOD_HINT_END
 };
 #endif /* NEED_mapped_method_hints */

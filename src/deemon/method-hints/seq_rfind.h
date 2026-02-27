@@ -175,20 +175,11 @@ __seq_rfind__.seq_rfind_with_key([[nonnull]] DeeObject *self,
 	Dee_ssize_t status;
 	struct default_seq_find_with_key_foreach_data data;
 	DeeMH_seq_enumerate_index_reverse_t renum;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.dsfwkf_base.dsff_elem = item;
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.dsfwkf_base.dsff_elem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.dsfwkf_base.dsff_elem)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsfwkf_key = key;
 	renum = REQUIRE_DEPENDENCY(seq_enumerate_index_reverse);
 	ASSERT(renum);
 	status = (*renum)(self, &default_seq_find_with_key_foreach_cb, &data, start, end);
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(data.dsfwkf_base.dsff_elem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
 			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);
@@ -203,20 +194,10 @@ err:
 %{$with__seq_enumerate_index = [[prefix(DEFINE_default_seq_rfind_with_key_foreach_cb)]] {
 	Dee_ssize_t status;
 	struct default_seq_rfind_with_key_foreach_data data;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.dsrfwk_kelem = item;
 	data.dsrfwk_key   = key;
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.dsrfwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.dsrfwk_kelem)
-		goto err;
-	data.dsrfwk_key = key;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsrfwk_result = (size_t)-1;
 	status = CALL_DEPENDENCY(seq_enumerate_index, self, &default_seq_rfind_with_key_foreach_cb, &data, start, end);
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(data.dsrfwk_kelem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(status == 0 || status == -1);
 	if unlikely(status == -1)
 		goto err;

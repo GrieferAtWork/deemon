@@ -118,22 +118,13 @@ if (isFind) {
 	print('	if (end > selfsize)');
 	print('		end = selfsize;');
 	print('	if likely(start < end) {');
-	local err_item = "err";
-if (hasKey) {
-	err_item = "err_item";
-	print('#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM');
-	print('		item = DeeObject_Call(key, 1, &item);');
-	print('		if unlikely(!item)');
-	print('			goto err;');
-	print('#endif /' '* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM *' '/');
-}
 	print('		do {');
 	print('			int cmp_result;');
 	print('			size_t mid = overflowsafe_mid(start, end);');
 	print('			DREF DeeObject *seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);');
 	print('			if unlikely(!ITER_ISOK(seq_item)) {');
 	print('				if unlikely(!seq_item)');
-	print('					goto ', err_item, ';');
+	print('					goto err;');
 	print('				cmp_result = 1; /' '* item > <unbound> *' '/');
 	print('			} else {');
 if (hasKey) {
@@ -143,7 +134,7 @@ if (hasKey) {
 }
 	print('				Dee_Decref(seq_item);');
 	print('				if (Dee_COMPARE_ISERR(cmp_result))');
-	print('					goto ', err_item, ';');
+	print('					goto err;');
 	print('			}');
 	print('			if (Dee_COMPARE_ISLO(cmp_result)) {');
 	print('				end = mid;');
@@ -158,11 +149,6 @@ if (isFind || isPosition) {
 	print('					goto err_item_overflow;');
 	print('				}');
 	NEED_err_item_overflow = true;
-if (hasKey) {
-	print('#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM');
-	print('				Dee_Decref(item);');
-	print('#endif /' '* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM *' '/');
-}
 	print('				return mid;');
 } else if (isRange) {
 	print('				size_t result_range_start = mid;');
@@ -174,7 +160,7 @@ if (hasKey) {
 	print('					seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);');
 	print('					if unlikely(!ITER_ISOK(seq_item)) {');
 	print('						if unlikely(!seq_item)');
-	print('							goto ', err_item, ';');
+	print('							goto err;');
 	print('						cmp_result = Dee_COMPARE_GR; /' '* item > <unbound> *' '/');
 	print('					} else {');
 if (hasKey) {
@@ -184,7 +170,7 @@ if (hasKey) {
 }
 	print('						Dee_Decref(seq_item);');
 	print('						if (Dee_COMPARE_ISERR(cmp_result))');
-	print('							goto ', err_item, ';');
+	print('							goto err;');
 	print('					}');
 	print('					if (Dee_COMPARE_ISEQ(cmp_result)) {');
 	print('						/' '* Still part of returned range! *' '/');
@@ -202,7 +188,7 @@ if (hasKey) {
 	print('					seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);');
 	print('					if unlikely(!ITER_ISOK(seq_item)) {');
 	print('						if unlikely(!seq_item)');
-	print('							goto ', err_item, ';');
+	print('							goto err;');
 	print('						cmp_result = Dee_COMPARE_GR; /' '* item > <unbound> *' '/');
 	print('					} else {');
 if (hasKey) {
@@ -212,7 +198,7 @@ if (hasKey) {
 }
 	print('						Dee_Decref(seq_item);');
 	print('						if (Dee_COMPARE_ISERR(cmp_result))');
-	print('							goto ', err_item, ';');
+	print('							goto err;');
 	print('					}');
 	print('					if (Dee_COMPARE_ISEQ(cmp_result)) {');
 	print('						/' '* Still part of returned range! *' '/');
@@ -227,11 +213,6 @@ if (hasKey) {
 	print('				/' '* Write-back the result range bounds *' '/');
 	print('				result_range[0] = result_range_start;');
 	print('				result_range[1] = result_range_end;');
-if (hasKey) {
-	print('#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM');
-	print('				Dee_Decref(item);');
-	print('#endif /' '* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM *' '/');
-}
 	print('				return 0;');
 } // isRange
 	print('			}');
@@ -239,11 +220,6 @@ if (hasKey) {
 	print('		} while (start < end);');
 	print('	}');
 	print('	ASSERT(start >= end);');
-if (hasKey) {
-	print('#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM');
-	print('	Dee_Decref(item);');
-	print('#endif /' '* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM *' '/');
-}
 if (isFind) {
 	print('	return (size_t)-1;');
 } else if (isPosition) {
@@ -259,12 +235,6 @@ if (isFind) {
 if (NEED_err_item_overflow) {
 	print('err_item_overflow:');
 	print('	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);');
-}
-if (hasKey) {
-	print('err_item:');
-	print('#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM');
-	print('	Dee_Decref(item);');
-	print('#endif /' '* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM *' '/');
 }
 	print('err:');
 	print('	return ', LOCAL_return_ERR, ';');
@@ -474,24 +444,19 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
 	if (end > selfsize)
 		end = selfsize;
 	if likely(start < end) {
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-		item = DeeObject_Call(key, 1, &item);
-		if unlikely(!item)
-			goto err;
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		do {
 			int cmp_result;
 			size_t mid = overflowsafe_mid(start, end);
 			DREF DeeObject *seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
-					goto err_item;
+					goto err;
 				cmp_result = 1; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
 				if (Dee_COMPARE_ISERR(cmp_result))
-					goto err_item;
+					goto err;
 			}
 			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
@@ -504,25 +469,15 @@ __seq_bfind__.seq_bfind_with_key([[nonnull]] DeeObject *self,
 					end = mid;
 					goto err_item_overflow;
 				}
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-				Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
 		} while (start < end);
 	}
 	ASSERT(start >= end);
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 err_item_overflow:
 	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
-err_item:
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
@@ -664,24 +619,19 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
 	if (end > selfsize)
 		end = selfsize;
 	if likely(start < end) {
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-		item = DeeObject_Call(key, 1, &item);
-		if unlikely(!item)
-			goto err;
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		do {
 			int cmp_result;
 			size_t mid = overflowsafe_mid(start, end);
 			DREF DeeObject *seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
-					goto err_item;
+					goto err;
 				cmp_result = 1; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
 				if (Dee_COMPARE_ISERR(cmp_result))
-					goto err_item;
+					goto err;
 			}
 			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
@@ -694,27 +644,17 @@ __seq_bposition__.seq_bposition_with_key([[nonnull]] DeeObject *self,
 					end = mid;
 					goto err_item_overflow;
 				}
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-				Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 				return mid;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
 		} while (start < end);
 	}
 	ASSERT(start >= end);
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if unlikely(end == (size_t)-1 || end == (size_t)Dee_COMPARE_ERR)
 		goto err_item_overflow;
 	return end;
 err_item_overflow:
 	DeeRT_ErrIntegerOverflowU(end, (size_t)Dee_COMPARE_ERR - 1);
-err_item:
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)Dee_COMPARE_ERR;
 }} {
@@ -913,24 +853,19 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 	if (end > selfsize)
 		end = selfsize;
 	if likely(start < end) {
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-		item = DeeObject_Call(key, 1, &item);
-		if unlikely(!item)
-			goto err;
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 		do {
 			int cmp_result;
 			size_t mid = overflowsafe_mid(start, end);
 			DREF DeeObject *seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);
 			if unlikely(!ITER_ISOK(seq_item)) {
 				if unlikely(!seq_item)
-					goto err_item;
+					goto err;
 				cmp_result = 1; /* item > <unbound> */
 			} else {
 				cmp_result = DeeObject_CompareKey(item, seq_item, key);
 				Dee_Decref(seq_item);
 				if (Dee_COMPARE_ISERR(cmp_result))
-					goto err_item;
+					goto err;
 			}
 			if (Dee_COMPARE_ISLO(cmp_result)) {
 				end = mid;
@@ -947,13 +882,13 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 					seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
-							goto err_item;
+							goto err;
 						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);
 						Dee_Decref(seq_item);
 						if (Dee_COMPARE_ISERR(cmp_result))
-							goto err_item;
+							goto err;
 					}
 					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
@@ -971,13 +906,13 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 					seq_item = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, mid);
 					if unlikely(!ITER_ISOK(seq_item)) {
 						if unlikely(!seq_item)
-							goto err_item;
+							goto err;
 						cmp_result = Dee_COMPARE_GR; /* item > <unbound> */
 					} else {
 						cmp_result = DeeObject_TryCompareKeyEq(item, seq_item, key);
 						Dee_Decref(seq_item);
 						if (Dee_COMPARE_ISERR(cmp_result))
-							goto err_item;
+							goto err;
 					}
 					if (Dee_COMPARE_ISEQ(cmp_result)) {
 						/* Still part of returned range! */
@@ -992,25 +927,15 @@ __seq_brange__.seq_brange_with_key([[nonnull]] DeeObject *self,
 				/* Write-back the result range bounds */
 				result_range[0] = result_range_start;
 				result_range[1] = result_range_end;
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-				Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 				return 0;
 			}
 			/* Since this runs in O(log(N)), there's no need to check for interrupts! */
 		} while (start < end);
 	}
 	ASSERT(start >= end);
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	result_range[0] = start;
 	result_range[1] = end;
 	return 0;
-err_item:
-#ifdef CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }} {

@@ -809,11 +809,6 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 fl_mh_find_with_key(FixedList *self, DeeObject *item,
                       size_t start, size_t end, DeeObject *key) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (end > self->fl_size)
 		end = self->fl_size;
 	for (; start < end; ++start) {
@@ -828,23 +823,12 @@ fl_mh_find_with_key(FixedList *self, DeeObject *item,
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
 		if (Dee_COMPARE_ISERR(error))
-			goto err_item;
-		if (Dee_COMPARE_ISEQ(error)) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-			Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+			goto err;
+		if (Dee_COMPARE_ISEQ(error))
 			return start;
-		}
 	}
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
 err:
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 
@@ -877,11 +861,6 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) size_t DCALL
 fl_mh_rfind_with_key(FixedList *self, DeeObject *item,
                      size_t start, size_t end, DeeObject *key) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (end > self->fl_size)
 		end = self->fl_size;
 	while (end > start) {
@@ -897,24 +876,12 @@ fl_mh_rfind_with_key(FixedList *self, DeeObject *item,
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
 		if (Dee_COMPARE_ISERR(error))
-			goto err_item;
-		if (Dee_COMPARE_ISEQ(error)) {
-			/* Found it! */
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-			Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-			return end;
-		}
+			goto err;
+		if (Dee_COMPARE_ISEQ(error))
+			return end; /* Found it! */
 	}
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
 err:
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)Dee_COMPARE_ERR;
 }
 
@@ -959,11 +926,6 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 fl_mh_remove_with_key(FixedList *self, DeeObject *item,
                       size_t start, size_t end, DeeObject *key) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (end > self->fl_size)
 		end = self->fl_size;
 	for (; start < end; ++start) {
@@ -979,34 +941,24 @@ again_elem:
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
 		if (Dee_COMPARE_ISERR(error))
-			goto err_item;
+			goto err;
 		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[start] != elem) {
 				FixedList_LockEndWrite(self);
 				if (DeeThread_CheckInterrupt())
-					goto err_item;
+					goto err;
 				goto again_elem;
 			}
 			self->fl_elem[start] = NULL;
 			FixedList_LockEndWrite(self);
 			Dee_Decref(elem);
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-			Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return 1;
 		}
 	}
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return 0;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
 err:
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return -1;
 }
 
@@ -1052,11 +1004,6 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 fl_mh_rremove_with_key(FixedList *self, DeeObject *item,
                        size_t start, size_t end, DeeObject *key) {
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (end > self->fl_size)
 		end = self->fl_size;
 	while (end > start) {
@@ -1073,34 +1020,24 @@ again_elem:
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
 		if (Dee_COMPARE_ISERR(error))
-			goto err_item;
+			goto err;
 		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[end] != elem) {
 				FixedList_LockEndWrite(self);
 				if (DeeThread_CheckInterrupt())
-					goto err_item;
+					goto err;
 				goto again_elem;
 			}
 			self->fl_elem[end] = NULL;
 			FixedList_LockEndWrite(self);
 			Dee_Decref(elem);
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-			Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 			return 1;
 		}
 	}
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return 0;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
 err:
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return -1;
 }
 
@@ -1154,11 +1091,6 @@ fl_mh_removeall_with_key(FixedList *self, DeeObject *item, size_t start,
 	size_t result = 0;
 	if unlikely(!max)
 		return 0;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if (end > self->fl_size)
 		end = self->fl_size;
 	for (; start < end; ++start) {
@@ -1174,14 +1106,14 @@ again_elem:
 		error = DeeObject_TryCompareKeyEq(item, elem, key);
 		Dee_Decref(elem);
 		if (Dee_COMPARE_ISERR(error))
-			goto err_item;
+			goto err;
 		if (Dee_COMPARE_ISEQ(error)) {
 			/* Found it! */
 			FixedList_LockWrite(self);
 			if unlikely(self->fl_elem[start] != elem) {
 				FixedList_LockEndWrite(self);
 				if (DeeThread_CheckInterrupt())
-					goto err_item;
+					goto err;
 				goto again_elem;
 			}
 			self->fl_elem[start] = NULL;
@@ -1192,15 +1124,8 @@ again_elem:
 				break;
 		}
 	}
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return result;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
 err:
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return (size_t)-1;
 }
 

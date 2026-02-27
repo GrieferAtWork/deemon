@@ -194,26 +194,14 @@ __seq_contains__.seq_contains_with_key([[nonnull]] DeeObject *self,
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.gscwk_kelem = item;
 	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_contains_with_key_foreach_cb, &data);
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gscwk_kelem)
-		goto err;
-	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_contains_with_key_foreach_cb, &data);
-	Dee_Decref(data.gscwk_kelem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(foreach_status == 0 ||
 	       foreach_status == -1 ||
 	       foreach_status == -2);
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-err:
-	return -1;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 }}
 %{$with__seq_find_with_key = {
 	return default__seq_contains_with_range_and_key__with__seq_find_with_key(self, item, 0, (size_t)-1, key);
@@ -343,26 +331,14 @@ __seq_contains__.seq_contains_with_range_and_key([[nonnull]] DeeObject *self,
 	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.gscwk_kelem = item;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_contains_with_key_enumerate_cb, &data, start, end);
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gscwk_kelem)
-		goto err;
-	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_contains_with_key_enumerate_cb, &data, start, end);
-	Dee_Decref(data.gscwk_kelem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(foreach_status == 0 ||
 	       foreach_status == -1 ||
 	       foreach_status == -2);
 	if (foreach_status == -2)
 		foreach_status = 1;
 	return (int)foreach_status;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-err:
-	return -1;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 }}
 %{$with__seq_find_with_key = {
 	size_t match = CALL_DEPENDENCY(seq_find_with_key, self, item, start, end, key);

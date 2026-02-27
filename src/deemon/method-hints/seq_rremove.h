@@ -101,22 +101,11 @@ __seq_rremove__.seq_rremove_with_key([[nonnull]] DeeObject *self,
 	Dee_ssize_t foreach_status;
 	struct default_remove_with_key_with_enumerate_index_and_delitem_index_data data;
 	data.drwkweiadiid_self = self;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.drwkweiadiid_item = item;
 	data.drwkweiadiid_key  = key;
 	foreach_status = CALL_DEPENDENCY(seq_enumerate_index_reverse, self,
 	                                 &default_remove_with_key_with_enumerate_index_and_delitem_index_cb,
 	                                 &data, start, end);
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.drwkweiadiid_item = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.drwkweiadiid_item)
-		goto err;
-	data.drwkweiadiid_key = key;
-	foreach_status = CALL_DEPENDENCY(seq_enumerate_index_reverse, self,
-	                                 &default_remove_with_key_with_enumerate_index_and_delitem_index_cb,
-	                                 &data, start, end);
-	Dee_Decref(data.drwkweiadiid_item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	ASSERT(foreach_status == -2 || foreach_status == -1 || foreach_status == 0);
 	if unlikely(foreach_status == -1)
 		goto err;

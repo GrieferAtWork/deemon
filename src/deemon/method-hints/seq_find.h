@@ -159,18 +159,9 @@ __seq_find__.seq_find_with_key([[nonnull]] DeeObject *self,
 %{$with__seq_enumerate_index = [[prefix(DEFINE_default_seq_find_with_key_foreach_cb)]] {
 	Dee_ssize_t status;
 	struct default_seq_find_with_key_foreach_data data;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.dsfwkf_base.dsff_elem = item;
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.dsfwkf_base.dsff_elem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.dsfwkf_base.dsff_elem)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	data.dsfwkf_key = key;
 	status = CALL_DEPENDENCY(seq_enumerate_index, self, &default_seq_find_with_key_foreach_cb, &data, start, end);
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(data.dsfwkf_base.dsff_elem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	if likely(status == -2) {
 		if unlikely(data.dsfwkf_base.dsff_index == (size_t)Dee_COMPARE_ERR)
 			DeeRT_ErrIntegerOverflowU(data.dsfwkf_base.dsff_index, (size_t)Dee_COMPARE_ERR - 1);

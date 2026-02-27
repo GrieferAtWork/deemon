@@ -112,23 +112,11 @@ __seq_startswith__.seq_startswith_with_key([[nonnull]] DeeObject *self,
 		goto err;
 	if (first == ITER_DONE)
 		return 0;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	result = DeeObject_TryCompareKeyEq(item, first, key);
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err_first;
-	result = DeeObject_TryCompareKeyEq(item, first, key);
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Decref(first);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-err_first:
-	Dee_Decref(first);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }} {
@@ -230,23 +218,11 @@ __seq_startswith__.seq_startswith_with_range_and_key([[nonnull]] DeeObject *self
 		goto err;
 	if (selfitem == ITER_DONE)
 		return 0;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err_selfitem;
-	result = DeeObject_TryCompareKeyEq(item, selfitem, key);
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	Dee_Decref(selfitem);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-err_selfitem:
-	Dee_Decref(selfitem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return -1;
 }} {

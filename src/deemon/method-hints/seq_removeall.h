@@ -175,35 +175,15 @@ __seq_removeall__.seq_removeall_with_key([[nonnull]] DeeObject *self,
 %{unsupported(auto)}
 %{$empty = 0}
 %{$with__seq_removeif = {
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	/* >> return !!self.removeif(x -> deemon.equals(item, key(x)), start, end, max); */
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	/* >> local keyedItem = key(item);
-	 * >> return !!self.removeif(x -> deemon.equals(keyedItem, key(x)), start, end, max); */
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	size_t result;
 	DREF SeqRemoveWithRemoveIfPredicateWithKey *pred;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	pred = SeqRemoveWithRemoveIfPredicateWithKey_NewInheritedOnSuccess(item, key);
 	if unlikely(!pred)
 		goto err;
 	result = CALL_DEPENDENCY(seq_removeif, self, Dee_AsObject(pred), start, end, max);
 	SeqRemoveWithRemoveIfPredicateWithKey_DecrefSymbolic(pred);
 	return result;
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-	pred = SeqRemoveWithRemoveIfPredicateWithKey_NewInheritedOnSuccess(item, key);
-	if unlikely(!pred)
-		goto err_item;
-	result = CALL_DEPENDENCY(seq_removeif, self, Dee_AsObject(pred), start, end, max);
-	SeqRemoveWithRemoveIfPredicateWithKey_DecrefSymbolic(pred);
-	Dee_Decref(item);
-	return result;
-err_item:
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)-1;
 }}
@@ -265,33 +245,28 @@ err:
 		end = selfsize;
 	if unlikely(start >= end)
 		return 0;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	item = DeeObject_Call(key, 1, &item);
-	if unlikely(!item)
-		goto err;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	do {
 		DREF DeeObject *elem;
 		elem = CALL_DEPENDENCY(seq_operator_trygetitem_index, self, start);
 		if unlikely(!elem)
-			goto err_item;
+			goto err;
 		if (elem != ITER_DONE) {
 			int equal;
 			equal = DeeObject_TryCompareKeyEq(item, elem, key);
 			Dee_Decref(elem);
 			if (Dee_COMPARE_ISERR(equal))
-				goto err_item;
+				goto err;
 			if (Dee_COMPARE_ISEQ(equal)) {
 				/* Found one! (delete it) */
 				if unlikely(CALL_DEPENDENCY(seq_operator_delitem_index, self, start))
-					goto err_item;
+					goto err;
 				++result;
 				if (result >= max)
 					break;
 				if (sequence_size_changes_after_delitem == -1) {
 					size_t new_selfsize = CALL_DEPENDENCY(seq_operator_size, self);
 					if unlikely(new_selfsize == (size_t)-1)
-						goto err_item;
+						goto err;
 					sequence_size_changes_after_delitem = selfsize > new_selfsize ? 1 : 0;
 				}
 				if (sequence_size_changes_after_delitem) {
@@ -305,16 +280,9 @@ err:
 		++start;
 check_interrupt:
 		if (DeeThread_CheckInterrupt())
-			goto err_item;
+			goto err;
 	} while (start < end);
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 	return result;
-err_item:
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-	Dee_Decref(item);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
 err:
 	return (size_t)-1;
 }} {

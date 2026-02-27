@@ -127,24 +127,10 @@ __seq_count__.seq_count_with_key([[nonnull]] DeeObject *self,
 	return (size_t)err_seq_unsupportedf(self, "count(%r, key: %r)", item, key);
 })}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_count_with_key_foreach_cb)]] {
-	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.gscwk_kelem = item;
-	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_count_with_key_foreach_cb, &data);
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gscwk_kelem)
-		goto err;
-	foreach_status = CALL_DEPENDENCY(seq_operator_foreach, self, &seq_count_with_key_foreach_cb, &data);
-	Dee_Decref(data.gscwk_kelem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	return (size_t)foreach_status;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-err:
-	return (size_t)-1;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	return (size_t)CALL_DEPENDENCY(seq_operator_foreach, self, &seq_count_with_key_foreach_cb, &data);
 }}
 %{$with__seq_find_with_key = {
 	return default__seq_count_with_range_and_key__with__seq_find_with_key(self, item, 0, (size_t)-1, key);
@@ -247,24 +233,10 @@ __seq_count__.seq_count_with_range_and_key([[nonnull]] DeeObject *self,
 %{$empty = 0}
 %{unsupported(auto)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_count_with_key_enumerate_cb)]] {
-	Dee_ssize_t foreach_status;
 	struct seq_count_with_key_data data;
 	data.gscwk_key   = key;
-#ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
 	data.gscwk_kelem = item;
-	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_count_with_key_enumerate_cb, &data, start, end);
-#else /* CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	data.gscwk_kelem = DeeObject_Call(key, 1, &item);
-	if unlikely(!data.gscwk_kelem)
-		goto err;
-	foreach_status = CALL_DEPENDENCY(seq_enumerate_index, self, &seq_count_with_key_enumerate_cb, &data, start, end);
-	Dee_Decref(data.gscwk_kelem);
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-	return (size_t)foreach_status;
-#ifndef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-err:
-	return (size_t)-1;
-#endif /* !CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
+	return (size_t)CALL_DEPENDENCY(seq_enumerate_index, self, &seq_count_with_key_enumerate_cb, &data, start, end);
 }}
 %{$with__seq_find_with_key = {
 	PRELOAD_DEPENDENCY(seq_find_with_key)

@@ -511,43 +511,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_MMAP_DEC */
 
 
-/* Experimental feature switch: sequence functions taking a "key" argument,
- * as well as a item/value argument will **NOT** apply said "key" to said
- * item/value argument, only applying it to the sequence's items:
- *
- * >> local mySeq = ["foo", "foobar", "foobarbar"];
- * >> local findMe = 6;
- * >> #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
- * >> // Given "key" is only applied to items of "mySeq", but not to "findMe"
- * >> local index = mySeq.find(item: findMe, key: e -> e.length);
- * >> #else
- * >> // Without this feature switch, "key" is also applied to "findMe",
- * >> // meaning either the entire sequence must be mapped (which is
- * >> // always possible in the case of "find", but for not for something
- * >> // like "__seq_remove__")
- * >> local index = mySeq.map(e -> e.length).find(item: findMe);
- * >> local index = mySeq.find(item: findMe, key: e -> e === findMe ? e : e.length);
- * >> #endif
- *
- * If deemon had type generics, think of it like this:
- * >> class Sequence<T: Object> {
- * >>     public find(item: T, start: int = 0, end: int = -1): int;
- * >> #ifdef CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
- * >>     public find<S: Object>(item: S, start: int = 0, end: int = -1, key: (arg: T): S): int;
- * >> #else
- * >>     public find(item: T, start: int = 0, end: int = -1, key: (arg: T): Object): int;
- * >> #endif
- * >> }; */
-#if (!defined(CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM))
-#if 1
-#define CONFIG_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-#else
-#define CONFIG_NO_EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_KEY_NOT_APPLIED_TO_ITEM */
-
-
 /* Remove/re-define some of the members of "Numeric":
  * - Remove s8/s16/s32/s64/s128 u8/u16/u32/u64/u128
  * - Replace signedN/unsignedN
