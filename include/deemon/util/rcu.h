@@ -173,29 +173,35 @@ DFUNDEF NONNULL((1)) void (DFCALL DeeRCU_Synchronize)(Dee_rcu_lock_t *__restrict
 #define DeeRCU_LockSelf(self, caller) \
 	__hybrid_atomic_store(&(caller)->t_rcu_vers, __hybrid_atomic_load(&(self)->rcul_version, __ATOMIC_ACQUIRE), __ATOMIC_RELEASE)
 #endif /* !CONFIG_PER_OBJECT_RCU_LOCKS */
+#undef DeeRCU_Unlock
 #ifndef DeeRCU_UnlockSelf
 #define DeeRCU_UnlockSelf(self, caller) \
 	__hybrid_atomic_store(&(caller)->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, __ATOMIC_RELEASE)
+#define DeeRCU_Unlock(self) DeeRCU_UnlockSelf(self, DeeThread_Self())
 #endif /* !DeeRCU_UnlockSelf */
 
 #undef DeeRCU_Lock
-#undef DeeRCU_Unlock
 #ifdef CONFIG_PER_OBJECT_RCU_LOCKS
 #define DeeRCU_Lock(self)                                         \
 	do {                                                          \
 		DeeThreadObject *const _drculd_caller = DeeThread_Self(); \
 		DeeRCU_LockSelf(self, _drculd_caller);                    \
 	}	__WHILE0
+#ifndef DeeRCU_Unlock
 #define DeeRCU_Unlock(self)                                       \
 	do {                                                          \
 		DeeThreadObject *const _drcuud_caller = DeeThread_Self(); \
 		DeeRCU_UnlockSelf(self, _drcuud_caller);                  \
 	}	__WHILE0
+#endif /* !DeeRCU_Unlock */
 #else /* CONFIG_PER_OBJECT_RCU_LOCKS */
-#define DeeRCU_Lock(self)   DeeRCU_LockSelf(self, DeeThread_Self())
+#define DeeRCU_Lock(self) DeeRCU_LockSelf(self, DeeThread_Self())
+#ifndef DeeRCU_Unlock
 #define DeeRCU_Unlock(self) DeeRCU_UnlockSelf(self, DeeThread_Self())
+#endif /* !DeeRCU_Unlock */
 #endif /* !CONFIG_PER_OBJECT_RCU_LOCKS */
 
+/* "fast" RCU locking macros (what makes these "fast" is just that they pre-cache the calling thread) */
 #define DeeRCU_FAST_SETUP DeeThreadObject *const _rcu_fast_caller = DeeThread_Self();
 #if defined(__NO_builtin_assume) || defined(__builtin_assume_has_sideeffects)
 #define DeeRCU_FAST_Lock(self)   DeeRCU_LockSelf(self, _rcu_fast_caller)

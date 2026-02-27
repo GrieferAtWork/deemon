@@ -26,7 +26,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* DeeFormat_*, PRFuSIZ */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_CallAttrPack, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref, Dee_ssize_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_CallAttrPack, DeeObject_TypeAssertFailed2, Dee_AsObject, Dee_Clear, Dee_Decref, Dee_Decref_unlikely, Dee_XDecref, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_IsUpper, DeeUni_ToLower, Dee_ASCII_PRINTER_INIT, Dee_ascii_printer*, Dee_charptr_const, STRING_ERROR_F*, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, memcpy*, memmovedownc, mempcpyc */
 #include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
@@ -146,9 +146,7 @@ err_unknown_codec(DeeObject *__restrict name) {
 
 PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_expected_string_or_bytes(DeeObject *__restrict self) {
-	return DeeError_Throwf(&DeeError_TypeError,
-	                       "Expected a string or Bytes object, but got an instance of %k",
-	                       self->ob_type);
+	return DeeObject_TypeAssertFailed2(self, &DeeString_Type, &DeeBytes_Type);
 }
 
 
@@ -455,7 +453,7 @@ err:
 		if (error_mode == STRING_ERROR_FSTRICT) {
 			DeeError_Throwf(&DeeError_UnicodeDecodeError,
 			                "Cannot encode unmatched trailing byte in data block of %" PRFuSIZ " "
-			                "bytes, when an number of bytes divisible by 2 was required",
+			                "bytes, when a number of bytes divisible by 2 was required",
 			                size);
 			goto err;
 		}
@@ -489,7 +487,7 @@ err:
 		if (error_mode == STRING_ERROR_FSTRICT) {
 			DeeError_Throwf(&DeeError_UnicodeDecodeError,
 			                "Cannot encode unmatched trailing byte in data block of %" PRFuSIZ " "
-			                "bytes, when an number of bytes divisible by 4 was required",
+			                "bytes, when a number of bytes divisible by 4 was required",
 			                size);
 			goto err;
 		}

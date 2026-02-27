@@ -379,8 +379,8 @@ err:
 }
 
 /* TODO: Use "Dee_ATOMIC_REF" here */
-PRIVATE DREF DeeModuleObject *strexec_module = NULL; /* import("_strexec") */
-PRIVATE DREF DeeObject *strexec_exec = NULL;         /* _strexec.exec */
+PRIVATE DREF DeeModuleObject *strexec_module = NULL; /* import._strexec */
+PRIVATE DREF DeeObject *strexec_exec = NULL;         /* import._strexec.exec */
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t strexec_access_lock = Dee_ATOMIC_RWLOCK_INIT;

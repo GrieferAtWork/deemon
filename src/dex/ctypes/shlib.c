@@ -155,6 +155,7 @@ PRIVATE Dee_atomic_rwlock_t static_type_lock = Dee_ATOMIC_RWLOCK_INIT;
 #define static_type_lock_endread()    Dee_atomic_rwlock_endread(&static_type_lock)
 #define static_type_lock_end()        Dee_atomic_rwlock_end(&static_type_lock)
 
+/* TODO: Use Dee_ATOMIC_REF */
 PRIVATE DREF DeeSTypeObject *void_ptr = NULL; /* `void.ptr' */
 INTERN bool DCALL clear_void_pointer(void) {
 	DREF DeeSTypeObject *ptr;

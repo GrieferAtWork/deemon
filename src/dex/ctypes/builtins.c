@@ -34,17 +34,15 @@
 
 #include <stddef.h> /* NULL, size_t */
 
-#undef FORMAT_TYP
-#undef FORMAT_STR
-#undef SIGNED_TYPE_NAME
-#undef UNSIGNED_TYPE_NAME
-#undef TYPE_NAME
-#undef SIGNED
-#undef ALIGNOF
-#undef SIZEOF
-#undef T
-#undef X
-#undef F
+#undef DEFINE_PRINTF_TYP
+#undef DEFINE_PRINTF_FMT
+#undef DEFINE_TYPE_NAME_SIGNED
+#undef DEFINE_TYPE_NAME_UNSIGNED
+#undef DEFINE_TYPE_NAME
+#undef DEFINE_SIGNED
+#undef DEFINE_ALIGNOF
+#undef DEFINE_SIZEOF
+#undef DEFINE_T
 
 DECL_BEGIN
 
@@ -66,247 +64,247 @@ DECL_END
 #ifndef __INTELLISENSE__
 
 /* Basic integer types. */
-#define SIZEOF 1
-#define SIGNED 1
+#define DEFINE_SIZEOF 1
+#define DEFINE_SIGNED 1
 #include "define-integer.c.inl"
-#define SIZEOF 2
-#define SIGNED 1
+#define DEFINE_SIZEOF 2
+#define DEFINE_SIGNED 1
 #include "define-integer.c.inl"
-#define SIZEOF 4
-#define SIGNED 1
+#define DEFINE_SIZEOF 4
+#define DEFINE_SIGNED 1
 #include "define-integer.c.inl"
-#define SIZEOF 8
-#define SIGNED 1
+#define DEFINE_SIZEOF 8
+#define DEFINE_SIGNED 1
 #include "define-integer.c.inl"
-#define SIZEOF 16
-#define SIGNED 1
+#define DEFINE_SIZEOF 16
+#define DEFINE_SIGNED 1
 #include "define-integer.c.inl"
 
-#define SIZEOF 1
+#define DEFINE_SIZEOF 1
 #include "define-integer.c.inl"
-#define SIZEOF 2
+#define DEFINE_SIZEOF 2
 #include "define-integer.c.inl"
-#define SIZEOF 4
+#define DEFINE_SIZEOF 4
 #include "define-integer.c.inl"
-#define SIZEOF 8
+#define DEFINE_SIZEOF 8
 #include "define-integer.c.inl"
-#define SIZEOF 16
+#define DEFINE_SIZEOF 16
 #include "define-integer.c.inl"
 
 /* `char' */
 #ifndef CONFIG_CTYPES_CHAR_UNSIGNED
-#define SIGNED             1
+#define DEFINE_SIGNED             1
 #endif  /* !CONFIG_CTYPES_CHAR_UNSIGNED */
-#define NAME               "char"
-#define FORMAT_STR         "%c"
-#define FORMAT_TYP         int
+#define DEFINE_NAME               "char"
+#define DEFINE_PRINTF_FMT         "%c"
+#define DEFINE_PRINTF_TYP         int
 #ifdef CONFIG_CTYPES_CHAR_UNSIGNED
-#define FFI_TYPE           ffi_type_uchar
+#define DEFINE_FFI_TYPE           ffi_type_uchar
 #else /* CONFIG_CTYPES_CHAR_UNSIGNED */
-#define FFI_TYPE           ffi_type_schar
+#define DEFINE_FFI_TYPE           ffi_type_schar
 #endif /* !CONFIG_CTYPES_CHAR_UNSIGNED */
-#define SIZEOF             CONFIG_CTYPES_SIZEOF_CHAR
-#define ALIGNOF            CONFIG_CTYPES_ALIGNOF_CHAR
-#define TYPE_NAME          DeeCChar_Type
-#define SIGNED_TYPE_NAME   DeeCSChar_Type
-#define UNSIGNED_TYPE_NAME DeeCUChar_Type
+#define DEFINE_SIZEOF             CONFIG_CTYPES_SIZEOF_CHAR
+#define DEFINE_ALIGNOF            CONFIG_CTYPES_ALIGNOF_CHAR
+#define DEFINE_TYPE_NAME          DeeCChar_Type
+#define DEFINE_TYPE_NAME_SIGNED   DeeCSChar_Type
+#define DEFINE_TYPE_NAME_UNSIGNED DeeCUChar_Type
 #include "define-integer.c.inl"
 
 /* `wchar_t' */
 #ifndef CONFIG_CTYPES_WCHAR_UNSIGNED
-#define SIGNED                1
+#define DEFINE_SIGNED                1
 #endif /* !CONFIG_CTYPES_WCHAR_UNSIGNED */
-#define NAME                  "wchar_t"
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_WCHAR
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_WCHAR
-#define TYPE_NAME             DeeCWChar_Type
-#define NO_SIGNED_TYPE_NAME   1
-#define NO_UNSIGNED_TYPE_NAME 1
+#define DEFINE_NAME                  "wchar_t"
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_WCHAR
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_WCHAR
+#define DEFINE_TYPE_NAME             DeeCWChar_Type
+#define DEFINE_NO_SIGNED_TYPE_NAME   1
+#define DEFINE_NO_UNSIGNED_TYPE_NAME 1
 #include "define-integer.c.inl"
 
 /* `char16_t' */
 #ifndef CONFIG_CTYPES_CHAR16_UNSIGNED
-#define SIGNED                1
+#define DEFINE_SIGNED                1
 #endif /* !CONFIG_CTYPES_CHAR16_UNSIGNED */
-#define NAME                  "char16_t"
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR16
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR16
-#define TYPE_NAME             DeeCChar16_Type
-#define NO_SIGNED_TYPE_NAME   1
-#define NO_UNSIGNED_TYPE_NAME 1
+#define DEFINE_NAME                  "char16_t"
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR16
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR16
+#define DEFINE_TYPE_NAME             DeeCChar16_Type
+#define DEFINE_NO_SIGNED_TYPE_NAME   1
+#define DEFINE_NO_UNSIGNED_TYPE_NAME 1
 #include "define-integer.c.inl"
 
 /* `char32_t' */
 #ifndef CONFIG_CTYPES_CHAR32_UNSIGNED
-#define SIGNED                1
+#define DEFINE_SIGNED                1
 #endif /* !CONFIG_CTYPES_CHAR32_UNSIGNED */
-#define NAME                  "char32_t"
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR32
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR32
-#define TYPE_NAME             DeeCChar32_Type
-#define NO_SIGNED_TYPE_NAME   1
-#define NO_UNSIGNED_TYPE_NAME 1
+#define DEFINE_NAME                  "char32_t"
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR32
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR32
+#define DEFINE_TYPE_NAME             DeeCChar32_Type
+#define DEFINE_NO_SIGNED_TYPE_NAME   1
+#define DEFINE_NO_UNSIGNED_TYPE_NAME 1
 #include "define-integer.c.inl"
 
 /* `bool' */
-#define NAME                  "bool"
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_BOOL
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_BOOL
-#define TYPE_NAME             DeeCBool_Type
-#define NO_SIGNED_TYPE_NAME   1
-#define NO_UNSIGNED_TYPE_NAME 1
+#define DEFINE_NAME                  "bool"
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_BOOL
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_BOOL
+#define DEFINE_TYPE_NAME             DeeCBool_Type
+#define DEFINE_NO_SIGNED_TYPE_NAME   1
+#define DEFINE_NO_UNSIGNED_TYPE_NAME 1
 #define CONFIG_BOOL_STRING
 #include "define-integer.c.inl"
 #undef CONFIG_BOOL_STRING
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
 /* `signed char' */
-#define SIGNED                1
-#define FORMAT_STR            "%hhd"
-#define FORMAT_TYP            signed char
-#define T                     signed char
-#define FFI_TYPE              ffi_type_schar
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR
-#define TYPE_NAME             DeeCSChar_Type
-#define SIGNED_TYPE_NAME      DeeCSChar_Type
-#define UNSIGNED_TYPE_NAME    DeeCUChar_Type
+#define DEFINE_SIGNED                1
+#define DEFINE_PRINTF_FMT            "%hhd"
+#define DEFINE_PRINTF_TYP            signed char
+#define DEFINE_T                     signed char
+#define DEFINE_FFI_TYPE              ffi_type_schar
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR
+#define DEFINE_TYPE_NAME             DeeCSChar_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCSChar_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCUChar_Type
 #include "define-integer.c.inl"
 /* `unsigned char' */
-#define FORMAT_STR            "%hhu"
-#define FORMAT_TYP            unsigned char
-#define T                     unsigned char
-#define FFI_TYPE              ffi_type_uchar
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR
-#define TYPE_NAME             DeeCUChar_Type
-#define SIGNED_TYPE_NAME      DeeCSChar_Type
-#define UNSIGNED_TYPE_NAME    DeeCUChar_Type
+#define DEFINE_PRINTF_FMT            "%hhu"
+#define DEFINE_PRINTF_TYP            unsigned char
+#define DEFINE_T                     unsigned char
+#define DEFINE_FFI_TYPE              ffi_type_uchar
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_CHAR
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_CHAR
+#define DEFINE_TYPE_NAME             DeeCUChar_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCSChar_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCUChar_Type
 #include "define-integer.c.inl"
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
 /* `signed short' */
-#define SIGNED                1
-#define FORMAT_STR            "%hd"
-#define FORMAT_TYP            signed short
-#define T                     signed short
-#define FFI_TYPE              ffi_type_sshort
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_SHORT
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_SHORT
-#define TYPE_NAME             DeeCShort_Type
-#define SIGNED_TYPE_NAME      DeeCShort_Type
-#define UNSIGNED_TYPE_NAME    DeeCUShort_Type
+#define DEFINE_SIGNED                1
+#define DEFINE_PRINTF_FMT            "%hd"
+#define DEFINE_PRINTF_TYP            signed short
+#define DEFINE_T                     signed short
+#define DEFINE_FFI_TYPE              ffi_type_sshort
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_SHORT
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_SHORT
+#define DEFINE_TYPE_NAME             DeeCShort_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCShort_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCUShort_Type
 #include "define-integer.c.inl"
 /* `unsigned short' */
-#define FORMAT_STR            "%hu"
-#define FORMAT_TYP            unsigned short
-#define T                     unsigned short
-#define FFI_TYPE              ffi_type_ushort
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_SHORT
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_SHORT
-#define TYPE_NAME             DeeCUShort_Type
-#define SIGNED_TYPE_NAME      DeeCShort_Type
-#define UNSIGNED_TYPE_NAME    DeeCUShort_Type
+#define DEFINE_PRINTF_FMT            "%hu"
+#define DEFINE_PRINTF_TYP            unsigned short
+#define DEFINE_T                     unsigned short
+#define DEFINE_FFI_TYPE              ffi_type_ushort
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_SHORT
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_SHORT
+#define DEFINE_TYPE_NAME             DeeCUShort_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCShort_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCUShort_Type
 #include "define-integer.c.inl"
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
 /* `signed int' */
-#define SIGNED                1
-#define FORMAT_STR            "%d"
-#define FORMAT_TYP            signed int
-#define T                     signed int
-#define FFI_TYPE              ffi_type_sint
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_INT
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_INT
-#define TYPE_NAME             DeeCInt_Type
-#define SIGNED_TYPE_NAME      DeeCInt_Type
-#define UNSIGNED_TYPE_NAME    DeeCUInt_Type
+#define DEFINE_SIGNED                1
+#define DEFINE_PRINTF_FMT            "%d"
+#define DEFINE_PRINTF_TYP            signed int
+#define DEFINE_T                     signed int
+#define DEFINE_FFI_TYPE              ffi_type_sint
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_INT
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_INT
+#define DEFINE_TYPE_NAME             DeeCInt_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCInt_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCUInt_Type
 #include "define-integer.c.inl"
 /* `unsigned int' */
-#define FORMAT_STR            "%u"
-#define FORMAT_TYP            unsigned int
-#define T                     unsigned int
-#define FFI_TYPE              ffi_type_uint
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_INT
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_INT
-#define TYPE_NAME             DeeCUInt_Type
-#define SIGNED_TYPE_NAME      DeeCInt_Type
-#define UNSIGNED_TYPE_NAME    DeeCUInt_Type
+#define DEFINE_PRINTF_FMT            "%u"
+#define DEFINE_PRINTF_TYP            unsigned int
+#define DEFINE_T                     unsigned int
+#define DEFINE_FFI_TYPE              ffi_type_uint
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_INT
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_INT
+#define DEFINE_TYPE_NAME             DeeCUInt_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCInt_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCUInt_Type
 #include "define-integer.c.inl"
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #define CONFIG_DONT_PROMOTE_TO_INTEGER
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
 /* `signed long' */
-#define SIGNED                1
-#define FORMAT_STR            "%ld"
-#define FORMAT_TYP            signed long
-#define T                     signed long
-#define F(x)                  x##l
-#define FFI_TYPE              ffi_type_slong
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_LONG
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LONG
-#define TYPE_NAME             DeeCLong_Type
-#define SIGNED_TYPE_NAME      DeeCLong_Type
-#define UNSIGNED_TYPE_NAME    DeeCULong_Type
+#define DEFINE_SIGNED                1
+#define DEFINE_PRINTF_FMT            "%ld"
+#define DEFINE_PRINTF_TYP            signed long
+#define DEFINE_T                     signed long
+#define DEFINE_F(x)                  x##l
+#define DEFINE_FFI_TYPE              ffi_type_slong
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_LONG
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_LONG
+#define DEFINE_TYPE_NAME             DeeCLong_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCLong_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCULong_Type
 #include "define-integer.c.inl"
 /* `unsigned long' */
-#define FORMAT_STR            "%lu"
-#define FORMAT_TYP            unsigned long
-#define T                     unsigned long
-#define F(x)                  x##ul
-#define FFI_TYPE              ffi_type_ulong
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_LONG
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LONG
-#define TYPE_NAME             DeeCULong_Type
-#define SIGNED_TYPE_NAME      DeeCLong_Type
-#define UNSIGNED_TYPE_NAME    DeeCULong_Type
+#define DEFINE_PRINTF_FMT            "%lu"
+#define DEFINE_PRINTF_TYP            unsigned long
+#define DEFINE_T                     unsigned long
+#define DEFINE_F(x)                  x##ul
+#define DEFINE_FFI_TYPE              ffi_type_ulong
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_LONG
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_LONG
+#define DEFINE_TYPE_NAME             DeeCULong_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCLong_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCULong_Type
 #include "define-integer.c.inl"
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
 /* `signed long long' */
-#define SIGNED                1
-#define FORMAT_STR            "%lld"
-#define FORMAT_TYP            __LONGLONG
-#define T                     __LONGLONG
-#define F(x)                  x##ll
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
-#define TYPE_NAME             DeeCLLong_Type
-#define SIGNED_TYPE_NAME      DeeCLLong_Type
-#define UNSIGNED_TYPE_NAME    DeeCULLong_Type
+#define DEFINE_SIGNED                1
+#define DEFINE_PRINTF_FMT            "%lld"
+#define DEFINE_PRINTF_TYP            __LONGLONG
+#define DEFINE_T                     __LONGLONG
+#define DEFINE_F(x)                  x##ll
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
+#define DEFINE_TYPE_NAME             DeeCLLong_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCLLong_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCULLong_Type
 #include "define-integer.c.inl"
 /* `unsigned long long' */
-#define FORMAT_STR            "%llu"
-#define FORMAT_TYP            __ULONGLONG
-#define T                     __ULONGLONG
-#define F(x)                  x##ull
-#define SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
-#define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
-#define TYPE_NAME             DeeCULLong_Type
-#define SIGNED_TYPE_NAME      DeeCLLong_Type
-#define UNSIGNED_TYPE_NAME    DeeCULLong_Type
+#define DEFINE_PRINTF_FMT            "%llu"
+#define DEFINE_PRINTF_TYP            __ULONGLONG
+#define DEFINE_T                     __ULONGLONG
+#define DEFINE_F(x)                  x##ull
+#define DEFINE_SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
+#define DEFINE_ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
+#define DEFINE_TYPE_NAME             DeeCULLong_Type
+#define DEFINE_TYPE_NAME_SIGNED      DeeCLLong_Type
+#define DEFINE_TYPE_NAME_UNSIGNED    DeeCULLong_Type
 #include "define-integer.c.inl"
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 #undef CONFIG_DONT_PROMOTE_TO_INTEGER
 
 /* Floating point types. */
-#define NAME       "float"
-#define TYPE_NAME  DeeCFloat_Type
-#define T          CONFIG_CTYPES_FLOAT_TYPE
+#define DEFINE_NAME       "float"
+#define DEFINE_TYPE_NAME  DeeCFloat_Type
+#define DEFINE_T          CONFIG_CTYPES_FLOAT_TYPE
 #include "define-float.c.inl"
 
-#define NAME       "double"
-#define TYPE_NAME  DeeCDouble_Type
-#define T          CONFIG_CTYPES_DOUBLE_TYPE
+#define DEFINE_NAME       "double"
+#define DEFINE_TYPE_NAME  DeeCDouble_Type
+#define DEFINE_T          CONFIG_CTYPES_DOUBLE_TYPE
 #include "define-float.c.inl"
 
-#define NAME       "long_double"
-#define TYPE_NAME  DeeCLDouble_Type
-#define T          CONFIG_CTYPES_LDOUBLE_TYPE
+#define DEFINE_NAME       "long_double"
+#define DEFINE_TYPE_NAME  DeeCLDouble_Type
+#define DEFINE_T          CONFIG_CTYPES_LDOUBLE_TYPE
 #include "define-float.c.inl"
 
 #endif /* !__INTELLISENSE__ */
@@ -345,7 +343,7 @@ INTERN DeeSTypeObject DeeCVoid_Type = {
 		/* .tp_base     = */ DeeSType_AsType(&DeeStructured_Type),
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
-				/* T:              */ DeeObject,
+				/* DEFINE_T:              */ DeeObject,
 				/* tp_ctor:        */ NULL,
 				/* tp_copy_ctor:   */ NULL,
 				/* tp_any_ctor:    */ NULL,

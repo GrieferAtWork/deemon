@@ -167,6 +167,7 @@ PRIVATE DREF String *latin1_chars[256] = {
 	NULL,
 };
 
+/* TODO: Use "struct Dee_rcu_lock" */
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_rwlock_t latin1_chars_lock = Dee_ATOMIC_RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */

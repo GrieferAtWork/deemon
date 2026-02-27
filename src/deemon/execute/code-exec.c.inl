@@ -1031,9 +1031,9 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 
 #ifdef _MSC_VER
 	/* MSVC is too dumb to take advantage of the C standard
-	 * and optimize away inner-scope variables that take the
-	 * address of a local variable, and have multiple such
-	 * scopes share the same memory location for said variable:
+	 * and optimize away inner-scope variables that have their
+	 * address taken, and have multiple such variables share
+	 * the same memory location:
 	 * >> {
 	 * >>     int x = 4;
 	 * >>     printf("%p\n", &x);
@@ -1042,7 +1042,7 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 	 * >>     int y = 5;
 	 * >>     printf("%p\n", &y); // Regardless of optimization level, MSVC refuses to have
 	 * >>                         // `y' share the same memory location with `x', even though
-	 * >>                         // The C standard 100% allows a compiler to do this.
+	 * >>                         // the C standard 100% allows a compiler to do this.
 	 * >> }
 	 *
 	 * From what I understand, Microsoft actually has to do this due to some

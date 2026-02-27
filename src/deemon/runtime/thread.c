@@ -5787,10 +5787,10 @@ PUBLIC void (DCALL DeeRCU_LockDefault)(void) {
 
 PUBLIC void (DCALL DeeRCU_UnlockDefault)(void) {
 	DeeThreadObject *caller = DeeThread_Self();
-	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
 #ifdef CONFIG_PER_OBJECT_RCU_LOCKS
 	ASSERT(caller->t_rcu_lock == &_DeeRCU_Default);
 #endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
 #ifndef NDEBUG
 	caller->t_rcu_lock = _DeeRCU_INVALID_LOCK;
 #endif /* !NDEBUG */
@@ -5813,10 +5813,10 @@ PUBLIC NONNULL((1)) void
 PUBLIC NONNULL((1)) void
 (DFCALL DeeRCU_Unlock)(Dee_rcu_lock_t *__restrict self) {
 	DeeThreadObject *caller = DeeThread_Self();
-	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
 #ifdef CONFIG_PER_OBJECT_RCU_LOCKS
 	ASSERT(caller->t_rcu_lock == self);
 #endif /* CONFIG_PER_OBJECT_RCU_LOCKS */
+	atomic_write_explicit(&caller->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, Dee_ATOMIC_RELEASE);
 #ifndef NDEBUG
 	caller->t_rcu_lock = _DeeRCU_INVALID_LOCK;
 #endif /* !NDEBUG */
@@ -5847,8 +5847,8 @@ PUBLIC void (DCALL DeeRCU_SynchronizeDefault)(void)
 	DeeThreadObject *caller = DeeThread_Self();
 	Dee_thread_rcuvers_t old_version, new_version;
 	ASSERTF(caller->t_rcu_vers == Dee_THREAD_RCU_INACTIVE,
-	        "Illegal: call to 'DeeRCU_SynchronizeDefault()' while calling "
-	        /**/ "thread has itself made a call to 'DeeRCU_LockDefault()'");
+	        "Illegal: call to 'DeeRCU_Synchronize()' while calling "
+	        /**/ "thread has itself made a call to 'DeeRCU_Lock()'");
 
 	/* Increment the RCU version counter (but make sure it never becomes "0") */
 again_increment_version:
@@ -5859,7 +5859,7 @@ again_increment_version:
 		if unlikely(new_version >= 8)
 			goto handle_overflowing_version;
 #else
-		if unlikely(new_version == Dee_THREAD_RCU_INACTIVE)
+		if unlikely(new_version == 0) /* aka: new_version < old_version */
 			goto handle_overflowing_version;
 #endif
 	} while (!atomic_cmpxch_weak_explicit(LOCAL_P_rcul_version, old_version, new_version,
@@ -5879,17 +5879,18 @@ again_increment_version:
 	 *
 	 * All potentially blocking system calls (should) then be wrapped by these
 	 * 2 functions (though if a system call is missed, that's actually perfectly
-	 * fine; it just means that concurrent `DeeRCU_SynchronizeDefault()' are a little
+	 * fine; it just means that concurrent `DeeRCU_Synchronize()' are a little
 	 * bit slower than they need to be).
 	 *
 	 * These 2 functions then interact with an unordered (position within has
 	 * no explicit meaning), fixed-width (each node has a fixed # of sub-nodes)
 	 * tree, with actual threads then appearing as leafs.
 	 *
-	 * The rebuilding of this tree is the protected by Dee_THREAD_PRIV_STATE_LISTRCU
-	 * being set in any thread (rather than "thread_list" being protected by that
+	 * The rebuilding of this tree is then protected by Dee_THREAD_PRIV_STATE_LISTRCU
+	 * being set in any thread (rather than only "thread_list" being protected by that
 	 * flag), and all threads that have started and are (potentially) running deemon
-	 * user-code appear in this tree ALL THE TIME.
+	 * user-code appear in this tree ALL THE TIME (no: the enter/leave blocking APIs
+	 * are not meant to add/remove a thread; they do something different; see below).
 	 *
 	 * >> struct rcu_tree_node {
 	 * >>     size_t                rtn_numactive;    // # of children in an "active" state
@@ -6027,16 +6028,8 @@ again_increment_version:
 			if unlikely(old_version > current_rcu_version)
 				old_version = current_rcu_version;
 
-			/* Try again. Note that we *CAN'T* release "thread_list_lock_release()"
-			 * and then re-acquire it before repeating the search. If we did that,
-			 * threads might fail the "ASSERT(thread_version == ...)" check above,
-			 * since then another thread might make another "DeeRCU_SynchronizeDefault()"
-			 * call in the mean-time.
-			 *
-			 * However, since RCU locks are kind-of on par with "atomic" locks, this
-			 * is actually OK (because we have an implicit guaranty that all threads
-			 * still holding RCU locks will eventually release those locks). */
-		}
+			/* Keep waiting for the "iter" thread to be finished */
+		} /* for (;;) */
 	} while ((iter = thread_list_next_atomic(iter)) != NULL);
 	thread_list_rcu_unlock(caller);
 	return;
@@ -6046,7 +6039,7 @@ handle_overflowing_version:
 	 * - The new version has to be less than the old version (since there is
 	 *   no more room for the version number to grow)
 	 * - Once the new (smaller) version has been assigned as the new version,
-	 *   any concurrent call to "DeeRCU_SynchronizeDefault()" will not be waiting for
+	 *   any concurrent call to "DeeRCU_Synchronize()" will not be waiting for
 	 *   RCU locks that happened prior to the new version having been set.
 	 *
 	 * Solve this problem by:
@@ -6083,7 +6076,7 @@ handle_overflowing_version:
 			ASSERT(iter != caller);
 			/* NOTE: Yielding here while still holding "thread_list_rcu_lock" is OK! */
 			SCHED_YIELD();
-		}
+		} /* for (;;) */
 	} while ((iter = thread_list_next_atomic(iter)) != NULL);
 	thread_list_rcu_unlock(caller);
 

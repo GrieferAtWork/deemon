@@ -552,7 +552,7 @@ struct atexit_entry {
 };
 
 /* [lock(atexit_lock)] The atexit list used by deemon. */
-PRIVATE size_t atexit_size = 0;
+PRIVATE size_t /*         */ atexit_size = 0;
 PRIVATE struct atexit_entry *atexit_list = NULL;
 
 #define ATEXIT_FNORMAL 0x0000 /* Normal atexit flags. */
