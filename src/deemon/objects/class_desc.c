@@ -48,7 +48,7 @@
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
 #include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_* */
+#include <deemon/util/atomic.h>        /* Dee_atomic_read, atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock */
 
@@ -2698,10 +2698,15 @@ ot_delitem_index(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+	oldval = atomic_xch(&self->ot_desc->id_vtab[index], NULL);
+	Dee_instance_desc_lock_synchronize(self->ot_desc);
+#else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	Dee_instance_desc_lock_write(self->ot_desc);
 	oldval = self->ot_desc->id_vtab[index];
 	self->ot_desc->id_vtab[index] = NULL;
 	Dee_instance_desc_lock_endwrite(self->ot_desc);
+#endif /* !CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	Dee_XDecref(oldval);
 	return 0;
 err_index:
@@ -2714,10 +2719,15 @@ ot_setitem_index(ObjectTable *self, size_t index, DeeObject *value) {
 	if unlikely(index >= self->ot_size)
 		goto err_index;
 	Dee_Incref(value);
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+	oldval = atomic_xch(&self->ot_desc->id_vtab[index], value);
+	Dee_instance_desc_lock_synchronize(self->ot_desc);
+#else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	Dee_instance_desc_lock_write(self->ot_desc);
 	oldval = self->ot_desc->id_vtab[index];
 	self->ot_desc->id_vtab[index] = value;
 	Dee_instance_desc_lock_endwrite(self->ot_desc);
+#endif /* !CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	Dee_XDecref(oldval);
 	return 0;
 err_index:
@@ -2729,8 +2739,12 @@ ot_bounditem_index(ObjectTable *__restrict self, size_t index) {
 	DeeObject *value;
 	if unlikely(index >= self->ot_size)
 		return Dee_BOUND_MISSING;
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+	value = Dee_atomic_read(&self->ot_desc->id_vtab[index]);
+#else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	value = Dee_atomic_read_with_atomic_rwlock(&self->ot_desc->id_vtab[index],
 	                                           &self->ot_desc->id_lock);
+#endif /* !CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	return Dee_BOUND_FROMBOOL(value);
 }
 

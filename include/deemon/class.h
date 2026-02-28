@@ -39,7 +39,6 @@
 
 #include "object.h"    /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_TYPE, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 #include "type.h"      /* DeeType_*, Dee_OPERATOR_USERCOUNT, Dee_TP_FGC, Dee_TP_FHEAP, Dee_TP_FVARIABLE, Dee_operator_t, Dee_visit_t, type_gc */
-#include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #include "util/lock.h" /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
 
 #include <stdarg.h>  /* va_list */
@@ -48,7 +47,8 @@
 #include <stdint.h>  /* uint16_t, uintptr_t */
 
 #ifndef __INTELLISENSE__
-#include "string.h" /* DeeString_Hash */
+#include "string.h"    /* DeeString_Hash */
+#include "util/hash.h" /* Dee_HashPtr, Dee_HashStr */
 #if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
 #include "tuple.h" /* DeeTuple_ELEM, DeeTuple_SIZE */
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
@@ -491,6 +491,18 @@ struct Dee_class_optable {
 	DREF DeeObject *co_operators[Dee_CLASS_HEADER_OPC2];
 };
 
+#undef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+#if 0 /* TODO: Finish and see how well this runs... */
+#define CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+#endif
+
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+DECL_END
+#include "util/rcu.h" /* DeeRCU_*, Dee_DECLARE_RCU_LOCK, Dee_rcu_lock_init */
+DECL_BEGIN
+#endif /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
+
+
 struct Dee_class_desc {
 	/* The class description tail embedded into type-objects
 	 * which have been initialized as custom user-classes. */
@@ -503,13 +515,24 @@ struct Dee_class_desc {
 	                                                        * Table of cached operator callbacks. */
 	/* XXX: Consider removing this lock here (and in `Dee_instance_desc') and using RCU locking instead... */
 #ifndef CONFIG_NO_THREADS
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+	Dee_DECLARE_RCU_LOCK(cd_lock)                          /* Lock for accessing the class member table. */
+#else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	Dee_atomic_rwlock_t                       cd_lock;     /* Lock for accessing the class member table. */
+#endif /* !CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 #endif /* !CONFIG_NO_THREADS */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, cd_members); /* [0..1][lock(cd_lock)][cd_desc->cd_cmemb_size]
 	                                                        * The class member table (also contains
 	                                                        * instance-methods and operator callbacks). */
 };
 
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+#define Dee_class_desc_lock_init(self)        Dee_rcu_lock_init(&(self)->cd_lock)
+#define Dee_class_desc_lock_read(self)        DeeRCU_Lock(&(self)->cd_lock)
+#define Dee_class_desc_lock_endread(self)     DeeRCU_Unlock(&(self)->cd_lock)
+#define Dee_class_desc_lock_synchronize(self) DeeRCU_Synchronize(&(self)->cd_lock)
+#else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
+#define Dee_class_desc_lock_init(self)       Dee_atomic_rwlock_init(&(self)->cd_lock)
 #define Dee_class_desc_lock_reading(self)    Dee_atomic_rwlock_reading(&(self)->cd_lock)
 #define Dee_class_desc_lock_writing(self)    Dee_atomic_rwlock_writing(&(self)->cd_lock)
 #define Dee_class_desc_lock_tryread(self)    Dee_atomic_rwlock_tryread(&(self)->cd_lock)
@@ -526,6 +549,7 @@ struct Dee_class_desc {
 #define Dee_class_desc_lock_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->cd_lock)
 #define Dee_class_desc_lock_endread(self)    Dee_atomic_rwlock_endread(&(self)->cd_lock)
 #define Dee_class_desc_lock_end(self)        Dee_atomic_rwlock_end(&(self)->cd_lock)
+#endif /* !CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 
 #ifndef CONFIG_NO_THREADS
 #define Dee_class_desc_as_instance(x) ((struct Dee_instance_desc *)&(x)->cd_lock)
@@ -571,13 +595,24 @@ struct Dee_class_desc {
 
 struct Dee_instance_desc {
 #ifndef CONFIG_NO_THREADS
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+	Dee_DECLARE_RCU_LOCK(id_lock)  /* Lock that must be held when accessing  */
+#else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 	Dee_atomic_rwlock_t                       id_lock;  /* Lock that must be held when accessing  */
+#endif /* !CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 #endif /* !CONFIG_NO_THREADS */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, id_vtab); /* [0..1][lock(id_lock)]
 	                                                     * [DeeClass_DESC(:ob_type)->cd_desc->cd_imemb_size]
 	                                                     * Instance member table. */
 };
 
+#ifdef CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS
+#define Dee_instance_desc_lock_init(self)        Dee_rcu_lock_init(&(self)->id_lock)
+#define Dee_instance_desc_lock_read(self)        DeeRCU_Lock(&(self)->id_lock)
+#define Dee_instance_desc_lock_endread(self)     DeeRCU_Unlock(&(self)->id_lock)
+#define Dee_instance_desc_lock_synchronize(self) DeeRCU_Synchronize(&(self)->id_lock)
+#else /* CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
+#define Dee_instance_desc_lock_init(self)       Dee_atomic_rwlock_init(&(self)->id_lock)
 #define Dee_instance_desc_lock_reading(self)    Dee_atomic_rwlock_reading(&(self)->id_lock)
 #define Dee_instance_desc_lock_writing(self)    Dee_atomic_rwlock_writing(&(self)->id_lock)
 #define Dee_instance_desc_lock_tryread(self)    Dee_atomic_rwlock_tryread(&(self)->id_lock)
@@ -594,6 +629,7 @@ struct Dee_instance_desc {
 #define Dee_instance_desc_lock_endwrite(self)   Dee_atomic_rwlock_endwrite(&(self)->id_lock)
 #define Dee_instance_desc_lock_endread(self)    Dee_atomic_rwlock_endread(&(self)->id_lock)
 #define Dee_instance_desc_lock_end(self)        Dee_atomic_rwlock_end(&(self)->id_lock)
+#endif /* !CONFIG_USE_RCU_LOCKS_FOR_INSTANCE_LOCKS */
 
 #define DeeInstance_DESC(class_descriptor, self) \
 	((struct Dee_instance_desc *)((uintptr_t)Dee_AsObject(self) + (class_descriptor)->cd_offset))
