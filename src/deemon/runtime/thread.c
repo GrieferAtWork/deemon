@@ -1027,12 +1027,12 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 #define thread_list_rcu_lock(caller)   (void)0
 #define thread_list_rcu_unlock(caller) (void)0
 #else /* DeeThread_USE_SINGLE_THREADED */
-/* Wait for "Dee_THREAD_PRIV_STATE_NORMAL" to disappear from all threads.
+/* Wait for "Dee_THREAD_PRIV_STATE_LISTRCU" to disappear from all threads.
  * Caller must be holding "thread_list_lock". */
 PRIVATE void DCALL thread_list_lock_await_rcu(void) {
 	DeeThreadObject *iter;
 	LIST_FOREACH (iter, &thread_list, t_global) {
-		while (atomic_read(&iter->t_privstate) & Dee_THREAD_PRIV_STATE_NORMAL)
+		while (atomic_read(&iter->t_privstate) & Dee_THREAD_PRIV_STATE_LISTRCU)
 			SCHED_YIELD();
 	}
 }
@@ -1040,16 +1040,16 @@ PRIVATE void DCALL thread_list_lock_await_rcu(void) {
 /* Insert/unbind impl here needs to be more complicated, since it has to
  * involve "thread_list_lock_await_rcu()", and be atomic in regards to
  * other threads (other than the just-inserted/removed one), when any of
- * those threads have the "Dee_THREAD_PRIV_STATE_NORMAL" flag set.
+ * those threads have the "Dee_THREAD_PRIV_STATE_LISTRCU" flag set.
  *
  * iow: when inserting a thread, any (unrelated) thread that also has the
- *      "Dee_THREAD_PRIV_STATE_NORMAL" flag set must not be hindered in its
+ *      "Dee_THREAD_PRIV_STATE_LISTRCU" flag set must not be hindered in its
  *      enumeration of the thread list using only `thread_list_*_atomic'.
  */
 PRIVATE NONNULL((1)) void DCALL
 thread_list_insert(DeeThreadObject *__restrict self) {
 	DeeThreadObject *next;
-	ASSERT(!(self->t_privstate & Dee_THREAD_PRIV_STATE_NORMAL));
+	ASSERT(!(self->t_privstate & Dee_THREAD_PRIV_STATE_LISTRCU));
 	self->t_global.le_prev = &DeeThread_Main.ot_thread.t_global.le_next;
 	next = DeeThread_Main.ot_thread.t_global.le_next;
 	atomic_write_explicit(&self->t_global.le_next, next, Dee_ATOMIC_RELAXED);
@@ -1064,7 +1064,7 @@ PRIVATE NONNULL((1)) void DCALL
 thread_list_unbind(DeeThreadObject *__restrict self) {
 	DeeThreadObject **p_self, *next;
 #if 0 /* Doesn't actually matter in this case (and might not be the case in some weird edge-case) */
-	ASSERT(!(self->t_privstate & Dee_THREAD_PRIV_STATE_NORMAL));
+	ASSERT(!(self->t_privstate & Dee_THREAD_PRIV_STATE_LISTRCU));
 #endif
 	ASSERT(self->t_global.le_prev != NULL);
 	p_self = self->t_global.le_prev;
@@ -1109,8 +1109,8 @@ thread_list_unbind(DeeThreadObject *__restrict self) {
  * >>     ...
  * >> }
  * >> thread_list_rcu_unlock(caller); */
-#define thread_list_rcu_lock(caller)   _DeeThread_EnablePrivState(caller, Dee_THREAD_PRIV_STATE_NORMAL)
-#define thread_list_rcu_unlock(caller) _DeeThread_DisablePrivState(caller, Dee_THREAD_PRIV_STATE_NORMAL)
+#define thread_list_rcu_lock(caller)   _DeeThread_EnablePrivState(caller, Dee_THREAD_PRIV_STATE_LISTRCU)
+#define thread_list_rcu_unlock(caller) _DeeThread_DisablePrivState(caller, Dee_THREAD_PRIV_STATE_LISTRCU)
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 
 /* Check if a given thread is part of "thread_list"
@@ -3105,9 +3105,11 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 		if (ITER_ISOK(pCancelSynchronousIo)) {
 			(void)((*pCancelSynchronousIo)(me->ot_hThread));
 		} else if (!pCancelSynchronousIo) {
-			LPCANCELSYNCHRONOUSIO ptr;
+			LPCANCELSYNCHRONOUSIO ptr = NULL;
 			static WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
-			*(void **)&ptr = GetProcAddress(GetModuleHandleW(wKernel32), "CancelSynchronousIo");
+			HMODULE hKernel32 = GetModuleHandleW(wKernel32);
+			if (hKernel32 != NULL)
+				*(void **)&ptr = GetProcAddress(hKernel32, "CancelSynchronousIo");
 			if (!ptr)
 				*(void **)&ptr = (void *)ITER_DONE;
 			pCancelSynchronousIo = ptr;
