@@ -365,7 +365,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 	/* Start by untracking the object in question. */
 #if LOCAL_HAS_GC
 	self = DeeGC_UntrackAsync(self);
-	if (self == NULL)
+	if unlikely(self == NULL)
 		return; /* Remainder of object destruction happens asynchronously */
 #endif /* LOCAL_HAS_GC */
 #endif /* !DEFINE_DeeGCObject_FinishDestroyAfterUntrack */

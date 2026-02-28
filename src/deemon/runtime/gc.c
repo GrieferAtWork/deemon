@@ -627,7 +627,7 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 		 * untracked before it ever was being tracked for real. If that is
 		 * what's happening, then in order for the untrack to even work, the
 		 * object has to be tracked first. */
-		if (atomic_read(&gc_insert) != NULL)
+		if unlikely(atomic_read(&gc_insert) != NULL)
 			gc_reap_insert();
 
 		gc_do_untrack_locked(ob);
