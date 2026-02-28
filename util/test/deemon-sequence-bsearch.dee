@@ -31,7 +31,7 @@ assert seq.bfind(13) == 2;
 assert seq.bfind(21) == 3;
 assert seq.bfind(22) in [4:7];
 assert seq.bfind(23) == 7;
-assert seq.bfind(24) is none;
+assert seq.bfind(24) == -1;
 assert seq.bfind(31) == 8;
 assert seq.bfind(32) == 9;
 assert seq.bfind(33) == 10;

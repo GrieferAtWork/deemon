@@ -2363,14 +2363,14 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Do a binary search (requiring @this to be sorted via @key) for @item\n"
 	              "In case multiple elements match @item, the returned index will be "
 	              /**/ "that for one of them, though it is undefined which one specifically.\n"
-	              "When no elements of @this match, ?N is returned."
+	              "When no elements of @this match, ${-1} is returned."
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_bposition_name, &DeeMA_Sequence_bposition,
 	              "" DeeMA_Sequence_bposition_doc "\n"
 	              DOC_param_item
 	              DOC_param_key
 	              "Same as ?#bfind, but return (an) index where @item should be inserted, rather "
-	              /**/ "than ?N when @this doesn't contain any matching object"
+	              /**/ "than ${-1} when @this doesn't contain any matching object"
 	              ""), /* TODO: Requirements|Implementation table */
 	TYPE_KWMETHOD(DeeMA_Sequence_brange_name, &DeeMA_Sequence_brange,
 	              "" DeeMA_Sequence_brange_doc "\n"
@@ -2715,7 +2715,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Wrapper around ?#bfind that returns indicative of @item being bound:\n"
 	              "${"
 	              /**/ "local index = Sequence.bfind(this, start, end, key);\n"
-	              /**/ "return index !is none;"
+	              /**/ "return index != -1;"
 	              "}"),
 	TYPE_KWMETHOD("bindex", &seq_bindex,
 	              "(" seq_bindex_params ")->?Dint\n"
@@ -2725,7 +2725,7 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 	              "Same as ?#bfind, but throw an :ValueError instead of returning ?N:\n"
 	              "${"
 	              /**/ "local index = Sequence.bfind(this, start, end, key);\n"
-	              /**/ "if (index is none)\n"
+	              /**/ "if (index == -1)\n"
 	              /**/ "	throw ValueError(...);\n"
 	              /**/ "return index;"
 	              "}"),

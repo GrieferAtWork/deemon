@@ -20,14 +20,14 @@
 
 
 [[kw, alias(Sequence.bfind)]]
-__seq_bfind__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?X2?Dint?N {
+__seq_bfind__(item, size_t start = 0, size_t end = (size_t)-1, key:?DCallable=!N)->?Dint {
 	size_t result = !DeeNone_Check(key)
 	                ? CALL_DEPENDENCY(seq_bfind_with_key, self, item, start, end, key)
 	                : CALL_DEPENDENCY(seq_bfind, self, item, start, end);
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
-		return_none;
+		return DeeInt_NewMinusOne();
 	return DeeInt_NewSize(result);
 err:
 	return NULL;

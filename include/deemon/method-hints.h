@@ -1458,7 +1458,7 @@ DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_sorted__(DeeObject *__res
 
 #define DeeMA___seq_bfind___flags Dee_TYPE_METHOD_FKWDS
 #define DeeMA___seq_bfind___name  _DeeMA_ATTRSTR(__seq_bfind__)
-#define DeeMA___seq_bfind___doc   "(item,start=!0,end=!-1,key:?DCallable=!N)->?X2?Dint?N"
+#define DeeMA___seq_bfind___doc   "(item,start=!0,end=!-1,key:?DCallable=!N)->?Dint"
 DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeMA___seq_bfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define DeeMA_Sequence_bfind_flags DeeMA___seq_bfind___flags
 #define DeeMA_Sequence_bfind_name  _DeeMA_ATTRSTR(bfind)
