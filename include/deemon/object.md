@@ -40,7 +40,7 @@ void default__destroy(DeeObject *self) {
 	// Invoke regular destructors
 	do {
 		if (tp->tp_init.tp_dtor)
-			(*tp->tp_init.tp_dtor)(self);
+			(*tp->tp_init.tp_dtor)(self); // When "TF_TPVISIT" is set: inject "tp" as another, leading argument
 	} while ((tp = DeeType_Base(tp)) != NULL);
 	tp = Dee_TYPE(self);
 
