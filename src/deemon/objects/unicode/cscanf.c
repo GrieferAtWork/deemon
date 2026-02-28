@@ -603,7 +603,7 @@ ssi_setup(StringScanIterator *__restrict self,
 	/* Universally use UTF-8 for string scanning to prevent
 	 * any problems related to unicode text processing. */
 	if (DeeString_Check(scanner->ss_data)) {
-		self->si_datiter = DeeString_AsUtf8((DeeObject *)scanner->ss_data);
+		self->si_datiter = DeeString_AsUtf8(scanner->ss_data);
 		if unlikely(!self->si_datiter)
 			goto err;
 		self->si_datend = self->si_datiter + WSTR_LENGTH(self->si_datiter);
@@ -613,7 +613,7 @@ ssi_setup(StringScanIterator *__restrict self,
 		self->si_datend  = self->si_datiter + DeeBytes_SIZE(scanner->ss_data);
 	}
 	if (DeeString_Check(scanner->ss_format)) {
-		self->si_fmtiter = DeeString_AsUtf8((DeeObject *)scanner->ss_format);
+		self->si_fmtiter = DeeString_AsUtf8(scanner->ss_format);
 		if unlikely(!self->si_fmtiter)
 			goto err;
 		self->si_fmtend = self->si_fmtiter + WSTR_LENGTH(self->si_fmtiter);

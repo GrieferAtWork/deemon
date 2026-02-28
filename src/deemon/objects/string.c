@@ -1861,7 +1861,7 @@ string_foreach(String *self, Dee_foreach_t proc, void *arg) {
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
-		ptr.cp8 = DeeString_Get1Byte(Dee_AsObject(self));
+		ptr.cp8 = DeeString_Get1Byte(self);
 		end.cp8 = ptr.cp8 + WSTR_LENGTH(ptr.cp8);
 		while (ptr.cp8 < end.cp8) {
 #ifdef CONFIG_STRING_LATIN1_STATIC
@@ -1882,7 +1882,7 @@ string_foreach(String *self, Dee_foreach_t proc, void *arg) {
 		break;
 
 	CASE_WIDTH_2BYTE:
-		ptr.cp16 = DeeString_Get2Byte(Dee_AsObject(self));
+		ptr.cp16 = DeeString_Get2Byte(self);
 		end.cp16 = ptr.cp16 + WSTR_LENGTH(ptr.cp16);
 		while (ptr.cp16 < end.cp16) {
 			DREF DeeObject *elem;
@@ -1899,7 +1899,7 @@ string_foreach(String *self, Dee_foreach_t proc, void *arg) {
 		break;
 
 	CASE_WIDTH_4BYTE:
-		ptr.cp32 = DeeString_Get4Byte(Dee_AsObject(self));
+		ptr.cp32 = DeeString_Get4Byte(self);
 		end.cp32 = ptr.cp32 + WSTR_LENGTH(ptr.cp32);
 		while (ptr.cp32 < end.cp32) {
 			DREF DeeObject *elem;
@@ -1929,7 +1929,7 @@ string_foreach_reverse(String *self, Dee_foreach_t proc, void *arg) {
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
-		ptr.cp8 = DeeString_Get1Byte(Dee_AsObject(self));
+		ptr.cp8 = DeeString_Get1Byte(self);
 		end.cp8 = ptr.cp8 + WSTR_LENGTH(ptr.cp8);
 		while (ptr.cp8 < end.cp8) {
 			--end.cp8;
@@ -1950,7 +1950,7 @@ string_foreach_reverse(String *self, Dee_foreach_t proc, void *arg) {
 		break;
 
 	CASE_WIDTH_2BYTE:
-		ptr.cp16 = DeeString_Get2Byte(Dee_AsObject(self));
+		ptr.cp16 = DeeString_Get2Byte(self);
 		end.cp16 = ptr.cp16 + WSTR_LENGTH(ptr.cp16);
 		while (ptr.cp16 < end.cp16) {
 			DREF DeeObject *elem;
@@ -1967,7 +1967,7 @@ string_foreach_reverse(String *self, Dee_foreach_t proc, void *arg) {
 		break;
 
 	CASE_WIDTH_4BYTE:
-		ptr.cp32 = DeeString_Get4Byte(Dee_AsObject(self));
+		ptr.cp32 = DeeString_Get4Byte(self);
 		end.cp32 = ptr.cp32 + WSTR_LENGTH(ptr.cp32);
 		while (ptr.cp32 < end.cp32) {
 			DREF DeeObject *elem;
@@ -1999,7 +1999,7 @@ string_mh_seq_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
 
 	CASE_WIDTH_1BYTE: {
 		size_t i;
-		ptr.cp8 = DeeString_Get1Byte(Dee_AsObject(self));
+		ptr.cp8 = DeeString_Get1Byte(self);
 		if (end > WSTR_LENGTH(ptr.cp8))
 			end = WSTR_LENGTH(ptr.cp8);
 		for (i = start; i < end; ++i) {
@@ -2022,7 +2022,7 @@ string_mh_seq_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
 
 	CASE_WIDTH_2BYTE: {
 		size_t i;
-		ptr.cp16 = DeeString_Get2Byte(Dee_AsObject(self));
+		ptr.cp16 = DeeString_Get2Byte(self);
 		if (end > WSTR_LENGTH(ptr.cp16))
 			end = WSTR_LENGTH(ptr.cp16);
 		for (i = start; i < end; ++i) {
@@ -2041,7 +2041,7 @@ string_mh_seq_enumerate_index(String *self, Dee_seq_enumerate_index_t cb,
 
 	CASE_WIDTH_4BYTE: {
 		size_t i;
-		ptr.cp32 = DeeString_Get4Byte(Dee_AsObject(self));
+		ptr.cp32 = DeeString_Get4Byte(self);
 		if (end > WSTR_LENGTH(ptr.cp32))
 			end = WSTR_LENGTH(ptr.cp32);
 		for (i = start; i < end; ++i) {
@@ -2073,7 +2073,7 @@ string_mh_seq_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE: {
-		ptr.cp8 = DeeString_Get1Byte(Dee_AsObject(self));
+		ptr.cp8 = DeeString_Get1Byte(self);
 		if (end > WSTR_LENGTH(ptr.cp8))
 			end = WSTR_LENGTH(ptr.cp8);
 		while (end > start) {
@@ -2095,7 +2095,7 @@ string_mh_seq_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb
 	}	break;
 
 	CASE_WIDTH_2BYTE: {
-		ptr.cp16 = DeeString_Get2Byte(Dee_AsObject(self));
+		ptr.cp16 = DeeString_Get2Byte(self);
 		if (end > WSTR_LENGTH(ptr.cp16))
 			end = WSTR_LENGTH(ptr.cp16);
 		while (end > start) {
@@ -2113,7 +2113,7 @@ string_mh_seq_enumerate_index_reverse(String *self, Dee_seq_enumerate_index_t cb
 	}	break;
 
 	CASE_WIDTH_4BYTE: {
-		ptr.cp32 = DeeString_Get4Byte(Dee_AsObject(self));
+		ptr.cp32 = DeeString_Get4Byte(self);
 		if (end > WSTR_LENGTH(ptr.cp32))
 			end = WSTR_LENGTH(ptr.cp32);
 		while (end > start) {
@@ -2145,7 +2145,7 @@ string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
 	CASE_WIDTH_1BYTE:
-		ptr.cp8 = DeeString_Get1Byte(Dee_AsObject(self));
+		ptr.cp8 = DeeString_Get1Byte(self);
 		result  = WSTR_LENGTH(ptr.cp8);
 		if unlikely(dst_length < result)
 			break;
@@ -2165,7 +2165,7 @@ string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 		break;
 
 	CASE_WIDTH_2BYTE:
-		ptr.cp16 = DeeString_Get2Byte(Dee_AsObject(self));
+		ptr.cp16 = DeeString_Get2Byte(self);
 		result   = WSTR_LENGTH(ptr.cp16);
 		if unlikely(dst_length < result)
 			break;
@@ -2180,7 +2180,7 @@ string_asvector(String *self, size_t dst_length, /*out*/ DREF DeeObject **dst) {
 		break;
 
 	CASE_WIDTH_4BYTE:
-		ptr.cp32 = DeeString_Get4Byte(Dee_AsObject(self));
+		ptr.cp32 = DeeString_Get4Byte(self);
 		result   = WSTR_LENGTH(ptr.cp32);
 		if unlikely(dst_length < result)
 			break;
@@ -2528,7 +2528,7 @@ string_audit_wstr_bytes(String *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_utf8_bytes(String *__restrict self) {
-	char const *utf8 = DeeString_AsUtf8(Dee_AsObject(self));
+	char const *utf8 = DeeString_AsUtf8(self);
 	if unlikely(!utf8)
 		goto err;
 	return DeeBytes_NewViewRo(Dee_AsObject(self), utf8,
@@ -2539,7 +2539,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_utf16_bytes(String *__restrict self) {
-	uint16_t const *utf16 = DeeString_AsUtf16(Dee_AsObject(self), STRING_ERROR_FSTRICT);
+	uint16_t const *utf16 = DeeString_AsUtf16(self, STRING_ERROR_FSTRICT);
 	if unlikely(!utf16)
 		goto err;
 	return DeeBytes_NewViewRo(Dee_AsObject(self), utf16,
@@ -2550,7 +2550,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_audit_utf32_bytes(String *__restrict self) {
-	uint32_t const *utf32 = DeeString_AsUtf32(Dee_AsObject(self));
+	uint32_t const *utf32 = DeeString_AsUtf32(self);
 	if unlikely(!utf32)
 		goto err;
 	return DeeBytes_NewViewRo(Dee_AsObject(self), utf32,
@@ -2564,7 +2564,7 @@ string_audit_1byte_bytes(String *__restrict self) {
 	uint8_t const *b1;
 	if (self->s_data && self->s_data->u_width != Dee_STRING_WIDTH_1BYTE)
 		goto err_too_large;
-	b1 = DeeString_As1Byte(Dee_AsObject(self));
+	b1 = DeeString_As1Byte(self);
 	return DeeBytes_NewViewRo(Dee_AsObject(self), b1,
 	                          WSTR_LENGTH(b1));
 err_too_large:
@@ -2579,7 +2579,7 @@ string_audit_2byte_bytes(String *__restrict self) {
 	uint16_t const *b2;
 	if (self->s_data && self->s_data->u_width > Dee_STRING_WIDTH_2BYTE)
 		goto err_too_large;
-	b2 = DeeString_As2Byte(Dee_AsObject(self));
+	b2 = DeeString_As2Byte(self);
 	return DeeBytes_NewViewRo(Dee_AsObject(self), b2,
 	                          WSTR_LENGTH(b2) << 1);
 err_too_large:
@@ -2785,7 +2785,7 @@ string_getbuf(String *__restrict self,
               DeeBuffer *__restrict info,
               unsigned int flags) {
 	(void)flags;
-	info->bb_base = (void *)DeeString_AsBytes(Dee_AsObject(self), false);
+	info->bb_base = (void *)DeeString_AsBytes(self, false);
 	if unlikely(!info->bb_base)
 		goto err;
 	info->bb_size = WSTR_LENGTH(info->bb_base);

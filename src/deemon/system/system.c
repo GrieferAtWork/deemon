@@ -1598,7 +1598,7 @@ again_deletefile:
 		unc_filename = (DREF DeeStringObject *)DeeNTSystem_FixUncPath(filename);
 		if unlikely(!unc_filename)
 			goto err;
-		wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(unc_filename));
+		wname = (LPWSTR)DeeString_AsWide(unc_filename);
 		if unlikely(!wname) {
 			/* No point in trying to use DeleteFileA() here.
 			 * It doesn't work for UNC paths to begin with... */

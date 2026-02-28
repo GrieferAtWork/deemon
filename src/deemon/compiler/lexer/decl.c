@@ -493,7 +493,7 @@ switch_symbol_type:
 				if unlikely(!module_name)
 					goto print_object;
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-				module_name = DeeString_AsUtf8(Dee_AsObject(sym->s_extern.e_module->mo_name));
+				module_name = DeeString_AsUtf8(sym->s_extern.e_module->mo_name);
 				if unlikely(!module_name)
 					goto err;
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -622,7 +622,7 @@ print_undefined_symbol_name:
 
 	case DAST_ATTR: {
 		char const *attrname;
-		attrname = DeeString_AsUtf8(Dee_AsObject(self->da_attr.a_name));
+		attrname = DeeString_AsUtf8(self->da_attr.a_name);
 		if unlikely(!attrname)
 			goto err;
 		if unlikely(Dee_UNICODE_PRINTER_PRINT(printer, "?A") < 0)

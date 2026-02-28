@@ -281,27 +281,27 @@ splititer_setup(StringSplitIterator *__restrict self,
 	SWITCH_SIZEOF_WIDTH(self->s_width) {
 
 	CASE_WIDTH_1BYTE:
-		self->s_start.cp8 = DeeString_As1Byte((DeeObject *)split->s_str);
+		self->s_start.cp8 = DeeString_As1Byte(split->s_str);
 		self->s_end.cp8   = self->s_start.cp8 + WSTR_LENGTH(self->s_start.cp8);
-		self->s_sep.cp8   = DeeString_As1Byte((DeeObject *)split->s_sep);
+		self->s_sep.cp8   = DeeString_As1Byte(split->s_sep);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		self->s_start.cp16 = DeeString_As2Byte((DeeObject *)split->s_str);
+		self->s_start.cp16 = DeeString_As2Byte(split->s_str);
 		if unlikely(!self->s_start.cp16)
 			goto err;
 		self->s_end.cp16 = self->s_start.cp16 + WSTR_LENGTH(self->s_start.cp16);
-		self->s_sep.cp16 = DeeString_As2Byte((DeeObject *)split->s_sep);
+		self->s_sep.cp16 = DeeString_As2Byte(split->s_sep);
 		if unlikely(!self->s_sep.cp16)
 			goto err;
 		break;
 
 	CASE_WIDTH_4BYTE:
-		self->s_start.cp32 = DeeString_As4Byte((DeeObject *)split->s_str);
+		self->s_start.cp32 = DeeString_As4Byte(split->s_str);
 		if unlikely(!self->s_start.cp32)
 			goto err;
 		self->s_end.cp32 = self->s_start.cp32 + WSTR_LENGTH(self->s_start.cp32);
-		self->s_sep.cp32 = DeeString_As4Byte((DeeObject *)split->s_sep);
+		self->s_sep.cp32 = DeeString_As4Byte(split->s_sep);
 		if unlikely(!self->s_sep.cp32)
 			goto err;
 		break;
@@ -476,27 +476,27 @@ split_doiter(StringSplit *__restrict self,
 	SWITCH_SIZEOF_WIDTH(result->s_width) {
 
 	CASE_WIDTH_1BYTE:
-		result->s_start.cp8 = DeeString_As1Byte(Dee_AsObject(self->s_str));
+		result->s_start.cp8 = DeeString_As1Byte(self->s_str);
 		result->s_end.cp8   = result->s_start.cp8 + WSTR_LENGTH(result->s_start.cp8);
-		result->s_sep.cp8   = DeeString_As1Byte(Dee_AsObject(self->s_sep));
+		result->s_sep.cp8   = DeeString_As1Byte(self->s_sep);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		result->s_start.cp16 = DeeString_As2Byte(Dee_AsObject(self->s_str));
+		result->s_start.cp16 = DeeString_As2Byte(self->s_str);
 		if unlikely(!result->s_start.cp16)
 			goto err_r;
 		result->s_end.cp16 = result->s_start.cp16 + WSTR_LENGTH(result->s_start.cp16);
-		result->s_sep.cp16 = DeeString_As2Byte(Dee_AsObject(self->s_sep));
+		result->s_sep.cp16 = DeeString_As2Byte(self->s_sep);
 		if unlikely(!result->s_sep.cp16)
 			goto err_r;
 		break;
 
 	CASE_WIDTH_4BYTE:
-		result->s_start.cp32 = DeeString_As4Byte(Dee_AsObject(self->s_str));
+		result->s_start.cp32 = DeeString_As4Byte(self->s_str);
 		if unlikely(!result->s_start.cp32)
 			goto err_r;
 		result->s_end.cp32 = result->s_start.cp32 + WSTR_LENGTH(result->s_start.cp32);
-		result->s_sep.cp32 = DeeString_As4Byte(Dee_AsObject(self->s_sep));
+		result->s_sep.cp32 = DeeString_As4Byte(self->s_sep);
 		if unlikely(!result->s_sep.cp32)
 			goto err_r;
 		break;

@@ -137,7 +137,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 			/* Globally available module (loadable as part of the library path). */
 			char const *global_name;
 import_module_by_name:
-			global_name = DeeString_AsUtf8(Dee_AsObject(mod->mo_name));
+			global_name = DeeString_AsUtf8(mod->mo_name);
 			if unlikely(!global_name)
 				goto err;
 			data = dec_allocstr(global_name,
@@ -156,13 +156,13 @@ import_module_by_name:
 			 *       the empty module don't have a path assigned. */
 			if (!mod->mo_path)
 				goto import_module_by_name;
-			other_pathstr = DeeString_AsUtf8(Dee_AsObject(mod->mo_path));
+			other_pathstr = DeeString_AsUtf8(mod->mo_path);
 			if unlikely(!other_pathstr)
 				goto err;
 			other_pathend = other_pathstr + WSTR_LENGTH(other_pathstr);
 			if (!module_pathstr) {
 				/* Lazily calculate the module's path when it's start being used. */
-				module_pathstr = DeeString_AsUtf8(Dee_AsObject(self->mo_path));
+				module_pathstr = DeeString_AsUtf8(self->mo_path);
 				if unlikely(!module_pathstr)
 					goto err;
 				module_pathend = module_pathstr + WSTR_LENGTH(module_pathstr);
@@ -575,7 +575,7 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 	if (dec_putptr(straddr))
 		goto err; /* Dec_ClassDescriptor::cd_nam */
 	if (self->cd_doc) {
-		char const *doc_str = DeeString_AsUtf8(Dee_AsObject(self->cd_doc));
+		char const *doc_str = DeeString_AsUtf8(self->cd_doc);
 		if unlikely(!doc_str)
 			goto err;
 		if (WSTR_LENGTH(doc_str) == 0)
@@ -671,7 +671,7 @@ empty_doc:
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
-			char const *doc_str = DeeString_AsUtf8(Dee_AsObject(attr->ca_doc));
+			char const *doc_str = DeeString_AsUtf8(attr->ca_doc);
 			if unlikely(!doc_str)
 				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
@@ -727,7 +727,7 @@ empty_cattr_doc:
 		if (dec_putptr(straddr))
 			goto err; /* Dec_ClassAttribute::ca_nam */
 		if (attr->ca_doc) {
-			char const *doc_str = DeeString_AsUtf8(Dee_AsObject(attr->ca_doc));
+			char const *doc_str = DeeString_AsUtf8(attr->ca_doc);
 			if unlikely(!doc_str)
 				goto err;
 			if (WSTR_LENGTH(doc_str) == 0)
@@ -1775,7 +1775,7 @@ INTERN WUNUSED NONNULL((1)) int
 				uint8_t *name;
 				uint32_t addr;
 				dec_curr = SC_STRING;
-				name = (uint8_t *)DeeString_AsUtf8(Dee_AsObject(self->co_keywords[i]));
+				name = (uint8_t *)DeeString_AsUtf8(self->co_keywords[i]);
 				if unlikely(!name)
 					goto err;
 				name = dec_allocstr(name, (WSTR_LENGTH(name) + 1) * sizeof(char));
@@ -1791,7 +1791,7 @@ INTERN WUNUSED NONNULL((1)) int
 				uint8_t *name;
 				uint32_t addr;
 				size_t len;
-				name = (uint8_t *)DeeString_AsUtf8(Dee_AsObject(self->co_keywords[i]));
+				name = (uint8_t *)DeeString_AsUtf8(self->co_keywords[i]);
 				if unlikely(!name)
 					goto err;
 				len = WSTR_LENGTH(name);

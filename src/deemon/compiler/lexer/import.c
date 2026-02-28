@@ -363,7 +363,7 @@ PRIVATE struct TPPKeyword *DCALL
 get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) {
 	char const *utf8_repr, *symbol_start;
 	size_t symbol_length;
-	utf8_repr = DeeString_AsUtf8(Dee_AsObject(module_name));
+	utf8_repr = DeeString_AsUtf8(module_name);
 	if unlikely(!utf8_repr)
 		goto err;
 	symbol_start  = (char const *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;

@@ -186,7 +186,7 @@ sfi_setup(StringFindIterator *__restrict self,
 	SWITCH_SIZEOF_WIDTH(self->sfi_width) {
 
 	CASE_WIDTH_1BYTE:
-		self->sfi_ptr.cp8   = DeeString_As1Byte((DeeObject *)find->sf_str);
+		self->sfi_ptr.cp8   = DeeString_As1Byte(find->sf_str);
 		self->sfi_start.cp8 = self->sfi_ptr.cp8;
 		if (my_end > WSTR_LENGTH(self->sfi_ptr.cp8))
 			my_end = WSTR_LENGTH(self->sfi_ptr.cp8);
@@ -194,12 +194,12 @@ sfi_setup(StringFindIterator *__restrict self,
 			my_start = my_end;
 		self->sfi_end.cp8 = self->sfi_ptr.cp8 + my_end;
 		self->sfi_ptr.cp8 += my_start;
-		self->sfi_needle_ptr.cp8 = DeeString_As1Byte((DeeObject *)find->sf_needle);
+		self->sfi_needle_ptr.cp8 = DeeString_As1Byte(find->sf_needle);
 		self->sfi_needle_len     = WSTR_LENGTH(self->sfi_needle_ptr.cp8);
 		break;
 
 	CASE_WIDTH_2BYTE:
-		self->sfi_ptr.cp16 = DeeString_As2Byte((DeeObject *)find->sf_str);
+		self->sfi_ptr.cp16 = DeeString_As2Byte(find->sf_str);
 		if unlikely(!self->sfi_ptr.cp16)
 			goto err;
 		self->sfi_start.cp16 = self->sfi_ptr.cp16;
@@ -209,14 +209,14 @@ sfi_setup(StringFindIterator *__restrict self,
 			my_start = my_end;
 		self->sfi_end.cp16 = self->sfi_ptr.cp16 + my_end;
 		self->sfi_ptr.cp16 += my_start;
-		self->sfi_needle_ptr.cp16 = DeeString_As2Byte((DeeObject *)find->sf_needle);
+		self->sfi_needle_ptr.cp16 = DeeString_As2Byte(find->sf_needle);
 		if unlikely(!self->sfi_needle_ptr.cp16)
 			goto err;
 		self->sfi_needle_len = WSTR_LENGTH(self->sfi_needle_ptr.cp16);
 		break;
 
 	CASE_WIDTH_4BYTE:
-		self->sfi_ptr.cp32 = DeeString_As4Byte((DeeObject *)find->sf_str);
+		self->sfi_ptr.cp32 = DeeString_As4Byte(find->sf_str);
 		if unlikely(!self->sfi_ptr.cp32)
 			goto err;
 		self->sfi_start.cp32 = self->sfi_ptr.cp32;
@@ -226,7 +226,7 @@ sfi_setup(StringFindIterator *__restrict self,
 			my_start = my_end;
 		self->sfi_end.cp32 = self->sfi_ptr.cp32 + my_end;
 		self->sfi_ptr.cp32 += my_start;
-		self->sfi_needle_ptr.cp32 = DeeString_As4Byte((DeeObject *)find->sf_needle);
+		self->sfi_needle_ptr.cp32 = DeeString_As4Byte(find->sf_needle);
 		if unlikely(!self->sfi_needle_ptr.cp32)
 			goto err;
 		self->sfi_needle_len = WSTR_LENGTH(self->sfi_needle_ptr.cp32);

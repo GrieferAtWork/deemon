@@ -325,7 +325,7 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 	self->ten_str = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 	if unlikely(!self->ten_str)
 		goto err;
-	self->ten_start = DeeString_AsUtf8(Dee_AsObject(self->ten_str));
+	self->ten_start = DeeString_AsUtf8(self->ten_str);
 	if unlikely(!self->ten_start)
 		goto err_ten_str;
 	self->ten_end = self->ten_start + WSTR_LENGTH(self->ten_start);
@@ -3648,7 +3648,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 			 * >>     ret   $8 */
 			/* TODO: Can inline more than this! (see impl of `string_format()'):
 			 * - Inline "DeeArg_Unpack1(err, argc, argv, "format", &args)"
-			 * - Inline "DeeString_AsUtf8(Dee_AsObject(self))"
+			 * - Inline "DeeString_AsUtf8(self)"
 			 */
 
 			/* TODO: Inline constant arguments into the format string */

@@ -1388,7 +1388,7 @@ again:
 		fullname = diriter_get_d_fullname(self);
 		if unlikely(!fullname)
 			goto err;
-		utf8 = DeeString_AsUtf8((DeeObject *)fullname);
+		utf8 = DeeString_AsUtf8(fullname);
 		if unlikely(!utf8) {
 			Dee_Decref(fullname);
 			goto err;

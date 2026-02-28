@@ -92,7 +92,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 posix_path_headof_f(DeeStringObject *__restrict path) {
 	char const *tailsep, *pathstr;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	pathstr = DeeString_AsUtf8(Dee_AsObject(path));
+	pathstr = DeeString_AsUtf8(path);
 	if unlikely(!pathstr)
 		goto err;
 	tailsep = DeeSystem_BaseName(pathstr, WSTR_LENGTH(pathstr));
@@ -111,7 +111,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 posix_path_tailof_f(DeeStringObject *__restrict path) {
 	char const *tailsep, *pathstr;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	pathstr = DeeString_AsUtf8(Dee_AsObject(path));
+	pathstr = DeeString_AsUtf8(path);
 	if unlikely(!pathstr)
 		goto err;
 	tailsep = DeeSystem_BaseName(pathstr, WSTR_LENGTH(pathstr));
@@ -131,7 +131,7 @@ posix_path_driveof_f(DeeStringObject *__restrict path) {
 	char const *pathstr, *iter, *end;
 	DREF DeeStringObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	pathstr = DeeString_AsUtf8(Dee_AsObject(path));
+	pathstr = DeeString_AsUtf8(path);
 	if unlikely(!pathstr)
 		goto err;
 	iter = pathstr;
@@ -406,7 +406,7 @@ posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Load `linkname' as UTF-8 and check where the containing directory ends. */
-	name_base = DeeString_AsUtf8((DeeObject *)linkname);
+	name_base = DeeString_AsUtf8(linkname);
 	if unlikely(!name_base)
 		goto err;
 	name_end = DeeSystem_BaseName(name_base, WSTR_LENGTH(name_base));
@@ -418,7 +418,7 @@ posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname) {
 	}
 
 	/* Load the string as UTF-8 and strip leading `./' */
-	link_base = DeeString_AsUtf8((DeeObject *)link);
+	link_base = DeeString_AsUtf8(link);
 	if unlikely(!link_base)
 		goto err;
 	link_start = link_base;
@@ -502,10 +502,10 @@ return_unmodified:
 		char const *next;
 		char const *pwd_base, *pwd_begin, *pwd_end;
 		char const *pth_base, *pth_begin, *pth_end;
-		pwd_base = DeeString_AsUtf8((DeeObject *)pwd);
+		pwd_base = DeeString_AsUtf8(pwd);
 		if unlikely(!pwd_base)
 			goto err_pwd;
-		pth_base = DeeString_AsUtf8(Dee_AsObject(path));
+		pth_base = DeeString_AsUtf8(path);
 		if unlikely(!pth_base)
 			goto err_pwd;
 		pwd_end = (pwd_begin = pwd_base) + WSTR_LENGTH(pwd_base);
@@ -707,10 +707,10 @@ posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
 		if unlikely(!pwd)
 			goto err;
 	}
-	pth_iter = DeeString_AsUtf8(Dee_AsObject(path));
+	pth_iter = DeeString_AsUtf8(path);
 	if unlikely(!pth_iter)
 		goto err;
-	pwd_iter = DeeString_AsUtf8((DeeObject *)pwd);
+	pwd_iter = DeeString_AsUtf8(pwd);
 	if unlikely(!pwd_iter)
 		goto err;
 	pth_end = pth_iter + WSTR_LENGTH(pth_iter);
@@ -922,7 +922,7 @@ continue_uprefs_normal:
 					 * had to be retrieved retroactively. */
 #ifndef DeeSystem_HAVE_FS_DRIVES
 					char const *pth_base;
-					pth_base = DeeString_AsUtf8(Dee_AsObject(path));
+					pth_base = DeeString_AsUtf8(path);
 					if unlikely(!pth_base)
 						goto err;
 #endif /* !DeeSystem_HAVE_FS_DRIVES */
@@ -1016,7 +1016,7 @@ posix_path_normalpath_f(DeeStringObject *__restrict path) {
 	/*utf-8*/ char const *flush_start, *flush_end;
 	uint32_t ch;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	begin = DeeString_AsUtf8(Dee_AsObject(path));
+	begin = DeeString_AsUtf8(path);
 	if unlikely(!begin)
 		goto err;
 	end = begin + WSTR_LENGTH(begin);
@@ -1198,7 +1198,7 @@ posix_path_joinpath_f(size_t pathc, DeeStringObject *const *__restrict pathv) {
 		/* Validate that the path is actually a string. */
 		if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 			goto err;
-		begin = DeeString_AsUtf8(Dee_AsObject(path));
+		begin = DeeString_AsUtf8(path);
 		if unlikely(!begin)
 			goto err;
 		end = begin + WSTR_LENGTH(begin);

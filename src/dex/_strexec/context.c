@@ -1230,7 +1230,7 @@ JITContext_DoImportModule(JITContext *__restrict self,
 	char const *source_name;
 	size_t source_size;
 	if (spec->ii_import_name) {
-		source_name = DeeString_AsUtf8((DeeObject *)spec->ii_import_name);
+		source_name = DeeString_AsUtf8(spec->ii_import_name);
 		if unlikely(!source_name)
 			goto err;
 		source_size = WSTR_LENGTH(source_name);
@@ -1338,7 +1338,7 @@ JITContext_DoImportSymbol(JITContext *__restrict self,
 		size_t source_size;
 		Dee_hash_t source_hash;
 		if (spec->ii_import_name) {
-			source_name = DeeString_AsUtf8((DeeObject *)spec->ii_import_name);
+			source_name = DeeString_AsUtf8(spec->ii_import_name);
 			if unlikely(!source_name)
 				goto err;
 			source_size = WSTR_LENGTH(source_name);

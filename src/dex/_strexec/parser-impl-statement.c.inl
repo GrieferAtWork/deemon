@@ -758,7 +758,7 @@ get_module_symbol_name(JITLexer *__restrict self,
 	DeeStringObject *module_name = result->ii_import_name;
 	char const *utf8_repr, *symbol_start;
 	size_t symbol_length;
-	utf8_repr = DeeString_AsUtf8((DeeObject *)module_name);
+	utf8_repr = DeeString_AsUtf8(module_name);
 	if unlikely(!utf8_repr)
 		goto err;
 	symbol_start  = (char const *)memrend(utf8_repr, '.', WSTR_LENGTH(utf8_repr)) + 1;

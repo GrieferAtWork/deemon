@@ -768,8 +768,9 @@ PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
  * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
  *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
  * @return: NULL: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1)) /*latin-1*/ __BYTE_TYPE__ const *DCALL
-DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
+DFUNDEF WUNUSED NONNULL((1)) /*latin-1*/ __BYTE_TYPE__ const *
+(DCALL DeeString_AsBytes)(DeeObject *__restrict self, bool allow_invalid);
+#define DeeString_AsBytes(self, allow_invalid)  DeeString_AsBytes(Dee_AsObject(self), allow_invalid)
 #define DeeString_AsLatin1(self, allow_invalid) DeeString_AsBytes(self, allow_invalid)
 
 /* Quickly access the 1, 2 or 4-byte variants of a given string, allowing
@@ -779,12 +780,18 @@ DFUNDEF WUNUSED NONNULL((1)) uint16_t const *(DCALL DeeString_As2Byte)(DeeObject
 DFUNDEF WUNUSED NONNULL((1)) uint32_t const *(DCALL DeeString_As4Byte)(DeeObject *__restrict self);
 #ifdef __INTELLISENSE__
 ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t const *(DeeString_As1Byte)(DeeObject *__restrict self);
+#define DeeString_As1Byte(self) DeeString_As1Byte(Dee_AsObject(self))
 #endif /* __INTELLISENSE__ */
+#define DeeString_As2Byte(self) DeeString_As2Byte(Dee_AsObject(self))
+#define DeeString_As4Byte(self) DeeString_As4Byte(Dee_AsObject(self))
 
 #ifdef __INTELLISENSE__
 ATTR_RETNONNULL WUNUSED NONNULL((1)) uint8_t const *(DeeString_Get1Byte)(DeeObject *__restrict self);
 ATTR_RETNONNULL WUNUSED NONNULL((1)) uint16_t const *(DeeString_Get2Byte)(DeeObject *__restrict self);
 ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t const *(DeeString_Get4Byte)(DeeObject *__restrict self);
+#define DeeString_Get1Byte(self) DeeString_Get1Byte(Dee_AsObject(self))
+#define DeeString_Get2Byte(self) DeeString_Get2Byte(Dee_AsObject(self))
+#define DeeString_Get4Byte(self) DeeString_Get4Byte(Dee_AsObject(self))
 #else /* __INTELLISENSE__ */
 #define DeeString_Get1Byte(self) DeeString_As1Byte(self)
 #define DeeString_Get2Byte(self)                                                  \
@@ -802,18 +809,20 @@ ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t const *(DeeString_Get4Byte)(DeeObj
 	         ((DeeStringObject *)(self))->s_data->u_width == Dee_STRING_WIDTH_1BYTE, \
 	         "The string is too wide to view its 1-byte variant"),                   \
 	 (uint8_t const *)DeeString_STR(self))
+#undef DeeString_As2Byte
 #define DeeString_As2Byte(self)                                                              \
 	(((DeeStringObject *)(self))->s_data &&                                                  \
 	 (ASSERTF(((DeeStringObject *)(self))->s_data->u_width <= Dee_STRING_WIDTH_2BYTE,        \
 	          "The string is too wide to view its 2-byte variant"),                          \
 	  ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE])                   \
 	 ? (uint16_t const *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_2BYTE] \
-	 : (DeeString_As2Byte)(self))
+	 : (DeeString_As2Byte)((DeeObject *)(self)))
+#undef DeeString_As4Byte
 #define DeeString_As4Byte(self)                                                              \
 	(((DeeStringObject *)(self))->s_data &&                                                  \
 	 ((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE]                     \
 	 ? (uint32_t const *)((DeeStringObject *)(self))->s_data->u_data[Dee_STRING_WIDTH_4BYTE] \
-	 : (DeeString_As4Byte)(self))
+	 : (DeeString_As4Byte)((DeeObject *)(self)))
 #endif /* !__INTELLISENSE__ */
 
 
@@ -823,20 +832,24 @@ ATTR_RETNONNULL WUNUSED NONNULL((1)) uint32_t const *(DeeString_Get4Byte)(DeeObj
  * using `Dee_WSTR_LENGTH(return)'.
  * @return: * :   A pointer to the UTF-8 variant-string of `self'
  * @return: NULL: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
-DeeString_AsUtf8(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *
+(DCALL DeeString_AsUtf8)(DeeObject *__restrict self);
+#define DeeString_AsUtf8(self) DeeString_AsUtf8(Dee_AsObject(self))
 
 /* Same as `DeeString_AsUtf8()', but returns NULL without throwing an error. */
-DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
-DeeString_TryAsUtf8(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) /*utf-8*/ char const *
+(DCALL DeeString_TryAsUtf8)(DeeObject *__restrict self);
+#define DeeString_TryAsUtf8(self) DeeString_TryAsUtf8(Dee_AsObject(self))
 
 /* Returns the UTF-16 variant of the given string (as a width-string). */
-DFUNDEF WUNUSED NONNULL((1)) uint16_t const *DCALL
-DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) uint16_t const *
+(DCALL DeeString_AsUtf16)(DeeObject *__restrict self, unsigned int error_mode);
+#define DeeString_AsUtf16(self, error_mode) DeeString_AsUtf16(Dee_AsObject(self), error_mode)
 
 /* Returns the UTF-32 variant of the given string (as a width-string). */
 #ifdef __INTELLISENSE__
 uint32_t const *DeeString_AsUtf32(DeeObject *__restrict self);
+#define DeeString_AsUtf32(self) DeeString_AsUtf32(Dee_AsObject(self))
 #else /* __INTELLISENSE__ */
 #define DeeString_AsUtf32(self) DeeString_As4Byte(self)
 #endif /* !__INTELLISENSE__ */
@@ -844,6 +857,7 @@ uint32_t const *DeeString_AsUtf32(DeeObject *__restrict self);
 /* Returns the Wide-string variant of the given string (as a width-string). */
 #ifdef __INTELLISENSE__
 Dee_wchar_t const *DeeString_AsWide(DeeObject *__restrict self);
+#define DeeString_AsWide(self) DeeString_AsWide(Dee_AsObject(self))
 #elif __SIZEOF_WCHAR_T__ == 2
 #define DeeString_AsWide(self) ((Dee_wchar_t const *)DeeString_AsUtf16(self, Dee_STRING_ERROR_FREPLAC))
 #else /* __SIZEOF_WCHAR_T__ == 2 */

@@ -434,8 +434,8 @@ PRIVATE int __LIBCCALL
 compare_strings_by_utf8(void const *lhs_ptr, void const *rhs_ptr) {
 	DeeStringObject *lhs = *(DeeStringObject **)lhs_ptr;
 	DeeStringObject *rhs = *(DeeStringObject **)rhs_ptr;
-	char const *lhs_utf8 = DeeString_AsUtf8((DeeObject *)lhs);
-	char const *rhs_utf8 = DeeString_AsUtf8((DeeObject *)rhs);
+	char const *lhs_utf8 = DeeString_AsUtf8(lhs);
+	char const *rhs_utf8 = DeeString_AsUtf8(rhs);
 	ASSERT(lhs_utf8);
 	ASSERT(rhs_utf8);
 	return fs_strcmp(lhs_utf8, rhs_utf8);
@@ -453,7 +453,7 @@ Dee_tuple_builder_sort_and_make_unique(struct Dee_tuple_builder *__restrict self
 		char const *utf8;
 		DeeStringObject *item;
 		item = (DeeStringObject *)tuple->t_elem[i];
-		utf8 = DeeString_AsUtf8((DeeObject *)item);
+		utf8 = DeeString_AsUtf8(item);
 		if unlikely(!utf8)
 			goto err;
 	}

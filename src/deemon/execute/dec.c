@@ -520,8 +520,8 @@ corrupt_dep_index_reloc_rrel:
 #if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
 	if (self->e_typedata.td_reloc.er_offsetof_gchead) {
 		/* Link in GC objects (if there are any) */
-		DeeObject *gc_head = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
-		DeeObject *gc_tail = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
+		DeeObject *gc_head = DeeDec_Ehdr_RELOC_GetGCHead(self);
+		DeeObject *gc_tail = DeeDec_Ehdr_RELOC_GetGCTail(self);
 		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NORMAL);
 	}
 #endif
@@ -1538,7 +1538,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 			ASSERT(dep->ddm_impstr);
 			total_need = CEIL_ALIGN(total_need, Dee_ALIGNOF_DEC_DSTR);
 			total_need += offsetof(Dec_Dstr, ds_string);
-			impstr_utf8 = DeeString_AsUtf8((DeeObject *)dep->ddm_impstr);
+			impstr_utf8 = DeeString_AsUtf8(dep->ddm_impstr);
 			if unlikely(!impstr_utf8)
 				goto err;
 			total_need += (WSTR_LENGTH(impstr_utf8) + 1) * sizeof(char);
@@ -1647,7 +1647,7 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 				}
 
 				/* Emit module name */
-				impstr_utf8 = DeeString_AsUtf8((DeeObject *)dep->ddm_impstr);
+				impstr_utf8 = DeeString_AsUtf8(dep->ddm_impstr);
 				ASSERTF(impstr_utf8, "Should have been pre-loaded since was needed to calc buffer size");
 				addrof_outname = CEIL_ALIGN(addrof_outname, Dee_ALIGNOF_DEC_DSTR);
 				out_name = (Dec_Dstr *)((byte_t *)ehdr + addrof_outname);
@@ -4278,7 +4278,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 
 	/* Load the import table. */
 	strtab         = (char const *)(self->df_base + LETOH32(hdr->e_stroff));
-	module_pathstr = DeeString_AsUtf8(Dee_AsObject(self->df_name));
+	module_pathstr = DeeString_AsUtf8(self->df_name);
 	if unlikely(!module_pathstr)
 		goto err;
 	module_pathlen = WSTR_LENGTH(module_pathstr);

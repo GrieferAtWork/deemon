@@ -695,7 +695,7 @@ DeeModule_FindDirectoryAttrString(DeeModuleObject *__restrict self,
 		int diff;
 		size_t mid = (lo + hi) / 2;
 		DeeStringObject *name = (DeeStringObject *)DeeTuple_GET(dir, mid);
-		char const *name_utf8 = DeeString_AsUtf8(Dee_AsObject(name));
+		char const *name_utf8 = DeeString_AsUtf8(name);
 		if unlikely(!name_utf8)
 			goto err;
 		diff = FS_strcmp(name_utf8, attr_name);
@@ -730,7 +730,7 @@ DeeModule_FindDirectoryAttrStringLen(DeeModuleObject *__restrict self,
 		int diff;
 		size_t mid = (lo + hi) / 2;
 		DeeStringObject *name = (DeeStringObject *)DeeTuple_GET(dir, mid);
-		char const *name_utf8 = DeeString_AsUtf8(Dee_AsObject(name));
+		char const *name_utf8 = DeeString_AsUtf8(name);
 		if unlikely(!name_utf8)
 			goto err;
 		diff = FS_strcmpz(name_utf8, attr_name, attrlen);
@@ -2811,7 +2811,7 @@ module_import_with_frame_base(DeeObject *__restrict module_name) {
 		if unlikely(!path)
 			goto open_normal;
 		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-		begin = DeeString_AsUtf8(Dee_AsObject(path));
+		begin = DeeString_AsUtf8(path);
 		if unlikely(!begin)
 			goto err;
 		end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
@@ -3312,7 +3312,7 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	 * >> PRIVATE DEFINE_STRING(my_string, "Hi there!");
 	 * >> ...
 	 * >> PRIVATE void DCALL i_get_called_from_usercode(void) {
-	 * >>     Dee_wchar_t *wstr = DeeString_AsWide(Dee_AsObject(&my_string));
+	 * >>     Dee_wchar_t *wstr = DeeString_AsWide(&my_string);
 	 * >>     ...
 	 * >> }
 	 *

@@ -784,7 +784,7 @@ jseq_or_map_init_parser(DeeJsonSequenceObject *__restrict self,
 				end    = (byte_t const *)start + length;
 			}
 		} else {
-			char const *utf8 = DeeString_AsUtf8((DeeObject *)input);
+			char const *utf8 = DeeString_AsUtf8(input);
 			if unlikely(!utf8)
 				goto err;
 			start = utf8;
@@ -1996,7 +1996,7 @@ type_expression_name_unescape(struct type_expression_name *__restrict self) {
 	self->ten_str = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 	if unlikely(!self->ten_str)
 		goto err;
-	self->ten_start = DeeString_AsUtf8(Dee_AsObject(self->ten_str));
+	self->ten_start = DeeString_AsUtf8(self->ten_str);
 	if unlikely(!self->ten_start)
 		goto err_ten_str;
 	self->ten_end = self->ten_start + WSTR_LENGTH(self->ten_start);
@@ -3297,7 +3297,7 @@ libjson_writer_writeattr(void *arg, struct Dee_attrdesc *__restrict attr) {
 	/* All right! Let's write this attribute. */
 	if (attr->ad_perm & Dee_ATTRPERM_F_NAMEOBJ) {
 		DeeStringObject *str_name = Dee_attrdesc_nameobj(attr);
-		char const *name_utf8 = DeeString_AsUtf8((DeeObject *)str_name);
+		char const *name_utf8 = DeeString_AsUtf8(str_name);
 		if unlikely(!name_utf8)
 			goto err_attr_value;
 		error = libjson_writer_addfield(&me->djw_writer, name_utf8, WSTR_LENGTH(name_utf8));
@@ -3537,7 +3537,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjson_parse_f_impl(DeeOb
 				end    = (byte_t const *)start + length;
 			}
 		} else {
-			char const *utf8 = DeeString_AsUtf8((DeeObject *)input);
+			char const *utf8 = DeeString_AsUtf8(input);
 			if unlikely(!utf8)
 				goto err;
 			start = utf8;

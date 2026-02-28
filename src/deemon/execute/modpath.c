@@ -2292,16 +2292,12 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 #define IMAGE_GC_HEADTAIL_MATCH_RELOC 0
 #endif /* __SIZEOF_SIZE_T__ == 4 */
 	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
-		DeeObject *gc_head = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
-		DeeObject *gc_tail = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
-		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
-		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
+		DeeObject *gc_head = DeeDec_Ehdr_IMAGE_GetGCHead(ehdr);
+		DeeObject *gc_tail = DeeDec_Ehdr_IMAGE_GetGCTail(ehdr);
 		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NOCOLLECT);
 	} else {
-		DeeObject *gc_head = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
-		DeeObject *gc_tail = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
-		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
-		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
+		DeeObject *gc_head = DeeDec_Ehdr_RELOC_GetGCHead(ehdr);
+		DeeObject *gc_tail = DeeDec_Ehdr_RELOC_GetGCTail(ehdr);
 		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NOCOLLECT);
 	}
 #undef IMAGE_GC_HEADTAIL_MATCH_RELOC
@@ -3280,7 +3276,7 @@ use_absolute_filename:
 		}
 		if unlikely(!filename_ob)
 			goto err;
-		filename = DeeString_AsUtf8(Dee_AsObject(filename_ob));
+		filename = DeeString_AsUtf8(filename_ob);
 		if unlikely(!filename)
 			goto err_filename_ob;
 		result = DeeModule_OpenFile_impl2((char *)filename, WSTR_LENGTH(filename),
@@ -3319,7 +3315,7 @@ use_absolute_filename:
 		}
 		if unlikely(!context_absname_ob)
 			goto err;
-		context_absname = DeeString_AsUtf8(Dee_AsObject(context_absname_ob));
+		context_absname = DeeString_AsUtf8(context_absname_ob);
 		if unlikely(!context_absname)
 			goto err_context_absname_ob;
 		context_absname_size = WSTR_LENGTH(context_absname);
@@ -3402,7 +3398,7 @@ make_absolute_path:
 		}
 		if unlikely(!pathname_ob)
 			goto err;
-		pathname = DeeString_AsUtf8(Dee_AsObject(pathname_ob));
+		pathname = DeeString_AsUtf8(pathname_ob);
 		if unlikely(!pathname)
 			goto err_pathname_ob;
 		pathname_size = WSTR_LENGTH(pathname);
@@ -3590,7 +3586,7 @@ do_DeeModule_OpenGlobal_impl(/*utf-8*/ char const *__restrict import_str, size_t
 		bool must_be_directory;
 		ASSERT(i < DeeTuple_SIZE(libpath));
 		path = (DeeStringObject *)DeeTuple_GET(libpath, i);
-		path_utf8 = DeeString_AsUtf8(Dee_AsObject(path));
+		path_utf8 = DeeString_AsUtf8(path);
 		if unlikely(!path_utf8)
 			goto err;
 		used_flags = flags | DeeModule_IMPORT_F_ENOENT;
@@ -4548,7 +4544,7 @@ do_DeeModule_PrintRelNameEx_impl(DeeModuleObject *__restrict self,
 	}
 	if unlikely(!context_absname_ob)
 		goto err;
-	context_absname = DeeString_AsUtf8((DeeObject *)context_absname_ob);
+	context_absname = DeeString_AsUtf8(context_absname_ob);
 	if unlikely(!context_absname)
 		goto err_context_absname_ob;
 	context_absname_size = WSTR_LENGTH(context_absname);
@@ -4812,7 +4808,7 @@ module_has_libname_replace_slash_with_dot(DeeModuleObject *__restrict self,
 	do {
 		char const *name_utf8;
 		ASSERT(iter->mle_name);
-		name_utf8 = DeeString_AsUtf8((DeeObject *)iter->mle_name);
+		name_utf8 = DeeString_AsUtf8(iter->mle_name);
 		ASSERTF(name_utf8, "Should have been pre-loaded by caller");
 		if (streq_replace_slash_with_dot(name_utf8, libname_with_slashes))
 			return true;
@@ -4856,7 +4852,7 @@ module_try_add_missing_libnames_or_unlock(DeeModuleObject *__restrict self,
 	for (i = 0; i < DeeTuple_SIZE(libpath); ++i) {
 		int status;
 		DeeStringObject *path = (DeeStringObject *)DeeTuple_GET(libpath, i);
-		char const *utf8 = DeeString_AsUtf8(Dee_AsObject(path));
+		char const *utf8 = DeeString_AsUtf8(path);
 		ASSERTF(utf8, "Should have been pre-loaded by caller");
 		status = module_try_add_missing_libname_or_unlock(self, utf8);
 		if (status != MODULE_TRY_ADD_MISSING_LIBNAMES_OR_UNLOCK__OK)
@@ -6388,12 +6384,12 @@ again_search_fs_modules:
 			char const *utf8_path;
 			if (fs_hashmodpath(result) != hash)
 				continue;
-			utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
+			utf8_path = DeeString_TryAsUtf8(result->mo_path);
 			if unlikely(!utf8_path) {
 				if (!Dee_IncrefIfNotZero(result))
 					break;
 				modules_lock_endread();
-				utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
+				utf8_path = DeeString_AsUtf8(result->mo_path);
 				if unlikely(!utf8_path)
 					goto err_buf_r;
 				if (WSTR_LENGTH(utf8_path) == len &&
@@ -7044,7 +7040,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 		abs_path = (DREF DeeStringObject *)Dee_unicode_printer_pack(&printer);
 		if unlikely(!abs_path)
 			goto err;
-		abs_utf8 = DeeString_AsUtf8((DeeObject *)abs_path);
+		abs_utf8 = DeeString_AsUtf8(abs_path);
 		if unlikely(!abs_utf8)
 			goto err_abs_path;
 		result = DeeModule_SubOpenInPathAbs(abs_utf8,
@@ -7526,7 +7522,7 @@ DeeModule_ImportRel(DeeModuleObject *__restrict basemodule,
 		result = DeeModule_OpenGlobal(module_name, NULL, true);
 	} else {
 		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-		begin = DeeString_AsUtf8(Dee_AsObject(path));
+		begin = DeeString_AsUtf8(path);
 		if unlikely(!begin)
 			goto err;
 		end = begin + WSTR_LENGTH(begin);
@@ -7566,7 +7562,7 @@ DeeModule_ImportRelString(DeeModuleObject *__restrict basemodule,
 		result = DeeModule_OpenGlobalString(module_name, module_namesize, NULL, true);
 	} else {
 		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-		begin = DeeString_AsUtf8(Dee_AsObject(path));
+		begin = DeeString_AsUtf8(path);
 		if unlikely(!begin)
 			goto err;
 		end = begin + WSTR_LENGTH(begin);
@@ -8795,7 +8791,7 @@ DeeModule_HandleRemovedLibPath_diff_locked(DeeTupleObject *old_libpath,
 		}
 		if (!exists) {
 			/* Path was removed. */
-			char const *utf8 = DeeString_AsUtf8((DeeObject *)oldpath);
+			char const *utf8 = DeeString_AsUtf8(oldpath);
 			ASSERTF(utf8, "Should have been pre-loaded by caller");
 			DeeModule_HandleRemovedLibPath_locked(utf8, WSTR_LENGTH(utf8));
 		}
@@ -8844,7 +8840,7 @@ DeeModule_ApplyLibPath(DeeTupleObject *old_path,
 	/* Set operation must happen while holding "module_libtree_lock",
 	 * but only a single path may have been removed. */
 	if (remove_hint) {
-		char const *remove_hint_utf8 = DeeString_AsUtf8((DeeObject *)remove_hint);
+		char const *remove_hint_utf8 = DeeString_AsUtf8(remove_hint);
 		if unlikely(!remove_hint_utf8)
 			goto err;
 		module_libtree_lock_write();

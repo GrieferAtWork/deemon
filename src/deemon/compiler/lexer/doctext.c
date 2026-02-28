@@ -653,7 +653,7 @@ do_compile_printer_to_printer(struct Dee_unicode_printer *__restrict result_prin
 			goto err;
 
 		/* Convert to utf-8 */
-		rawutf8 = DeeString_AsUtf8(Dee_AsObject(rawtext));
+		rawutf8 = DeeString_AsUtf8(rawtext);
 		if unlikely(!rawutf8) {
 err_rawtext:
 			Dee_Decref_likely(rawtext);
@@ -3105,7 +3105,7 @@ doctext_compile(struct Dee_unicode_printer *__restrict doctext) {
 			goto err;
 
 		/* Convert to utf-8 */
-		rawutf8 = DeeString_AsUtf8(Dee_AsObject(rawtext));
+		rawutf8 = DeeString_AsUtf8(rawtext);
 		if unlikely(!rawutf8) {
 err_rawtext:
 			Dee_Decref_likely(rawtext);

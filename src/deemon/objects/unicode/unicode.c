@@ -656,8 +656,8 @@ err:
 
 
 
-PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
-DeeString_AsUtf8(DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char const *
+(DCALL DeeString_AsUtf8)(DeeObject *__restrict self) {
 	struct Dee_string_utf *utf;
 	uint8_t const *iter, *end;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -744,8 +744,8 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char const *DCALL
-DeeString_TryAsUtf8(DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) /*utf-8*/ char const *
+(DCALL DeeString_TryAsUtf8)(DeeObject *__restrict self) {
 	struct Dee_string_utf *utf;
 	uint8_t const *iter, *end;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -838,8 +838,8 @@ err:
  * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
  *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
  * @return: NULL: An error occurred. */
-PUBLIC WUNUSED NONNULL((1)) /*latin-1*/ byte_t const *DCALL
-DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
+PUBLIC WUNUSED NONNULL((1)) /*latin-1*/ byte_t const *
+(DCALL DeeString_AsBytes)(DeeObject *__restrict self, bool allow_invalid) {
 	struct Dee_string_utf *utf;
 	union Dee_charptr_const str;
 	bool contains_invalid;
@@ -944,8 +944,8 @@ err:
 
 
 
-PUBLIC WUNUSED NONNULL((1)) uint16_t const *DCALL
-DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode) {
+PUBLIC WUNUSED NONNULL((1)) uint16_t const *
+(DCALL DeeString_AsUtf16)(DeeObject *__restrict self, unsigned int error_mode) {
 	struct Dee_string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	utf = ((String *)self)->s_data;

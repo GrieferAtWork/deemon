@@ -394,7 +394,7 @@ DB_NewQuery(DB *__restrict self, DeeStringObject *__restrict sql,
 	{
 		int rc;
 		char const *sql_utf8, *sql_tail = NULL;
-		sql_utf8 = DeeString_AsUtf8((DeeObject *)sql);
+		sql_utf8 = DeeString_AsUtf8(sql);
 		if unlikely(!sql_utf8)
 			goto err_r;
 again_prepare:
@@ -927,7 +927,7 @@ db_exec(DB *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack1Or2(err, argc, argv, "exec", &sql, &params);
 	if (DeeObject_AssertTypeExact(sql, &DeeString_Type))
 		goto err;
-	utf8_sql = DeeString_AsUtf8((DeeObject *)sql);
+	utf8_sql = DeeString_AsUtf8(sql);
 	if unlikely(!utf8_sql)
 		goto err;
 	utf8_sql_orig = utf8_sql;

@@ -338,24 +338,24 @@ sseg_contains(StringSegments *self, DeeStringObject *other) {
 		                                        DeeString_WIDTH(other))) {
 
 		CASE_WIDTH_1BYTE:
-			my_str.cp8 = DeeString_As1Byte((DeeObject *)str);
-			ot_str.cp8 = DeeString_As1Byte((DeeObject *)other);
+			my_str.cp8 = DeeString_As1Byte(str);
+			ot_str.cp8 = DeeString_As1Byte(other);
 			return_bool(MEMEQB(my_str.cp8 + last_index, ot_str.cp8, last_part));
 
 		CASE_WIDTH_2BYTE:
-			my_str.cp16 = DeeString_As2Byte((DeeObject *)str);
+			my_str.cp16 = DeeString_As2Byte(str);
 			if unlikely(!my_str.cp16)
 				goto err;
-			ot_str.cp16 = DeeString_As2Byte((DeeObject *)other);
+			ot_str.cp16 = DeeString_As2Byte(other);
 			if unlikely(!ot_str.cp16)
 				goto err;
 			return_bool(MEMEQW(my_str.cp16 + last_index, ot_str.cp16, last_part));
 
 		CASE_WIDTH_4BYTE:
-			my_str.cp32 = DeeString_As4Byte((DeeObject *)str);
+			my_str.cp32 = DeeString_As4Byte(str);
 			if unlikely(!my_str.cp32)
 				goto err;
-			ot_str.cp32 = DeeString_As4Byte((DeeObject *)other);
+			ot_str.cp32 = DeeString_As4Byte(other);
 			if unlikely(!ot_str.cp32)
 				goto err;
 			return_bool(MEMEQL(my_str.cp32 + last_index, ot_str.cp32, last_part));
@@ -365,8 +365,8 @@ sseg_contains(StringSegments *self, DeeStringObject *other) {
 	                                        DeeString_WIDTH(other))) {
 
 	CASE_WIDTH_1BYTE:
-		my_str.cp8 = DeeString_As1Byte((DeeObject *)str);
-		ot_str.cp8 = DeeString_As1Byte((DeeObject *)other);
+		my_str.cp8 = DeeString_As1Byte(str);
+		ot_str.cp8 = DeeString_As1Byte(other);
 		my_end.cp8 = my_str.cp8 + WSTR_LENGTH(my_str.cp8) - self->s_siz;
 		for (; my_str.cp8 <= my_end.cp8; my_str.cp8 += self->s_siz) {
 			if (MEMEQB(my_str.cp8, ot_str.cp8, self->s_siz))
@@ -375,10 +375,10 @@ sseg_contains(StringSegments *self, DeeStringObject *other) {
 		break;
 
 	CASE_WIDTH_2BYTE:
-		my_str.cp16 = DeeString_As2Byte((DeeObject *)str);
+		my_str.cp16 = DeeString_As2Byte(str);
 		if unlikely(!my_str.cp16)
 			goto err;
-		ot_str.cp16 = DeeString_As2Byte((DeeObject *)other);
+		ot_str.cp16 = DeeString_As2Byte(other);
 		if unlikely(!ot_str.cp16)
 			goto err;
 		my_end.cp16 = my_str.cp16 + WSTR_LENGTH(my_str.cp16) - self->s_siz;
@@ -389,10 +389,10 @@ sseg_contains(StringSegments *self, DeeStringObject *other) {
 		break;
 
 	CASE_WIDTH_4BYTE:
-		my_str.cp32 = DeeString_As4Byte((DeeObject *)str);
+		my_str.cp32 = DeeString_As4Byte(str);
 		if unlikely(!my_str.cp32)
 			goto err;
-		ot_str.cp32 = DeeString_As4Byte((DeeObject *)other);
+		ot_str.cp32 = DeeString_As4Byte(other);
 		if unlikely(!ot_str.cp32)
 			goto err;
 		my_end.cp32 = my_str.cp32 + WSTR_LENGTH(my_str.cp32) - self->s_siz;

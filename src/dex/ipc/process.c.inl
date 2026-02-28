@@ -395,7 +395,7 @@ ipc_nt_cmdline_add_arg(struct Dee_unicode_printer *__restrict printer,
 	if (!Dee_UNICODE_PRINTER_ISEMPTY(printer) && Dee_unicode_printer_putc(printer, ' '))
 		goto err;
 	start_length = Dee_UNICODE_PRINTER_LENGTH(printer);
-	begin        = DeeString_AsUtf8((DeeObject *)arg);
+	begin        = DeeString_AsUtf8(arg);
 	if unlikely(!begin)
 		goto err;
 	iter        = begin;
@@ -514,7 +514,7 @@ ipc_cmdline2argv(DeeStringObject *__restrict cmdline) {
 	DREF DeeObject *arg;
 	DREF DeeTupleObject *result;
 	size_t result_alloc, result_size;
-	iter = DeeString_AsUtf8((DeeObject *)cmdline);
+	iter = DeeString_AsUtf8(cmdline);
 	if unlikely(!iter)
 		goto err;
 	end = iter + WSTR_LENGTH(iter);
@@ -751,7 +751,7 @@ is_executable_file(DeeStringObject *__restrict filename) {
 	{
 		int error;
 		Dee_wchar_t const *filename_wide;
-		filename_wide = DeeString_AsWide((DeeObject *)filename);
+		filename_wide = DeeString_AsWide(filename);
 		if unlikely(!filename_wide)
 			goto err;
 #define NEED_err
@@ -765,7 +765,7 @@ is_executable_file(DeeStringObject *__restrict filename) {
 	{
 		int error;
 		char const *filename_utf8;
-		filename_utf8 = DeeString_AsUtf8((DeeObject *)filename);
+		filename_utf8 = DeeString_AsUtf8(filename);
 		if unlikely(!filename_utf8)
 			goto err;
 #define NEED_err
@@ -1794,7 +1794,7 @@ err_result:
 				Dee_DecrefDokill(result);
 				goto err;
 			}
-			pathname = (LPWSTR)DeeString_AsWide((DeeObject *)fixed_result);
+			pathname = (LPWSTR)DeeString_AsWide(fixed_result);
 			if unlikely(!pathname) {
 				Dee_Decref(fixed_result);
 				goto err_result;
@@ -1884,7 +1884,7 @@ ipc_nt_CreateProcessPathWithoutCache(LPWSTR lpApplicationName, SIZE_T szApplicat
 			goto err_nopath;
 		goto done_nopath;
 	}
-	pathStr = (LPWSTR)DeeString_AsWide(Dee_AsObject(path));
+	pathStr = (LPWSTR)DeeString_AsWide(path);
 	if unlikely(!pathStr)
 		goto err;
 again:
@@ -1903,7 +1903,7 @@ again:
 		appnameBuffer = (LPWSTR)Dee_Mallocc(appnameBufferSize + 1, sizeof(WCHAR));
 		if unlikely(!appnameBuffer)
 			goto err_pathext;
-		iter = (LPWSTR)DeeString_AsWide((DeeObject *)pathext);
+		iter = (LPWSTR)DeeString_AsWide(pathext);
 		if unlikely(!iter) {
 			Dee_Free(appnameBuffer);
 			goto err_pathext;
@@ -2001,7 +2001,7 @@ ipc_nt_CreateProcessPath(DeeStringObject *exe_str, LPWSTR lpApplicationName,
 		if likely(cached_pathname != NULL) {
 			BOOL bCreateOk;
 			LPWSTR lpwCachedPathName;
-			lpwCachedPathName = (LPWSTR)DeeString_AsWide((DeeObject *)cached_pathname);
+			lpwCachedPathName = (LPWSTR)DeeString_AsWide(cached_pathname);
 			if unlikely(!lpwCachedPathName)
 				goto err_cached_pathname;
 			bCreateOk = CreateProcessW(lpwCachedPathName, lpCommandLine, lpProcessAttributes,
@@ -2128,7 +2128,7 @@ ipc_nt_CreateProcessExtWithoutCache(LPWSTR lpApplicationName, SIZE_T szApplicati
 		LPWSTR lpPathExt;
 		if unlikely(!pathext_str)
 			goto err;
-		lpPathExt = (LPWSTR)DeeString_AsWide((DeeObject *)pathext_str);
+		lpPathExt = (LPWSTR)DeeString_AsWide(pathext_str);
 		if unlikely(!lpPathExt) {
 			result = NULL;
 		} else {
@@ -2876,10 +2876,10 @@ again:
 		exe_str = DeeObject_AsFileSystemPathString(self->p_exe);
 		if unlikely(!exe_str)
 			goto err;
-		lpwExe = (LPWSTR)DeeString_AsWide((DeeObject *)exe_str);
+		lpwExe = (LPWSTR)DeeString_AsWide(exe_str);
 		if unlikely(!lpwExe)
 			goto err_exe_str;
-		lpwCmdLine = (LPWSTR)DeeString_AsWide(Dee_AsObject(self->p_cmdline));
+		lpwCmdLine = (LPWSTR)DeeString_AsWide(self->p_cmdline);
 		if unlikely(!lpwCmdLine)
 			goto err_exe_str;
 
@@ -2900,7 +2900,7 @@ again:
 			pwd_str = DeeObject_AsFileSystemPathString(self->p_pwd);
 			if unlikely(!pwd_str)
 				goto err_exe_str_lpwCmdLineCopy;
-			lpwProcessWorkingDirectory = (LPWSTR)DeeString_AsWide((DeeObject *)pwd_str);
+			lpwProcessWorkingDirectory = (LPWSTR)DeeString_AsWide(pwd_str);
 			if unlikely(!lpwProcessWorkingDirectory)
 				goto err_exe_str_lpwCmdLineCopy_pwd_str;
 		}
@@ -2912,7 +2912,7 @@ again:
 			env_str = ipc_nt_pack_environ(self->p_envp);
 			if unlikely(!env_str)
 				goto err_exe_str_lpwCmdLineCopy_pwd_str;
-			lpwEnviron = (LPWSTR)DeeString_AsWide((DeeObject *)env_str);
+			lpwEnviron = (LPWSTR)DeeString_AsWide(env_str);
 			if unlikely(!lpwEnviron)
 				goto err_exe_str_lpwCmdLineCopy_pwd_str_env_str;
 		}
@@ -2984,7 +2984,7 @@ again_create_process:
 				full_exe_str = (DREF DeeStringObject *)DeeNTSystem_FixUncPath((DeeObject *)exe_str);
 				if unlikely(!full_exe_str)
 					goto err_exe_str_lpwCmdLineCopy_pwd_str_env_str_stdfd_files;
-				lpwFullExe = (LPWSTR)DeeString_AsWide((DeeObject *)full_exe_str);
+				lpwFullExe = (LPWSTR)DeeString_AsWide(full_exe_str);
 				if unlikely(!lpwFullExe)
 					goto err_exe_str_lpwCmdLineCopy_pwd_str_env_str_stdfd_files_full_exe_str;
 				DBG_ALIGNMENT_DISABLE();

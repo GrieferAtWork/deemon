@@ -2233,7 +2233,7 @@ lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	name_utf8 = DeeString_AsUtf8(Dee_AsObject(args.name));
+	name_utf8 = DeeString_AsUtf8(args.name);
 	if unlikely(!name_utf8)
 		goto err;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -2283,7 +2283,7 @@ lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	name_utf8 = DeeString_AsUtf8(Dee_AsObject(args.name));
+	name_utf8 = DeeString_AsUtf8(args.name);
 	if unlikely(!name_utf8)
 		goto err;
 	if (COMPILER_BEGIN(self->cw_compiler))
@@ -2362,7 +2362,7 @@ lexer_undef(DeeCompilerWrapperObject *self, size_t argc, DeeObject *const *argv)
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.name, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(args.name));
+	utf8_name = DeeString_AsUtf8(args.name);
 	if unlikely(!utf8_name)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
@@ -2402,10 +2402,10 @@ lexer_define(DeeCompilerWrapperObject *self, size_t argc,
 		goto err;
 	if (DeeObject_AssertTypeExact(args.value, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(args.name));
+	utf8_name = DeeString_AsUtf8(args.name);
 	if unlikely(!utf8_name)
 		goto err;
-	utf8_value = DeeString_AsUtf8(Dee_AsObject(args.value));
+	utf8_value = DeeString_AsUtf8(args.value);
 	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
@@ -2445,10 +2445,10 @@ lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
 		goto err;
 	if (DeeObject_AssertTypeExact(args.answer, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(args.predicate));
+	utf8_name = DeeString_AsUtf8(args.predicate);
 	if unlikely(!utf8_name)
 		goto err;
-	utf8_value = DeeString_AsUtf8(Dee_AsObject(args.answer));
+	utf8_value = DeeString_AsUtf8(args.answer);
 	if unlikely(!utf8_value)
 		goto err;
 	old_exceptsz = DeeThread_Self()->t_exceptsz;
@@ -2485,13 +2485,13 @@ lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.predicate, &DeeString_Type))
 		goto err;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(args.predicate));
+	utf8_name = DeeString_AsUtf8(args.predicate);
 	if unlikely(!utf8_name)
 		goto err;
 	if (args.answer) {
 		if (DeeObject_AssertTypeExact(args.answer, &DeeString_Type))
 			goto err;
-		utf8_value = DeeString_AsUtf8(Dee_AsObject(args.answer));
+		utf8_value = DeeString_AsUtf8(args.answer);
 		if unlikely(!utf8_value)
 			goto err;
 	}

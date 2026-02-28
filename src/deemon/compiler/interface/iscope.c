@@ -386,7 +386,7 @@ scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
 		goto done;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto done;
-	name_utf8 = DeeString_AsUtf8(Dee_AsObject(args.name));
+	name_utf8 = DeeString_AsUtf8(args.name);
 	if unlikely(!name_utf8)
 		goto done_compiler_end;
 	kwd = TPPLexer_LookupKeyword(name_utf8, WSTR_LENGTH(name_utf8), 1);

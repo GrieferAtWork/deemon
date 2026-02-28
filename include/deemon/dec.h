@@ -286,6 +286,11 @@ typedef struct {
 	                                           * this heap is assumed to point at the `DeeModuleObject' describing the dec file itself. */
 } Dec_Ehdr;
 
+#define DeeDec_Ehdr_IMAGE_GetGCHead(self) (Dee_ASSERT((self)->e_typedata.td_image.ei_offsetof_gchead), (DeeObject *)((__BYTE_TYPE__ *)(self) + (self)->e_typedata.td_image.ei_offsetof_gchead))
+#define DeeDec_Ehdr_IMAGE_GetGCTail(self) (Dee_ASSERT((self)->e_typedata.td_image.ei_offsetof_gctail), (DeeObject *)((__BYTE_TYPE__ *)(self) + (self)->e_typedata.td_image.ei_offsetof_gctail))
+#define DeeDec_Ehdr_RELOC_GetGCHead(self) (Dee_ASSERT((self)->e_typedata.td_reloc.er_offsetof_gchead), (DeeObject *)((__BYTE_TYPE__ *)(self) + (self)->e_typedata.td_reloc.er_offsetof_gchead))
+#define DeeDec_Ehdr_RELOC_GetGCTail(self) (Dee_ASSERT((self)->e_typedata.td_reloc.er_offsetof_gctail), (DeeObject *)((__BYTE_TYPE__ *)(self) + (self)->e_typedata.td_reloc.er_offsetof_gctail))
+
 #define Dee_ALIGNOF_DEC_REL 4
 struct Dee_dec_rel {
 	/* Non-reference-counted relocation:

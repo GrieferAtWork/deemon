@@ -97,7 +97,7 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 	if (handle_errors != ERROR_PRINT_DOHANDLE ||
 	    !DeeType_IsInterrupt(Dee_TYPE(error_ob))) {
 		DeeError_Display(reason, error_ob,
-		                 (DeeObject *)except_frame_gettb(thread_self->t_except));
+		                 Dee_AsObject(except_frame_gettb(thread_self->t_except)));
 	}
 
 	/* If we're not supposed to handle any errors, then don't */
@@ -356,7 +356,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	/* Pack the constructor argument tuple. */
 	error_ob = DeeType_Check(tp)
 	           ? DeeObject_New(tp, 1, argv)
-	           : DeeObject_Call((DeeObject *)tp, 1, argv);
+	           : DeeObject_Call(Dee_AsObject(tp), 1, argv);
 	Dee_Decref(argv[0]);
 	if unlikely(!error_ob)
 		goto err;

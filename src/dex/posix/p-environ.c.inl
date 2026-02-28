@@ -394,7 +394,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_hasenv(DeeStringObject *__restrict name) {
 #ifdef posix_getenv_USE_GetEnvironmentVariableW
 	bool result;
-	LPCWSTR wname = (LPCWSTR)DeeString_AsWide(Dee_AsObject(name));
+	LPCWSTR wname = (LPCWSTR)DeeString_AsWide(name);
 	if unlikely(!wname)
 		return -1;
 	environ_lock_read();
@@ -407,7 +407,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_wgetenv
 	bool result;
-	Dee_wchar_t const *wname = DeeString_AsWide(Dee_AsObject(name));
+	Dee_wchar_t const *wname = DeeString_AsWide(name);
 	if unlikely(!wname)
 		return -1;
 	environ_lock_read();
@@ -420,7 +420,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 
 #ifdef posix_getenv_USE_getenv
 	bool result;
-	char const *utf8 = DeeString_AsUtf8(Dee_AsObject(name));
+	char const *utf8 = DeeString_AsUtf8(name);
 	if unlikely(!utf8)
 		return -1;
 	environ_lock_read();
@@ -436,7 +436,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 	Dee_wchar_t const *wenvstr;
 	Dee_wchar_t const *wname;
 	size_t i, wname_len;
-	wname = DeeString_AsWide(Dee_AsObject(name));
+	wname = DeeString_AsWide(name);
 	if unlikely(!wname)
 		return -1;
 	wname_len = wcslen((wchar_t *)wname);
@@ -459,7 +459,7 @@ posix_environ_hasenv(DeeStringObject *__restrict name) {
 	int result;
 	char const *envstr, *utf8_name;
 	size_t i, utf8_name_len;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
 		return -1;
 	utf8_name_len = strlen(utf8_name);
@@ -498,7 +498,7 @@ posix_environ_trygetenv(DeeStringObject *name) {
 	LPWSTR buffer, new_buffer;
 	DWORD bufsize = 256, error;
 	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(name));
+	wname = (LPWSTR)DeeString_AsWide(name);
 	if unlikely(!wname)
 		goto err;
 	buffer = DeeString_NewWideBuffer(bufsize);
@@ -536,7 +536,7 @@ err:
 	size_t reqlen;
 	Dee_wchar_t *new_buffer, *buffer = NULL;
 	Dee_wchar_t const *wenvstr;
-	Dee_wchar_t const *wname = DeeString_AsWide(Dee_AsObject(name));
+	Dee_wchar_t const *wname = DeeString_AsWide(name);
 #ifdef posix_getenv_USE_wenviron
 	size_t wname_len;
 #endif /* posix_getenv_USE_wenviron */
@@ -593,7 +593,7 @@ err:
 #if (defined(posix_getenv_USE_getenv) || defined(posix_getenv_USE_environ))
 	size_t reqlen;
 	char *new_buffer, *buffer = NULL;
-	char const *envstr, *utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	char const *envstr, *utf8_name = DeeString_AsUtf8(name);
 #ifdef posix_getenv_USE_environ
 	size_t utf8_name_len;
 #endif /* posix_getenv_USE_environ */
@@ -657,10 +657,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 posix_environ_setenv(DeeStringObject *name, DeeStringObject *value, bool replace) {
 #ifdef posix_setenv_USE_SetEnvironmentVariableW
 	LPWSTR wname, wvalue;
-	wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(name));
+	wname = (LPWSTR)DeeString_AsWide(name);
 	if unlikely(!wname)
 		goto err;
-	wvalue = (LPWSTR)DeeString_AsWide((DeeObject *)value);
+	wvalue = (LPWSTR)DeeString_AsWide(value);
 	if unlikely(!wvalue)
 		goto err;
 again_setenv:
@@ -695,10 +695,10 @@ err:
 
 #ifdef posix_setenv_USE_wsetenv
 	Dee_wchar_t const *wname, *wvalue;
-	wname = DeeString_AsWide(Dee_AsObject(name));
+	wname = DeeString_AsWide(name);
 	if unlikely(!wname)
 		goto err;
-	wvalue = DeeString_AsWide((DeeObject *)value);
+	wvalue = DeeString_AsWide(value);
 	if unlikely(!wvalue)
 		goto err;
 again_setenv:
@@ -725,10 +725,10 @@ err:
 
 #ifdef posix_setenv_USE_setenv
 	char const *utf8_name, *utf8_value;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
 		goto err;
-	utf8_value = DeeString_AsUtf8((DeeObject *)value);
+	utf8_value = DeeString_AsUtf8(value);
 	if unlikely(!utf8_value)
 		goto err;
 again_setenv:
@@ -756,10 +756,10 @@ err:
 #ifdef posix_setenv_USE_wputenv_s
 	int error;
 	Dee_wchar_t const *wname, *wvalue;
-	wname = DeeString_AsWide(Dee_AsObject(name));
+	wname = DeeString_AsWide(name);
 	if unlikely(!wname)
 		goto err;
-	wvalue = DeeString_AsWide((DeeObject *)value);
+	wvalue = DeeString_AsWide(value);
 	if unlikely(!wvalue)
 		goto err;
 again_setenv:
@@ -812,10 +812,10 @@ err:
 #ifdef posix_setenv_USE_putenv_s
 	int error;
 	char const *utf8_name, *utf8_value;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
 		goto err;
-	utf8_value = DeeString_AsUtf8((DeeObject *)value);
+	utf8_value = DeeString_AsUtf8(value);
 	if unlikely(!utf8_value)
 		goto err;
 again_setenv:
@@ -870,10 +870,10 @@ err:
 	Dee_wchar_t const *wide_name, *wide_value;
 	Dee_wchar_t *wide_envline, *wide_oldline;
 	size_t wide_name_len, wide_value_len;
-	wide_name = DeeString_AsWide(Dee_AsObject(name));
+	wide_name = DeeString_AsWide(name);
 	if unlikely(!wide_name)
 		goto err;
-	wide_value = DeeString_AsWide((DeeObject *)value);
+	wide_value = DeeString_AsWide(value);
 	if unlikely(!wide_value)
 		goto err;
 	wide_name_len  = wcslen((wchar_t *)wide_name);
@@ -951,10 +951,10 @@ err:
 	char const *utf8_name, *utf8_value;
 	char *utf8_envline, *utf8_oldline;
 	size_t utf8_name_len, utf8_value_len;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
 		goto err;
-	utf8_value = DeeString_AsUtf8((DeeObject *)value);
+	utf8_value = DeeString_AsUtf8(value);
 	if unlikely(!utf8_value)
 		goto err;
 	utf8_name_len  = strlen(utf8_name);
@@ -1044,7 +1044,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 posix_environ_unsetenv(DeeStringObject *__restrict name) {
 #ifdef posix_unsetenv_USE_SetEnvironmentVariableW
 	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide(Dee_AsObject(name));
+	wname = (LPWSTR)DeeString_AsWide(name);
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
@@ -1064,7 +1064,7 @@ err:
 
 #ifdef posix_unsetenv_USE_wunsetenv
 	Dee_wchar_t const *wname;
-	wname = DeeString_AsWide(Dee_AsObject(name));
+	wname = DeeString_AsWide(name);
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
@@ -1084,7 +1084,7 @@ err:
 
 #ifdef posix_unsetenv_USE_unsetenv
 	char const *utf8_name;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
 		goto err;
 	environ_lock_write();
@@ -1104,7 +1104,7 @@ err:
 
 #ifdef posix_unsetenv_USE_wputenv
 	Dee_wchar_t const *wname;
-	wname = DeeString_AsWide(Dee_AsObject(name));
+	wname = DeeString_AsWide(name);
 	if unlikely(!wname)
 		goto err;
 	environ_lock_write();
@@ -1125,7 +1125,7 @@ err:
 
 #ifdef posix_unsetenv_USE_putenv
 	char const *utf8_name;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
 		goto err;
 	environ_lock_write();
@@ -1148,7 +1148,7 @@ err:
 	Dee_wchar_t const *wide_name;
 	Dee_wchar_t *wide_oldline;
 	size_t wide_name_len;
-	wide_name = DeeString_AsWide(Dee_AsObject(name));
+	wide_name = DeeString_AsWide(name);
 	if unlikely(!wide_name)
 		goto err;
 	wide_name_len = wcslen((wchar_t *)wide_name);
@@ -1195,7 +1195,7 @@ err:
 	char const *utf8_name;
 	char *utf8_oldline;
 	size_t utf8_name_len;
-	utf8_name = DeeString_AsUtf8(Dee_AsObject(name));
+	utf8_name = DeeString_AsUtf8(name);
 	if unlikely(!utf8_name)
 		goto err;
 	utf8_name_len = strlen(utf8_name);
