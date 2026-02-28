@@ -1237,15 +1237,24 @@ typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, voi
  * This operator is necessary to implement GC support, but is generic
  * enough to also allow it to be exposed here.
  *
- * WARNING: **NEVER** do anything that might block inside of `proc' --
- *          implementations of this operator may invoke `proc' while
- *          certain internal locks are held.
- * WARNING: Implementors of this operator must not alter the reference
- *          counters of referenced objects in this operator, and must
- *          also **NOT** perform debug checks on reference counts. This
- *          operator may be called while "self->ob_refcnt == 0", or the
- *          objects referenced by "self" have weird/non-sense reference
- *          counts (this is intentional and the result of GC operations) */
+ * NOTES:
+ * - **NEVER** do anything that might block inside of `proc' --
+ *   implementations of this operator may invoke `proc' while
+ *   certain internal locks are held.
+ * - Implementors of this operator must not alter the reference
+ *   counters of referenced objects in this operator, and must
+ *   also **NOT** perform debug checks on reference counts. This
+ *   operator may be called while "self->ob_refcnt == 0", or the
+ *   objects referenced by "self" have weird/non-sense reference
+ *   counts (this is intentional and the result of GC operations)
+ * - By the time `*proc' is invoked with some reference, "self"
+ *   may no longer be actually holding that same reference. This
+ *   can happen when the passed referenced was protected by an
+ *   RCU lock, though in this case `*proc' is invoked while that
+ *   same RCU lock is still held (meaning that while `self' may
+ *   no longer be *holding* that reference, that reference will
+ *   not have been dropped, yet, since another thread wanting to
+ *   do so would have to wait for the RCU lock to be dropped). */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
 
 /* Integral value lookup operators.

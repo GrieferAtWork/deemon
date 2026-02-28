@@ -5996,9 +5996,65 @@ again_increment_version:
 	 * >>         }
 	 * >>         recurse(node);
 	 * >>     }
-	 * >>     if (rcu_tree_node_isthread())
 	 * >> }
 	 * >> thread_list_rcu_unlock(me);
+	 *
+	 * =================================================================================
+	 * =================================================================================
+	 * =================================================================================
+	 *
+	 * All of the above is good and all, but what'd be even better if individual RCU
+	 * locks kept their own set of threads that were ever connected to that lock version
+	 * counter. That way, only threads that ever acquired a specific RCU lock at one
+	 * point will need to be checked for holding a specific RCU lock at any given point
+	 * in time. Additionally, synchronize could then periodically remove threads from
+	 * the lock's set of potential threads when those threads hadn't been connected for
+	 * a couple of synchronize iterations.
+	 *
+	 * NOTES:
+	 * - Since this would require a heap structure, there needs to be a fallback case
+	 *   where we simply check *all* threads if any one of them was unable to add itself
+	 *   to the current lock's set of threads
+	 * - The path where a thread was already added to some RCU lock's set of threads
+	 *   must be optimized as much as possible, and **MUST** be O(1)
+	 *
+	 * >> PUBLIC NONNULL((1)) void DFCALL DeeRCU_Lock(Dee_rcu_lock_t *__restrict self) {
+	 * >>     DeeThreadObject *caller = DeeThread_Self();
+	 * >>     Dee_thread_rcuvers_t version = atomic_read_explicit(&self->rcul_version, Dee_ATOMIC_ACQUIRE);
+	 * >>     atomic_write_explicit(&caller->t_rcu_vers, version, Dee_ATOMIC_RELEASE);
+	 * >>     atomic_write_explicit(&caller->t_rcu_lock, self, Dee_ATOMIC_RELEASE);
+	 * >>
+	 * >>     struct Dee_rcu_lock_threadlist *threads = atomic_read(&self->rcul_threads); // +1 read
+	 * >>     Dee_rcu_lock_threadid_t mytid = caller->t_rcu_tid;                          // +1 read
+	 * >>     Dee_rcu_lock_threadid_t lntid = threads->rcultl_nthreads;                   // +1 read
+	 * >>     if unlikely(myid >= lntid)                                                  // +1 branch
+	 * >>         goto must_inject;
+	 * >>     bool connected = threads->rcultl_threads[myid].rcult_connected;             // +1 read
+	 * >>     if unlikely(!connected)                                                     // +1 branch
+	 * >>         goto must_inject;
+	 * >>     return;
+	 * >> must_inject:
+	 * >>     ...
+	 * >> }
+	 *
+	 * That would be 4 read- and 2 branch-instructions. That already feels way more expensive
+	 * than it needs to be. -- I don't think this is the way to go when it comes to using RCU
+	 * locks to actually using this for the sake of performances.
+	 *
+	 * BTW: The end-goal here is to use RCU locks to replace `Dee_instance_desc::id_lock'.
+	 *
+	 *
+	 * Thing is: the above plan (having a tree to track which threads are "active") would work
+	 *           to speed up multi-threaded applications with lots of threads, where those
+	 *           threads spend most of their time sleeping on some blocking system calls
+	 *           (i.e.: something like a web server would benefit here), but deemon is meant
+	 *           for more than "just" web servers or stuff like that: other programs, like
+	 *           ones that spawn lots of worker threads to do lots of parallel processing of
+	 *           data of some kind, would not benefit at all, since in such programs pretty
+	 *           much all threads are "active" all the time.
+	 *
+	 * -> So any solution that I'd actually be happy with would have to invoke some sort of
+	 *    >> Per-rcu-lock relevant-thread tracking
 	 */
 
 	/* Check if there is any thread still using "old_version" */
