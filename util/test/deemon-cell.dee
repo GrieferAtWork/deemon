@@ -1,0 +1,139 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import .common.test;
+
+#define TRY(x) (try x catch (e...) e)
+
+local x = Cell();
+assert !x;
+assert x.value !is bound;
+test.assertEqualsTyped("Cell()", repr x);
+test.assertEqualsTyped(UnboundAttribute(ob: x, attr: "value"), TRY(x.value));
+test.assertNone(x.get());
+test.assertEqualsTyped("unbound", x.get("unbound"));
+assert x.cmpxch(/*old: unbound, new: unbound*/);
+assert !x.cmpxch(old: 42/*, new: unbound*/);
+assert !x.cmpxch(old: 42, new: 10);
+
+assert !x;
+assert x.value !is bound;
+assert x.cmpxch(/*old: unbound, */new: 10);
+assert x;
+assert x.value is bound;
+test.assertEqualsTyped("Cell(10)", repr x);
+test.assertEqualsTyped(10, x.value);
+assert !x.cmpxch(/*old: unbound, */new: 10);
+test.assertEqualsTyped(10, x.value);
+test.assertEqualsTyped(10, x.get("unbound"));
+assert x.cmpxch(old: 10/*, new: unbound*/);
+assert !x.cmpxch(old: 10/*, new: unbound*/);
+test.assertEqualsTyped(UnboundAttribute(ob: x, attr: "value"), TRY(x.value));
+test.assertNone(x.get());
+
+assert !x;
+assert x.value !is bound;
+test.assertNotEquals("", str x); /* For coverage... */
+x.value = "ASSIGNED";
+test.assertNotEquals("", str x); /* For coverage... */
+assert x;
+assert x.value is bound;
+test.assertEqualsTyped('Cell("ASSIGNED")', repr x);
+test.assertEqualsTyped("ASSIGNED", x.value);
+test.assertEqualsTyped("ASSIGNED", x.get());
+test.assertEqualsTyped("ASSIGNED", x.pop());
+test.assertNone(x.get());
+test.assertNone(x.pop());
+test.assertEqualsTyped("foo", x.pop("foo"));
+
+x.set("newval");
+test.assertEqualsTyped("newval", x.value);
+del x.value;
+test.assertEqualsTyped(UnboundAttribute(ob: x, attr: "value"), TRY(x.value));
+
+local another = "another";
+test.assertNone(x.xch(another));
+test.assertEqualsTyped(Cell(another), x);
+test.assertSame(another, x.xch("value"));
+x.delete();
+test.assertEqualsTyped("nothing", x.xch("final", "nothing"));
+test.assertEqualsTyped("final", x.value);
+
+class MyWrapper {
+	this = default;
+	public final member value;
+};
+
+local a = MyWrapper(10);
+local b = MyWrapper(10);
+test.assertEqualsTyped(a, a);
+test.assertEqualsTyped(hash(a), hash(b));
+
+/* Cells implement comparison (and hashing) by-address, but
+ * don't invoke compare operators on contained objects. */
+local aCell = Cell(a);
+local bCell = Cell(b);
+test.assertEqualsTyped(aCell, aCell);
+test.assertEqualsTyped(bCell, bCell);
+test.assertNotEquals(aCell, bCell);
+test.assertNotEquals(hash(aCell), hash(bCell));
+
+/* Copying empty cells must work */
+assert !copy Cell();
+assert !deepcopy Cell();
+
+/* Copying populated cells must work (and behave as expected) */
+local cCell = deepcopy aCell;
+test.assertNotEquals(aCell, cCell);
+assert cCell.value is bound;
+assert cCell.value !== a;
+assert cCell.value == a;
+
+/* Assigning cells must work */
+cCell := bCell;
+assert cCell.value is bound;
+assert cCell.value === b;
+
+assert aCell.value is bound;
+cCell.operator move:= (aCell);
+assert aCell.value !is bound;
+assert cCell.value is bound;
+assert cCell.value === a;
+
+local dCell = copy cCell;
+test.assertEqualsTyped(dCell, cCell);
+assert dCell.value === cCell.value;
+
+/* Assert that illegal operations give the correct error */
+assert TRY(cCell := 42) is TypeError;
+assert TRY(cCell == 42) is TypeError;
+assert TRY(compare(cCell, 42)) is TypeError;
+assert TRY(Cell(10, 20)) is TypeError;
+assert TRY(Cell().get(10, 20)) is TypeError;
+assert TRY(Cell().delete(10, 20)) is TypeError;
+assert TRY(Cell().pop(10, 20)) is TypeError;
+assert TRY(Cell().set(10, 20)) is TypeError;
+assert TRY(Cell().xch(10, 20, 30)) is TypeError;
+assert TRY(Cell().cmpxch(10, 20, 30)) is TypeError;
+assert !equals(cCell, 42);
+
