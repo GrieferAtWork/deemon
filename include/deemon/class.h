@@ -997,9 +997,6 @@ INTDEF NONNULL((1, 2)) void DCALL instance_finalize(DeeTypeObject *tp_self, DeeO
 /* GC support for class objects. */
 INTDEF NONNULL((1, 2, 3)) void DCALL instance_tvisit(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg);
 INTDEF NONNULL((1, 2)) void DCALL instance_tclear(DeeTypeObject *tp_self, DeeObject *__restrict self);
-#ifndef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
-INTDEF NONNULL((1)) void DCALL instance_clear(DeeObject *__restrict self);
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 INTDEF struct type_gc Dee_tpconst instance_gc;
 
 struct Dee_attrhint;

@@ -2459,13 +2459,9 @@ struct Dee_type_operator {
                                             * or any sort of container object capable of holding instances of the same type. */
 #define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()')
                                             * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*' */
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
 #define Dee_TF_TPVISIT          0x00000004 /* Adds an extra `DeeTypeObject *tp_self' argument o "tp_visit" and "tp_cleaar":
                                             * >> void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
                                             * >> void (DCALL *tp_clear)(DeeTypeObject *tp_self, DeeObject *self); */
-#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
-#define Dee_TF_TPVISIT          0x00000004 /* "tp_visit" is actually typed as "void (DCALL *tp_visit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg)" */
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 #define Dee_TF_SEQCLASS_SHFT    26         /* [INTERNAL] Shift for `Dee_TF_SEQCLASS_MASK' */
 #define Dee_TF_SEQCLASS_MASK    0x1c000000 /* [INTERNAL] Mask for cached `Dee_SEQCLASS_*' */
 #define Dee_TF_NOTCONSTCASTABLE 0x20000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': false */

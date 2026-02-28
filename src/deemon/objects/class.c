@@ -3534,23 +3534,8 @@ again_i:
 	Dee_Decrefv(buffer, buflen);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
-INTERN NONNULL((1)) void DCALL
-instance_clear(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	do {
-		instance_tclear(tp_self, self);
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
-	         DeeType_IsClass(tp_self));
-}
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
-
 INTERN struct type_gc tpconst instance_gc = {
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&instance_tclear,
-#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
-	/* .tp_clear  = */ &instance_clear,
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 };
 
 

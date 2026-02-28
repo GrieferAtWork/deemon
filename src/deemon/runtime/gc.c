@@ -1020,17 +1020,10 @@ DeeObject_GCClear(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_gc && tp_self->tp_gc->tp_clear) {
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
 			if (tp_self->tp_features & TF_TPVISIT) {
 				typedef void (DCALL *tp_tclear_t)(DeeTypeObject *tp_self, DeeObject *self);
 				(*(tp_tclear_t)tp_self->tp_gc->tp_clear)(tp_self, self);
-			} else
-#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
-			if (tp_self->tp_gc->tp_clear == &instance_clear) {
-				instance_tclear(tp_self, self);
-			} else
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
-			{
+			} else {
 				(*tp_self->tp_gc->tp_clear)(self);
 			}
 		}
