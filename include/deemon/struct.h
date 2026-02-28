@@ -147,7 +147,11 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Copy(DeeObject *__rest
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_Init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeStructObject_InitKw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeStructObject_Serialize(DeeObject *__restrict self, struct Dee_serial *__restrict writer, Dee_seraddr_t addr);
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
+DFUNDEF NONNULL((1, 2)) void DCALL DeeStructObject_Fini(DeeTypeObject *tp_self, DeeObject *__restrict self); /* Only finalizes fields defined by "Dee_TYPE(self)" */
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 DFUNDEF NONNULL((1)) void DCALL DeeStructObject_Fini(DeeObject *__restrict self); /* Only finalizes fields defined by "Dee_TYPE(self)" */
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 DFUNDEF NONNULL((1)) void DCALL DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Remember to set "Dee_TF_TPVISIT" */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeStructObject_PrintRepr(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg);
 DFUNDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL DeeStructObject_Hash(DeeObject *__restrict self);

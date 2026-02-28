@@ -23,8 +23,8 @@
 #include <deemon/api.h>
 
 #include <deemon/none.h>         /* DeeNoneObject, DeeNone_Type */
-#include <deemon/object.h>       /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_IncrefIfNotZero, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_WEAKREF_SUPPORT_INIT, Dee_refcnt_t, Dee_unlockinfo, Dee_unlockinfo_xunlock, Dee_weakref_list, ITER_DONE, OBJECT_HEAD */
-#include <deemon/type.h>         /* DeeType_Base */
+#include <deemon/object.h>       /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_IncrefIfNotZero, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_WEAKREF_SUPPORT_INIT, Dee_unlockinfo, Dee_unlockinfo_xunlock, Dee_weakref_list, ITER_DONE, OBJECT_HEAD */
+#include <deemon/type.h>         /* DeeType_Base, TF_TPVISIT */
 #include <deemon/util/atomic.h>  /* atomic_* */
 #include <deemon/util/weakref.h> /* Dee_weakref, Dee_weakref_callback_t */
 
@@ -994,14 +994,32 @@ typedef struct {
 
 
 PUBLIC WUNUSED NONNULL((2)) bool DCALL
-DeeObject_UndoConstruction(DeeTypeObject *undo_start,
-                           DeeObject *self) {
+DeeObject_UndoConstruction(DeeTypeObject *undo_start, DeeObject *self) {
+	DeeTypeObject *finalize_iter;
+
+	/* Invoke finalizers in reverse order (where they have been defined) */
+	for (finalize_iter = undo_start; finalize_iter;
+	     finalize_iter = DeeType_Base(finalize_iter)) {
+		if (finalize_iter->tp_init.tp_finalize)
+			(*finalize_iter->tp_init.tp_finalize)(finalize_iter, self);
+	}
+
+	/* Drop the reference that was still kept during invocation of finalizers. */
 	if unlikely(!atomic_cmpxch(&self->ob_refcnt, 1, 0))
 		return false;
+
+	/* Properly destroy the object... */
 	for (;; undo_start = DeeType_Base(undo_start)) {
 		if (!undo_start)
 			break;
 		if (undo_start->tp_init.tp_dtor) {
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
+			if (undo_start->tp_features & TF_TPVISIT) {
+				(*(void (DCALL *)(DeeTypeObject *, DeeObject *__restrict))undo_start->tp_init.tp_dtor)(undo_start, self);
+			} else {
+				(*undo_start->tp_init.tp_dtor)(self);
+			}
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 			/* Update the object's typing to mirror what is written here.
 			 * NOTE: We're allowed to modify the type of `self' _ONLY_ because
 			 *       it's reference counter is ZERO (aka: the object isn't shared
@@ -1011,65 +1029,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 			COMPILER_WRITE_BARRIER();
 			(*undo_start->tp_init.tp_dtor)(self);
 			COMPILER_READ_BARRIER();
-
-			/* Special case: The destructor managed to revive the object. */
-			{
-				Dee_refcnt_t refcnt;
-				do {
-					refcnt = atomic_read(&self->ob_refcnt);
-					if (refcnt == 0)
-						goto destroy_weak;
-				} while unlikely(!atomic_cmpxch_weak_or_write(&self->ob_refcnt, refcnt, refcnt + 1));
-				return false;
-			}
-		}
-
-		/* Delete all weak references linked against this type level. */
-destroy_weak:
-		if (has_noninherited_weakrefs(undo_start)) {
-			struct Dee_weakref *iter, *next;
-			struct Dee_weakref_list *list;
-			ASSERT(undo_start->tp_weakrefs >= sizeof(DeeObject));
-			list = (struct Dee_weakref_list *)((uintptr_t)self + undo_start->tp_weakrefs);
-restart_clear_weakrefs:
-			LOCK_POINTER(list->wl_nodes);
-			iter = (struct Dee_weakref *)GET_POINTER(list->wl_nodes);
-			if (iter == NULL) {
-				UNLOCK_POINTER(list->wl_nodes);
-			} else {
-				if (!WEAKREF_TRYLOCK(iter)) {
-					/* Prevent deadlock. */
-					UNLOCK_POINTER(list->wl_nodes);
-					SCHED_YIELD();
-					goto restart_clear_weakrefs;
-				}
-				ASSERT(iter->wr_pself == &list->wl_nodes);
-				next = (struct Dee_weakref *)GET_POINTER(iter->wr_next);
-				if (next) {
-					if (!WEAKREF_TRYLOCK(next)) {
-						/* Prevent deadlock. */
-						WEAKREF_UNLOCK(iter);           /* WEAKREF_UNLOCK(list->FIRST) */
-						UNLOCK_POINTER(list->wl_nodes); /* WEAKREF_UNLOCK(list) */
-						SCHED_YIELD();
-						goto restart_clear_weakrefs;
-					}
-					next->wr_pself = &list->wl_nodes;
-					WEAKREF_UNLOCK(next);    /* WEAKREF_UNLOCK(list->FIRST) */
-				}
-
-				/* Overwrite the weakly referenced object with NULL,
-				 * indicating that the link has been severed. */
-				atomic_write(&list->wl_nodes, next); /* WEAKREF_UNLOCK(list) */
-				WEAKREF_SETBAD(iter->wr_pself, struct Dee_weakref **);
-				iter->wr_obj = NULL;
-				COMPILER_WRITE_BARRIER();
-				if (iter->wr_del) {
-					(*iter->wr_del)(iter);
-				} else {
-					atomic_write(&iter->wr_next, WEAKREF_EMPTY_NEXTVAL);
-				}
-				goto restart_clear_weakrefs;
-			}
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 		}
 	}
 	return true;

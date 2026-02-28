@@ -944,7 +944,11 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_copy(DeeObject *__rest
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
+INTDEF NONNULL((1, 2)) void DCALL instance_builtin_destructor(DeeTypeObject *tp_self, DeeObject *self);
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 INTDEF NONNULL((1)) void DCALL instance_builtin_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_assign(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tmoveassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);

@@ -699,6 +699,16 @@ again:
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
+INTERN NONNULL((1, 2)) void DCALL
+instance_builtin_destructor(DeeTypeObject *tp_self, DeeObject *self) {
+	/* Drop references to all members of this instance. */
+	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
+	struct Dee_instance_desc *me = DeeInstance_DESC(desc, self);
+	uint16_t count = desc->cd_desc->cd_imemb_size;
+	Dee_XDecrefv(me->id_vtab, count);
+}
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 INTERN NONNULL((1)) void DCALL
 instance_builtin_destructor(DeeObject *__restrict self) {
 	struct Dee_class_desc *desc;
@@ -707,6 +717,7 @@ instance_builtin_destructor(DeeObject *__restrict self) {
 	instance_clear_members(DeeInstance_DESC(desc, self),
 	                       desc->cd_desc->cd_imemb_size);
 }
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 
 PRIVATE WUNUSED bool DCALL
 instance_builtin_serialize_enabled(DeeTypeObject *base) {
@@ -4017,7 +4028,11 @@ err_custom_allocator:
 	result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_copy;
 	result->tp_init.tp_assign             = &instance_builtin_assign;
 	result->tp_init.tp_move_assign        = &instance_builtin_moveassign;
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
+	result->tp_init.tp_dtor               = (void (DCALL *)(DeeObject *__restrict))&instance_builtin_destructor;
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 	result->tp_init.tp_dtor               = &instance_builtin_destructor;
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 	result->tp_visit = (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&instance_tvisit;
 	result->tp_gc    = &instance_gc;
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS

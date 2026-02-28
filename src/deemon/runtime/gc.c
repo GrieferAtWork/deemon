@@ -24,7 +24,6 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeDbgObject_*, DeeObject_*alloc*, DeeObject_Free, DeeSlab_ENUMERATE, DeeSlab_Invoke */
-#include <deemon/class.h>           /* instance_clear, instance_tclear */
 #include <deemon/code.h>            /* DeeCodeObject, DeeCode_NAME, DeeCode_Type, DeeFunction_CODE, DeeFunction_Type */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/gc.h>              /* DeeGC_*, Dee_GC_*, Dee_gc_head */
