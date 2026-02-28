@@ -343,6 +343,8 @@ global final C_KEYWORDS: {string...} = HashSet.Frozen({
 	"import",
 	"true",
 	"false",
+	"new",
+	"delete",
 
 	/* Now keywords, but use aliases to prevent conflict with common macros */
 	"min",

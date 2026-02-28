@@ -38,6 +38,7 @@
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include "../runtime/strings.h"
+#include "../runtime/kwlist.h"
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -472,62 +473,24 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-cell_cmpdel(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *oldval, *result;
-	DeeArg_Unpack1(err, argc, argv, "o:cmpdel", &oldval);
-	result = DeeCell_CmpXch(Dee_AsObject(self), oldval, NULL);
-	Dee_XDecref(result);
-	return_bool(result == oldval);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-cell_cmpxch(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *result;
-/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("cmpxch", params: """
-	DeeObject *oldval;
-	DeeObject *newval = NULL;
-	DeeObject *def = NULL;
+cell_cmpxch(DeeCellObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *real_oldval;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("cmpxch", params: """
+	DeeObject *old = NULL;
+	DeeObject *new = NULL;
 """);]]]*/
 	struct {
-		DeeObject *oldval;
-		DeeObject *newval;
-		DeeObject *def;
+		DeeObject *old;
+		DeeObject *new_;
 	} args;
-	args.newval = NULL;
-	args.def = NULL;
-	DeeArg_UnpackStruct1Or2Or3(err, argc, argv, "cmpxch", &args, &args.oldval, &args.newval, &args.def);
+	args.old = NULL;
+	args.new_ = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__old_new, "|oo:cmpxch", &args))
+		goto err;
 /*[[[end]]]*/
-	if (args.newval) {
-		result = DeeCell_CmpXch(Dee_AsObject(self), args.oldval, args.newval);
-		if (!result) {
-			if (!args.def)
-				goto err_empty;
-			Dee_Incref(args.def);
-			result = args.def;
-		}
-	} else {
-		result = DeeCell_CmpXch(Dee_AsObject(self), NULL, args.oldval);
-		if (!result)
-			return_true;
-		Dee_Decref(result);
-		result = DeeBool_NewFalse();
-	}
-	return result;
-err_empty:
-	err_empty_cell();
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-cell_cmpset(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *oldval, *newval = NULL, *result;
-	DeeArg_Unpack1Or2(err, argc, argv, "cmpset", &oldval, &newval);
-	result = DeeCell_CmpXch(Dee_AsObject(self), oldval, newval);
-	Dee_XDecref(result);
-	return_bool(result == oldval);
+	real_oldval = DeeCell_CmpXch(Dee_AsObject(self), args.old, args.new_);
+	Dee_XDecref(real_oldval);
+	return_bool(args.old == real_oldval);
 err:
 	return NULL;
 }
@@ -565,38 +528,13 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	              "\n"
 	              "(value,def)->\n"
 	              "Returns the contained value of the ?. or @def when it is empty"),
-	TYPE_METHOD_F("cmpdel", &cell_cmpdel, METHOD_FNOREFESCAPE,
-	              "(old_value)->?Dbool\n"
-	              "Atomically check if the stored object's id matches @{old_value}. If this is "
-	              /**/ "the case, delete the stored object and return ?t. Otherwise, return ?f"),
-	TYPE_METHOD_F("cmpxch", &cell_cmpxch, METHOD_FNOREFESCAPE,
-	              "(old_value,new_value)->\n"
-	              "#tValueError{@this ?. is empty}"
-	              "\n"
 
-	              "(old_value,new_value,def)->\n"
-	              "Do an id-compare of the stored object against @old_value and overwrite "
-	              /**/ "that object with @new_value when they match. Otherwise, don't modify the "
-	              /**/ "stored object. In both cases, return the previously stored object, @def, "
-	              /**/ "or throw a :{ValueError}.\n"
-	              "This is equivalent to the atomic execution of the following:\n"
-	              "${"
-	              /**/ "local result = this.value;\n"
-	              /**/ "if (this && result === old_value)\n"
-	              /**/ "	this.value = new_value;\n"
-	              /**/ "return result;"
-	              "}\n"
-	              "\n"
-
-	              "(new_value)->?Dbool\n"
-	              "Return ?t and atomically set @new_value as stored object only "
-	              /**/ "if no object had been set before. Otherwise, return ?f"),
-	TYPE_METHOD_F("cmpset", &cell_cmpset, METHOD_FNOREFESCAPE,
-	              "(old_value)->?Dbool\n"
-	              "(old_value,new_value)->?Dbool\n"
-	              "Atomically check if the stored value equals @old_value and return ?t "
-	              /**/ "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
-	              "When @new_value is omit, the function behaves identical to ?#cmpdel"),
+	TYPE_KWMETHOD_F("cmpxch", &cell_cmpxch, METHOD_FNOREFESCAPE,
+	                "(old?,new?)->?Dbool\n"
+	                "Check if the currently set ?#value matches @old (by-id). "
+	                /**/ "If so, atomically assign @new and return !t, else return !f. "
+	                /**/ "Both @old and @new may be unbound which reflects the "
+	                /**/ "relevant old/new is-bound state."),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD_F("del", &cell_delete, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"

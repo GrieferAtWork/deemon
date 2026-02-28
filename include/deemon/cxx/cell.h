@@ -119,39 +119,19 @@ public:
 		args[1] = def;
 		return inherit(DeeObject_CallAttrStringHash(this, "xch", _Dee_HashSelectC(0x818ce38a, 0x6bb37305be1b0321), 2, args));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (cmpdel)(DeeObject *old_value) {
-		DeeObject *args[1];
-		args[0] = old_value;
-		return inherit(DeeObject_CallAttrStringHash(this, "cmpdel", _Dee_HashSelectC(0x9f2753d6, 0xb34dad8ca05ec81d), 1, args));
+	WUNUSED Ref<deemon::bool_> (cmpxch)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "cmpxch", _Dee_HashSelectC(0x3988d00b, 0xc8716ef5297eda10), 0, NULL));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (cmpxch)(DeeObject *new_value) {
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (cmpxch)(DeeObject *old) {
 		DeeObject *args[1];
-		args[0] = new_value;
+		args[0] = old;
 		return inherit(DeeObject_CallAttrStringHash(this, "cmpxch", _Dee_HashSelectC(0x3988d00b, 0xc8716ef5297eda10), 1, args));
 	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<T> (cmpxch)(DeeObject *old_value, DeeObject *new_value) {
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (cmpxch)(DeeObject *old, DeeObject *new) {
 		DeeObject *args[2];
-		args[0] = old_value;
-		args[1] = new_value;
+		args[0] = old;
+		args[1] = new;
 		return inherit(DeeObject_CallAttrStringHash(this, "cmpxch", _Dee_HashSelectC(0x3988d00b, 0xc8716ef5297eda10), 2, args));
-	}
-	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<T> (cmpxch)(DeeObject *old_value, DeeObject *new_value, DeeObject *def) {
-		DeeObject *args[3];
-		args[0] = old_value;
-		args[1] = new_value;
-		args[2] = def;
-		return inherit(DeeObject_CallAttrStringHash(this, "cmpxch", _Dee_HashSelectC(0x3988d00b, 0xc8716ef5297eda10), 3, args));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (cmpset)(DeeObject *old_value) {
-		DeeObject *args[1];
-		args[0] = old_value;
-		return inherit(DeeObject_CallAttrStringHash(this, "cmpset", _Dee_HashSelectC(0xebdea141, 0xaa28c2c4dbba2ceb), 1, args));
-	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (cmpset)(DeeObject *old_value, DeeObject *new_value) {
-		DeeObject *args[2];
-		args[0] = old_value;
-		args[1] = new_value;
-		return inherit(DeeObject_CallAttrStringHash(this, "cmpset", _Dee_HashSelectC(0xebdea141, 0xaa28c2c4dbba2ceb), 2, args));
 	}
 	WUNUSED Ref<deemon::bool_> (del)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "del", _Dee_HashSelectC(0x26f49208, 0x4dde761d85eeecc2), 0, NULL));

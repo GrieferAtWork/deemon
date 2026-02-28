@@ -143,6 +143,7 @@ local kw_lists = {
 	{"data", "hint"},
 	{"from", "transitive"},
 	{"to", "transitive"},
+	{"old", "new"},
 
 	// For runtime errors...
 	{"value", "minval", "maxval", "positive"},
@@ -249,6 +250,7 @@ DECLARE_KWLIST(kwlist__ob_name_perm_permset_decl, { KEX("ob", 0xdfa5fee2, 0x80a9
 DECLARE_KWLIST(kwlist__ob_perm_permset_decl, { KEX("ob", 0xdfa5fee2, 0x80a90888850ad043), KEX("perm", 0x7a394a64, 0x8b7755103442f209), KEX("permset", 0x4ee6a00a, 0xd554c804f15d2e0b), KEX("decl", 0x95fe81e2, 0xdc35fdc1dce5cffc), KEND });
 DECLARE_KWLIST(kwlist__obj_callback, { KEX("obj", 0x477b06c1, 0xffb577570f61bd03), KEX("callback", 0x3b9dd39e, 0x1e7dd8df6e98f4c6), KEND });
 DECLARE_KWLIST(kwlist__off_whence, { KEX("off", 0xe95f4e95, 0x499726573b82dfda), KEX("whence", 0x41d86ee7, 0x560314d7be8806a5), KEND });
+DECLARE_KWLIST(kwlist__old_new, { KEX("old", 0xcc8f249c, 0x10cf2ea06510fb10), KEX("new", 0x192a6587, 0x45d0a0098e6c668a), KEND });
 DECLARE_KWLIST(kwlist__other, { KEX("other", 0x887ca3a8, 0x353f92c20a856fc5), KEND });
 DECLARE_KWLIST(kwlist__path_oflags_mode, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("oflags", 0xbe92b5be, 0x4f84e498f7c9d171), KEX("mode", 0x11abbac9, 0xa978c54b1db00143), KEND });
 DECLARE_KWLIST(kwlist__pattern_replace_max_rules, { KEX("pattern", 0x6ea88732, 0x829c0a5f2fb04920), KEX("replace", 0x54b94882, 0x2d4ba4f8cfd63bc6), KEX("max", 0xc293979b, 0x822bd5c706bd9850), KEX("rules", 0xa825949d, 0x78d6949b972cfd25), KEND });
