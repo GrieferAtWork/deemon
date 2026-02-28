@@ -18,7 +18,8 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 #ifdef __INTELLISENSE__
-#define EXEC_SAFE 1
+//#define EXEC_SAFE 1
+#define EXEC_FAST 1
 #endif /* __INTELLISENSE__ */
 
 #include <deemon/api.h>
@@ -85,10 +86,9 @@ __pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
 #pragma optimize("ts", on)
 #endif /* _MSC_VER */
 
-#if ((defined(EXEC_SAFE) && defined(EXEC_FAST)) || \
-     (!defined(EXEC_SAFE) && !defined(EXEC_FAST)))
+#if (defined(EXEC_SAFE) + defined(EXEC_FAST)) != 1
 #error "Invalid configuration. - Must either define `EXEC_SAFE' or `EXEC_FAST'"
-#endif
+#endif /* (EXEC_SAFE + EXEC_FAST) != 1 */
 
 /* Figure out how we want to implement the big instruction jump tables. */
 #undef exec_dispatch_USE_switch
@@ -100,7 +100,7 @@ __pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
  * and also works for all ancient version of those compilers, too, since
  * addressable labels have been in GCC since the 2.0 days of the early 90s. */
 #define exec_dispatch_USE_goto
-#elif defined(_MSC_VER) && defined(NDEBUG)
+#elif defined(_MSC_VER) && defined(__OPTIMIZE__)
 /* This forces msvc to *always* generate a *full* 256-word jump-table.
  * When using a regular switch with a default-case, msvc will also use
  * a jump-table, but it won't be 256-word long. Instead, it will emit
