@@ -48,6 +48,13 @@ DECL_BEGIN
 #define DeeBool_IsTrue_10(self) (DeeBool_IsTrue(self) ? 1 : 0)
 #endif /* !... */
 
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#define bool_forcompare(self) (!!DeeBool_IsTrue(self))
+#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#define bool_forcompare(self) (self)
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_return_false(void) {
 	return_false;
@@ -281,12 +288,17 @@ PRIVATE struct type_math bool_math = {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_compare_eq(DeeObject *self, DeeObject *other) {
 	int error;
-	if (DeeBool_Check(other))
-		return self == other ? 0 : 1;
+	if (DeeBool_Check(other)) {
+		if (bool_forcompare(self) == bool_forcompare(other))
+			return Dee_COMPARE_EQ;
+		return Dee_COMPARE_NE;
+	}
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return !!DeeBool_IsTrue(self) == !!error;
+	if (!!DeeBool_IsTrue(self) == !!error)
+		return Dee_COMPARE_EQ;
+	return Dee_COMPARE_NE;
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -294,8 +306,10 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_compare(DeeObject *self, DeeObject *other) {
 	int error;
-	if (DeeBool_Check(other))
-		Dee_return_compare(self, other);
+	if (DeeBool_Check(other)) {
+		Dee_return_compare(bool_forcompare(self),
+		                   bool_forcompare(other));
+	}
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;

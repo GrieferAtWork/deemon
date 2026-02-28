@@ -1,0 +1,295 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2026 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2026 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from errors;
+import .common.test;
+
+#define TRY(x) (try x catch (e...) e)
+
+local falseValues = { false, 0, "" };
+local trueValues = { true, 1, -1, 999, -999, "foo" };
+
+/* No-args constructor must return "false" */
+test.assertEqualsTyped(false, bool());
+
+/* Constructor must work */
+for (local v: falseValues) {
+	assert !v;
+	test.assertEqualsTyped(false, !!v);
+	test.assertEqualsTyped(false, v.operator bool());
+	test.assertEqualsTyped(false, bool(v));
+	test.assertEqualsTyped(false, !!bool(v));
+}
+for (local v: trueValues) {
+	assert v;
+	test.assertEqualsTyped(true, !!v);
+	test.assertEqualsTyped(true, v.operator bool());
+	test.assertEqualsTyped(true, bool(v));
+	test.assertEqualsTyped(true, !!bool(v));
+}
+assert TRY(bool(10, 20)) is TypeError;
+
+/* str/repr must work */
+test.assertEqualsTyped("false", str bool(0));
+test.assertEqualsTyped("true", str bool(1));
+test.assertEqualsTyped("false", repr bool(0));
+test.assertEqualsTyped("true", repr bool(1));
+
+/* Comparison must work */
+for (local falseValue: falseValues) {
+	for (local trueValue: { true, 1, -1, 999, -999, "foo" }) {
+		test.assertEqualsTyped(true,  equals (false, falseValue));
+		test.assertEqualsTyped(0,     compare(false, falseValue));
+		test.assertEqualsTyped(false, false <  falseValue);
+		test.assertEqualsTyped(true,  false <= falseValue);
+		test.assertEqualsTyped(true,  false == falseValue);
+		test.assertEqualsTyped(false, false != falseValue);
+		test.assertEqualsTyped(false, false >  falseValue);
+		test.assertEqualsTyped(true,  false >= falseValue);
+
+		test.assertEqualsTyped(false, equals (false, trueValue));
+		test.assertEqualsTyped(-1,    compare(false, trueValue));
+		test.assertEqualsTyped(true,  false <  trueValue);
+		test.assertEqualsTyped(true,  false <= trueValue);
+		test.assertEqualsTyped(false, false == trueValue);
+		test.assertEqualsTyped(true,  false != trueValue);
+		test.assertEqualsTyped(false, false >  trueValue);
+		test.assertEqualsTyped(false, false >= trueValue);
+
+		test.assertEqualsTyped(false, equals (true, falseValue));
+		test.assertEqualsTyped(1,     compare(true, falseValue));
+		test.assertEqualsTyped(false, true <  falseValue);
+		test.assertEqualsTyped(false, true <= falseValue);
+		test.assertEqualsTyped(false, true == falseValue);
+		test.assertEqualsTyped(true,  true != falseValue);
+		test.assertEqualsTyped(true,  true >  falseValue);
+		test.assertEqualsTyped(true,  true >= falseValue);
+
+		test.assertEqualsTyped(true,  equals (true, trueValue));
+		test.assertEqualsTyped(0,     compare(true, trueValue));
+		test.assertEqualsTyped(false, true <  trueValue);
+		test.assertEqualsTyped(true,  true <= trueValue);
+		test.assertEqualsTyped(true,  true == trueValue);
+		test.assertEqualsTyped(false, true != trueValue);
+		test.assertEqualsTyped(false, true >  trueValue);
+		test.assertEqualsTyped(true,  true >= trueValue);
+	}
+}
+
+
+/* Convert to int/float must work */
+test.assertEqualsTyped(1, true.operator int());
+test.assertEqualsTyped(0, false.operator int());
+test.assertEqualsTyped(1, int(true));
+test.assertEqualsTyped(0, int(false));
+if (float.hasoperator("constructor")) {
+	test.assertEqualsTyped(1.0, true.operator float());
+	test.assertEqualsTyped(0.0, false.operator float());
+	test.assertEqualsTyped(1.0, float(true));
+	test.assertEqualsTyped(0.0, float(false));
+}
+
+/* All Other math operators must work
+ *
+ * All (except for "<<" and ">>") of these have been implemented as:
+ * >> operator UNARY (): bool     { return bool(UNARY int(this)); }
+ * >> operator BINARY (rhs): bool { return bool(int(this) BINARY int(rhs.operator bool())); }
+ */
+
+test.assertEqualsTyped(false, ~true);
+test.assertEqualsTyped(true, ~false);
+
+/* -x == ~(x - 1)
+ * >> -x == ~(false - 1) == ~(0 - 1) == ~(-1) == 0  == bool(0)  == false
+ * >> -x == ~(true  - 1) == ~(1 - 1) == ~(0)  == -1 == bool(-1) == true */
+test.assertEqualsTyped(true,  -true);
+test.assertEqualsTyped(false, -false);
+
+test.assertEqualsTyped(true,  +true);
+test.assertEqualsTyped(false, +false);
+
+/* Sanity-check: logical operators must work (these are
+ * hard-writed within the compiler and can't be overwritten) */
+test.assertEqualsTyped(false, false || false);
+test.assertEqualsTyped(true,  false || true);
+test.assertEqualsTyped(true,  true  || false);
+test.assertEqualsTyped(true,  true  || true);
+test.assertEqualsTyped(false, false && false);
+test.assertEqualsTyped(false, false && true);
+test.assertEqualsTyped(false, true  && false);
+test.assertEqualsTyped(true,  true  && true);
+
+/* 2-operand math functions */
+for (local falseValue: falseValues) {
+	test.assertEqualsTyped(false, false | falseValue);
+	test.assertEqualsTyped(true,  true  | falseValue);
+	test.assertEqualsTyped(false, false & falseValue);
+	test.assertEqualsTyped(false, true  & falseValue);
+	test.assertEqualsTyped(false, false ^ falseValue);
+	test.assertEqualsTyped(true,  true  ^ falseValue);
+	/* "operator +" must behave the same as "operator -" */
+	test.assertEqualsTyped(false, false + falseValue);
+	test.assertEqualsTyped(true,  true  + falseValue);
+}
+for (local trueValue: trueValues) {
+	test.assertEqualsTyped(true,  false | trueValue);
+	test.assertEqualsTyped(true,  true  | trueValue);
+	test.assertEqualsTyped(false, false & trueValue);
+	test.assertEqualsTyped(true,  true  & trueValue);
+	test.assertEqualsTyped(true,  false ^ trueValue);
+	test.assertEqualsTyped(false, true  ^ trueValue);
+	/* "operator +" must behave the same as "operator -" */
+	test.assertEqualsTyped(true,  false + trueValue);
+	test.assertEqualsTyped(true,  true  + trueValue);
+}
+
+
+/* >> operator - (other) { return bool(this.operator int() - bool(other).operator int()); }
+ *
+ * "operator -" is actually the same as "operator ^":
+ *    A  B                 R
+ *    0, 0 -> 0 - 0 = bool(0)  = false
+ *    0, 1 -> 0 - 1 = bool(-1) = true
+ *    1, 0 -> 1 - 0 = bool(1)  = true
+ *    1, 1 -> 0 - 0 = bool(0)  = false
+ *
+ *
+ * You could also argue that "bool - bool" should be "bool + (-bool)":
+ * >> operator - (other) { return this + (-other); }
+ * But we chose not to implement it in that case since it didn't feel
+ * right to have "+" and "-" be the same operator (even though it already
+ * is so for unary +/-). Reason is that this version wouldn't immediately
+ * cast the right-hand-side operand to "bool", but would first invoke the
+ * abstract "operator - ()" on it (which might do unexpected things) */
+for (local falseValue: falseValues) {
+	test.assertEqualsTyped(false, false - falseValue);
+	test.assertEqualsTyped(true,  true  - falseValue);
+}
+for (local trueValue: trueValues) {
+	test.assertEqualsTyped(true,  false - trueValue);
+	test.assertEqualsTyped(false, true  - trueValue);
+}
+
+/* Division and modulo does what you'd expect */
+for (local trueValue: trueValues) {
+	test.assertEqualsTyped(false, false / trueValue);
+	test.assertEqualsTyped(true,  true / trueValue);
+	test.assertEqualsTyped(false, false % trueValue);
+	test.assertEqualsTyped(false, true % trueValue);
+}
+for (local falseValue: falseValues) {
+	assert TRY(false / falseValue) is DivideByZero;
+	assert TRY(true / falseValue) is DivideByZero;
+	assert TRY(false % falseValue) is DivideByZero;
+	assert TRY(true % falseValue) is DivideByZero;
+}
+
+test.assertEqualsTyped(false, false << false);
+test.assertEqualsTyped(false, false << 0);
+test.assertEqualsTyped(false, false << true);
+test.assertEqualsTyped(false, false << 1);
+test.assertEqualsTyped(false, false << 999);
+test.assertEqualsTyped(true,  true  << false);
+test.assertEqualsTyped(true,  true  << 0);
+test.assertEqualsTyped(true,  true  << true);
+test.assertEqualsTyped(true,  true  << 1);
+test.assertEqualsTyped(true,  true  << 999);
+assert TRY(false << -1) is NegativeShift;
+assert TRY(true  << -1) is NegativeShift;
+assert TRY(false << -999) is NegativeShift;
+assert TRY(true  << -999) is NegativeShift;
+
+test.assertEqualsTyped(false, false >> false);
+test.assertEqualsTyped(false, false >> 0);
+test.assertEqualsTyped(false, false >> true);
+test.assertEqualsTyped(false, false >> 1);
+test.assertEqualsTyped(false, false >> 999);
+test.assertEqualsTyped(true,  true  >> false);
+test.assertEqualsTyped(true,  true  >> 0);
+test.assertEqualsTyped(false, true  >> true);
+test.assertEqualsTyped(false, true  >> 1);
+test.assertEqualsTyped(false, true  >> 999);
+assert TRY(false >> -1) is NegativeShift;
+assert TRY(true  >> -1) is NegativeShift;
+assert TRY(false >> -999) is NegativeShift;
+assert TRY(true  >> -999) is NegativeShift;
+
+
+for (local trueValue: trueValues) {
+	test.assertEqualsTyped(false, false ** trueValue);
+	test.assertEqualsTyped(true,  true  ** trueValue);
+}
+for (local falseValue: falseValues) {
+	test.assertEqualsTyped(true, false ** falseValue);
+	test.assertEqualsTyped(true, true  ** falseValue);
+}
+
+
+/* Assert that all boolean operators correctly handle propagate
+ * exceptions when the right-hand-side throw an error in "bool" */
+local myError = "ERROR!";
+local myError2 = "INT ERROR!";
+class MyClass {
+	operator bool() {
+		throw myError;
+	}
+	operator int() {
+		throw myError2;
+	}
+}
+
+local rhs = MyClass();
+for (local lhs: {false, true}) {
+	test.assertSame(myError, TRY(lhs ^ rhs));
+	test.assertSame(myError, TRY(lhs - rhs));
+	test.assertSame(myError, TRY(lhs / rhs));
+	test.assertSame(myError, TRY(lhs % rhs));
+	test.assertSame(myError, TRY(lhs == rhs));
+	test.assertSame(myError, TRY(lhs != rhs));
+	test.assertSame(myError, TRY(equals(lhs, rhs)));
+	test.assertSame(myError, TRY(compare(lhs, rhs)));
+}
+
+/* Shift operators are special, in that sometimes don't invoke "rhs.operator bool()" */
+test.assertSame(false,   TRY(true  < rhs));
+test.assertSame(myError, TRY(false < rhs));
+test.assertSame(myError, TRY(true  <= rhs));
+test.assertSame(true,    TRY(false <= rhs));
+test.assertSame(myError, TRY(true  > rhs));
+test.assertSame(false,   TRY(false > rhs));
+test.assertSame(true,    TRY(true  >= rhs));
+test.assertSame(myError, TRY(false >= rhs));
+
+/* Shift operators are special, in that they invoke "rhs.operator int()" */
+test.assertSame(myError2, TRY(true  << rhs));
+test.assertSame(myError2, TRY(false << rhs));
+test.assertSame(myError2, TRY(true  >> rhs));
+test.assertSame(myError2, TRY(false >> rhs));
+
+test.assertSame(true,    TRY(true  + rhs));
+test.assertSame(myError, TRY(false + rhs));
+test.assertSame(true,    TRY(true  | rhs));
+test.assertSame(myError, TRY(false | rhs));
+test.assertSame(myError, TRY(true  & rhs));
+test.assertSame(false,   TRY(false & rhs));
+test.assertSame(true,    TRY(true  ** rhs));
+test.assertSame(myError, TRY(false ** rhs));
