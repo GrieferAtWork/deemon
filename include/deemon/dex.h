@@ -371,13 +371,13 @@ struct Dee_dex {
 };
 
 typedef struct Dee_dex_object {
-	DeeModuleObject    d_module;       /* The underlying module. */
-	struct Dee_dex    *d_dex;          /* [1..1][const_if(Dee_MODULE_FDIDLOAD)] The dex definition table exported by this extension.
-	                                    * NOTE: This pointer is apart of the extension's static address space. */
-	void              *d_handle;       /* [?..?][const_if(Dee_MODULE_FDIDLOAD)] System-specific library handle. */
-	DeeDexObject     **d_pself;        /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
-	DREF DeeDexObject *d_next;         /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
-	                                    * During finalization, extensions are unloaded in reverse order. */
+	DeeModuleObject             d_module; /* The underlying module. */
+	struct Dee_dex             *d_dex;    /* [1..1][const_if(Dee_MODULE_FDIDLOAD)] The dex definition table exported by this extension.
+	                                       * NOTE: This pointer is apart of the extension's static address space. */
+	void                       *d_handle; /* [?..?][const_if(Dee_MODULE_FDIDLOAD)] System-specific library handle. */
+	struct Dee_dex_object     **d_pself;  /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
+	DREF struct Dee_dex_object *d_next;   /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
+	                                       * During finalization, extensions are unloaded in reverse order. */
 } DeeDexObject;
 
 DDATDEF DeeTypeObject DeeDex_Type;

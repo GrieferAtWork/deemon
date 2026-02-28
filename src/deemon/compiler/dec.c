@@ -44,6 +44,9 @@
 #include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* UINT16_MAX, uintN_t */
 
+#undef sym_alloc
+#undef sym_free
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memmem

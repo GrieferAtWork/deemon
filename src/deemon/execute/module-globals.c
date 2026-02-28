@@ -284,6 +284,10 @@ again:
 	}
 	do_DeeModule_UnlockSymbols(mod);
 	return result_name;
+#ifndef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+err:
+	return NULL;
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF ModuleExports *DCALL

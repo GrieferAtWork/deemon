@@ -1235,9 +1235,20 @@ INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 			goto err;
 		if (dec_putptr(1))
 			goto err;
-		return dec_putobj(DeeSeqOne_GET(self));
+		return dec_putobj(DeeSeqOne_GET((DeeSeqOneObject *)self));
 	}
 #endif /* CONFIG_ENABLE_SEQ_ONE_TYPE */
+#ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
+	if (tp_self == &DeeSeqPair_Type) {
+		if (dec_putb(DTYPE_TUPLE))
+			goto err;
+		if (dec_putptr(2))
+			goto err;
+		if (dec_putobj(DeeSeqPair_ELEM((DeeSeqPairObject *)self)[0]))
+			goto err;
+		return dec_putobj(DeeSeqPair_ELEM((DeeSeqPairObject *)self)[1]);
+	}
+#endif /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 
 	/* Fallback: try to encode a builtin object. */
 	builtin_id = Dec_BuiltinID(self);

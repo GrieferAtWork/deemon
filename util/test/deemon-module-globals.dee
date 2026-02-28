@@ -27,12 +27,17 @@ import . as me;
 
 global FOO = 42;
 
-test.assertSequence(rt.ModuleLibNames(deemon), {"deemon"});
-test.assertSequence(deemon.__libnames__, {"deemon"});
-test.assertSequence(rt.ModuleLibNames(rt), {"rt"});
-test.assertSequence(rt.__libnames__, {"rt"});
-test.assertSequence(rt.ModuleLibNames(me), {});
-test.assertSequence(me.__libnames__, {});
+local CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES = hasattr(rt, "ModuleDir");
+
+if (CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) {
+	test.assertSequence(rt.ModuleLibNames(deemon), {"deemon"});
+	test.assertSequence(deemon.__libnames__, {"deemon"});
+	test.assertSequence(rt.ModuleLibNames(rt), {"rt"});
+	test.assertSequence(rt.__libnames__, {"rt"});
+	test.assertSequence(rt.ModuleLibNames(me), {});
+	test.assertSequence(me.__libnames__, {});
+}
+
 test.assertSequence(rt.ModuleGlobals(me), {42});
 test.assertSequence(me.__globals__, {42});
 test.assertMapping(rt.ModuleExports(me), {"FOO": 42});
