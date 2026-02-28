@@ -1825,7 +1825,13 @@ push_a_if_used:
 			    (current_assembler.a_flag & (ASM_FOPTIMIZE | ASM_FOPTIMIZE_SIZE))) {
 				DREF DeeObject *push_seq;
 				int32_t cid;
-				push_seq = DeeRoSet_FromSequenceOrMappingForContains(self->a_operator.o_op0->a_constexpr);
+				push_seq = self->a_operator.o_op0->a_constexpr;
+				if (!DeeSeq_Check(push_seq)) {
+					if (DeeNone_Check(push_seq))
+						goto do_compile_none_contains;
+					goto do_compile_set_contains;
+				}
+				push_seq = DeeRoSet_FromSequenceOrMappingForContains(push_seq);
 				if unlikely(!push_seq) {
 					DO(!DeeError_Handled(ERROR_HANDLED_RESTORE));
 					push_seq = self->a_operator.o_op0->a_constexpr;
@@ -1841,7 +1847,18 @@ push_a_if_used:
 				DO(ast_genasm(self->a_operator.o_op1, ASM_G_FPUSHRES));
 				DO(asm_putddi(self));
 				DO(asm_gcontains_const((uint16_t)cid));
+			} else if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
+			           ast_predict_type(self->a_operator.o_op0) == &DeeNone_Type) {
+				DO(ast_genasm(self->a_operator.o_op0, ASM_G_FNORMAL));
+do_compile_none_contains:
+				DO(ast_genasm(self->a_operator.o_op1, ASM_G_FNORMAL));
+				if (PUSH_RESULT) {
+					DO(asm_putddi(self));
+					DO(asm_gpush_none());
+				}
+				goto done;
 			} else {
+do_compile_set_contains:
 				DO(ast_genasm_set(self->a_operator.o_op0, ASM_G_FPUSHRES));
 				DO(ast_genasm_one(self->a_operator.o_op1, ASM_G_FPUSHRES));
 				DO(asm_putddi(self));
@@ -2290,7 +2307,13 @@ do_this_as_typesym_ref:
 				    (current_assembler.a_flag & (ASM_FOPTIMIZE | ASM_FOPTIMIZE_SIZE))) {
 					DREF DeeObject *push_seq;
 					int32_t cid;
-					push_seq = DeeRoSet_FromSequenceOrMappingForContains(self->a_action.a_act1->a_constexpr);
+					push_seq = self->a_action.a_act1->a_constexpr;
+					if (!DeeSeq_Check(push_seq)) {
+						if (DeeNone_Check(push_seq))
+							goto action_in_with_none;
+						goto action_in_without_const;
+					}
+					push_seq = DeeRoSet_FromSequenceOrMappingForContains(push_seq);
 					if unlikely(!push_seq) {
 						DO(!DeeError_Handled(ERROR_HANDLED_RESTORE));
 						push_seq = self->a_action.a_act1->a_constexpr;
@@ -2306,6 +2329,16 @@ do_this_as_typesym_ref:
 					DO(ast_genasm(self->a_action.a_act0, ASM_G_FPUSHRES));
 					DO(asm_putddi(self));
 					DO(asm_gcontains_const((uint16_t)cid));
+				} else if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
+				           ast_predict_type(self->a_action.a_act1) == &DeeNone_Type) {
+action_in_with_none:
+					DO(ast_genasm_one(self->a_action.a_act0, ASM_G_FNORMAL));
+					DO(ast_genasm_set(self->a_action.a_act1, ASM_G_FNORMAL));
+					if (PUSH_RESULT) {
+						DO(asm_putddi(self));
+						DO(asm_gpush_none());
+					}
+					goto done;
 				} else {
 action_in_without_const:
 					if (ast_can_exchange(self->a_action.a_act0,

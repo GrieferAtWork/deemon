@@ -48,7 +48,6 @@ PRIVATE DeeObject *tpconst iterator_dummy_vec[1] = { &iterator_dummy };
 [[wunused]] DREF DeeObject *
 __iter_peek__.iter_peek([[nonnull]] DeeObject *self)
 %{unsupported(err_iter_unsupportedf(self, "peek"))}
-%{$none = return_none}
 %{$empty = ITER_DONE}
 %{$with__operator_copy__and__operator_next = {
 	DREF DeeObject *result;

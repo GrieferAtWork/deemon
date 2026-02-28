@@ -485,6 +485,8 @@ DeeMA___seq_unpackub__(DeeObject *__restrict self, size_t argc, DeeObject *const
 		err_invalid_argc("__seq_unpackub__", argc, 1, 2);
 		goto err;
 	}
+	if (max_count == 0)
+		goto return_empty;
 	result = DeeTuple_NewUninitialized(max_count);
 	if unlikely(!result)
 		goto err;
@@ -492,13 +494,21 @@ DeeMA___seq_unpackub__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	if unlikely(min_count == (size_t)-1)
 		goto err_r;
 	ASSERT(min_count <= max_count);
-	if (min_count < max_count)
+	if (min_count < max_count) {
+		if (min_count == 0)
+			goto return_empty_r;
 		result = DeeTuple_TruncateUninitialized(result, min_count);
+	}
+	ASSERT(!DeeObject_IsShared(result));
+	ASSERT(result->ob_type == &DeeTuple_Type);
 	Dee_DecrefNokill(&DeeTuple_Type);
 	Dee_Incref(&DeeNullableTuple_Type);
-	ASSERT(result->ob_type == &DeeTuple_Type);
 	result->ob_type = &DeeNullableTuple_Type;
-	return (DeeObject *)result;
+	return Dee_AsObject(result);
+return_empty_r:
+	DeeTuple_FreeUninitialized(result);
+return_empty:
+	return_reference(&DeeNullableTuple_Empty);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:
@@ -1495,7 +1505,7 @@ DeeMA___seq_bfind__(DeeObject *__restrict self, size_t argc, DeeObject *const *a
 	if unlikely(result == (size_t)Dee_COMPARE_ERR)
 		goto err;
 	if unlikely(result == (size_t)-1)
-		return_none;
+		return DeeInt_NewMinusOne();
 	return DeeInt_NewSize(result);
 err:
 	return NULL;

@@ -48,7 +48,6 @@ PRIVATE DeeObject *tpconst iterator_dummy_vec[1] = { &iterator_dummy };
 [[wunused]] DREF DeeObject *
 __iter_prev__.iter_prev([[nonnull]] DeeObject *self)
 %{unsupported(err_iter_unsupportedf(self, "prev"))}
-%{$none = return_none}
 %{$empty = ITER_DONE}
 %{$with__iter_revert__and__iter_peek = {
 	size_t count = CALL_DEPENDENCY(iter_revert, self, 1);

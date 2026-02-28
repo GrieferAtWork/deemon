@@ -148,6 +148,8 @@ INTERN WUNUSED NONNULL((1)) int
 		/* The inner sequence is a constant expression.
 		 * -> Compile it as a _RoSet object. */
 		DREF DeeObject *inner_set;
+		if (!DeeSeq_Check(self->a_constexpr))
+			goto push_generic;
 		inner_set = DeeRoSet_FromSequenceOrMappingForContains(self->a_constexpr);
 		if unlikely(!inner_set) {
 restore_error:

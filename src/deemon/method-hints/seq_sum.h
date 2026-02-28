@@ -42,6 +42,7 @@ err:
 __seq_sum__.seq_sum([[nonnull]] DeeObject *self,
                     [[nonnull]] DeeObject *def)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = {
 	DREF DeeObject *result;
@@ -98,6 +99,7 @@ __seq_sum__.seq_sum_with_key([[nonnull]] DeeObject *self,
                              [[nonnull]] DeeObject *def,
                              [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference(def)}
 %{$with__seq_operator_foreach = [[prefix(DEFINE_seq_sum_with_key_foreach_cb)]] {
 	DREF DeeObject *result;
@@ -144,6 +146,7 @@ __seq_sum__.seq_sum_with_range([[nonnull]] DeeObject *self,
                                size_t start, size_t end,
                                [[nonnull]] DeeObject *def)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_sum_enumerate_cb)]] {
 	DREF DeeObject *result;
@@ -184,6 +187,7 @@ __seq_sum__.seq_sum_with_range_and_key([[nonnull]] DeeObject *self,
                                        [[nonnull]] DeeObject *def,
                                        [[nonnull]] DeeObject *key)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = return_reference(def)}
 %{$with__seq_enumerate_index = [[prefix(DEFINE_seq_sum_with_key_enumerate_cb)]] {
 	DREF DeeObject *result;

@@ -224,19 +224,29 @@ DeeNone_OperatorInt(DeeObject *__restrict UNUSED(self)) {
 	return DeeInt_NewZero();
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeNone_OperatorCompare(DeeObject *UNUSED(self), DeeObject *other) {
+	return DeeNone_Check(other) ? Dee_COMPARE_EQ : Dee_COMPARE_LO;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeNone_OperatorEq(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(DeeNone_Check(other));
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeNone_OperatorCompare(DeeObject *UNUSED(self), DeeObject *other) {
-	return DeeNone_Check(other) ? 0 : -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeNone_OperatorNe(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(!DeeNone_Check(other));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeNone_ReturnTrue(DeeObject *UNUSED(self), DeeObject *UNUSED(other)) {
+	return_true;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeNone_ReturnFalse(DeeObject *UNUSED(self), DeeObject *UNUSED(other)) {
+	return_false;
 }
 
 #define DeeNone_OperatorVarCtor    DeeNone_NewRef
@@ -427,8 +437,8 @@ PRIVATE struct type_cmp none_cmp = {
 	/* .tp_eq            = */ &DeeNone_OperatorEq,
 	/* .tp_ne            = */ &DeeNone_OperatorNe,
 	/* .tp_lo            = */ &DeeNone_OperatorNe,
-	/* .tp_le            = */ &DeeNone_OperatorEq,
-	/* .tp_gr            = */ &DeeNone_OperatorNe,
+	/* .tp_le            = */ &DeeNone_ReturnTrue,
+	/* .tp_gr            = */ &DeeNone_ReturnFalse,
 	/* .tp_ge            = */ &DeeNone_OperatorEq,
 };
 
@@ -731,21 +741,21 @@ PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 	/* .mh_seq_parity_with_range                   = */ &default__seq_parity_with_range__empty,
 	/* .mh_seq_parity_with_range_and_key           = */ &default__seq_parity_with_range_and_key__empty,
 	/* .mh_seq_reduce                              = */ &default__seq_reduce__none,
-	/* .mh_seq_reduce_with_init                    = */ &default__seq_reduce_with_init__empty,
+	/* .mh_seq_reduce_with_init                    = */ &default__seq_reduce_with_init__none,
 	/* .mh_seq_reduce_with_range                   = */ &default__seq_reduce_with_range__none,
-	/* .mh_seq_reduce_with_range_and_init          = */ &default__seq_reduce_with_range_and_init__empty,
-	/* .mh_seq_min                                 = */ &default__seq_min__empty,
-	/* .mh_seq_min_with_key                        = */ &default__seq_min_with_key__empty,
-	/* .mh_seq_min_with_range                      = */ &default__seq_min_with_range__empty,
-	/* .mh_seq_min_with_range_and_key              = */ &default__seq_min_with_range_and_key__empty,
-	/* .mh_seq_max                                 = */ &default__seq_max__empty,
-	/* .mh_seq_max_with_key                        = */ &default__seq_max_with_key__empty,
-	/* .mh_seq_max_with_range                      = */ &default__seq_max_with_range__empty,
-	/* .mh_seq_max_with_range_and_key              = */ &default__seq_max_with_range_and_key__empty,
-	/* .mh_seq_sum                                 = */ &default__seq_sum__empty,
-	/* .mh_seq_sum_with_key                        = */ &default__seq_sum_with_key__empty,
-	/* .mh_seq_sum_with_range                      = */ &default__seq_sum_with_range__empty,
-	/* .mh_seq_sum_with_range_and_key              = */ &default__seq_sum_with_range_and_key__empty,
+	/* .mh_seq_reduce_with_range_and_init          = */ &default__seq_reduce_with_range_and_init__none,
+	/* .mh_seq_min                                 = */ &default__seq_min__none,
+	/* .mh_seq_min_with_key                        = */ &default__seq_min_with_key__none,
+	/* .mh_seq_min_with_range                      = */ &default__seq_min_with_range__none,
+	/* .mh_seq_min_with_range_and_key              = */ &default__seq_min_with_range_and_key__none,
+	/* .mh_seq_max                                 = */ &default__seq_max__none,
+	/* .mh_seq_max_with_key                        = */ &default__seq_max_with_key__none,
+	/* .mh_seq_max_with_range                      = */ &default__seq_max_with_range__none,
+	/* .mh_seq_max_with_range_and_key              = */ &default__seq_max_with_range_and_key__none,
+	/* .mh_seq_sum                                 = */ &default__seq_sum__none,
+	/* .mh_seq_sum_with_key                        = */ &default__seq_sum_with_key__none,
+	/* .mh_seq_sum_with_range                      = */ &default__seq_sum_with_range__none,
+	/* .mh_seq_sum_with_range_and_key              = */ &default__seq_sum_with_range_and_key__none,
 	/* .mh_seq_count                               = */ &default__seq_count__empty,
 	/* .mh_seq_count_with_key                      = */ &default__seq_count_with_key__empty,
 	/* .mh_seq_count_with_range                    = */ &default__seq_count_with_range__empty,
@@ -754,7 +764,7 @@ PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 	/* .mh_seq_contains_with_key                   = */ &default__seq_contains_with_key__empty,
 	/* .mh_seq_contains_with_range                 = */ &default__seq_contains_with_range__empty,
 	/* .mh_seq_contains_with_range_and_key         = */ &default__seq_contains_with_range_and_key__empty,
-	/* .mh_seq_operator_contains                   = */ &default__seq_operator_contains__none,
+	/* .mh_seq_operator_contains                   = */ &default__seq_operator_contains__empty,
 	/* .mh_seq_locate                              = */ &default__seq_locate__none,
 	/* .mh_seq_locate_with_range                   = */ &default__seq_locate_with_range__none,
 	/* .mh_seq_rlocate                             = */ &default__seq_rlocate__none,
@@ -871,7 +881,7 @@ PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 	/* .mh_map_operator_setitem_index              = */ &default__map_operator_setitem_index__none,
 	/* .mh_map_operator_setitem_string_hash        = */ &default__map_operator_setitem_string_hash__none,
 	/* .mh_map_operator_setitem_string_len_hash    = */ &default__map_operator_setitem_string_len_hash__none,
-	/* .mh_map_operator_contains                   = */ &default__map_operator_contains__none,
+	/* .mh_map_operator_contains                   = */ &default__map_operator_contains__empty,
 	/* .mh_map_keys                                = */ &default__map_keys__none,
 	/* .mh_map_iterkeys                            = */ &default__map_iterkeys__none,
 	/* .mh_map_values                              = */ &default__map_values__none,
@@ -909,13 +919,13 @@ PRIVATE struct Dee_type_mh_cache mh_cache_none = {
 	/* .mh_map_pop_with_default                    = */ &default__map_pop_with_default__none,
 	/* .mh_map_popitem                             = */ &default__map_popitem__empty,
 	/* .mh_iter_advance                            = */ &default__iter_advance__empty,
-	/* .mh_iter_prev                               = */ &default__iter_prev__none,
+	/* .mh_iter_prev                               = */ &default__iter_prev__empty,
 	/* .mh_iter_revert                             = */ &default__iter_revert__empty,
 	/* .mh_iter_operator_bool                      = */ &default__iter_operator_bool__empty,
 	/* .mh_iter_getindex                           = */ &default__iter_getindex__empty,
 	/* .mh_iter_setindex                           = */ &default__iter_setindex__empty,
 	/* .mh_iter_rewind                             = */ &default__iter_rewind__empty,
-	/* .mh_iter_peek                               = */ &default__iter_peek__none,
+	/* .mh_iter_peek                               = */ &default__iter_peek__empty,
 	/* .mh_iter_getseq                             = */ &default__iter_getseq__none,
 /*[[[end]]]*/
 	/* clang-format on */
@@ -1004,7 +1014,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	                         "del.(attr:?Dstring)->?N\n"
 	                         ".=(attr:?Dstring)->?N\n"
 	                         "No-op that ignores all arguments and always re-returns ?N"),
-	/* .tp_flags    = */ TP_FVARIABLE | TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT | TP_FFINAL | TP_FDEEPIMMUTABLE,
+	/* .tp_flags    = */ TP_FVARIABLE | TP_FNORMAL | TP_FMOVEANY | TP_FNAMEOBJECT | TP_FABSTRACT | TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(DeeNoneObject),
 	/* .tp_features = */ TF_SINGLETON | TF_KW,
 	/* .tp_base     = */ &DeeObject_Type,

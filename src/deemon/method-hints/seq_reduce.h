@@ -151,6 +151,7 @@ __seq_reduce__.seq_reduce_with_init([[nonnull]] DeeObject *self,
                                     [[nonnull]] DeeObject *combine,
                                     [[nonnull]] DeeObject *init)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = {
 	(void)self;
 	(void)combine;
@@ -216,6 +217,7 @@ __seq_reduce__.seq_reduce_with_range_and_init([[nonnull]] DeeObject *self,
                                               size_t start, size_t end,
                                               [[nonnull]] DeeObject *init)
 %{unsupported(auto)}
+%{$none = return_none}
 %{$empty = {
 	(void)self;
 	(void)combine;

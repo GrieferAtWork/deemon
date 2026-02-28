@@ -50,6 +50,8 @@ __seq_unpackub__(min:?Dint,max?:?Dint)->?Ert:NullableTuple {{
 		err_invalid_argc("__seq_unpackub__", argc, 1, 2);
 		goto err;
 	}
+	if (max_count == 0)
+		goto return_empty;
 	result = DeeTuple_NewUninitialized(max_count);
 	if unlikely(!result)
 		goto err;
@@ -57,13 +59,21 @@ __seq_unpackub__(min:?Dint,max?:?Dint)->?Ert:NullableTuple {{
 	if unlikely(min_count == (size_t)-1)
 		goto err_r;
 	ASSERT(min_count <= max_count);
-	if (min_count < max_count)
+	if (min_count < max_count) {
+		if (min_count == 0)
+			goto return_empty_r;
 		result = DeeTuple_TruncateUninitialized(result, min_count);
+	}
+	ASSERT(!DeeObject_IsShared(result));
+	ASSERT(result->ob_type == &DeeTuple_Type);
 	Dee_DecrefNokill(&DeeTuple_Type);
 	Dee_Incref(&DeeNullableTuple_Type);
-	ASSERT(result->ob_type == &DeeTuple_Type);
 	result->ob_type = &DeeNullableTuple_Type;
-	return (DeeObject *)result;
+	return Dee_AsObject(result);
+return_empty_r:
+	DeeTuple_FreeUninitialized(result);
+return_empty:
+	return_reference(&DeeNullableTuple_Empty);
 err_r:
 	DeeTuple_FreeUninitialized(result);
 err:

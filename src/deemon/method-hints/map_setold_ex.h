@@ -151,7 +151,7 @@ __map_setold_ex__.map_setold_ex([[nonnull]] DeeObject *self,
                                 [[nonnull]] DeeObject *key,
                                 [[nonnull]] DeeObject *value)
 %{unsupported(auto)}
-%{$none = return_none}
+%{$none = return ITER_DONE}
 %{$empty = "default__map_setold_ex__unsupported"}
 %{$with__map_operator_trygetitem__and__map_setold = {
 	DREF DeeObject *old_value = CALL_DEPENDENCY(map_operator_trygetitem, self, key);
