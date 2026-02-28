@@ -85,10 +85,9 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCell_Get(DeeObject *__rest
 DFUNDEF NONNULL((1)) int DCALL DeeCell_Del(DeeObject *__restrict self);
 DFUNDEF NONNULL((1)) int DCALL DeeCell_Set(DeeObject *self, DeeObject *value);
 
-/* Exchange the Cell's value.
- * NOTE: `DeeCell_XchIfNotNull()' will only set the new value when the old was non-NULL. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCell_Xch(DeeObject *self, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCell_XchIfNotNull(DeeObject *self, DeeObject *value);
+/* Exchange the Cell's value. */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCell_Xch(DeeObject *self, DeeObject *value);
 
 /* Perform a compare-exchange, returning the old value of the Cell. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -51,7 +51,6 @@ EXPORTS
 	_DeeCell_Set@8=DeeCell_Set@8
 	_DeeCell_TryGet@4=DeeCell_TryGet@4
 	_DeeCell_Xch@8=DeeCell_Xch@8
-	_DeeCell_XchIfNotNull@8=DeeCell_XchIfNotNull@8
 	_DeeClassDescriptor_QueryClassAttributeHash@12=DeeClassDescriptor_QueryClassAttributeHash@12
 	_DeeClassDescriptor_QueryClassAttributeStringHash@12=DeeClassDescriptor_QueryClassAttributeStringHash@12
 	_DeeClassDescriptor_QueryClassAttributeStringLenHash@16=DeeClassDescriptor_QueryClassAttributeStringLenHash@16

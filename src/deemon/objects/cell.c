@@ -28,9 +28,11 @@
 #include <deemon/cell.h>               /* DeeCell* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
+#include <deemon/error-rt.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/none.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_* */
@@ -181,27 +183,18 @@ DeeCell_TryGet(DeeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE ATTR_COLD int DCALL err_empty_cell(void) {
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "The cell is empty");
-}
-
-
-
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_Get(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeCell_TryGet(self);
 	if unlikely(!result) {
-		DeeError_Throwf(&DeeError_UnboundAttribute,
-		                "The cell is empty");
+		DeeRT_ErrUnboundAttrCStr(self, "value");
 		/* No mitochondria here... */
 	}
 	return result;
 }
 
-/* Exchange the Cell's value.
- * NOTE: `DeeCell_XchIfNotNull()' will only set the new value when the old was non-NULL. */
+/* Exchange the Cell's value. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_Xch(DeeObject *self, DeeObject *value) {
 	DeeCellObject *me = (DeeCellObject *)self;
@@ -215,27 +208,6 @@ DeeCell_Xch(DeeObject *self, DeeObject *value) {
 	result = me->c_item;
 	me->c_item = value;
 	DeeCell_LockEndWrite(me);
-	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeCell_XchIfNotNull(DeeObject *self, DeeObject *value) {
-	DeeCellObject *me = (DeeCellObject *)self;
-	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE(me, &DeeCell_Type);
-	ASSERT_OBJECT_OPT(value);
-
-	/* Exchange the Cell's value. */
-	Dee_XIncref(value);
-	DeeCell_LockWrite(me);
-	result = me->c_item;
-	if unlikely(!result) {
-		DeeCell_LockEndWrite(me);
-		Dee_XDecrefNokill(value);
-	} else {
-		me->c_item = value;
-		DeeCell_LockEndWrite(me);
-	}
 	return result;
 }
 
@@ -389,96 +361,115 @@ PRIVATE struct type_getset tpconst cell_getsets[] = {
 	TYPE_GETSET_END
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cell_get(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *def = NULL, *result;
-	DeeArg_Unpack0Or1(err, argc, argv, "get", &def);
+	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("get", params: """
+	DeeObject *def = Dee_None;
+""", docStringPrefix: "cell");]]]*/
+#define cell_get_params "def=!N"
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = Dee_None;
+	DeeArg_Unpack0Or1(err, argc, argv, "get", &args.def);
+/*[[[end]]]*/
 	result = DeeCell_TryGet(Dee_AsObject(self));
 	if (!result) {
-		result = def;
-		if (!result)
-			goto err_empty;
-		Dee_Incref(def);
+		result = args.def;
+		Dee_Incref(result);
 	}
 	return result;
-err_empty:
-	err_empty_cell();
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cell_delete(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *oldval;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("delete", params: """
+""", docStringPrefix: "cell");]]]*/
+#define cell_delete_params ""
 	DeeArg_Unpack0(err, argc, argv, "delete");
-	oldval = DeeCell_Xch(Dee_AsObject(self), NULL);
-	if (!oldval)
-		return_false;
-	Dee_Decref(oldval);
-	return_true;
+/*[[[end]]]*/
+	DeeCell_Del(Dee_AsObject(self));
+	return_none;
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-cell_pop(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *oldval, *def = NULL;
-	DeeArg_Unpack0Or1(err, argc, argv, "pop", &def);
-	oldval = DeeCell_Xch(Dee_AsObject(self), NULL);
-	if (!oldval) {
-		if (def)
-			return_reference_(def);
-		goto err_empty;
-	}
-	return oldval;
-err_empty:
-	err_empty_cell();
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cell_set(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *newval;
-	DeeArg_Unpack1(err, argc, argv, "set", &newval);
-	newval = DeeCell_Xch(Dee_AsObject(self), newval);
-	if (!newval)
-		return_false;
-	Dee_Decref(newval);
-	return_true;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("set", params: """
+	DeeObject *value;
+""", docStringPrefix: "cell");]]]*/
+#define cell_set_params "value"
+	struct {
+		DeeObject *value;
+	} args;
+	DeeArg_Unpack1(err, argc, argv, "set", &args.value);
+/*[[[end]]]*/
+	DeeCell_Set(Dee_AsObject(self), args.value);
+	return_none;
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-cell_xch(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *value, *def = NULL, *result;
-	DeeArg_Unpack1Or2(err, argc, argv, "o|o:xch", &value, &def);
-	if (def) {
-		result = DeeCell_Xch(Dee_AsObject(self), value);
-		if (!result) {
-			Dee_Incref(def);
-			result = def;
-		}
-	} else {
-		result = DeeCell_XchIfNotNull(Dee_AsObject(self), value);
-		if (!result)
-			goto err_empty;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cell_pop(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("pop", params: """
+	DeeObject *def = Dee_None;
+""", docStringPrefix: "cell");]]]*/
+#define cell_pop_params "def=!N"
+	struct {
+		DeeObject *def;
+	} args;
+	args.def = Dee_None;
+	DeeArg_Unpack0Or1(err, argc, argv, "pop", &args.def);
+/*[[[end]]]*/
+	result = DeeCell_Xch(Dee_AsObject(self), NULL);
+	if (result == NULL) {
+		result = args.def;
+		Dee_Incref(result);
 	}
 	return result;
-err_empty:
-	err_empty_cell();
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cell_xch(DeeCellObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
+/*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("xch", params: """
+	DeeObject *value;
+	DeeObject *def = Dee_None;
+""", docStringPrefix: "cell");]]]*/
+#define cell_xch_params "value,def=!N"
+	struct {
+		DeeObject *value;
+		DeeObject *def;
+	} args;
+	args.def = Dee_None;
+	DeeArg_UnpackStruct1Or2(err, argc, argv, "xch", &args, &args.value, &args.def);
+/*[[[end]]]*/
+	result = DeeCell_Xch(Dee_AsObject(self), args.value);
+	if (result == NULL) {
+		result = args.def;
+		Dee_Incref(result);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cell_cmpxch(DeeCellObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *real_oldval;
 /*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("cmpxch", params: """
 	DeeObject *old = NULL;
 	DeeObject *new = NULL;
-""");]]]*/
+""", docStringPrefix: "cell");]]]*/
+#define cell_cmpxch_params "old?,new?"
 	struct {
 		DeeObject *old;
 		DeeObject *new_;
@@ -498,50 +489,34 @@ err:
 
 PRIVATE struct type_method tpconst cell_methods[] = {
 	TYPE_METHOD_F(STR_get, &cell_get, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#tValueError{@this ?. is empty}"
-	              "Returns the contained value of the ?.\n"
-	              "\n"
-
-	              "(def)->\n"
-	              "Returns the contained value of the ?. or @def when it is empty"),
+	              "(" cell_get_params ")->\n"
+	              "Same as ${(try this.value catch (UnboundAttribute) def)}"),
 	TYPE_METHOD_F("delete", &cell_delete, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Delete the value stored in @this ?., returning ?t if "
-	              /**/ "the ?. wasn't empty before, or ?f if it already was"),
-	TYPE_METHOD_F(STR_pop, &cell_pop, METHOD_FNOREFESCAPE,
-	              "->\n"
-	              "#tValueError{The ?. was empty}"
-
-	              "\n"
-	              "(def)->\n"
-	              "Pop and return the previously contained object, @def, or throw a :ValueError"),
+	              "(" cell_delete_params ")\n"
+	              "Same as ${del this.value}"),
 	TYPE_METHOD_F(STR_set, &cell_set, METHOD_FNOREFESCAPE,
-	              "(value)->?Dbool\n"
-	              "Set (override) @this ?.'s value, returning ?t if a previous value "
-	              /**/ "has been overwritten, or ?f if no value had been set before"),
+	              "(value)\n"
+	              "Same as ${this.value = value}"),
+	TYPE_METHOD_F(STR_pop, &cell_pop, METHOD_FNOREFESCAPE,
+	              "(" cell_pop_params ")->\n"
+	              "Pop and return the previously contained object or @def"),
 	TYPE_METHOD_F("xch", &cell_xch, METHOD_FNOREFESCAPE,
-	              "(value)->\n"
-	              "#tValueError{@this ?. is empty}"
-	              "Overwrite the ?.'s value and return the old value or throw an error when it was empty\n"
-
-	              "\n"
-	              "(value,def)->\n"
-	              "Returns the contained value of the ?. or @def when it is empty"),
-
+	              "(" cell_xch_params ")->\n"
+	              "Assign @value as the cell's value and return its old ?#value. "
+	              "If the cell's old ?#value was unassigned, return @def instead."),
 	TYPE_KWMETHOD_F("cmpxch", &cell_cmpxch, METHOD_FNOREFESCAPE,
-	                "(old?,new?)->?Dbool\n"
+	                "(" cell_cmpxch_params ")->?Dbool\n"
 	                "Check if the currently set ?#value matches @old (by-id). "
 	                /**/ "If so, atomically assign @new and return !t, else return !f. "
 	                /**/ "Both @old and @new may be unbound which reflects the "
 	                /**/ "relevant old/new is-bound state."),
+
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	TYPE_METHOD_F("del", &cell_delete, METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
+	              "(" cell_delete_params ")\n"
 	              "Deprecated alias for ?#delete"),
 	TYPE_METHOD_F("exchange", &cell_xch, METHOD_FNOREFESCAPE,
-	              "(value)->\n"
-	              "(value,def)->\n"
+	              "(" cell_xch_params ")->\n"
 	              "Deprecated alias for ?#xch"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
