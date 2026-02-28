@@ -684,10 +684,10 @@ again:
 			}
 		}
 		if (iter->cf_vargs) {
-			DeeObject *ob  = (DeeObject *)iter->cf_vargs;
+			DeeTupleObject *ob = iter->cf_vargs;
 			iter->cf_vargs = NULL;
 			if (!Dee_DecrefIfNotOne(ob)) {
-				*decref_later++ = ob;
+				*decref_later++ = Dee_AsObject(ob);
 				if (decref_later == COMPILER_ENDOF(decref_later_buffer))
 					goto clear_buffer;
 			}

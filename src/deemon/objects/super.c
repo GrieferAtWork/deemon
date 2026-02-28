@@ -1118,7 +1118,7 @@ super_typeof(DeeObject *UNUSED(self),
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.ob, &DeeSuper_Type))
 		goto err;
-	return_reference_((DeeObject *)args.ob->s_type);
+	return_reference(args.ob->s_type);
 err:
 	return NULL;
 }
@@ -1137,7 +1137,7 @@ super_selfof(DeeObject *UNUSED(self),
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.ob, &DeeSuper_Type))
 		goto err;
-	return_reference_((DeeObject *)args.ob->s_self);
+	return_reference(args.ob->s_self);
 err:
 	return NULL;
 }

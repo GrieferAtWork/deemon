@@ -103,7 +103,7 @@ _DeeRegexBaseExec_LoadCode(struct DeeRegexBaseExec *__restrict self) {
 	if unlikely((uintptr_t)result > _Dee_RE_COMPILE_MASK)
 		return result; /* Already loaded */
 	/* Lazily re-load after serialization */
-	result = DeeString_GetRegex((DeeObject *)self->rx_pattern,
+	result = DeeString_GetRegex(Dee_AsObject(self->rx_pattern),
 	                            (unsigned int)(uintptr_t)result,
 	                            NULL);
 	if likely(result)
@@ -232,7 +232,7 @@ DeeRegexBaseExec_Serialize(struct DeeRegexBaseExec *__restrict self,
 	if ((uintptr_t)self->rx_code <= _Dee_RE_COMPILE_MASK) {
 		compile_flags = (unsigned int)(uintptr_t)self->rx_code;
 	} else {
-		compile_flags = DeeString_GetRegexFlags((DeeObject *)self->rx_pattern, self->rx_code);
+		compile_flags = DeeString_GetRegexFlags(Dee_AsObject(self->rx_pattern), self->rx_code);
 	}
 	out = DeeSerial_Addr2Mem(writer, addr, struct DeeRegexBaseExec);
 	/* Set "rx_code" to the flags that were used to compile it.

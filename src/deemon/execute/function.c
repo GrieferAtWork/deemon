@@ -450,7 +450,7 @@ PRIVATE struct type_member tpconst function_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_refs(Function *__restrict self) {
-	return DeeRefVector_NewReadonly(Dee_AsObject(self),
+	return DeeRefVector_NewReadonly(self,
 	                                self->fo_code->co_refc,
 	                                self->fo_refv);
 }
@@ -1556,7 +1556,7 @@ PRIVATE struct type_member tpconst yf_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_args(YFunction *__restrict self) {
-	return DeeRefVector_NewReadonly(Dee_AsObject(self), self->yf_pargc, self->yf_argv);
+	return DeeRefVector_NewReadonly(self, self->yf_pargc, self->yf_argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL

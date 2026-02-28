@@ -2943,7 +2943,7 @@ DeeJsonObject_ParseIntoAttribute(DeeJsonParser *__restrict self,
 		struct Dee_class_desc *attr_class;
 		struct Dee_class_attribute *attr;
 		attr_class = DeeClass_DESC(into_type);
-		attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, (DeeObject *)attr_name);
+		attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, Dee_AsObject(attr_name));
 		if (!attr) {
 			/* Check if the attribute exists in a base-class */
 			DeeTypeMRO mro;
@@ -2955,7 +2955,7 @@ DeeJsonObject_ParseIntoAttribute(DeeJsonParser *__restrict self,
 				if (!DeeType_IsClass(into_type))
 					goto fallback;
 				attr_class = DeeClass_DESC(into_type);
-				attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, (DeeObject *)attr_name);
+				attr       = DeeClassDesc_QueryInstanceAttribute(attr_class, Dee_AsObject(attr_name));
 				if (attr)
 					break;
 			}
@@ -2971,7 +2971,7 @@ fallback:
 	value = DeeJson_ParseObject(self, true);
 	if unlikely(!value)
 		goto err;
-	error = DeeObject_SetAttr(into, (DeeObject *)attr_name, value);
+	error = DeeObject_SetAttr(into, Dee_AsObject(attr_name), value);
 	Dee_Decref(value);
 	return error;
 err:

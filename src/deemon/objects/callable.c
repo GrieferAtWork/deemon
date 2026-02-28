@@ -241,7 +241,7 @@ err_temp:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 composition_get_callbacks(DeeTupleObject *__restrict self) {
-	return DeeRefVector_NewReadonly(Dee_AsObject(self), self->t_size, self->t_elem);
+	return DeeRefVector_NewReadonly(self, self->t_size, self->t_elem);
 }
 
 PRIVATE struct type_cmp composition_cmp = {

@@ -247,7 +247,7 @@ jy_getargs(JITYieldFunction *__restrict self) {
 		arg_offset = DeeKwds_SIZE(self->jy_kw);
 	if (arg_offset > self->jy_argc)
 		arg_offset = self->jy_argc;
-	return DeeRefVector_NewReadonly(Dee_AsObject(self),
+	return DeeRefVector_NewReadonly(self,
 	                                self->jy_argc - arg_offset,
 	                                self->jy_argv + arg_offset);
 }

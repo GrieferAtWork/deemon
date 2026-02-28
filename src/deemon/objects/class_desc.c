@@ -901,7 +901,7 @@ cat_foreach_pair(ClassAttributeTable *self, Dee_foreach_pair_t proc, void *arg) 
 		attr = cattr_new(self->ca_desc, at);
 		if unlikely(!attr)
 			goto err;
-		temp = (*proc)(arg, (DeeObject *)at->ca_name, (DeeObject *)attr);
+		temp = (*proc)(arg, Dee_AsObject(at->ca_name), Dee_AsObject(attr));
 		Dee_Decref(attr);
 		if unlikely(temp < 0)
 			goto err_temp;

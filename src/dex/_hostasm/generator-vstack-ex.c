@@ -3286,7 +3286,7 @@ do_impl_vopTcallattrkw(struct fungen *__restrict self,
 			ASSERT_OBJECT_TYPE_EXACT(attr_obj, &DeeString_Type);
 			if (memval_isconst(thisval))
 				this_value_or_null = memval_const_getobj(thisval);
-			if (DeeObject_TFindAttrInfo(type, this_value_or_null, (DeeObject *)attr_obj, &attr)) {
+			if (DeeObject_TFindAttrInfo(type, this_value_or_null, Dee_AsObject(attr_obj), &attr)) {
 				int temp = vopcallattrkw_constattr(self, argc, &attr);
 				if (temp <= 0)
 					return temp; /* Optimization applied, or error */
@@ -3372,7 +3372,7 @@ impl_vopcallattrkw(struct fungen *__restrict self,
 			ASSERT_OBJECT_TYPE_EXACT(attr_obj, &DeeString_Type);
 			if (memval_isconst(thisval))
 				this_value_or_null = memval_const_getobj(thisval);
-			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, (DeeObject *)attr_obj, &attr)) {
+			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, Dee_AsObject(attr_obj), &attr)) {
 				int temp = vopcallattrkw_constattr(self, argc, &attr);
 				if (temp <= 0)
 					return temp; /* Optimization applied, or error */
@@ -3902,7 +3902,7 @@ fg_vopgetattr(struct fungen *__restrict self) {
 			ASSERT_OBJECT_TYPE_EXACT(attr_obj, &DeeString_Type);
 			if (memval_isconst(thisval))
 				this_value_or_null = memval_const_getobj(thisval);
-			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, (DeeObject *)attr_obj, &attr)) {
+			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, Dee_AsObject(attr_obj), &attr)) {
 				int temp = vopgetattr_constattr(self, &attr);
 				if (temp <= 0)
 					return temp; /* Optimization applied, or error */
@@ -3977,7 +3977,7 @@ fg_vopboundattr(struct fungen *__restrict self) {
 			ASSERT_OBJECT_TYPE_EXACT(attr_obj, &DeeString_Type);
 			if (memval_isconst(thisval))
 				this_value_or_null = memval_const_getobj(thisval);
-			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, (DeeObject *)attr_obj, &attr)) {
+			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, Dee_AsObject(attr_obj), &attr)) {
 				int temp = vopboundattr_constattr(self, &attr);
 				if (temp <= 0)
 					return temp; /* Optimization applied, or error */
@@ -4044,7 +4044,7 @@ fg_vopdelattr(struct fungen *__restrict self) {
 			ASSERT_OBJECT_TYPE_EXACT(attr_obj, &DeeString_Type);
 			if (memval_isconst(thisval))
 				this_value_or_null = memval_const_getobj(thisval);
-			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, (DeeObject *)attr_obj, &attr)) {
+			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, Dee_AsObject(attr_obj), &attr)) {
 				int temp = vopdelattr_constattr(self, &attr);
 				if (temp <= 0)
 					return temp; /* Optimization applied, or error */
@@ -4105,7 +4105,7 @@ fg_vopsetattr(struct fungen *__restrict self) {
 			ASSERT_OBJECT_TYPE_EXACT(attr_obj, &DeeString_Type);
 			if (memval_isconst(thisval))
 				this_value_or_null = memval_const_getobj(thisval);
-			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, (DeeObject *)attr_obj, &attr)) {
+			if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, Dee_AsObject(attr_obj), &attr)) {
 				int temp = vopsetattr_constattr(self, &attr);
 				if (temp <= 0)
 					return temp; /* Optimization applied, or error */

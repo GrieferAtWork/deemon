@@ -428,7 +428,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_get_sequences(Cat *__restrict self) {
-	return DeeRefVector_NewReadonly(Dee_AsObject(self),
+	return DeeRefVector_NewReadonly(self,
 	                                DeeTuple_SIZE(self),
 	                                DeeTuple_ELEM(self));
 }

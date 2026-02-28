@@ -2221,7 +2221,7 @@ ftype_args(DeeCFunctionTypeObject *__restrict self) {
 	return NULL;
 #else /* CONFIG_NO_CFUNCTION */
 	/* Use a read-only shared-reference vector to grant the user access to arguments. */
-	return DeeRefVector_NewReadonly((DeeObject *)DeeCFunctionType_AsType(self),
+	return DeeRefVector_NewReadonly(DeeCFunctionType_AsType(self),
 	                                self->ft_argc, (DeeObject **)self->ft_argv);
 #endif /* !CONFIG_NO_CFUNCTION */
 }

@@ -352,7 +352,7 @@ bseg_foreach(BytesSegments *__restrict self, Dee_foreach_t proc, void *arg) {
 		elem = bytes_getsubstr(self->b_str, start, end);
 		if unlikely(!elem)
 			goto err;
-		temp = (*proc)(arg, (DeeObject *)elem);
+		temp = (*proc)(arg, Dee_AsObject(elem));
 		Dee_Decref(elem);
 		if unlikely(temp < 0)
 			goto err_temp;

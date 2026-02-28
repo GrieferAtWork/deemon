@@ -256,7 +256,7 @@ DEFINE_OPERATOR_INVOKE(operator_getattr, &usrtype__getattr__with__GETATTR, &do_i
 	DeeArg_Unpack1(err, argc, argv, OPNAME("getattr"), &attr);
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
-	return DeeObject_TGetAttr(tp_self, self, (DeeObject *)attr);
+	return DeeObject_TGetAttr(tp_self, self, Dee_AsObject(attr));
 err:
 	return NULL;
 }
@@ -268,7 +268,7 @@ DEFINE_OPERATOR_INVOKE(operator_delattr, &usrtype__delattr__with__DELATTR, &do_i
 	DeeArg_Unpack1(err, argc, argv, OPNAME("delattr"), &attr);
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
-	if (DeeObject_TDelAttr(tp_self, self, (DeeObject *)attr))
+	if (DeeObject_TDelAttr(tp_self, self, Dee_AsObject(attr)))
 		goto err;
 	return_none;
 err:
@@ -283,7 +283,7 @@ DEFINE_OPERATOR_INVOKE(operator_setattr, &usrtype__setattr__with__SETATTR, &do_i
 	DeeArg_Unpack2(err, argc, argv, OPNAME("setattr"), &attr, &value);
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
-	if (DeeObject_TSetAttr(tp_self, self, (DeeObject *)attr, value))
+	if (DeeObject_TSetAttr(tp_self, self, Dee_AsObject(attr), value))
 		goto err;
 	return_none;
 err:
@@ -295,7 +295,7 @@ DEFINE_OPERATOR_INVOKE(operator_enumattr, &instance_iterattr, &do_inherit_noop) 
 	(void)p_self;
 	(void)opname;
 	DeeArg_Unpack0(err, argc, argv, OPNAME("enumattr"));
-	args[0] = (DeeObject *)tp_self;
+	args[0] = Dee_AsObject(tp_self);
 	args[1] = self;
 	return DeeObject_New(&DeeEnumAttr_Type, 2, args);
 err:

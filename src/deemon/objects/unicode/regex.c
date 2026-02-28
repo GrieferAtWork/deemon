@@ -595,9 +595,9 @@ again_insert_result:
 		bool wasdummy;
 
 		/* Enable finalization hooks for the string */
-		if (!DeeString_TryEnableFiniHook((DeeObject *)me)) {
+		if (!DeeString_TryEnableFiniHook(Dee_AsObject(me))) {
 			regex_cache_lock_endwrite();
-			if unlikely(DeeString_EnableFiniHook((DeeObject *)me))
+			if unlikely(DeeString_EnableFiniHook(Dee_AsObject(me)))
 				goto err_r;
 			goto again_lock_and_insert_result;
 		}

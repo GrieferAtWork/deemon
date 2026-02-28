@@ -427,7 +427,7 @@ LOCAL_sfa_evalunary_base(struct string_format_advanced *__restrict self) {
 			DREF DeeTypeObject *tp = Dee_TYPE(result);
 			Dee_Incref(tp);
 			Dee_Decref(result);
-			result = (DeeObject *)tp;
+			result = Dee_AsObject(tp);
 		}	break;
 		default: __builtin_unreachable();
 		}
@@ -731,7 +731,7 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 					if unlikely(!call_args)
 						goto err_lhs;
 					result = DeeObject_CallAttrTupleKw(lhs, attrname,
-					                                   (DeeObject *)call_args,
+					                                   Dee_AsObject(call_args),
 					                                   call_kw);
 					Dee_XDecref(call_kw);
 					Dee_Decref(call_args);
@@ -770,7 +770,7 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 					if unlikely(!call_args)
 						goto err_lhs;
 					result = DeeObject_CallAttrStringLenHashTupleKw(lhs, kwd, kwdlen, hash,
-					                                                (DeeObject *)call_args,
+					                                                Dee_AsObject(call_args),
 					                                                call_kw);
 					Dee_XDecref(call_kw);
 					Dee_Decref(call_args);
@@ -876,7 +876,7 @@ LOCAL_sfa_evalunary_operand(struct string_format_advanced *__restrict self LOCAL
 			call_args = sfa_evalcallargs(self, &call_kw);
 			if unlikely(!call_args)
 				goto err_lhs;
-			result = DeeObject_CallTupleKw(lhs, (DeeObject *)call_args, call_kw);
+			result = DeeObject_CallTupleKw(lhs, Dee_AsObject(call_args), call_kw);
 			Dee_XDecref(call_kw);
 			Dee_Decref(call_args);
 			Dee_Decref(lhs);

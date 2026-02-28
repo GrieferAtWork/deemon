@@ -471,7 +471,7 @@ so_add(SeqOne *lhs, DeeObject *rhs) {
 	size_t sizehint = DeeObject_SizeFast(rhs);
 	if (sizehint != (size_t)-1) {
 		if (sizehint == 0)
-			return_reference((DeeObject *)lhs);
+			return_reference(lhs);
 		if (Dee_TYPE(rhs)->tp_seq &&
 		    Dee_TYPE(rhs)->tp_seq->tp_asvector) {
 			/* Construct a tuple that prepends "lhs->so_item".

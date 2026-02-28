@@ -981,7 +981,7 @@ frame_get_function_refs(Frame *__restrict self) {
 	func = frame->cf_func;
 	Dee_Incref(func);
 	DeeFrame_LockEndRead(Dee_AsObject(self));
-	result = DeeRefVector_NewReadonly((DeeObject *)func,
+	result = DeeRefVector_NewReadonly(func,
 	                                  func->fo_code->co_refc,
 	                                  func->fo_refv);
 	Dee_Decref_unlikely(func);

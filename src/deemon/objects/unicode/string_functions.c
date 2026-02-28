@@ -360,7 +360,7 @@ DeeString_UnifyLines(String *self, String *replacement) {
 				continue;
 			if unlikely(Dee_unicode_printer_print8(&printer, flush_start.cp8, (size_t)(iter.cp8 - flush_start.cp8)) < 0)
 				goto err;
-			if unlikely(Dee_unicode_printer_printstring(&printer, (DeeObject *)replacement) < 0)
+			if unlikely(Dee_unicode_printer_printstring(&printer, Dee_AsObject(replacement)) < 0)
 				goto err;
 			if (ch == UNICODE_CR && iter.cp8[1] == UNICODE_LF)
 				++iter.cp8;
@@ -386,7 +386,7 @@ DeeString_UnifyLines(String *self, String *replacement) {
 				continue;
 			if unlikely(Dee_unicode_printer_print16(&printer, flush_start.cp16, (size_t)(iter.cp16 - flush_start.cp16)) < 0)
 				goto err;
-			if unlikely(Dee_unicode_printer_printstring(&printer, (DeeObject *)replacement) < 0)
+			if unlikely(Dee_unicode_printer_printstring(&printer, Dee_AsObject(replacement)) < 0)
 				goto err;
 			if (ch == UNICODE_CR && iter.cp16[1] == UNICODE_LF)
 				++iter.cp16;
@@ -412,7 +412,7 @@ DeeString_UnifyLines(String *self, String *replacement) {
 				continue;
 			if unlikely(Dee_unicode_printer_print32(&printer, flush_start.cp32, (size_t)(iter.cp32 - flush_start.cp32)) < 0)
 				goto err;
-			if unlikely(Dee_unicode_printer_printstring(&printer, (DeeObject *)replacement) < 0)
+			if unlikely(Dee_unicode_printer_printstring(&printer, Dee_AsObject(replacement)) < 0)
 				goto err;
 			if (ch == UNICODE_CR && iter.cp32[1] == UNICODE_LF)
 				++iter.cp32;
@@ -681,7 +681,7 @@ DeeString_Indent(String *self, String *filler) {
 		struct Dee_unicode_printer printer = Dee_UNICODE_PRINTER_INIT;
 		union Dee_charptr_const flush_start, iter, end;
 		/* Start by inserting the initial, unconditional indentation at the start. */
-		if (Dee_unicode_printer_printstring(&printer, (DeeObject *)filler) < 0)
+		if (Dee_unicode_printer_printstring(&printer, Dee_AsObject(filler)) < 0)
 			goto err;
 		SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
 
@@ -702,7 +702,7 @@ DeeString_Indent(String *self, String *filler) {
 						goto err;
 					flush_start.cp8 = iter.cp8;
 					/* Insert the filler just before the linefeed. */
-					if (Dee_unicode_printer_printobject(&printer, (DeeObject *)filler) < 0)
+					if (Dee_unicode_printer_printobject(&printer, Dee_AsObject(filler)) < 0)
 						goto err;
 					continue;
 				}
@@ -739,7 +739,7 @@ DeeString_Indent(String *self, String *filler) {
 					                                (size_t)(iter.cp16 - flush_start.cp16)) < 0)
 						goto err;
 					flush_start.cp16 = iter.cp16;
-					if (Dee_unicode_printer_printobject(&printer, (DeeObject *)filler) < 0)
+					if (Dee_unicode_printer_printobject(&printer, Dee_AsObject(filler)) < 0)
 						goto err;
 					continue;
 				}
@@ -771,7 +771,7 @@ DeeString_Indent(String *self, String *filler) {
 					                                (size_t)(iter.cp32 - flush_start.cp32)) < 0)
 						goto err;
 					flush_start.cp32 = iter.cp32;
-					if (Dee_unicode_printer_printobject(&printer, (DeeObject *)filler) < 0)
+					if (Dee_unicode_printer_printobject(&printer, Dee_AsObject(filler)) < 0)
 						goto err;
 					continue;
 				}
@@ -1250,7 +1250,7 @@ string_replace(String *__restrict self, size_t argc,
 				/* Found one */
 				if unlikely(Dee_unicode_printer_print8(&p, begin.cp8, (size_t)(ptr.cp8 - begin.cp8)) < 0)
 					goto err_printer;
-				if unlikely(Dee_unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
+				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
 				if unlikely(!--args.max_)
 					break;
@@ -1284,7 +1284,7 @@ string_replace(String *__restrict self, size_t argc,
 			                           findstr.cp16, findlen)) != NULL) {
 				if unlikely(Dee_unicode_printer_print16(&p, begin.cp16, (size_t)(ptr.cp16 - begin.cp16)) < 0)
 					goto err_printer;
-				if unlikely(Dee_unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
+				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
 				if unlikely(!--args.max_)
 					break;
@@ -1314,7 +1314,7 @@ string_replace(String *__restrict self, size_t argc,
 			                           findstr.cp32, findlen)) != NULL) {
 				if unlikely(Dee_unicode_printer_print32(&p, begin.cp32, (size_t)(ptr.cp32 - begin.cp32)) < 0)
 					goto err_printer;
-				if unlikely(Dee_unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
+				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
 				if unlikely(!--args.max_)
 					break;
@@ -1386,7 +1386,7 @@ string_casereplace(String *__restrict self, size_t argc,
 				/* Found one */
 				if unlikely(Dee_unicode_printer_print8(&p, begin.cp8, (size_t)(ptr.cp8 - begin.cp8)) < 0)
 					goto err_printer;
-				if unlikely(Dee_unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
+				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
 				if unlikely(!--args.max_)
 					break;
@@ -1421,7 +1421,7 @@ string_casereplace(String *__restrict self, size_t argc,
 			                                   &match_length)) != NULL) {
 				if unlikely(Dee_unicode_printer_print16(&p, begin.cp16, (size_t)(ptr.cp16 - begin.cp16)) < 0)
 					goto err_printer;
-				if unlikely(Dee_unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
+				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
 				if unlikely(!--args.max_)
 					break;
@@ -1452,7 +1452,7 @@ string_casereplace(String *__restrict self, size_t argc,
 			                                   &match_length)) != NULL) {
 				if unlikely(Dee_unicode_printer_print32(&p, begin.cp32, (size_t)(ptr.cp32 - begin.cp32)) < 0)
 					goto err_printer;
-				if unlikely(Dee_unicode_printer_printstring(&p, (DeeObject *)args.replace) < 0)
+				if unlikely(Dee_unicode_printer_printstring(&p, Dee_AsObject(args.replace)) < 0)
 					goto err_printer;
 				if unlikely(!--args.max_)
 					break;
@@ -4643,7 +4643,7 @@ string_join_cb(void *arg, DeeObject *elem) {
 	struct string_join_data *data = (struct string_join_data *)arg;
 	/* Print `self' prior to every object, starting with the 2nd one. */
 	if (!data->sjd_first) {
-		if unlikely(Dee_unicode_printer_printstring(&data->sjd_out, (DeeObject *)data->sjd_sep) < 0)
+		if unlikely(Dee_unicode_printer_printstring(&data->sjd_out, Dee_AsObject(data->sjd_sep)) < 0)
 			goto err;
 	}
 	if unlikely(Dee_unicode_printer_printobject(&data->sjd_out, elem) < 0)

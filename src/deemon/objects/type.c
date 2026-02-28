@@ -205,7 +205,7 @@ type_print(DeeObject *__restrict self, Dee_formatprinter_t printer, void *arg) {
 	if (me->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *nameob;
 		nameob = container_of(me->tp_name, DeeStringObject, s_str);
-		return DeeString_PrintUtf8((DeeObject *)nameob, printer, arg);
+		return DeeString_PrintUtf8(Dee_AsObject(nameob), printer, arg);
 	}
 	name = DeeType_GetName(me);
 	return DeeFormat_PrintStr(printer, arg, name);
@@ -255,7 +255,7 @@ fallback:
 	DREF DeeModuleObject *mod = DeeType_GetModule(me);
 	if (!mod)
 		goto fallback;
-	result = DeeString_PrintUtf8((DeeObject *)mod->mo_name, printer, arg);
+	result = DeeString_PrintUtf8(Dee_AsObject(mod->mo_name), printer, arg);
 	Dee_Decref(mod);
 	if unlikely(result < 0)
 		goto done;
@@ -945,7 +945,7 @@ set_basic_member(DeeTypeObject *tp_self, DeeObject *self,
 			struct Dee_class_desc *desc;
 			DREF DeeObject *old_value;
 			attr = DeeType_QueryAttributeHash(tp_self, iter,
-			                                  (DeeObject *)member_name,
+			                                  Dee_AsObject(member_name),
 			                                  attr_hash);
 			if (!attr)
 				goto next_base;
@@ -1129,7 +1129,7 @@ type_new_extended(DeeTypeObject *self, DeeObject *initializer) {
 
 	/* {(Type, ({(string, Object)...}, Tuple))...} */
 	/* {(Type, ({(string, Object)...}, Tuple, Mapping))...} */
-	init_info = DeeObject_TryGetItem(initializer, (DeeObject *)first_base);
+	init_info = DeeObject_TryGetItem(initializer, Dee_AsObject(first_base));
 	if unlikely(!init_info)
 		goto err_r;
 	if (init_info == ITER_DONE) {
@@ -1162,7 +1162,7 @@ done_fields:
 	do {
 		if (iter == first_base)
 			continue;
-		init_info = DeeObject_TryGetItem(initializer, (DeeObject *)iter);
+		init_info = DeeObject_TryGetItem(initializer, Dee_AsObject(iter));
 		if unlikely(!init_info)
 			goto err_r_firstbase;
 		if (init_info == ITER_DONE)
@@ -1292,7 +1292,7 @@ type_getinstanceattr(DeeTypeObject *self, size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	return DeeType_GetInstanceAttr(self, (DeeObject *)args.attr);
+	return DeeType_GetInstanceAttr(self, args.attr);
 err:
 	return NULL;
 }
@@ -1327,7 +1327,7 @@ type_hasinstanceattr(DeeTypeObject *self, size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	result = DeeType_HasInstanceAttr(self, (DeeObject *)args.attr);
+	result = DeeType_HasInstanceAttr(self, args.attr);
 	if unlikely(result < 0)
 		goto err;
 	return_bool(result);
@@ -1355,7 +1355,7 @@ type_boundinstanceattr(DeeTypeObject *self, size_t argc,
 		goto err;
 
 	/* Instance attributes of types are always bound (because they're all wrappers) */
-	switch (DeeType_BoundInstanceAttr(self, (DeeObject *)args.attr)) {
+	switch (DeeType_BoundInstanceAttr(self, args.attr)) {
 	default:
 		if unlikely(!args.allow_missing) {
 			DeeRT_ErrUnknownTypeInstanceAttr(self, args.attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);
@@ -1389,7 +1389,7 @@ type_delinstanceattr(DeeTypeObject *self, size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	if (DeeType_DelInstanceAttr(self, (DeeObject *)args.attr))
+	if (DeeType_DelInstanceAttr(self, args.attr))
 		goto err;
 	return_none;
 err:
@@ -1413,7 +1413,7 @@ type_setinstanceattr(DeeTypeObject *self, size_t argc,
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.attr, &DeeString_Type))
 		goto err;
-	if (DeeType_SetInstanceAttr(self, (DeeObject *)args.attr, args.value))
+	if (DeeType_SetInstanceAttr(self, args.attr, args.value))
 		goto err;
 	return_reference_(args.value);
 err:

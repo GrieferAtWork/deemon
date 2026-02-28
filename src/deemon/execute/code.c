@@ -1308,7 +1308,7 @@ code_visit(DeeCodeObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_kwds(DeeCodeObject *__restrict self) {
 	if likely(self->co_keywords) {
-		return DeeRefVector_NewReadonly(Dee_AsObject(self),
+		return DeeRefVector_NewReadonly(self,
 		                                (size_t)self->co_argc_max,
 		                                (DeeObject *const *)self->co_keywords);
 	}
@@ -1325,7 +1325,7 @@ code_bound_kwds(DeeCodeObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getdefaults(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_min <= self->co_argc_max);
-	return DeeRefVector_NewReadonly(Dee_AsObject(self),
+	return DeeRefVector_NewReadonly(self,
 	                                (size_t)(self->co_argc_max - self->co_argc_min),
 	                                self->co_defaultv);
 }
@@ -1333,7 +1333,7 @@ code_getdefaults(DeeCodeObject *__restrict self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getconstants(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_min <= self->co_argc_max);
-	return DeeRefVector_NewReadonly(Dee_AsObject(self),
+	return DeeRefVector_NewReadonly(self,
 	                                self->co_constc,
 	                                self->co_constv);
 }

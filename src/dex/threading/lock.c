@@ -2859,7 +2859,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lock_union_locks_get(LockUnion *__restrict self) {
-	return DeeRefVector_NewReadonly(Dee_AsObject(self), self->lu_size, self->lu_elem);
+	return DeeRefVector_NewReadonly(self, self->lu_size, self->lu_elem);
 }
 
 PRIVATE struct type_with lock_union_with = {

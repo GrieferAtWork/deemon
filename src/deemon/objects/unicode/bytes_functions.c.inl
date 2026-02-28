@@ -1269,7 +1269,7 @@ bytes_scanf(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[end]]]*/
 	if (DeeObject_AssertTypeExact(args.format, &DeeString_Type))
 		goto err;
-	return DeeString_Scanf(Dee_AsObject(self), (DeeObject *)args.format);
+	return DeeString_Scanf(Dee_AsObject(self), Dee_AsObject(args.format));
 err:
 	return NULL;
 }
@@ -4750,9 +4750,9 @@ bytes_search_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 		goto err;
 	if (DeeObject_AssertTypeExact(result->rewr_pattern, &DeeString_Type))
 		goto err;
-	result->rewr_exec.rx_code = DeeString_GetRegex((DeeObject *)result->rewr_pattern,
+	result->rewr_exec.rx_code = DeeString_GetRegex(Dee_AsObject(result->rewr_pattern),
 	                                               Dee_RE_COMPILE_NOUTF8,
-	                                               (DeeObject *)result->rewr_rules);
+	                                               Dee_AsObject(result->rewr_rules));
 	if unlikely(!result->rewr_exec.rx_code)
 		goto err;
 	result->rewr_exec.rx_nmatch = 0;
@@ -5048,12 +5048,12 @@ err:
 
 PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
 err_regex_not_found_in_bytes(Bytes *self, struct DeeRegexExecWithRange const *__restrict exec) {
-	return DeeRT_ErrRegexNotFound(Dee_AsObject(self),
-	                              (DeeObject *)exec->rewr_pattern,
+	return DeeRT_ErrRegexNotFound(self,
+	                              exec->rewr_pattern,
 	                              exec->rewr_exec.rx_startoff,
 	                              exec->rewr_exec.rx_endoff,
 	                              exec->rewr_range,
-	                              (DeeObject *)exec->rewr_rules,
+	                              exec->rewr_rules,
 	                              exec->rewr_exec.rx_eflags);
 }
 
@@ -5511,7 +5511,7 @@ bytes_base_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 		goto err;
 	if (DeeObject_AssertTypeExact(result->rx_pattern, &DeeString_Type))
 		goto err;
-	result->rx_code = DeeString_GetRegex((DeeObject *)result->rx_pattern,
+	result->rx_code = DeeString_GetRegex(Dee_AsObject(result->rx_pattern),
 	                                     Dee_RE_COMPILE_NOUTF8, rules);
 	if unlikely(!result->rx_code)
 		goto err;

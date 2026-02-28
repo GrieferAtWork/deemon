@@ -84,7 +84,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_hasat
 	int result;
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
-	result = DeeObject_HasAttr(ob, (DeeObject *)attr);
+	result = DeeObject_HasAttr(ob, Dee_AsObject(attr));
 	if unlikely(Dee_HAS_ISERR(result))
 		goto err;
 	return_bool(result);
@@ -146,7 +146,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL builtin_functions_bound
 {
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
-	switch (DeeObject_BoundAttr(ob, (DeeObject *)attr)) {
+	switch (DeeObject_BoundAttr(ob, Dee_AsObject(attr))) {
 	default:
 		if unlikely(!allow_missing) {
 			DeeRT_ErrUnknownAttr(ob, attr, DeeRT_ATTRIBUTE_ACCESS_BOUND);

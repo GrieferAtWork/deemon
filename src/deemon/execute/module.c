@@ -2574,7 +2574,7 @@ module_get_haspath(DeeModuleObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_imports(DeeModuleObject *__restrict self) {
-	return DeeRefVector_NewReadonly(Dee_AsObject(self), self->mo_importc,
+	return DeeRefVector_NewReadonly(self, self->mo_importc,
 	                                (DeeObject **)self->mo_importv);
 }
 

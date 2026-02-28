@@ -4179,7 +4179,7 @@ DeeSeqEach_CallAttrStringHash(DeeObject *self, char const *__restrict attr,
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqEach_CallAttr(self, (DeeObject *)attr_ob, argc, argv);
+	result = DeeSeqEach_CallAttr(self, Dee_AsObject(attr_ob), argc, argv);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
@@ -4194,7 +4194,7 @@ DeeSeqEach_CallAttrStringLenHash(DeeObject *self, char const *__restrict attr, s
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqEach_CallAttr(self, (DeeObject *)attr_ob, argc, argv);
+	result = DeeSeqEach_CallAttr(self, Dee_AsObject(attr_ob), argc, argv);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
@@ -4209,7 +4209,7 @@ DeeSeqEach_CallAttrStringHashKw(DeeObject *self, char const *__restrict attr, De
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqEach_CallAttrKw(self, (DeeObject *)attr_ob, argc, argv, kw);
+	result = DeeSeqEach_CallAttrKw(self, Dee_AsObject(attr_ob), argc, argv, kw);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
@@ -4224,7 +4224,7 @@ DeeSeqEach_CallAttrStringLenHashKw(DeeObject *self, char const *__restrict attr,
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqEach_CallAttrKw(self, (DeeObject *)attr_ob, argc, argv, kw);
+	result = DeeSeqEach_CallAttrKw(self, Dee_AsObject(attr_ob), argc, argv, kw);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
@@ -4284,7 +4284,7 @@ DeeSeqSome_CallAttrStringHash(DeeObject *self, char const *__restrict attr,
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqSome_CallAttr(self, (DeeObject *)attr_ob, argc, argv);
+	result = DeeSeqSome_CallAttr(self, Dee_AsObject(attr_ob), argc, argv);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
@@ -4299,7 +4299,7 @@ DeeSeqSome_CallAttrStringLenHash(DeeObject *self, char const *__restrict attr, s
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqSome_CallAttr(self, (DeeObject *)attr_ob, argc, argv);
+	result = DeeSeqSome_CallAttr(self, Dee_AsObject(attr_ob), argc, argv);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
@@ -4314,7 +4314,7 @@ DeeSeqSome_CallAttrStringHashKw(DeeObject *self, char const *__restrict attr, De
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqSome_CallAttrKw(self, (DeeObject *)attr_ob, argc, argv, kw);
+	result = DeeSeqSome_CallAttrKw(self, Dee_AsObject(attr_ob), argc, argv, kw);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:
@@ -4329,7 +4329,7 @@ DeeSeqSome_CallAttrStringLenHashKw(DeeObject *self, char const *__restrict attr,
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
 	if unlikely(!attr_ob)
 		goto err;
-	result = DeeSeqSome_CallAttrKw(self, (DeeObject *)attr_ob, argc, argv, kw);
+	result = DeeSeqSome_CallAttrKw(self, Dee_AsObject(attr_ob), argc, argv, kw);
 	Dee_Decref_unlikely(attr_ob);
 	return result;
 err:

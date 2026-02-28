@@ -214,8 +214,8 @@ DeeType_GetSeqClass(DeeTypeObject const *__restrict self);
  * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',
  *       whereas when write-access is not possible, then the disposition of
  *       elements of `vector' doesn't matter and can either be `[0..1]' or `[1..1]'. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRefVector_New(DeeObject *owner, size_t length,
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeRefVector_New)(DeeObject *owner, size_t length,
                  DeeObject **vector,
 #ifndef CONFIG_NO_THREADS
                  Dee_atomic_rwlock_t *plock
@@ -223,11 +223,20 @@ DeeRefVector_New(DeeObject *owner, size_t length,
                  bool writable
 #endif /* CONFIG_NO_THREADS */
                  );
+#ifndef CONFIG_NO_THREADS
+#define DeeRefVector_New(owner, length, vector, plock) \
+	DeeRefVector_New(Dee_AsObject(owner), length, vector, plock)
+#else /* !CONFIG_NO_THREADS */
+#define DeeRefVector_New(owner, length, vector, writable) \
+	DeeRefVector_New(Dee_AsObject(owner), length, vector, writable)
+#endif /* CONFIG_NO_THREADS */
 
 #ifdef __INTELLISENSE__
-DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
-                         DeeObject *const *__restrict vector);
+DFUNDEF WUNUSED DREF DeeObject *
+(DCALL DeeRefVector_NewReadonly)(DeeObject *__restrict owner, size_t length,
+                                 DeeObject *const *__restrict vector);
+#define DeeRefVector_NewReadonly(owner, length, vector) \
+	DeeRefVector_NewReadonly(Dee_AsObject(owner), length, vector)
 #elif defined(CONFIG_NO_THREADS)
 #define DeeRefVector_NewReadonly(owner, length, vector) \
 	DeeRefVector_New(owner, length, (DeeObject **)(vector), false)

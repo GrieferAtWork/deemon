@@ -280,7 +280,7 @@ generic_proxy__serialize_and_wordcopy_atomic16(ProxyObject *__restrict self,
                                                Dee_seraddr_t addr) {
 	uint16_t *out;
 	uint16_t const *in;
-	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
+	size_t instance_size = serialize_copy_after_getsize(Dee_AsObject(self));
 	ASSERTF(instance_size >= sizeof(*self),
 	        "Instance size %" PRFuSIZ " of %r is lower than "
 	        /**/ "basic size %" PRFuSIZ " of proxy object",
@@ -309,7 +309,7 @@ generic_proxy__serialize_and_wordcopy_atomic32(ProxyObject *__restrict self,
                                                Dee_seraddr_t addr) {
 	uint32_t *out;
 	uint32_t const *in;
-	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
+	size_t instance_size = serialize_copy_after_getsize(Dee_AsObject(self));
 	ASSERTF(instance_size >= sizeof(*self),
 	        "Instance size %" PRFuSIZ " of %r is lower than "
 	        /**/ "basic size %" PRFuSIZ " of proxy object",
@@ -339,7 +339,7 @@ generic_proxy__serialize_and_wordcopy_atomic64(ProxyObject *__restrict self,
                                                Dee_seraddr_t addr) {
 	uint64_t *out;
 	uint64_t const *in;
-	size_t instance_size = serialize_copy_after_getsize((DeeObject *)self);
+	size_t instance_size = serialize_copy_after_getsize(Dee_AsObject(self));
 	ASSERTF(instance_size >= sizeof(*self),
 	        "Instance size %" PRFuSIZ " of %r is lower than "
 	        /**/ "basic size %" PRFuSIZ " of proxy object",

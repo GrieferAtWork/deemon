@@ -1147,7 +1147,7 @@ PRIVATE struct type_method tpconst object_methods[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_class_get(DeeObject *__restrict self) {
-	return_reference((DeeObject *)DeeObject_Class(self));
+	return_reference(DeeObject_Class(self));
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
