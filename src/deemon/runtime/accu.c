@@ -38,6 +38,7 @@
 #include <hybrid/overflow.h> /* OVERFLOW_SADD, OVERFLOW_UADD */
 
 #include "../objects/int_logic.h"
+#include "../objects/seq/concat.h"
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* int32_t, int64_t */
@@ -166,10 +167,12 @@ bytes_add(DeeBytesObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeFloatObject *DCALL
 float_add(DeeFloatObject *__restrict self, DeeObject *__restrict other);
 #endif /* Dee_ACCU_FLOAT_DEFINED */
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
-tuple_concat(DeeTupleObject *self, DeeObject *other);
+DeeTuple_Concat(DeeTupleObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeListObject *DCALL
 list_add(DeeListObject *me, DeeObject *other);
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 
 PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -231,7 +234,48 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		self->acu_mode = Dee_ACCU_FLOAT;
 		Dee_Decref(first);
 #endif /* Dee_ACCU_FLOAT_DEFINED */
-	} else if (tp_add == (DeeNO_add_t)&tuple_concat) {
+#ifdef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+	} else if (tp_add == (DeeNO_add_t)&DeeSeq_Concat) {
+		if (tp_first == &DeeTuple_Type) {
+			if (!DeeObject_IsShared(first)) {
+				/* Can re-use the initial "first" tuple as an in-place buffer. */
+				self->acu_value.v_tuple.tb_size  = DeeTuple_SIZE(first);
+				self->acu_value.v_tuple.tb_tuple = (DREF DeeTupleObject *)first;
+				self->acu_mode = Dee_ACCU_TUPLE;
+			} else {
+				Dee_ssize_t error;
+				size_t total_size = DeeTuple_SIZE(first);
+				size_t second_size_fast = DeeObject_SizeFast(second);
+				if likely(second_size_fast != (size_t)-1) {
+					if (OVERFLOW_UADD(total_size, second_size_fast, &total_size))
+						total_size = (size_t)-1;
+				}
+				Dee_tuple_builder_init_with_hint(&self->acu_value.v_tuple, total_size);
+				self->acu_mode = Dee_ACCU_TUPLE;
+				error = Dee_tuple_builder_extend(&self->acu_value.v_tuple,
+				                                 DeeTuple_SIZE(first),
+				                                 DeeTuple_ELEM(first));
+				Dee_Decref_unlikely(first);
+				if unlikely(error < 0)
+					goto err;
+			}
+			return Dee_tuple_builder_appenditems(&self->acu_value.v_tuple, second);
+		} else if (DeeType_Extends(tp_first, &DeeList_Type)) {
+			DREF DeeObject *combine;
+			combine = DeeList_ConcatInherited(first, second);
+			if unlikely(!combine) {
+				self->acu_mode = Dee_ACCU_NONE; /* Because reference to "first" was inherited. */
+				goto err;
+			}
+			ASSERT_OBJECT_TYPE_EXACT(combine, &DeeList_Type);
+			ASSERT(!DeeObject_IsShared(combine));
+			self->acu_value.v_object = combine;
+			self->acu_mode = Dee_ACCU_LIST;
+		} else {
+			goto fallback;
+		}
+#else /* CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+	} else if (tp_add == (DeeNO_add_t)&DeeTuple_Concat) {
 		if (!DeeObject_IsShared(first)) {
 			/* Can re-use the initial "first" tuple as an in-place buffer. */
 			self->acu_value.v_tuple.tb_size  = DeeTuple_SIZE(first);
@@ -266,6 +310,7 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		ASSERT(!DeeObject_IsShared(combine));
 		self->acu_value.v_object = combine;
 		self->acu_mode = Dee_ACCU_LIST;
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 	} else if (tp_add == (DeeNO_add_t)&_DeeNone_NewRef2) {
 		Dee_Decref_unlikely(first);
 		self->acu_mode = Dee_ACCU_NONE;

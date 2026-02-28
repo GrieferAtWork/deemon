@@ -159,6 +159,10 @@ if (DeeType_GetNativeOperatorWithoutUnsupported(rt.ctypes_addrof(rt.RoDict), TNO
 	return; /* rodict_sizeob == tuple_sizeob */
 
 
+global final CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS =
+	!Tuple.hasprivateoperator("add");
+
+
 
 
 /* Assert that operators that are inherited also have their  */
@@ -231,9 +235,9 @@ Type_assert(deemon.List, {
 	"tp_setrange":                                "list_setrange",
 	"tp_setrange_index":                          "list_setrange_index",
 	"tp_setrange_index_n":                        "list_setrange_index_n",
-	"tp_add":                                     "list_add",
+	"tp_add":                                     CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "DeeSeq_Concat" : "list_add",
 	"tp_inplace_add":                             "list_inplace_add",
-	"tp_mul":                                     "list_mul",
+	"tp_mul":                                     CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "default__seq_operator_mul__with__DeeSeq_Repeat" : "list_mul",
 	"tp_inplace_mul":                             "list_inplace_mul",
 	"mh_seq_operator_bool":                       "list_bool",
 	"mh_seq_operator_sizeob":                     "default__seq_operator_sizeob__with__seq_operator_size",
@@ -1149,12 +1153,12 @@ Type_assert(deemon.Tuple, {
 	"tp_setrange":                                "default__seq_operator_setrange__unsupported",
 	"tp_setrange_index":                          "default__seq_operator_setrange_index__unsupported",
 	"tp_setrange_index_n":                        "default__seq_operator_setrange_index_n__unsupported",
-	"tp_add":                                     "tuple_concat",
-	"tp_inplace_add":                             "default__inplace_add__with__add",
+	"tp_add":                                     CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "DeeSeq_Concat" : "DeeTuple_Concat",
+	"tp_inplace_add":                             CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "default__seq_operator_inplace_add__with__seq_operator_add" : "default__inplace_add__with__add",
 	"tp_sub":                                     "default__set_operator_sub", /* Not "default__set_operator_sub__unsupported" -- see blurb in "DeeType_MapTMHInTNOForInherit" */
 	"tp_inplace_sub":                             "default__set_operator_inplace_sub", /* Not "default__set_operator_inplace_sub__unsupported" -- see blurb in "DeeType_MapTMHInTNOForInherit" */
-	"tp_mul":                                     "tuple_repeat",
-	"tp_inplace_mul":                             "default__inplace_mul__with__mul",
+	"tp_mul":                                     CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "default__seq_operator_mul__with__DeeSeq_Repeat" : "tuple_repeat",
+	"tp_inplace_mul":                             CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "default__seq_operator_inplace_mul__with__seq_operator_mul" : "default__inplace_mul__with__mul",
 	"mh_seq_operator_bool":                       "tuple_bool",
 	"mh_seq_operator_sizeob":                     "default__seq_operator_sizeob__with__seq_operator_size",
 	"mh_seq_operator_size":                       "tuple_size",
@@ -1193,8 +1197,8 @@ Type_assert(deemon.Tuple, {
 	"mh_seq_operator_le":                         "default__seq_operator_le__with__seq_operator_compare",
 	"mh_seq_operator_gr":                         "default__seq_operator_gr__with__seq_operator_compare",
 	"mh_seq_operator_ge":                         "default__seq_operator_ge__with__seq_operator_compare",
-	"mh_seq_operator_add":                        "tuple_concat",
-	"mh_seq_operator_mul":                        "tuple_repeat",
+	"mh_seq_operator_add":                        CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "DeeSeq_Concat" : "DeeTuple_Concat",
+	"mh_seq_operator_mul":                        CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS ? "default__seq_operator_mul__with__DeeSeq_Repeat" : "tuple_repeat",
 	"mh_seq_operator_inplace_add":                "default__seq_operator_inplace_add__with__seq_operator_add",
 	"mh_seq_operator_inplace_mul":                "default__seq_operator_inplace_mul__with__seq_operator_mul",
 	"mh_seq_enumerate":                           "default__seq_enumerate__with__seq_enumerate_index",

@@ -128,12 +128,12 @@ function typeExprToCxxType(tx: TypeExpr): string {
 
 	case "T": {
 		local tupleElemTypes: {TypeExpr...} = tx.Ttypes;
-		local cxxElemTypes: {string...} = List(
+		local cxxElemTypes: {string...} = (
 			for (local x: tupleElemTypes)
 				finalizeCxxType(typeExprToCxxType(x))
-		);
+		).frozen;
 		if (cxxElemTypes.last.endswith(">"))
-			cxxElemTypes = cxxElemTypes[:-1] + [templateGt(cxxElemTypes.last)];
+			cxxElemTypes = cxxElemTypes[:-1] + {templateGt(cxxElemTypes.last)};
 		return f"_AbstractTuple<{", ".join(cxxElemTypes)}>";
 	}	break;
 

@@ -391,15 +391,17 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 		case OPERATOR_ADD: {
 			DeeTypeObject *predict;
 			predict = ast_predict_type_ex(self->a_operator.o_op0, flags);
-			if (predict == &DeeNone_Type || /* Always re-returns itself */
-			    predict == &DeeInt_Type ||  /* int_add */
+			if (predict == &DeeNone_Type ||   /* Always re-returns itself */
+			    predict == &DeeInt_Type ||    /* int_add */
 #ifdef CONFIG_HAVE_FPU
-			    predict == &DeeFloat_Type || /* float_add */
+			    predict == &DeeFloat_Type ||  /* float_add */
 #endif /* CONFIG_HAVE_FPU */
 			    predict == &DeeString_Type || /* string_cat */
-			    predict == &DeeBytes_Type ||  /* bytes_add */
-			    predict == &DeeList_Type ||   /* list_add */
-			    predict == &DeeTuple_Type     /* tuple_concat */
+			    predict == &DeeBytes_Type     /* bytes_add */
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+			    || predict == &DeeList_Type   /* list_add */
+			    || predict == &DeeTuple_Type  /* DeeTuple_Concat */
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 			) {
 				return predict;
 			}

@@ -3836,86 +3836,10 @@ PRIVATE struct type_gc tpconst list_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&DeeList_Clear
 };
 
-INTERN WUNUSED NONNULL((1, 2)) DREF List *DCALL
-list_add(List *me, DeeObject *other) {
-	DREF List *result = DeeList_Copy(me);
-	if unlikely(!result)
-		goto err;
-	if unlikely(DeeList_AppendSequence((DeeObject *)result, other))
-		goto err_r;
-	return result;
-err_r:
-	DeeList_Destroy(result);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 list_inplace_add(List **__restrict p_self,
                  DeeObject *other) {
 	return DeeList_AppendSequence((DeeObject *)*p_self, other);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF List *DCALL
-list_mul(List *me, DeeObject *other) {
-	size_t i, my_elemc, res_elemc, multiplier;
-	DREF List *result;
-	DREF DeeObject **res_elemv, **dst;
-	if (DeeObject_AsSize(other, &multiplier))
-		goto err;
-again:
-	DeeList_LockRead(me);
-	my_elemc = me->l_list.ol_elemc;
-	if (OVERFLOW_UMUL(my_elemc, multiplier, &res_elemc)) {
-		DeeList_LockEndRead(me);
-		DeeRT_ErrIntegerOverflowUMul(my_elemc, multiplier);
-		goto err;
-	}
-	if unlikely(res_elemc == 0) {
-		DeeList_LockEndRead(me);
-		return (DREF List *)DeeList_New();
-	}
-	res_elemv = Dee_objectlist_elemv_trymalloc_safe(res_elemc);
-	if unlikely(!res_elemv) {
-		DeeList_LockEndRead(me);
-		if (Dee_CollectMemorycSafe(res_elemc, sizeof(DREF DeeObject *)))
-			goto again;
-		goto err;
-	}
-#ifndef __OPTIMIZE_SIZE__
-	if (my_elemc == 1) {
-		DeeObject *obj = DeeList_GET(me, 0);
-		Dee_Setrefv(res_elemv, obj, multiplier);
-	} else
-#endif /* !__OPTIMIZE_SIZE__ */
-	{
-		for (i = 0; i < my_elemc; ++i) {
-			DeeObject *obj;
-			obj = DeeList_GET(me, i);
-			Dee_Incref_n(obj, multiplier);
-		}
-		for (dst = res_elemv, i = 0; i < multiplier; ++i) {
-			memcpyc(dst, DeeList_ELEM(me),
-			        my_elemc, sizeof(DREF DeeObject *));
-			dst += my_elemc;
-		}
-	}
-	DeeList_LockEndRead(me);
-	result = DeeGCObject_MALLOC(List);
-	if unlikely(!result)
-		goto err_elem;
-	result->l_list.ol_elemv = res_elemv;
-	result->l_list.ol_elemc = res_elemc;
-	_DeeList_SetAlloc(result, res_elemc);
-	Dee_weakref_support_init(result);
-	Dee_atomic_rwlock_init(&result->l_lock);
-	DeeObject_Init(result, &DeeList_Type);
-	return DeeGC_TRACK(List, result);
-err_elem:
-	Dee_Decrefv(res_elemv, res_elemc);
-	Dee_objectlist_elemv_free(res_elemv);
-err:
-	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3982,6 +3906,89 @@ err:
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+#define PTR_list_add DEFIMPL(&DeeSeq_Concat)
+#define PTR_list_mul DEFIMPL(&default__seq_operator_mul__with__DeeSeq_Repeat)
+#else /* CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+#define PTR_list_add (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_add
+INTERN WUNUSED NONNULL((1, 2)) DREF List *DCALL
+list_add(List *me, DeeObject *other) {
+	DREF List *result = DeeList_Copy(me);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeList_AppendSequence((DeeObject *)result, other))
+		goto err_r;
+	return result;
+err_r:
+	DeeList_Destroy(result);
+err:
+	return NULL;
+}
+
+#define PTR_list_mul (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_mul
+PRIVATE WUNUSED NONNULL((1, 2)) DREF List *DCALL
+list_mul(List *me, DeeObject *other) {
+	size_t i, my_elemc, res_elemc, multiplier;
+	DREF List *result;
+	DREF DeeObject **res_elemv, **dst;
+	if (DeeObject_AsSize(other, &multiplier))
+		goto err;
+again:
+	DeeList_LockRead(me);
+	my_elemc = me->l_list.ol_elemc;
+	if (OVERFLOW_UMUL(my_elemc, multiplier, &res_elemc)) {
+		DeeList_LockEndRead(me);
+		DeeRT_ErrIntegerOverflowUMul(my_elemc, multiplier);
+		goto err;
+	}
+	if unlikely(res_elemc == 0) {
+		DeeList_LockEndRead(me);
+		return (DREF List *)DeeList_New();
+	}
+	res_elemv = Dee_objectlist_elemv_trymalloc_safe(res_elemc);
+	if unlikely(!res_elemv) {
+		DeeList_LockEndRead(me);
+		if (Dee_CollectMemorycSafe(res_elemc, sizeof(DREF DeeObject *)))
+			goto again;
+		goto err;
+	}
+#ifndef __OPTIMIZE_SIZE__
+	if (my_elemc == 1) {
+		DeeObject *obj = DeeList_GET(me, 0);
+		Dee_Setrefv(res_elemv, obj, multiplier);
+	} else
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+		for (i = 0; i < my_elemc; ++i) {
+			DeeObject *obj;
+			obj = DeeList_GET(me, i);
+			Dee_Incref_n(obj, multiplier);
+		}
+		for (dst = res_elemv, i = 0; i < multiplier; ++i) {
+			memcpyc(dst, DeeList_ELEM(me),
+			        my_elemc, sizeof(DREF DeeObject *));
+			dst += my_elemc;
+		}
+	}
+	DeeList_LockEndRead(me);
+	result = DeeGCObject_MALLOC(List);
+	if unlikely(!result)
+		goto err_elem;
+	result->l_list.ol_elemv = res_elemv;
+	result->l_list.ol_elemc = res_elemc;
+	_DeeList_SetAlloc(result, res_elemc);
+	Dee_weakref_support_init(result);
+	Dee_atomic_rwlock_init(&result->l_lock);
+	DeeObject_Init(result, &DeeList_Type);
+	return DeeGC_TRACK(List, result);
+err_elem:
+	Dee_Decrefv(res_elemv, res_elemc);
+	Dee_objectlist_elemv_free(res_elemv);
+err:
+	return NULL;
+}
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+
 PRIVATE struct type_math list_math = {
 	/* .tp_int32       = */ DEFIMPL_UNSUPPORTED(&default__int32__unsupported),
 	/* .tp_int64       = */ DEFIMPL_UNSUPPORTED(&default__int64__unsupported),
@@ -3990,9 +3997,9 @@ PRIVATE struct type_math list_math = {
 	/* .tp_inv         = */ DEFIMPL(&default__set_operator_inv),
 	/* .tp_pos         = */ DEFIMPL_UNSUPPORTED(&default__pos__unsupported),
 	/* .tp_neg         = */ DEFIMPL_UNSUPPORTED(&default__neg__unsupported),
-	/* .tp_add         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_add,
+	/* .tp_add         = */ PTR_list_add,
 	/* .tp_sub         = */ DEFIMPL(&default__set_operator_sub),
-	/* .tp_mul         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_mul,
+	/* .tp_mul         = */ PTR_list_mul,
 	/* .tp_div         = */ DEFIMPL_UNSUPPORTED(&default__div__unsupported),
 	/* .tp_mod         = */ DEFIMPL_UNSUPPORTED(&default__mod__unsupported),
 	/* .tp_shl         = */ DEFIMPL_UNSUPPORTED(&default__shl__unsupported),
@@ -4166,125 +4173,137 @@ PRIVATE struct type_operator const list_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0037_SETRANGE, METHOD_FNOREFESCAPE),
 };
 
+#ifdef CONFIG_NO_DOC
+#define list_doc NULL
+#else /* CONFIG_NO_DOC */
+PRIVATE char const list_doc[] =
+"An index-based vector sequence, capable of holding any number of objects\n"
+"\n"
+
+"()\n"
+"Create a new, empty List\n"
+"\n"
+
+"(items:?S?O)\n"
+"Create a new List, using objects enumerated by iterating @items\n"
+"\n"
+
+"(size:?Dint,filler=!N)\n"
+"Create a new List consisting of @size elements, all initialized to @filler\n"
+"\n"
+
+"copy->\n"
+"Creates a shallow copy of @this List\n"
+"\n"
+
+"deepcopy->\n"
+"Creates a deep copy of @this List\n"
+"\n"
+
+"bool->\n"
+"Returns ?t if @this List is non-empty\n"
+"\n"
+
+"repr->\n"
+"Returns the items of @this List, following List syntax rather than abstract sequence syntax:\n"
+"${"
+/**/ "local x = [];\n"
+/**/ "x.append(10);\n"
+/**/ "x.append(20);\n"
+/**/ "x.append(30);\n"
+/**/ "print repr x; /* `[10, 20, 30]' */"
+"}\n"
+"\n"
+
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+"+(other:?X2?.?S?O)->\n"
+"Returns a new List that is the concatenation of @this List and @other\n"
+"\n"
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+
+"+=(other:?X2?.?S?O)->\n"
+"Appends elements from @other to @this List. (Same as ?#extend)\n"
+"\n"
+
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+"*(count:?Dint)->\n"
+"#tIntegerOverflow{@count is negative}"
+"Return a new List containing all the elements of @this one, repeated @count times\n"
+"When @count is equal to $0, an empty List is returned\n"
+"\n"
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+
+"*=(count:?Dint)->\n"
+"#tIntegerOverflow{@count is negative}"
+"Extend @this List to contain @count as many items, filling the new slots with repetitions of all pre-existing items\n"
+"When @count is equal to $0, the operator behaves the same as ?#clear\n"
+"\n"
+
+"#->\n"
+"Returns the number of items contained within @this List\n"
+"\n"
+
+"[](index:?Dint)->\n"
+"#tIndexError{@index is out of bounds}"
+"#tIntegerOverflow{@index is negative or too large}"
+"Return the @index'th item of @this List\n"
+"\n"
+
+"del[](index:?Dint)->\n"
+"#tIndexError{@index is out of bounds}"
+"#tIntegerOverflow{@index is negative or too large}"
+"Delete the @index'th item from @this List. (same as ${this.erase(index, 1)})\n"
+"\n"
+
+"[]=(index:?Dint,ob)->\n"
+"#tIndexError{@index is out of bounds}"
+"#tIntegerOverflow{@index is negative or too large}"
+"Replace the @index'th item of @this List with @ob\n"
+"\n"
+
+"[:](start:?Dint,end:?Dint)->\n"
+"#tIntegerOverflow{@start or @end are too large}"
+"Return a new List containing the elements within the range @{start}...@end\n"
+"If either @start or @end are negative, ${##this} is added first.\n"
+"If following this, either is greater than ${##this}, it is clampled to that value\n"
+"\n"
+
+"del[:](start:?Dint,end:?Dint)->\n"
+"#tIntegerOverflow{@start or @end are too large}"
+"Using the same index-rules as for ?#{op:getrange}, delete all items from that range\n"
+"\n"
+
+"[:]=(start:?Dint,end:?Dint,items:?S?O)->\n"
+"#tNotImplemented{The given @items cannot be iterated}"
+"#tIntegerOverflow{@start or @end are too large}"
+"Using the same index-rules as for ?#{op:getrange}, delete all items from that range "
+/**/ "before inserting all elements from @items at the range's start. - This operation "
+/**/ "is performed atomically, and @this List is not modified if @items cannot be iterated\n"
+"\n"
+
+"iter->\n"
+"Returns an iterator for enumerating the elements of @this List\n"
+"\n"
+
+"contains->\n"
+"Returns ?t if @elem is apart of @this List\n"
+"\n"
+
+"<(other:?X2?.?S?O)->\n"
+"<=(other:?X2?.?S?O)->\n"
+"==(other:?X2?.?S?O)->\n"
+"!=(other:?X2?.?S?O)->\n"
+">(other:?X2?.?S?O)->\n"
+">=(other:?X2?.?S?O)->\n"
+"#tNotImplemented{The given @other cannot be iterated}"
+"Perform a lexicographical comparison between @this List and the given @other sequence"
+"";
+#endif /* !CONFIG_NO_DOC */
+
 PUBLIC DeeTypeObject DeeList_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_List),
-	/* .tp_doc      = */ DOC("An index-based vector sequence, capable of holding any number of objects\n"
-	                         "\n"
-
-	                         "()\n"
-	                         "Create a new, empty List\n"
-	                         "\n"
-
-	                         "(items:?S?O)\n"
-	                         "Create a new List, using objects enumerated by iterating @items\n"
-	                         "\n"
-
-	                         "(size:?Dint,filler=!N)\n"
-	                         "Create a new List consisting of @size elements, all initialized to @filler\n"
-	                         "\n"
-
-	                         "copy->\n"
-	                         "Creates a shallow copy of @this List\n"
-	                         "\n"
-
-	                         "deepcopy->\n"
-	                         "Creates a deep copy of @this List\n"
-	                         "\n"
-
-	                         "bool->\n"
-	                         "Returns ?t if @this List is non-empty\n"
-	                         "\n"
-
-	                         "repr->\n"
-	                         "Returns the items of @this List, following List syntax rather than abstract sequence syntax:\n"
-	                         "${"
-	                         /**/ "local x = [];\n"
-	                         /**/ "x.append(10);\n"
-	                         /**/ "x.append(20);\n"
-	                         /**/ "x.append(30);\n"
-	                         /**/ "print repr x; /* `[10, 20, 30]' */"
-	                         "}\n"
-	                         "\n"
-
-	                         "+(other:?X2?.?S?O)->\n"
-	                         "Returns a new List that is the concatenation of @this List and @other\n"
-	                         "\n"
-
-	                         "+=(other:?X2?.?S?O)->\n"
-	                         "Appends elements from @other to @this List. (Same as ?#extend)\n"
-	                         "\n"
-
-	                         "*(count:?Dint)->\n"
-	                         "#tIntegerOverflow{@count is negative}"
-	                         "Return a new List containing all the elements of @this one, repeated @count times\n"
-	                         "When @count is equal to $0, an empty List is returned\n"
-	                         "\n"
-
-	                         "*=(count:?Dint)->\n"
-	                         "#tIntegerOverflow{@count is negative}"
-	                         "Extend @this List to contain @count as many items, filling the new slots with repetitions of all pre-existing items\n"
-	                         "When @count is equal to $0, the operator behaves the same as ?#clear\n"
-	                         "\n"
-
-	                         "#->\n"
-	                         "Returns the number of items contained within @this List\n"
-	                         "\n"
-
-	                         "[](index:?Dint)->\n"
-	                         "#tIndexError{@index is out of bounds}"
-	                         "#tIntegerOverflow{@index is negative or too large}"
-	                         "Return the @index'th item of @this List\n"
-	                         "\n"
-
-	                         "del[](index:?Dint)->\n"
-	                         "#tIndexError{@index is out of bounds}"
-	                         "#tIntegerOverflow{@index is negative or too large}"
-	                         "Delete the @index'th item from @this List. (same as ${this.erase(index, 1)})\n"
-	                         "\n"
-
-	                         "[]=(index:?Dint,ob)->\n"
-	                         "#tIndexError{@index is out of bounds}"
-	                         "#tIntegerOverflow{@index is negative or too large}"
-	                         "Replace the @index'th item of @this List with @ob\n"
-	                         "\n"
-
-	                         "[:](start:?Dint,end:?Dint)->\n"
-	                         "#tIntegerOverflow{@start or @end are too large}"
-	                         "Return a new List containing the elements within the range @{start}...@end\n"
-	                         "If either @start or @end are negative, ${##this} is added first.\n"
-	                         "If following this, either is greater than ${##this}, it is clampled to that value\n"
-	                         "\n"
-
-	                         "del[:](start:?Dint,end:?Dint)->\n"
-	                         "#tIntegerOverflow{@start or @end are too large}"
-	                         "Using the same index-rules as for ?#{op:getrange}, delete all items from that range\n"
-	                         "\n"
-
-	                         "[:]=(start:?Dint,end:?Dint,items:?S?O)->\n"
-	                         "#tNotImplemented{The given @items cannot be iterated}"
-	                         "#tIntegerOverflow{@start or @end are too large}"
-	                         "Using the same index-rules as for ?#{op:getrange}, delete all items from that range "
-	                         /**/ "before inserting all elements from @items at the range's start. - This operation "
-	                         /**/ "is performed atomically, and @this List is not modified if @items cannot be iterated\n"
-	                         "\n"
-
-	                         "iter->\n"
-	                         "Returns an iterator for enumerating the elements of @this List\n"
-	                         "\n"
-
-	                         "contains->\n"
-	                         "Returns ?t if @elem is apart of @this List\n"
-	                         "\n"
-
-	                         "<(other:?X2?.?S?O)->\n"
-	                         "<=(other:?X2?.?S?O)->\n"
-	                         "==(other:?X2?.?S?O)->\n"
-	                         "!=(other:?X2?.?S?O)->\n"
-	                         ">(other:?X2?.?S?O)->\n"
-	                         ">=(other:?X2?.?S?O)->\n"
-	                         "#tNotImplemented{The given @other cannot be iterated}"
-	                         "Perform a lexicographical comparison between @this List and the given @other sequence"),
+	/* .tp_doc      = */ list_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(List),
 	/* .tp_features = */ TF_NONE,

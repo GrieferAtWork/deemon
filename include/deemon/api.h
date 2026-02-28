@@ -632,6 +632,30 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_PER_THREAD_BOOL */
+
+/* Experimental feature switch:
+ * Remove (inefficient) special-purpose operators:
+ * - Tuple.operator + (other: Sequence): Tuple
+ *   List.operator + (other: Sequence): List
+ *   Instead, "Sequence.operator +" is used, which returns an abstract "Sequence" instead of "Tuple" / "List"
+ * - Tuple.operator * (repeat: int): Tuple
+ *   List.operator * (repeat: int): List
+ *   Instead, "Sequence.operator *" is used, which returns an abstract "Sequence" instead of "Tuple" / "List"
+ *
+ * Inplace operators are not affected, however this feature switch might still
+ * be somewhat controversial, since stuff like "local x = [10, 20] + other" will
+ * now return an abstract sequence, which doesn't evaluate "other" immediately,
+ * and also isn't mutable either.
+ *
+ * Such code should be re-written as "[10, 20, other...]" or "List({10, 20} + other)" */
+#if (!defined(CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS))
+#if 1
+#define CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+#else
+#define CONFIG_NO_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 /************************************************************************/
 
 

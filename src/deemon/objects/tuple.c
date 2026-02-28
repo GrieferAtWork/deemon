@@ -1802,7 +1802,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
-tuple_concat(Tuple *self, DeeObject *other) {
+DeeTuple_Concat(Tuple *self, DeeObject *other) {
 	DREF Tuple *result;
 	size_t other_sizehint, total_size;
 	DeeTypeObject *tp_other          = Dee_TYPE(other);
@@ -1888,7 +1888,7 @@ DeeTuple_ConcatInherited(/*inherit(always)*/ DREF DeeObject *self, DeeObject *se
 	DeeTypeObject *tp_sequence;
 	DeeNO_foreach_t tp_sequence_foreach;
 	if unlikely(DeeObject_IsShared(me)) {
-		result = tuple_concat(me, sequence);
+		result = DeeTuple_Concat(me, sequence);
 		Dee_Decref_unlikely(me);
 		return Dee_AsObject(result);
 	}
@@ -2001,6 +2001,9 @@ err_me_argv:
 	return NULL;
 }
 
+#ifdef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+#define PTR_tuple_math DEFIMPL(&default__tp_math__6AAE313158D20BA0)
+#else /* CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Tuple *DCALL
 tuple_repeat(Tuple *self, DeeObject *other) {
 	size_t i, count, total_length, my_length;
@@ -2046,6 +2049,7 @@ err:
 	return NULL;
 }
 
+#define PTR_tuple_math &tuple_math
 PRIVATE struct type_math tuple_math = {
 	/* .tp_int32  = */ DEFIMPL_UNSUPPORTED(&default__int32__unsupported),
 	/* .tp_int64  = */ DEFIMPL_UNSUPPORTED(&default__int64__unsupported),
@@ -2054,7 +2058,7 @@ PRIVATE struct type_math tuple_math = {
 	/* .tp_inv    = */ DEFIMPL(&default__set_operator_inv),
 	/* .tp_pos    = */ DEFIMPL_UNSUPPORTED(&default__pos__unsupported),
 	/* .tp_neg    = */ DEFIMPL_UNSUPPORTED(&default__neg__unsupported),
-	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_concat,
+	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&DeeTuple_Concat,
 	/* .tp_sub    = */ DEFIMPL(&default__set_operator_sub),
 	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_repeat,
 	/* .tp_div    = */ DEFIMPL_UNSUPPORTED(&default__div__unsupported),
@@ -2079,6 +2083,7 @@ PRIVATE struct type_math tuple_math = {
 	/* .tp_inplace_xor = */ DEFIMPL(&default__set_operator_inplace_xor),
 	/* .tp_inplace_pow = */ DEFIMPL_UNSUPPORTED(&default__inplace_pow__unsupported),
 };
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
 tuple_hash(Tuple *__restrict self) {
@@ -2144,93 +2149,102 @@ PRIVATE struct type_operator const tuple_operators[] = {
 #define tuple_tp_free_PTR NULL
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT == 0 */
 
+#ifdef CONFIG_NO_DOC
+#define tuple_doc NULL
+#else /* CONFIG_NO_DOC */
+PRIVATE char const tuple_doc[] =
+"A builtin type that is similar to ?DList, however represents a fixed-length, "
+/**/ "immutable sequence of objects. Tuples are fast, low-level ?DSequence-like objects "
+/**/ "that are written as ${(elem1, elem2, etc)}, with the exception of single-element "
+/**/ "tuples being written as ${(single_element,)}\n"
+"\n"
+
+"()\n"
+"Construct an empty ?.\n"
+"\n"
+
+"(" tuple_Tuple_params ")\n"
+"Construct a new ?. that is pre-initializes with the elements from @items\n"
+"\n"
+
+"str->\n"
+"Returns the concatenation of all of @this ?.'s elements converted to strings:\n"
+"${"
+/**/ "operator str() {\n"
+/**/ "	return \"\".join(this);\n"
+/**/ "}"
+"}\n"
+"\n"
+
+"repr->\n"
+"Returns a representation of @this ?.:\n"
+"${"
+/**/ "operator repr() {\n"
+/**/ "	if (#this == 1)\n"
+/**/ "		return f\"({repr this[0]},)\";\n"
+/**/ "	return f\"({\", \".join(for (local x: this) repr x)})\";\n"
+/**/ "}"
+"}\n"
+"\n"
+
+"bool->\n"
+"Returns ?t if @this ?. is non-empty\n"
+"\n"
+
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+"+->\n"
+"+(other:?S?O)->\n"
+"#tNotImplemented{The given @other isn't iterable}"
+"Returns a new ?. consisting of the elements from @this, followed by "
+/**/ "those from @other, which may be another ?., or a generic sequence\n"
+"\n"
+
+"*(count:?Dint)->\n"
+"#tIntegerOverflow{The given @count is negative, or too large}"
+"Return a new ?. consisting of the elements from @this, repeated @count times\n"
+"When @count is $0, an empty ?. is returned. When @count is $1, @this ?. is re-returned\n"
+"\n"
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+
+"==->\n"
+"!=->\n"
+"<->\n"
+"<=->\n"
+">->\n"
+">=->\n"
+"Perform a lexicographical comparison between the elements of @this "
+/**/ "?. and the given @other sequence\n"
+"\n"
+
+"iter->\n"
+"Returns an iterator for enumerating the elements of @this ?.\n"
+"\n"
+
+"#->\n"
+"Returns the number of elements contained inside of @this ?.\n"
+"\n"
+
+"contains->\n"
+"Returns ?t if @elem is apart of @this ?., or @false otherwise\n"
+"\n"
+
+"[]->\n"
+"#tIntegerOverflow{The given @index is negative, or too large}"
+"#tIndexError{The given @index is out of bounds}"
+"Returns the @index'th item of @this ?.\n"
+"\n"
+
+"[:]->?.\n"
+"Returns a new ?. for the given subrange, following the usual rules for "
+/**/ "negative @start or @end values, as well as ?N being passed for "
+/**/ "either (s.a. ?A{op:getrange}?DSequence)"
+"";
+#endif /* !CONFIG_NO_DOC */
 
 PUBLIC DeeTypeObject DeeTuple_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Tuple),
-	/* .tp_doc      = */ DOC("A builtin type that is similar to ?DList, however represents a fixed-length, "
-	                         /**/ "immutable sequence of objects. Tuples are fast, low-level ?DSequence-like objects "
-	                         /**/ "that are written as ${(elem1, elem2, etc)}, with the exception of single-element "
-	                         /**/ "tuples being written as ${(single_element,)}\n"
-	                         "\n"
-
-	                         "()\n"
-	                         "Construct an empty ?.\n"
-	                         "\n"
-
-	                         "(" tuple_Tuple_params ")\n"
-	                         "Construct a new ?. that is pre-initializes with the elements from @items\n"
-	                         "\n"
-
-	                         "str->\n"
-	                         "Returns the concatenation of all of @this ?.'s elements converted to strings:\n"
-	                         "${"
-	                         /**/ "operator str() {\n"
-	                         /**/ "	return \"\".join(this);\n"
-	                         /**/ "}"
-	                         "}\n"
-	                         "\n"
-
-	                         "repr->\n"
-	                         "Returns a representation of @this ?.:\n"
-	                         "${"
-	                         /**/ "operator repr() {\n"
-	                         /**/ "	if (#this == 1)\n"
-	                         /**/ "		return f\"({repr this[0]},)\";\n"
-	                         /**/ "	return f\"({\", \".join(for (local x: this) repr x)})\";\n"
-	                         /**/ "}"
-	                         "}\n"
-	                         "\n"
-
-	                         "bool->\n"
-	                         "Returns ?t if @this ?. is non-empty\n"
-	                         "\n"
-
-	                         "+->\n"
-	                         "+(other:?S?O)->\n"
-	                         "#tNotImplemented{The given @other isn't iterable}"
-	                         "Returns a new ?. consisting of the elements from @this, followed by "
-	                         /**/ "those from @other, which may be another ?., or a generic sequence\n"
-	                         "\n"
-
-	                         "*(count:?Dint)->\n"
-	                         "#tIntegerOverflow{The given @count is negative, or too large}"
-	                         "Return a new ?. consisting of the elements from @this, repeated @count times\n"
-	                         "When @count is $0, an empty ?. is returned. When @count is $1, @this ?. is re-returned\n"
-	                         "\n"
-
-	                         "==->\n"
-	                         "!=->\n"
-	                         "<->\n"
-	                         "<=->\n"
-	                         ">->\n"
-	                         ">=->\n"
-	                         "Perform a lexicographical comparison between the elements of @this "
-	                         /**/ "?. and the given @other sequence\n"
-	                         "\n"
-
-	                         "iter->\n"
-	                         "Returns an iterator for enumerating the elements of @this ?.\n"
-	                         "\n"
-
-	                         "#->\n"
-	                         "Returns the number of elements contained inside of @this ?.\n"
-	                         "\n"
-
-	                         "contains->\n"
-	                         "Returns ?t if @elem is apart of @this ?., or @false otherwise\n"
-	                         "\n"
-
-	                         "[]->\n"
-	                         "#tIntegerOverflow{The given @index is negative, or too large}"
-	                         "#tIndexError{The given @index is out of bounds}"
-	                         "Returns the @index'th item of @this ?.\n"
-	                         "\n"
-
-	                         "[:]->?.\n"
-	                         "Returns a new ?. for the given subrange, following the usual rules for "
-	                         /**/ "negative @start or @end values, as well as ?N being passed for "
-	                         /**/ "either (s.a. ?A{op:getrange}?DSequence)"),
+	/* .tp_doc      = */ tuple_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0, /* !!! DeeTuple_ConcatInherited assumes that tuples can't have weakrefs! */
 	/* .tp_features = */ TF_NONE,
@@ -2257,7 +2271,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	},
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&tuple_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ &tuple_math,
+	/* .tp_math          = */ PTR_tuple_math,
 	/* .tp_cmp           = */ &tuple_cmp,
 	/* .tp_seq           = */ &tuple_seq,
 	/* .tp_iter_next     = */ DEFIMPL_UNSUPPORTED(&default__iter_next__unsupported),
