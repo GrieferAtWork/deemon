@@ -30,7 +30,7 @@
 
 #include "api.h"
 
-#include "gc.h"              /* Dee_gc_head, Dee_gc_head_link */
+#include "gc.h"              /* Dee_gc_head */
 #include "object.h"          /* DeeObject_NewRef */
 #include "string.h"          /* DeeString*, Dee_STRING_ERROR_FIGNORE */
 #include "system-features.h" /* bcmp, strlen */
@@ -781,12 +781,8 @@ DDATDEF DeeTypeObject DeeModuleDex_Type; /* ./net.so   (".so/.dll"; native modul
 
 struct Dee_static_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	struct Dee_gc_head        m_head;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	struct Dee_gc_head_link   m_head;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-	struct Dee_module_object  m_module;
+	struct Dee_gc_head       m_head;
+	struct Dee_module_object m_module;
 };
 
 /* The built-in `deemon' module. */
@@ -1253,8 +1249,8 @@ DFUNDEF NONNULL((1)) void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restr
 
 struct Dee_static_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
-	struct Dee_gc_head_link m_head;
-	DeeModuleObject         m_module;
+	struct Dee_gc_head m_head;
+	DeeModuleObject    m_module;
 };
 
 DDATDEF DeeTypeObject DeeModule_Type;

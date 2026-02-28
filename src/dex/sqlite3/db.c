@@ -1170,10 +1170,6 @@ PRIVATE struct type_getset tpconst db_getsets[] = {
 
 PRIVATE struct type_gc tpconst db_gc = {
 	/* .tp_clear  = */ NULL,
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* .tp_pclear = */ NULL,
-	/* .tp_gcprio = */ 0,
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	/* .tp_cc     = */ (bool (DCALL *)(DeeObject *__restrict))&db_cc,
 };
 

@@ -42,7 +42,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
+#include <stdint.h>  /* uintptr_t */
 
 /* To satisfy "fixincludes" (these includes are intentionally missing) */
 /*!fixincludes fake_include "type.h" // Dee_TYPE_CONSTRUCTOR_INIT_ALLOC */
@@ -61,11 +61,6 @@ DECL_END
 #endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
-
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-
-#define Dee_gc_head_link Dee_gc_head /* Backwards compatibility (remove after "CONFIG_EXPERIMENTAL_REWORKED_GC") */
-
 
 /* Head of an object that is GC-able.
  *
@@ -373,77 +368,7 @@ DFUNDEF WUNUSED size_t DCALL DeeGC_Collect(size_t max_objects);
 INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
 #endif /* CONFIG_BUILDING_DEEMON */
 
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-struct Dee_gc_head;
-struct Dee_gc_head_link {
-	/* The structure that is prefixed before every GC-allocated object. */
-	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
-	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
-};
 
-struct Dee_gc_head {
-	struct Dee_gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
-	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
-	DeeObject            gc_object; /* The object that is being controlled by the GC. */
-};
-
-#ifndef NDEBUG
-#if __SIZEOF_POINTER__ == 4
-#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct Dee_gc_head **)UINT32_C(0xcccccccc))
-#elif __SIZEOF_POINTER__ == 8
-#define _Dee_GC_HEAD_UNTRACKED_MARKER ((struct Dee_gc_head **)UINT64_C(0xcccccccccccccccc))
-#endif /* __SIZEOF_POINTER__ == ... */
-#endif /* !NDEBUG */
-
-#ifdef _Dee_GC_HEAD_UNTRACKED_MARKER
-#define _Dee_GC_HEAD_UNTRACKED_INIT NULL, _Dee_GC_HEAD_UNTRACKED_MARKER
-#else /* _Dee_GC_HEAD_UNTRACKED_MARKER */
-#define _Dee_GC_HEAD_UNTRACKED_INIT NULL, NULL
-#endif /* !_Dee_GC_HEAD_UNTRACKED_MARKER */
-
-
-
-#define Dee_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
-#define Dee_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
-#define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_AsObject(ob) - Dee_GC_OBJECT_OFFSET))
-#define DeeGC_Object(ob)     (&(ob)->gc_object)
-
-/* Begin/end tracking a given GC-allocated object.
- * `DeeGC_Track()' must be called explicitly when the object
- * has been allocated using `DeeGCObject_Malloc' and friends,
- * though constructions of non-variadic GC objects don't need
- * to call this function on the passed object. - That call will
- * automatically be done when the function returns successfully.
- * @return: * : == ob */
-DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Track(DeeObject *__restrict ob);
-DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
-
-/* Track all GC objects in range [first,last], all of which have
- * already been linked together using their `struct Dee_gc_head' */
-DFUNDEF WUNUSED bool DCALL DeeGC_TrackMany_TryLock(void);
-DFUNDEF void DCALL DeeGC_TrackMany_Lock(void);
-DFUNDEF NONNULL((1, 2)) void DCALL DeeGC_TrackMany_Exec(DeeObject *first, DeeObject *last);
-DFUNDEF void DCALL DeeGC_TrackMany_Unlock(void);
-
-#define DeeGC_TRACK(T, ob)           ((DREF T *)DeeGC_Track(Dee_AsObject(ob)))
-#define DeeGC_TRACK_EX(T, ob, flags) DeeGC_TRACK(T, ob) /* Forward compat */
-
-
-/* Try to collect at most `max_objects' GC-objects,
- * returning the actual amount collected. */
-DFUNDEF size_t DCALL DeeGC_Collect(size_t max_objects);
-
-#ifdef CONFIG_BUILDING_DEEMON
-/* Return `true' if any GC objects with a non-zero reference
- * counter is being tracked.
- * NOTE: In addition, this function does not return `true' when
- *       all that's left are dex objects (which are destroyed
- *       at a later point during deemon shutdown, than the point
- *       when this function is called to determine if the GC must
- *       continue to run) */
-INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
-#endif /* CONFIG_BUILDING_DEEMON */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* GC object alloc/free.
  * Don't you think these functions allocate some magical memory

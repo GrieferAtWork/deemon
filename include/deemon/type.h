@@ -481,7 +481,6 @@ struct Dee_type_constructor {
 	 * custom implementation). */
 	Dee_tp_destroy_t tp_destroy;
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* [0..1] Optional destructor callback that is called before "tp_dtor".
 	 * Also, unlike "tp_dtor", this callback is allowed to "revive" the
 	 * object by returning with its "ob_refcnt > 0". When this happens,
@@ -493,7 +492,6 @@ struct Dee_type_constructor {
 	NONNULL_T((1, 2))
 	void (DCALL *tp_finalize)(DeeTypeObject *__restrict tp_self,
 	                          DeeObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 struct Dee_type_cast {
@@ -515,138 +513,13 @@ struct Dee_type_gc {
 	 * statically allocated stub-object (e.g.: `Dee_None') */
 	NONNULL_T((1)) void (DCALL *tp_clear)(DeeObject *__restrict self);
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* TODO: Once `CONFIG_EXPERIMENTAL_REWORKED_GC' becomes mandatory, consider inlining `tp_clear'
-	 *       into `DeeTypeObject' by getting rid of `tp_gc'. `tp_cc' could then become a method hint */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	/* Same as `tp_clear', but only clear reachable objects with a `tp_gcprio'
-	 * priority that is `>= prio'. (non-gc types have a priority of `Dee_GC_PRIORITY_LATE')
-	 * @assume(prio != 0);
-	 * When `prio' would be ZERO(0), `tp_clear' is called instead.
-	 * Using this, the order in which the GC destroys objects can be specified,
-	 * where higher-priority objects are unlinked before lower-priority ones.
-	 * The usual implementation acts as a weaker version of `tp_clear' that
-	 * should drop references to other objects individually, rather than as
-	 * a bulk, as well as do so with regards of GC priority, when comparing
-	 * `gc_priority' against the return value of `DeeObject_GCPriority()' */
-	NONNULL_T((1)) void (DCALL *tp_pclear)(DeeObject *__restrict self, unsigned int gc_priority);
-
-	/* The GC destruction priority of this object (greater
-	 * values are (attempted to be) destroyed before lower ones).
-	 * For a list of priority values of builtin types, see the macros below.
-	 * However, this priority ordering is a mere hint to the garbage collector,
-	 * which is always allowed to detract from this priorative ordering when
-	 * it would otherwise be impossible to resolve reference loops.
-	 * Also note that for priorative GC to function properly, any GC object
-	 * apart of a priorative loop should implement `tp_pclear()' in addition
-	 * to `tp_clear'.
-	 * This however is _never_ a requirement for properly functioning code.
-	 * The most basic usage case for why this is a fairly good idea would be as simple as this:
-	 * >> class MyClass {
-	 * >>     private m_value = 42;
-	 * >>     this() {
-	 * >>         print "MyClass.this()", m_value;
-	 * >>     }
-	 * >>     ~this() {
-	 * >>         print "MyClass.~this()", m_value;
-	 * >>     }
-	 * >> }
-	 * >>
-	 * >> global x = MyClass();
-	 * The global variable `x' is never unbound, meaning that
-	 * when deemon is shutting down, the following GC-cycle
-	 * still exists and must be cleaned up before terminating:
-	 *
-	 *  ***********************************************************************
-	 *  *                                                                     *
-	 *  *    x ─> MyClass ─> function(MyClass.operators) ─> code ─> module    *
-	 *  *    ^      ^  ^                                     │       │  │     *
-	 *  *    │      │  │                                     │       │  │     *
-	 *  *    │      │  └─────────────────────────────────────┘       │  │     *
-	 *  *    │      │                                                │  │     *
-	 *  *    │      └────────────────────────────────────────────────┘  │     *
-	 *  *    │                                                          │     *
-	 *  *    └──────────────────────────────────────────────────────────┘     *
-	 *  *                                                                     *
-	 *  ***********************************************************************
-	 *
-	 *  * NOTE: The '*' around the graphic above are required to work around a
-	 *          VS bug that causes the IDE's internal parser to enter an infinite
-	 *          loop. I don't know exactly what's causing it, but you can test
-	 *          it for yourself by creating a file with the following contents,
-	 *          then closing+reopening VS (2017) and opening that file:
-	 *          >>  #ifndef FOO                                              <<
-	 *          >>  #define FOO                                              <<
-	 *          >>  //│                                                      <<
-	 *          >>  //│                                                      <<
-	 *          >>  //│                                                      <<
-	 *          >>  //│                                                      <<
-	 *          >>  #endif                                                   <<
-	 *          I have no idea what exactly is going on here, but the bug only
-	 *          seems to appear when at least 4 consecutive comment lines end
-	 *          with the '│' unicode character.
-	 *
-	 * This might seem simple at first, but the order with which the GC
-	 * chooses to deal with this cycle determines if the destructor can
-	 * even function properly:
-	 *   - As you can see, it uses a member variable `m_value', meaning that
-	 *     if we were to clear the instance `x' first, it would fail with an
-	 *     attribute error, so `x' is a bad idea
-	 *   - If we were to start by clearing `MyClass's operators, it wouldn't
-	 *     work at all because there'd no longer be a destructor to call.
-	 *   - The link from `Code' to `Module' is kind-of special, in that it
-	 *     can't actually be broken (plus: preventing the destructor from
-	 *     accessing global variables would also break the member lookup,
-	 *     as this requires access to the class type `MyClass', which (in this case)
-	 *     is assembled to use a global; aka. module variable lookup)
-	 *   - And we can't clear the module, because that would include clearing
-	 *     not only `x', but also `MyClass', once again breaking the destructor.
-	 * So how _do_ we solve this?
-	 *   - We clear the module. (Which has the greatest priority `Dee_GC_PRIORITY_MODULE')
-	 *   - But you just said that we can't do that because it would unlink
-	 *     the `MyClass' type and break member lookup.
-	 *   - Yes, it would. But that's where `tp_pclear()' comes into play,
-	 *     which we can then use to only clear instances of `Dee_GC_PRIORITY_MODULE'
-	 *     (which might cause problems with dynamically imported modules, but we
-	 *     won't bother with that, considering how that would cause a priority
-	 *     logic loop when `module >before> instance >before> module').
-	 *     And after we've done that, we'll move on to clear the next lower
-	 *     priority level of all objects in the loop (which is `Dee_GC_PRIORITY_INSTANCE')
-	 *   - Now, all we've done thus far is to clear the module's link to `x',
-	 *     allowing us to break the cycle surrounding the outer-most ring
-	 *     plainly visible by the long arrow from `module' to `x' in the diagram above,
-	 *     while the module on the right still continues to know of `MyClass', meaning
-	 *     that the destructor can operate normally, just as intended.
-	 *   - Now consider what would happen if the instance `x' contained a
-	 *     self-reference: We'd be unable to destroy it by just deleting
-	 *     the global reference. However eventually we'd move on to delete
-	 *     that self-reference, before also deleting `MyClass', gradually
-	 *     decreasing the used GC-priority while still doing our best to
-	 *     fulfill the desired destruction order.
-	 *     Eventually, the destructor will throw an error that will be
-	 *     discarded, before the class instance is finally deleted.
-	 *     And even if this was not the case, `Dee_Shutdown()' will
-	 *     eventually disallow further execution of user-code, meaning that
-	 *     anything the user-destructor might do to revive itself will no
-	 *     longer be done at some point.
-	 */
-	unsigned int tp_gcprio;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+	/* TODO: Consider inlining `tp_clear' into `DeeTypeObject' by getting
+	 *       rid of `tp_gc'. `tp_cc' could then become a method hint */
 
 	/* Clear unused heap caches of the object. Called when deemon is
 	 * running low on memory (iow: from "Dee_CollectMemory") */
 	NONNULL_T((1)) bool (DCALL *tp_cc)(DeeObject *__restrict self);
 };
-
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-/* GC destruction priority levels of builtin types. */
-#define Dee_GC_PRIORITY_LATE     0x0000 /* (Preferably) destroyed last. */
-#define Dee_GC_PRIORITY_CLASS    0xfd00 /* User-classes. */
-#define Dee_GC_PRIORITY_INSTANCE 0xfe00 /* Instances of user-classes. */
-#define Dee_GC_PRIORITY_MODULE   0xff00 /* Module objects. */
-#define Dee_GC_PRIORITY_EARLY    0xffff /* (Preferably) destroyed before anything else. */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 /* Return values for `tp_int32' and `tp_int64' */
@@ -2249,11 +2122,6 @@ typedef uint16_t Dee_operator_t;
 
 /* Operators not exposed to user-code. */
 #define OPERATOR_GETBUF       0x8000 /* `tp_getbuf'. */
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#define OPERATOR_VISIT        0x8001 /* `tp_visit'. */
-#define OPERATOR_CLEAR        0x8002 /* `tp_clear'. */
-#define OPERATOR_PCLEAR       0x8003 /* `tp_pclear'. */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* Fake operators (for use with `DeeFormat_PrintOperatorRepr()'). */
 #define FAKE_OPERATOR_IS          0xff00 /* `a is b' */
@@ -2262,85 +2130,76 @@ typedef uint16_t Dee_operator_t;
 #define FAKE_OPERATOR_NOT         0xff03 /* `!a' */
 
 /* Operator association ranges. */
-#define OPERATOR_PRIVMIN    OPERATOR_GETBUF
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-#define OPERATOR_PRIVMAX    OPERATOR_GETBUF
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-#define OPERATOR_PRIVMAX    OPERATOR_PCLEAR
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+#define OPERATOR_PRIVMIN OPERATOR_GETBUF
+#define OPERATOR_PRIVMAX OPERATOR_GETBUF
 
 /* Aliases that should be used when operators need to appear sorted by ID.
  *
  * By using these, you can ensure a proper operator order by simply doing
  * a lexicographical line sort. */
-#define OPERATOR_0000_CONSTRUCTOR  OPERATOR_CONSTRUCTOR
-#define OPERATOR_0001_COPY         OPERATOR_COPY
-#define OPERATOR_0002_SERIALIZE    OPERATOR_SERIALIZE
-#define OPERATOR_0003_DESTRUCTOR   OPERATOR_DESTRUCTOR
-#define OPERATOR_0004_ASSIGN       OPERATOR_ASSIGN
-#define OPERATOR_0005_MOVEASSIGN   OPERATOR_MOVEASSIGN
-#define OPERATOR_0006_STR          OPERATOR_STR
-#define OPERATOR_0007_REPR         OPERATOR_REPR
-#define OPERATOR_0008_BOOL         OPERATOR_BOOL
-#define OPERATOR_0009_ITERNEXT     OPERATOR_ITERNEXT
-#define OPERATOR_000A_CALL         OPERATOR_CALL
-#define OPERATOR_000B_INT          OPERATOR_INT
-#define OPERATOR_000C_FLOAT        OPERATOR_FLOAT
-#define OPERATOR_000D_INV          OPERATOR_INV
-#define OPERATOR_000E_POS          OPERATOR_POS
-#define OPERATOR_000F_NEG          OPERATOR_NEG
-#define OPERATOR_0010_ADD          OPERATOR_ADD
-#define OPERATOR_0011_SUB          OPERATOR_SUB
-#define OPERATOR_0012_MUL          OPERATOR_MUL
-#define OPERATOR_0013_DIV          OPERATOR_DIV
-#define OPERATOR_0014_MOD          OPERATOR_MOD
-#define OPERATOR_0015_SHL          OPERATOR_SHL
-#define OPERATOR_0016_SHR          OPERATOR_SHR
-#define OPERATOR_0017_AND          OPERATOR_AND
-#define OPERATOR_0018_OR           OPERATOR_OR
-#define OPERATOR_0019_XOR          OPERATOR_XOR
-#define OPERATOR_001A_POW          OPERATOR_POW
-#define OPERATOR_001B_INC          OPERATOR_INC
-#define OPERATOR_001C_DEC          OPERATOR_DEC
-#define OPERATOR_001D_INPLACE_ADD  OPERATOR_INPLACE_ADD
-#define OPERATOR_001E_INPLACE_SUB  OPERATOR_INPLACE_SUB
-#define OPERATOR_001F_INPLACE_MUL  OPERATOR_INPLACE_MUL
-#define OPERATOR_0020_INPLACE_DIV  OPERATOR_INPLACE_DIV
-#define OPERATOR_0021_INPLACE_MOD  OPERATOR_INPLACE_MOD
-#define OPERATOR_0022_INPLACE_SHL  OPERATOR_INPLACE_SHL
-#define OPERATOR_0023_INPLACE_SHR  OPERATOR_INPLACE_SHR
-#define OPERATOR_0024_INPLACE_AND  OPERATOR_INPLACE_AND
-#define OPERATOR_0025_INPLACE_OR   OPERATOR_INPLACE_OR
-#define OPERATOR_0026_INPLACE_XOR  OPERATOR_INPLACE_XOR
-#define OPERATOR_0027_INPLACE_POW  OPERATOR_INPLACE_POW
-#define OPERATOR_0028_HASH         OPERATOR_HASH
-#define OPERATOR_0029_EQ           OPERATOR_EQ
-#define OPERATOR_002A_NE           OPERATOR_NE
-#define OPERATOR_002B_LO           OPERATOR_LO
-#define OPERATOR_002C_LE           OPERATOR_LE
-#define OPERATOR_002D_GR           OPERATOR_GR
-#define OPERATOR_002E_GE           OPERATOR_GE
-#define OPERATOR_002F_ITER         OPERATOR_ITER
-#define OPERATOR_0030_SIZE         OPERATOR_SIZE
-#define OPERATOR_0031_CONTAINS     OPERATOR_CONTAINS
-#define OPERATOR_0032_GETITEM      OPERATOR_GETITEM
-#define OPERATOR_0033_DELITEM      OPERATOR_DELITEM
-#define OPERATOR_0034_SETITEM      OPERATOR_SETITEM
-#define OPERATOR_0035_GETRANGE     OPERATOR_GETRANGE
-#define OPERATOR_0036_DELRANGE     OPERATOR_DELRANGE
-#define OPERATOR_0037_SETRANGE     OPERATOR_SETRANGE
-#define OPERATOR_0038_GETATTR      OPERATOR_GETATTR
-#define OPERATOR_0039_DELATTR      OPERATOR_DELATTR
-#define OPERATOR_003A_SETATTR      OPERATOR_SETATTR
-#define OPERATOR_003B_ENUMATTR     OPERATOR_ENUMATTR
-#define OPERATOR_003C_ENTER        OPERATOR_ENTER
-#define OPERATOR_003D_LEAVE        OPERATOR_LEAVE
-#define OPERATOR_8000_GETBUF       OPERATOR_GETBUF
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#define OPERATOR_8001_VISIT        OPERATOR_VISIT
-#define OPERATOR_8002_CLEAR        OPERATOR_CLEAR
-#define OPERATOR_8003_PCLEAR       OPERATOR_PCLEAR
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+#define OPERATOR_0000_CONSTRUCTOR OPERATOR_CONSTRUCTOR
+#define OPERATOR_0001_COPY        OPERATOR_COPY
+#define OPERATOR_0002_SERIALIZE   OPERATOR_SERIALIZE
+#define OPERATOR_0003_DESTRUCTOR  OPERATOR_DESTRUCTOR
+#define OPERATOR_0004_ASSIGN      OPERATOR_ASSIGN
+#define OPERATOR_0005_MOVEASSIGN  OPERATOR_MOVEASSIGN
+#define OPERATOR_0006_STR         OPERATOR_STR
+#define OPERATOR_0007_REPR        OPERATOR_REPR
+#define OPERATOR_0008_BOOL        OPERATOR_BOOL
+#define OPERATOR_0009_ITERNEXT    OPERATOR_ITERNEXT
+#define OPERATOR_000A_CALL        OPERATOR_CALL
+#define OPERATOR_000B_INT         OPERATOR_INT
+#define OPERATOR_000C_FLOAT       OPERATOR_FLOAT
+#define OPERATOR_000D_INV         OPERATOR_INV
+#define OPERATOR_000E_POS         OPERATOR_POS
+#define OPERATOR_000F_NEG         OPERATOR_NEG
+#define OPERATOR_0010_ADD         OPERATOR_ADD
+#define OPERATOR_0011_SUB         OPERATOR_SUB
+#define OPERATOR_0012_MUL         OPERATOR_MUL
+#define OPERATOR_0013_DIV         OPERATOR_DIV
+#define OPERATOR_0014_MOD         OPERATOR_MOD
+#define OPERATOR_0015_SHL         OPERATOR_SHL
+#define OPERATOR_0016_SHR         OPERATOR_SHR
+#define OPERATOR_0017_AND         OPERATOR_AND
+#define OPERATOR_0018_OR          OPERATOR_OR
+#define OPERATOR_0019_XOR         OPERATOR_XOR
+#define OPERATOR_001A_POW         OPERATOR_POW
+#define OPERATOR_001B_INC         OPERATOR_INC
+#define OPERATOR_001C_DEC         OPERATOR_DEC
+#define OPERATOR_001D_INPLACE_ADD OPERATOR_INPLACE_ADD
+#define OPERATOR_001E_INPLACE_SUB OPERATOR_INPLACE_SUB
+#define OPERATOR_001F_INPLACE_MUL OPERATOR_INPLACE_MUL
+#define OPERATOR_0020_INPLACE_DIV OPERATOR_INPLACE_DIV
+#define OPERATOR_0021_INPLACE_MOD OPERATOR_INPLACE_MOD
+#define OPERATOR_0022_INPLACE_SHL OPERATOR_INPLACE_SHL
+#define OPERATOR_0023_INPLACE_SHR OPERATOR_INPLACE_SHR
+#define OPERATOR_0024_INPLACE_AND OPERATOR_INPLACE_AND
+#define OPERATOR_0025_INPLACE_OR  OPERATOR_INPLACE_OR
+#define OPERATOR_0026_INPLACE_XOR OPERATOR_INPLACE_XOR
+#define OPERATOR_0027_INPLACE_POW OPERATOR_INPLACE_POW
+#define OPERATOR_0028_HASH        OPERATOR_HASH
+#define OPERATOR_0029_EQ          OPERATOR_EQ
+#define OPERATOR_002A_NE          OPERATOR_NE
+#define OPERATOR_002B_LO          OPERATOR_LO
+#define OPERATOR_002C_LE          OPERATOR_LE
+#define OPERATOR_002D_GR          OPERATOR_GR
+#define OPERATOR_002E_GE          OPERATOR_GE
+#define OPERATOR_002F_ITER        OPERATOR_ITER
+#define OPERATOR_0030_SIZE        OPERATOR_SIZE
+#define OPERATOR_0031_CONTAINS    OPERATOR_CONTAINS
+#define OPERATOR_0032_GETITEM     OPERATOR_GETITEM
+#define OPERATOR_0033_DELITEM     OPERATOR_DELITEM
+#define OPERATOR_0034_SETITEM     OPERATOR_SETITEM
+#define OPERATOR_0035_GETRANGE    OPERATOR_GETRANGE
+#define OPERATOR_0036_DELRANGE    OPERATOR_DELRANGE
+#define OPERATOR_0037_SETRANGE    OPERATOR_SETRANGE
+#define OPERATOR_0038_GETATTR     OPERATOR_GETATTR
+#define OPERATOR_0039_DELATTR     OPERATOR_DELATTR
+#define OPERATOR_003A_SETATTR     OPERATOR_SETATTR
+#define OPERATOR_003B_ENUMATTR    OPERATOR_ENUMATTR
+#define OPERATOR_003C_ENTER       OPERATOR_ENTER
+#define OPERATOR_003D_LEAVE       OPERATOR_LEAVE
+#define OPERATOR_8000_GETBUF      OPERATOR_GETBUF
 #endif /* DEE_SOURCE */
 
 
@@ -2585,24 +2444,11 @@ struct Dee_type_operator {
 /*      Dee_TP_F                0x0200  * ... */
 #define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
 #define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#define Dee_TP_FMAYREVIVE       0x1000 /* This type's `tp_dtor' may revive the object (return with the object's `ob_refcnt > 0')
-                                        * Note that when reviving an object, `tp_dtor' must (in addition to an external reference)
-                                        * gift the caller one further reference to the object that got revived (meaning that upon
-                                        * return, `ob_refcnt >= 2', where at least 1 reference is caused by some global reference,
-                                        * and 1 will be inherited by `DeeObject_Destroy()'). This is needed to prevent a potential
-                                        * race condition where a GC-object isn't being tracked during destruction. */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define Dee_TP_FGC              0x2000 /* Instance of this type can be harvested by the Garbage Collector. */
 #define Dee_TP_FHEAP            0x4000 /* This type was allocated on the heap. */
 #define Dee_TP_FVARIABLE        0x8000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 #define Dee_TP_FINTERHITABLE    (Dee_TP_FINTERRUPT | Dee_TP_FGC | Dee_TP_FVARIABLE) \
                                        /* Set of special flags that are inherited by sub-classes. */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-#define Dee_TP_FINTERHITABLE    (Dee_TP_FINTERRUPT | Dee_TP_FMAYREVIVE | Dee_TP_FGC | Dee_TP_FVARIABLE) \
-                                       /* Set of special flags that are inherited by sub-classes. */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #define Dee_TF_NONE             0x00000000 /* No special features. */
 #define Dee_TF_NONLOOPING       0x00000001 /* The object's tp_visit function can be skipped when searching for conventional reference loops.
@@ -2627,28 +2473,25 @@ struct Dee_type_operator {
 #define Dee_TF_SINGLETON        0x80000000 /* This type is a singleton. */
 
 #ifdef DEE_SOURCE
-#define TP_FNORMAL          Dee_TP_FNORMAL
-#define TP_FFINAL           Dee_TP_FFINAL
-#define TP_FTRUNCATE        Dee_TP_FTRUNCATE
-#define TP_FINTERRUPT       Dee_TP_FINTERRUPT
-#define TP_FMOVEANY         Dee_TP_FMOVEANY
-#define TP_FDEEPIMMUTABLE   Dee_TP_FDEEPIMMUTABLE
-#define TP_FINHERITCTOR     Dee_TP_FINHERITCTOR
-#define TP_FABSTRACT        Dee_TP_FABSTRACT
-#define TP_FNAMEOBJECT      Dee_TP_FNAMEOBJECT
-#define TP_FDOCOBJECT       Dee_TP_FDOCOBJECT
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#define TP_FMAYREVIVE       Dee_TP_FMAYREVIVE
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-#define TP_FVARIABLE        Dee_TP_FVARIABLE
-#define TP_FGC              Dee_TP_FGC
-#define TP_FHEAP            Dee_TP_FHEAP
-#define TP_FINTERHITABLE    Dee_TP_FINTERHITABLE
-#define TF_NONE             Dee_TF_NONE
-#define TF_NONLOOPING       Dee_TF_NONLOOPING
-#define TF_KW               Dee_TF_KW
-#define TF_TPVISIT          Dee_TF_TPVISIT
-#define TF_SINGLETON        Dee_TF_SINGLETON
+#define TP_FNORMAL        Dee_TP_FNORMAL
+#define TP_FFINAL         Dee_TP_FFINAL
+#define TP_FTRUNCATE      Dee_TP_FTRUNCATE
+#define TP_FINTERRUPT     Dee_TP_FINTERRUPT
+#define TP_FMOVEANY       Dee_TP_FMOVEANY
+#define TP_FDEEPIMMUTABLE Dee_TP_FDEEPIMMUTABLE
+#define TP_FINHERITCTOR   Dee_TP_FINHERITCTOR
+#define TP_FABSTRACT      Dee_TP_FABSTRACT
+#define TP_FNAMEOBJECT    Dee_TP_FNAMEOBJECT
+#define TP_FDOCOBJECT     Dee_TP_FDOCOBJECT
+#define TP_FVARIABLE      Dee_TP_FVARIABLE
+#define TP_FGC            Dee_TP_FGC
+#define TP_FHEAP          Dee_TP_FHEAP
+#define TP_FINTERHITABLE  Dee_TP_FINTERHITABLE
+#define TF_NONE           Dee_TF_NONE
+#define TF_NONLOOPING     Dee_TF_NONLOOPING
+#define TF_KW             Dee_TF_KW
+#define TF_TPVISIT        Dee_TF_TPVISIT
+#define TF_SINGLETON      Dee_TF_SINGLETON
 #endif /* DEE_SOURCE */
 
 #ifndef Dee_visit_t_DEFINED
@@ -2780,11 +2623,7 @@ struct Dee_type_object {
 #define DeeType_IsSequence(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_seq != NULL)
 #define DeeType_IsIntTruncated(x)        (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FTRUNCATE)
 #define DeeType_HasMoveAny(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FMOVEANY)
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 #define DeeType_HasRevivingDestructor(x) (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_finalize != NULL)
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-#define DeeType_HasRevivingDestructor(x) (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FMAYREVIVE)
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define DeeType_IsDeepImmutable(x)       (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & Dee_TP_FDEEPIMMUTABLE)
 #define DeeType_IsIterator(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_iter_next != NULL)
 #define DeeType_IsTypeType(x)            DeeType_Extends(Dee_REQUIRES_OBJECT(DeeTypeObject const, x), &DeeType_Type)
@@ -2796,10 +2635,6 @@ struct Dee_type_object {
 #define DeeType_IsCopyable(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_init.tp_alloc.tp_copy_ctor != NULL) /* TODO: What about inherited copyability? (Dee_TP_FINHERITCTOR) */
 #define DeeType_IsNamespace(x)           ((Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_flags & (Dee_TP_FFINAL | Dee_TP_FABSTRACT)) == (Dee_TP_FFINAL | Dee_TP_FABSTRACT) && (((DeeTypeObject const *)(x))->tp_features & Dee_TF_SINGLETON))
 #define DeeType_Base(x)                  (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_base)
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#define DeeType_GCPriority(x)            (Dee_REQUIRES_OBJECT(DeeTypeObject const, x)->tp_gc ? ((DeeTypeObject const *)(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
-#define DeeObject_GCPriority(x)          DeeType_GCPriority(Dee_TYPE(x))
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #define DeeObject_IsInterrupt(x)         DeeType_IsInterrupt(Dee_TYPE(x))
 
 #ifdef CONFIG_BUILDING_DEEMON

@@ -541,27 +541,9 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_NUMERIC_FIXED_BIT */
 
 
-/* A re-worked implementation of the deemon garbage collector.
- * This new implementation's main purpose is to the solve the O(n^2)
- * time complexity issue of the old GC when it comes to implementing
- * "gc.collect()". This new implementation's gc.collect() is O(n). */
-#if (!defined(CONFIG_EXPERIMENTAL_REWORKED_GC) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_GC))
-#if 1
-#define CONFIG_EXPERIMENTAL_REWORKED_GC
-#else
-#define CONFIG_NO_EXPERIMENTAL_REWORKED_GC
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_GC */
-
-
 /* When "Dee_TF_TPVISIT" is set, "tp_clear" also gets an extra, leading "DeeTypeObject *" argument */
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#undef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
-#undef CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
-#define CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
-#elif (!defined(CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR) && \
-       !defined(CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR))
+#if (!defined(CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR))
 #if 1
 #define CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
 #else
@@ -577,17 +559,13 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * - Be just as fast as before (i.e. O(1) alloc and O(1) free)
  *
  * Unlike the old slab system, this one only works because:
- * - CONFIG_EXPERIMENTAL_REWORKED_GC: makes it so `tp_free' is **always**
- *   called for the original type, and never for one of that type's base-
- *   classes (meaning the slab chunk's size is *always* known at compile-
+ * - The new GC makes it so `tp_free' is **always** called for the
+ *   original type, and never for one of that type's base-classes
+ *   (meaning the slab chunk's size is *always* known at compile-
  *   time during a free operation)
  */
-#if !defined(CONFIG_EXPERIMENTAL_REWORKED_GC)
-#undef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#undef CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#define CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#elif (!defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) && \
-       !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR))
+#if (!defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR))
 #if 1
 #define CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #else

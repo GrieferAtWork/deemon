@@ -33,6 +33,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, Dee_AsObject, Dee_Decref_likely */
 #include <deemon/rodict.h>             /* DeeRoDict_Type */
 #include <deemon/roset.h>              /* DeeRoSet_FromSequence, DeeRoSet_Type */
+#include <deemon/seq.h>                /* DeeSeq_Check */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
 #include <deemon/type.h>               /* OPERATOR_CALL */
 

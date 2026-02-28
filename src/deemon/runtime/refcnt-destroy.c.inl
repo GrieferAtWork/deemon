@@ -35,16 +35,6 @@
 //#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType0_GC1_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC0_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC1_Rev0
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType0_GC0_Rev1
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType0_GC1_Rev1
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType1_GC0_Rev1
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType1_GC1_Rev1
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType0_GC0_Rev1
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType0_GC1_Rev1
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC0_Rev1
-//#define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC1_Rev1
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 //#define DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_DtorN_GC1_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev1
@@ -68,14 +58,6 @@
      defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType0_GC1_Rev0) + \
      defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC0_Rev0) + \
      defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC1_Rev0) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType0_GC0_Rev1) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType0_GC1_Rev1) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType1_GC0_Rev1) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free0_HeapType1_GC1_Rev1) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType0_GC0_Rev1) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType0_GC1_Rev1) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC0_Rev1) + \
-     defined(DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC1_Rev1) + \
      defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev0) +                 \
      defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC1_Rev0) +                 \
      defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev1) +                 \
@@ -87,9 +69,9 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>       /* DeeObject_Free */
-#include <deemon/gc.h>          /* DeeGCObject_Free, DeeGC_*, Dee_GC_FLAG_FINALIZED */
-#include <deemon/object.h>      /* DeeObject, DeeObject_Destroy, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_refcnt_t, OBJECT_HEAD */
-#include <deemon/type.h>        /* DeeType_IsFinal, DeeType_IsGC */
+#include <deemon/gc.h>          /* DeeGCObject_Free, DeeGC_Head, DeeGC_UntrackAsync, Dee_GC_FLAG_FINALIZED */
+#include <deemon/object.h>      /* DeeObject, DeeTypeObject, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_TYPE, OBJECT_HEAD */
+#include <deemon/type.h>        /* DeeType_IsFinal */
 #include <deemon/util/atomic.h> /* atomic_* */
 
 #include <stddef.h> /* NULL */
@@ -332,7 +314,6 @@ PRIVATE NONNULL((1)) void DCALL
 LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 	DeeTypeObject *orig_type;
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 #if LOCAL_HAS_Rev
 	/* Invoke "tp_finalize" operators */
 #if LOCAL_HAS_GC
@@ -360,18 +341,13 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 			return;
 	}
 #endif /* LOCAL_HAS_Rev */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #ifndef DEFINE_DeeGCObject_FinishDestroyAfterUntrack
 	/* Start by untracking the object in question. */
 #if LOCAL_HAS_GC
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	self = DeeGC_UntrackAsync(self);
 	if (self == NULL)
 		return; /* Remainder of object destruction happens asynchronously */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	self = DeeGC_Untrack(self);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #endif /* LOCAL_HAS_GC */
 #endif /* !DEFINE_DeeGCObject_FinishDestroyAfterUntrack */
 
@@ -402,9 +378,9 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
        *    there in terms of user-defined destructors being invoked with an object's original type)
        * -> It would also give even more power to "tp_free" and slab-based allocators, since there would
        *    no longer be a requirement for `DeeSlab_FreeN' to be able to free `DeeSlab_FreeM' | M > N,
-       *    since (CONFIG_EXPERIMENTAL_REWORKED_GC already allows this) we can now guaranty that custom
-       *    object allocator tp_free functions are **always** invoked for the **original** type (i.e.:
-       *    the one that originally allocated the object)! */
+       *    since (the new GC already allows this) we can now guaranty that custom object allocator
+       *    tp_free functions are **always** invoked for the **original** type (i.e.: the one that
+       *    originally allocated the object)! */
 				((GenericObject *)self)->ob_type = type;
 #endif
 				COMPILER_WRITE_BARRIER();
@@ -413,62 +389,6 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 				Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-				/* Special case: The destructor managed to revive the object. */
-#if LOCAL_HAS_Rev
-				if unlikely(self->ob_refcnt != 0) {
-					/* Resume tracking of the object. */
-#if LOCAL_HAS_GC
-					ASSERTF(DeeType_IsGC(type),
-					        "This runtime does not implementing reviving "
-					        "GC-allocated objects as non-GC objects.");
-					self = DeeGC_Track(self);
-#endif /* LOCAL_HAS_GC */
-
-					/* Incref() the new type that now describes this revived object.
-					 * NOTE: The fact that this type may use a different (or none at all)
-					 *       tp_free function, is the reason why no GC-able type from who's
-					 *       destruction a user-callback that can somehow get a hold of the
-					 *       instance being destroyed (which is also possible for any weakly
-					 *       referenceable type), is allowed to assume that it will actually
-					 *       be called, limiting its use to pre-allocated object caches that
-					 *       allocate their instances using `DeeObject_Malloc'. */
-					Dee_Incref(type);
-
-					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
-					 * in order to prevent a race condition that could otherwise occur when another
-					 * thread would have cleared the external reference after the destructor created
-					 * it, but before we were able to read out the fact that `ob_refcnt' was now
-					 * non-zero. - If that were to happen, the other thread may also attempt to destroy
-					 * the object, causing it to be destroyed in multiple threads at the same time,
-					 * which is something that's not allowed! */
-					Dee_Decref(orig_type);
-
-					/* Special case: in order for `tp_dtor' to revive the object, it has to gift us
-					 * a secondary reference. This needs to be done to prevent a race condition in
-					 * GC-enabled objects, where another thread might (once again) destroy the object
-					 * before we were able to call `DeeGC_Track()' above.
-					 *
-					 * So to prevent other threads from destroying the object until then, there is
-					 * this second, magic reference that only gets dropped here. */
-#ifndef CONFIG_TRACE_REFCHANGES
-					{
-						Dee_refcnt_t oldref;
-						oldref = atomic_fetchdec(&self->ob_refcnt);
-						ASSERTF(oldref != 0,
-						        "Upon revival, a destructor must let the caller inherit a "
-						        "reference (which may appear like a leak, but actually isn't)");
-						if unlikely(oldref == 1)
-							DeeObject_Destroy(self);
-					}
-#else /* !CONFIG_TRACE_REFCHANGES */
-					Dee_Decref_unlikely(self);
-#endif /* CONFIG_TRACE_REFCHANGES */
-					return;
-				}
-#endif /* LOCAL_HAS_Rev */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 			}
 		} while ((type = type->tp_base) != NULL);
 	}
@@ -480,34 +400,6 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #ifdef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
 	Dee_CHECKMEMORY();
 #endif /* CONFIG_OBJECT_DESTROY_CHECK_MEMORY */
-
-	/* Special case: The destructor managed to revive the object. */
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#if LOCAL_HAS_Rev
-	if unlikely(self->ob_refcnt != 0) {
-		/* Resume tracking of the object. */
-#if LOCAL_HAS_GC
-		self = DeeGC_Track(self);
-#endif /* LOCAL_HAS_GC */
-
-		/* See explanation above for what this decref is all about. */
-#ifndef CONFIG_TRACE_REFCHANGES
-		{
-			Dee_refcnt_t oldref;
-			oldref = atomic_fetchdec(&self->ob_refcnt);
-			ASSERTF(oldref != 0,
-			        "Upon revival, a destructor must let the caller inherit a "
-			        "reference (which may appear like a leak, but actually isn't)");
-			if unlikely(oldref == 1)
-				DeeObject_Destroy(self);
-		}
-#else /* !CONFIG_TRACE_REFCHANGES */
-		Dee_Decref_unlikely(self);
-#endif /* CONFIG_TRACE_REFCHANGES */
-		return;
-	}
-#endif /* LOCAL_HAS_Rev */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #endif /* LOCAL_HAS_Dtor == ... */
 
 	/* Free the tracker for changes to reference counts. */

@@ -32,14 +32,14 @@
 #include <deemon/module.h>          /* DeeModule_Type, Dee_module_object */
 #include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
 #include <deemon/none.h>            /* DeeNone_Check */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref_unlikely, Dee_XDecrefv, Dee_XMovrefv, Dee_formatprinter_t, Dee_funptr_t, Dee_refcnt_t, Dee_ssize_t */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, ASSERT_OBJECT_TYPE_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref_unlikely, Dee_XDecrefv, Dee_XMovrefv, Dee_formatprinter_t, Dee_funptr_t, Dee_ssize_t */
 #include <deemon/operator-hints.h>  /* usrtype__* */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/super.h>           /* DeeObject_TAssign, DeeObject_TMoveAssign */
 #include <deemon/system-features.h> /* bzero*, memcpyc, memmoveupc */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_GC_PRIORITY_INSTANCE, Dee_METHOD_FNORMAL, Dee_TF_TPVISIT, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_type_operator_isdecl, Dee_visit_t, OPCC_SPECIAL, OPCLASS_CUSTOM, OPERATOR_*, TP_F*, type_* */
+#include <deemon/type.h>            /* DeeObject_*, DeeTypeMRO, DeeTypeMRO_*, DeeTypeType_GetOperatorById, DeeType_*, Dee_METHOD_FNORMAL, Dee_TF_TPVISIT, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_type_operator_isdecl, Dee_visit_t, OPCC_SPECIAL, OPCLASS_CUSTOM, OPERATOR_*, TP_F*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 #include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_* */
@@ -252,14 +252,8 @@ err:
 
 INTERN NONNULL((1, 2)) void DCALL
 class_visit(DeeTypeObject *__restrict self, Dee_visit_t proc, void *arg) {
-	struct Dee_class_desc *my_class;
-	uint16_t i, size;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-	my_class = self->tp_class;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	my_class = DeeClass_DESC(self);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-	size     = my_class->cd_desc->cd_cmemb_size;
+	struct Dee_class_desc *my_class = self->tp_class;
+	uint16_t i, size = my_class->cd_desc->cd_cmemb_size;
 	Dee_class_desc_lock_read(my_class);
 	Dee_XVisitv(my_class->cd_members, size);
 
@@ -339,77 +333,6 @@ again:
 		goto again;
 	}
 }
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-INTERN NONNULL((1)) void DCALL
-class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
-	struct Dee_class_desc *my_class;
-	DREF DeeObject *buffer[64];
-	size_t buflen;
-	uint16_t i, size;
-	my_class = DeeClass_DESC(self);
-	/* Clear all class members (including cached operators). */
-	size = my_class->cd_desc->cd_cmemb_size;
-again:
-	buflen = 0;
-	Dee_class_desc_lock_write(my_class);
-	for (i = 0; i < size; ++i) {
-		DeeObject *ob;
-		ob = my_class->cd_members[i];
-		if (!ob)
-			continue;
-		if (DeeObject_GCPriority(ob) < gc_priority)
-			continue;
-		my_class->cd_members[i] = NULL;
-		if (Dee_DecrefIfNotOne(ob))
-			continue;
-		/* We're responsible for destroying this member! */
-		if (buflen == COMPILER_LENOF(buffer)) {
-			Dee_class_desc_lock_endwrite(my_class);
-			Dee_Decref(ob);
-			Dee_Decrefv(buffer, buflen);
-			goto again;
-		}
-		buffer[buflen++] = ob; /* Inherit reference. */
-	}
-	/* Also clear all cached operators. */
-	for (i = 0; i < Dee_CLASS_HEADER_OPC1; ++i) {
-		struct Dee_class_optable *table;
-		uint16_t j;
-		table = my_class->cd_ops[i];
-		if (!table)
-			continue;
-		for (j = 0; j < Dee_CLASS_HEADER_OPC2; ++j) {
-			DeeObject *ob = table->co_operators[j];
-			if (!ob)
-				continue;
-			if (DeeObject_GCPriority(ob) < gc_priority)
-				continue;
-			table->co_operators[j] = NULL;
-			if (Dee_DecrefIfNotOne(ob))
-				continue;
-			/* We're responsible for destroying this member! */
-			if (buflen == COMPILER_LENOF(buffer)) {
-				Dee_class_desc_lock_endwrite(my_class);
-				Dee_Decref(ob);
-				Dee_Decrefv(buffer, buflen);
-				goto again;
-			}
-			buffer[buflen++] = ob; /* Inherit reference. */
-		}
-	}
-	Dee_class_desc_lock_endwrite(my_class);
-	if (buflen) {
-		/* Clear the buffer. */
-		Dee_Decrefv(buffer, buflen);
-		/* Since custom destructors may have been able to
-		 * re-assign new members, we must keep clearing them
-		 * all until none are left! */
-		goto again;
-	}
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
 
 PRIVATE NONNULL((1, 3)) void DCALL
 class_desc_cache_operator(struct Dee_class_desc *__restrict self,
@@ -843,7 +766,6 @@ err:
 }
 
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 INTERN NONNULL((1, 2)) void DCALL
 instance_finalize(DeeTypeObject *tp_self, DeeObject *self) {
 	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
@@ -860,51 +782,6 @@ err:
 	DeeError_Print("Unhandled error in destructor",
 	               ERROR_PRINT_DOHANDLE);
 }
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-INTERN NONNULL((1)) void DCALL
-instance_destructor(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
-	DREF DeeObject *callback, *result;
-	callback = class_desc_get_known_operator(tp_self, desc, OPERATOR_DESTRUCTOR);
-	if unlikely(!callback) {
-		result = NULL;
-	} else {
-		Dee_refcnt_t new_refcnt;
-		atomic_inc(&self->ob_refcnt);
-		result = DeeObject_ThisCallInherited(callback, self, 0, NULL);
-
-		/* Check if `self' got revived. - If it did we let the caller
-		 * inherit a reference to it to prevent a race condition. */
-		for (;;) {
-			new_refcnt = atomic_read(&self->ob_refcnt);
-			if (new_refcnt > 1) {
-				/* Object got revived (let the caller inherit our reference) */
-				if likely(result) {
-					Dee_Decref(result);
-				} else {
-					DeeError_Print("Unhandled error in destructor",
-					               ERROR_PRINT_DOHANDLE);
-				}
-				return;
-			}
-			if (atomic_cmpxch_weak(&self->ob_refcnt, new_refcnt, 0))
-				break;
-		}
-	}
-	if likely(result) {
-		Dee_Decref(result);
-	} else {
-		DeeError_Print("Unhandled error in destructor",
-		               ERROR_PRINT_DOHANDLE);
-	}
-
-	/* Clear all the members of this instance. */
-	instance_clear_members(DeeInstance_DESC(desc, self),
-	                       desc->cd_desc->cd_imemb_size);
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
 
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #define IF_NOBASE(x) x
@@ -3618,11 +3495,7 @@ INTERN NONNULL((1, 2, 3)) void DCALL
 instance_tvisit(DeeTypeObject *tp_self,
                 DeeObject *__restrict self,
                 Dee_visit_t proc, void *arg) {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	struct Dee_class_desc *desc = tp_self->tp_class;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
 	Dee_XVisitv(instance->id_vtab, desc->cd_desc->cd_imemb_size);
@@ -3661,55 +3534,6 @@ again_i:
 	Dee_Decrefv(buffer, buflen);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-INTERN NONNULL((1, 2)) void DCALL
-instance_tpclear(DeeTypeObject *tp_self,
-                 DeeObject *__restrict self,
-                 unsigned int gc_priority) {
-	struct Dee_class_desc *desc = DeeClass_DESC(tp_self);
-	struct Dee_instance_desc *instance = DeeInstance_DESC(desc, self);
-	DREF DeeObject *buffer[64];
-	size_t buflen = 0;
-	uint16_t i;
-	Dee_instance_desc_lock_write(instance);
-	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i) {
-again_i:
-		if (!instance->id_vtab[i])
-			continue; /* Unbound member slot. */
-		if (DeeObject_GCPriority(instance->id_vtab[i]) < gc_priority)
-			continue; /* Object isn't of interest. */
-		if (Dee_DecrefIfNotOne(instance->id_vtab[i])) {
-			/* Clear was possible without side-effects */
-			instance->id_vtab[i] = NULL;
-			continue;
-		}
-		if (buflen == COMPILER_LENOF(buffer)) {
-			Dee_instance_desc_lock_endwrite(instance);
-			Dee_Decrefv(buffer, buflen);
-			buflen = 0;
-			Dee_instance_desc_lock_write(instance);
-			goto again_i;
-		}
-		buffer[buflen++]     = instance->id_vtab[i]; /* Steal this reference. */
-		instance->id_vtab[i] = NULL;
-	}
-	Dee_instance_desc_lock_endwrite(instance);
-	Dee_Decrefv(buffer, buflen);
-}
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-INTERN NONNULL((1, 2)) void DCALL
-instance_visit(DeeObject *__restrict self,
-               Dee_visit_t proc, void *arg) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	do {
-		instance_tvisit(tp_self, self, proc, arg);
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
-	         DeeType_IsClass(tp_self));
-}
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-
 #ifndef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
 INTERN NONNULL((1)) void DCALL
 instance_clear(DeeObject *__restrict self) {
@@ -3721,28 +3545,12 @@ instance_clear(DeeObject *__restrict self) {
 }
 #endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-INTERN NONNULL((1)) void DCALL
-instance_pclear(DeeObject *__restrict self,
-                unsigned int gc_priority) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	do {
-		instance_tpclear(tp_self, self, gc_priority);
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL &&
-	         DeeType_IsClass(tp_self));
-}
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-
 INTERN struct type_gc tpconst instance_gc = {
 #ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&instance_tclear,
 #else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
 	/* .tp_clear  = */ &instance_clear,
 #endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* .tp_pclear = */ &instance_pclear,
-	/* .tp_gcprio = */ Dee_GC_PRIORITY_INSTANCE
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 
@@ -4162,9 +3970,7 @@ err_custom_allocator:
 	result->tp_flags = ((TP_FHEAP | TP_FGC) |
 	                    (desc->cd_flags & (TP_FFINAL | TP_FTRUNCATE |
 	                                       TP_FINTERRUPT | TP_FMOVEANY)));
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	result->tp_features = Dee_TF_TPVISIT;
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	result->tp_mro = cbases.cb_mro; /* Inherit reference */
 	if (cbases.cb_base == NULL) {
 		/*result->tp_base = NULL;*/
@@ -4227,12 +4033,8 @@ err_custom_allocator:
 	result->tp_init.tp_assign             = &instance_builtin_assign;
 	result->tp_init.tp_move_assign        = &instance_builtin_moveassign;
 	result->tp_init.tp_dtor               = &instance_builtin_destructor;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	result->tp_visit = (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&instance_tvisit;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	result->tp_visit = &instance_visit;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-	result->tp_gc                         = &instance_gc;
+	result->tp_gc    = &instance_gc;
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 	if (cbases.cb_base == NULL || cbases.cb_base == &DeeObject_Type)
 		result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_nobase_copy;
@@ -4433,14 +4235,6 @@ err_custom_allocator:
 	/* Make sure to disallow MOVE-ANY when the builtin move-assign operator is used. */
 	if (result->tp_init.tp_move_assign == &instance_builtin_moveassign)
 		result->tp_flags &= ~TP_FMOVEANY;
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* If the class has a custom destructor, it *may* be able to revive itself during destruction.
-	 * XXX: Technically only needed if the dtor function doesn't support "METHOD_FNOREFESCAPE",
-	 *      but we don't keep track of attributes like that for user-functions (yet?) */
-	if (result->tp_init.tp_dtor == &instance_destructor)
-		result->tp_flags |= TP_FMAYREVIVE;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 	/* Assign the declaring module (if given) */
 	if likely(declaring_module != NULL)

@@ -1233,13 +1233,20 @@ DFUNDEF WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) Dee_hash_t (DCALL DeeObject_XHashv)
 typedef NONNULL_T((1)) void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg); /*!export-*/
 #endif /* !Dee_visit_t_DEFINED */
 
-/* GC operator invocation. */
+/* Visit references to (potential) GC objects that are held by "self".
+ * This operator is necessary to implement GC support, but is generic
+ * enough to also allow it to be exposed here.
+ *
+ * WARNING: **NEVER** do anything that might block inside of `proc' --
+ *          implementations of this operator may invoke `proc' while
+ *          certain internal locks are held.
+ * WARNING: Implementors of this operator must not alter the reference
+ *          counters of referenced objects in this operator, and must
+ *          also **NOT** perform debug checks on reference counts. This
+ *          operator may be called while "self->ob_refcnt == 0", or the
+ *          objects referenced by "self" have weird/non-sense reference
+ *          counts (this is intentional and the result of GC operations) */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-DFUNDEF NONNULL((1)) void (DCALL DeeObject_Clear)(DeeObject *__restrict self);
-DFUNDEF NONNULL((1)) void (DCALL DeeObject_PClear)(DeeObject *__restrict self, unsigned int gc_priority);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 /* Integral value lookup operators.
  * @return: Dee_INT_SIGNED:   The value stored in `result' must be interpreted as signed.

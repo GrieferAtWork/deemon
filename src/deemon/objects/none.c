@@ -22,13 +22,13 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>          /* return_bool */
+#include <deemon/bool.h>          /* return_bool, return_false, return_true */
 #include <deemon/file.h>          /* GETC_EOF, OPERATOR_FILE_* */
 #include <deemon/int.h>           /* DeeInt_*, INT_UNSIGNED */
 #include <deemon/mro.h>           /* Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_initempty, Dee_attrspec */
 #include <deemon/none-operator.h> /*  */
 #include <deemon/none.h>          /* DeeNoneObject, DeeNone_Check, return_none */
-#include <deemon/object.h>        /* DREF, DeeBuffer, DeeObject, DeeObject_Type, DeeTypeObject, Dee_SIZEOF_HASH_T, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>        /* DREF, DeeBuffer, DeeObject, DeeObject_Type, DeeTypeObject, Dee_COMPARE_EQ, Dee_COMPARE_LO, Dee_SIZEOF_HASH_T, Dee_WEAKREF_SUPPORT_ADDR, Dee_WEAKREF_SUPPORT_INIT, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>        /* DeeString_STR */
 #include <deemon/type.h>          /* DeeObject_DATA, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, INT_UNSIGNED, METHOD_FCONSTCALL, METHOD_FNOTHROW, OPERATOR_*, TF_KW, TF_SINGLETON, TP_F*, TYPE_OPERATOR_CUSTOM, TYPE_OPERATOR_FLAGS, type_* */
 

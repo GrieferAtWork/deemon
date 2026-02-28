@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/exec.h>               /* DeeExec_GetHome, DeeModule_*, Dee_GetArgv */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
-#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_gc_head, Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include <deemon/gc.h>                 /* DeeGCObject_Callocc, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_TRACK, DeeGC_Untrack, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include <deemon/int.h>                /* DeeInt_NewUInt128 */
 #include <deemon/module.h>             /* DeeInteractiveModule_Check, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_MODDATA_INIT_CODE, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_MODULE_STRUCT_EX, Dee_MODULE_SYMBOL_EQUALS_STR, Dee_MODULE_SYMBOL_GETDOCSTR, Dee_MODULE_SYMBOL_GETNAMELEN, Dee_MODULE_SYMBOL_GETNAMESTR, Dee_module_*, Dee_static_module_struct, _Dee_MODULE_* */
 #include <deemon/mro.h>                /* DeeObject_GenericFindAttrInfoStringLenHash, DeeObject_TGenericFindAttr, DeeObject_TGenericIterAttr, Dee_ATTRINFO_CUSTOM, Dee_ATTRINFO_MODSYM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attriterchain_builder, Dee_attriterchain_builder_*, Dee_attrperm_t, Dee_attrspec */
@@ -43,7 +43,7 @@
 #include <deemon/system.h>             /* DeeSystem_HAVE_FS_ICASE, DeeSystem_IsSep */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_*, DeeType_Type, Dee_GC_PRIORITY_MODULE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_*, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_ACQUIRE, Dee_atomic_cmpxch_val, atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_WaitPtr, DeeFutex_WakeAll */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_init */
@@ -2950,36 +2950,8 @@ restart:
 	Dee_XDecref(root_code);
 }
 
-PRIVATE NONNULL((1)) void DCALL
-module_pclear(DeeModuleObject *__restrict self,
-              unsigned int priority) {
-	size_t i;
-	DeeModule_LockWrite(self);
-	i = self->mo_globalc;
-	while (i--) {
-		/* Operate in reverse order, better mirrors the
-		 * (likely) order in which stuff was initialized in. */
-		DREF DeeObject *ob = self->mo_globalv[i];
-		if (ob == NULL)
-			continue;
-		if (DeeObject_GCPriority(ob) < priority)
-			continue; /* Clear this object in a later pass. */
-		self->mo_globalv[i] = NULL;
-		/* Temporarily unlock the module to immediately
-		 * destroy a global variable when the priority
-		 * level isn't encompassing _all_ objects, yet. */
-		DeeModule_LockEndWrite(self);
-		Dee_Decref(ob);
-		DeeModule_LockWrite(self);
-	}
-	DeeModule_LockEndWrite(self);
-}
-
-
 PRIVATE struct type_gc tpconst module_gc = {
-	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_clear,
-	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_pclear,
-	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&module_clear,
 };
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 
@@ -3020,17 +2992,6 @@ module_dir_destroy(DeeModuleObject *__restrict self) {
 	module_common_destroy(self);
 	DeeGCObject_Free(self);
 }
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-#define PTR_module_dir_gc &module_dir_gc
-PRIVATE struct type_gc tpconst module_dir_gc = {
-	/* .tp_clear  = */ NULL,
-	/* .tp_pclear = */ NULL,
-	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
-};
-#else /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-#define PTR_module_dir_gc NULL /* TODO: Remove after "CONFIG_EXPERIMENTAL_REWORKED_GC" */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 
 
@@ -3132,47 +3093,8 @@ module_dee_clear(DeeModuleObject *__restrict self) {
 	Dee_Decref_likely(code);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-PRIVATE NONNULL((1)) void DCALL
-module_dee_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
-	uint16_t i;
-	DREF DeeCodeObject *code;
-	DeeModule_LockWrite(self);
-	for (i = self->mo_globalc; i--;) {
-		/* Operate in reverse order, better mirrors the
-		 * (likely) order in which stuff was initialized in. */
-		DREF DeeObject *ob = self->mo_globalv[i];
-		if (ob == NULL)
-			continue;
-		if (DeeObject_GCPriority(ob) < priority)
-			continue; /* Clear this object in a later pass. */
-		self->mo_globalv[i] = NULL;
-
-		/* Temporarily unlock the module to immediately
-		 * destroy a global variable when the priority
-		 * level isn't encompassing _all_ objects, yet. */
-		DeeModule_LockEndWrite(self);
-		Dee_Decref(ob);
-		DeeModule_LockWrite(self);
-	}
-	code = self->mo_moddata.mo_rootcode;
-	if (DeeObject_GCPriority(code) >= priority) {
-		self->mo_moddata.mo_rootcode = &DeeCode_Empty;
-		Dee_Incref(&DeeCode_Empty);
-		DeeModule_LockEndWrite(self);
-		Dee_Decref_likely(code);
-	} else {
-		DeeModule_LockEndWrite(self);
-	}
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
 PRIVATE struct type_gc tpconst module_dee_gc = {
-	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_clear,
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_dee_pclear,
-	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_clear,
 };
 
 
@@ -3454,25 +3376,12 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 #endif
 }
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-PRIVATE NONNULL((1)) void DCALL
-module_dex_clear_common(DeeModuleObject *__restrict self) {
-	struct Dee_module_dexdata *dexdata = self->mo_moddata.mo_dexdata;
-	if (dexdata->mdx_clear)
-		(*dexdata->mdx_clear)();
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
 PRIVATE NONNULL((1)) void DCALL
 module_dex_clear(DeeModuleObject *__restrict self) {
 	uint16_t i;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	struct Dee_module_dexdata *dexdata = self->mo_moddata.mo_dexdata;
 	if (dexdata->mdx_clear)
 		(*dexdata->mdx_clear)();
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	module_dex_clear_common(self);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	DeeModule_LockWrite(self);
 	for (i = self->mo_globalc; i--;) {
 		/* Operate in reverse order, better mirrors the
@@ -3492,20 +3401,8 @@ module_dex_clear(DeeModuleObject *__restrict self) {
 	DeeModule_LockEndWrite(self);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-PRIVATE NONNULL((1)) void DCALL
-module_dex_pclear(DeeModuleObject *__restrict self, unsigned int priority) {
-	module_dex_clear_common(self);
-	module_dee_pclear(self, priority);
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
 PRIVATE struct type_gc tpconst module_dex_gc = {
-	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_clear,
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&module_dex_pclear,
-	/* .tp_gcprio = */ Dee_GC_PRIORITY_MODULE
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
+	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_clear,
 };
 #endif /* !CONFIG_NO_DEX */
 
@@ -3599,7 +3496,7 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 		/* .tp_printrepr = */ DEFIMPL(&module_printrepr),
 	},
 	/* .tp_visit         = */ NULL, // (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&module_dir_visit, /* Wouldn't have anything to visit! */
-	/* .tp_gc            = */ PTR_module_dir_gc,
+	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ DEFIMPL_UNSUPPORTED(&default__tp_math__AE7A38D3B0C75E4B),
 	/* .tp_cmp           = */ DEFIMPL(&default__tp_cmp__FEC430738D08383C),
 	/* .tp_seq           = */ DEFIMPL_UNSUPPORTED(&default__tp_seq__A0A5A432B5FA58F3),
@@ -3726,11 +3623,7 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 
 struct Dee_empty_module_struct {
 	/* Even though never tracked, static modules still need the GC header for visiting. */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	struct Dee_gc_head               m_head;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	struct Dee_gc_head_link          m_head;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	Dee_MODULE_STRUCT_EX(/**/, /**/) m_module;
 };
 

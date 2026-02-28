@@ -43,7 +43,6 @@
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
-#include "../gc_inspect.h"
 #include "concat.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -327,10 +326,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 catiterator_curr_set(CatIterator *__restrict self,
                      DeeObject *__restrict value) {
 	DREF DeeObject *oldval;
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	if (DeeGC_ReferredBy(value, Dee_AsObject(self)))
-		return err_reference_loop(Dee_AsObject(self), value);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	Dee_Incref(value);
 	CatIterator_LockWrite(self);
 	oldval       = self->cti_curr;

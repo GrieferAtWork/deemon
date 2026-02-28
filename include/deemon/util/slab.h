@@ -38,7 +38,7 @@
 
 /* ==== Discussion on slabs
  *
- * "CONFIG_EXPERIMENTAL_REWORKED_GC" now means that:
+ * The new garbage collector now means that:
  * - "tp_free" is **always** called on an object's original type
  * - Previously "tp_free" always had to be able to also free objects of sub-classes,
  *   where there was a possibility that those objects were larger than the object
@@ -48,7 +48,7 @@
  *   if the size doesn't match
  * --> This is no longer necessary now, meaning that:
  *
- * "CONFIG_EXPERIMENTAL_REWORKED_GC" has just (inadvertently) opened the
+ * The new garbage collector has just (inadvertently) opened the
  * floodgates for a new slab allocator implementation, and more importantly:
  * - one that doesn't need to be able to safely handle non-slab memory...
  * - ... or slab memory from slabs of greater size

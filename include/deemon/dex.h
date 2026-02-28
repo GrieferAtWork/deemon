@@ -32,7 +32,7 @@
 #ifndef CONFIG_NO_DEX
 #include <hybrid/typecore.h> /* __*_TYPE__ */
 
-#include "gc.h"     /* Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include "gc.h"     /* Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include "module.h" /* DeeModuleDex_Type, DeeModuleObject, Dee_MODSYM_F*, Dee_MODULE_FNORMAL, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_module_object, Dee_module_symbol, _Dee_MODULE_INIT_mo_lock */
 #include "object.h" /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_REFTRACKER_UNTRACKED, Dee_WEAKREF_SUPPORT_INIT */
 
@@ -229,8 +229,8 @@ INTDEF _Dee_PRIVATE_ELF_ATTR_WEAK __BYTE_TYPE__ __dex_builduuid32_3__[]; /*!expo
 	PRIVATE struct Dee_module_symbol _dex_bucketv[_DEX_BUCKETM + 1] = {};   \
 	Dee_MODULE_STRUCT(_dex_object_raw, COMPILER_LENOF(_dex_symbols));       \
 	struct _dex_object {                                                    \
-		struct Dee_gc_head_link m_head;                                     \
-		struct _dex_object_raw  m_dex;                                      \
+		struct Dee_gc_head     m_head;                                      \
+		struct _dex_object_raw m_dex;                                       \
 	};                                                                      \
 	EXPDEF struct _dex_object DEX;                                          \
 	_Dee_MODULE_DEXDATA_INIT_BUILDID_PREHOOK;                               \

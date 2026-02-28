@@ -25,9 +25,9 @@
 #include <deemon/alloc.h>           /* DeeMem_ClearCaches, Dee_CollectMemoryc, Dee_Free, Dee_TryReallocc */
 #include <deemon/code.h>            /* DeeFunctionObject, DeeFunction_Call */
 #include <deemon/dex.h>             /* DeeDex_Cleanup, DeeDex_Finalize, DeeModule_ClearDexModuleCaches, DeeModule_UnloadAllDexModules */
-#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE, Dee_ERROR_PRINT_HANDLEINTR, ERROR_PRINT_HANDLEINTR */
-#include <deemon/exec.h>            /* DeeExec_*, DeeModule_ClearLibPath, Dee_RUNATEXIT_FDONTRUN, Dee_RUNATEXIT_FRUNALL, Dee_SHUTDOWN_F_FAST */
-#include <deemon/file.h>            /* DeeFile_* */
+#include <deemon/error.h>           /* DeeError_*, Dee_ERROR_PRINT_DOHANDLE, ERROR_PRINT_HANDLEINTR */
+#include <deemon/exec.h>            /* DeeExec_CompileModuleStream, DeeExec_SetHome, DeeModule_ClearLibPath, Dee_RUNATEXIT_FDONTRUN, Dee_RUNATEXIT_FRUNALL, Dee_SHUTDOWN_F_FAST */
+#include <deemon/file.h>            /* DeeFile_ResetStd */
 #include <deemon/filetypes.h>       /* DeeMemoryFile_Close, DeeMemoryFile_New */
 #include <deemon/gc.h>              /* DeeGC_Collect, DeeGC_IsEmptyWithoutDex */
 #include <deemon/heap.h>            /* DeeHeap_Trim */
@@ -814,7 +814,6 @@ extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
  * This function can be called any number of times, but
  * is intended to be called once before deemon gets unloaded. */
 PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	for (;;) {
 		bool must_continue = false;
 		size_t collected;
@@ -863,83 +862,6 @@ PUBLIC void DCALL Dee_Shutdown(unsigned int flags) {
 		}
 		break;
 	}
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	size_t num_gc = 0, num_empty_gc = 0;
-	for (;;) {
-		bool must_continue = false;
-
-		/* Track how often we've already invoked the GC. */
-		if (++num_gc == MAX_NONEMPTY_GC_ITERATIONS_BEFORE_KILL) {
-do_kill_user:
-			num_gc       = 0;
-			num_empty_gc = 0;
-#ifndef CONFIG_NO_THREADS
-			/* Make sure that no secondary threads could enter an
-			 * undefined state by us tinkering with their code. */
-			must_continue |= DeeThread_InterruptAndJoinAll();
-#endif /* !CONFIG_NO_THREADS */
-
-			/* Tell the user about what's happening (stddbg is forwarded to stderr) */
-			if (DeeFile_Printf(DeeFile_DefaultStddbg,
-			                   "Stop executing user-code to fix unresolvable reference loop\n") < 0)
-				DeeError_Print(NULL, Dee_ERROR_PRINT_HANDLEINTR);
-			if (!DeeExec_KillUserCode()) {
-				/* Well... shit!
-				 * If we've gotten here, that probably means that there is some sort of
-				 * resource leak caused by deemon itself, meaning it's probably my fault... */
-#ifndef NDEBUG
-#ifdef CONFIG_HOST_WINDOWS
-				if (!IsDebuggerPresent())
-					break;
-#endif /* CONFIG_HOST_WINDOWS */
-				/* Log all GC objects still alive */
-				gc_dump_all_except_dex();
-				
-#ifdef CONFIG_TRACE_REFCHANGES
-				Dee_DPRINT("\n\n\nReference Leaks:\n");
-				Dee_DumpReferenceLeaks();
-#endif /* CONFIG_TRACE_REFCHANGES */
-				Dee_BREAKPOINT();
-#else /* !NDEBUG */
-				/* Silently hide the shame when not built for debug mode... */
-#endif /* NDEBUG */
-				break;
-			}
-		}
-
-		/* Do an initial shutdown (clear) on all global variables. */
-		must_continue |= shutdown_globals();
-
-		/* Collect as many GC objects as possible. */
-		if (DeeGC_Collect((size_t)-1)) {
-			num_empty_gc = 0; /* Reset the empty-gc counter. */
-			continue;
-		}
-
-		/* Make sure that nothing is hiding in globals,
-		 * now that the garbage has been collected. */
-		must_continue |= shutdown_globals();
-
-		/* If we already know that we must continue, don't even
-		 * bother looking at the GC chain as it stands right now. */
-		if (must_continue)
-			continue;
-
-		/* Check if the GC truly is empty, and also
-		 * ensure that globals haven't been trying
-		 * to hide in here. */
-		if (!DeeGC_IsEmptyWithoutDex()) {
-			++num_empty_gc;
-			if (num_empty_gc == MAX_EMPTY_GC_ITERATIONS_BEFORE_KILL)
-				goto do_kill_user;
-			continue;
-		}
-
-		/* If nothing's left to-be done, _then_ we can stop. */
-		if (!must_continue)
-			break;
-	}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 	/* Shutdown all loaded DEX extensions. */
 #ifndef CONFIG_NO_DEX

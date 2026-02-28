@@ -185,7 +185,6 @@ template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
 
 
 #ifndef Dee_STATIC_REFCOUNT_INIT
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 /* Because the GC determines unreachable objects by playing out with reference
  * counters, it requires that all statically allocated objects have reference
  * counters that are sufficiently great for them to never drop to 0, even when
@@ -201,15 +200,6 @@ template<class T> T *__Dee_REQUIRES_OBJECT(decltype(nullptr));
 #else /* __SIZEOF_POINTER__ >= 4 */
 #define Dee_STATIC_REFCOUNT_INIT __UINT8_C(0xff)
 #endif /* __SIZEOF_POINTER__ ! 4 */
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-#ifdef CONFIG_BUILDING_DEEMON
-/* We add +1 for all statically initialized objects, so
- * we can easily add them to deemon's builtin module. */
-#define Dee_STATIC_REFCOUNT_INIT 3
-#else /* CONFIG_BUILDING_DEEMON */
-#define Dee_STATIC_REFCOUNT_INIT 2
-#endif /* !CONFIG_BUILDING_DEEMON */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #endif /* !Dee_STATIC_REFCOUNT_INIT */
 
 #ifdef CONFIG_TRACE_REFCHANGES

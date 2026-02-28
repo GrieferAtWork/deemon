@@ -54,7 +54,6 @@
 #undef container_of
 #define container_of COMPILER_CONTAINER_OF
 
-#if defined(CONFIG_EXPERIMENTAL_REWORKED_GC) || defined(__DEEMON__)
 DECL_BEGIN
 
 struct gcset_item {
@@ -1266,6 +1265,5 @@ PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
 };
 
 DECL_END
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #endif /* !GUARD_DEEMON_RUNTIME_GC_INSPECT_C_INL */

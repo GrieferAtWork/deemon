@@ -23,7 +23,6 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>          /* DeeObject_FreeTracker */
-#include <deemon/class.h>          /* instance_* */
 #include <deemon/error-rt.h>       /* DeeRT_ErrNoBufferInterface */
 #include <deemon/error.h>          /* DeeError_BufferError, DeeError_Throwf */
 #include <deemon/gc.h>             /* DeeGC_Track */
@@ -34,10 +33,9 @@
 #include <deemon/operator-hints.h> /* DeeType_Inherit*, DeeType_InvokeCastPrint, DeeType_InvokeCastPrintRepr, DeeType_InvokeCastRepr, DeeType_InvokeCastStr, DeeType_InvokeCmpHash */
 #include <deemon/seq.h>            /* DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>         /* DeeString_PrintAscii, DeeString_Type */
-#include <deemon/super.h>          /* DeeObject_TClear */
 #include <deemon/thread.h>         /* DeeThreadObject, DeeThread_Self, Dee_repr_frame, Dee_trepr_frame */
 #include <deemon/tuple.h>          /* DeeTuple* */
-#include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, Dee_GC_PRIORITY_LATE, Dee_visit_t, OPERATOR_*, TF_TPVISIT */
+#include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, OPERATOR_* */
 #include <deemon/util/hash.h>      /* DeeObject_HashGeneric, Dee_HASHOF_RECURSIVE_ITEM */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
@@ -965,76 +963,6 @@ recursion:
 }
 
 #undef Xrepr_frame
-
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, Dee_visit_t proc, void *arg)) {
-	LOAD_TP_SELF;
-	do {
-		if (tp_self->tp_visit) {
-			if (tp_self->tp_visit == &instance_visit) {
-				/* TODO: Remove "instance_visit" and use "TF_TPVISIT" instead! */
-				/* Required to prevent redundancy in class instances.
-				 * Without this, all instance levels would be visited more
-				 * than once by the number of recursive user-types, when
-				 * one visit (as implemented here) is already enough. */
-				instance_tvisit(tp_self, self, proc, arg);
-			} else if (tp_self->tp_features & TF_TPVISIT) {
-				typedef void (DCALL *tp_tvisit_t)(DeeTypeObject *tp_self, DeeObject *self,
-				                                  Dee_visit_t proc, void *arg);
-				(*(tp_tvisit_t)tp_self->tp_visit)(tp_self, self, proc, arg);
-			} else {
-				(*tp_self->tp_visit)(self, proc, arg);
-			}
-		}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
-
-	/* Only visit heap-allocated types. */
-	if (DeeType_IsHeapType(Dee_TYPE(self)))
-		(*proc)((DeeObject *)Dee_TYPE(self), arg);
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-DEFINE_OPERATOR(void, Clear, (DeeObject *__restrict self)) {
-	LOAD_TP_SELF;
-	do {
-		if (tp_self->tp_gc && tp_self->tp_gc->tp_clear) {
-			if (tp_self->tp_gc->tp_clear == &instance_clear) {
-				/* Same deal as with visit above: Reduce
-				 * overhead from recursive redundancies. */
-				instance_tclear(tp_self, self);
-			} else {
-				(*tp_self->tp_gc->tp_clear)(self);
-			}
-		}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
-}
-
-DEFINE_OPERATOR(void, PClear, (DeeObject *__restrict self, unsigned int gc_priority)) {
-	LOAD_TP_SELF;
-	if unlikely(gc_priority == Dee_GC_PRIORITY_LATE) {
-#ifdef DEFINE_TYPED_OPERATORS
-		DeeObject_TClear(tp_self, self);
-#else /* DEFINE_TYPED_OPERATORS */
-		DeeObject_Clear(self);
-#endif /* !DEFINE_TYPED_OPERATORS */
-		return;
-	}
-	do {
-		if (tp_self->tp_gc &&
-		    tp_self->tp_gc->tp_pclear) {
-			if (tp_self->tp_gc->tp_pclear == &instance_pclear) {
-				/* Same deal as with visit above: Reduce
-				 * overhead from recursive redundancies. */
-				instance_tpclear(tp_self, self, gc_priority);
-			} else {
-				(*tp_self->tp_gc->tp_pclear)(self, gc_priority);
-			}
-		}
-	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL

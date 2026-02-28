@@ -40,7 +40,7 @@
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref_likely, Dee_Incref */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE */
-#include <deemon/seq.h>                /* Dee_EmptySeq */
+#include <deemon/seq.h>                /* DeeSeq_Check, Dee_EmptySeq */
 #include <deemon/set.h>                /* Dee_EmptySet */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
 #include <deemon/type.h>               /* DeeTypeType_GetOperatorById, DeeType_*, Dee_operator_t, Dee_opinfo, OPCC_FINPLACE, OPERATOR_* */

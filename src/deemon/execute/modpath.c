@@ -32,7 +32,7 @@
 #include <deemon/error-rt.h>        /* DeeRT_ATTRIBUTE_ACCESS_GET, DeeRT_Err* */
 #include <deemon/error.h>           /* DeeError_*, Dee_ERROR_HANDLED_NORMAL, Dee_ERROR_HANDLED_RESTORE, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>          /* DeeFormat_Repeat, Dee_sprintf, PRFuSIZ */
-#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_*, Dee_gc_head, Dee_gc_head_link */
+#include <deemon/gc.h>              /* DeeGCObject_CALLOC, DeeGCObject_Free, DeeGCObject_Malloc, DeeGC_*, Dee_gc_head */
 #include <deemon/heap.h>            /* DeeDbgHeap_AddHeapRegion, DeeHeap_GetRegionOf, Dee_heapregion */
 #include <deemon/method-hints.h>    /* type_method_hint */
 #include <deemon/module.h>          /* DeeModule*, Dee_DEC_FDISABLE, Dee_MODSYM_FDOCOBJ, Dee_MODSYM_FNAMEOBJ, Dee_MODULE_F*, Dee_MODULE_HASHIT, Dee_MODULE_HASHNX, Dee_MODULE_HASHST, Dee_MODULE_INIT_INITIALIZED, Dee_MODULE_INIT_UNINITIALIZED, Dee_MODULE_STRUCT, Dee_compiler_options, Dee_module_*, _Dee_MODULE_* */
@@ -1378,11 +1378,7 @@ load_from_export_table:
 
 /* As defined by Dee_DEX_END()... */
 struct DEX {
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	struct Dee_gc_head            m_head;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	struct Dee_gc_head_link       m_head;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	Dee_MODULE_STRUCT(/**/, 1024) m_dex;
 };
 
@@ -2295,7 +2291,6 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 #else /* __SIZEOF_SIZE_T__ == 4 */
 #define IMAGE_GC_HEADTAIL_MATCH_RELOC 0
 #endif /* __SIZEOF_SIZE_T__ == 4 */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
 		DeeObject *gc_head = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
 		DeeObject *gc_tail = (DeeObject *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
@@ -2309,23 +2304,6 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
 		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NOCOLLECT);
 	}
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	DeeGC_TrackMany_Lock();
-	if (ehdr->e_type == Dee_DEC_TYPE_IMAGE && !IMAGE_GC_HEADTAIL_MATCH_RELOC) {
-		struct Dee_gc_head *gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gchead);
-		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_image.ei_offsetof_gctail);
-		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gchead);
-		ASSERT(ehdr->e_typedata.td_image.ei_offsetof_gctail);
-		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
-	} else {
-		struct Dee_gc_head *gc_head = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gchead);
-		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)ehdr + ehdr->e_typedata.td_reloc.er_offsetof_gctail);
-		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gchead);
-		ASSERT(ehdr->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
-	}
-	DeeGC_TrackMany_Unlock();
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 #undef IMAGE_GC_HEADTAIL_MATCH_RELOC
 
 	/* Add debug info to every object from the module's heap (s.a. runtime/heap.c:gcscan__pointer())
@@ -2965,17 +2943,12 @@ remember_dir_module:
 		} else
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 		{
-			result = DeeGC_TRACK(DeeModuleObject, result);
+			result = DeeGC_TRACK_EX(DeeModuleObject, result, DeeGC_TRACK_F_NOCOLLECT);
 		}
 		module_abstree_lock_endwrite();
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
-#ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
 		/* ... because we called `DeeGC_TrackAll(..., DeeGC_TRACK_F_NOCOLLECT)' above */
 		DeeGC_CollectAsNecessary();
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_GC */
 	} else {
 free_abs_filename_and_return_result:
 		if (!(flags & _DeeModule_IMPORT_F_NO_INHERIT_FILENAME))

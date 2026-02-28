@@ -158,27 +158,12 @@ PRIVATE WUNUSED int DCALL Dee_TryCollectMemory(size_t req_bytes) {
 		return 1;
 	req_bytes -= collect_bytes;
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* Collect GC objects. */
 	collect_bytes = DeeGC_Collect((size_t)-1);
 	if (collect_bytes == (size_t)-1)
 		return -1;
 	if (collect_bytes != 0)
 		return 1;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	/* Collect GC objects.
-	 * NOTE: When optimizing, only try to collect a single object
-	 *       in order to prevent lag-time during memory shortages.
-	 *       However for debug-mode, always collect everything in
-	 *       order to try and harden the algorithm in times of need. */
-#if defined(NDEBUG) || defined(__OPTIMIZE__)
-	if (DeeGC_Collect(1))
-		return 1;
-#else /* NDEBUG || __OPTIMIZE__ */
-	if (DeeGC_Collect((size_t)-1))
-		return 1;
-#endif /* !NDEBUG && !__OPTIMIZE__ */
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 
 	/* TODO: Call "tp_cc" of GC objects that are reachable */
 

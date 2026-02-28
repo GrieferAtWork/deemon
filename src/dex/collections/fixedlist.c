@@ -40,7 +40,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzeroc, memcpyc */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_GCPriority, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 #include <deemon/util/weakref.h>    /* Dee_weakref */
@@ -341,41 +341,8 @@ again:
 	Dee_Decrefv(buf, buflen);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-PRIVATE void DCALL
-fl_pclear(FixedList *__restrict self, unsigned int gc_priority) {
-	size_t i, buflen = 0;
-	DREF DeeObject *buf[16];
-again:
-	FixedList_LockWrite(self);
-	for (i = 0; i < self->fl_size; ++i) {
-		DREF DeeObject *ob;
-		ob = self->fl_elem[i];
-		if (!ob)
-			continue;
-		if (DeeObject_GCPriority(ob) < gc_priority)
-			continue; /* Ignore this object (for now) */
-		self->fl_elem[i] = NULL;
-		if (buflen >= COMPILER_LENOF(buf)) {
-			FixedList_LockEndWrite(self);
-			Dee_Decref(ob);
-			Dee_Decrefv(buf, buflen);
-			goto again;
-		}
-		buf[buflen++] = ob; /* Inherit reference. */
-	}
-	FixedList_LockEndWrite(self);
-	/* Drop all of the references we took. */
-	Dee_Decrefv(buf, buflen);
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
-
 PRIVATE struct type_gc tpconst fl_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&fl_clear_impl,
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&fl_pclear
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 

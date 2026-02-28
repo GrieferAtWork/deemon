@@ -50,7 +50,7 @@
 #include <hybrid/host.h>     /* __i386__, __x86_64__ */
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
-#include "gc.h"         /* Dee_gc_head_link, _Dee_GC_HEAD_UNTRACKED_INIT */
+#include "gc.h"         /* Dee_gc_head, _Dee_GC_HEAD_UNTRACKED_INIT */
 #include "object.h"     /* DeeObject_*, Dee_XDecref */
 #include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_HEAD_INIT, Dee_REQUIRES_OBJECT */
 #include "util/lock.h"  /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_* */
@@ -1076,7 +1076,7 @@ typedef struct Dee_function_object {
 
 #define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
 	struct {                                               \
-		struct Dee_gc_head_link _gc_head_data;             \
+		struct Dee_gc_head _gc_head_data;                  \
 		struct {                                           \
 			Dee_OBJECT_HEAD                                \
 			DREF DeeCodeObject *fo_code;                   \
@@ -1094,7 +1094,7 @@ typedef struct Dee_function_object {
 	}
 #define Dee_DEFINE_FUNCTION_NOREFS(name, fo_code_) \
 	struct {                                       \
-		struct Dee_gc_head_link _gc_head_data;     \
+		struct Dee_gc_head _gc_head_data;          \
 		struct {                                   \
 			Dee_OBJECT_HEAD                        \
 			DREF DeeCodeObject *fo_code;           \

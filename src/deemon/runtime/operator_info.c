@@ -908,11 +908,6 @@ check_effective_opname_with_copy:
 
 	case OPERATOR_DESTRUCTOR:
 	case OPERATOR_HASH:
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	case OPERATOR_VISIT:
-	case OPERATOR_CLEAR:
-	case OPERATOR_PCLEAR:
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 		return METHOD_FNOTHROW;
 	default: break;
 	}

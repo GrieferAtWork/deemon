@@ -34,12 +34,12 @@
 #include <deemon/gc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>             /* DeeInt_NewSize */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/none.h>            /* DeeNone_Check, DeeNone_NewRef, return_none */
+#include <deemon/none.h>            /* DeeNone_Check, return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ, Dee_COMPARE_ISERR, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_WEAKREF_SUPPORT_ADDR, Dee_foreach_t, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* bzero, memcpy */
-#include <deemon/type.h>            /* DeeObject_GCPriority, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
@@ -1067,45 +1067,8 @@ deq_clear(Deque *__restrict self) {
 	deq_fini(&bData);
 }
 
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-PRIVATE NONNULL((1)) void DCALL
-deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
-	Deque_LockWrite(self);
-	if (self->d_size) {
-		DequeIterator iter;
-		size_t version;
-		version = self->d_version;
-		DequeIterator_InitBegin(&iter, self);
-		for (;;) {
-			DREF DeeObject *orig_ob;
-			orig_ob = DequeIterator_ITEM(&iter);
-			if (DeeObject_GCPriority(orig_ob) >= gc_priority) {
-				/* Inherit reference to `orig_ob' */
-				DequeIterator_ITEM(&iter) = DeeNone_NewRef();
-				/* Drop a reference from the cleared object. */
-				if (!Dee_DecrefIfNotOne(orig_ob)) {
-					Deque_LockEndWrite(self);
-					Dee_Decref(orig_ob);
-					Deque_LockWrite(self);
-					if (version != self->d_version)
-						break;
-				}
-			}
-			if (!DequeIterator_HasNext(&iter, self))
-				break;
-			DequeIterator_Next(&iter, self);
-		}
-	}
-	Deque_LockEndWrite(self);
-}
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
-
-
 PRIVATE struct type_gc tpconst deq_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&deq_clear,
-#ifndef CONFIG_EXPERIMENTAL_REWORKED_GC
-	/* .tp_pclear = */ (void (DCALL *)(DeeObject *__restrict, unsigned int))&deq_pclear
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 };
 
 

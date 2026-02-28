@@ -38,7 +38,7 @@
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/exec.h>            /* DeeExec_GetTimestamp */
 #include <deemon/format.h>          /* PRF* */
-#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGCSlab_Free, DeeGC_*, Dee_GC_OBJECT_OFFSET, Dee_gc_head, Dee_gc_head_link */
+#include <deemon/gc.h>              /* DeeGCObject_*alloc*, DeeGCObject_Free, DeeGCSlab_Free, DeeGC_Head, DeeGC_Track, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/heap.h>            /* DeeHeap_GetRegionOf, Dee_HEAPCHUNK_*, Dee_heapchunk, Dee_heapregion, Dee_heaptail */
 #include <deemon/module.h>          /* DeeModule*, Dee_DEC_FLOADOUTDATED, Dee_DEC_FUNTRUSTED, Dee_MODSYM_F*, Dee_MODULE_F*, Dee_MODULE_HASHNX, Dee_module_buildid, Dee_module_symbol */
 #include <deemon/string.h>          /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT, WSTR_LENGTH */
@@ -54,7 +54,7 @@
 #include <hybrid/typecore.h>         /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* offsetof, ptrdiff_t, size_t */
+#include <stddef.h>  /* NULL, offsetof, ptrdiff_t, size_t */
 #include <stdint.h>  /* int32_t, uintN_t, uintptr_t */
 
 #undef byte_t
@@ -520,17 +520,9 @@ corrupt_dep_index_reloc_rrel:
 #if 0 /* This needs to be done by the caller using `DeeDec_Track()' */
 	if (self->e_typedata.td_reloc.er_offsetof_gchead) {
 		/* Link in GC objects (if there are any) */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 		DeeObject *gc_head = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
 		DeeObject *gc_tail = (DeeObject *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
 		DeeGC_TrackAll(gc_head, gc_tail, DeeGC_TRACK_F_NORMAL);
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-		struct Dee_gc_head *gc_head = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gchead);
-		struct Dee_gc_head *gc_tail = (struct Dee_gc_head *)((byte_t *)self + self->e_typedata.td_reloc.er_offsetof_gctail);
-		DeeGC_TrackMany_Lock();
-		DeeGC_TrackMany_Exec(DeeGC_Object(gc_head), DeeGC_Object(gc_tail));
-		DeeGC_TrackMany_Unlock();
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	}
 #endif
 
@@ -2280,11 +2272,7 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
                                DeeObject *__restrict ref, unsigned int flags) {
 	size_t total;
 	Dee_seraddr_t result;
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	DeeObject *copy;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	struct Dee_gc_head *copy;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	ASSERTF(DeeType_IsGC(Dee_TYPE(ref)), "Use decwriter_object_malloc_impl()");
 	if (OVERFLOW_UADD(num_bytes, Dee_GC_OBJECT_OFFSET, &total))
 		total = (size_t)-1;
@@ -2292,30 +2280,29 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	if unlikely(!Dee_SERADDR_ISOK(result))
 		goto err;
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	/* Initialize GC head/tail link pointers */
 	ASSERT((self->dw_gchead == 0) ==
 	       (self->dw_gctail == 0));
 	result += Dee_GC_OBJECT_OFFSET;
 	if (self->dw_gctail == 0) {
 		/* First GC object... */
-		struct Dee_gc_head_link *link;
+		struct Dee_gc_head *link;
 		self->dw_gchead = result;
 		link = DeeDecWriter_Addr2Mem(self, result - Dee_GC_OBJECT_OFFSET,
-		                             struct Dee_gc_head_link);
+		                             struct Dee_gc_head);
 		link->gc_info.gi_pself = NULL;
 		link->gc_next          = NULL;
 	} else {
 		/* Append to end of GC list. */
 		if (decwriter_putaddr(self,
 		                      (result - Dee_GC_OBJECT_OFFSET) +
-		                      offsetof(struct Dee_gc_head_link, gc_info.gi_pself),
+		                      offsetof(struct Dee_gc_head, gc_info.gi_pself),
 		                      (self->dw_gctail - Dee_GC_OBJECT_OFFSET) +
-		                      offsetof(struct Dee_gc_head_link, gc_next)))
+		                      offsetof(struct Dee_gc_head, gc_next)))
 			goto err_r;
 		if (decwriter_putaddr(self,
 		                      (self->dw_gctail - Dee_GC_OBJECT_OFFSET) +
-		                      offsetof(struct Dee_gc_head_link, gc_next),
+		                      offsetof(struct Dee_gc_head, gc_next),
 		                      result))
 			goto err_r;
 	}
@@ -2332,47 +2319,9 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 	                                offsetof(DeeObject, ob_type),
 	                                Dee_AsObject(Dee_TYPE(ref))))
 		goto err_r;
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	/* Initialize GC head/tail link pointers */
-	ASSERT((self->dw_gchead == 0) ==
-	       (self->dw_gctail == 0));
-	if (self->dw_gctail == 0) {
-		/* First GC object... */
-		struct Dee_gc_head_link *link;
-		self->dw_gchead = result;
-		link = DeeDecWriter_Addr2Mem(self, result, struct Dee_gc_head_link);
-		link->gc_next  = NULL;
-		link->gc_pself = NULL;
-	} else {
-		/* Append to end of GC list. */
-		if (decwriter_putaddr(self, self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct Dee_gc_head_link, gc_next), result))
-			goto err_r;
-		if (decwriter_putaddr(self, result + (Dee_dec_addr32_t)offsetof(struct Dee_gc_head_link, gc_pself),
-		                      self->dw_gctail + (Dee_dec_addr32_t)offsetof(struct Dee_gc_head_link, gc_next)))
-			goto err_r;
-	}
-	self->dw_gctail = result;
-
-	/* Initialize "ob_refcnt" and "ob_type" of the newly allocated object */
-	copy = DeeDecWriter_Addr2Mem(self, result, struct Dee_gc_head);
-	DeeGC_Object(copy)->ob_refcnt = 1;
-#ifdef CONFIG_TRACE_REFCHANGES
-	copy->gc_object.ob_trace = NULL;
-#endif /* CONFIG_TRACE_REFCHANGES */
-	if unlikely(decwriter_putobject(self,
-	                                result + Dee_GC_OBJECT_OFFSET +
-	                                offsetof(DeeObject, ob_type),
-	                                Dee_AsObject(Dee_TYPE(ref))))
-		goto err_r;
-	result += Dee_GC_OBJECT_OFFSET;
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 	return result;
 err_r:
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_GC
 	decwriter_free(self, result - Dee_GC_OBJECT_OFFSET, DeeGC_Head(ref));
-#else /* CONFIG_EXPERIMENTAL_REWORKED_GC */
-	decwriter_free(self, result, ref);
-#endif /* !CONFIG_EXPERIMENTAL_REWORKED_GC */
 err:
 	return Dee_SERADDR_INVALID;
 }
@@ -2727,23 +2676,23 @@ decwriter_slab_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t n,
 	result += Dee_GC_OBJECT_OFFSET;
 	if (self->dw_gctail == 0) {
 		/* First GC object... */
-		struct Dee_gc_head_link *link;
+		struct Dee_gc_head *link;
 		self->dw_gchead = result;
 		link = DeeDecWriter_Addr2Mem(self, result - Dee_GC_OBJECT_OFFSET,
-		                             struct Dee_gc_head_link);
+		                             struct Dee_gc_head);
 		link->gc_info.gi_pself = NULL;
 		link->gc_next          = NULL;
 	} else {
 		/* Append to end of GC list. */
 		if (decwriter_putaddr(self,
 		                      (result - Dee_GC_OBJECT_OFFSET) +
-		                      offsetof(struct Dee_gc_head_link, gc_info.gi_pself),
+		                      offsetof(struct Dee_gc_head, gc_info.gi_pself),
 		                      (self->dw_gctail - Dee_GC_OBJECT_OFFSET) +
-		                      offsetof(struct Dee_gc_head_link, gc_next)))
+		                      offsetof(struct Dee_gc_head, gc_next)))
 			goto err_r;
 		if (decwriter_putaddr(self,
 		                      (self->dw_gctail - Dee_GC_OBJECT_OFFSET) +
-		                      offsetof(struct Dee_gc_head_link, gc_next),
+		                      offsetof(struct Dee_gc_head, gc_next),
 		                      result))
 			goto err_r;
 	}
