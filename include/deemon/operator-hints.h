@@ -513,7 +513,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_funptr_t
  * or `default__seq_operator_size__with__seq_operator_sizeob')
  * Also never returns `DeeType_GetNativeOperatorOOM()' or
  * `DeeType_GetNativeOperatorUnsupported()' */
-INTDEF WUNUSED NONNULL((1)) Dee_funptr_t
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject const *__restrict self, enum Dee_tno_id id);
 
 /* Wrapper around `DeeType_SelectMissingNativeOperator' that checks if the

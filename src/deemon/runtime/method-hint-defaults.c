@@ -15539,6 +15539,14 @@ default__set_operator_foreach__with__seq_operator_foreach(DeeObject *__restrict 
 	return result;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default__set_operator_foreach__with__map_operator_foreach_pair(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
+	struct default_foreach_with_foreach_pair_data data;
+	data.dfwfp_cb  = cb;
+	data.dfwfp_arg = arg;
+	return (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_foreach_pair))(self, &default_foreach_with_foreach_pair_cb, &data);
+}
+
 
 /* set_operator_sizeob */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

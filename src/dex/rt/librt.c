@@ -163,12 +163,6 @@ print define_Dee_HashStr("distinct");
 print define_Dee_HashStr("fromkeys");
 print define_Dee_HashStr("fromattr");
 print define_Dee_HashStr("__SeqWithIter__");
-print define_Dee_HashStr("__IterWithForeach__");
-print define_Dee_HashStr("__IterWithForeachPair__");
-print define_Dee_HashStr("__IterWithEnumerateMap__");
-print define_Dee_HashStr("__IterWithEnumerateIndexSeq__");
-print define_Dee_HashStr("__IterWithEnumerateSeq__");
-print define_Dee_HashStr("__IterWithEnumerateIndexMap__");
 print define_Dee_HashStr("Composition");
 ]]]*/
 #define Dee_HashStr__enumerate _Dee_HashSelectC(0x990a48c9, 0x8514809a12261fe3)
@@ -229,12 +223,6 @@ print define_Dee_HashStr("Composition");
 #define Dee_HashStr__fromkeys _Dee_HashSelectC(0xa8bdff1e, 0x34221e7828fcf94f)
 #define Dee_HashStr__fromattr _Dee_HashSelectC(0x3db0dca7, 0x665ab1c0e444f870)
 #define Dee_HashStr____SeqWithIter__ _Dee_HashSelectC(0x337ea2df, 0xb25329aebe2c9945)
-#define Dee_HashStr____IterWithForeach__ _Dee_HashSelectC(0xb9e197d8, 0xa7821cd4b81f3978)
-#define Dee_HashStr____IterWithForeachPair__ _Dee_HashSelectC(0xb64dbee5, 0xc91aa0d30329b6f3)
-#define Dee_HashStr____IterWithEnumerateMap__ _Dee_HashSelectC(0x1cd8bec4, 0x15c6710443d657fc)
-#define Dee_HashStr____IterWithEnumerateIndexSeq__ _Dee_HashSelectC(0x46c315bf, 0xfbcafdb8adece080)
-#define Dee_HashStr____IterWithEnumerateSeq__ _Dee_HashSelectC(0x9f86b78c, 0x4fe8bf8aafe855be)
-#define Dee_HashStr____IterWithEnumerateIndexMap__ _Dee_HashSelectC(0xf2e455a4, 0x4693cf704005698)
 #define Dee_HashStr__Composition _Dee_HashSelectC(0x53eb3c96, 0x996cbb266132dfaa)
 /*[[[end]]]*/
 
@@ -1871,32 +1859,6 @@ librt_get_SeqWithIter_Type_f(void) {
 	return_cached(librt_get_default_sequence_type(__SeqWithIter__));
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IterWithForeach_Type_f(void) {
-	return_cached(librt_get_default_sequence_type(__IterWithForeach__));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IterWithForeachPair_Type_f(void) {
-	return_cached(librt_get_default_sequence_type(__IterWithForeachPair__));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IterWithEnumerateMap_Type_f(void) {
-	return_cached(librt_get_default_sequence_type(__IterWithEnumerateMap__));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IterWithEnumerateIndexSeq_Type_f(void) {
-	return_cached(librt_get_default_sequence_type(__IterWithEnumerateIndexSeq__));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IterWithEnumerateSeq_Type_f(void) {
-	return_cached(librt_get_default_sequence_type(__IterWithEnumerateSeq__));
-}
-
-
 
 PRIVATE DEFINE_TUPLE(non_empty_tuple, 1, { Dee_None });
 
@@ -2887,11 +2849,6 @@ PRIVATE DEFINE_CMETHOD0(librt_get_IterWithSizeObAndGetItemPair, &librt_get_IterW
 PRIVATE DEFINE_CMETHOD0(librt_get_IterWithNextAndLimit, &librt_get_IterWithNextAndLimit_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_IterWithIterKeysAndGetItemForMap, &librt_get_IterWithIterKeysAndGetItemForMap_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_IterWithIterKeysAndTryGetItemForMap, &librt_get_IterWithIterKeysAndTryGetItemForMap_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_IterWithForeach, &librt_get_IterWithForeach_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_IterWithForeachPair, &librt_get_IterWithForeachPair_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_IterWithEnumerateMap, &librt_get_IterWithEnumerateMap_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_IterWithEnumerateIndexSeq, &librt_get_IterWithEnumerateIndexSeq_Type_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_IterWithEnumerateSeq, &librt_get_IterWithEnumerateSeq_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_IterWithNextAndCounterPair, &librt_get_IterWithNextAndCounterPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_IterWithNextAndCounterAndLimitPair, &librt_get_IterWithNextAndCounterAndLimitPair_Type_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_IterWithNextAndUnpackFilter, &librt_get_IterWithNextAndUnpackFilter_Type_f, METHOD_FCONSTCALL);
@@ -3291,11 +3248,6 @@ DEX_GETTER_F_NODOC("IterWithSizeAndGetItemPair", &librt_get_IterWithSizeObAndGet
 DEX_GETTER_F_NODOC("IterWithNextAndLimit", &librt_get_IterWithNextAndLimit, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithNextAndLimit_Type */
 DEX_GETTER_F_NODOC("IterWithIterKeysAndGetItemForMap", &librt_get_IterWithIterKeysAndGetItemForMap, DEXSYM_CONSTEXPR),       /* DefaultIterator_WithIterKeysAndGetItemMap_Type */
 DEX_GETTER_F_NODOC("IterWithIterKeysAndTryGetItemForMap", &librt_get_IterWithIterKeysAndTryGetItemForMap, DEXSYM_CONSTEXPR), /* DefaultIterator_WithIterKeysAndTryGetItemMap_Type */
-DEX_GETTER_F_NODOC("IterWithForeach", &librt_get_IterWithForeach, DEXSYM_CONSTEXPR),                                         /* DefaultIterator_WithForeach_Type */
-DEX_GETTER_F_NODOC("IterWithForeachPair", &librt_get_IterWithForeachPair, DEXSYM_CONSTEXPR),                                 /* DefaultIterator_WithForeachPair_Type */
-DEX_GETTER_F_NODOC("IterWithEnumerateMap", &librt_get_IterWithEnumerateMap, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithEnumerateMap_Type */
-DEX_GETTER_F_NODOC("IterWithEnumerateIndexSeq", &librt_get_IterWithEnumerateIndexSeq, DEXSYM_CONSTEXPR),                     /* DefaultIterator_WithEnumerateIndexSeq_Type */
-DEX_GETTER_F_NODOC("IterWithEnumerateSeq", &librt_get_IterWithEnumerateSeq, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithEnumerateSeq_Type */
 DEX_GETTER_F_NODOC("IterWithNextAndCounterPair", &librt_get_IterWithNextAndCounterPair, DEXSYM_CONSTEXPR),                   /* DefaultIterator_WithNextAndCounterPair_Type */
 DEX_GETTER_F_NODOC("IterWithNextAndCounterAndLimitPair", &librt_get_IterWithNextAndCounterAndLimitPair, DEXSYM_CONSTEXPR),   /* DefaultIterator_WithNextAndCounterAndLimitPair_Type */
 DEX_GETTER_F_NODOC("IterWithNextAndUnpackFilter", &librt_get_IterWithNextAndUnpackFilter, DEXSYM_CONSTEXPR),                 /* DefaultIterator_WithNextAndUnpackFilter_Type */

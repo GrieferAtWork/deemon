@@ -1395,7 +1395,7 @@ INTERN_TPCONST struct oh_init_spec tpconst oh_init_specs[] = {
 /*[[[end]]]*/
 /* clang-format on */
 
-PRIVATE WUNUSED NONNULL((1)) Dee_funptr_t DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t DCALL
 type_tno_get(DeeTypeObject const *__restrict self, enum Dee_tno_id id) {
 	struct oh_init_spec const *specs = &oh_init_specs[id];
 	byte_t const *table = (byte_t const *)self;
@@ -1448,7 +1448,7 @@ type_tno_tryalloc_table(__UINTPTR_HALF_TYPE__ offsetof_table) {
 
 /* @return false: OOM */
 PRIVATE NONNULL((1)) bool DCALL
-type_tno_tryset(DeeTypeObject const *__restrict self,
+type_tno_tryset(DeeTypeObject /*const*/ *__restrict self,
                 enum Dee_tno_id id, Dee_funptr_t value) {
 	struct oh_init_spec const *specs = &oh_init_specs[id];
 	byte_t *table = (byte_t *)self;
@@ -1485,8 +1485,8 @@ type_tno_tryset(DeeTypeObject const *__restrict self,
 					 *           presumably the original allocation state).
 					 *
 					 * The same also goes for pretty much all other instances where "Dee_UntrackAlloc"
-					 * is currently being used to suppress leak notifications with the argument of
-					 * the associated heap memory being meant for a dex module.
+					 * is currently being used to suppress leak notifications with the argument of the
+					 * associated heap memory being meant for a dex module.
 					 */
 				}
 				table = new_table;
@@ -1771,7 +1771,7 @@ Dee_tmh_isdefault_or_usrtype(enum Dee_tmh_id id, Dee_funptr_t funptr);
  * or `default__seq_operator_size__with__seq_operator_sizeob')
  * Also never returns `DeeType_GetNativeOperatorOOM()' or
  * `DeeType_GetNativeOperatorUnsupported()' */
-INTERN WUNUSED NONNULL((1)) Dee_funptr_t
+INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_funptr_t
 (DCALL DeeType_GetNativeOperatorWithoutDefaults)(DeeTypeObject const *__restrict self,
                                                  enum Dee_tno_id id) {
 	Dee_funptr_t result = type_tno_get(self, id);
@@ -1892,15 +1892,6 @@ INTERN WUNUSED NONNULL((1)) Dee_funptr_t
 			}
 
 perform_actions:
-			/* TODO: Think about getting rid of "default__iter__with__foreach"
-			 * - It's not even fully implemented, and it would be super-slow.
-			 * - By not implementing it, our caller would be forced to use
-			 *   method hints (which are able to re-implement it for sequence
-			 *   types, but are also smart enough to use size+getitem instead
-			 *   if at all possible)
-			 * - Some stuff actually uses that impls:
-			 *   >> CRTL+SHIFT+F: DEFIMPL(&default__iter__with__foreach) */
-
 			while (n_actions > 1) {
 				struct Dee_tno_assign *action;
 				--n_actions;
@@ -1971,8 +1962,8 @@ DeeType_MapTMHInTNOForInherit(DeeTypeObject *__restrict from,
 		 * If we were to map operators here, even when "from" isn't supposed to
 		 * support them, then we might confused "default__seq_operator_iter__empty"
 		 * with "default__set_operator_iter__empty" (because the later is an alias
-		 * for the former, so "default__set_operator_iter" has to stay as-is if
-		 * not natively supported by the "from" type) */
+		 * for the former, so "default__set_operator_iter" has to stay as-is if not
+		 * natively supported by the "from" type) */
 		for (; iter->ohismh_id < Dee_TMH_COUNT; ++iter) {
 			Dee_funptr_t mapped;
 			if (!oh_init_spec_mhint_caninherit(iter, from))
@@ -2396,7 +2387,7 @@ STATIC_ASSERT_MSG(Dee_TNO_COUNT <= (((unsigned int)1 << (sizeof(Dee_compact_tno_
 INTERN_CONST Dee_compact_tno_id_t const _DeeType_GetTnoOfOperator[Dee_OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_0000_CONSTRUCTOR] = */ (Dee_compact_tno_id_t)Dee_TNO_COUNT,
 	/* [OPERATOR_0001_COPY]        = */ (Dee_compact_tno_id_t)Dee_TNO_COUNT,
-	/* [OPERATOR_0002_DEEPCOPY]    = */ (Dee_compact_tno_id_t)Dee_TNO_COUNT,
+	/* [OPERATOR_0002_SERIALIZE]   = */ (Dee_compact_tno_id_t)Dee_TNO_COUNT,
 	/* [OPERATOR_0003_DESTRUCTOR]  = */ (Dee_compact_tno_id_t)Dee_TNO_COUNT,
 	/* [OPERATOR_0004_ASSIGN]      = */ (Dee_compact_tno_id_t)Dee_TNO_assign,
 	/* [OPERATOR_0005_MOVEASSIGN]  = */ (Dee_compact_tno_id_t)Dee_TNO_move_assign,

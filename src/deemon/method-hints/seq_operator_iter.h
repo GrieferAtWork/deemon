@@ -638,8 +638,11 @@ seq_operator_foreach = {
 	DeeMH_seq_operator_iter_t seq_operator_iter;
 	/*if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
 		return &$with__seq_operator_foreach_pair;*/
-	if (REQUIRE_NODEFAULT(map_operator_foreach_pair))
+	if (REQUIRE_NODEFAULT(map_operator_foreach_pair)) {
+		/* Can re-use "$with__seq_operator_foreach_pair" because
+		 * "seq_operator_foreach_pair" inherits from "map_operator_foreach_pair" */
 		return &$with__seq_operator_foreach_pair;
+	}
 	seq_operator_iter = REQUIRE(seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &$empty;

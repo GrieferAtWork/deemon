@@ -252,8 +252,11 @@ mh_select_seq_operator_foreach(DeeTypeObject *self, DeeTypeObject *orig_type) {
 	DeeMH_seq_operator_iter_t seq_operator_iter;
 	/*if (REQUIRE_NODEFAULT(seq_operator_foreach_pair))
 		return &$with__seq_operator_foreach_pair;*/
-	if ((DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_foreach_pair))
+	if ((DeeMH_map_operator_foreach_pair_t)DeeType_GetPrivateMethodHintNoDefault(self, orig_type, Dee_TMH_map_operator_foreach_pair)) {
+		/* Can re-use "$with__seq_operator_foreach_pair" because
+		 * "seq_operator_foreach_pair" inherits from "map_operator_foreach_pair" */
 		return &default__seq_operator_foreach__with__seq_operator_foreach_pair;
+	}
 	seq_operator_iter = (DeeMH_seq_operator_iter_t)DeeType_GetPrivateMethodHint(self, orig_type, Dee_TMH_seq_operator_iter);
 	if (seq_operator_iter == &default__seq_operator_iter__empty)
 		return &default__seq_operator_foreach__empty;
