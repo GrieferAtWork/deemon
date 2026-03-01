@@ -358,7 +358,7 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #pragma warning(disable: 4200) /* "nonstandard extension used: zero-sized array in struct/union" */
 #define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[0]
 #else /* _MSC_VER >= 800 */
-/* Use this version since it makes debugging easier -- the other version would be
+/* Use this version since  it makes debugging  easier -- the  other version would  be
  * more correct, but doesn't let you expand flexible arrays within the debugger (ugh) */
 #define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[0xffff]
 #endif /* _MSC_VER < 800 */

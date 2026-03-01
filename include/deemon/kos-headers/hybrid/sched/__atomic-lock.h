@@ -211,7 +211,7 @@ __NOTHROW(__ATTR_FASTCALL __hybrid_atomic_lock_waitfor_nx)(struct __hybrid_atomi
 }
 #else /* __OPTIMIZE_SIZE__ */
 #define __hybrid_atomic_lock_acquire_nx(self) \
-	(__likely(__hybrid_atomic_lock_tryacquire(__self)) || __PRIVATE_hybrid_atomic_lock_acquire_nx(self))
+	(__likely(__hybrid_atomic_lock_tryacquire(self)) || __PRIVATE_hybrid_atomic_lock_acquire_nx(self))
 __LOCAL __ATTR_COLD __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
 __NOTHROW(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_acquire_nx)(struct __hybrid_atomic_lock *__restrict __self) {
 	do {
@@ -222,7 +222,7 @@ __NOTHROW(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_acquire_nx)(struct __hybr
 	return 1;
 }
 #define __hybrid_atomic_lock_waitfor_nx(self) \
-	(__likely(__hybrid_atomic_lock_available(__self)) || __PRIVATE_hybrid_atomic_lock_waitfor_nx(self))
+	(__likely(__hybrid_atomic_lock_available(self)) || __PRIVATE_hybrid_atomic_lock_waitfor_nx(self))
 __LOCAL __ATTR_COLD __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL
 __NOTHROW(__ATTR_FASTCALL __PRIVATE_hybrid_atomic_lock_waitfor_nx)(struct __hybrid_atomic_lock *__restrict __self) {
 	do {

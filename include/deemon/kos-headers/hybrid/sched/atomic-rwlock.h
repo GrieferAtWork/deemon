@@ -25,12 +25,12 @@
 #define __GUARD_HYBRID_SCHED_ATOMIC_RWLOCK_H 1
 
 #include "../../__stdinc.h"
-#include "__atomic-rwlock.h"
 
 #define __SIZEOF_ATOMIC_RWLOCK __SIZEOF_HYBRID_ATOMIC_RWLOCK
 
 #if defined(__CC__) || defined(__DEEMON__)
-#define atomic_rwlock                    __hybrid_atomic_rwlock
+/*!export atomic_rwlock*/
+#define __hybrid_atomic_rwlock           atomic_rwlock /*!export-*/
 #define ATOMIC_RWLOCK_MAX_READERS        __HYBRID_ATOMIC_RWLOCK_MAX_READERS
 #define ATOMIC_RWLOCK_INIT               __HYBRID_ATOMIC_RWLOCK_INIT
 #define ATOMIC_RWLOCK_INIT_READ          __HYBRID_ATOMIC_RWLOCK_INIT_READ
@@ -82,7 +82,7 @@
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 #endif /* __CC__ */
 
-
+#include "__atomic-rwlock.h"
 
 #if defined(__ASSEMBLER__) && !defined(__INTELLISENSE__)
 #if defined(__x86_64__)

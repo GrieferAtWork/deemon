@@ -3124,7 +3124,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 #if defined(__clang__) || !defined(_MSC_VER)
 /* Don't use c++ API for native MSVC:
  * - MSVC doesn't support "ATTR_ARTIFICIAL", so debugging gets very annoying
- *   when all atomic operations get wrapped by c++ template functions.
+ *   when  all  atomic operations  get  wrapped by  c++  template functions.
  * - Since msvc+cxx lets us perfectly emulate __builtin_choose_expr, we can
  *   get build an implementation that doesn't need any compiler warnings to
  *   be disabled! */

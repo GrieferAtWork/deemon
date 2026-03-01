@@ -20,10 +20,10 @@
 /*!fixincludes no_include_comments*/
 /*!fixincludes discourage_include*/
 /* Don't export symbols here. Because this header isn't normally included by <__stdinc.h>,
- * fixincludes will become confused and will think that this is some stand-alone header
+ * fixincludes will become confused  and will think that  this is some stand-alone  header
  * that can be included instead of <__stdinc.h> being included
  *
- * Since we also need to mark <__stdinc.h> as "discourage_include" (because we want
+ * Since we also need to mark <__stdinc.h> as "discourage_include" (because we  want
  * to allow per-project "api.h" headers to be a better match), that would leave this
  * header and <__stdinc.h> with the same inclusion priority, which is no good! */
 /*-!export **/

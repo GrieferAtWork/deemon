@@ -25,12 +25,12 @@
 #define __GUARD_HYBRID_SCHED_ATOMIC_LOCK_H 1
 
 #include "../../__stdinc.h"
-#include "__atomic-lock.h"
 
 #define __SIZEOF_ATOMIC_LOCK __SIZEOF_HYBRID_ATOMIC_LOCK
 
 #if defined(__CC__) || defined(__DEEMON__)
-#define atomic_lock                 __hybrid_atomic_lock
+/*!export atomic_lock*/
+#define __hybrid_atomic_lock        atomic_lock /*!export-*/
 #define ATOMIC_LOCK_INIT            __HYBRID_ATOMIC_LOCK_INIT
 #define ATOMIC_LOCK_INIT_ACQUIRED   __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED
 #define atomic_lock_init            __hybrid_atomic_lock_init
@@ -58,5 +58,7 @@
 #define atomic_lock_waitfor_nx __hybrid_atomic_lock_waitfor_nx
 #endif /* __KERNEL__ && __KOS_VERSION__ >= 400 */
 #endif /* __CC__ */
+
+#include "__atomic-lock.h"
 
 #endif /* !__GUARD_HYBRID_SCHED_ATOMIC_LOCK_H */
