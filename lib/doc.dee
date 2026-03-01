@@ -1748,7 +1748,7 @@ class Expression: WeakRefAble {
 	@@Example: @"!Edeemon:none"
 	public final property docstring: string = {
 		get(): string {
-			if (m_docstring === false)
+			if (bool.isfalse(m_docstring))
 				m_docstring = encodeExpression(m_cache);
 			return m_docstring;
 		}

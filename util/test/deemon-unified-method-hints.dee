@@ -21,6 +21,7 @@
 import * from deemon;
 import * from errors;
 import rt;
+import .common.test;
 
 class MyClass1 {
 	this = default;
@@ -50,12 +51,12 @@ class MyClassWithIter3: Sequence {
 }
 
 #define TRY(x...) (try x catch (_e...) _e)
-assert TRY({10,20} == (MyClassWithIter1() as Sequence)) === true;
-assert TRY({10,20} == (MyClassWithIter2() as Sequence)) === true;
-assert TRY({10,20} == (MyClassWithIter3() as Sequence)) === true;
+test.assertTrue(TRY({10,20} == (MyClassWithIter1() as Sequence)));
+test.assertTrue(TRY({10,20} == (MyClassWithIter2() as Sequence)));
+test.assertTrue(TRY({10,20} == (MyClassWithIter3() as Sequence)));
 assert TRY({10,20} == MyClassWithIter1()) is NotImplemented;
-assert TRY({10,20} == MyClassWithIter2()) === true;
-assert TRY({10,20} == MyClassWithIter3()) === true;
+test.assertTrue(TRY({10,20} == MyClassWithIter2()));
+test.assertTrue(TRY({10,20} == MyClassWithIter3()));
 
 assert !({10} == ({10, 10}            ));
 assert !({10} == ({10, 10} as Sequence));

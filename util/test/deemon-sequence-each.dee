@@ -20,17 +20,17 @@
  */
 
 /* Assert correct evaluation of sequence-each expressions. */
+import .common.test;
 
 {
 	/* The simple case: transform all elements of a
 	 * sequence, thus creating a new sequence */
 	local x = { "Foo", "Bar", "Foobar" };
-	assert x.each.lower() == { "foo", "bar", "foobar" };
-	assert x.each.upper() == { "FOO", "BAR", "FOOBAR" };
-	assert (x.each.upper() == { "FOO", "BAR", "FOOBAR" }) === true;
+	test.assertTrue(x.each.lower() == { "foo", "bar", "foobar" });
+	test.assertTrue(x.each.upper() == { "FOO", "BAR", "FOOBAR" });
 
 	/* Also assert that compare-operators can be applied during the first step */
-	assert ((x.each == "Foo") == { true, false, false }) === true;
+	test.assertTrue((x.each == "Foo") == { true, false, false });
 }
 
 {

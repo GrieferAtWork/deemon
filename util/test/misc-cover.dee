@@ -22,6 +22,7 @@
 import * from deemon;
 import * from errors;
 import * from collections;
+import .common.test;
 
 {
 	local x = Dict {
@@ -100,9 +101,9 @@ import * from collections;
 		assert x.values.operator iter() is x.class.Values.Iterator;
 		assert x.get("foo") == "bar";
 		assert x.get(11) == 22;
-		assert x.get("MISSING") === none;
-		assert x.get("MISSING", true) === true;
-		assert x.get("MISSING", false) === false;
+		test.assertNone(x.get("MISSING"));
+		test.assertTrue(x.get("MISSING", true));
+		test.assertFalse(x.get("MISSING", false));
 	}
 	function check_iterators(x) {
 		(none)str(x);

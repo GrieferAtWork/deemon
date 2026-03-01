@@ -116,9 +116,9 @@ test.assertSame(true,  flat.contains("1", 2, -1, key: int.tostr));
 test.assertSequence({ 10, 20, 30 }.map(e -> (e, e + 1)).flatten, { 10, 11, 20, 21, 30, 31 });
 
 test.assertSame(true, { {true}, {}, {1, "foo"} }.flatten.all());
-test.assertSame(true, { {true}, {}, {1, "foo"} }.flatten.all(e -> e !== false));
+test.assertSame(true, { {true}, {}, {1, "foo"} }.flatten.all(e -> !bool.isfalse(e)));
 test.assertSame(false, { {true}, {}, {1, "foo", false} }.flatten.all(1, -1));
-test.assertSame(false, { {true}, {}, {1, "foo", false} }.flatten.all(1, -1, e -> e !== false));
+test.assertSame(false, { {true}, {}, {1, "foo", false} }.flatten.all(1, -1, e -> !bool.isfalse(e)));
 
 
 test.assertSame(false, { {0}, {}, {false, ""} }.flatten.any());
@@ -134,12 +134,12 @@ test.assertSame(false, { {0,0,true}, {true,1}, {}, {1} }.flatten.parity(1, -1));
 test.assertSame(true,  { {0,0,true}, {true,1}, {}, {0} }.flatten.parity(1, -1));
 test.assertSame(true,  { {0,0,true}, {true,1}, {}, {1} }.flatten.parity(3, -1));
 test.assertSame(false, { {0,0,true}, {true,1}, {}, {0} }.flatten.parity(3, -1));
-test.assertSame(false, { {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(key: e -> e === true));
-test.assertSame(true,  { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(key: e -> e === true));
-test.assertSame(false, { {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(1, -1, key: e -> e === true));
-test.assertSame(true,  { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(1, -1, key: e -> e === true));
-test.assertSame(true,  { {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(3, -1, key: e -> e === true));
-test.assertSame(false, { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(3, -1, key: e -> e === true));
+test.assertSame(false, { {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(key: bool.istrue));
+test.assertSame(true,  { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(key: bool.istrue));
+test.assertSame(false, { {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(1, -1, key: bool.istrue));
+test.assertSame(true,  { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(1, -1, key: bool.istrue));
+test.assertSame(true,  { {0,0,true}, {true, 1}, {}, {1} }.flatten.parity(3, -1, key: bool.istrue));
+test.assertSame(false, { {0,0,true}, {false,1}, {}, {1} }.flatten.parity(3, -1, key: bool.istrue));
 
 for (local useInsertAll: {false, true}) {
 	local a = [10, 20, 30];

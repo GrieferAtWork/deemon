@@ -578,8 +578,8 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * constants. With this enabled, the true/false objects need to be
  * detected as:
  * >> #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
- * >> local isTrue  = ob is bool && !!ob;
- * >> local isFalse = ob is bool && !ob;
+ * >> local isTrue  = bool.istrue(ob);  // ob is bool && !!ob;
+ * >> local isFalse = bool.isfalse(ob); // ob is bool && !ob;
  * >> #else
  * >> local isTrue  = ob === true;
  * >> local isFalse = ob === false;
@@ -589,10 +589,25 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * will NOT become mandatory, but will simply be renamed. Reason is
  * that under "CONFIG_NO_THREADS", there is absolutely no reason to
  * have boolean constants be per-thread (since there can only be 1 of
- * them) */
+ * them)
+ *
+ * ----
+ *
+ * And yes: this definitely makes a difference:
+ * - CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL:
+ *   >> time deemon util/scripts/fixincludes.dee
+ *      real    0m21.558s
+ *
+ * - CONFIG_EXPERIMENTAL_PER_THREAD_BOOL:
+ *   >> time deemon util/scripts/fixincludes.dee
+ *      real    0m18.793s
+ */
 #if (!defined(CONFIG_EXPERIMENTAL_PER_THREAD_BOOL) && \
      !defined(CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL))
-#if 0
+#if 0 /* TODO: Requires some more adjustments/fixes in external code
+       * TODO: Add compiler warning to suggest changing to "bool.isXXX"
+       *       when encountering "X (===|!==) (true|false)" (or the same
+       *       with reversed operands) */
 #define CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 #else
 #define CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL

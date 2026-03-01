@@ -22,6 +22,7 @@
 import * from deemon;
 import * from errors;
 import json;
+import .common.test;
 
 /* Assert that JSON is able to parse simple expressions */
 assert json.parse(r'"foo"') == "foo";
@@ -34,14 +35,18 @@ assert json.parse(r'0.5') == 0.5;
 assert json.parse(r'1.0') == 1.0;
 assert json.parse(r'1.5') == 1.5;
 assert json.parse(r'1.5', into: float) == 1.5;
-assert json.parse(r'true') === true;
-assert json.parse(r'true', into: bool) === true;
-assert json.parse(r'false') === false;
-assert json.parse(r'false', into: bool) === false;
-assert json.parse(r'null') === none;
-assert json.parse(r'null', into: none) === none;
-assert json.parse(r'null', into: type none) === none;
+test.assertTrue(json.parse(r'true'));
+test.assertTrue(json.parse(r'true', into: bool));
+test.assertFalse(json.parse(r'false'));
+test.assertFalse(json.parse(r'false', into: bool));
+test.assertNone(json.parse(r'null'));
+test.assertNone(json.parse(r'null', into: none));
+test.assertNone(json.parse(r'null', into: type none));
+#if 0 /* TODO: doesn't work (wrong error type thrown for index-out-of-bounds) */
+test.assertSequence(json.parse(r'[]'), {});
+#else
 assert json.parse(r'[]') == {};
+#endif
 assert json.parse(r'[]', into: Sequence) is Sequence;
 assert json.parse(r'[]', into: Sequence) == {};
 assert json.parse(r'[]', into: List) is List;

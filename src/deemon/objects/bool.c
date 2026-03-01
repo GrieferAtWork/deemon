@@ -25,6 +25,7 @@
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TryMemalign */
 #include <deemon/bool.h>               /* DeeBool*, Dee_False, Dee_True, _DeeBool_Pair, _Dee_ALIGNOF_BOOL_PAIR, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/objmethod.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/int.h>                /* Dee_return_smallint, INT_UNSIGNED */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
@@ -397,6 +398,19 @@ PRIVATE struct type_cmp bool_cmp = {
 	/* .tp_ge            = */ &bool_ge,
 };
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bool_istrue_f(DeeObject *__restrict self) {
+	return_bool(DeeBool_CheckTrue(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bool_isfalse_f(DeeObject *__restrict self) {
+	return_bool(DeeBool_CheckFalse(self));
+}
+
+PRIVATE DEFINE_CMETHOD1(bool_istrue, bool_istrue_f, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE);
+PRIVATE DEFINE_CMETHOD1(bool_isfalse, bool_isfalse_f, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE);
+
 PRIVATE struct type_member tpconst bool_members[] = {
 	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
 	TYPE_MEMBER_END
@@ -406,6 +420,12 @@ PRIVATE struct type_member tpconst bool_class_members[] = {
 	TYPE_MEMBER_CONST(STR_true, Dee_True),
 	TYPE_MEMBER_CONST(STR_false, Dee_False),
 	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),
+	TYPE_MEMBER_CONST_DOC("istrue", &bool_istrue,
+	                      "(ob)->?.\n"
+	                      "Alias for ${ob is bool && !!ob}"),
+	TYPE_MEMBER_CONST_DOC("isfalse", &bool_isfalse,
+	                      "(ob)->?.\n"
+	                      "Alias for ${ob is bool && !ob}"),
 	TYPE_MEMBER_END
 };
 
@@ -482,6 +502,19 @@ bool_destroy(DeeObject *__restrict ptr) {
  *      threads) id determined by a specific bit within the address
  *      of the relevant bool. */
 INTERN ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void) {
+	/* Because atomic of cache-conflicts arising from use of atomics,
+	 * incref/decref operations on booleans are actually kind-of a
+	 * bottle-neck, accounting for ~15% of time that deemon spends
+	 * executing `deemon util/scripts/fixincludes.dee`
+	 *
+	 * The obvious idea here would be to:
+	 * - Break the rule that true/false are singletons
+	 * - Give every thread its own thread-local true/false objects that
+	 *   are created when a thread is created.
+	 *
+	 * The only real problem here is the former, since lots of code exists
+	 * that relies on booleans being singletons, by including constructs
+	 * such as "expr === true" */
 	DeeBool_Block *block;
 	block = (DeeBool_Block *)Dee_TryMemalign(_Dee_ALIGNOF_BOOL_PAIR, sizeof(DeeBool_Block));
 	if likely(block) {

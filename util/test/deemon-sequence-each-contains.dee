@@ -18,13 +18,14 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+import .common.test;
 
 local SEQ = { "Foo", "bAr" };
 
-assert true === ("foo" !in SEQ);
-assert true === ("bar" !in SEQ);
-assert true === ("baz" !in SEQ);
+test.assertTrue("foo" !in SEQ);
+test.assertTrue("bar" !in SEQ);
+test.assertTrue("baz" !in SEQ);
 
-assert true === ("foo"  in SEQ.each.lower());
-assert true === ("bar"  in SEQ.each.lower());
-assert true === ("baz" !in SEQ.each.lower());
+test.assertTrue("foo"  in SEQ.each.lower());
+test.assertTrue("bar"  in SEQ.each.lower());
+test.assertTrue("baz" !in SEQ.each.lower());
