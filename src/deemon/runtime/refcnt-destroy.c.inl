@@ -86,7 +86,7 @@
 
 #include <deemon/alloc.h>       /* DeeObject_Free */
 #include <deemon/gc.h>          /* DeeGCObject_Free, DeeGC_Head, DeeGC_UntrackAsync, Dee_GC_FLAG_FINALIZED */
-#include <deemon/object.h>      /* DeeObject, DeeTypeObject, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_TYPE, Dee_funptr_t, OBJECT_HEAD */
+#include <deemon/object.h>      /* DeeObject, DeeTypeObject, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_TYPE, Dee_funptr_t */
 #include <deemon/type.h>        /* DeeType_IsFinal, Dee_TF_TPVISIT */
 #include <deemon/util/atomic.h> /* atomic_* */
 

@@ -714,16 +714,6 @@ typedef struct Dee_module_object {
 #define _Dee_MODULE_STRUCT_mo_lock /* nothing */
 #define _Dee_MODULE_INIT_mo_lock   /* nothing */
 #endif /* CONFIG_NO_THREADS */
-#if !defined(CONFIG_NO_DEC) || !defined(CONFIG_NO_DEX)
-#define _Dee_MODULE_STRUCT_mo_minaddr __BYTE_TYPE__ const *mo_minaddr;
-#define _Dee_MODULE_STRUCT_mo_maxaddr __BYTE_TYPE__ const *mo_maxaddr;
-#define _Dee_MODULE_STRUCT_mo_adrnode struct Dee_module_treenode mo_adrnode;
-#else /* !CONFIG_NO_DEC || !CONFIG_NO_DEX */
-#define _Dee_MODULE_STRUCT_mo_minaddr /* nothing */
-#define _Dee_MODULE_STRUCT_mo_maxaddr /* nothing */
-#define _Dee_MODULE_STRUCT_mo_adrnode /* nothing */
-#endif /* CONFIG_NO_DEC && CONFIG_NO_DEX */
-
 
 #define Dee_MODULE_STRUCT_EX(name, mo_globalv_def) \
 	struct name {                                  \
@@ -743,9 +733,9 @@ typedef struct Dee_module_object {
 		Dee_WEAKREF_SUPPORT                        \
 		union Dee_module_moddata       mo_moddata; \
 		DREF DeeModuleObject   *const *mo_importv; \
-		_Dee_MODULE_STRUCT_mo_minaddr              \
-		_Dee_MODULE_STRUCT_mo_maxaddr              \
-		_Dee_MODULE_STRUCT_mo_adrnode              \
+		__BYTE_TYPE__ const           *mo_minaddr; \
+		__BYTE_TYPE__ const           *mo_maxaddr; \
+		struct Dee_module_treenode     mo_adrnode; \
 		mo_globalv_def                             \
 	}
 #define Dee_MODULE_STRUCT(name, mo_globalc_) \
@@ -770,7 +760,9 @@ typedef struct Dee_module_object {
 
 DDATDEF DeeTypeObject DeeModule_Type;
 #define DeeModule_Check(ob)      DeeObject_InstanceOf(ob, &DeeModule_Type)
+#if 0 /* Wouldn't make sense -- "DeeModule_Type" is more of an abstract base class for the types below. */
 #define DeeModule_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeModule_Type)
+#endif
 
 DDATDEF DeeTypeObject DeeModuleDir_Type; /* ./folder   (directory-only module) */
 DDATDEF DeeTypeObject DeeModuleDee_Type; /* ./foo.dee  (or ".foo.dec"; user-code module) */

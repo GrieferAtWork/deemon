@@ -25,13 +25,13 @@
 #include <deemon/alloc.h>              /* Dee_Free, Dee_TryMemalign */
 #include <deemon/bool.h>               /* DeeBool*, Dee_False, Dee_True, _DeeBool_Pair, _Dee_ALIGNOF_BOOL_PAIR, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/objmethod.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/int.h>                /* Dee_return_smallint, INT_UNSIGNED */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
+#include <deemon/objmethod.h>          /*  */
 #include <deemon/string.h>             /* DeeString_PrintAscii, DeeString_STR */
-#include <deemon/type.h>               /* DeeObject_InitInherited, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitInherited, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
 #include <deemon/util/atomic.h>        /* atomic_orfetch */
 
 #include <hybrid/align.h>    /* IS_ALIGNED */
