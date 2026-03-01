@@ -272,8 +272,8 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 			struct Dee_gc_head *head = DeeGC_Head(unreachable_fast);
 			DeeObject *next = head->gc_next;
 			sithrd_gc_object_set_pself(&head->gc_info.gi_pself, &LOCAL_gen->gg_objects);
-			ASSERT(!(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
 #ifndef DEFINE_gc_collectall_collect_or_unlock
+			ASSERT(!(sithrd_atomic_read(&head->gc_info.gi_flag) & Dee_GC_FLAG_GENN));
 			if (LOCAL_gen != &gc_gen0)
 #endif /* !DEFINE_gc_collectall_collect_or_unlock */
 			{
