@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/arg.h>                /* DeeArg_Unpack*, UNPu64 */
-#include <deemon/bool.h>               /* DeeBool*, Dee_False, Dee_True, return_bool, return_false */
+#include <deemon/bool.h>               /* DeeBool_NewTrue, Dee_False, Dee_FalseTrue, Dee_True, _DeeBool_Pair, return_bool, return_false */
 #include <deemon/code.h>               /* DeeCodeObject, DeeCode_NAME, DeeFunctionObject, DeeFunction_Check, Dee_CODE_FRAME_NOT_EXECUTING, Dee_CODE_FTHISCALL, Dee_code_frame */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrNoActiveException, DeeRT_ErrTUnboundAttrCStr */
@@ -993,7 +993,7 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 		                      0,
 		/* .t_interrupt  = */ { NULL, NULL, NULL },
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-		/* .t_bools      = */ { Dee_False, Dee_True },
+		/* .t_bools      = */ &Dee_FalseTrue,
 #endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #ifndef CONFIG_NO_THREADS
 		/* .t_int_vers   = */ 0,
@@ -1597,33 +1597,56 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 
 
 /* Extra init/fini of threads that reached `Dee_THREAD_STATE_STARTED' */
-#if (!defined(DeeThread_USE_SINGLE_THREADED) && \
-     defined(CONFIG_EXPERIMENTAL_PER_THREAD_BOOL))
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifndef DeeThread_USE_SINGLE_THREADED
+
+/* Try to allocate a new (distinct) boolean pair, and return it.
+ * Upon success (return != NULL), the caller actually inhertis 2
+ * references here, those references being:
+ * >> DREF &return->bp_bools[0]
+ * >> DREF &return->bp_bools[1]
+ *
+ * Yes: the inherited objects are both allocated in-line and next
+ *      to each other. This is required because the is-true state
+ *      of boolean objects (even secondary ones from alternate
+ *      threads) id determined by a specific bit within the address
+ *      of the relevant bool. */
+INTDEF ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void);
+
 #define thread_init_started thread_init_started
 PRIVATE NONNULL((1)) void DCALL
 thread_init_started(DeeThreadObject *__restrict self) {
-	DREF DeeBoolObject *thrd_false;
-	DREF DeeBoolObject *thrd_true;
-
-	/* TODO: Allocate new objects (on failure: simply use Dee_True/Dee_False defaults) */
-	thrd_false = (DREF DeeBoolObject *)DeeBool_NewFalse();
-	thrd_true  = (DREF DeeBoolObject *)DeeBool_NewTrue();
-
-	self->t_bools[0] = Dee_AsObject(thrd_false);
-	self->t_bools[1] = Dee_AsObject(thrd_true);
+	if ((self->t_bools = DeeBool_NewPair()) == NULL) {
+		/* Fallback: re-use the global, static boolean pair. */
+		self->t_bools = &Dee_FalseTrue;
+		Dee_Incref(&self->t_bools->bp_bools[1]);
+		Dee_Incref(&self->t_bools->bp_bools[0]);
+	}
 }
 
-#define thread_visit_started(self)  \
-	(Dee_Visit((self)->t_bools[0]), \
-	 Dee_Visit((self)->t_bools[1]))
+#define thread_visit_started(self)             \
+	(Dee_Visit(&(self)->t_bools->bp_bools[0]), \
+	 Dee_Visit(&(self)->t_bools->bp_bools[1]))
 
 #define thread_fini_started thread_fini_started
 PRIVATE NONNULL((1)) void DCALL
 thread_fini_started(DeeThreadObject *__restrict self) {
-	Dee_Decref(self->t_bools[1]);
-	Dee_Decref(self->t_bools[0]);
+	Dee_Decref(&self->t_bools->bp_bools[1]);
+	Dee_Decref(&self->t_bools->bp_bools[0]);
+}
+#endif /* !DeeThread_USE_SINGLE_THREADED */
+
+PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED
+_DeeBool_Pair *DCALL DeeBool_GetPair(void) {
+#ifdef DeeThread_USE_SINGLE_THREADED
+	return &Dee_FalseTrue;
+#else /* DeeThread_USE_SINGLE_THREADED */
+	DeeThreadObject *me = DeeThread_Self();
+	return me->t_bools;
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 }
 #endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
 #ifndef thread_init_started
 #define thread_init_started(self) (void)0
 #define thread_fini_started(self) (void)0

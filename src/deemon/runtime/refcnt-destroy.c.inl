@@ -322,12 +322,14 @@ DECL_BEGIN
 #error "LOCAL_HAS_GC must be specified statically"
 #endif /* !LOCAL_HAS_GC */
 
+#ifndef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
 #ifndef GenericObject_DEFINED
 #define GenericObject_DEFINED
 typedef struct {
 	OBJECT_HEAD
 } GenericObject;
 #endif /* !GenericObject_DEFINED */
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 
 PRIVATE NONNULL((1)) void DCALL
 LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
@@ -421,7 +423,11 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 		 * >> It is not guaranteed that __del__() methods are called for objects that
 		 * >> still exist when the interpreter exits. 
 		 */
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
+		DeeTypeObject *type = Dee_TYPE(self);
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 		DeeTypeObject *type = Dee_TYPE((GenericObject *)self);
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 		ASSERT(self->ob_refcnt == 0);
 		atomic_write(&self->ob_refcnt, 1);
 		do {
@@ -451,7 +457,11 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #endif /* !DEFINE_DeeGCObject_FinishDestroyAfterUntrack */
 
 	/* Load the object's type. */
+#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
+	orig_type = Dee_TYPE(self);
+#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 	orig_type = Dee_TYPE((GenericObject *)self);
+#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 
 #if LOCAL_HAS_Dtor > 2
 	{

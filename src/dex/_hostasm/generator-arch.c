@@ -3163,14 +3163,14 @@ _fungen_gmorph_hstackindCreg2reg01(struct fungen *__restrict self,
 
 
 #ifdef HAVE__host_section_gmorph_reg012regbool
-/* dst_regno = &Dee_FalseTrue[src_regno + src_delta]; */
+/* dst_regno = &Dee_FalseTrue.bp_bools[src_regno + src_delta]; */
 INTERN WUNUSED NONNULL((1)) int DCALL
 _host_section_gmorph_reg012regbool(struct host_section *__restrict self,
                                    host_regno_t src_regno, ptrdiff_t src_delta,
                                    host_regno_t dst_regno) {
 	STATIC_ASSERT(sizeof(DeeBoolObject) == 8);
 	src_delta *= 8;
-	src_delta += (uintptr_t)Dee_FalseTrue;
+	src_delta += (uintptr_t)Dee_FalseTrue.bp_bools;
 	if unlikely(host_section_reqx86(self, 1))
 		goto err;
 	gen86_printf(sect, "lea" Plq "\t%Id(,%s,8), %s\n", src_delta, gen86_regname(src_regno), gen86_regname(dst_regno));

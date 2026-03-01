@@ -25,10 +25,14 @@
 
 #include "api.h"
 
+#include <hybrid/typecore.h> /* __BYTE_TYPE__ */
+
+#include <stdint.h> /* uintptr_t */
+
 #ifndef __INTELLISENSE__
-#include "object.h" /* Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref */
+#include "object.h" /* DeeObject_NewRef, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref */
 #endif /* !__INTELLISENSE__ */
-#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT */
+#include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_OFFSETOF_DATA, Dee_REQUIRES_OBJECT */
 
 DECL_BEGIN
 
@@ -39,6 +43,61 @@ DECL_BEGIN
 #define return_false  Dee_return_false
 #endif /* DEE_SOURCE */
 
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+
+#if Dee_OBJECT_OFFSETOF_DATA <= 4
+#define _Dee_SIZEOF_BOOL_OBJECT 4
+#elif Dee_OBJECT_OFFSETOF_DATA <= 8
+#define _Dee_SIZEOF_BOOL_OBJECT 8
+#elif Dee_OBJECT_OFFSETOF_DATA <= 16
+#define _Dee_SIZEOF_BOOL_OBJECT 16
+#elif Dee_OBJECT_OFFSETOF_DATA <= 32
+#define _Dee_SIZEOF_BOOL_OBJECT 32
+#elif Dee_OBJECT_OFFSETOF_DATA <= 64
+#define _Dee_SIZEOF_BOOL_OBJECT 64
+#elif Dee_OBJECT_OFFSETOF_DATA <= 128
+#define _Dee_SIZEOF_BOOL_OBJECT 128
+#else /* Dee_OBJECT_OFFSETOF_DATA == 128 */
+#error "Configured 'Dee_OBJECT_OFFSETOF_DATA' is too large"
+#endif /* Dee_OBJECT_OFFSETOF_DATA != 128 */
+
+typedef struct ATTR_ALIGNED(_Dee_SIZEOF_BOOL_OBJECT) {
+	Dee_OBJECT_HEAD
+#if _Dee_SIZEOF_BOOL_OBJECT > Dee_OBJECT_OFFSETOF_DATA
+	__BYTE_TYPE__ _b_pad[_Dee_SIZEOF_BOOL_OBJECT - Dee_OBJECT_OFFSETOF_DATA];
+#endif /* _Dee_SIZEOF_BOOL_OBJECT > Dee_OBJECT_OFFSETOF_DATA */
+} DeeBoolObject;
+
+#if _Dee_SIZEOF_BOOL_OBJECT == 4
+#define _Dee_ALIGNOF_BOOL_PAIR 8
+#elif _Dee_SIZEOF_BOOL_OBJECT == 8
+#define _Dee_ALIGNOF_BOOL_PAIR 16
+#elif _Dee_SIZEOF_BOOL_OBJECT == 16
+#define _Dee_ALIGNOF_BOOL_PAIR 32
+#elif _Dee_SIZEOF_BOOL_OBJECT == 32
+#define _Dee_ALIGNOF_BOOL_PAIR 64
+#elif _Dee_SIZEOF_BOOL_OBJECT == 64
+#define _Dee_ALIGNOF_BOOL_PAIR 128
+#else /* _Dee_SIZEOF_BOOL_OBJECT == ... */
+#define _Dee_ALIGNOF_BOOL_PAIR (_Dee_SIZEOF_BOOL_OBJECT * 2)
+#endif /* _Dee_SIZEOF_BOOL_OBJECT != ... */
+
+union _Dee_bool_pair;
+typedef union ATTR_ALIGNED(_Dee_ALIGNOF_BOOL_PAIR) _Dee_bool_pair {
+	DeeBoolObject bp_bools[2];
+} _DeeBool_Pair;
+
+DDATDEF ATTR_ALIGNED(_Dee_ALIGNOF_BOOL_PAIR) _DeeBool_Pair Dee_FalseTrue;
+
+#define DeeBool_IsTrue(x)     (((uintptr_t)(x) & _Dee_SIZEOF_BOOL_OBJECT) != 0)
+#define DeeBool_CheckTrue(x)  (DeeBool_Check(x) && DeeBool_IsTrue(x))
+#define DeeBool_CheckFalse(x) (DeeBool_Check(x) && !DeeBool_IsTrue(x))
+
+/* Returns a pointer to the calling thread's thread-local boolean pair. */
+DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED _DeeBool_Pair *DCALL DeeBool_GetPair(void);
+#define _DeeBool_For01(val) (&DeeBool_GetPair()->bp_bools[val])
+
+#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 
 /* HINT: In i386 assembly, `bool' is 8 bytes, so if you want to
  *       convert an integer 0/1 into a boolean, you can use the
@@ -52,22 +111,29 @@ typedef struct {
 	Dee_OBJECT_HEAD
 } DeeBoolObject;
 
+#define DeeBool_IsTrue(x)     (Dee_REQUIRES_OBJECT(DeeBoolObject, x) != &Dee_FalseTrue.bp_bools[0])
+#define DeeBool_CheckTrue(x)  (Dee_REQUIRES_OBJECT(DeeBoolObject, x) == &Dee_FalseTrue.bp_bools[1])
+#define DeeBool_CheckFalse(x) (Dee_REQUIRES_OBJECT(DeeBoolObject, x) == &Dee_FalseTrue.bp_bools[0])
+
+typedef union _Dee_bool_pair {
+	DeeBoolObject bp_bools[2];
+} _DeeBool_Pair;
+
+DDATDEF _DeeBool_Pair Dee_FalseTrue;
+#define _DeeBool_For01(val) (&Dee_FalseTrue.bp_bools[val])
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
 #define DeeBool_Check(x)      DeeObject_InstanceOfExact(x, &DeeBool_Type) /* `bool' is final. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBool_Type)
-#define DeeBool_IsTrue(x)     (Dee_REQUIRES_OBJECT(DeeBoolObject, x) != &Dee_FalseTrue[0])
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-#define DeeBool_CheckTrue(x)  (DeeBool_Check(x) && DeeBool_IsTrue(x))
-#define DeeBool_CheckFalse(x) (DeeBool_Check(x) && !DeeBool_IsTrue(x))
-#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
-#define DeeBool_CheckTrue(x)  (Dee_REQUIRES_OBJECT(DeeBoolObject, x) == &Dee_FalseTrue[1])
-#define DeeBool_CheckFalse(x) (Dee_REQUIRES_OBJECT(DeeBoolObject, x) == &Dee_FalseTrue[0])
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+DDATDEF DeeTypeObject DeeBool_Type;
 
 #ifdef __INTELLISENSE__
 #define DeeBool_Incref(x) (void)Dee_AsObject(x)
 #define DeeBool_Decref(x) (void)Dee_AsObject(x)
+#define DeeBool_NewRef(x) (x)
 #else /* __INTELLISENSE__ */
 #define DeeBool_Incref(x) Dee_Incref(x)
+#define DeeBool_NewRef(x) DeeObject_NewRef(x)
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 #define DeeBool_Decref(x) Dee_Decref_unlikely(x)
 #else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
@@ -75,37 +141,28 @@ typedef struct {
 #endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #endif /* !__INTELLISENSE__ */
 
-DDATDEF DeeTypeObject DeeBool_Type;
-DDATDEF DeeBoolObject Dee_FalseTrue[2];
-#define _DeeBool_False      (&Dee_FalseTrue[0])
-#define _DeeBool_True       (&Dee_FalseTrue[1])
-#define _DeeBool_For(val)   (&Dee_FalseTrue[!!(val)])
-#define _DeeBool_For01(val) (&Dee_FalseTrue[val])
-
+/* These 2 are always linked to globals so they can be used in static initializers. */
+#define Dee_False ((DeeObject *)&Dee_FalseTrue.bp_bools[0])
+#define Dee_True  ((DeeObject *)&Dee_FalseTrue.bp_bools[1])
 
 /* General-purpose macros... */
-#define Dee_False           ((DeeObject *)_DeeBool_False)
-#define Dee_True            ((DeeObject *)_DeeBool_True)
-#define DeeBool_For(val)    ((DeeObject *)_DeeBool_For(val))
 #define DeeBool_For01(val)  ((DeeObject *)_DeeBool_For01(val))
-#define DeeBool_NewFalse()  (DeeBool_Incref(_DeeBool_False), (DeeObject *)_DeeBool_False)
-#define DeeBool_NewTrue()   (DeeBool_Incref(_DeeBool_True), (DeeObject *)_DeeBool_True)
-#define DeeBool_New(val)    (DeeBool_Incref(_DeeBool_For(val)), (DeeObject *)_DeeBool_For(val))
-#define DeeBool_New01(val)  (DeeBool_Incref(_DeeBool_For01(val)), (DeeObject *)_DeeBool_For01(val))
-#define Dee_return_bool(val)                                            \
-	do {                                                                \
-		__register DeeBoolObject *const _rb_result = _DeeBool_For(val); \
-		DeeBool_Incref(_rb_result);                                     \
-		return (DREF DeeObject *)_rb_result;                            \
-	}	__WHILE0
+#define DeeBool_New01(val)  DeeBool_NewRef(DeeBool_For01(val))
+#define DeeBool_NewFalse()  DeeBool_New01(0)
+#define DeeBool_NewTrue()   DeeBool_New01(1)
 #define Dee_return_bool01(val)                                            \
 	do {                                                                  \
 		__register DeeBoolObject *const _rb_result = _DeeBool_For01(val); \
 		DeeBool_Incref(_rb_result);                                       \
 		return (DREF DeeObject *)_rb_result;                              \
 	}	__WHILE0
-#define Dee_return_true  Dee_return_bool01(1)
-#define Dee_return_false Dee_return_bool01(0)
+
+#define DeeBool_For(val)     DeeBool_For01(!!(val))
+#define DeeBool_New(val)     DeeBool_New01(!!(val))
+#define Dee_return_bool(val) Dee_return_bool01(!!(val))
+#define Dee_return_false     Dee_return_bool01(0)
+#define Dee_return_true      Dee_return_bool01(1)
+
 
 DECL_END
 

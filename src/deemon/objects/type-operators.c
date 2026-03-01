@@ -33,7 +33,7 @@
 #include <deemon/int.h>            /* DeeInt_NewHash */
 #include <deemon/kwds.h>           /* DeeKw_Wrap */
 #include <deemon/none.h>           /* return_none */
-#include <deemon/object.h>         /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_New, DeeTypeObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>         /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_New, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_formatprinter_t, Dee_hash_t, ITER_DONE, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_GetNativeOperatorWithoutUnsupported, DeeType_GetTnoOfOperator, Dee_tno_id, usrtype__* */
 #include <deemon/string.h>         /* DeeStringObject, DeeString_Type */
 #include <deemon/super.h>          /* DeeObject_T* */

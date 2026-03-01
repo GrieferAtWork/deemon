@@ -171,7 +171,7 @@ gc_collectall_collect_or_unlock(size_t *__restrict p_num_collected)
 		for (iter = gen->gg_objects; iter;) {
 			struct Dee_gc_head *head = DeeGC_Head(iter);
 			DeeObject_Visit(iter, &LOCAL_gc_visit__incref__with_weakref_detect__cb,
-			                  &must_kill_nested_weakrefs);
+			                &must_kill_nested_weakrefs);
 			iter = (DeeObject *)((uintptr_t)head->gc_next & ~1);
 		}
 	}

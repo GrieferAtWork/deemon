@@ -3342,7 +3342,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _fungen_gmorph_hstackindCreg2reg01(struct 
 #endif /* _host_section_gmorph_hstackind2reg01_MAYFAIL */
 #if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64) && !defined(CONFIG_TRACE_REFCHANGES)
 #define HAVE__host_section_gmorph_reg012regbool
-INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gmorph_reg012regbool(struct host_section *__restrict self, host_regno_t src_regno, ptrdiff_t src_delta, host_regno_t dst_regno); /* dst_regno = &Dee_FalseTrue[src_regno + src_delta]; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _host_section_gmorph_reg012regbool(struct host_section *__restrict self, host_regno_t src_regno, ptrdiff_t src_delta, host_regno_t dst_regno); /* dst_regno = &Dee_FalseTrue.bp_bools[src_regno + src_delta]; */
 #endif /* HOSTASM_X86 && !HOSTASM_X86_64 && !CONFIG_TRACE_REFCHANGES */
 
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_gmorph_regx2reg01(struct fungen *__restrict self, host_regno_t src_regno, ptrdiff_t src_delta, unsigned int cmp, host_regno_t dst_regno);
@@ -3355,10 +3355,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_gmorph_hstackindCreg2reg01(struct funge
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_gmorph_loc2reg01(struct fungen *__restrict self, struct memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, host_regno_t dst_regno);                                          /* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_gmorph_locCreg2reg01(struct fungen *__restrict self, struct memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, host_regno_t rhs_regno, host_regno_t dst_regno);       /* dst_regno = (src_loc + src_delta) <CMP> rhs_regno ? 1 : 0; */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_gmorph_locCloc2reg01(struct fungen *__restrict self, struct memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, struct memloc const *rhs_loc, host_regno_t dst_regno);    /* dst_regno = (src_loc + src_delta) <CMP> rhs_loc ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL fg_gmorph_loc2regbooly(struct fungen *__restrict self, struct memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, host_regno_t dst_regno, ptrdiff_t *__restrict p_dst_delta); /* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL fg_gmorph_loc012regbooly(struct fungen *__restrict self, struct memloc const *src_loc, ptrdiff_t src_delta, host_regno_t dst_regno, ptrdiff_t *__restrict p_dst_delta);                 /* dst_regno = &Dee_FalseTrue[src_loc + src_delta] - *p_dst_delta; */
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL fg_gmorph_loc2regbooly(struct fungen *__restrict self, struct memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, host_regno_t dst_regno, ptrdiff_t *__restrict p_dst_delta); /* dst_regno = &Dee_FalseTrue.bp_bools[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL fg_gmorph_loc012regbooly(struct fungen *__restrict self, struct memloc const *src_loc, ptrdiff_t src_delta, host_regno_t dst_regno, ptrdiff_t *__restrict p_dst_delta);                 /* dst_regno = &Dee_FalseTrue.bp_bools[src_loc + src_delta] - *p_dst_delta; */
 
-/* dst_regno = &Dee_FalseTrue[src_regno + src_delta] - *p_dst_delta; */
+/* dst_regno = &Dee_FalseTrue.bp_bools[src_regno + src_delta] - *p_dst_delta; */
 #ifdef HAVE__host_section_gmorph_reg012regbool
 #define fg_gmorph_reg012regbooly(self, src_regno, src_delta, dst_regno, p_dst_delta) \
 	(*(p_dst_delta) = 0, _host_section_gmorph_reg012regbool(fg_gettext(self), src_regno, src_delta, dst_regno))

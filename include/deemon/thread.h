@@ -36,6 +36,7 @@
 #include <hybrid/sched/__yield.h> /* __hybrid_yield */
 #include <hybrid/typecore.h>      /* __UINT32_C, __UINT_FAST32_TYPE__, __ULONG32_TYPE__ */
 
+#include "bool.h"       /* _Dee_bool_pair */
 #include "types.h"      /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD, Dee_REQUIRES_OBJECT, Dee_refcnt_t, ITER_DONE */
 #include "util/futex.h" /* DeeFutex_WakeAll */
 
@@ -326,9 +327,9 @@ typedef struct Dee_thread_object {
 	                                              * to-be executed in the context of this thread. */
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 #ifdef GUARD_DEEMON_RUNTIME_THREAD_C
-	DREF DeeObject                *t_bools[2];   /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
+	union _Dee_bool_pair          *t_bools;      /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
 #else /* GUARD_DEEMON_RUNTIME_THREAD_C */
-	DREF DeeObject          *const t_bools[2];   /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
+	union _Dee_bool_pair    *const t_bools;   /* [1..1][valif_if(t_state & Dee_THREAD_STATE_STARTED)][const] This thread's `[0] = false, [1] = true' constants (see ) */
 #endif /* !GUARD_DEEMON_RUNTIME_THREAD_C */
 #endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #ifndef CONFIG_NO_THREADS

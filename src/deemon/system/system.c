@@ -28,7 +28,7 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_AsInt, DeeInt_Check */
 #include <deemon/mapfile.h>         /* DeeMapFile* */
-#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_pos_t, Dee_ssize_t, ITER_DONE, return_reference_ */
+#include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, Dee_Decref, Dee_Decref_likely, Dee_TYPE, Dee_pos_t, Dee_ssize_t, ITER_DONE, return_reference_ */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, Dee_wchar_t, STRING_ERROR_FIGNORE, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/stringutils.h>     /* Dee_unicode_skipspaceutf8_n, Dee_unicode_skipspaceutf8_rev_n */
 #include <deemon/system-features.h> /* *read*, *stat*, CLOCK_REALTIME, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_DEFINE_*, DeeSystem_DlOpen_USE_*, DeeSystem_GetErrno, DeeSystem_IF_E1, DeeSystem_IF_E2, DeeSystem_IF_E4, MAP_*, PROT_READ, PROT_WRITE, RTLD_*, bzero, clock_gettime, clock_gettime64, dl*, getcwd, getenv, gettimeofday, gettimeofday64, lseek, lseek64, mmap, mmap64, munmap, remove, strlen, sysconf, time, time64, unlink, wgetcwd, wremove, wunlink */

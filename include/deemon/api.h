@@ -592,7 +592,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * them) */
 #if (!defined(CONFIG_EXPERIMENTAL_PER_THREAD_BOOL) && \
      !defined(CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL))
-#if 0 /* TODO: Incomplete */
+#if 0
 #define CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 #else
 #define CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL

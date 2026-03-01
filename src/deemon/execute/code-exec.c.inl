@@ -26,7 +26,7 @@
 
 #include <deemon/alloc.h>           /* Dee_Mallocc, Dee_Reallocc */
 #include <deemon/asm.h>             /* ASM16_*, ASM32_JMP, ASM_*, instruction_t */
-#include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_FalseTrue, Dee_True */
+#include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_True */
 #include <deemon/class.h>           /* DeeClassDescriptor_Type, DeeClass_*, DeeInstance_* */
 #include <deemon/code.h>            /* CONFIG_HAVE_EXEC_ALTSTACK, DeeCodeObject, DeeCode_*, DeeFunction_*, Dee_CODE_F*, Dee_EXCEPTION_HANDLER_F*, Dee_EXEC_ALTSTACK_PERIOD, Dee_TRIGGER_BREAKPOINT_*, Dee_code_frame, Dee_except_handler, code_addr_t, instruction_t */
 #include <deemon/dict.h>            /* DeeDict_FromSequenceInheritedOnSuccess, DeeDict_NewKeyValuesInherited */
@@ -1022,16 +1022,19 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 	DeeThreadObject *const this_thread = DeeThread_Self();
 	uint16_t const except_recursion    = this_thread->t_exceptsz;
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-#define LOCAL_Dee_False          this_thread->t_bools[0]
-#define LOCAL_Dee_True           this_thread->t_bools[1]
-#define LOCAL_DeeBool_NewFalse() (Dee_Incref(LOCAL_Dee_False), LOCAL_Dee_False)
-#define LOCAL_DeeBool_NewTrue()  (Dee_Incref(LOCAL_Dee_True), LOCAL_Dee_True)
+#define LOCAL_Dee_False          Dee_AsObject(&this_thread->t_bools->bp_bools[0])
+#define LOCAL_Dee_True           Dee_AsObject(&this_thread->t_bools->bp_bools[1])
+#define LOCAL_DeeBool_NewFalse() (Dee_Incref(&this_thread->t_bools->bp_bools[0]), Dee_AsObject(&this_thread->t_bools->bp_bools[0]))
+#define LOCAL_DeeBool_NewTrue()  (Dee_Incref(&this_thread->t_bools->bp_bools[1]), Dee_AsObject(&this_thread->t_bools->bp_bools[1]))
+#define LOCAL_DeeBool_For01(v)   Dee_AsObject(&this_thread->t_bools->bp_bools[v])
 #else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #define LOCAL_Dee_False          Dee_False
 #define LOCAL_Dee_True           Dee_True
 #define LOCAL_DeeBool_NewFalse() DeeBool_NewFalse()
 #define LOCAL_DeeBool_NewTrue()  DeeBool_NewTrue()
+#define LOCAL_DeeBool_For01(v)   DeeBool_For01(v)
 #endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#define LOCAL_DeeBool_For(v) LOCAL_DeeBool_For01(!!(v))
 
 #ifdef _MSC_VER
 	/* MSVC is too dumb to take advantage of the C standard
@@ -1416,9 +1419,9 @@ except_no_active_exception:
 			imm_val = READ_imm8();
 do_push_bnd_arg:
 			ASSERT_ARGimm();
-			PUSHREF(DeeBool_For(imm_val < frame->cf_argc ||
-			                    (frame->cf_kw &&
-			                     frame->cf_kw->fk_kargv[imm_val - frame->cf_argc])));
+			PUSHREF(LOCAL_DeeBool_For(imm_val < frame->cf_argc ||
+			                          (frame->cf_kw &&
+			                           frame->cf_kw->fk_kargv[imm_val - frame->cf_argc])));
 			DISPATCH();
 		}
 
@@ -1428,7 +1431,7 @@ do_push_bnd_arg:
 do_push_bnd_extern:
 			ASSERT_EXTERNimm();
 			/*EXTERN_LOCKREAD();*/
-			PUSHREF(DeeBool_For(EXTERNimm != NULL));
+			PUSHREF(LOCAL_DeeBool_For(EXTERNimm != NULL));
 			/*EXTERN_LOCKENDREAD();*/
 			DISPATCH();
 		}
@@ -1441,7 +1444,7 @@ do_push_bnd_static:
 			/*STATIC_LOCKREAD();*/
 			value = STATICimm;
 			/*STATIC_LOCKENDREAD();*/
-			PUSHREF(DeeBool_For(ITER_ISOK(value)));
+			PUSHREF(LOCAL_DeeBool_For(ITER_ISOK(value)));
 			DISPATCH();
 		}
 
@@ -1450,7 +1453,7 @@ do_push_bnd_static:
 do_push_bnd_global:
 			ASSERT_GLOBALimm();
 			/*GLOBAL_LOCKREAD();*/
-			PUSHREF(DeeBool_For(GLOBALimm != NULL));
+			PUSHREF(LOCAL_DeeBool_For(GLOBALimm != NULL));
 			/*GLOBAL_LOCKENDREAD();*/
 			DISPATCH();
 		}
@@ -1459,7 +1462,7 @@ do_push_bnd_global:
 			imm_val = READ_imm8();
 do_push_bnd_local:
 			ASSERT_LOCALimm();
-			PUSHREF(DeeBool_For(LOCALimm != NULL));
+			PUSHREF(LOCAL_DeeBool_For(LOCALimm != NULL));
 			DISPATCH();
 		}
 
@@ -1810,7 +1813,7 @@ do_super_this_r:
 
 		TARGET(ASM_ISNONE, -1, +1) {
 			Dee_Decref(TOP); /* Can already decref() because we only need to check the pointer. */
-			TOP = DeeBool_For(TOP == Dee_None);
+			TOP = LOCAL_DeeBool_For(TOP == Dee_None);
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -2202,7 +2205,7 @@ do_push_module:
 			}
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = Dee_AsObject(&Dee_FalseTrue[is_instance]);
+			TOP = LOCAL_DeeBool_For01(is_instance);
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -2220,7 +2223,7 @@ do_push_module:
 			}
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = Dee_AsObject(&Dee_FalseTrue[is_implemented]);
+			TOP = LOCAL_DeeBool_For01(is_implemented);
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -2340,7 +2343,7 @@ do_push_module:
 			int boolval = DeeObject_BoolInheritedOnSuccess(TOP);
 			if unlikely(boolval < 0)
 				HANDLE_EXCEPT();
-			TOP = DeeBool_For(!boolval);
+			TOP = LOCAL_DeeBool_For(!boolval);
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -3787,10 +3790,10 @@ do_boundmember_r:
 			temp = DeeInstance_BoundMemberSafe((DeeTypeObject *)REFimm, THIS, imm_val2);
 			if unlikely(temp < 0)
 				HANDLE_EXCEPT();
-			PUSHREF(DeeBool_For(temp != 0));
+			PUSHREF(LOCAL_DeeBool_For(temp != 0));
 #else /* EXEC_SAFE */
 			temp = DeeInstance_BoundMember((DeeTypeObject *)REFimm, THIS, imm_val2);
-			PUSHREF(DeeBool_For(temp));
+			PUSHREF(LOCAL_DeeBool_For(temp));
 #endif /* !EXEC_SAFE */
 			DISPATCH();
 		}
@@ -3955,7 +3958,7 @@ do_call_local:
 				HANDLE_EXCEPT();
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = DeeBool_For(Dee_BOUND_ISBOUND(error));
+			TOP = LOCAL_DeeBool_For(Dee_BOUND_ISBOUND(error));
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
@@ -4414,7 +4417,7 @@ do_setattr_this_c:
 					is_same = SECOND == FIRST;
 					POPREF();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(is_same);
+					TOP = LOCAL_DeeBool_For(is_same);
 					Dee_Incref(TOP);
 					DISPATCH();
 				}
@@ -4424,7 +4427,7 @@ do_setattr_this_c:
 					is_diff = SECOND != FIRST;
 					POPREF();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(is_diff);
+					TOP = LOCAL_DeeBool_For(is_diff);
 					Dee_Incref(TOP);
 					DISPATCH();
 				}
@@ -4739,7 +4742,7 @@ do_setattr_this_c:
 					if unlikely(result < 0)
 						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(result);
+					TOP = LOCAL_DeeBool_For(result);
 					Dee_Incref(TOP);
 					DISPATCH();
 				}
@@ -4749,7 +4752,7 @@ do_setattr_this_c:
 					if unlikely(result < 0)
 						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(result);
+					TOP = LOCAL_DeeBool_For(result);
 					Dee_Incref(TOP);
 					DISPATCH();
 				}
@@ -5026,7 +5029,7 @@ do_hasmember:
 						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(temp);
+					TOP = LOCAL_DeeBool_For(temp);
 					Dee_Incref(TOP);
 					DISPATCH();
 				}
@@ -5094,7 +5097,7 @@ do_hasmember_this:
 					if unlikely(temp < 0)
 						HANDLE_EXCEPT();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(temp);
+					TOP = LOCAL_DeeBool_For(temp);
 					Dee_Incref(TOP);
 					DISPATCH();
 				}
@@ -5193,7 +5196,7 @@ do_setmember_this:
 						HANDLE_EXCEPT();
 					POPREF();
 					Dee_Decref(TOP);
-					TOP = DeeBool_For(Dee_BOUND_ISBOUND(error));
+					TOP = LOCAL_DeeBool_For(Dee_BOUND_ISBOUND(error));
 					Dee_Incref(TOP);
 					DISPATCH();
 				}
@@ -5386,7 +5389,7 @@ do_pack_dict:
 						temp = DeeObject_Bool(value);
 						if unlikely(temp < 0)
 							HANDLE_EXCEPT();
-						value = DeeBool_For(temp);
+						value = LOCAL_DeeBool_For(temp);
 					}
 					PUSHREF(value);
 					DISPATCH();
@@ -5425,7 +5428,7 @@ do_pack_dict:
 					} else {
 						va_size = (size_t)(frame->cf_argc - code->co_argc_max);
 					}
-					PUSHREF(DeeBool_For(va_size == READ_imm8()));
+					PUSHREF(LOCAL_DeeBool_For(va_size == READ_imm8()));
 					DISPATCH();
 				}
 
@@ -5442,7 +5445,7 @@ do_pack_dict:
 					} else {
 						va_size = (size_t)(frame->cf_argc - code->co_argc_max);
 					}
-					PUSHREF(DeeBool_For(va_size > READ_imm8()));
+					PUSHREF(LOCAL_DeeBool_For(va_size > READ_imm8()));
 					DISPATCH();
 				}
 
@@ -7586,6 +7589,10 @@ err_unbound_static:
 	HANDLE_EXCEPT();
 #undef LOCAL_Dee_False
 #undef LOCAL_Dee_True
+#undef LOCAL_DeeBool_NewFalse
+#undef LOCAL_DeeBool_NewTrue
+#undef LOCAL_DeeBool_For01
+#undef LOCAL_DeeBool_For
 }
 
 DECL_END

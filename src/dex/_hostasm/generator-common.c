@@ -2082,7 +2082,7 @@ fg_gmorph_loc2regbooly(struct fungen *__restrict self,
 }
 
 #ifndef HAVE__host_section_gmorph_reg012regbool
-/* dst_regno = &Dee_FalseTrue[src_regno + src_delta] - *p_dst_delta; */
+/* dst_regno = &Dee_FalseTrue.bp_bools[src_regno + src_delta] - *p_dst_delta; */
 INTERN WUNUSED NONNULL((1, 5)) int DCALL
 fg_gmorph_reg012regbooly(struct fungen *__restrict self,
                          host_regno_t src_regno, ptrdiff_t src_delta,
@@ -2092,7 +2092,7 @@ fg_gmorph_reg012regbooly(struct fungen *__restrict self,
 	                                             sizeof(DeeBoolObject), dst_regno))
 		goto err;
 	src_delta *= sizeof(DeeBoolObject);
-	src_delta += (ptrdiff_t)(uintptr_t)Dee_FalseTrue;
+	src_delta += (ptrdiff_t)(uintptr_t)Dee_FalseTrue.bp_bools;
 	*p_dst_delta = 0;
 	return _host_section_gmov_regx2reg(sect, dst_regno, src_delta, dst_regno);
 err:
@@ -2100,7 +2100,7 @@ err:
 }
 #endif /* !HAVE__host_section_gmorph_reg012regbool */
 
-/* dst_regno = &Dee_FalseTrue[src_loc + src_delta] - *p_dst_delta; */
+/* dst_regno = &Dee_FalseTrue.bp_bools[src_loc + src_delta] - *p_dst_delta; */
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 fg_gmorph_loc012regbooly(struct fungen *__restrict self,
                          struct memloc const *src_loc, ptrdiff_t src_delta,

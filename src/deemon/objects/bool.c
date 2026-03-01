@@ -22,15 +22,18 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>               /* DeeBool*, Dee_False, Dee_True, return_bool, return_false, return_true */
+#include <deemon/alloc.h>              /* Dee_Free, Dee_TryMemalign */
+#include <deemon/bool.h>               /* DeeBool*, Dee_False, Dee_True, _DeeBool_Pair, _Dee_ALIGNOF_BOOL_PAIR, return_bool, return_false, return_true */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrDivideByZero, DeeRT_ErrNegativeShiftOverflow */
 #include <deemon/int.h>                /* Dee_return_smallint, INT_UNSIGNED */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/string.h>             /* DeeString_PrintAscii, DeeString_STR */
-#include <deemon/type.h>               /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitInherited, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/util/atomic.h>        /* atomic_orfetch */
 
+#include <hybrid/align.h>    /* IS_ALIGNED */
 #include <hybrid/typecore.h> /* __SIZEOF_INT__ */
 
 #include "../runtime/runtime_error.h"
@@ -38,7 +41,10 @@
 
 #include <stdbool.h> /* false, true */
 #include <stddef.h>  /* NULL, size_t */
-#include <stdint.h>  /* int32_t, int64_t */
+#include <stdint.h>  /* int32_t, int64_t, uintptr_t */
+
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 DECL_BEGIN
 
@@ -434,6 +440,71 @@ PRIVATE struct type_operator const bool_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 };
 
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifndef CONFIG_NO_THREADS
+
+typedef struct {
+	_DeeBool_Pair bp_pair; /* Contained pair */
+#define DeeBool_Block_FREE_NONE  0
+#define DeeBool_Block_FREE_FALSE 1 /* Dee_False of this block was free'd */
+#define DeeBool_Block_FREE_TRUE  2 /* Dee_True of this block was free'd */
+#define DeeBool_Block_FREE_ALL   (DeeBool_Block_FREE_FALSE | DeeBool_Block_FREE_TRUE)
+	unsigned int  bp_free; /* Set of `DeeBool_Block_FREE_*' */
+} DeeBool_Block;
+
+/* The following 2 are defined in "runtime/slab.c" */
+#define PTR_bool_tp_destroy &bool_destroy
+PRIVATE NONNULL((1)) void DCALL
+bool_destroy(DeeObject *__restrict ptr) {
+	unsigned int new_status, mask;
+	DeeBoolObject *me = (DeeBoolObject *)ptr;
+	DeeBool_Block *block;
+	block = DeeBool_IsTrue(me) ? container_of(me, DeeBool_Block, bp_pair.bp_bools[1])
+	                           : container_of(me, DeeBool_Block, bp_pair.bp_bools[0]);
+	mask = DeeBool_IsTrue(me) ? DeeBool_Block_FREE_TRUE : DeeBool_Block_FREE_FALSE;
+	new_status = atomic_orfetch(&block->bp_free, mask);
+	ASSERT((new_status & ~DeeBool_Block_FREE_ALL) == 0);
+
+	/* Once both booleans have been free'd, destroy the block. */
+	if (new_status == DeeBool_Block_FREE_ALL)
+		Dee_Free(block);
+}
+
+/* Try to allocate a new (distinct) boolean pair, and return it.
+ * Upon success (return != NULL), the caller actually inhertis 2
+ * references here, those references being:
+ * >> DREF &return->bp_bools[0]
+ * >> DREF &return->bp_bools[1]
+ *
+ * Yes: the inherited objects are both allocated in-line and next
+ *      to each other. This is required because the is-true state
+ *      of boolean objects (even secondary ones from alternate
+ *      threads) id determined by a specific bit within the address
+ *      of the relevant bool. */
+INTERN ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void) {
+	DeeBool_Block *block;
+	block = (DeeBool_Block *)Dee_TryMemalign(_Dee_ALIGNOF_BOOL_PAIR, sizeof(DeeBool_Block));
+	if likely(block) {
+		/* We let the new boolean "inherit" references to "DeeBool_Type"
+		 * In actuality, we just overwrite "tp_destroy" such that it does
+		 * not decref() the object's type (and simply free's its backing
+		 * storage) to make stuff easier and faster. */
+		ASSERT(IS_ALIGNED((uintptr_t)&block->bp_pair, _Dee_ALIGNOF_BOOL_PAIR));
+		block->bp_free = DeeBool_Block_FREE_NONE;
+		DeeObject_InitInherited(&block->bp_pair.bp_bools[0], &DeeBool_Type);
+		DeeObject_InitInherited(&block->bp_pair.bp_bools[1], &DeeBool_Type);
+		return &block->bp_pair;
+	}
+	return NULL;
+}
+
+#endif /* !CONFIG_NO_THREADS */
+#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
+#ifndef PTR_bool_tp_destroy
+#define PTR_bool_tp_destroy NULL
+#endif /* !PTR_bool_tp_destroy */
+
 PUBLIC DeeTypeObject DeeBool_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_bool),
@@ -459,6 +530,7 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_destroy     = */ PTR_bool_tp_destroy,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ &bool_str,
@@ -491,9 +563,16 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_operators_size= */ COMPILER_LENOF(bool_operators),
 };
 
-PUBLIC DeeBoolObject Dee_FalseTrue[2] = {
-	{ OBJECT_HEAD_INIT(&DeeBool_Type) }, /* `false' */
-	{ OBJECT_HEAD_INIT(&DeeBool_Type) }  /* `true' */
+#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+PUBLIC ATTR_ALIGNED(_Dee_ALIGNOF_BOOL_PAIR) _DeeBool_Pair Dee_FalseTrue =
+#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+PUBLIC _DeeBool_Pair Dee_FalseTrue =
+#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+{
+	/* .bp_bools = */ {
+		/* [0] = */ { OBJECT_HEAD_INIT(&DeeBool_Type) }, /* `false' */
+		/* [1] = */ { OBJECT_HEAD_INIT(&DeeBool_Type) }  /* `true' */
+	}
 };
 
 
