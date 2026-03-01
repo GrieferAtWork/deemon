@@ -341,6 +341,86 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 	      Dee_GC_FLAG_FINALIZED))
 #endif /* LOCAL_HAS_GC */
 	{
+		/* FIXME: This way of doing destructors is cool and all, however:
+		 *        there are ways to create infinite loops that make it
+		 *        impossible for deemon to exit properly:
+		 *
+		 * >> global instance;
+		 * >> class MyClass {
+		 * >>     ~this() {
+		 * >>         print "In destructor:", this.id;
+		 * >>         instance = MyClass();
+		 * >>     }
+		 * >> }
+		 * >> MyClass();
+		 *
+		 * ^^ This code doesn't even need to make use of self-reviving objects.
+		 *    All it does is simply create a new instance of the class that is
+		 *    being finalized. This then repeats indefinitely as the GC notices
+		 *    over and over again that "instance" is unreachable.
+		 *
+		 * >> In destructor: 10420432
+		 * >> In destructor: 10439416
+		 * >> In destructor: 10420432
+		 * >> In destructor: 10439416
+		 * >> In destructor: 10420432
+		 * >> In destructor: 10439416
+		 * >> In destructor: 10420432
+		 * >> In destructor: 10439416
+		 * >> In destructor: 10420432
+		 * >> In destructor: 10439416
+		 * >> In destructor: 10420432
+		 * >> In destructor: 10439416
+		 * >> In destructor: 10420432
+		 * >> In destructor: 10439416
+		 * >> In destructor: 10420432
+		 * >> [...]
+		 *
+		 * Doing the same thing in python:
+		 * >> instance = None
+		 * >> class MyClass:
+		 * >>     def __del__(self):
+		 * >>         global instance
+		 * >>         print("In fini: " + str(MyClass))
+		 * >>         instance = MyClass()
+		 * >> MyClass()
+		 *
+		 * This code seems to resolve itself after only a couple of GC iterations:
+		 * >> In fini: __main__.MyClass
+		 * >> In fini: __main__.MyClass
+		 * >> In fini: None
+		 * >> Exception TypeError: "'NoneType' object is not callable" in <bound method MyClass.__del__ of <__main__.MyClass instance at 0x03391E90>> ignored
+		 *
+		 * So python is (somehow) solving this problem.
+		 * However, I have no idea what's allowing it to clear the "MyClass" variable
+		 * in this situation, since obviously that variable is still being used by the
+		 * __del__ method that's yet to be invoked.
+		 *
+		 * Adjusting the code above to work around MyClass suddenly being "None":
+		 * >> instance = None
+		 * >> class MyClass:
+		 * >>     def __init__(self):
+		 * >>         self.c = MyClass
+		 * >>     def __del__(self):
+		 * >>         global instance
+		 * >>         print("In fini: " + str(MyClass) + ", " + str(self.c))
+		 * >>         instance = self.c()
+		 * >> MyClass()
+		 *
+		 * And now the output is this:
+		 * >> In fini: __main__.MyClass, __main__.MyClass
+		 * >> In fini: __main__.MyClass, __main__.MyClass
+		 * >> In fini: None, __main__.MyClass
+		 *
+		 * So obviously, at some point python just stops bothering to invoke user-
+		 * defined __del__ method entirely. I wonder what's causing this...
+		 *
+		 * ---
+		 *
+		 * Reading python's docs, I think this line explains it:
+		 * >> It is not guaranteed that __del__() methods are called for objects that
+		 * >> still exist when the interpreter exits. 
+		 */
 		DeeTypeObject *type = Dee_TYPE((GenericObject *)self);
 		ASSERT(self->ob_refcnt == 0);
 		atomic_write(&self->ob_refcnt, 1);
