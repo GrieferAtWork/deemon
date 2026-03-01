@@ -604,10 +604,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  */
 #if (!defined(CONFIG_EXPERIMENTAL_PER_THREAD_BOOL) && \
      !defined(CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL))
-#if 0 /* TODO: Requires some more adjustments/fixes in external code
-       * TODO: Add compiler warning to suggest changing to "bool.isXXX"
-       *       when encountering "X (===|!==) (true|false)" (or the same
-       *       with reversed operands) */
+#if 0 /* TODO: Requires some more adjustments/fixes in external code */
 #define CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
 #else
 #define CONFIG_NO_EXPERIMENTAL_PER_THREAD_BOOL

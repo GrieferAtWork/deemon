@@ -70,6 +70,21 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 warn_idcompare_nonbuiltin(struct ast *__restrict warn_ast) {
 	return WARNAST(warn_ast, W_COMPARE_SODO_NONBUILTIN_UNDEFINED);
 }
+
+#ifdef HAVE_W_COMPARE_SODO_TRUE_UNDEFINED
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+warn_idcompare_bool(struct ast *__restrict warn_ast) {
+	if (warn_ast->a_type == AST_CONSTEXPR && DeeBool_Check(warn_ast->a_constexpr)) {
+		bool istrue = DeeBool_IsTrue(warn_ast->a_constexpr);
+		return WARNAST(warn_ast, istrue ? W_COMPARE_SODO_TRUE_UNDEFINED
+		                                : W_COMPARE_SODO_FALSE_UNDEFINED);
+	}
+	return 0;
+}
+#else /* HAVE_W_COMPARE_SODO_TRUE_UNDEFINED */
+#define warn_idcompare_bool(warn_ast) 0
+#endif /* !HAVE_W_COMPARE_SODO_TRUE_UNDEFINED */
+
 #endif
 
 
@@ -597,9 +612,14 @@ action_set_expr_result:
 		    self->a_action.a_act1->a_type == AST_CONSTEXPR) {
 #ifdef is_builtin_object
 			/* Warn if the constant of either branch isn't a builtin object */
-			if ((!is_builtin_object(self->a_action.a_act0->a_constexpr) ||
-			     !is_builtin_object(self->a_action.a_act1->a_constexpr)) &&
-			    warn_idcompare_nonbuiltin(self))
+			if (!is_builtin_object(self->a_action.a_act0->a_constexpr) ||
+			    !is_builtin_object(self->a_action.a_act1->a_constexpr)) {
+				if (warn_idcompare_nonbuiltin(self))
+					goto err;
+			}
+			if (warn_idcompare_bool(self->a_action.a_act0))
+				goto err;
+			if (warn_idcompare_bool(self->a_action.a_act1))
 				goto err;
 #endif /* is_builtin_object */
 			expr_result = DeeBool_For(self->a_action.a_act0->a_constexpr ==
@@ -611,6 +631,8 @@ action_set_expr_result:
 			/* Warn if the constant of `act0' isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act0->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
+				goto err;
+			if (warn_idcompare_bool(self->a_action.a_act0))
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
@@ -628,6 +650,8 @@ action_set_expr_result:
 			/* Warn if the constant of `act1' isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act1->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
+				goto err;
+			if (warn_idcompare_bool(self->a_action.a_act1))
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
@@ -779,6 +803,10 @@ check_printseq_const:
 			     !is_builtin_object(self->a_action.a_act1->a_constexpr)) &&
 			    warn_idcompare_nonbuiltin(self))
 				goto err;
+			if (warn_idcompare_bool(self->a_action.a_act0))
+				goto err;
+			if (warn_idcompare_bool(self->a_action.a_act1))
+				goto err;
 #endif /* is_builtin_object */
 			expr_result = DeeBool_For(self->a_action.a_act0->a_constexpr !=
 			                          self->a_action.a_act1->a_constexpr);
@@ -789,6 +817,8 @@ check_printseq_const:
 			/* Warn if the constant of `act0' isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act0->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
+				goto err;
+			if (warn_idcompare_bool(self->a_action.a_act0))
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
@@ -813,6 +843,8 @@ check_printseq_const:
 			/* Warn if the constant of `act1' isn't a builtin object */
 			if (!is_builtin_object(self->a_action.a_act1->a_constexpr) &&
 			    warn_idcompare_nonbuiltin(self))
+				goto err;
+			if (warn_idcompare_bool(self->a_action.a_act1))
 				goto err;
 #endif /* is_builtin_object */
 			if (DeeNone_Check(self->a_action.a_act0->a_constexpr)) {
