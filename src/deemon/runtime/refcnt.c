@@ -150,7 +150,6 @@ PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor1_Free1_HeapType0_G
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC0_Rev0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC1_Rev0(DeeObject *__restrict self);
 
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC0_Rev0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC1_Rev0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor2_Free0_HeapType1_GC0_Rev0(DeeObject *__restrict self);
@@ -159,7 +158,6 @@ PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_G
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC1_Rev0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC0_Rev0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev0(DeeObject *__restrict self);
-#endif /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_DtorN_GC0_Rev0(DeeObject *__restrict self);
 PRIVATE NONNULL((1)) void DCALL DeeObject_DefaultDestroy_DtorN_GC1_Rev0(DeeObject *__restrict self);
@@ -202,7 +200,6 @@ DECL_END
 #define DEFINE_DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC1_Rev0
 #include "refcnt-destroy.c.inl"
 
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
 #define DEFINE_DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC0_Rev0
 #include "refcnt-destroy.c.inl"
 #define DEFINE_DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC1_Rev0
@@ -219,7 +216,6 @@ DECL_END
 #include "refcnt-destroy.c.inl"
 #define DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev0
 #include "refcnt-destroy.c.inl"
-#endif /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 
 #define DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev0
 #include "refcnt-destroy.c.inl"
@@ -259,7 +255,6 @@ DECL_BEGIN
 #define DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_GC0_Rev1
 #define DeeObject_DefaultDestroy_Dtor1_Free1_HeapType1_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_GC1_Rev1
 
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
 #define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_GC0_Rev1
 #define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_GC1_Rev1
 #define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType1_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_GC0_Rev1
@@ -268,7 +263,6 @@ DECL_BEGIN
 #define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_GC1_Rev1
 #define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_GC0_Rev1
 #define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_GC1_Rev1
-#endif /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 
 #define DeeObject_DefaultDestroy_DtorN_Free0_HeapType0_GC0_Rev0 DeeObject_DefaultDestroy_DtorN_GC0_Rev0
 #define DeeObject_DefaultDestroy_DtorN_Free0_HeapType0_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_GC0_Rev1
@@ -286,25 +280,6 @@ DECL_BEGIN
 #define DeeObject_DefaultDestroy_DtorN_Free1_HeapType1_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_GC0_Rev1
 #define DeeObject_DefaultDestroy_DtorN_Free1_HeapType1_GC1_Rev0 DeeObject_DefaultDestroy_DtorN_GC1_Rev0
 #define DeeObject_DefaultDestroy_DtorN_Free1_HeapType1_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_GC1_Rev1
-
-#ifndef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC0_Rev0 DeeObject_DefaultDestroy_DtorN_Free0_HeapType0_GC0_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_Free0_HeapType0_GC0_Rev1
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC1_Rev0 DeeObject_DefaultDestroy_DtorN_Free0_HeapType0_GC1_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType0_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_Free0_HeapType0_GC1_Rev1
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType1_GC0_Rev0 DeeObject_DefaultDestroy_DtorN_Free0_HeapType1_GC0_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType1_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_Free0_HeapType1_GC0_Rev1
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType1_GC1_Rev0 DeeObject_DefaultDestroy_DtorN_Free0_HeapType1_GC1_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free0_HeapType1_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_Free0_HeapType1_GC1_Rev1
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC0_Rev0 DeeObject_DefaultDestroy_DtorN_Free1_HeapType0_GC0_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_Free1_HeapType0_GC0_Rev1
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC1_Rev0 DeeObject_DefaultDestroy_DtorN_Free1_HeapType0_GC1_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_Free1_HeapType0_GC1_Rev1
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC0_Rev0 DeeObject_DefaultDestroy_DtorN_Free1_HeapType1_GC0_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC0_Rev1 DeeObject_DefaultDestroy_DtorN_Free1_HeapType1_GC0_Rev1
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev0 DeeObject_DefaultDestroy_DtorN_Free1_HeapType1_GC1_Rev0
-#define DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev1 DeeObject_DefaultDestroy_DtorN_Free1_HeapType1_GC1_Rev1
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 
 /* Object destroy feature flags. */
 #define DESTROY_FREV      0x01
@@ -454,12 +429,9 @@ DeeType_RequireDestroy_uncached_impl(DeeTypeObject *__restrict self) {
 	if (self->tp_init.tp_alloc.tp_free)
 		flags |= DESTROY_FFREE;
 	if (self->tp_init.tp_dtor) {
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
 		if (self->tp_features & TF_TPVISIT) {
 			flags |= DESTROY_FDTOR2;
-		} else
-#endif /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
-		{
+		} else {
 			flags |= DESTROY_FDTOR1;
 		}
 	}

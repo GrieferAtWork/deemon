@@ -634,17 +634,6 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
-
-
-/* When "Dee_TF_TPVISIT" is set, "tp_dtor" also gets an extra, leading "DeeTypeObject *" argument */
-#if (!defined(CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR) && \
-     !defined(CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR))
-#if 1
-#define CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
-#else
-#define CONFIG_NO_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
-#endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 /************************************************************************/
 
 

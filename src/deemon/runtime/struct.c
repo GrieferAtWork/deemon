@@ -877,17 +877,8 @@ DeeStructObject_Visit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	}
 }
 
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
 PUBLIC NONNULL((1, 2)) void DCALL
-DeeStructObject_Fini(DeeTypeObject *tp_self, DeeObject *__restrict self)
-#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
-PUBLIC NONNULL((1)) void DCALL /* Only finalizes fields defined by "Dee_TYPE(self)" */
-DeeStructObject_Fini(DeeObject *__restrict self)
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
-{
-#ifndef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
+DeeStructObject_Fini(DeeTypeObject *tp_self, DeeObject *__restrict self) {
 	struct type_member const *member;
 #ifdef CONFIG_HAVE_STRUCT_OBJECT_FIELD_CACHE
 	struct Dee_type_member const *const *fields;

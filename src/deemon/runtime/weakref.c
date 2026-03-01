@@ -1013,23 +1013,11 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start, DeeObject *self) {
 		if (!undo_start)
 			break;
 		if (undo_start->tp_init.tp_dtor) {
-#ifdef CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR
 			if (undo_start->tp_features & TF_TPVISIT) {
 				(*(void (DCALL *)(DeeTypeObject *, DeeObject *__restrict))undo_start->tp_init.tp_dtor)(undo_start, self);
 			} else {
 				(*undo_start->tp_init.tp_dtor)(self);
 			}
-#else /* CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
-			/* Update the object's typing to mirror what is written here.
-			 * NOTE: We're allowed to modify the type of `self' _ONLY_ because
-			 *       it's reference counter is ZERO (aka: the object isn't shared
-			 *       and also can't be revived by weak references, which don't
-			 *       allow locking once the object's reference counter has hit ZERO). */
-			((GenericObject *)self)->ob_type = undo_start;
-			COMPILER_WRITE_BARRIER();
-			(*undo_start->tp_init.tp_dtor)(self);
-			COMPILER_READ_BARRIER();
-#endif /* !CONFIG_EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_DTOR */
 		}
 	}
 	return true;
