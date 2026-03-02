@@ -634,6 +634,21 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+
+
+/* TODO: Experimental feature where types can define a new flag "TF_NOTYPEREF"
+ * When set, the type's "tp_destroy" will not decref(ob->ob_type) when the object
+ * is destroyed. This flag can then be set for pretty much all statically allocated
+ * native types, including "int" or "string" -- the resulting reduction in required
+ * atomic OPS on reference counters of static objects will then result in some more
+ * performance improvements.
+ *
+ * Once this has been consequently implemented for all native types, this flag could
+ * then be removed once again, because really: only "TP_FHEAP" types *actually* need
+ * to be referenced by object instances (meaning *no* native type needs to be).
+ *
+ * Start by implementing this for "int", "string" and "Bytes", since those will be
+ * the types that will probably benefit the most from this. */
 /************************************************************************/
 
 
