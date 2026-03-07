@@ -39,6 +39,7 @@
 
 #include "../objects/int_logic.h"
 #include "../objects/seq/concat.h"
+#include "method-hint-defaults.h"
 
 #include <stddef.h> /* size_t */
 #include <stdint.h> /* int32_t, int64_t */
@@ -71,7 +72,9 @@ Dee_accu_fini(struct Dee_accu *__restrict self) {
 		break;
 	case Dee_ACCU_SECOND:
 	case Dee_ACCU_OBJECT:
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_LIST:
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 		Dee_Decref(self->acu_value.v_object);
 		break;
 	case Dee_ACCU_STRING:
@@ -80,9 +83,11 @@ Dee_accu_fini(struct Dee_accu *__restrict self) {
 	case Dee_ACCU_BYTES:
 		Dee_bytes_printer_fini(&self->acu_value.v_bytes);
 		break;
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_TUPLE:
 		Dee_tuple_builder_fini(&self->acu_value.v_tuple);
 		break;
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 	default: __builtin_unreachable();
 	}
 }
@@ -105,12 +110,16 @@ Dee_accu_visit(struct Dee_accu *__restrict self,
 		break;
 	case Dee_ACCU_SECOND:
 	case Dee_ACCU_OBJECT:
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_LIST:
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 		Dee_Visit(self->acu_value.v_object);
 		break;
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_TUPLE:
 		Dee_tuple_builder_visit(&self->acu_value.v_tuple);
 		break;
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 	default: __builtin_unreachable();
 	}
 }
@@ -134,7 +143,9 @@ Dee_accu_pack(struct Dee_accu *__restrict self) {
 		return_none;
 	case Dee_ACCU_SECOND:
 	case Dee_ACCU_OBJECT:
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_LIST:
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 		return self->acu_value.v_object;
 	case Dee_ACCU_STRING:
 		return Dee_unicode_printer_pack(&self->acu_value.v_string);
@@ -150,8 +161,10 @@ Dee_accu_pack(struct Dee_accu *__restrict self) {
 	case Dee_ACCU_FLOAT:
 		return DeeFloat_New(self->acu_value.v_float);
 #endif /* Dee_ACCU_FLOAT_DEFINED */
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_TUPLE:
 		return Dee_tuple_builder_pack(&self->acu_value.v_tuple);
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
@@ -234,47 +247,15 @@ accu_second(struct Dee_accu *__restrict self, DeeObject *second) {
 		self->acu_mode = Dee_ACCU_FLOAT;
 		Dee_Decref(first);
 #endif /* Dee_ACCU_FLOAT_DEFINED */
-#ifdef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
-	} else if (tp_add == (DeeNO_add_t)&DeeSeq_Concat) {
-		if (tp_first == &DeeTuple_Type) {
-			if (!DeeObject_IsShared(first)) {
-				/* Can re-use the initial "first" tuple as an in-place buffer. */
-				self->acu_value.v_tuple.tb_size  = DeeTuple_SIZE(first);
-				self->acu_value.v_tuple.tb_tuple = (DREF DeeTupleObject *)first;
-				self->acu_mode = Dee_ACCU_TUPLE;
-			} else {
-				Dee_ssize_t error;
-				size_t total_size = DeeTuple_SIZE(first);
-				size_t second_size_fast = DeeObject_SizeFast(second);
-				if likely(second_size_fast != (size_t)-1) {
-					if (OVERFLOW_UADD(total_size, second_size_fast, &total_size))
-						total_size = (size_t)-1;
-				}
-				Dee_tuple_builder_init_with_hint(&self->acu_value.v_tuple, total_size);
-				self->acu_mode = Dee_ACCU_TUPLE;
-				error = Dee_tuple_builder_extend(&self->acu_value.v_tuple,
-				                                 DeeTuple_SIZE(first),
-				                                 DeeTuple_ELEM(first));
-				Dee_Decref_unlikely(first);
-				if unlikely(error < 0)
-					goto err;
-			}
-			return Dee_tuple_builder_appenditems(&self->acu_value.v_tuple, second);
-		} else if (DeeType_Extends(tp_first, &DeeList_Type)) {
-			DREF DeeObject *combine;
-			combine = DeeList_ConcatInherited(first, second);
-			if unlikely(!combine) {
-				self->acu_mode = Dee_ACCU_NONE; /* Because reference to "first" was inherited. */
-				goto err;
-			}
-			ASSERT_OBJECT_TYPE_EXACT(combine, &DeeList_Type);
-			ASSERT(!DeeObject_IsShared(combine));
-			self->acu_value.v_object = combine;
-			self->acu_mode = Dee_ACCU_LIST;
-		} else {
-			goto fallback;
-		}
-#else /* CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
+#if 0
+	} else if (tp_add == (DeeNO_add_t)&default__seq_operator_add__unsupported) {
+		/* TODO */
+	} else if (tp_add == (DeeNO_add_t)&default__set_operator_add__unsupported) {
+		/* TODO */
+	} else if (tp_add == (DeeNO_add_t)&default__map_operator_add__unsupported) {
+		/* TODO */
+#endif
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	} else if (tp_add == (DeeNO_add_t)&DeeTuple_Concat) {
 		if (!DeeObject_IsShared(first)) {
 			/* Can re-use the initial "first" tuple as an in-place buffer. */
@@ -348,8 +329,10 @@ Dee_accu_add(/*struct Dee_accu*/ void *self, DeeObject *item) {
 	case Dee_ACCU_NONE:
 		return 0;
 
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_LIST:
 		return DeeList_AppendSequence((DeeObject *)me->acu_value.v_list, item);
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 	case Dee_ACCU_STRING:
 		return Dee_unicode_printer_printobject(&me->acu_value.v_string, item);
@@ -424,8 +407,10 @@ convert_int64_to_object:
 	}	break;
 #endif /* !Dee_ACCU_FLOAT_DEFINED */
 
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	case Dee_ACCU_TUPLE:
 		return Dee_tuple_builder_appenditems(&me->acu_value.v_tuple, item);
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 	case Dee_ACCU_OBJECT: {
 		DeeObject *first;

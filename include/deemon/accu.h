@@ -31,10 +31,13 @@
 #include "bytes.h"  /* Dee_bytes_printer */
 #include "object.h" /* DREF, DeeObject, Dee_Incref, Dee_ssize_t */
 #include "string.h" /* Dee_unicode_printer */
-#include "tuple.h"  /* Dee_tuple_builder */
 #include "type.h"   /* Dee_visit_t */
 
 #include <stdint.h> /* int64_t, uintptr_t */
+
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
+#include "tuple.h"  /* Dee_tuple_builder */
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 DECL_BEGIN
 
@@ -57,8 +60,10 @@ enum {
 	Dee_ACCU_FLOAT,   /* First object was "float" */
 #define Dee_ACCU_FLOAT_DEFINED
 #endif /* !CONFIG_NO_FPU */
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 	Dee_ACCU_TUPLE,   /* First object was "Tuple" */
 	Dee_ACCU_LIST,    /* First object was "List" (!DeeObject_IsShared) */
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 //TODO:	Dee_ACCU_SEQ,     /* First object's `operator +' was identical to `Sequence.__add__' (SeqConcat_Type) */
 //TODO:	Dee_ACCU_SET,     /* First object's `operator +' was identical to `Set.__add__'      (SetUnion_Type) */
 //TODO:	Dee_ACCU_MAP,     /* First object's `operator +' was identical to `Mapping.__add__'  (MapUnion_Type) */
@@ -78,8 +83,10 @@ struct Dee_accu {
 #ifndef CONFIG_NO_FPU
 		double                       v_float;  /* Dee_ACCU_FLOAT */
 #endif /* !CONFIG_NO_FPU */
+#ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
 		struct Dee_tuple_builder     v_tuple;  /* Dee_ACCU_TUPLE */
 		DREF struct Dee_list_object *v_list;   /* Dee_ACCU_LIST */
+#endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 	} acu_value;
 };
 

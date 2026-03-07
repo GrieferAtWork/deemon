@@ -50,6 +50,8 @@ function assertAccu(expected: Object, values: {Object...}) {
 	assertAccuImpl(expected, a);
 }
 
+local CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS = type([] + []) !== List;
+
 assertUnbound(Accu());
 assert repr(Accu()) == "Accu()";
 assert repr(Accu(42)) == "Accu(42)";
@@ -62,8 +64,10 @@ assertAccu("foobarfoobar", {"foo", "bar", "foobar"});
 assertAccu("foobarfoobar".bytes(), {"foo".bytes(), "bar".bytes(), "foobar".bytes()});
 assertAccu("foobarfoobar".bytes(), {"foo".bytes(), "bar", "foobar"});
 assertAccu("foo1020", {"foo", 10, 20});
-assertAccu([10, 20, 30, 40], {[], {10, 20}, {30, 40}});
-assertAccu((10, 20, 30, 40), {(), {10, 20}, {30, 40}});
+if (!CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS) {
+	assertAccu([10, 20, 30, 40], {[], {10, 20}, {30, 40}});
+	assertAccu((10, 20, 30, 40), {(), {10, 20}, {30, 40}});
+}
 assertAccu(none, {none, [], {10, 20}, {30, 40}});
 
 class MyAdder {
