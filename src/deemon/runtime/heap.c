@@ -164,14 +164,17 @@ DECL_BEGIN
  *
  *   Makes use of thread-local memory, MSPACES and FOOTERS to:
  *   - Allow for an arbitrary number of lazily allocated, extra
- *     mspaces that can be used to memory from a thread-local
- *     mspace when the global mspace ("gm") cannot be locked
+ *     mspaces that can be used to allocacte memory from a
+ *     thread-local mspace when the global mspace ("gm") cannot
+ *     be locked.
  *   - When a thread that had previously allocated a private
  *     mspace exits, that mspace is added to a global queue of
  *     available mspaces, such that another thread can re-use
  *     it (actually freeing these mspaces isn't possible, since
  *     a thread exiting doesn't mean that memory it allocated is
- *     no longer in-use)
+ *     no longer in-use: lazily allocated caches, and any memory
+ *     used by the thread's return value are examples that would
+ *     come to mind)
  *   - When dlmalloc() fails to acquire the USE_LOCKS lock, then
  *     the calling thread's tls_mspace() is used (if available)
  *   - Since FOOTERS=1 + MSPACES=1 stores the originating mspace
@@ -179,7 +182,10 @@ DECL_BEGIN
  *     free memory from a thread-local mspace, even when free'd
  *     from another thread!
  *   This extension provides an **EXTREMELY** significant boost
- *   in performance when API consumers make heavy use of threads
+ *   in performance when API consumers make heavy use of threads,
+ *   as it solves the problem of atomic contention and the fact
+ *   that only a single thread can allocate from the same mspace
+ *   at the same time.
  *
  *
  * - USE_MSPACE_MALLOC_LOCKLESS --------------------------------
@@ -189,7 +195,7 @@ DECL_BEGIN
  *   it allows `dlmalloc()' to select either the "tls" or "gm"
  *   allocator, based on whichever becomes available first,
  *   rather than having to unconditionally rely on "tls" as soon
- *   as "gm" cannot be locked event once.
+ *   as "gm" cannot be locked even once.
  */
 #ifdef CONFIG_NO_THREADS
 #define USE_LOCKS             0
@@ -232,8 +238,8 @@ DECL_BEGIN
  *   checks to ensure consistency during/after the internal
  *   state transitions made during dlmalloc() or dlfree().
  *   Generally, this switch can be kept off, but it may be of
- *   when debugging bugs introduced by one of the many additions
- *   made to dlmalloc here.
+ *   use when debugging bugs introduced by one of the many
+ *   additions made to dlmalloc here.
  *
  *
  * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE --------------
@@ -241,9 +247,9 @@ DECL_BEGIN
  *   it was allocated by dlmalloc(). This not only makes a lot
  *   of bad-api-usage-related bugs fully consistent and easily
  *   reproducible, but it also makes it very easy to spot memory
- *   that was:
- *   - Bytes that were allocated but not initialized  (CCCCCCCC)
- *   - Memory that was free'd but is still referenced (DEADBEEF)
+ *   that:
+ *   - was allocated but not initialized  (CCCCCCCC)
+ *   - was free'd but is still referenced (DEADBEEF)
  *   Note that the pattern for newly allocated memory was chosen
  *   to repeat itself across all bytes of some word. This way,
  *   it becomes trivial to spot uninitialized memory when only
@@ -262,12 +268,12 @@ DECL_BEGIN
  *   dumped. See below for more details and implementations.
  *
  */
-#if !defined(NDEBUG) && 1
+#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 1
 #define DL_DEBUG_EXTERNAL 1
 #else
 #define DL_DEBUG_EXTERNAL 0
 #endif
-#if !defined(NDEBUG) && 0
+#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 0
 #define DL_DEBUG_INTERNAL 1
 #else
 #define DL_DEBUG_INTERNAL 0
@@ -313,8 +319,8 @@ DECL_BEGIN
  * - leaks_pending_remove
  *
  * exist as global singletons, meaning that in situations where all 32 of my machine's
- * core try to insert elements at the same time, there is only a 1/32 chance for that
- * insert succeeding for any one of those threads.
+ * cores try to insert elements at the same time, there is only a 1/32 chance for that
+ * insert succeeding for any one of them.
  *
  * XXX: This could also be improved upon further by having multiple pending lists, and
  *      selecting one at random based on the address of the "leak_footer" that's being
@@ -345,10 +351,10 @@ DECL_BEGIN
  * searched for what (look like) pointers to heap structures, which are then used to
  * check which heap blocks are still reachable.
  *
- * Since this relies on some arch-specific (mainly: stack/register enumeration), this
+ * Since this relies on some arch-specifics (mainly: stack/register enumeration), this
  * sort of leak detection might not be possible all the time, but when it is possible,
  * it allows one to check for memory leaks in a running system, as opposed to only at
- * the very end, just before deemon exits. */
+ * the very end, just before exiting. */
 #if (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL && \
      defined(CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES) && \
      !defined(CONFIG_NO_DEX) && 0) /* TODO */

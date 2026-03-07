@@ -36,6 +36,7 @@
 
 #include <hybrid/align.h>    /* IS_ALIGNED */
 #include <hybrid/typecore.h> /* __SIZEOF_INT__ */
+#include <hybrid/host.h> /* __SIZEOF_INT__ */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -51,12 +52,14 @@ DECL_BEGIN
 
 #if (10 == 10) == 1 && (10 == 20) == 0
 #define DeeBool_IsTrue_10(self) DeeBool_IsTrue(self)
+#define int_as_01(v)            (!!(v))
 #else /* ... */
 #define DeeBool_IsTrue_10(self) (DeeBool_IsTrue(self) ? 1 : 0)
+#define int_as_01(v)            ((v) ? 1 : 0)
 #endif /* !... */
 
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-#define bool_forcompare(self) (!!DeeBool_IsTrue(self))
+#define bool_forcompare(self) DeeBool_IsTrue_10(self)
 #else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #define bool_forcompare(self) (self)
 #endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
@@ -77,11 +80,15 @@ err_bad_argc:
 	return NULL;
 }
 
+#ifdef __pic__
+#define bool_string(self) (DeeBool_IsTrue(self) ? Dee_AsObject(&str_true) : Dee_AsObject(&str_false))
+#else /* __pic__ */
 PRIVATE DeeObject *tpconst bool_strings[2] = {
 	Dee_AsObject(&str_false),
 	Dee_AsObject(&str_true)
 };
 #define bool_string(self) bool_strings[DeeBool_IsTrue_10(self)]
+#endif /* !__pic__ */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_str(DeeObject *__restrict self) {
@@ -161,7 +168,7 @@ bool_xor(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		goto err;
-	return_bool(!!DeeBool_IsTrue(self) ^ !!temp);
+	return_bool(DeeBool_IsTrue_10(self) ^ int_as_01(temp));
 err:
 	return NULL;
 }
@@ -303,7 +310,7 @@ bool_compare_eq(DeeObject *self, DeeObject *other) {
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	if (!!DeeBool_IsTrue(self) == !!error)
+	if (DeeBool_IsTrue_10(self) == int_as_01(error))
 		return Dee_COMPARE_EQ;
 	return Dee_COMPARE_NE;
 err:
@@ -320,7 +327,7 @@ bool_compare(DeeObject *self, DeeObject *other) {
 	error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	Dee_return_compare(!!DeeBool_IsTrue(self), !!error);
+	Dee_return_compare(DeeBool_IsTrue_10(self), int_as_01(error));
 err:
 	return Dee_COMPARE_ERR;
 }
@@ -330,7 +337,7 @@ bool_eq(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return_bool(DeeBool_IsTrue(self) == !!error);
+	return_bool(DeeBool_IsTrue_10(self) == int_as_01(error));
 err:
 	return NULL;
 }
@@ -340,7 +347,7 @@ bool_ne(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		goto err;
-	return_bool(DeeBool_IsTrue(self) != !!error);
+	return_bool(DeeBool_IsTrue_10(self) != int_as_01(error));
 err:
 	return NULL;
 }
@@ -481,7 +488,7 @@ bool_destroy(DeeObject *__restrict ptr) {
 	DeeBool_Block *block;
 	block = DeeBool_IsTrue(me) ? container_of(me, DeeBool_Block, bp_pair.bp_bools[1])
 	                           : container_of(me, DeeBool_Block, bp_pair.bp_bools[0]);
-	mask = DeeBool_IsTrue(me) ? DeeBool_Block_FREE_TRUE : DeeBool_Block_FREE_FALSE;
+	mask  = DeeBool_IsTrue(me) ? DeeBool_Block_FREE_TRUE : DeeBool_Block_FREE_FALSE;
 	new_status = atomic_orfetch(&block->bp_free, mask);
 	ASSERT((new_status & ~DeeBool_Block_FREE_ALL) == 0);
 
@@ -502,15 +509,15 @@ bool_destroy(DeeObject *__restrict ptr) {
  *      threads) id determined by a specific bit within the address
  *      of the relevant bool. */
 INTERN ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void) {
-	/* Because atomic of cache-conflicts arising from use of atomics,
-	 * incref/decref operations on booleans are actually kind-of a
-	 * bottle-neck, accounting for ~15% of time that deemon spends
-	 * executing `deemon util/scripts/fixincludes.dee`
+	/* Because of cache-conflicts arising from use of atomics,
+	 * incref/decref operations on booleans are actually kind-of
+	 * a bottle-neck, accounting for ~15% of time that deemon
+	 * spends executing `deemon util/scripts/fixincludes.dee`
 	 *
-	 * The obvious idea here would be to:
+	 * The obvious idea here is to:
 	 * - Break the rule that true/false are singletons
-	 * - Give every thread its own thread-local true/false objects that
-	 *   are created when a thread is created.
+	 * - Give every thread its own thread-local true/false
+	 *   objects that are created when a thread is created.
 	 *
 	 * The only real problem here is the former, since lots of code exists
 	 * that relies on booleans being singletons, by including constructs
@@ -597,6 +604,9 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 };
 
 #ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef __NO_ATTR_ALIGNED
+#error "Need 'ATTR_ALIGNED' when 'CONFIG_EXPERIMENTAL_PER_THREAD_BOOL' is enabled"
+#endif /* __NO_ATTR_ALIGNED */
 PUBLIC ATTR_ALIGNED(_Dee_ALIGNOF_BOOL_PAIR) _DeeBool_Pair Dee_FalseTrue =
 #else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 PUBLIC _DeeBool_Pair Dee_FalseTrue =

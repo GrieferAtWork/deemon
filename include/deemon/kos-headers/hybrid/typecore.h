@@ -2651,10 +2651,10 @@ __NAMESPACE_INT_END
  * such words, even if those words are written without the use of
  * `__hybrid_atomic_store()' or similar.
  *
- * Another   way  of  looking   at  this  option  is:
+ * Another way of looking at this option is:
  * >> if (__ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC >= sizeof(*p)) {
- * >>     __hybrid_atomic_store(&p, v, __ATOMIC_RELAXED);
- * >>     p = v; // ^ literally the same as as this line.
+ * >>     __hybrid_atomic_store(p, v, __ATOMIC_RELAXED);
+ * >>     *p = v; // ^ literally the same as as this line.
  * >> }
  */
 #undef __ARCH_HAVE_ALIGNED_WRITES_ARE_ATOMIC

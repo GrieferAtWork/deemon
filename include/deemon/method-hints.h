@@ -41,9 +41,6 @@
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, size_t */
 
-#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
-#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
-
 /* Not *that* "remove" */
 /*!fixincludes fake_include "system-features.h" // remove */
 

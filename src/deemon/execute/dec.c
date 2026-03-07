@@ -961,18 +961,29 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 	DREF /*untracked*/ struct Dee_module_object *result;
 #ifndef Dee_DPRINT_IS_NOOP
 	char const *fail_reason;
-#define goto_fail(reason)     \
-	do {                      \
-		fail_reason = reason; \
-		goto fail;            \
+#ifdef __OPTIMIZE_SIZE__
+#define goto_fail_if(cond, reason) \
+	fail_reason = reason;          \
+	if unlikely(cond)              \
+		goto fail;
+#else /* __OPTIMIZE_SIZE__ */
+#define goto_fail_if(cond, reason) \
+	do {                           \
+		if unlikely(cond) {        \
+			fail_reason = reason;  \
+			goto fail;             \
+		}                          \
 	}	__WHILE0
+#endif /* !__OPTIMIZE_SIZE__ */
 #else /* !Dee_DPRINT_IS_NOOP */
-#define goto_fail(reason) goto fail
+#define goto_fail_if(cond, reason) \
+	if unlikely(cond)              \
+		goto fail
 #endif /* Dee_DPRINT_IS_NOOP */
 	union Dee_module_buildid const *deemon_buildid;
 	Dec_Ehdr *ehdr = (Dec_Ehdr *)DeeMapFile_GetAddr(fmap);
-	if unlikely(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr))
-		goto_fail("File is smaller than 'sizeof(Dec_Ehdr)'");
+	goto_fail_if(DeeMapFile_GetSize(fmap) < sizeof(Dec_Ehdr),
+	             "File is smaller than 'sizeof(Dec_Ehdr)'");
 
 	/* Validate dec file header... */
 	deemon_buildid = DeeModule_GetBuildId(&DeeModule_Deemon);
@@ -990,57 +1001,57 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 #endif /* !Dee_DPRINT_IS_NOOP */
 		goto fail_nomsg;
 	}
-	if unlikely(ehdr->e_ident[DI_MAG0] != DECMAG0)
-		goto_fail("Bad DI_MAG0");
-	if unlikely(ehdr->e_ident[DI_MAG1] != DECMAG1)
-		goto_fail("Bad DI_MAG1");
-	if unlikely(ehdr->e_ident[DI_MAG2] != DECMAG2)
-		goto_fail("Bad DI_MAG2");
-	if unlikely(ehdr->e_ident[DI_MAG3] != DECMAG3)
-		goto_fail("Bad DI_MAG3");
-	if unlikely(ehdr->e_mach != Dee_DEC_MACH)
-		goto_fail("Bad 'e_mach'");
+	goto_fail_if(ehdr->e_ident[DI_MAG0] != DECMAG0, "Bad DI_MAG0");
+	goto_fail_if(ehdr->e_ident[DI_MAG1] != DECMAG1, "Bad DI_MAG1");
+	goto_fail_if(ehdr->e_ident[DI_MAG2] != DECMAG2, "Bad DI_MAG2");
+	goto_fail_if(ehdr->e_ident[DI_MAG3] != DECMAG3, "Bad DI_MAG3");
+	goto_fail_if(ehdr->e_mach != Dee_DEC_MACH, "Bad 'e_mach'");
 	/* Only relocatable images can be written to disk, so that's the only valid type */
-	if unlikely(ehdr->e_type != Dee_DEC_TYPE_RELOC)
-		goto_fail("Bad 'e_type'");
-	if unlikely(ehdr->e_version != DVERSION_CUR)
-		goto_fail("Bad 'e_version'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_heap != offsetof(Dec_Ehdr, e_heap))
-		goto_fail("Bad 'er_offsetof_heap'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_sizeof_pointer != sizeof(void *))
-		goto_fail("Bad 'er_sizeof_pointer'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_endian != Dee_DEC_ENDIAN)
-		goto_fail("Bad 'er_endian'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_eof != DeeMapFile_GetSize(fmap))
-		goto_fail("Bad 'er_offsetof_eof' does not match size of file");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_eof > DFILE_LIMIT)
-		goto_fail("Bad 'er_offsetof_eof' is greater than 'DFILE_LIMIT'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_srel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_srel'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_drel'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_drrel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_drrel'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_deps >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_deps'");
-	if unlikely(/*ehdr->e_typedata.td_reloc.er_offsetof_files != 0 &&*/
-	            ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_files'");
-	if unlikely(/*ehdr->e_typedata.td_reloc.er_offsetof_xrel != 0 &&*/
-	            ehdr->e_typedata.td_reloc.er_offsetof_xrel >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_xrel'");
-	if unlikely(!IS_POWER_OF_TWO(ehdr->e_typedata.td_reloc.er_alignment))
-		goto_fail("Bad 'er_alignment'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_gchead == 0 || ehdr->e_typedata.td_reloc.er_offsetof_gchead >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_gchead'");
-	if unlikely(ehdr->e_typedata.td_reloc.er_offsetof_gctail == 0 || ehdr->e_typedata.td_reloc.er_offsetof_gctail >= ehdr->e_typedata.td_reloc.er_offsetof_eof)
-		goto_fail("Bad 'er_offsetof_gctail'");
-	if unlikely((ehdr->e_typedata.td_reloc.er_offsetof_gchead != 0) != (ehdr->e_typedata.td_reloc.er_offsetof_gctail != 0))
-		goto_fail("Presence of 'er_offsetof_gchead' and 'er_offsetof_gctail' do not match");
-	if unlikely(ehdr->e_heap.hr_size >= (ehdr->e_typedata.td_reloc.er_offsetof_eof - offsetof(Dec_Ehdr, e_heap)))
-		goto_fail("Bad 'e_heap.hr_size' points past EOF");
+	goto_fail_if(ehdr->e_type != Dee_DEC_TYPE_RELOC, "Bad 'e_type'");
+	goto_fail_if(ehdr->e_version != DVERSION_CUR, "Bad 'e_version'");
 
-#if 1 /* Validate the module's MD5 checksum */
+	/* We actually hard-code the expected heap-offset. This is because it could only
+	 * be different for some different installation of deemon, in which case the dec
+	 * file really should have already failed loading at "er_deemon_build_id" above. */
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_heap != offsetof(Dec_Ehdr, e_heap),
+	             "Bad 'er_offsetof_heap'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_sizeof_pointer != sizeof(void *),
+	             "Bad 'er_sizeof_pointer'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_endian != Dee_DEC_ENDIAN,
+	             "Bad 'er_endian'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_eof != DeeMapFile_GetSize(fmap),
+	             "Bad 'er_offsetof_eof' does not match size of file");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_eof > DFILE_LIMIT,
+	             "Bad 'er_offsetof_eof' is greater than 'DFILE_LIMIT'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_srel >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_srel'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_drel >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_drel'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_drrel >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_drrel'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_deps >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_deps'");
+	goto_fail_if(/*ehdr->e_typedata.td_reloc.er_offsetof_files != 0 &&*/
+	             ehdr->e_typedata.td_reloc.er_offsetof_files >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_files'");
+	goto_fail_if(/*ehdr->e_typedata.td_reloc.er_offsetof_xrel != 0 &&*/
+	             ehdr->e_typedata.td_reloc.er_offsetof_xrel >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_xrel'");
+	goto_fail_if(!IS_POWER_OF_TWO(ehdr->e_typedata.td_reloc.er_alignment),
+	             "Bad 'er_alignment'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_gchead == 0 ||
+	             ehdr->e_typedata.td_reloc.er_offsetof_gchead >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_gchead'");
+	goto_fail_if(ehdr->e_typedata.td_reloc.er_offsetof_gctail == 0 ||
+	             ehdr->e_typedata.td_reloc.er_offsetof_gctail >= ehdr->e_typedata.td_reloc.er_offsetof_eof,
+	             "Bad 'er_offsetof_gctail'");
+	goto_fail_if((ehdr->e_typedata.td_reloc.er_offsetof_gchead != 0) !=
+	             (ehdr->e_typedata.td_reloc.er_offsetof_gctail != 0),
+	             "Presence of 'er_offsetof_gchead' and 'er_offsetof_gctail' do not match");
+	goto_fail_if(ehdr->e_heap.hr_size >= (ehdr->e_typedata.td_reloc.er_offsetof_eof - offsetof(Dec_Ehdr, e_heap)),
+	             "Bad 'e_heap.hr_size' points past EOF");
+
+#if 1 /* Validate the module's MD5 checksum (which is also its "build ID") */
 	{
 		DeeMD5_Context md5;
 		DeeModuleObject *mod = DeeDec_Ehdr_GetModule(ehdr);
@@ -1055,7 +1066,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		/* The build timestamp also doesn't participate (this way, a module source
 		 * being touched without any changes made to the source code (or the only
 		 * changes made not affected the generated code), will not result in a
-		 * cascade of dependent modules also needing to be re-built).
+		 * cascade of there-on depending modules also needing to be re-built).
 		 *
 		 * s.a.: the MD5 generation code in `DeeDecWriter_PackEhdr()' */
 		ehdr->e_typedata.td_reloc.er_build_timestamp = 0;
@@ -1097,7 +1108,7 @@ DeeDec_OpenFile(/*inherit(on_success)*/ struct DeeMapFile *__restrict fmap,
 		*fmap = ehdr->e_mapping; /* Inherit */
 	}
 	return result;
-#undef goto_fail
+#undef goto_fail_if
 fail:
 #ifndef Dee_DPRINT_IS_NOOP
 	Dee_DPRINTF("[LD][dec %q] CORRUPT: Header verification failed: %s\n",

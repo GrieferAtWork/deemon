@@ -32,7 +32,7 @@ ClCompile.BasicRuntimeChecks = Default
 #if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
 
 /* Implementation configuration */
-#if !defined(NDEBUG) && 1 /* TODO: Disable by default in the near future */
+#if !defined(NDEBUG) && 0
 #define SLAB_DEBUG_INTERNAL 1
 #else
 #define SLAB_DEBUG_INTERNAL 0

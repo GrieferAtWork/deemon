@@ -61,7 +61,7 @@ DECL_BEGIN
  *
  *    Offset Hex Data      Field                                         Descriptor / Comment
  *    ----   -----------   -------------------------------------------   --------------------
- *    0000   38 10 00 00   struct Dee_heapregion::hr_size                size = 312 (0x138)
+ *    0000   38 01 00 00   struct Dee_heapregion::hr_size                size = 312 (0x138)
  *    0004   87 65 43 21   struct Dee_heapregion::hr_destroy             (void (DCALL *)(struct Dee_heapregion *))0x12345678
  *
  *    0008   00 00 00 00   struct Dee_heapregion::hr_first.hc_prevsize   Must always be "0" for first chunk

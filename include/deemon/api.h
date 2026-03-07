@@ -85,7 +85,10 @@
 
 
 /* Expose definitions that don't comply with the deemon C symbol namespace.
- * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'. */
+ * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'.
+ * TODO: Get rid of "dee_*" and "DEE_*" from this list
+ * TODO: "CONFIG_*" macros are always exposed, but don't match this list
+ *       Consider refactoring all of those to "Dee_CONFIG_*" */
 #if !defined(DEE_SOURCE) && defined(CONFIG_BUILDING_DEEMON)
 #define DEE_SOURCE
 #endif /* !DEE_SOURCE && CONFIG_BUILDING_DEEMON */
@@ -221,7 +224,15 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !Dee_ASSUMED_VALUE */
 
 
-/* #define CONFIG_NO_THREADS */
+/* Disable all thread-safety, and support for spawning additional threads.
+ * When enabled, single-threaded programs may be faster, but multi-threaded
+ * programs become impossible (and trying to force multi-threading via some
+ * 3rd party library in that case would just cause hard crashes since this
+ * also removes all forms of locking/synchronization) */
+#if 0
+#define CONFIG_NO_THREADS
+#endif
+
 
 /* CONFIG:  Enable tracing of all incref()s and decref()s that
  *          happen to an object over the course of its lifetime.
@@ -554,12 +565,14 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  */
 #if (!defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) && \
      !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR))
+/* TODO: When this becomes mandatory, also remove "CONFIG_NO_OBJECT_SLABS"
+ *       (replaced with "#ifdef Dee_SLAB_CHUNKSIZE_MIN") */
 #if 1
 #define CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #else
 #define CONFIG_NO_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #endif
-#endif /* !CONFIG_[NO_]EXPERIMENTAL_TPVISIT_ALSO_AFFECTS_CLEAR */
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 
 
