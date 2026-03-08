@@ -182,7 +182,7 @@ apply_rrel_incref(DeeDec_Ehdr *__restrict self,
 		 * and refuse to load the DEX module.
 		 *
 		 * This edge-case is also the reason for the special extension to dlmalloc:
-		 * FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
+		 * FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
 		 *
 		 * Thanks to that extension, dlfree() will never overwrite fields at offsets
 		 * - offsetof(DeeObject, ob_refcnt)

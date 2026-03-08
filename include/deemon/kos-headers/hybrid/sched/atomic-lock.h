@@ -29,8 +29,12 @@
 #define __SIZEOF_ATOMIC_LOCK __SIZEOF_HYBRID_ATOMIC_LOCK
 
 #if defined(__CC__) || defined(__DEEMON__)
-/*!export atomic_lock*/
-#define __hybrid_atomic_lock        atomic_lock /*!export-*/
+#ifdef __GUARD_HYBRID_SCHED___ATOMIC_LOCK_H
+#define atomic_lock __hybrid_atomic_lock /*!export*/
+#else /* __GUARD_HYBRID_SCHED___ATOMIC_LOCK_H */
+#define __hybrid_atomic_lock atomic_lock /*!export-*/
+#endif /* !__GUARD_HYBRID_SCHED___ATOMIC_LOCK_H */
+
 #define ATOMIC_LOCK_INIT            __HYBRID_ATOMIC_LOCK_INIT
 #define ATOMIC_LOCK_INIT_ACQUIRED   __HYBRID_ATOMIC_LOCK_INIT_ACQUIRED
 #define atomic_lock_init            __hybrid_atomic_lock_init

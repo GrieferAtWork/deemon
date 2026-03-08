@@ -50,17 +50,17 @@ ClCompile.BasicRuntimeChecks = Default
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_EXPERIMENTAL_CUSTOM_HEAP
-#include <deemon/alloc.h>            /* Dee_CollectMemory */
+#include <deemon/alloc.h>            /* DeeDbg_*, Dee_*alloc*, Dee_CollectMemory, Dee_Free, Dee_Memalign, Dee_TryMemalign */
 #include <deemon/format.h>           /* PRF* */
 #include <deemon/gc.h>               /* Dee_GC_OBJECT_OFFSET, Dee_gc_head */
-#include <deemon/heap.h>             /* DeeHeap_*, Dee_HEAPCHUNK_ALIGN, Dee_HEAP_M_*, Dee_heap_mallinfo, Dee_heapchunk, Dee_heapchunk_getnext, Dee_heapregion, Dee_heapregion_*, Dee_heaptail */
+#include <deemon/heap.h>             /* DeeDbgHeap_AddHeapRegion, DeeDbgHeap_DelHeapRegion, DeeHeap_*, Dee_HEAPCHUNK_ALIGN, Dee_HEAP_M_*, Dee_heap_mallinfo, Dee_heapchunk, Dee_heapchunk_getnext, Dee_heapregion, Dee_heapregion_*, Dee_heaptail */
 #include <deemon/module.h>           /* DeeModule*, Dee_module_libentry, Dee_module_object, _Dee_MODULE_FNOADDR */
-#include <deemon/system-features.h>  /* CONFIG_HAVE_*, MAP_ANONYMOUS, MREMAP_MAYMOVE, O_RDWR, bzero, calloc, fprintf, free, getpagesize, malloc, memcpy, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */
+#include <deemon/system-features.h>  /* CONFIG_HAVE_*, MAP_ANONYMOUS, MREMAP_MAYMOVE, O_RDWR, bzero, calloc, errno, fprintf, free, getpagesize, malloc, memcpy, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */
 #include <deemon/thread.h>           /* DeeThreadObject, DeeThread_Self */
 #include <deemon/types.h>            /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t */
 #include <deemon/util/atomic.h>      /* atomic_* */
-#include <deemon/util/lock.h>        /* Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
-#include <deemon/util/rlock.h>       /* Dee_ratomic_lock_*, Dee_rshared_lock_* */
+#include <deemon/util/lock.h>        /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
+#include <deemon/util/rlock.h>       /* Dee_RATOMIC_LOCK_INIT, Dee_RSHARED_LOCK_INIT, Dee_ratomic_lock_*, Dee_rshared_lock_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX */
 #include <deemon/util/slab.h>        /* Dee_slab_page, Dee_slab_page_rawtrim */
 
@@ -71,12 +71,12 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/overflow.h>        /* OVERFLOW_UADD */
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>   /* LIST_*, SLIST_* */
-#include <hybrid/typecore.h>        /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C */
+#include <hybrid/typecore.h>        /* __*_TYPE__, __ALIGNOF_MAX_ALIGN_T__, __CHAR_BIT__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C */
 
 #include "slab.h"
 
 #include <stdbool.h> /* bool, false, true */
-#include <stddef.h>  /* offsetof, size_t */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 #include <stdint.h>  /* UINT32_C, UINT64_C, uintptr_t */
 
 #undef Dee_TryMalloc
@@ -118,93 +118,12 @@ ClCompile.BasicRuntimeChecks = Default
 
 DECL_BEGIN
 
-/* Heavily modified version of dlmalloc (Doug Lea's malloc).
- *
- * dlmalloc is public domain, but I feel like it's just a
- * matter of respect to state this inspiration, and give
- * credit where credit is due ;)
- *
- *
- * The basis for this implementation is the already-modified version found in the KOS source tree here:
- * >> https://github.com/GrieferAtWork/KOSmk4/blob/2ec470169e5df4a9f0b28fd4ff0c105a4f731852/kos/src/libdlmalloc/dlmalloc.c
- *
- * That file in turn is based on the original dlmalloc:
- * >> v2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
- *
- * Heavy modifications have been made:
- * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE:
- *   Debug option to fill freshly malloc'd / free'd memory with patterns
- * - GM_ONLY: **only** provide a single, global mspace
- * - FLAG4_BIT_INDICATES_HEAP_REGION: define an ABI for serializable heap chunks
- * - Determine system implementation (VirtualAlloc / mmap / sbrk) based on CONFIG_HAVE_* macros
- * - Add support for a 4th system implementation: malloc(3)
- *   (iow: implement dlmalloc() using the system's native malloc(3))
- * - Split dlmalloc debug checks into INTERNAL and EXTERNAL
- * - Change dlcalloc (Dee_TryCalloc) to take only a single argument
- * - Assert in-use in dlmalloc_usable_size (Dee_MallocUsableSize)
- * - Use-after-free detection when re-used memory is allocated again
- * - USE_PENDING_FREE_LIST: Support for guarantied non-blocking dlfree()
- * - USE_PER_THREAD_MSTATE: Support for thread-local heaps
- */
 
-
-/* Threading configuration:
- *
- * - USE_LOCKS -------------------------------------------------
- *   Same as already defined by the original dlmalloc: adds
- *   locking to guard against multi-threaded access to globals
- *
- *
- * - USE_PENDING_FREE_LIST -------------------------------------
- *   Makes use of SLIST_ATOMIC_INSERT to form a queue of pending
- *   heap pointers when dlfree() is unable to acquire the lock
- *   added by USE_LOCKS. When this extension is enabled, freeing
- *   memory is a guarantied non-blocking operation.
- *
- *
- * - USE_PER_THREAD_MSTATE -------------------------------------
- *   Provide a per-thread "mstate" that is used when the global
- *   state is locked.
- *
- *   Makes use of thread-local memory, MSPACES and FOOTERS to:
- *   - Allow for an arbitrary number of lazily allocated, extra
- *     mspaces that can be used to allocacte memory from a
- *     thread-local mspace when the global mspace ("gm") cannot
- *     be locked.
- *   - When a thread that had previously allocated a private
- *     mspace exits, that mspace is added to a global queue of
- *     available mspaces, such that another thread can re-use
- *     it (actually freeing these mspaces isn't possible, since
- *     a thread exiting doesn't mean that memory it allocated is
- *     no longer in-use: lazily allocated caches, and any memory
- *     used by the thread's return value are examples that would
- *     come to mind)
- *   - When dlmalloc() fails to acquire the USE_LOCKS lock, then
- *     the calling thread's tls_mspace() is used (if available)
- *   - Since FOOTERS=1 + MSPACES=1 stores the originating mspace
- *     within the returned heap pointer, Dee_Free() is able to
- *     free memory from a thread-local mspace, even when free'd
- *     from another thread!
- *   This extension provides an **EXTREMELY** significant boost
- *   in performance when API consumers make heavy use of threads,
- *   as it solves the problem of atomic contention and the fact
- *   that only a single thread can allocate from the same mspace
- *   at the same time.
- *
- *
- * - USE_MSPACE_MALLOC_LOCKLESS --------------------------------
- *   Define a new method "mspace_malloc_lockless" (same as
- *   "mspace_malloc", but caller must do "PREACTION") This is a
- *   minor optimization on-top of "USE_PER_THREAD_MSTATE", since
- *   it allows `dlmalloc()' to select either the "tls" or "gm"
- *   allocator, based on whichever becomes available first,
- *   rather than having to unconditionally rely on "tls" as soon
- *   as "gm" cannot be locked even once.
- */
+/* ============ Threading configuration ============ */
 #ifdef CONFIG_NO_THREADS
-#define USE_LOCKS             0
+#define USE_LOCKS 0
 #else /* CONFIG_NO_THREADS */
-#define USE_LOCKS             2
+#define USE_LOCKS 1
 #define USE_PENDING_FREE_LIST 1
 /* Always enable in SMP -- performance gain is too significant to
  * ignore, even when compared to the slight increase in code size */
@@ -215,86 +134,20 @@ DECL_BEGIN
 #ifndef USE_PER_THREAD_MSTATE
 #define USE_PER_THREAD_MSTATE 0
 #endif /* !USE_PER_THREAD_MSTATE */
-#define USE_MSPACE_MALLOC_LOCKLESS USE_PER_THREAD_MSTATE
 
 
 
-/* Debug configuration:
- *
- * - DL_DEBUG_EXTERNAL -----------------------------------------
- *   Main switch for enabling debug features meant to protect
- *   against, and check for errors that may be made by code
- *   outside of this (modified) dlmalloc implementation. Also
- *   defines the default state of a number of individually
- *   configurable debug features:
- *   - footers
- *   - usage checks
- *   - debug-memset patterns
- *   - leak detector
- *   - ...
- *
- *
- * - DL_DEBUG_INTERNAL -----------------------------------------
- *   internal debugging (self-consistency assertions).
- *
- *   Enable debug checks/assertions that are internal to this
- *   (modified) dlmalloc implementation. This mainly includes
- *   checks to ensure consistency during/after the internal
- *   state transitions made during dlmalloc() or dlfree().
- *   Generally, this switch can be kept off, but it may be of
- *   use when debugging bugs introduced by one of the many
- *   additions made to dlmalloc here.
- *
- *
- * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE --------------
- *   Special word-sized patterns with which to fill memory after
- *   it was allocated by dlmalloc(). This not only makes a lot
- *   of bad-api-usage-related bugs fully consistent and easily
- *   reproducible, but it also makes it very easy to spot memory
- *   that:
- *   - was allocated but not initialized  (CCCCCCCC)
- *   - was free'd but is still referenced (DEADBEEF)
- *   Note that the pattern for newly allocated memory was chosen
- *   to repeat itself across all bytes of some word. This way,
- *   it becomes trivial to spot uninitialized memory when only
- *   parts of some word were initialized.
- *
- *
- * - DETECT_USE_AFTER_FREE -------------------------------------
- *   When memory is allocated that was previously free'd, check
- *   that its contents still reflect `DL_DEBUG_MEMSET_FREE'.
- *   This feature requires `DL_DEBUG_MEMSET_FREE' to work.
- *
- *
- * - LEAK_DETECTION --------------------------------------------
- *   Enables a memory leak detector suitable for dumping all
- *   memory that is (still) allocated at the time of leaks being
- *   dumped. See below for more details and implementations.
- *
- */
+/* ============ Debug configuration ============ */
 #if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 1
 #define DL_DEBUG_EXTERNAL 1
 #else
 #define DL_DEBUG_EXTERNAL 0
 #endif
-#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 0
-#define DL_DEBUG_INTERNAL 1
-#else
-#define DL_DEBUG_INTERNAL 0
-#endif
-#undef DL_DEBUG_MEMSET_ALLOC
-#undef DL_DEBUG_MEMSET_FREE
-#if DL_DEBUG_EXTERNAL
-#define DL_DEBUG_MEMSET_ALLOC WORD_4BYTE(CCCCCCCC) /* Set by Dee_Malloc() */
-#define DL_DEBUG_MEMSET_FREE  WORD_4BYTE(DEADBEEF) /* Set by Dee_Free() */
-#endif /* DL_DEBUG_EXTERNAL */
-#ifdef DL_DEBUG_MEMSET_FREE
-#define DETECT_USE_AFTER_FREE 1
-#else /* DL_DEBUG_MEMSET_FREE */
-#define DETECT_USE_AFTER_FREE 0
-#endif /* !DL_DEBUG_MEMSET_FREE */
 
 
+/* BEGIN --- Not part of dlmalloc core: leak detection */
+/* BEGIN --- Not part of dlmalloc core: leak detection */
+/* BEGIN --- Not part of dlmalloc core: leak detection */
 
 /* CAUTION: Leak detection is a bit of a bottleneck:
  *
@@ -368,22 +221,20 @@ DECL_BEGIN
 #define LEAK_DETECTION_GC 0
 #endif /* !LEAK_DETECTION_GC */
 
+/* END --- Not part of dlmalloc core: leak detection */
+/* END --- Not part of dlmalloc core: leak detection */
+/* END --- Not part of dlmalloc core: leak detection */
 
-/* Configure some of dlmalloc's remaining builtin config options. */
-#define MALLOC_ALIGNMENT       (size_t)(__SIZEOF_POINTER__ * 2) /* It may not be __ALIGNOF_MAX_ALIGN_T__, but it's "just what 'a needed" */
-#define ONLY_MSPACES           0                                /* The whole idea is to implement `Dee_Malloc()', so we'll need more than MSPACES (but see `USE_PER_THREAD_MSTATE') */
-#define PROCEED_ON_ERROR       0                                /* Wouldn't even work anymore since RTCHECK was replaced with "ext_assert()" */
-#define MALLOC_INSPECT_ALL     0                                /* Not needed (and probably wouldn't work for one reason of another) */
-#define MSPACES                (USE_PER_THREAD_MSTATE)          /* Need to enable MSPACES support for `tls_mspace()' */
-#define GM_ONLY                (!MSPACES)                       /* Without MSPACES, we only need the "gm" mspace */
-#define INSECURE               0                                /* Set to `1' to disable some asserts/assumptions that were originally used to implement `RTCHECK'. These were turned into assertions/__builtin_assume, so this option kind-of does the opposite now... */
-#define XOR_MASK_MCHUNK_FOOT   DL_DEBUG_EXTERNAL                /* xor-mask footers of heap chunks with "mparams.magic" when using them as mspace indicator */
-#undef REALLOC_ZERO_BYTES_FREES /* Nope: Dee_Realloc(p, 0) resizes to 0-sized block, but returns non-NULL */
-#undef MALLOC_ZERO_RETURNS_NULL /* Nope: Dee_Malloc(0) returns 0-sized, but non-NULL, block */
+
+/* It may not be __ALIGNOF_MAX_ALIGN_T__, but it's "just what 'a needed" */
+#define MALLOC_ALIGNMENT (size_t)(__SIZEOF_POINTER__ * 2)
+
+/* We use dlmalloc() to implement Dee_TryMalloc() at its lowest
+ * -- as such, nothing needs to be done as the "failure action" */
 #if 1
-#define MALLOC_FAILURE_ACTION  /* Nothing */
+#define MALLOC_FAILURE_ACTION /* Nothing */
 #else
-#define MALLOC_FAILURE_ACTION  Dee_BREAKPOINT()
+#define MALLOC_FAILURE_ACTION Dee_BREAKPOINT()
 #endif
 
 
@@ -400,9 +251,9 @@ DECL_BEGIN
 #endif
 
 
-/* Custom dlmalloc extension:
- * FLAG4_BIT on an allocation means it's part of "struct Dee_heapregion" */
-#define FLAG4_BIT_INDICATES_HEAP_REGION 1
+
+/* ============= Enable & configure support for "struct Dee_heapregion" */
+#define FLAG4_BIT_HEAP_REGION 1
 
 /* Handler special flag: we need to be able to detect if a statically allocated
  * object from a heap region has been destroyed via its "ob_refcnt" in order to
@@ -410,27 +261,27 @@ DECL_BEGIN
  * objects within another module under "CONFIG_EXPERIMENTAL_MMAP_DEC". If during
  * object destruction, it is found that a "Dee_refcnt_t"-sized word at one of
  * the following offsets into a heap block's user-area is "0", then this "0"
- * must **NOT** be overwritten by "DL_DEBUG_MEMSET_FREE":
+ * must **NOT** be overwritten by "DL_DEBUG_MEMSET_FREE_PATTERN":
  * - offsetof(DeeObject, ob_refcnt)
  * - offsetof(struct Dee_gc_head, gc_object.ob_refcnt) */
 #ifdef CONFIG_EXPERIMENTAL_MMAP_DEC
-#define FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 1
-#else /* CONFIG_EXPERIMENTAL_MMAP_DEC */
-#define FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 0
-#endif /* !CONFIG_EXPERIMENTAL_MMAP_DEC */
+STATIC_ASSERT(IS_ALIGNED(offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
+STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
+#define FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 1
+#define HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T Dee_refcnt_t
+#define HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_CANSET(chunk_offset, p_word)         \
+	(!((chunk_offset) == offsetof(DeeObject, ob_refcnt) ||                          \
+	   (chunk_offset) == (Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt)) || \
+	   (atomic_read(iter) == 0)))
+#endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
-/* HAVE_DBG_HEAP_REGION: Make provisioning for:
+/* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE: Make provisioning for:
  * - DeeDbgHeap_AddHeapRegion
  * - DeeDbgHeap_DelHeapRegion */
-#undef HAVE_DBG_HEAP_REGION
-#define HAVE_DBG_HEAP_REGION ((LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL) && FLAG4_BIT_INDICATES_HEAP_REGION)
+#define FLAG4_BIT_HEAP_REGION_DBG_DISPOSE \
+	(LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL)
+/* ============= */
 
-
-#if __SIZEOF_POINTER__ > 4
-#define WORD_4BYTE(x) UINT64_C(0x##x##x)
-#else /* __SIZEOF_POINTER__ > 4 */
-#define WORD_4BYTE(x) UINT32_C(0x##x)
-#endif /*__SIZEOF_POINTER__ <= 4 */
 
 
 /* API Configuration */
@@ -446,7 +297,6 @@ DECL_BEGIN
 #define NO_INDEPENDENT_ALLOC 1
 #define NO_BULK_FREE         1
 #define NO_MALLOC_TRIM       0
-#define EXPOSE_AS_DEEMON_API 1
 
 /* Disable certain mspace-specific functions */
 #define NO_MSPACE_FREE                1 /* 'Dee_Free()' is able to detect mspace chunks (via "FOOTERS"), so mspace_free() isn't needed */
@@ -462,6 +312,7 @@ DECL_BEGIN
 #define NO_MSPACE_FOOTPRINT_LIMIT     1 /* Unused: integrated into dlmalloc_footprint_limit() */
 #define NO_MSPACE_SET_FOOTPRINT_LIMIT 1 /* Unused: integrated into dlmalloc_set_footprint_limit() */
 #define NO_MSPACE_TRIM                1 /* Unused: integrated into dlmalloc_trim() */
+#define NO_MSPACE_MALLINFO            1
 #define NO_DESTROY_MSPACE             1 /* Per-thread heaps must be re-used as needed and cannot be destroyed (if there's a way to get rid of Dee_UntrackAlloc(), this might come back one day...) */
 
 
@@ -473,12 +324,702 @@ DECL_BEGIN
 #define M_GRANULARITY    Dee_HEAP_M_GRANULARITY
 #define M_MMAP_THRESHOLD Dee_HEAP_M_MMAP_THRESHOLD
 
+/* Configure API for deemon */
+#define dlcalloc_SINGLE_PARAMETER 1
+#define DL_DECL_DEFAULT static
+#define DL_IMPL_DEFAULT static
+
+/* When not doing any leak detection, then dlmalloc's internal methods can be exposed directly! */
+#define DIRECTLY_DEFINE_DEEMON_PUBLIC_API (LEAK_DETECTION == LEAK_DETECTION_METHOD_NONE)
+#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
+#define DL_DECL_dlmalloc DFUNDEF
+#define DL_IMPL_dlmalloc PUBLIC
+#define DL_CC_dlmalloc   DCALL
+#define dlmalloc         Dee_TryMalloc
+#define Dee_TryMalloc_DEFINED
+
+#define DL_DECL_dlcalloc DFUNDEF
+#define DL_IMPL_dlcalloc PUBLIC
+#define DL_CC_dlcalloc   DCALL
+#define dlcalloc         Dee_TryCalloc
+#define Dee_TryCalloc_DEFINED
+
+#define DL_DECL_dlfree DFUNDEF
+#define DL_IMPL_dlfree PUBLIC
+#define DL_CC_dlfree   DCALL
+#define dlfree         Dee_Free
+#define Dee_Free_DEFINED
+
+#define DL_DECL_dlrealloc DFUNDEF
+#define DL_IMPL_dlrealloc PUBLIC
+#define DL_CC_dlrealloc   DCALL
+#define dlrealloc         Dee_TryRealloc
+#define Dee_TryRealloc_DEFINED
+
+#define DL_DECL_dlmemalign DFUNDEF
+#define DL_IMPL_dlmemalign PUBLIC
+#define DL_CC_dlmemalign   DCALL
+#define dlmemalign         Dee_TryMemalign
+#define Dee_TryMemalign_DEFINED
+
+#define DL_DECL_dlrealloc_in_place DFUNDEF
+#define DL_IMPL_dlrealloc_in_place PUBLIC
+#define DL_CC_dlrealloc_in_place   DCALL
+#define dlrealloc_in_place         Dee_TryReallocInPlace
+#define Dee_TryReallocInPlace_DEFINED
+#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+#define dlfree_CHECKS_NULL    0 /* Not needed (already done by caller) */
+#define dlrealloc_CHECKS_NULL 0 /* Not needed (already done by caller) */
+#if LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL
+#define DLREALLOC_IN_PLACE_CHECKS_NULL 0 /* Not needed (already done by caller) */
+#else /* LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL */
+#define DL_DECL_dlrealloc_in_place DFUNDEF
+#define DL_IMPL_dlrealloc_in_place PUBLIC
+#define DL_CC_dlrealloc_in_place   DCALL
+#define dlrealloc_in_place         Dee_TryReallocInPlace
+#define Dee_TryReallocInPlace_DEFINED
+#endif /* LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL */
+#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
+
+#define dlrealloc_ZERO_BYTES_FREES 0 /* Nope: Dee_Realloc(p, 0) resizes to 0-sized block, but returns non-NULL */
+#define dlmalloc_ZERO_RETURNS_NULL 0 /* Nope: Dee_Malloc(0) returns 0-sized, but non-NULL, block */
+
+#define DL_DECL_dlmallopt DFUNDEF
+#define DL_IMPL_dlmallopt PUBLIC
+#define DL_CC_dlmallopt   DCALL
+#define dlmallopt DeeHeap_SetOpt
+#define dlmallopt_SECOND_PARAMETER_IS_SIZE_T 1
+
+#if !NO_MALLOC_FOOTPRINT
+#define DL_DECL_dlmalloc_footprint DFUNDEF
+#define DL_IMPL_dlmalloc_footprint PUBLIC
+#define DL_CC_dlmalloc_footprint   DCALL
+#define dlmalloc_footprint DeeHeap_Footprint
+
+#define DL_DECL_dlmalloc_max_footprint DFUNDEF
+#define DL_IMPL_dlmalloc_max_footprint PUBLIC
+#define DL_CC_dlmalloc_max_footprint   DCALL
+#define dlmalloc_max_footprint DeeHeap_MaxFootprint
+
+#define DL_DECL_dlmalloc_footprint_limit DFUNDEF
+#define DL_IMPL_dlmalloc_footprint_limit PUBLIC
+#define DL_CC_dlmalloc_footprint_limit   DCALL
+#define dlmalloc_footprint_limit DeeHeap_GetFootprintLimit
+
+#define DL_DECL_dlmalloc_set_footprint_limit DFUNDEF
+#define DL_IMPL_dlmalloc_set_footprint_limit PUBLIC
+#define DL_CC_dlmalloc_set_footprint_limit   DCALL
+#define dlmalloc_set_footprint_limit DeeHeap_SetFootprintLimit
+#define dlmalloc_set_footprint_limit_RETURNS_OLD_VALUE 1
+#endif /* !NO_MALLOC_FOOTPRINT */
+
+#if !NO_MALLINFO
+#define DL_DECL_dlmallinfo DFUNDEF
+#define DL_IMPL_dlmallinfo PUBLIC
+#define DL_CC_dlmallinfo   DCALL
+#define dlmallinfo      DeeHeap_MallInfo
+#define STRUCT_mallinfo struct Dee_heap_mallinfo
+
+#define STRUCT_mallinfo_get_arena(x)       (x)->hmi_arena
+#define STRUCT_mallinfo_set_arena(x, v)    (void)((x)->hmi_arena = (v))
+#define STRUCT_mallinfo_get_ordblks(x)     (x)->hmi_ordblks
+#define STRUCT_mallinfo_set_ordblks(x, v)  (void)((x)->hmi_ordblks = (v))
+#define STRUCT_mallinfo_get_hblkhd(x)      (x)->hmi_hblkhd
+#define STRUCT_mallinfo_set_hblkhd(x, v)   (void)((x)->hmi_hblkhd = (v))
+#define STRUCT_mallinfo_get_usmblks(x)     (x)->hmi_usmblks
+#define STRUCT_mallinfo_set_usmblks(x, v)  (void)((x)->hmi_usmblks = (v))
+#define STRUCT_mallinfo_get_uordblks(x)    (x)->hmi_uordblks
+#define STRUCT_mallinfo_set_uordblks(x, v) (void)((x)->hmi_uordblks = (v))
+#define STRUCT_mallinfo_get_fordblks(x)    (x)->hmi_fordblks
+#define STRUCT_mallinfo_set_fordblks(x, v) (void)((x)->hmi_fordblks = (v))
+#define STRUCT_mallinfo_get_keepcost(x)    (x)->hmi_keepcost
+#define STRUCT_mallinfo_set_keepcost(x, v) (void)((x)->hmi_keepcost = (v))
+#endif /* !NO_MALLINFO */
+
+#if !NO_MALLOC_TRIM
+#define DL_DECL_dlmalloc_trim DFUNDEF
+#define DL_IMPL_dlmalloc_trim PUBLIC
+#define DL_CC_dlmalloc_trim   DCALL
+#define dlmalloc_trim DeeHeap_Trim
+#define dlmalloc_trim_RETURNS_SIZE_T 1
+#endif /* !NO_MALLOC_TRIM */
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
+/* Trim the slab page cache (do this first, in case said cache has
+ * been implemented in terms of the fallback `Dee_Memalign()' impl) */
+#define dlmalloc_trim_PREHOOK(p_result, pad) \
+	*(p_result) += Dee_slab_page_rawtrim(pad)
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+
+/* Integrate assert checks */
+#define DL_ASSERT  Dee_ASSERT
+#define DL_ASSERTF Dee_ASSERTF
+
+/* Integrate lock type */
+#define DL_LOCK_T           Dee_atomic_lock_t
+#define DL_LOCK_INIT_STATIC Dee_ATOMIC_LOCK_INIT
+#define DL_LOCK_INIT        Dee_atomic_lock_cinit
+#define DL_LOCK_ACQUIRED    Dee_atomic_lock_acquired
+#define DL_LOCK_AVAILABLE   Dee_atomic_lock_available
+#define DL_LOCK_ACQUIRE     Dee_atomic_lock_acquire
+#define DL_LOCK_RELEASE     Dee_atomic_lock_release
+#define DL_LOCK_TRYACQUIRE  Dee_atomic_lock_tryacquire
+#define DL_LOCK_WAITFOR     Dee_atomic_lock_waitfor
+
+/* Integrate re-entrant lock type */
+#if 1 /* Use atomic locks -- shared locks use futex, which might require Dee_TryMalloc() for its impl! */
+#define DL_REENTRANT_LOCK_T           Dee_ratomic_lock_t
+#define DL_REENTRANT_LOCK_INIT_STATIC Dee_RATOMIC_LOCK_INIT
+#define DL_REENTRANT_LOCK_ACQUIRE     Dee_ratomic_lock_acquire
+#define DL_REENTRANT_LOCK_RELEASE     Dee_ratomic_lock_release
+#else
+#define DL_REENTRANT_LOCK_T           Dee_rshared_lock_t
+#define DL_REENTRANT_LOCK_INIT_STATIC Dee_RSHARED_LOCK_INIT
+#define DL_REENTRANT_LOCK_ACQUIRE     Dee_rshared_lock_acquire_noint
+#define DL_REENTRANT_LOCK_RELEASE     Dee_rshared_lock_release
+#endif
+
+/* Integrate TLS heap context */
+#define DL_TLS_VARS       DeeThreadObject *const _tls_me = DeeThread_Self();
+#define DL_TLS_GETHEAP()  (_tls_me->t_heap)
+#define DL_TLS_SETHEAP(v) (void)(_tls_me->t_heap = (v))
+
+/* Integrate heap region ABI */
+#define STRUCT_dlheapchunk  struct Dee_heapchunk
+#define STRUCT_dlheaptail   struct Dee_heaptail
+#define STRUCT_dlheapregion struct Dee_heapregion
+
+/* Tell dlmalloc() which system features are available... */
+#if !defined(CONFIG_HAVE_mmap) && defined(CONFIG_HAVE_mmap64)
+#define CONFIG_HAVE_mmap 1
+#undef mmap
+#define mmap mmap64
+#endif /* mmap = mmap64 */
+#ifdef CONFIG_HAVE_VirtualAlloc
+#define DL_CONFIG_HAVE_VirtualAlloc 1
+#endif /* CONFIG_HAVE_VirtualAlloc */
+#ifdef CONFIG_HAVE_mmap
+#define DL_CONFIG_HAVE_mmap 1
+#endif /* CONFIG_HAVE_mmap */
+#ifdef CONFIG_HAVE_munmap
+#define DL_CONFIG_HAVE_munmap 1
+#endif /* CONFIG_HAVE_munmap */
+#ifdef CONFIG_HAVE_PROT_READ
+#define DL_CONFIG_HAVE_PROT_READ 1
+#endif /* CONFIG_HAVE_PROT_READ */
+#ifdef CONFIG_HAVE_PROT_WRITE
+#define DL_CONFIG_HAVE_PROT_WRITE 1
+#endif /* CONFIG_HAVE_PROT_WRITE */
+#ifdef CONFIG_HAVE_MAP_PRIVATE
+#define DL_CONFIG_HAVE_MAP_PRIVATE 1
+#endif /* CONFIG_HAVE_MAP_PRIVATE */
+#ifdef CONFIG_HAVE_MAP_ANONYMOUS
+#define DL_CONFIG_HAVE_MAP_ANONYMOUS 1
+#endif /* CONFIG_HAVE_MAP_ANONYMOUS */
+#ifdef CONFIG_HAVE_sbrk
+#define DL_CONFIG_HAVE_sbrk 1
+#endif /* CONFIG_HAVE_sbrk */
+#ifdef CONFIG_HAVE_mremap
+#define DL_CONFIG_HAVE_mremap 1
+#endif /* CONFIG_HAVE_mremap */
+#ifdef CONFIG_HAVE_MREMAP_MAYMOVE
+#define DL_CONFIG_HAVE_MREMAP_MAYMOVE 1
+#endif /* CONFIG_HAVE_MREMAP_MAYMOVE */
+#ifdef CONFIG_HAVE_malloc
+#define DL_CONFIG_HAVE_malloc 1
+#endif /* CONFIG_HAVE_malloc */
+#ifdef CONFIG_HAVE_calloc
+#define DL_CONFIG_HAVE_calloc 1
+#endif /* CONFIG_HAVE_calloc */
+#ifdef CONFIG_HAVE_free
+#define DL_CONFIG_HAVE_free 1
+#endif /* CONFIG_HAVE_free */
+#ifdef CONFIG_HAVE_time
+#define DL_CONFIG_HAVE_time 1
+#endif /* CONFIG_HAVE_time */
+#ifdef CONFIG_HAVE_getpagesize
+#define DL_CONFIG_HAVE_getpagesize 1
+#endif /* CONFIG_HAVE_getpagesize */
+#ifdef CONFIG_HAVE_sysconf
+#define DL_CONFIG_HAVE_sysconf 1
+#endif /* CONFIG_HAVE_sysconf */
+#ifdef CONFIG_HAVE_SYS_PARAM_H
+#define DL_CONFIG_HAVE_SYS_PARAM_H 1
+#endif /* CONFIG_HAVE_SYS_PARAM_H */
+
+
+
+
+
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+/*                                                                      */
+/* START OF DLMALLOC                                                    */
+/*                                                                      */
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+/* Heavily modified version of dlmalloc (Doug Lea's malloc).
+ *
+ * dlmalloc is public domain, but I feel like it's just a
+ * matter of respect to state this inspiration, and give
+ * credit where credit is due ;)
+ *
+ *
+ * The basis for this implementation is the already-modified version found in the KOS source tree here:
+ * >> https://github.com/GrieferAtWork/KOSmk4/blob/2ec470169e5df4a9f0b28fd4ff0c105a4f731852/kos/src/libdlmalloc/dlmalloc.c
+ *
+ * That file in turn is based on the original dlmalloc:
+ * >> v2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
+ *
+ * Heavy modifications have been made:
+ * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE:
+ *   Debug option to fill freshly malloc'd / free'd memory with patterns
+ * - GM_ONLY: **only** provide a single, global mspace
+ * - FLAG4_BIT_HEAP_REGION: define an ABI for serializable heap chunks
+ * - Determine system implementation (VirtualAlloc / mmap / sbrk) based on CONFIG_HAVE_* macros
+ * - Add support for a 4th system implementation: malloc(3)
+ *   (iow: implement dlmalloc() using the system's native malloc(3))
+ * - Split dlmalloc debug checks into INTERNAL and EXTERNAL
+ * - Change dlcalloc to take only a single argument
+ * - Assert in-use in dlmalloc_usable_size
+ * - Use-after-free detection when re-used memory is allocated again
+ * - USE_PENDING_FREE_LIST: Support for guarantied non-blocking dlfree()
+ * - USE_PER_THREAD_MSTATE: Support for thread-local heaps
+ */
+
+
+/* Threading configuration:
+ *
+ * - USE_LOCKS -------------------------------------------------
+ *   Same as already defined by the original dlmalloc: adds
+ *   locking to guard against multi-threaded access to globals
+ *
+ *
+ * - USE_PENDING_FREE_LIST -------------------------------------
+ *   Makes use of SLIST_ATOMIC_INSERT to form a queue of pending
+ *   heap pointers when dlfree() is unable to acquire the lock
+ *   added by USE_LOCKS. When this extension is enabled, freeing
+ *   memory is a guarantied non-blocking operation.
+ *
+ *
+ * - USE_PER_THREAD_MSTATE -------------------------------------
+ *   Provide a per-thread "mstate" that is used when the global
+ *   state is locked.
+ *
+ *   Makes use of thread-local memory, MSPACES and FOOTERS to:
+ *   - Allow for an arbitrary number of lazily allocated, extra
+ *     mspaces that can be used to allocacte memory from a
+ *     thread-local mspace when the global mspace ("gm") cannot
+ *     be locked.
+ *   - When a thread that had previously allocated a private
+ *     mspace exits, that mspace is added to a global queue of
+ *     available mspaces, such that another thread can re-use
+ *     it (actually freeing these mspaces isn't possible, since
+ *     a thread exiting doesn't mean that memory it allocated is
+ *     no longer in-use: lazily allocated caches, and any memory
+ *     used by the thread's return value are examples that would
+ *     come to mind)
+ *   - When dlmalloc() fails to acquire the USE_LOCKS lock, then
+ *     the calling thread's tls_mspace() is used (if available)
+ *   - Since FOOTERS=1 + MSPACES=1 stores the originating mspace
+ *     within the returned heap pointer, dlfree() is able to
+ *     free memory from a thread-local mspace, even when free'd
+ *     from another thread!
+ *   This extension provides an **EXTREMELY** significant boost
+ *   in performance when API consumers make heavy use of threads,
+ *   as it solves the problem of atomic contention and the fact
+ *   that only a single thread can allocate from the same mspace
+ *   at the same time.
+ *
+ *
+ * - USE_MSPACE_MALLOC_LOCKLESS --------------------------------
+ *   Define a new method "mspace_malloc_lockless" (same as
+ *   "mspace_malloc", but caller must do "PREACTION") This is a
+ *   minor optimization on-top of "USE_PER_THREAD_MSTATE", since
+ *   it allows `dlmalloc()' to select either the "tls" or "gm"
+ *   allocator, based on whichever becomes available first,
+ *   rather than having to unconditionally rely on "tls" as soon
+ *   as "gm" cannot be locked even once.
+ */
+#ifndef USE_LOCKS
+#define USE_LOCKS 0
+#endif /* !USE_LOCKS */
+#ifndef USE_PENDING_FREE_LIST
+#define USE_PENDING_FREE_LIST 0
+#endif /* !USE_PENDING_FREE_LIST */
+#ifndef USE_PER_THREAD_MSTATE
+#define USE_PER_THREAD_MSTATE 0
+#endif /* !USE_PER_THREAD_MSTATE */
+#ifndef USE_MSPACE_MALLOC_LOCKLESS
+#define USE_MSPACE_MALLOC_LOCKLESS USE_PER_THREAD_MSTATE
+#endif /* !USE_MSPACE_MALLOC_LOCKLESS */
+
+
+
+/* Debug configuration:
+ *
+ * - DL_DEBUG_EXTERNAL -----------------------------------------
+ *   Main switch for enabling debug features meant to protect
+ *   against, and check for errors that may be made by code
+ *   outside of this (modified) dlmalloc implementation. Also
+ *   defines the default state of a number of individually
+ *   configurable debug features:
+ *   - footers
+ *   - usage checks
+ *   - debug-memset patterns
+ *   - leak detector
+ *   - ...
+ *
+ *
+ * - DL_DEBUG_INTERNAL -----------------------------------------
+ *   internal debugging (self-consistency assertions).
+ *
+ *   Enable debug checks/assertions that are internal to this
+ *   (modified) dlmalloc implementation. This mainly includes
+ *   checks to ensure consistency during/after the internal
+ *   state transitions made during dlmalloc() or dlfree().
+ *   Generally, this switch can be kept off, but it may be of
+ *   use when debugging bugs introduced by one of the many
+ *   additions made to dlmalloc here.
+ *
+ *
+ * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE --------------
+ *   Special word-sized patterns with which to fill memory after
+ *   it was allocated by dlmalloc(). This not only makes a lot
+ *   of bad-api-usage-related bugs fully consistent and easily
+ *   reproducible, but it also makes it very easy to spot memory
+ *   that:
+ *   - was allocated but not initialized  (CCCCCCCC)
+ *   - was free'd but is still referenced (DEADBEEF)
+ *   Note that the pattern for newly allocated memory was chosen
+ *   to repeat itself across all bytes of some word. This way,
+ *   it becomes trivial to spot uninitialized memory when only
+ *   parts of some word were initialized.
+ *
+ *
+ * - DETECT_USE_AFTER_FREE -------------------------------------
+ *   When memory is allocated that was previously free'd, check
+ *   that its contents still reflect `DL_DEBUG_MEMSET_FREE_PATTERN'.
+ *   This feature requires `DL_DEBUG_MEMSET_FREE_PATTERN' to work.
+ *
+ *
+ * - LEAK_DETECTION --------------------------------------------
+ *   Enables a memory leak detector suitable for dumping all
+ *   memory that is (still) allocated at the time of leaks being
+ *   dumped. See below for more details and implementations.
+ *
+ */
+#ifndef DL_DEBUG_INTERNAL
+#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 0
+#define DL_DEBUG_INTERNAL 1
+#else
+#define DL_DEBUG_INTERNAL 0
+#endif
+#endif /* !DL_DEBUG_INTERNAL */
+#ifndef DL_DEBUG_EXTERNAL
+#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 1
+#define DL_DEBUG_EXTERNAL 1
+#else
+#define DL_DEBUG_EXTERNAL 0
+#endif
+#endif /* !DL_DEBUG_EXTERNAL */
+
+#ifndef DL_DEBUG_MEMSET_ALLOC
+#define DL_DEBUG_MEMSET_ALLOC DL_DEBUG_EXTERNAL
+#endif /* !DL_DEBUG_MEMSET_ALLOC */
+#ifndef DL_DEBUG_MEMSET_FREE
+#define DL_DEBUG_MEMSET_FREE DL_DEBUG_EXTERNAL
+#endif /* !DL_DEBUG_MEMSET_FREE */
+#ifndef DETECT_USE_AFTER_FREE
+#define DETECT_USE_AFTER_FREE DL_DEBUG_MEMSET_FREE
+#endif /* !DETECT_USE_AFTER_FREE */
+
+#if __SIZEOF_POINTER__ > 4
+#define WORD_4BYTE(x) UINT64_C(0x##x##x)
+#else /* __SIZEOF_POINTER__ > 4 */
+#define WORD_4BYTE(x) UINT32_C(0x##x)
+#endif /*__SIZEOF_POINTER__ <= 4 */
+
+#if !DL_DEBUG_MEMSET_ALLOC
+#undef DL_DEBUG_MEMSET_ALLOC_PATTERN
+#elif !defined(DL_DEBUG_MEMSET_ALLOC_PATTERN)
+#define DL_DEBUG_MEMSET_ALLOC_PATTERN WORD_4BYTE(CCCCCCCC) /* Set by dlmalloc() */
+#endif
+
+#if !DL_DEBUG_MEMSET_FREE
+#undef DL_DEBUG_MEMSET_FREE_PATTERN
+#elif !defined(DL_DEBUG_MEMSET_FREE_PATTERN)
+#define DL_DEBUG_MEMSET_FREE_PATTERN WORD_4BYTE(DEADBEEF) /* Set by dlfree() */
+#endif
+
+
+
+/* Configure some of dlmalloc's remaining builtin config options. */
+#ifndef MALLOC_ALIGNMENT
+#define MALLOC_ALIGNMENT __ALIGNOF_MAX_ALIGN_T__
+#endif /* !MALLOC_ALIGNMENT */
+
+/* The whole idea is to implement `dlmalloc()', so we'll need
+ * more than MSPACES (but see `USE_PER_THREAD_MSTATE') */
+#ifndef ONLY_MSPACES
+#define ONLY_MSPACES 0
+#endif /* ONLY_MSPACES */
+
+/* Wouldn't even work anymore since RTCHECK was replaced with "ext_assert()" */
+#ifndef PROCEED_ON_ERROR
+#define PROCEED_ON_ERROR 0
+#endif /* PROCEED_ON_ERROR */
+
+/* Enable support for `dlmalloc_inspect_all()' */
+#ifndef MALLOC_INSPECT_ALL
+#define MALLOC_INSPECT_ALL 0
+#endif /* MALLOC_INSPECT_ALL */
+
+/* Need to enable MSPACES support for `tls_mspace()' */
+#ifndef MSPACES
+#define MSPACES (USE_PER_THREAD_MSTATE)
+#endif /* MSPACES */
+
+/* Without MSPACES, we only need the "gm" mspace */
+#ifndef GM_ONLY
+#define GM_ONLY (!MSPACES)
+#endif /* GM_ONLY */
+
+/* Set to `1' to disable some asserts/assumptions that were originally used
+ * to implement `RTCHECK'. These were turned into assertions/__builtin_assume,
+ * so this option kind-of does the opposite now... */
+#ifndef INSECURE
+#define INSECURE 0
+#endif /* INSECURE */
+
+/* xor-mask footers of heap chunks with "mparams.magic" when using them as mspace indicator */
+#ifndef XOR_MASK_MCHUNK_FOOT
+#define XOR_MASK_MCHUNK_FOOT DL_DEBUG_EXTERNAL
+#endif /* XOR_MASK_MCHUNK_FOOT */
+
+#ifndef FOOTERS
+#define FOOTERS USE_PER_THREAD_MSTATE /* Needed for `dlfree()' to detect source mspace! */
+#endif /* !FOOTERS */
+
+/* Custom dlmalloc extension:
+ * FLAG4_BIT on an allocation means it's part of "STRUCT_dlheapregion" */
+#ifndef FLAG4_BIT_HEAP_REGION
+#define FLAG4_BIT_HEAP_REGION 0
+#endif /* !FLAG4_BIT_HEAP_REGION */
+
+/* Extension to "FLAG4_BIT_HEAP_REGION" and "DL_DEBUG_MEMSET_FREE":
+ * - When inside of `dlfree()' with a chunk that is part of a heap
+ *   region, only apply "DL_DEBUG_MEMSET_FREE_PATTERN" to selective words:
+ * >> size_t i, n_words = CHUNK_SIZE / sizeof(HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T);
+ * >> HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T *iter = (HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T *)CHUNK_BASE;
+ * >> for (i = 0; i < n_words; ++i, ++iter) {
+ * >>     if (HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_CANSET(i * sizeof(HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T), iter)) {
+ * >>         *iter = DL_DEBUG_MEMSET_FREE_PATTERN;
+ * >>     } else {
+ * >>         // Skip this word
+ * >>     }
+ * >> }
+ *
+ * When this feature flag is "1", you must define the additional macros:
+ * >> #define HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_CANSET(offset, p_word) <boolean-expression>   // MAND
+ * >> #define HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T                 <word-type>            // OPT */
+#ifndef FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
+#define FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE 0
+#endif /* !FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
+
+/* Extension to 'FLAG4_BIT_HEAP_REGION':
+ * - Allow `STRUCT_dlheaptail::ht_zero' to be non-zero and point at some
+ *   extra, custom debug information / metadata that should be associated
+ *   with the heap region.
+ * - When this field is non-zero, an additional callback is invoked before
+ *   the region's actual `hr_destroy' function pointer is called:
+ *
+ *   >> PRIVATE ATTR_RETNONNULL NONNULL((1)) STRUCT_dlheapregion *DCALL
+ *   >> dl_dbg_heapregion_dispose(STRUCT_dlheapregion *__restrict region);
+ *
+ *   This callback should re-return "region", after disposing any debug
+ *   info that may have been linked to the region (which was probably done
+ *   via its "ht_zero"-field, because again: this only happens when "ht_zero"
+ *   ends up being non-zero) */
+#ifndef FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
+#define FLAG4_BIT_HEAP_REGION_DBG_DISPOSE 0
+#endif /* !FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
+
+
+/* Auto-complete API configuration */
+#ifndef MALLINFO_FIELD_TYPE
+#define MALLINFO_FIELD_TYPE int
+#endif /* !MALLINFO_FIELD_TYPE */
+#ifndef NO_MALLINFO
+#define NO_MALLINFO 0
+#endif /* !NO_MALLINFO */
+#ifndef NO_MALLOC_STATS
+#define NO_MALLOC_STATS 0
+#endif /* !NO_MALLOC_STATS */
+#ifndef NO_SEGMENT_TRAVERSAL
+#define NO_SEGMENT_TRAVERSAL 0
+#endif /* !NO_SEGMENT_TRAVERSAL */
+#ifndef NO_POSIX_MEMALIGN
+#define NO_POSIX_MEMALIGN 0
+#endif /* !NO_POSIX_MEMALIGN */
+#ifndef NO_VALLOC
+#define NO_VALLOC 0
+#endif /* !NO_VALLOC */
+#ifndef NO_PVALLOC
+#define NO_PVALLOC 0
+#endif /* !NO_PVALLOC */
+#ifndef NO_MALLOPT
+#define NO_MALLOPT 0
+#endif /* !NO_MALLOPT */
+#ifndef NO_MALLOC_FOOTPRINT
+#define NO_MALLOC_FOOTPRINT 0
+#endif /* !NO_MALLOC_FOOTPRINT */
+#ifndef NO_INDEPENDENT_ALLOC
+#define NO_INDEPENDENT_ALLOC 0
+#endif /* !NO_INDEPENDENT_ALLOC */
+#ifndef NO_BULK_FREE
+#define NO_BULK_FREE 0
+#endif /* !NO_BULK_FREE */
+#ifndef NO_MALLOC_TRIM
+#define NO_MALLOC_TRIM 0
+#endif /* !NO_MALLOC_TRIM */
+
+#ifndef NO_MSPACE_FREE
+#define NO_MSPACE_FREE 0
+#endif /* !NO_MSPACE_FREE */
+#ifndef NO_MSPACE_REALLOC
+#define NO_MSPACE_REALLOC 0
+#endif /* !NO_MSPACE_REALLOC */
+#ifndef NO_MSPACE_REALLOC_IN_PLACE
+#define NO_MSPACE_REALLOC_IN_PLACE 0
+#endif /* !NO_MSPACE_REALLOC_IN_PLACE */
+#ifndef NO_MSPACE_USABLE_SIZE
+#define NO_MSPACE_USABLE_SIZE 0
+#endif /* !NO_MSPACE_USABLE_SIZE */
+#ifndef NO_MSPACE_TRACK_LARGE_CHUNKS
+#define NO_MSPACE_TRACK_LARGE_CHUNKS 0
+#endif /* !NO_MSPACE_TRACK_LARGE_CHUNKS */
+#ifndef NO_CREATE_MSPACE_WITH_BASE
+#define NO_CREATE_MSPACE_WITH_BASE 0
+#endif /* !NO_CREATE_MSPACE_WITH_BASE */
+#ifndef NO_MSPACE_CALLOC
+#define NO_MSPACE_CALLOC 0
+#endif /* !NO_MSPACE_CALLOC */
+#ifndef NO_MSPACE_MEMALIGN
+#define NO_MSPACE_MEMALIGN 0
+#endif /* !NO_MSPACE_MEMALIGN */
+#ifndef NO_MSPACE_FOOTPRINT
+#define NO_MSPACE_FOOTPRINT 0
+#endif /* !NO_MSPACE_FOOTPRINT */
+#ifndef NO_MSPACE_MAX_FOOTPRINT
+#define NO_MSPACE_MAX_FOOTPRINT 0
+#endif /* !NO_MSPACE_MAX_FOOTPRINT */
+#ifndef NO_MSPACE_FOOTPRINT_LIMIT
+#define NO_MSPACE_FOOTPRINT_LIMIT 0
+#endif /* !NO_MSPACE_FOOTPRINT_LIMIT */
+#ifndef NO_MSPACE_SET_FOOTPRINT_LIMIT
+#define NO_MSPACE_SET_FOOTPRINT_LIMIT 0
+#endif /* !NO_MSPACE_SET_FOOTPRINT_LIMIT */
+#ifndef NO_MSPACE_TRIM
+#define NO_MSPACE_TRIM 0
+#endif /* !NO_MSPACE_TRIM */
+#ifndef NO_MSPACE_MALLINFO
+#define NO_MSPACE_MALLINFO 0
+#endif /* !NO_MSPACE_MALLINFO */
+#ifndef NO_DESTROY_MSPACE
+#define NO_DESTROY_MSPACE 0
+#endif /* !NO_DESTROY_MSPACE */
+
+#ifndef M_TRIM_THRESHOLD
+#define M_TRIM_THRESHOLD (-1)
+#endif /* !M_TRIM_THRESHOLD */
+#ifndef M_GRANULARITY
+#define M_GRANULARITY    (-2)
+#endif /* !M_GRANULARITY */
+#ifndef M_MMAP_THRESHOLD
+#define M_MMAP_THRESHOLD (-3)
+#endif /* !M_MMAP_THRESHOLD */
+
+
+/* Defaults for host system features (stuff that isn't supported) */
+#ifndef DL_CONFIG_HAVE_VirtualAlloc
+#define DL_CONFIG_HAVE_VirtualAlloc 0
+#endif /* !DL_CONFIG_HAVE_VirtualAlloc */
+#ifndef DL_CONFIG_HAVE_mmap
+#define DL_CONFIG_HAVE_mmap 0
+#endif /* !DL_CONFIG_HAVE_mmap */
+#ifdef CONFIG_HAVE_mmap
+#define DL_CONFIG_HAVE_mmap 1
+#endif /* CONFIG_HAVE_mmap */
+#ifndef DL_CONFIG_HAVE_munmap
+#define DL_CONFIG_HAVE_munmap 0
+#endif /* !DL_CONFIG_HAVE_munmap */
+#ifndef DL_CONFIG_HAVE_PROT_READ
+#define DL_CONFIG_HAVE_PROT_READ 0
+#endif /* !DL_CONFIG_HAVE_PROT_READ */
+#ifndef DL_CONFIG_HAVE_PROT_WRITE
+#define DL_CONFIG_HAVE_PROT_WRITE 0
+#endif /* !DL_CONFIG_HAVE_PROT_WRITE */
+#ifndef DL_CONFIG_HAVE_MAP_PRIVATE
+#define DL_CONFIG_HAVE_MAP_PRIVATE 0
+#endif /* !DL_CONFIG_HAVE_MAP_PRIVATE */
+#ifndef DL_CONFIG_HAVE_MAP_ANONYMOUS
+#define DL_CONFIG_HAVE_MAP_ANONYMOUS 0
+#endif /* !DL_CONFIG_HAVE_MAP_ANONYMOUS */
+#ifndef DL_CONFIG_HAVE_sbrk
+#define DL_CONFIG_HAVE_sbrk 0
+#endif /* !DL_CONFIG_HAVE_sbrk */
+#ifndef DL_CONFIG_HAVE_mremap
+#define DL_CONFIG_HAVE_mremap 0
+#endif /* !DL_CONFIG_HAVE_mremap */
+#ifndef DL_CONFIG_HAVE_malloc
+#define DL_CONFIG_HAVE_malloc 0
+#endif /* !DL_CONFIG_HAVE_malloc */
+#ifndef DL_CONFIG_HAVE_calloc
+#define DL_CONFIG_HAVE_calloc 0
+#endif /* !DL_CONFIG_HAVE_calloc */
+#ifndef DL_CONFIG_HAVE_free
+#define DL_CONFIG_HAVE_free 0
+#endif /* !DL_CONFIG_HAVE_free */
+#ifndef DL_CONFIG_HAVE_time
+#define DL_CONFIG_HAVE_time 0
+#endif /* !DL_CONFIG_HAVE_time */
+#ifndef DL_CONFIG_HAVE_getpagesize
+#define DL_CONFIG_HAVE_getpagesize 0
+#endif /* !DL_CONFIG_HAVE_getpagesize */
+#ifndef DL_CONFIG_HAVE_sysconf
+#define DL_CONFIG_HAVE_sysconf 0
+#endif /* !DL_CONFIG_HAVE_sysconf */
+#ifndef DL_CONFIG_HAVE_SYS_PARAM_H
+#define DL_CONFIG_HAVE_SYS_PARAM_H 0
+#endif /* !DL_CONFIG_HAVE_SYS_PARAM_H */
+
+
+/* Load fallback assert macro */
+#ifndef DL_ASSERT
+DECL_END
+#include <hybrid/__assert.h> /* __hybrid_assert, __hybrid_assertf */
+DECL_BEGIN
+#define DL_ASSERT  __hybrid_assert
+#define DL_ASSERTF __hybrid_assertf
+#endif /* !DL_ASSERTF */
+#ifndef DL_ASSERTF
+#define DL_ASSERTF(expr, ...) DL_ASSERT(expr)
+#endif /* !DL_ASSERTF */
+
+
 /* EXTernal_ASSERT  (for external assertions; i.e. API usage, use-after-free, etc.) */
 #undef ext_assert
 #undef ext_assertf
 #if DL_DEBUG_EXTERNAL
-#define ext_assert  Dee_ASSERT
-#define ext_assertf Dee_ASSERTF
+#define ext_assert  DL_ASSERT
+#define ext_assertf DL_ASSERTF
 #elif !defined(__NO_builtin_assume)
 #define ext_assert             __builtin_assume
 #define ext_assertf(expr, ...) __builtin_assume(expr)
@@ -491,8 +1032,8 @@ DECL_BEGIN
 #undef dl_assert
 #undef dl_assertf
 #if DL_DEBUG_INTERNAL
-#define dl_assert  Dee_ASSERT
-#define dl_assertf Dee_ASSERTF
+#define dl_assert  DL_ASSERT
+#define dl_assertf DL_ASSERTF
 #elif !defined(__NO_builtin_assume)
 #define dl_assert             __builtin_assume
 #define dl_assertf(expr, ...) __builtin_assume(expr)
@@ -502,12 +1043,749 @@ DECL_BEGIN
 #endif
 
 
+#if !NO_MALLINFO
+#ifndef STRUCT_mallinfo
+#define STRUCT_mallinfo struct mallinfo
+struct mallinfo {
+	MALLINFO_FIELD_TYPE arena;    /* non-mmapped space allocated from system */
+	MALLINFO_FIELD_TYPE ordblks;  /* number of free chunks */
+	MALLINFO_FIELD_TYPE smblks;   /* always 0 */
+	MALLINFO_FIELD_TYPE hblks;    /* always 0 */
+	MALLINFO_FIELD_TYPE hblkhd;   /* space in mmapped regions */
+	MALLINFO_FIELD_TYPE usmblks;  /* maximum total allocated space */
+	MALLINFO_FIELD_TYPE fsmblks;  /* always 0 */
+	MALLINFO_FIELD_TYPE uordblks; /* total allocated space */
+	MALLINFO_FIELD_TYPE fordblks; /* total free space */
+	MALLINFO_FIELD_TYPE keepcost; /* releasable (via malloc_trim) space */
+};
+#define STRUCT_mallinfo_get_arena(x)       (x)->arena
+#define STRUCT_mallinfo_set_arena(x, v)    (void)((x)->arena = (v))
+#define STRUCT_mallinfo_get_ordblks(x)     (x)->ordblks
+#define STRUCT_mallinfo_set_ordblks(x, v)  (void)((x)->ordblks = (v))
+#define STRUCT_mallinfo_get_hblkhd(x)      (x)->hblkhd
+#define STRUCT_mallinfo_set_hblkhd(x, v)   (void)((x)->hblkhd = (v))
+#define STRUCT_mallinfo_get_usmblks(x)     (x)->usmblks
+#define STRUCT_mallinfo_set_usmblks(x, v)  (void)((x)->usmblks = (v))
+#define STRUCT_mallinfo_get_uordblks(x)    (x)->uordblks
+#define STRUCT_mallinfo_set_uordblks(x, v) (void)((x)->uordblks = (v))
+#define STRUCT_mallinfo_get_fordblks(x)    (x)->fordblks
+#define STRUCT_mallinfo_set_fordblks(x, v) (void)((x)->fordblks = (v))
+#define STRUCT_mallinfo_get_keepcost(x)    (x)->keepcost
+#define STRUCT_mallinfo_set_keepcost(x, v) (void)((x)->keepcost = (v))
+#endif /* !STRUCT_mallinfo */
+#endif /* !NO_MALLINFO */
 
-#if !defined(CONFIG_HAVE_mmap) && defined(CONFIG_HAVE_mmap64)
-#define CONFIG_HAVE_mmap 1
-#undef mmap
-#define mmap mmap64
-#endif /* mmap = mmap64 */
+/* ------------------- Declarations of public routines ------------------- */
+
+/* Calling conventions/declaration-level for different APIs */
+
+/*[[[deemon
+local APIS = {
+	"dlmalloc",
+	"dlcalloc",
+	"dlfree",
+	"dlrealloc",
+	"dlmemalign",
+	"dlrealloc_in_place",
+	"dlposix_memalign",
+	"dlvalloc",
+	"dlmallopt",
+	"dlmalloc_footprint",
+	"dlmalloc_max_footprint",
+	"dlmalloc_footprint_limit",
+	"dlmalloc_set_footprint_limit",
+	"handler",
+	"dlmallinfo",
+	"dlindependent_calloc",
+	"dlindependent_comalloc",
+	"dlbulk_free",
+	"dlpvalloc",
+	"dlmalloc_trim",
+	"dlmalloc_stats",
+	"create_mspace",
+	"destroy_mspace",
+	"create_mspace_with_base",
+	"mspace_track_large_chunks",
+	"mspace_malloc",
+	"mspace_malloc_lockless",
+	"mspace_free",
+	"mspace_realloc",
+	"mspace_realloc_in_place",
+	"mspace_calloc",
+	"mspace_memalign",
+	"mspace_independent_calloc",
+	"mspace_independent_comalloc",
+	"mspace_bulk_free",
+	"mspace_footprint",
+	"mspace_max_footprint",
+	"mspace_footprint_limit",
+	"mspace_set_footprint_limit",
+	"mspace_mallinfo",
+	"mspace_usable_size",
+	"mspace_malloc_stats",
+	"mspace_trim",
+	"tls_mspace",
+	"tls_mspace_foreach",
+};
+for (local what: { "DECL", "IMPL", "CC" }) {
+	print("#ifndef DL_", what, "_DEFAULT");
+	print("#define DL_", what, "_DEFAULT /" "* nothing *" "/");
+	print("#endif /" "* !DL_", what, "_DEFAULT *" "/");
+	for (local api: APIS) {
+		print("#ifndef DL_", what, "_", api);
+		print("#define DL_", what, "_", api, " DL_", what, "_DEFAULT");
+		print("#endif /" "* !DL_", what, "_", api, " *" "/");
+	}
+}
+]]]*/
+#ifndef DL_DECL_DEFAULT
+#define DL_DECL_DEFAULT /* nothing */
+#endif /* !DL_DECL_DEFAULT */
+#ifndef DL_DECL_dlmalloc
+#define DL_DECL_dlmalloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmalloc */
+#ifndef DL_DECL_dlcalloc
+#define DL_DECL_dlcalloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlcalloc */
+#ifndef DL_DECL_dlfree
+#define DL_DECL_dlfree DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlfree */
+#ifndef DL_DECL_dlrealloc
+#define DL_DECL_dlrealloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlrealloc */
+#ifndef DL_DECL_dlmemalign
+#define DL_DECL_dlmemalign DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmemalign */
+#ifndef DL_DECL_dlrealloc_in_place
+#define DL_DECL_dlrealloc_in_place DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlrealloc_in_place */
+#ifndef DL_DECL_dlposix_memalign
+#define DL_DECL_dlposix_memalign DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlposix_memalign */
+#ifndef DL_DECL_dlvalloc
+#define DL_DECL_dlvalloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlvalloc */
+#ifndef DL_DECL_dlmallopt
+#define DL_DECL_dlmallopt DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmallopt */
+#ifndef DL_DECL_dlmalloc_footprint
+#define DL_DECL_dlmalloc_footprint DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmalloc_footprint */
+#ifndef DL_DECL_dlmalloc_max_footprint
+#define DL_DECL_dlmalloc_max_footprint DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmalloc_max_footprint */
+#ifndef DL_DECL_dlmalloc_footprint_limit
+#define DL_DECL_dlmalloc_footprint_limit DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmalloc_footprint_limit */
+#ifndef DL_DECL_dlmalloc_set_footprint_limit
+#define DL_DECL_dlmalloc_set_footprint_limit DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmalloc_set_footprint_limit */
+#ifndef DL_DECL_handler
+#define DL_DECL_handler DL_DECL_DEFAULT
+#endif /* !DL_DECL_handler */
+#ifndef DL_DECL_dlmallinfo
+#define DL_DECL_dlmallinfo DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmallinfo */
+#ifndef DL_DECL_dlindependent_calloc
+#define DL_DECL_dlindependent_calloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlindependent_calloc */
+#ifndef DL_DECL_dlindependent_comalloc
+#define DL_DECL_dlindependent_comalloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlindependent_comalloc */
+#ifndef DL_DECL_dlbulk_free
+#define DL_DECL_dlbulk_free DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlbulk_free */
+#ifndef DL_DECL_dlpvalloc
+#define DL_DECL_dlpvalloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlpvalloc */
+#ifndef DL_DECL_dlmalloc_trim
+#define DL_DECL_dlmalloc_trim DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmalloc_trim */
+#ifndef DL_DECL_dlmalloc_stats
+#define DL_DECL_dlmalloc_stats DL_DECL_DEFAULT
+#endif /* !DL_DECL_dlmalloc_stats */
+#ifndef DL_DECL_create_mspace
+#define DL_DECL_create_mspace DL_DECL_DEFAULT
+#endif /* !DL_DECL_create_mspace */
+#ifndef DL_DECL_destroy_mspace
+#define DL_DECL_destroy_mspace DL_DECL_DEFAULT
+#endif /* !DL_DECL_destroy_mspace */
+#ifndef DL_DECL_create_mspace_with_base
+#define DL_DECL_create_mspace_with_base DL_DECL_DEFAULT
+#endif /* !DL_DECL_create_mspace_with_base */
+#ifndef DL_DECL_mspace_track_large_chunks
+#define DL_DECL_mspace_track_large_chunks DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_track_large_chunks */
+#ifndef DL_DECL_mspace_malloc
+#define DL_DECL_mspace_malloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_malloc */
+#ifndef DL_DECL_mspace_malloc_lockless
+#define DL_DECL_mspace_malloc_lockless DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_malloc_lockless */
+#ifndef DL_DECL_mspace_free
+#define DL_DECL_mspace_free DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_free */
+#ifndef DL_DECL_mspace_realloc
+#define DL_DECL_mspace_realloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_realloc */
+#ifndef DL_DECL_mspace_realloc_in_place
+#define DL_DECL_mspace_realloc_in_place DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_realloc_in_place */
+#ifndef DL_DECL_mspace_calloc
+#define DL_DECL_mspace_calloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_calloc */
+#ifndef DL_DECL_mspace_memalign
+#define DL_DECL_mspace_memalign DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_memalign */
+#ifndef DL_DECL_mspace_independent_calloc
+#define DL_DECL_mspace_independent_calloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_independent_calloc */
+#ifndef DL_DECL_mspace_independent_comalloc
+#define DL_DECL_mspace_independent_comalloc DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_independent_comalloc */
+#ifndef DL_DECL_mspace_bulk_free
+#define DL_DECL_mspace_bulk_free DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_bulk_free */
+#ifndef DL_DECL_mspace_footprint
+#define DL_DECL_mspace_footprint DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_footprint */
+#ifndef DL_DECL_mspace_max_footprint
+#define DL_DECL_mspace_max_footprint DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_max_footprint */
+#ifndef DL_DECL_mspace_footprint_limit
+#define DL_DECL_mspace_footprint_limit DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_footprint_limit */
+#ifndef DL_DECL_mspace_set_footprint_limit
+#define DL_DECL_mspace_set_footprint_limit DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_set_footprint_limit */
+#ifndef DL_DECL_mspace_mallinfo
+#define DL_DECL_mspace_mallinfo DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_mallinfo */
+#ifndef DL_DECL_mspace_usable_size
+#define DL_DECL_mspace_usable_size DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_usable_size */
+#ifndef DL_DECL_mspace_malloc_stats
+#define DL_DECL_mspace_malloc_stats DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_malloc_stats */
+#ifndef DL_DECL_mspace_trim
+#define DL_DECL_mspace_trim DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_trim */
+#ifndef DL_DECL_mspace_mallopt
+#define DL_DECL_mspace_mallopt DL_DECL_DEFAULT
+#endif /* !DL_DECL_mspace_mallopt */
+#ifndef DL_DECL_tls_mspace
+#define DL_DECL_tls_mspace DL_DECL_DEFAULT
+#endif /* !DL_DECL_tls_mspace */
+#ifndef DL_DECL_tls_mspace_foreach
+#define DL_DECL_tls_mspace_foreach DL_DECL_DEFAULT
+#endif /* !DL_DECL_tls_mspace_foreach */
+#ifndef DL_IMPL_DEFAULT
+#define DL_IMPL_DEFAULT /* nothing */
+#endif /* !DL_IMPL_DEFAULT */
+#ifndef DL_IMPL_dlmalloc
+#define DL_IMPL_dlmalloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmalloc */
+#ifndef DL_IMPL_dlcalloc
+#define DL_IMPL_dlcalloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlcalloc */
+#ifndef DL_IMPL_dlfree
+#define DL_IMPL_dlfree DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlfree */
+#ifndef DL_IMPL_dlrealloc
+#define DL_IMPL_dlrealloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlrealloc */
+#ifndef DL_IMPL_dlmemalign
+#define DL_IMPL_dlmemalign DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmemalign */
+#ifndef DL_IMPL_dlrealloc_in_place
+#define DL_IMPL_dlrealloc_in_place DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlrealloc_in_place */
+#ifndef DL_IMPL_dlposix_memalign
+#define DL_IMPL_dlposix_memalign DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlposix_memalign */
+#ifndef DL_IMPL_dlvalloc
+#define DL_IMPL_dlvalloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlvalloc */
+#ifndef DL_IMPL_dlmallopt
+#define DL_IMPL_dlmallopt DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmallopt */
+#ifndef DL_IMPL_dlmalloc_footprint
+#define DL_IMPL_dlmalloc_footprint DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmalloc_footprint */
+#ifndef DL_IMPL_dlmalloc_max_footprint
+#define DL_IMPL_dlmalloc_max_footprint DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmalloc_max_footprint */
+#ifndef DL_IMPL_dlmalloc_footprint_limit
+#define DL_IMPL_dlmalloc_footprint_limit DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmalloc_footprint_limit */
+#ifndef DL_IMPL_dlmalloc_set_footprint_limit
+#define DL_IMPL_dlmalloc_set_footprint_limit DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmalloc_set_footprint_limit */
+#ifndef DL_IMPL_handler
+#define DL_IMPL_handler DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_handler */
+#ifndef DL_IMPL_dlmallinfo
+#define DL_IMPL_dlmallinfo DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmallinfo */
+#ifndef DL_IMPL_dlindependent_calloc
+#define DL_IMPL_dlindependent_calloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlindependent_calloc */
+#ifndef DL_IMPL_dlindependent_comalloc
+#define DL_IMPL_dlindependent_comalloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlindependent_comalloc */
+#ifndef DL_IMPL_dlbulk_free
+#define DL_IMPL_dlbulk_free DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlbulk_free */
+#ifndef DL_IMPL_dlpvalloc
+#define DL_IMPL_dlpvalloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlpvalloc */
+#ifndef DL_IMPL_dlmalloc_trim
+#define DL_IMPL_dlmalloc_trim DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmalloc_trim */
+#ifndef DL_IMPL_dlmalloc_stats
+#define DL_IMPL_dlmalloc_stats DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_dlmalloc_stats */
+#ifndef DL_IMPL_create_mspace
+#define DL_IMPL_create_mspace DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_create_mspace */
+#ifndef DL_IMPL_destroy_mspace
+#define DL_IMPL_destroy_mspace DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_destroy_mspace */
+#ifndef DL_IMPL_create_mspace_with_base
+#define DL_IMPL_create_mspace_with_base DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_create_mspace_with_base */
+#ifndef DL_IMPL_mspace_track_large_chunks
+#define DL_IMPL_mspace_track_large_chunks DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_track_large_chunks */
+#ifndef DL_IMPL_mspace_malloc
+#define DL_IMPL_mspace_malloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_malloc */
+#ifndef DL_IMPL_mspace_malloc_lockless
+#define DL_IMPL_mspace_malloc_lockless DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_malloc_lockless */
+#ifndef DL_IMPL_mspace_free
+#define DL_IMPL_mspace_free DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_free */
+#ifndef DL_IMPL_mspace_realloc
+#define DL_IMPL_mspace_realloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_realloc */
+#ifndef DL_IMPL_mspace_realloc_in_place
+#define DL_IMPL_mspace_realloc_in_place DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_realloc_in_place */
+#ifndef DL_IMPL_mspace_calloc
+#define DL_IMPL_mspace_calloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_calloc */
+#ifndef DL_IMPL_mspace_memalign
+#define DL_IMPL_mspace_memalign DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_memalign */
+#ifndef DL_IMPL_mspace_independent_calloc
+#define DL_IMPL_mspace_independent_calloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_independent_calloc */
+#ifndef DL_IMPL_mspace_independent_comalloc
+#define DL_IMPL_mspace_independent_comalloc DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_independent_comalloc */
+#ifndef DL_IMPL_mspace_bulk_free
+#define DL_IMPL_mspace_bulk_free DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_bulk_free */
+#ifndef DL_IMPL_mspace_footprint
+#define DL_IMPL_mspace_footprint DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_footprint */
+#ifndef DL_IMPL_mspace_max_footprint
+#define DL_IMPL_mspace_max_footprint DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_max_footprint */
+#ifndef DL_IMPL_mspace_footprint_limit
+#define DL_IMPL_mspace_footprint_limit DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_footprint_limit */
+#ifndef DL_IMPL_mspace_set_footprint_limit
+#define DL_IMPL_mspace_set_footprint_limit DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_set_footprint_limit */
+#ifndef DL_IMPL_mspace_mallinfo
+#define DL_IMPL_mspace_mallinfo DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_mallinfo */
+#ifndef DL_IMPL_mspace_usable_size
+#define DL_IMPL_mspace_usable_size DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_usable_size */
+#ifndef DL_IMPL_mspace_malloc_stats
+#define DL_IMPL_mspace_malloc_stats DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_malloc_stats */
+#ifndef DL_IMPL_mspace_trim
+#define DL_IMPL_mspace_trim DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_trim */
+#ifndef DL_IMPL_mspace_mallopt
+#define DL_IMPL_mspace_mallopt DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_mspace_mallopt */
+#ifndef DL_IMPL_tls_mspace
+#define DL_IMPL_tls_mspace DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_tls_mspace */
+#ifndef DL_IMPL_tls_mspace_foreach
+#define DL_IMPL_tls_mspace_foreach DL_IMPL_DEFAULT
+#endif /* !DL_IMPL_tls_mspace_foreach */
+#ifndef DL_CC_DEFAULT
+#define DL_CC_DEFAULT /* nothing */
+#endif /* !DL_CC_DEFAULT */
+#ifndef DL_CC_dlmalloc
+#define DL_CC_dlmalloc DL_CC_DEFAULT
+#endif /* !DL_CC_dlmalloc */
+#ifndef DL_CC_dlcalloc
+#define DL_CC_dlcalloc DL_CC_DEFAULT
+#endif /* !DL_CC_dlcalloc */
+#ifndef DL_CC_dlfree
+#define DL_CC_dlfree DL_CC_DEFAULT
+#endif /* !DL_CC_dlfree */
+#ifndef DL_CC_dlrealloc
+#define DL_CC_dlrealloc DL_CC_DEFAULT
+#endif /* !DL_CC_dlrealloc */
+#ifndef DL_CC_dlmemalign
+#define DL_CC_dlmemalign DL_CC_DEFAULT
+#endif /* !DL_CC_dlmemalign */
+#ifndef DL_CC_dlrealloc_in_place
+#define DL_CC_dlrealloc_in_place DL_CC_DEFAULT
+#endif /* !DL_CC_dlrealloc_in_place */
+#ifndef DL_CC_dlposix_memalign
+#define DL_CC_dlposix_memalign DL_CC_DEFAULT
+#endif /* !DL_CC_dlposix_memalign */
+#ifndef DL_CC_dlvalloc
+#define DL_CC_dlvalloc DL_CC_DEFAULT
+#endif /* !DL_CC_dlvalloc */
+#ifndef DL_CC_dlmallopt
+#define DL_CC_dlmallopt DL_CC_DEFAULT
+#endif /* !DL_CC_dlmallopt */
+#ifndef DL_CC_dlmalloc_footprint
+#define DL_CC_dlmalloc_footprint DL_CC_DEFAULT
+#endif /* !DL_CC_dlmalloc_footprint */
+#ifndef DL_CC_dlmalloc_max_footprint
+#define DL_CC_dlmalloc_max_footprint DL_CC_DEFAULT
+#endif /* !DL_CC_dlmalloc_max_footprint */
+#ifndef DL_CC_dlmalloc_footprint_limit
+#define DL_CC_dlmalloc_footprint_limit DL_CC_DEFAULT
+#endif /* !DL_CC_dlmalloc_footprint_limit */
+#ifndef DL_CC_dlmalloc_set_footprint_limit
+#define DL_CC_dlmalloc_set_footprint_limit DL_CC_DEFAULT
+#endif /* !DL_CC_dlmalloc_set_footprint_limit */
+#ifndef DL_CC_handler
+#define DL_CC_handler DL_CC_DEFAULT
+#endif /* !DL_CC_handler */
+#ifndef DL_CC_dlmallinfo
+#define DL_CC_dlmallinfo DL_CC_DEFAULT
+#endif /* !DL_CC_dlmallinfo */
+#ifndef DL_CC_dlindependent_calloc
+#define DL_CC_dlindependent_calloc DL_CC_DEFAULT
+#endif /* !DL_CC_dlindependent_calloc */
+#ifndef DL_CC_dlindependent_comalloc
+#define DL_CC_dlindependent_comalloc DL_CC_DEFAULT
+#endif /* !DL_CC_dlindependent_comalloc */
+#ifndef DL_CC_dlbulk_free
+#define DL_CC_dlbulk_free DL_CC_DEFAULT
+#endif /* !DL_CC_dlbulk_free */
+#ifndef DL_CC_dlpvalloc
+#define DL_CC_dlpvalloc DL_CC_DEFAULT
+#endif /* !DL_CC_dlpvalloc */
+#ifndef DL_CC_dlmalloc_trim
+#define DL_CC_dlmalloc_trim DL_CC_DEFAULT
+#endif /* !DL_CC_dlmalloc_trim */
+#ifndef DL_CC_dlmalloc_stats
+#define DL_CC_dlmalloc_stats DL_CC_DEFAULT
+#endif /* !DL_CC_dlmalloc_stats */
+#ifndef DL_CC_create_mspace
+#define DL_CC_create_mspace DL_CC_DEFAULT
+#endif /* !DL_CC_create_mspace */
+#ifndef DL_CC_destroy_mspace
+#define DL_CC_destroy_mspace DL_CC_DEFAULT
+#endif /* !DL_CC_destroy_mspace */
+#ifndef DL_CC_create_mspace_with_base
+#define DL_CC_create_mspace_with_base DL_CC_DEFAULT
+#endif /* !DL_CC_create_mspace_with_base */
+#ifndef DL_CC_mspace_track_large_chunks
+#define DL_CC_mspace_track_large_chunks DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_track_large_chunks */
+#ifndef DL_CC_mspace_malloc
+#define DL_CC_mspace_malloc DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_malloc */
+#ifndef DL_CC_mspace_malloc_lockless
+#define DL_CC_mspace_malloc_lockless DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_malloc_lockless */
+#ifndef DL_CC_mspace_free
+#define DL_CC_mspace_free DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_free */
+#ifndef DL_CC_mspace_realloc
+#define DL_CC_mspace_realloc DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_realloc */
+#ifndef DL_CC_mspace_realloc_in_place
+#define DL_CC_mspace_realloc_in_place DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_realloc_in_place */
+#ifndef DL_CC_mspace_calloc
+#define DL_CC_mspace_calloc DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_calloc */
+#ifndef DL_CC_mspace_memalign
+#define DL_CC_mspace_memalign DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_memalign */
+#ifndef DL_CC_mspace_independent_calloc
+#define DL_CC_mspace_independent_calloc DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_independent_calloc */
+#ifndef DL_CC_mspace_independent_comalloc
+#define DL_CC_mspace_independent_comalloc DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_independent_comalloc */
+#ifndef DL_CC_mspace_bulk_free
+#define DL_CC_mspace_bulk_free DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_bulk_free */
+#ifndef DL_CC_mspace_footprint
+#define DL_CC_mspace_footprint DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_footprint */
+#ifndef DL_CC_mspace_max_footprint
+#define DL_CC_mspace_max_footprint DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_max_footprint */
+#ifndef DL_CC_mspace_footprint_limit
+#define DL_CC_mspace_footprint_limit DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_footprint_limit */
+#ifndef DL_CC_mspace_set_footprint_limit
+#define DL_CC_mspace_set_footprint_limit DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_set_footprint_limit */
+#ifndef DL_CC_mspace_mallinfo
+#define DL_CC_mspace_mallinfo DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_mallinfo */
+#ifndef DL_CC_mspace_usable_size
+#define DL_CC_mspace_usable_size DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_usable_size */
+#ifndef DL_CC_mspace_malloc_stats
+#define DL_CC_mspace_malloc_stats DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_malloc_stats */
+#ifndef DL_CC_mspace_trim
+#define DL_CC_mspace_trim DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_trim */
+#ifndef DL_CC_mspace_mallopt
+#define DL_CC_mspace_mallopt DL_CC_DEFAULT
+#endif /* !DL_CC_mspace_mallopt */
+#ifndef DL_CC_tls_mspace
+#define DL_CC_tls_mspace DL_CC_DEFAULT
+#endif /* !DL_CC_tls_mspace */
+#ifndef DL_CC_tls_mspace_foreach
+#define DL_CC_tls_mspace_foreach DL_CC_DEFAULT
+#endif /* !DL_CC_tls_mspace_foreach */
+/*[[[end]]]*/
+
+
+#define DL_API_DECL(attr, Treturn, name, params) \
+	DL_DECL_##name attr Treturn (DL_CC_##name name) params
+#define DL_API_IMPL(attr, Treturn, name, params) \
+	DL_IMPL_##name attr Treturn (DL_CC_##name name) params
+
+
+/* Special behavioral modifications to make to various dlmalloc APIs */
+#ifndef dlcalloc_SINGLE_PARAMETER
+#define dlcalloc_SINGLE_PARAMETER 0
+#endif /* !dlcalloc_SINGLE_PARAMETER */
+#ifndef dlmallopt_SECOND_PARAMETER_IS_SIZE_T
+#define dlmallopt_SECOND_PARAMETER_IS_SIZE_T 0
+#endif /* !dlmallopt_SECOND_PARAMETER_IS_SIZE_T */
+#ifndef dlmalloc_trim_RETURNS_SIZE_T
+#define dlmalloc_trim_RETURNS_SIZE_T 0
+#endif /* !dlmalloc_trim_RETURNS_SIZE_T */
+#ifndef dlmalloc_set_footprint_limit_RETURNS_OLD_VALUE
+#define dlmalloc_set_footprint_limit_RETURNS_OLD_VALUE 0
+#endif /* !dlmalloc_set_footprint_limit_RETURNS_OLD_VALUE */
+#ifndef dlrealloc_ZERO_BYTES_FREES
+#define dlrealloc_ZERO_BYTES_FREES 0
+#endif /* !dlrealloc_ZERO_BYTES_FREES */
+#ifndef dlmalloc_ZERO_RETURNS_NULL
+#define dlmalloc_ZERO_RETURNS_NULL 0
+#endif /* !dlmalloc_ZERO_RETURNS_NULL */
+
+
+
+/* DLMALLOC API */
+#if !ONLY_MSPACES
+DL_API_DECL(ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)), void *, dlmalloc, (size_t bytes));
+#if dlcalloc_SINGLE_PARAMETER
+DL_API_DECL(ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)), void *, dlcalloc, (size_t req));
+#else /* dlcalloc_SINGLE_PARAMETER */
+DL_API_DECL(ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1, 2)), void *, dlcalloc, (size_t n_elements, size_t elem_size));
+#endif /* !dlcalloc_SINGLE_PARAMETER */
+DL_API_DECL(, void, dlfree, (void *mem));
+DL_API_DECL(WUNUSED, void *, dlrealloc, (void *oldmem, size_t bytes));
+DL_API_DECL(ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)), void *, dlmemalign, (size_t alignment, size_t bytes));
+DL_API_DECL(WUNUSED, void *, dlrealloc_in_place, (void *oldmem, size_t bytes));
+
+#if !NO_POSIX_MEMALIGN
+DL_API_DECL(, int, dlposix_memalign, (void **pp, size_t alignment, size_t bytes));
+#endif /* !NO_POSIX_MEMALIGN */
+
+#if !NO_VALLOC
+DL_API_DECL(, void *, dlvalloc, (size_t bytes));
+#endif /* !NO_VALLOC */
+
+#if !NO_MALLOPT
+#if dlmallopt_SECOND_PARAMETER_IS_SIZE_T
+DL_API_DECL(, int, dlmallopt, (int option, size_t value));
+#else /* dlmallopt_SECOND_PARAMETER_IS_SIZE_T */
+DL_API_DECL(, int, dlmallopt, (int option, int value));
+#endif /* !dlmallopt_SECOND_PARAMETER_IS_SIZE_T */
+#endif /* !NO_MALLOPT */
+
+#if !NO_MALLOC_FOOTPRINT
+DL_API_DECL(ATTR_PURE WUNUSED, size_t, dlmalloc_footprint, (void));
+DL_API_DECL(ATTR_PURE WUNUSED, size_t, dlmalloc_max_footprint, (void));
+DL_API_DECL(ATTR_PURE WUNUSED, size_t, dlmalloc_footprint_limit, (void));
+DL_API_DECL(, size_t, dlmalloc_set_footprint_limit, (size_t bytes));
+#endif /* !NO_MALLOC_FOOTPRINT */
+
+#if MALLOC_INSPECT_ALL
+DL_API_DECL(, void, dlmalloc_inspect_all, (void (*handler)(void *start, void *end,
+                                                           size_t used_bytes,
+                                                           void *callback_arg),
+                                           void *arg));
+#endif /* MALLOC_INSPECT_ALL */
+
+#if !NO_MALLINFO
+DL_API_DECL(ATTR_PURE WUNUSED, STRUCT_mallinfo, dlmallinfo, (void));
+#endif /* NO_MALLINFO */
+
+#if !NO_INDEPENDENT_ALLOC
+DL_API_DECL(, void **, dlindependent_calloc, (size_t n_elements, size_t elem_size, void *chunks[]));
+DL_API_DECL(, void **, dlindependent_comalloc, (size_t n_elements, size_t sizes[], void *chunks[]));
+#endif /* !NO_INDEPENDENT_ALLOC */
+
+#if !NO_BULK_FREE
+DL_API_DECL(, size_t, dlbulk_free, (void *array[], size_t nelem));
+#endif /* !NO_BULK_FREE */
+
+#if !NO_PVALLOC
+DL_API_DECL(, void *, dlpvalloc, (size_t bytes));
+#endif /* !NO_PVALLOC */
+
+#if !NO_MALLOC_TRIM
+#if dlmalloc_trim_RETURNS_SIZE_T
+#define dlmalloc_trim_RETURN_TYPE size_t
+#else /* dlmalloc_trim_RETURNS_SIZE_T */
+#define dlmalloc_trim_RETURN_TYPE int
+#endif /* !dlmalloc_trim_RETURNS_SIZE_T */
+DL_API_DECL(, dlmalloc_trim_RETURN_TYPE, dlmalloc_trim, (size_t pad));
+#endif /* !NO_MALLOC_TRIM */
+
+#if !NO_MALLOC_STATS
+DL_API_DECL(, void, dlmalloc_stats, (void));
+#endif /* !NO_MALLOC_STATS */
+#endif /* ONLY_MSPACES */
+
+#if MSPACES
+typedef void *mspace;
+
+DL_API_DECL(, mspace, create_mspace, (size_t capacity/*, int locked*/));
+#if !NO_DESTROY_MSPACE
+DL_API_DECL(, size_t, destroy_mspace, (mspace msp));
+#endif /* NO_DESTROY_MSPACE */
+#if !NO_CREATE_MSPACE_WITH_BASE
+DL_API_DECL(, mspace, create_mspace_with_base, (void *base, size_t capacity/*, int locked*/));
+#endif /* !NO_CREATE_MSPACE_WITH_BASE */
+#if !NO_MSPACE_TRACK_LARGE_CHUNKS
+DL_API_DECL(, int, mspace_track_large_chunks, (mspace msp, int enable));
+#endif /* !NO_MSPACE_TRACK_LARGE_CHUNKS */
+DL_API_DECL(, void *, mspace_malloc, (mspace msp, size_t bytes));
+#if USE_MSPACE_MALLOC_LOCKLESS
+DL_API_DECL(, void *, mspace_malloc_lockless, (mspace msp, size_t bytes));
+#endif /* USE_MSPACE_MALLOC_LOCKLESS */
+#if !NO_MSPACE_FREE
+DL_API_DECL(, void, mspace_free, (mspace msp, void *mem));
+#endif /* !NO_MSPACE_FREE */
+#if !NO_MSPACE_REALLOC
+DL_API_DECL(, void *, mspace_realloc, (mspace msp, void *oldmem, size_t bytes));
+#endif /* !NO_MSPACE_REALLOC */
+#if !NO_MSPACE_REALLOC_IN_PLACE
+DL_API_DECL(, void *, mspace_realloc_in_place, (mspace msp, void *oldmem, size_t bytes));
+#endif /* !NO_MSPACE_REALLOC_IN_PLACE */
+#if !NO_MSPACE_CALLOC
+DL_API_DECL(, void *, mspace_calloc, (mspace msp, size_t n_elements, size_t elem_size));
+#endif /* !NO_MSPACE_CALLOC */
+#if !NO_MSPACE_MEMALIGN
+DL_API_DECL(, void *, mspace_memalign, (mspace msp, size_t alignment, size_t bytes));
+#endif /* !NO_MSPACE_MEMALIGN */
+#if !NO_INDEPENDENT_ALLOC
+DL_API_DECL(, void **, mspace_independent_calloc, (mspace msp, size_t n_elements, size_t elem_size, void *chunks[]));
+DL_API_DECL(, void **, mspace_independent_comalloc, (mspace msp, size_t n_elements, size_t sizes[], void *chunks[]));
+#endif /* !NO_INDEPENDENT_ALLOC */
+#if !NO_BULK_FREE
+DL_API_DECL(, size_t, mspace_bulk_free, (mspace msp, void *array[], size_t nelem));
+#endif /* !NO_BULK_FREE */
+#if !NO_MSPACE_FOOTPRINT
+DL_API_DECL(, size_t, mspace_footprint, (mspace msp));
+#endif /* !NO_MSPACE_FOOTPRINT */
+#if !NO_MSPACE_MAX_FOOTPRINT
+DL_API_DECL(, size_t, mspace_max_footprint, (mspace msp));
+#endif /* !NO_MSPACE_MAX_FOOTPRINT */
+#if !NO_MSPACE_FOOTPRINT_LIMIT
+DL_API_DECL(, size_t, mspace_footprint_limit, (mspace msp));
+#endif /* !NO_MSPACE_FOOTPRINT_LIMIT */
+#if !NO_MSPACE_SET_FOOTPRINT_LIMIT
+DL_API_DECL(, size_t, mspace_set_footprint_limit, (mspace msp, size_t bytes));
+#endif /* !NO_MSPACE_SET_FOOTPRINT_LIMIT */
+#if !NO_MSPACE_MALLINFO
+DL_API_DECL(, STRUCT_mallinfo, mspace_mallinfo, (mspace msp));
+#endif /* !NO_MSPACE_MALLINFO */
+#if !NO_MSPACE_USABLE_SIZE
+DL_API_DECL(, size_t, mspace_usable_size, (void const *mem));
+#endif /* !NO_MSPACE_USABLE_SIZE */
+#if !NO_MALLOC_STATS
+DL_API_DECL(, void, mspace_malloc_stats, (mspace msp));
+#endif /* NO_MALLOC_STATS */
+#if !NO_MSPACE_TRIM
+DL_API_DECL(, dlmalloc_trim_RETURN_TYPE, mspace_trim, (mspace msp, size_t pad));
+#endif /* NO_MSPACE_TRIM */
+
+#if USE_PER_THREAD_MSTATE
+/* Return the calling thread's thread-local mspace (or "NULL" if not available) */
+DL_API_DECL(, mspace, tls_mspace, (void));
+
+/* Invoke `cb' for every existing `tls_mspace()' ("cb" must still PREACTION()-lock said space) */
+DL_API_DECL(, size_t, tls_mspace_foreach, (size_t (*cb)(mspace ms, void *arg), void *arg));
+#endif /* USE_PER_THREAD_MSTATE */
+#endif /* MSPACES */
+
+
+
+/* DLMALLOC API HOOKS */
+#ifndef MALLOC_FAILURE_ACTION
+#define MALLOC_FAILURE_ACTION errno = ENOMEM;
+#endif /* !MALLOC_FAILURE_ACTION */
+#ifndef dlmalloc_trim_PREHOOK
+#define dlmalloc_trim_PREHOOK(p_result, pad) (void)0
+#endif /* dlmalloc_trim_PREHOOK */
+#ifndef dlmalloc_trim_POSTHOOK
+#define dlmalloc_trim_POSTHOOK(p_result, pad) (void)0
+#endif /* !dlmalloc_trim_POSTHOOK */
+
+
+
+/* Data types for the heap region extension */
+#if FLAG4_BIT_HEAP_REGION
+#ifndef STRUCT_dlheapregion
+#define STRUCT_dlheapchunk struct dlheapchunk
+struct /*ATTR_ALIGNED(MALLOC_ALIGNMENT)*/ dlheapchunk {
+	size_t hc_prevsize; /* Size of previous chunk, or "0" if this is the first chunk; must be multiple of "MALLOC_ALIGNMENT" */
+	size_t hc_head;     /* Size of this chunk (including this header), but least significant
+	                     * 3 bits have special meaning and (when the chunk is allocated, which
+	                     * is the only mode explicitly defined by this binary format), must be
+	                     * initialized to 0b100 (aka. "4") */
+};
+
+#define STRUCT_dlheaptail struct dlheaptail
+struct /*ATTR_ALIGNED(MALLOC_ALIGNMENT)*/ dlheaptail {
+	size_t ht_lastsize; /* Size of the last *real* chunk within the region (in bytes); must be multiple of "MALLOC_ALIGNMENT" */
+	size_t ht_zero;     /* Always zero (but see `FLAG4_BIT_HEAP_REGION_DBG_DISPOSE') */
+};
+
+#define STRUCT_dlheapregion struct dlheapregion
+struct /*ATTR_ALIGNED(MALLOC_ALIGNMENT)*/ dlheapregion {
+	size_t             hr_size;  /* [const][== offsetafter(dlheapregion, hr_tail)]
+	                              * Total region size (in bytes, including this header, and the tail) */
+	/* [1..1][const] Destructor invoked once the region's last chunk is dlfree()'d */
+	void (DCALL       *hr_destroy)(STRUCT_dlheapregion *__restrict self);
+	STRUCT_dlheapchunk hr_first;                                /* First chunk of region */
+//	byte_t             hr_data[hr_size - (6 * sizeof(void *))]; /* Region payload (containing more chunks...) */
+//	STRUCT_dlheaptail  hr_tail;                                 /* Region tail (see above) */
+};
+#endif /* !STRUCT_dlheapregion */
+#endif /* FLAG4_BIT_HEAP_REGION */
+
+
 
 /* System configuration -- figure out how we want to implement the heap backend */
 #undef HAVE_MMAP
@@ -516,25 +1794,17 @@ DECL_BEGIN
 #undef HAVE_MREMAP
 #undef HAVE_MORECORE
 #undef HAVE_MMAP_CLEARS
-#if defined(CONFIG_HAVE_VirtualAlloc)
+#if DL_CONFIG_HAVE_VirtualAlloc
 #define HAVE_MMAP 1
 #define HAVE_MMAP_IS_VirtualAlloc /* Windows: use VirtualAlloc() */
-#elif defined(CONFIG_HAVE_mmap) || defined(CONFIG_HAVE_sbrk)
-#ifdef CONFIG_HAVE_mmap
-#define HAVE_MMAP 1               /* Unix: use mmap(2)... */
-#endif /* CONFIG_HAVE_mmap */
-#ifdef CONFIG_HAVE_mremap
-#define HAVE_MREMAP 1
-#endif /* CONFIG_HAVE_mremap */
-#ifdef CONFIG_HAVE_sbrk
-#define HAVE_MORECORE 1           /* Unix: ... and sbrk(2) */
-#endif /* CONFIG_HAVE_sbrk */
-#elif defined(CONFIG_HAVE_malloc) || defined(CONFIG_HAVE_calloc)
+#elif DL_CONFIG_HAVE_mmap || DL_CONFIG_HAVE_sbrk
+#define HAVE_MMAP     DL_CONFIG_HAVE_mmap /* Unix: use mmap(2)... */
+#define HAVE_MREMAP   DL_CONFIG_HAVE_mremap
+#define HAVE_MORECORE DL_CONFIG_HAVE_sbrk /* Unix: ... and sbrk(2) */
+#elif DL_CONFIG_HAVE_malloc || DL_CONFIG_HAVE_calloc
 #define HAVE_MMAP 1
 #define HAVE_MMAP_IS_malloc       /* Generic: use the host's native malloc(3) */
-#ifndef CONFIG_HAVE_calloc
-#define HAVE_MMAP_CLEARS 0
-#endif /* !CONFIG_HAVE_calloc */
+#define HAVE_MMAP_CLEARS DL_CONFIG_HAVE_calloc
 #else /* ... */
 /* No way to implement dlmalloc() -- memory allocation will just fail at runtime :( */
 #endif /* !... */
@@ -583,218 +1853,24 @@ DECL_BEGIN
 
 
 
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-/*                                                                      */
-/* START OF DLMALLOC                                                    */
-/*                                                                      */
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-#if !NO_MALLINFO && !EXPOSE_AS_DEEMON_API
-struct dlmalloc_mallinfo {
-	MALLINFO_FIELD_TYPE arena;    /* non-mmapped space allocated from system */
-	MALLINFO_FIELD_TYPE ordblks;  /* number of free chunks */
-	MALLINFO_FIELD_TYPE smblks;   /* always 0 */
-	MALLINFO_FIELD_TYPE hblks;    /* always 0 */
-	MALLINFO_FIELD_TYPE hblkhd;   /* space in mmapped regions */
-	MALLINFO_FIELD_TYPE usmblks;  /* maximum total allocated space */
-	MALLINFO_FIELD_TYPE fsmblks;  /* always 0 */
-	MALLINFO_FIELD_TYPE uordblks; /* total allocated space */
-	MALLINFO_FIELD_TYPE fordblks; /* total free space */
-	MALLINFO_FIELD_TYPE keepcost; /* releasable (via malloc_trim) space */
-};
-#endif /* !NO_MALLINFO && !EXPOSE_AS_DEEMON_API */
-
-/* ------------------- Declarations of public routines ------------------- */
-
-#if !ONLY_MSPACES
-/* When not doing any leak detection, then dlmalloc's internal methods can be exposed directly! */
-#define DIRECTLY_DEFINE_DEEMON_PUBLIC_API (LEAK_DETECTION == LEAK_DETECTION_METHOD_NONE)
-#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-#define dlmalloc           Dee_TryMalloc
-#define dlcalloc           Dee_TryCalloc
-#define dlfree             Dee_Free
-#define dlrealloc          Dee_TryRealloc
-#define dlmemalign         Dee_TryMemalign
-DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryMalloc)(size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryCalloc)(size_t n_bytes);
-DFUNDEF void (DCALL Dee_Free)(void *ptr);
-DFUNDEF WUNUSED void *(DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes);
-DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCALL Dee_TryMemalign)(size_t min_alignment, size_t n_bytes);
-DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
-#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-#define DLFREE_CHECKS_NULL    0 /* Not needed (already done by caller) */
-#define DLREALLOC_CHECKS_NULL 0 /* Not needed (already done by caller) */
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlmalloc(size_t n_bytes);
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlcalloc(size_t n_bytes);
-static void dlfree(void *ptr);
-static WUNUSED void *dlrealloc(void *ptr, size_t n_bytes);
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *dlmemalign(size_t min_alignment, size_t n_bytes);
-#if LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL
-#define DLREALLOC_IN_PLACE_CHECKS_NULL 0 /* Not needed (already done by caller) */
-static WUNUSED void *dlrealloc_in_place(void *ptr, size_t n_bytes);
-#else /* LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL */
-DFUNDEF WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *ptr, size_t n_bytes);
-#endif /* LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL */
-#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-
-#if !NO_POSIX_MEMALIGN
-static int dlposix_memalign(void **, size_t, size_t);
-#endif /* !NO_POSIX_MEMALIGN */
-#if !NO_VALLOC
-static void *dlvalloc(size_t);
-#endif /* !NO_VALLOC */
-#if !NO_MALLOPT
-#if EXPOSE_AS_DEEMON_API
-DFUNDEF int DCALL DeeHeap_SetOpt(int option, size_t value);
-#else /* EXPOSE_AS_DEEMON_API */
-static int dlmallopt(int, int);
-#endif /* !EXPOSE_AS_DEEMON_API */
-#endif /* !NO_MALLOPT */
-#if !NO_MALLOC_FOOTPRINT
-#if EXPOSE_AS_DEEMON_API
-DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeHeap_Footprint(void);
-DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeHeap_MaxFootprint(void);
-DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeHeap_GetFootprintLimit(void);
-DFUNDEF size_t DCALL DeeHeap_SetFootprintLimit(size_t bytes);
-#else /* EXPOSE_AS_DEEMON_API */
-static size_t dlmalloc_footprint(void);
-static size_t dlmalloc_max_footprint(void);
-static size_t dlmalloc_footprint_limit();
-static size_t dlmalloc_set_footprint_limit(size_t bytes);
-#endif /* !EXPOSE_AS_DEEMON_API */
-#endif /* !NO_MALLOC_FOOTPRINT */
-#if MALLOC_INSPECT_ALL
-static void dlmalloc_inspect_all(void (*handler)(void *, void *, size_t, void *), void *arg);
-#endif /* MALLOC_INSPECT_ALL */
-#if !NO_MALLINFO
-#if EXPOSE_AS_DEEMON_API
-DFUNDEF ATTR_PURE WUNUSED struct Dee_heap_mallinfo DCALL DeeHeap_MallInfo(void);
-#else /* EXPOSE_AS_DEEMON_API */
-static struct Dee_heap_mallinfo dlmallinfo(void);
-#endif /* !EXPOSE_AS_DEEMON_API */
-#endif /* NO_MALLINFO */
-#if !NO_INDEPENDENT_ALLOC
-static void **dlindependent_calloc(size_t, size_t, void **);
-static void **dlindependent_comalloc(size_t, size_t *, void **);
-#endif /* !NO_INDEPENDENT_ALLOC */
-#if !NO_BULK_FREE
-static size_t dlbulk_free(void **, size_t n_elements);
-#endif /* !NO_BULK_FREE */
-#if !NO_PVALLOC
-static void *dlpvalloc(size_t);
-#endif /* !NO_PVALLOC */
-#if !NO_MALLOC_TRIM
-#if EXPOSE_AS_DEEMON_API
-DFUNDEF size_t DCALL DeeHeap_Trim(size_t pad);
-#else /* EXPOSE_AS_DEEMON_API */
-static int dlmalloc_trim(size_t);
-#endif /* !EXPOSE_AS_DEEMON_API */
-#endif /* !NO_MALLOC_TRIM */
-#if !NO_MALLOC_STATS
-static void dlmalloc_stats(void);
-#endif /* !NO_MALLOC_STATS */
-#endif /* ONLY_MSPACES */
-
-#if MSPACES
-typedef void *mspace;
-static mspace create_mspace(size_t capacity/*, int locked*/);
-#if !NO_DESTROY_MSPACE
-static size_t destroy_mspace(mspace msp);
-#endif /* NO_DESTROY_MSPACE */
-#if !NO_CREATE_MSPACE_WITH_BASE
-static mspace create_mspace_with_base(void *base, size_t capacity/*, int locked*/);
-#endif /* !NO_CREATE_MSPACE_WITH_BASE */
-#if !NO_MSPACE_TRACK_LARGE_CHUNKS
-static int mspace_track_large_chunks(mspace msp, int enable);
-#endif /* !NO_MSPACE_TRACK_LARGE_CHUNKS */
-static void *mspace_malloc(mspace msp, size_t bytes);
-#if USE_MSPACE_MALLOC_LOCKLESS
-static void *mspace_malloc_lockless(mspace msp, size_t bytes);
-#endif /* USE_MSPACE_MALLOC_LOCKLESS */
-#if !NO_MSPACE_FREE
-static void mspace_free(mspace msp, void *mem);
-#endif /* !NO_MSPACE_FREE */
-#if !NO_MSPACE_REALLOC
-static void *mspace_realloc(mspace msp, void *mem, size_t newsize);
-#endif /* !NO_MSPACE_REALLOC */
-#if !NO_MSPACE_REALLOC_IN_PLACE
-static void *mspace_realloc_in_place(mspace msp, void *oldmem, size_t bytes);
-#endif /* !NO_MSPACE_REALLOC_IN_PLACE */
-#if !NO_MSPACE_CALLOC
-static void *mspace_calloc(mspace msp, size_t n_elements, size_t elem_size);
-#endif /* !NO_MSPACE_CALLOC */
-#if !NO_MSPACE_MEMALIGN
-static void *mspace_memalign(mspace msp, size_t alignment, size_t bytes);
-#endif /* !NO_MSPACE_MEMALIGN */
-#if !NO_INDEPENDENT_ALLOC
-static void **mspace_independent_calloc(mspace msp, size_t n_elements, size_t elem_size, void *chunks[]);
-static void **mspace_independent_comalloc(mspace msp, size_t n_elements, size_t sizes[], void *chunks[]);
-#endif /* !NO_INDEPENDENT_ALLOC */
-#if !NO_BULK_FREE
-static size_t mspace_bulk_free(mspace msp, void *array[], size_t nelem);
-#endif /* !NO_BULK_FREE */
-#if !NO_MSPACE_FOOTPRINT
-static size_t mspace_footprint(mspace msp);
-#endif /* !NO_MSPACE_FOOTPRINT */
-#if !NO_MSPACE_MAX_FOOTPRINT
-static size_t mspace_max_footprint(mspace msp);
-#endif /* !NO_MSPACE_MAX_FOOTPRINT */
-#if !NO_MSPACE_FOOTPRINT_LIMIT
-static size_t mspace_footprint_limit(mspace msp);
-#endif /* !NO_MSPACE_FOOTPRINT_LIMIT */
-#if !NO_MSPACE_SET_FOOTPRINT_LIMIT
-static size_t mspace_set_footprint_limit(mspace msp, size_t bytes);
-#endif /* !NO_MSPACE_SET_FOOTPRINT_LIMIT */
-#if !NO_MALLINFO && !EXPOSE_AS_DEEMON_API
-static struct dlmalloc_mallinfo mspace_mallinfo(mspace msp);
-#endif /* NO_MALLINFO && !EXPOSE_AS_DEEMON_API */
-#if !NO_MSPACE_USABLE_SIZE
-static size_t mspace_usable_size(void const *mem);
-#endif /* !NO_MSPACE_USABLE_SIZE */
-#if !NO_MALLOC_STATS
-static void mspace_malloc_stats(mspace msp);
-#endif /* NO_MALLOC_STATS */
-#if !NO_MSPACE_TRIM
-static int mspace_trim(mspace msp, size_t pad);
-#endif /* NO_MSPACE_TRIM */
-#if !NO_MALLOPT && !EXPOSE_AS_DEEMON_API
-static int mspace_mallopt(int param_number, int value);
-#endif /* !NO_MALLOPT && !EXPOSE_AS_DEEMON_API */
-
-#if USE_PER_THREAD_MSTATE
-/* Return the calling thread's thread-local mspace (or "0" if not available) */
-static mspace tls_mspace(void);
-/* Invoke `cb' for every existing `tls_mspace()' ("cb" must still PREACTION()-lock said space) */
-static size_t tls_mspace_foreach(size_t (*cb)(mspace ms, void *arg), void *arg);
-#endif /* USE_PER_THREAD_MSTATE */
-
-#endif /* MSPACES */
-
-
 /*------------------------------ internal #includes ---------------------- */
-
 #ifdef __ARCH_PAGESIZE
 #define malloc_getpagesize __ARCH_PAGESIZE
 #define MALLOC_PAGESIZE    __ARCH_PAGESIZE
-#elif defined(CONFIG_HAVE_getpagesize)
+#elif DL_CONFIG_HAVE_getpagesize
 #define malloc_getpagesize getpagesize()
 #else /* __ARCH_PAGESIZE */
 #if !defined(_SC_PAGE_SIZE) && defined(_SC_PAGESIZE)
 #define _SC_PAGE_SIZE _SC_PAGESIZE
 #endif /* !_SC_PAGE_SIZE && _SC_PAGESIZE */
-#if defined(_SC_PAGE_SIZE) && defined(CONFIG_HAVE_sysconf)
+#if defined(_SC_PAGE_SIZE) && DL_CONFIG_HAVE_sysconf
 #define malloc_getpagesize sysconf(_SC_PAGE_SIZE)
-#else /* _SC_PAGE_SIZE && CONFIG_HAVE_sysconf */
-#ifdef CONFIG_HAVE_SYS_PARAM_H
+#else /* _SC_PAGE_SIZE && DL_CONFIG_HAVE_sysconf */
+#if DL_CONFIG_HAVE_SYS_PARAM_H
 DECL_END
 #include <sys/param.h>
 DECL_BEGIN
-#endif /* CONFIG_HAVE_SYS_PARAM_H */
+#endif /* DL_CONFIG_HAVE_SYS_PARAM_H */
 #ifdef EXEC_PAGESIZE
 #define malloc_getpagesize EXEC_PAGESIZE
 #elif defined(NBPG)
@@ -810,7 +1886,7 @@ DECL_BEGIN
 #else /* EXEC_PAGESIZE */
 #define malloc_getpagesize ((size_t)4096U) /* just guess */
 #endif /* !EXEC_PAGESIZE */
-#endif /* !_SC_PAGE_SIZE || !CONFIG_HAVE_sysconf */
+#endif /* !_SC_PAGE_SIZE || !DL_CONFIG_HAVE_sysconf */
 #endif /* !__ARCH_PAGESIZE */
 
 /* ------------------- size_t and alignment properties -------------------- */
@@ -846,7 +1922,7 @@ DECL_BEGIN
 
 /* MORECORE and MMAP must return MFAIL on failure */
 #define MFAIL  ((void *)(SIZE_MAX))
-#define CMFAIL ((char *)(MFAIL)) /* defined for convenience */
+#define CMFAIL ((byte_t *)(MFAIL)) /* defined for convenience */
 
 #if HAVE_MMAP
 #ifdef HAVE_MMAP_IS_VirtualAlloc
@@ -871,18 +1947,19 @@ FORCELOCAL void *win32direct_mmap(size_t size) {
 /* This function supports releasing coalesced segments */
 FORCELOCAL int win32munmap(void *ptr, size_t size) {
 	MEMORY_BASIC_INFORMATION minfo;
-	char *cptr = (char *)ptr;
+	byte_t *cptr = (byte_t *)ptr;
 	while (size) {
 		DBG_ALIGNMENT_DISABLE();
-		if (VirtualQuery(cptr, &minfo, sizeof(minfo)) == 0) {
+		if (VirtualQuery((void *)cptr, &minfo, sizeof(minfo)) == 0) {
 			DBG_ALIGNMENT_ENABLE();
 			return -1;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		if (minfo.BaseAddress != cptr || minfo.AllocationBase != cptr ||
+		if (minfo.BaseAddress != (void *)cptr ||
+		    minfo.AllocationBase != (void *)cptr ||
 		    minfo.State != MEM_COMMIT || minfo.RegionSize > size)
 			return -1;
-		if (VirtualFree(cptr, 0, MEM_RELEASE) == 0)
+		if (VirtualFree((void *)cptr, 0, MEM_RELEASE) == 0)
 			return -1;
 		cptr += minfo.RegionSize;
 		size -= minfo.RegionSize;
@@ -913,18 +1990,18 @@ FORCELOCAL int win32munmap(void *ptr, size_t size) {
 FORCELOCAL void *native_malloc_mmap(size_t size) {
 	void *ptr;
 	DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_calloc
+#if DL_CONFIG_HAVE_calloc
 	ptr = calloc(1, size);
-#else /* CONFIG_HAVE_calloc */
+#else /* DL_CONFIG_HAVE_calloc */
 	ptr = malloc(size);
-#endif /* !CONFIG_HAVE_calloc */
+#endif /* !DL_CONFIG_HAVE_calloc */
 	DBG_ALIGNMENT_ENABLE();
 	return (ptr != 0) ? ptr : MFAIL;
 }
 
 /* NOTE: We can just use "free()" if it's available
  *       because we configure "NO_SEGMENT_TRAVERSAL"! */
-#ifdef CONFIG_HAVE_free
+#if DL_CONFIG_HAVE_free
 #define DL_MUNMAP(a, s) native_malloc_munmap((a), (s))
 FORCELOCAL int native_malloc_munmap(void *ptr, size_t size) {
 	(void)size;
@@ -933,28 +2010,28 @@ FORCELOCAL int native_malloc_munmap(void *ptr, size_t size) {
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
 }
-#endif /* CONFIG_HAVE_free */
+#endif /* DL_CONFIG_HAVE_free */
 #else /* ... */
-#ifdef CONFIG_HAVE_munmap
+#if DL_CONFIG_HAVE_munmap
 #define DL_MUNMAP(a, s) munmap((a), (s))
-#endif /* CONFIG_HAVE_munmap */
-#ifndef CONFIG_HAVE_PROT_READ
+#endif /* DL_CONFIG_HAVE_munmap */
+#if !DL_CONFIG_HAVE_PROT_READ
 #undef PROT_READ
 #define PROT_READ 0
-#endif /* !CONFIG_HAVE_PROT_READ */
-#ifndef CONFIG_HAVE_PROT_WRITE
+#endif /* !DL_CONFIG_HAVE_PROT_READ */
+#if !DL_CONFIG_HAVE_PROT_WRITE
 #undef PROT_WRITE
 #define PROT_WRITE 0
-#endif /* !CONFIG_HAVE_PROT_WRITE */
-#ifndef CONFIG_HAVE_MAP_PRIVATE
+#endif /* !DL_CONFIG_HAVE_PROT_WRITE */
+#if !DL_CONFIG_HAVE_MAP_PRIVATE
 #undef MAP_PRIVATE
 #define MAP_PRIVATE 0
-#endif /* !CONFIG_HAVE_MAP_PRIVATE */
+#endif /* !DL_CONFIG_HAVE_MAP_PRIVATE */
 #define MMAP_PROT (PROT_READ | PROT_WRITE)
-#ifdef CONFIG_HAVE_MAP_ANONYMOUS
+#if DL_CONFIG_HAVE_MAP_ANONYMOUS
 #define MMAP_FLAGS (MAP_PRIVATE | MAP_ANONYMOUS)
 #define DL_MMAP(s) mmap(0, (s), MMAP_PROT, MMAP_FLAGS, -1, 0)
-#else /* CONFIG_HAVE_MAP_ANONYMOUS */
+#else /* DL_CONFIG_HAVE_MAP_ANONYMOUS */
 /* Nearly all versions of mmap support MAP_ANONYMOUS, so the following
  * is unlikely to be needed, but is supplied just in case. */
 #define MMAP_FLAGS (MAP_PRIVATE)
@@ -963,7 +2040,7 @@ static int dev_zero_fd = -1; /* Cached file descriptor for /dev/zero. */
 	((dev_zero_fd < 0) ? (dev_zero_fd = open("/dev/zero", O_RDWR),             \
 	                      mmap(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0)) \
 	                   : mmap(0, (s), MMAP_PROT, MMAP_FLAGS, dev_zero_fd, 0))
-#endif /* !CONFIG_HAVE_MAP_ANONYMOUS */
+#endif /* !DL_CONFIG_HAVE_MAP_ANONYMOUS */
 #endif /* !... */
 #endif /* HAVE_MMAP */
 
@@ -972,7 +2049,7 @@ static int dev_zero_fd = -1; /* Cached file descriptor for /dev/zero. */
  * Define DL_MMAP/DL_MUNMAP/DL_DIRECT_MMAP
  */
 #if HAVE_MMAP
-#define USE_MMAP_BIT (SIZE_T_ONE)
+#define USE_MMAP_BIT    (SIZE_T_ONE)
 #else /* HAVE_MMAP */
 #define USE_MMAP_BIT    (SIZE_T_ZERO)
 #define DL_MMAP(s)      MFAIL
@@ -988,12 +2065,15 @@ static int dev_zero_fd = -1; /* Cached file descriptor for /dev/zero. */
 /**
  * Define DL_MREMAP
  */
+#ifndef DL_CONFIG_HAVE_MREMAP_MAYMOVE
+#define DL_CONFIG_HAVE_MREMAP_MAYMOVE 0
+#endif /* !DL_CONFIG_HAVE_MREMAP_MAYMOVE */
 #if HAVE_MMAP && HAVE_MREMAP
-#ifdef CONFIG_HAVE_MREMAP_MAYMOVE
+#if DL_CONFIG_HAVE_MREMAP_MAYMOVE
 #define DL_MREMAP(addr, osz, nsz, mv) mremap((addr), (osz), (nsz), (mv) ? MREMAP_MAYMOVE : 0)
-#else /* CONFIG_HAVE_MREMAP_MAYMOVE */
+#else /* DL_CONFIG_HAVE_MREMAP_MAYMOVE */
 #define DL_MREMAP(addr, osz, nsz, mv) mremap((addr), (osz), (nsz), (mv))
-#endif /* !CONFIG_HAVE_MREMAP_MAYMOVE */
+#endif /* !DL_CONFIG_HAVE_MREMAP_MAYMOVE */
 #else /* HAVE_MMAP && HAVE_MREMAP */
 #define DL_MREMAP(addr, osz, nsz, mv) MFAIL
 #define DL_MREMAP_ALWAYS_FAILS
@@ -1006,13 +2086,55 @@ static int dev_zero_fd = -1; /* Cached file descriptor for /dev/zero. */
 
 
 /* --------------------------- Lock preliminaries ------------------------ */
+#ifndef DL_LOCK_T
+DECL_END
+#include <hybrid/sched/atomic-lock.h> /* ATOMIC_LOCK_INIT, atomic_lock, atomic_lock_* */
+DECL_BEGIN
+#define DL_LOCK_T           struct atomic_lock     /* Mand */
+#define DL_LOCK_INIT_STATIC ATOMIC_LOCK_INIT       /* Mand */
+#define DL_LOCK_INIT        atomic_lock_cinit      /* Mand */
+#define DL_LOCK_ACQUIRE     atomic_lock_acquire    /* Mand */
+#define DL_LOCK_RELEASE     atomic_lock_release    /* Mand */
+#define DL_LOCK_TRYACQUIRE  atomic_lock_tryacquire /* Mand */
+#define DL_LOCK_ACQUIRED    atomic_lock_acquired   /* Opt */
+#define DL_LOCK_AVAILABLE   atomic_lock_available  /* Opt */
+#define DL_LOCK_WAITFOR     atomic_lock_waitfor    /* Opt */
+#endif /* !DL_LOCK_T */
+#ifndef DL_LOCK_WAITFOR
+#define DL_LOCK_WAITFOR(x)  \
+	do {                    \
+		DL_LOCK_ACQUIRE(x); \
+		DL_LOCK_RELEASE(x); \
+	} __WHILE0
+#endif /* !DL_LOCK_WAITFOR */
+#if !USE_LOCKS
+#undef DL_LOCK_T
+#undef DL_LOCK_INIT_STATIC
+#undef DL_LOCK_INIT
+#undef DL_LOCK_ACQUIRE
+#undef DL_LOCK_RELEASE
+#undef DL_LOCK_TRYACQUIRE
+#undef DL_LOCK_ACQUIRED
+#undef DL_LOCK_AVAILABLE
+#undef DL_LOCK_WAITFOR
+#define DL_LOCK_T             char
+#define DL_LOCK_INIT_STATIC   0
+#define DL_LOCK_INIT(x)       (void)0
+#define DL_LOCK_ACQUIRE(x)    (void)0
+#define DL_LOCK_RELEASE(x)    (void)0
+#define DL_LOCK_TRYACQUIRE(x) 1
+#define DL_LOCK_ACQUIRED(x)   1
+#define DL_LOCK_AVAILABLE(x)  1
+#define DL_LOCK_WAITFOR(x)    (void)0
+#endif /* !USE_LOCKS */
+
 #if GM_ONLY || !USE_LOCKS
 #define ACQUIRE_MALLOC_GLOBAL_LOCK() (void)0
 #define RELEASE_MALLOC_GLOBAL_LOCK() (void)0
 #else /* GM_ONLY || !USE_LOCKS */
-static Dee_atomic_lock_t malloc_global_lock = Dee_ATOMIC_LOCK_INIT;
-#define ACQUIRE_MALLOC_GLOBAL_LOCK() Dee_atomic_lock_acquire(&malloc_global_lock)
-#define RELEASE_MALLOC_GLOBAL_LOCK() Dee_atomic_lock_release(&malloc_global_lock)
+static DL_LOCK_T malloc_global_lock = DL_LOCK_INIT_STATIC;
+#define ACQUIRE_MALLOC_GLOBAL_LOCK() DL_LOCK_ACQUIRE(&malloc_global_lock)
+#define RELEASE_MALLOC_GLOBAL_LOCK() DL_LOCK_RELEASE(&malloc_global_lock)
 #endif /* !GM_ONLY && USE_LOCKS */
 
 /* -----------------------  Chunk representations ------------------------ */
@@ -1047,8 +2169,8 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 #define MIN_CHUNK_SIZE ((MCHUNK_SIZE + CHUNK_ALIGN_MASK) & ~CHUNK_ALIGN_MASK)
 
 /* conversion from malloc headers to user pointers, and back */
-#define chunk2mem(p)   ((void *)((char *)(p) + TWO_SIZE_T_SIZES))
-#define mem2chunk(mem) ((mchunkptr)((char *)(mem) - TWO_SIZE_T_SIZES))
+#define chunk2mem(p)   ((void *)((byte_t *)(p) + TWO_SIZE_T_SIZES))
+#define mem2chunk(mem) ((mchunkptr)((byte_t *)(mem) - TWO_SIZE_T_SIZES))
 
 /* chunk associated with aligned address A */
 #define align_as_chunk(A) (mchunkptr)((A) + align_offset(chunk2mem(A)))
@@ -1091,8 +2213,8 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 #define clear_flag4(p)  ((p)->head &= ~FLAG4_BIT)
 
 /* Treat space at ptr +/- offset as a chunk */
-#define chunk_plus_offset(p, s)  ((mchunkptr)((char *)(p) + (s)))
-#define chunk_minus_offset(p, s) ((mchunkptr)((char *)(p) - (s)))
+#define chunk_plus_offset(p, s)  ((mchunkptr)((byte_t *)(p) + (s)))
+#define chunk_minus_offset(p, s) ((mchunkptr)((byte_t *)(p) - (s)))
 
 /* Ptr to next or previous physical malloc_chunk. */
 #define next_chunk(p) chunk_plus_offset(p, chunksize(p))
@@ -1114,7 +2236,7 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 	(clear_pinuse(n), set_size_and_pinuse_of_free_chunk(p, s))
 
 /* Get the internal overhead associated with chunk p */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 #if MMAP_CHUNK_OVERHEAD == TWO_SIZE_T_SIZES && MMAP_CHUNK_OVERHEAD == CHUNK_OVERHEAD
 #define overhead_for(p) MMAP_CHUNK_OVERHEAD
 #elif MMAP_CHUNK_OVERHEAD == TWO_SIZE_T_SIZES
@@ -1129,7 +2251,7 @@ typedef unsigned int flag_t;          /* The type of various bit flag sets */
 #endif /* !... */
 
 /* Return true if malloced space is not necessarily cleared */
-#if HAVE_MMAP_CLEARS && !defined(DL_DEBUG_MEMSET_ALLOC)
+#if HAVE_MMAP_CLEARS && !DL_DEBUG_MEMSET_ALLOC
 #define calloc_must_clear(p) (!is_mmapped(p))
 #else /* HAVE_MMAP_CLEARS && !DL_DEBUG_MEMSET_ALLOC */
 #define calloc_must_clear(p) (1)
@@ -1146,7 +2268,7 @@ struct malloc_tree_chunk {
 
 	struct malloc_tree_chunk *child[2];
 	struct malloc_tree_chunk *parent;
-#ifdef DL_DEBUG_MEMSET_FREE
+#if DL_DEBUG_MEMSET_FREE
 	union {
 		bindex_t              index;
 		size_t                index_word;
@@ -1166,7 +2288,7 @@ typedef struct malloc_tree_chunk *tbinptr; /* The type of bins of trees */
 /* ----------------------------- Segments -------------------------------- */
 
 struct malloc_segment {
-	char                  *base;   /* base address */
+	byte_t                *base;   /* base address */
 	size_t                 size;   /* allocated size */
 	struct malloc_segment *next;   /* ptr to next segment */
 	flag_t                 sflags; /* mmap and extern flag */
@@ -1184,9 +2306,6 @@ typedef struct malloc_segment *msegmentptr;
 
 /* ----------------------------- Free List -------------------------------- */
 
-#ifndef USE_PENDING_FREE_LIST
-#define USE_PENDING_FREE_LIST 0
-#endif /* !USE_PENDING_FREE_LIST */
 #if USE_PENDING_FREE_LIST
 struct freelist_entry {
 	SLIST_ENTRY(freelist_entry) fle_link;
@@ -1212,7 +2331,7 @@ PRIVATE binmap_t /* */ dl_gm_smallmap = 0;
 PRIVATE binmap_t /* */ dl_gm_treemap = 0;
 PRIVATE size_t /*   */ dl_gm_dvsize = 0;
 PRIVATE size_t /*   */ dl_gm_topsize = 0;
-PRIVATE char * /*   */ dl_gm_least_addr = 0;
+PRIVATE byte_t * /* */ dl_gm_least_addr = 0;
 PRIVATE mchunkptr /**/ dl_gm_dv = 0;
 PRIVATE mchunkptr /**/ dl_gm_top = 0;
 PRIVATE size_t /*   */ dl_gm_trim_check = 0;
@@ -1226,7 +2345,7 @@ PRIVATE size_t /*   */ dl_gm_footprint_limit = 0; /* zero means no limit */
 PRIVATE flag_t /*   */ dl_gm_mflags = 0;
 PRIVATE msegment /* */ dl_gm_seg = {};
 #if USE_LOCKS
-PRIVATE Dee_atomic_lock_t dl_gm_mutex = Dee_ATOMIC_LOCK_INIT;
+PRIVATE DL_LOCK_T dl_gm_mutex = DL_LOCK_INIT_STATIC;
 #endif /* USE_LOCKS */
 #if USE_PENDING_FREE_LIST
 /* [0..n][lock(ATOMIC)] List of heap pointers that still need to be free'd */
@@ -1272,7 +2391,7 @@ struct malloc_state {
 	binmap_t  treemap;
 	size_t    dvsize;
 	size_t    topsize;
-	char     *least_addr;
+	byte_t   *least_addr;
 	mchunkptr dv;
 	mchunkptr top;
 	size_t    trim_check;
@@ -1285,7 +2404,7 @@ struct malloc_state {
 	size_t    footprint_limit; /* zero means no limit */
 	flag_t    mflags;
 #if USE_LOCKS
-	Dee_atomic_lock_t mutex; /* locate lock among fields that rarely change */
+	DL_LOCK_T mutex; /* locate lock among fields that rarely change */
 #endif /* USE_LOCKS */
 #if USE_PENDING_FREE_LIST
 	struct freelist flist;
@@ -1481,10 +2600,10 @@ static struct malloc_state _gm_;
 
 /*  True if segment S holds address A */
 #define segment_holds(S, A) \
-	((char *)(A) >= S->base && (char *)(A) < S->base + S->size)
+	((byte_t *)(A) >= S->base && (byte_t *)(A) < S->base + S->size)
 
 /* Return segment holding given address */
-static msegmentptr segment_holding(PARAM_mstate_m_ char *addr) {
+static msegmentptr segment_holding(PARAM_mstate_m_ byte_t *addr) {
 	msegmentptr sp = &mstate_seg(m);
 	for (;;) {
 		if (addr >= sp->base && addr < sp->base + sp->size)
@@ -1499,7 +2618,7 @@ static msegmentptr segment_holding(PARAM_mstate_m_ char *addr) {
 static int has_segment_link(PARAM_mstate_m_ msegmentptr ss) {
 	msegmentptr sp = &mstate_seg(m);
 	for (;;) {
-		if ((char *)sp >= ss->base && (char *)sp < ss->base + ss->size)
+		if ((byte_t *)sp >= ss->base && (byte_t *)sp < ss->base + ss->size)
 			return 1;
 		if ((sp = sp->next) == 0)
 			return 0;
@@ -1544,24 +2663,25 @@ again:
 	pending.slh_first = SLIST_ATOMIC_CLEAR(&mstate_flist(m));
 	if (pending.slh_first)
 		dl_freelist_do_reap(ARG_mstate_m_ pending.slh_first);
-	Dee_atomic_lock_release(&mstate_mutex(m));
+	DL_LOCK_RELEASE(&mstate_mutex(m));
 	if unlikely(atomic_read(&mstate_flist(m).slh_first) != NULL) {
-		if (Dee_atomic_lock_tryacquire(&mstate_mutex(m)))
+		if (DL_LOCK_TRYACQUIRE(&mstate_mutex(m)))
 			goto again;
 	}
 }
 
-#if 1 /* Do a (read-only) check if lock is available so our
-       * CPU doesn't need to write-lock a highly shared part
-       * of the memory bus all the time. */
-#define TRY_PREACTION(M)                            \
-	(Dee_atomic_lock_available(&mstate_mutex(M)) && \
-	 Dee_atomic_lock_tryacquire(&mstate_mutex(M)))
+#if defined(DL_LOCK_AVAILABLE) && 1
+/* Do a (read-only) check if lock is available so our
+ * CPU doesn't need to write-lock a highly shared part
+ * of the memory bus all the time. */
+#define TRY_PREACTION(M)                    \
+	(DL_LOCK_AVAILABLE(&mstate_mutex(M)) && \
+	 DL_LOCK_TRYACQUIRE(&mstate_mutex(M)))
 #else
-#define TRY_PREACTION(M) Dee_atomic_lock_tryacquire(&mstate_mutex(M))
+#define TRY_PREACTION(M) DL_LOCK_TRYACQUIRE(&mstate_mutex(M))
 #endif
 
-#define PREACTION(M)      Dee_atomic_lock_acquire(&mstate_mutex(M))
+#define PREACTION(M)      DL_LOCK_ACQUIRE(&mstate_mutex(M))
 #define POSTACTION(M)     dl_freelist_release_and_reap(ARG_mstate_X(M))
 
 #define dl_freelist_append(M, p)                                   \
@@ -1574,9 +2694,9 @@ again:
 			POSTACTION(M);                                         \
 	}
 #else /* USE_PENDING_FREE_LIST */
-#define TRY_PREACTION(M) Dee_atomic_lock_tryacquire(&mstate_mutex(M))
-#define PREACTION(M)     Dee_atomic_lock_acquire(&mstate_mutex(M))
-#define POSTACTION(M)    Dee_atomic_lock_release(&mstate_mutex(M))
+#define TRY_PREACTION(M) DL_LOCK_TRYACQUIRE(&mstate_mutex(M))
+#define PREACTION(M)     DL_LOCK_ACQUIRE(&mstate_mutex(M))
+#define POSTACTION(M)    DL_LOCK_RELEASE(&mstate_mutex(M))
 #endif /* !USE_PENDING_FREE_LIST */
 
 
@@ -1590,12 +2710,12 @@ static void reset_on_error(PARAM_mstate_m);
 
 /* -------------------------- Debugging setup ---------------------------- */
 
-#ifdef DL_DEBUG_MEMSET_FREE
-#define dl_setfree_word(W, T) (void)(W = (T)DL_DEBUG_MEMSET_FREE)
+#if DL_DEBUG_MEMSET_FREE
+#define dl_setfree_word(W, T) (void)(W = (T)DL_DEBUG_MEMSET_FREE_PATTERN)
 PRIVATE void DCALL dl_setfree_data(void *p, size_t n) {
 	size_t *iter = (size_t *)p;
 	while (n >= sizeof(size_t)) {
-		*iter++ = DL_DEBUG_MEMSET_FREE;
+		*iter++ = DL_DEBUG_MEMSET_FREE_PATTERN;
 		n -= sizeof(size_t);
 	}
 }
@@ -1603,12 +2723,12 @@ PRIVATE void DCALL dl_setfree_data(void *p, size_t n) {
 #define dl_setfree_word(W, T) (void)0
 #define dl_setfree_data(p, n) (void)0
 #endif /* !DL_DEBUG_MEMSET_FREE */
-#ifdef DL_DEBUG_MEMSET_ALLOC
-#define dl_setalloc_word(W, T) (void)(W = (T)DL_DEBUG_MEMSET_ALLOC)
+#if DL_DEBUG_MEMSET_ALLOC
+#define dl_setalloc_word(W, T) (void)(W = (T)DL_DEBUG_MEMSET_ALLOC_PATTERN)
 PRIVATE void DCALL dl_setalloc_data(void *p, size_t n) {
 	size_t *iter = (size_t *)p;
 	while (n >= sizeof(size_t)) {
-		*iter++ = DL_DEBUG_MEMSET_ALLOC;
+		*iter++ = DL_DEBUG_MEMSET_ALLOC_PATTERN;
 		n -= sizeof(size_t);
 	}
 }
@@ -1653,7 +2773,7 @@ PRIVATE void DCALL dl_setalloc_data(void *p, size_t n) {
 #define check_memset_use_after_free(M, P) /* nothing */
 #endif /* !DETECT_USE_AFTER_FREE */
 
-#ifdef DL_DEBUG_MEMSET_FREE
+#if DL_DEBUG_MEMSET_FREE
 static void do_check_memset_free(PARAM_mstate_m_ mchunkptr p);
 #else /* DL_DEBUG_MEMSET_FREE */
 #define do_check_memset_free(p) (void)0
@@ -1682,7 +2802,7 @@ static size_t traverse_and_check(PARAM_mstate_m);
 #define MIN_SMALL_INDEX     (small_index(MIN_CHUNK_SIZE))
 
 /* addressing by index. See above about smallbin repositioning */
-#define smallbin_at(M, i) ((sbinptr)((char *)&(mstate_smallbins(M)[(i) << 1])))
+#define smallbin_at(M, i) ((sbinptr)((byte_t *)&(mstate_smallbins(M)[(i) << 1])))
 #define treebin_at(M, i)  (&(mstate_treebins(M)[i]))
 
 /* assign tree index for size S to variable I. Use x86 asm if possible  */
@@ -1743,9 +2863,9 @@ static size_t traverse_and_check(PARAM_mstate_m);
 
 #if !INSECURE
 /* Check if address a is at least as high as any from MORECORE or MMAP */
-#define ok_address(M, a) ((char *)(a) >= mstate_least_addr(M))
+#define ok_address(M, a) ((byte_t *)(a) >= mstate_least_addr(M))
 /* Check if address of next chunk n is higher than base chunk p */
-#define ok_next(p, n)    ((char *)(p) < (char *)(n))
+#define ok_next(p, n)    ((byte_t *)(p) < (byte_t *)(n))
 /* Check if p has inuse status */
 #define ok_inuse(p)      is_inuse(p)
 /* Check if p has its pinuse bit on */
@@ -1832,7 +2952,7 @@ static size_t traverse_and_check(PARAM_mstate_m);
 
 #endif /* !FOOTERS */
 
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 #define do_validate_flag4_footer(p)                                            \
 	do {                                                                       \
 		size_t _ps = chunksize(p);                                             \
@@ -1840,12 +2960,12 @@ static size_t traverse_and_check(PARAM_mstate_m);
 		ext_assertf(*_pval == _ps,                                             \
 		            "flag4 mchunk footer at %p of chunk %p-%p has unexpected " \
 		            "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
-		            _pval, p, (char *)(p) + _ps - 1, *_pval, _ps);             \
+		            _pval, p, (byte_t *)(p) + _ps - 1, *_pval, _ps);           \
 	}	__WHILE0
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#else /* FLAG4_BIT_HEAP_REGION */
 #define do_validate_flag4_footer_IS_NOOP
 #define do_validate_flag4_footer(p) (void)0
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION */
 #if FOOTERS && GM_ONLY
 #define do_validate_inuse_footer(p)                                            \
 	do {                                                                       \
@@ -1854,7 +2974,7 @@ static size_t traverse_and_check(PARAM_mstate_m);
 		ext_assertf(*_pval == mparams.magic,                                   \
 		            "inuse mchunk footer at %p of chunk %p-%p has unexpected " \
 		            "value %#" PRFxSIZ " when %#" PRFxSIZ " was expected",     \
-		            _pval, p, (char *)(p) + _ps - 1, *_pval, mparams.magic);   \
+		            _pval, p, (byte_t *)(p) + _ps - 1, *_pval, mparams.magic); \
 	}	__WHILE0
 #else /* FOOTERS && GM_ONLY */
 #define do_validate_inuse_footer_IS_NOOP
@@ -1926,7 +3046,7 @@ static int init_mparams(void) {
 		   Alignment, min chunk size, and page size must all be powers of 2.
 		*/
 #if 0
-		if ((sizeof(size_t) != sizeof(char*)) ||
+		if ((sizeof(size_t) != sizeof(byte_t*)) ||
 		    (SIZE_MAX < MIN_CHUNK_SIZE)  ||
 		    (sizeof(int) < 4)  ||
 		    (MALLOC_ALIGNMENT < (size_t)8U) ||
@@ -1956,7 +3076,7 @@ static int init_mparams(void) {
 		{
 #ifdef CONFIG_HOST_WINDOWS
 			magic = (size_t)(GetTickCount() ^ (size_t)0x55555555U);
-#elif defined(CONFIG_HAVE_time)
+#elif DL_CONFIG_HAVE_time
 			magic = (size_t)(time(0) ^ (size_t)0x55555555U);
 #else /* ... */
 			magic = (size_t)&magic ^ (size_t)0x55555555U;
@@ -1977,15 +3097,15 @@ static int init_mparams(void) {
 
 /* support for mallopt */
 #if !NO_MALLOPT
-#if !EXPOSE_AS_DEEMON_API
-static int change_mparam(int param_number, int value)
-#else /* !EXPOSE_AS_DEEMON_API */
-DFUNDEF int DCALL DeeHeap_SetOpt(int param_number, size_t val)
-#endif /* EXPOSE_AS_DEEMON_API */
+#if dlmallopt_SECOND_PARAMETER_IS_SIZE_T
+DL_API_IMPL(, int, dlmallopt, (int param_number, size_t val))
+#else /* dlmallopt_SECOND_PARAMETER_IS_SIZE_T */
+DL_API_IMPL(, int, dlmallopt, (int param_number, int value))
+#endif /* !dlmallopt_SECOND_PARAMETER_IS_SIZE_T */
 {
-#if !EXPOSE_AS_DEEMON_API
+#if !dlmallopt_SECOND_PARAMETER_IS_SIZE_T
 	size_t val = (value == -1) ? SIZE_MAX : (size_t)value;
-#endif /* !EXPOSE_AS_DEEMON_API */
+#endif /* !dlmallopt_SECOND_PARAMETER_IS_SIZE_T */
 #ifdef HOOK_AFTER_INIT_MALLOPT
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOPT(param_number, value));
 #else /* HOOK_AFTER_INIT_MALLOPT */
@@ -2010,10 +3130,11 @@ DFUNDEF int DCALL DeeHeap_SetOpt(int param_number, size_t val)
 }
 #endif /* !NO_MALLOPT */
 
+
 #if DL_DEBUG_EXTERNAL || DL_DEBUG_INTERNAL
 /* ------------------------- Debugging Support --------------------------- */
 
-#ifdef DL_DEBUG_MEMSET_FREE
+#if DL_DEBUG_MEMSET_FREE
 static void do_check_memset_free(PARAM_mstate_m_ mchunkptr p) {
 	size_t num_bytes = chunksize(p);
 	size_t num_words = num_bytes / sizeof(size_t);
@@ -2029,9 +3150,9 @@ static void do_check_memset_free(PARAM_mstate_m_ mchunkptr p) {
 		num_words -= sizeof(tchunk) / sizeof(size_t);
 	}
 	for (i = 0; i < num_words; ++i) {
-		ASSERTF(words[i] == DL_DEBUG_MEMSET_FREE,
+		ASSERTF(words[i] == DL_DEBUG_MEMSET_FREE_PATTERN,
 		        "Free pointer %p at offset %" PRFxSIZ " from %p-%p has bad pattern %#" PRFXSIZ "",
-		        &words[i], i * sizeof(size_t), p, (char *)p + num_bytes - 1, words[i]);
+		        &words[i], i * sizeof(size_t), p, (byte_t *)p + num_bytes - 1, words[i]);
 	}
 }
 #endif /* DL_DEBUG_MEMSET_FREE */
@@ -2044,14 +3165,14 @@ static void do_check_any_chunk(PARAM_mstate_m_ mchunkptr p) {
 
 /* Check properties of top chunk */
 static void do_check_top_chunk(PARAM_mstate_m_ mchunkptr p) {
-	msegmentptr sp = segment_holding(ARG_mstate_m_ (char *)p);
+	msegmentptr sp = segment_holding(ARG_mstate_m_ (byte_t *)p);
 	size_t sz      = p->head & ~INUSE_BITS; /* third-lowest bit can be set! */
 	ASSERT(sp != 0);
 	ASSERT((is_aligned(chunk2mem(p))) || (p->head == FENCEPOST_HEAD));
 	ASSERT(ok_address(m, p));
 	ASSERT(sz == mstate_topsize(m));
 	ASSERT(sz > 0);
-	ASSERT(sz == ((sp->base + sp->size) - (char *)p) - TOP_FOOT_SIZE);
+	ASSERT(sz == ((sp->base + sp->size) - (byte_t *)p) - TOP_FOOT_SIZE);
 	ASSERT(pinuse(p));
 	ASSERT(!pinuse(chunk_plus_offset(p, sz)));
 }
@@ -2308,13 +3429,7 @@ static void do_check_malloc_state(PARAM_mstate_m) {
 /* ----------------------------- statistics ------------------------------ */
 
 #if !NO_MALLINFO
-#if !EXPOSE_AS_DEEMON_API
-#define STRUCT_dlmalloc_mallinfo struct dlmalloc_mallinfo
-#else /* !EXPOSE_AS_DEEMON_API */
-#define STRUCT_dlmalloc_mallinfo struct Dee_heap_mallinfo
-#endif /* EXPOSE_AS_DEEMON_API */
-
-static void do_gather_internal_mallinfo(PARAM_mstate_m_ STRUCT_dlmalloc_mallinfo *nm) {
+static void do_gather_internal_mallinfo(PARAM_mstate_m_ STRUCT_mallinfo *nm) {
 	PREACTION(m);
 	check_malloc_state(m);
 	if (is_initialized(m)) {
@@ -2336,16 +3451,7 @@ static void do_gather_internal_mallinfo(PARAM_mstate_m_ STRUCT_dlmalloc_mallinfo
 			}
 			s = s->next;
 		}
-#if EXPOSE_AS_DEEMON_API
-#define nm__hmi_(x) nm->hmi_##x
-#else /* EXPOSE_AS_DEEMON_API */
-#define nm__hmi_(x) nm->x
-#endif /* !EXPOSE_AS_DEEMON_API */
-#if USE_PER_THREAD_MSTATE
-#define nm__hmi_account(x, v) nm__hmi_(x) += v
-#else /* USE_PER_THREAD_MSTATE */
-#define nm__hmi_account(x, v) nm__hmi_(x) = v
-#endif /* !USE_PER_THREAD_MSTATE */
+#define nm__hmi_account(x, v) STRUCT_mallinfo_set_##x(nm, STRUCT_mallinfo_get_##x(nm) + v)
 		nm__hmi_account(arena, sum);
 		nm__hmi_account(ordblks, nfree);
 		nm__hmi_account(hblkhd, mstate_footprint(m) - sum);
@@ -2354,46 +3460,33 @@ static void do_gather_internal_mallinfo(PARAM_mstate_m_ STRUCT_dlmalloc_mallinfo
 		nm__hmi_account(fordblks, mfree);
 		nm__hmi_account(keepcost, mstate_topsize(m));
 #undef nm__hmi_account
-#undef nm__hmi_
 	}
 	POSTACTION(m);
 }
 
 #if USE_PER_THREAD_MSTATE
 PRIVATE size_t do_gather_internal_mallinfo_cb(mspace ms, void *arg) {
-	do_gather_internal_mallinfo(ARG_mstate_X_((mstate)ms) (STRUCT_dlmalloc_mallinfo *)arg);
+	do_gather_internal_mallinfo(ARG_mstate_X_((mstate)ms) (STRUCT_mallinfo *)arg);
 	return 0;
 }
 #endif /* USE_PER_THREAD_MSTATE */
 
-#if !EXPOSE_AS_DEEMON_API
-static STRUCT_dlmalloc_mallinfo internal_mallinfo(PARAM_mstate_m)
-#define lm m
-#else /* !EXPOSE_AS_DEEMON_API */
-PUBLIC ATTR_PURE WUNUSED STRUCT_dlmalloc_mallinfo DCALL DeeHeap_MallInfo(void)
-#define lm gm
-#endif /* EXPOSE_AS_DEEMON_API */
-{
-#if EXPOSE_AS_DEEMON_API
-	STRUCT_dlmalloc_mallinfo nm = { 0, 0, 0, 0, 0, 0, 0 };
-#else /* EXPOSE_AS_DEEMON_API */
-	STRUCT_dlmalloc_mallinfo nm = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-#endif /* !EXPOSE_AS_DEEMON_API */
+DL_API_IMPL(ATTR_PURE WUNUSED, STRUCT_mallinfo, dlmallinfo, (void)) {
+	STRUCT_mallinfo nm;
+	bzero(&nm, sizeof(nm));
 #ifdef HOOK_AFTER_INIT_MALLINFO
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLINFO());
 #else /* HOOK_AFTER_INIT_MALLINFO */
 	ensure_initialization();
 #endif /* !HOOK_AFTER_INIT_MALLINFO */
-	do_gather_internal_mallinfo(ARG_mstate_X_(lm) &nm);
+	do_gather_internal_mallinfo(ARG_mstate_gm_ &nm);
 
 	/* Include info from "tls_mspace()" */
 #if USE_PER_THREAD_MSTATE
 	tls_mspace_foreach(&do_gather_internal_mallinfo_cb, &nm);
 #endif /* USE_PER_THREAD_MSTATE */
-
 	return nm;
 }
-#undef lm
 #endif /* !NO_MALLINFO */
 
 #if !NO_MALLOC_STATS
@@ -2694,7 +3787,7 @@ static void *mmap_alloc(PARAM_mstate_m_ size_t nb) {
 			return 0;
 	}
 	if (mmsize > nb) { /* Check for wrap around 0 */
-		char *mm = (char *)(DL_DIRECT_MMAP(mmsize));
+		byte_t *mm = (byte_t *)(DL_DIRECT_MMAP(mmsize));
 		if (mm != CMFAIL) {
 			size_t offset = align_offset(chunk2mem(mm));
 			size_t psize  = mmsize - offset - MMAP_FOOT_PAD;
@@ -2740,7 +3833,7 @@ static mchunkptr mmap_resize(PARAM_mstate_m_ mchunkptr oldp, size_t nb, int flag
 		size_t offset    = oldp->prev_foot;
 		size_t oldmmsize = oldsize + offset + MMAP_FOOT_PAD;
 		size_t newmmsize = mmap_align(nb + SIX_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
-		char *cp = (char *)DL_MREMAP((char *)oldp - offset, oldmmsize, newmmsize, flags);
+		byte_t *cp = (byte_t *)DL_MREMAP((byte_t *)oldp - offset, oldmmsize, newmmsize, flags);
 		if (cp != CMFAIL) {
 			mchunkptr newp = (mchunkptr)(cp + offset);
 			size_t psize   = newmmsize - offset - MMAP_FOOT_PAD;
@@ -2768,7 +3861,7 @@ static mchunkptr mmap_resize(PARAM_mstate_m_ mchunkptr oldp, size_t nb, int flag
 static void init_top(PARAM_mstate_m_ mchunkptr p, size_t psize) {
 	/* Ensure alignment */
 	size_t offset = align_offset(chunk2mem(p));
-	p = (mchunkptr)((char *)p + offset);
+	p = (mchunkptr)((byte_t *)p + offset);
 	psize -= offset;
 
 	mstate_top(m)     = p;
@@ -2809,16 +3902,15 @@ static void reset_on_error(PARAM_mstate_m) {
 #endif /* PROCEED_ON_ERROR */
 
 /* Allocate chunk and prepend remainder with chunk in successor base. */
-static void *prepend_alloc(PARAM_mstate_m_ char *newbase, char *oldbase,
-                           size_t nb) {
+static void *prepend_alloc(PARAM_mstate_m_ byte_t *newbase, byte_t *oldbase, size_t nb) {
 	mchunkptr p        = align_as_chunk(newbase);
 	mchunkptr oldfirst = align_as_chunk(oldbase);
-	size_t psize       = (char *)oldfirst - (char *)p;
+	size_t psize       = (byte_t *)oldfirst - (byte_t *)p;
 	mchunkptr q        = chunk_plus_offset(p, nb);
 	size_t qsize       = psize - nb;
 	set_size_and_pinuse_of_inuse_chunk(m, p, nb);
 
-	dl_assert((char *)oldfirst > (char *)q);
+	dl_assert((byte_t *)oldfirst > (byte_t *)q);
 	dl_assert(pinuse(oldfirst));
 	dl_assert(qsize >= MIN_CHUNK_SIZE);
 
@@ -2855,16 +3947,16 @@ static void *prepend_alloc(PARAM_mstate_m_ char *newbase, char *oldbase,
 }
 
 /* Add a segment to hold a new noncontiguous region */
-static void add_segment(PARAM_mstate_m_ char *tbase, size_t tsize, flag_t mmapped) {
+static void add_segment(PARAM_mstate_m_ byte_t *tbase, size_t tsize, flag_t mmapped) {
 	/* Determine locations and sizes of segment, fenceposts, old top */
-	char *old_top     = (char *)mstate_top(m);
+	byte_t *old_top   = (byte_t *)mstate_top(m);
 	msegmentptr oldsp = segment_holding(ARG_mstate_m_ old_top);
-	char *old_end     = oldsp->base + oldsp->size;
+	byte_t *old_end   = oldsp->base + oldsp->size;
 	size_t ssize      = pad_request(sizeof(struct malloc_segment));
-	char *rawsp       = old_end - (ssize + FOUR_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
+	byte_t *rawsp     = old_end - (ssize + FOUR_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
 	size_t offset     = align_offset(chunk2mem(rawsp));
-	char *asp         = rawsp + offset;
-	char *csp         = (asp < (old_top + MIN_CHUNK_SIZE)) ? old_top : asp;
+	byte_t *asp       = rawsp + offset;
+	byte_t *csp       = (asp < (old_top + MIN_CHUNK_SIZE)) ? old_top : asp;
 	mchunkptr sp      = (mchunkptr)csp;
 	msegmentptr ss    = (msegmentptr)(chunk2mem(sp));
 	mchunkptr tnext   = chunk_plus_offset(sp, ssize);
@@ -2888,7 +3980,7 @@ static void add_segment(PARAM_mstate_m_ char *tbase, size_t tsize, flag_t mmappe
 		mchunkptr nextp = chunk_plus_offset(p, SIZE_T_SIZE);
 		p->head         = FENCEPOST_HEAD;
 		++nfences;
-		if ((char *)(&(nextp->head)) < old_end)
+		if ((byte_t *)(&(nextp->head)) < old_end)
 			p = nextp;
 		else
 			break;
@@ -2911,14 +4003,14 @@ static void add_segment(PARAM_mstate_m_ char *tbase, size_t tsize, flag_t mmappe
 
 /* Get memory from system using MORECORE or MMAP */
 static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
-	char *tbase      = CMFAIL;
+	byte_t *tbase    = CMFAIL;
 	size_t tsize     = 0;
 	flag_t mmap_flag = 0;
 	size_t asize; /* allocation size */
 
 #if !USE_LOCKS || MSPACES || GM_ONLY
 	ensure_initialization();
-#endif
+#endif /* !USE_LOCKS || MSPACES || GM_ONLY */
 
 	/* Directly map large chunks, but only if already initialized */
 	if (use_mmap(m) && nb >= mparams.mmap_threshold && mstate_topsize(m) != 0) {
@@ -2960,13 +4052,13 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 
 #if MORECORE_CONTIGUOUS
 	if (!use_noncontiguous(m)) {
-		char *br       = CMFAIL;
+		byte_t *br     = CMFAIL;
 		size_t ssize   = asize; /* sbrk call size */
-		msegmentptr ss = (mstate_top(m) == 0) ? 0 : segment_holding(ARG_mstate_m_ (char *)mstate_top(m));
+		msegmentptr ss = (mstate_top(m) == 0) ? 0 : segment_holding(ARG_mstate_m_ (byte_t *)mstate_top(m));
 		ACQUIRE_MALLOC_GLOBAL_LOCK();
 
 		if (ss == 0) { /* First time through or recovery */
-			char *base = (char *)sbrk(0);
+			byte_t *base = (byte_t *)sbrk(0);
 			if (base != CMFAIL) {
 				size_t fp;
 				/* Adjust to end on a page boundary */
@@ -2976,7 +4068,7 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 				if (ssize > nb && ssize < HALF_MAX_SIZE_T &&
 				    (mstate_footprint_limit(m) == 0 ||
 				     (fp > mstate_footprint(m) && fp <= mstate_footprint_limit(m))) &&
-				    (br = (char *)(sbrk(ssize))) == base) {
+				    (br = (byte_t *)(sbrk(ssize))) == base) {
 					tbase = base;
 					tsize = ssize;
 				}
@@ -2986,7 +4078,7 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 			ssize = granularity_align(nb - mstate_topsize(m) + SYS_ALLOC_PADDING);
 			/* Use mem here only if it did continuously extend old space */
 			if (ssize < HALF_MAX_SIZE_T &&
-			    (br = (char *)(sbrk(ssize))) == ss->base + ss->size) {
+			    (br = (byte_t *)(sbrk(ssize))) == ss->base + ss->size) {
 				tbase = br;
 				tsize = ssize;
 			}
@@ -2998,7 +4090,7 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 				    ssize < nb + SYS_ALLOC_PADDING) {
 					size_t esize = granularity_align(nb + SYS_ALLOC_PADDING - ssize);
 					if (esize < HALF_MAX_SIZE_T) {
-						char *end = (char *)sbrk(esize);
+						byte_t *end = (byte_t *)sbrk(esize);
 						if (end != CMFAIL)
 							ssize += esize;
 						else { /* Can't use; try to release */
@@ -3021,7 +4113,7 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 
 #if HAVE_MMAP
 	if (tbase == CMFAIL) { /* Try MMAP */
-		char *mp = (char *)(DL_MMAP(asize));
+		byte_t *mp = (byte_t *)(DL_MMAP(asize));
 		if (mp != CMFAIL) {
 			tbase     = mp;
 			tsize     = asize;
@@ -3033,11 +4125,11 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 #if HAVE_MORECORE
 	if (tbase == CMFAIL) { /* Try noncontiguous MORECORE */
 		if (asize < HALF_MAX_SIZE_T) {
-			char *br  = CMFAIL;
-			char *end = CMFAIL;
+			byte_t *br  = CMFAIL;
+			byte_t *end = CMFAIL;
 			ACQUIRE_MALLOC_GLOBAL_LOCK();
-			br  = (char *)(sbrk(asize));
-			end = (char *)(sbrk(0));
+			br  = (byte_t *)(sbrk(asize));
+			end = (byte_t *)(sbrk(0));
 			RELEASE_MALLOC_GLOBAL_LOCK();
 			if (br != CMFAIL && end != CMFAIL && br < end) {
 				size_t ssize = end - br;
@@ -3076,7 +4168,7 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 			{
 				/* Offset top by embedded malloc_state */
 				mchunkptr mn = next_chunk(mem2chunk(m));
-				init_top(ARG_mstate_m_ mn, (size_t)((tbase + tsize) - (char *)mn) - TOP_FOOT_SIZE);
+				init_top(ARG_mstate_m_ mn, (size_t)((tbase + tsize) - (byte_t *)mn) - TOP_FOOT_SIZE);
 			}
 #endif /* !GM_ONLY */
 		} else {
@@ -3100,7 +4192,7 @@ static void *sys_alloc(PARAM_mstate_m_ size_t nb) {
 				if (sp != 0 &&
 				    !is_extern_segment(sp) &&
 				    (sp->sflags & USE_MMAP_BIT) == mmap_flag) {
-					char *oldbase = sp->base;
+					byte_t *oldbase = sp->base;
 					sp->base      = tbase;
 					sp->size += tsize;
 					return prepend_alloc(ARG_mstate_m_ tbase, oldbase, nb);
@@ -3134,7 +4226,7 @@ static size_t release_unused_segments(PARAM_mstate_m) {
 	msegmentptr pred = &mstate_seg(m);
 	msegmentptr sp   = pred->next;
 	while (sp != 0) {
-		char *base       = sp->base;
+		byte_t *base     = sp->base;
 		size_t size      = sp->size;
 		msegmentptr next = sp->next;
 		++nsegs;
@@ -3142,9 +4234,9 @@ static size_t release_unused_segments(PARAM_mstate_m) {
 			mchunkptr p  = align_as_chunk(base);
 			size_t psize = chunksize(p);
 			/* Can unmap if first chunk holds entire segment and not pinned */
-			if (!is_inuse(p) && (char *)p + psize >= base + size - TOP_FOOT_SIZE) {
+			if (!is_inuse(p) && (byte_t *)p + psize >= base + size - TOP_FOOT_SIZE) {
 				tchunkptr tp = (tchunkptr)p;
-				dl_assert(segment_holds(sp, (char *)sp));
+				dl_assert(segment_holds(sp, (byte_t *)sp));
 				check_memset_use_after_free(m, p);
 				if (p == mstate_dv(m)) {
 					mstate_dv(m)     = 0;
@@ -3178,12 +4270,7 @@ static size_t release_unused_segments(PARAM_mstate_m) {
 	return released;
 }
 
-#if !EXPOSE_AS_DEEMON_API
-#define sys_trim_return_t int
-#else /* !EXPOSE_AS_DEEMON_API */
-#define sys_trim_return_t size_t
-#endif /* EXPOSE_AS_DEEMON_API */
-static sys_trim_return_t sys_trim(PARAM_mstate_m_ size_t pad) {
+static dlmalloc_trim_RETURN_TYPE sys_trim(PARAM_mstate_m_ size_t pad) {
 	size_t released = 0;
 	if (pad < MAX_REQUEST && is_initialized(m)) {
 		pad += TOP_FOOT_SIZE; /* ensure enough room for segment overhead */
@@ -3194,7 +4281,7 @@ static sys_trim_return_t sys_trim(PARAM_mstate_m_ size_t pad) {
 			size_t extra = ((mstate_topsize(m) - pad + (unit - SIZE_T_ONE)) / unit -
 			                SIZE_T_ONE) *
 			               unit;
-			msegmentptr sp = segment_holding(ARG_mstate_m_(char *) mstate_top(m));
+			msegmentptr sp = segment_holding(ARG_mstate_m_ (byte_t *) mstate_top(m));
 			(void)extra;
 
 			if (!is_extern_segment(sp)) {
@@ -3224,10 +4311,10 @@ static sys_trim_return_t sys_trim(PARAM_mstate_m_ size_t pad) {
 					ACQUIRE_MALLOC_GLOBAL_LOCK();
 					{
 						/* Make sure end of memory is where we last set it. */
-						char *old_br = (char *)(sbrk(0));
+						byte_t *old_br = (byte_t *)(sbrk(0));
 						if (old_br == sp->base + sp->size) {
-							char *rel_br = (char *)(sbrk(-extra));
-							char *new_br = (char *)(sbrk(0));
+							byte_t *rel_br = (byte_t *)(sbrk(-extra));
+							byte_t *new_br = (byte_t *)(sbrk(0));
 							if (rel_br != CMFAIL && new_br < old_br)
 								released = old_br - new_br;
 						}
@@ -3255,11 +4342,11 @@ static sys_trim_return_t sys_trim(PARAM_mstate_m_ size_t pad) {
 			mstate_trim_check(m) = SIZE_MAX;
 	}
 
-#if EXPOSE_AS_DEEMON_API
+#if dlmalloc_trim_RETURNS_SIZE_T
 	return released;
-#else /* EXPOSE_AS_DEEMON_API */
+#else /* dlmalloc_trim_RETURNS_SIZE_T */
 	return (released != 0) ? 1 : 0;
-#endif /* !EXPOSE_AS_DEEMON_API */
+#endif /* !dlmalloc_trim_RETURNS_SIZE_T */
 }
 
 /* Consolidate and bin a chunk. Differs from exported versions
@@ -3273,7 +4360,7 @@ static void dispose_chunk(PARAM_mstate_m_ mchunkptr p, size_t psize) {
 		if (is_mmapped(p)) {
 			psize += prevsize + MMAP_FOOT_PAD;
 #ifndef DL_MUNMAP_ALWAYS_FAILS
-			if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+			if (DL_MUNMAP((byte_t *)p - prevsize, psize) == 0)
 				mstate_footprint(m) -= psize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 			return;
@@ -3442,13 +4529,7 @@ static void *tmalloc_small(PARAM_mstate_m_ size_t nb) {
 
 #if !ONLY_MSPACES
 
-#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-#define Dee_TryMalloc_DEFINED
-PUBLIC ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryMalloc)(size_t bytes)
-#else /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlmalloc(size_t bytes)
-#endif /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-{
+DL_API_IMPL(ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)), void *, dlmalloc, (size_t bytes)) {
 	/*
 	   Basic algorithm:
 	   If a small request (< 256 bytes minus per-chunk overhead):
@@ -3474,23 +4555,24 @@ static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlmalloc(size_t bytes)
 	void *mem;
 	size_t nb;
 
-#ifdef MALLOC_ZERO_RETURNS_NULL
+#if dlmalloc_ZERO_RETURNS_NULL
 	if unlikely(!bytes)
 		return NULL;
-#endif /* MALLOC_ZERO_RETURNS_NULL */
+#endif /* dlmalloc_ZERO_RETURNS_NULL */
 #ifdef HOOK_AFTER_INIT_MALLOC
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOC(bytes));
 #else /* HOOK_AFTER_INIT_MALLOC */
 #if USE_LOCKS && !GM_STATIC_INIT_MUTEX
 	ensure_initialization(); /* initialize in sys_alloc if not using locks */
-#endif
+#endif /* USE_LOCKS && !GM_STATIC_INIT_MUTEX */
 #endif /* !HOOK_AFTER_INIT_MALLOC */
 
-	/* This "PREACTION(gm)" right here is ****THE**** biggest bottleneck in
-	 * all of deemon when it comes to executing heavily parallelized user-code!
+	/* This "PREACTION(gm)" right here was ****THE**** biggest
+	 * bottleneck when it came to hosting heavily parallelized
+	 * programs!
 	 *
 	 * Solution:
-	 * - Thread-local heap [cache]?
+	 * - Thread-local heap
 	 *   - including per-thread free lists, since it isn't
 	 *     actually that likely for the allocating thread to
 	 *     also be the one that free's memory, thanks to the
@@ -3626,7 +4708,7 @@ static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlmalloc(size_t bytes)
 
 postaction:
 	POSTACTION(gm);
-#ifdef DL_DEBUG_MEMSET_ALLOC
+#if DL_DEBUG_MEMSET_ALLOC
 	if (mem != 0) {
 		mchunkptr p = mem2chunk(mem);
 		dl_setalloc_data(mem, chunksize(p) - overhead_for(p));
@@ -3636,14 +4718,14 @@ postaction:
 }
 
 /* ---------------------------- free --------------------------- */
+#if FLAG4_BIT_HEAP_REGION
 
-#if FLAG4_BIT_INDICATES_HEAP_REGION
-#if HAVE_DBG_HEAP_REGION
-PRIVATE ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
-DeeDbgHeap_DelHeapRegion_locked(struct Dee_heapregion *__restrict region);
-#endif /* HAVE_DBG_HEAP_REGION */
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
+PRIVATE ATTR_RETNONNULL NONNULL((1)) STRUCT_dlheapregion *DCALL
+dl_dbg_heapregion_dispose(STRUCT_dlheapregion *__restrict region);
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 
-/* Meaning of flags when "struct Dee_heapregion" comes into play:
+/* Meaning of flags when "STRUCT_dlheapregion" comes into play:
  *                 ALLOCATED    FREED
  * - 1 PINUSE_BIT  clear        set
  * - 2 CINUSE_BIT  clear        undefined
@@ -3663,9 +4745,9 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 	mchunkptr next  = chunk_plus_offset(p, psize);
 	size_t prevsize = p->prev_foot;
 	mchunkptr prev  = chunk_minus_offset(p, prevsize);
-#if !HAVE_DBG_HEAP_REGION
+#if !FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	ext_assert(pinuse(next) || flag4inuse(next) || next->head == 0);
-#endif /* !HAVE_DBG_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	ext_assert(pinuse(prev) || flag4inuse(prev));
 #if 0
 	dl_assert(p != gm__top);
@@ -3693,13 +4775,12 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 	}
 	p->head = (psize | PINUSE_BIT);
 	set_foot(p, psize);
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	if (prevsize == 0) {
-		/* Last chunk of user-defined "struct Dee_heapregion" just got free'd! */
-		struct Dee_heapregion *region;
-#define REGION_OVERHEAD (offsetof(struct Dee_heapregion, hr_first) + sizeof(struct Dee_heaptail))
-		region = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
-		                               struct Dee_heapregion, hr_first);
+		/* Last chunk of user-defined "STRUCT_dlheapregion" (have have) just got free'd! */
+		STRUCT_dlheapregion *region;
+#define REGION_OVERHEAD (offsetof(STRUCT_dlheapregion, hr_first) + sizeof(STRUCT_dlheaptail))
+		region = COMPILER_CONTAINER_OF((STRUCT_dlheapchunk *)p, STRUCT_dlheapregion, hr_first);
 		if (region->hr_size == (psize + REGION_OVERHEAD)) {
 			ext_assert(region->hr_destroy);
 			ext_assert(region->hr_first.hc_prevsize == 0);
@@ -3708,19 +4789,18 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 				/* Free dynamically allocated debug info from `DeeDbgHeap_AddHeapRegion()',
 				 * and remove "region" (or its debug info) from the global list of known,
 				 * custom heap regions */
-				region = DeeDbgHeap_DelHeapRegion_locked(region);
+				region = dl_dbg_heapregion_dispose(region);
 			}
 			(*region->hr_destroy)(region);
 		}
 #undef REGION_OVERHEAD
 	}
-#else /* HAVE_DBG_HEAP_REGION */
+#else /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	if (prevsize == 0 && next->head == 0) {
-		/* Last chunk of user-defined "struct Dee_heapregion" just got free'd! */
-		struct Dee_heapregion *region;
-#define REGION_OVERHEAD (offsetof(struct Dee_heapregion, hr_first) + sizeof(struct Dee_heaptail))
-		region = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
-		                               struct Dee_heapregion, hr_first);
+		/* Last chunk of user-defined "STRUCT_dlheapregion" just got free'd! */
+		STRUCT_dlheapregion *region;
+#define REGION_OVERHEAD (offsetof(STRUCT_dlheapregion, hr_first) + sizeof(STRUCT_dlheaptail))
+		region = COMPILER_CONTAINER_OF((STRUCT_dlheapchunk *)p, STRUCT_dlheapregion, hr_first);
 		ext_assert(region->hr_size == (psize + REGION_OVERHEAD));
 		ext_assert(region->hr_destroy);
 		ext_assert(region->hr_first.hc_prevsize == 0);
@@ -3728,20 +4808,14 @@ static ATTR_NOINLINE void free_flag4_mem(mchunkptr p) {
 		(*region->hr_destroy)(region);
 #undef REGION_OVERHEAD
 	}
-#endif /* !HAVE_DBG_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 }
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 
-#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-#define Dee_Free_DEFINED
-PUBLIC void (DCALL Dee_Free)(void *mem)
-#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-static void dlfree(void *mem)
-#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-{
-#ifndef DLFREE_CHECKS_NULL
-#define DLFREE_CHECKS_NULL 1
-#endif /* !DLFREE_CHECKS_NULL */
+DL_API_IMPL(, void, dlfree, (void *mem)) {
+#ifndef dlfree_CHECKS_NULL
+#define dlfree_CHECKS_NULL 1
+#endif /* !dlfree_CHECKS_NULL */
 
 	/*
 	   Consolidate freed chunks with preceeding or succeeding bordering
@@ -3758,10 +4832,10 @@ static void dlfree(void *mem)
 #endif /* !FOOTERS || GM_ONLY */
 
 	/* Ignore "NULL"-pointers */
-#if DLFREE_CHECKS_NULL
+#if dlfree_CHECKS_NULL
 	if unlikely(!mem)
 		return;
-#endif /* DLFREE_CHECKS_NULL */
+#endif /* dlfree_CHECKS_NULL */
 
 	p = mem2chunk(mem);
 	validate_footer(p);
@@ -3770,35 +4844,32 @@ static void dlfree(void *mem)
 	psize = chunksize(p);
 	next  = chunk_plus_offset(p, psize);
 
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 	if unlikely(is_mmapped(p)) {
 #ifndef DL_MUNMAP_ALWAYS_FAILS
 		size_t prevsize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 		if unlikely(flag4inuse(p)) {
-#if defined(DL_DEBUG_MEMSET_FREE) && FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
-			/* Special case: don't set the "DL_DEBUG_MEMSET_FREE" word
+#if DL_DEBUG_MEMSET_FREE && FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE
+#ifndef HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T
+#define HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T size_t
+#endif /* !HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T */
+			/* Special case: don't set the "DL_DEBUG_MEMSET_FREE_PATTERN" word
 			 *               at one of the following offsets, if that
 			 *               word is currently set to "0". */
-#define INDEXOF_WORD(T, field) (offsetof(T, field) / sizeof(Dee_refcnt_t))
 			size_t usize = chunksize(p) - overhead_for(p);
-			STATIC_ASSERT(IS_ALIGNED(offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
-			STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), sizeof(Dee_refcnt_t)));
-			size_t i, n_words = usize / sizeof(Dee_refcnt_t);
-			Dee_refcnt_t *iter = (Dee_refcnt_t *)mem;
+			size_t i, n_words = usize / sizeof(HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T);
+			HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T *iter = (HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T *)mem;
 			for (i = 0; i < n_words; ++i, ++iter) {
-				if ((i == ((offsetof(DeeObject, ob_refcnt)) / sizeof(Dee_refcnt_t)) ||
-				     i == ((Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt)) / sizeof(Dee_refcnt_t))) &&
-				    (atomic_read(iter) == 0)) {
-					/* Skip this word */
+				if (HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_CANSET(i * sizeof(HEAP_REGION_RESTRICTED_DL_DEBUG_MEMSET_WORD_T), iter)) {
+					*iter = DL_DEBUG_MEMSET_FREE_PATTERN;
 				} else {
-					*iter = DL_DEBUG_MEMSET_FREE;
+					/* Skip this word */
 				}
 			}
-#undef INDEXOF_WORD
-#else /* DL_DEBUG_MEMSET_FREE && FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
+#else /* DL_DEBUG_MEMSET_FREE && FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
 			dl_setfree_data(mem, chunksize(p) - overhead_for(p));
-#endif /* !DL_DEBUG_MEMSET_FREE || !FLAG4_BIT_INDICATES_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
+#endif /* !DL_DEBUG_MEMSET_FREE || !FLAG4_BIT_HEAP_REGION_REQUIRES_RESTRICTED_DL_DEBUG_MEMSET_FREE */
 			free_flag4_mem(p);
 			return;
 		}
@@ -3821,12 +4892,12 @@ static void dlfree(void *mem)
 		ext_assert__ok_address(fm, p);
 		prevsize = p->prev_foot;
 		psize += prevsize + MMAP_FOOT_PAD;
-		if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+		if (DL_MUNMAP((byte_t *)p - prevsize, psize) == 0)
 			mstate_footprint(fm) -= psize;
 		goto postaction;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 	}
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 
 	/* memset() the payload area to the debug pattern for FREE memory. */
 	dl_setfree_data(mem, chunksize(p) - overhead_for(p));
@@ -3847,29 +4918,29 @@ do_dl_freelist_append:
 #else /* USE_PENDING_FREE_LIST */
 	PREACTION(fm);
 #endif /* !USE_PENDING_FREE_LIST */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 #if DL_DEBUG_INTERNAL
 	if (!flag4inuse(p))
 		check_inuse_chunk(fm, p);
 #endif /* DL_DEBUG_INTERNAL */
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#else /* FLAG4_BIT_HEAP_REGION */
 	check_inuse_chunk(fm, p);
 	ext_assert__ok_address(fm, p);
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION */
 
 	if (!pinuse(p)) {
 		mchunkptr prev;
 		size_t prevsize = p->prev_foot;
-#if !FLAG4_BIT_INDICATES_HEAP_REGION
+#if !FLAG4_BIT_HEAP_REGION
 		if unlikely(is_mmapped(p)) {
 #ifndef DL_MUNMAP_ALWAYS_FAILS
 			psize += prevsize + MMAP_FOOT_PAD;
-			if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+			if (DL_MUNMAP((byte_t *)p - prevsize, psize) == 0)
 				mstate_footprint(fm) -= psize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 			goto postaction;
 		}
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION */
 
 		prev = chunk_minus_offset(p, prevsize);
 		psize += prevsize;
@@ -3964,7 +5035,7 @@ dl_freelist_do_reap_item(PARAM_mstate_m_ void *__restrict mem) {
 		if unlikely(is_mmapped(p)) {
 #ifndef DL_MUNMAP_ALWAYS_FAILS
 			psize += prevsize + MMAP_FOOT_PAD;
-			if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+			if (DL_MUNMAP((byte_t *)p - prevsize, psize) == 0)
 				mstate_footprint(m) -= psize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 			goto postaction;
@@ -4051,14 +5122,8 @@ dl_freelist_do_reap(PARAM_mstate_m_ struct freelist_entry *__restrict flist) {
 }
 #endif /* NEED_dl_freelist_do_reap */
 
-#if 1
-#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-#define Dee_TryCalloc_DEFINED
-PUBLIC ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *(DCALL Dee_TryCalloc)(size_t req)
-#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlcalloc(size_t req)
-#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-{
+#if dlcalloc_SINGLE_PARAMETER
+DL_API_IMPL(ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)), void *, dlcalloc, (size_t req)) {
 	void *mem = dlmalloc(req);
 	if (mem != 0 && calloc_must_clear(mem2chunk(mem))) {
 		mchunkptr p = mem2chunk(mem);
@@ -4066,8 +5131,9 @@ static ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *dlcalloc(size_t req)
 	}
 	return mem;
 }
-#else
-void *dlcalloc(size_t n_elements, size_t elem_size) {
+#else /* dlcalloc_SINGLE_PARAMETER */
+DL_API_IMPL(ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1, 2)), void *,
+            dlcalloc, (size_t n_elements, size_t elem_size)) {
 	void *mem;
 	size_t req = 0;
 	if (n_elements != 0) {
@@ -4081,7 +5147,7 @@ void *dlcalloc(size_t n_elements, size_t elem_size) {
 		bzero(mem, req);
 	return mem;
 }
-#endif
+#endif /* !dlcalloc_SINGLE_PARAMETER */
 
 #endif /* !ONLY_MSPACES */
 
@@ -4089,34 +5155,34 @@ void *dlcalloc(size_t n_elements, size_t elem_size) {
 
 /* Try to realloc; only in-place unless can_move true */
 #undef try_realloc_chunk
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 static mchunkptr try_realloc_chunk(PARAM_mstate_m_ mchunkptr p, size_t nb)
 #define try_realloc_chunk(m, p, nb, can_move) try_realloc_chunk(ARG_mstate_X_(m) p, nb)
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#else /* FLAG4_BIT_HEAP_REGION */
 static mchunkptr try_realloc_chunk(PARAM_mstate_m_ mchunkptr p, size_t nb, int can_move)
 #define try_realloc_chunk(m, p, nb, can_move) try_realloc_chunk(ARG_mstate_X_(m) p, nb, can_move)
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION */
 {
 	mchunkptr newp = 0;
 	size_t oldsize = chunksize(p);
 	mchunkptr next = chunk_plus_offset(p, oldsize);
-#ifdef DL_DEBUG_MEMSET_ALLOC
+#if DL_DEBUG_MEMSET_ALLOC
 	size_t oldsize_usable = oldsize - overhead_for(p);
 #endif /* DL_DEBUG_MEMSET_ALLOC */
 	ext_assert__ok_inuse(p);
 	ext_assert__ok_next(p, next);
 	ext_assert__ok_address(m, p);
 	ext_assert__ok_pinuse(next);
-#if !FLAG4_BIT_INDICATES_HEAP_REGION
+#if !FLAG4_BIT_HEAP_REGION
 	if (is_mmapped(p)) {
 		newp = mmap_resize(m, p, nb, can_move);
 	} else
-#endif /* !FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION */
 	if (oldsize >= nb) { /* already big enough */
 		size_t rsize = oldsize - nb;
 		if (rsize >= MIN_CHUNK_SIZE) { /* split off remainder */
 			mchunkptr r = chunk_plus_offset(p, nb);
-			dl_setfree_data((char *)r + TWO_SIZE_T_SIZES, rsize - CHUNK_OVERHEAD);
+			dl_setfree_data((byte_t *)r + TWO_SIZE_T_SIZES, rsize - CHUNK_OVERHEAD);
 			set_inuse(m, p, nb);
 			set_inuse(m, r, rsize);
 			dispose_chunk(ARG_mstate_m_ r, rsize);
@@ -4173,11 +5239,11 @@ static mchunkptr try_realloc_chunk(PARAM_mstate_m_ mchunkptr p, size_t nb, int c
 			newp = p;
 		}
 	}
-#ifdef DL_DEBUG_MEMSET_ALLOC
+#if DL_DEBUG_MEMSET_ALLOC
 	if (newp) {
 		size_t newsize_usable = chunksize(newp) - overhead_for(newp);
 		if (newsize_usable > oldsize_usable) {
-			dl_setalloc_data((char *)chunk2mem(newp) + oldsize_usable,
+			dl_setalloc_data((byte_t *)chunk2mem(newp) + oldsize_usable,
 			                 newsize_usable - oldsize_usable);
 		}
 	}
@@ -4232,10 +5298,10 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 				   We've allocated enough total room so that this is always
 				   possible.
 				 */
-				char *br        = (char *)mem2chunk((size_t)(((size_t)((char *)mem + alignment - SIZE_T_ONE)) & ~(alignment - SIZE_T_ONE)));
-				char *pos       = ((size_t)(br - (char *)(p)) >= MIN_CHUNK_SIZE) ? br : br + alignment;
+				byte_t *br      = (byte_t *)mem2chunk((size_t)(((size_t)((byte_t *)mem + alignment - SIZE_T_ONE)) & ~(alignment - SIZE_T_ONE)));
+				byte_t *pos     = ((size_t)(br - (byte_t *)(p)) >= MIN_CHUNK_SIZE) ? br : br + alignment;
 				mchunkptr newp  = (mchunkptr)pos;
-				size_t leadsize = pos - (char *)(p);
+				size_t leadsize = pos - (byte_t *)(p);
 				size_t newsize  = chunksize(p) - leadsize;
 
 				if (is_mmapped(p)) { /* For mmapped chunks, just adjust offset */
@@ -4244,7 +5310,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 				} else { /* Otherwise, give back leader, use the rest */
 					set_inuse(fm, p, leadsize);
 					set_inuse(fm, newp, newsize); /* OG dlmalloc had these in a weird order, where "newp->head" was left partially uninitialized... */
-					dl_setfree_data_untested((char *)p + TWO_SIZE_T_SIZES,
+					dl_setfree_data_untested((byte_t *)p + TWO_SIZE_T_SIZES,
 					                         leadsize - CHUNK_OVERHEAD);
 					dispose_chunk(ARG_mstate_X_(fm) p, leadsize);
 				}
@@ -4259,7 +5325,7 @@ static void *internal_memalign(PARAM_mstate_m_ size_t alignment, size_t bytes) {
 					mchunkptr remainder   = chunk_plus_offset(p, nb);
 					set_inuse(fm, p, nb);
 					set_inuse(fm, remainder, remainder_size);
-					dl_setfree_data_untested((char *)remainder + TWO_SIZE_T_SIZES,
+					dl_setfree_data_untested((byte_t *)remainder + TWO_SIZE_T_SIZES,
 					                         remainder_size - CHUNK_OVERHEAD);
 					dispose_chunk(ARG_mstate_X_(fm) remainder, remainder_size);
 				}
@@ -4471,9 +5537,9 @@ static void internal_inspect_all(PARAM_mstate_m_
 				} else {
 					used = 0;
 					if (is_small(sz)) { /* offset by possible bookkeeping */
-						start = (void *)((char *)q + sizeof(struct malloc_chunk));
+						start = (void *)((byte_t *)q + sizeof(struct malloc_chunk));
 					} else {
-						start = (void *)((char *)q + sizeof(struct malloc_tree_chunk));
+						start = (void *)((byte_t *)q + sizeof(struct malloc_tree_chunk));
 					}
 				}
 				if (start < (void *)next) /* skip if all space is bookkeeping */
@@ -4491,33 +5557,27 @@ static void internal_inspect_all(PARAM_mstate_m_
 
 #if !ONLY_MSPACES
 
-#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-#define Dee_TryRealloc_DEFINED
-PUBLIC WUNUSED void *(DCALL Dee_TryRealloc)(void *oldmem, size_t bytes)
-#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-static WUNUSED void *dlrealloc(void *oldmem, size_t bytes)
-#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-{
-#ifndef DLREALLOC_CHECKS_NULL
-#define DLREALLOC_CHECKS_NULL 1
-#endif /* !DLREALLOC_CHECKS_NULL */
+DL_API_IMPL(WUNUSED, void *, dlrealloc, (void *oldmem, size_t bytes)) {
+#ifndef dlrealloc_CHECKS_NULL
+#define dlrealloc_CHECKS_NULL 1
+#endif /* !dlrealloc_CHECKS_NULL */
 	void *mem = 0;
-#if DLREALLOC_CHECKS_NULL
+#if dlrealloc_CHECKS_NULL
 	if (oldmem == 0) {
 #ifdef HOOK_AFTER_INIT_REALLOC
 		ensure_initialization_for(HOOK_AFTER_INIT_REALLOC(oldmem, bytes));
 #endif /* HOOK_AFTER_INIT_REALLOC */
 		mem = dlmalloc(bytes);
 	} else
-#endif /* DLREALLOC_CHECKS_NULL */
+#endif /* dlrealloc_CHECKS_NULL */
 	if (bytes >= MAX_REQUEST) {
 		MALLOC_FAILURE_ACTION;
 	} else
-#ifdef REALLOC_ZERO_BYTES_FREES
+#if dlrealloc_ZERO_BYTES_FREES
 	if (bytes == 0) {
 		dlfree(oldmem);
 	} else
-#endif /* REALLOC_ZERO_BYTES_FREES */
+#endif /* dlrealloc_ZERO_BYTES_FREES */
 	{
 		size_t nb      = request2size(bytes);
 		mchunkptr oldp = mem2chunk(oldmem);
@@ -4528,9 +5588,9 @@ static WUNUSED void *dlrealloc(void *oldmem, size_t bytes)
 #define fm gm
 #endif /* !FOOTERS || GM_ONLY */
 		validate_footer(oldp);
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 		if unlikely(is_mmapped(oldp)) {
-			/* Don't realloc pointers from user-defined "struct Dee_heapregion" */
+			/* Don't realloc pointers from user-defined heap region */
 			if unlikely(flag4inuse(oldp)) {
 #if FOOTERS && !GM_ONLY
 				fm = gm;
@@ -4568,7 +5628,7 @@ do_dlmalloc_fallback:
 #endif /* !USE_PER_THREAD_MSTATE */
 			newp = mmap_resize(fm, oldp, nb, 1);
 		} else
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 		{
 #if FOOTERS && !GM_ONLY
 			fm = get_mstate_for(oldp);
@@ -4603,9 +5663,9 @@ do_dlmalloc_fallback:
 			check_inuse_chunk(fm, newp);
 			mem = chunk2mem(newp);
 		} else {
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 fallback_internal_malloc:
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 			mem = internal_malloc(fm, bytes);
 #if USE_PER_THREAD_MSTATE
 after_internal_malloc:
@@ -4621,13 +5681,7 @@ after_internal_malloc:
 	return mem;
 }
 
-#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API || (LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL)
-#define Dee_TryReallocInPlace_DEFINED
-PUBLIC WUNUSED void *(DCALL Dee_TryReallocInPlace)(void *oldmem, size_t bytes)
-#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API || (LEAK_DETECTION != LEAK_DETECTION_METHOD_IN_TAIL) */
-static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
-#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API && (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL) */
-{
+DL_API_IMPL(WUNUSED, void *, dlrealloc_in_place, (void *oldmem, size_t bytes)) {
 	void *mem = 0;
 #ifndef DLREALLOC_IN_PLACE_CHECKS_NULL
 #define DLREALLOC_IN_PLACE_CHECKS_NULL 1
@@ -4648,9 +5702,9 @@ static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
 #else /* FOOTERS && !GM_ONLY */
 #define fm gm
 #endif /* !FOOTERS || GM_ONLY */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 		if unlikely(is_mmapped(oldp)) {
-			/* Don't realloc pointers from user-defined "struct Dee_heapregion" */
+			/* Don't realloc pointers from user-defined heap region */
 			if unlikely(flag4inuse(oldp))
 				return NULL;
 #if FOOTERS && !GM_ONLY
@@ -4660,7 +5714,7 @@ static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
 			PREACTION(fm);
 			newp = mmap_resize(fm, oldp, nb, 0);
 		} else
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 		{
 #if FOOTERS && !GM_ONLY
 			fm = get_mstate_for(oldp);
@@ -4680,15 +5734,8 @@ static WUNUSED void *dlrealloc_in_place(void *oldmem, size_t bytes)
 	return mem;
 }
 
-#if DIRECTLY_DEFINE_DEEMON_PUBLIC_API
-#define Dee_TryMemalign_DEFINED
-PUBLIC ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *
-(DCALL Dee_TryMemalign)(size_t alignment, size_t bytes)
-#else /* DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-static ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *
-dlmemalign(size_t alignment, size_t bytes)
-#endif /* !DIRECTLY_DEFINE_DEEMON_PUBLIC_API */
-{
+DL_API_IMPL(ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)),
+            void *, dlmemalign, (size_t alignment, size_t bytes)){
 #ifdef HOOK_AFTER_INIT_MEMALIGN
 	ensure_initialization_for(HOOK_AFTER_INIT_MEMALIGN(alignment, bytes));
 #endif /* HOOK_AFTER_INIT_MEMALIGN */
@@ -4698,7 +5745,7 @@ dlmemalign(size_t alignment, size_t bytes)
 }
 
 #if !NO_POSIX_MEMALIGN
-static int dlposix_memalign(void **pp, size_t alignment, size_t bytes) {
+DL_API_IMPL(, int, dlposix_memalign, (void **pp, size_t alignment, size_t bytes)) {
 	void *mem = 0;
 #ifdef HOOK_AFTER_INIT_POSIX_MEMALIGN
 	ensure_initialization_for(HOOK_AFTER_INIT_POSIX_MEMALIGN(pp, alignment, bytes));
@@ -4726,7 +5773,7 @@ static int dlposix_memalign(void **pp, size_t alignment, size_t bytes) {
 #endif /* !NO_POSIX_MEMALIGN */
 
 #if !NO_VALLOC
-static void *dlvalloc(size_t bytes) {
+DL_API_IMPL(, void *, dlvalloc, (size_t bytes)) {
 	size_t pagesz;
 #ifdef HOOK_AFTER_INIT_VALLOC
 	ensure_initialization_for(HOOK_AFTER_INIT_VALLOC(bytes));
@@ -4741,7 +5788,7 @@ static void *dlvalloc(size_t bytes) {
 #endif /* !NO_VALLOC */
 
 #if !NO_PVALLOC
-static void *dlpvalloc(size_t bytes) {
+DL_API_IMPL(, void *, dlpvalloc, (size_t bytes)) {
 	size_t pagesz;
 #ifdef HOOK_AFTER_INIT_PVALLOC
 	ensure_initialization_for(HOOK_AFTER_INIT_PVALLOC(bytes));
@@ -4756,29 +5803,27 @@ static void *dlpvalloc(size_t bytes) {
 #endif /* !NO_PVALLOC */
 
 #if !NO_INDEPENDENT_ALLOC
-static void **dlindependent_calloc(size_t n_elements, size_t elem_size, void *chunks[]) {
+DL_API_IMPL(, void **, dlindependent_calloc, (size_t n_elements, size_t elem_size, void *chunks[])) {
 	size_t sz = elem_size; /* serves as 1-element array */
 	return ialloc(ARG_mstate_gm_ n_elements, &sz, 3, chunks);
 }
 
-void **dlindependent_comalloc(size_t n_elements, size_t sizes[],
-                              void *chunks[]) {
+DL_API_IMPL(, void **, dlindependent_comalloc, (size_t n_elements, size_t sizes[], void *chunks[])) {
 	return ialloc(ARG_mstate_gm_ n_elements, sizes, 0, chunks);
 }
 #endif /* !NO_INDEPENDENT_ALLOC */
 
 #if !NO_BULK_FREE
-static size_t dlbulk_free(void *array[], size_t nelem) {
+DL_API_IMPL(, size_t, dlbulk_free, (void *array[], size_t nelem)) {
 	return internal_bulk_free(ARG_mstate_gm_ array, nelem);
 }
 #endif /* !NO_BULK_FREE */
 
 #if MALLOC_INSPECT_ALL
-static void dlmalloc_inspect_all(void (*handler)(void *start,
-                                                 void *end,
-                                                 size_t used_bytes,
-                                                 void *callback_arg),
-                                 void *arg) {
+DL_API_IMPL(, void, dlmalloc_inspect_all, (void (*handler)(void *start, void *end,
+                                                           size_t used_bytes,
+                                                           void *callback_arg),
+                                           void *arg)) {
 #if !GM_STATIC_INIT_MUTEX
 	ensure_initialization();
 #endif /* !GM_STATIC_INIT_MUTEX */
@@ -4789,9 +5834,8 @@ static void dlmalloc_inspect_all(void (*handler)(void *start,
 #endif /* MALLOC_INSPECT_ALL */
 
 #if !NO_MALLOC_TRIM
-
-PRIVATE sys_trim_return_t do_mspace_sys_trim(PARAM_mstate_m_ size_t pad) {
-	sys_trim_return_t result;
+PRIVATE dlmalloc_trim_RETURN_TYPE do_mspace_sys_trim(PARAM_mstate_m_ size_t pad) {
+	dlmalloc_trim_RETURN_TYPE result;
 	PREACTION(m);
 	result = sys_trim(ARG_mstate_m_ pad);
 	POSTACTION(m);
@@ -4804,13 +5848,8 @@ PRIVATE size_t do_mspace_sys_trim_cb(mspace ms, void *arg) {
 }
 #endif /* USE_PER_THREAD_MSTATE */
 
-#if !EXPOSE_AS_DEEMON_API
-static int dlmalloc_trim(size_t pad)
-#else /* !EXPOSE_AS_DEEMON_API */
-PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
-#endif /* EXPOSE_AS_DEEMON_API */
-{
-	sys_trim_return_t result = 0;
+DL_API_IMPL(, dlmalloc_trim_RETURN_TYPE, dlmalloc_trim, (size_t pad)) {
+	dlmalloc_trim_RETURN_TYPE result = 0;
 #ifdef HOOK_AFTER_INIT_MALLOC_TRIM
 	ensure_initialization_for(HOOK_AFTER_INIT_MALLOC_TRIM(pad));
 #else /* HOOK_AFTER_INIT_MALLOC_TRIM */
@@ -4819,21 +5858,19 @@ PUBLIC size_t DCALL DeeHeap_Trim(size_t pad)
 #endif /* !GM_STATIC_INIT_MUTEX */
 #endif /* !HOOK_AFTER_INIT_MALLOC_TRIM */
 
-	/* Trim the slab page cache (do this first, in case said cache has
-	 * been implemented in terms of the fallback `Dee_Memalign()' impl) */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#ifdef Dee_SLAB_CHUNKSIZE_MAX
-	result += Dee_slab_page_rawtrim(pad);
-#endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+	/* Invoke custom trim pre-hook */
+	dlmalloc_trim_PREHOOK(&result, pad);
 
 	/* Trim the main (global) heap */
 	result += do_mspace_sys_trim(ARG_mstate_gm_ pad);
 
 	/* Also trim every "tls_mspace()" (add sum from that to result) */
 #if USE_PER_THREAD_MSTATE
-	result += (sys_trim_return_t)tls_mspace_foreach(&do_mspace_sys_trim_cb, (void *)(uintptr_t)pad);
+	result += (dlmalloc_trim_RETURN_TYPE)tls_mspace_foreach(&do_mspace_sys_trim_cb, (void *)(uintptr_t)pad);
 #endif /* USE_PER_THREAD_MSTATE */
+
+	/* Invoke custom trim post-hook */
+	dlmalloc_trim_POSTHOOK(&result, pad);
 
 	return result;
 }
@@ -4858,12 +5895,7 @@ PRIVATE size_t do_mspace_set_footprint_limit_cb(mspace ms, void *arg) {
 }
 #endif /* USE_PER_THREAD_MSTATE */
 
-#if !EXPOSE_AS_DEEMON_API
-static size_t dlmalloc_footprint(void)
-#else /* !EXPOSE_AS_DEEMON_API */
-PUBLIC ATTR_PURE WUNUSED size_t DCALL DeeHeap_Footprint(void)
-#endif /* EXPOSE_AS_DEEMON_API */
-{
+DL_API_IMPL(ATTR_PURE WUNUSED, size_t, dlmalloc_footprint, (void)) {
 	size_t result = atomic_read(&gm__footprint);
 	/* Include info from "tls_mspace()" (add sum from tls) */
 #if USE_PER_THREAD_MSTATE
@@ -4872,12 +5904,7 @@ PUBLIC ATTR_PURE WUNUSED size_t DCALL DeeHeap_Footprint(void)
 	return result;
 }
 
-#if !EXPOSE_AS_DEEMON_API
-static size_t dlmalloc_max_footprint(void)
-#else /* !EXPOSE_AS_DEEMON_API */
-PUBLIC ATTR_PURE WUNUSED size_t DCALL DeeHeap_MaxFootprint(void)
-#endif /* EXPOSE_AS_DEEMON_API */
-{
+DL_API_IMPL(ATTR_PURE WUNUSED, size_t, dlmalloc_max_footprint, (void)) {
 	size_t result = atomic_read(&gm__max_footprint);
 	/* Include info from "tls_mspace()" (add sum from tls) */
 #if USE_PER_THREAD_MSTATE
@@ -4886,22 +5913,12 @@ PUBLIC ATTR_PURE WUNUSED size_t DCALL DeeHeap_MaxFootprint(void)
 	return result;
 }
 
-#if !EXPOSE_AS_DEEMON_API
-static size_t dlmalloc_footprint_limit(void)
-#else /* !EXPOSE_AS_DEEMON_API */
-PUBLIC ATTR_PURE WUNUSED size_t DCALL DeeHeap_GetFootprintLimit(void)
-#endif /* EXPOSE_AS_DEEMON_API */
-{
+DL_API_IMPL(ATTR_PURE WUNUSED, size_t, dlmalloc_footprint_limit, (void)) {
 	size_t maf = gm__footprint_limit;
 	return maf == 0 ? SIZE_MAX : maf;
 }
 
-#if !EXPOSE_AS_DEEMON_API
-static size_t dlmalloc_set_footprint_limit(size_t bytes)
-#else /* !EXPOSE_AS_DEEMON_API */
-PUBLIC size_t DCALL DeeHeap_SetFootprintLimit(size_t bytes)
-#endif /* EXPOSE_AS_DEEMON_API */
-{
+DL_API_IMPL(, size_t, dlmalloc_set_footprint_limit, (size_t bytes)) {
 	size_t result;
 	size_t newval; /* invert sense of 0 */
 	if (bytes == 0)
@@ -4910,12 +5927,12 @@ PUBLIC size_t DCALL DeeHeap_SetFootprintLimit(size_t bytes)
 		newval = 0; /* disable */
 	else
 		newval = granularity_align(bytes);
-#if EXPOSE_AS_DEEMON_API
+#if dlmalloc_set_footprint_limit_RETURNS_OLD_VALUE
 	result = atomic_xch(&gm__footprint_limit, newval);
-#else /* EXPOSE_AS_DEEMON_API */
+#else /* dlmalloc_set_footprint_limit_RETURNS_OLD_VALUE */
 	atomic_write(&gm__footprint_limit, newval);
 	result = newval;
-#endif /* !EXPOSE_AS_DEEMON_API */
+#endif /* !dlmalloc_set_footprint_limit_RETURNS_OLD_VALUE */
 
 	/* Also set value in every "tls_mspace()" (set the same value everywhere) */
 #if USE_PER_THREAD_MSTATE
@@ -4926,30 +5943,18 @@ PUBLIC size_t DCALL DeeHeap_SetFootprintLimit(size_t bytes)
 }
 #endif /* !NO_MALLOC_FOOTPRINT */
 
-#if !NO_MALLINFO && !EXPOSE_AS_DEEMON_API
-static struct dlmalloc_mallinfo dlmallinfo(void) {
-	return internal_mallinfo(ARG_mstate_gm);
-}
-#endif /* NO_MALLINFO && !EXPOSE_AS_DEEMON_API */
-
 #if !NO_MALLOC_STATS
-static void dlmalloc_stats() {
+DL_API_IMPL(, void, dlmalloc_stats, (void) {
 	internal_malloc_stats(ARG_mstate_gm);
 }
 #endif /* NO_MALLOC_STATS */
-
-#if !NO_MALLOPT && !EXPOSE_AS_DEEMON_API
-static int dlmallopt(int param_number, int value) {
-	return change_mparam(param_number, value);
-}
-#endif /* !NO_MALLOPT && !EXPOSE_AS_DEEMON_API */
 #endif /* !ONLY_MSPACES */
 
 /* ----------------------------- user mspaces ---------------------------- */
 
 #if MSPACES
 
-static mstate init_user_mstate(char *tbase, size_t tsize) {
+static mstate init_user_mstate(byte_t *tbase, size_t tsize) {
 	size_t msize;
 	mchunkptr mn;
 	mchunkptr msp;
@@ -4965,6 +5970,7 @@ static mstate init_user_mstate(char *tbase, size_t tsize) {
 	mstate_magic(m) = mparams.magic;
 	mstate_release_checks(m) = MAX_RELEASE_CHECK_RATE;
 	m->mflags = mparams.default_mflags;
+	DL_LOCK_INIT(&mstate_mutex(m));
 #ifdef mstate_extp
 	mstate_extp(m) = 0;
 #endif /* mstate_extp */
@@ -4974,12 +5980,12 @@ static mstate init_user_mstate(char *tbase, size_t tsize) {
 	disable_contiguous(m);
 	init_bins(m);
 	mn = next_chunk(mem2chunk(m));
-	init_top(m, mn, (size_t)((tbase + tsize) - (char *)mn) - TOP_FOOT_SIZE);
+	init_top(m, mn, (size_t)((tbase + tsize) - (byte_t *)mn) - TOP_FOOT_SIZE);
 	check_top_chunk(m, mstate_top(m));
 	return m;
 }
 
-static mspace create_mspace(size_t capacity/*, int locked*/) {
+DL_API_IMPL(, mspace, create_mspace, (size_t capacity/*, int locked*/)) {
 	mstate m = 0;
 	size_t msize;
 	ensure_initialization();
@@ -4987,7 +5993,7 @@ static mspace create_mspace(size_t capacity/*, int locked*/) {
 	if (capacity < (size_t)0 - (size_t)(msize + TOP_FOOT_SIZE + malloc_pagesize)) {
 		size_t rs    = ((capacity == 0) ? mparams.granularity : (capacity + TOP_FOOT_SIZE + msize));
 		size_t tsize = granularity_align(rs);
-		char *tbase  = (char *)(DL_MMAP(tsize));
+		byte_t *tbase  = (byte_t *)(DL_MMAP(tsize));
 		if (tbase != CMFAIL) {
 			m = init_user_mstate(tbase, tsize);
 			mstate_seg(m).sflags = USE_MMAP_BIT;
@@ -4997,14 +6003,14 @@ static mspace create_mspace(size_t capacity/*, int locked*/) {
 }
 
 #if !NO_CREATE_MSPACE_WITH_BASE
-static mspace create_mspace_with_base(void *base, size_t capacity/*, int locked*/) {
+DL_API_IMPL(, mspace, create_mspace_with_base, (void *base, size_t capacity/*, int locked*/)) {
 	mstate m = 0;
 	size_t msize;
 	ensure_initialization();
 	msize = pad_request(sizeof(struct malloc_state));
 	if (capacity > msize + TOP_FOOT_SIZE &&
 	    capacity < (size_t)0 - (size_t)(msize + TOP_FOOT_SIZE + malloc_pagesize)) {
-		m = init_user_mstate((char *)base, capacity);
+		m = init_user_mstate((byte_t *)base, capacity);
 		mstate_seg(m).sflags = EXTERN_BIT;
 	}
 	return (mspace)m;
@@ -5012,7 +6018,7 @@ static mspace create_mspace_with_base(void *base, size_t capacity/*, int locked*
 #endif /* !NO_CREATE_MSPACE_WITH_BASE */
 
 #if !NO_MSPACE_TRACK_LARGE_CHUNKS
-static int mspace_track_large_chunks(mspace msp, int enable) {
+DL_API_IMPL(, int, mspace_track_large_chunks, (mspace msp, int enable)) {
 	int ret   = 0;
 	mstate ms = (mstate)msp;
 	PREACTION(ms);
@@ -5030,16 +6036,16 @@ static int mspace_track_large_chunks(mspace msp, int enable) {
 #endif /* !NO_MSPACE_TRACK_LARGE_CHUNKS */
 
 #if !NO_DESTROY_MSPACE
-static size_t destroy_mspace(mspace msp) {
+DL_API_IMPL(, size_t, destroy_mspace, (mspace msp)) {
 	size_t freed = 0;
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 #ifndef DL_MUNMAP_ALWAYS_FAILS
 	msegmentptr sp = &ms->seg;
 	while (sp != 0) {
-		char *base  = sp->base;
-		size_t size = sp->size;
-		flag_t flag = sp->sflags;
+		byte_t *base = sp->base;
+		size_t size  = sp->size;
+		flag_t flag  = sp->sflags;
 		(void)base; /* placate people compiling -Wunused-variable */
 		sp = sp->next;
 #ifdef EXTERN_BIT
@@ -5063,14 +6069,12 @@ SLIST_HEAD(malloc_state_slist, malloc_state);
 PRIVATE struct malloc_state_slist free_tls_mspace = SLIST_HEAD_INITIALIZER(free_tls_mspace);
 PRIVATE struct malloc_state_slist used_tls_mspace = SLIST_HEAD_INITIALIZER(used_tls_mspace);
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_lock_t tls_mspace_lock = Dee_ATOMIC_LOCK_INIT;
+PRIVATE DL_LOCK_T tls_mspace_lock = DL_LOCK_INIT_STATIC;
 #endif /* !CONFIG_NO_THREADS */
-#define tls_mspace_lock_available()  Dee_atomic_lock_available(&tls_mspace_lock)
-#define tls_mspace_lock_acquired()   Dee_atomic_lock_acquired(&tls_mspace_lock)
-#define tls_mspace_lock_tryacquire() Dee_atomic_lock_tryacquire(&tls_mspace_lock)
-#define tls_mspace_lock_acquire()    Dee_atomic_lock_acquire(&tls_mspace_lock)
-#define tls_mspace_lock_waitfor()    Dee_atomic_lock_waitfor(&tls_mspace_lock)
-#define tls_mspace_lock_release()    Dee_atomic_lock_release(&tls_mspace_lock)
+#define tls_mspace_lock_tryacquire() DL_LOCK_TRYACQUIRE(&tls_mspace_lock)
+#define tls_mspace_lock_acquire()    DL_LOCK_ACQUIRE(&tls_mspace_lock)
+#define tls_mspace_lock_waitfor()    DL_LOCK_WAITFOR(&tls_mspace_lock)
+#define tls_mspace_lock_release()    DL_LOCK_RELEASE(&tls_mspace_lock)
 
 PRIVATE WUNUSED mspace DCALL create_tls_mspace(void) {
 	struct malloc_state *result;
@@ -5104,50 +6108,47 @@ PRIVATE NONNULL((1)) void DCALL destroy_tls_mspace(mspace ms) {
 	tls_mspace_lock_release();
 }
 
+#if !defined(DL_TLS_GETHEAP) || !defined(DL_TLS_SETHEAP)
+#error "Must #define DL_TLS_GETHEAP() and DL_TLS_SETHEAP() when 'USE_PER_THREAD_MSTATE=1'"
+#endif /* !DL_TLS_GETHEAP || !DL_TLS_SETHEAP */
+
+#ifndef DL_TLS_VARS
+#define DL_TLS_VARS /* nothing */
+#endif /* !DL_TLS_VARS */
+
 /* Return the calling thread's thread-local mspace (or "0" if not available) */
-static mspace tls_mspace(void) {
-	DeeThreadObject *me = DeeThread_Self();
-	mspace result = (mspace)me->t_heap;
+DL_API_IMPL(, mspace, tls_mspace, (void)) {
+	DL_TLS_VARS
+	mspace result = (mspace)DL_TLS_GETHEAP();
 	if unlikely(!result) {
 		result = create_tls_mspace();
-		me->t_heap = (void *)result;
+		DL_TLS_SETHEAP((void *)result);
 	}
 	return result;
 }
 
-#if 1 /* Use atomic locks -- shared locks use futex, which might require Dee_TryMalloc() for its impl! */
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_ratomic_lock_t foreach_lock = Dee_RATOMIC_LOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-#define foreach_lock_available()     Dee_ratomic_lock_available(&foreach_lock)
-#define foreach_lock_acquired()      Dee_ratomic_lock_acquired(&foreach_lock)
-#define foreach_lock_tryacquire()    Dee_ratomic_lock_tryacquire(&foreach_lock)
-#define foreach_lock_acquire()       Dee_ratomic_lock_acquire(&foreach_lock)
-#define foreach_lock_acquire_noint() Dee_ratomic_lock_acquire(&foreach_lock)
-#define foreach_lock_waitfor()       Dee_ratomic_lock_waitfor(&foreach_lock)
-#define foreach_lock_release()       Dee_ratomic_lock_release(&foreach_lock)
-#else
-#ifndef CONFIG_NO_THREADS
-PRIVATE Dee_rshared_lock_t foreach_lock = Dee_RSHARED_LOCK_INIT;
-#endif /* !CONFIG_NO_THREADS */
-#define foreach_lock_available()     Dee_rshared_lock_available(&foreach_lock)
-#define foreach_lock_acquired()      Dee_rshared_lock_acquired(&foreach_lock)
-#define foreach_lock_tryacquire()    Dee_rshared_lock_tryacquire(&foreach_lock)
-#define foreach_lock_acquire()       Dee_rshared_lock_acquire(&foreach_lock)
-#define foreach_lock_acquire_noint() Dee_rshared_lock_acquire_noint(&foreach_lock)
-#define foreach_lock_waitfor()       Dee_rshared_lock_waitfor(&foreach_lock)
-#define foreach_lock_release()       Dee_rshared_lock_release(&foreach_lock)
-#endif
+#ifndef DL_REENTRANT_LOCK_T
+#define DL_REENTRANT_LOCK_T           DL_LOCK_T
+#define DL_REENTRANT_LOCK_INIT_STATIC DL_LOCK_INIT_STATIC
+#define DL_REENTRANT_LOCK_ACQUIRE     DL_LOCK_ACQUIRE
+#define DL_REENTRANT_LOCK_RELEASE     DL_LOCK_RELEASE
+#endif /* !DL_REENTRANT_LOCK_T */
 
-PRIVATE uintptr_t foreach_bitset_inuse = 0;
-PRIVATE uintptr_t foreach_bitset_inuse_alloc(void) {
+/* Try to use a recursive lock here because the callback of `tls_mspace_foreach()'
+ * may call back into `tls_mspace_foreach()' in some situations. */
+PRIVATE DL_REENTRANT_LOCK_T tls_foreach_lock = DL_REENTRANT_LOCK_INIT_STATIC;
+#define tls_foreach_lock_acquire_noint() DL_REENTRANT_LOCK_ACQUIRE(&tls_foreach_lock)
+#define tls_foreach_lock_release()       DL_REENTRANT_LOCK_RELEASE(&tls_foreach_lock)
+
+PRIVATE uintptr_t tls_foreach_bitset_inuse = 0;
+PRIVATE uintptr_t tls_foreach_bitset_inuse_alloc(void) {
 	unsigned int i;
 	uintptr_t result, state;
 again:
-	state = atomic_read(&foreach_bitset_inuse);
+	state = atomic_read(&tls_foreach_bitset_inuse);
 	for (i = 0, result = 1; i < (sizeof(state) * __CHAR_BIT__); ++i, result <<= 1) {
 		if (!(state & result)) {
-			if (!(atomic_fetchor(&foreach_bitset_inuse, result) & result))
+			if (!(atomic_fetchor(&tls_foreach_bitset_inuse, result) & result))
 				return result;
 			goto again;
 		}
@@ -5155,8 +6156,8 @@ again:
 	return 0;
 }
 
-PRIVATE void foreach_bitset_inuse_free(uintptr_t mask) {
-	atomic_and(&foreach_bitset_inuse, ~mask);
+PRIVATE void tls_foreach_bitset_inuse_free(uintptr_t mask) {
+	atomic_and(&tls_foreach_bitset_inuse, ~mask);
 }
 
 static void reset_not_visited_tls_mspace(uintptr_t mask) {
@@ -5184,12 +6185,12 @@ static mstate find_not_visited_tls_mspace(uintptr_t mask) {
 	return NULL;
 }
 
-static size_t tls_mspace_foreach(size_t (*cb)(mspace ms, void *arg), void *arg) {
+DL_API_IMPL(, size_t, tls_mspace_foreach, (size_t (*cb)(mspace ms, void *arg), void *arg)) {
 	uintptr_t mask;
 	mstate ms;
 	size_t result = 0;
-	foreach_lock_acquire_noint();
-	mask = foreach_bitset_inuse_alloc();
+	tls_foreach_lock_acquire_noint();
+	mask = tls_foreach_bitset_inuse_alloc();
 	tls_mspace_lock_acquire();
 	reset_not_visited_tls_mspace(mask);
 	while ((ms = find_not_visited_tls_mspace(mask)) != NULL) {
@@ -5198,8 +6199,8 @@ static size_t tls_mspace_foreach(size_t (*cb)(mspace ms, void *arg), void *arg) 
 		tls_mspace_lock_acquire();
 	}
 	tls_mspace_lock_release();
-	foreach_bitset_inuse_free(mask);
-	foreach_lock_release();
+	tls_foreach_bitset_inuse_free(mask);
+	tls_foreach_lock_release();
 	return result;
 }
 
@@ -5217,22 +6218,22 @@ thread_heap_destroy(void *heap) {
 */
 
 #if USE_MSPACE_MALLOC_LOCKLESS
-static void *mspace_malloc(mspace msp, size_t bytes) {
+DL_API_IMPL(, void *, mspace_malloc, (mspace msp, size_t bytes)) {
 	void *result;
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
-#ifdef MALLOC_ZERO_RETURNS_NULL
+#if dlmalloc_ZERO_RETURNS_NULL
 	if unlikely(!bytes)
 		return NULL;
-#endif /* MALLOC_ZERO_RETURNS_NULL */
+#endif /* dlmalloc_ZERO_RETURNS_NULL */
 	PREACTION(ms);
 	result = mspace_malloc_lockless(ms, bytes);
 	POSTACTION(ms);
 	return result;
 }
-static void *mspace_malloc_lockless(mspace msp, size_t bytes)
+DL_API_IMPL(, void *, mspace_malloc_lockless, (mspace msp, size_t bytes))
 #else /* USE_MSPACE_MALLOC_LOCKLESS */
-static void *mspace_malloc(mspace msp, size_t bytes)
+DL_API_IMPL(, void *, mspace_malloc, (mspace msp, size_t bytes))
 #endif /* !USE_MSPACE_MALLOC_LOCKLESS */
 {
 	void *mem;
@@ -5240,10 +6241,10 @@ static void *mspace_malloc(mspace msp, size_t bytes)
 	mstate ms = (mstate)msp;
 #if !USE_MSPACE_MALLOC_LOCKLESS
 	ext_assert__ok_magic(ms);
-#ifdef MALLOC_ZERO_RETURNS_NULL
+#if dlmalloc_ZERO_RETURNS_NULL
 	if unlikely(!bytes)
 		return NULL;
-#endif /* MALLOC_ZERO_RETURNS_NULL */
+#endif /* dlmalloc_ZERO_RETURNS_NULL */
 	PREACTION(ms);
 #endif /* !USE_MSPACE_MALLOC_LOCKLESS */
 	if (bytes <= MAX_SMALL_REQUEST) {
@@ -5352,7 +6353,7 @@ postaction:
 }
 
 #if !NO_MSPACE_FREE
-static void mspace_free(mspace msp, void *mem) {
+DL_API_IMPL(, void, mspace_free, (mspace msp, void *mem)) {
 	size_t psize;
 	mchunkptr next;
 	mchunkptr p;
@@ -5380,7 +6381,7 @@ static void mspace_free(mspace msp, void *mem) {
 		if (is_mmapped(p)) {
 #ifndef DL_MUNMAP_ALWAYS_FAILS
 			psize += prevsize + MMAP_FOOT_PAD;
-			if (DL_MUNMAP((char *)p - prevsize, psize) == 0)
+			if (DL_MUNMAP((byte_t *)p - prevsize, psize) == 0)
 				fm->footprint -= psize;
 #endif /* !DL_MUNMAP_ALWAYS_FAILS */
 			goto postaction;
@@ -5448,7 +6449,7 @@ postaction:
 #endif /* !NO_MSPACE_FREE */
 
 #if !NO_MSPACE_CALLOC
-static void *mspace_calloc(mspace msp, size_t n_elements, size_t elem_size) {
+DL_API_IMPL(, void *, mspace_calloc, (mspace msp, size_t n_elements, size_t elem_size)) {
 	void *mem;
 	size_t req = 0;
 	mstate ms = (mstate)msp;
@@ -5467,18 +6468,18 @@ static void *mspace_calloc(mspace msp, size_t n_elements, size_t elem_size) {
 #endif /* !NO_MSPACE_CALLOC */
 
 #if !NO_MSPACE_REALLOC
-static void *mspace_realloc(mspace msp, void *oldmem, size_t bytes) {
+DL_API_IMPL(, void *, mspace_realloc, (mspace msp, void *oldmem, size_t bytes)) {
 	void *mem = 0;
 	if (oldmem == 0) {
 		mem = mspace_malloc(msp, bytes);
 	} else if (bytes >= MAX_REQUEST) {
 		MALLOC_FAILURE_ACTION;
 	}
-#ifdef REALLOC_ZERO_BYTES_FREES
+#if dlrealloc_ZERO_BYTES_FREES
 	else if (bytes == 0) {
 		mspace_free(msp, oldmem);
 	}
-#endif /* REALLOC_ZERO_BYTES_FREES */
+#endif /* dlrealloc_ZERO_BYTES_FREES */
 	else {
 		size_t nb      = request2size(bytes);
 		mchunkptr oldp = mem2chunk(oldmem);
@@ -5509,7 +6510,7 @@ static void *mspace_realloc(mspace msp, void *oldmem, size_t bytes) {
 #endif /* !NO_MSPACE_REALLOC */
 
 #if !NO_MSPACE_REALLOC_IN_PLACE
-static void *mspace_realloc_in_place(mspace msp, void *oldmem, size_t bytes) {
+DL_API_IMPL(, void *, mspace_realloc_in_place, (mspace msp, void *oldmem, size_t bytes)) {
 	void *mem = 0;
 	if (oldmem != 0) {
 		if (bytes >= MAX_REQUEST) {
@@ -5539,7 +6540,7 @@ static void *mspace_realloc_in_place(mspace msp, void *oldmem, size_t bytes) {
 #endif /* !NO_MSPACE_REALLOC_IN_PLACE */
 
 #if !NO_MSPACE_MEMALIGN
-static void *mspace_memalign(mspace msp, size_t alignment, size_t bytes) {
+DL_API_IMPL(, void *, mspace_memalign, (mspace msp, size_t alignment, size_t bytes)) {
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 	if (alignment <= MALLOC_ALIGNMENT)
@@ -5549,16 +6550,16 @@ static void *mspace_memalign(mspace msp, size_t alignment, size_t bytes) {
 #endif /* !NO_MSPACE_MEMALIGN */
 
 #if !NO_INDEPENDENT_ALLOC
-static void **mspace_independent_calloc(mspace msp, size_t n_elements,
-                                        size_t elem_size, void *chunks[]) {
+DL_API_IMPL(, void **, mspace_independent_calloc, (mspace msp, size_t n_elements,
+                                                   size_t elem_size, void *chunks[])) {
 	size_t sz = elem_size; /* serves as 1-element array */
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 	return ialloc(ms, n_elements, &sz, 3, chunks);
 }
 
-static void **mspace_independent_comalloc(mspace msp, size_t n_elements,
-                                          size_t sizes[], void *chunks[]) {
+DL_API_IMPL(, void **, mspace_independent_comalloc, (mspace msp, size_t n_elements,
+                                                     size_t sizes[], void *chunks[])) {
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 	return ialloc(ms, n_elements, sizes, 0, chunks);
@@ -5566,7 +6567,7 @@ static void **mspace_independent_comalloc(mspace msp, size_t n_elements,
 #endif /* !NO_INDEPENDENT_ALLOC */
 
 #if !NO_BULK_FREE
-static size_t mspace_bulk_free(mspace msp, void *array[], size_t nelem) {
+DL_API_IMPL(, size_t, mspace_bulk_free, (mspace msp, void *array[], size_t nelem)) {
 	return internal_bulk_free((mstate)msp, array, nelem);
 }
 #endif /* !NO_BULK_FREE */
@@ -5587,8 +6588,8 @@ static void mspace_inspect_all(mspace msp,
 #endif /* MALLOC_INSPECT_ALL */
 
 #if !NO_MSPACE_TRIM
-static int mspace_trim(mspace msp, size_t pad) {
-	int result = 0;
+DL_API_IMPL(, dlmalloc_trim_RETURN_TYPE, mspace_trim, (mspace msp, size_t pad)) {
+	dlmalloc_trim_RETURN_TYPE result;
 	mstate ms  = (mstate)msp;
 	ext_assert__ok_magic(ms);
 	PREACTION(ms);
@@ -5599,7 +6600,7 @@ static int mspace_trim(mspace msp, size_t pad) {
 #endif /* NO_MSPACE_TRIM */
 
 #if !NO_MALLOC_STATS
-static void mspace_malloc_stats(mspace msp) {
+DL_API_IMPL(, void, mspace_malloc_stats, (mspace msp)) {
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 	internal_malloc_stats(ms);
@@ -5607,7 +6608,7 @@ static void mspace_malloc_stats(mspace msp) {
 #endif /* NO_MALLOC_STATS */
 
 #if !NO_MSPACE_FOOTPRINT
-static size_t mspace_footprint(mspace msp) {
+DL_API_IMPL(, size_t, mspace_footprint, (mspace msp)) {
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 	return ms->footprint;
@@ -5615,7 +6616,7 @@ static size_t mspace_footprint(mspace msp) {
 #endif /* !NO_MSPACE_FOOTPRINT */
 
 #if !NO_MSPACE_MAX_FOOTPRINT
-static size_t mspace_max_footprint(mspace msp) {
+DL_API_IMPL(, size_t, mspace_max_footprint, (mspace msp)) {
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
 	return ms->max_footprint;
@@ -5623,7 +6624,7 @@ static size_t mspace_max_footprint(mspace msp) {
 #endif /* !NO_MSPACE_MAX_FOOTPRINT */
 
 #if !NO_MSPACE_FOOTPRINT_LIMIT
-static size_t mspace_footprint_limit(mspace msp) {
+DL_API_IMPL(, size_t, mspace_footprint_limit, (mspace msp)) {
 	size_t maf;
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
@@ -5633,7 +6634,7 @@ static size_t mspace_footprint_limit(mspace msp) {
 #endif /* !NO_MSPACE_FOOTPRINT_LIMIT */
 
 #if !NO_MSPACE_SET_FOOTPRINT_LIMIT
-static size_t mspace_set_footprint_limit(mspace msp, size_t bytes) {
+DL_API_IMPL(, size_t, mspace_set_footprint_limit, (mspace msp, size_t bytes)) {
 	size_t result = 0;
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
@@ -5648,16 +6649,19 @@ static size_t mspace_set_footprint_limit(mspace msp, size_t bytes) {
 }
 #endif /* !NO_MSPACE_SET_FOOTPRINT_LIMIT */
 
-#if !NO_MALLINFO && !EXPOSE_AS_DEEMON_API
-static struct dlmalloc_mallinfo mspace_mallinfo(mspace msp) {
+#if !NO_MSPACE_MALLINFO
+DL_API_IMPL(, STRUCT_mallinfo, mspace_mallinfo, (mspace msp)) {
+	STRUCT_mallinfo nm;
 	mstate ms = (mstate)msp;
 	ext_assert__ok_magic(ms);
-	return internal_mallinfo(ms);
+	bzero(&nm, sizeof(nm));
+	do_gather_internal_mallinfo(ARG_mstate_X_(ms) &nm);
+	return nm;
 }
-#endif /* NO_MALLINFO && !EXPOSE_AS_DEEMON_API */
+#endif /* !NO_MSPACE_MALLINFO */
 
 #if !NO_MSPACE_USABLE_SIZE
-static size_t mspace_usable_size(void const *mem) {
+DL_API_IMPL(, size_t, mspace_usable_size, (void const *mem)) {
 	if (mem != 0) {
 		mchunkptr p = mem2chunk(mem);
 		if (is_inuse(p))
@@ -5666,12 +6670,6 @@ static size_t mspace_usable_size(void const *mem) {
 	return 0;
 }
 #endif /* !NO_MSPACE_USABLE_SIZE */
-
-#if !NO_MALLOPT && !EXPOSE_AS_DEEMON_API
-static int mspace_mallopt(int param_number, int value) {
-	return change_mparam(param_number, value);
-}
-#endif /* !NO_MALLOPT && !EXPOSE_AS_DEEMON_API */
 #endif /* MSPACES */
 
 /************************************************************************/
@@ -5783,7 +6781,7 @@ DFUNDEF ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) void *(DCAL
  *   >> void *p = Dee_Malloc(16);
  *   >> void *c = Dee_Malloc(0);
  *   >> size_t s = Dee_MallocUsableSize(p);
- *   >> void *tail = (char *)p + s;
+ *   >> void *tail = (byte_t *)p + s;
  *   >> size_t tail_ptr = *(size_t *)tail;
  *   >> *(size_t *)tail = 42;
  *   >> Dee_CHECKMEMORY();
@@ -5828,7 +6826,7 @@ struct leak_footer {
 #define lf_remlink _dee_aunion3.lf_remlink
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
-#if LEAK_DETECTION_GC || HAVE_DBG_HEAP_REGION
+#if LEAK_DETECTION_GC || FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 #define leak_footer_line_t __INTPTR_HALF_TYPE__
 	__INTPTR_HALF_TYPE__  lf_line;  /* [lock(OWNER(lf_chunk))] Line where "lf_chunk" was allocated */
 	__UINTPTR_HALF_TYPE__ lf_gcflags; /* [lock(leaks_lock)] Flags used to track state during GC leak search */
@@ -5838,14 +6836,14 @@ struct leak_footer {
 #define LEAK_FOOTER_GCFLAG_RED     ((__UINTPTR_HALF_TYPE__)1 << (sizeof(__UINTPTR_HALF_TYPE__) * __CHAR_BIT__ - 1)) /* Red node */
 #define LEAK_FOOTER_GCFLAG_HITMASK (~LEAK_FOOTER_GCFLAG_RED)
 #define LEAK_FOOTER_GCFLAG_ONEHIT  1
-#else /* LEAK_DETECTION_GC || HAVE_DBG_HEAP_REGION */
+#else /* LEAK_DETECTION_GC || FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 #define leak_footer_line_t int
 	int                   lf_line;  /* [lock(OWNER(lf_chunk))] Line where "lf_chunk" was allocated */
-#endif /* !LEAK_DETECTION_GC && !HAVE_DBG_HEAP_REGION */
+#endif /* !LEAK_DETECTION_GC && !FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	size_t                lf_id;    /* Allocation ID (I hate that this field prevents this thing from aligning nicely) */
 };
 
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 #define leak_footer_isregion(self)  ((self)->lf_foot == 1) /* Values [1,3] can never be set due to: alignment of "malloc_state", and initialization of "mparams.magic" */
 #define leak_footer_setregion(self) (void)((self)->lf_foot = 1)
 #define leak_footer_asregion(self)  ((struct region_leak_footer *)(self))
@@ -5881,7 +6879,7 @@ struct region_leak_footer {
 	 region_leak_footer_free(self))
 
 #define Dee_heapregion_getusize(self)      ((self)->hr_size - sizeof(struct Dee_heaptail))
-#define Dee_heapregion_getuminaddr(self)   ((char *)Dee_heapregion_gethead(self))
+#define Dee_heapregion_getuminaddr(self)   ((byte_t *)Dee_heapregion_gethead(self))
 #define Dee_heapregion_getumaxaddr(self)   (Dee_heapregion_getuminaddr(self) + Dee_heapregion_getusize(self) - 1)
 #define Dee_heapregion_getuwordcount(self) (Dee_heapregion_getusize(self) / sizeof(void *))
 
@@ -5900,7 +6898,7 @@ struct region_leak_footer {
 #define region_leak_footer_setreachable(self, word) (void)((self)->rlf_reachable[(word) / __CHAR_BIT__] |= ((unsigned char)1 << ((word) % __CHAR_BIT__)))
 #endif /* LEAK_DETECTION_GC */
 
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 
 
 /* Return pointer to "prev_foot" field of next chunk (i.e. the "footer" field of this chunk) */
@@ -5935,14 +6933,11 @@ PRIVATE struct leak_footer_slist leak_footer_freelist = SLIST_HEAD_INITIALIZER(l
 
 /* Lock needed to remove items from "leak_footer_freelist" */
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_lock_t leak_footer_freelock = Dee_ATOMIC_LOCK_INIT;
+PRIVATE DL_LOCK_T leak_footer_freelock = DL_LOCK_INIT_STATIC;
 #endif /* !CONFIG_NO_THREADS */
-#define leak_footer_freelock_available()  Dee_atomic_lock_available(&leak_footer_freelock)
-#define leak_footer_freelock_acquired()   Dee_atomic_lock_acquired(&leak_footer_freelock)
-#define leak_footer_freelock_tryacquire() Dee_atomic_lock_tryacquire(&leak_footer_freelock)
-#define leak_footer_freelock_acquire()    Dee_atomic_lock_acquire(&leak_footer_freelock)
-#define leak_footer_freelock_waitfor()    Dee_atomic_lock_waitfor(&leak_footer_freelock)
-#define leak_footer_freelock_release()    Dee_atomic_lock_release(&leak_footer_freelock)
+#define leak_footer_freelock_tryacquire() DL_LOCK_TRYACQUIRE(&leak_footer_freelock)
+#define leak_footer_freelock_acquire()    DL_LOCK_ACQUIRE(&leak_footer_freelock)
+#define leak_footer_freelock_release()    DL_LOCK_RELEASE(&leak_footer_freelock)
 
 PRIVATE ATTR_HOT ATTR_MALLOC WUNUSED struct leak_footer *DCALL
 leak_footer_alloc(void) {
@@ -6009,14 +7004,14 @@ DeeHeap_SetAllocBreakpoint(size_t id) {
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE Dee_atomic_lock_t leaks_lock = Dee_ATOMIC_LOCK_INIT;
+PRIVATE DL_LOCK_T leaks_lock = DL_LOCK_INIT_STATIC;
 #endif /* !CONFIG_NO_THREADS */
-#define leaks_lock_available()  Dee_atomic_lock_available(&leaks_lock)
-#define leaks_lock_acquired()   Dee_atomic_lock_acquired(&leaks_lock)
-#define leaks_lock_tryacquire() Dee_atomic_lock_tryacquire(&leaks_lock)
-#define leaks_lock_acquire()    Dee_atomic_lock_acquire(&leaks_lock)
-#define leaks_lock_waitfor()    Dee_atomic_lock_waitfor(&leaks_lock)
-#define _leaks_lock_release()   Dee_atomic_lock_release(&leaks_lock)
+#ifdef DL_LOCK_ACQUIRED
+#define leaks_lock_acquired()   DL_LOCK_ACQUIRED(&leaks_lock)
+#endif /* DL_LOCK_ACQUIRED */
+#define leaks_lock_tryacquire() DL_LOCK_TRYACQUIRE(&leaks_lock)
+#define leaks_lock_acquire()    DL_LOCK_ACQUIRE(&leaks_lock)
+#define _leaks_lock_release()   DL_LOCK_RELEASE(&leaks_lock)
 
 /* [lock(leaks_lock)] Ring of memory leaks */
 PRIVATE struct leak_footer leaks = {
@@ -6210,10 +7205,10 @@ PRIVATE void DCALL leaks_lock_acquire_and_reap(void) {
 #define leak_addrok(p) (_leak_addrok(p) && IS_ALIGNED((uintptr_t)(p), sizeof(void *)))
 
 
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 
 #define _Dee_heapregion__p_uptr(T, self) \
-	(*(T *)((char *)(self) + (self)->hr_size - sizeof(size_t)))
+	(*(T *)((byte_t *)(self) + (self)->hr_size - sizeof(size_t)))
 #define Dee_heapregion_hasfooter_or_next(self) (_Dee_heapregion__p_uptr(uintptr_t, self) != 0)
 #define Dee_heapregion_hasnext(self)           (_Dee_heapregion__p_uptr(uintptr_t, self) & 1)
 #define Dee_heapregion_getfooter(self)    _Dee_heapregion__p_uptr(struct region_leak_footer *const, self)
@@ -6277,8 +7272,10 @@ region_leak_mlist_remove(struct Dee_heapregion *__restrict region) {
 
 /* Remove debug info attached to "region" -- caller must be holding "leaks_lock" */
 PRIVATE ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
-DeeDbgHeap_DelHeapRegion_locked(struct Dee_heapregion *__restrict region) {
+dl_dbg_heapregion_dispose(struct Dee_heapregion *__restrict region) {
+#ifdef leaks_lock_acquired
 	ASSERT(leaks_lock_acquired());
+#endif /* leaks_lock_acquired */
 	if (Dee_heapregion_hasfooter_or_next(region)) {
 		if (Dee_heapregion_hasnext(region)) {
 			region_leak_mlist_remove(region);
@@ -6298,7 +7295,7 @@ DeeDbgHeap_DelHeapRegion_locked(struct Dee_heapregion *__restrict region) {
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
 Dee_heapregion_chunkcount(struct Dee_heapregion *__restrict self) {
 	size_t result = 0;
-	mchunkptr tail = (mchunkptr)((char *)self + self->hr_size - sizeof(struct Dee_heaptail));
+	mchunkptr tail = (mchunkptr)((byte_t *)self + self->hr_size - sizeof(struct Dee_heaptail));
 	mchunkptr iter = (mchunkptr)&self->hr_first;
 	while (iter < tail) {
 		iter = chunk_plus_offset(iter, chunksize(iter));
@@ -6336,7 +7333,7 @@ DeeDbgHeap_AddHeapRegion_locked_p(struct Dee_heapregion *__restrict region,
 #elif __has_builtin(__builtin_trap)
 		__builtin_trap();
 #else /* ... */
-		char volatile *volatile P = (char volatile *)0;
+		byte_t volatile *volatile P = (byte_t volatile *)0;
 		*P = 'B';
 #endif /* !... */
 	}
@@ -6356,8 +7353,8 @@ leaks_untrack_chunk_containing(void const *ptr) {
 		void *mem = atomic_read(&iter->lf_chunk);
 		mchunkptr p = mem2chunk(mem);
 		size_t size = chunksize(p) - overhead_for(p);
-		if ((char *)ptr >= (char *)mem &&
-		    (char *)ptr < ((char *)mem + size)) {
+		if ((byte_t *)ptr >= (byte_t *)mem &&
+		    (byte_t *)ptr < ((byte_t *)mem + size)) {
 			/* Do the same that's done by `Dee_UntrackAlloc()' below. */
 			leaks_remove(iter);
 			iter->lf_prev = iter;
@@ -6421,7 +7418,7 @@ DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *f
 		}
 	}
 
-	region = DeeDbgHeap_DelHeapRegion_locked(region); /* For safety -- should not be bound, yet */
+	region = dl_dbg_heapregion_dispose(region); /* For safety -- should not be bound, yet */
 	if likely(footer) {
 		region = DeeDbgHeap_AddHeapRegion_locked_p(region, footer, file);
 		file = NULL; /* Inherited */
@@ -6429,9 +7426,9 @@ DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *f
 		region = region_leak_mlist_insert(region);
 	}
 	leaks_lock_release();
-#if !DLFREE_CHECKS_NULL
+#if !dlfree_CHECKS_NULL
 	if (file)
-#endif /* !DLFREE_CHECKS_NULL */
+#endif /* !dlfree_CHECKS_NULL */
 	{
 		dlfree((char *)file);
 	}
@@ -6441,11 +7438,11 @@ DeeDbgHeap_AddHeapRegion(struct Dee_heapregion *__restrict region, char const *f
 PUBLIC ATTR_RETNONNULL NONNULL((1)) struct Dee_heapregion *DCALL
 DeeDbgHeap_DelHeapRegion(struct Dee_heapregion *__restrict region) {
 	leaks_lock_acquire_and_reap();
-	region = DeeDbgHeap_DelHeapRegion_locked(region);
+	region = dl_dbg_heapregion_dispose(region);
 	leaks_lock_release();
 	return region;
 }
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 
 
 
@@ -6510,7 +7507,7 @@ again:
 	/* Lock "gm" */
 	if (!TRY_PREACTION(gm)) {
 		local_unlock();
-		Dee_atomic_lock_waitfor(&mstate_mutex(gm));
+		DL_LOCK_WAITFOR(&mstate_mutex(gm));
 		goto again;
 #undef local_unlock_1
 #define local_unlock_1() POSTACTION(gm)
@@ -6539,7 +7536,7 @@ again:
 				}
 				local_unlock();
 				/* TLS mspaces are never free'd, so no need to worry about "tls" going away here... */
-				Dee_atomic_lock_waitfor(&mstate_mutex(tls));
+				DL_LOCK_WAITFOR(&mstate_mutex(tls));
 			}
 		}
 	}
@@ -6672,7 +7669,7 @@ do_DeeHeap_DumpMemoryLeaks_one(struct leak_footer *leak
 	if (leaks_pending_remove__contains(leak))
 		return 0;
 
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	if (leak_footer_isregion(leak)) {
 		/* Print 1 line for every unreachable chunk within the region of "leak" */
 		struct region_leak_footer *footer = leak_footer_asregion(leak);
@@ -6680,16 +7677,16 @@ do_DeeHeap_DumpMemoryLeaks_one(struct leak_footer *leak
 		struct Dee_heapchunk *start = Dee_heapregion_getstart(region);
 		struct Dee_heapchunk *end = Dee_heapregion_getend(region);
 		struct Dee_heapchunk *iter;
-		char *region_maxaddr = (char *)region + region->hr_size - 1;
+		byte_t *region_maxaddr = (byte_t *)region + region->hr_size - 1;
 		size_t index = 0;
-		ASSERT((char *)start == Dee_heapregion_getuminaddr(region));
+		ASSERT((byte_t *)start == Dee_heapregion_getuminaddr(region));
 		size = 0;
 		for (iter = start; iter < end; iter = Dee_heapchunk_getnext(iter)) {
-			size_t offset = (size_t)((char *)iter - (char *)start);
+			size_t offset = (size_t)((byte_t *)iter - (byte_t *)start);
 			size_t chunk_size = iter->hc_head & ~7;
 			size_t chunk_head_word = offset / sizeof(void *);
 			size_t chunk_body_word = chunk_head_word + (sizeof(struct Dee_heapchunk) / sizeof(void *));
-			char *payload_start = (char *)start + (chunk_body_word * sizeof(void *));
+			byte_t *payload_start = (byte_t *)start + (chunk_body_word * sizeof(void *));
 			size_t payload_size = chunk_size - sizeof(struct Dee_heapchunk);
 #if LEAK_DETECTION_GC
 			if (!(iter->hc_head & PINUSE_BIT) &&
@@ -6700,27 +7697,27 @@ do_DeeHeap_DumpMemoryLeaks_one(struct leak_footer *leak
 			{
 				Dee_DPRINTF("%s : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes: %p-%p [in Dee_heapregion %p-%p]\n",
 				            file, leak->lf_id + index, payload_size,
-				            payload_start, (char *)payload_start + payload_size - 1,
+				            payload_start, (byte_t *)payload_start + payload_size - 1,
 				            region, region_maxaddr);
 				size += payload_size;
 			}
 			++index;
 		}
 	} else
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 #if LEAK_DETECTION_GC
 	if (print_gc_hits) {
 		Dee_DPRINTF("%s(%d) : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes of memory: "
 		            /**/ "%p-%p (referenced %" PRFuSIZ " by other leaks)\n",
 		            file, (int)leak->lf_line, leak->lf_id,
-		            size, (char *)mem, (char *)mem + size - 1,
+		            size, (byte_t *)mem, (byte_t *)mem + size - 1,
 		            (size_t)(leak->lf_gcflags & LEAK_FOOTER_GCFLAG_HITMASK));
 	} else
 #endif /* LEAK_DETECTION_GC */
 	{
 		Dee_DPRINTF("%s(%d) : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes of memory: %p-%p\n",
 		            file, (int)leak->lf_line, leak->lf_id,
-		            size, (char *)mem, (char *)mem + size - 1);
+		            size, (byte_t *)mem, (byte_t *)mem + size - 1);
 	}
 	return size;
 }
@@ -6792,18 +7789,18 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_ALL(void) {
 	result += (size_t)Dee_slab_leaks_foreach_page(&do_DeeHeap_DumpMemoryLeaks_slabpage_cb, NULL);
 #endif /* HAVE_Dee_slab_leaks_foreach_page */
 
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	if (region_leak_mlist) {
 		struct Dee_heapregion *region = region_leak_mlist;
 		do {
 			result += region->hr_size;
 			Dee_DPRINTF("? : ? : Leaked %" PRFuSIZ " bytes: %p-%p [in Dee_heapregion %p-%p]\n",
 			            region->hr_size,
-			            (char *)region, (char *)region + region->hr_size - 1,
-			            (char *)region, (char *)region + region->hr_size - 1);
+			            (byte_t *)region, (byte_t *)region + region->hr_size - 1,
+			            (byte_t *)region, (byte_t *)region + region->hr_size - 1);
 		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
 	}
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	dumpleaks_release_locks();
 	return result;
 }
@@ -6821,13 +7818,13 @@ DECL_END
 #define RBTREE_LEFT_LEANING
 #define RBTREE(name)            gcleak_byaddr_##name
 #define RBTREE_T                struct leak_footer
-#define RBTREE_Tkey             char *
+#define RBTREE_Tkey             byte_t *
 #define RBTREE_GETLHS(self)     (self)->lf_prev
 #define RBTREE_GETRHS(self)     (self)->lf_next
 #define RBTREE_SETLHS(self, v)  (void)((self)->lf_prev = (v))
 #define RBTREE_SETRHS(self, v)  (void)((self)->lf_next = (v))
-#define RBTREE_GETMINKEY(self)  ((char *)(self)->lf_chunk)
-#define RBTREE_GETMAXKEY(self)  ((char *)(self)->lf_chunk + fast_usable_size((self)->lf_chunk) - 1)
+#define RBTREE_GETMINKEY(self)  ((byte_t *)(self)->lf_chunk)
+#define RBTREE_GETMAXKEY(self)  ((byte_t *)(self)->lf_chunk + fast_usable_size((self)->lf_chunk) - 1)
 #define RBTREE_REDFIELD         lf_gcflags
 #define RBTREE_REDBIT           LEAK_FOOTER_GCFLAG_RED
 #define RBTREE_CC               DFCALL
@@ -6897,23 +7894,23 @@ PRIVATE void DCALL gcmove__leaks__into__gcleak_byaddr_tree(void) {
 		next = iter->lf_next;
 		iter->lf_gcflags = LEAK_FOOTER_GCFLAG_NORMAL; /* Reset visibility flags */
 		gcleak_byaddr_insert(&gcleak_byaddr_tree, iter);
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 		if (leak_footer_isregion(iter)) {
 			struct region_leak_footer *footer = leak_footer_asregion(iter);
 			region_leak_footer_clearreachable(footer);
 		}
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	}
 	leaks.lf_next = &leaks;
 	leaks.lf_prev = &leaks;
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	if (region_leak_mlist) {
 		struct Dee_heapregion *region = region_leak_mlist;
 		do {
 			Dee_heapregion_cleargcflags(region);
 		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
 	}
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 }
 
 
@@ -6928,7 +7925,7 @@ PRIVATE void DFCALL gcscan__range(void const *base, size_t num_bytes) {
 	size_t i, num_words;
 	if (!IS_ALIGNED((uintptr_t)base, sizeof(void *))) {
 		size_t miss = sizeof(void *) - ((uintptr_t)base & (sizeof(void *) - 1));
-		base = (char *)base + miss;
+		base = (byte_t *)base + miss;
 		if (miss >= num_bytes)
 			return;
 		num_bytes -= miss;
@@ -6939,40 +7936,40 @@ PRIVATE void DFCALL gcscan__range(void const *base, size_t num_bytes) {
 		void const *pointer = atomic_read(p_pointer);
 		if (leak_addrok(pointer)) {
 			struct leak_footer *leak;
-			leak = gcleak_byaddr_locate(gcleak_byaddr_tree, (char *)pointer);
+			leak = gcleak_byaddr_locate(gcleak_byaddr_tree, (byte_t *)pointer);
 			if (leak) {
 				GCSCAN_LOGF("%s(%d) : HIT @%p -> %p (in %p-%p)\n",
 				            leak->lf_file, leak->lf_line, p_pointer, pointer,
-				            (char *)leak->lf_chunk,
-				            (char *)leak->lf_chunk + fast_usable_size(leak->lf_chunk) - 1);
+				            (byte_t *)leak->lf_chunk,
+				            (byte_t *)leak->lf_chunk + fast_usable_size(leak->lf_chunk) - 1);
 				leak->lf_gcflags |= LEAK_FOOTER_GCFLAG_REACH;
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 				if (leak_footer_isregion(leak)) {
 					struct region_leak_footer *footer = leak_footer_asregion(leak);
 					struct Dee_heapregion *region = region_leak_footer_getregion(footer);
-					char *umin = Dee_heapregion_getuminaddr(region);
-					if likely((char *)pointer >= umin) {
-						size_t uoffset = (size_t)((char *)pointer - umin);
+					byte_t *umin = Dee_heapregion_getuminaddr(region);
+					if likely((byte_t *)pointer >= umin) {
+						size_t uoffset = (size_t)((byte_t *)pointer - umin);
 						size_t uword = uoffset / sizeof(void *);
 						size_t words = Dee_heapregion_getuwordcount(region);
 						if likely(uword < words)
 							region_leak_footer_setreachable(footer, uword);
 					}
 				}
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 			}
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 			if (region_leak_mlist) {
 				struct Dee_heapregion *region = region_leak_mlist;
 				do {
-					if ((char *)pointer > ((char *)region) &&
-					    (char *)pointer < ((char *)region + region->hr_size)) {
+					if ((byte_t *)pointer > ((byte_t *)region) &&
+					    (byte_t *)pointer < ((byte_t *)region + region->hr_size)) {
 						Dee_heapregion_set_gc_reachable(region);
 						break;
 					}
 				} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
 			}
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 		}
 	}
 }
@@ -7281,7 +8278,7 @@ again:
 		root->lf_gcflags |= LEAK_FOOTER_GCFLAG_SCANNED;
 		/* XXX: This read may return an invalid pointer if another thread just did a dlrealloc(chunk)! */
 		chunk = atomic_read(&root->lf_chunk);
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 		if (leak_footer_isregion(root)) {
 			/* Use reachable bits associated with "hc_prevsize" and
 			 * "hc_head" of  payload chunks as GC control bits:
@@ -7293,10 +8290,10 @@ again:
 			struct Dee_heapchunk *end = Dee_heapregion_getend(region);
 			struct Dee_heapchunk *iter;
 			bool has_unreachable_chunk = false;
-			ASSERT((char *)start == Dee_heapregion_getuminaddr(region));
+			ASSERT((byte_t *)start == Dee_heapregion_getuminaddr(region));
 			for (iter = start; iter < end; iter = Dee_heapchunk_getnext(iter)) {
-				size_t offset = (size_t)((char *)iter - (char *)start);
-				size_t chunk_size = iter->hc_head & ~7;
+				size_t offset = (size_t)((byte_t *)iter - (byte_t *)start);
+				size_t chunk_size = iter->hc_head & ~FLAG_BITS;
 				size_t chunk_head_word = offset / sizeof(void *);
 				size_t chunk_body_word = chunk_head_word + (sizeof(struct Dee_heapchunk) / sizeof(void *));
 				size_t chunk_tail_word = chunk_head_word + (chunk_size / sizeof(void *));
@@ -7318,7 +8315,7 @@ again:
 				}
 				if (!region_leak_footer_getreachable(footer, chunk_head_word + 1)) {
 					/* Visit payload area now */
-					char *payload_start = (char *)start + (chunk_body_word * sizeof(void *));
+					byte_t *payload_start = (byte_t *)start + (chunk_body_word * sizeof(void *));
 					size_t payload_size = chunk_size - sizeof(struct Dee_heapchunk);
 					region_leak_footer_setreachable(footer, chunk_head_word + 1);
 					gcscan__range(payload_start, payload_size);
@@ -7328,12 +8325,12 @@ again:
 			if (has_unreachable_chunk) /* Keep checking if there are unscanned parts... */
 				root->lf_gcflags &= ~LEAK_FOOTER_GCFLAG_SCANNED;
 		} else
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 		{
 			GCSCAN_LOGF("%s(%d) : Scan %p-%p\n", root->lf_file, root->lf_line,
-			            chunk, (char *)chunk + fast_usable_size(chunk) - 1);
+			            chunk, (byte_t *)chunk + fast_usable_size(chunk) - 1);
 			gcscan__range(chunk, fast_usable_size(chunk));
-			GCSCAN_LOGF("Scan end %p-%p\n", chunk, (char *)chunk + fast_usable_size(chunk) - 1);
+			GCSCAN_LOGF("Scan end %p-%p\n", chunk, (byte_t *)chunk + fast_usable_size(chunk) - 1);
 			result = true;
 		}
 	}
@@ -7354,7 +8351,7 @@ PRIVATE bool DCALL gcscan__visit__reachable(void) {
 	bool result = false;
 	if (gcleak_byaddr_tree)
 		result = gcscan__visit__reachable_at(gcleak_byaddr_tree);
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	if (region_leak_mlist) {
 		struct Dee_heapregion *region = region_leak_mlist;
 		do {
@@ -7367,7 +8364,7 @@ PRIVATE bool DCALL gcscan__visit__reachable(void) {
 			}
 		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
 	}
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	return result;
 }
 
@@ -7422,7 +8419,7 @@ again:
 		void const *pointer = atomic_read(p_pointer);
 		if (leak_addrok(pointer)) {
 			struct leak_footer *leak;
-			leak = gcleak_byaddr_locate(gcleak_byaddr_nreach_tree, (char *)pointer);
+			leak = gcleak_byaddr_locate(gcleak_byaddr_nreach_tree, (byte_t *)pointer);
 			if (leak && (leak->lf_gcflags & LEAK_FOOTER_GCFLAG_HITMASK) != LEAK_FOOTER_GCFLAG_HITMASK)
 				leak->lf_gcflags += LEAK_FOOTER_GCFLAG_ONEHIT;
 		}
@@ -7527,18 +8524,18 @@ PRIVATE size_t DCALL gcdump__byhit(void) {
 		} while ((iter = gcleak_byhit_nextnode(gcleak_byhit_tree, iter)) != NULL);
 	}
 
-#if HAVE_DBG_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	if (region_leak_mlist) {
 		struct Dee_heapregion *region = region_leak_mlist;
 		do {
 			if (!Dee_heapregion_get_gc_reachable(region)) {
 				result += region->hr_size;
 				Dee_DPRINTF("? : ? : Leaked %" PRFuSIZ " bytes from a custom 'Dee_heapregion': %p-%p\n",
-				            region->hr_size, (char *)region, (char *)region + region->hr_size - 1);
+				            region->hr_size, (byte_t *)region, (byte_t *)region + region->hr_size - 1);
 			}
 		} while ((region = Dee_heapregion_getnext_opt(region)) != NULL);
 	}
-#endif /* HAVE_DBG_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	return result;
 }
 
@@ -7696,7 +8693,7 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 #elif __has_builtin(__builtin_trap)
 		__builtin_trap();
 #else /* ... */
-		char volatile *volatile P = (char volatile *)0;
+		byte_t volatile *volatile P = (byte_t volatile *)0;
 		*P = 'B';
 #endif /* !... */
 	}
@@ -7768,18 +8765,18 @@ PUBLIC ATTR_HOT void
 	p = mem2chunk(ptr);
 
 	/* Special handling required for flag4 memory */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 	if unlikely(flag4inuse(p)) {
-#if HAVE_DBG_HEAP_REGION
-		leaks_lock_acquire_and_reap(); /* Acquire+reap required for "DeeDbgHeap_DelHeapRegion_locked()" */
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
+		leaks_lock_acquire_and_reap(); /* Acquire+reap required for "dl_dbg_heapregion_dispose()" */
 		dlfree(ptr);
 		leaks_lock_release();
-#else /* HAVE_DBG_HEAP_REGION */
+#else /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 		dlfree(ptr);
-#endif /* !HAVE_DBG_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 		return;
 	}
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 
 	p_foot = chunk_p_foot(p);
 	leak = *(struct leak_footer **)p_foot;
@@ -7839,24 +8836,24 @@ PUBLIC ATTR_HOT WUNUSED void *
 	p = mem2chunk(ptr);
 
 	/* Special handling required for flag4 memory */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 	if unlikely(flag4inuse(p)) {
 		/* Muse use "DeeDbg_TryMalloc()" so the new chunk gets a "struct leak_footer" */
 		result = DeeDbg_TryMalloc(n_bytes, file, line);
 		if likely(result) {
 			size_t oc = chunksize(p) - overhead_for(p);
 			result = memcpy(result, ptr, (oc < n_bytes) ? oc : n_bytes);
-#if HAVE_DBG_HEAP_REGION
-			leaks_lock_acquire_and_reap(); /* Acquire+reap required for "DeeDbgHeap_DelHeapRegion_locked()" */
+#if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
+			leaks_lock_acquire_and_reap(); /* Acquire+reap required for "dl_dbg_heapregion_dispose()" */
 			dlfree(ptr);
 			leaks_lock_release();
-#else /* HAVE_DBG_HEAP_REGION */
+#else /* FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 			dlfree(ptr);
-#endif /* !HAVE_DBG_HEAP_REGION */
+#endif /* !FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 		}
 		return result;
 	}
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 
 	p_foot = chunk_p_foot(p);
 	leak = *(struct leak_footer **)p_foot;
@@ -7910,10 +8907,10 @@ PUBLIC WUNUSED void *
 	p = mem2chunk(ptr);
 
 	/* Special handling required for flag4 memory */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 	if unlikely(flag4inuse(p))
 		return NULL; /* Cannot be done */
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 
 	p_foot = chunk_p_foot(p);
 	leak = *(struct leak_footer **)p_foot;
@@ -7955,12 +8952,12 @@ PUBLIC void *
 	p = mem2chunk(ptr);
 
 	/* Special handling required for flag4 memory */
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 	if unlikely(flag4inuse(p)) {
 		fatal("Dee_UntrackAlloc(ptr)", file, line,
 		      "%p: Not allowed to untrack FLAG4 memory", ptr);
 	}
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 
 	p_foot = chunk_p_foot(p);
 	leak = *(struct leak_footer **)p_foot;
@@ -8029,10 +9026,10 @@ struct leaknode {
 DECL_END
 #define RBTREE(name)            leaknode_tree_##name
 #define RBTREE_T                struct leaknode
-#define RBTREE_Tkey             char *
+#define RBTREE_Tkey             byte_t *
 #define RBTREE_GETNODE(self)    (self)->ln_link.ln_node
-#define RBTREE_GETMINKEY(self)  ((char *)(self)->ln_chunk)
-#define RBTREE_GETMAXKEY(self)  ((char *)(self)->ln_chunk + chunksize((self)->ln_chunk) - 1)
+#define RBTREE_GETMINKEY(self)  ((byte_t *)(self)->ln_chunk)
+#define RBTREE_GETMAXKEY(self)  ((byte_t *)(self)->ln_chunk + chunksize((self)->ln_chunk) - 1)
 #define RBTREE_REDFIELD         ln_flags
 #define RBTREE_REDBIT           LEAKNODE_F_RED
 #define RBTREE_CC               DFCALL
@@ -8047,20 +9044,14 @@ DECL_BEGIN
  * at application exit. */
 PRIVATE LLRBTREE_ROOT(leaknode) leak_nodes = NULL;
 #if USE_LOCKS
-PRIVATE Dee_atomic_lock_t leak_lock = Dee_ATOMIC_LOCK_INIT;
-#define leak_lock_available()  Dee_atomic_lock_available(&leak_lock)
-#define leak_lock_acquired()   Dee_atomic_lock_acquired(&leak_lock)
-#define leak_lock_tryacquire() Dee_atomic_lock_tryacquire(&leak_lock)
-#define leak_lock_acquire()    Dee_atomic_lock_acquire(&leak_lock)
-#define leak_lock_waitfor()    Dee_atomic_lock_waitfor(&leak_lock)
-#define _leak_lock_release()   Dee_atomic_lock_release(&leak_lock)
-#define leak_lock_release()    Dee_atomic_lock_release(&leak_lock)
+PRIVATE DL_LOCK_T leak_lock = DL_LOCK_INIT_STATIC;
+#define leak_lock_tryacquire() DL_LOCK_TRYACQUIRE(&leak_lock)
+#define leak_lock_acquire()    DL_LOCK_ACQUIRE(&leak_lock)
+#define _leak_lock_release()   DL_LOCK_RELEASE(&leak_lock)
+#define leak_lock_release()    DL_LOCK_RELEASE(&leak_lock)
 #else /* USE_LOCKS */
-#define leak_lock_available()  1
-#define leak_lock_acquired()   1
 #define leak_lock_tryacquire() 1
 #define leak_lock_acquire()    (void)0
-#define leak_lock_waitfor()    (void)0
 #define _leak_lock_release()   (void)0
 #define leak_lock_release()    (void)0
 #endif /* !USE_LOCKS */
@@ -8111,7 +9102,7 @@ _leaks_pending_reap_and_unlock(void) {
 		char const *file = ptr->lfle_file;
 		int line = ptr->lfle_line;
 		SLIST_REMOVE_HEAD(&remove, lfle_link);
-		node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
+		node = leaknode_tree_remove(&leak_nodes, (byte_t *)ptr);
 		if unlikely(node && (void *)ptr != chunk2mem(node->ln_chunk)) {
 			/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
 			leaknode_tree_insert(&leak_nodes, node);
@@ -8146,7 +9137,7 @@ _leaks_pending_reap_and_unlock(void) {
 				_DeeAssert_Failf("Dee_Free(ptr)", file, line,
 				                 "Bad pointer %p does not map to start of node at %p-%p",
 				                 ptr, chunk2mem(node->ln_chunk),
-				                 (char *)chunk2mem(node->ln_chunk) +
+				                 (byte_t *)chunk2mem(node->ln_chunk) +
 				                 (chunksize(node->ln_chunk) - overhead_for(node->ln_chunk) - 1));
 				Dee_BREAKPOINT();
 			}
@@ -8205,7 +9196,7 @@ dump_leaks_node(struct leaknode *__restrict self) {
 	size_t result = 0;
 again:
 	if (!(self->ln_flags & LEAKNODE_F_NOLEAK)) {
-		char *base = (char *)(chunk2mem(self->ln_chunk));
+		byte_t *base = (byte_t *)chunk2mem(self->ln_chunk);
 		size_t size = chunksize(self->ln_chunk) - overhead_for(self->ln_chunk);
 		Dee_DPRINTF("%s(%d) : %" PRFuSIZ " : Leaked %" PRFuSIZ " bytes of memory: %p-%p\n",
 		            self->ln_file, self->ln_line, self->ln_id, size, base, base + size - 1);
@@ -8360,7 +9351,7 @@ handle_leak_lock_blocking:
 #else /* USE_PENDING_FREE_LIST */
 	leak_lock_acquire();
 #endif /* !USE_PENDING_FREE_LIST */
-	node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
+	node = leaknode_tree_remove(&leak_nodes, (byte_t *)ptr);
 	if unlikely(node && ptr != chunk2mem(node->ln_chunk)) {
 		/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
 		leaknode_tree_insert(&leak_nodes, node);
@@ -8381,7 +9372,7 @@ handle_leak_lock_blocking:
 			_DeeAssert_Failf("Dee_Free(ptr)", file, line,
 			                 "Bad pointer %p does not map to start of node at %p-%p",
 			                 ptr, chunk2mem(node->ln_chunk),
-			                 (char *)chunk2mem(node->ln_chunk) +
+			                 (byte_t *)chunk2mem(node->ln_chunk) +
 			                 (chunksize(node->ln_chunk) - overhead_for(node->ln_chunk) - 1));
 			Dee_BREAKPOINT();
 		}
@@ -8451,7 +9442,7 @@ handle_leak_lock_blocking:
 #else /* USE_PENDING_FREE_LIST */
 	leak_lock_acquire();
 #endif /* !USE_PENDING_FREE_LIST */
-	node = leaknode_tree_remove(&leak_nodes, (char *)ptr);
+	node = leaknode_tree_remove(&leak_nodes, (byte_t *)ptr);
 	if unlikely(node && ptr != chunk2mem(node->ln_chunk)) {
 		/* This can happen if "ptr" is a custom flag4 sub-region of a bigger heap region */
 		leaknode_tree_insert(&leak_nodes, node);
@@ -8482,7 +9473,7 @@ handle_leak_lock_blocking:
 			_DeeAssert_Failf("Dee_Realloc(ptr)", file, line,
 			                 "Bad pointer %p does not map to start of node at %p-%p",
 			                 ptr, chunk2mem(node->ln_chunk),
-			                 (char *)chunk2mem(node->ln_chunk) +
+			                 (byte_t *)chunk2mem(node->ln_chunk) +
 			                 (chunksize(node->ln_chunk) - overhead_for(node->ln_chunk) - 1));
 			Dee_BREAKPOINT();
 		}
@@ -8529,7 +9520,7 @@ PUBLIC void *
 	if (ptr) {
 		struct leaknode *node;
 		leak_lock_acquire_and_reap();
-		node = leaknode_tree_locate(leak_nodes, (char *)ptr);
+		node = leaknode_tree_locate(leak_nodes, (byte_t *)ptr);
 		if (!node) {
 			_DeeAssert_Failf("Dee_UntrackAlloc(ptr)", file, line,
 			                 "Bad pointer %p does not map to any node");
@@ -8538,7 +9529,7 @@ PUBLIC void *
 			_DeeAssert_Failf("Dee_UntrackAlloc(ptr)", file, line,
 			                 "Bad pointer %p does not map to start of node at %p-%p",
 			                 ptr, chunk2mem(node->ln_chunk),
-			                 (char *)chunk2mem(node->ln_chunk) +
+			                 (byte_t *)chunk2mem(node->ln_chunk) +
 			                 (chunksize(node->ln_chunk) - overhead_for(node->ln_chunk) - 1));
 			Dee_BREAKPOINT();
 		} else {
@@ -8576,10 +9567,10 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED ATTR_ALLOC_SIZE((1)) void *
 #define Dee_Free_DEFINED
 PUBLIC ATTR_HOT void
 (DCALL Dee_Free)(void *ptr) {
-#if !DLFREE_CHECKS_NULL
+#if !dlfree_CHECKS_NULL
 	if unlikely(!ptr)
 		return;
-#endif /* !DLFREE_CHECKS_NULL */
+#endif /* !dlfree_CHECKS_NULL */
 	dlfree(ptr);
 }
 #endif /* !Dee_Free_DEFINED */
@@ -8588,10 +9579,10 @@ PUBLIC ATTR_HOT void
 #define Dee_TryRealloc_DEFINED
 PUBLIC ATTR_HOT WUNUSED void *
 (DCALL Dee_TryRealloc)(void *ptr, size_t n_bytes) {
-#if !DLFREE_CHECKS_NULL
+#if !dlfree_CHECKS_NULL
 	if unlikely(!ptr)
 		return dlmalloc(n_bytes);
-#endif /* !DLFREE_CHECKS_NULL */
+#endif /* !dlfree_CHECKS_NULL */
 	return dlrealloc(ptr, n_bytes);
 }
 #endif /* !Dee_TryRealloc_DEFINED */
@@ -8625,7 +9616,7 @@ PUBLIC ATTR_HOT ATTR_MALLOC WUNUSED ATTR_ALLOC_ALIGN(1) ATTR_ALLOC_SIZE((2)) voi
  * @return: NULL: Given `ptr' is `NULL' or does not belong to a custom heap region */
 PUBLIC ATTR_PURE WUNUSED struct Dee_heapregion *DCALL
 DeeHeap_GetRegionOf(void *ptr) {
-#if FLAG4_BIT_INDICATES_HEAP_REGION
+#if FLAG4_BIT_HEAP_REGION
 	struct Dee_heapregion *result = NULL;
 #ifndef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #ifdef IS_SLAB_POINTER
@@ -8643,7 +9634,7 @@ DeeHeap_GetRegionOf(void *ptr) {
 			}
 			result = COMPILER_CONTAINER_OF((struct Dee_heapchunk *)p,
 			                               struct Dee_heapregion, hr_first);
-			ext_assert(result->hr_size >= (size_t)((char *)mem2chunk(ptr) - (char *)result));
+			ext_assert(result->hr_size >= (size_t)((byte_t *)mem2chunk(ptr) - (byte_t *)result));
 		} else {
 #if DL_DEBUG_INTERNAL
 #if FOOTERS && !GM_ONLY
@@ -8660,10 +9651,10 @@ DeeHeap_GetRegionOf(void *ptr) {
 		}
 	}
 	return result;
-#else /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#else /* FLAG4_BIT_HEAP_REGION */
 	(void)ptr;
 	return NULL;
-#endif /* FLAG4_BIT_INDICATES_HEAP_REGION */
+#endif /* FLAG4_BIT_HEAP_REGION */
 }
 
 #if DL_DEBUG_EXTERNAL
@@ -8740,10 +9731,10 @@ PUBLIC ATTR_HOT_NDEBUG WUNUSED void *
 #ifdef DeeDbg_TryRealloc_DEFINED
 	return (DeeDbg_TryRealloc)(ptr, n_bytes, NULL, 0);
 #else /* DeeDbg_TryRealloc_DEFINED */
-#if !DLFREE_CHECKS_NULL
+#if !dlfree_CHECKS_NULL
 	if unlikely(!ptr)
 		return dlmalloc(n_bytes);
-#endif /* !DLFREE_CHECKS_NULL */
+#endif /* !dlfree_CHECKS_NULL */
 	return dlrealloc(ptr, n_bytes);
 #endif /* !DeeDbg_TryRealloc_DEFINED */
 }
@@ -9720,7 +10711,7 @@ typedef struct _CrtMemBlockHeader {
 	unsigned char              gap[nNoMansLandSize];
 } _CrtMemBlockHeader;
 
-#define pbData(pblock) ((unsigned char *)((_CrtMemBlockHeader *)pblock + 1))
+#define pbData(pblock) ((byte_t *)((_CrtMemBlockHeader *)pblock + 1))
 #define pHdr(pbData)   (((_CrtMemBlockHeader *)pbData) - 1)
 
 #define IGNORE_REQ  0L              /* Request number for ignore block */

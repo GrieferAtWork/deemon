@@ -29,8 +29,12 @@
 #define __SIZEOF_ATOMIC_RWLOCK __SIZEOF_HYBRID_ATOMIC_RWLOCK
 
 #if defined(__CC__) || defined(__DEEMON__)
-/*!export atomic_rwlock*/
-#define __hybrid_atomic_rwlock           atomic_rwlock /*!export-*/
+#ifdef __GUARD_HYBRID_SCHED___ATOMIC_RWLOCK_H
+#define atomic_rwlock __hybrid_atomic_rwlock /*!export*/
+#else /* __GUARD_HYBRID_SCHED___ATOMIC_RWLOCK_H */
+#define __hybrid_atomic_rwlock atomic_rwlock /*!export-*/
+#endif /* !__GUARD_HYBRID_SCHED___ATOMIC_RWLOCK_H */
+
 #define ATOMIC_RWLOCK_MAX_READERS        __HYBRID_ATOMIC_RWLOCK_MAX_READERS
 #define ATOMIC_RWLOCK_INIT               __HYBRID_ATOMIC_RWLOCK_INIT
 #define ATOMIC_RWLOCK_INIT_READ          __HYBRID_ATOMIC_RWLOCK_INIT_READ
