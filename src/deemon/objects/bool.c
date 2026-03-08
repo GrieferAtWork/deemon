@@ -35,8 +35,8 @@
 #include <deemon/util/atomic.h>        /* atomic_orfetch */
 
 #include <hybrid/align.h>    /* IS_ALIGNED */
+#include <hybrid/host.h>     /* __pic__ */
 #include <hybrid/typecore.h> /* __SIZEOF_INT__ */
-#include <hybrid/host.h> /* __SIZEOF_INT__ */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

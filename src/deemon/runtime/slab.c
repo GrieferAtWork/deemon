@@ -32,13 +32,13 @@ ClCompile.BasicRuntimeChecks = Default
 #if defined(CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR) || defined(__DEEMON__)
 
 /* Implementation configuration */
-#if !defined(NDEBUG) && 0
+#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 0
 #define SLAB_DEBUG_INTERNAL 1
 #else
 #define SLAB_DEBUG_INTERNAL 0
 #endif
 
-#if !defined(NDEBUG) && 1
+#if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 1
 #define SLAB_DEBUG_EXTERNAL 1
 #else
 #define SLAB_DEBUG_EXTERNAL 0
@@ -149,6 +149,7 @@ STATIC_ASSERT_MSG(Dee_SLAB_PAGESIZE >= (SIZEOF_bitword_t + Dee_SLAB_CHUNKSIZE_MA
                   "max-sized slab chunk when accounting for metadata");
 STATIC_ASSERT(DeeSlab_EXISTS(Dee_SLAB_CHUNKSIZE_MIN));
 STATIC_ASSERT(DeeSlab_EXISTS(Dee_SLAB_CHUNKSIZE_MAX));
+STATIC_ASSERT(Dee_SIZEOF_SLAB_PAGE_META == sizeof(((struct Dee_slab_page *)0)->sp_meta));
 
 /* Assert that all GC slabs exist when adjust for their actual size */
 #define LOCAL_ASSERT_GC_SLAB_EXISTS(n, _) \
@@ -200,24 +201,27 @@ PRIVATE void DCALL slab_chkfree_data(void const *p, size_t n) {
 
 /* Debug debug versions of slab allocator functions */
 #if !SLAB_DEBUG_LEAKS
-#define dbg_slab__attach(p, n, file, line) (p) /* Attach debug info and either free, */
-#define dbg_slab__detach(p, n, file, line) (p)
+#define dbg_slab__attach(p, n, i, file, line) (p) /* Attach debug info and either free, */
+#define dbg_slab__detach(p, n, i, file, line) (p)
 #else /* !SLAB_DEBUG_LEAKS */
 PRIVATE WUNUSED NONNULL((1)) void *DCALL
-dbg_slab__attach(void *__restrict p, size_t n, char const *file, int line) {
+dbg_slab__attach(void *__restrict p, size_t n, size_t i, char const *file, int line) {
 	/* TODO: Attach debug info (for leaks and such...)
 	 * On error, can free "p" which is guarantied to
 	 * be an "n"-byte large slab, then return "NULL" */
 	(void)n;
+	(void)i; /* index-of-"p"-in-page */
 	(void)file;
 	(void)line;
 	return p;
 }
+
 PRIVATE ATTR_RETNONNULL NONNULL((1)) void *DCALL
-dbg_slab__detach(void *p, size_t n, char const *file, int line) {
+dbg_slab__detach(void *p, size_t n, size_t i, char const *file, int line) {
 	/* TODO: Free debug info if it exists for "p" (which is an "n"-byte large slab)
 	 * NOTE: Debug info might not exist when "p" is part of a custom slab page. */
 	(void)n;
+	(void)i; /* index-of-"p"-in-page */
 	(void)file;
 	(void)line;
 	return p;
@@ -277,14 +281,7 @@ LOCAL void *gc_initob(void *ptr) {
 	}                                                                               \
 	PUBLIC void *DCALL                                                              \
 	DeeDbgGCSlab_UntrackAlloc##n(void *p, char const *file, int line) {             \
-		(void)file;                                                                 \
-		(void)line;                                                                 \
-		if likely(p) {                                                              \
-			(void)dbg_slab__detach(DeeGC_Head((DeeObject *)p),                      \
-			                       n + Dee_GC_OBJECT_OFFSET,                        \
-			                       file, line);                                     \
-		}                                                                           \
-		return p;                                                                   \
+		return call_gc_slab(n, DeeDbgSlab_UntrackAlloc, (p, file, line));           \
 	}                                                                               \
 	PUBLIC NONNULL((1)) void DCALL                                                  \
 	DeeDbgGCSlab_Free##n(void *__restrict p, char const *file, int line) {          \
@@ -1075,6 +1072,33 @@ INTERN void DCALL DeeSlab_CheckMemory(void) {
 		check_slab(&slab_specs[i]);
 #endif /* SLAB_DEBUG_EXTERNAL */
 }
+
+/* One-time, static test-code to demonstrate that a
+ * 4-word metadata footer doesn't change anything */
+#if defined(__INTELLISENSE__) && 0
+#define EX_Dee_SIZEOF_SLAB_PAGE_META(ms)  (ms) /* `sizeof(struct Dee_slab_page::sp_meta)' */
+#define EX_Dee_OFFSET_SLAB_PAGE_META(ms)  (Dee_SLAB_PAGESIZE - EX_Dee_SIZEOF_SLAB_PAGE_META(ms))
+#define EX__UPPER__MAX_CHUNK_COUNT(ms, n) (EX_Dee_OFFSET_SLAB_PAGE_META(ms) / n)
+#define EX__UPPER_ELEMOF__sp_used(ms, n)  CEILDIV(EX__UPPER__MAX_CHUNK_COUNT(ms, n), BITSOF_bitword_t)
+#define EX__UPPER_SIZEOF__sp_used(ms, n)  (EX__UPPER_ELEMOF__sp_used(ms, n) * SIZEOF_bitword_t)
+#define EX__LOWER_SIZEOF__sp_data(ms, n)  (EX_Dee_OFFSET_SLAB_PAGE_META(ms) - EX__UPPER_SIZEOF__sp_used(ms, n))
+#define EX__LOWER__MAX_CHUNK_COUNT(ms, n) (EX__LOWER_SIZEOF__sp_data(ms, n) / n)
+#define EX__LOWER_ELEMOF__sp_used(ms, n)  CEILDIV(EX__LOWER__MAX_CHUNK_COUNT(ms, n), BITSOF_bitword_t)
+#define EX__LOWER_SIZEOF__sp_used(ms, n)  (EX__LOWER_ELEMOF__sp_used(ms, n) * SIZEOF_bitword_t)
+#define EX__LOWER_BITSOF__sp_used(ms, n)  (EX__LOWER_ELEMOF__sp_used(ms, n) * BITSOF_bitword_t)
+#define EX__FINAL_SIZEOF__sp_data(ms, n)  (EX_Dee_OFFSET_SLAB_PAGE_META(ms) - EX__LOWER_SIZEOF__sp_used(ms, n))
+#define EX__MAX_CHUNK_COUNT(ms, n)        (EX__FINAL_SIZEOF__sp_data(ms, n) / n)
+#define EX_MAX_CHUNK_COUNT(ms, n)         (EX__MAX_CHUNK_COUNT(ms, n) > EX__LOWER_BITSOF__sp_used(ms, n) ? EX__LOWER_BITSOF__sp_used(ms, n) : EX__MAX_CHUNK_COUNT(ms, n))
+
+#define C_MAX_CHUNK_COUNT_3WORD(n) EX_MAX_CHUNK_COUNT(3 * __SIZEOF_POINTER__, n)
+#define C_MAX_CHUNK_COUNT_4WORD(n) EX_MAX_CHUNK_COUNT(4 * __SIZEOF_POINTER__, n)
+
+#define ASSERT_SLAB_SIZES_UNCHANGED(n, _) \
+	STATIC_ASSERT_MSG(C_MAX_CHUNK_COUNT_4WORD(n) == C_MAX_CHUNK_COUNT_3WORD(n), "changed for size " #n);
+Dee_SLAB_CHUNKSIZE_FOREACH(ASSERT_SLAB_SIZES_UNCHANGED, ~)
+#undef ASSERT_SLAB_SIZES_UNCHANGED
+#endif /* __INTELLISENSE__ */
+
 
 
 DECL_END

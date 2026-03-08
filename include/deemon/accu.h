@@ -36,7 +36,7 @@
 #include <stdint.h> /* int64_t, uintptr_t */
 
 #ifndef CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS
-#include "tuple.h"  /* Dee_tuple_builder */
+#include "tuple.h" /* Dee_tuple_builder */
 #endif /* !CONFIG_EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 DECL_BEGIN

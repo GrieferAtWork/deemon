@@ -28,7 +28,7 @@
 #include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX, Dee_SLAB_CHUNKSIZE_MIN */
-#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS */
+#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS, Dee_slab_page_isnormal */
 
 #include <hybrid/align.h>         /* CEILDIV */
 #include <hybrid/bit.h>           /* CTZ */
@@ -457,8 +457,26 @@ LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
 	(void)file;
 	(void)line;
 #if SLAB_DEBUG_LEAKS
-	if likely(p != NULL)
-		p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, file, line);
+	if likely(p != NULL) {
+		struct LOCAL_slab_page *page = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
+		size_t offset = (size_t)((byte_t *)p - (byte_t *)page->sp_data);
+		size_t index = offset / DEFINE_CHUNK_SIZE;
+#if SLAB_DEBUG_EXTERNAL
+		size_t bit_indx = index / BITSOF_bitword_t;
+		bitword_t bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
+		if unlikely((offset % DEFINE_CHUNK_SIZE) != 0) {
+			_DeeAssert_XFailf(PP_STR(LOCAL_DeeDbgSlab_UntrackAlloc) "(p)", file, line,
+			                  "Badly aligned slab pointer: %p", p);
+		}
+		if unlikely((atomic_read(&page->sp_used[bit_indx]) & bit_mask) == 0) {
+			_DeeAssert_XFailf(PP_STR(LOCAL_DeeDbgSlab_UntrackAlloc) "(p)", file, line,
+			                  "Pointer not allocated: %p", p);
+		}
+#endif /* SLAB_DEBUG_EXTERNAL */
+		/* Detach debug info from normal slab pages. */
+		if (Dee_slab_page_isnormal(page))
+			p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, index, file, line);
+	}
 #endif /* SLAB_DEBUG_LEAKS */
 	return p;
 }

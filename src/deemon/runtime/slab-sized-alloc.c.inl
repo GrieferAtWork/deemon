@@ -135,9 +135,13 @@ again_locked:
 done:
 	slab_setalloc_data(result, DEFINE_CHUNK_SIZE);
 #ifdef LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT
-	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE, file, line);
+	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE,
+	                        (size_t)(((byte_t *)result - page->sp_data) / DEFINE_CHUNK_SIZE),
+	                        file, line);
 #else /* LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT */
-	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE, NULL, 0);
+	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE,
+	                        (size_t)(((byte_t *)result - page->sp_data) / DEFINE_CHUNK_SIZE),
+	                        NULL, 0);
 #endif /* !LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT */
 }
 

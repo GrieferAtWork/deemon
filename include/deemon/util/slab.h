@@ -27,6 +27,7 @@
 
 #ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
 #include <hybrid/host.h>          /* __ARCH_PAGESIZE */
+#include <hybrid/limitcore.h>     /* __INT_FAST16_MAX__, __INT_MAX__ */
 #include <hybrid/sequence/list.h> /* LIST_ENTRY */
 #include <hybrid/typecore.h>      /* __*_TYPE__, __SIZEOF_*__ */
 
@@ -308,7 +309,7 @@
 #endif /* !__ARCH_PAGESIZE_MIN */
 #endif /* !Dee_SLAB_PAGESIZE */
 
-#define Dee_SIZEOF_SLAB_PAGE_META (3 * __SIZEOF_POINTER__) /* `sizeof(struct Dee_slab_page_meta)' */
+#define Dee_SIZEOF_SLAB_PAGE_META (4 * __SIZEOF_POINTER__) /* `sizeof(struct Dee_slab_page::sp_meta)' */
 #define Dee_OFFSET_SLAB_PAGE_META (Dee_SLAB_PAGESIZE - Dee_SIZEOF_SLAB_PAGE_META)
 
 #ifdef __CC__
@@ -317,9 +318,9 @@ DECL_BEGIN
 /* Type-marker for slab pages with custom "c_free" functions */
 #define Dee_SLAB_PAGE_META_CUSTOM_MARKER ((void *)-1)
 
-#if __SIZEOF_INT_FAST16_T__ <= __SIZEOF_POINTER__
+#if __INT_FAST16_MAX__ >= Dee_SLAB_PAGESIZE && __SIZEOF_INT_FAST16_T__ <= __SIZEOF_POINTER__
 #define Dee_slab_page_builder_offset_t __UINT_FAST16_TYPE__
-#elif __SIZEOF_INT__ <= __SIZEOF_POINTER__
+#elif __INT_MAX__ >= Dee_SLAB_PAGESIZE && __SIZEOF_INT__ <= __SIZEOF_POINTER__
 #define Dee_slab_page_builder_offset_t unsigned int
 #else /* ... */
 #define Dee_slab_page_builder_offset_t __UINTPTR_TYPE__
@@ -331,6 +332,10 @@ struct Dee_slab_page_builder {
 };
 
 #define Dee_SLAB_PAGE_META_FIELDS(page_type)                                                         \
+	void   *spm_leak; /* [?..?] Used internally for tracking memory leaks. The presence of this      \
+	                   * field doesn't actually change the effective # of chunks fitting into any    \
+	                   * given page for any of the defined slab sizes (in both 32- and 64-bit mode), \
+	                   * when compared to this field missing and metadata being only 3 words. */     \
 	size_t  spm_used; /* [<= LOCAL__MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used" Must be  \
 	                   * holding "LOCAL_slab_lock" to change to/from 0/LOCAL__MAX_CHUNK_COUNT. */    \
 	union {                                                                                          \

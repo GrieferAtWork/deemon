@@ -40,17 +40,10 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 	size_t bit_indx;
 	bitword_t bit_mask;
 	size_t old__spm_used;
-#if SLAB_DEBUG_LEAKS
-#ifdef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
-	p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, file, line);
-#else /* LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
-	p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, NULL, 0);
-#endif /* !LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
-#endif /* SLAB_DEBUG_LEAKS */
 
 	/* Figure out the slab-context of "p" */
 	page     = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
-	offset   = (byte_t *)p - (byte_t *)&page->sp_data;
+	offset   = (size_t)((byte_t *)p - (byte_t *)page->sp_data);
 	index    = offset / DEFINE_CHUNK_SIZE;
 	bit_indx = index / BITSOF_bitword_t;
 	bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
@@ -71,6 +64,17 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 	        PP_STR(LOCAL_DeeSlab_Free) ": Pointer not allocated: %p", p);
 #endif /* !LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
 #endif /* SLAB_DEBUG_EXTERNAL */
+
+#if SLAB_DEBUG_LEAKS
+	/* Detach debug info from normal slab pages. */
+	if (Dee_slab_page_isnormal(page)) {
+#ifdef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
+		p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, index, file, line);
+#else /* LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
+		p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, index, NULL, 0);
+#endif /* !LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
+	}
+#endif /* SLAB_DEBUG_LEAKS */
 
 	/* Fill chunk with the free-memory pattern */
 #ifdef SLAB_DEBUG_MEMSET_FREE
