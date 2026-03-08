@@ -24,8 +24,8 @@ ClCompile.BasicRuntimeChecks = Default
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_RUNTIME_HEAP_API_C
-#define GUARD_DEEMON_RUNTIME_HEAP_API_C 1
+#ifndef GUARD_DEEMON_RUNTIME_HEAP_C
+#define GUARD_DEEMON_RUNTIME_HEAP_C 1
 
 #include <deemon/api.h>
 
@@ -566,7 +566,7 @@ STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), 
 /************************************************************************/
 
 DECL_END
-#include "heap.c.inl"
+#include "../../libdlmalloc/dlmalloc.c.inl"
 DECL_BEGIN
 
 
@@ -4750,4 +4750,4 @@ PUBLIC void *
 DECL_END
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 
-#endif /* !GUARD_DEEMON_RUNTIME_HEAP_API_C */
+#endif /* !GUARD_DEEMON_RUNTIME_HEAP_C */

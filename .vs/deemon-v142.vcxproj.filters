@@ -1434,9 +1434,6 @@
 		<ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
-		<ClInclude Include="..\src\deemon\runtime\heap.c.inl">
-			<Filter>src\runtime</Filter>
-		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
@@ -2066,7 +2063,7 @@
 		<ClCompile Include="..\src\deemon\runtime\hash.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\runtime\heap-api.c">
+		<ClCompile Include="..\src\deemon\runtime\heap.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c">

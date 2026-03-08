@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_LIBMALLOC_HEAP_C_INL
-#define GUARD_LIBMALLOC_HEAP_C_INL 1
+#ifndef GUARD_LIBDLMALLOC_DLMALLOC_C_INL
+#define GUARD_LIBDLMALLOC_DLMALLOC_C_INL 1
 
 /* Disable these attributes in here -- we must routinely write past the end
  * of our own allocations, because how else are we supposed to manage adjacent
@@ -34,6 +34,7 @@
 #undef ATTR_ALLOC_ALIGN
 #define ATTR_ALLOC_ALIGN(pari) /* Nothing */
 
+#include <hybrid/atomic.h>          /* ATOMIC_* */
 #include <hybrid/bit.h>             /* CLZ, CTZ */
 #include <hybrid/compiler.h>
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -43,7 +44,6 @@
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>   /* SLIST_* */
 #include <hybrid/typecore.h>        /* __ALIGNOF_MAX_ALIGN_T__, __BYTE_TYPE__, __CHAR_BIT__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C */
-#include <hybrid/atomic.h>        /* __ALIGNOF_MAX_ALIGN_T__, __BYTE_TYPE__, __CHAR_BIT__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C */
 
 #include <stddef.h> /* offsetof, size_t */
 #include <stdint.h> /* UINT32_C, UINT64_C, uintptr_t */
@@ -59,10 +59,10 @@
 #endif /* !__SIZE_C */
 #endif /* !SIZE_C */
 
-#undef container_of
-#define container_of COMPILER_CONTAINER_OF
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 DECL_BEGIN
 
@@ -6166,4 +6166,4 @@ DL_API_IMPL(, size_t, mspace_usable_size, (void const *mem)) {
 
 DECL_END
 
-#endif /* !GUARD_LIBMALLOC_HEAP_C_INL */
+#endif /* !GUARD_LIBDLMALLOC_DLMALLOC_C_INL */
