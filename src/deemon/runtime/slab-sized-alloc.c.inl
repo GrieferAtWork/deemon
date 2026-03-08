@@ -27,7 +27,7 @@
 
 #include <deemon/system-features.h> /* bzero */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
-#include <deemon/util/slab.h>       /* Dee_slab_page_* */
+#include <deemon/util/slab.h>       /* Dee_slab_page, Dee_slab_page_isnormal */
 
 #include <hybrid/sched/yield.h>   /* SCHED_YIELD */
 #include <hybrid/sequence/list.h> /* LIST_* */
@@ -53,9 +53,9 @@ DECL_BEGIN
 #endif /* !... */
 
 #ifdef LOCAL_IS_TRY_MALLOC
-#define LOCAL_Dee_slab_page_rawmalloc Dee_slab_page_rawtrymalloc
+#define LOCAL_dbg_slab_page_rawmalloc dbg_slab_page_rawtrymalloc
 #else /* LOCAL_IS_TRY_MALLOC */
-#define LOCAL_Dee_slab_page_rawmalloc Dee_slab_page_rawmalloc
+#define LOCAL_dbg_slab_page_rawmalloc dbg_slab_page_rawmalloc
 #endif /* !LOCAL_IS_TRY_MALLOC */
 
 LOCAL_DECL ATTR_MALLOC WUNUSED void *DCALL
@@ -91,6 +91,9 @@ again_locked:
 
 				/* Remove page from "LOCAL_slab_pages" */
 				LIST_REMOVE(page, sp_meta.spm_type.t_link);
+#if SLAB_TRACK_FULL_PAGES
+				LIST_INSERT_HEAD(&LOCAL_slab_fullpages, page, sp_meta.spm_type.t_link);
+#endif /* SLAB_TRACK_FULL_PAGES */
 				LOCAL_slab_lock_endwrite();
 				break;
 			} else if (atomic_cmpxch(&page->sp_meta.spm_used, old__spm_used, old__spm_used + 1)) {
@@ -114,7 +117,8 @@ again_locked:
 	LOCAL_slab_lock_endread();
 
 	/* Get a new page (global) */
-	page = (struct LOCAL_slab_page *)LOCAL_Dee_slab_page_rawmalloc();
+	page = (struct LOCAL_slab_page *)LOCAL_dbg_slab_page_rawmalloc(DEFINE_CHUNK_SIZE,
+	                                                               LOCAL_MAX_CHUNK_COUNT);
 	if unlikely(!page)
 		return NULL;
 	bzero(page->sp_used, sizeof(page->sp_used));
@@ -122,7 +126,10 @@ again_locked:
 	DBG_memset(page->_sp_pad, 0xcc, sizeof(page->_sp_pad));
 #endif /* LOCAL_SIZEOF__sp_pad != 0 */
 	slab_setfree_data(page->sp_data, sizeof(page->sp_data));
-	page->sp_used[0]       = 1;
+	page->sp_used[0] = 1;
+#if !SLAB_DEBUG_LEAKS
+	page->sp_meta.spm_leak = NULL; /* For binary compatibility with non-leaking builds */
+#endif /* !SLAB_DEBUG_LEAKS */
 	page->sp_meta.spm_used = 1;
 	result = page->sp_data;
 
@@ -135,11 +142,11 @@ again_locked:
 done:
 	slab_setalloc_data(result, DEFINE_CHUNK_SIZE);
 #ifdef LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT
-	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE,
+	return dbg_slab__attach((struct Dee_slab_page *)page, result, DEFINE_CHUNK_SIZE,
 	                        (size_t)(((byte_t *)result - page->sp_data) / DEFINE_CHUNK_SIZE),
 	                        file, line);
 #else /* LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT */
-	return dbg_slab__attach(result, DEFINE_CHUNK_SIZE,
+	return dbg_slab__attach((struct Dee_slab_page *)page, result, DEFINE_CHUNK_SIZE,
 	                        (size_t)(((byte_t *)result - page->sp_data) / DEFINE_CHUNK_SIZE),
 	                        NULL, 0);
 #endif /* !LOCAL_DeeSlab_Malloc_DBG_ARGS_PRESENT */
@@ -153,7 +160,7 @@ LOCAL_MY_DeeSlab_Calloc(LOCAL_DeeSlab_Malloc_DBG_PARAMS) {
 	return result;
 }
 
-#undef LOCAL_Dee_slab_page_rawmalloc
+#undef LOCAL_dbg_slab_page_rawmalloc
 
 #undef LOCAL_IS_TRY_MALLOC
 #undef LOCAL_MY_DeeSlab_Malloc

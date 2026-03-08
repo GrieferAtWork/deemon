@@ -57,12 +57,12 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/module.h>           /* DeeModule*, Dee_module_libentry, Dee_module_object, _Dee_MODULE_FNOADDR */
 #include <deemon/system-features.h>  /* CONFIG_HAVE_*, MAP_ANONYMOUS, MREMAP_MAYMOVE, O_RDWR, bzero, calloc, fprintf, free, getpagesize, malloc, memcpy, mmap64, mremap, munmap, open, realloc, remainder, remove, sbrk, stderr, strlen, sysconf, time */
 #include <deemon/thread.h>           /* DeeThreadObject, DeeThread_Self */
-#include <deemon/types.h>            /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t */
+#include <deemon/types.h>            /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t */
 #include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
 #include <deemon/util/rlock.h>       /* Dee_ratomic_lock_*, Dee_rshared_lock_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX */
-#include <deemon/util/slab.h>        /* Dee_slab_page_rawtrim */
+#include <deemon/util/slab.h>        /* Dee_slab_page, Dee_slab_page_rawtrim */
 
 #include <hybrid/align.h>           /* CEILDIV, IS_ALIGNED */
 #include <hybrid/bit.h>             /* CLZ, CTZ */
@@ -72,6 +72,8 @@ ClCompile.BasicRuntimeChecks = Default
 #include <hybrid/sched/yield.h>     /* SCHED_YIELD */
 #include <hybrid/sequence/list.h>   /* LIST_*, SLIST_* */
 #include <hybrid/typecore.h>        /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_POINTER__, __SIZEOF_SIZE_T__, __SIZE_C */
+
+#include "slab.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* offsetof, size_t */
@@ -111,6 +113,8 @@ ClCompile.BasicRuntimeChecks = Default
 
 #undef container_of
 #define container_of COMPILER_CONTAINER_OF
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -6464,6 +6468,7 @@ PRIVATE void DCALL dumpleaks_acquire_locks(void) {
 	 * - PREACTION(gm)                     -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
 	 * - tls_mspace_lock_acquire()         -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
 	 * - PREACTION(used_tls_mspace.each)   -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
+	 * - TODO: Locks for all slab allocators
 	 *
 	 * For GC only:
 	 * - gc_lock                           -- need to skew GC list and links
@@ -6547,6 +6552,20 @@ again:
 		}                                                \
 	}	__WHILE0
 #endif /* USE_PER_THREAD_MSTATE */
+
+#ifdef HAVE_Dee_slab_leaks_tryacquire
+	{
+		Dee_atomic_rwlock_t *blocking;
+		blocking = Dee_slab_leaks_tryacquire();
+		if unlikely(blocking) {
+			local_unlock();
+			Dee_atomic_rwlock_waitwrite(blocking);
+			goto again;
+#undef local_unlock_4
+#define local_unlock_4() Dee_slab_leaks_release()
+		}
+	}
+#endif /* HAVE_Dee_slab_leaks_tryacquire */
 }
 
 PRIVATE void DCALL dumpleaks_release_locks(void) {
@@ -6579,40 +6598,40 @@ again:
 	if (!Dee_rshared_lock_tryacquire(&gc_lock)) {
 		local_unlock();
 		Dee_rshared_lock_waitfor_noint(&gc_lock);
-#undef local_unlock_4
-#define local_unlock_4() Dee_rshared_lock_release(&gc_lock)
+#undef local_unlock_5
+#define local_unlock_5() Dee_rshared_lock_release(&gc_lock)
 		goto again;
 	}
 
 	if (!Dee_atomic_rwlock_trywrite(&module_abstree_lock)) {
 		local_unlock();
 		Dee_atomic_rwlock_waitwrite(&module_abstree_lock);
-#undef local_unlock_5
-#define local_unlock_5() Dee_atomic_rwlock_endwrite(&module_abstree_lock)
+#undef local_unlock_6
+#define local_unlock_6() Dee_atomic_rwlock_endwrite(&module_abstree_lock)
 		goto again;
 	}
 
 	if (!Dee_atomic_rwlock_trywrite(&module_libtree_lock)) {
 		local_unlock();
 		Dee_atomic_rwlock_waitwrite(&module_libtree_lock);
-#undef local_unlock_6
-#define local_unlock_6() Dee_atomic_rwlock_endwrite(&module_libtree_lock)
+#undef local_unlock_7
+#define local_unlock_7() Dee_atomic_rwlock_endwrite(&module_libtree_lock)
 		goto again;
 	}
 
 	if (!Dee_atomic_rwlock_trywrite(&module_byaddr_lock)) {
 		local_unlock();
 		Dee_atomic_rwlock_waitwrite(&module_byaddr_lock);
-#undef local_unlock_7
-#define local_unlock_7() Dee_atomic_rwlock_endwrite(&module_byaddr_lock)
+#undef local_unlock_8
+#define local_unlock_8() Dee_atomic_rwlock_endwrite(&module_byaddr_lock)
 		goto again;
 	}
 
 	if (!Dee_shared_lock_tryacquire(&thread_list_lock)) {
 		local_unlock();
 		Dee_shared_lock_waitfor(&thread_list_lock);
-#undef local_unlock_7
-#define local_unlock_7() Dee_shared_lock_release(&thread_list_lock)
+#undef local_unlock_9
+#define local_unlock_9() Dee_shared_lock_release(&thread_list_lock)
 		goto again;
 	}
 }
@@ -6706,6 +6725,52 @@ do_DeeHeap_DumpMemoryLeaks_one(struct leak_footer *leak
 	return size;
 }
 
+#ifdef HAVE_Dee_slab_leaks_foreach_page
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+do_DeeHeap_DumpMemoryLeaks_slabpage_cb(void *UNUSED(arg),
+                                       struct Dee_slab_page *page,
+                                       struct pagespecs const *specs) {
+	size_t bitno;
+	Dee_ssize_t result = 0;
+	struct pageleaks *pl = (struct pageleaks *)page->sp_meta.spm_leak;
+	slab_bitword_t *page__sp_used = (slab_bitword_t *)page->sp_used_and_data;
+	byte_t *page__sp_data = (byte_t *)page->sp_used_and_data + specs->ps_sizeof__sp_used;
+	if unlikely(!pl)
+		goto done; /* Page has no leak information -> nothing in here can be a leak! */
+	/* Sanity check info from "pl" is correct */
+	if (pl->pl_chnksiz != specs->ps_chunksize ||
+	    pl->pl_chnkcnt != specs->ps_chunkcount) {
+		Dee_DPRINTF("? : ? : Slab page at %p has bad leaks metadata "
+		            "[chnksiz:{expected:%" PRFuSIZ ", actual:%" PRFuSIZ "}"
+		            ",chnkcnt:{expected:%" PRFuSIZ ", actual:%" PRFuSIZ "}]\n",
+		            specs->ps_chunksize, pl->pl_chnksiz,
+		            specs->ps_chunkcount, pl->pl_chnkcnt);
+		result += 1;
+	} else {
+		for (bitno = 0; bitno < specs->ps_chunkcount; ++bitno) {
+			size_t bit_indx = slab_bitword_indx(bitno);
+			slab_bitword_t bit_mask = slab_bitword_mask(bitno);
+			slab_bitword_t bit_word = atomic_read(&page__sp_used[bit_indx]);
+			if (bit_word & bit_mask) {
+				/* Found an allocated chunk -- look at its leak descriptor */
+				struct chunkleak *leak = &pl->pl_chunks[bitno];
+				if (leak->cl_file == NULL && leak->cl_line == -1) {
+					/* Explicitly untracked leak */
+				} else {
+					byte_t *chunk = page__sp_data + (bitno * specs->ps_chunksize);
+					Dee_DPRINTF("%s(%d) : ? : Leaked %" PRFuSIZ " bytes of memory: %p-%p [in slab page %p]\n",
+					            leak->cl_file, (int)leak->cl_line, specs->ps_chunksize,
+					            chunk, chunk + specs->ps_chunksize - 1);
+					result += 1;
+				}
+			}
+		}
+	}
+done:
+	return result;
+}
+#endif /* HAVE_Dee_slab_leaks_foreach_page */
+
 PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_ALL(void) {
 	size_t result = 0;
 	struct leak_footer *iter;
@@ -6722,6 +6787,10 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_ALL(void) {
 		result += do_DeeHeap_DumpMemoryLeaks_one(iter);
 #endif /* !LEAK_DETECTION_GC */
 	}
+
+#ifdef HAVE_Dee_slab_leaks_foreach_page
+	result += (size_t)Dee_slab_leaks_foreach_page(&do_DeeHeap_DumpMemoryLeaks_slabpage_cb, NULL);
+#endif /* HAVE_Dee_slab_leaks_foreach_page */
 
 #if HAVE_DBG_HEAP_REGION
 	if (region_leak_mlist) {
@@ -7487,6 +7556,12 @@ PRIVATE size_t DCALL do_DeeHeap_DumpMemoryLeaks_GC_locked(void) {
 
 	/* #1: Convert "leaks" into a by-address R/B-tree "gcleak_byaddr_tree" */
 	gcmove__leaks__into__gcleak_byaddr_tree();
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
+#ifdef Dee_SLAB_CHUNKSIZE_MAX
+	/* TODO: Move allocated slab pages into "gcleak_byaddr_tree" */
+#endif /* Dee_SLAB_CHUNKSIZE_MAX */
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
 	/* #2: Scan static memory locations of the deemon core and all dex modules for
 	 *     stuff that looks like pointers. Every pointer found is checked for being
@@ -8606,12 +8681,6 @@ PRIVATE size_t lock_and_do_check_malloc_state_foreach_cb(mspace ms, void *arg) {
 }
 #endif /* USE_PER_THREAD_MSTATE */
 
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#ifdef Dee_SLAB_CHUNKSIZE_MAX
-INTDEF void DCALL DeeSlab_CheckMemory(void);
-#endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
-
 /* Validate heap memory, asserting the absence of corruptions from
  * various common heap mistakes (write-past-end, use-after-free, etc.).
  *
@@ -8622,12 +8691,11 @@ PUBLIC ATTR_COLD void DCALL DeeHeap_CheckMemory(void) {
 #if USE_PER_THREAD_MSTATE
 	tls_mspace_foreach(&lock_and_do_check_malloc_state_foreach_cb, NULL);
 #endif /* USE_PER_THREAD_MSTATE */
-#ifdef CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR
-#ifdef Dee_SLAB_CHUNKSIZE_MAX
+
 	/* Also check slab memory (~ala `slab_chkfree_data()') */
+#ifdef HAVE_DeeSlab_CheckMemory
 	DeeSlab_CheckMemory();
-#endif /* Dee_SLAB_CHUNKSIZE_MAX */
-#endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
+#endif /* HAVE_DeeSlab_CheckMemory */
 }
 #endif /* DL_DEBUG_EXTERNAL */
 

@@ -108,8 +108,8 @@
  * >>
  * >> template<size_t CHUNK_SIZE> alignas(SLAB_PAGESIZE) struct slab_page {
  * >>     // Bitset of allocated chunk base addresses
- * >>     typedef uintptr_t bitword_t; // More appropriate would be something like "uint_fastptr_t"
- * >>     bitword_t sp_used[CEILDIV(SLAB_PAGESIZE - sizeof(sp_used), CHUNK_SIZE * BITSOF(bitword_t))];
+ * >>     typedef uintptr_t slab_bitword_t; // More appropriate would be something like "uint_fastptr_t"
+ * >>     slab_bitword_t sp_used[CEILDIV(SLAB_PAGESIZE - sizeof(sp_used), CHUNK_SIZE * BITSOF(slab_bitword_t))];
  * >>
  * >>     // Slab payload data
  * >>     byte_t sp_data[SLAB_PAGESIZE - sizeof(sp_used) - sizeof(sp_meta)];
@@ -118,8 +118,8 @@
  * >>     enum { MAX_CHUNK_COUNT = sizeof(sp_data) / CHUNK_SIZE };
  * >>     STATIC_ASSERT(BITSOF(sp_used) >= MAX_CHUNK_COUNT);
  * >>     enum { UNUSED_TRAILING_BITS = BITSOF(sp_used) - MAX_CHUNK_COUNT };
- * >>     enum { USED_TRAILING_BITS = BITSOF(bitword_t) - UNUSED_TRAILING_BITS };
- * >>     enum { LAST_USED_MASK = ((bitword_t)1 << USED_TRAILING_BITS) - 1 };
+ * >>     enum { USED_TRAILING_BITS = BITSOF(slab_bitword_t) - UNUSED_TRAILING_BITS };
+ * >>     enum { LAST_USED_MASK = ((slab_bitword_t)1 << USED_TRAILING_BITS) - 1 };
  * >>
  * >>     // Metadata for the slab page
  * >>     struct {
@@ -145,22 +145,22 @@
  * >>     for (;;) {
  * >>         size_t i;
  * >>         constexpr for (i = 0; i < lengthof(page->sp_used); ++i) {
- * >>             constexpr slab_page<CHUNK_SIZE>::bitword_t full_mask =
+ * >>             constexpr slab_page<CHUNK_SIZE>::slab_bitword_t full_mask =
  * >>                 i >= (lengthof(page->sp_used) - 1)
  * >>                 ? LAST_USED_MASK
- * >>                 : ((slab_page<CHUNK_SIZE>::bitword_t)-1);
- * >>             slab_page<CHUNK_SIZE>::bitword_t word;
+ * >>                 : ((slab_page<CHUNK_SIZE>::slab_bitword_t)-1);
+ * >>             slab_page<CHUNK_SIZE>::slab_bitword_t word;
  * >> again_read_word:
  * >>             word = atomic_read(&page->sp_used[i]);
  * >>             if (word != full_mask) {
  * >>                 // There seems to be something free here!
  * >>                 size_t index, offset;
  * >>                 shift_t free_bit = CTZ(~word);
- * >>                 slab_page<CHUNK_SIZE>::bitword_t alloc_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << free_bit;
+ * >>                 slab_page<CHUNK_SIZE>::slab_bitword_t alloc_mask = (slab_page<CHUNK_SIZE>::slab_bitword_t)1 << free_bit;
  * >>                 if (!atomic_cmpxch_weak(&page->sp_used[i], word, word | alloc_mask))
  * >>                     goto again_read_word;
  * >>                 // Got it! -- now just calculate the pointer we need to return
- * >>                 index  = i * BITSOF(slab_page<CHUNK_SIZE>::bitword_t) + free_bit;
+ * >>                 index  = i * BITSOF(slab_page<CHUNK_SIZE>::slab_bitword_t) + free_bit;
  * >>                 offset = index * CHUNK_SIZE;
  * >>                 return page->sp_data + offset;
  * >>             }
@@ -230,9 +230,9 @@
  * >>     slab_page<CHUNK_SIZE> *page = (slab_page<CHUNK_SIZE> *)((uintptr_t)p & ~(SLAB_PAGESIZE - 1));
  * >>     size_t offset = (byte_t *)p - (byte_t *)&page->sp_data;
  * >>     size_t index = offset / CHUNK_SIZE;
- * >>     size_t bit_indx = index / BITSOF(slab_page<CHUNK_SIZE>::bitword_t);
+ * >>     size_t bit_indx = index / BITSOF(slab_page<CHUNK_SIZE>::slab_bitword_t);
  * >>     size_t old__sm_used;
- * >>     slab_page<CHUNK_SIZE>::bitword_t bit_mask = (slab_page<CHUNK_SIZE>::bitword_t)1 << (index % BITSOF(slab_page<CHUNK_SIZE>::bitword_t));
+ * >>     slab_page<CHUNK_SIZE>::slab_bitword_t bit_mask = (slab_page<CHUNK_SIZE>::slab_bitword_t)1 << (index % BITSOF(slab_page<CHUNK_SIZE>::slab_bitword_t));
  * >>     ASSERTF((atomic_read(&page->sp_used[bit_indx]) & bit_mask) != 0, "Pointer not allocated");
  * >>     atomic_and(&page->sp_used[bit_indx], ~bit_mask);
  * >>     do {
@@ -332,10 +332,11 @@ struct Dee_slab_page_builder {
 };
 
 #define Dee_SLAB_PAGE_META_FIELDS(page_type)                                                         \
-	void   *spm_leak; /* [?..?] Used internally for tracking memory leaks. The presence of this      \
-	                   * field doesn't actually change the effective # of chunks fitting into any    \
-	                   * given page for any of the defined slab sizes (in both 32- and 64-bit mode), \
-	                   * when compared to this field missing and metadata being only 3 words. */     \
+	void   *spm_leak; /* [0..1][const] Used internally for tracking memory leaks. The presence of    \
+	                   * this field doesn't actually change the effective # of chunks fitting into   \
+	                   * any given page for any of the defined slab sizes (in both 32- and 64-bit    \
+	                   * mode), when compared to this field missing and metadata being 3 words.      \
+	                   * Only valid/used in `Dee_slab_page_isnormal()' pages */                      \
 	size_t  spm_used; /* [<= LOCAL__MAX_CHUNK_COUNT][lock(ATOMIC)] # of 1-bits in "sp_used" Must be  \
 	                   * holding "LOCAL_slab_lock" to change to/from 0/LOCAL__MAX_CHUNK_COUNT. */    \
 	union {                                                                                          \

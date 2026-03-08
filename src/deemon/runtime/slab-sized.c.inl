@@ -28,7 +28,7 @@
 #include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_MAX, Dee_SLAB_CHUNKSIZE_MIN */
-#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS, Dee_slab_page_isnormal */
+#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_FIELDS, Dee_slab_page, Dee_slab_page_isnormal */
 
 #include <hybrid/align.h>         /* CEILDIV */
 #include <hybrid/bit.h>           /* CTZ */
@@ -52,6 +52,7 @@
 #define LOCAL_slab_page               LOCAL_SYM(slab_page)
 #define LOCAL_slab_page_list          LOCAL_SYM(slab_page_list)
 #define LOCAL_slab_pages              LOCAL_SYM(slab_pages)
+#define LOCAL_slab_fullpages          LOCAL_SYM(slab_fullpages)
 #define LOCAL_slab_lock               LOCAL_SYM(slab_lock)
 #define LOCAL_slab_malloc_in_page     LOCAL_SYM(slab_malloc_in_page)
 #define LOCAL__DeeSlab_Malloc         LOCAL_SYM(DeeSlab_Malloc)
@@ -101,10 +102,10 @@ DECL_BEGIN
 #endif /* LOCAL_MAX_CHUNK_COUNT > _LOWER_BITSOF__sp_used(DEFINE_CHUNK_SIZE) */
 
 /* Macros for some other constants */
-#define LOCAL_ELEMOF__sp_used CEILDIV(LOCAL_MAX_CHUNK_COUNT, BITSOF_bitword_t)
+#define LOCAL_ELEMOF__sp_used CEILDIV(LOCAL_MAX_CHUNK_COUNT, BITSOF_slab_bitword_t)
 #define LOCAL_SIZEOF__sp_data (LOCAL_MAX_CHUNK_COUNT * DEFINE_CHUNK_SIZE)
-#define LOCAL_SIZEOF__sp_used (LOCAL_ELEMOF__sp_used * SIZEOF_bitword_t)
-#define LOCAL_BITSOF__sp_used (LOCAL_ELEMOF__sp_used * BITSOF_bitword_t)
+#define LOCAL_SIZEOF__sp_used (LOCAL_ELEMOF__sp_used * SIZEOF_slab_bitword_t)
+#define LOCAL_BITSOF__sp_used (LOCAL_ELEMOF__sp_used * BITSOF_slab_bitword_t)
 #define LOCAL_SIZEOF__sp_pad  (Dee_SLAB_PAGESIZE - (Dee_SIZEOF_SLAB_PAGE_META + LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data))
 
 /* Sanity check the calculation above */
@@ -113,16 +114,16 @@ STATIC_ASSERT(LOCAL_SIZEOF__sp_data == (LOCAL_MAX_CHUNK_COUNT * DEFINE_CHUNK_SIZ
 STATIC_ASSERT(LOCAL_MAX_CHUNK_COUNT <= LOCAL_BITSOF__sp_used);
 STATIC_ASSERT((LOCAL_SIZEOF__sp_used + LOCAL_SIZEOF__sp_data +
                LOCAL_SIZEOF__sp_pad + Dee_SIZEOF_SLAB_PAGE_META) == Dee_SLAB_PAGESIZE);
-STATIC_ASSERT_MSG(LOCAL_SIZEOF__sp_pad < (DEFINE_CHUNK_SIZE + SIZEOF_bitword_t),
+STATIC_ASSERT_MSG(LOCAL_SIZEOF__sp_pad < (DEFINE_CHUNK_SIZE + SIZEOF_slab_bitword_t),
                   "More padding than this wouldn't make sense, because "
                   "then 1 extra item in `sp_data' should have been used");
 
 /* Define the "slab_page" structure */
 struct LOCAL_slab_page {
-	bitword_t sp_used[LOCAL_ELEMOF__sp_used]; /* Bitset of allocated chunk base addresses */
-	byte_t    sp_data[LOCAL_SIZEOF__sp_data]; /* Slab payload data */
+	slab_bitword_t sp_used[LOCAL_ELEMOF__sp_used]; /* Bitset of allocated chunk base addresses */
+	byte_t         sp_data[LOCAL_SIZEOF__sp_data]; /* Slab payload data */
 #if LOCAL_SIZEOF__sp_pad != 0
-	byte_t   _sp_pad[LOCAL_SIZEOF__sp_pad];   /* Unused padding */
+	byte_t        _sp_pad[LOCAL_SIZEOF__sp_pad];   /* Unused padding */
 #endif /* LOCAL_SIZEOF__sp_pad != 0 */
 	struct {
 		Dee_SLAB_PAGE_META_FIELDS(LOCAL_slab_page)
@@ -162,16 +163,20 @@ PRIVATE Dee_atomic_rwlock_t LOCAL_slab_lock = Dee_ATOMIC_RWLOCK_INIT;
 
 
 /* [0..n][lock(LOCAL_slab_lock)] Pages containing at least 1 free, and at least 1 allocated chunk.
- * - fully allocated pages aren't tracked anywhere
+ * - fully allocated pages are only tracked when 'SLAB_TRACK_FULL_PAGES' is enabled
  * - fully free pages are stored in a global free-list (so they can be used by all slab allocators) */
 PRIVATE struct LOCAL_slab_page_list LOCAL_slab_pages = LIST_HEAD_INITIALIZER(LOCAL_slab_pages);
 
+#if SLAB_TRACK_FULL_PAGES
+/* [0..n][lock(LOCAL_slab_lock)] Pages that are fully allocated (`spm_used == LOCAL_MAX_CHUNK_COUNT') */
+PRIVATE struct LOCAL_slab_page_list LOCAL_slab_fullpages = LIST_HEAD_INITIALIZER(LOCAL_slab_fullpages);
+#endif /* SLAB_TRACK_FULL_PAGES */
 
 
 /* Calculate the last-word mask for "sp_used" */
 #define LOCAL_sp_used__UNUSED_TRAILING_BITS (LOCAL_BITSOF__sp_used - LOCAL_MAX_CHUNK_COUNT)
-#define LOCAL_sp_used__USED_TRAILING_BITS   (BITSOF_bitword_t - LOCAL_sp_used__UNUSED_TRAILING_BITS)
-#define LOCAL_sp_used__LAST_USED_MASK       ((BITWORD_C(1) << LOCAL_sp_used__USED_TRAILING_BITS) - 1)
+#define LOCAL_sp_used__USED_TRAILING_BITS   (BITSOF_slab_bitword_t - LOCAL_sp_used__UNUSED_TRAILING_BITS)
+#define LOCAL_sp_used__LAST_USED_MASK       ((SLAB_BITWORD_C(1) << LOCAL_sp_used__USED_TRAILING_BITS) - 1)
 
 
 
@@ -180,12 +185,12 @@ PRIVATE WUNUSED NONNULL((1)) void *DCALL
 LOCAL_slab_malloc_in_page(struct LOCAL_slab_page *__restrict page) {
 	/* Caller guaranties that something is free (since they reserved a spot for us)
 	 * -- we just need to find that spot! */
-	bitword_t word;
+	slab_bitword_t word;
 
 #define LOCAL_maskfor(i)                \
 	((i) >= (LOCAL_ELEMOF__sp_used - 1) \
 	 ? LOCAL_sp_used__LAST_USED_MASK    \
-	 : (bitword_t) - 1)
+	 : (slab_bitword_t) - 1)
 #if 1 /* Both impls here work the same */
 #define LOCAL_alloc_in_word(p, word, mask) atomic_cmpxch_weak(p, word, word | mask)
 #else
@@ -194,12 +199,12 @@ LOCAL_slab_malloc_in_page(struct LOCAL_slab_page *__restrict page) {
 #define LOCAL_alloc_from(i, full_mask)                                        \
 	if ((word = atomic_read(&page->sp_used[i])) != (full_mask)) {             \
 		/* There seems to be something free here! */                          \
-		shift_t free_bit     = CTZ(~word);                                    \
-		bitword_t alloc_mask = (bitword_t)1 << free_bit;                      \
+		shift_t free_bit          = CTZ(~word);                               \
+		slab_bitword_t alloc_mask = (slab_bitword_t)1 << free_bit;            \
 		slab_assert(!(word & alloc_mask));                                    \
 		if (LOCAL_alloc_in_word(&page->sp_used[i], word, alloc_mask)) {       \
 			/* Got it! -- now just calculate the pointer we need to return */ \
-			size_t index  = i * BITSOF_bitword_t + free_bit;                  \
+			size_t index  = i * BITSOF_slab_bitword_t + free_bit;             \
 			size_t offset = index * DEFINE_CHUNK_SIZE;                        \
 			return page->sp_data + offset;                                    \
 		}                                                                     \
@@ -283,7 +288,7 @@ print("#endif /" "* !__OPTIMIZE_SIZE__ *" "/");
 	for (;;) {
 		size_t i;
 		for (i = 0; i < LOCAL_ELEMOF__sp_used; ++i) {
-			bitword_t full_mask = LOCAL_maskfor(i);
+			slab_bitword_t full_mask = LOCAL_maskfor(i);
 			LOCAL_alloc_from(i, full_mask);
 		}
 	}
@@ -462,8 +467,8 @@ LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
 		size_t offset = (size_t)((byte_t *)p - (byte_t *)page->sp_data);
 		size_t index = offset / DEFINE_CHUNK_SIZE;
 #if SLAB_DEBUG_EXTERNAL
-		size_t bit_indx = index / BITSOF_bitword_t;
-		bitword_t bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
+		size_t bit_indx = index / BITSOF_slab_bitword_t;
+		slab_bitword_t bit_mask = (slab_bitword_t)1 << (index % BITSOF_slab_bitword_t);
 		if unlikely((offset % DEFINE_CHUNK_SIZE) != 0) {
 			_DeeAssert_XFailf(PP_STR(LOCAL_DeeDbgSlab_UntrackAlloc) "(p)", file, line,
 			                  "Badly aligned slab pointer: %p", p);
@@ -474,8 +479,10 @@ LOCAL_DeeDbgSlab_UntrackAlloc(void *p, char const *file, int line) {
 		}
 #endif /* SLAB_DEBUG_EXTERNAL */
 		/* Detach debug info from normal slab pages. */
-		if (Dee_slab_page_isnormal(page))
-			p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, index, file, line);
+		if (Dee_slab_page_isnormal(page)) {
+			p = dbg_slab__detach((struct Dee_slab_page *)page, p,
+			                     DEFINE_CHUNK_SIZE, index, file, line);
+		}
 	}
 #endif /* SLAB_DEBUG_LEAKS */
 	return p;
@@ -513,6 +520,7 @@ DECL_END
 #undef LOCAL_slab_page
 #undef LOCAL_slab_page_list
 #undef LOCAL_slab_pages
+#undef LOCAL_slab_fullpages
 #undef LOCAL_slab_lock
 #undef LOCAL_slab_malloc_in_page
 #undef LOCAL__DeeSlab_Malloc

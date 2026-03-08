@@ -24,7 +24,7 @@
 #include <deemon/api.h>
 
 #include <deemon/util/atomic.h> /* atomic_* */
-#include <deemon/util/slab.h>   /* Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_* */
+#include <deemon/util/slab.h>   /* Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_iscustom, Dee_slab_page_isnormal */
 
 #include <hybrid/sequence/list.h> /* LIST_* */
 
@@ -38,15 +38,15 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 	size_t offset;
 	size_t index;
 	size_t bit_indx;
-	bitword_t bit_mask;
+	slab_bitword_t bit_mask;
 	size_t old__spm_used;
 
 	/* Figure out the slab-context of "p" */
 	page     = (struct LOCAL_slab_page *)((uintptr_t)p & ~(Dee_SLAB_PAGESIZE - 1));
 	offset   = (size_t)((byte_t *)p - (byte_t *)page->sp_data);
 	index    = offset / DEFINE_CHUNK_SIZE;
-	bit_indx = index / BITSOF_bitword_t;
-	bit_mask = (bitword_t)1 << (index % BITSOF_bitword_t);
+	bit_indx = index / BITSOF_slab_bitword_t;
+	bit_mask = (slab_bitword_t)1 << (index % BITSOF_slab_bitword_t);
 #if SLAB_DEBUG_EXTERNAL
 #ifdef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
 	if unlikely((offset % DEFINE_CHUNK_SIZE) != 0) {
@@ -69,9 +69,11 @@ LOCAL_DeeSlab_Free(void *__restrict p LOCAL_DeeSlab_Free__DBG_PARAMS) {
 	/* Detach debug info from normal slab pages. */
 	if (Dee_slab_page_isnormal(page)) {
 #ifdef LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT
-		p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, index, file, line);
+		p = dbg_slab__detach((struct Dee_slab_page *)page, p,
+		                     DEFINE_CHUNK_SIZE, index, file, line);
 #else /* LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
-		p = dbg_slab__detach(p, DEFINE_CHUNK_SIZE, index, NULL, 0);
+		p = dbg_slab__detach((struct Dee_slab_page *)page, p,
+		                     DEFINE_CHUNK_SIZE, index, NULL, 0);
 #endif /* !LOCAL_DeeSlab_Free__DBG_PARAMS_PRESENT */
 	}
 #endif /* SLAB_DEBUG_LEAKS */
@@ -113,7 +115,9 @@ again_read__spm_used:
 			LIST_REMOVE(page, sp_meta.spm_type.t_link);
 			LOCAL_slab_lock_endwrite();
 			/* Ensure page is now free */
-			Dee_slab_page_rawfree((struct Dee_slab_page *)page);
+			dbg_slab_page_rawfree((struct Dee_slab_page *)page,
+			                      DEFINE_CHUNK_SIZE,
+			                      LOCAL_MAX_CHUNK_COUNT);
 			break;
 		} else if (old__spm_used == LOCAL_MAX_CHUNK_COUNT &&
 		           Dee_slab_page_isnormal(page)) {
@@ -129,6 +133,9 @@ again_read__spm_used:
 				goto again_read__spm_used;
 			}
 			slab_assert(Dee_slab_page_isnormal(page));
+#if SLAB_TRACK_FULL_PAGES
+			LIST_REMOVE(page, sp_meta.spm_type.t_link); /* Remove from "LOCAL_slab_fullpages" */
+#endif /* SLAB_TRACK_FULL_PAGES */
 			LIST_INSERT_HEAD(&LOCAL_slab_pages, page, sp_meta.spm_type.t_link);
 			LOCAL_slab_lock_endwrite();
 			break;

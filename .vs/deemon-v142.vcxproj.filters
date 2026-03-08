@@ -1479,6 +1479,9 @@
 		<ClInclude Include="..\src\deemon\runtime\slab-sized.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\slab.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\strings.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>

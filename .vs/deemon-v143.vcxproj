@@ -501,6 +501,7 @@
 		<ClInclude Include="..\src\deemon\runtime\slab-sized-alloc.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab-sized-free.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab-sized.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\slab.h" />
 		<ClInclude Include="..\src\deemon\runtime\strings.h" />
 		<ClInclude Include="..\src\deemon\system\futex-controller-new.c.inl" />
 		<ClInclude Include="..\src\deemon\system\futex-wait.c.inl" />

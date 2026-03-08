@@ -44,12 +44,6 @@ ClCompile.BasicRuntimeChecks = Default
 #define SLAB_DEBUG_EXTERNAL 0
 #endif
 
-#if SLAB_DEBUG_EXTERNAL && 1
-#define SLAB_DEBUG_LEAKS 1
-#else
-#define SLAB_DEBUG_LEAKS 0
-#endif
-
 #if __SIZEOF_POINTER__ > 4
 #define WORD_4BYTE(x) UINT64_C(0x##x##x)
 #else /* __SIZEOF_POINTER__ > 4 */
@@ -72,6 +66,16 @@ ClCompile.BasicRuntimeChecks = Default
 #define slab_assertf(expr, ...) (void)0
 #endif /* !... */
 
+/* Config option: enable support for detecting memory leaks caused by slabs */
+#define SLAB_DEBUG_LEAKS (SLAB_DEBUG_EXTERNAL && 1)
+
+/* Config option: keep track of slab pages that have been fully allocated
+ *                (in a separate per-slab list). This is needed for leak
+ *                detection to find those pages if at application exit some
+ *                slab page ends up going entirely unused. */
+#define SLAB_TRACK_FULL_PAGES SLAB_DEBUG_LEAKS
+
+
 
 /* Disable NONNULL attributes -- needed so debug NULL-checks in DeeDbgSlab_Free() work */
 #if SLAB_DEBUG_EXTERNAL
@@ -80,22 +84,24 @@ ClCompile.BasicRuntimeChecks = Default
 #endif /* SLAB_DEBUG_EXTERNAL */
 
 
-#include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_* */
+#include <deemon/alloc.h>            /* DeeDbgSlab_*, DeeSlab_*, Dee_Free, Dee_Mallococ, Dee_TryMallococ, Dee_UntrackAlloc */
 #include <deemon/format.h>           /* PRF* */
 #include <deemon/gc.h>               /* DeeDbgGCSlab_*, DeeGCSlab_*, DeeGC_Head, DeeGC_Object, Dee_GC_OBJECT_OFFSET, Dee_gc_head */
 #include <deemon/system-features.h>  /* memset */
-#include <deemon/types.h>            /* DeeObject */
+#include <deemon/types.h>            /* DeeObject, Dee_ssize_t */
 #include <deemon/util/atomic.h>      /* atomic_read */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_* */
-#include <deemon/util/slab.h>        /* Dee_OFFSET_SLAB_PAGE_META, Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_builder_offset_t */
+#include <deemon/util/slab.h>        /* Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_* */
 
 #include <hybrid/align.h>         /* CEILDIV, IS_ALIGNED, IS_POWER_OF_TWO */
 #include <hybrid/overflow.h>      /* OVERFLOW_USUB */
-#include <hybrid/sequence/list.h> /* LIST_PFIRST, LIST_PNEXT */
-#include <hybrid/typecore.h>      /* __*_TYPE__, __CHAR_BIT__, __SIZEOF_INT_FASTn_T__, __SIZEOF_POINTER__, __UINTPTR_C, __UINTn_C */
+#include <hybrid/sequence/list.h> /* LIST_* */
+#include <hybrid/typecore.h>      /* __BYTE_TYPE__, __SHIFT_TYPE__, __SIZEOF_POINTER__ */
 
-#include <stddef.h> /* NULL, size_t */
+#include "slab.h"
+
+#include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* UINT32_C, UINT64_C, uintptr_t */
 
 #ifndef NDEBUG
@@ -103,6 +109,9 @@ ClCompile.BasicRuntimeChecks = Default
 #else /* !NDEBUG */
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
+
+#undef container_of
+#define container_of COMPILER_CONTAINER_OF
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -114,37 +123,18 @@ ClCompile.BasicRuntimeChecks = Default
 #pragma optimize("ts", on)
 #endif /* _MSC_VER */
 
-/* Select "bitword_t" data type. */
-#if __SIZEOF_POINTER__ <= 1
-#define bitword_t        __UINT_FAST8_TYPE__
-#define BITWORD_C(v)     __UINT8_C(v)
-#define SIZEOF_bitword_t __SIZEOF_INT_FAST8_T__
-#elif __SIZEOF_POINTER__ <= 2
-#define bitword_t        __UINT_FAST16_TYPE__
-#define BITWORD_C(v)     __UINT16_C(v)
-#define SIZEOF_bitword_t __SIZEOF_INT_FAST16_T__
-#elif __SIZEOF_POINTER__ <= 4
-#define bitword_t        __UINT_FAST32_TYPE__
-#define BITWORD_C(v)     __UINT32_C(v)
-#define SIZEOF_bitword_t __SIZEOF_INT_FAST32_T__
-#elif __SIZEOF_POINTER__ <= 8
-#define bitword_t        __UINT_FAST64_TYPE__
-#define BITWORD_C(v)     __UINT64_C(v)
-#define SIZEOF_bitword_t __SIZEOF_INT_FAST64_T__
-#else /* __SIZEOF_POINTER__ <= ... */
-#define bitword_t        __UINTPTR_TYPE__
-#define BITWORD_C(v)     __UINTPTR_C(v)
-#define SIZEOF_bitword_t __SIZEOF_POINTER__
-#endif /* __SIZEOF_POINTER__ > ... */
-#define BITSOF_bitword_t (SIZEOF_bitword_t * __CHAR_BIT__)
-
+#if (defined(Dee_SLAB_CHUNKSIZE_MIN) != defined(Dee_SLAB_CHUNKSIZE_MAX))
+#error "Either both 'Dee_SLAB_CHUNKSIZE_MIN' and 'Dee_SLAB_CHUNKSIZE_MAX' must be defined, or neither must be"
+#endif /* ... */
 
 #if defined(Dee_SLAB_CHUNKSIZE_MAX) || defined(__DEEMON__)
 DECL_BEGIN
 
 /* Do some sanity assertions on the slab configuration */
 STATIC_ASSERT(IS_POWER_OF_TWO(Dee_SLAB_PAGESIZE));
-STATIC_ASSERT_MSG(Dee_SLAB_PAGESIZE >= (SIZEOF_bitword_t + Dee_SLAB_CHUNKSIZE_MAX + Dee_SIZEOF_SLAB_PAGE_META),
+STATIC_ASSERT_MSG(Dee_SLAB_PAGESIZE >= (SIZEOF_slab_bitword_t +
+                                        Dee_SLAB_CHUNKSIZE_MAX +
+                                        Dee_SIZEOF_SLAB_PAGE_META),
                   "Slab pages are too small to hold even a single "
                   "max-sized slab chunk when accounting for metadata");
 STATIC_ASSERT(DeeSlab_EXISTS(Dee_SLAB_CHUNKSIZE_MIN));
@@ -201,29 +191,107 @@ PRIVATE void DCALL slab_chkfree_data(void const *p, size_t n) {
 
 /* Debug debug versions of slab allocator functions */
 #if !SLAB_DEBUG_LEAKS
-#define dbg_slab__attach(p, n, i, file, line) (p) /* Attach debug info and either free, */
-#define dbg_slab__detach(p, n, i, file, line) (p)
+#define dbg_slab_page_rawmalloc(cs, cc)    Dee_slab_page_rawmalloc()
+#define dbg_slab_page_rawtrymalloc(cs, cc) Dee_slab_page_rawtrymalloc()
+#define dbg_slab_page_rawfree(p, cs, cc)   Dee_slab_page_rawfree(p)
+#define dbg_slab__attach(page, p, n, i, file, line) (p) /* Attach debug info and either free, */
+#define dbg_slab__detach(page, p, n, i, file, line) (p)
 #else /* !SLAB_DEBUG_LEAKS */
+
+/* @param: cs: ChunkSize
+ * @param: cc: ChunkCount */
+#define dbg_slab_page_rawmalloc dbg_slab_page_rawmalloc
+PRIVATE ATTR_NOINLINE ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
+struct Dee_slab_page *DCALL dbg_slab_page_rawmalloc(size_t cs, size_t cc) {
+	struct pageleaks *li;
+	struct Dee_slab_page *result;
+	result = Dee_slab_page_rawmalloc();
+	if unlikely(!result)
+		goto err;
+	li = (struct pageleaks *)Dee_UntrackAlloc(Dee_Mallococ(offsetof(struct pageleaks, pl_chunks),
+	                                                       cc, sizeof(struct chunkleak)));
+	if unlikely(!li)
+		goto err_r;
+	result->sp_meta.spm_leak = li;
+	li->pl_chnksiz = cs;
+	li->pl_chnkcnt = cc;
+	return result;
+err_r:
+	Dee_slab_page_rawfree(result);
+err:
+	return NULL;
+}
+
+#define dbg_slab_page_rawtrymalloc dbg_slab_page_rawtrymalloc
+PRIVATE ATTR_NOINLINE ATTR_MALLOC WUNUSED ATTR_ASSUME_ALIGNED(Dee_SLAB_PAGESIZE)
+struct Dee_slab_page *DCALL dbg_slab_page_rawtrymalloc(size_t cs, size_t cc) {
+	struct pageleaks *pl;
+	struct Dee_slab_page *result;
+	result = Dee_slab_page_rawtrymalloc();
+	if unlikely(!result)
+		goto err;
+	pl = (struct pageleaks *)Dee_UntrackAlloc(Dee_TryMallococ(offsetof(struct pageleaks, pl_chunks),
+	                                                          cc, sizeof(struct chunkleak)));
+	if unlikely(!pl)
+		goto err_r;
+	result->sp_meta.spm_leak = pl;
+	pl->pl_chnksiz = cs;
+	pl->pl_chnkcnt = cc;
+	return result;
+err_r:
+	Dee_slab_page_rawfree(result);
+err:
+	return NULL;
+}
+
+#define dbg_slab_page_rawfree dbg_slab_page_rawfree
+PRIVATE ATTR_NOINLINE NONNULL((1)) void DCALL
+dbg_slab_page_rawfree(struct Dee_slab_page *__restrict page, size_t cs, size_t cc) {
+	struct pageleaks *pl = (struct pageleaks *)page->sp_meta.spm_leak;
+	slab_assert(pl);
+	slab_assert(pl->pl_chnksiz == cs);
+	slab_assert(pl->pl_chnkcnt == cc);
+	(void)cs;
+	(void)cc;
+	Dee_Free(pl);
+	Dee_slab_page_rawfree(page);
+}
+
+
+/* Attach debug info (for leaks and such...)
+ *
+ * On error, can free "p" which is guarantied to
+ * be an "n"-byte large slab, then return "NULL" */
 PRIVATE WUNUSED NONNULL((1)) void *DCALL
-dbg_slab__attach(void *__restrict p, size_t n, size_t i, char const *file, int line) {
-	/* TODO: Attach debug info (for leaks and such...)
-	 * On error, can free "p" which is guarantied to
-	 * be an "n"-byte large slab, then return "NULL" */
+dbg_slab__attach(struct Dee_slab_page *page, void *p,
+                 size_t n, size_t i, char const *file, int line) {
+	struct pageleaks *pl = (struct pageleaks *)page->sp_meta.spm_leak;
+	if unlikely(line < 0)
+		line = 0; /* Negative values have special meaning */
+	slab_assert(pl);
+	slab_assert(pl->pl_chnksiz == n);
+	slab_assert(i < pl->pl_chnkcnt);
 	(void)n;
-	(void)i; /* index-of-"p"-in-page */
-	(void)file;
-	(void)line;
+	pl->pl_chunks[i].cl_file = file;
+	pl->pl_chunks[i].cl_line = line;
 	return p;
 }
 
+/* Free debug info if it exists for "p" (which is an "n"-byte large slab) */
 PRIVATE ATTR_RETNONNULL NONNULL((1)) void *DCALL
-dbg_slab__detach(void *p, size_t n, size_t i, char const *file, int line) {
-	/* TODO: Free debug info if it exists for "p" (which is an "n"-byte large slab)
-	 * NOTE: Debug info might not exist when "p" is part of a custom slab page. */
+dbg_slab__detach(struct Dee_slab_page *page, void *p,
+                 size_t n, size_t i, char const *file, int line) {
+	struct pageleaks *pl = (struct pageleaks *)page->sp_meta.spm_leak;
+	slab_assert(pl);
+	slab_assert(pl->pl_chnksiz == n);
+	slab_assert(i < pl->pl_chnkcnt);
+	(void)pl;
+	(void)i;
 	(void)n;
-	(void)i; /* index-of-"p"-in-page */
 	(void)file;
 	(void)line;
+	pl->pl_chunks[i].cl_file = NULL;
+	pl->pl_chunks[i].cl_line = -1;
 	return p;
 }
 #endif /* SLAB_DEBUG_LEAKS */
@@ -290,23 +358,6 @@ LOCAL void *gc_initob(void *ptr) {
 
 Dee_SLAB_CHUNKSIZE_GC_FOREACH(DEFINE_DeeGCSlab_API, ~)
 #undef DEFINE_DeeGCSlab_API
-
-
-/* Calculate the # of chunks that fit into a slab page, given the size of those chunks.
- * Since the formula for this is self-dependent, we use 3 consecutive approximations,
- * which seems to produce optimial results in all situations. */
-#define _UPPER__MAX_CHUNK_COUNT(n) (Dee_OFFSET_SLAB_PAGE_META / n)
-#define _UPPER_ELEMOF__sp_used(n)  CEILDIV(_UPPER__MAX_CHUNK_COUNT(n), BITSOF_bitword_t)
-#define _UPPER_SIZEOF__sp_used(n)  (_UPPER_ELEMOF__sp_used(n) * SIZEOF_bitword_t)
-#define _LOWER_SIZEOF__sp_data(n)  (Dee_OFFSET_SLAB_PAGE_META - _UPPER_SIZEOF__sp_used(n))
-#define _LOWER__MAX_CHUNK_COUNT(n) (_LOWER_SIZEOF__sp_data(n) / n)
-#define _LOWER_ELEMOF__sp_used(n)  CEILDIV(_LOWER__MAX_CHUNK_COUNT(n), BITSOF_bitword_t)
-#define _LOWER_SIZEOF__sp_used(n)  (_LOWER_ELEMOF__sp_used(n) * SIZEOF_bitword_t)
-#define _LOWER_BITSOF__sp_used(n)  (_LOWER_ELEMOF__sp_used(n) * BITSOF_bitword_t)
-#define _FINAL_SIZEOF__sp_data(n)  (Dee_OFFSET_SLAB_PAGE_META - _LOWER_SIZEOF__sp_used(n))
-#define _MAX_CHUNK_COUNT(n)        (_FINAL_SIZEOF__sp_data(n) / n)
-#define MAX_CHUNK_COUNT(n)        (_MAX_CHUNK_COUNT(n) > _LOWER_BITSOF__sp_used(n) ? _LOWER_BITSOF__sp_used(n) : _MAX_CHUNK_COUNT(n))
-
 
 DECL_END
 
@@ -809,13 +860,13 @@ DECL_BEGIN
 
 struct page_format {
 	Dee_slab_page_builder_offset_t pf__max_chunk_count; /* max # of chunks that may exist in the page */
-	Dee_slab_page_builder_offset_t pf__sizeof__sp_used; /* [== sizeof(sp_used) == SIZEOF_bitword_t * CEILDIV(pf__max_chunk_count, BITSOF_bitword_t)]
+	Dee_slab_page_builder_offset_t pf__sizeof__sp_used; /* [== sizeof(sp_used) == SIZEOF_slab_bitword_t * CEILDIV(pf__max_chunk_count, BITSOF_slab_bitword_t)]
 	                                                     * aka "offsetof__sp_data" */
 };
 #define PAGE_FORMAT_INIT(n)                                                                           \
 	{                                                                                                 \
 		/* .pf__max_chunk_count = */ MAX_CHUNK_COUNT(n),                                              \
-		/* .pf__sizeof__sp_used = */ SIZEOF_bitword_t * CEILDIV(MAX_CHUNK_COUNT(n), BITSOF_bitword_t) \
+		/* .pf__sizeof__sp_used = */ SIZEOF_slab_bitword_t * CEILDIV(MAX_CHUNK_COUNT(n), BITSOF_slab_bitword_t) \
 	}
 
 
@@ -863,7 +914,7 @@ struct page_format const *DCALL get_page_format(size_t n) {
 PUBLIC WUNUSED NONNULL((1)) void *DCALL
 Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	struct page_format const *fmt = get_page_format(n);
-	bitword_t *self__sp_used = (bitword_t *)self;
+	slab_bitword_t *self__sp_used = (slab_bitword_t *)self;
 	Dee_slab_page_builder_offset_t lo_offset = self->sp_meta.spm_type.t_builder.spb_unused_lo;
 	Dee_slab_page_builder_offset_t hi_offset = self->sp_meta.spm_type.t_builder.spb_unused_hi;
 	if (lo_offset < fmt->pf__sizeof__sp_used)
@@ -877,14 +928,14 @@ Dee_slab_page_buildmalloc(struct Dee_slab_page *__restrict self, size_t n) {
 	hi_offset = (hi_offset / (Dee_slab_page_builder_offset_t)n) * (Dee_slab_page_builder_offset_t)n;
 	for (;;) {
 		size_t bitno, bit_indx;
-		bitword_t bit_mask;
+		slab_bitword_t bit_mask;
 		if (hi_offset <= lo_offset)
 			goto fail;
 		hi_offset -= (Dee_slab_page_builder_offset_t)n; /* Allocate memory */
 		bitno = hi_offset / (Dee_slab_page_builder_offset_t)n;
 		slab_assert(bitno < fmt->pf__max_chunk_count);
-		bit_indx = bitno / BITSOF_bitword_t;
-		bit_mask = BITWORD_C(1) << (bitno % BITSOF_bitword_t);
+		bit_indx = slab_bitword_indx(bitno);
+		bit_mask = slab_bitword_mask(bitno);
 		if (self__sp_used[bit_indx] & bit_mask)
 			continue; /* Conflict with some other allocation -> cannot use this position (try the next one) */
 
@@ -912,13 +963,13 @@ fail:
 
 PUBLIC NONNULL((1, 2)) void DCALL
 Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
-	bitword_t *self__sp_used = (bitword_t *)self;
+	slab_bitword_t *self__sp_used = (slab_bitword_t *)self;
 	struct page_format const *fmt = get_page_format(n);
 	Dee_slab_page_builder_offset_t offsetof__p_from_self    = (Dee_slab_page_builder_offset_t)((byte_t *)p - (byte_t *)self);
 	Dee_slab_page_builder_offset_t offsetof__p_from_sp_data = offsetof__p_from_self - fmt->pf__sizeof__sp_used;
 	size_t bitno_of__p_in_sp_used = offsetof__p_from_sp_data / (Dee_slab_page_builder_offset_t)n;
 	size_t indx_of__p_in_sp_used;
-	bitword_t word_of__p_in_sp_used;
+	slab_bitword_t word_of__p_in_sp_used;
 	ASSERTF(offsetof__p_from_self >= fmt->pf__sizeof__sp_used,
 	        "Given 'p' is too close to the start of the page for this chunk-size");
 	ASSERTF(offsetof__p_from_self >= self->sp_meta.spm_type.t_builder.spb_unused_hi,
@@ -928,8 +979,8 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 	ASSERTF(bitno_of__p_in_sp_used < fmt->pf__max_chunk_count,
 	        "Given 'p' is too close to the end of the page for this chunk-size");
 
-	indx_of__p_in_sp_used = bitno_of__p_in_sp_used / BITSOF_bitword_t;
-	word_of__p_in_sp_used = BITWORD_C(1) << (bitno_of__p_in_sp_used % BITSOF_bitword_t);
+	indx_of__p_in_sp_used = slab_bitword_indx(bitno_of__p_in_sp_used);
+	word_of__p_in_sp_used = slab_bitword_mask(bitno_of__p_in_sp_used);
 	ASSERTF(self__sp_used[indx_of__p_in_sp_used] & word_of__p_in_sp_used,
 	        "Given 'p' is not marked as allocated within this page");
 	ASSERTF(self->sp_meta.spm_used, "Nothing marked as allocated");
@@ -955,44 +1006,60 @@ Dee_slab_page_buildfree(struct Dee_slab_page *self, void *p, size_t n) {
 
 LIST_HEAD(Dee_slab_page_list, Dee_slab_page);
 struct slab_spec {
-	struct Dee_slab_page_list *const ss_pages;   /* [1..1] LOCAL_slab_pages */
-	size_t                     const ss_chunksz; /* Chunk size */
-	struct page_format const  *const ss_format;  /* [1..1] Slab format */
+	struct pagespecs           const ss_specs;     /* Slab page specs */
+	struct Dee_slab_page_list *const ss_pages;     /* [1..1] LOCAL_slab_pages */
+#if SLAB_TRACK_FULL_PAGES
+	struct Dee_slab_page_list *const ss_fullpages; /* [1..1] LOCAL_slab_fullpages */
+#endif /* SLAB_TRACK_FULL_PAGES */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t       *const ss_lock;    /* [1..1] LOCAL_slab_lock */
+	Dee_atomic_rwlock_t       *const ss_lock;      /* [1..1] LOCAL_slab_lock */
 #endif /* !CONFIG_NO_THREADS */
 };
 
 PRIVATE struct slab_spec tpconst slab_specs[SLAB_COUNT] = {
+#if SLAB_TRACK_FULL_PAGES
+#define _SLAB_SPECS_INIT__FULLPAGES(n) , (struct Dee_slab_page_list *)&PP_CAT2(slab_fullpages, n)
+#else /* SLAB_TRACK_FULL_PAGES */
+#define _SLAB_SPECS_INIT__FULLPAGES(n) /* nothing */
+#endif /* !SLAB_TRACK_FULL_PAGES */
 #ifdef CONFIG_NO_THREADS
-#define SLAB_SPECS_INIT_CB(n, _) { (struct Dee_slab_page_list *)&PP_CAT2(slab_pages, n), n, &slab_format##n },
+#define _SLAB_SPECS_INIT__LOCK(n, _) /* nothing */
 #else /* CONFIG_NO_THREADS */
-#define SLAB_SPECS_INIT_CB(n, _) { (struct Dee_slab_page_list *)&PP_CAT2(slab_pages, n), n, &slab_format##n, &PP_CAT2(slab_lock, n) },
+#define _SLAB_SPECS_INIT__LOCK(n) , &PP_CAT2(slab_lock, n)
 #endif /* !CONFIG_NO_THREADS */
+#define SLAB_SPECS_INIT_CB(n, _)                             \
+	{                                                        \
+		PAGESPECS_INIT(n),                                   \
+		(struct Dee_slab_page_list *)&PP_CAT2(slab_pages, n) \
+		_SLAB_SPECS_INIT__FULLPAGES(n)                       \
+		_SLAB_SPECS_INIT__LOCK(n)                            \
+	},
 #ifndef __INTELLISENSE__
 	Dee_SLAB_CHUNKSIZE_FOREACH(SLAB_SPECS_INIT_CB, ~)
 #endif /* !__INTELLISENSE__ */
 #undef SLAB_SPECS_INIT_CB
+#undef _SLAB_SPECS_INIT__FULLPAGES
+#undef _SLAB_SPECS_INIT__LOCK
 };
 
 PRIVATE NONNULL((1, 2)) void DCALL
 check_slab_page(struct slab_spec const *__restrict spec,
                 struct Dee_slab_page *__restrict self) {
 	size_t bitno, orig_used, real_used;
-	bitword_t const *self__sp_used = (bitword_t const *)self->sp_used_and_data;
-	byte_t const *self__sp_data    = (byte_t const *)self + spec->ss_format->pf__sizeof__sp_used;
+	slab_bitword_t const *self__sp_used = (slab_bitword_t const *)self->sp_used_and_data;
+	byte_t const *self__sp_data    = (byte_t const *)self + spec->ss_specs.ps_sizeof__sp_used;
 again:
 	orig_used = atomic_read(&self->sp_meta.spm_used);
-	for (real_used = bitno = 0; bitno < spec->ss_format->pf__max_chunk_count; ++bitno) {
-		size_t bit_indx    = bitno / BITSOF_bitword_t;
-		bitword_t bit_mask = BITWORD_C(1) << (bitno % BITSOF_bitword_t);
-		bitword_t word = atomic_read(&self__sp_used[bit_indx]);
-		byte_t const *blob = self__sp_data + (bitno * spec->ss_chunksz);
+	for (real_used = bitno = 0; bitno < spec->ss_specs.ps_chunkcount; ++bitno) {
+		size_t bit_indx         = slab_bitword_indx(bitno);
+		slab_bitword_t bit_mask = slab_bitword_mask(bitno);
+		slab_bitword_t word     = atomic_read(&self__sp_used[bit_indx]);
+		byte_t const *blob = self__sp_data + (bitno * spec->ss_specs.ps_chunksize);
 		if ((word & bit_mask) == 0) {
 			/* Verify that a chunk marked as unused is filled with the
 			 * proper memory pattern (this detects use-after-free). */
 #ifdef SLAB_DEBUG_MEMSET_FREE
-			slab_chkfree_data(blob, spec->ss_chunksz);
+			slab_chkfree_data(blob, spec->ss_specs.ps_chunksize);
 #endif /* SLAB_DEBUG_MEMSET_FREE */
 		} else {
 			++real_used;
@@ -1001,16 +1068,16 @@ again:
 
 	/* Assert that no trailing bits are set in last word of "self__sp_used" */
 	{
-		shift_t lastbits = spec->ss_format->pf__max_chunk_count % BITSOF_bitword_t;
-		size_t last_indx = (spec->ss_format->pf__max_chunk_count - 1) / BITSOF_bitword_t;
-		bitword_t lastmask = lastbits ? ((BITWORD_C(1) << lastbits) - 1) : (bitword_t)-1;
-		bitword_t lastword = atomic_read(&self__sp_used[last_indx]);
+		shift_t lastbits = spec->ss_specs.ps_chunkcount % BITSOF_slab_bitword_t;
+		size_t last_indx = (spec->ss_specs.ps_chunkcount - 1) / BITSOF_slab_bitword_t;
+		slab_bitword_t lastmask = lastbits ? ((SLAB_BITWORD_C(1) << lastbits) - 1) : (slab_bitword_t)-1;
+		slab_bitword_t lastword = atomic_read(&self__sp_used[last_indx]);
 		ASSERTF((lastword & ~lastmask) == 0,
-		        "Invalid in-use bits %#" PRFxN(SIZEOF_bitword_t) " enabled "
+		        "Invalid in-use bits %#" PRFxN(SIZEOF_slab_bitword_t) " enabled "
 		        /**/ "in last word of 'sp_used' (chunksize: %" PRFuSIZ ")\n"
-		        "word: %#" PRFxN(SIZEOF_bitword_t) "\n"
-		        "mask: %#" PRFxN(SIZEOF_bitword_t) "\n",
-		        lastword & ~lastmask, spec->ss_chunksz, lastword, lastmask);
+		        "word: %#" PRFxN(SIZEOF_slab_bitword_t) "\n"
+		        "mask: %#" PRFxN(SIZEOF_slab_bitword_t) "\n",
+		        lastword & ~lastmask, spec->ss_specs.ps_chunksize, lastword, lastmask);
 	}
 
 	/* Other threads can DeeSlab_Free() chunks even while our caller has a write-lock
@@ -1021,7 +1088,7 @@ again:
 	        "Too many chunks marked as in-use (chunksize: %" PRFuSIZ ")\n"
 	        "sp_meta.spm_used: %" PRFuSIZ " (as specified in metadata prior to scan)\n"
 	        "real_used:        %" PRFuSIZ " (# of 1-bits in 'sp_used')",
-	        spec->ss_chunksz, orig_used, real_used);
+	        spec->ss_specs.ps_chunksize, orig_used, real_used);
 	if (real_used > orig_used) {
 		size_t new_orig_used = atomic_read(&self->sp_meta.spm_used);
 		ASSERTF(new_orig_used > orig_used,
@@ -1029,7 +1096,7 @@ again:
 		        "sp_meta.spm_used: %" PRFuSIZ " (as specified in metadata after scan)\n"
 		        "orig_used:        %" PRFuSIZ " (as specified in metadata prior to scan)\n"
 		        "real_used:        %" PRFuSIZ " (# of 1-bits in 'sp_used')",
-		        spec->ss_chunksz, new_orig_used, orig_used, orig_used);
+		        spec->ss_specs.ps_chunksize, new_orig_used, orig_used, orig_used);
 		orig_used = new_orig_used;
 		goto again;
 	}
@@ -1049,14 +1116,14 @@ check_slab(struct slab_spec const *__restrict spec) {
 		        p_iter == LIST_PFIRST(spec->ss_pages)
 		        ? " (first member of slab_pages)"
 		        : "",
-		        spec->ss_chunksz);
+		        spec->ss_specs.ps_chunksize);
 		real_prev = iter->sp_meta.spm_type.t_link.le_prev;
 		ASSERTF(real_prev == p_iter,
 		        "Broken self-pointer at %p in slab page %p (chunksize: %" PRFuSIZ "):\n"
 		        "Expected: %p\n"
 		        "Actual:   %p\n",
 		        &iter->sp_meta.spm_type.t_link.le_prev,
-		        iter, spec->ss_chunksz,
+		        iter, spec->ss_specs.ps_chunksize,
 		        p_iter, real_prev);
 		check_slab_page(spec, iter);
 	}
@@ -1064,7 +1131,98 @@ check_slab(struct slab_spec const *__restrict spec) {
 }
 #endif /* SLAB_DEBUG_EXTERNAL */
 
-/* Callback by `DeeHeap_CheckMemory()' */
+
+#ifdef HAVE_Dee_slab_leaks_tryacquire
+INTERN WUNUSED Dee_atomic_rwlock_t *DCALL
+Dee_slab_leaks_tryacquire(void) {
+#if SLAB_DEBUG_EXTERNAL
+	size_t i;
+	for (i = 0; i < SLAB_COUNT; ++i) {
+		Dee_atomic_rwlock_t *lock = slab_specs[i].ss_lock;
+		if (!Dee_atomic_rwlock_trywrite(lock)) {
+			while (i--) {
+				Dee_atomic_rwlock_t *prev_lock = slab_specs[i].ss_lock;
+				Dee_atomic_rwlock_endwrite(prev_lock);
+			}
+			return lock;
+		}
+	}
+#endif /* SLAB_DEBUG_EXTERNAL */
+	return NULL;
+}
+
+INTERN void DCALL Dee_slab_leaks_release(void) {
+#if SLAB_DEBUG_EXTERNAL
+	size_t i = SLAB_COUNT;
+	do {
+		Dee_atomic_rwlock_t *lock;
+		--i;
+		lock = slab_specs[i].ss_lock;
+		Dee_atomic_rwlock_endwrite(lock);
+	} while (i);
+#endif /* SLAB_DEBUG_EXTERNAL */
+}
+#endif /* HAVE_Dee_slab_leaks_tryacquire */
+
+
+/* Enumerate all slab pages containing at least 1 allocated chunk.
+ * Before calling this function, the caller must acquire locks by
+ * use of `Dee_slab_leaks_tryacquire()'
+ * @return: * : Dee_formatprinter_t-style aggregate of calls to `cb' */
+#ifdef HAVE_Dee_slab_leaks_foreach_page
+#if SLAB_DEBUG_EXTERNAL
+PRIVATE NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+Dee_slab_leaks_foreach_page__list(struct slab_spec const *spec,
+                                  struct Dee_slab_page_list *pages,
+                                  Dee_slab_leaks_page_cb_t cb, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	struct Dee_slab_page *page;
+	LIST_FOREACH (page, pages, sp_meta.spm_type.t_link) {
+		temp = (*cb)(arg, page, &spec->ss_specs);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+
+PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
+Dee_slab_leaks_foreach_page__spec(struct slab_spec const *spec,
+                                  Dee_slab_leaks_page_cb_t cb, void *arg) {
+#if SLAB_TRACK_FULL_PAGES
+	Dee_ssize_t result = Dee_slab_leaks_foreach_page__list(spec, spec->ss_pages, cb, arg);
+	if likely(result >= 0) {
+		Dee_ssize_t temp = Dee_slab_leaks_foreach_page__list(spec, spec->ss_fullpages, cb, arg);
+		result = temp < 0 ? temp : (result + temp);
+	}
+	return result;
+#else /* SLAB_TRACK_FULL_PAGES */
+	return Dee_slab_leaks_foreach_page__list(spec, spec->ss_pages, cb, arg);
+#endif /* !SLAB_TRACK_FULL_PAGES */
+}
+#endif /* SLAB_DEBUG_EXTERNAL */
+
+INTERN NONNULL((1)) Dee_ssize_t DCALL
+Dee_slab_leaks_foreach_page(Dee_slab_leaks_page_cb_t cb, void *arg) {
+	Dee_ssize_t result = 0;
+#if SLAB_DEBUG_EXTERNAL
+	size_t i;
+	for (i = 0; i < SLAB_COUNT; ++i) {
+		Dee_ssize_t temp = Dee_slab_leaks_foreach_page__spec(&slab_specs[i], cb, arg);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+#endif /* SLAB_DEBUG_EXTERNAL */
+	(void)cb;
+	(void)arg;
+	return result;
+}
+#endif /* HAVE_Dee_slab_leaks_foreach_page */
+
+
+/* Called by `DeeHeap_CheckMemory()' */
+#ifdef HAVE_DeeSlab_CheckMemory
 INTERN void DCALL DeeSlab_CheckMemory(void) {
 #if SLAB_DEBUG_EXTERNAL
 	size_t i;
@@ -1072,6 +1230,9 @@ INTERN void DCALL DeeSlab_CheckMemory(void) {
 		check_slab(&slab_specs[i]);
 #endif /* SLAB_DEBUG_EXTERNAL */
 }
+#endif /* HAVE_DeeSlab_CheckMemory */
+
+
 
 /* One-time, static test-code to demonstrate that a
  * 4-word metadata footer doesn't change anything */
@@ -1079,13 +1240,13 @@ INTERN void DCALL DeeSlab_CheckMemory(void) {
 #define EX_Dee_SIZEOF_SLAB_PAGE_META(ms)  (ms) /* `sizeof(struct Dee_slab_page::sp_meta)' */
 #define EX_Dee_OFFSET_SLAB_PAGE_META(ms)  (Dee_SLAB_PAGESIZE - EX_Dee_SIZEOF_SLAB_PAGE_META(ms))
 #define EX__UPPER__MAX_CHUNK_COUNT(ms, n) (EX_Dee_OFFSET_SLAB_PAGE_META(ms) / n)
-#define EX__UPPER_ELEMOF__sp_used(ms, n)  CEILDIV(EX__UPPER__MAX_CHUNK_COUNT(ms, n), BITSOF_bitword_t)
-#define EX__UPPER_SIZEOF__sp_used(ms, n)  (EX__UPPER_ELEMOF__sp_used(ms, n) * SIZEOF_bitword_t)
+#define EX__UPPER_ELEMOF__sp_used(ms, n)  CEILDIV(EX__UPPER__MAX_CHUNK_COUNT(ms, n), BITSOF_slab_bitword_t)
+#define EX__UPPER_SIZEOF__sp_used(ms, n)  (EX__UPPER_ELEMOF__sp_used(ms, n) * SIZEOF_slab_bitword_t)
 #define EX__LOWER_SIZEOF__sp_data(ms, n)  (EX_Dee_OFFSET_SLAB_PAGE_META(ms) - EX__UPPER_SIZEOF__sp_used(ms, n))
 #define EX__LOWER__MAX_CHUNK_COUNT(ms, n) (EX__LOWER_SIZEOF__sp_data(ms, n) / n)
-#define EX__LOWER_ELEMOF__sp_used(ms, n)  CEILDIV(EX__LOWER__MAX_CHUNK_COUNT(ms, n), BITSOF_bitword_t)
-#define EX__LOWER_SIZEOF__sp_used(ms, n)  (EX__LOWER_ELEMOF__sp_used(ms, n) * SIZEOF_bitword_t)
-#define EX__LOWER_BITSOF__sp_used(ms, n)  (EX__LOWER_ELEMOF__sp_used(ms, n) * BITSOF_bitword_t)
+#define EX__LOWER_ELEMOF__sp_used(ms, n)  CEILDIV(EX__LOWER__MAX_CHUNK_COUNT(ms, n), BITSOF_slab_bitword_t)
+#define EX__LOWER_SIZEOF__sp_used(ms, n)  (EX__LOWER_ELEMOF__sp_used(ms, n) * SIZEOF_slab_bitword_t)
+#define EX__LOWER_BITSOF__sp_used(ms, n)  (EX__LOWER_ELEMOF__sp_used(ms, n) * BITSOF_slab_bitword_t)
 #define EX__FINAL_SIZEOF__sp_data(ms, n)  (EX_Dee_OFFSET_SLAB_PAGE_META(ms) - EX__LOWER_SIZEOF__sp_used(ms, n))
 #define EX__MAX_CHUNK_COUNT(ms, n)        (EX__FINAL_SIZEOF__sp_data(ms, n) / n)
 #define EX_MAX_CHUNK_COUNT(ms, n)         (EX__MAX_CHUNK_COUNT(ms, n) > EX__LOWER_BITSOF__sp_used(ms, n) ? EX__LOWER_BITSOF__sp_used(ms, n) : EX__MAX_CHUNK_COUNT(ms, n))
