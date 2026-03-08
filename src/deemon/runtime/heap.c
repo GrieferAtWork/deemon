@@ -121,7 +121,7 @@ DECL_BEGIN
 
 
 /* ============ Threading configuration ============ */
-#ifdef CONFIG_NO_THREADS
+#if defined(CONFIG_NO_THREADS)
 #define USE_LOCKS 0
 #else /* CONFIG_NO_THREADS */
 #define USE_LOCKS 1
@@ -150,7 +150,13 @@ DECL_BEGIN
 /* BEGIN --- Not part of dlmalloc core: leak detection */
 /* BEGIN --- Not part of dlmalloc core: leak detection */
 
-/* CAUTION: Leak detection is a bit of a bottleneck:
+/* - LEAK_DETECTION --------------------------------------------
+ *   Enables a memory leak detector suitable for dumping all
+ *   memory that is (still) allocated at the time of leaks being
+ *   dumped. See below for more details and implementations.
+ * -------------------------------------------------------------
+ *
+ * CAUTION: Leak detection is a bit of a bottleneck:
  *
  * LEAK_DETECTION_METHOD_NONE         time make computed-operators    real    0m4.482s   100%
  * LEAK_DETECTION_METHOD_IN_TAIL      time make computed-operators    real    0m7.234s   161%
@@ -484,7 +490,7 @@ STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), 
 
 /* Integrate TLS heap context */
 #define DL_TLS_VARS       DeeThreadObject *const _tls_me = DeeThread_Self();
-#define DL_TLS_GETHEAP()  (_tls_me->t_heap)
+#define DL_TLS_GETHEAP(r) (void)(*(r) = _tls_me->t_heap)
 #define DL_TLS_SETHEAP(v) (void)(_tls_me->t_heap = (v))
 
 /* Integrate heap region ABI */
@@ -551,23 +557,14 @@ STATIC_ASSERT(IS_ALIGNED(Dee_GC_OBJECT_OFFSET + offsetof(DeeObject, ob_refcnt), 
 #endif /* CONFIG_HAVE_SYS_PARAM_H */
 
 
-
-
-
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-/*                                                                      */
-/* START OF DLMALLOC                                                    */
-/*                                                                      */
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
+/* Pull in (heavily modified) dlmalloc sources */
 DECL_END
 #include "../../libdlmalloc/dlmalloc.c.inl"
 DECL_BEGIN
+
+
+
+
 
 
 /* Deemon public heap API */
@@ -815,9 +812,9 @@ PRIVATE size_t leak_footer_freesize = 0;
 PRIVATE struct leak_footer_slist leak_footer_freelist = SLIST_HEAD_INITIALIZER(leak_footer_freelist);
 
 /* Lock needed to remove items from "leak_footer_freelist" */
-#ifndef CONFIG_NO_THREADS
+#if USE_LOCKS
 PRIVATE DL_LOCK_T leak_footer_freelock = DL_LOCK_INIT_STATIC;
-#endif /* !CONFIG_NO_THREADS */
+#endif /* USE_LOCKS */
 #define leak_footer_freelock_tryacquire() DL_LOCK_TRYACQUIRE(&leak_footer_freelock)
 #define leak_footer_freelock_acquire()    DL_LOCK_ACQUIRE(&leak_footer_freelock)
 #define leak_footer_freelock_release()    DL_LOCK_RELEASE(&leak_footer_freelock)
@@ -886,9 +883,9 @@ DeeHeap_SetAllocBreakpoint(size_t id) {
 }
 
 
-#ifndef CONFIG_NO_THREADS
+#if USE_LOCKS
 PRIVATE DL_LOCK_T leaks_lock = DL_LOCK_INIT_STATIC;
-#endif /* !CONFIG_NO_THREADS */
+#endif /* USE_LOCKS */
 #ifdef DL_LOCK_ACQUIRED
 #define leaks_lock_acquired()   DL_LOCK_ACQUIRED(&leaks_lock)
 #endif /* DL_LOCK_ACQUIRED */
@@ -4009,14 +4006,14 @@ DeeDbgHeap_DelHeapRegion(struct Dee_heapregion *__restrict region) {
 
 
 #ifndef CONFIG_NO_THREADS
-#ifndef thread_heap_destroy_DEFINED
-#define thread_heap_destroy_DEFINED
 INTERN NONNULL((1)) void DCALL
 thread_heap_destroy(void *heap) {
+#if USE_PER_THREAD_MSTATE
+	tls_mspace_destroy((mspace)heap);
+#endif /* USE_PER_THREAD_MSTATE */
 	COMPILER_IMPURE();
 	(void)heap;
 }
-#endif /* !thread_heap_destroy_DEFINED */
 #endif /* !CONFIG_NO_THREADS */
 
 

@@ -1570,3 +1570,14 @@
 #define DL_CC(x)
 #define DL_API_DECL(a,T,n,p) static T n p
 #define DL_API_IMPL(a,T,n,p) static T n p
+#define STRUCT_dlheapchunk  struct Dee_heapchunk
+#define STRUCT_dlheaptail   struct Dee_heaptail
+#define STRUCT_dlheapregion struct Dee_heapregion
+
+#define dlmallopt DeeHeap_SetOpt
+#define dlmalloc_footprint DeeHeap_Footprint
+#define dlmalloc_max_footprint DeeHeap_MaxFootprint
+#define dlmalloc_footprint_limit DeeHeap_GetFootprintLimit
+#define dlmalloc_set_footprint_limit DeeHeap_SetFootprintLimit
+#define dlmallinfo DeeHeap_MallInfo
+#define dlmalloc_trim DeeHeap_Trim
