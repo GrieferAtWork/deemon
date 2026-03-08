@@ -109,7 +109,7 @@ function sub(n: string) {
 	//print("#ifndef __NO_XBLOCK");
 	//print("#define __hybrid_atomic_load", n, "(p, order) \\");
 	//print("	__XBLOCK({ __UINT", n, "_TYPE__ const *__hal", n, "_p = (p); __UINT", n, "_TYPE__ __hal", n, "_res; \\");
-	//print("	           do { __hal", n, "_res = *__hal", n, "_p; __COMPILER_READ_BARRIER(); \\");
+	//print("	           do { __hal", n, "_res = *(__UINT", n, "_TYPE__ const volatile *)__hal", n, "_p; __COMPILER_READ_BARRIER(); \\");
 	//print("	           } while (!__hybrid_atomic_cmpxch_weak((__UINT", n, "_TYPE__ *)__hal", n, "_p, __hal", n, "_res, __hal", n, "_res, order, order)); \\");
 	//print("	           __XRETURN __hal", n, "_res; })");
 	//print("#else /" "* __NO_XBLOCK *" "/");
@@ -117,7 +117,7 @@ function sub(n: string) {
 	//print("__LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT", n, "_TYPE__ __NOTHROW_NCX(__hybrid_atomic_load", n, ")(__UINT", n, "_TYPE__ const *__p, int __order) {");
 	//print("	__UINT", n, "_TYPE__ __res;");
 	//print("	(void)__order;");
-	//print("	do { __res = *__p; __COMPILER_READ_BARRIER();");
+	//print("	do { __res = *(__UINT", n, "_TYPE__ const volatile *)__p; __COMPILER_READ_BARRIER();");
 	//print("	} while (!__hybrid_atomic_cmpxch_weak((__UINT", n, "_TYPE__ *)__p, __res, __res, __order, __order));");
 	//print("	return __res;");
 	//print("}");
@@ -126,14 +126,14 @@ function sub(n: string) {
 	print("#else /" "* __hybrid_atomic_load *" "/");
 	print("#ifndef __NO_XBLOCK");
 	print("#define __hybrid_atomic_load", n, "(p, order) \\");
-	print("	__XBLOCK({ __UINT", n, "_TYPE__ __hal", n, "_res = *(p); \\");
+	print("	__XBLOCK({ __UINT", n, "_TYPE__ __hal", n, "_res = *(__UINT", n, "_TYPE__ const volatile *)(p); \\");
 	print("	           if ((order) >= __ATOMIC_ACQUIRE) \\");
 	print("	               __COMPILER_READ_BARRIER(); \\");
 	print("	           __XRETURN __hal", n, "_res; })");
 	print("#else /" "* __NO_XBLOCK *" "/");
 	print("#define __hybrid_atomic_load", n, " __hybrid_atomic_load", n);
 	print("__LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT", n, "_TYPE__ __NOTHROW_NCX(__hybrid_atomic_load", n, ")(__UINT", n, "_TYPE__ const *__p, int __order) {");
-	print("	__UINT", n, "_TYPE__ __res = *__p;");
+	print("	__UINT", n, "_TYPE__ __res = *(__UINT", n, "_TYPE__ const volatile *)__p;");
 	print("	if (__order >= __ATOMIC_ACQUIRE)");
 	print("		__COMPILER_READ_BARRIER();");
 	print("	return __res;");
@@ -434,14 +434,14 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW_NC
 #else /* __hybrid_atomic_load */
 #ifndef __NO_XBLOCK
 #define __hybrid_atomic_load8(p, order) \
-	__XBLOCK({ __UINT8_TYPE__ __hal8_res = *(p); \
+	__XBLOCK({ __UINT8_TYPE__ __hal8_res = *(__UINT8_TYPE__ const volatile *)(p); \
 	           if ((order) >= __ATOMIC_ACQUIRE) \
 	               __COMPILER_READ_BARRIER(); \
 	           __XRETURN __hal8_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_load8 __hybrid_atomic_load8
 __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NOTHROW_NCX(__hybrid_atomic_load8)(__UINT8_TYPE__ const *__p, int __order) {
-	__UINT8_TYPE__ __res = *__p;
+	__UINT8_TYPE__ __res = *(__UINT8_TYPE__ const volatile *)__p;
 	if (__order >= __ATOMIC_ACQUIRE)
 		__COMPILER_READ_BARRIER();
 	return __res;
@@ -975,14 +975,14 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW_NC
 #else /* __hybrid_atomic_load */
 #ifndef __NO_XBLOCK
 #define __hybrid_atomic_load16(p, order) \
-	__XBLOCK({ __UINT16_TYPE__ __hal16_res = *(p); \
+	__XBLOCK({ __UINT16_TYPE__ __hal16_res = *(__UINT16_TYPE__ const volatile *)(p); \
 	           if ((order) >= __ATOMIC_ACQUIRE) \
 	               __COMPILER_READ_BARRIER(); \
 	           __XRETURN __hal16_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_load16 __hybrid_atomic_load16
 __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __NOTHROW_NCX(__hybrid_atomic_load16)(__UINT16_TYPE__ const *__p, int __order) {
-	__UINT16_TYPE__ __res = *__p;
+	__UINT16_TYPE__ __res = *(__UINT16_TYPE__ const volatile *)__p;
 	if (__order >= __ATOMIC_ACQUIRE)
 		__COMPILER_READ_BARRIER();
 	return __res;
@@ -1516,14 +1516,14 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW_NC
 #else /* __hybrid_atomic_load */
 #ifndef __NO_XBLOCK
 #define __hybrid_atomic_load32(p, order) \
-	__XBLOCK({ __UINT32_TYPE__ __hal32_res = *(p); \
+	__XBLOCK({ __UINT32_TYPE__ __hal32_res = *(__UINT32_TYPE__ const volatile *)(p); \
 	           if ((order) >= __ATOMIC_ACQUIRE) \
 	               __COMPILER_READ_BARRIER(); \
 	           __XRETURN __hal32_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_load32 __hybrid_atomic_load32
 __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __NOTHROW_NCX(__hybrid_atomic_load32)(__UINT32_TYPE__ const *__p, int __order) {
-	__UINT32_TYPE__ __res = *__p;
+	__UINT32_TYPE__ __res = *(__UINT32_TYPE__ const volatile *)__p;
 	if (__order >= __ATOMIC_ACQUIRE)
 		__COMPILER_READ_BARRIER();
 	return __res;
@@ -2058,14 +2058,14 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW_NC
 #else /* __hybrid_atomic_load */
 #ifndef __NO_XBLOCK
 #define __hybrid_atomic_load64(p, order) \
-	__XBLOCK({ __UINT64_TYPE__ __hal64_res = *(p); \
+	__XBLOCK({ __UINT64_TYPE__ __hal64_res = *(__UINT64_TYPE__ const volatile *)(p); \
 	           if ((order) >= __ATOMIC_ACQUIRE) \
 	               __COMPILER_READ_BARRIER(); \
 	           __XRETURN __hal64_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_load64 __hybrid_atomic_load64
 __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __NOTHROW_NCX(__hybrid_atomic_load64)(__UINT64_TYPE__ const *__p, int __order) {
-	__UINT64_TYPE__ __res = *__p;
+	__UINT64_TYPE__ __res = *(__UINT64_TYPE__ const volatile *)__p;
 	if (__order >= __ATOMIC_ACQUIRE)
 		__COMPILER_READ_BARRIER();
 	return __res;
@@ -2601,14 +2601,14 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL __NOTHROW_NC
 #else /* __hybrid_atomic_load */
 #ifndef __NO_XBLOCK
 #define __hybrid_atomic_load128(p, order) \
-	__XBLOCK({ __UINT128_TYPE__ __hal128_res = *(p); \
+	__XBLOCK({ __UINT128_TYPE__ __hal128_res = *(__UINT128_TYPE__ const volatile *)(p); \
 	           if ((order) >= __ATOMIC_ACQUIRE) \
 	               __COMPILER_READ_BARRIER(); \
 	           __XRETURN __hal128_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_load128 __hybrid_atomic_load128
 __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __NOTHROW_NCX(__hybrid_atomic_load128)(__UINT128_TYPE__ const *__p, int __order) {
-	__UINT128_TYPE__ __res = *__p;
+	__UINT128_TYPE__ __res = *(__UINT128_TYPE__ const volatile *)__p;
 	if (__order >= __ATOMIC_ACQUIRE)
 		__COMPILER_READ_BARRIER();
 	return __res;

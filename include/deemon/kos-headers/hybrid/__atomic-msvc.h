@@ -1099,7 +1099,7 @@ __NOTHROW_NCX(__impl_hybrid_atomic_thread_fence)(int __order) {
 	}
 }
 __NAMESPACE_INT_END
-#endif /* __arm__ */
+#endif /* !__arm__ */
 
 __DECL_END
 #endif /* __CC__ */

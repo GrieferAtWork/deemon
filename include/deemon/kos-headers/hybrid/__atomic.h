@@ -117,7 +117,7 @@
 
 /* HINT: In order to have full atomic support, we need at least an cmpxch/cmpxch_weak function */
 #ifdef __CC__
-#ifdef __INTELLISENSE__
+#if defined(__INTELLISENSE__) && 1
 __DECL_BEGIN
 
 #define __hybrid_atomic_load8        __hybrid_atomic_load8
@@ -512,7 +512,7 @@ template<class __ITS_T> typename ::__intern::____INTELLISENSE_enableif< ::__inte
 /**/
 #include "__atomic-complete.h"
 #elif ((defined(__GNUC__) && __GCC_VERSION_NUM >= 40700) || \
-       defined(____INTELLISENSE_STDINC_COMMON_H) || defined(__clang__))
+       defined(____INTELLISENSE_STDINC_SYNTAX_GCC_H) || defined(__clang__))
 /* __atomic_xxx() */
 #define __hybrid_atomic_load(p, order)                             __atomic_load_n(p, order)
 #define __hybrid_atomic_store(p, val, order)                       __atomic_store_n(p, val, order)
