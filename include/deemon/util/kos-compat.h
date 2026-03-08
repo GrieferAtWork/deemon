@@ -525,8 +525,11 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define assert_failed(message) _DeeAssert_XFail(message, __FILE__, __LINE__)
 #undef assertf
 #define assertf ASSERTF
+#if (!defined(__STATIC_ASSERT_IS_static_assert) && \
+     !defined(__STATIC_ASSERT_IS_static_assert_2))
 #undef static_assert
 #define static_assert(expr, ...) STATIC_ASSERT(expr)
+#endif /* !__STATIC_ASSERT_IS_static_assert[_2] */
 #undef lengthof
 #define lengthof COMPILER_LENOF
 

@@ -486,6 +486,7 @@
 		<ClInclude Include="..\src\deemon\runtime\gc-collect.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\gc-inspect.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\heap.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h" />
 		<ClInclude Include="..\src\deemon\runtime\method-hint-defaults.h" />
 		<ClInclude Include="..\src\deemon\runtime\method-hint-select.h" />
@@ -697,7 +698,7 @@
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />
 		<ClCompile Include="..\src\deemon\runtime\hash-io.c" />
 		<ClCompile Include="..\src\deemon\runtime\hash.c" />
-		<ClCompile Include="..\src\deemon\runtime\heap.c">
+		<ClCompile Include="..\src\deemon\runtime\heap-api.c">
 			<Optimization>MaxSpeed</Optimization>
 			<InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
 			<FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>

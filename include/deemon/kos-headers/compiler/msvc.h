@@ -111,6 +111,7 @@
 #define __STATIC_ASSERT_IS_static_assert
 #define __STATIC_ASSERT static_assert
 #else /* __cpp_static_assert >= 201411 */
+#define __STATIC_ASSERT_IS_static_assert_2
 #define __STATIC_ASSERT(expr) static_assert(expr, #expr)
 #endif /* __cpp_static_assert < 201411 */
 #define __STATIC_ASSERT_MSG_IS_static_assert
