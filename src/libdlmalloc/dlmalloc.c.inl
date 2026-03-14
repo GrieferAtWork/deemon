@@ -26,8 +26,8 @@
  *
  * Without this, we get crashes: "*** buffer overflow detected ***: terminated"
  *
- * I think this is due to GCC intentionally crashing the program in places where
- * we intentionally write past the end of a heap block in "heap.c" to overwrite
+ * I think this is due to GCC intentionally crashing the program in places
+ * where we intentionally write past the end of a heap block in to overwrite
  * the block's footer with extra debug info... */
 #undef ATTR_ALLOC_SIZE
 #define ATTR_ALLOC_SIZE(ppars) /* Nothing */
@@ -68,8 +68,8 @@ DECL_BEGIN
 
 /* Heavily modified version of dlmalloc (Doug Lea's malloc).
  *
- * dlmalloc is public domain, but I feel like it's just a
- * matter of respect to state this inspiration, and give
+ * dlmalloc is public domain [*], but I feel like it's just
+ * a matter of respect to state this inspiration, and give
  * credit where credit is due ;)
  *
  *
@@ -78,6 +78,16 @@ DECL_BEGIN
  *
  * That file in turn is based on the original dlmalloc:
  * >> v2.8.6 Wed Aug 29 06:57:58 2012  Doug Lea
+ *
+ * [*] dlmalloc can normally be found here: https://gee.cs.oswego.edu/pub/misc/malloc.c
+ *     But I just noticed that more recent versions of dlmalloc (as of 2023) are no longer
+ *     considered "public domain". For this purpose, I'd like to clarify that the basis
+ *     of the dlmalloc is "v2.8.6", as released mid-2012. Nothing added to the official
+ *     release of dlmalloc after that point has ever been added here (as a matter of
+ *     fact: other than the license change, nothing has been added to it since then,
+ *     either). A copy of the original "v2.8.6" release (with its original "public domain"
+ *     licensing statement) can be found here:
+ *     https://web.archive.org/web/20130508225521/http://gee.cs.oswego.edu/pub/misc/malloc.c
  *
  * Heavy modifications have been made:
  * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE:
@@ -102,6 +112,7 @@ DECL_BEGIN
  * - USE_LOCKS -------------------------------------------------
  *   Same as already defined by the original dlmalloc: adds
  *   locking to guard against multi-threaded access to globals
+ * -------------------------------------------------------------
  *
  *
  * - USE_PENDING_FREE_LIST -------------------------------------
@@ -109,6 +120,7 @@ DECL_BEGIN
  *   heap pointers when dlfree() is unable to acquire the lock
  *   added by USE_LOCKS. When this extension is enabled, freeing
  *   memory is a guarantied non-blocking operation.
+ * -------------------------------------------------------------
  *
  *
  * - USE_PER_THREAD_MSTATE -------------------------------------
@@ -117,7 +129,7 @@ DECL_BEGIN
  *
  *   Makes use of thread-local memory, MSPACES and FOOTERS to:
  *   - Allow for an arbitrary number of lazily allocated, extra
- *     mspaces that can be used to allocacte memory from a
+ *     mspaces that can be used to allocate memory from a
  *     thread-local mspace when the global mspace ("gm") cannot
  *     be locked.
  *   - When a thread that had previously allocated a private
@@ -140,6 +152,15 @@ DECL_BEGIN
  *   that only a single thread can allocate from the same mspace
  *   at the same time.
  *
+ *   When enabled, the user must define some additional macros
+ *   that are needed for managing the live-time / lazy-
+ *   initialization of the thread-local mspace/heap:
+ *   >> PRIVATE _Thread_local void *tls_heap = NULL
+ *   >>     __attribute__((cleanup(tls_mspace_destroy)));
+ *   >> #define DL_TLS_GETHEAP(p) (void)(*(p) = tls_heap)
+ *   >> #define DL_TLS_SETHEAP(v) (void)(tls_heap = (v))
+ * -------------------------------------------------------------
+ *
  *
  * - USE_MSPACE_MALLOC_LOCKLESS --------------------------------
  *   Define a new method "mspace_malloc_lockless" (same as
@@ -149,6 +170,7 @@ DECL_BEGIN
  *   allocator, based on whichever becomes available first,
  *   rather than having to unconditionally rely on "tls" as soon
  *   as "gm" cannot be locked even once.
+ * -------------------------------------------------------------
  */
 #ifndef USE_LOCKS
 #define USE_LOCKS 0
@@ -178,6 +200,7 @@ DECL_BEGIN
  *   - debug-memset patterns
  *   - leak detector
  *   - ...
+ * -------------------------------------------------------------
  *
  *
  * - DL_DEBUG_INTERNAL -----------------------------------------
@@ -190,6 +213,7 @@ DECL_BEGIN
  *   Generally, this switch can be kept off, but it may be of
  *   use when debugging bugs introduced by one of the many
  *   additions made to dlmalloc here.
+ * -------------------------------------------------------------
  *
  *
  * - DL_DEBUG_MEMSET_ALLOC / DL_DEBUG_MEMSET_FREE --------------
@@ -204,12 +228,14 @@ DECL_BEGIN
  *   to repeat itself across all bytes of some word. This way,
  *   it becomes trivial to spot uninitialized memory when only
  *   parts of some word were initialized.
+ * -------------------------------------------------------------
  *
  *
  * - DETECT_USE_AFTER_FREE -------------------------------------
  *   When memory is allocated that was previously free'd, check
  *   that its contents still reflect `DL_DEBUG_MEMSET_FREE_PATTERN'.
  *   This feature requires `DL_DEBUG_MEMSET_FREE_PATTERN' to work.
+ * -------------------------------------------------------------
  */
 #ifndef DL_DEBUG_INTERNAL
 #if !defined(NDEBUG) && !defined(__OPTIMIZE_SIZE__) && 0
@@ -253,6 +279,8 @@ DECL_BEGIN
 #elif !defined(DL_DEBUG_MEMSET_FREE_PATTERN)
 #define DL_DEBUG_MEMSET_FREE_PATTERN WORD_4BYTE(DEADBEEF) /* Set by dlfree() */
 #endif
+
+
 
 
 
