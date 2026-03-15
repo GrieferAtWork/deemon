@@ -3486,6 +3486,9 @@ PUBLIC DeeTypeObject DeeModuleDir_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_new         = */ NULL,
+		/* .tp_new_kw      = */ NULL,
+		/* .tp_new_copy    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dir_destroy,
 	},
 	/* .tp_cast = */ {
@@ -3537,6 +3540,9 @@ PUBLIC DeeTypeObject DeeModuleDee_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_new         = */ NULL,
+		/* .tp_new_kw      = */ NULL,
+		/* .tp_new_copy    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dee_destroy,
 	},
 	/* .tp_cast = */ {
@@ -3589,6 +3595,9 @@ PUBLIC DeeTypeObject DeeModuleDex_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_new         = */ NULL,
+		/* .tp_new_kw      = */ NULL,
+		/* .tp_new_copy    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&module_dex_destroy,
 	},
 	/* .tp_cast = */ {

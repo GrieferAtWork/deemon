@@ -439,6 +439,11 @@ Dee_funptr_t __Dee_PRIVATE_REQUIRE_tp_free(decltype(nullptr));
 
 typedef NONNULL_T((1)) void (DCALL *Dee_tp_destroy_t)(DeeObject *__restrict self);
 
+/* Prototypes for create-instance-of-type operators */
+typedef NONNULL_T((1)) ATTR_INS_T(3, 2) DREF DeeObject *(DCALL *Dee_tp_new_t)(DeeTypeObject *tp_self, size_t argc, DeeObject *const *argv);
+typedef NONNULL_T((1)) ATTR_INS_T(3, 2) DREF DeeObject *(DCALL *Dee_tp_new_kw_t)(DeeTypeObject *tp_self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+typedef NONNULL_T((1)) DREF DeeObject *(DCALL *Dee_tp_new_copy_t)(DeeTypeObject *tp_self, DeeObject *self);
+
 #undef tp_alloc
 struct Dee_type_constructor {
 	/* Instance constructors/destructors. */
@@ -550,6 +555,11 @@ struct Dee_type_constructor {
 	 * @return: != 0: Error was thrown */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_assign)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_move_assign)(DeeObject *self, DeeObject *other);
+
+	/* Prototypes for create-instance-of-type operators */
+	Dee_tp_new_t      tp_new;
+	Dee_tp_new_kw_t   tp_new_kw;
+	Dee_tp_new_copy_t tp_new_copy;
 
 	/* Callback for `DeeObject_Destroy()' (usually auto-assigned by
 	 * `DeeType_RequireDestroy()', but can be overwritten with a
@@ -2719,6 +2729,13 @@ INTDEF WUNUSED NONNULL((1)) Dee_funptr_t (DCALL DeeType_GetTpSerialize)(DeeTypeO
  * object destruction called by `DeeObject_Destroy()' */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_destroy_t DCALL
 DeeType_RequireDestroy(DeeTypeObject *__restrict self);
+
+#ifdef CONFIG_EXPERIMENTAL_USE_TP_NEW
+/* Return the relevant implementations of DeeObject_New() / DeeObject_NewKw() / DeeObject_Copy() */
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_new_t DCALL DeeType_RequireNew(DeeTypeObject *__restrict self);
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_new_kw_t DCALL DeeType_RequireNewKw(DeeTypeObject *__restrict self);
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_tp_new_copy_t DCALL DeeType_RequireNewCopy(DeeTypeObject *__restrict self);
+#endif /* CONFIG_EXPERIMENTAL_USE_TP_NEW */
 
 
 /* Returns the "instance-size" of a given object "self",

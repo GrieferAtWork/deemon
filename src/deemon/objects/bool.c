@@ -575,6 +575,9 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_new         = */ NULL,
+		/* .tp_new_kw      = */ NULL,
+		/* .tp_new_copy    = */ NULL,
 		/* .tp_destroy     = */ PTR_bool_tp_destroy,
 	},
 	/* .tp_cast = */ {

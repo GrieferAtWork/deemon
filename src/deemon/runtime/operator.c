@@ -145,6 +145,18 @@ DECL_BEGIN
 #define DeeType_INVOKE_HASH(tp_self, self)                    (*(tp_self)->tp_cmp->tp_hash)(self)
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+#ifdef DEFINE_TYPED_OPERATORS
+#define LOAD_TP_SELF  ASSERT_OBJECT_TYPE_A(self, tp_self)
+#define GET_TP_SELF() tp_self
+#else /* DEFINE_TYPED_OPERATORS */
+#define LOAD_TP_SELF  DeeTypeObject *tp_self; \
+                      ASSERT_OBJECT(self);    \
+                      tp_self = Dee_TYPE(self)
+#define GET_TP_SELF() Dee_TYPE(self)
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+
+#ifndef CONFIG_EXPERIMENTAL_USE_TP_NEW
 #ifndef GenericObject_DEFINED
 #define GenericObject_DEFINED
 typedef struct {
@@ -159,6 +171,8 @@ DeeObject_NewDefault(DeeTypeObject *__restrict object_type) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
+	if (object_type->tp_init.tp_new)
+		return (*object_type->tp_init.tp_new)(object_type, 0, NULL);
 	if (DeeType_IsVariable(object_type)) {
 		if (object_type->tp_init.tp_var.tp_ctor) {
 do_invoke_var_ctor:
@@ -241,6 +255,8 @@ DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
+	if (object_type->tp_init.tp_new)
+		return (*object_type->tp_init.tp_new)(object_type, argc, argv);
 	if (DeeType_IsVariable(object_type)) {
 		if (object_type->tp_init.tp_var.tp_ctor && !argc) {
 do_invoke_var_ctor:
@@ -348,6 +364,8 @@ DeeObject_NewKw(DeeTypeObject *object_type, size_t argc,
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
 	ASSERT(!kw || DeeObject_IsKw(kw));
+	if (object_type->tp_init.tp_new_kw)
+		return (*object_type->tp_init.tp_new_kw)(object_type, argc, argv, kw);
 	if (DeeType_IsVariable(object_type)) {
 		if (object_type->tp_init.tp_var.tp_any_ctor_kw) {
 do_invoke_var_any_ctor_kw:
@@ -608,21 +626,11 @@ DeeObject_Newf(DeeTypeObject *object_type,
 }
 #endif /* DEFINE_TYPED_OPERATORS */
 
-#ifdef DEFINE_TYPED_OPERATORS
-#define LOAD_TP_SELF  ASSERT_OBJECT_TYPE_A(self, tp_self)
-#define GET_TP_SELF() tp_self
-#else /* DEFINE_TYPED_OPERATORS */
-#define LOAD_TP_SELF  DeeTypeObject *tp_self; \
-                      ASSERT_OBJECT(self);    \
-                      tp_self = Dee_TYPE(self)
-#define GET_TP_SELF() Dee_TYPE(self)
-#endif /* !DEFINE_TYPED_OPERATORS */
-
-
-
 DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
+	if (tp_self->tp_init.tp_new_copy)
+		return (*tp_self->tp_init.tp_new_copy)(tp_self, self);
 	if (DeeType_IsVariable(tp_self)) {
 		if (tp_self->tp_init.tp_var.tp_copy_ctor) {
 do_invoke_var_copy:
@@ -659,6 +667,7 @@ err_r:
 	DeeType_DecrefHeapTypeNokill(tp_self);
 	goto err;
 }
+#endif /* !CONFIG_EXPERIMENTAL_USE_TP_NEW */
 
 
 #ifdef DEFINE_TYPED_OPERATORS

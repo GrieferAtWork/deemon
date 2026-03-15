@@ -718,6 +718,7 @@
 		<ClCompile Include="..\src\deemon\runtime\method-hints.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />
+		<ClCompile Include="..\src\deemon\runtime\new.c" />
 		<ClCompile Include="..\src\deemon\runtime\notify.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator-hint-defaults.c" />

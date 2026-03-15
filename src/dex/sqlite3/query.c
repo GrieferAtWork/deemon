@@ -885,6 +885,9 @@ INTERN DeeTypeObject Query_Type = {
 		/* .tp_dtor        = */ NULL, /* Nope: this one has a custom tp_destroy (needed to dead queries can be re-used) */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL,
+		/* .tp_new         = */ NULL,
+		/* .tp_new_kw      = */ NULL,
+		/* .tp_new_copy    = */ NULL,
 		/* .tp_destroy     = */ (void (DCALL *)(DeeObject *__restrict))&query_destroy,
 	},
 	/* .tp_cast = */ {

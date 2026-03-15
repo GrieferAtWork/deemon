@@ -322,6 +322,12 @@ DECL_BEGIN
 #error "LOCAL_HAS_GC must be specified statically"
 #endif /* !LOCAL_HAS_GC */
 
+#if (defined(DEFINE_DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0) && defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
+#define DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC0 (*(Dee_tp_destroy_t)&DeeObject_Free)
+#elif (defined(DEFINE_DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC1) && defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
+#define DeeObject_DefaultDestroy_Dtor0_Free0_HeapType0_GC1 (*(Dee_tp_destroy_t)&DeeGCObject_Free)
+#else /* ... */
+
 #undef LOCAL_HAVE_orig_type
 #if (LOCAL_HAS_HeapType || LOCAL_HAS_Free || (LOCAL_HAS_Dtor != 0) || \
      !defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
@@ -544,6 +550,8 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 }
 
 #undef LOCAL_HAVE_orig_type
+#endif /* !... */
+
 #undef LOCAL_DeeObject_DefaultDestroy
 #undef LOCAL_HAS_Dtor
 #undef LOCAL_HAS_Free

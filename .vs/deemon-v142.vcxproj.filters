@@ -2108,6 +2108,9 @@
 		<ClCompile Include="..\src\deemon\runtime\mro.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\new.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\notify.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
