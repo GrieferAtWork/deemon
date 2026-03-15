@@ -1115,8 +1115,8 @@ DeeObject_Class(DeeObject *__restrict self);
 
 /* Object creation (constructor invocation). */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);
-DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_NewKw(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewKw(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_NewTuple(DeeTypeObject *object_type, DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_NewTupleKw(DeeTypeObject *object_type, DeeObject *args, DeeObject *kw);
 DFUNDEF ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *DeeObject_NewPack(DeeTypeObject *object_type, size_t argc, ...);
