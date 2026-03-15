@@ -653,7 +653,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * instances of types without TP_FHEAP isn't a reference */
 #if (!defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE) && \
      !defined(CONFIG_NO_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
-#if 0 /* TODO: Implementation is incomplete */
+#if 1
 #define CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #else
 #define CONFIG_NO_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
