@@ -27,10 +27,10 @@ operator {
 [[export("DeeObject_{|T}Bool")]]
 [[export_precheck(
 #ifndef __OPTIMIZE_SIZE__
-#ifndef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifndef Dee_CONFIG_BOOL_TLS
 	__builtin_assume((tp_self == &DeeBool_Type) ==
 	                 (self == Dee_True || self == Dee_False));
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* !Dee_CONFIG_BOOL_TLS */
 	if (tp_self == &DeeBool_Type)
 		return DeeBool_IsTrue(self) ? 1 : 0;
 #endif /* !__OPTIMIZE_SIZE__ */

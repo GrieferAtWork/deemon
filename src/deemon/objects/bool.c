@@ -58,11 +58,11 @@ DECL_BEGIN
 #define int_as_01(v)            ((v) ? 1 : 0)
 #endif /* !... */
 
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef Dee_CONFIG_BOOL_TLS
 #define bool_forcompare(self) DeeBool_IsTrue_10(self)
-#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#else /* Dee_CONFIG_BOOL_TLS */
 #define bool_forcompare(self) (self)
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* !Dee_CONFIG_BOOL_TLS */
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -467,7 +467,7 @@ PRIVATE struct type_operator const bool_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 };
 
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef Dee_CONFIG_BOOL_TLS
 #ifndef CONFIG_NO_THREADS
 
 typedef struct {
@@ -544,7 +544,7 @@ INTERN ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void) {
 }
 
 #endif /* !CONFIG_NO_THREADS */
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* Dee_CONFIG_BOOL_TLS */
 
 #ifndef PTR_bool_tp_destroy
 #define PTR_bool_tp_destroy NULL
@@ -611,14 +611,14 @@ PUBLIC DeeTypeObject DeeBool_Type = {
 	/* .tp_operators_size= */ COMPILER_LENOF(bool_operators),
 };
 
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef Dee_CONFIG_BOOL_TLS
 #ifdef __NO_ATTR_ALIGNED
-#error "Need 'ATTR_ALIGNED' when 'CONFIG_EXPERIMENTAL_PER_THREAD_BOOL' is enabled"
+#error "Need 'ATTR_ALIGNED' when 'Dee_CONFIG_BOOL_TLS' is enabled"
 #endif /* __NO_ATTR_ALIGNED */
 PUBLIC ATTR_ALIGNED(_Dee_ALIGNOF_BOOL_PAIR) _DeeBool_Pair Dee_FalseTrue =
-#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#else /* Dee_CONFIG_BOOL_TLS */
 PUBLIC _DeeBool_Pair Dee_FalseTrue =
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* !Dee_CONFIG_BOOL_TLS */
 {
 	/* .bp_bools = */ {
 		/* [0] = */ { OBJECT_HEAD_INIT(&DeeBool_Type) }, /* `false' */
@@ -626,6 +626,13 @@ PUBLIC _DeeBool_Pair Dee_FalseTrue =
 	}
 };
 
+
+#ifndef Dee_CONFIG_BOOL_TLS
+PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED
+_DeeBool_Pair *DCALL DeeBool_GetPair(void) {
+	return &Dee_FalseTrue;
+}
+#endif /* !Dee_CONFIG_BOOL_TLS */
 
 DECL_END
 

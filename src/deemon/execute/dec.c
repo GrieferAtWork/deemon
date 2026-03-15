@@ -3016,13 +3016,13 @@ decwriter_putobject_ex(DeeDecWriter *__restrict self,
 		}
 	}
 
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef Dee_CONFIG_BOOL_TLS
 	if (DeeBool_Check(obj)) {
 		/* Always encode the global, static boolean objects,
 		 * rather than any potentially thread-local ones. */
 		obj = Dee_AsObject(&Dee_FalseTrue.bp_bools[DeeBool_IsTrue(obj)]);
 	}
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* Dee_CONFIG_BOOL_TLS */
 
 	/* Check if "obj" points into a dex module, or the deemon core */
 	mod = DeeModule_OfPointer(obj);

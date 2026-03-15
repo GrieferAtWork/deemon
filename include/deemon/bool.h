@@ -34,6 +34,54 @@
 #endif /* !__INTELLISENSE__ */
 #include "types.h" /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_OBJECT_OFFSETOF_DATA, Dee_REQUIRES_OBJECT */
 
+/* Make it so "true" / "false" are no longer global singletons, but
+ * rather per-thread constants. The advantage of this is that when
+ * lots of threads are running, boolean constants tend to be used
+ * extremely often, to the point where the penalty of conflicts
+ * caused by needing to incref/decref them all them time becomes a
+ * significant bottle-neck (such that a heavily parallel deemon
+ * program will spend 20-30% sitting there and invalidating memory
+ * caches because some other thread wanted to incref/decref one of
+ * the boolean constants, while your thread wanted to do the same)
+ *
+ * This feature actually breaks a promise deemon made a long time
+ * ago: that "===" and "!==" can be used to safely detect the boolean
+ * constants. With this enabled, the true/false objects need to be
+ * detected as:
+ * >> #ifdef Dee_CONFIG_BOOL_TLS
+ * >> local isTrue  = bool.istrue(ob);  // ob is bool && !!ob;
+ * >> local isFalse = bool.isfalse(ob); // ob is bool && !ob;
+ * >> #else // Dee_CONFIG_BOOL_TLS
+ * >> local isTrue  = ob === true;
+ * >> local isFalse = ob === false;
+ * >> #endif // !Dee_CONFIG_BOOL_TLS
+ *
+ * Even once this has been fully implemented and tested, this feature
+ * will NOT become mandatory, but will simply be renamed. Reason is
+ * that under "CONFIG_NO_THREADS", there is absolutely no reason to
+ * have boolean constants be per-thread (since there can only be 1 of
+ * them)
+ *
+ * ----
+ *
+ * And yes: this definitely makes a difference:
+ * - Dee_CONFIG_NO_BOOL_TLS:
+ *   >> time deemon util/scripts/fixincludes.dee
+ *      real    0m21.558s
+ *
+ * - Dee_CONFIG_BOOL_TLS:
+ *   >> time deemon util/scripts/fixincludes.dee
+ *      real    0m18.793s
+ */
+#if (!defined(Dee_CONFIG_BOOL_TLS) && \
+     !defined(Dee_CONFIG_NO_BOOL_TLS))
+#if !defined(CONFIG_NO_THREADS)
+#define Dee_CONFIG_BOOL_TLS
+#else /* !CONFIG_NO_THREADS */
+#define Dee_CONFIG_NO_BOOL_TLS
+#endif  /* CONFIG_NO_THREADS */
+#endif /* !Dee_CONFIG_[NO_]BOOL_TLS */
+
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
@@ -43,7 +91,7 @@ DECL_BEGIN
 #define return_false  Dee_return_false
 #endif /* DEE_SOURCE */
 
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef Dee_CONFIG_BOOL_TLS
 
 #if Dee_OBJECT_OFFSETOF_DATA <= 4
 #define _Dee_SIZEOF_BOOL_OBJECT 4
@@ -97,7 +145,7 @@ DDATDEF ATTR_ALIGNED(_Dee_ALIGNOF_BOOL_PAIR) _DeeBool_Pair Dee_FalseTrue;
 DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED _DeeBool_Pair *DCALL DeeBool_GetPair(void);
 #define _DeeBool_For01(val) (&DeeBool_GetPair()->bp_bools[val])
 
-#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#else /* Dee_CONFIG_BOOL_TLS */
 
 /* HINT: In i386 assembly, `bool' is 8 bytes, so if you want to
  *       convert an integer 0/1 into a boolean, you can use the
@@ -121,7 +169,10 @@ typedef union _Dee_bool_pair {
 
 DDATDEF _DeeBool_Pair Dee_FalseTrue;
 #define _DeeBool_For01(val) (&Dee_FalseTrue.bp_bools[val])
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+
+/* For binary compatibility: simply returns a pointer to `Dee_FalseTrue' */
+DFUNDEF ATTR_CONST ATTR_RETNONNULL WUNUSED _DeeBool_Pair *DCALL DeeBool_GetPair(void);
+#endif /* !Dee_CONFIG_BOOL_TLS */
 
 #define DeeBool_Check(x)      DeeObject_InstanceOfExact(x, &DeeBool_Type) /* `bool' is final. */
 #define DeeBool_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBool_Type)
@@ -134,11 +185,11 @@ DDATDEF DeeTypeObject DeeBool_Type;
 #else /* __INTELLISENSE__ */
 #define DeeBool_Incref(x) Dee_Incref(x)
 #define DeeBool_NewRef(x) DeeObject_NewRef(x)
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef Dee_CONFIG_BOOL_TLS
 #define DeeBool_Decref(x) Dee_Decref_unlikely(x)
-#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#else /* Dee_CONFIG_BOOL_TLS */
 #define DeeBool_Decref(x) Dee_DecrefNokill(x)
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* !Dee_CONFIG_BOOL_TLS */
 #endif /* !__INTELLISENSE__ */
 
 /* These 2 are always linked to globals so they can be used in static initializers. */

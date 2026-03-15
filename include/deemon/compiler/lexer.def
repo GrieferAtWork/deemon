@@ -508,14 +508,8 @@ DEF_WARNING(W_WRITE_TO_FINAL_VARIABLE, (WG_READONLY), WSTATE_ERROR, { struct sym
 DEF_WARNING(W_SYMBOL_TYPE_DECLARATION_CHANGED, (WG_SYNTAX), WSTATE_ERROR, { struct symbol const *sym = ARG(struct symbol const *); WARNF("Type declaration for symbol `%s' differs from previous definition", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE, (WG_SYNTAX), WSTATE_ERROR, { char const *name = ARG(char const *); WARNF("Unknown attribute `%s' of constant expressions `%r'", name, ARG(DeeObject *)); })
 
-#if defined(CONFIG_EXPERIMENTAL_PER_THREAD_BOOL) || 1
-#define HAVE_W_COMPARE_SODO_TRUE_UNDEFINED
 DEF_WARNING(W_COMPARE_SODO_TRUE_UNDEFINED, (WG_SYMBOL), WSTATE_WARN, WARNF("Comparing `=== true' or `!== true' produces undefined results. Consider using `bool.istrue()' instead"))
 DEF_WARNING(W_COMPARE_SODO_FALSE_UNDEFINED, (WG_SYMBOL), WSTATE_WARN, WARNF("Comparing `=== false' or `!== false' produces undefined results. Consider using `bool.isfalse()' instead"))
-#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
-WARNING(W_UNUSED_W_COMPARE_SODO_TRUE_UNDEFINED, (WG_SYNTAX), WSTATE_ERROR)
-WARNING(W_UNUSED_W_COMPARE_SODO_FALSE_UNDEFINED, (WG_SYNTAX), WSTATE_ERROR)
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 
 
 #ifdef CONFIG_LANGUAGE_NO_ASM

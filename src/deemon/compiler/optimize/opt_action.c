@@ -71,7 +71,6 @@ warn_idcompare_nonbuiltin(struct ast *__restrict warn_ast) {
 	return WARNAST(warn_ast, W_COMPARE_SODO_NONBUILTIN_UNDEFINED);
 }
 
-#ifdef HAVE_W_COMPARE_SODO_TRUE_UNDEFINED
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 warn_idcompare_bool(struct ast *__restrict warn_ast) {
 	if (warn_ast->a_type == AST_CONSTEXPR && DeeBool_Check(warn_ast->a_constexpr)) {
@@ -81,10 +80,6 @@ warn_idcompare_bool(struct ast *__restrict warn_ast) {
 	}
 	return 0;
 }
-#else /* HAVE_W_COMPARE_SODO_TRUE_UNDEFINED */
-#define warn_idcompare_bool(warn_ast) 0
-#endif /* !HAVE_W_COMPARE_SODO_TRUE_UNDEFINED */
-
 #endif
 
 

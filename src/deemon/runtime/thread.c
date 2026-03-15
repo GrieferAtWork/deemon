@@ -992,10 +992,8 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 #endif /* DeeThread_GetCurrentTid */
 		                      0,
 		/* .t_interrupt  = */ { NULL, NULL, NULL },
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
-		/* .t_bools      = */ &Dee_FalseTrue,
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
 #ifndef CONFIG_NO_THREADS
+		/* .t_bools      = */ &Dee_FalseTrue,
 		/* .t_int_vers   = */ 0,
 		/* .t_rcu_vers   = */ Dee_THREAD_RCU_INACTIVE,
 #ifdef CONFIG_PER_OBJECT_RCU_LOCKS
@@ -1597,7 +1595,7 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 
 
 /* Extra init/fini of threads that reached `Dee_THREAD_STATE_STARTED' */
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#ifdef Dee_CONFIG_BOOL_TLS
 #ifndef DeeThread_USE_SINGLE_THREADED
 
 /* Try to allocate a new (distinct) boolean pair, and return it.
@@ -1616,7 +1614,8 @@ INTDEF ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void);
 #define thread_init_started thread_init_started
 PRIVATE NONNULL((1)) void DCALL
 thread_init_started(DeeThreadObject *__restrict self) {
-	if ((self->t_bools = DeeBool_NewPair()) == NULL) {
+	self->t_bools = DeeBool_NewPair();
+	if unlikely(self->t_bools == NULL) {
 		/* Fallback: re-use the global, static boolean pair. */
 		self->t_bools = &Dee_FalseTrue;
 		Dee_Incref(&self->t_bools->bp_bools[1]);
@@ -1645,12 +1644,20 @@ _DeeBool_Pair *DCALL DeeBool_GetPair(void) {
 	return me->t_bools;
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 }
-#endif /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* Dee_CONFIG_BOOL_TLS */
 
 #ifndef thread_init_started
-#define thread_init_started(self) (void)0
-#define thread_fini_started(self) (void)0
+#ifndef CONFIG_NO_THREADS
+#define thread_init_started(self)  (void)((self)->t_bools = &Dee_FalseTrue)
+#define thread_fini_started(self)  (void)0
 #define thread_visit_started(self) (void)0
+#endif /* !CONFIG_NO_THREADS */
+
+#ifndef thread_init_started
+#define thread_init_started(self)  (void)0
+#define thread_fini_started(self)  (void)0
+#define thread_visit_started(self) (void)0
+#endif /* !thread_init_started */
 #endif /* !thread_init_started */
 
 

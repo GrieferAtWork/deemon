@@ -1021,19 +1021,19 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame)
 	uint16_t imm_val2;
 	DeeThreadObject *const this_thread = DeeThread_Self();
 	uint16_t const except_recursion    = this_thread->t_exceptsz;
-#ifdef CONFIG_EXPERIMENTAL_PER_THREAD_BOOL
+#if !defined(CONFIG_NO_THREADS) && defined(Dee_CONFIG_BOOL_TLS)
 #define LOCAL_Dee_False          Dee_AsObject(&this_thread->t_bools->bp_bools[0])
 #define LOCAL_Dee_True           Dee_AsObject(&this_thread->t_bools->bp_bools[1])
 #define LOCAL_DeeBool_NewFalse() (Dee_Incref(&this_thread->t_bools->bp_bools[0]), Dee_AsObject(&this_thread->t_bools->bp_bools[0]))
 #define LOCAL_DeeBool_NewTrue()  (Dee_Incref(&this_thread->t_bools->bp_bools[1]), Dee_AsObject(&this_thread->t_bools->bp_bools[1]))
 #define LOCAL_DeeBool_For01(v)   Dee_AsObject(&this_thread->t_bools->bp_bools[v])
-#else /* CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#else /* !CONFIG_NO_THREADS && Dee_CONFIG_BOOL_TLS */
 #define LOCAL_Dee_False          Dee_False
 #define LOCAL_Dee_True           Dee_True
 #define LOCAL_DeeBool_NewFalse() DeeBool_NewFalse()
 #define LOCAL_DeeBool_NewTrue()  DeeBool_NewTrue()
 #define LOCAL_DeeBool_For01(v)   DeeBool_For01(v)
-#endif /* !CONFIG_EXPERIMENTAL_PER_THREAD_BOOL */
+#endif /* CONFIG_NO_THREADS || !Dee_CONFIG_BOOL_TLS */
 #define LOCAL_DeeBool_For(v) LOCAL_DeeBool_For01(!!(v))
 
 #ifdef _MSC_VER
