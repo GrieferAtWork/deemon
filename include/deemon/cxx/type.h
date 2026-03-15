@@ -121,9 +121,6 @@ public:
 	WUNUSED bool cbase() const DEE_CXX_NOTHROW {
 		return DeeType_Base(this);
 	}
-	WUNUSED bool cgcpriority() const DEE_CXX_NOTHROW {
-		return DeeType_GCPriority(this);
-	}
 	WUNUSED bool chasoperator(Dee_operator_t name) const DEE_CXX_NOTHROW {
 		return DeeType_HasOperator((DeeTypeObject *)this, name);
 	}

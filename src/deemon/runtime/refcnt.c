@@ -26,7 +26,7 @@
 #include <deemon/format.h>          /* PRFXSIZ, PRFuSIZ */
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_AT, DREF, DeeObject, DeeObject_Check, DeeTypeObject, Dee_Decref*, Dee_Incref*, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_refcnt_t */
 #include <deemon/system-features.h> /* CONFIG_HAVE_memsetp, DeeSystem_DEFINE_memsetp, abort, strlen */
-#include <deemon/type.h>            /* DeeType_*, Dee_TP_FGC, Dee_TP_FHEAP, Dee_refchange, Dee_refchanges, Dee_reftracker, Dee_tp_destroy_t, TF_TPVISIT */
+#include <deemon/type.h>            /* DeeType_*, Dee_refchange, Dee_refchanges, Dee_reftracker, Dee_tp_destroy_t, TF_TPVISIT, TP_FGC, TP_FHEAP */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 
@@ -395,14 +395,14 @@ PRIVATE Dee_tp_destroy_t tpconst DeeObject_DefaultDestroy_table[DESTROY_COUNT] =
 /*[[[end]]]*/
 
 #undef DESTROY_TP_FLAGS_SHIFT_HINT
-#if (Dee_TP_FGC >> 12) == DESTROY_FGC
+#if (TP_FGC >> 12) == DESTROY_FGC
 #define DESTROY_TP_FLAGS_SHIFT_HINT 12
 #endif
 
 
 #ifdef DESTROY_TP_FLAGS_SHIFT_HINT
-#if ((Dee_TP_FGC >> DESTROY_TP_FLAGS_SHIFT_HINT) != DESTROY_FGC || \
-     (Dee_TP_FHEAP >> DESTROY_TP_FLAGS_SHIFT_HINT) != DESTROY_FHEAPTYPE)
+#if ((TP_FGC >> DESTROY_TP_FLAGS_SHIFT_HINT) != DESTROY_FGC || \
+     (TP_FHEAP >> DESTROY_TP_FLAGS_SHIFT_HINT) != DESTROY_FHEAPTYPE)
 #undef DESTROY_TP_FLAGS_SHIFT_HINT
 #endif /* ... */
 #endif /* DESTROY_TP_FLAGS_SHIFT_HINT */
@@ -412,9 +412,7 @@ DeeType_RequireDestroy_uncached_impl(DeeTypeObject *__restrict self) {
 	DeeTypeObject *iter;
 	unsigned int flags;
 #ifdef DESTROY_TP_FLAGS_SHIFT_HINT
-	flags = (self->tp_flags & (Dee_TP_FGC |
-	                           Dee_TP_FHEAP)) >>
-	        DESTROY_TP_FLAGS_SHIFT_HINT;
+	flags = (self->tp_flags & (TP_FGC | TP_FHEAP)) >> DESTROY_TP_FLAGS_SHIFT_HINT;
 	if (DeeType_HasRevivingDestructor(self))
 		flags |= DESTROY_FREV;
 #else /* DESTROY_TP_FLAGS_SHIFT_HINT */

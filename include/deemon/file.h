@@ -40,8 +40,8 @@
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
 
-#include "object.h" /* DeeObject_AsXInt, DeeObject_AsXUInt, Dee_Incref */
-#include "type.h"   /* DeeObject_InitInherited, OPERATOR_EXTENDED */
+#include "object.h" /* DeeObject_AsXInt, DeeObject_AsXUInt */
+#include "type.h"   /* DeeObject_*, OPERATOR_EXTENDED */
 #include "types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, DeeTypeObject, Dee_OBJECT_HEAD_EX, Dee_OBJECT_HEAD_INIT, Dee_off_t, Dee_pos_t, Dee_ssize_t */
 
 #include <stdarg.h>  /* va_list */
@@ -124,9 +124,12 @@ typedef struct Dee_file_object {
 /* Initialize the standard objects fields of a freshly allocated object.
  * @param: DeeObject      *self: The object to initialize
  * @param: DeeTypeoObject *type: The type to assign to the object */
-#define DeeFileObject_Init(self, type) \
-	(Dee_Incref(&(type)->ft_base),     \
-	 DeeObject_InitInherited(self, (DeeFileTypeObject *)(type)))
+#define DeeFileObject_InitStatic(self, type)          DeeObject_InitStaticEx(self, type, DeeFileType_AsType)
+#define DeeFileObject_InitStaticInherited(self, type) DeeObject_InitStaticInheritedEx(self, type, DeeFileType_AsType)
+#define DeeFileObject_InitHeap(self, type)            DeeObject_InitHeapEx(self, type, DeeFileType_AsType)
+#define DeeFileObject_InitHeapInherited(self, type)   DeeObject_InitHeapInheritedEx(self, type, DeeFileType_AsType)
+#define DeeFileObject_Init(self, type)                DeeObject_InitEx(self, type, DeeFileType_AsType)
+#define DeeFileObject_InitInherited(self, type)       DeeObject_InitInheritedEx(self, type, DeeFileType_AsType)
 
 
 /* The underlying system file descriptor type. */

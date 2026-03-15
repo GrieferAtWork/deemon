@@ -488,8 +488,11 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #if LOCAL_HAS_HeapType
 #define LOCAL_decref_orig_type() Dee_Decref_unlikely(orig_type)
 #else /* LOCAL_HAS_HeapType */
-	/* Non-heap types can never be destroyed, so we can use the *Nokill version here! */
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define LOCAL_decref_orig_type() /* nothing (ob_type didn't hold a reference) */
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define LOCAL_decref_orig_type() Dee_DecrefNokill(orig_type)
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #endif /* !LOCAL_HAS_HeapType */
 
 	/* Invoke `tp_free' of `orig_type', and decref `orig_type' */

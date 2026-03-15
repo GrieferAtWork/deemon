@@ -649,19 +649,16 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_NO_LEGACY_SEQUENCE_MATH_OPERATORS */
 
 
-/* TODO: Experimental feature where types can define a new flag "TF_NOTYPEREF"
- * When set, the type's "tp_destroy" will not decref(ob->ob_type) when the object
- * is destroyed. This flag can then be set for pretty much all statically allocated
- * native types, including "int" or "string" -- the resulting reduction in required
- * atomic OPS on reference counters of static objects will then result in some more
- * performance improvements.
- *
- * Once this has been consequently implemented for all native types, this flag could
- * then be removed once again, because really: only "TP_FHEAP" types *actually* need
- * to be referenced by object instances (meaning *no* native type needs to be).
- *
- * Start by implementing this for "int", "string" and "Bytes", since those will be
- * the types that will probably benefit the most from this. */
+/* Experimental feature switch: The "ob_type"f field of
+ * instances of types without TP_FHEAP isn't a reference */
+#if (!defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
+#if 0 /* TODO: Implementation is incomplete */
+#define CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#else
+#define CONFIG_NO_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_TP_FHEAP_IS_NOREF_OB_TYPE */
 /************************************************************************/
 
 

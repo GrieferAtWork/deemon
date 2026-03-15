@@ -80,7 +80,7 @@
 /* To satisfy "fixincludes" (these includes are intentionally missing) */
 /*!fixincludes fake_include "alloc.h"  // DeeObject_Free, DeeObject_Malloc, DeeSlab_* */
 /*!fixincludes fake_include "gc.h"     // DeeGCObject_Free, DeeGCObject_Malloc, DeeGCSlab_GetFree, DeeGCSlab_GetMalloc */
-/*!fixincludes fake_include "object.h" // DeeAssert_BadObjectType, DeeAssert_BadObjectTypeOpt, DeeObject_Check, Dee_Incref */
+/*!fixincludes fake_include "object.h" // DeeAssert_BadObjectType, DeeAssert_BadObjectTypeOpt, DeeObject_Check, Dee_DecrefNokill, Dee_Incref */
 /*!fixincludes fake_include "string.h" // DeeString_Hash, DeeString_STR */
 /*!fixincludes fake_include "tuple.h"  // DeeTuple_ELEM, DeeTuple_SIZE */
 
@@ -144,18 +144,17 @@ struct Dee_reftracker {
 DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #endif /* CONFIG_TRACE_REFCHANGES */
 
+#ifdef CONFIG_TRACE_REFCHANGES
+#define _DeeObject_Init_EXTRA_(self) (self)->ob_trace = NULL,
+#else /* CONFIG_TRACE_REFCHANGES */
+#define _DeeObject_Init_EXTRA_(self) /* nothing */
+#endif /* !CONFIG_TRACE_REFCHANGES */
+
 
 /* Check if the given object is being shared.
  * WARNING: The returned value cannot be relied upon for
  *          objects implementing the WEAKREF interface. */
 #define DeeObject_IsShared(self) ((self)->ob_refcnt != 1)
-
-/* >> DeeTypeObject *DeeObject_InitInherited(DeeObject *self, / *inherit(always)* / DREF DeeTypeObject *type); */
-#ifdef CONFIG_TRACE_REFCHANGES
-#define DeeObject_InitInherited(self, type) ((self)->ob_refcnt = 1, (self)->ob_type = (type), (self)->ob_trace = NULL)
-#else /* CONFIG_TRACE_REFCHANGES */
-#define DeeObject_InitInherited(self, type) ((self)->ob_refcnt = 1, (self)->ob_type = (type))
-#endif /* !CONFIG_TRACE_REFCHANGES */
 
 /* >> void *DeeObject_DATA(DeeObject *self);
  * Returns a pointer to the object-specific data-area of "self" */
@@ -170,13 +169,78 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #endif /* !__INTELLISENSE__ */
 
 
-/* >> DeeTypeObject *DeeObject_Init(DeeObject *self, DeeTypeObject *type);
+/* >> DeeTypeObject *DeeObject_InitHeap(DeeObject *self, DeeTypeObject *type);
+ * >> DeeTypeObject *DeeObject_InitHeapInherited(DeeObject *self, [inherit(always)] DREF DeeTypeObject *type);
+ * >> DeeTypeObject *DeeObject_InitStatic(DeeObject *self, DeeTypeObject *type);
+ * >> DeeTypeObject *DeeObject_InitStaticInherited(DeeObject *self, [inherit(always)] DREF DeeTypeObject *type);
  * Initialize the standard objects fields of a freshly allocated object.
+ * - *Heap:      Type must be a heap-type      (DeeType_IsHeapType())
+ * - *Static:    Type must not be a heap-type  (!DeeType_IsHeapType())
+ * - *Inherited: Inherit a reference to "type" (inherit(always))
+ *
  * @param: DeeObject      *self: The object to initialize
- * @param: DeeTypeoObject *type: The type to assign to the object */
-#define DeeObject_Init(self, type) \
-	(Dee_Incref(type),             \
-	 DeeObject_InitInherited(self, (DeeTypeObject *)(type)))
+ * @param: DeeTypeoObject *type: The (non-static) type to assign to the object */
+#define DeeObject_InitHeap(self, type)                                DeeObject_InitHeapEx(self, type, /**/)
+#define DeeObject_InitHeapInherited(self, /*inherit(always)*/ type)   DeeObject_InitHeapInheritedEx(self, type, /**/)
+#define DeeObject_InitStatic(self, type)                              DeeObject_InitStaticEx(self, type, /**/)
+#define DeeObject_InitStaticInherited(self, /*inherit(always)*/ type) DeeObject_InitStaticInheritedEx(self, type, /**/)
+#define DeeObject_InitHeapEx(self, type, type_as_type)        \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,      \
+	 Dee_ASSERT(type_as_type(type)->tp_flags & Dee_TP_FHEAP), \
+	 Dee_Incref(type_as_type(type)), (self)->ob_type = (type))
+#define DeeObject_InitHeapInheritedEx(self, /*inherit(always)*/ type, type_as_type) \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,                            \
+	 Dee_ASSERT(type_as_type(type)->tp_flags & Dee_TP_FHEAP), (self)->ob_type = (type))
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define DeeObject_InitStaticEx(self, type, type_as_type)         \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,         \
+	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)), \
+	 (self)->ob_type = (type))
+#define DeeObject_InitStaticInheritedEx(self, /*inherit(always)*/ type, type_as_type) \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,                              \
+	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)),                      \
+	 Dee_DecrefNokill(type_as_type(type)), (self)->ob_type = (type))
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+#define DeeObject_InitStaticEx(self, type, type_as_type)         \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,         \
+	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)), \
+	 Dee_Incref(type_as_type(type)), (self)->ob_type = (type))
+#define DeeObject_InitStaticInheritedEx(self, /*inherit(always)*/ type, type_as_type) \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,                              \
+	 Dee_ASSERT(!(type_as_type(type)->tp_flags & Dee_TP_FHEAP)),                      \
+	 (self)->ob_type = (type))
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+
+
+/* >> DeeTypeObject *DeeObject_Init(DeeObject *self, DeeTypeObject *type);
+ * >> DeeTypeObject *DeeObject_InitInherited(DeeObject *self, [inherit(always)] DREF DeeTypeObject *type);
+ * Initialize the standard objects fields of a freshly allocated object.
+ * If possible, you should use `DeeObject_InitHeap' / `DeeObject_InitStatic' instead!
+ * @param: DeeObject      *self: The object to initialize
+ * @param: DeeTypeoObject *type: The (non-static) type to assign to the object */
+#define DeeObject_Init(self, type)          DeeObject_InitEx(self, type, /**/)
+#define DeeObject_InitInherited(self, type) DeeObject_InitInheritedEx(self, type, /**/)
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define DeeObject_InitEx(self, type, type_as_type)       \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1, \
+	 type_as_type(type)->tp_flags & Dee_TP_FHEAP         \
+	 ? Dee_Incref(type_as_type(type))                    \
+	 : (void)0,                                          \
+	 (self)->ob_type = (type))
+#define DeeObject_InitInheritedEx(self, type, type_as_type) \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1,    \
+	 type_as_type(type)->tp_flags & Dee_TP_FHEAP            \
+	 ? (void)0                                              \
+	 : Dee_DecrefNokill(type_as_type(type)),                \
+	 (self)->ob_type = (type))
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+#define DeeObject_InitEx(self, type, type_as_type)       \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1, \
+	 Dee_Incref(type_as_type(type)), (self)->ob_type = (type))
+#define DeeObject_InitInheritedEx(self, type, type_as_type) \
+	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1, (self)->ob_type = (type))
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+
 
 
 /* Serialization address (points into the abstract serialization buffer) */
@@ -2445,6 +2509,7 @@ struct Dee_type_operator {
 /*      Dee_TP_F                0x0200  * ... */
 #define Dee_TP_FNAMEOBJECT      0x0400 /* `tp_name' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
 #define Dee_TP_FDOCOBJECT       0x0800 /* `tp_doc' actually points to the `s_str' member of a `DeeStringObject' that this type holds a reference to. */
+/*      Dee_TP_F                0x1000  * ... */
 #define Dee_TP_FGC              0x2000 /* Instance of this type can be harvested by the Garbage Collector. */
 #define Dee_TP_FHEAP            0x4000 /* This type was allocated on the heap. */
 #define Dee_TP_FVARIABLE        0x8000 /* Variable-length object type. (`tp_var' is used, rather than `tp_alloc') */
