@@ -136,7 +136,7 @@ DECL_BEGIN
 #define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_Dtor0_Free0_HeapType1_GC1
 #define LOCAL_HAS_Dtor                 0
 #define LOCAL_HAS_Free                 0
-#define LOCAL_HAS_HeapType             0
+#define LOCAL_HAS_HeapType             1
 #define LOCAL_HAS_GC                   1
 #elif defined(DEFINE_DeeObject_DefaultDestroy_Dtor0_Free1_HeapType0_GC0)
 #define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_Dtor0_Free1_HeapType0_GC0
@@ -322,9 +322,17 @@ DECL_BEGIN
 #error "LOCAL_HAS_GC must be specified statically"
 #endif /* !LOCAL_HAS_GC */
 
+#undef LOCAL_HAVE_orig_type
+#if (LOCAL_HAS_HeapType || LOCAL_HAS_Free || (LOCAL_HAS_Dtor != 0) || \
+     !defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
+#define LOCAL_HAVE_orig_type
+#endif /* ... */
+
 PRIVATE NONNULL((1)) void DCALL
 LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
+#ifdef LOCAL_HAVE_orig_type
 	DeeTypeObject *orig_type;
+#endif /* LOCAL_HAVE_orig_type */
 
 #if LOCAL_HAS_Rev
 	/* Invoke "tp_finalize" operators */
@@ -444,7 +452,9 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #endif /* !DEFINE_DeeGCObject_FinishDestroyAfterUntrack */
 
 	/* Load the object's type. */
+#ifdef LOCAL_HAVE_orig_type
 	orig_type = Dee_TYPE(self);
+#endif /* LOCAL_HAVE_orig_type */
 
 #if LOCAL_HAS_Dtor > 2
 	{
@@ -533,6 +543,7 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 #undef LOCAL_decref_orig_type
 }
 
+#undef LOCAL_HAVE_orig_type
 #undef LOCAL_DeeObject_DefaultDestroy
 #undef LOCAL_HAS_Dtor
 #undef LOCAL_HAS_Free
