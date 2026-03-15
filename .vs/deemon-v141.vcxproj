@@ -493,6 +493,8 @@
 		<ClInclude Include="..\src\deemon\runtime\method-hints.h" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl-cache.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\mro-impl.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\new-copy.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\new-new.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\old-slab-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\old-slab.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h" />

@@ -1126,6 +1126,9 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VNewf(DeeTypeObj
 #ifndef __OPTIMIZE_SIZE__
 #define DeeObject_NewTuple(object_type, args)       DeeObject_New(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_NewTupleKw(object_type, args, kw) DeeObject_NewKw(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#ifdef CONFIG_EXPERIMENTAL_USE_TP_NEW
+#define DeeObject_NewDefault(object_type) DeeObject_New(object_type, 0, NULL)
+#endif /* CONFIG_EXPERIMENTAL_USE_TP_NEW */
 #endif /* !__OPTIMIZE_SIZE__ */
 
 /* Object deepcopy invocation (convenience wrappers for `DeeDeepCopyContext') */
