@@ -669,7 +669,7 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
  * such that they match the expected, traditional behavior. */
 #if (!defined(CONFIG_EXPERIMENTAL_USE_TP_NEW) && \
      !defined(CONFIG_NO_EXPERIMENTAL_USE_TP_NEW))
-#if 0 /* TODO: Incomplete */
+#if 1
 #define CONFIG_EXPERIMENTAL_USE_TP_NEW
 #else
 #define CONFIG_NO_EXPERIMENTAL_USE_TP_NEW
