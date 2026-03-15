@@ -40,7 +40,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzeroc, memcpyc */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
 #include <deemon/util/weakref.h>    /* Dee_weakref */
@@ -73,7 +73,7 @@ PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = 0;
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &FixedList_Type);
+	DeeObject_InitStatic(result, &FixedList_Type);
 	return DeeGC_TRACK(FixedList, result);
 err:
 	return NULL;
@@ -92,7 +92,7 @@ fl_copy(FixedList *__restrict self) {
 	Dee_XMovrefv(result->fl_elem, self->fl_elem, self->fl_size);
 	FixedList_LockEndRead(self);
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &FixedList_Type);
+	DeeObject_InitStatic(result, &FixedList_Type);
 	return DeeGC_TRACK(FixedList, result);
 err:
 	return NULL;
@@ -212,7 +212,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 	}
 /*done:*/
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &FixedList_Type);
+	DeeObject_InitStatic(result, &FixedList_Type);
 	return DeeGC_TRACK(FixedList, result);
 err_r_elem:
 	Dee_XDecrefv(result->fl_elem, result->fl_size);
@@ -489,7 +489,7 @@ fl_iter(FixedList *__restrict self) {
 	result->li_list = self;
 	result->li_iter = 0;
 	Dee_Incref(self);
-	DeeObject_Init(result, &FixedListIterator_Type);
+	DeeObject_InitStatic(result, &FixedListIterator_Type);
 done:
 	return result;
 }
@@ -515,7 +515,7 @@ fl_getrange_index(FixedList *__restrict self, Dee_ssize_t i_begin, Dee_ssize_t i
 	             range_size);
 	FixedList_LockEndRead(self);
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &FixedList_Type);
+	DeeObject_InitStatic(result, &FixedList_Type);
 	return DeeGC_Track((DeeObject *)result);
 err:
 	return NULL;
@@ -544,7 +544,7 @@ fl_getrange_index_n(FixedList *__restrict self, Dee_ssize_t i_begin) {
 	             range_size);
 	FixedList_LockEndRead(self);
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &FixedList_Type);
+	DeeObject_InitStatic(result, &FixedList_Type);
 	return DeeGC_Track((DeeObject *)result);
 err:
 	return NULL;

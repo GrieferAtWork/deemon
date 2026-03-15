@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>  /* DeeObject_MALLOC */
 #include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_Incref */
-#include <deemon/type.h>   /* DeeObject_Init */
+#include <deemon/type.h>   /* DeeObject_InitStatic */
 
 #include "../generic-proxy.h"
 
@@ -53,7 +53,7 @@ MapFromKeysAndValue_New(DeeObject *keys, DeeObject *value) {
 		result->mfk_value = value;
 		Dee_Incref(keys);
 		Dee_Incref(value);
-		DeeObject_Init(result, &MapFromKeysAndValue_Type);
+		DeeObject_InitStatic(result, &MapFromKeysAndValue_Type);
 	}
 	return result;
 }
@@ -66,7 +66,7 @@ MapFromKeysAndCallback_New(DeeObject *keys, DeeObject *valuefor) {
 		result->mfk_value = valuefor;
 		Dee_Incref(keys);
 		Dee_Incref(valuefor);
-		DeeObject_Init(result, &MapFromKeysAndCallback_Type);
+		DeeObject_InitStatic(result, &MapFromKeysAndCallback_Type);
 	}
 	return result;
 }

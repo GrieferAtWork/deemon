@@ -38,7 +38,7 @@
 #include <deemon/system-features.h>    /* CONFIG_HAVE__Exit, CONFIG_HAVE_exit, DeeSystem_GetErrno, _Exit, exit */
 #include <deemon/system.h>             /* DeeNTSystem_*, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
@@ -689,7 +689,7 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 		if likely(error) {
 			/* Initialize the appexit error. */
 			error->ae_exitcode = exitcode;
-			DeeObject_Init(error, &DeeError_AppExit);
+			DeeObject_InitStatic(error, &DeeError_AppExit);
 			/* Throw the appexit error. */
 			DeeError_ThrowInherited(error);
 		}

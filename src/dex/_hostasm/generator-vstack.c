@@ -44,7 +44,7 @@
 #include <deemon/system-features.h>  /* bzero, memmoveupc, memset */
 #include <deemon/thread.h>           /* DeeThreadObject, Dee_except_frame */
 #include <deemon/tuple.h>            /* DeeTupleObject, DeeTuple_NewVector, Dee_EmptyTuple */
-#include <deemon/type.h>             /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, OPERATOR_*, TF_NONE, TP_F* */
+#include <deemon/type.h>             /* DeeObject_InitStatic, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_operator_t, OPERATOR_*, TF_NONE, TP_F* */
 #include <deemon/util/atomic.h>      /* atomic_read */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_CHUNKSIZE_FOREACH */
 
@@ -4293,7 +4293,7 @@ DummyVector_New(size_t num_items) {
 	result = (DREF DummyVectorObject *)DeeObject_Mallocc(offsetof(DummyVectorObject, dvo_items),
 	                                                     num_items, sizeof(void *));
 	if likely(result)
-		DeeObject_Init(result, &DeeVectorDummy_Type);
+		DeeObject_InitStatic(result, &DeeVectorDummy_Type);
 	return result;
 }
 

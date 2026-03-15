@@ -344,7 +344,7 @@ DeeModule_GetRoot(DeeModuleObject *__restrict self,
 	if unlikely(!result)
 		goto err;
 	result->fo_code = code; /* Inherit reference */
-	DeeObject_Init(result, &DeeFunction_Type);
+	DeeObject_InitStatic(result, &DeeFunction_Type);
 #ifdef CONFIG_HAVE_CODE_METRICS
 	atomic_inc(&result->fo_code->co_metrics.com_functions);
 #endif /* CONFIG_HAVE_CODE_METRICS */

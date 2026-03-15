@@ -36,7 +36,7 @@
 #include <deemon/string.h>           /* DeeString*, Dee_UNICODE_PRINTER_LENGTH, Dee_unicode_printer* */
 #include <deemon/system-features.h>  /* DeeSystem_DEFINE_strcmp, bcmpc, bzero, memcpy, mempcpyc, memset, strlen */
 #include <deemon/tuple.h>            /* Dee_EmptyTuple */
-#include <deemon/type.h>             /* DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FFINAL, TP_FINHERITCTOR */
+#include <deemon/type.h>             /* DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TP_FFINAL, TP_FINHERITCTOR */
 
 #include "../../runtime/strings.h"
 
@@ -1439,7 +1439,7 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 	                                                                   7 + 1, sizeof(struct Dee_class_attribute));
 	if unlikely(!maker.cm_desc)
 		goto err;
-	DeeObject_Init(maker.cm_desc, &DeeClassDescriptor_Type);
+	DeeObject_InitStatic(maker.cm_desc, &DeeClassDescriptor_Type);
 	maker.cm_desc->cd_flags      = class_flags;
 	maker.cm_desc->cd_cattr_list = empty_class_attributes;
 	maker.cm_desc->cd_clsop_list = empty_class_operators;

@@ -37,7 +37,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcpy* */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self, Dee_except_frame, Dee_except_frame_free */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsInterrupt, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsInterrupt, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 #include <deemon/util/rlock.h>      /* Dee_rshared_lock_init */
 
@@ -201,7 +201,7 @@ jy_iter(JITYieldFunction *__restrict self) {
 	JITLexer_Start(&result->ji_lex,
 	               (unsigned char const *)jf->jf_source_start,
 	               (unsigned char const *)jf->jf_source_end);
-	DeeObject_Init(result, &JITYieldFunctionIterator_Type);
+	DeeObject_InitStatic(result, &JITYieldFunctionIterator_Type);
 	return DeeGC_TRACK(JITYieldFunctionIterator, result);
 err_r_loc_bad_argc:
 	if (jf->jf_selfarg == (size_t)-1) {

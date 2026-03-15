@@ -36,7 +36,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric */
@@ -280,7 +280,7 @@ GCCollection_New(DeeObject *__restrict ob, gcset_populate_cb_t populate) {
 	result->gcc_populate = populate;
 	GCSet_Init(&result->gcc_cache);
 	Dee_once_init(&result->gcc_loaded);
-	DeeObject_Init(result, &GCCollection_Type);
+	DeeObject_InitStatic(result, &GCCollection_Type);
 	return result;
 err:
 	return NULL;
@@ -656,7 +656,7 @@ gccoll_iter(GCCollection *__restrict self) {
 	result->gcci_coll = self;
 	result->gcci_iter = self->gcc_cache.gs_map;
 	result->gcci_end  = self->gcc_cache.gs_map + self->gcc_cache.gs_msk + 1;
-	DeeObject_Init(result, &GCCollectionIterator_Type);
+	DeeObject_InitStatic(result, &GCCollectionIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1024,7 +1024,7 @@ gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 	if unlikely(!result)
 		goto err;
 	gciter_setup(result);
-	DeeObject_Init(result, &GCIter_Type);
+	DeeObject_InitStatic(result, &GCIter_Type);
 	return result;
 err:
 	return NULL;

@@ -38,7 +38,7 @@
 #include <deemon/none.h>             /* return_none */
 #include <deemon/object.h>           /* DREF, DeeObject, DeeObject_AsUInt64, DeeObject_AssertType, DeeTypeObject, Dee_AsObject, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/system-features.h>  /* read, write */
-#include <deemon/type.h>             /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>             /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>      /* atomic_read */
 #include <deemon/util/lock-utils.h>  /* Dee_atomic_lock_*, Dee_atomic_rwlock_* */
 #include <deemon/util/lock.h>        /* Dee_ATOMIC_RWLOCK_MAX_READERS, Dee_SHARED_RWLOCK_MAX_READERS, Dee_SIZEOF_ATOMIC_LOCK, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_*, Dee_shared_rwlock_*, _Dee_atomic_lock_release_NDEBUG, _Dee_atomic_rwlock_*, _Dee_shared_lock_release_NDEBUG, _Dee_shared_rwlock_* */
@@ -1316,7 +1316,7 @@ LOCAL_rwlockapi_readlock_get(LOCAL_DeeRWLockObject *__restrict self) {
 		goto done;
 	result->grwl_lock = Dee_AsObject(self);
 	Dee_Incref(self);
-	DeeObject_Init(result, &LOCAL_DeeRWLockReadLock_Type);
+	DeeObject_InitStatic(result, &LOCAL_DeeRWLockReadLock_Type);
 done:
 	return result;
 }
@@ -1329,7 +1329,7 @@ LOCAL_rwlockapi_writelock_get(LOCAL_DeeRWLockObject *__restrict self) {
 		goto done;
 	result->grwl_lock = Dee_AsObject(self);
 	Dee_Incref(self);
-	DeeObject_Init(result, &LOCAL_DeeRWLockWriteLock_Type);
+	DeeObject_InitStatic(result, &LOCAL_DeeRWLockWriteLock_Type);
 done:
 	return result;
 }

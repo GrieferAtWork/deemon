@@ -35,7 +35,7 @@
 #include <deemon/set.h>                 /* DeeSet_Type */
 #include <deemon/super.h>               /* DeeSuper_New */
 #include <deemon/thread.h>              /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>                /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>                /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/simple-hashset.h> /* Dee_simple_hashset_with_lock_* */
 
 #include "../../runtime/runtime_error.h"
@@ -365,7 +365,7 @@ uqiwk_getseq(DistinctIteratorWithKey *__restrict self) {
 	result->dswk_seq = iter_seq; /* Inherit reference */
 	result->dswk_key = self->diwk_key;
 	Dee_Incref(self->diwk_key);
-	DeeObject_Init(result, &DistinctSetWithKey_Type);
+	DeeObject_InitStatic(result, &DistinctSetWithKey_Type);
 	return result;
 err_iter_seq:
 	Dee_Decref(iter_seq);
@@ -466,7 +466,7 @@ dswk_iter(DistinctSetWithKey *__restrict self) {
 	result->diwk_key = self->dswk_key;
 	Dee_Incref(self->dswk_key);
 	Dee_simple_hashset_with_lock_init(&result->diwk_encountered);
-	DeeObject_Init(result, &DistinctIteratorWithKey_Type);
+	DeeObject_InitStatic(result, &DistinctIteratorWithKey_Type);
 	return DeeGC_TRACK(DistinctIteratorWithKey, result);
 err_r_iter:
 	Dee_Decref(result->diwk_iter);

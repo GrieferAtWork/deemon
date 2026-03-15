@@ -39,7 +39,7 @@
 #include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_STUB */
 #include <deemon/system.h>          /* DeeSystem_* */
 #include <deemon/tuple.h>           /* DeeTupleObject, DeeTuple_NewUninitialized */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_InitInherited, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_METHOD_END, TYPE_METHOD_F, type_* */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_InitHeapInherited, DeeType_IsHeapType, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_FNORMAL, TYPE_METHOD_END, TYPE_METHOD_F, type_* */
 #include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_SHARED_LOCK_INIT, Dee_shared_lock_* */
@@ -189,7 +189,7 @@ shlib_getitem(Shlib *self, DeeObject *name) {
 	result = pointer_object_malloc();
 	if unlikely(!result)
 		goto err_type;
-	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
+	DeeObject_InitHeapInherited(result, DeeSType_AsType(result_type));
 	result->p_ptr.ptr = symaddr;
 	return Dee_AsObject(result);
 err_type:
@@ -246,7 +246,7 @@ shlib_getattr(Shlib *self,
 		Dee_Decref(DeeSType_AsType(result_type));
 		goto err;
 	}
-	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
+	DeeObject_InitHeapInherited(result, DeeSType_AsType(result_type));
 #else /* CONFIG_NO_CFUNCTION */
 	result_type = self->sh_vfunptr;
 	if (!result_type) {
@@ -264,6 +264,7 @@ shlib_getattr(Shlib *self,
 		result_type = new_type;
 
 		/* Save the reference in the shlib descriptor. */
+		ASSERT(DeeType_IsHeapType(DeeSType_AsType(result_type)));
 		if (!atomic_cmpxch(&self->sh_vfunptr, NULL, result_type))
 			Dee_DecrefNokill(DeeSType_AsType(result_type));
 		ASSERT(self->sh_vfunptr == result_type);
@@ -305,7 +306,7 @@ shlib_base(Shlib *self, size_t argc,
 	result = pointer_object_malloc();
 	if unlikely(!result)
 		goto err_type;
-	DeeObject_InitInherited(result, DeeSType_AsType(result_type));
+	DeeObject_InitHeapInherited(result, DeeSType_AsType(result_type));
 	/* Return the base address of the shared library. */
 	result->p_ptr.ptr = (void *)self->sh_lib;
 

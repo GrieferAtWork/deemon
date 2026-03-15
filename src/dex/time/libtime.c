@@ -45,7 +45,7 @@
 #include <deemon/system-features.h> /* CLOCK_REALTIME, CONFIG_HAVE_*, clock_gettime, clock_gettime64, gettimeofday, gettimeofday64, memcasecmp, strlen, time, time64, timezone, tzset */
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>          /* DeeThread_GetTimeMicroSeconds */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_SIGNED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_SIGNED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_write */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 
@@ -1897,7 +1897,7 @@ time_timepart_get(DeeTimeObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	result->t_type  = self->t_type;
 	result->t_kind  = TIME_KIND_TIMESTAMP;
 	result->t_nanos = self->t_nanos;
@@ -1943,7 +1943,7 @@ time_datepart_get(DeeTimeObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	result->t_type  = self->t_type;
 	result->t_kind  = TIME_KIND_TIMESTAMP;
 	result->t_nanos = self->t_nanos;
@@ -2032,7 +2032,7 @@ time_get_astimestamp(DeeTimeObject *__restrict self) {
 			DREF DeeTimeObject *result;
 			result = DeeObject_MALLOC(DeeTimeObject);
 			if likely(result) {
-				DeeObject_Init(result, &DeeTime_Type);
+				DeeObject_InitStatic(result, &DeeTime_Type);
 				result->t_nanos = self->t_nanos;
 				result->t_type  = self->t_type;
 				result->t_kind  = TIME_KIND_TIMESTAMP;
@@ -2051,7 +2051,7 @@ time_get_asdelta(DeeTimeObject *__restrict self) {
 			DREF DeeTimeObject *result;
 			result = DeeObject_MALLOC(DeeTimeObject);
 			if likely(result) {
-				DeeObject_Init(result, &DeeTime_Type);
+				DeeObject_InitStatic(result, &DeeTime_Type);
 				result->t_nanos = self->t_nanos;
 				result->t_type  = self->t_type;
 				result->t_kind  = TIME_KIND_DELTA;
@@ -2199,7 +2199,7 @@ time_neg(DeeTimeObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	result->t_nanos    = self->t_nanos;
 	result->t_typekind = self->t_typekind;
 	__hybrid_int128_neg(result->t_nanos);
@@ -2260,7 +2260,7 @@ time_add(DeeTimeObject *self, DeeTimeObject *other) {
 	result->t_kind = self->t_kind;
 	if (DeeTime_IsDelta(self))
 		result->t_kind = other->t_kind;
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return result;
 err_cannot_add_timestamp_to_timestamp:
 	DeeError_Throwf(&DeeError_ValueError,
@@ -2306,7 +2306,7 @@ time_sub(DeeTimeObject *self, DeeTimeObject *other) {
 	result->t_kind = self->t_kind;
 	if (!DeeTime_IsDelta(self) && !DeeTime_IsDelta(other))
 		result->t_kind = TIME_KIND_DELTA; /* Delta between 2 timestamp */
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return result;
 err_cannot_subtract_timestamp_from_delta:
 	DeeError_Throwf(&DeeError_ValueError,
@@ -2330,7 +2330,7 @@ time_mul(DeeTimeObject *self, DeeObject *other) {
 	result->t_typekind = self->t_typekind;
 	result->t_nanos    = self->t_nanos;
 	__hybrid_int128_mul128(result->t_nanos, multiplier);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return result;
 err_cannot_multiply_timestamp:
 	DeeError_Throwf(&DeeError_ValueError,
@@ -2366,7 +2366,7 @@ time_div(DeeTimeObject *self, DeeObject *other) {
 	result->t_kind  = TIME_KIND_DELTA;
 	result->t_nanos = self->t_nanos;
 	__hybrid_int128_floordiv128(result->t_nanos, rhs);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 done:
 	return Dee_AsObject(result);
 err_cannot_divide_timestamp:
@@ -2397,7 +2397,7 @@ time_mod(DeeTimeObject *self, DeeObject *other) {
 	result->t_kind  = TIME_KIND_DELTA;
 	result->t_nanos = self->t_nanos;
 	__hybrid_int128_floormod128(result->t_nanos, rhs);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 done:
 	return Dee_AsObject(result);
 err_cannot_divide_timestamp:
@@ -2447,7 +2447,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libtime_gmtime_f_impl(void)
 		goto err;
 	time_now_utc(&result->t_nanos);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2466,7 +2466,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libtime_localtime_f_impl(void)
 		goto err;
 	time_now_local(&result->t_nanos);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2490,7 +2490,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libtime_tick_f_impl(void)
 	__hybrid_int128_set64(result->t_nanos, tick);
 	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2521,7 +2521,7 @@ function def(what: string, where: string, mul: string) {
 		"t_nanos": "TIME_TYPE_NANOSECONDS",
 		"t_months": "TIME_TYPE_MONTHS",
 	}[where], ", TIME_KIND_DELTA);");
-	print("	DeeObject_Init(result, &DeeTime_Type);");
+	print("	DeeObject_InitStatic(result, &DeeTime_Type);");
 	print("	return Dee_AsObject(result);");
 	print("err:");
 	print("	return NULL;");
@@ -2562,7 +2562,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_nanoseconds_f_impl(Dee_int128_t
 		goto err;
 	result->t_nanos = value;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2588,7 +2588,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_microseconds_f_impl(Dee_int128_
 	result->t_nanos = value;
 	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2614,7 +2614,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_milliseconds_f_impl(Dee_int128_
 	result->t_nanos = value;
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_MILLISECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2640,7 +2640,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_seconds_f_impl(Dee_int128_t val
 	result->t_nanos = value;
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2666,7 +2666,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_minutes_f_impl(Dee_int128_t val
 	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_MINUTE);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2692,7 +2692,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_hours_f_impl(Dee_int128_t value
 	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_HOUR);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2718,7 +2718,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_days_f_impl(Dee_int128_t value)
 	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_DAY);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2744,7 +2744,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_weeks_f_impl(Dee_int128_t value
 	result->t_nanos = value;
 	__hybrid_int128_mul64(result->t_nanos, NANOSECONDS_PER_WEEK);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2769,7 +2769,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_months_f_impl(Dee_int128_t valu
 		goto err;
 	result->t_months = value;
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2795,7 +2795,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_years_f_impl(Dee_int128_t value
 	result->t_months = value;
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_YEAR);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2821,7 +2821,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_decades_f_impl(Dee_int128_t val
 	result->t_months = value;
 	__hybrid_int128_mul8(result->t_months, MONTHS_PER_DECADE);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2847,7 +2847,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_centuries_f_impl(Dee_int128_t v
 	result->t_months = value;
 	__hybrid_int128_mul16(result->t_months, MONTHS_PER_CENTURY);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2873,7 +2873,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_millennia_f_impl(Dee_int128_t v
 	result->t_months = value;
 	__hybrid_int128_mul16(result->t_months, MONTHS_PER_MILLENNIUM);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_MONTHS, TIME_KIND_DELTA);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2923,7 +2923,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_maketime_f_impl(Dee_int128_t ho
 	DeeTime_SetRepr(result, &minute, TIME_REPR_MINUTE);
 	DeeTime_SetRepr(result, &second, TIME_REPR_SECOND);
 	DeeTime_SetRepr(result, &nanosecond, TIME_REPR_NANOSECOND);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2968,7 +2968,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime_makedate_f_impl(Dee_int128_t ye
 	DeeTime_SetRepr(result, &year, TIME_REPR_YEAR);
 	DeeTime_SetRepr(result, &month, TIME_REPR_MONTH);
 	DeeTime_SetRepr(result, &day, TIME_REPR_MDAY);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2994,7 +2994,7 @@ DeeTime_NewUnix(int64_t seconds_since_01_01_1970,
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	__hybrid_int128_add32(result->t_nanos, extra_nanoseconds);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3029,7 +3029,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime__mkunix_f_impl(int64_t time_t_,
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	__hybrid_int128_add32(result->t_nanos, nanosecond);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -3046,7 +3046,7 @@ DeeTime_NewFILETIME(void const *filetime) {
 	__hybrid_uint128_mul8(*(Dee_uint128_t *)&result->t_nanos, 100);
 	__hybrid_uint128_add128(*(Dee_uint128_t *)&result->t_nanos, NANOSECONDS_01_01_1601);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3074,7 +3074,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libtime__mkFILETIME_f_impl(uint64_t FIL
 	__hybrid_uint128_mul8(result->t_unanos, 100);
 	__hybrid_uint128_add128(result->t_unanos, NANOSECONDS_01_01_1601);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -3093,7 +3093,7 @@ time_class_from_time_t(DeeObject *UNUSED(self), size_t argc, DeeObject *const *a
 	__hybrid_int128_add64(result->t_nanos, SECONDS_01_01_1970);
 	__hybrid_int128_mul32(result->t_nanos, NANOSECONDS_PER_SECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
-	DeeObject_Init(result, &DeeTime_Type);
+	DeeObject_InitStatic(result, &DeeTime_Type);
 done:
 	return result;
 err_r:

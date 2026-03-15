@@ -56,7 +56,7 @@
 #include <deemon/string.h>          /* DeeString*, DeeUni_AsDigit, DeeUni_IsSymCont, Dee_ASCII_PRINTER_INIT, Dee_STRING_MUL_SIZEOF_WIDTH, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer*, Dee_string_utf, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
 #include <deemon/system-features.h> /* bcmpc, memchr, strchr, strlen */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
@@ -462,7 +462,7 @@ jseqiter_getseq(DeeJsonIteratorObject *__restrict self) {
 	result->js_index = 0;
 	result->js_size  = 0;
 	Dee_atomic_rwlock_init(&result->js_lock);
-	DeeObject_Init(result, &DeeJsonSequence_Type);
+	DeeObject_InitStatic(result, &DeeJsonSequence_Type);
 done:
 	return result;
 err_r_syntax:
@@ -483,7 +483,7 @@ jmapiter_getseq(DeeJsonIteratorObject *__restrict self) {
 	if unlikely(libjson_parser_rewind(&result->jm_parser) != JSON_PARSER_OBJECT)
 		goto err_r_syntax;
 	Dee_atomic_rwlock_init(&result->jm_lock);
-	DeeObject_Init(result, &DeeJsonMapping_Type);
+	DeeObject_InitStatic(result, &DeeJsonMapping_Type);
 done:
 	return result;
 err_r_syntax:
@@ -904,7 +904,7 @@ jseq_iter(DeeJsonSequenceObject *__restrict self) {
 		goto err_r_syntax;
 	result->ji_owner = self->js_owner;
 	Dee_Incref(result->ji_owner);
-	DeeObject_Init(result, &DeeJsonSequenceIterator_Type);
+	DeeObject_InitStatic(result, &DeeJsonSequenceIterator_Type);
 done:
 	return result;
 err_r_syntax:
@@ -926,7 +926,7 @@ jmap_iter(DeeJsonMappingObject *__restrict self) {
 		goto err_r_syntax;
 	result->ji_owner = self->jm_owner;
 	Dee_Incref(result->ji_owner);
-	DeeObject_Init(result, &DeeJsonMappingIterator_Type);
+	DeeObject_InitStatic(result, &DeeJsonMappingIterator_Type);
 done:
 	return result;
 err_r_syntax:
@@ -1520,7 +1520,7 @@ DeeJsonMapping_New(DeeJsonParser *__restrict self, bool must_advance_parser) {
 	Dee_atomic_rwlock_init(&result->jm_lock);
 	result->jm_owner = self->djp_owner;
 	Dee_Incref(self->djp_owner);
-	DeeObject_Init(result, &DeeJsonMapping_Type);
+	DeeObject_InitStatic(result, &DeeJsonMapping_Type);
 done:
 	return result;
 err_syntax_object_retval:
@@ -1548,7 +1548,7 @@ DeeJsonSequence_New(DeeJsonParser *__restrict self, bool must_advance_parser) {
 	result->js_size  = 0;
 	result->js_owner = self->djp_owner;
 	Dee_Incref(self->djp_owner);
-	DeeObject_Init(result, &DeeJsonSequence_Type);
+	DeeObject_InitStatic(result, &DeeJsonSequence_Type);
 done:
 	return result;
 err_syntax_array_retval:

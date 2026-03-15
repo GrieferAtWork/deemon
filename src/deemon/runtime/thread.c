@@ -46,7 +46,7 @@
 #include <deemon/thread.h>             /* CONFIG_PER_OBJECT_RCU_LOCKS, DeeThreadObject, DeeThread_CheckExact, DeeThread_HasTerminated, DeeThread_WasDetached, DeeThread_WasInterrupted, Dee_THREAD_PRIV_STATE_LISTRCU, Dee_THREAD_PRIV_STATE_NORMAL, Dee_THREAD_RCU_INACTIVE, Dee_THREAD_STATE_*, Dee_except_frame, Dee_except_frame_free, Dee_except_frame_tryalloc, Dee_pid_t, Dee_thread_interrupt*, Dee_thread_intvers_t, Dee_thread_object, Dee_thread_rcuvers_t, Dee_tls_callback_hooks, _DeeThread_*, _Dee_thread_interrupt_free */
 #include <deemon/traceback.h>          /* DeeTraceback*, Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple, Dee_tuple_object */
-#include <deemon/type.h>               /* DeeObject_GenericCmpByAddr, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_GenericCmpByAddr, DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT_OPT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_ATOMIC_*, atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init, Dee_atomic_rwlock_*, Dee_shared_lock_*, _Dee_SHARED_WAITWORD_IS_NOOP */
@@ -1906,7 +1906,7 @@ DeeThread_AllocateCurrentThread(void) {
 	result = DeeObject_TRYCALLOC(struct acceded_thread_object);
 	if unlikely(result == NULL)
 		return NULL;
-	DeeObject_Init(&result->at_os_thread.ot_thread, &DeeThread_Type);
+	DeeObject_InitStatic(&result->at_os_thread.ot_thread, &DeeThread_Type);
 
 	/* Set expected thread flags. */
 	result->at_os_thread.ot_thread.t_state = 0 |
@@ -2395,7 +2395,7 @@ again_check_for_interrupts:
 				DeeObject_FREE(keyboard_interrupt);
 				continue;
 			}
-			DeeObject_Init(keyboard_interrupt, &DeeError_KeyboardInterrupt);
+			DeeObject_InitStatic(keyboard_interrupt, &DeeError_KeyboardInterrupt);
 			DeeError_ThrowInherited(Dee_AsObject(keyboard_interrupt));
 			goto err;
 		}
@@ -3468,7 +3468,7 @@ except_frame_copy_for_rethrow_or_unlock(struct Dee_except_frame *__restrict self
 	}
 
 	/* Duplicate exception tracebacks and package errors in `Error.ThreadCrash'. */
-	DeeObject_Init(thread_crash, &DeeError_ThreadCrash);
+	DeeObject_InitStatic(thread_crash, &DeeError_ThreadCrash);
 	thread_crash->e_msg = NULL;
 	thread_crash->e_cause   = self->ef_error;
 	result->ef_trace = self->ef_trace;
@@ -3486,7 +3486,9 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 except_frame_free_for_rethrow(struct Dee_except_frame *__restrict self) {
 	DeeObject_FREE((DeeErrorObject *)self->ef_error);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeError_ThreadCrash);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	Dee_except_frame_free(self);
 }
 
@@ -3839,7 +3841,7 @@ PUBLIC WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	                            Dee_THREAD_STATE_UNMANAGED;
 	thread_init_started(&result->ot_thread);
 	result->ot_tid = tid;
-	DeeObject_Init(&result->ot_thread, &DeeThread_Type);
+	DeeObject_InitStatic(&result->ot_thread, &DeeThread_Type);
 	return DeeGC_Track(Dee_AsObject(&result->ot_thread));
 err:
 	return NULL;
@@ -4598,7 +4600,7 @@ thread_exit(DeeObject *UNUSED(self),
 		goto err;
 	error->te_result = result;
 	Dee_Incref(result);
-	DeeObject_Init(error, &DeeError_ThreadExit);
+	DeeObject_InitStatic(error, &DeeError_ThreadExit);
 	DeeError_ThrowInherited(error);
 err:
 	return NULL;
@@ -5511,7 +5513,7 @@ done_traceback:
 			result->tb_thread = me;
 			Dee_atomic_lock_init(&result->tb_lock);
 			result->tb_numframes = traceback_used;
-			DeeObject_Init(result, &DeeTraceback_Type);
+			DeeObject_InitStatic(result, &DeeTraceback_Type);
 
 			/* Tracebacks are GC objects, so we need to start tracking it here. */
 			return DeeGC_Track(Dee_AsObject(result));

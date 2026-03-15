@@ -38,7 +38,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* remainder */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_F*, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/overflow.h>    /* OVERFLOW_UADD */
@@ -336,7 +336,7 @@ so_iter(SeqOne *__restrict self) {
 		goto err;
 	result->soi_item = self->so_item;
 	Dee_Incref(result->soi_item);
-	DeeObject_Init(result, &SeqOneIterator_Type);
+	DeeObject_InitStatic(result, &SeqOneIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1280,7 +1280,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
 #ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 	Dee_Incref(item);
 	self->so_item = item;
-	DeeObject_Init(self, &DeeSeqOne_Type);
+	DeeObject_InitStatic(self, &DeeSeqOne_Type);
 #else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
 	ASSERT(DeeTuple_SIZE(self) == 1);
@@ -1296,7 +1296,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
 	ASSERT(item != Dee_AsObject(self));
 #ifdef CONFIG_ENABLE_SEQ_ONE_TYPE
 	self->so_item = item; /* Inherited */
-	DeeObject_Init(self, &DeeSeqOne_Type);
+	DeeObject_InitStatic(self, &DeeSeqOne_Type);
 #else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
 	ASSERT(DeeTuple_SIZE(self) == 1);
@@ -1348,7 +1348,9 @@ DeeSeqOne_DecrefSymbolic(DREF DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqOne_Type);
 	if (!DeeObject_IsShared(me)) {
 		DeeSeq_FreeOneUninitialized(me);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeSeqOne_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	} else {
 		Dee_Incref(me->so_item);
 		Dee_Decref_unlikely(me);

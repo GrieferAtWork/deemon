@@ -37,7 +37,7 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Incref, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* access, bzero, memcpy */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_member, type_method */
+#include <deemon/type.h>            /* DeeObject_Init, DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_member, type_method */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT, Dee_atomic_rwlock_cinit */
 
@@ -180,7 +180,7 @@ DeeStructType_FromSequence(DeeObject *name,
 	/* Fill in remaining fields and start tracking the new struct type. */
 	Dee_Incref(DeeStructType_AsType(&DeeStruct_Type));
 	Dee_atomic_rwlock_cinit(&data.staf_result->st_base.st_cachelock);
-	data.staf_result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
+	data.staf_result->st_base.st_base.tp_base  = DeeStructType_AsType(&DeeStruct_Type);
 	data.staf_result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
 	data.staf_result->st_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FHEAP | TP_FMOVEANY;
 
@@ -190,7 +190,7 @@ DeeStructType_FromSequence(DeeObject *name,
 		data.staf_result->st_base.st_base.tp_flags |= TP_FNAMEOBJECT;
 		Dee_Incref(name);
 	}
-	DeeObject_Init(&data.staf_result->st_base.st_base, &DeeStructType_Type);
+	DeeObject_InitStatic(&data.staf_result->st_base.st_base, &DeeStructType_Type);
 	return DeeType_AsStructType(DeeGC_TRACK(DeeTypeObject, DeeStructType_AsType(data.staf_result)));
 err_r:
 	for (i = 0; i <= data.staf_result->st_fmsk; ++i) {

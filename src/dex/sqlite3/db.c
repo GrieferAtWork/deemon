@@ -462,7 +462,9 @@ use_existing_result:
 			DB_QueryCache_LockEndRead(self);
 			atomic_write(&existing_result->ob_refcnt, 1); /* Mask as in-use */
 			ASSERT(Query_InUse(existing_result));
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 			Dee_DecrefNokill(&Query_Type); /* result->ob_type */
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 			Dee_DecrefNokill(self);        /* result->q_db */
 			Dee_DecrefNokill(sql);         /* result->q_sql */
 			DB_FinalizeStmt(self, result->q_stmt);
@@ -521,7 +523,9 @@ use_list:
 	/* Done! */
 	return result;
 err_r_sql_misc:
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&Query_Type); /* result->ob_type */
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	Dee_DecrefNokill(self);        /* result->q_db */
 	Dee_DecrefNokill(sql);         /* result->q_sql */
 err_r_sql:

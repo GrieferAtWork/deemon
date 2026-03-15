@@ -39,7 +39,7 @@
 #include <deemon/list.h>            /* DeeList_FromSequenceInheritedOnSuccess, DeeList_NewVectorInherited */
 #include <deemon/map.h>             /* DeeSharedItem, DeeSharedMap_Decref, DeeSharedMap_NewShared */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/none.h>            /* DeeNone_Check, DeeNone_NewRef, Dee_None */
+#include <deemon/none.h>            /* DeeNone*, Dee_None */
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Extends, DeeType_Implements, Dee_AsObject, Dee_BOUND_ISBOUND, Dee_BOUND_ISERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK */
 #include <deemon/operator-hints.h>  /* DeeNO_shl_t, DeeType_RequireNativeOperator */
 #include <deemon/pair.h>            /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeq_OfOneInheritedOnSuccess, DeeSeq_OfPairInheritedOnSuccess */
@@ -4762,7 +4762,7 @@ do_setattr_this_c:
 do_cmpxch_ub_c:
 					ASSERT_CONSTimm();
 					if (DeeNone_Check(TOP)) {
-						Dee_DecrefNokill(Dee_None);
+						DeeNone_Decref();
 						TOP = CONSTimm;
 						Dee_Incref(TOP);
 					}
@@ -4781,7 +4781,7 @@ do_cmpxch_ub_c:
 
 				TARGET(ASM_CMPXCH_UB_POP, -2, +1) {
 					if (DeeNone_Check(SECOND)) {
-						Dee_DecrefNokill(Dee_None);
+						DeeNone_Decref();
 						SECOND = TOP; /* Inherit reference */
 						(void)POP();
 					} else {

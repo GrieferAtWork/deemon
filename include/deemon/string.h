@@ -67,7 +67,7 @@
 #include "alloc.h"  /* DeeDbgObject_*, DeeDbg_*, DeeObject_*, Dee_*alloc*, Dee_Free, Dee_UntrackAlloc */
 #include "format.h" /* DeeFormat_Printf, DeeFormat_VPrintf */
 #include "object.h" /* DeeObject_*, Dee_Incref, _DeeRefcnt_DecFetch, _DeeRefcnt_Inc */
-#include "type.h"   /* DeeObject_Init */
+#include "type.h"   /* DeeObject_InitStatic */
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_NO_STRING_H
@@ -1828,7 +1828,7 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 	result->s_data               = NULL;
 	result->s_hash               = Dee_STRING_HASH_UNSET;
 	result->s_str[result->s_len] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	return Dee_AsObject(result);
 }
 

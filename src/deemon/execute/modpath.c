@@ -46,7 +46,7 @@
 #include <deemon/system.h>          /* DeeNTSystem_HandleGenericError, DeeNTSystem_IsBufferTooSmall, DeeSystem_*, DeeUnixSystem_PrintLinkString */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_Self, Dee_import_frame */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_TUPLE_BUILDER_INIT, Dee_tuple_builder* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_TYPE_MEMBER_ISCONST, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_*, Dee_TYPE_MEMBER_ISCONST, type_* */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic-ref.h> /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
@@ -2313,8 +2313,12 @@ DeeDec_Track(DREF /*untracked*/ struct Dee_module_object *__restrict self) {
 }
 #endif /* CONFIG_EXPERIMENTAL_MMAP_DEC */
 
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define DeeModule_DestroyAnonymousDirectory(self) DeeGCObject_Free(self)
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define DeeModule_DestroyAnonymousDirectory(self) \
 	(Dee_DecrefNokill(&DeeModuleDir_Type), DeeGCObject_Free(self))
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 #define sizeof_DeeModuleDir offsetof(DeeModuleObject, mo_moddata)
 PRIVATE WUNUSED DREF /*untracked*/ DeeModuleObject *DCALL
@@ -2323,7 +2327,7 @@ DeeModule_CreateAnonymousDirectory(void) {
 	result = (DREF /*untracked*/ DeeModuleObject *)DeeGCObject_Malloc(sizeof_DeeModuleDir);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeModuleDir_Type);
+	DeeObject_InitStatic(result, &DeeModuleDir_Type);
 	result->mo_absname = NULL; /* Will be filled in by caller */
 	result->mo_libname.mle_dat.mle_mod = result;
 	result->mo_libname.mle_name = NULL;
@@ -6233,7 +6237,7 @@ DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	result = DeeGCObject_CALLOC(DeeModuleObject);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeModule_Type);
+	DeeObject_InitStatic(result, &DeeModule_Type);
 	result->mo_name    = (DeeStringObject *)name;
 	result->mo_bucketv = empty_module_buckets;
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
@@ -7792,7 +7796,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	result->mo_name    = (DREF DeeStringObject *)module_name; /* Inherit reference. */
 	result->mo_bucketv = empty_module_buckets;
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
-	DeeObject_Init(result, &DeeModule_Type);
+	DeeObject_InitStatic(result, &DeeModule_Type);
 	Dee_weakref_support_init(result);
 	result = DeeGC_TRACK(DeeModuleObject, result);
 	result->mo_flags = Dee_MODULE_FLOADING;

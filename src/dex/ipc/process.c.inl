@@ -1813,7 +1813,9 @@ err_result:
 			}
 			error = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 			Dee_DecrefNokill(&DeeString_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 			if (result->s_data) {
 				ASSERT(result->s_data->u_utf16 == buffer);
 				result->s_data->u_utf16 = NULL;

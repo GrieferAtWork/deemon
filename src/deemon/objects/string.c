@@ -40,7 +40,7 @@
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_ASCII_PRINTER_INIT, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_PRINTER_INIT, Dee_ascii_printer, Dee_ascii_printer_fini, Dee_charptr_const, Dee_empty_string_struct, Dee_string_fini_hook*, Dee_string_utf*, Dee_unicode_printer*, STRING_ERROR_FSTRICT, STRING_MUL_SIZEOF_WIDTH, STRING_SIZEOF_WIDTH, STRING_WIDTH_COUNT, STRING_WIDTH_GETCHAR, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* DeeString_GetChar */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_*, bzero, memcmp, memcpy*, memmovedownc, memmoveupc, memset, strlen */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_Hash* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
@@ -264,7 +264,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	result->s_str[self->ap_length] = '\0';
 
 	/* Do final object initialization. */
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	result->s_hash = (Dee_hash_t)-1;
 	result->s_data = NULL;
 	DBG_memset(self, 0xcc, sizeof(*self));
@@ -338,7 +338,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	if likely(result) {
 		if (!self) {
 			/* Do the initial init when `self' was `NULL'. */
-			DeeObject_Init(result, &DeeString_Type);
+			DeeObject_InitStatic(result, &DeeString_Type);
 			result->s_data = NULL;
 			result->s_hash = (Dee_hash_t)-1;
 		}
@@ -369,7 +369,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	if likely(result) {
 		if (!self) {
 			/* Do the initial init when `self' was `NULL'. */
-			DeeObject_Init(result, &DeeString_Type);
+			DeeObject_InitStatic(result, &DeeString_Type);
 			result->s_data = NULL;
 			result->s_hash = (Dee_hash_t)-1;
 		}
@@ -401,7 +401,7 @@ PUBLIC WUNUSED DREF DeeObject *
 	                                             file, line);
 #endif /* !NDEBUG */
 	if likely(result) {
-		DeeObject_Init(result, &DeeString_Type);
+		DeeObject_InitStatic(result, &DeeString_Type);
 		result->s_data           = NULL;
 		result->s_hash           = (Dee_hash_t)-1;
 		result->s_len            = num_bytes;
@@ -1726,7 +1726,7 @@ string_iter(String *__restrict self) {
 	result = DeeObject_MALLOC(StringIterator);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &StringIterator_Type);
+	DeeObject_InitStatic(result, &StringIterator_Type);
 	result->si_string = self;
 	Dee_Incref(self);
 	result->si_width    = DeeString_WIDTH(self);

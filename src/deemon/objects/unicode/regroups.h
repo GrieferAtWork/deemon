@@ -30,7 +30,7 @@
 #include <deemon/regex.h>  /* DeeRegexMatch */
 #include <deemon/string.h> /* DeeString_NewUtf8, Dee_STRING_ERROR_FSTRICT */
 #include <deemon/tuple.h>  /* DeeTuple_Newf */
-#include <deemon/type.h>   /* DeeObject_Init */
+#include <deemon/type.h>   /* DeeObject_InitStatic */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
@@ -59,7 +59,7 @@ INTDEF DeeTypeObject ReGroups_Type;
 	                               sizeof(struct DeeRegexMatch)))
 #define ReGroups_Free(self) DeeObject_Free(self)
 #define ReGroups_Init(self, ngroups)             \
-	(void)(DeeObject_Init(self, &ReGroups_Type), \
+	(void)(DeeObject_InitStatic(self, &ReGroups_Type), \
 	       (self)->rg_ngroups = (ngroups))
 
 
@@ -93,7 +93,7 @@ INTDEF DeeTypeObject ReSubBytes_Type;
 	                                   sizeof(struct DeeRegexMatch)))
 #define ReSubStrings_Free(self) DeeObject_Free(self)
 #define ReSubStrings_Init(self, baseown, baseptr, ngroups) \
-	(void)(DeeObject_Init(self, &ReSubStrings_Type),       \
+	(void)(DeeObject_InitStatic(self, &ReSubStrings_Type),       \
 	       (self)->rss_ngroups = (ngroups),                \
 	       (self)->rss_baseown = (baseown),                \
 	       Dee_Incref((self)->rss_baseown),                \
@@ -104,7 +104,7 @@ INTDEF DeeTypeObject ReSubBytes_Type;
 #define ReSubBytes_Malloc ReSubStrings_Malloc
 #define ReSubBytes_Free   ReSubStrings_Free
 #define ReSubBytes_Init(self, baseown, baseptr, ngroups) \
-	(void)(DeeObject_Init(self, &ReSubBytes_Type),       \
+	(void)(DeeObject_InitStatic(self, &ReSubBytes_Type),       \
 	       (self)->rss_ngroups = (ngroups),              \
 	       (self)->rss_baseown = (baseown),              \
 	       Dee_Incref((self)->rss_baseown),              \

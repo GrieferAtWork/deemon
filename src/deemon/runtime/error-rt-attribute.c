@@ -40,7 +40,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* access, memcmp, memset, stpcpy, strlen */
 #include <deemon/system.h>             /* DeeSystem_IsStaticPointer */
-#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_type_member, Dee_type_member_desc, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_InitStatic, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_type_member, Dee_type_member_desc, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_Hash* */
 
@@ -1697,7 +1697,7 @@ AttributeError_get_attr(AttributeError *__restrict self) {
 		goto err;
 	Dee_attrdesc_init_copy(&result->a_desc, &self->ae_desc);
 	Dee_Incref(result->a_desc.ad_info.ai_decl);
-	DeeObject_Init(result, &DeeAttribute_Type);
+	DeeObject_InitStatic(result, &DeeAttribute_Type);
 	return result;
 err_unbound:
 	return (DREF DeeAttributeObject *)DeeRT_ErrTUnboundAttrCStr(&DeeError_AttributeError, self, "attr");
@@ -1929,7 +1929,7 @@ DeeRT_ErrAttributeError_impl(DeeTypeObject *error_type, DeeObject *decl,
 	Dee_XIncref(decl);
 	result->ae_desc.ad_info.ai_decl = decl;
 	result->ae_flags = flags;
-	DeeObject_Init(result, error_type);
+	DeeObject_InitStatic(result, error_type);
 	return DeeError_ThrowInherited(result);
 err:
 	Dee_XDecref(cause);
@@ -1958,7 +1958,7 @@ DeeRT_ErrAttributeErrorCStr_impl(DeeTypeObject *error_type, DeeObject *decl,
 	Dee_XIncref(decl);
 	result->ae_desc.ad_info.ai_decl = decl;
 	result->ae_flags = flags;
-	DeeObject_Init(result, error_type);
+	DeeObject_InitStatic(result, error_type);
 	return DeeError_ThrowInherited(result);
 err:
 	Dee_XDecref(cause);
@@ -1984,7 +1984,7 @@ DeeRT_ErrAttributeErrorEx_impl(DeeTypeObject *error_type, DeeObject *ob,
 	Dee_attrdesc_init_copy(&result->ae_desc, attr);
 	Dee_Incref(result->ae_desc.ad_info.ai_decl);
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_DESCLOADED;
-	DeeObject_Init(result, error_type);
+	DeeObject_InitStatic(result, error_type);
 	return DeeError_ThrowInherited(result);
 err:
 	return -1;
@@ -2008,7 +2008,7 @@ DeeRT_ErrAttributeErrorCA_impl(DeeTypeObject *error_type, DeeObject *ob,
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTR; /* Changed to "Dee_ATTRINFO_INSTANCE_ATTR" if appropriate */
 	result->ae_desc.ad_info.ai_value.v_attr = attr;
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	DeeObject_Init(result, error_type);
+	DeeObject_InitStatic(result, error_type);
 	return DeeError_ThrowInherited(result);
 err:
 	return -1;
@@ -2032,7 +2032,7 @@ DeeRT_ErrAttributeErrorMethod_impl(DeeTypeObject *error_type, DeeObject *ob,
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_METHOD; /* Changed to "Dee_ATTRINFO_INSTANCE_METHOD" if appropriate */
 	result->ae_desc.ad_info.ai_value.v_method = attr;
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	DeeObject_Init(result, error_type);
+	DeeObject_InitStatic(result, error_type);
 	return DeeError_ThrowInherited(result);
 err:
 	return -1;
@@ -2056,7 +2056,7 @@ DeeRT_ErrAttributeErrorGetSet_impl(DeeTypeObject *error_type, DeeObject *ob,
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_GETSET; /* Changed to "Dee_ATTRINFO_INSTANCE_GETSET" if appropriate */
 	result->ae_desc.ad_info.ai_value.v_getset = attr;
 	result->ae_flags = flags | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	DeeObject_Init(result, error_type);
+	DeeObject_InitStatic(result, error_type);
 	return DeeError_ThrowInherited(result);
 err:
 	return -1;
@@ -2088,7 +2088,7 @@ DeeRT_ErrAttributeErrorMember_impl(DeeTypeObject *error_type, DeeObject *ob,
 	 * To deal with this case, we have to create yet another copy that will then be resolved
 	 * lazily when the attribute error's declaration location is loaded. */
 	type_member_buffer_init(buffer, attr);
-	DeeObject_Init(result, error_type);
+	DeeObject_InitStatic(result, error_type);
 	return DeeError_ThrowInherited(result);
 err:
 	return -1;
@@ -2194,7 +2194,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) DeeObject *
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT;
 	result->ae_desc.ad_info.ai_value.v_any = (void *)(uintptr_t)addr;
 	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	DeeObject_Init(result, &DeeError_UnboundAttribute);
+	DeeObject_InitStatic(result, &DeeError_UnboundAttribute);
 	DeeError_ThrowInherited(result);
 err:
 	return NULL;
@@ -2215,7 +2215,7 @@ PUBLIC ATTR_COLD NONNULL((1)) DeeObject *
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_CLASS_SLOT;
 	result->ae_desc.ad_info.ai_value.v_any = (void *)(uintptr_t)addr;
 	result->ae_flags = AttributeError_F_GET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	DeeObject_Init(result, &DeeError_UnboundAttribute);
+	DeeObject_InitStatic(result, &DeeError_UnboundAttribute);
 	DeeError_ThrowInherited(result);
 err:
 	return NULL;
@@ -2469,7 +2469,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	result->ae_desc.ad_info.ai_type = Dee_ATTRINFO_ATTRIBUTEERROR_INSTANCE_SLOT;
 	result->ae_desc.ad_info.ai_value.v_any = (void *)(uintptr_t)addr;
 	result->ae_flags = AttributeError_F_SET | AttributeError_F_INFOLOADED | AttributeError_F_LAZYDECL;
-	DeeObject_Init(result, &DeeError_RestrictedAttribute);
+	DeeObject_InitStatic(result, &DeeError_RestrictedAttribute);
 	return DeeError_ThrowInherited(result);
 err:
 	return -1;

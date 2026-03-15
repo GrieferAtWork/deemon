@@ -34,7 +34,7 @@
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type */
 #include <deemon/set.h>                /* DeeSet_NewEmpty, DeeSet_Type, Dee_EmptySet */
 #include <deemon/super.h>              /* DeeSuper_New */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -430,7 +430,7 @@ mfkv_iter(MapFromKeys *__restrict self) {
 		goto err_r;
 	result->mfki_base = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &MapFromKeysAndValueIterator_Type);
+	DeeObject_InitStatic(result, &MapFromKeysAndValueIterator_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -449,7 +449,7 @@ mfkc_iter(MapFromKeys *__restrict self) {
 		goto err_r;
 	result->mfki_base = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &MapFromKeysAndCallbackIterator_Type);
+	DeeObject_InitStatic(result, &MapFromKeysAndCallbackIterator_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);

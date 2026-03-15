@@ -671,7 +671,7 @@ tusrtype__bool__with__BOOL(DeeTypeObject *tp_self, DeeObject *self) {
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
 	retval = DeeBool_IsTrue(result) ? 1 : 0;
-	Dee_DecrefNokill(result);
+	DeeBool_Decref(result);
 	return retval;
 err_r:
 	Dee_Decref(result);
@@ -695,7 +695,7 @@ usrtype__bool__with__BOOL(DeeObject *__restrict self) {
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
 	retval = DeeBool_IsTrue(result) ? 1 : 0;
-	Dee_DecrefNokill(result);
+	DeeBool_Decref(result);
 	return retval;
 err_r:
 	Dee_Decref(result);

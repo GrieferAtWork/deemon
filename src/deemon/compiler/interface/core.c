@@ -27,7 +27,7 @@
 #include <deemon/compiler/interface.h> /* DR_Compiler, DeeCompilerWrapper_Members, DeeCompilerWrapper_Visit */
 #include <deemon/error.h>              /* DeeError_ReferenceError, DeeError_Throwf */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_InstanceOfExact, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_TYPE, OBJECT_HEAD_INIT */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD_DOC, type_member */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -252,7 +252,7 @@ DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
 		goto done;
 	result->cw_compiler = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, type);
+	DeeObject_InitStatic(result, type);
 done:
 	return Dee_AsObject(result);
 }
@@ -354,7 +354,7 @@ again:
 	/* Initialize the new item. */
 	result->ci_compiler = self;
 	result->ci_value    = value;
-	DeeObject_Init(result, type);
+	DeeObject_InitStatic(result, type);
 	Dee_Incref(self);
 	if (is_an_object)
 		Dee_Incref((DeeObject *)value);

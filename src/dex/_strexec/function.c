@@ -39,7 +39,7 @@
 #include <deemon/system-features.h> /* CONFIG_HAVE_FPU, bcmpc, memcmp, memcpy*, mempcpy */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_Self */
 #include <deemon/tuple.h>           /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_FFINAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_F*, STRUCT_*, TF_NONE, TP_FFINAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashUtf8 */
 
 #include <stdbool.h> /* bool, false, true */
@@ -289,7 +289,7 @@ JITFunction_New(/*utf-8*/ char const *name_start,
 	Dee_XIncref(result->jf_import);
 	Dee_XIncref(result->jf_impbase);
 	Dee_XIncref(result->jf_globals);
-	DeeObject_Init(result, &JITFunction_Type);
+	DeeObject_InitStatic(result, &JITFunction_Type);
 
 	if (params_end > params_start) {
 		uint16_t arga = 0;
@@ -838,7 +838,7 @@ jf_call_kw(JITFunction *self, size_t argc,
 		Dee_Incref(self);
 		Dee_XIncref(kw);
 		Dee_Movrefv(yfo->jy_argv, argv, argc);
-		DeeObject_Init(yfo, &JITYieldFunction_Type);
+		DeeObject_InitStatic(yfo, &JITYieldFunction_Type);
 		return Dee_AsObject(yfo);
 	}
 	ts = DeeThread_Self();

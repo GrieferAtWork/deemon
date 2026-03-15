@@ -41,7 +41,7 @@
 #include <deemon/stringutils.h>     /* DeeString_Foreach, DeeString_GetChar, Dee_unicode_utf8seqlen_safe */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp, bzero, close, isalnum, isalpha, isdigit, islower, isupper, memchr*, memcmp, memcmpb, memcmpl, memcmpw, memcpy*, memmeml, memmemw, memmoveb, memmovel, memmovew, mempcpy*, mempsetb, mempsetl, mempsetw, memrchrl, memrchrw, memrmeml, memrmemw, memsetb, memsetl, memsetw, open */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, METHOD_F*, TYPE_*METHOD*, type_math, type_method */
+#include <deemon/type.h>            /* DeeObject_InitStatic, METHOD_F*, TYPE_*METHOD*, type_math, type_method */
 
 #include <hybrid/byteswap.h> /* BSWAP16, BSWAP32 */
 #include <hybrid/minmax.h>   /* MIN */
@@ -11880,7 +11880,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 				*p             = '\0';
 				result->s_hash = Dee_STRING_HASH_UNSET;
 				result->s_data = NULL;
-				DeeObject_Init(result, &DeeString_Type);
+				DeeObject_InitStatic(result, &DeeString_Type);
 				return result;
 			}
 		} else if (rhs_utf && rhs_utf->u_width != STRING_WIDTH_1BYTE) {
@@ -11998,7 +11998,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			    rhs_utf->u_data[STRING_WIDTH_1BYTE] == (size_t *)DeeString_STR(other))
 				result_utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
 			result->s_data = result_utf;
-			DeeObject_Init(result, &DeeString_Type);
+			DeeObject_InitStatic(result, &DeeString_Type);
 			return result;
 err_r_2_4_utf:
 			Dee_string_utf_free(result_utf);

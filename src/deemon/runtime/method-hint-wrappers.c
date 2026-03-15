@@ -502,8 +502,10 @@ DeeMA___seq_unpackub__(DeeObject *__restrict self, size_t argc, DeeObject *const
 	}
 	ASSERT(!DeeObject_IsShared(result));
 	ASSERT(result->ob_type == &DeeTuple_Type);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeTuple_Type);
 	Dee_Incref(&DeeNullableTuple_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	result->ob_type = &DeeNullableTuple_Type;
 	return Dee_AsObject(result);
 return_empty_r:

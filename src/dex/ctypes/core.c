@@ -710,7 +710,7 @@ ltype_frombytes(DeeLValueTypeObject *self, size_t argc, DeeObject *const *argv) 
 	if unlikely(!result)
 		goto err;
 	result->l_ptr.ptr = DeeBytes_DATA(args.data) + args.offset;
-	DeeObject_Init(result, DeeLValueType_AsType(self));
+	DeeObject_InitHeap(result, DeeLValueType_AsType(self));
 	return result;
 err_bad_size:
 	data_size = DeeBytes_SIZE(args.data);
@@ -860,7 +860,7 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 	}
 
 	/* Finish the pointer type. */
-	DeeObject_Init(DeePointerType_AsType(result), &DeePointerType_Type);
+	DeeObject_InitStatic(DeePointerType_AsType(result), &DeePointerType_Type);
 	return DeeType_AsPointerType(DeeGC_TRACK(DeeTypeObject, DeePointerType_AsType(result)));
 err_r:
 	DeeGCObject_FREE(result);
@@ -907,7 +907,7 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	result->lt_base.st_lvalue = result;
 
 	/* Finish the lvalue type. */
-	DeeObject_Init(DeeLValueType_AsType(result), &DeeLValueType_Type);
+	DeeObject_InitStatic(DeeLValueType_AsType(result), &DeeLValueType_Type);
 	return DeeType_AsLValueType(DeeGC_TRACK(DeeTypeObject, DeeLValueType_AsType(result)));
 err_r:
 	DeeGCObject_FREE(result);
@@ -1596,7 +1596,7 @@ DeePointer_New(DeePointerTypeObject *pointer_type,
 		goto done;
 
 	/* Initialize the new pointer object. */
-	DeeObject_Init(result, DeePointerType_AsType(pointer_type));
+	DeeObject_InitHeap(result, DeePointerType_AsType(pointer_type));
 	result->p_ptr.ptr = pointer_value;
 done:
 	return Dee_AsObject(result);
@@ -1615,7 +1615,7 @@ DeePointer_NewInherited(/*inherit(always)*/ DREF DeePointerTypeObject *pointer_t
 		goto err;
 
 	/* Initialize the new pointer object. */
-	DeeObject_InitInherited(result, DeePointerType_AsType(pointer_type));
+	DeeObject_InitHeapInherited(result, DeePointerType_AsType(pointer_type));
 	result->p_ptr.ptr = pointer_value;
 	return Dee_AsObject(result);
 err:
@@ -1647,7 +1647,7 @@ DeeLValue_NewInherited(/*inherit(always)*/ DREF DeeLValueTypeObject *lvalue_type
 		goto err;
 
 	/* Initialize the new lvalue object. */
-	DeeObject_InitInherited(result, DeeLValueType_AsType(lvalue_type));
+	DeeObject_InitHeapInherited(result, DeeLValueType_AsType(lvalue_type));
 	result->l_ptr.ptr = pointer_value;
 	return Dee_AsObject(result);
 err:

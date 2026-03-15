@@ -33,7 +33,7 @@
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE */
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_INIT, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* access */
-#include <deemon/type.h>            /* DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_GetName, DeeType_Type, Dee_operator_t, Dee_opinfo */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_GetName, DeeType_Type, Dee_operator_t, Dee_opinfo */
 
 #include <hybrid/typecore.h> /* __SIZE_WIDTH__ */
 
@@ -58,7 +58,7 @@ PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 		 * object, throw a static instance. */
 		return DeeError_Throw(&DeeError_NoMemory_instance);
 	}
-	DeeObject_Init(nomem_error, &DeeError_NoMemory);
+	DeeObject_InitStatic(nomem_error, &DeeError_NoMemory);
 	nomem_error->e_msg    = NULL;
 	nomem_error->e_cause      = NULL;
 	nomem_error->nm_allocsize = req_bytes;

@@ -29,13 +29,13 @@
 #include <deemon/int.h>            /* DeeIntObject, DeeInt_* */
 #include <deemon/kwds.h>           /* DeeKwds_Check, DeeKwds_SIZE, DeeObject_IsKw */
 #include <deemon/list.h>           /* DeeList_* */
-#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref*, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, return_reference_ */
+#include <deemon/object.h>         /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_A, ASSERT_OBJECT_TYPE_EXACT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_Decrefv, Dee_Increfv, Dee_TYPE, Dee_buffer, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD, return_reference_ */
 #include <deemon/operator-hints.h> /* DeeType_Inherit*, DeeType_InvokeCastPrint, DeeType_InvokeCastPrintRepr, DeeType_InvokeCastRepr, DeeType_InvokeCastStr, DeeType_InvokeCmpHash */
 #include <deemon/seq.h>            /* DeeSharedVector_Decref, DeeSharedVector_NewShared */
 #include <deemon/string.h>         /* DeeString_PrintAscii, DeeString_Type */
 #include <deemon/thread.h>         /* DeeThreadObject, DeeThread_Self, Dee_repr_frame, Dee_trepr_frame */
 #include <deemon/tuple.h>          /* DeeTuple* */
-#include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeObject_InitInherited, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, OPERATOR_* */
+#include <deemon/type.h>           /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeType_*, Dee_BUFFER_TYPE_FREADONLY, OPERATOR_*, _DeeObject_Init_EXTRA_ */
 #include <deemon/util/hash.h>      /* DeeObject_HashGeneric, Dee_HASHOF_RECURSIVE_ITEM */
 
 #include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
@@ -204,7 +204,9 @@ do_invoke_alloc_any_ctor_kw:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitInherited((GenericObject *)result, object_type);
+			_DeeObject_Init_EXTRA_((GenericObject *)result)
+			((GenericObject *)result)->ob_refcnt = 1;
+			((GenericObject *)result)->ob_type = object_type;
 			if (object_type->tp_init.tp_alloc.tp_ctor)
 				goto do_invoke_alloc_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -230,7 +232,7 @@ err_object_type_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
-	Dee_DecrefNokill(object_type);
+	DeeType_DecrefHeapTypeNokill(object_type);
 	goto err;
 }
 
@@ -302,7 +304,9 @@ do_invoke_alloc_copy:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitInherited((GenericObject *)result, object_type);
+			_DeeObject_Init_EXTRA_((GenericObject *)result)
+			((GenericObject *)result)->ob_refcnt = 1;
+			((GenericObject *)result)->ob_type = object_type;
 			if (object_type->tp_init.tp_alloc.tp_ctor && argc == 0)
 				goto do_invoke_alloc_ctor;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -333,7 +337,7 @@ err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
-	Dee_DecrefNokill(object_type);
+	DeeType_DecrefHeapTypeNokill(object_type);
 	goto err;
 }
 
@@ -485,7 +489,9 @@ do_invoke_alloc_copy:
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
 				goto err_object_type;
-			DeeObject_InitInherited((GenericObject *)result, object_type);
+			_DeeObject_Init_EXTRA_((GenericObject *)result)
+			((GenericObject *)result)->ob_refcnt = 1;
+			((GenericObject *)result)->ob_type = object_type;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor_kw)
 				goto do_invoke_alloc_any_ctor_kw;
 			if (object_type->tp_init.tp_alloc.tp_any_ctor)
@@ -519,7 +525,7 @@ err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
-	Dee_DecrefNokill(object_type);
+	DeeType_DecrefHeapTypeNokill(object_type);
 	goto err;
 err_no_keywords:
 	err_keywords_ctor_not_accepted(object_type, kw);
@@ -622,33 +628,12 @@ DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 do_invoke_var_copy:
 			return (*tp_self->tp_init.tp_var.tp_copy_ctor)(self);
 		}
-#if 0 /* Better not -- overcomplicated and is never really used */
-		if (tp_self->tp_init.tp_var.tp_any_ctor) {
-do_invoke_var_any_ctor:
-			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
-			return (*tp_self->tp_init.tp_var.tp_any_ctor)(1, (DeeObject **)&self);
-		}
-		if (tp_self->tp_init.tp_var.tp_any_ctor_kw) {
-do_invoke_var_any_ctor_kw:
-			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
-			return (*tp_self->tp_init.tp_var.tp_any_ctor_kw)(1, (DeeObject **)&self, NULL);
-		}
-#endif
 		if (DeeType_InheritConstructors(tp_self)) {
 			if (tp_self->tp_init.tp_var.tp_copy_ctor)
 				goto do_invoke_var_copy;
-#if 0 /* Better not -- overcomplicated and is never really used */
-			if (tp_self->tp_init.tp_var.tp_any_ctor)
-				goto do_invoke_var_any_ctor;
-			if (tp_self->tp_init.tp_var.tp_any_ctor_kw)
-				goto do_invoke_var_any_ctor_kw;
-#endif
 		}
 	} else if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
 		int error;
-#if 0 /* Better not -- overcomplicated and is never really used */
-do_invoke_alloc_copy:
-#endif
 		result = DeeType_AllocInstance(tp_self);
 		if unlikely(!result)
 			goto err;
@@ -662,65 +647,16 @@ do_invoke_alloc_copy:
 			result = DeeGC_Track(result);
 		return result;
 	} else {
-#if 0 /* Better not -- overcomplicated and is never really used */
-		int error;
-		ASSERT(!DeeType_IsVariable(tp_self));
-		result = DeeType_AllocInstance(tp_self);
-		if unlikely(!result)
-			goto err;
-		DeeObject_Init((GenericObject *)result, tp_self);
-		if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
-do_invoke_alloc_any_ctor:
-			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
-			error = (*tp_self->tp_init.tp_alloc.tp_any_ctor)(result, 1, (DeeObject **)&self);
-		} else if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw) {
-do_invoke_alloc_any_ctor_kw:
-			/* TODO: If this returns a TypeError, wrap that error as NotImplemented */
-			error = (*tp_self->tp_init.tp_alloc.tp_any_ctor_kw)(result, 1, (DeeObject **)&self, NULL);
-		} else {
-			DeeObject_FreeTracker(result);
-			DeeType_FreeInstance(tp_self, result);
-			if (!DeeType_InheritConstructors(tp_self))
-				goto err_not_implemented;
-			if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
-				Dee_DecrefNokill(tp_self);
-				goto do_invoke_alloc_copy;
-			}
-			result = DeeType_AllocInstance(tp_self);
-			if unlikely(!result)
-				goto err_object_type;
-			DeeObject_InitInherited((GenericObject *)result, tp_self);
-			if (tp_self->tp_init.tp_alloc.tp_any_ctor)
-				goto do_invoke_alloc_any_ctor;
-			if (tp_self->tp_init.tp_alloc.tp_any_ctor_kw)
-				goto do_invoke_alloc_any_ctor_kw;
-			goto err_not_implemented_r;
-		}
-		if unlikely(error)
-			goto err_r;
-		/* Begin tracking the returned object. */
-		if (DeeType_IsGC(tp_self))
-			result = DeeGC_Track(result);
-		return result;
-#else
 		goto err_not_implemented;
-#endif
 	}
 err_not_implemented:
 	err_unimplemented_constructor(tp_self, 0, NULL);
 err:
 	return NULL;
-#if 0 /* Better not -- overcomplicated and is never really used */
-err_not_implemented_r:
-	err_unimplemented_constructor(tp_self, 0, NULL);
-#endif
 err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(tp_self, result);
-#if 0 /* Better not -- overcomplicated and is never really used */
-err_object_type:
-#endif
-	Dee_DecrefNokill(tp_self);
+	DeeType_DecrefHeapTypeNokill(tp_self);
 	goto err;
 }
 

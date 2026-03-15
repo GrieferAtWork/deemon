@@ -39,7 +39,7 @@
 #include <deemon/string.h>             /* DeeString*, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* mempcpyc, strlen */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, OPERATOR_CALL, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, OPERATOR_CALL, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_MEMBER*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -243,7 +243,7 @@ LOCAL_seX(mh_seq_operator_iter)(LOCAL_SeqEach *__restrict self) {
 	if unlikely(!result->ei_iter)
 		goto err_r;
 	Dee_Incref(self);
-	DeeObject_Init(result, &LOCAL_SeqEachIterator_Type);
+	DeeObject_InitStatic(result, &LOCAL_SeqEachIterator_Type);
 done:
 	return result;
 err_r:
@@ -746,7 +746,7 @@ LOCAL_seX(wraprange)(LOCAL_SeqEach *self, /*inherit(always)*/ DREF DeeObject *ba
 	result->sg_argc = self->sg_argc;
 	Dee_Movrefv(result->sg_argv, self->sg_argv, self->sg_argc);
 #endif /* DEFINE_SeqEachCallAttr || DEFINE_SeqEachCallAttrKw */
-	DeeObject_Init(result, &LOCAL_SeqEach_Type);
+	DeeObject_InitStatic(result, &LOCAL_SeqEach_Type);
 	return result;
 err_base:
 	Dee_Decref(base);
@@ -1159,7 +1159,7 @@ PRIVATE WUNUSED DREF LOCAL_SeqEach *DCALL LOCAL_seX(ctor)(void) {
 #ifdef DEFINE_SeqEachCallAttrKw
 	result->sg_kw   = DeeMapping_NewEmpty();
 #endif /* DEFINE_SeqEachCallAttrKw */
-	DeeObject_Init(result, &LOCAL_SeqEach_Type);
+	DeeObject_InitStatic(result, &LOCAL_SeqEach_Type);
 done:
 	return result;
 }
@@ -1181,7 +1181,7 @@ LOCAL_seX(copy)(LOCAL_SeqEach *__restrict other) {
 #endif /* DEFINE_SeqEachCallAttrKw */
 	Dee_Incref(result->se_seq);
 	Dee_Incref(result->sg_attr);
-	DeeObject_Init(result, &LOCAL_SeqEach_Type);
+	DeeObject_InitStatic(result, &LOCAL_SeqEach_Type);
 done:
 	return result;
 }
@@ -1226,7 +1226,7 @@ LOCAL_seX(init)(size_t argc, DeeObject *const *argv) {
 	result->sg_attr = attr;
 	Dee_Incref(seq);
 	Dee_Incref(attr);
-	DeeObject_Init(result, &LOCAL_SeqEach_Type);
+	DeeObject_InitStatic(result, &LOCAL_SeqEach_Type);
 	return result;
 err:
 	return NULL;

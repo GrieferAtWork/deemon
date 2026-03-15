@@ -393,7 +393,7 @@ deepcopy_object_free(DeeDeepCopyContext *__restrict self,
                      Dee_seraddr_t addr, DeeObject *__restrict ref) {
 	DeeObject *out = deepcopy_ser2ptr(self, addr, DeeObject);
 	deepcopy_unmappointer(self, ref);
-	Dee_Decref_unlikely(out->ob_type);
+	DeeType_DecrefHeapType(out->ob_type);
 	deepcopy_heap_free(&self->dcc_obheap, out);
 }
 
@@ -417,7 +417,7 @@ deepcopy_gcobject_free(DeeDeepCopyContext *__restrict self,
 		next_head = DeeGC_Head(next);
 		next_head->gc_info.gi_pself = NULL;
 	}
-	Dee_Decref_unlikely(obj->ob_type);
+	DeeType_DecrefHeapType(obj->ob_type);
 	deepcopy_heap_free(&self->dcc_gcheap, head);
 }
 
@@ -646,7 +646,7 @@ deepcopy_slab_object_free(DeeDeepCopyContext *__restrict self, Dee_seraddr_t add
                           size_t n, DeeObject *__restrict ref) {
 	DeeObject *out = deepcopy_ser2ptr(self, addr, DeeObject);
 	deepcopy_unmappointer(self, ref);
-	Dee_Decref_unlikely(out->ob_type);
+	DeeType_DecrefHeapType(out->ob_type);
 	deepcopy_slab_free_impl(&self->dcc_uheap, out, n);
 }
 
@@ -719,7 +719,7 @@ deepcopy_slab_gcobject_free(DeeDeepCopyContext *__restrict self, Dee_seraddr_t a
 		next_head = DeeGC_Head(next);
 		next_head->gc_info.gi_pself = NULL;
 	}
-	Dee_Decref_unlikely(obj->ob_type);
+	DeeType_DecrefHeapType(obj->ob_type);
 	deepcopy_slab_free_impl(&self->dcc_uheap, obj, n);
 }
 
@@ -876,7 +876,7 @@ destroy_obheap(Dee_deepcopy_heap_t *heap, ptrdiff_t offsetof_object) {
 	while (heap) {
 		Dee_deepcopy_heap_t *next;
 		DeeObject *ob = (DeeObject *)((byte_t *)Dee_deepcopy_heap_getbase(heap) + offsetof_object);
-		Dee_Decref_unlikely(ob->ob_type);
+		DeeType_DecrefHeapType(ob->ob_type);
 		next = Dee_deepcopy_heap_getnext(heap);
 		Dee_deepcopy_heap_destroy(heap);
 		heap = next;

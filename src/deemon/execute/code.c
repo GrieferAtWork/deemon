@@ -38,7 +38,7 @@
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_ERR, Dee_BOUND_FROMBOOL, Dee_BUFFER_FREADONLY, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_XDecrefv, Dee_XIncref, Dee_XMovrefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly, DeeSeq_* */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
-#include <deemon/type.h>               /* DeeObject_DATA, DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_DATA, DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPtr */
 #include <deemon/seq.h>
 #include <deemon/string.h>          /* DeeString*, Dee_EmptyString */
@@ -1882,7 +1882,7 @@ code_copy(DeeCodeObject *__restrict self) {
 
 	Dee_XIncref(result->co_ddi);
 	Dee_XIncref(result->co_module);
-	DeeObject_Init(result, &DeeCode_Type);
+	DeeObject_InitStatic(result, &DeeCode_Type);
 done:
 	return result;
 err_r_static:
@@ -2360,7 +2360,7 @@ got_flag:
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 	/* Initialize the new code object, and start tracking it. */
-	DeeObject_Init(result, &DeeCode_Type);
+	DeeObject_InitStatic(result, &DeeCode_Type);
 	return result;
 err_r_ddi:
 	Dee_Decref(result->co_ddi);

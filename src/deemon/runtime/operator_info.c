@@ -41,7 +41,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmp, mempcpyc, memset, pow */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeType_*, Dee_METHOD_FCONSTCALL, Dee_METHOD_FNORETURN, Dee_OPERATOR_USERCOUNT, Dee_TF_ISCONSTCASTABLE, Dee_TF_NOTCONSTCASTABLE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_operator_t, Dee_opinfo, Dee_visit_t, FAKE_OPERATOR_*, METHOD_F*, OPCC_ARGC, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeMRO, DeeTypeMRO_Init, DeeType_*, Dee_METHOD_FCONSTCALL, Dee_METHOD_FNORETURN, Dee_OPERATOR_USERCOUNT, Dee_TF_ISCONSTCASTABLE, Dee_TF_NOTCONSTCASTABLE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_operator_t, Dee_opinfo, Dee_visit_t, FAKE_OPERATOR_*, METHOD_F*, OPCC_ARGC, OPCLASS_CUSTOM, OPCLASS_TYPE, OPERATOR_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
@@ -1813,7 +1813,7 @@ to_iter(TypeOperators *__restrict self) {
 	result->toi_opid = 0;
 	result->toi_name = self->to_name;
 	Dee_Incref(self->to_type);
-	DeeObject_Init(result, &TypeOperatorsIterator_Type);
+	DeeObject_InitStatic(result, &TypeOperatorsIterator_Type);
 done:
 	return result;
 }
@@ -2002,7 +2002,7 @@ toi_getseq(TypeOperatorsIterator *__restrict self) {
 	result->to_type = self->toi_type;
 	result->to_name = self->toi_name;
 	Dee_Incref(result->to_type);
-	DeeObject_Init(result, &TypeOperators_Type);
+	DeeObject_InitStatic(result, &TypeOperators_Type);
 done:
 	return result;
 }
@@ -2122,7 +2122,7 @@ type_get_operators(DeeTypeObject *__restrict self) {
 	result->to_type = self;
 	result->to_name = true;
 	Dee_Incref(self);
-	DeeObject_Init(result, &TypeOperators_Type);
+	DeeObject_InitStatic(result, &TypeOperators_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -2136,7 +2136,7 @@ type_get_operatorids(DeeTypeObject *__restrict self) {
 	result->to_type = self;
 	result->to_name = false;
 	Dee_Incref(self);
-	DeeObject_Init(result, &TypeOperators_Type);
+	DeeObject_InitStatic(result, &TypeOperators_Type);
 done:
 	return Dee_AsObject(result);
 }

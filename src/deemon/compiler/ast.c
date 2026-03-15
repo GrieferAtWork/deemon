@@ -35,7 +35,7 @@
 #include <deemon/seq.h>               /* Dee_EmptySeq */
 #include <deemon/set.h>               /* Dee_EmptySet */
 #include <deemon/tuple.h>             /* Dee_EmptyTuple */
-#include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_operator_t, Dee_visit_t, OPERATOR_ISINPLACE, TF_NONE, TP_FNORMAL */
+#include <deemon/type.h>              /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_operator_t, Dee_visit_t, OPERATOR_ISINPLACE, TF_NONE, TP_FNORMAL */
 
 #include <stddef.h> /* NULL, size_t */
 #include <stdint.h> /* uint16_t */
@@ -62,7 +62,7 @@ ast_dbgnew(char const *file, int line) {
 #ifdef CONFIG_AST_IS_STRUCT
 		result->a_refcnt = 1;
 #else /* CONFIG_AST_IS_STRUCT */
-		DeeObject_Init(result, &DeeAst_Type);
+		DeeObject_InitStatic(result, &DeeAst_Type);
 #endif /* !CONFIG_AST_IS_STRUCT */
 		result->a_scope      = current_scope;
 		result->a_ddi.l_file = NULL;
@@ -77,7 +77,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_new(void) {
 	ASSERT(DeeCompiler_LockReading());
 #endif /* !CONFIG_NO_THREADS */
 	if likely(result) {
-		DeeObject_Init(result, &DeeAst_Type);
+		DeeObject_InitStatic(result, &DeeAst_Type);
 		result->a_scope      = current_scope;
 		result->a_ddi.l_file = NULL;
 		Dee_Incref(result->a_scope);

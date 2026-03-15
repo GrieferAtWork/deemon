@@ -41,7 +41,7 @@
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, EXIT_FAILURE, _Exit, abort, bzero, stpcpy, strcpy */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_MEMBER_ISCONST, Dee_type_getset, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_FDEEPIMMUTABLE, TP_FFINAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_*, Dee_*method_t, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_MEMBER_ISCONST, Dee_type_getset, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_FDEEPIMMUTABLE, TP_FFINAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 
@@ -64,7 +64,7 @@ DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeObjMethodObject);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeObjMethod_Type);
+	DeeObject_InitStatic(result, &DeeObjMethod_Type);
 	result->om_func.omf_meth = func;
 	result->om_this          = self;
 	Dee_Incref(self);
@@ -79,7 +79,7 @@ DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeObjMethodObject);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeKwObjMethod_Type);
+	DeeObject_InitStatic(result, &DeeKwObjMethod_Type);
 	result->om_func.omf_kwmeth = func;
 	result->om_this            = self;
 	Dee_Incref(self);
@@ -666,7 +666,7 @@ dockwds_iter(DocKwds *__restrict self) {
 	Dee_Incref(self);
 	result->dki_kwds = self;
 	result->dki_iter = self->dk_start + 1;
-	DeeObject_Init(result, &DocKwdsIterator_Type);
+	DeeObject_InitStatic(result, &DocKwdsIterator_Type);
 done:
 	return result;
 }
@@ -839,7 +839,7 @@ doc_decode_kwds(DeeObject *owner, char const *doc) {
 	Dee_Incref(owner);
 	result->dk_owner = owner;
 	result->dk_start = doc;
-	DeeObject_Init(result, &DocKwds_Type);
+	DeeObject_InitStatic(result, &DocKwds_Type);
 done:
 	return Dee_AsObject(result);
 no_kwds:
@@ -995,7 +995,7 @@ DeeClsMethod_New(DeeTypeObject *__restrict type,
 	result = DeeObject_MALLOC(DeeClsMethodObject);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeClsMethod_Type);
+	DeeObject_InitStatic(result, &DeeClsMethod_Type);
 	result->clm_type           = type;
 	result->clm_func.clmf_meth = func;
 	Dee_Incref(type);
@@ -1011,7 +1011,7 @@ DeeKwClsMethod_New(DeeTypeObject *__restrict type,
 	result = DeeObject_MALLOC(DeeClsMethodObject);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeKwClsMethod_Type);
+	DeeObject_InitStatic(result, &DeeKwClsMethod_Type);
 	result->clm_type             = type;
 	result->clm_func.clmf_kwmeth = func;
 	Dee_Incref(type);
@@ -1462,7 +1462,7 @@ DeeClsProperty_NewEx(DeeTypeObject *__restrict type,
 	result = DeeObject_MALLOC(DeeClsPropertyObject);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeClsProperty_Type);
+	DeeObject_InitStatic(result, &DeeClsProperty_Type);
 	result->cp_type = type;
 	Dee_Incref(type);
 	result->cp_get   = get;
@@ -1872,7 +1872,7 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
 	result = DeeObject_MALLOC(DeeClsMemberObject);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeClsMember_Type);
+	DeeObject_InitStatic(result, &DeeClsMember_Type);
 	result->cmb_memb = *desc;
 	result->cmb_type = type;
 	Dee_Incref(type);
@@ -2844,7 +2844,7 @@ DeeCMethod_New(Dee_cmethod_t func, uintptr_t flags) {
 	if likely(result) {
 		result->cm_func.cmf_meth = func;
 		result->cm_flags         = flags;
-		DeeObject_Init(result, &DeeCMethod_Type);
+		DeeObject_InitStatic(result, &DeeCMethod_Type);
 	}
 	return Dee_AsObject(result);
 }
@@ -2856,7 +2856,7 @@ DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags) {
 	if likely(result) {
 		result->cm_func.cmf_kwmeth = func;
 		result->cm_flags           = flags;
-		DeeObject_Init(result, &DeeKwCMethod_Type);
+		DeeObject_InitStatic(result, &DeeKwCMethod_Type);
 	}
 	return Dee_AsObject(result);
 }
@@ -2868,7 +2868,7 @@ DeeCMethod0_New(Dee_cmethod0_t func, uintptr_t flags) {
 	if likely(result) {
 		result->cm_func.cmf_meth0 = func;
 		result->cm_flags          = flags;
-		DeeObject_Init(result, &DeeCMethod0_Type);
+		DeeObject_InitStatic(result, &DeeCMethod0_Type);
 	}
 	return Dee_AsObject(result);
 }
@@ -2880,7 +2880,7 @@ DeeCMethod1_New(Dee_cmethod1_t func, uintptr_t flags) {
 	if likely(result) {
 		result->cm_func.cmf_meth1 = func;
 		result->cm_flags          = flags;
-		DeeObject_Init(result, &DeeCMethod1_Type);
+		DeeObject_InitStatic(result, &DeeCMethod1_Type);
 	}
 	return Dee_AsObject(result);
 }

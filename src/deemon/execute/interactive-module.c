@@ -46,7 +46,7 @@
 #include <deemon/thread.h>             /* DeeThread_Self, except_frame_gettb */
 #include <deemon/traceback.h>          /* Dee_traceback_object */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FGC, TP_FNORMAL, type_gc, type_seq */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FGC, TP_FNORMAL, type_gc, type_seq */
 #include <deemon/util/atomic.h>        /* atomic_inc, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 #include <deemon/util/rlock.h>         /* Dee_rshared_rwlock_* */
@@ -499,7 +499,9 @@ do_exec_code:
 		assembler_init_reuse(current_code,
 		                     current_code->co_code +
 		                     preexisting_codesize);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeCode_Type);    /* current_code->ob_type */
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		Dee_DecrefNokill(&self->im_module); /* current_code->co_module */
 		current_assembler.a_constv = (DREF DeeObject **)current_code->co_constv;
 		current_code->co_constv    = NULL;
@@ -1173,7 +1175,7 @@ imod_init(InteractiveModule *__restrict self,
 	self->im_frame.cf_func = (DeeFunctionObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
 	if unlikely(!self->im_frame.cf_func)
 		goto err_stream;
-	DeeObject_Init(self->im_frame.cf_func, &DeeFunction_Type);
+	DeeObject_InitStatic(self->im_frame.cf_func, &DeeFunction_Type);
 	/* self->im_frame.cf_func->fo_code = ...; // Set below! */
 
 	/* Allocate the compiler that will be used
@@ -1388,7 +1390,7 @@ err_compiler_basefile:
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 		Dee_hostasm_code_init(&init_code->co_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-		DeeObject_Init(init_code, &DeeCode_Type);
+		DeeObject_InitStatic(init_code, &DeeCode_Type);
 		init_code = DeeGC_TRACK(DeeCodeObject, init_code);
 		self->im_module.mo_root = init_code; /* Inherit reference. */
 
@@ -1413,7 +1415,9 @@ err_basefile:
 err_compiler:
 	Dee_Decref(self->im_compiler);
 err_frame:
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeFunction_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	DeeObject_FreeTracker(Dee_AsObject(self->im_frame.cf_func));
 	DeeObject_Free(Dee_AsObject(self->im_frame.cf_func));
 err_stream:
@@ -1727,7 +1731,7 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	result = DeeGCObject_MALLOC(InteractiveModule);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(&result->im_module, &DeeInteractiveModule_Type);
+	DeeObject_InitStatic(&result->im_module, &DeeInteractiveModule_Type);
 	if (imod_init(result,
 	              source_stream,
 	              mode,
@@ -1742,7 +1746,9 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	/* Start tracking the new module as a GC object. */
 	return DeeGC_TRACK(DeeModuleObject, &result->im_module);
 err_r:
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeInteractiveModule_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	DeeObject_FreeTracker(Dee_AsObject(&result->im_module));
 	DeeGCObject_FREE(result);
 err:

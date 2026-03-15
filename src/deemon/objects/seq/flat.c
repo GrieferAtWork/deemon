@@ -33,7 +33,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>              /* DeeTupleObject, DeeTuple_FromSequence */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__, __SSIZE_MIN__ */
@@ -218,7 +218,7 @@ sf_iter(SeqFlat *__restrict self) {
 		goto err;
 	if unlikely(sfi_inititer_withseq(result, self->sf_seq))
 		goto err_r;
-	DeeObject_Init(result, &SeqFlatIterator_Type);
+	DeeObject_InitStatic(result, &SeqFlatIterator_Type);
 	return DeeGC_TRACK(SeqFlatIterator, result);
 err_r:
 	DeeGCObject_FREE(result);

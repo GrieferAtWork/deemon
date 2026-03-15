@@ -42,7 +42,7 @@
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/string.h>             /* DeeString_STR, Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h>    /* memcpyc */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
@@ -215,7 +215,7 @@ done_populate_result:;
 
 	/* Initialize and start tracking the new set. */
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &DeeHashSet_Type);
+	DeeObject_InitStatic(result, &DeeHashSet_Type);
 	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err_r_elem:
 	Dee_Free(result->hs_elem);
@@ -335,7 +335,7 @@ return_empty_set:
 
 	/* Initialize and start tracking the new set. */
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &DeeHashSet_Type);
+	DeeObject_InitStatic(result, &DeeHashSet_Type);
 	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err:
 	return NULL;
@@ -349,7 +349,7 @@ DeeHashSet_FromSequence(DeeObject *__restrict self) {
 		goto err;
 	if unlikely(hashset_init_sequence(result, self))
 		goto err_r;
-	DeeObject_Init(result, &DeeHashSet_Type);
+	DeeObject_InitStatic(result, &DeeHashSet_Type);
 	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err_r:
 	DeeGCObject_FREE(result);
@@ -397,7 +397,7 @@ DeeHashSet_FromRoSet(DeeObject *__restrict self) {
 	}
 	Dee_atomic_rwlock_init(&result->hs_lock);
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &DeeHashSet_Type);
+	DeeObject_InitStatic(result, &DeeHashSet_Type);
 	return Dee_AsObject(DeeGC_TRACK(HashSet, result));
 err_r:
 	DeeGCObject_FREE(result);
@@ -1317,7 +1317,7 @@ hashset_iter(HashSet *__restrict self) {
 	result = DeeObject_MALLOC(HashSetIterator);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &HashSetIterator_Type);
+	DeeObject_InitStatic(result, &HashSetIterator_Type);
 	result->hsi_set = self;
 	Dee_Incref(self);
 	result->hsi_next = atomic_read(&self->hs_elem);

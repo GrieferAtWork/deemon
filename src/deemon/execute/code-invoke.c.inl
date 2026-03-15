@@ -32,7 +32,7 @@
 #include <deemon/object.h>          /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_Movrefv, Dee_XDecref */
 #include <deemon/system-features.h> /* bzeroc, memcpyc */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init */
+#include <deemon/type.h>            /* DeeObject_InitStatic */
 #include <deemon/util/atomic.h>     /* atomic_inc, atomic_read */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
@@ -659,7 +659,7 @@ err_ex_frame:
 		yf->yf_this = NULL;
 #endif /* !CALL_THIS */
 		yf->yf_kw = NULL;
-		DeeObject_Init(yf, &DeeYieldFunction_Type);
+		DeeObject_InitStatic(yf, &DeeYieldFunction_Type);
 		return Dee_AsObject(yf);
 	}
 err:

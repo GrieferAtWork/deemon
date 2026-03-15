@@ -35,7 +35,7 @@
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Compare, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_XIncref, Dee_foreach_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
@@ -512,7 +512,7 @@ range_iter(Range *__restrict self) {
 	result->ri_first = true;
 	result->ri_rev   = self->r_rev;
 	Dee_atomic_rwlock_init(&result->ri_lock);
-	DeeObject_Init(result, &SeqRangeIterator_Type);
+	DeeObject_InitStatic(result, &SeqRangeIterator_Type);
 	result = DeeGC_TRACK(RangeIterator, result);
 done:
 	return result;
@@ -934,7 +934,7 @@ got_ns_ne:
 	result->r_rev   = self->r_rev;
 	result->r_step  = self->r_step;
 	Dee_XIncref(result->r_step);
-	DeeObject_Init(result, &SeqRange_Type);
+	DeeObject_InitStatic(result, &SeqRange_Type);
 	return Dee_AsObject(result);
 err_ns_ne:
 	Dee_Decref(new_end);
@@ -1316,7 +1316,7 @@ intrange_iter(IntRange *__restrict self) {
 	result->iri_step  = self->ir_step;
 	result->iri_end   = self->ir_end;
 	result->iri_index = self->ir_start;
-	DeeObject_Init(result, &SeqIntRangeIterator_Type);
+	DeeObject_InitStatic(result, &SeqIntRangeIterator_Type);
 done:
 	return result;
 }
@@ -1711,7 +1711,7 @@ err:
 	result = DeeObject_MALLOC(IntRange);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &SeqIntRange_Type);
+	DeeObject_InitStatic(result, &SeqIntRange_Type);
 	/* Fill in members of the new range object. */
 	result->ir_start = begin;
 	result->ir_end   = end;
@@ -1769,7 +1769,7 @@ do_object_range:
 	result = DeeObject_MALLOC(Range);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &SeqRange_Type);
+	DeeObject_InitStatic(result, &SeqRange_Type);
 
 	/* Fill in members of the new range object. */
 	result->r_start = begin;

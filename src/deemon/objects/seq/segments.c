@@ -31,7 +31,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_foreach_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -254,7 +254,7 @@ seg_iter(Segments *__restrict self) {
 	if unlikely(!result->si_iter)
 		goto err_r;
 	result->si_len = self->s_len;
-	DeeObject_Init(result, &SeqSegmentsIterator_Type);
+	DeeObject_InitStatic(result, &SeqSegmentsIterator_Type);
 done:
 	return result;
 err_r:
@@ -384,7 +384,7 @@ seg_get_frozen(Segments *__restrict self) {
 		goto err_inner;
 	result->s_seq = inner_frozen; /* Inherit reference */
 	result->s_len = self->s_len;
-	DeeObject_Init(result, &SeqSegments_Type);
+	DeeObject_InitStatic(result, &SeqSegments_Type);
 	return result;
 err_inner:
 	Dee_Decref(inner_frozen);
@@ -469,7 +469,7 @@ DeeSeq_Segments(DeeObject *__restrict self, size_t segsize) {
 	result->s_seq = self;
 	result->s_len = segsize;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SeqSegments_Type);
+	DeeObject_InitStatic(result, &SeqSegments_Type);
 done:
 	return Dee_AsObject(result);
 }

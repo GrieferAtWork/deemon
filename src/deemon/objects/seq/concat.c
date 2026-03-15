@@ -35,7 +35,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* bcmpc */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
@@ -418,7 +418,7 @@ cat_iter(Cat *__restrict self) {
 	result->cti_cat  = self;
 	Dee_Incref(self);
 	Dee_atomic_rwlock_init(&result->cti_lock);
-	DeeObject_Init(result, &SeqConcatIterator_Type);
+	DeeObject_InitStatic(result, &SeqConcatIterator_Type);
 	return DeeGC_TRACK(CatIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
@@ -465,8 +465,10 @@ cat_get_frozen(Cat *__restrict self) {
 
 	/* Fix the resulting object type. */
 	ASSERT(result->ob_type == &DeeTuple_Type);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeTuple_Type);
 	Dee_Incref(&SeqConcat_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	result->ob_type = &SeqConcat_Type;
 	return result;
 err_r_i:
@@ -814,8 +816,10 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 
 	/* Fix the resulting object type. */
 	ASSERT(result->ob_type == &DeeTuple_Type);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeTuple_Type);
 	Dee_Incref(&SeqConcat_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	result->ob_type = &SeqConcat_Type;
 	return Dee_AsObject(result);
 err:

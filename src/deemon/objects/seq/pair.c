@@ -39,7 +39,7 @@
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/typecore.h> /* __SIZEOF_SIZE_T__ */
@@ -265,7 +265,7 @@ sp_iter(SeqPair *__restrict self) {
 		Dee_Incref(self);
 		result->spi_pair  = self;
 		result->spi_index = 0;
-		DeeObject_Init(result, &SeqPairIterator_Type);
+		DeeObject_InitStatic(result, &SeqPairIterator_Type);
 	}
 	return result;
 }
@@ -1064,7 +1064,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3)) DREF DeeObject *
 	self->sp_items[0] = a;
 	Dee_Incref(b);
 	self->sp_items[1] = b;
-	DeeObject_Init(self, &DeeSeqPair_Type);
+	DeeObject_InitStatic(self, &DeeSeqPair_Type);
 #else /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
 	ASSERT(DeeTuple_SIZE(self) == 2);
@@ -1085,7 +1085,7 @@ PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3)) DREF DeeObject *
 #ifdef CONFIG_ENABLE_SEQ_PAIR_TYPE
 	self->sp_items[0] = a; /* Inherited */
 	self->sp_items[1] = b; /* Inherited */
-	DeeObject_Init(self, &DeeSeqPair_Type);
+	DeeObject_InitStatic(self, &DeeSeqPair_Type);
 #else /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
 	ASSERT(DeeTuple_SIZE(self) == 2);
@@ -1142,7 +1142,9 @@ DeeSeqPair_DecrefSymbolic(DREF DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSeqPair_Type);
 	if (!DeeObject_IsShared(me)) {
 		DeeSeq_FreePairUninitialized(me);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeSeqPair_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	} else {
 		Dee_Incref(me->sp_items[1]);
 		Dee_Incref(me->sp_items[0]);

@@ -34,7 +34,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpyc */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 #include <deemon/util/objectlist.h>    /* Dee_OBJECTLIST_*, Dee_objectlist_*, _Dee_objectlist_setalloc */
@@ -406,7 +406,7 @@ cswi_iter(CachedSeq_WithIter *__restrict self) {
 	Dee_Incref(self);
 	result->cswii_cache = self;
 	result->cswii_index = 0;
-	DeeObject_Init(result, &CachedSeq_WithIter_Iterator_Type);
+	DeeObject_InitStatic(result, &CachedSeq_WithIter_Iterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1490,7 +1490,7 @@ cswgi_iter(CachedSeq_WithGetItem *__restrict self) {
 	result->cswgii_cache = self;
 	cachedseq_index_init_index(&result->cswgii_nextindex, 0);
 	Dee_atomic_lock_init(&result->cswgii_lock);
-	DeeObject_Init(result, &CachedSeq_WithGetItem_Iterator_Type);
+	DeeObject_InitStatic(result, &CachedSeq_WithGetItem_Iterator_Type);
 	return result;
 err:
 	return NULL;

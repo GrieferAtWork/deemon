@@ -43,7 +43,7 @@
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* memcpyc */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
@@ -711,7 +711,7 @@ USet_FromSequence(DeeObject *__restrict sequence) {
 		goto err;
 	if unlikely(USet_InitSequence(result, sequence))
 		goto err_r;
-	DeeObject_Init(result, &USet_Type);
+	DeeObject_InitStatic(result, &USet_Type);
 	return DeeGC_TRACK(USet, result);
 err_r:
 	DeeGCObject_FREE(result);
@@ -855,7 +855,7 @@ uset_iter(USet *__restrict self) {
 	result = DeeObject_MALLOC(USetIterator);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &USetIterator_Type);
+	DeeObject_InitStatic(result, &USetIterator_Type);
 	result->usi_set = self;
 	Dee_Incref(self);
 	result->usi_next = atomic_read(&self->us_elem);
@@ -1526,7 +1526,7 @@ uroset_iter(URoSet *__restrict self) {
 		result->ursi_set  = self;
 		result->ursi_next = self->urs_elem;
 		Dee_Incref(self);
-		DeeObject_Init(result, &URoSetIterator_Type);
+		DeeObject_InitStatic(result, &URoSetIterator_Type);
 	}
 	return result;
 }
@@ -1635,7 +1635,7 @@ INTERN WUNUSED DREF URoSet *DCALL URoSet_New(void) {
 		result->urs_mask           = 0;
 		result->urs_size           = 0;
 		result->urs_elem[0].usi_key = NULL;
-		DeeObject_Init(result, &URoSet_Type);
+		DeeObject_InitStatic(result, &URoSet_Type);
 	}
 	return result;
 }
@@ -1772,7 +1772,7 @@ again_lock_hashset_src:
 		}
 	}
 	USet_LockEndRead(self);
-	DeeObject_Init(result, &URoSet_Type);
+	DeeObject_InitStatic(result, &URoSet_Type);
 done:
 	return result;
 }
@@ -1884,7 +1884,7 @@ use_zero_sizehint:
 		if unlikely(DeeObject_Foreach(sequence, &roset_init_foreach_cb, &result))
 			goto err_r_elem;
 	}
-	DeeObject_Init(result, &URoSet_Type);
+	DeeObject_InitStatic(result, &URoSet_Type);
 	return result;
 err_r_elem:
 	{

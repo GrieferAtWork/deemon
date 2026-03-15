@@ -43,7 +43,7 @@
 #include <deemon/stringutils.h>        /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_utf8seqlen, Dee_unicode_writeutf8 */
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_get_osfhandle, CONFIG_HAVE_memcasecmp, bcmpc, memcasecmp, stderr, stdin, stdout, strchr, strend, writeall */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, OPERATOR_REPR, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, OPERATOR_REPR, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic-ref.h>    /* Dee_ATOMIC_XREF, Dee_atomic_xref_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/rcu.h>           /* DeeRCU_*, Dee_DEFINE_RCU_LOCK */
@@ -760,7 +760,7 @@ file_read_trymap(Dee_fd_t fd, size_t maxbytes,
 	mapob = DeeObject_MALLOC(DREF DeeMapFileObject);
 	if unlikely(!mapob)
 		goto err_map;
-	DeeObject_Init(mapob, &DeeMapFile_Type);
+	DeeObject_InitStatic(mapob, &DeeMapFile_Type);
 	DeeMapFile_Move(&mapob->mf_map, &map);
 	mapob->mf_rsize = DeeMapFile_GetSize(&mapob->mf_map);
 
@@ -2488,7 +2488,7 @@ file_mmap(DeeObject *self, size_t argc,
 	                                mapflags))
 		goto err_r;
 	mapob->mf_rsize = DeeMapFile_GetSize(&mapob->mf_map) + args.nulbytes;
-	DeeObject_Init(mapob, &DeeMapFile_Type);
+	DeeObject_InitStatic(mapob, &DeeMapFile_Type);
 	result = DeeBytes_NewView((DeeObject *)mapob,
 	                          (void *)DeeMapFile_GetAddr(&mapob->mf_map),
 	                          mapob->mf_rsize, Dee_BUFFER_FWRITABLE);

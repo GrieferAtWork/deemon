@@ -36,7 +36,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy, memset */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_STRUCT_INTEGER, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_STRUCT_INTEGER, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashStr */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SHIFT_TYPE__ */
@@ -514,7 +514,7 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 		return (DREF Attr *)DeeNone_NewRef();
 	}
 	Dee_Incref(result->a_desc.ad_info.ai_decl);
-	DeeObject_Init(result, &DeeAttribute_Type);
+	DeeObject_InitStatic(result, &DeeAttribute_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -908,7 +908,7 @@ again_iterattr:
 	result->ei_itsz = req_bufsize;
 	result->ei_seq  = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeEnumAttrIterator_Type);
+	DeeObject_InitStatic(result, &DeeEnumAttrIterator_Type);
 	return result;
 err_r:
 	DeeObject_Free(result);
@@ -1061,7 +1061,7 @@ enumattriter_copy(EnumAttrIter *__restrict self) {
 	Dee_Incref(self->ei_seq);
 	result->ei_seq  = self->ei_seq;
 	result->ei_itsz = self->ei_itsz;
-	DeeObject_Init(result, &DeeEnumAttrIterator_Type);
+	DeeObject_InitStatic(result, &DeeEnumAttrIterator_Type);
 	return result;
 err_r:
 	DeeObject_Free(result);
@@ -1109,7 +1109,7 @@ enumattriter_next(EnumAttrIter *__restrict self) {
 		goto err;
 	Dee_Incref(desc.ad_info.ai_decl);
 	memcpy(&result->a_desc, &desc, sizeof(struct Dee_attrdesc));
-	DeeObject_Init(result, &DeeAttribute_Type);
+	DeeObject_InitStatic(result, &DeeAttribute_Type);
 	return result;
 err:
 	return NULL;

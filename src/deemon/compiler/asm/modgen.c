@@ -35,7 +35,7 @@
 #include <deemon/string.h>             /* DeeStringObject */
 #include <deemon/system-features.h>    /* memcpyc */
 #include <deemon/system.h>             /* DeeSystem_GetWalltime */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, TF_NONE, TP_F* */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
 #include <hybrid/int128.h> /* __hybrid_uint128_set64 */
@@ -143,7 +143,7 @@ create_current_module_marker(size_t size) {
 	result = (DREF ModuleCurrent *)DeeGCObject_Malloc(size);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeModuleCurrent_Type);
+	DeeObject_InitStatic(result, &DeeModuleCurrent_Type);
 	return DeeGC_TRACK(ModuleCurrent, result);
 err:
 	return NULL;
@@ -330,7 +330,7 @@ module_compile(DeeModuleObject *__restrict mod,
 	                                                  sizeof(DREF DeeObject *));
 	if unlikely(!mod)
 		goto err;
-	DeeObject_Init(mod, &DeeModuleDee_Type);
+	DeeObject_InitStatic(mod, &DeeModuleDee_Type);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
 	mod->mo_globalv = (DREF DeeObject **)Dee_Callocc(current_rootscope->rs_globalc,
 	                                                 sizeof(DREF DeeObject *));

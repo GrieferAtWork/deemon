@@ -40,7 +40,7 @@
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_Type, Dee_seq_range, _DeeSeqRange_Clamp */
 #include <deemon/string.h>          /* DeeString*, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* bzero */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_getset, type_member */
+#include <deemon/type.h>            /* DeeObject_*, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_getset, type_member */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
@@ -97,7 +97,7 @@ aiter_next(ArrayIterator *__restrict self) {
 	result = lvalue_object_malloc();
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, DeeLValueType_AsType(self->ai_type));
+	DeeObject_InitHeap(result, DeeLValueType_AsType(self->ai_type));
 
 	/* Use the item pointer which we've just extracted. */
 	result->l_ptr.ptr = result_pointer.ptr;
@@ -198,7 +198,7 @@ array_iter(DeeArrayTypeObject *tp_self, void *base) {
 	result->ai_pos.ptr   = base;
 	result->ai_siz       = DeeSType_Sizeof(tp_self->at_orig);
 	result->ai_end.ptr   = (byte_t *)base + (result->ai_siz * tp_self->at_count);
-	DeeObject_Init(result, &ArrayIterator_Type);
+	DeeObject_InitStatic(result, &ArrayIterator_Type);
 done:
 	return result;
 err_r:
@@ -231,7 +231,7 @@ array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 			temp = lvalue_object_malloc();
 			if unlikely(!temp)
 				goto err_lval_type;
-			DeeObject_Init(temp, DeeLValueType_AsType(lval_type));
+			DeeObject_InitHeap(temp, DeeLValueType_AsType(lval_type));
 		}
 		temp->l_ptr.ptr = iter.ptr;
 		iter.uint += siz;
@@ -707,7 +707,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 	result->at_count                 = num_items;
 
 	/* Finalize the array type. */
-	DeeObject_Init(DeeArrayType_AsType(result), &DeeArrayType_Type);
+	DeeObject_InitStatic(DeeArrayType_AsType(result), &DeeArrayType_Type);
 	return DeeType_AsArrayType(DeeGC_TRACK(DeeTypeObject, DeeArrayType_AsType(result)));
 err_r:
 	DeeGCObject_FREE(result);

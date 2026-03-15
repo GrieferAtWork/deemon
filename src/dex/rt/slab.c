@@ -35,7 +35,7 @@
 #include <deemon/seq.h>             /* DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h> /* memcmp, memcpy */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -75,7 +75,7 @@ do_realloc_result:
 		if likely(new_result)
 			result = new_result;
 	}
-	DeeObject_Init(result, &SlabStat_Type);
+	DeeObject_InitStatic(result, &SlabStat_Type);
 done:
 	return result;
 err_r:
@@ -146,7 +146,7 @@ ss_getitem_index(SlabStatObject *__restrict self, size_t index) {
 	result->si_info = &self->st_stat.st_slabs[index];
 	result->si_stat = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SlabInfo_Type);
+	DeeObject_InitStatic(result, &SlabInfo_Type);
 done:
 	return result;
 }

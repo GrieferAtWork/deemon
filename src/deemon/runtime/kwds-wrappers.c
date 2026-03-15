@@ -38,7 +38,7 @@
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, STRUCT_OBJECT_AB, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, STRUCT_OBJECT_AB, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit, Dee_atomic_rwlock_init */
@@ -514,7 +514,7 @@ blv_iter(DeeBlackListKwdsObject *__restrict self) {
 	result->blki_end  = result->blki_iter + self->blkd_kwds->kw_mask + 1;
 	result->blki_map  = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeBlackListKwdsIterator_Type);
+	DeeObject_InitStatic(result, &DeeBlackListKwdsIterator_Type);
 done:
 	return result;
 }
@@ -895,7 +895,7 @@ blv_copy(DeeBlackListKwdsObject *__restrict self) {
 	result->blkd_kwds = self->blkd_kwds;
 	Dee_Incref(result->blkd_kwds);
 	result->blkd_mask = self->blkd_mask;
-	DeeObject_Init(result, &DeeBlackListKwds_Type);
+	DeeObject_InitStatic(result, &DeeBlackListKwds_Type);
 done:
 	return result;
 }
@@ -1066,7 +1066,7 @@ DeeBlackListKwds_New(struct Dee_code_object *__restrict code,
 	result->blkd_kwds = kwds;                                     /* Weakly referenced. */
 	result->blkd_argv = (DREF DeeObject **)(DeeObject **)kw_argv; /* Weakly referenced. */
 	result->blkd_mask = mask;
-	DeeObject_Init(result, &DeeBlackListKwds_Type);
+	DeeObject_InitStatic(result, &DeeBlackListKwds_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -1086,7 +1086,9 @@ DeeBlackListKwds_Decref(DREF DeeObject *__restrict self) {
 		 *              so our cleanup process has been greatly simplified. */
 		/*Dee_Decref(me->blkd_code);*/ /* Not actually referenced */
 		/*Dee_Decref(me->blkd_kwds);*/ /* Not actually referenced */
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeBlackListKwds_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;
@@ -1516,7 +1518,7 @@ blkw_iter(DeeBlackListKwObject *__restrict self) {
 		goto err_r;
 	result->mi_map = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeBlackListKwIterator_Type);
+	DeeObject_InitStatic(result, &DeeBlackListKwIterator_Type);
 done:
 	return result;
 err_r:
@@ -1772,7 +1774,7 @@ blkw_copy(DeeBlackListKwObject *__restrict self) {
 	        result->blkw_mask + 1,
 	        sizeof(DeeBlackListKwdsEntry));
 	DeeBlackListKw_LockEndRead(self);
-	DeeObject_Init(result, &DeeBlackListKw_Type);
+	DeeObject_InitStatic(result, &DeeBlackListKw_Type);
 	return result;
 err_result_kw:
 	Dee_Decref(result_kw);
@@ -1856,7 +1858,7 @@ blkw_get_frozen(DeeBlackListKwObject *__restrict self) {
 	        result->blkw_mask + 1,
 	        sizeof(DeeBlackListKwdsEntry));
 	DeeBlackListKw_LockEndRead(self);
-	DeeObject_Init(result, &DeeBlackListKw_Type);
+	DeeObject_InitStatic(result, &DeeBlackListKw_Type);
 	return result;
 err_frozen_kw:
 	Dee_Decref(frozen_kw);
@@ -1975,7 +1977,7 @@ DeeBlackListKw_New(struct Dee_code_object *__restrict code,
 	result->blkw_mask = mask;
 	Dee_Incref(code);
 	Dee_Incref(kw);
-	DeeObject_Init(result, &DeeBlackListKw_Type);
+	DeeObject_InitStatic(result, &DeeBlackListKw_Type);
 done:
 	return Dee_AsObject(result);
 }

@@ -26,7 +26,7 @@
 #include <deemon/dec.h>              /* DBUILTINS_MAX, DECMAG*, DEC_BUILTINID_MAKE, DEC_BUILTINID_UNKNOWN, DFILE_LIMIT, DI_MAG*, DTYPE16_BUILTIN_MIN, DTYPE16_CELL, DTYPE16_CLASSDESC, DTYPE16_DICT, DTYPE16_HASHSET, DTYPE16_NONE, DTYPE16_RODICT, DTYPE16_ROSET, DTYPE_BUILTIN_MAX, DTYPE_BUILTIN_MIN, DTYPE_BUILTIN_NUM, DTYPE_CLASSDESC, DTYPE_CODE, DTYPE_EXTENDED, DTYPE_FUNCTION, DTYPE_IEEE754, DTYPE_KWDS, DTYPE_LIST, DTYPE_NONE, DTYPE_NULL, DTYPE_SLEB, DTYPE_STRING, DTYPE_TUPLE, DTYPE_ULEB, DVERSION_CUR, Dec_*, DeeDecWriter, DeeDecWriter_*, DeeDec_Ehdr, DeeDec_Ehdr_*, Dee_ALIGNOF_DEC_*, Dee_DEC_ENDIAN, Dee_DEC_MACH, Dee_DEC_TYPE_IMAGE, Dee_DEC_TYPE_RELOC, Dee_dec_* */
 #include <deemon/object.h>           /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_IncrefIfNotZero, Dee_OBJECT_OFFSETOF_DATA, Dee_TYPE, Dee_XClear, Dee_XDecref, Dee_XDecrefv, Dee_funptr_t, Dee_hash_t, Dee_uint128_t, Dee_weakref_support_cinit, ITER_DONE, ITER_ISOK */
 #include <deemon/serial.h>           /* DeeSerial, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t, Dee_serial_type */
-#include <deemon/type.h>             /* DeeObject_Init, DeeType_*, Dee_operator_t */
+#include <deemon/type.h>             /* DeeObject_InitStatic, DeeType_*, Dee_operator_t */
 #include <deemon/util/hash.h>        /* Dee_HashPtr, Dee_HashStr */
 #include <deemon/util/slab-config.h> /* Dee_SLAB_* */
 #include <deemon/util/slab.h>        /* Dee_SLAB_PAGESIZE, Dee_SLAB_PAGE_META_CUSTOM_MARKER, Dee_slab_page, Dee_slab_page_buildinit, Dee_slab_page_buildmalloc */
@@ -2268,10 +2268,20 @@ decwriter_object_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-	if unlikely(decwriter_putobject(self,
-	                                result + offsetof(DeeObject, ob_type),
-	                                Dee_AsObject(Dee_TYPE(ref))))
-		goto err_r;
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
+		if unlikely(decwriter_putpointer(self,
+		                                 result + offsetof(DeeObject, ob_type),
+		                                 Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	} else
+#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+	{
+		if unlikely(decwriter_putobject(self,
+		                                result + offsetof(DeeObject, ob_type),
+		                                Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	}
 	return result;
 err_r:
 	decwriter_free(self, result, ref);
@@ -2326,11 +2336,22 @@ decwriter_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t num_bytes,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-	if unlikely(decwriter_putobject(self,
-	                                result +
-	                                offsetof(DeeObject, ob_type),
-	                                Dee_AsObject(Dee_TYPE(ref))))
-		goto err_r;
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
+		if unlikely(decwriter_putpointer(self,
+		                                 result +
+		                                 offsetof(DeeObject, ob_type),
+		                                 Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	} else
+#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+	{
+		if unlikely(decwriter_putobject(self,
+		                                result +
+		                                offsetof(DeeObject, ob_type),
+		                                Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	}
 	return result;
 err_r:
 	decwriter_free(self, result - Dee_GC_OBJECT_OFFSET, DeeGC_Head(ref));
@@ -2646,10 +2667,20 @@ decwriter_slab_object_malloc_impl(DeeDecWriter *__restrict self, size_t n,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-	if unlikely(decwriter_putobject(self,
-	                                result + offsetof(DeeObject, ob_type),
-	                                Dee_AsObject(Dee_TYPE(ref))))
-		goto err_r;
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
+		if unlikely(decwriter_putpointer(self,
+		                                 result + offsetof(DeeObject, ob_type),
+		                                 Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	} else
+#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+	{
+		if unlikely(decwriter_putobject(self,
+		                                result + offsetof(DeeObject, ob_type),
+		                                Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	}
 	return result;
 err_r:
 	decwriter_slab_free(self, result, n, ref);
@@ -2716,11 +2747,22 @@ decwriter_slab_gcobject_malloc_impl(DeeDecWriter *__restrict self, size_t n,
 #ifdef CONFIG_TRACE_REFCHANGES
 	copy->ob_trace = NULL;
 #endif /* CONFIG_TRACE_REFCHANGES */
-	if unlikely(decwriter_putobject(self,
-	                                result +
-	                                offsetof(DeeObject, ob_type),
-	                                Dee_AsObject(Dee_TYPE(ref))))
-		goto err_r;
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+	if (!DeeType_IsHeapType(Dee_TYPE(ref))) {
+		if unlikely(decwriter_putobject(self,
+		                                result +
+		                                offsetof(DeeObject, ob_type),
+		                                Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	} else
+#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+	{
+		if unlikely(decwriter_putobject(self,
+		                                result +
+		                                offsetof(DeeObject, ob_type),
+		                                Dee_AsObject(Dee_TYPE(ref))))
+			goto err_r;
+	}
 	return result;
 err_r:
 	decwriter_slab_free(self, result - Dee_GC_OBJECT_OFFSET, total, DeeGC_Head(ref));
@@ -4427,7 +4469,7 @@ DecFile_CreateModule(uint16_t num_globals) {
 		result->mo_globalc = num_globals;
 		Dee_atomic_rwlock_cinit(&result->mo_lock);
 		Dee_weakref_support_cinit(result);
-		DeeObject_Init(result, &DeeModuleDee_Type);
+		DeeObject_InitStatic(result, &DeeModuleDee_Type);
 	}
 	return result;
 }
@@ -4752,7 +4794,7 @@ err_function_code:
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 		Dee_hostasm_function_init(&((DREF DeeFunctionObject *)result)->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-		DeeObject_Init((DeeFunctionObject *)result, &DeeFunction_Type);
+		DeeObject_InitStatic((DeeFunctionObject *)result, &DeeFunction_Type);
 		Dee_atomic_rwlock_init(&((DREF DeeFunctionObject *)result)->fo_reflock);
 		result = DeeGC_Track(result);
 	}	break;
@@ -4858,7 +4900,7 @@ err_function_code:
 		                                             iattr_mask + 1, sizeof(struct Dee_class_attribute));
 		if unlikely(!result)
 			goto err;
-		DeeObject_Init(descriptor, &DeeClassDescriptor_Type);
+		DeeObject_InitStatic(descriptor, &DeeClassDescriptor_Type);
 		descriptor->cd_flags      = flags;
 		descriptor->cd_cattr_list = empty_class_attributes;
 		descriptor->cd_clsop_list = empty_class_operators;
@@ -5234,7 +5276,7 @@ err_function_code:
 			                                             iattr_mask + 1, sizeof(struct Dee_class_attribute));
 			if unlikely(!result)
 				goto err;
-			DeeObject_Init(descriptor, &DeeClassDescriptor_Type);
+			DeeObject_InitStatic(descriptor, &DeeClassDescriptor_Type);
 			descriptor->cd_flags      = flags;
 			descriptor->cd_cattr_list = empty_class_attributes;
 			descriptor->cd_clsop_list = empty_class_operators;
@@ -5697,7 +5739,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
 		goto err_r_maps;
 
 	Dee_Incref(result->d_strtab);
-	DeeObject_Init(result, &DeeDDI_Type);
+	DeeObject_InitStatic(result, &DeeDDI_Type);
 	return result;
 err_r_maps:
 	Dee_Free((void *)result->d_strings);
@@ -6065,7 +6107,7 @@ err_kwds_i:
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 	/* Finally, initialize the resulting code object and start tracking it. */
-	DeeObject_Init(result, &DeeCode_Type);
+	DeeObject_InitStatic(result, &DeeCode_Type);
 done:
 	*p_reader = reader;
 	return result;

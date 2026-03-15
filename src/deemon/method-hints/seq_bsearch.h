@@ -265,7 +265,7 @@ if (NEED_err_item_overflow) {
 		print('	goto err;');
 	} else {
 		print('	if (DeeNone_Check(resultob)) {');
-		print('		Dee_DecrefNokill(resultob);');
+		print('		DeeNone_Decref();');
 		print('		return (size_t)-1;');
 		print('	}');
 		print('	if (DeeObject_AsSize(resultob, &result))');
@@ -399,7 +399,7 @@ err:
 	if unlikely(!resultob)
 		goto err;
 	if (DeeNone_Check(resultob)) {
-		Dee_DecrefNokill(resultob);
+		DeeNone_Decref();
 		return (size_t)-1;
 	}
 	if (DeeObject_AsSize(resultob, &result))
@@ -486,7 +486,7 @@ err:
 	if unlikely(!resultob)
 		goto err;
 	if (DeeNone_Check(resultob)) {
-		Dee_DecrefNokill(resultob);
+		DeeNone_Decref();
 		return (size_t)-1;
 	}
 	if (DeeObject_AsSize(resultob, &result))
@@ -574,7 +574,7 @@ err:
 	if unlikely(!resultob)
 		goto err;
 	if (DeeNone_Check(resultob)) {
-		Dee_DecrefNokill(resultob);
+		DeeNone_Decref();
 		return (size_t)-1;
 	}
 	if (DeeObject_AsSize(resultob, &result))
@@ -663,7 +663,7 @@ err:
 	if unlikely(!resultob)
 		goto err;
 	if (DeeNone_Check(resultob)) {
-		Dee_DecrefNokill(resultob);
+		DeeNone_Decref();
 		return (size_t)-1;
 	}
 	if (DeeObject_AsSize(resultob, &result))

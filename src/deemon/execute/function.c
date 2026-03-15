@@ -44,7 +44,7 @@
 #include <deemon/system-features.h>    /* bzero, memcpy*, memset */
 #include <deemon/traceback.h>          /* DeeFrameObject, DeeFrame_NewReferenceWithLock, Dee_FRAME_F* */
 #include <deemon/tuple.h>              /* DeeTuple_Type, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeType_GetOperatorById, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_F*, STRUCT_OBJECT, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeType_GetOperatorById, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_F*, STRUCT_OBJECT, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_inc */
 #include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
 #include <deemon/util/hash.h>          /* Dee_HASHOF_UNBOUND_ITEM, Dee_HashCombine */
@@ -330,7 +330,7 @@ DeeFunction_New(DeeCodeObject *code, size_t refc,
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	Dee_atomic_rwlock_init(&result->fo_reflock);
 	Dee_Movrefv(result->fo_refv, refv, refc);
-	DeeObject_Init(result, &DeeFunction_Type);
+	DeeObject_InitStatic(result, &DeeFunction_Type);
 	result = DeeGC_TRACK(Function, result);
 done:
 	return Dee_AsObject(result);
@@ -368,7 +368,7 @@ DeeFunction_NewInherited(DeeCodeObject *code, size_t refc,
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	Dee_atomic_rwlock_init(&result->fo_reflock);
 	memcpyc(result->fo_refv, refv, refc, sizeof(DREF DeeObject *));
-	DeeObject_Init(result, &DeeFunction_Type);
+	DeeObject_InitStatic(result, &DeeFunction_Type);
 	result = DeeGC_TRACK(Function, result);
 done:
 	return Dee_AsObject(result);
@@ -397,7 +397,7 @@ DeeFunction_NewNoRefs(DeeCodeObject *__restrict code) {
 	Dee_hostasm_function_init(&result->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	Dee_atomic_rwlock_init(&result->fo_reflock);
-	DeeObject_Init(result, &DeeFunction_Type);
+	DeeObject_InitStatic(result, &DeeFunction_Type);
 	result = DeeGC_TRACK(Function, result);
 done:
 	return Dee_AsObject(result);
@@ -433,7 +433,7 @@ function_init(size_t argc, DeeObject *const *argv) {
 	Dee_hostasm_function_init(&result->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	Dee_atomic_rwlock_init(&result->fo_reflock);
-	DeeObject_Init(result, &DeeFunction_Type);
+	DeeObject_InitStatic(result, &DeeFunction_Type);
 	result = DeeGC_TRACK(Function, result);
 	return result;
 err_r:
@@ -1359,7 +1359,7 @@ PRIVATE WUNUSED DREF YFunction *DCALL yf_ctor(void) {
 	result->yf_argc  = 0;
 	result->yf_kw    = NULL;
 	result->yf_this  = NULL;
-	DeeObject_Init(result, &DeeYieldFunction_Type);
+	DeeObject_InitStatic(result, &DeeYieldFunction_Type);
 	return result;
 err_r:
 	DeeObject_Free(result);
@@ -1398,7 +1398,7 @@ yf_copy(YFunction *__restrict self) {
 	Dee_Incref(result->yf_func);
 	Dee_Movrefv(result->yf_argv, self->yf_argv, self->yf_argc);
 	Dee_XIncref(result->yf_this);
-	DeeObject_Init(result, &DeeYieldFunction_Type);
+	DeeObject_InitStatic(result, &DeeYieldFunction_Type);
 	return result;
 err_r:
 	DeeObject_Free(result);
@@ -1450,7 +1450,7 @@ yf_iter(YFunction *__restrict self) {
 		goto err;
 	if unlikely(yfi_init(result, self))
 		goto err_r;
-	DeeObject_Init(result, &DeeYieldFunctionIterator_Type);
+	DeeObject_InitStatic(result, &DeeYieldFunctionIterator_Type);
 	return DeeGC_TRACK(YFIterator, result);
 err_r:
 	DeeGCObject_FREE(result);

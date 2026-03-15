@@ -57,7 +57,7 @@ err:
 	if unlikely(!result)
 		goto err;
 	if unlikely(DeeNone_Check(result)) {
-		Dee_DecrefNokill(result);
+		DeeNone_Decref();
 		DeeRT_ErrEmptySequence(self);
 		goto err;
 	}
@@ -100,7 +100,7 @@ err:
 	if unlikely(!result)
 		goto err;
 	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(result);
+		DeeNone_Decref();
 		return_reference_(default_);
 	}
 	return result;

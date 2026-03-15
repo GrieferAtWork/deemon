@@ -28,7 +28,7 @@
 #include <deemon/bytes.h>              /* DeeBytes* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_* */
-#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t, GETC_EOF, GETC_ERR */
+#include <deemon/file.h>               /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_AsType, DeeFileType_Type, DeeFile_Check, DeeFile_Type, Dee_SEEK_*, Dee_fd_t_IS_HANDLE, Dee_fd_t_IS_int, Dee_ioflag_t, GETC_EOF, GETC_ERR */
 #include <deemon/filetypes.h>          /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES, DeeFilePrinterObject, DeeFilePrinter_*, DeeFileReaderObject, DeeFileReader_*, DeeFileWriterObject, DeeFileWriter_*, DeeMemoryFileObject, DeeMemoryFile_*, Dee_FILE_WRITER_HINT_BYTES */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize */
@@ -41,7 +41,7 @@
 #include <deemon/system-features.h>    /* bzero, memcmp, memcpy*, mempcpy, strcmp */
 #include <deemon/system.h>             /* DeeNTSystem_GetHandle, DeeUnixSystem_GetFD */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_shared_rwlock_init */
 
@@ -332,7 +332,7 @@ DeeMemoryFile_New(void const *data, size_t data_size) {
 	result->mf_end   = (byte_t const *)data + data_size;
 	result->mf_ptr   = result->mf_begin;
 	Dee_atomic_rwlock_init(&result->mf_lock);
-	DeeFileObject_Init(result, &DeeMemoryFile_Type);
+	DeeFileObject_InitStatic(result, &DeeMemoryFile_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -343,7 +343,9 @@ DeeMemoryFile_Close(DREF /*File*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(self, (DeeTypeObject *)&DeeMemoryFile_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* The file also went away, so we can simply not free its data! */
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(DeeFileType_AsType(&DeeMemoryFile_Type));
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker(me);
 		DeeObject_FREE(me);
 	} else {
@@ -853,7 +855,7 @@ DeeFileReader_NewMemory(DeeObject *__restrict data_owner,
 	result->r_end   = (byte_t const *)data + data_size;
 	result->r_ptr   = (byte_t const *)data;
 	Dee_atomic_rwlock_init(&result->r_lock);
-	DeeFileObject_Init(result, &DeeFileReader_Type);
+	DeeFileObject_InitStatic(result, &DeeFileReader_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -885,7 +887,7 @@ DeeFileReader_NewObjectBuffer(DeeObject *__restrict data,
 	result->r_end   = (byte_t const *)result->r_buffer.bb_base + end;
 	result->r_ptr   = result->r_begin;
 	Dee_atomic_rwlock_init(&result->r_lock);
-	DeeFileObject_Init(result, &DeeFileReader_Type);
+	DeeFileObject_InitStatic(result, &DeeFileReader_Type);
 done:
 	return Dee_AsObject(result);
 err_r:
@@ -2209,7 +2211,7 @@ writer_tryappend8_string_locked(DeeFileWriterObject *__restrict self,
 			if unlikely(!init_buffer)
 				goto err;
 		}
-		DeeObject_Init(init_buffer, &DeeString_Type);
+		DeeObject_InitStatic(init_buffer, &DeeString_Type);
 		init_buffer->s_data = NULL;
 		init_buffer->s_hash = Dee_STRING_HASH_UNSET;
 		init_buffer->s_len  = init_size;
@@ -2320,7 +2322,7 @@ writer_tryappendch_string_locked(DeeFileWriterObject *__restrict self, uint32_t 
 				if unlikely(!init_buffer)
 					goto err;
 			}
-			DeeObject_Init(init_buffer, &DeeString_Type);
+			DeeObject_InitStatic(init_buffer, &DeeString_Type);
 			init_buffer->s_data   = NULL;
 			init_buffer->s_hash   = Dee_STRING_HASH_UNSET;
 			init_buffer->s_len    = init_size;
@@ -2403,7 +2405,9 @@ writer_tryappendch_string_locked(DeeFileWriterObject *__restrict self, uint32_t 
 			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 			                                     DeeStringObject,
 			                                     s_str));
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 			Dee_DecrefNokill(&DeeString_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 			self->w_printer.wp_uni.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
 			self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
@@ -2424,7 +2428,9 @@ writer_tryappendch_string_locked(DeeFileWriterObject *__restrict self, uint32_t 
 			DeeObject_Free(COMPILER_CONTAINER_OF(self->w_printer.wp_uni.up_buffer,
 			                                     DeeStringObject,
 			                                     s_str));
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 			Dee_DecrefNokill(&DeeString_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 			self->w_printer.wp_uni.up_buffer = new_buffer;
 #if STRING_WIDTH_1BYTE != 0
 			self->w_printer.wp_uni.up_flags &= ~Dee_UNICODE_PRINTER_FWIDTH;
@@ -2801,7 +2807,9 @@ unlock_and_destroy_new_bytes_and_try_again:
 				Dee_Free((size_t *)utf->u_utf8 - 1);
 			Dee_string_utf_free(utf);
 			DeeObject_Free(wstr);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 			Dee_DecrefNokill(&DeeString_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		}
 		self->w_string = NULL;
 	} else if (self->w_printer.wp_uni.up_buffer &&
@@ -2827,7 +2835,7 @@ unlock_and_destroy_new_bytes_and_try_again:
 					goto again;
 				goto err;
 			}
-			DeeObject_Init(buffer_copy, &DeeString_Type);
+			DeeObject_InitStatic(buffer_copy, &DeeString_Type);
 			buffer_copy->s_len  = buffer_length;
 			buffer_copy->s_data = NULL;
 			buffer_copy->s_hash = Dee_STRING_HASH_UNSET;
@@ -3169,7 +3177,7 @@ DeeFileWriter_New(unsigned int hint) {
 #else /* CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
 	(void)hint;
 #endif /* !CONFIG_EXPERIMENTAL_FILE_WRITER_BYTES */
-	DeeFileObject_Init(result, &DeeFileWriter_Type);
+	DeeFileObject_InitStatic(result, &DeeFileWriter_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3306,7 +3314,7 @@ DeeFilePrinter_New(Dee_formatprinter_t printer, void *arg) {
 	result->fp_arg     = arg;
 	result->fp_result  = 0;
 	Dee_shared_rwlock_init(&result->fp_lock);
-	DeeFileObject_Init(result, &DeeFilePrinter_Type);
+	DeeFileObject_InitStatic(result, &DeeFilePrinter_Type);
 done:
 	return Dee_AsObject(result);
 }

@@ -31,7 +31,7 @@
 #include <deemon/int.h>          /* DeeInt_NewUIntptr */
 #include <deemon/method-hints.h> /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
 #include <deemon/object.h>       /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_TYPE, Dee_foreach_t, Dee_ssize_t, ITER_ISOK */
-#include <deemon/type.h>         /* DeeObject_Init, DeeType_Check */
+#include <deemon/type.h>         /* DeeObject_InitStatic, DeeType_Check */
 #include <deemon/util/hash.h>    /* DeeObject_Id */
 
 #include "simpleproxy.c"
@@ -98,7 +98,7 @@ LOCAL_iter(SeqSimpleProxy *__restrict self) {
 	result->si_iter = DeeObject_InvokeMethodHint(seq_operator_iter, self->sp_seq);
 	if unlikely(!result->si_iter)
 		goto err_r_maybe_nest;
-	DeeObject_Init(result, &LOCAL_ProxyIterator_Type);
+	DeeObject_InitStatic(result, &LOCAL_ProxyIterator_Type);
 	return result;
 err_r_maybe_nest:
 	DeeRT_ErrNestSequenceError(self->sp_seq, self);

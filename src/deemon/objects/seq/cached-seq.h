@@ -25,7 +25,7 @@
 #include <deemon/gc.h>              /* DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>             /* DeeIntObject */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, Dee_Decref_likely, Dee_XDecref, Dee_XIncref, OBJECT_HEAD */
-#include <deemon/type.h>            /* DeeObject_Init */
+#include <deemon/type.h>            /* DeeObject_InitStatic */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_* */
 #include <deemon/util/objectlist.h> /* Dee_objectlist, Dee_objectlist_init */
 
@@ -75,7 +75,7 @@ CachedSeq_WithIter_New(/*inherit(always)*/ DREF DeeObject *iter) {
 	result->cswi_iter = iter; /* Inherit reference */
 	Dee_atomic_lock_init(&result->cswi_lock);
 	Dee_objectlist_init(&result->cswi_cache);
-	DeeObject_Init(result, &CachedSeq_WithIter_Type);
+	DeeObject_InitStatic(result, &CachedSeq_WithIter_Type);
 	return DeeGC_TRACK(CachedSeq_WithIter, result);
 err:
 	Dee_Decref_likely(iter);

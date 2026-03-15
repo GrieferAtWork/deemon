@@ -1566,7 +1566,7 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 		}
 	}
 
-	DeeObject_Init(result, &DeeCode_Type);
+	DeeObject_InitStatic(result, &DeeCode_Type);
 	/* Inherit data from the current base-scope. */
 	ASSERT((current_basescope->bs_default != NULL) ==
 	       (current_basescope->bs_argc_min != current_basescope->bs_argc_max));
@@ -2055,7 +2055,7 @@ DeeRelInt_New(struct asm_sym *__restrict sym,
 	result->ri_sym  = sym;
 	result->ri_add  = addend;
 	result->ri_mode = mode;
-	DeeObject_Init(result, &DeeRelInt_Type);
+	DeeObject_InitStatic(result, &DeeRelInt_Type);
 done:
 	return Dee_AsObject(result);
 }

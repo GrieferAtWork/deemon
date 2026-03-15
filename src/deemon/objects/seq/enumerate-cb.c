@@ -29,10 +29,10 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
-#include <deemon/none.h>               /* DeeNone_Check, Dee_None, return_none */
+#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Decref, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_member */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_member */
 #include <deemon/util/rlock.h>         /* Dee_rshared_lock_* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
@@ -66,7 +66,7 @@ seq_enumerate_cb(void *arg, DeeObject *key_or_index,
 	if unlikely(!result)
 		goto err;
 	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(Dee_None);
+		DeeNone_Decref();
 		return 0;
 	}
 	data->sed_result = result;
@@ -90,7 +90,7 @@ seq_enumerate_index_cb(void *arg, size_t index, /*nullable*/ DeeObject *value) {
 	if unlikely(!result)
 		goto err;
 	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(Dee_None);
+		DeeNone_Decref();
 		return 0;
 	}
 	data->sed_result = result;
@@ -167,7 +167,7 @@ seq_enumerate_with_filter_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject
 	if unlikely(!result)
 		goto err;
 	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(Dee_None);
+		DeeNone_Decref();
 		return 0;
 	}
 	data->sedwf_result = result;
@@ -443,7 +443,7 @@ deleted_enumerate_cb(void *arg, DeeObject *index, /*nullable*/ DeeObject *value)
  *                         an error. */
 INTERN WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 SeqEnumerateWrapper_Decref(/*inherit(always)*/ DREF SeqEnumerateWrapper *self,
-                        /*inherit(always)*/ DREF DeeObject *userproc_result) {
+                           /*inherit(always)*/ DREF DeeObject *userproc_result) {
 	DREF DeeObject *err;
 	Dee_ssize_t result;
 	bool shared;
@@ -470,7 +470,9 @@ SeqEnumerateWrapper_Decref(/*inherit(always)*/ DREF SeqEnumerateWrapper *self,
 		Dee_rshared_lock_release(&self->sew_lock);
 		Dee_Decref_unlikely(self);
 	} else {
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(Dee_TYPE(self));
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FREE(self);
 	}
 	Dee_XDecref(err);
@@ -489,7 +491,7 @@ SeqEnumerateWrapper_New(Dee_seq_enumerate_t cb, void *arg) {
 	result->sew_res = 0;
 	result->sew_err = NULL;
 	Dee_rshared_lock_init(&result->sew_lock);
-	DeeObject_Init(result, &SeqEnumerateWrapper_Type);
+	DeeObject_InitStatic(result, &SeqEnumerateWrapper_Type);
 	return result;
 err:
 	return NULL;
@@ -506,7 +508,7 @@ SeqEnumerateIndexWrapper_New(Dee_seq_enumerate_index_t cb, void *arg) {
 	result->sew_res = 0;
 	result->sew_err = NULL;
 	Dee_rshared_lock_init(&result->sew_lock);
-	DeeObject_Init(result, &SeqEnumerateIndexWrapper_Type);
+	DeeObject_InitStatic(result, &SeqEnumerateIndexWrapper_Type);
 	return result;
 err:
 	return NULL;

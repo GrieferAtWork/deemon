@@ -33,7 +33,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpy */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_*, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeMRO, DeeTypeMRO_*, DeeType_Base, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
@@ -494,7 +494,7 @@ typemro_iter(TypeMRO *__restrict self) {
 	DeeTypeMRO_Init(&result->tmi_mro, self->tm_type);
 	Dee_Incref(self->tm_type);
 	Dee_atomic_lock_init(&result->tmi_lock);
-	DeeObject_Init(result, &TypeMROIterator_Type);
+	DeeObject_InitStatic(result, &TypeMROIterator_Type);
 done:
 	return result;
 }
@@ -508,7 +508,7 @@ typebases_iter(TypeMRO *__restrict self) {
 	result->tmi_iter = DeeTypeMRO_Init(&result->tmi_mro, self->tm_type);
 	Dee_Incref(self->tm_type);
 	Dee_atomic_lock_init(&result->tmi_lock);
-	DeeObject_Init(result, &TypeBasesIterator_Type);
+	DeeObject_InitStatic(result, &TypeBasesIterator_Type);
 done:
 	return result;
 }

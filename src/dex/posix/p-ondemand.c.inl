@@ -211,7 +211,7 @@
 #include <deemon/system-features.h> /* *utim*, AT_FDCWD, CONFIG_HAVE_*, DeeSystem_GetErrno, DeeSystem_IF_E2, bcmp, bzero, memcpy, mempcpyc, sendfile, strchr, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_*, DeeUnixSystem_GetFD, DeeUnixSystem_ThrowErrorf */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_Init */
+#include <deemon/type.h>            /* DeeObject_InitStatic */
 #include <deemon/util/atomic.h>     /* atomic_and, atomic_read */
 #include <deemon/util/once.h>       /* Dee_ONCE */
 
@@ -4857,7 +4857,7 @@ err_bad_used_bufsize:
 						progress_info->cfp_dstfile = dst; /* Inherit reference */
 						progress_info->cfp_total   = (uint64_t)-1;
 						progress_info->cfp_bufsize = sendfile_iosize;
-						DeeObject_Init(progress_info, &DeeCopyFileProgress_Type);
+						DeeObject_InitStatic(progress_info, &DeeCopyFileProgress_Type);
 					}
 
 					/* Update the copied-bytes counter of the progress info object. */
@@ -4983,7 +4983,7 @@ err_progress_info_mapfile:
 					progress_info->cfp_dstfile = dst; /* Inherit reference */
 					progress_info->cfp_total   = transfer_total + DeeMapFile_GetSize(&mf);
 					progress_info->cfp_bufsize = used_bufsize;
-					DeeObject_Init(progress_info, &DeeCopyFileProgress_Type);
+					DeeObject_InitStatic(progress_info, &DeeCopyFileProgress_Type);
 				}
 
 				/* Update the copied-bytes counter of the progress info object. */
@@ -5044,7 +5044,7 @@ err_progress_info_transfer_buffer:
 					progress_info->cfp_dstfile = dst; /* Inherit reference */
 					progress_info->cfp_total   = (uint64_t)-1;
 					progress_info->cfp_bufsize = transfer_buffer_size;
-					DeeObject_Init(progress_info, &DeeCopyFileProgress_Type);
+					DeeObject_InitStatic(progress_info, &DeeCopyFileProgress_Type);
 				}
 
 				/* Update the copied-bytes counter of the progress info object. */

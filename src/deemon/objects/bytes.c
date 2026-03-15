@@ -41,7 +41,7 @@
 #include <deemon/super.h>              /* DeeObject_TGetBuf, DeeSuper* */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, bcmp, bzero, memcmp, memcpy, memmove, mempcpy, memset, memsetb, memsetl, memsetq, memsetw */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_InheritBuffer, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_InheritBuffer, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_Hash* */
 
@@ -354,7 +354,7 @@ DeeObject_Bytes(DeeObject *__restrict self,
 	result->b_orig  = self;
 	result->b_flags = flags;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
 err_r:
@@ -386,7 +386,7 @@ DeeObject_TBytes(DeeTypeObject *tp_self,
 	result->b_orig  = self;
 	result->b_flags = flags;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
 err_r:
@@ -411,7 +411,7 @@ DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
 	_DeeBytes_InitBuffer(result, num_bytes);
 #endif
 	result->b_flags = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return result;
 }
@@ -425,7 +425,7 @@ DeeBytes_NewBufferUninitialized(size_t num_bytes) {
 		goto done;
 	_DeeBytes_InitBuffer(result, num_bytes);
 	result->b_flags = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return result;
 }
@@ -439,7 +439,7 @@ DeeBytes_TryNewBufferUninitialized(size_t num_bytes) {
 		goto done;
 	_DeeBytes_InitBuffer(result, num_bytes);
 	result->b_flags = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return result;
 }
@@ -460,7 +460,7 @@ DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	_DeeBytes_InitBuffer(result, num_bytes);
 #endif
 	result->b_flags = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return result;
 }
@@ -481,7 +481,7 @@ DeeBytes_TryNewBufferData(void const *__restrict data, size_t num_bytes) {
 	_DeeBytes_InitBuffer(result, num_bytes);
 #endif
 	result->b_flags = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return result;
 }
@@ -583,7 +583,7 @@ DeeBytes_NewView(DeeObject *owner, void *base,
 	result->b_orig  = owner;
 	result->b_flags = flags;
 	Dee_Incref(owner);
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -698,7 +698,7 @@ err_args:
 				result->b_orig  = ob;
 				result->b_flags = Dee_BUFFER_FREADONLY;
 				Dee_Incref(ob);
-				DeeObject_Init(result, &DeeBytes_Type);
+				DeeObject_InitStatic(result, &DeeBytes_Type);
 				return result;
 			}
 		} while (DeeType_InheritBuffer(tp_iter));
@@ -846,7 +846,7 @@ bytes_iter(Bytes *__restrict self) {
 	result->bi_bytes = self;
 	result->bi_iter  = DeeBytes_DATA(self);
 	Dee_Incref(self);
-	DeeObject_Init(result, &BytesIterator_Type);
+	DeeObject_InitStatic(result, &BytesIterator_Type);
 done:
 	return result;
 }
@@ -2134,7 +2134,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct Dee_bytes_printer *__restrict 
 	result->b_base  = DeeBytes_BUFFER_DATA(result);
 	result->b_orig  = Dee_AsObject(result);
 	result->b_flags = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &DeeBytes_Type);
+	DeeObject_InitStatic(result, &DeeBytes_Type);
 	DBG_memset(self, 0xcc, sizeof(*self));
 	return Dee_AsObject(result);
 }

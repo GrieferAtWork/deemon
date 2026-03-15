@@ -42,7 +42,7 @@
 #include <deemon/system-features.h> /* *seek*, *stat*, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, CONFIG_PREFER_WCHAR_FUNCTIONS, DeeSystem_GetErrno, bzero, clearerr, fclose, ferror, fopen, fopen64, ftell, ftello, ftello64, memcasecmp, strchr, strend */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_IsSep, DeeUnixSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, METHOD_FNORMAL, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_method */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_val */
 
 #include <hybrid/debug-alignment.h> /* DBG_ALIGNMENT_DISABLE, DBG_ALIGNMENT_ENABLE */
@@ -1074,7 +1074,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fstat_f_impl(DeeObje
 		goto err;
 	if unlikely(dee_stat_init(&result->so_stat, NULL, fd, Dee_STAT_F_NORMAL))
 		goto err_r;
-	DeeObject_Init(result, &DeeStat_Type);
+	DeeObject_InitStatic(result, &DeeStat_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
@@ -1130,7 +1130,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_fstatat_f_impl(De
 		goto err;
 	if unlikely(dee_stat_init(&result->so_stat, dfd, path, atflags))
 		goto err_r;
-	DeeObject_Init(result, &DeeStat_Type);
+	DeeObject_InitStatic(result, &DeeStat_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);

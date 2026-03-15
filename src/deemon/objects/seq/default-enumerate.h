@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>  /* DeeObject_MALLOC */
 #include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_Incref */
-#include <deemon/type.h>   /* DeeObject_Init */
+#include <deemon/type.h>   /* DeeObject_InitStatic */
 
 #include "../generic-proxy.h"
 
@@ -93,7 +93,7 @@ DefaultEnumerationWithIntFilter_New(DeeTypeObject *DefaultEnumerationWithIntFilt
 		result->dewif_seq = self;
 		result->dewif_start = start;
 		result->dewif_end = end;
-		DeeObject_Init(result, DefaultEnumerationWithIntFilter__with__xxx);
+		DeeObject_InitStatic(result, DefaultEnumerationWithIntFilter__with__xxx);
 	}
 	return result;
 }

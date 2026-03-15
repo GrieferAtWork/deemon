@@ -42,7 +42,7 @@
 #include <deemon/serial.h>        /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>           /* DeeSet_Type */
 #include <deemon/thread.h>        /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>          /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_ITER, STRUCT_OBJECT_AB, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>          /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_ITER, STRUCT_OBJECT_AB, TF_NONE, TP_FABSTRACT, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/lock.h>     /* Dee_atomic_lock_* */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD */
@@ -93,7 +93,7 @@ RangeMapProxy_New(DeeObject *rmap, DeeTypeObject *type) {
 	if likely(result) {
 		result->rmp_rmap = rmap;
 		Dee_Incref(rmap);
-		DeeObject_Init(result, type);
+		DeeObject_InitStatic(result, type);
 	}
 	return result;
 }
@@ -936,7 +936,7 @@ proxy_iterself(RangeMapProxy *__restrict self, DeeTypeObject *__restrict result_
 		goto err_r;
 	result->rmpii_base.rmpi_rmap = self->rmp_rmap;
 	Dee_Incref(result->rmpii_base.rmpi_rmap);
-	DeeObject_Init(&result->rmpii_base, result_type);
+	DeeObject_InitStatic(&result->rmpii_base, result_type);
 done:
 	return result;
 err_r:
@@ -960,7 +960,7 @@ proxy_iterself_keys(RangeMapProxy *__restrict self) {
 	result->rmpki_maxkey = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&result->rmpki_lock);
 	result->rmpki_first = false;
-	DeeObject_Init(&result->rmpki_base.rmpii_base, &RangeMapKeysIterator_Type);
+	DeeObject_InitStatic(&result->rmpki_base.rmpii_base, &RangeMapKeysIterator_Type);
 done:
 	return result;
 err_r:
@@ -989,7 +989,7 @@ proxy_iterself_nodes(RangeMapProxy *__restrict self) {
 		goto err_r;
 	result->rmpi_rmap = self->rmp_rmap;
 	Dee_Incref(result->rmpi_rmap);
-	DeeObject_Init(result, &RangeMapNodesIterator_Type);
+	DeeObject_InitStatic(result, &RangeMapNodesIterator_Type);
 done:
 	return result;
 err_r:
@@ -1019,7 +1019,7 @@ make_RangeMapProxyMapItemsIterator(RangeMapProxy *self, DeeTypeObject *type) {
 	result->rmpki_maxkey           = (DeeObject *)_DeeInt_Zero;
 	Dee_atomic_lock_init(&result->rmpki_lock);
 	result->rmpki_first = false;
-	DeeObject_Init(&result->rmpki_base.rmpii_base, type);
+	DeeObject_InitStatic(&result->rmpki_base.rmpii_base, type);
 done:
 	return result;
 err_r:

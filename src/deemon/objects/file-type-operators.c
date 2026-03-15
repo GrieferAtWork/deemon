@@ -30,8 +30,8 @@
 #include <deemon/file.h>     /* DeeFileObject, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, Dee_FILEIO_FNORMAL, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPERATOR_FILE_* */
 #include <deemon/format.h>   /* PCK* */
 #include <deemon/int.h>      /* DeeInt_* */
-#include <deemon/none.h>     /* DeeNone_Check, return_none */
-#include <deemon/object.h>   /* ASSERT_OBJECT_TYPE, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_DecrefNokill, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
+#include <deemon/none.h>     /* DeeNone_Check, DeeNone_Decref, return_none */
+#include <deemon/object.h>   /* ASSERT_OBJECT_TYPE, DREF, DeeBuffer, DeeBuffer_Fini, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BUFFER_FREADONLY, Dee_BUFFER_FWRITABLE, Dee_Decref, Dee_SIZEOF_OFF_T, Dee_SIZEOF_POS_T, Dee_TYPE, Dee_off_t, Dee_pos_t */
 #include <deemon/super.h>    /* DeeSuperObject, DeeSuper_Type */
 #include <deemon/type.h>     /* Dee_OPERATOR_INVOKE_INIT, Dee_operator_invoke, Dee_operator_t, Dee_opinfo, OPCC_SPECIAL, OPCLASS_TYPE, TYPE_OPERATOR_DECL, type_operator */
 
@@ -237,7 +237,7 @@ instance_tgetc(DeeFileTypeObject *tp_self, DeeFileObject *self, Dee_ioflag_t fla
 	if unlikely(!result_ob)
 		goto err;
 	if (DeeNone_Check(result_ob)) {
-		Dee_DecrefNokill(result_ob);
+		DeeNone_Decref();
 		return GETC_EOF;
 	}
 	if unlikely(DeeObject_AsInt(result_ob, &temp))
@@ -263,7 +263,7 @@ instance_tungetc(DeeFileTypeObject *tp_self, DeeFileObject *self, int ch) {
 	if unlikely(!result_ob)
 		goto err;
 	if (DeeNone_Check(result_ob)) {
-		Dee_DecrefNokill(result_ob);
+		DeeNone_Decref();
 		return ch;
 	}
 	temp = DeeObject_BoolInherited(result_ob);
@@ -285,7 +285,7 @@ instance_tputc(DeeFileTypeObject *tp_self, DeeFileObject *self,
 	if unlikely(!result_ob)
 		goto err;
 	if (DeeNone_Check(result_ob)) {
-		Dee_DecrefNokill(result_ob);
+		DeeNone_Decref();
 		return ch;
 	}
 	temp = DeeObject_BoolInherited(result_ob);

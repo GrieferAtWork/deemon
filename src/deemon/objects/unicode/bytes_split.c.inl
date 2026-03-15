@@ -37,7 +37,7 @@
 #include <deemon/string.h>             /* DeeString_AsBytes, DeeString_Check, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memcpy */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -469,7 +469,7 @@ bs_iter(BytesSplit *__restrict self) {
 	result->bsi_sep_ptr = self->bs_sep_ptr;
 	result->bsi_sep_len = self->bs_sep_len;
 	Dee_Incref(self);
-	DeeObject_Init(result, &BytesSplitIterator_Type);
+	DeeObject_InitStatic(result, &BytesSplitIterator_Type);
 done:
 	return result;
 }
@@ -489,7 +489,7 @@ bcs_iter(BytesSplit *__restrict self) {
 	result->bsi_sep_ptr = self->bs_sep_ptr;
 	result->bsi_sep_len = self->bs_sep_len;
 	Dee_Incref(self);
-	DeeObject_Init(result, &BytesCaseSplitIterator_Type);
+	DeeObject_InitStatic(result, &BytesCaseSplitIterator_Type);
 done:
 	return result;
 }
@@ -723,7 +723,7 @@ DeeBytes_SplitByte(Bytes *__restrict self, byte_t sep) {
 	result->bs_sep_len    = 1;
 	result->bs_sep_buf[0] = sep;
 	Dee_Incref(self);
-	DeeObject_Init(result, &BytesSplit_Type);
+	DeeObject_InitStatic(result, &BytesSplit_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -751,7 +751,7 @@ DeeBytes_Split(Bytes *self, DeeObject *sep) {
 	result->bs_sep_owner = sep;
 	Dee_Incref(self);
 	Dee_Incref(sep);
-	DeeObject_Init(result, &BytesSplit_Type);
+	DeeObject_InitStatic(result, &BytesSplit_Type);
 done:
 	return Dee_AsObject(result);
 err_r:
@@ -774,7 +774,7 @@ DeeBytes_CaseSplitByte(Bytes *__restrict self, byte_t sep) {
 	result->bs_sep_len    = 1;
 	result->bs_sep_buf[0] = sep;
 	Dee_Incref(self);
-	DeeObject_Init(result, &BytesCaseSplit_Type);
+	DeeObject_InitStatic(result, &BytesCaseSplit_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -802,7 +802,7 @@ DeeBytes_CaseSplit(Bytes *self, DeeObject *sep) {
 	result->bs_sep_owner = sep;
 	Dee_Incref(self);
 	Dee_Incref(sep);
-	DeeObject_Init(result, &BytesCaseSplit_Type);
+	DeeObject_InitStatic(result, &BytesCaseSplit_Type);
 done:
 	return Dee_AsObject(result);
 err_r:
@@ -1065,7 +1065,7 @@ bls_iter(BytesLineSplit *__restrict self) {
 	if (result->blsi_iter == result->blsi_end)
 		result->blsi_iter = NULL;
 	Dee_Incref(result->blsi_bytes);
-	DeeObject_Init(result, &BytesLineSplitIterator_Type);
+	DeeObject_InitStatic(result, &BytesLineSplitIterator_Type);
 done:
 	return result;
 }
@@ -1185,7 +1185,7 @@ DeeBytes_SplitLines(Bytes *__restrict self,
 	result->bls_bytes    = self;
 	result->bls_keepends = keepends;
 	Dee_Incref(self);
-	DeeObject_Init(result, &BytesLineSplit_Type);
+	DeeObject_InitStatic(result, &BytesLineSplit_Type);
 done:
 	return Dee_AsObject(result);
 }

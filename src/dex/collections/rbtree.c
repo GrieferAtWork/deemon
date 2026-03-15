@@ -43,7 +43,7 @@
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetp */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FGC, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* DeeLock_Acquire2, Dee_atomic_rwlock_* */
 
@@ -964,7 +964,7 @@ err_changed_unlock:
 		}                                                                        \
 		result->rbti_next = node;                                                \
 		Dee_Incref(result->rbti_tree);                                           \
-		DeeObject_Init(result, &RBTreeIterator_Type);                            \
+		DeeObject_InitStatic(result, &RBTreeIterator_Type);                      \
 	done:                                                                        \
 		return Dee_AsObject(result);                                             \
 	err_r_unlock_unbound:                                                        \
@@ -1243,7 +1243,7 @@ rbtree_iter(RBTree *__restrict self) {
 	RBTree_LockEndRead(self);
 	result->rbti_tree = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &RBTreeIterator_Type);
+	DeeObject_InitStatic(result, &RBTreeIterator_Type);
 done:
 	return result;
 }
@@ -2455,7 +2455,7 @@ rbtree_itlocate(RBTree *self, size_t argc, DeeObject *const *argv) {
 	RBTree_LockEndRead(self);
 	result->rbti_tree = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &RBTreeIterator_Type);
+	DeeObject_InitStatic(result, &RBTreeIterator_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2603,7 +2603,7 @@ rbtree_itprevnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	RBTree_LockEndRead(self);
 	result->rbti_tree = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &RBTreeIterator_Type);
+	DeeObject_InitStatic(result, &RBTreeIterator_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2636,7 +2636,7 @@ rbtree_itnextnode(RBTree *self, size_t argc, DeeObject *const *argv) {
 	RBTree_LockEndRead(self);
 	result->rbti_tree = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &RBTreeIterator_Type);
+	DeeObject_InitStatic(result, &RBTreeIterator_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2958,7 +2958,7 @@ rbtree_get_itroot(RBTree *__restrict self) {
 	RBTree_LockEndRead(self);
 	result->rbti_tree = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &RBTreeIterator_Type);
+	DeeObject_InitStatic(result, &RBTreeIterator_Type);
 done:
 	return result;
 err_r_unlock_empty:

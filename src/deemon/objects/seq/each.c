@@ -33,7 +33,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSomeObject, DeeSeq_* */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_InvokeOperator, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_SIZED, Dee_Visit, Dee_Visitv, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/runtime_error.h"
@@ -63,7 +63,7 @@ seqeach_makeop0(DeeObject *__restrict seq, Dee_operator_t opname) {
 	result->so_opname = opname;
 	result->so_opargc = 0;
 	Dee_Incref(seq);
-	DeeObject_Init(result, &SeqEachOperator_Type);
+	DeeObject_InitStatic(result, &SeqEachOperator_Type);
 done:
 	return result;
 }
@@ -80,7 +80,7 @@ seqeach_makeop1(DeeObject *seq, Dee_operator_t opname,
 	result->so_opargc    = 1;
 	result->so_opargv[0] = arg_0; /* Inherit reference. */
 	Dee_Incref(seq);
-	DeeObject_Init(result, &SeqEachOperator_Type);
+	DeeObject_InitStatic(result, &SeqEachOperator_Type);
 	return result;
 err:
 	Dee_Decref(arg_0);
@@ -101,7 +101,7 @@ seqeach_makeop2(DeeObject *seq, Dee_operator_t opname,
 	result->so_opargv[0] = arg_0; /* Inherit reference. */
 	result->so_opargv[1] = arg_1; /* Inherit reference. */
 	Dee_Incref(seq);
-	DeeObject_Init(result, &SeqEachOperator_Type);
+	DeeObject_InitStatic(result, &SeqEachOperator_Type);
 	return result;
 err:
 	Dee_Decref(arg_1);
@@ -1207,7 +1207,7 @@ seqeach_getattr(SeqEachBase *self,
 	result->sg_attr = attr;
 	Dee_Incref(self->se_seq);
 	Dee_Incref(attr);
-	DeeObject_Init(result, &SeqEachGetAttr_Type);
+	DeeObject_InitStatic(result, &SeqEachGetAttr_Type);
 done:
 	return result;
 }
@@ -1375,7 +1375,7 @@ seqsome_makeop0(DeeObject *__restrict seq, Dee_operator_t opname) {
 	result->so_opname = opname;
 	result->so_opargc = 0;
 	Dee_Incref(seq);
-	DeeObject_Init(result, &SeqSomeOperator_Type);
+	DeeObject_InitStatic(result, &SeqSomeOperator_Type);
 done:
 	return result;
 }
@@ -1392,7 +1392,7 @@ seqsome_makeop1(DeeObject *seq, Dee_operator_t opname,
 	result->so_opargc    = 1;
 	result->so_opargv[0] = arg_0; /* Inherit reference. */
 	Dee_Incref(seq);
-	DeeObject_Init(result, &SeqSomeOperator_Type);
+	DeeObject_InitStatic(result, &SeqSomeOperator_Type);
 	return result;
 err:
 	Dee_Decref(arg_0);
@@ -1413,7 +1413,7 @@ seqsome_makeop2(DeeObject *seq, Dee_operator_t opname,
 	result->so_opargv[0] = arg_0; /* Inherit reference. */
 	result->so_opargv[1] = arg_1; /* Inherit reference. */
 	Dee_Incref(seq);
-	DeeObject_Init(result, &SeqSomeOperator_Type);
+	DeeObject_InitStatic(result, &SeqSomeOperator_Type);
 	return result;
 err:
 	Dee_Decref(arg_1);
@@ -1856,7 +1856,7 @@ seqsome_getattr(SeqEachBase *self, DeeStringObject *attr) {
 	result->sg_attr = attr;
 	Dee_Incref(self->se_seq);
 	Dee_Incref(attr);
-	DeeObject_Init(result, &SeqSomeGetAttr_Type);
+	DeeObject_InitStatic(result, &SeqSomeGetAttr_Type);
 done:
 	return result;
 }
@@ -2132,7 +2132,7 @@ DeeSeq_Each(DeeObject *__restrict self) {
 		goto done;
 	result->se_seq = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SeqEach_Type);
+	DeeObject_InitStatic(result, &SeqEach_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -2149,7 +2149,7 @@ DeeSeq_Some(DeeObject *__restrict self) {
 		goto done;
 	result->se_seq = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeSeqSome_Type);
+	DeeObject_InitStatic(result, &DeeSeqSome_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -2976,7 +2976,7 @@ seqeachw_getattr(DeeObject *__restrict self,
 	result->sg_attr = attr;
 	Dee_Incref(self);
 	Dee_Incref(attr);
-	DeeObject_Init(result, &SeqEachGetAttr_Type);
+	DeeObject_InitStatic(result, &SeqEachGetAttr_Type);
 done:
 	return result;
 }
@@ -3046,7 +3046,7 @@ seo_mh_seq_operator_iter(SeqEachOperator *__restrict self) {
 	if unlikely(!result->ei_iter)
 		goto err_r;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SeqEachOperatorIterator_Type);
+	DeeObject_InitStatic(result, &SeqEachOperatorIterator_Type);
 done:
 	return result;
 err_r:
@@ -3122,7 +3122,7 @@ seo_wraprange(SeqEachOperator *self, /*inherit(always)*/ DREF DeeObject *base) {
 	result->so_opname = self->so_opname;
 	result->so_opargc = self->so_opargc;
 	Dee_Movrefv(result->so_opargv, self->so_opargv, self->so_opargc);
-	DeeObject_Init(result, &SeqEachOperator_Type);
+	DeeObject_InitStatic(result, &SeqEachOperator_Type);
 	return result;
 err_base:
 	Dee_Decref(base);
@@ -3769,7 +3769,7 @@ seqsomew_getattr(DeeObject *__restrict self,
 	result->sg_attr = attr;
 	Dee_Incref(self);
 	Dee_Incref(attr);
-	DeeObject_Init(result, &SeqSomeGetAttr_Type);
+	DeeObject_InitStatic(result, &SeqSomeGetAttr_Type);
 done:
 	return result;
 }
@@ -4142,7 +4142,7 @@ DeeSeqEach_CallAttr(DeeObject *self, DeeObject *attr,
 	Dee_Movrefv(result->sg_argv, argv, argc);
 	Dee_Incref(self);
 	Dee_Incref(attr);
-	DeeObject_Init(result, &SeqEachCallAttr_Type);
+	DeeObject_InitStatic(result, &SeqEachCallAttr_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -4165,7 +4165,7 @@ DeeSeqEach_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc,
 	Dee_Incref(self);
 	Dee_Incref(attr);
 	Dee_Incref(kw);
-	DeeObject_Init(result, &SeqEachCallAttrKw_Type);
+	DeeObject_InitStatic(result, &SeqEachCallAttrKw_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -4247,7 +4247,7 @@ DeeSeqSome_CallAttr(DeeObject *self, DeeObject *attr,
 	Dee_Movrefv(result->sg_argv, argv, argc);
 	Dee_Incref(self);
 	Dee_Incref(attr);
-	DeeObject_Init(result, &SeqSomeCallAttr_Type);
+	DeeObject_InitStatic(result, &SeqSomeCallAttr_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -4270,7 +4270,7 @@ DeeSeqSome_CallAttrKw(DeeObject *self, DeeObject *attr, size_t argc,
 	Dee_Incref(self);
 	Dee_Incref(attr);
 	Dee_Incref(kw);
-	DeeObject_Init(result, &SeqSomeCallAttrKw_Type);
+	DeeObject_InitStatic(result, &SeqSomeCallAttrKw_Type);
 done:
 	return Dee_AsObject(result);
 }

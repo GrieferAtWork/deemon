@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>  /* DeeObject_FREE, DeeObject_MALLOC */
 #include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD */
 #include <deemon/serial.h> /* Dee_seraddr_t */
-#include <deemon/type.h>   /* DeeObject_Init, DeeObject_IsShared, Dee_visit_t, type_cmp */
+#include <deemon/type.h>   /* DeeObject_InitStatic, DeeObject_IsShared, Dee_visit_t, type_cmp */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
@@ -335,7 +335,7 @@ ProxyObject_New(DeeTypeObject *tp, DeeObject *ob) {
 		goto err;
 	Dee_Incref(ob);
 	result->po_obj = ob;
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -348,7 +348,7 @@ ProxyObject_NewInherited(DeeTypeObject *tp, /*inherit(always)*/ DREF DeeObject *
 	if unlikely(!result)
 		goto err;
 	result->po_obj = ob; /* Inherit */
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	Dee_Decref(ob);
@@ -362,7 +362,7 @@ ProxyObject_NewInheritedOnSuccess(DeeTypeObject *tp, /*inherit(on_success)*/ DRE
 	if unlikely(!result)
 		goto err;
 	result->po_obj = ob; /* Inherit */
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -371,7 +371,9 @@ err:
 LOCAL NONNULL((1)) void DCALL
 ProxyObject_DecrefSymbolic(DREF ProxyObject *__restrict self) {
 	if (!DeeObject_IsShared(self)) {
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(Dee_TYPE(self));
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FREE(self);
 	} else {
 		Dee_Incref(self->po_obj);
@@ -400,7 +402,7 @@ ProxyObject2_New(DeeTypeObject *tp, DeeObject *obj1, DeeObject *obj2) {
 	result->po_obj1 = obj1;
 	Dee_Incref(obj2);
 	result->po_obj2 = obj2;
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -416,7 +418,7 @@ ProxyObject2_NewInherited(DeeTypeObject *tp,
 		goto err;
 	result->po_obj1 = obj1; /* Inherit */
 	result->po_obj2 = obj2; /* Inherit */
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	Dee_Decref(obj2);
@@ -435,7 +437,7 @@ ProxyObject2_NewInherited1(DeeTypeObject *tp,
 	result->po_obj1 = obj1; /* Inherit */
 	Dee_Incref(obj2);
 	result->po_obj2 = obj2;
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	Dee_Decref(obj1);
@@ -452,7 +454,7 @@ ProxyObject2_NewInherited2(DeeTypeObject *tp, DeeObject *obj1,
 	Dee_Incref(obj1);
 	result->po_obj1 = obj1;
 	result->po_obj2 = obj2; /* Inherit */
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	Dee_Decref(obj2);
@@ -469,7 +471,7 @@ ProxyObject2_NewInheritedOnSuccess(DeeTypeObject *tp,
 		goto err;
 	result->po_obj1 = obj1; /* Inherit */
 	result->po_obj2 = obj2; /* Inherit */
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -478,7 +480,9 @@ err:
 LOCAL NONNULL((1)) void DCALL
 ProxyObject2_DecrefSymbolic(DREF ProxyObject2 *__restrict self) {
 	if (!DeeObject_IsShared(self)) {
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(Dee_TYPE(self));
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FREE(self);
 	} else {
 		Dee_Incref(self->po_obj2);
@@ -507,7 +511,7 @@ ProxyObject3_New(DeeTypeObject *tp, DeeObject *obj1, DeeObject *obj2, DeeObject 
 	result->po_obj2 = obj2;
 	Dee_Incref(obj3);
 	result->po_obj3 = obj3;
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -525,7 +529,7 @@ ProxyObject3_NewInherited(DeeTypeObject *tp,
 	result->po_obj1 = obj1; /* Inherit */
 	result->po_obj2 = obj2; /* Inherit */
 	result->po_obj3 = obj3; /* Inherit */
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	Dee_Decref(obj3);
@@ -546,7 +550,7 @@ ProxyObject3_NewInheritedOnSuccess(DeeTypeObject *tp,
 	result->po_obj1 = obj1; /* Inherit */
 	result->po_obj2 = obj2; /* Inherit */
 	result->po_obj3 = obj3; /* Inherit */
-	DeeObject_Init(result, tp);
+	DeeObject_InitStatic(result, tp);
 	return Dee_AsObject(result);
 err:
 	return NULL;

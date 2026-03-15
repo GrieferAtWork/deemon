@@ -44,7 +44,7 @@ tp_cast.tp_bool([[nonnull]] DeeObject *__restrict self)
 	if (DeeObject_AssertTypeExact(result, &DeeBool_Type))
 		goto err_r;
 	retval = DeeBool_IsTrue(result) ? 1 : 0;
-	Dee_DecrefNokill(result);
+	DeeBool_Decref(result);
 	return retval;
 err_r:
 	Dee_Decref(result);

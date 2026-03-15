@@ -38,7 +38,7 @@
 #include <deemon/system.h>            /* DeeSystem_* */
 #include <deemon/thread.h>            /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>             /* DeeTuple* */
-#include <deemon/type.h>              /* DeeObject_InitInherited */
+#include <deemon/type.h>              /* DeeObject_InitInherited, DeeObject_InitStatic */
 #include <deemon/types.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE */
 
 #include <hybrid/typecore.h> /* __SIZEOF_INT__, __SIZEOF_POINTER__ */
@@ -807,7 +807,11 @@ tpp_unknown_file(int mode, char *__restrict filename,
 
 		/* Initialize the buffer string.
 		 * NOTE: The reference to `DeeString_Type' is added if we succeed in opening the file. */
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+		DeeObject_InitStatic(buffer, &DeeString_Type);
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_InitInherited(buffer, &DeeString_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		buffer->s_len = req_length;
 
 		/* Try to truncate the used portion of the buffer. */
@@ -821,7 +825,9 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		}
 		stream = DeeFile_Open(Dee_AsObject(buffer), OPEN_FRDONLY | OPEN_FCLOEXEC, 0);
 		if (stream != ITER_DONE) {       /* Error or success. */
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 			Dee_Incref(&DeeString_Type); /* Finalize initialization of the buffer. */
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 			/* Check for errors that may have occurred during `DeeFile_Open()' */
 			if unlikely(!stream) {

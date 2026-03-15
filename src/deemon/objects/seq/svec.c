@@ -33,7 +33,7 @@
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcpyc */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_init, Dee_atomic_rwlock_t */
 
@@ -608,7 +608,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	result = DeeObject_MALLOC(RefVector);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &RefVector_Type);
+	DeeObject_InitStatic(result, &RefVector_Type);
 	Dee_Incref(owner); /* Create the reference for `rv_owner' */
 	result->rv_length = length;
 	result->rv_vector = vector;
@@ -1112,7 +1112,7 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	result = SharedVector_Malloc();
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeSharedVector_Type);
+	DeeObject_InitStatic(result, &DeeSharedVector_Type);
 	Dee_atomic_rwlock_init(&result->sv_lock);
 	result->sv_length = length;
 	result->sv_vector = vector;
@@ -1146,7 +1146,9 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
 		Dee_Decrefv(me->sv_vector, me->sv_length);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeSharedVector_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker((DeeObject *)me);
 		SharedVector_Free(me);
 		return;
@@ -1197,7 +1199,9 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSharedVector_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeSharedVector_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker((DeeObject *)me);
 		SharedVector_Free(me);
 		return;

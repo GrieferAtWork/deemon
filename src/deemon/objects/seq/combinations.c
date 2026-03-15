@@ -33,7 +33,7 @@
 #include <deemon/seq.h>                /* DeeIterator_NewEmpty, DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/tuple.h>              /* Dee_EmptyTuple */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, STRUCT_WOBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, STRUCT_WOBJECT, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 #include <deemon/util/weakref.h>       /* Dee_weakref_* */
 
@@ -175,7 +175,7 @@ sc_iter(SeqCombinations *__restrict self) {
 	Dee_Incref(self);
 	result->sci_com = self;
 	Dee_weakref_initempty(&result->sci_view);
-	DeeObject_Init(result, &SeqCombinationsIterator_Type);
+	DeeObject_InitStatic(result, &SeqCombinationsIterator_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -198,7 +198,7 @@ src_iter(SeqCombinations *__restrict self) {
 	result->sci_com = self;
 	result->sci_idx[rparam - 1] = (size_t)-1; /* Hack to get the first element to load correctly */
 	Dee_weakref_initempty(&result->sci_view);
-	DeeObject_Init(result, &SeqRepeatCombinationsIterator_Type);
+	DeeObject_InitStatic(result, &SeqRepeatCombinationsIterator_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -228,7 +228,7 @@ sp_iter(SeqCombinations *__restrict self) {
 	Dee_Incref(self);
 	result->sci_com = self;
 	Dee_weakref_initempty(&result->sci_view);
-	DeeObject_Init(result, &SeqPermutationsIterator_Type);
+	DeeObject_InitStatic(result, &SeqPermutationsIterator_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -636,7 +636,7 @@ sci_copy(SeqCombinationsIterator *__restrict self) {
 	for (i = 0; i < rparam; ++i)
 		result->sci_idx[i] = atomic_read(&self->sci_idx[i]);
 	Dee_weakref_initempty(&result->sci_view);
-	DeeObject_Init(result, Dee_TYPE(self));
+	DeeObject_InitStatic(result, Dee_TYPE(self));
 	return result;
 err:
 	return NULL;
@@ -756,7 +756,7 @@ sci_getview(SeqCombinationsIterator *__restrict self) {
 		result->scv_com  = self->sci_com;
 		result->scv_idx  = self->sci_idx;
 		Dee_weakref_support_init(result);
-		DeeObject_Init(result, &SeqCombinationsView_Type);
+		DeeObject_InitStatic(result, &SeqCombinationsView_Type);
 		COMPILER_WRITE_BARRIER();
 
 		/* Cache the view within the weakref, and handle the
@@ -1579,7 +1579,7 @@ SeqCombinations_New(/*inherit(always)*/ DREF DeeObject *__restrict seq,
 	result->sc_seqsize = (size_t)-1; /* Will be calculated lazily */
 	result->sc_rparam  = rparam;
 	result->sc_seq     = seq; /* Inherit reference */
-	DeeObject_Init(result, type);
+	DeeObject_InitStatic(result, type);
 	return Dee_AsObject(result);
 err_seq_r_combinations_not_supported:
 	DeeObject_FREE(result);

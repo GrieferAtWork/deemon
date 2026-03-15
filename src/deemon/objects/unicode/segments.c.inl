@@ -35,7 +35,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_charptr_const, STRING_SIZEOF_WIDTH, STRING_WIDTH_1BYTE, STRING_WIDTH_COMMON, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -305,7 +305,7 @@ sseg_iter(StringSegments *__restrict self) {
 	result->s_ptr   = (uint8_t *)DeeString_WSTR(self->s_str);
 	result->s_end   = (uint8_t *)DeeString_WEND(self->s_str);
 	result->s_width = DeeString_WIDTH(self->s_str);
-	DeeObject_Init(result, &StringSegmentsIterator_Type);
+	DeeObject_InitStatic(result, &StringSegmentsIterator_Type);
 done:
 	return result;
 }
@@ -546,7 +546,7 @@ DeeString_Segments(String *__restrict self,
 	result->s_str = (DREF DeeStringObject *)self;
 	Dee_Incref(self);
 	result->s_siz = segment_size;
-	DeeObject_Init(result, &StringSegments_Type);
+	DeeObject_InitStatic(result, &StringSegments_Type);
 done:
 	return Dee_AsObject(result);
 }

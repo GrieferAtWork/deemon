@@ -36,7 +36,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpyc */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, TF_KW, TP_FGC, TP_FNORMAL, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, TF_KW, TP_FGC, TP_FNORMAL, type_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include <hybrid/sched/yield.h> /* SCHED_YIELD */
@@ -1211,7 +1211,7 @@ DeeCachedDict_New(DeeObject *__restrict mapping) {
 	Dee_Incref(mapping);
 	result->cd_elem = empty_cdict_items;
 	Dee_atomic_rwlock_init(&result->cd_lock);
-	DeeObject_Init(result, &DeeCachedDict_Type);
+	DeeObject_InitStatic(result, &DeeCachedDict_Type);
 	result = DeeGC_TRACK(CachedDict, result);
 done:
 	return Dee_AsObject(result);
@@ -1228,7 +1228,7 @@ DeeCachedDict_NewInheritedOnSuccess(/*inherit(on_success)*/ DREF DeeObject *__re
 	result->cd_map  = mapping; /* Inherit reference */
 	result->cd_elem = empty_cdict_items;
 	Dee_atomic_rwlock_init(&result->cd_lock);
-	DeeObject_Init(result, &DeeCachedDict_Type);
+	DeeObject_InitStatic(result, &DeeCachedDict_Type);
 	result = DeeGC_TRACK(CachedDict, result);
 done:
 	return Dee_AsObject(result);

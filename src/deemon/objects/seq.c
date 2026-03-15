@@ -41,7 +41,7 @@
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memset */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_Type, Dee_TF_SEQCLASS_MASK, Dee_TF_SEQCLASS_SHFT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_NextDirectBase, DeeType_Type, Dee_TF_SEQCLASS_MASK, Dee_TF_SEQCLASS_SHFT, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FCONSTCALL, METHOD_FCONSTCALL_*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_or */
 
 #include "../runtime/kwlist.h"
@@ -690,7 +690,7 @@ seq_distinct(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	Dee_Incref(args.key);
 	result->dswk_seq = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DistinctSetWithKey_Type);
+	DeeObject_InitStatic(result, &DistinctSetWithKey_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -3482,10 +3482,13 @@ seq_class_concat(DeeObject *UNUSED(self),
 		return_reference_(argv[0]);
 	result = DeeTuple_NewVector(argc, argv);
 	if likely(result) {
-		ASSERT(((DeeTupleObject *)result)->ob_type == &DeeTuple_Type);
+		DeeTupleObject *retval = (DeeTupleObject *)result;
+		ASSERT(retval->ob_type == &DeeTuple_Type);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeTuple_Type);
 		Dee_Incref(&SeqConcat_Type);
-		((DeeTupleObject *)result)->ob_type = &SeqConcat_Type;
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+		retval->ob_type = &SeqConcat_Type;
 	}
 	return result;
 }

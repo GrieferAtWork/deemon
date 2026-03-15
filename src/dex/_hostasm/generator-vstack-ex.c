@@ -2776,7 +2776,7 @@ vopgetattr_constattr(struct fungen *__restrict self,
 					prop = DeeObject_MALLOC(DeePropertyObject);
 					if unlikely(!prop)
 						goto err;
-					DeeObject_Init(prop, &DeeProperty_Type);
+					DeeObject_InitStatic(prop, &DeeProperty_Type);
 					prop->p_get = get; /* Inherit reference */
 					prop->p_del = del; /* Inherit reference */
 					prop->p_set = set; /* Inherit reference */
@@ -4975,7 +4975,7 @@ vpack_map_or_set_at_runtime(struct fungen *__restrict self,
 	 * >>
 	 * >> d->d_lock = Dee_ATOMIC_RWLOCK_INIT;
 	 * >> d->ob_weakrefs = Dee_WEAKREF_SUPPORT_INIT;
-	 * >> DeeObject_Init(d, &DeeDict_Type);
+	 * >> DeeObject_InitStatic(d, &DeeDict_Type);
 	 * >> RESULT = DeeGC_Track(d);
 	 */
 	struct hashmap_template_item {
@@ -7101,6 +7101,9 @@ err:
 /* instance, type -> instance */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vcall_DeeObject_Init(struct fungen *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+	/* TODO: Proper support! */
+#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #ifdef CONFIG_TRACE_REFCHANGES
 	DO(fg_vpush_NULL(self));                             /* instance, type, NULL */
 	DO(fg_vpopind(self, offsetof(DeeObject, ob_trace))); /* instance, type */

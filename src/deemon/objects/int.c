@@ -49,7 +49,7 @@
 #include <deemon/string.h>             /* DeeAscii_ItoaDigits, DeeString*, DeeUni_*, Dee_ASCII_PRINTER_*, Dee_UNICODE_*, Dee_ascii_printer*, Dee_unicode_printer*, Dee_unitraits, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8_n, Dee_unicode_readutf8_rev_n */
 #include <deemon/system-features.h>    /* CONFIG_HAVE_LIMITS_H, CONFIG_HAVE_MATH_H, DeeSystem_DEFINE_memend, bzero*, isgreater, isgreaterequal, isless, islessequal, islessgreater, log, memcpy*, mempcpyc, memset */
-#include <deemon/type.h>               /* DeeObject_DATA, DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_SIGNED, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_DATA, DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_SIGNED, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include <hybrid/__byteswap.h> /* __hybrid_bswap* */
 #include <hybrid/align.h>      /* CEILDIV */
@@ -408,7 +408,7 @@ do_alloc:
 	if unlikely(!result)
 		goto done;
 init_result:
-	DeeObject_Init(result, &DeeInt_Type);
+	DeeObject_InitStatic(result, &DeeInt_Type);
 	result->ob_size = n_digits;
 done:
 	return result;
@@ -439,7 +439,7 @@ DeeInt_Alloc_d(size_t n_digits, char const *file, int line)
 	                                                   n_digits, sizeof(digit), file, line);
 #endif /* !NDEBUG */
 	if (result) {
-		DeeObject_Init(result, &DeeInt_Type);
+		DeeObject_InitStatic(result, &DeeInt_Type);
 		result->ob_size = n_digits;
 	}
 	return result;

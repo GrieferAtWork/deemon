@@ -74,7 +74,7 @@ err:
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
-	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -148,7 +148,7 @@ err:
 	result->dssgi_tp_getitem_index = THIS_TYPE->tp_seq->tp_getitem_index_fast;
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -168,7 +168,7 @@ err:
 	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_getitem_index);
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -188,7 +188,7 @@ err:
 	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_trygetitem_index);
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -212,7 +212,7 @@ err:
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
-	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return Dee_AsObject(result);
 err_r_start:
 	Dee_Decref(result->dssg_start);
@@ -243,7 +243,7 @@ err:
 	result->dsial_start   = range.sr_start;
 	result->dsial_limit   = range.sr_end - range.sr_start;
 	result->dsial_tp_iter = REQUIRE_DEPENDENCY(seq_operator_iter);
-	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithIterAndLimit_Type);
 	return Dee_AsObject(result);
 empty_seq:
 	return DeeSeq_NewEmpty();
@@ -328,7 +328,7 @@ err:
 	result->dssgi_tp_getitem_index = THIS_TYPE->tp_seq->tp_getitem_index_fast;
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
 	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
@@ -374,7 +374,7 @@ err:
 	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_getitem_index);
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
 	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
@@ -402,7 +402,7 @@ err:
 	result->dssgi_tp_getitem_index = REQUIRE_DEPENDENCY(seq_operator_trygetitem_index);
 	result->dssgi_start            = (size_t)start;
 	result->dssgi_end              = size;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
@@ -434,7 +434,7 @@ err:
 	Dee_Incref(self);
 	result->dssg_seq        = self;
 	result->dssg_tp_getitem = REQUIRE_DEPENDENCY(seq_operator_getitem);
-	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return Dee_AsObject(result);
 empty_range:
 	return DeeSeq_NewEmpty();
@@ -464,7 +464,7 @@ err:
 	result->dsial_start   = used_start;
 	result->dsial_limit   = (size_t)-1;
 	result->dsial_tp_iter = REQUIRE_DEPENDENCY(seq_operator_iter);
-	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithIterAndLimit_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;

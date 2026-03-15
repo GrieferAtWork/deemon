@@ -41,7 +41,7 @@
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, memcpy* */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_*, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_*, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
@@ -352,7 +352,7 @@ DeeKwds_NewWithHint(size_t num_items) {
 	if unlikely(!result)
 		goto done;
 	result->kw_mask = init_mask;
-	DeeObject_Init(result, &DeeKwds_Type);
+	DeeObject_InitStatic(result, &DeeKwds_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -487,7 +487,7 @@ PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void) {
 	result->kw_map[1].ke_name = NULL;
 	result->kw_mask           = 1;
 	result->kw_size           = 0;
-	DeeObject_Init(result, &DeeKwds_Type);
+	DeeObject_InitStatic(result, &DeeKwds_Type);
 done:
 	return result;
 }
@@ -604,7 +604,7 @@ kwds_iter(Kwds *__restrict self) {
 	result->ki_end  = self->kw_map + self->kw_mask + 1;
 	result->ki_map  = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeKwdsIterator_Type);
+	DeeObject_InitStatic(result, &DeeKwdsIterator_Type);
 done:
 	return result;
 }
@@ -1143,7 +1143,7 @@ PRIVATE WUNUSED DREF KwdsMapping *DCALL kmap_ctor(void) {
 	if unlikely(!result->kmo_kwds)
 		goto err_r;
 	Dee_atomic_rwlock_init(&result->kmo_lock);
-	DeeObject_Init(result, &DeeKwdsMapping_Type);
+	DeeObject_InitStatic(result, &DeeKwdsMapping_Type);
 done:
 	return result;
 err_r:
@@ -1167,7 +1167,7 @@ kmap_copy(KwdsMapping *__restrict self) {
 	result->kmo_kwds = self->kmo_kwds;
 	Dee_Incref(result->kmo_kwds);
 	Dee_atomic_rwlock_init(&result->kmo_lock);
-	DeeObject_Init(result, &DeeKwdsMapping_Type);
+	DeeObject_InitStatic(result, &DeeKwdsMapping_Type);
 done:
 	return result;
 }
@@ -1226,7 +1226,7 @@ kmap_init(size_t argc, DeeObject *const *argv) {
 	result->kmo_kwds = kwds;
 	Dee_Incref(kwds);
 	Dee_atomic_rwlock_init(&result->kmo_lock);
-	DeeObject_Init(result, &DeeKwdsMapping_Type);
+	DeeObject_InitStatic(result, &DeeKwdsMapping_Type);
 	return result;
 err:
 	return NULL;
@@ -1262,7 +1262,7 @@ kmap_iter(KwdsMapping *__restrict self) {
 	result->ki_end  = self->kmo_kwds->kw_map + self->kmo_kwds->kw_mask + 1;
 	result->ki_map  = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeKwdsMappingIterator_Type);
+	DeeObject_InitStatic(result, &DeeKwdsMappingIterator_Type);
 done:
 	return result;
 }
@@ -1602,7 +1602,7 @@ DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
 	Dee_atomic_rwlock_init(&result->kmo_lock);
 	result->kmo_argv = (DREF DeeObject **)kw_argv; /* Shared (for now) */
 	result->kmo_kwds = (DREF DeeKwdsObject *)kwds;
-	DeeObject_Init(result, &DeeKwdsMapping_Type);
+	DeeObject_InitStatic(result, &DeeKwdsMapping_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -1625,7 +1625,9 @@ DeeKwdsMapping_Decref(DREF /*KwdsMapping*/ DeeObject *__restrict self) {
 		Dee_Decref_unlikely(self);
 	} else {
 		/*Dee_Decref(me->kmo_kwds);*/
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeKwdsMapping_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_Free(me);
 	}
 }

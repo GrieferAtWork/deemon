@@ -36,7 +36,7 @@
 #include <deemon/system-features.h> /* CONFIG_HAVE_memcasecmp, bcmp, bzero, errno, memcasecmp, memcpy*, mempcpyc, strchr, strend, strlen */
 #include <deemon/thread.h>          /* DeeThread_Sleep */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_UINT16_T, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_CONST, STRUCT_UINT16_T, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>       /* Dee_HashPtr */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
@@ -442,7 +442,7 @@ again:
 		result->s_hash = (Dee_hash_t)-1;
 		result->s_data = NULL;
 		result->s_len  = name_length;
-		DeeObject_Init(result, &DeeString_Type);
+		DeeObject_InitStatic(result, &DeeString_Type);
 		return Dee_AsObject(result);
 	}
 	sysdb_lock_endwrite();
@@ -797,7 +797,7 @@ restart:
 	memcpyc(result->s_str, hp->h_name,
 	        name_length + 1, sizeof(char));
 	sysdb_lock_endwrite();
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	result->s_data = NULL;
 	result->s_hash = (Dee_hash_t)-1;
 	result->s_len  = name_length;

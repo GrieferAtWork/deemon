@@ -32,7 +32,7 @@
 #include <deemon/string.h>             /* DeeStringObject, Dee_ascii_printer* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_qsort, bzero, memcpy, mempcpy */
 #include <deemon/system.h>             /* DeeSystem_BaseName */
-#include <deemon/type.h>               /* DeeObject_Init */
+#include <deemon/type.h>               /* DeeObject_InitStatic */
 #include <deemon/util/bytewriter.h>    /* Dee_BYTEWRITER_INIT, Dee_bytewriter, Dee_bytewriter_*, bytewriter_fini */
 
 #include <hybrid/byteswap.h> /* HTOLE16, HTOLE32 */
@@ -699,7 +699,7 @@ err_xwriter:
 	}
 
 	/* Finally, initialize the DDI object. */
-	DeeObject_Init(result, &DeeDDI_Type);
+	DeeObject_InitStatic(result, &DeeDDI_Type);
 	return result;
 err_result_printer:
 	/* Free all buffers and fail. */

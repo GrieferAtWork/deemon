@@ -80,7 +80,7 @@
 /* To satisfy "fixincludes" (these includes are intentionally missing) */
 /*!fixincludes fake_include "alloc.h"  // DeeObject_Free, DeeObject_Malloc, DeeSlab_* */
 /*!fixincludes fake_include "gc.h"     // DeeGCObject_Free, DeeGCObject_Malloc, DeeGCSlab_GetFree, DeeGCSlab_GetMalloc */
-/*!fixincludes fake_include "object.h" // DeeAssert_BadObjectType, DeeAssert_BadObjectTypeOpt, DeeObject_Check, Dee_DecrefNokill, Dee_Incref */
+/*!fixincludes fake_include "object.h" // DeeAssert_BadObjectType, DeeAssert_BadObjectTypeOpt, DeeObject_Check, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref */
 /*!fixincludes fake_include "string.h" // DeeString_Hash, DeeString_STR */
 /*!fixincludes fake_include "tuple.h"  // DeeTuple_ELEM, DeeTuple_SIZE */
 
@@ -239,6 +239,16 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 	 Dee_Incref(type_as_type(type)), (self)->ob_type = (type))
 #define DeeObject_InitInheritedEx(self, type, type_as_type) \
 	(_DeeObject_Init_EXTRA_(self) (self)->ob_refcnt = 1, (self)->ob_type = (type))
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define DeeType_IncrefHeapType(self)       (DeeType_IsHeapType(self) ? Dee_Incref(self) : (void)0)
+#define DeeType_DecrefHeapType(self)       (DeeType_IsHeapType(self) ? Dee_Decref_unlikely(self) : (void)0)
+#define DeeType_DecrefHeapTypeNokill(self) (DeeType_IsHeapType(self) ? Dee_DecrefNokill(self) : (void)0)
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+#define DeeType_IncrefHeapType(self)       Dee_Incref(self)
+#define DeeType_DecrefHeapType(self)       Dee_Decref_unlikely(self)
+#define DeeType_DecrefHeapTypeNokill(self) Dee_DecrefNokill(self)
 #endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 

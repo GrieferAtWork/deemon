@@ -43,7 +43,7 @@
 #include <deemon/system.h>          /* DeeUnixSystem_HandleGenericError */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds, DeeThread_SleepNoInt */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
@@ -284,7 +284,7 @@ socket_sockname_get(Socket *__restrict self) {
 		goto done;
 	if unlikely(DeeSocket_GetSockName(self, &result->sa_addr, true))
 		goto err_r;
-	DeeObject_Init(result, &DeeSockAddr_Type);
+	DeeObject_InitStatic(result, &DeeSockAddr_Type);
 done:
 	return result;
 err_r:
@@ -302,7 +302,7 @@ socket_peeraddr_get(Socket *__restrict self) {
 		goto done;
 	if unlikely(DeeSocket_GetPeerAddr(self, &result->sa_addr, true))
 		goto err_r;
-	DeeObject_Init(result, &DeeSockAddr_Type);
+	DeeObject_InitStatic(result, &DeeSockAddr_Type);
 done:
 	return result;
 err_r:
@@ -1949,7 +1949,7 @@ socket_doaccept(Socket *__restrict self, uint64_t timeout_nanoseconds) {
 	result->s_state                 = (SOCKET_FOPENED | SOCKET_FHASSOCKADDR | SOCKET_FCONNECTED);
 	result->s_type                  = self->s_type;
 	result->s_proto                 = self->s_proto;
-	DeeObject_Init(result, &DeeSocket_Type);
+	DeeObject_InitStatic(result, &DeeSocket_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
@@ -2200,7 +2200,7 @@ socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 		result_addr = (DREF DeeSockAddrObject *)DeeNone_NewRef();
 		result_text = DeeBytes_NewEmpty();
 	} else {
-		DeeObject_Init(result_addr, &DeeSockAddr_Type);
+		DeeObject_InitStatic(result_addr, &DeeSockAddr_Type);
 	}
 
 	/* Fill the result pair with the socket address and text. */
@@ -2293,7 +2293,7 @@ socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 		result_size_ob = DeeInt_NewSize((size_t)result_size);
 		if unlikely(!result_size_ob)
 			goto err_addr_r;
-		DeeObject_Init(result_addr, &DeeSockAddr_Type);
+		DeeObject_InitStatic(result_addr, &DeeSockAddr_Type);
 	}
 
 	/* Fill the result pair with the socket address and result-size. */

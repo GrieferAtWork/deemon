@@ -30,7 +30,7 @@
 #include <deemon/none.h>               /* DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Decref*, Dee_Incref, Dee_foreach_t, Dee_hash_t, Dee_return_compare_if_ne, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, Dee_HashCombine */
 
 #include "../../runtime/method-hint-defaults.h"
@@ -304,7 +304,7 @@ mapped_iter(SeqMapped *__restrict self) {
 	/* Assign the mapper functions. */
 	result->smi_mapper = self->sm_mapper;
 	Dee_Incref(self->sm_mapper);
-	DeeObject_Init(result, &SeqMappedIterator_Type);
+	DeeObject_InitStatic(result, &SeqMappedIterator_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
@@ -646,7 +646,7 @@ mapped_map(SeqMapped *self, size_t argc, DeeObject *const *argv) {
 		goto err_r;
 	result->sm_seq = self->sm_seq;
 	Dee_Incref(result->sm_seq);
-	DeeObject_Init(result, &SeqMapped_Type);
+	DeeObject_InitStatic(result, &SeqMapped_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -1042,7 +1042,7 @@ mapped_mh_seq_reversed(SeqMapped *__restrict self, size_t start, size_t end) {
 	result->sm_mapper = self->sm_mapper;
 	Dee_Incref(result->sm_mapper);
 	result->sm_seq = seq; /* Inherit reference */
-	DeeObject_Init(result, &SeqMapped_Type);
+	DeeObject_InitStatic(result, &SeqMapped_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -2190,7 +2190,7 @@ DeeSeq_Map(DeeObject *self, DeeObject *mapper) {
 	result->sm_mapper = mapper;
 	Dee_Incref(self);
 	Dee_Incref(mapper);
-	DeeObject_Init(result, &SeqMapped_Type);
+	DeeObject_InitStatic(result, &SeqMapped_Type);
 done:
 	return Dee_AsObject(result);
 }

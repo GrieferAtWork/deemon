@@ -33,7 +33,7 @@
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_Print, DeeObject_Type, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref*, Dee_Movrefv, Dee_hash_t, OBJECT_HEAD_INIT */
 #include <deemon/string.h>          /* DeeStringObject, DeeString_STR, Dee_ASCII_PRINTER_INIT, Dee_ASCII_PRINTER_PRINT, Dee_ascii_printer* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_strcmp, strlen */
-#include <deemon/type.h>            /* DeeObject_Init, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, TF_NONE, TP_F* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, TF_NONE, TP_F* */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 #include <deemon/util/lock.h>       /* Dee_ATOMIC_RWLOCK_INIT */
 
@@ -455,7 +455,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 		result->ft_woff_argptr = 0;
 
 	/* Finalize the cfunction type. */
-	DeeObject_Init(DeeCFunctionType_AsType(result), &DeeCFunctionType_Type);
+	DeeObject_InitStatic(DeeCFunctionType_AsType(result), &DeeCFunctionType_Type);
 	return DeeType_AsCFunctionType(DeeGC_TRACK(DeeTypeObject, DeeCFunctionType_AsType(result)));
 err_argv_r_name_ffi_typev:
 	Dee_Free(result->ft_ffi_arg_type_v);

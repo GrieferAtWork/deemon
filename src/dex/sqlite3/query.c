@@ -38,7 +38,7 @@
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* strlen */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 #include <deemon/util/weakref.h>    /* Dee_weakref_* */
@@ -193,7 +193,7 @@ _Query_TryNewRowFmtOrUnlock(Query *__restrict self) {
 			return (DREF RowFmt *)ITER_DONE;
 		return NULL;
 	}
-	DeeObject_Init(result, &RowFmt_Type);
+	DeeObject_InitStatic(result, &RowFmt_Type);
 	result->rf_ncol = ncol;
 	for (i = 0; i < ncol; ++i) {
 		DREF DeeStringObject *nameob, *decltypeob;
@@ -486,7 +486,7 @@ Query_GetRow(Query *__restrict self) {
 		goto err;
 
 	/* Initialize the new row */
-	DeeObject_Init(result, &Row_Type);
+	DeeObject_InitStatic(result, &Row_Type);
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->r_lock);
 	result->r_query = self;
@@ -506,7 +506,9 @@ Query_GetRow(Query *__restrict self) {
 	if unlikely(existing_row) {
 		Dee_weakref_support_fini(result);
 		Dee_DecrefNokill(self); /* result->r_query */
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&Row_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		Row_Free(result);
 		return existing_row;
 	}
@@ -514,7 +516,9 @@ Query_GetRow(Query *__restrict self) {
 err_r:
 	Dee_weakref_support_fini(result);
 	Dee_DecrefNokill(self); /* result->r_query */
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&Row_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	Row_Free(result);
 err:
 	return NULL;
@@ -654,7 +658,7 @@ again_with_row:
 	}
 
 	/* Initialize the new row and remember it */
-	DeeObject_Init(result, &Row_Type);
+	DeeObject_InitStatic(result, &Row_Type);
 	Dee_weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->r_lock);
 	result->r_query = self;
@@ -791,7 +795,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF QueryIterator *DCALL
 query_iter(Query *__restrict self) {
 	DREF QueryIterator *result = DeeObject_MALLOC(QueryIterator);
 	if likely(result) {
-		DeeObject_Init(result, &QueryIterator_Type);
+		DeeObject_InitStatic(result, &QueryIterator_Type);
 		result->qi_query = self;
 		Dee_Incref(self);
 	}

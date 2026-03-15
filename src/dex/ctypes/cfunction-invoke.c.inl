@@ -33,8 +33,8 @@
 #include <deemon/float.h>           /* DeeFloat_Type, DeeFloat_VALUE */
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/int.h>             /* DeeInt_* */
-#include <deemon/none.h>            /* DeeNone_Type, Dee_None */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Incref, Dee_TYPE */
+#include <deemon/none.h>            /* DeeNone_NewRef, DeeNone_Type */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_TYPE */
 #include <deemon/string.h>          /* DeeString_STR, DeeString_Type */
 #include <deemon/system-features.h> /* memcpy, mempcpyc */
 #include <deemon/type.h>            /* DeeObject_Init, DeeType_AllocInstance */
@@ -392,8 +392,7 @@ def_var_data:
 #endif /* CONFIG_HAVE_CTYPES_SEH_GUARD */
 
 	if (tp_self->ft_orig == &DeeCVoid_Type) {
-		result = Dee_None;
-		Dee_Incref(result);
+		result = DeeNone_NewRef();
 	} else {
 		DeeSTypeObject *orig_type = tp_self->ft_orig;
 		result = DeeType_AllocInstance(&orig_type->st_base);

@@ -28,7 +28,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_COMPARE_NE, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_hash_t, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_*, Dee_EmptySeq */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_HASH_T, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_HASH_T, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 
 #include "../../runtime/strings.h"
@@ -202,7 +202,7 @@ filteriterator_seq_get(HashFilterIterator *__restrict self) {
 	result_type = Dee_TYPE(self) == &SeqHashFilterIterator_Type
 	              ? &SeqHashFilter_Type
 	              : &MapHashFilter_Type;
-	DeeObject_Init(result, result_type);
+	DeeObject_InitStatic(result, result_type);
 	return result;
 err_base_seq:
 	Dee_Decref(base_seq);
@@ -340,7 +340,7 @@ filter_iter(HashFilter *__restrict self) {
 	result_type = Dee_TYPE(self) == &SeqHashFilter_Type
 	              ? &SeqHashFilterIterator_Type
 	              : &MapHashFilterIterator_Type;
-	DeeObject_Init(result, result_type);
+	DeeObject_InitStatic(result, result_type);
 done:
 	return result;
 err_r:
@@ -474,7 +474,7 @@ hashfilter_get_frozen(HashFilter *__restrict self) {
 		goto err_inner;
 	result->f_seq  = inner_frozen; /* Inherit reference */
 	result->f_hash = self->f_hash;
-	DeeObject_Init(result, Dee_TYPE(self));
+	DeeObject_InitStatic(result, Dee_TYPE(self));
 	return result;
 err_inner:
 	Dee_Decref(inner_frozen);
@@ -600,7 +600,7 @@ DeeSeq_HashFilter(DeeObject *self, Dee_hash_t hash) {
 	Dee_Incref(self);
 	result->f_seq  = self;
 	result->f_hash = hash;
-	DeeObject_Init(result, &SeqHashFilter_Type);
+	DeeObject_InitStatic(result, &SeqHashFilter_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -614,7 +614,7 @@ DeeMap_HashFilter(DeeObject *self, Dee_hash_t hash) {
 	Dee_Incref(self);
 	result->f_seq  = self;
 	result->f_hash = hash;
-	DeeObject_Init(result, &MapHashFilter_Type);
+	DeeObject_InitStatic(result, &MapHashFilter_Type);
 done:
 	return Dee_AsObject(result);
 }

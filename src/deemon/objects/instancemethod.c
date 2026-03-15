@@ -34,7 +34,7 @@
 #include <deemon/none.h>               /* DeeNone_Singleton, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_YES, Dee_Decref_unlikely, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeMRO, DeeTypeMRO_Init, DeeTypeMRO_Next, DeeType_IsClass, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_OBJECT_AB, TF_NONE, TP_FNAMEOBJECT, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
@@ -64,7 +64,7 @@ DeeInstanceMethod_New(DeeObject *func,
 	result = DeeObject_MALLOC(InstanceMethod);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeInstanceMethod_Type);
+	DeeObject_InitStatic(result, &DeeInstanceMethod_Type);
 	result->im_func = func;
 	result->im_this = this_arg;
 	Dee_Incref(func);
@@ -83,7 +83,7 @@ DeeInstanceMethod_NewInherited(/*inherit(always)*/ DREF DeeObject *func,
 	result = DeeObject_MALLOC(InstanceMethod);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeInstanceMethod_Type);
+	DeeObject_InitStatic(result, &DeeInstanceMethod_Type);
 	result->im_func = func;     /* Inherit reference */
 	result->im_this = this_arg; /* Inherit reference */
 	return Dee_AsObject(result);

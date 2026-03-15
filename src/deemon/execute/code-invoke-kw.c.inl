@@ -32,7 +32,7 @@
 #include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* bzeroc */
 #include <deemon/tuple.h>           /* DeeTuple_ELEM, DeeTuple_SIZE, Dee_tuple_object */
-#include <deemon/type.h>            /* DeeObject_Init */
+#include <deemon/type.h>            /* DeeObject_InitStatic */
 
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
@@ -317,7 +317,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' (Only valid when `Dee_CODE_FVARKWDS') */
 #endif /* CODE_FLAGS & Dee_CODE_FVARKWDS ) */
 	yf->yf_kw = frame.cf_kw; /* Inherit data. */
-	DeeObject_Init(yf, &DeeYieldFunction_Type);
+	DeeObject_InitStatic(yf, &DeeYieldFunction_Type);
 	return Dee_AsObject(yf);
 #else /* CODE_FLAGS & Dee_CODE_FYIELDING */
 	/* Direct function invocation */

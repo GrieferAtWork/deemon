@@ -34,7 +34,7 @@
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeObject_Type, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* DeeObject_Id */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
@@ -56,7 +56,7 @@ DeeCell_New(DeeObject *__restrict item) {
 	if unlikely(!result)
 		goto err;
 	/* Initialize and fill in the new Cell. */
-	DeeObject_Init(result, &DeeCell_Type);
+	DeeObject_InitStatic(result, &DeeCell_Type);
 	Dee_Incref(item);
 	result->c_item = item;
 	Dee_atomic_rwlock_init(&result->c_lock);

@@ -39,7 +39,7 @@
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmpz, bcmp, memcpy*, memmovedownc, memmoveupc, strlen */
 #include <deemon/traceback.h>          /* DeeFrame* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/futex.h>         /* DeeFutex_WakeAll */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_lock_* */
@@ -443,7 +443,7 @@ funcstatics_iter(FunctionStatics *__restrict self) {
 	Dee_Incref(result->fsi_func);
 	result->fsi_sid = self->fs_func->fo_code->co_refc;
 	result->fsi_end = self->fs_func->fo_code->co_refstaticc;
-	DeeObject_Init(result, &FunctionStaticsIterator_Type);
+	DeeObject_InitStatic(result, &FunctionStaticsIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1222,7 +1222,7 @@ funcsymbolsbyname_iter(FunctionSymbolsByName *__restrict self) {
 	result->fsbni_func = self->fsbn_func;
 	result->fsbni_rid  = self->fsbn_rid_start;
 	result->fsbni_end  = self->fsbn_rid_end;
-	DeeObject_Init(result, &FunctionSymbolsByNameIterator_Type);
+	DeeObject_InitStatic(result, &FunctionSymbolsByNameIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1239,7 +1239,7 @@ funcsymbolsbyname_mh_map_iterkeys(FunctionSymbolsByName *__restrict self) {
 	result->fsbni_func = self->fsbn_func;
 	result->fsbni_rid  = self->fsbn_rid_start;
 	result->fsbni_end  = self->fsbn_rid_end;
-	DeeObject_Init(result, &FunctionSymbolsByNameKeysIterator_Type);
+	DeeObject_InitStatic(result, &FunctionSymbolsByNameKeysIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1721,7 +1721,7 @@ DeeFunction_GetRefsByNameWrapper(DeeFunctionObject *__restrict self) {
 	Dee_Incref(self);
 	result->fsbn_rid_start = 0;
 	result->fsbn_rid_end   = self->fo_code->co_refc;
-	DeeObject_Init(result, &FunctionSymbolsByName_Type);
+	DeeObject_InitStatic(result, &FunctionSymbolsByName_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -1737,7 +1737,7 @@ DeeFunction_GetStaticsByNameWrapper(DeeFunctionObject *__restrict self) {
 	Dee_Incref(self);
 	result->fsbn_rid_start = self->fo_code->co_refc;
 	result->fsbn_rid_end   = self->fo_code->co_refstaticc;
-	DeeObject_Init(result, &FunctionSymbolsByName_Type);
+	DeeObject_InitStatic(result, &FunctionSymbolsByName_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -1753,7 +1753,7 @@ DeeFunction_GetSymbolsByNameWrapper(DeeFunctionObject *__restrict self) {
 	Dee_Incref(self);
 	result->fsbn_rid_start = 0;
 	result->fsbn_rid_end   = self->fo_code->co_refstaticc;
-	DeeObject_Init(result, &FunctionSymbolsByName_Type);
+	DeeObject_InitStatic(result, &FunctionSymbolsByName_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2437,7 +2437,7 @@ yfuncsymbolsbyname_iter(YieldFunctionSymbolsByName *__restrict self) {
 	Dee_Incref(self);
 	result->yfsbni_idx.yfsbnii_idx.i_aid = 0;
 	result->yfsbni_idx.yfsbnii_idx.i_rid = self->yfsbn_rid_start;
-	DeeObject_Init(result, &YieldFunctionSymbolsByNameIterator_Type);
+	DeeObject_InitStatic(result, &YieldFunctionSymbolsByNameIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -2453,7 +2453,7 @@ yfuncsymbolsbyname_mh_map_iterkeys(YieldFunctionSymbolsByName *__restrict self) 
 	Dee_Incref(self);
 	result->yfsbni_idx.yfsbnii_idx.i_aid = 0;
 	result->yfsbni_idx.yfsbnii_idx.i_rid = self->yfsbn_rid_start;
-	DeeObject_Init(result, &YieldFunctionSymbolsByNameKeysIterator_Type);
+	DeeObject_InitStatic(result, &YieldFunctionSymbolsByNameKeysIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -2791,7 +2791,7 @@ DeeYieldFunction_GetArgsByNameWrapper(DeeYieldFunctionObject *__restrict self) {
 	result->yfsbn_nargs = code->co_argc_max;
 	result->yfsbn_rid_start = 0;
 	result->yfsbn_rid_end   = 0;
-	DeeObject_Init(result, &YieldFunctionSymbolsByName_Type);
+	DeeObject_InitStatic(result, &YieldFunctionSymbolsByName_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2810,7 +2810,7 @@ DeeYieldFunction_GetSymbolsByNameWrapper(DeeYieldFunctionObject *__restrict self
 	result->yfsbn_nargs = code->co_argc_max;
 	result->yfsbn_rid_start = 0;
 	result->yfsbn_rid_end   = code->co_refstaticc;
-	DeeObject_Init(result, &YieldFunctionSymbolsByName_Type);
+	DeeObject_InitStatic(result, &YieldFunctionSymbolsByName_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -3059,7 +3059,7 @@ DeeFrame_GetArgsWrapper(DeeFrameObject *__restrict self) {
 	DeeFrame_LockEndRead(Dee_AsObject(self));
 	result->fa_frame = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &FrameArgs_Type);
+	DeeObject_InitStatic(result, &FrameArgs_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
@@ -3399,7 +3399,7 @@ DeeFrame_GetLocalsWrapper(DeeFrameObject *__restrict self) {
 	DeeFrame_LockEndRead(Dee_AsObject(self));
 	result->fl_frame = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &FrameLocals_Type);
+	DeeObject_InitStatic(result, &FrameLocals_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
@@ -4884,7 +4884,7 @@ framesymbolsbyname_iter(FrameSymbolsByName *__restrict self) {
 	result->frsbni_idx.frsbnii_rid = self->frsbn_rid_start;
 	result->frsbni_idx.frsbnii_lid = 0;
 	result->frsbni_idx.frsbnii_nsp = 0;
-	DeeObject_Init(result, &FrameSymbolsByNameIterator_Type);
+	DeeObject_InitStatic(result, &FrameSymbolsByNameIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -4903,7 +4903,7 @@ framesymbolsbyname_mh_map_keysiter(FrameSymbolsByName *__restrict self) {
 	result->frsbni_idx.frsbnii_rid = self->frsbn_rid_start;
 	result->frsbni_idx.frsbnii_lid = 0;
 	result->frsbni_idx.frsbnii_nsp = 0;
-	DeeObject_Init(result, &FrameSymbolsByNameKeysIterator_Type);
+	DeeObject_InitStatic(result, &FrameSymbolsByNameKeysIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -5450,7 +5450,7 @@ DeeFrame_GetSymbolsByNameWrapper(DeeFrameObject *__restrict self) {
 	result->frsbn_localc    = code->co_localc;
 	result->frsbn_frame     = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &FrameSymbolsByName_Type);
+	DeeObject_InitStatic(result, &FrameSymbolsByName_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);

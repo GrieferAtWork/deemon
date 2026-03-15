@@ -34,7 +34,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/system-features.h>    /* memcpy */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -368,7 +368,7 @@ DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 	if likely(result) {
 		/*result->rd_size = 0;*/
 		result->rs_mask = mask;
-		DeeObject_Init(result, &DeeRoSet_Type);
+		DeeObject_InitStatic(result, &DeeRoSet_Type);
 		if unlikely(DeeObject_Foreach(sequence, DeeRoSet_InsertSequence_foreach_PTR, &result))
 			goto err_r;
 	}
@@ -388,7 +388,7 @@ DeeRoSet_New(void) {
 		goto done;
 	result->rs_mask = ROSET_INITIAL_MASK;
 	result->rs_size = 0;
-	DeeObject_Init(result, &DeeRoSet_Type);
+	DeeObject_InitStatic(result, &DeeRoSet_Type);
 done:
 	return result;
 }
@@ -405,7 +405,7 @@ DeeRoSet_NewWithHint(size_t num_items) {
 		goto done;
 	result->rs_mask = mask;
 	result->rs_size = 0;
-	DeeObject_Init(result, &DeeRoSet_Type);
+	DeeObject_InitStatic(result, &DeeRoSet_Type);
 done:
 	return result;
 }
@@ -420,7 +420,7 @@ roset_iter(RoSet *__restrict self) {
 	result->rosi_set  = self;
 	result->rosi_next = self->rs_elem;
 	Dee_Incref(self);
-	DeeObject_Init(result, &RoSetIterator_Type);
+	DeeObject_InitStatic(result, &RoSetIterator_Type);
 done:
 	return result;
 }
@@ -627,7 +627,7 @@ PRIVATE WUNUSED DREF RoSet *DCALL roset_ctor(void) {
 		goto done;
 	result->rs_mask = 1;
 	result->rs_size = 0;
-	DeeObject_Init(result, &DeeRoSet_Type);
+	DeeObject_InitStatic(result, &DeeRoSet_Type);
 done:
 	return result;
 }

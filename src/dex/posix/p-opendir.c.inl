@@ -39,7 +39,7 @@
 #include <deemon/string.h>          /* DeeString*, Dee_UNICODE_PRINTER_*, Dee_unicode_printer*, STRING_ERROR_FREPLAC, WSTR_LENGTH */
 #include <deemon/system-features.h> /* *stat*, AT_FDCWD, AT_SYMLINK_NOFOLLOW, CONFIG_HAVE_*, DTTOIF, DT_*, DeeSystem_DEFINE_wcslen, DeeSystem_GetErrno, DeeSystem_SetErrno, IFTODT, close, closedir, dirfd, dup, fdopendir, opendir, readdir, readdir64, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_*, DeeSystem_GetFilenameOfFD, DeeSystem_SEP, DeeUnixSystem_* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, METHOD_FNORMAL, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, METHOD_FNORMAL, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
@@ -2029,7 +2029,7 @@ diriter_getseq(DeeDirIteratorObject *__restrict self) {
 	DREF DeeDirObject *result;
 	result = DeeObject_MALLOC(DeeDirObject);
 	if likely(result) {
-		DeeObject_Init(result, &DeeDir_Type);
+		DeeObject_InitStatic(result, &DeeDir_Type);
 		result->d_path      = self->odi_path;
 		result->d_skipdots  = self->odi_skipdots;
 		result->d_inheritfd = false;
@@ -2239,7 +2239,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_fdopendir_f_impl(Dee
 	result = DeeObject_MALLOC(DeeDirObject);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeDir_Type);
+	DeeObject_InitStatic(result, &DeeDir_Type);
 	Dee_Incref(path);
 	result->d_path      = path;
 	result->d_skipdots  = skipdots;
@@ -2264,7 +2264,7 @@ dir_iter(DeeDirObject *__restrict self) {
 		result = NULL;
 		goto done;
 	}
-	DeeObject_Init(result, &DeeDirIterator_Type);
+	DeeObject_InitStatic(result, &DeeDirIterator_Type);
 done:
 	return result;
 }

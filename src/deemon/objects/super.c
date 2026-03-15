@@ -30,7 +30,7 @@
 #include <deemon/serial.h> /* DeeSerial, DeeSerial_PutObject, Dee_seraddr_t */
 #include <deemon/string.h> /* DeeString_STR */
 #include <deemon/super.h>  /* DeeObject_T*, DeeSuper* */
-#include <deemon/type.h>   /* DeeObject_Init, DeeObject_IsShared, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, TF_NONE, TP_F*, TYPE_METHOD, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>   /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_*, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, TF_NONE, TP_F*, TYPE_METHOD, TYPE_METHOD_END, type_* */
 
 #include "../runtime/method-hint-super.h"
 #include "../runtime/runtime_error.h"
@@ -86,7 +86,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	result = DeeObject_MALLOC(Super);
 	if unlikely(!result)
 		goto err;
-	DeeObject_Init(result, &DeeSuper_Type);
+	DeeObject_InitStatic(result, &DeeSuper_Type);
 	result->s_type = tp_self;
 	result->s_self = self;
 	Dee_Incref(tp_self);

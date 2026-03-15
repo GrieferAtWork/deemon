@@ -41,7 +41,7 @@
 #include <deemon/serial.h>          /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>          /* DeeString*, STRING_ERROR_FIGNORE */
 #include <deemon/system-features.h> /* strcmp */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TP_FVARIABLE, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FNORMAL, TP_FVARIABLE, TYPE_*, type_* */
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* int64_t */
@@ -90,7 +90,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF CellFmt *DCALL
 CellFmt_New(RowFmt *__restrict rowfmt, struct cellfmt const *__restrict cell) {
 	DREF CellFmt *result = DeeObject_MALLOC(CellFmt);
 	if likely(result) {
-		DeeObject_Init(result, &CellFmt_Type);
+		DeeObject_InitStatic(result, &CellFmt_Type);
 		result->cfo_fmt  = rowfmt;
 		result->cfo_cell = cell;
 		Dee_Incref(rowfmt);
@@ -245,7 +245,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF RowFmtColumns *DCALL
 RowFmtColumns_NewInherited(/*inherit(always)*/DREF RowFmt *__restrict self) {
 	DREF RowFmtColumns *result = DeeObject_MALLOC(RowFmtColumns);
 	if likely(result) {
-		DeeObject_Init(result, &RowFmtColumns_Type);
+		DeeObject_InitStatic(result, &RowFmtColumns_Type);
 		result->rfc_fmt = self; /* Inherited */
 	} else {
 		Dee_Decref_unlikely(self); /* always inherited */

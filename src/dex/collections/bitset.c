@@ -42,7 +42,7 @@
 #include <deemon/set.h>             /* DeeSet_Type */
 #include <deemon/string.h>          /* DeeString_Check, DeeString_STR, WSTR_LENGTH */
 #include <deemon/system-features.h> /* memcpy* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Base, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Base, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_BUFFER_TYPE_FREADONLY, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/hash.h>       /* Dee_HASHOF_EMPTY_SEQUENCE, Dee_HashCombine */
 
@@ -326,7 +326,7 @@ bs_init_fromseq(DeeObject *seq, DeeObject *minbits_ob) {
 		if likely(new_result)
 			result = new_result;
 	}
-	DeeObject_Init(result, &Bitset_Type);
+	DeeObject_InitStatic(result, &Bitset_Type);
 	return result;
 err:
 	return NULL;
@@ -454,7 +454,7 @@ bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
 				bitset_ncopy0_and_maybe_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
 				                                         ref.bsr_startbit, ref_nbits);
 				result->bs_nbits = minbits;
-				DeeObject_Init(result, &Bitset_Type);
+				DeeObject_InitStatic(result, &Bitset_Type);
 				return result;
 			}
 		}
@@ -464,7 +464,7 @@ bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
 		bitset_ncopy0_and_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
 		                                   ref.bsr_startbit, ref_nbits);
 		result->bs_nbits = ref_nbits;
-		DeeObject_Init(result, &Bitset_Type);
+		DeeObject_InitStatic(result, &Bitset_Type);
 		return result;
 	}
 	return bs_init_fromseq(seq, minbits_ob);
@@ -617,7 +617,7 @@ bs_iter(Bitset *__restrict self) {
 	result->bsi_startbit = 0;
 	result->bsi_endbit   = self->bs_nbits;
 	result->bsi_bitno    = 0;
-	DeeObject_Init(result, &BitsetIterator_Type);
+	DeeObject_InitStatic(result, &BitsetIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -698,7 +698,7 @@ bs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	result->bsv_startbit    = range.sr_start;
 	result->bsv_endbit      = range.sr_end;
 	result->bsv_bflags      = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &BitsetView_Type);
+	DeeObject_InitStatic(result, &BitsetView_Type);
 	return result;
 err:
 	return NULL;
@@ -717,7 +717,7 @@ bs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
 	result->bsv_startbit    = DeeSeqRange_Clamp_n(start, self->bs_nbits);
 	result->bsv_endbit      = self->bs_nbits;
 	result->bsv_bflags      = Dee_BUFFER_FWRITABLE;
-	DeeObject_Init(result, &BitsetView_Type);
+	DeeObject_InitStatic(result, &BitsetView_Type);
 	return result;
 err:
 	return NULL;
@@ -1200,7 +1200,7 @@ PRIVATE WUNUSED DREF Bitset *DCALL bs_ctor(void) {
 	if unlikely(!result)
 		goto err;
 	result->bs_nbits = 0;
-	DeeObject_Init(result, &Bitset_Type);
+	DeeObject_InitStatic(result, &Bitset_Type);
 	return result;
 err:
 	return NULL;
@@ -1214,7 +1214,7 @@ bs_copy(Bitset *__restrict self) {
 	result->bs_nbits = self->bs_nbits;
 	memcpy(result->bs_bitset, self->bs_bitset,
 	       BITSET_SIZEOF(self->bs_nbits));
-	DeeObject_Init(result, &Bitset_Type);
+	DeeObject_InitStatic(result, &Bitset_Type);
 	return result;
 err:
 	return NULL;
@@ -1247,7 +1247,7 @@ bs_frozen(Bitset *__restrict self) {
 	result->bs_nbits = self->bs_nbits;
 	memcpy(result->bs_bitset, self->bs_bitset,
 	       BITSET_SIZEOF(self->bs_nbits));
-	DeeObject_Init(result, &RoBitset_Type);
+	DeeObject_InitStatic(result, &RoBitset_Type);
 	return result;
 err:
 	return NULL;
@@ -1285,7 +1285,7 @@ init_fixed_length_as_empty:
 			goto err;
 	}
 	result->bs_nbits = nbits;
-	DeeObject_Init(result, &Bitset_Type);
+	DeeObject_InitStatic(result, &Bitset_Type);
 	return result;
 err:
 	return NULL;
@@ -1428,7 +1428,7 @@ bs_inv(Bitset *__restrict self) {
 	bitset_flipall_and_zero_unused_bits(result->bs_bitset,
 	                                    self->bs_nbits);
 	result->bs_nbits = self->bs_nbits;
-	DeeObject_Init(result, &RoBitset_Type); /* Yes: this returns a read-only bitset! */
+	DeeObject_InitStatic(result, &RoBitset_Type); /* Yes: this returns a read-only bitset! */
 	return result;
 err:
 	return NULL;
@@ -1470,7 +1470,7 @@ bs_bitop_bitset(Bitset *self, struct bitset_ref *__restrict ref, unsigned int op
 		}
 	}
 	result->bs_nbits = res_bits;
-	DeeObject_Init(result, &RoBitset_Type); /* Yes: this returns a read-only bitset! */
+	DeeObject_InitStatic(result, &RoBitset_Type); /* Yes: this returns a read-only bitset! */
 	return result;
 err:
 	return NULL;
@@ -2026,7 +2026,7 @@ robs_init_fromseq(DeeObject *seq) {
 		if likely(new_result)
 			result = new_result;
 	}
-	DeeObject_Init(result, &RoBitset_Type);
+	DeeObject_InitStatic(result, &RoBitset_Type);
 	return result;
 err:
 	return NULL;
@@ -2045,7 +2045,7 @@ robs_init_fromseq_or_bitset(DeeObject *seq) {
 		bitset_ncopy0_and_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
 		                                   ref.bsr_startbit, ref_nbits);
 		result->bs_nbits = ref_nbits;
-		DeeObject_Init(result, &RoBitset_Type);
+		DeeObject_InitStatic(result, &RoBitset_Type);
 		return result;
 	}
 	return robs_init_fromseq(seq);
@@ -2087,7 +2087,7 @@ robs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	result->bsv_startbit    = range.sr_start;
 	result->bsv_endbit      = range.sr_end;
 	result->bsv_bflags      = Dee_BUFFER_FREADONLY;
-	DeeObject_Init(result, &BitsetView_Type);
+	DeeObject_InitStatic(result, &BitsetView_Type);
 	return result;
 err:
 	return NULL;
@@ -2106,7 +2106,7 @@ robs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
 	result->bsv_startbit    = DeeSeqRange_Clamp_n(start, self->bs_nbits);
 	result->bsv_endbit      = self->bs_nbits;
 	result->bsv_bflags      = Dee_BUFFER_FREADONLY;
-	DeeObject_Init(result, &BitsetView_Type);
+	DeeObject_InitStatic(result, &BitsetView_Type);
 	return result;
 err:
 	return NULL;
@@ -2143,7 +2143,7 @@ PRIVATE WUNUSED DREF Bitset *DCALL robs_ctor(void) {
 	if unlikely(!result)
 		goto err;
 	result->bs_nbits = 0;
-	DeeObject_Init(result, &RoBitset_Type);
+	DeeObject_InitStatic(result, &RoBitset_Type);
 	return result;
 err:
 	return NULL;
@@ -2680,7 +2680,7 @@ bsv_iter(BitsetView *__restrict self) {
 	result->bsi_startbit = self->bsv_startbit;
 	result->bsi_endbit   = self->bsv_endbit;
 	result->bsi_bitno    = self->bsv_startbit;
-	DeeObject_Init(result, &BitsetIterator_Type);
+	DeeObject_InitStatic(result, &BitsetIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -2772,7 +2772,7 @@ bsv_getrange_index(BitsetView *self, Dee_ssize_t start, Dee_ssize_t end) {
 	result->bsv_startbit = range.sr_start + self->bsv_startbit;
 	result->bsv_endbit   = range.sr_end + self->bsv_startbit;
 	result->bsv_bflags   = self->bsv_bflags;
-	DeeObject_Init(result, &BitsetView_Type);
+	DeeObject_InitStatic(result, &BitsetView_Type);
 	return result;
 err:
 	return NULL;
@@ -2791,7 +2791,7 @@ bsv_getrange_index_n(BitsetView *self, Dee_ssize_t start) {
 	result->bsv_startbit = DeeSeqRange_Clamp_n(start, BitsetView_GetNBits(self)) + self->bsv_startbit;
 	result->bsv_endbit   = self->bsv_endbit;
 	result->bsv_bflags   = self->bsv_bflags;
-	DeeObject_Init(result, &BitsetView_Type);
+	DeeObject_InitStatic(result, &BitsetView_Type);
 	return result;
 err:
 	return NULL;
@@ -3386,7 +3386,7 @@ bsv_frozen(BitsetView *__restrict self) {
 	bitset_ncopy0_and_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
 	                                   ref.bsr_startbit, ref_nbits);
 	result->bs_nbits = ref_nbits;
-	DeeObject_Init(result, &RoBitset_Type);
+	DeeObject_InitStatic(result, &RoBitset_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -3667,7 +3667,7 @@ bsv_inv(BitsetView *__restrict self) {
 	                                         self->bsv_startbit, self_bits);
 	bitset_flipall_and_zero_unused_bits(result->bs_bitset, self_bits);
 	result->bs_nbits = self_bits;
-	DeeObject_Init(result, &RoBitset_Type);
+	DeeObject_InitStatic(result, &RoBitset_Type);
 	return result;
 err:
 	return NULL;
@@ -3713,7 +3713,7 @@ bitset_ref_bitop(struct bitset_ref const *__restrict lhs,
 		}
 	}
 	result->bs_nbits = res_bits;
-	DeeObject_Init(result, &RoBitset_Type);
+	DeeObject_InitStatic(result, &RoBitset_Type);
 	return result;
 err:
 	return NULL;

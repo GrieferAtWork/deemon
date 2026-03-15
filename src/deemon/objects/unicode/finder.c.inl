@@ -31,7 +31,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_EmptyString, Dee_STRING_DIV_SIZEOF_WIDTH, Dee_charptr_const, STRING_WIDTH_1BYTE, STRING_WIDTH_COMMON, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* memmeml, memmemw */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -664,7 +664,7 @@ sf_iter(StringFind *__restrict self) {
 		goto done;
 	if (sfi_setup(result, self))
 		goto err_r;
-	DeeObject_Init(result, &StringFindIterator_Type);
+	DeeObject_InitStatic(result, &StringFindIterator_Type);
 done:
 	return result;
 err_r:
@@ -680,7 +680,7 @@ scf_iter(StringFind *__restrict self) {
 		goto done;
 	if (sfi_setup(result, self))
 		goto err_r;
-	DeeObject_Init(result, &StringCaseFindIterator_Type);
+	DeeObject_InitStatic(result, &StringCaseFindIterator_Type);
 done:
 	return result;
 err_r:
@@ -933,7 +933,7 @@ DeeString_FindAll(String *self, String *other,
 	result->sf_ovrlap = overlapping;
 	Dee_Incref(self);
 	Dee_Incref(other);
-	DeeObject_Init(result, &StringFind_Type);
+	DeeObject_InitStatic(result, &StringFind_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -953,7 +953,7 @@ DeeString_CaseFindAll(String *self, String *other,
 	result->sf_ovrlap = overlapping;
 	Dee_Incref(self);
 	Dee_Incref(other);
-	DeeObject_Init(result, &StringCaseFind_Type);
+	DeeObject_InitStatic(result, &StringCaseFind_Type);
 done:
 	return Dee_AsObject(result);
 }

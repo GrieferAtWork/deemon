@@ -37,7 +37,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* memcasemem, memmem */
 #include <deemon/tuple.h>              /* DeeTuple_Newf */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -495,7 +495,7 @@ bf_iter(BytesFind *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	bfi_setup(result, self);
-	DeeObject_Init(result, &BytesFindIterator_Type);
+	DeeObject_InitStatic(result, &BytesFindIterator_Type);
 done:
 	return result;
 }
@@ -507,7 +507,7 @@ bcf_iter(BytesFind *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	bfi_setup(result, self);
-	DeeObject_Init(result, &BytesCaseFindIterator_Type);
+	DeeObject_InitStatic(result, &BytesCaseFindIterator_Type);
 done:
 	return result;
 }
@@ -782,7 +782,7 @@ DeeBytes_FindAll(Bytes *self, DeeObject *needle,
 	result->bf_ovrlap = overlapping;
 	Dee_Incref(self);
 	Dee_Incref(needle);
-	DeeObject_Init(result, &BytesFind_Type);
+	DeeObject_InitStatic(result, &BytesFind_Type);
 done:
 	return Dee_AsObject(result);
 err_r:
@@ -811,7 +811,7 @@ DeeBytes_CaseFindAll(Bytes *self, DeeObject *needle,
 	result->bf_ovrlap = overlapping;
 	Dee_Incref(self);
 	Dee_Incref(needle);
-	DeeObject_Init(result, &BytesCaseFind_Type);
+	DeeObject_InitStatic(result, &BytesCaseFind_Type);
 done:
 	return Dee_AsObject(result);
 err_r:

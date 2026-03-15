@@ -37,7 +37,7 @@
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memcasecmp, DeeSystem_DEFINE_memcasemem, strlen */
 #include <deemon/system.h>          /* DeeNTSystem_TranslateErrno, Dee_SYSTEM_ERROR_UNKNOWN */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_*, TF_NONE, TP_FINHERITCTOR, TP_FNORMAL, TYPE_MEMBER*, type_member */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, STRUCT_*, TF_NONE, TP_FINHERITCTOR, TP_FNORMAL, TYPE_MEMBER*, type_member */
 
 #include "sqlite3-external.h"
 
@@ -452,7 +452,7 @@ handle_nomem:
 		DREF SQLError *error = DeeObject_MALLOC(SQLError);
 		if unlikely(!error)
 			goto err;
-		DeeObject_Init(&error->sqe_system, type);
+		DeeObject_InitStatic(&error->sqe_system, type);
 		error->sqe_system.e_cause = NULL;
 		error->sqe_system.e_msg   = NULL;
 #ifdef CONFIG_HOST_WINDOWS

@@ -128,7 +128,7 @@ __seq_reversed__.seq_reversed([[nonnull]] DeeObject *self,
 	result->drwgii_seq  = self;
 	result->drwgii_max  = end - 1; /* It's ok if this underflows */
 	result->drwgii_size = end - start;
-	DeeObject_Init(result, &DefaultReversed_WithGetItemIndexFast_Type);
+	DeeObject_InitStatic(result, &DefaultReversed_WithGetItemIndexFast_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -150,7 +150,7 @@ err:
 	result->drwgii_seq  = self;
 	result->drwgii_max  = end - 1; /* It's ok if this underflows */
 	result->drwgii_size = end - start;
-	DeeObject_Init(result, &DefaultReversed_WithGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultReversed_WithGetItemIndex_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -172,7 +172,7 @@ err:
 	result->drwgii_seq  = self;
 	result->drwgii_max  = end - 1; /* It's ok if this underflows */
 	result->drwgii_size = end - start;
-	DeeObject_Init(result, &DefaultReversed_WithTryGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultReversed_WithTryGetItemIndex_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;

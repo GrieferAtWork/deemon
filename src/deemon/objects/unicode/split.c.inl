@@ -26,13 +26,13 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compare, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_return_compare, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, DeeUni_IsLF, Dee_STRING_DIV_SIZEOF_WIDTH, Dee_charptr_const, STRING_WIDTH_COMMON, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/super.h>              /* DeeSuper_New */
 #include <deemon/system-features.h>    /* memmeml, memmemw */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 
@@ -508,7 +508,7 @@ split_doiter(StringSplit *__restrict self,
 	/* Finalize the split iterator and return it. */
 	Dee_Incref(self);
 	result->s_split = self;
-	DeeObject_Init(result, iter_type);
+	DeeObject_InitStatic(result, iter_type);
 done:
 	return result;
 err_r:
@@ -770,7 +770,7 @@ DeeString_Split(DeeStringObject *self,
 	result = DeeObject_MALLOC(StringSplit);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &StringSplit_Type);
+	DeeObject_InitStatic(result, &StringSplit_Type);
 	Dee_Incref(self);
 	Dee_Incref(separator);
 	result->s_str = self;      /* Inherit */
@@ -794,7 +794,7 @@ DeeString_CaseSplit(DeeStringObject *self,
 	if unlikely(!result)
 		goto done;
 	/* Same as the regular split(), but use the case-insensitive sequence type. */
-	DeeObject_Init(result, &StringCaseSplit_Type);
+	DeeObject_InitStatic(result, &StringCaseSplit_Type);
 	Dee_Incref(self);
 	Dee_Incref(separator);
 	result->s_str = self;      /* Inherit */
@@ -932,17 +932,23 @@ STATIC_ASSERT(offsetof(StringSplitIterator, s_split) == offsetof(LineSplitIterat
 STATIC_ASSERT(offsetof(StringSplitIterator, s_next) == offsetof(LineSplitIterator, ls_next));
 
 PRIVATE NONNULL((1, 2)) void DCALL
-lineiter_setup(LineSplitIterator *__restrict self,
-               LineSplit *__restrict split) {
+lineiter_setup_inherited(LineSplitIterator *__restrict self,
+                         /*inherit(always)*/DREF LineSplit *__restrict split) {
 	self->ls_width     = DeeString_WIDTH(split->ls_str);
 	self->ls_begin.ptr = DeeString_WSTR(split->ls_str);
 	self->ls_next.ptr  = self->ls_begin.ptr;
 	self->ls_end.ptr   = DeeString_WEND(split->ls_str);
 	if (self->ls_next.ptr == self->ls_end.ptr)
 		self->ls_next.ptr = NULL;
-	self->ls_keep = split->ls_keep;
-	Dee_Incref(split);
+	self->ls_keep  = split->ls_keep;
 	self->ls_split = split;
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+lineiter_setup(LineSplitIterator *__restrict self,
+               LineSplit *__restrict split) {
+	lineiter_setup_inherited(self, split);
+	Dee_Incref(split);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -951,8 +957,7 @@ lineiter_ctor(LineSplitIterator *__restrict self) {
 	split = (DREF LineSplit *)DeeObject_NewDefault(&StringLineSplit_Type);
 	if unlikely(!split)
 		goto err;
-	lineiter_setup(self, split);
-	Dee_DecrefNokill(split);
+	lineiter_setup_inherited(self, split);
 	return 0;
 err:
 	return -1;
@@ -1078,7 +1083,7 @@ linesplit_iter(LineSplit *__restrict self) {
 	result->ls_keep = self->ls_keep;
 	Dee_Incref(self);
 	result->ls_split = self;
-	DeeObject_Init(result, &StringLineSplitIterator_Type);
+	DeeObject_InitStatic(result, &StringLineSplitIterator_Type);
 done:
 	return result;
 }
@@ -1232,7 +1237,7 @@ DeeString_SplitLines(DeeObject *__restrict self,
 	if unlikely(!result)
 		goto done;
 	/* Same as the regular split(), but use the case-insensitive sequence type. */
-	DeeObject_Init(result, &StringLineSplit_Type);
+	DeeObject_InitStatic(result, &StringLineSplit_Type);
 	Dee_Incref(self);
 	result->ls_str  = (DREF DeeStringObject *)self; /* Inherit */
 	result->ls_keep = keepends;

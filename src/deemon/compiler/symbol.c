@@ -34,7 +34,7 @@
 #include <deemon/object.h>            /* ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_AssertType, DeeTypeObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecrefv, Dee_XMovrefv, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/string.h>            /* DeeStringObject */
 #include <deemon/system-features.h>   /* bzero, memcpy, memset */
-#include <deemon/type.h>              /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FNORMAL */
+#include <deemon/type.h>              /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, TF_NONE, TP_FNORMAL */
 
 #include "../runtime/strings.h"
 
@@ -955,7 +955,7 @@ INTERN WUNUSED int (DCALL scope_push)(void) {
 	new_scope = DeeObject_CALLOC(DeeScopeObject);
 	if unlikely(!new_scope)
 		goto err;
-	DeeObject_Init(new_scope, &DeeScope_Type);
+	DeeObject_InitStatic(new_scope, &DeeScope_Type);
 	new_scope->s_prev  = current_scope; /* Inherit reference */
 	new_scope->s_base  = current_basescope;
 	new_scope->s_class = current_scope->s_class;
@@ -987,7 +987,7 @@ INTERN WUNUSED int (DCALL classscope_push)(void) {
 	this_sym = sym_alloc();
 	if unlikely(!this_sym)
 		goto err_new_scope;
-	DeeObject_Init(&new_scope->cs_scope, &DeeClassScope_Type);
+	DeeObject_InitStatic(&new_scope->cs_scope, &DeeClassScope_Type);
 	bzero(this_sym, sizeof(*this_sym));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	this_sym->s_refcnt = 1;
@@ -1038,7 +1038,7 @@ INTERN WUNUSED int (DCALL basescope_push)(void) {
 	new_scope = DeeObject_CALLOC(DeeBaseScopeObject);
 	if unlikely(!new_scope)
 		goto err;
-	DeeObject_Init(&new_scope->bs_scope, &DeeBaseScope_Type);
+	DeeObject_InitStatic(&new_scope->bs_scope, &DeeBaseScope_Type);
 	ASSERT(current_scope != NULL);
 	ASSERT(current_rootscope == current_basescope->bs_root);
 	new_scope->bs_scope.s_prev  = current_scope; /* Inherit reference */

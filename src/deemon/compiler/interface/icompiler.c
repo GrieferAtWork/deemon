@@ -44,7 +44,7 @@
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString */
 #include <deemon/system-features.h>    /* bcmp, bcmpc, bzero, strchr, strend */
 #include <deemon/tuple.h>              /* DeeTuple_Type */
-#include <deemon/type.h>               /* DeeObject_Init, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeTypeType_GetOperatorByName, DeeType_Type, Dee_operator_t, Dee_opinfo, OPERATOR_*, TYPE_*, type_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
 
 #include "../../runtime/kwlist.h"
@@ -301,7 +301,7 @@ ast_new(DeeScopeObject *__restrict scope, DeeObject *loc)
 #ifdef CONFIG_AST_IS_STRUCT
 			result->a_refcnt = 1;
 #else /* CONFIG_AST_IS_STRUCT */
-			DeeObject_Init(result, &DeeAst_Type);
+			DeeObject_InitStatic(result, &DeeAst_Type);
 #endif /* !CONFIG_AST_IS_STRUCT */
 			result->a_scope      = scope;
 			result->a_ddi.l_file = NULL;
@@ -1016,7 +1016,9 @@ ast_maketry(DeeCompilerObject *self, size_t argc,
 	                                                      ast_scope->s_base);
 	if unlikely(!result_ast->a_try.t_catchv && result_ast->a_try.t_catchc) {
 		Dee_DecrefNokill(ast_scope);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeAst_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		ast_free(result_ast);
 		goto done_compiler_end;
 	}

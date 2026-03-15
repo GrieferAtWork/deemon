@@ -44,7 +44,7 @@
 #include <deemon/string.h>          /* Dee_UNICODE_PRINTER_PRINT, Dee_unicode_printer* */
 #include <deemon/system-features.h> /* memcpy* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_*, Dee_Visit, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_init */
 
@@ -1013,7 +1013,7 @@ udict_iter(UDict *__restrict self) {
 	result = DeeObject_MALLOC(UDictIterator);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &UDictIterator_Type);
+	DeeObject_InitStatic(result, &UDictIterator_Type);
 	result->udi_dict = self;
 	Dee_Incref(self);
 	result->udi_next = atomic_read(&self->ud_elem);
@@ -1576,7 +1576,7 @@ INTERN WUNUSED DREF URoDict *DCALL URoDict_New(void) {
 	result->urd_mask = 0;
 	result->urd_size = 0;
 	result->urd_elem[0].di_key = NULL;
-	DeeObject_Init(result, &URoDict_Type);
+	DeeObject_InitStatic(result, &URoDict_Type);
 done:
 	return result;
 }
@@ -1594,7 +1594,7 @@ URoDict_NewWithHint(size_t num_items) {
 		goto done;
 	result->urd_mask = mask;
 	result->urd_size = 0;
-	DeeObject_Init(result, &URoDict_Type);
+	DeeObject_InitStatic(result, &URoDict_Type);
 done:
 	return result;
 }
@@ -1701,7 +1701,7 @@ URoDict_FromSequence_fallback(DeeObject *__restrict self) {
 	result->urd_mask = initial_mask;
 	if (DeeObject_ForeachPair(self, &URoDict_Insert, &result))
 		goto err_r;
-	DeeObject_Init(result, &URoDict_Type);
+	DeeObject_InitStatic(result, &URoDict_Type);
 	return result;
 	{
 		size_t i;
@@ -1853,7 +1853,7 @@ urodict_iter(URoDict *__restrict self) {
 	result->urdi_dict = self;
 	result->urdi_next = self->urd_elem;
 	Dee_Incref(self);
-	DeeObject_Init(result, &URoDictIterator_Type);
+	DeeObject_InitStatic(result, &URoDictIterator_Type);
 done:
 	return result;
 }

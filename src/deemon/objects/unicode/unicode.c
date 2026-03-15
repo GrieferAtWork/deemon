@@ -30,7 +30,7 @@
 #include <deemon/string.h>          /* CASE_WIDTH_nBYTE, DeeString*, DeeUniTrait_AsDigit, DeeUni_AsDigit, DeeUni_Descriptor, Dee_EmptyString, Dee_STRING_*, Dee_UNICODE_ISLF, Dee_UNICODE_PRINTER_*, Dee_charptr, Dee_charptr_const, Dee_string_utf*, Dee_unicode_printer*, Dee_unitraits, STRING_ERROR_FIGNORE, STRING_ERROR_FREPLAC, STRING_SIZEOF_WIDTH, STRING_WIDTH_COMMON, STRING_WIDTH_nBYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH, _Dee_string_utf_utf16_t */
 #include <deemon/stringutils.h>     /* Dee_UNICODE_UTF8_CURLEN, Dee_unicode_skiputf8, Dee_unicode_skiputf8_c */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_memsetl, DeeSystem_DEFINE_memsetw, bzero, memcpy*, memmove, memmoveb, memmovec, memmovedown, memmovedownc, memmovedownw, memmovel, memmovew, mempcpy*, memset, memsetb */
-#include <deemon/type.h>            /* DeeObject_Init, DeeObject_IsShared */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeObject_IsShared */
 #include <deemon/util/atomic.h>     /* atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_rwlock_* */
 
@@ -1509,7 +1509,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_str[utf8_length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
 	return Dee_AsObject(result);
 err_r:
@@ -1563,7 +1563,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_str[utf8_length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
 	return Dee_AsObject(result);
 err_r:
@@ -1744,7 +1744,7 @@ read_text_i:
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	return Dee_AsObject(result);
 err_r_utf:
 	Dee_string_utf_free(utf);
@@ -1898,7 +1898,7 @@ continue_at_i:
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	return Dee_AsObject(result);
 err_r_utf:
 	Dee_string_utf_free(utf);
@@ -1977,7 +1977,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
 	return Dee_AsObject(result);
 err_r:
@@ -2039,7 +2039,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	result->s_data = Dee_string_utf_untrack(utf);
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	(void)Dee_UntrackAlloc((size_t *)text - 1);
 	return Dee_AsObject(result);
 err_r:
@@ -2381,7 +2381,7 @@ err_buffer16:
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_len  = length;
 	result->s_str[length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
@@ -2607,7 +2607,7 @@ err_buffer16:
 	result->s_hash = Dee_STRING_HASH_UNSET;
 	result->s_len  = length;
 	result->s_str[length] = '\0';
-	DeeObject_Init(result, &DeeString_Type);
+	DeeObject_InitStatic(result, &DeeString_Type);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_Free(result);
@@ -2818,7 +2818,9 @@ err_buffer16:
 err_r:
 	DeeObject_FreeTracker((DeeObject *)result);
 	DeeObject_Free(result);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeString_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	return NULL;
 }
 
@@ -2990,7 +2992,9 @@ err_buffer16:
 err_r:
 	/*DeeObject_FreeTracker(result);*/
 	/*DeeObject_Free(result);*/
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	/*Dee_DecrefNokill(&DeeString_Type);*/
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	return NULL;
 }
 
@@ -3682,7 +3686,9 @@ inherit_latin1_string:
 		Dee_string_utf_free(utf);
 		DeeObject_Free(str);
 	}
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeString_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 }
 
 

@@ -47,7 +47,7 @@
 #include <deemon/system-features.h>    /* DeeSystem_DEFINE_strcmp, bcmpc, memcpy*, memset, strchr, strlen */
 #include <deemon/thread.h>             /* DeeThread_Self */
 #include <deemon/tuple.h>              /* DeeTuple*, Dee_EmptyTuple */
-#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_Init, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* ASSERT_OBJECT_TYPE_A, DeeObject_InitStatic, DeeTypeType_*, DeeType_*, Dee_TP_FFINAL, Dee_TP_FINHERITCTOR, Dee_TP_FINTERRUPT, Dee_TP_FMOVEANY, Dee_TP_FTRUNCATE, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_XVisit, Dee_operator_t, Dee_opinfo, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* Dee_atomic_read, atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_read_with_atomic_rwlock */
@@ -413,7 +413,7 @@ cot_iter(ClassOperatorTable *__restrict self) {
 	result->co_end = (self->co_desc->cd_clsop_list +
 	                  self->co_desc->cd_clsop_mask + 1);
 	Dee_Incref(self->co_desc);
-	DeeObject_Init(result, &ClassOperatorTableIterator_Type);
+	DeeObject_InitStatic(result, &ClassOperatorTableIterator_Type);
 done:
 	return result;
 }
@@ -679,7 +679,7 @@ cattr_new(ClassDescriptor *__restrict desc,
 	result->ca_desc = desc;
 	result->ca_attr = attr;
 	Dee_Incref(desc);
-	DeeObject_Init(result, &ClassAttribute_Type);
+	DeeObject_InitStatic(result, &ClassAttribute_Type);
 done:
 	return result;
 }
@@ -843,7 +843,7 @@ cat_iter(ClassAttributeTable *__restrict self) {
 	result->ca_iter = self->ca_start;
 	result->ca_end  = (self->ca_start + self->ca_mask + 1);
 	Dee_Incref(self->ca_desc);
-	DeeObject_Init(result, &ClassAttributeTableIterator_Type);
+	DeeObject_InitStatic(result, &ClassAttributeTableIterator_Type);
 done:
 	return result;
 }
@@ -929,7 +929,7 @@ cati_getseq(ClassAttributeTableIterator *__restrict self) {
 		result->ca_mask  = self->ca_desc->cd_cattr_mask;
 	}
 	Dee_Incref(self->ca_desc);
-	DeeObject_Init(result, &ClassAttributeTable_Type);
+	DeeObject_InitStatic(result, &ClassAttributeTable_Type);
 done:
 	return result;
 }
@@ -1652,7 +1652,7 @@ cd_iattr(ClassDescriptor *__restrict self) {
 	result->ca_start = self->cd_iattr_list;
 	result->ca_mask  = self->cd_iattr_mask;
 	Dee_Incref(self);
-	DeeObject_Init(result, &ClassAttributeTable_Type);
+	DeeObject_InitStatic(result, &ClassAttributeTable_Type);
 done:
 	return result;
 }
@@ -1667,7 +1667,7 @@ cd_cattr(ClassDescriptor *__restrict self) {
 	result->ca_start = self->cd_cattr_list;
 	result->ca_mask  = self->cd_cattr_mask;
 	Dee_Incref(self);
-	DeeObject_Init(result, &ClassAttributeTable_Type);
+	DeeObject_InitStatic(result, &ClassAttributeTable_Type);
 done:
 	return result;
 }
@@ -2500,7 +2500,7 @@ got_flag:
 	result->cd_doc  = args.doc;
 	Dee_Incref(args.name);
 	Dee_XIncref(args.doc);
-	DeeObject_Init(result, &DeeClassDescriptor_Type);
+	DeeObject_InitStatic(result, &DeeClassDescriptor_Type);
 	return result;
 err_r_imemb_cmemb:
 	if (result->cd_clsop_list != empty_class_operators)
@@ -3025,7 +3025,7 @@ type_get_ctable(DeeTypeObject *__restrict self) {
 	result->ot_desc  = Dee_class_desc_as_instance(desc);
 	result->ot_size  = desc->cd_desc->cd_cmemb_size;
 	Dee_Incref(self);
-	DeeObject_Init(result, &ObjectTable_Type);
+	DeeObject_InitStatic(result, &ObjectTable_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3050,7 +3050,7 @@ instance_get_itable(DeeObject *__restrict self) {
 	result->ot_desc  = DeeInstance_DESC(desc, real_self);
 	result->ot_size  = desc->cd_desc->cd_imemb_size;
 	Dee_Incref(self);
-	DeeObject_Init(result, &ObjectTable_Type);
+	DeeObject_InitStatic(result, &ObjectTable_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3390,7 +3390,7 @@ DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
 	result->im_type      = class_type;
 	result->im_attribute = attr;
 	Dee_Incref(class_type);
-	DeeObject_Init(result, &DeeInstanceMember_Type);
+	DeeObject_InitStatic(result, &DeeInstanceMember_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3935,7 +3935,7 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
 	}
 
 	/* Finalize initialization of the property wrapper and return it. */
-	DeeObject_Init(result, &DeeProperty_Type);
+	DeeObject_InitStatic(result, &DeeProperty_Type);
 	return Dee_AsObject(result);
 unbound:
 	DeeRT_ErrUnboundInstanceAttrCA(class_type, attr);

@@ -33,7 +33,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, DeeUni_*, Dee_EmptyString, STRING_ERROR_FNORMAL, WSTR_LENGTH */
 #include <deemon/stringutils.h>        /* Dee_unicode_readutf8, Dee_unicode_readutf8_n */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
@@ -782,7 +782,7 @@ ss_iter(StringScanner *__restrict self) {
 		goto err;
 	if unlikely(ssi_setup(result, self))
 		goto err_r;
-	DeeObject_Init(result, &StringScanIterator_Type);
+	DeeObject_InitStatic(result, &StringScanIterator_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -937,7 +937,7 @@ DeeString_Scanf(DeeObject *self,
 	result->ss_format = format;
 	Dee_Incref(self);
 	Dee_Incref(format);
-	DeeObject_Init(result, &StringScan_Type);
+	DeeObject_InitStatic(result, &StringScan_Type);
 done:
 	return Dee_AsObject(result);
 }

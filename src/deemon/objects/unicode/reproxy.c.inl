@@ -36,7 +36,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString*, Dee_EmptyString, STRING_ERROR_FSTRICT */
 #include <deemon/system-features.h>    /* bzero, memcpy */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
 
@@ -1647,7 +1647,7 @@ refa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &ReFindAllIterator_Type);
+	DeeObject_InitStatic(result, &ReFindAllIterator_Type);
 done:
 	return result;
 }
@@ -1663,7 +1663,7 @@ rebfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &ReBytesFindAllIterator_Type);
+	DeeObject_InitStatic(result, &ReBytesFindAllIterator_Type);
 done:
 	return result;
 }
@@ -1934,7 +1934,7 @@ regfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &RegFindAllIterator_Type);
+	DeeObject_InitStatic(result, &RegFindAllIterator_Type);
 done:
 	return result;
 }
@@ -1950,7 +1950,7 @@ regbfa_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &RegBytesFindAllIterator_Type);
+	DeeObject_InitStatic(result, &RegBytesFindAllIterator_Type);
 done:
 	return result;
 }
@@ -2186,7 +2186,7 @@ regla_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &RegLocateAllIterator_Type);
+	DeeObject_InitStatic(result, &RegLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2202,7 +2202,7 @@ regbla_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &RegBytesLocateAllIterator_Type);
+	DeeObject_InitStatic(result, &RegBytesLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2435,7 +2435,7 @@ rela_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &ReLocateAllIterator_Type);
+	DeeObject_InitStatic(result, &ReLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2451,7 +2451,7 @@ rebla_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &ReBytesLocateAllIterator_Type);
+	DeeObject_InitStatic(result, &ReBytesLocateAllIterator_Type);
 done:
 	return result;
 }
@@ -2690,7 +2690,7 @@ resp_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &ReSplitIterator_Type);
+	DeeObject_InitStatic(result, &ReSplitIterator_Type);
 done:
 	return result;
 }
@@ -2710,7 +2710,7 @@ rebsp_iter(ReSequence *__restrict self) {
 	Dee_Incref(result->rsi_data);
 	Dee_Incref(result->rsi_exec.rx_pattern);
 	Dee_atomic_rwlock_init(&result->rsi_lock);
-	DeeObject_Init(result, &ReBytesSplitIterator_Type);
+	DeeObject_InitStatic(result, &ReBytesSplitIterator_Type);
 done:
 	return result;
 }
@@ -2940,7 +2940,7 @@ string_re_findall(String *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &ReFindAll_Type);
+	DeeObject_InitStatic(result, &ReFindAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -2956,7 +2956,7 @@ string_reg_findall(String *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &RegFindAll_Type);
+	DeeObject_InitStatic(result, &RegFindAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -2972,7 +2972,7 @@ string_reg_locateall(String *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &RegLocateAll_Type);
+	DeeObject_InitStatic(result, &RegLocateAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -2988,7 +2988,7 @@ string_re_locateall(String *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &ReLocateAll_Type);
+	DeeObject_InitStatic(result, &ReLocateAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3006,7 +3006,7 @@ string_re_split(String *__restrict self,
 		result->rs_exec.rx_inbase = NULL;
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &ReSplit_Type);
+	DeeObject_InitStatic(result, &ReSplit_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3023,7 +3023,7 @@ bytes_re_findall(DeeBytesObject *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &ReBytesFindAll_Type);
+	DeeObject_InitStatic(result, &ReBytesFindAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3039,7 +3039,7 @@ bytes_reg_findall(DeeBytesObject *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &RegBytesFindAll_Type);
+	DeeObject_InitStatic(result, &RegBytesFindAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3055,7 +3055,7 @@ bytes_reg_locateall(DeeBytesObject *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &RegBytesLocateAll_Type);
+	DeeObject_InitStatic(result, &RegBytesLocateAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3071,7 +3071,7 @@ bytes_re_locateall(DeeBytesObject *__restrict self,
 	memcpy(&result->rs_exec, exec, sizeof(struct DeeRegexBaseExec));
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &ReBytesLocateAll_Type);
+	DeeObject_InitStatic(result, &ReBytesLocateAll_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -3089,7 +3089,7 @@ bytes_re_split(DeeBytesObject *__restrict self,
 		result->rs_exec.rx_inbase = NULL;
 	Dee_Incref(self);
 	Dee_Incref(result->rs_exec.rx_pattern);
-	DeeObject_Init(result, &ReBytesSplit_Type);
+	DeeObject_InitStatic(result, &ReBytesSplit_Type);
 done:
 	return Dee_AsObject(result);
 }

@@ -31,7 +31,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_SIZEOF_HASH_T, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/string.h>             /* DeeString_PrintAscii, DeeString_STR */
-#include <deemon/type.h>               /* DeeObject_InitInherited, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
+#include <deemon/type.h>               /* DeeObject_InitInherited, DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_VAR, INT_UNSIGNED, METHOD_F*, OPERATOR_*, TF_NONE, TP_F*, TYPE_MEMBER*, TYPE_OPERATOR_FLAGS, type_* */
 #include <deemon/util/atomic.h>        /* atomic_orfetch */
 
 #include <hybrid/align.h>    /* IS_ALIGNED */
@@ -531,8 +531,13 @@ INTERN ATTR_MALLOC WUNUSED DREF _DeeBool_Pair *DCALL DeeBool_NewPair(void) {
 		 * storage) to make stuff easier and faster. */
 		ASSERT(IS_ALIGNED((uintptr_t)&block->bp_pair, _Dee_ALIGNOF_BOOL_PAIR));
 		block->bp_free = DeeBool_Block_FREE_NONE;
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+		DeeObject_InitStatic(&block->bp_pair.bp_bools[0], &DeeBool_Type);
+		DeeObject_InitStatic(&block->bp_pair.bp_bools[1], &DeeBool_Type);
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_InitInherited(&block->bp_pair.bp_bools[0], &DeeBool_Type);
 		DeeObject_InitInherited(&block->bp_pair.bp_bools[1], &DeeBool_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		return &block->bp_pair;
 	}
 	return NULL;

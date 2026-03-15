@@ -45,7 +45,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_STR */
 #include <deemon/system-features.h>    /* bzeroc, memcpy*, memmovedownc, memmoveupc, memset */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
 #include <deemon/util/lock.h>          /* DeeLock_Acquire2, Dee_atomic_read_with_atomic_rwlock, Dee_atomic_rwlock_* */
@@ -538,7 +538,7 @@ dict_new_with_hint(size_t num_items, bool tryalloc, bool allow_overalloc) {
 	result->d_htab    = (union Dee_hash_htab *)((struct Dee_dict_item *)tabs + valloc);
 	Dee_atomic_rwlock_init(&result->d_lock);
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &DeeDict_Type);
+	DeeObject_InitStatic(result, &DeeDict_Type);
 	result = DeeGC_TRACK(Dict, result);
 	return Dee_AsObject(result);
 err_tabs:
@@ -1574,7 +1574,7 @@ dict_new_copy(Dict *__restrict self) {
 	Dee_atomic_rwlock_init(&result->d_lock);
 #endif /* !DICT_INITFROM_NEEDSLOCK */
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &DeeDict_Type);
+	DeeObject_InitStatic(result, &DeeDict_Type);
 	return DeeGC_TRACK(Dict, result);
 err_r:
 	DeeGCObject_FREE(result);
@@ -1642,7 +1642,7 @@ DeeDict_FromRoDict(/*RoDict*/ DeeObject *__restrict self) {
 	Dee_atomic_rwlock_init(&result->d_lock);
 #endif /* !DICT_INITFROM_NEEDSLOCK */
 	Dee_weakref_support_init(result);
-	DeeObject_Init(result, &DeeDict_Type);
+	DeeObject_InitStatic(result, &DeeDict_Type);
 	return Dee_AsObject(DeeGC_TRACK(Dict, result));
 err_r:
 	DeeGCObject_FREE(result);
@@ -1812,7 +1812,9 @@ err_r:
 	        "That would mean 'num_items == 0', which it can't "
 	        "be because then we wouldn't have gotten here");
 	_DeeDict_TabsFree(_DeeDict_GetRealVTab(result));
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 	Dee_DecrefNokill(&DeeDict_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	DeeGCObject_FREE(result);
 err:
 	return NULL;
@@ -2267,7 +2269,7 @@ dict_iter(Dict *__restrict self) {
 	Dee_Incref(self);
 	result->di_dict = self;
 	result->di_vidx = Dee_hash_vidx_tovirt(0);
-	DeeObject_Init(result, &DictIterator_Type);
+	DeeObject_InitStatic(result, &DictIterator_Type);
 	return result;
 err:
 	return NULL;

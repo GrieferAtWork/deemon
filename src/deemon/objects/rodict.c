@@ -42,7 +42,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/system-features.h>    /* bzero*, memcpy, memmovedownc, mempcpyc, memset */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_KW, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_or_write, atomic_read */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_*, Dee_SIZEOF_HASH_VIDX_T, Dee_hash_*, IF_Dee_HASH_HIDXIO_COUNT_GE_* */
 
@@ -289,7 +289,7 @@ Dee_rodict_builder_pack(struct Dee_rodict_builder *__restrict self) {
 		/* Free unused memory if there are unused buffers. */
 		if unlikely(result->rd_vsize < self->rdb_valloc)
 			result = rodict_trunc_vtab(result, self->rdb_valloc, result->rd_vsize);
-		DeeObject_Init(result, &DeeRoDict_Type);
+		DeeObject_InitStatic(result, &DeeRoDict_Type);
 	}
 	DBG_memset(self, 0xcc, sizeof(struct Dee_rodict_builder));
 	rodict_verify(result);
@@ -573,7 +573,7 @@ again:
 	result->rd_vsize   = vsize;
 	result->rd_hmask   = hmask;
 	result->rd_hidxget = Dee_hash_hidxio[dst_hidxio].hxio_get;
-	DeeObject_Init(result, &DeeRoDict_Type);
+	DeeObject_InitStatic(result, &DeeRoDict_Type);
 	rodict_verify(result);
 	return Dee_AsObject(result);
 err:
@@ -982,7 +982,7 @@ rodict_iter(RoDict *__restrict self) {
 	result->rodi_dict = self;
 	Dee_Incref(self);
 	result->rodi_vidx = 0;
-	DeeObject_Init(result, &RoDictIterator_Type);
+	DeeObject_InitStatic(result, &RoDictIterator_Type);
 	return result;
 err:
 	return NULL;
@@ -1822,7 +1822,7 @@ again:
 	/* Initialize values. */
 	if unlikely(rodict_init_values_after_keys(result, value, valuefor))
 		goto err_r;
-	DeeObject_Init(result, &DeeRoDict_Type);
+	DeeObject_InitStatic(result, &DeeRoDict_Type);
 	return result;
 err_r:
 	rodict_destroy_keysonly(result);
@@ -1864,7 +1864,7 @@ rodict_from_rodict_keys(DeeRoDictObject *dict_keys, DeeObject *value, DeeObject 
 	/* Initialize values. */
 	if unlikely(rodict_init_values_after_keys(result, value, valuefor))
 		goto err_r;
-	DeeObject_Init(result, &DeeRoDict_Type);
+	DeeObject_InitStatic(result, &DeeRoDict_Type);
 	return result;
 err_r:
 	rodict_destroy_keysonly(result);

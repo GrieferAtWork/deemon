@@ -37,7 +37,7 @@
 #include <deemon/int.h>             /* DeeInt_FromString, Dee_INT_STRING, Dee_INT_STRING_FNORMAL */
 #include <deemon/list.h>            /* DeeList_* */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_symbol */
-#include <deemon/none.h>            /* DeeNone*, Dee_None */
+#include <deemon/none.h>            /* DeeNone* */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, DeeType_Implements, Dee_AsObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_XDecref, Dee_hash_t */
 #include <deemon/seq.h>             /* DeeRange_New, DeeSeq_* */
 #include <deemon/string.h>          /* DeeString_FromBackslashEscaped, DeeString_NewUtf8, DeeUni_IsSpace, STRING_ERROR_FSTRICT */
@@ -2949,7 +2949,7 @@ DEFINE_SECONDARY(CmpEQOperand) {
 			break;
 		case TOK_QMARK_QMARK:
 			ASSERT(DeeNone_Check(lhs));
-			Dee_DecrefNokill(Dee_None);
+			DeeNone_Decref();
 			lhs = rhs; /* Inherit reference */
 			goto continue_expr;
 		case JIT_KEYWORD:

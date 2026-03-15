@@ -35,7 +35,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* memset */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_hash_t, ITER_DONE, OBJECT_HEAD_INIT */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
@@ -112,7 +112,7 @@ again_iterattr:
 	result->mfai_itsz = req_bufsize;
 	result->mfai_obj  = ob;
 	Dee_Incref(ob);
-	DeeObject_Init(result, &MapFromAttrKeysIterator_Type);
+	DeeObject_InitStatic(result, &MapFromAttrKeysIterator_Type);
 	return result;
 err_r:
 	MapFromAttrIterator_Free(result);
@@ -131,7 +131,7 @@ mfaki_copy(MapFromAttrIterator *__restrict self) {
 	result->mfai_obj = self->mfai_obj;
 	Dee_Incref(self->mfai_obj);
 	result->mfai_itsz = self->mfai_itsz;
-	DeeObject_Init(result, &MapFromAttrKeysIterator_Type);
+	DeeObject_InitStatic(result, &MapFromAttrKeysIterator_Type);
 	return result;
 err_r:
 	MapFromAttrIterator_Free(result);
@@ -200,7 +200,7 @@ mfaki_getseq(MapFromAttrIterator *__restrict self) {
 		goto err;
 	result->mfa_ob = self->mfai_obj;
 	Dee_Incref(result->mfa_ob);
-	DeeObject_Init(result, &MapFromAttr_Type);
+	DeeObject_InitStatic(result, &MapFromAttr_Type);
 	return result;
 err:
 	return NULL;

@@ -33,7 +33,7 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_DecrefNokill, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_NewEmpty, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
@@ -161,7 +161,7 @@ filteriterator_seq_get(FilterIterator *__restrict self) {
 	result->f_seq = base_seq; /* Inherit reference. */
 	result->f_fun = self->fi_func;
 	Dee_Incref(result->f_fun);
-	DeeObject_Init(result, &SeqFilter_Type);
+	DeeObject_InitStatic(result, &SeqFilter_Type);
 	return result;
 err_base_seq:
 	Dee_Decref(base_seq);
@@ -243,7 +243,7 @@ filter_iter(Filter *__restrict self) {
 		goto err_r;
 	result->fi_func = self->f_fun;
 	Dee_Incref(result->fi_func);
-	DeeObject_Init(result, &SeqFilterIterator_Type);
+	DeeObject_InitStatic(result, &SeqFilterIterator_Type);
 done:
 	return result;
 err_r:
@@ -901,7 +901,7 @@ DeeSeq_Filter(DeeObject *self, DeeObject *pred_keep) {
 	Dee_Incref(pred_keep);
 	result->f_seq = self;
 	result->f_fun = pred_keep;
-	DeeObject_Init(result, &SeqFilter_Type);
+	DeeObject_InitStatic(result, &SeqFilter_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -916,7 +916,7 @@ DeeSeq_FilterAsUnbound(DeeObject *self, DeeObject *pred_keep) {
 	Dee_Incref(pred_keep);
 	result->f_seq = self;
 	result->f_fun = pred_keep;
-	DeeObject_Init(result, &SeqFilterAsUnbound_Type);
+	DeeObject_InitStatic(result, &SeqFilterAsUnbound_Type);
 done:
 	return Dee_AsObject(result);
 }

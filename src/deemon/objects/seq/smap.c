@@ -33,7 +33,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
 #include <deemon/system-features.h>    /* memcpyc, strcmp */
-#include <deemon/type.h>               /* DeeObject_Init, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visitv, Dee_visit_t, STRUCT_OBJECT_AB, STRUCT_SIZE_T, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visitv, Dee_visit_t, STRUCT_OBJECT_AB, STRUCT_SIZE_T, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashCombine, Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_cinit */
@@ -436,7 +436,7 @@ smap_iter(SharedMap *__restrict self) {
 	result->smi_seq = self;
 	Dee_Incref(self);
 	result->smi_index = 0;
-	DeeObject_Init(result, &SharedMapIterator_Type);
+	DeeObject_InitStatic(result, &SharedMapIterator_Type);
 done:
 	return result;
 }
@@ -903,7 +903,7 @@ DeeSharedMap_NewShared(size_t length, /*inherit(maybe)*/ DREF DeeSharedItem cons
 	result->sm_loaded = 0;
 	result->sm_mask   = mask;
 	Dee_atomic_rwlock_cinit(&result->sm_lock);
-	DeeObject_Init(result, &DeeSharedMap_Type);
+	DeeObject_InitStatic(result, &DeeSharedMap_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -935,7 +935,9 @@ DeeSharedMap_Decref(DeeObject *__restrict self) {
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
 		Dee_Decrefv((DREF DeeObject **)me->sm_vector, me->sm_length * 2);
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeSharedMap_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;
@@ -985,7 +987,9 @@ DeeSharedMap_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSharedMap_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
+#ifndef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 		Dee_DecrefNokill(&DeeSharedMap_Type);
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;

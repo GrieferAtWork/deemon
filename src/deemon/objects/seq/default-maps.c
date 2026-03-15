@@ -36,7 +36,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_NewEmpty */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
@@ -160,7 +160,7 @@ mu_iter(MapUnion *__restrict self) {
 	result->mui_union = self;
 	Dee_atomic_rwlock_init(&result->mui_lock);
 	result->mui_in2nd = false;
-	DeeObject_Init(result, &MapUnionIterator_Type);
+	DeeObject_InitStatic(result, &MapUnionIterator_Type);
 	return DeeGC_TRACK(MapUnionIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
@@ -992,7 +992,7 @@ mi_iter(MapIntersection *__restrict self) {
 	Dee_Incref(self);
 	result->mii_intersect = self;
 	result->mii_keys      = self->mi_keys;
-	DeeObject_Init(result, &MapIntersectionIterator_Type);
+	DeeObject_InitStatic(result, &MapIntersectionIterator_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -1412,7 +1412,7 @@ md_iter(MapDifference *__restrict self) {
 	Dee_Incref(self);
 	result->mdi_diff = self;
 	result->mdi_keys = self->md_keys;
-	DeeObject_Init(result, &MapDifferenceIterator_Type);
+	DeeObject_InitStatic(result, &MapDifferenceIterator_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -1794,7 +1794,7 @@ msd_iter(MapSymmetricDifference *__restrict self) {
 	result->msdi_symdiff = self;
 	Dee_atomic_rwlock_init(&result->msdi_lock);
 	result->msdi_in2nd = false;
-	DeeObject_Init(result, &MapSymmetricDifferenceIterator_Type);
+	DeeObject_InitStatic(result, &MapSymmetricDifferenceIterator_Type);
 	return DeeGC_TRACK(MapSymmetricDifferenceIterator, result);
 err_r:
 	DeeGCObject_FREE(result);

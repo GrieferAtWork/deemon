@@ -29,7 +29,7 @@
 #include <deemon/string.h>          /* DeeStringObject, Dee_string_fini_hook */
 #include <deemon/system-features.h> /* memmovedownc, memmoveupc */
 #include <deemon/thread.h>          /* DeeThreadObject, Dee_thread_interrupt_hook */
-#include <deemon/type.h>            /* DeeObject_Init, Dee_Visit, Dee_visit_t */
+#include <deemon/type.h>            /* DeeObject_InitStatic, Dee_Visit, Dee_visit_t */
 #include <deemon/types.h>           /* DREF, DeeObject, DeeTypeObject, Dee_WEAKREF_SUPPORT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD */
 #include <deemon/util/atomic.h>     /* atomic_read */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
@@ -324,7 +324,7 @@ struct query_object {
 
 /* First-time initialization */
 #define Query_InitOnce(self, db, sql)   \
-	(DeeObject_Init(self, &Query_Type), \
+	(DeeObject_InitStatic(self, &Query_Type), \
 	 (self)->q_db     = (db),           \
 	 (self)->q_sql    = (sql),          \
 	 (self)->q_rowfmt = NULL,           \
@@ -333,11 +333,18 @@ struct query_object {
 /* Last-time finalization (+ free) */
 #define Query_Free(self, db) \
 	(DB_FinalizeStmt(db, (self)->q_stmt), _Query_Free(self))
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define _Query_Free(self)                    \
+	(Dee_XDecref((self)->q_rowfmt),          \
+	 ASSERT((self)->ob_type == &Query_Type), \
+	 DeeObject_FREE(self))
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define _Query_Free(self)                    \
 	(Dee_XDecref((self)->q_rowfmt),          \
 	 ASSERT((self)->ob_type == &Query_Type), \
 	 DeeObject_FREE(self),                   \
 	 Dee_DecrefNokill(&Query_Type))
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 /* Check if the query is in-use (returns "false" even if the query hasn't been marked
  * as unused, yet, meaning it is still being finalized and pre-pared for re-use) */

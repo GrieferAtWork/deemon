@@ -46,7 +46,7 @@
 #include <deemon/super.h>              /* DeeSuper* */
 #include <deemon/system-features.h>    /* mempcpyc */
 #include <deemon/tuple.h>              /* DeeTuple* */
-#include <deemon/type.h>               /* DeeObject_Init */
+#include <deemon/type.h>               /* DeeObject_InitStatic */
 #include <deemon/util/hash-io.h>       /* Dee_HASH_HIDXIO_FROM_VALLOC, Dee_hash_* */
 
 #include <hybrid/typecore.h> /* __SHIFT_TYPE__ */
@@ -178,7 +178,7 @@ again:
 	            DeeList_ELEM(self) + range.sr_start,
 	            range_size);
 	DeeList_LockEndRead(self);
-	DeeObject_Init(result, &DeeTuple_Type);
+	DeeObject_InitStatic(result, &DeeTuple_Type);
 	result->t_size = range_size;
 	return Dee_AsObject(result);
 err:
@@ -231,7 +231,7 @@ rodict_fromdict_locked_or_unlock(DeeDictObject *__restrict self) {
 	result->rd_vsize   = vsize;
 	result->rd_hmask   = hmask;
 	result->rd_hidxget = Dee_hash_hidxio[dst_hidxio].hxio_get;
-	DeeObject_Init(result, &DeeRoDict_Type);
+	DeeObject_InitStatic(result, &DeeRoDict_Type);
 	return result;
 }
 
@@ -653,7 +653,7 @@ check_set_again:
 	}
 	DeeHashSet_LockEndRead(value);
 	Dee_Decref(value);
-	DeeObject_Init(roset, &DeeRoSet_Type);
+	DeeObject_InitStatic(roset, &DeeRoSet_Type);
 
 	/* All right! we've got the ro-set all packed together!
 	 * -> Register it as a constant. */

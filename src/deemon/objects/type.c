@@ -41,7 +41,7 @@
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_OfPointer, Dee_module_object */
 #include <deemon/mro.h>                /* DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_FindAttr, DeeType_FindAttrInfoStringLenHash, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_IterAttr, DeeType_QueryAttributeHash, DeeType_QueryInstanceAttributeHash, DeeType_Set*Attr*, DeeType_VCallAttrStringHashf, DeeType_VCallAttrf, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attrspec, Dee_membercache_fini, Dee_membercache_init */
-#include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None, return_none */
+#include <deemon/none.h>               /* DeeNone*, Dee_None, return_none */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XDecref_unlikely, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/operator-hints.h>     /* DeeType_GetNativeOperator, DeeType_GetNativeOperatorWithoutUnsupported, Dee_tno_id */
 #include <deemon/property.h>           /* DeePropertyObject, DeeProperty_Type */
@@ -923,7 +923,7 @@ err_r:
 		if (!first_base)
 			break;
 	}
-	Dee_DecrefNokill(self);
+	DeeType_DecrefHeapTypeNokill(self);
 	DeeType_FreeInstance(self, result);
 err:
 	return NULL;
@@ -1029,17 +1029,17 @@ unpack_init_info(DeeObject *__restrict info,
 	if (n_args < 3) {
 		fields_args_kw[2] = NULL;
 	} else if (DeeNone_Check(fields_args_kw[2])) {
-		Dee_DecrefNokill(fields_args_kw[2]);
+		DeeNone_Decref();
 		fields_args_kw[2] = NULL;
 	}
 	if (n_args < 2) {
 		fields_args_kw[1] = DeeTuple_NewEmpty();
 	} else if (DeeNone_Check(fields_args_kw[1])) {
-		Dee_DecrefNokill(fields_args_kw[1]);
+		DeeNone_Decref();
 		fields_args_kw[1] = DeeTuple_NewEmpty();
 	}
 	if (DeeNone_Check(fields_args_kw[0])) {
-		Dee_DecrefNokill(fields_args_kw[0]);
+		DeeNone_Decref();
 		fields_args_kw[0] = NULL;
 	}
 	*p_init_fields = fields_args_kw[0];
@@ -1168,7 +1168,7 @@ done_fields:
 		if (init_info == ITER_DONE)
 			continue;
 		if (DeeNone_Check(init_info)) {
-			Dee_DecrefNokill(init_info);
+			DeeNone_Decref();
 			continue;
 		}
 		init_fields = unpack_init_info1(init_info);
@@ -1200,7 +1200,7 @@ err_r:
 		if (!first_base)
 			break;
 	}
-	Dee_DecrefNokill(self);
+	DeeType_DecrefHeapTypeNokill(self);
 	DeeType_FreeInstance(self, result);
 err:
 	return NULL;

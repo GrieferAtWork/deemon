@@ -37,7 +37,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString_AsBytes, DeeString_Check, WSTR_LENGTH */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 
 #include <hybrid/align.h>    /* CEILDIV */
@@ -269,7 +269,7 @@ bseg_iter(BytesSegments *__restrict self) {
 	result->b_siz = self->b_siz;
 	result->b_ptr = DeeBytes_DATA(self->b_str);
 	result->b_end = result->b_ptr + DeeBytes_SIZE(self->b_str);
-	DeeObject_Init(result, &BytesSegmentsIterator_Type);
+	DeeObject_InitStatic(result, &BytesSegmentsIterator_Type);
 done:
 	return result;
 }
@@ -487,7 +487,7 @@ DeeBytes_Segments(DeeBytesObject *__restrict self,
 	result->b_str = self;
 	Dee_Incref(self);
 	result->b_siz = segment_size;
-	DeeObject_Init(result, &BytesSegments_Type);
+	DeeObject_InitStatic(result, &BytesSegments_Type);
 done:
 	return Dee_AsObject(result);
 }

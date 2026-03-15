@@ -56,7 +56,7 @@
 #include "alloc.h"  /* DeeObject_FREE, DeeObject_MALLOC */
 #include "object.h" /* Dee_DecrefNokill, Dee_Incref */
 #include "tuple.h"  /* DeeTuple* */
-#include "type.h"   /* DeeObject_Init */
+#include "type.h"   /* DeeObject_InitStatic */
 #endif /* !__INTELLISENSE__ */
 #endif /* !CONFIG_ENABLE_SEQ_ONE_TYPE || !CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -79,8 +79,12 @@ INTDEF DeeTypeObject DeeSeqOne_Type;
 #define DeeSeq_InitOne_inplace(self) (void)0
 #define DeeSeq_FiniOne_inplace(self) (void)0
 #else /* __INTELLISENSE__ */
-#define DeeSeq_InitOne_inplace(self) (void)DeeObject_Init(self, &DeeSeqOne_Type)
+#define DeeSeq_InitOne_inplace(self) (void)DeeObject_InitStatic(self, &DeeSeqOne_Type)
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define DeeSeq_FiniOne_inplace(self) (void)0
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define DeeSeq_FiniOne_inplace(self) (void)Dee_DecrefNokill(&DeeSeqOne_Type)
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 #ifdef __INTELLISENSE__
@@ -120,10 +124,10 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject *
 #define DeeSeq_NewOneUninitialized()      DeeObject_MALLOC(DeeSeqOneObject)
 #define DeeSeq_FreeOneUninitialized(self) DeeObject_FREE(Dee_REQUIRES_TYPE(DeeSeqOneObject *, self))
 #define DeeSeq_InitOneInherited(self, item) \
-	((self)->so_item = (item), DeeObject_Init(self, &DeeSeqOne_Type), Dee_AsObject(self))
-#define DeeSeq_InitOne(self, item)  \
+	((self)->so_item = (item), DeeObject_InitStatic(self, &DeeSeqOne_Type), Dee_AsObject(self))
+#define DeeSeq_InitOne(self, item)               \
 	(Dee_Incref(item), (self)->so_item = (item), \
-	 DeeObject_Init(self, &DeeSeqOne_Type), Dee_AsObject(self))
+	 DeeObject_InitStatic(self, &DeeSeqOne_Type), Dee_AsObject(self))
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_ENABLE_SEQ_ONE_TYPE */
 #define DeeSeq_InitOneInherited(self, item) \
@@ -168,8 +172,12 @@ INTDEF DeeTypeObject DeeSeqPair_Type;
 #define DeeSeq_InitPair_inplace(self) (void)0
 #define DeeSeq_FiniPair_inplace(self) (void)0
 #else /* __INTELLISENSE__ */
-#define DeeSeq_InitPair_inplace(self) (void)DeeObject_Init(self, &DeeSeqPair_Type)
+#define DeeSeq_InitPair_inplace(self) (void)DeeObject_InitStatic(self, &DeeSeqPair_Type)
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+#define DeeSeq_FiniPair_inplace(self) (void)0
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define DeeSeq_FiniPair_inplace(self) (void)Dee_DecrefNokill(&DeeSeqPair_Type)
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #ifdef __INTELLISENSE__
@@ -211,11 +219,11 @@ DFUNDEF ATTR_RETNONNULL NONNULL((1, 2, 3)) DREF DeeObject *
 #define DeeSeq_FreePairUninitialized(self) DeeObject_FREE(Dee_REQUIRES_TYPE(DeeSeqPairObject *, self))
 #define DeeSeq_InitPairInherited(self, a, b)               \
 	((self)->sp_items[0] = (a), (self)->sp_items[1] = (b), \
-	 DeeObject_Init(self, &DeeSeqPair_Type), Dee_AsObject(self))
+	 DeeObject_InitStatic(self, &DeeSeqPair_Type), Dee_AsObject(self))
 #define DeeSeq_InitPair(self, a, b)            \
 	(Dee_Incref(a), (self)->sp_items[0] = (a), \
 	 Dee_Incref(b), (self)->sp_items[1] = (b), \
-	 DeeObject_Init(self, &DeeSeqPair_Type), Dee_AsObject(self))
+	 DeeObject_InitStatic(self, &DeeSeqPair_Type), Dee_AsObject(self))
 #endif /* !__INTELLISENSE__ */
 #else /* CONFIG_ENABLE_SEQ_PAIR_TYPE */
 #define DeeSeq_InitPairInherited(self, a, b) \

@@ -39,7 +39,7 @@
 #include <deemon/thread.h>             /* DeeThreadObject, DeeThread_Self, Dee_except_frame, Dee_thread_object, except_frame_gettb */
 #include <deemon/traceback.h>          /* DeeFrame_NewReferenceWithLock, DeeFrame_Type, DeeTraceback*, Dee_FRAME_FREADONLY, empty_traceback_object */
 #include <deemon/tuple.h>              /* DeeTupleObject */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
 #include <deemon/util/lock.h>          /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_init */
@@ -94,7 +94,7 @@ DeeTraceback_New(struct Dee_thread_object *__restrict thread) {
 
 	/* TODO: This somehow needs support for functions running under _hostasm. */
 	/* TODO: This somehow needs support for functions running under _strexec. */
-	DeeObject_Init(result, &DeeTraceback_Type);
+	DeeObject_InitStatic(result, &DeeTraceback_Type);
 	result->tb_numframes = thread->t_execsz;
 	result->tb_thread    = thread;
 	Dee_Incref(thread);
@@ -725,7 +725,7 @@ traceback_iter(DeeTracebackObject *__restrict self) {
 	result = DeeObject_MALLOC(TraceIterator);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &DeeTracebackIterator_Type);
+	DeeObject_InitStatic(result, &DeeTracebackIterator_Type);
 	result->ti_next  = self->tb_frames + self->tb_numframes - 1;
 	result->ti_trace = self;
 	Dee_Incref(self);

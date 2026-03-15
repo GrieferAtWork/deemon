@@ -49,7 +49,7 @@ __map_iter__.map_operator_iter([[nonnull]] DeeObject *__restrict self)
 	result->dmi_tp_nextpair = DeeType_RequireNativeOperator(itertyp, nextpair);
 	result->dmi_iter        = iter; /* Inherit reference */
 	Dee_simple_hashset_with_lock_init(&result->dmi_encountered);
-	DeeObject_Init(result, &DistinctMappingIterator_Type);
+	DeeObject_InitStatic(result, &DistinctMappingIterator_Type);
 	return Dee_AsObject(DeeGC_TRACK(DistinctMappingIterator, result));
 err_iter:
 	Dee_Decref(iter);

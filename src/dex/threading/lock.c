@@ -43,7 +43,7 @@
 #include <deemon/system-features.h> /* memset */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt, DeeThread_GetTimeMicroSeconds */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_Visitv, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>     /* Dee_ATOMIC_RELAXED, Dee_ATOMIC_SEQ_CST, atomic_* */
 #include <deemon/util/lock.h>       /* Dee_atomic_lock_t, Dee_atomic_rwlock_t, Dee_event_*, Dee_semaphore_*, Dee_shared_lock_t, Dee_shared_rwlock_t, _Dee_semaphore_waiting_wakemany */
 #include <deemon/util/rlock.h>      /* Dee_ratomic_lock_t, Dee_ratomic_rwlock_t, Dee_rshared_lock_t, Dee_rshared_rwlock_t */
@@ -1186,7 +1186,7 @@ rwlock_readlock_get(DeeObject *__restrict self) {
 		goto done;
 	result->grwl_lock = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeRWLockReadLock_Type);
+	DeeObject_InitStatic(result, &DeeRWLockReadLock_Type);
 done:
 	return result;
 }
@@ -1199,7 +1199,7 @@ rwlock_writelock_get(DeeObject *__restrict self) {
 		goto done;
 	result->grwl_lock = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &DeeRWLockWriteLock_Type);
+	DeeObject_InitStatic(result, &DeeRWLockWriteLock_Type);
 done:
 	return result;
 }
@@ -2192,7 +2192,7 @@ lock_union_allocator_pack(struct lock_union_allocator *__restrict self) {
 		if unlikely(!result)
 			result = self->lua_union;
 	}
-	DeeObject_Init(result, &DeeLockUnion_Type);
+	DeeObject_InitStatic(result, &DeeLockUnion_Type);
 	DBG_memset(self, 0xcc, sizeof(*self));
 	return result;
 }

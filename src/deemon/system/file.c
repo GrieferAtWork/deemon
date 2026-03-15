@@ -27,7 +27,7 @@
 #include <deemon/bool.h>            /* return_bool, return_false, return_true */
 #include <deemon/error-rt.h>        /* DeeRT_ErrTUnboundAttr */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPEN_F* */
+#include <deemon/file.h>            /* DeeFileObject, DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeFile_*, DeeSystem_FILE_USE_*, Dee_FILEIO_FNONBLOCKING, Dee_FILE_OBJECT_HEAD_INIT, Dee_SEEK_CUR, Dee_SEEK_SET, Dee_STD*, Dee_fd_*, Dee_ioflag_t, FILE_OPERATOR_*, GETC_EOF, GETC_ERR, OPEN_F* */
 #include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf, PRFxPTR */
 #include <deemon/int.h>             /* DeeInt_NewInt, DeeInt_NewUIntptr */
@@ -377,7 +377,7 @@ DeeFile_OpenFd(Dee_fd_t fd, /*String*/ DeeObject *filename,
 	Dee_XIncref(filename);
 #endif /* DeeSystem_FILE_USE_stdio_FILE */
 
-	DeeFileObject_Init(result, &DeeSystemFile_Type);
+	DeeFileObject_InitStatic(result, &DeeSystemFile_Type);
 done:
 	return Dee_AsObject(result);
 #endif /* !DeeSystem_FILE_USE_STUB */
@@ -638,7 +638,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto err_fp;
-	DeeFileObject_Init(result, &DeeFSFile_Type);
+	DeeFileObject_InitStatic(result, &DeeFSFile_Type);
 	result->sf_handle    = hFile;
 	result->sf_ownhandle = hFile;    /* Inherit handle. */
 	result->sf_filename  = filename; /* Inherit reference. */
@@ -821,7 +821,7 @@ err:
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto err_fd;
-	DeeFileObject_Init(result, &DeeFSFile_Type);
+	DeeFileObject_InitStatic(result, &DeeFSFile_Type);
 	result->sf_handle    = (Dee_fd_t)fd;
 	result->sf_ownhandle = (Dee_fd_t)fd; /* Inherit stream. */
 	result->sf_filename  = filename;
@@ -890,7 +890,7 @@ err:
 	result->sf_ownhandle = fp; /* Inherit stream. */
 	result->sf_filename  = filename;
 	Dee_Incref(filename);
-	DeeFileObject_Init(result, &DeeFSFile_Type);
+	DeeFileObject_InitStatic(result, &DeeFSFile_Type);
 	return Dee_AsObject(result);
 err_unsupported_mode:
 	DeeError_Throwf(&DeeError_UnsupportedAPI,

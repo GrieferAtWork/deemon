@@ -36,7 +36,7 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_*, Dee_EmptySet */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/hash.h>          /* Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
@@ -824,7 +824,7 @@ su_iter(SetUnion *__restrict self) {
 	result->sui_in2nd = false;
 	result->sui_union = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SetUnionIterator_Type);
+	DeeObject_InitStatic(result, &SetUnionIterator_Type);
 	return DeeGC_TRACK(SetUnionIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
@@ -1204,7 +1204,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result->ssd_in2nd = false;
 	result->ssd_set   = self;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SetSymmetricDifferenceIterator_Type);
+	DeeObject_InitStatic(result, &SetSymmetricDifferenceIterator_Type);
 	return DeeGC_TRACK(SetSymmetricDifferenceIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
@@ -1547,7 +1547,7 @@ si_iter(SetIntersection *__restrict self) {
 	Dee_Incref(self);
 	result->sii_intersect = self;
 	result->sii_other     = self->si_b;
-	DeeObject_Init(result, &SetIntersectionIterator_Type);
+	DeeObject_InitStatic(result, &SetIntersectionIterator_Type);
 done:
 	return result;
 err_r:
@@ -1812,7 +1812,7 @@ sd_iter(SetDifference *__restrict self) {
 	result->sdi_diff  = self;
 	result->sdi_other = self->sd_b;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SetDifferenceIterator_Type);
+	DeeObject_InitStatic(result, &SetDifferenceIterator_Type);
 done:
 	return result;
 err_r:

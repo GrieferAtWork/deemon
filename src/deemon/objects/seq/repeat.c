@@ -34,7 +34,7 @@
 #include <deemon/operator-hints.h>     /* DeeNO_foreach_pair_t, DeeNO_foreach_t, DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_EmptySeq, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
@@ -432,7 +432,7 @@ repeat_iter(Repeat *__restrict self) {
 	result->rpi_num = self->rp_num - 1;
 	Dee_atomic_rwlock_init(&result->rpi_lock);
 	Dee_Incref(self);
-	DeeObject_Init(result, &SeqRepeatIterator_Type);
+	DeeObject_InitStatic(result, &SeqRepeatIterator_Type);
 	return DeeGC_TRACK(RepeatIterator, result);
 err_r:
 	DeeGCObject_FREE(result);
@@ -612,7 +612,7 @@ repeat_get_frozen(Repeat *__restrict self) {
 		goto err_inner;
 	result->rp_seq = inner_frozen; /* Inherit reference */
 	result->rp_num = self->rp_num;
-	DeeObject_Init(result, &SeqRepeat_Type);
+	DeeObject_InitStatic(result, &SeqRepeat_Type);
 	return result;
 err_inner:
 	Dee_Decref(inner_frozen);
@@ -898,7 +898,7 @@ repeatitem_iter(RepeatItem *__restrict self) {
 	result->rii_obj = self->rpit_obj;
 	result->rii_num = self->rpit_num;
 	Dee_Incref(self);
-	DeeObject_Init(result, &SeqRepeatItemIterator_Type);
+	DeeObject_InitStatic(result, &SeqRepeatItemIterator_Type);
 done:
 	return result;
 }
@@ -1140,7 +1140,7 @@ DeeSeq_Repeat(DeeObject *__restrict self, size_t count) {
 	Dee_Incref(self);
 	result->rp_seq = self;
 	result->rp_num = count;
-	DeeObject_Init(result, &SeqRepeat_Type);
+	DeeObject_InitStatic(result, &SeqRepeat_Type);
 done:
 	return Dee_AsObject(result);
 }
@@ -1156,7 +1156,7 @@ DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
 	Dee_Incref(item);
 	result->rpit_obj = item;
 	result->rpit_num = count;
-	DeeObject_Init(result, &SeqRepeatItem_Type);
+	DeeObject_InitStatic(result, &SeqRepeatItem_Type);
 done:
 	return Dee_AsObject(result);
 }

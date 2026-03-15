@@ -32,7 +32,7 @@
 #include <deemon/operator-hints.h>     /* DeeType_RequireNativeOperator */
 #include <deemon/seq.h>                /* DeeSeq_NewEmpty, DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial, DeeSerial_Addr2Mem, Dee_seraddr_t */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_member, type_seq */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_member, type_seq */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include "../../runtime/runtime_error.h"
@@ -557,7 +557,7 @@ de_sos_gif__iter(DefaultEnumeration *__restrict self) {
 		goto err_r;
 	ASSERT(result->disgi_tp_getitem_index || !result->disgi_end);
 	Dee_Incref(self->de_seq);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -587,7 +587,7 @@ dewif_sos_gif__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 		result->disgi_end = self->dewif_end;
 	ASSERT(result->disgi_tp_getitem_index || !result->disgi_end);
 	Dee_Incref(self->dewif_seq);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndGetItemIndexFastPair_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -613,7 +613,7 @@ de_sos_sotgi__iter(DefaultEnumeration *__restrict self) {
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err_r;
 	Dee_Incref(self->de_seq);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -641,7 +641,7 @@ dewif_sos_sotgi__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	if (result->disgi_end > self->dewif_end)
 		result->disgi_end = self->dewif_end;
 	Dee_Incref(self->dewif_seq);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndTryGetItemIndexPair_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -667,7 +667,7 @@ de_sos_sogi__iter(DefaultEnumeration *__restrict self) {
 	if unlikely(result->disgi_end == (size_t)-1)
 		goto err_r;
 	Dee_Incref(self->de_seq);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -695,7 +695,7 @@ dewif_sos_soii__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	if (result->disgi_end > self->dewif_end)
 		result->disgi_end = self->dewif_end;
 	Dee_Incref(self->dewif_seq);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -724,7 +724,7 @@ de_soso_sog__iter(DefaultEnumeration *__restrict self) {
 	Dee_Incref(self->de_seq);
 	result->disg_seq = self->de_seq;
 	Dee_atomic_lock_init(&result->disg_lock);
-	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItemPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeObAndGetItemPair_Type);
 	return DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result);
 err_r_end:
 	Dee_Decref(result->disg_end);
@@ -749,7 +749,7 @@ de_sogi__iter(DefaultEnumeration *__restrict self) {
 	result->digi_tp_getitem_index = DeeType_RequireMethodHint(Dee_TYPE(self->de_seq), seq_operator_getitem_index);
 	Dee_Incref(self->de_seq);
 	result->digi_seq = self->de_seq;
-	DeeObject_Init(result, &DefaultIterator_WithGetItemIndexPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithGetItemIndexPair_Type);
 	return result;
 err:
 	return NULL;
@@ -771,7 +771,7 @@ dewif_soii__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 	result->disgi_index = self->dewif_start;
 	result->disgi_end   = self->dewif_end;
 	Dee_Incref(self->dewif_seq);
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndGetItemIndexPair_Type);
 	return result;
 err:
 	return NULL;
@@ -806,7 +806,7 @@ dewf_soso_sog__iter(DefaultEnumerationWithFilter *__restrict self) {
 	Dee_Incref(self->dewf_seq);
 	result->disg_seq = self->dewf_seq;
 	Dee_atomic_lock_init(&result->disg_lock);
-	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItemPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeObAndGetItemPair_Type);
 	return DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result);
 err_r_end:
 	Dee_Decref(result->disg_end);
@@ -832,7 +832,7 @@ de_sog__iter(DefaultEnumeration *__restrict self) {
 	Dee_Incref(self->de_seq);
 	result->dig_seq = self->de_seq;
 	Dee_atomic_lock_init(&result->dig_lock);
-	DeeObject_Init(result, &DefaultIterator_WithGetItemPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithGetItemPair_Type);
 	return DeeGC_TRACK(DefaultIterator_WithGetItem, result);
 err:
 	return NULL;
@@ -857,7 +857,7 @@ dewf_sog__iter(DefaultEnumerationWithFilter *__restrict self) {
 	Dee_Incref(self->dewf_end);
 	result->disg_end = self->dewf_end;
 	Dee_atomic_lock_init(&result->disg_lock);
-	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItemPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeObAndGetItemPair_Type);
 	return DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result);
 err:
 	return NULL;
@@ -879,7 +879,7 @@ de_soi__iter(DefaultEnumeration *__restrict self) {
 		goto err_r;
 	result->dinc_tp_next = DeeType_RequireNativeOperator(Dee_TYPE(result->dinc_iter), iter_next);
 	result->dinc_counter = 0;
-	DeeObject_Init(result, &DefaultIterator_WithNextAndCounterPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithNextAndCounterPair_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -906,7 +906,7 @@ dewif_soi__iter(DefaultEnumerationWithIntFilter *__restrict self) {
 		goto err_r_iter;
 	result->dincl_counter = self->dewif_start;
 	result->dincl_limit   = self->dewif_end;
-	DeeObject_Init(result, &DefaultIterator_WithNextAndCounterAndLimitPair_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithNextAndCounterAndLimitPair_Type);
 	return result;
 err_r_iter:
 	Dee_Decref(result->dincl_iter);
@@ -969,7 +969,7 @@ dewf_moi__iter(DefaultEnumerationWithFilter *__restrict self) {
 	result->dinuf_start = self->dewf_start;
 	Dee_Incref(self->dewf_end);
 	result->dinuf_end = self->dewf_end;
-	DeeObject_Init(result, &DefaultIterator_WithNextAndUnpackFilter_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithNextAndUnpackFilter_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -995,7 +995,7 @@ de_mik_mog__iter(DefaultEnumeration *__restrict self) {
 	result->diikgi_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_getitem);
 	Dee_Incref(self->de_seq);
 	result->diikgi_seq = self->de_seq;
-	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithIterKeysAndGetItemMap_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);
@@ -1033,7 +1033,7 @@ de_mik_motg__iter(DefaultEnumeration *__restrict self) {
 	result->diikgi_tp_getitem = DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_trygetitem);
 	Dee_Incref(self->de_seq);
 	result->diikgi_seq = self->de_seq;
-	DeeObject_Init(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithIterKeysAndTryGetItemMap_Type);
 	return result;
 err_r:
 	DeeObject_FREE(result);

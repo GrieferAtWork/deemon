@@ -33,7 +33,7 @@
 #include <deemon/operator-hints.h>     /* DeeType_RequireSupportedNativeOperator */
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_Type, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_GETITEM, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_GETITEM, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_*, type_* */
 
 #include "../../runtime/runtime_error.h"
 #include "default-reversed.h"
@@ -436,7 +436,7 @@ rs_gii_getrange_index(DefaultReversed_WithGetItemIndex *__restrict self,
 	result->drwgii_seq  = self->drwgii_seq;
 	result->drwgii_max  = self->drwgii_max - range.sr_start;
 	result->drwgii_size = range.sr_end - range.sr_start;
-	DeeObject_Init(result, Dee_TYPE(self));
+	DeeObject_InitStatic(result, Dee_TYPE(self));
 	return result;
 err:
 	return NULL;
@@ -457,7 +457,7 @@ rs_gii_getrange_index_n(DefaultReversed_WithGetItemIndex *__restrict self,
 	result->drwgii_seq  = self->drwgii_seq;
 	result->drwgii_max  = self->drwgii_max - used_start;
 	result->drwgii_size = self->drwgii_size - used_start;
-	DeeObject_Init(result, Dee_TYPE(self));
+	DeeObject_InitStatic(result, Dee_TYPE(self));
 	return result;
 err:
 	return NULL;

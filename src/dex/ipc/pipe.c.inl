@@ -28,7 +28,7 @@
 
 #include <deemon/alloc.h>           /* DeeObject_FREE, DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/arg.h>             /* DeeArg_Unpack0Or1X, UNPuSIZ */
-#include <deemon/file.h>            /* DeeFileObject_Init, DeeFileTypeObject, DeeFileType_Type, DeeSystemFile_Type, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd */
+#include <deemon/file.h>            /* DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeSystemFile_Type, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd */
 #include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
 #include <deemon/format.h>          /* PRFu32 */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeTypeObject, Dee_AsObject, OBJECT_HEAD_INIT */
@@ -173,8 +173,8 @@ pipe_new_impl(size_t pipe_size) {
 	reader_file->sf_filename = NULL;
 	writer_file->sf_filename = NULL;
 #endif /* DeeSystemFile_HAVE_sf_filename */
-	DeeFileObject_Init(reader_file, &DeePipeReader_Type);
-	DeeFileObject_Init(writer_file, &DeePipeWriter_Type);
+	DeeFileObject_InitStatic(reader_file, &DeePipeReader_Type);
+	DeeFileObject_InitStatic(writer_file, &DeePipeWriter_Type);
 	return DeeSeq_InitPairInherited(result,
 	                                Dee_AsObject(reader_file),
 	                                Dee_AsObject(writer_file));

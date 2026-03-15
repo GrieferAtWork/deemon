@@ -26,7 +26,7 @@
 
 #include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_OBJECT_HEAD, Dee_WEAKREF_SUPPORT */
 #if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
-#include "object.h" /* Dee_Incref */
+#include "object.h" /* Dee_DecrefNokill, Dee_Incref */
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
 
 DECL_BEGIN
@@ -55,11 +55,17 @@ DDATDEF DeeObject DeeNone_Singleton;
 #define DeeNone_Check(x)      (Dee_AsObject(x) == Dee_None) /* `none' is a singleton. */
 #define DeeNone_CheckExact(x) (Dee_AsObject(x) == Dee_None)
 
+#ifdef __INTELLISENSE__
+DFUNDEF void DCALL DeeNone_Incref(void);
+DFUNDEF void DCALL DeeNone_Decref(void);
+#else /* __INTELLISENSE__ */
+#define DeeNone_Incref() Dee_Incref(&DeeNone_Singleton)
+#define DeeNone_Decref() Dee_DecrefNokill(&DeeNone_Singleton)
+#endif /* !__INTELLISENSE__ */
+
 /* No-op/none function pointers */
 DFUNDEF ATTR_RETNONNULL WUNUSED DREF DeeObject *(DCALL DeeNone_NewRef)(void);
-#if !defined(__OPTIMIZE_SIZE__) && !defined(__INTELLISENSE__)
-#define DeeNone_NewRef() (Dee_Incref(&DeeNone_Singleton), (DeeObject *)&DeeNone_Singleton)
-#endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
+#define DeeNone_NewRef() (DeeNone_Incref(), (DeeObject *)&DeeNone_Singleton)
 #define Dee_return_none return DeeNone_NewRef()
 
 DECL_END

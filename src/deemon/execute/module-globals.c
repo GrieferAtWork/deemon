@@ -35,7 +35,7 @@
 #include <deemon/pair.h>               /* DeeSeq_OfPairInherited */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/string.h>             /* DeeString* */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FCONSTCALL, METHOD_FNOREFESCAPE, STRUCT_OBJECT_AB, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak, atomic_read */
 
 #include "../objects/generic-proxy.h"
@@ -465,7 +465,7 @@ modexports_iter(ModuleExports *__restrict self) {
 	result->mei_module = self->me_module;
 	result->mei_index  = 0;
 	Dee_Incref(result->mei_module);
-	DeeObject_Init(result, &ModuleExportsIterator_Type);
+	DeeObject_InitStatic(result, &ModuleExportsIterator_Type);
 done:
 	return result;
 }
@@ -479,7 +479,7 @@ modexports_iterkeys(ModuleExports *__restrict self) {
 	result->mei_module = self->me_module;
 	result->mei_index  = 0;
 	Dee_Incref(result->mei_module);
-	DeeObject_Init(result, &ModuleExportsKeysIterator_Type);
+	DeeObject_InitStatic(result, &ModuleExportsKeysIterator_Type);
 done:
 	return result;
 }

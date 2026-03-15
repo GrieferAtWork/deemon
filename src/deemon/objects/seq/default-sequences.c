@@ -36,7 +36,7 @@
 #include <deemon/seq.h>                /* DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_*, Dee_seq_range */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/thread.h>             /* DeeThread_CheckInterrupt */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, OPERATOR_*, STRUCT_*, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, TYPE_METHOD_END, type_* */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include <hybrid/overflow.h> /* OVERFLOW_UADD, OVERFLOW_USUB */
@@ -168,7 +168,7 @@ ds_sgi_iter(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	result->disgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->disgi_index            = self->dssgi_start;
 	result->disgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -185,7 +185,7 @@ ds_sgif_iter(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	result->disgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->disgi_index            = self->dssgi_start;
 	result->disgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFast_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndGetItemIndexFast_Type);
 	return result;
 err:
 	return NULL;
@@ -202,7 +202,7 @@ ds_stgi_iter(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	result->disgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->disgi_index            = self->dssgi_start;
 	result->disgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeAndTryGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -732,7 +732,7 @@ ds_sgi_getrange_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + range.sr_start;
 	result->dssgi_end              = self->dssgi_start + range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -755,7 +755,7 @@ ds_sgif_getrange_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + range.sr_start;
 	result->dssgi_end              = self->dssgi_start + range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
 	return result;
 err:
 	return NULL;
@@ -778,7 +778,7 @@ ds_stgi_getrange_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + range.sr_start;
 	result->dssgi_end              = self->dssgi_start + range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -800,7 +800,7 @@ ds_sgi_getrange_index_n(DefaultSequence_WithSizeAndGetItemIndex *__restrict self
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + used_start;
 	result->dssgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -822,7 +822,7 @@ ds_sgif_getrange_index_n(DefaultSequence_WithSizeAndGetItemIndex *__restrict sel
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + used_start;
 	result->dssgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
 	return result;
 err:
 	return NULL;
@@ -844,7 +844,7 @@ ds_stgi_getrange_index_n(DefaultSequence_WithSizeAndGetItemIndex *__restrict sel
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + used_start;
 	result->dssgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -1284,7 +1284,7 @@ ds_sg_iter(DefaultSequence_WithSizeObAndGetItem *__restrict self) {
 	result->disg_index      = self->dssg_start;
 	result->disg_end        = self->dssg_end;
 	Dee_atomic_lock_init(&result->disg_lock);
-	DeeObject_Init(result, &DefaultIterator_WithSizeObAndGetItem_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithSizeObAndGetItem_Type);
 	return DeeGC_TRACK(DefaultIterator_WithSizeObAndGetItem, result);
 err:
 	return NULL;
@@ -1379,7 +1379,7 @@ ds_sg_getrange(DefaultSequence_WithSizeObAndGetItem *self, DeeObject *start, Dee
 	result->dssg_start      = clamed_start_and_end_pair[0]; /* Inherit reference */
 	result->dssg_end        = clamed_start_and_end_pair[1]; /* Inherit reference */
 	result->dssg_tp_getitem = self->dssg_tp_getitem;
-	DeeObject_Init(result, &DefaultSequence_WithSizeObAndGetItem_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithSizeObAndGetItem_Type);
 	return result;
 err_clamed_start_and_end_pair:
 	Dee_Decref(clamed_start_and_end_pair[1]);
@@ -1973,7 +1973,7 @@ ds_i_getrange_index(DefaultSequence_WithIter *self, Dee_ssize_t start, Dee_ssize
 	result->dsial_start   = range.sr_start;
 	result->dsial_limit   = range.sr_end - range.sr_start;
 	result->dsial_tp_iter = self->dsi_tp_iter; /* Fast-forward the underlying sequence */
-	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithIterAndLimit_Type);
 	return Dee_AsObject(result);
 empty_seq:
 	return DeeSeq_NewEmpty();
@@ -2001,7 +2001,7 @@ ds_i_getrange_index_n(DefaultSequence_WithIter *self, Dee_ssize_t start) {
 	result->dsial_start   = used_start;
 	result->dsial_limit   = (size_t)-1;
 	result->dsial_tp_iter = self->dsi_tp_iter; /* Fast-forward the underlying sequence */
-	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithIterAndLimit_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2036,7 +2036,7 @@ ds_ial_iter(DefaultSequence_WithIterAndLimit *__restrict self) {
 	result->dinl_iter    = iter; /* Inherit reference */
 	result->dinl_tp_next = iter_next;
 	result->dinl_limit   = self->dsial_limit;
-	DeeObject_Init(result, &DefaultIterator_WithNextAndLimit_Type);
+	DeeObject_InitStatic(result, &DefaultIterator_WithNextAndLimit_Type);
 	return Dee_AsObject(result);
 err_iter_no_iter_next:
 	err_unimplemented_operator(Dee_TYPE(iter), OPERATOR_ITERNEXT);
@@ -2136,7 +2136,7 @@ ds_ial_getrange_index(DefaultSequence_WithIterAndLimit *__restrict self,
 	result->dsial_tp_iter = self->dsial_tp_iter;
 	result->dsial_start   = self->dsial_start + range.sr_start;
 	result->dsial_limit   = range.sr_end - range.sr_start;
-	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithIterAndLimit_Type);
 	return Dee_AsObject(result);
 err:
 	return NULL;
@@ -2167,7 +2167,7 @@ ds_ial_getrange_index_n(DefaultSequence_WithIterAndLimit *__restrict self,
 	result->dsial_limit   = self->dsial_limit - start;
 	if (self->dsial_limit == (size_t)-1)
 		result->dsial_limit = (size_t)-1;
-	DeeObject_Init(result, &DefaultSequence_WithIterAndLimit_Type);
+	DeeObject_InitStatic(result, &DefaultSequence_WithIterAndLimit_Type);
 	return result;
 err:
 	return NULL;

@@ -43,7 +43,7 @@
 #include <deemon/int.h>       /* DeeInt_NewInt64, INT_SIGNED */
 #include <deemon/object.h>    /* DREF, DeeObject, DeeObject_AsDouble, Dee_AsObject, OBJECT_HEAD, OBJECT_HEAD_INIT */
 #include <deemon/string.h>    /* DeeString_Newf */
-#include <deemon/type.h>      /* DeeObject_Init, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_SIGNED, TF_NONE, TP_F* */
+#include <deemon/type.h>      /* DeeObject_InitStatic, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_SIGNED, TF_NONE, TP_F* */
 #include <deemon/util/lock.h> /* Dee_ATOMIC_RWLOCK_INIT */
 
 #include <stddef.h> /* NULL, size_t */
@@ -167,7 +167,7 @@ float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
 	result = DeeObject_MALLOC(Float_double_object);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, DeeSType_AsType(&DeeCDouble_Type));
+	DeeObject_InitStatic(result, DeeSType_AsType(&DeeCDouble_Type));
 	result->f_value = val;
 done:
 	return Dee_AsObject(result);
@@ -182,7 +182,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL LOCAL_fltnew(DEFINE_T val) {
 	result = DeeObject_MALLOC(LOCAL_Float);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, DeeSType_AsType(&DEFINE_TYPE_NAME));
+	DeeObject_InitStatic(result, DeeSType_AsType(&DEFINE_TYPE_NAME));
 	result->f_value = val;
 done:
 	return Dee_AsObject(result);

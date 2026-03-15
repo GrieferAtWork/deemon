@@ -52,7 +52,7 @@ err:
 		goto err_r;
 	itertyp            = Dee_TYPE(result->dipsi_iter);
 	result->dipsi_next = DeeType_RequireNativeOperator(itertyp, nextvalue);
-	DeeObject_Init(result, &DefaultIterator_WithNextValue);
+	DeeObject_InitStatic(result, &DefaultIterator_WithNextValue);
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);

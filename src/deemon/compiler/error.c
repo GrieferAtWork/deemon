@@ -36,7 +36,7 @@
 #include <deemon/string.h>            /* Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer* */
 #include <deemon/thread.h>            /* DeeThreadObject, DeeThread_Self, Dee_except_frame, Dee_except_frame_free, except_frame_gettb */
 #include <deemon/traceback.h>         /* DeeTracebackObject */
-#include <deemon/type.h>              /* DeeObject_Init, DeeObject_IsInterrupt */
+#include <deemon/type.h>              /* DeeObject_InitStatic, DeeObject_IsInterrupt */
 #include <deemon/util/weakref.h>      /* Dee_weakref_initempty, Dee_weakref_set */
 
 #include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
@@ -705,7 +705,7 @@ handle_compiler_warning(struct ast_loc *loc,
 	{
 		DeeTypeObject *error_type;
 		error_type = get_warning_error_class(wnum);
-		DeeObject_Init(error, error_type);
+		DeeObject_InitStatic(error, error_type);
 	}
 
 	/* Finally, throw the error as a parser-error. */

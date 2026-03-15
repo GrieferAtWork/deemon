@@ -38,7 +38,7 @@
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeq_Unpack */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/tuple.h>              /* DeeTuple_Newf */
-#include <deemon/type.h>               /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, OPERATOR_GETITEM, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
+#include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC, Dee_Visit, Dee_visit_t, OPERATOR_GETITEM, OPERATOR_ITERNEXT, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_* */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric, DeeObject_Id, Dee_HashCombine */
 #include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
@@ -2833,7 +2833,7 @@ di_nX_getseq(DefaultIterator_WithNextAndLimit *__restrict self,
 	if unlikely(!result)
 		goto err_map;
 	result->dsmp_map = map;
-	DeeObject_Init(result, map_proxy_type);
+	DeeObject_InitStatic(result, map_proxy_type);
 	return result;
 err_map:
 	Dee_Decref(map);

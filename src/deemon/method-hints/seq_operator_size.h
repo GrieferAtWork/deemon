@@ -66,7 +66,7 @@ err:
 	if unlikely(status < 0)
 		goto err_r;
 	if (DeeNone_Check(result)) {
-		Dee_DecrefNokill(Dee_None);
+		DeeNone_Decref();
 		return DeeInt_NewZero();
 	}
 	if (DeeObject_Inc(&result))

@@ -46,7 +46,7 @@
 #include <deemon/system.h>          /* DeeNTSystem_* */
 #include <deemon/thread.h>          /* DeeThread_CheckInterrupt */
 #include <deemon/tuple.h>           /* DeeTuple* */
-#include <deemon/type.h>            /* DeeObject_Init, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_UNSIGNED, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_UINTPTR_T, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_* */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, INT_UNSIGNED, METHOD_FNORMAL, METHOD_FPURECALL, STRUCT_UINTPTR_T, TF_NONE, TP_FNORMAL, TYPE_MEMBER_END, TYPE_MEMBER_FIELD, type_* */
 #include <deemon/util/atomic.h>     /* atomic_read, atomic_write */
 #include <deemon/util/hash.h>       /* Dee_HashPointer */
 
@@ -873,7 +873,7 @@ libwin32_CreateHandle(HANDLE hHandle) {
 	if unlikely(!result)
 		goto done;
 	result->ho_handle = hHandle;
-	DeeObject_Init(result, &DeeHandle_Type);
+	DeeObject_InitStatic(result, &DeeHandle_Type);
 done:
 	return Dee_AsObject(result);
 }
