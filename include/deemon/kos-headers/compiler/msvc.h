@@ -346,7 +346,6 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #define __builtin_unreachable() __assume(0)
 #define __COMPILER_ALIGNOF_IS___alignof
 #define __COMPILER_ALIGNOF __alignof
-#define __builtin_offsetof(s, m) ((__SIZE_TYPE__) & ((s *)0)->m)
 #define __ATTR_INLINE_IS___inline
 #define __ATTR_INLINE      __inline
 #define __ATTR_FORCEINLINE_IS___FORCEINLINE
@@ -381,6 +380,46 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #define __UINT32_TYPE__ unsigned __int32
 #define __INT64_TYPE__  signed __int64
 #define __UINT64_TYPE__ unsigned __int64
+
+#ifndef _CRT_USE_BUILTIN_OFFSETOF
+#if !__has_builtin(__builtin_offsetof)
+#if (defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || \
+     defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64) ||     \
+     defined(_WIN64) || defined(WIN64))
+#define __builtin_offsetof(s, m) ((unsigned __int64)&((s *)0)->m)
+#else /* ... */
+#define __builtin_offsetof(s, m) ((unsigned int)&((s *)0)->m)
+#endif /* !... */
+#endif /* !__has_builtin(__builtin_offsetof) */
+
+/* Force MSVC's <stddef.h> to use our __builtin_offsetof under c++,
+ * instead of its pre-defined one.
+ *
+ * Why do we want this, and why do we care?
+ *
+ * The reason here is simple: msvc's definition of `offsetof' under
+ * c++ SUCKS! - It works (technically), and we don't do this so-as
+ * to support some kind of warning. The way in which msvc's version
+ * sucks is in that it causes additional code to be generated when
+ * `offsetof' is used in static initializers:
+ * >> // Under c++, this initialization happens via a runtime
+ * >> // constructor, rather than via proper static initialization
+ * >> static size_t off = offsetof(MyStruct, my_field);
+ */
+#if defined(__cplusplus) && !defined(__INTELLISENSE__)
+#ifndef _INC_STDDEF
+#if (!defined(__KOS_SYSTEM_HEADERS__) && _MSC_VER >= 1942 && \
+     (defined(__NO_has_include) || __has_include(<stddef.h>)))
+#include <stddef.h>
+#endif /* ... */
+#endif /* !_INC_STDDEF */
+#ifdef _INC_STDDEF
+#undef offsetof
+#define offsetof __builtin_offsetof
+#endif /* _INC_STDDEF */
+#endif /* __cplusplus && !__INTELLISENSE__ */
+#endif /* !_CRT_USE_BUILTIN_OFFSETOF */
+
 
 #ifndef __USER_LABEL_PREFIX__
 #if (defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || \
