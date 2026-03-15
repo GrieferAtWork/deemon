@@ -23,9 +23,14 @@
 #include <deemon/api.h>
 
 #ifdef CONFIG_EXPERIMENTAL_USE_TP_NEW
+#include <deemon/object.h> /* DREF, DeeObject, DeeTypeObject, Dee_Decref */
+#include <deemon/tuple.h>  /* DeeTuple* */
+#include <deemon/type.h>   /* Dee_tp_new_copy_t, Dee_tp_new_kw_t, Dee_tp_new_t */
 
-#include <deemon/alloc.h>  /* Dee_Free, Dee_TryCalloc */
-#include <deemon/object.h> /* ASSERT_OBJECT, ASSERT_OBJECT_AT, DREF, DeeObject, DeeObject_Check, DeeTypeObject, Dee_Decref*, Dee_Incref*, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_refcnt_t */
+#include <hybrid/host.h> /* __ARCH_VA_LIST_IS_STACK_POINTER */
+
+#include <stdarg.h> /* va_end, va_list, va_start */
+#include <stddef.h> /* NULL, size_t */
 
 DECL_BEGIN
 
