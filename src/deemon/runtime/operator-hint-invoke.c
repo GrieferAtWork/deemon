@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/bool.h>            /* DeeBool*, Dee_False, Dee_True, return_bool */
+#include <deemon/bool.h>            /* DeeBool*, Dee_CONFIG_BOOL_TLS, Dee_False, Dee_True, return_bool */
 #include <deemon/int.h>             /* DeeInt_Type */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_Decref, Dee_Decref_unlikely, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, return_reference_ */
 #include <deemon/operator-hints.h>  /* DeeNO_*_t, _DeeType_RequireNativeOperator, maketyped__* */

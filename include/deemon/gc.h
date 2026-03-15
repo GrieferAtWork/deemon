@@ -38,7 +38,7 @@
 #include <hybrid/typecore.h> /* __BYTE_TYPE__, __SIZEOF_POINTER__ */
 
 #include "types.h"            /* DREF, DeeObject, Dee_AsObject, Dee_funptr_t */
-#include "util/slab-config.h" /* Dee_SLAB_CHUNKSIZE_GC_FOREACH, Dee_SLAB_CHUNKSIZE_MAX */
+#include "util/slab-config.h" /* Dee_SLAB_CHUNKSIZE_GC_FOREACH, Dee_SLAB_CHUNKSIZE_MAX, _Dee_PRIVATE_SLAB_GC_SELECT */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
@@ -504,15 +504,6 @@ DFUNDEF void *(DCALL DeeDbgGCObject_UntrackAlloc)(void *p, char const *file, int
 Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_DeeGCObject_API, ~)
 #undef _Dee_PRIVATE_DeeGCObject_API
 
-
-#ifndef _Dee_PRIVATE_SLAB_SELECT_X
-#define _Dee_PRIVATE_SLAB_SELECT_UNPACK(N, PREFIX, f, SUFFIX) N, PREFIX, f, SUFFIX
-#define _Dee_PRIVATE_SLAB_SELECT_Z(n, N, PREFIX, f, SUFFIX)   n >= (N) ? (PREFIX f##n SUFFIX):
-#define _Dee_PRIVATE_SLAB_SELECT_Y(args)                      _Dee_PRIVATE_SLAB_SELECT_Z args
-#define _Dee_PRIVATE_SLAB_SELECT_X(n, args)                   _Dee_PRIVATE_SLAB_SELECT_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
-#endif /* !_Dee_PRIVATE_SLAB_SELECT_X */
-#define _Dee_PRIVATE_SLAB_GC_SELECT(N, PREFIX, f, SUFFIX, else) \
-	(Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_SLAB_SELECT_X, (N, PREFIX, f, SUFFIX)) else)
 
 /* Check if an object-size of "N" is supported for slab allocation */
 #ifdef Dee_SLAB_CHUNKSIZE_MAX

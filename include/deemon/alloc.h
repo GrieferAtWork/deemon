@@ -53,7 +53,7 @@
 #include "api.h"
 
 #include "types.h"            /* Dee_AsObject, Dee_funptr_t */
-#include "util/slab-config.h" /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_MAX */
+#include "util/slab-config.h" /* Dee_SLAB_CHUNKSIZE_FOREACH, Dee_SLAB_CHUNKSIZE_MAX, _Dee_PRIVATE_SLAB_SELECT */
 
 #ifdef __CC__
 #include <hybrid/__debug-alignment.h> /* __NO_hybrid_dbg_alignment, __hybrid_dbg_alignment_disable, __hybrid_dbg_alignment_enable */
@@ -576,15 +576,6 @@ DFUNDEF NONNULL((1)) void
 Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_PRIVATE_DeeSlab_API, ~)
 #undef _Dee_PRIVATE_DeeSlab_API
 #endif /* __CC__ */
-
-#ifndef _Dee_PRIVATE_SLAB_SELECT_X
-#define _Dee_PRIVATE_SLAB_SELECT_UNPACK(N, PREFIX, f, SUFFIX) N, PREFIX, f, SUFFIX
-#define _Dee_PRIVATE_SLAB_SELECT_Z(n, N, PREFIX, f, SUFFIX)   n >= (N) ? (PREFIX f##n SUFFIX):
-#define _Dee_PRIVATE_SLAB_SELECT_Y(args)                      _Dee_PRIVATE_SLAB_SELECT_Z args
-#define _Dee_PRIVATE_SLAB_SELECT_X(n, args)                   _Dee_PRIVATE_SLAB_SELECT_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
-#endif /* !_Dee_PRIVATE_SLAB_SELECT_X */
-#define _Dee_PRIVATE_SLAB_SELECT(N, PREFIX, f, SUFFIX, else) \
-	(Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_PRIVATE_SLAB_SELECT_X, (N, PREFIX, f, SUFFIX)) else)
 
 /* Check if an object-size of "N" is supported for slab allocation */
 #ifdef Dee_SLAB_CHUNKSIZE_MAX

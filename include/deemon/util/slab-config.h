@@ -131,4 +131,100 @@ for (local s: typesBySize.keys.sorted()) {
 
 #endif /* CONFIG_EXPERIMENTAL_REWORKED_SLAB_ALLOCATOR */
 
+
+
+#ifndef _Dee_PRIVATE_SLAB_SELECT_X
+#define _Dee_PRIVATE_SLAB_SELECT_UNPACK(N, PREFIX, f, SUFFIX) N, PREFIX, f, SUFFIX
+#define _Dee_PRIVATE_SLAB_SELECT_Z(n, N, PREFIX, f, SUFFIX)   n >= (N) ? (PREFIX f##n SUFFIX):
+#define _Dee_PRIVATE_SLAB_SELECT_Y(args)                      _Dee_PRIVATE_SLAB_SELECT_Z args
+#define _Dee_PRIVATE_SLAB_SELECT_X(n, args)                   _Dee_PRIVATE_SLAB_SELECT_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
+#endif /* !_Dee_PRIVATE_SLAB_SELECT_X */
+
+#ifdef __INTELLISENSE__
+/* ... */
+#elif (defined(_MSC_VER) && !defined(__clang__) && \
+       defined(__cplusplus) && !defined(__NO_builtin_choose_expr))
+/* Use some compiler magic to force compile-time evaluation of the appropriate
+ * expression in `_Dee_PRIVATE_SLAB_SELECT()' macro expansions, when the "N"
+ * argument is a compile-time constant.
+ *
+ * Without this, MSVC will actually generate code for all dead branches in:
+ * >> void *p = sizeof(FOO) <= 4 ? &a : sizeof(FOO) <= 8 ? &b : sizeof(FOO) <= 12 ? &c : ...;
+ * Instead of just evaluating "sizeof(FOO)" at compile-time, and only emitting
+ * the branch that is actually reachable (no idea why it does this).
+ *
+ * Anyways: by doing this special handling here, debug builds of deemon are
+ *          almost 500KiB smaller than without this trick, which is kind-of
+ *          important since this get rids of lots of bloat that'd only be
+ *          there to ruin performance metrics, coverage, and easy of debugging
+ *
+ * Explanation: See BCE implementation below (this one does pretty much the same
+ *              using the same trick used to implement __builtin_constant_p and
+ *              __builtin_choose_expr using MSVC's __if_exists extension)
+ *
+ * As a matter of fact: without this hack/work-around here, MSVC will emit runtime
+ * code to facilitate initialization of "Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC", and
+ * in turn: initialization of pretty much every statically defined "DeeTypeObject",
+ * including the ability to set breakpoints within the static initializers (which
+ * is a completely unnecessary and useless thing to be able to do). */
+#define _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Z(n, N, PREFIX, f, SUFFIX) \
+	__STATIC_IF(n>=(N)){(PREFIX f##n SUFFIX)}__STATIC_ELSE(n>=(N)){ /* Closed by `_Dee_PRIVATE_SLAB_SELECT_MSVC_CLOS' */
+#define _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Y(args)  _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Z args
+#define _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN(n, args) _Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
+#define _Dee_PRIVATE_SLAB_SELECT_MSVC_CLOS(n, _) }
+#define _Dee_PRIVATE_SLAB_SELECT_IMPL(foreach, N, PREFIX, f, SUFFIX, else)     \
+	__if_exists(::__intern::__msvc_static_if<!!(N) || !(N)>::__is_true__)      \
+	{(foreach(_Dee_PRIVATE_SLAB_SELECT_MSVC_OPEN, (N, PREFIX, f, SUFFIX)) else \
+	  foreach(_Dee_PRIVATE_SLAB_SELECT_MSVC_CLOS, ~))}                         \
+	__if_not_exists(::__intern::__msvc_static_if<!!(N) || !(N)>::__is_true__)  \
+	{(foreach(_Dee_PRIVATE_SLAB_SELECT_X, (N, PREFIX, f, SUFFIX)) else)}
+#define _Dee_PRIVATE_SLAB_SELECT(N, PREFIX, f, SUFFIX, else) \
+	_Dee_PRIVATE_SLAB_SELECT_IMPL(Dee_SLAB_CHUNKSIZE_FOREACH, N, PREFIX, f, SUFFIX, else)
+#define _Dee_PRIVATE_SLAB_GC_SELECT(N, PREFIX, f, SUFFIX, else) \
+	_Dee_PRIVATE_SLAB_SELECT_IMPL(Dee_SLAB_CHUNKSIZE_GC_FOREACH, N, PREFIX, f, SUFFIX, else)
+#elif (!defined(__NO_builtin_constant_p) &&  \
+       !defined(__NO_builtin_choose_expr) && \
+       !defined(__builtin_choose_expr))
+/* BCE = BuiltinChooseExpr
+ *
+ * Force compile-time branch selection (when possible) by doing:
+ * >> __builtin_choose_expr(
+ * >>     __builtin_constant_p(N),
+ * >>     __builtin_choose_expr(4   >= (N), PREFIX f##4   SUFFIX,
+ * >>     __builtin_choose_expr(8   >= (N), PREFIX f##8   SUFFIX,
+ * >>     __builtin_choose_expr(12  >= (N), PREFIX f##12  SUFFIX,
+ * >>     __builtin_choose_expr(... >= (N), PREFIX f##... SUFFIX,
+ * >>                           else
+ * >>     )))),
+ * >>     4   >= (N) ? PREFIX f##4   SUFFIX :
+ * >>     8   >= (N) ? PREFIX f##8   SUFFIX :
+ * >>     12  >= (N) ? PREFIX f##12  SUFFIX :
+ * >>     ... >= (N) ? PREFIX f##... SUFFIX :
+ * >>     else
+ * >> )
+ */
+#define _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Z(n, N, PREFIX, f, SUFFIX) \
+	__builtin_choose_expr(n>=(N), PREFIX f##n SUFFIX, /* Closed by `_Dee_PRIVATE_SLAB_SELECT_BCE_CLOS' */
+#define _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Y(args)  _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Z args
+#define _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN(n, args) _Dee_PRIVATE_SLAB_SELECT_BCE_OPEN_Y((n, _Dee_PRIVATE_SLAB_SELECT_UNPACK args))
+#define _Dee_PRIVATE_SLAB_SELECT_BCE_CLOS(n, _) )
+#define _Dee_PRIVATE_SLAB_SELECT_IMPL(foreach, N, PREFIX, f, SUFFIX, else)                        \
+	__builtin_choose_expr(__builtin_constant_p(N),                                                \
+	                      foreach(_Dee_PRIVATE_SLAB_SELECT_BCE_OPEN, (N, PREFIX, f, SUFFIX)) else \
+	                      foreach(_Dee_PRIVATE_SLAB_SELECT_BCE_CLOS, ~),                          \
+	                      foreach(_Dee_PRIVATE_SLAB_SELECT_X, (N, PREFIX, f, SUFFIX)) else)
+#define _Dee_PRIVATE_SLAB_SELECT(N, PREFIX, f, SUFFIX, else) \
+	_Dee_PRIVATE_SLAB_SELECT_IMPL(Dee_SLAB_CHUNKSIZE_FOREACH, N, PREFIX, f, SUFFIX, else)
+#define _Dee_PRIVATE_SLAB_GC_SELECT(N, PREFIX, f, SUFFIX, else) \
+	_Dee_PRIVATE_SLAB_SELECT_IMPL(Dee_SLAB_CHUNKSIZE_GC_FOREACH, N, PREFIX, f, SUFFIX, else)
+#endif /* ... */
+
+#ifndef _Dee_PRIVATE_SLAB_SELECT
+#define _Dee_PRIVATE_SLAB_SELECT(N, PREFIX, f, SUFFIX, else) \
+	(Dee_SLAB_CHUNKSIZE_FOREACH(_Dee_PRIVATE_SLAB_SELECT_X, (N, PREFIX, f, SUFFIX)) else)
+#define _Dee_PRIVATE_SLAB_GC_SELECT(N, PREFIX, f, SUFFIX, else) \
+	(Dee_SLAB_CHUNKSIZE_GC_FOREACH(_Dee_PRIVATE_SLAB_SELECT_X, (N, PREFIX, f, SUFFIX)) else)
+#endif /* !_Dee_PRIVATE_SLAB_SELECT */
+
+
 #endif /* !GUARD_DEEMON_UTIL_SLAB_CONFIG_H */

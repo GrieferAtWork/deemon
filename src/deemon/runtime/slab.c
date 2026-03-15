@@ -91,7 +91,7 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/types.h>            /* DeeObject, Dee_ssize_t */
 #include <deemon/util/atomic.h>      /* atomic_read */
 #include <deemon/util/lock.h>        /* Dee_atomic_rwlock_* */
-#include <deemon/util/slab-config.h> /* Dee_SLAB_* */
+#include <deemon/util/slab-config.h> /* Dee_SLAB_*, _Dee_PRIVATE_SLAB_SELECT */
 #include <deemon/util/slab.h>        /* Dee_SIZEOF_SLAB_PAGE_META, Dee_SLAB_PAGESIZE, Dee_slab_page, Dee_slab_page_* */
 
 #include <hybrid/align.h>         /* CEILDIV, IS_ALIGNED, IS_POWER_OF_TWO */

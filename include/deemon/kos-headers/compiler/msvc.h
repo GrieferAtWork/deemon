@@ -311,12 +311,19 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 	__if_not_exists(::__intern::__msvc_static_if<((c))>::__is_true__)
 /* Use our hacky `static_if' to emulate `__builtin_choose_expr' */
 #define __builtin_choose_expr(c, tt, ff) (__STATIC_IF(c){tt} __STATIC_ELSE(c){ff})
+#if 0 /* This (kind-of) works, but isn't actually useful since it can
+       * only detect immediate constants (but not inlined constants) */
+#define __builtin_constant_p(x) \
+	(0 __if_exists(::__intern::__msvc_static_if<!!(x) || !(x)>::__is_true__){+1})
+#endif
 #else /* __cplusplus */
 #define __STATIC_IF(x)   __pragma(warning(suppress : 4127)) if(x)
 #define __STATIC_ELSE(x) __pragma(warning(suppress : 4127)) if(x)
 #define __NO_builtin_choose_expr
 #define __builtin_choose_expr(c, tt, ff) ((c) ? (tt) : (ff))
 #endif /* !__cplusplus */
+#define __NO_builtin_constant_p
+#define __builtin_constant_p(x) (__LINE__ == -1)
 
 #define __NO_builtin_types_compatible_p
 #define __builtin_types_compatible_p(...) 1
@@ -351,8 +358,6 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #define __EXTERN_FORCEINLINE static __forceinline
 #define __LONGLONG           long long
 #define __ULONGLONG          unsigned long long
-#define __NO_builtin_constant_p
-#define __builtin_constant_p(x) (__LINE__ == -1)
 #define __restrict_arr __restrict
 #define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS
 #if 0 && _MSC_VER >= 800 /* VC++ 2.0 and newer always allowed for 0-sized arrays as an extension */
