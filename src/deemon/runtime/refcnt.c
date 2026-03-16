@@ -79,7 +79,7 @@ DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%#" PRFXSIZ ")\n",
 	            ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
-	if (DeeObject_Check(type) && DeeType_Check(type)) {
+	if (type && DeeObject_Check(type) && DeeType_Check(type)) {
 		Dee_DPRINTF("type : %s (%p)", DeeType_GetName(type), type);
 	} else {
 		Dee_DPRINTF("type : <INVALID> - %p", type);
@@ -99,7 +99,7 @@ DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n",
 	            ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
-	if (DeeObject_Check(type) && DeeType_Check(type)) {
+	if (type && DeeObject_Check(type) && DeeType_Check(type)) {
 		Dee_DPRINTF("type : %s (%p)", DeeType_GetName(type), type);
 	} else {
 		Dee_DPRINTF("type : <INVALID> - %p", type);
@@ -537,7 +537,7 @@ PUBLIC NONNULL((1)) void
 		Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DESTROY(%p)\n",
 		            file, line, self);
 		Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n", self->ob_refcnt, self->ob_refcnt);
-		if (DeeObject_Check(type) && DeeType_Check(type)) {
+		if (type && DeeObject_Check(type) && DeeType_Check(type)) {
 			Dee_DPRINTF("type : %s (%p)", DeeType_GetName(type), type);
 		} else {
 			Dee_DPRINTF("type : <INVALID> - %p", type);

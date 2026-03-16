@@ -98,6 +98,7 @@ bsi_init(BytesSplitIterator *__restrict self,
 		self->bsi_iter = NULL;
 	self->bsi_sep_ptr = self->bsi_split->bs_sep_ptr;
 	self->bsi_sep_len = self->bsi_split->bs_sep_len;
+	Dee_Incref(self->bsi_split);
 	return 0;
 err:
 	return -1;
@@ -403,8 +404,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bs_init(BytesSplit *__restrict self, size_t argc,
-        DeeObject *const *argv) {
+bs_init(BytesSplit *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeArg_Unpack2(err, argc, argv, "_BytesSplit", &self->bs_bytes, &self->bs_sep_owner);
 	if (DeeObject_AssertTypeExact(self->bs_bytes, &DeeBytes_Type))
 		goto err;
@@ -735,7 +735,7 @@ DeeBytes_Split(Bytes *self, DeeObject *sep) {
 	DREF BytesSplit *result;
 	result = DeeObject_MALLOC(BytesSplit);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	if (DeeString_Check(sep)) {
 		result->bs_sep_ptr = DeeString_AsBytes(sep, false);
 		if unlikely(!result->bs_sep_ptr)
@@ -752,10 +752,10 @@ DeeBytes_Split(Bytes *self, DeeObject *sep) {
 	Dee_Incref(self);
 	Dee_Incref(sep);
 	DeeObject_InitStatic(result, &BytesSplit_Type);
-done:
 	return Dee_AsObject(result);
 err_r:
 	DeeObject_FREE(result);
+err:
 	return NULL;
 handle_empty_sep:
 	DeeObject_FREE(result);
