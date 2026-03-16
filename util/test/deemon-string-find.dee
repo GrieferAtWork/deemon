@@ -121,9 +121,8 @@ function t(x, w) {
 	assert x.caserpartition(w("xxx"))[2] === x;
 	test.assertSequence(x.split(w("xxx")), { x });
 	test.assertSequence(x.casesplit(w("xxx")), { x });
-	// TODO: NotImplemented: Operator `import.deemon._BytesFind.operator copy' is not implemented
-//	test.assertSequence(x.findall(w("xxx")), { });
-//	test.assertSequence(x.casefindall(w("xxx")), { });
+	test.assertSequence(x.findall(w("xxx")), { });
+	test.assertSequence(x.casefindall(w("xxx")), { });
 	assert x.split(w("xxx")) == { x };
 	assert x.casesplit(w("xxx")) == { x };
 	assert x.findall(w("xxx")) == { };

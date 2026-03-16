@@ -456,6 +456,15 @@ bf_ctor(BytesFind *__restrict self) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bf_copy(BytesFind *__restrict self, BytesFind *__restrict other) {
+	self->bf_needle = other->bf_needle;
+	self->bf_start  = other->bf_start;
+	self->bf_end    = other->bf_end;
+	self->bf_ovrlap = other->bf_ovrlap;
+	return generic_proxy2__copy_alias12((ProxyObject2 *)self, (ProxyObject2 *)other);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bf_init(BytesFind *__restrict self,
         size_t argc, DeeObject *const *argv) {
@@ -666,7 +675,7 @@ INTERN DeeTypeObject BytesFind_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ BytesFind,
 			/* tp_ctor:        */ &bf_ctor,
-			/* tp_copy_ctor:   */ NULL,
+			/* tp_copy_ctor:   */ &bf_copy,
 			/* tp_any_ctor:    */ &bf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bf_serialize
@@ -723,7 +732,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ BytesFind,
 			/* tp_ctor:        */ &bf_ctor,
-			/* tp_copy_ctor:   */ NULL,
+			/* tp_copy_ctor:   */ &bf_copy,
 			/* tp_any_ctor:    */ &bf_init,
 			/* tp_any_ctor_kw: */ NULL,
 			/* tp_serialize:   */ &bf_serialize
@@ -818,7 +827,6 @@ err_r:
 	DeeObject_FREE(result);
 	return NULL;
 }
-
 
 DECL_END
 
