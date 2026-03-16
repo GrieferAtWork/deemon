@@ -253,6 +253,9 @@ DeeNone_ReturnFalse(DeeObject *UNUSED(self), DeeObject *UNUSED(other)) {
 #define DeeNone_OperatorVarCopy    (*(DREF DeeObject *(DCALL *)(DeeObject *__restrict))&_DeeNone_NewRef1)
 #define DeeNone_OperatorVarInit    (*(DREF DeeObject *(DCALL *)(size_t, DeeObject *const *))&_DeeNone_NewRef2)
 #define DeeNone_OperatorVarInitKw  (*(DREF DeeObject *(DCALL *)(size_t, DeeObject *const *, DeeObject *))&_DeeNone_NewRef3)
+#define DeeNone_OperatorNewInit    (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, size_t, DeeObject *const *))&_DeeNone_NewRef3)
+#define DeeNone_OperatorNewInitKw  (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, size_t, DeeObject *const *, DeeObject *))&_DeeNone_NewRef4)
+#define DeeNone_OperatorNewCopy    (*(DREF DeeObject *(DCALL *)(DeeTypeObject *, DeeObject *))&_DeeNone_NewRef2)
 #define DeeNone_OperatorInv        DeeNone_OperatorVarCopy
 #define DeeNone_OperatorPos        DeeNone_OperatorVarCopy
 #define DeeNone_OperatorNeg        DeeNone_OperatorVarCopy
@@ -1030,6 +1033,9 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 		/* .tp_dtor        = */ NULL,
 		/* .tp_assign      = */ &DeeNone_OperatorAssign,
 		/* .tp_move_assign = */ &DeeNone_OperatorMoveAssign,
+		/* .tp_new         = */ &DeeNone_OperatorNewInit,
+		/* .tp_new_kw      = */ &DeeNone_OperatorNewInitKw,
+		/* .tp_new_copy    = */ &DeeNone_OperatorNewCopy,
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ &DeeNone_OperatorStr,
