@@ -32,7 +32,7 @@
 #include <deemon/gc.h>                 /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGCObject_TRYMALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/int.h>                /* DeeInt_* */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti0_1, _DeeNone_reti0_2 */
 #include <deemon/none.h>               /* Dee_None, return_none */
@@ -3933,7 +3933,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(Dict),
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
 			/* T:              */ Dict,

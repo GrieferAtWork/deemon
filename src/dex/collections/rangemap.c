@@ -33,7 +33,7 @@
 #include <deemon/error.h>         /* DeeError_IntegerOverflow, DeeError_Throwf */
 #include <deemon/format.h>        /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/int.h>           /* _DeeInt_Zero */
-#include <deemon/map.h>           /* DeeMapping_Type */
+#include <deemon/map.h>           /* DeeMap_Type */
 #include <deemon/none-operator.h> /* DeeNone_Operator* */
 #include <deemon/none.h>          /* return_none */
 #include <deemon/object.h>        /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Clear, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_OBJECT_HEAD_INIT, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD, OBJECT_HEAD_INIT, _Dee_HashSelectC, return_reference_ */
@@ -423,7 +423,7 @@ rangemap_iterator_get(DeeTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_iterself(DeeObject *__restrict self) {
-	if unlikely(Dee_TYPE(self) == &DeeMapping_Type) {
+	if unlikely(Dee_TYPE(self) == &DeeMap_Type) {
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
 		return DeeIterator_NewEmpty();
@@ -791,7 +791,7 @@ INTERN DeeTypeObject RangeMap_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeObject,
@@ -2061,7 +2061,7 @@ INTERN DeeTypeObject RangeMapMapItems_Type = {
 };
 
 PRIVATE DeeTypeObject *tpconst rmapping_asmap_mro[] = {
-	&DeeMapping_Type,
+	&DeeMap_Type,
 	&RangeMapProxy_Type,
 	&DeeSeq_Type,
 	&DeeObject_Type,

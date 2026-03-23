@@ -22,7 +22,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/map.h>       /* DeeMapping_Type */
+#include <deemon/map.h>       /* DeeMap_Type */
 #include <deemon/object.h>    /* DREF, DeeObject, DeeObject_InstanceOfExact, DeeTypeObject, Dee_AsObject */
 #include <deemon/util/lock.h> /* Dee_atomic_rwlock_* */
 
@@ -38,7 +38,7 @@ DECL_BEGIN
  * NOTE: This function isn't guarantied to capture any kind of empty map,
  *       only maps that are meant to symbolically represent an empty one.
  * This map is represented as `{}' */
-#define DeeMap_CheckEmpty(x) DeeObject_InstanceOfExact(x, &DeeMapping_Type)
+#define DeeMap_CheckEmpty(x) DeeObject_InstanceOfExact(x, &DeeMap_Type)
 
 typedef struct {
 	PROXY_OBJECT_HEAD2(mu_a,  /* [1..1][const] The first map of the union. */

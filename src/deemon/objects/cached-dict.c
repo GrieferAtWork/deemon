@@ -31,7 +31,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/gc.h>                 /* DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/map.h>                /* DeeMapping_NewEmpty, DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_NewEmpty, DeeMap_Type */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ISEQ, Dee_COMPARE_ISERR, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_XDecref_unlikely, Dee_XIncref, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_ISOK, Dee_seraddr_t */
 #include <deemon/string.h>             /* DeeString* */
@@ -66,7 +66,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cdict_ctor(CachedDict *__restrict self) {
 	self->cd_mask = 0;
 	self->cd_size = 0;
-	self->cd_map  = DeeMapping_NewEmpty();
+	self->cd_map  = DeeMap_NewEmpty();
 	self->cd_elem = empty_cdict_items;
 	Dee_atomic_rwlock_init(&self->cd_lock);
 	return 0;
@@ -1151,7 +1151,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
 			/* T:              */ CachedDict,

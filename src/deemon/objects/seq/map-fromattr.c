@@ -28,7 +28,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_Err* */
 #include <deemon/error.h>              /* DeeError_* */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/mro.h>                /* DeeObject_IterAttr, Dee_ATTRPERM_F_NAMEOBJ, Dee_ITERATTR_DEFAULT_BUFSIZE, Dee_attrdesc, Dee_attrdesc_fini, Dee_attrdesc_nameobj, Dee_attrhint, Dee_attrhint_initall, Dee_attriter_*, _Dee_attrdesc_fini_WITHOUT_NAME */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>             /* DeeObject_*, Dee_BOUND_MISSING, Dee_Decref, Dee_Incref */
@@ -524,7 +524,7 @@ INTERN DeeTypeObject MapFromAttr_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ MapFromAttr,

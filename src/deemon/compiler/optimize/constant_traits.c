@@ -52,7 +52,7 @@
 #include <deemon/callable.h>  /* DeeCallable_Type */
 #include <deemon/cell.h>      /* DeeCell_Type */
 #include <deemon/error.h>     /* DeeError_* */
-#include <deemon/map.h>       /* DeeMapping_Type, Dee_EmptyMapping */
+#include <deemon/map.h>       /* DeeMap_Type, Dee_EmptyMap */
 #include <deemon/numeric.h>   /* DeeNumeric_Type */
 #include <deemon/seq.h>       /* DeeIterator_Type, DeeSeq_Type, Dee_EmptySeq */
 #include <deemon/set.h>       /* Dee_EmptySet */
@@ -125,7 +125,7 @@ PRIVATE DeeObject *tpconst legacy_Dec_BuiltinID[] = {
 	Dee_AsObject(&DeeError_BufferError),
 	Dee_AsObject(&DeeObject_Type),
 	Dee_AsObject(&DeeSeq_Type),
-	Dee_AsObject(&DeeMapping_Type),
+	Dee_AsObject(&DeeMap_Type),
 	Dee_AsObject(&DeeIterator_Type),
 	Dee_AsObject(&DeeCallable_Type),
 	Dee_AsObject(&DeeNumeric_Type),
@@ -138,7 +138,7 @@ PRIVATE DeeObject *tpconst legacy_Dec_BuiltinID[] = {
 	Dee_True,
 	Dee_EmptySeq,
 	Dee_EmptySet,
-	Dee_EmptyMapping,
+	Dee_EmptyMap,
 	Dee_AsObject(&DeeType_Type),
 	Dee_AsObject(&DeeTraceback_Type),
 	Dee_AsObject(&DeeThread_Type),

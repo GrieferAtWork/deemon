@@ -31,7 +31,7 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ, PRFxSIZ */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/int.h>                /* DeeInt_NEWU, DeeInt_NewSize */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* Dee_None */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Incref_n, Dee_TYPE, Dee_foreach_pair_t, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_neT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference, return_reference_ */
@@ -2087,7 +2087,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW, /* RoDict offers KW-support (because items cannot be removed, values can be loaded as NOREF) */
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &rodict_ctor,

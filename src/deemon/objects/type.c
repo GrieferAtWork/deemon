@@ -37,7 +37,7 @@
 #include <deemon/gc.h>                 /* DeeGCSlab_Free, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>                /* DeeInt_NewSize */
 #include <deemon/kwds.h>               /* DeeKwds*, Dee_kwds_entry */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/module.h>             /* DeeModuleObject, DeeModule_OfPointer, Dee_module_object */
 #include <deemon/mro.h>                /* DeeType_Bound*Attr*, DeeType_Call*Attr*, DeeType_Del*Attr*, DeeType_FindAttr, DeeType_FindAttrInfoStringLenHash, DeeType_Get*Attr*, DeeType_Has*Attr*, DeeType_IterAttr, DeeType_QueryAttributeHash, DeeType_QueryInstanceAttributeHash, DeeType_Set*Attr*, DeeType_VCallAttrStringHashf, DeeType_VCallAttrf, Dee_attrdesc, Dee_attrhint, Dee_attrinfo, Dee_attriter, Dee_attrspec, Dee_membercache_fini, Dee_membercache_init */
@@ -2054,7 +2054,7 @@ type_get_seqclass(DeeTypeObject *__restrict self) {
 		result = Dee_AsObject(&DeeSet_Type);
 		break;
 	case Dee_SEQCLASS_MAP:
-		result = Dee_AsObject(&DeeMapping_Type);
+		result = Dee_AsObject(&DeeMap_Type);
 		break;
 	default: __builtin_unreachable();
 	}

@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/format.h>          /* PRFuSIZ */
-#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/method-hints.h>    /* DeeObject_InvokeMethodHint */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_hash_t, Dee_ssize_t, return_reference */
 #include <deemon/seq.h>             /* DeeSeq_Type */
@@ -856,7 +856,7 @@ generic_obj__asset(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_obj__asmap(DeeObject *__restrict self) {
-	return DeeSuper_New(&DeeMapping_Type, self);
+	return DeeSuper_New(&DeeMap_Type, self);
 }
 
 

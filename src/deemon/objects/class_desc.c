@@ -33,7 +33,7 @@
 #include <deemon/format.h>             /* DeeFormat_*, PRFu16, PRFx16 */
 #include <deemon/instancemethod.h>     /* DeeInstanceMethod_NewInherited */
 #include <deemon/int.h>                /* DeeInt_* */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>             /* Dee_module_object */
 #include <deemon/mro.h>                /* DeeType_Query*Attribute*, Dee_ATTRINFO_ATTR, Dee_ATTRINFO_INSTANCE_ATTR, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrspec */
@@ -595,7 +595,7 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 	/* .tp_flags    = */ TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ ClassOperatorTable,
@@ -1336,7 +1336,7 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 	/* .tp_flags    = */ TP_FFINAL | TP_FDEEPIMMUTABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ ClassAttributeTable,

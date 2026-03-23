@@ -30,7 +30,7 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/computed-operators.h> /* DEFIMPL */
 #include <deemon/format.h>             /* DeeFormat_PrintOperatorRepr, DeeFormat_Printf */
-#include <deemon/map.h>                /* DeeMapping_NewEmpty, Dee_EmptyMapping */
+#include <deemon/map.h>                /* DeeMap_NewEmpty, Dee_EmptyMap */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT, TYPE_METHOD_HINT_END, type_method_hint */
 #include <deemon/mro.h>                /* Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attrspec */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT */
@@ -1157,7 +1157,7 @@ PRIVATE WUNUSED DREF LOCAL_SeqEach *DCALL LOCAL_seX(ctor)(void) {
 	result->sg_attr = (DREF DeeStringObject *)DeeString_NewEmpty();
 	result->sg_argc = 0;
 #ifdef DEFINE_SeqEachCallAttrKw
-	result->sg_kw   = DeeMapping_NewEmpty();
+	result->sg_kw   = DeeMap_NewEmpty();
 #endif /* DEFINE_SeqEachCallAttrKw */
 	DeeObject_InitStatic(result, &LOCAL_SeqEach_Type);
 done:
@@ -1193,7 +1193,7 @@ LOCAL_seX(init)(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	DeeObject *args = Dee_EmptyTuple;
 #ifdef DEFINE_SeqEachCallAttrKw
-	DeeObject *kw = Dee_EmptyMapping;
+	DeeObject *kw = Dee_EmptyMap;
 #endif /* DEFINE_SeqEachCallAttrKw */
 	if (DeeArg_Unpack(argc, argv,
 	                  "oo|o"

@@ -28,7 +28,7 @@
 #include <deemon/error.h>              /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/hashset.h>            /* DeeHashSet_FromSequence, DeeHashSet_Type */
 #include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* DeeMapping_Check */
+#include <deemon/map.h>                /* DeeMap_Check */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/object.h>             /* DREF, DeeObject, Dee_AsObject, Dee_Decref_likely */
 #include <deemon/rodict.h>             /* DeeRoDict_Type */
@@ -119,7 +119,7 @@ INTERN WUNUSED NONNULL((1)) int
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromSequenceOrMappingForContains(DeeObject *__restrict self) {
 	DREF DeeObject *keys, *result;
-	if (!DeeMapping_Check(self))
+	if (!DeeMap_Check(self))
 		return DeeRoSet_FromSequence(self);
 
 	/* `x in Mapping' checks if `x' is a key.

@@ -31,7 +31,7 @@
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/int.h>             /* DeeInt_NewUInt64 */
-#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/mro.h>             /* Dee_attrhint, Dee_attriter */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/object.h>          /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Decref*, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
@@ -501,7 +501,7 @@ INTERN DeeTypeObject DeeShLib_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ Shlib,

@@ -32,7 +32,7 @@
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_Type */
 #include <deemon/kwds.h>               /* DeeBlackListKw_New, DeeBlackListKwds*, DeeKwArgs, DeeKwds*, DeeObject_IsKw, DeeType_IsKw, Dee_kwds_entry */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/rodict.h>             /* DeeRoDict_NewEmpty, Dee_EmptyRoDict */
@@ -818,7 +818,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING | TF_KW, /* Instances of this type are allowed in "kw" arguments. */
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &kwds_ctor,
@@ -1540,7 +1540,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &kmap_ctor,

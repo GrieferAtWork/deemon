@@ -295,7 +295,7 @@ typedef struct {
 	 * >>			Dee_Incref(kw);
 	 * >>		}
 	 * >>	} else {
-	 * >>		kw = Dee_EmptyMapping;
+	 * >>		kw = Dee_EmptyMap;
 	 * >>		Dee_Incref(kw);
 	 * >>	}
 	 * >>	result = bar(argc, argv, kw);

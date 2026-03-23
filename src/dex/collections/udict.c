@@ -34,7 +34,7 @@
 #include <deemon/format.h>          /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/gc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
 #include <deemon/int.h>             /* DeeInt_NewSize */
-#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>            /* Dee_None */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_BOUND_YES, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_funptr_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
@@ -1325,7 +1325,7 @@ INTERN DeeTypeObject UDict_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(UDict),
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC(
 			/* T:              */ UDict,
@@ -2025,7 +2025,7 @@ INTERN DeeTypeObject URoDict_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &URoDict_New,

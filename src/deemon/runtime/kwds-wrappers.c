@@ -31,7 +31,7 @@
 #include <deemon/error.h>              /* DeeError_Throwf, DeeError_ValueError */
 #include <deemon/format.h>             /* PRFu16, PRFuSIZ */
 #include <deemon/kwds.h>               /* DeeBlackListKw*, DeeKw_*, DeeKwds*, Dee_kwds_entry */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_MISSING, Dee_COMPARE_ERR, Dee_Decref*, Dee_HAS_NO, Dee_HAS_YES, Dee_Incref, Dee_Movrefv, Dee_foreach_pair_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -989,7 +989,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
@@ -1899,7 +1899,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,

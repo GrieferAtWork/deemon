@@ -622,7 +622,7 @@ map_fromkeys(DeeTypeObject *self, size_t argc,
 	/* Special case: if the accessed mapping type isn't "Mapping" (iow:
 	 * the caller is calling <SubClassOfMapping>.fromkeys()), then cast
 	 * the produced wrapper into an instance of `SubClassOfMapping'. */
-	if (self != &DeeMapping_Type) {
+	if (self != &DeeMap_Type) {
 		DREF DeeObject *instance;
 		instance = DeeObject_New(self, 1, (DeeObject *const *)&result);
 		Dee_Decref_likely(result);
@@ -874,7 +874,7 @@ PRIVATE char const map_doc[] =
 
 
 /* `Mapping from deemon' */
-PUBLIC DeeTypeObject DeeMapping_Type = {
+PUBLIC DeeTypeObject DeeMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Mapping),
 	/* .tp_doc      = */ map_doc,
@@ -929,12 +929,12 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 
 /* An empty instance of a generic mapping object.
  * NOTE: This is _NOT_ a singleton. - Usercode may create more by
- *       calling the constructor of `DeeMapping_Type' with no arguments.
+ *       calling the constructor of `DeeMap_Type' with no arguments.
  *       Though this statically allocated instance is used by most
  *       internal sequence functions.
- * HINT: Any exact instance of `DeeMapping_Type' should be considered stub/empty. */
-PUBLIC DeeObject DeeMapping_EmptyInstance = {
-	OBJECT_HEAD_INIT(&DeeMapping_Type)
+ * HINT: Any exact instance of `DeeMap_Type' should be considered stub/empty. */
+PUBLIC DeeObject DeeMap_EmptyInstance = {
+	OBJECT_HEAD_INIT(&DeeMap_Type)
 };
 
 

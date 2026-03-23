@@ -29,7 +29,7 @@
 #include <deemon/compiler/lexer.h>    /* current_tags */
 #include <deemon/compiler/symbol.h>   /* DeeBaseScopeObject, DeeBaseScope_Type, SYMBOL_DEC_N*, SYMBOL_INC_N*, ast_loc, current_scope, lbl_free, symbol, text_label */
 #include <deemon/compiler/tpp.h>
-#include <deemon/map.h>               /* Dee_EmptyMapping */
+#include <deemon/map.h>               /* Dee_EmptyMap */
 #include <deemon/none.h>              /* Dee_None */
 #include <deemon/object.h>            /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE, DREF, DeeObject, DeeTypeObject, Dee_Decref, Dee_DecrefNokill, Dee_Incref, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>               /* Dee_EmptySeq */
@@ -367,7 +367,7 @@ got_result_maybe:
 			result = ast_constexpr(Dee_EmptySet);
 			goto got_result_maybe;
 		case AST_FMULTIPLE_GENERIC_MAP:
-			result = ast_constexpr(Dee_EmptyMapping);
+			result = ast_constexpr(Dee_EmptyMap);
 			goto got_result_maybe;
 		default: break;
 		}

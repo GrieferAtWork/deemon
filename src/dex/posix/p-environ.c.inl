@@ -32,7 +32,7 @@
 #include <deemon/bool.h>            /* return_bool */
 #include <deemon/dex.h>             /* DEXSYM_READONLY, DEX_MEMBER_F */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/none.h>            /* return_none */
 #include <deemon/notify.h>          /* DeeNotify_Broadcast, Dee_NOTIFICATION_CLASS_ENVIRON */
 #include <deemon/object.h>          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_AssertTypeExact, DeeObject_NewDefault, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_TYPE, Dee_XDecref, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
@@ -2260,7 +2260,7 @@ INTERN DeeTypeObject DeeEnviron_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ &environ_ctor,

@@ -43,7 +43,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/kwds.h>            /* DeeKw_ForceWrap, DeeKw_Wrap, DeeKwdsObject, DeeKwds_Type, DeeType_IsKw */
 #include <deemon/list.h>            /* DeeListObject, DeeList_* */
-#include <deemon/map.h>             /* DeeMapping_Type, DeeSharedMap_*, Dee_EmptyMapping */
+#include <deemon/map.h>             /* DeeMap_Type, DeeSharedMap_*, Dee_EmptyMap */
 #include <deemon/module.h>          /* DeeBuiltin_*, DeeModule*, Dee_MODSYM_F*, Dee_MODULE_PROPERTY_DEL, Dee_MODULE_PROPERTY_GET, Dee_MODULE_PROPERTY_SET, Dee_module_symbol, Dee_module_symbol_getindex */
 #include <deemon/mro.h>             /* DeeObject_TFindAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo, Dee_type_member_* */
 #include <deemon/none-operator.h>   /* DeeNone_OperatorCopy, DeeNone_OperatorCtor */
@@ -3573,7 +3573,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 
 	if (itemc == 0) {
 		/* Special case: use an empty sequence */
-		DeeObject *seq_or_map = asmap ? Dee_EmptyMapping : Dee_EmptyTuple;
+		DeeObject *seq_or_map = asmap ? Dee_EmptyMap : Dee_EmptyTuple;
 		DO(fg_vpush_const(self, seq_or_map));
 		return hasattr ? fg_vopcallattr(self, 1)
 		               : fg_vopcall(self, 1);
@@ -3585,7 +3585,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 	if (memval_isconst(funcval)) {
 		DeeObject *func = memval_const_getobj(funcval);
 		if (!hasattr && allow_vpackseq && DeeType_Check(func) &&
-		    (!!asmap == !!DeeType_Extends((DeeTypeObject *)func, &DeeMapping_Type)) &&
+		    (!!asmap == !!DeeType_Extends((DeeTypeObject *)func, &DeeMap_Type)) &&
 		    ((DeeTypeObject *)func == &DeeList_Type || (DeeTypeObject *)func == &DeeTuple_Type ||
 		     (DeeTypeObject *)func == &DeeDict_Type || (DeeTypeObject *)func == &DeeRoDict_Type ||
 		     (DeeTypeObject *)func == &DeeHashSet_Type || (DeeTypeObject *)func == &DeeRoSet_Type)) {
@@ -5354,7 +5354,7 @@ err_no_result_d_elem_template:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fg_vpackseq(struct fungen *__restrict self,
                                 DeeTypeObject *__restrict seq_type, vstackaddr_t elemc) {
-	unsigned int asmap = DeeType_Extends(seq_type, &DeeMapping_Type);
+	unsigned int asmap = DeeType_Extends(seq_type, &DeeMap_Type);
 	ASSERTF(!asmap || (elemc % 2) == 0,
 	        "Need an even number of elements for a mapping type");
 	DO(fg_vdirect(self, elemc));
@@ -6899,7 +6899,7 @@ is_constexpr_empty_sequence(struct fungen *__restrict gen,
 		return true;
 	if (tp_self == &DeeSet_Type)
 		return true;
-	if (tp_self == &DeeMapping_Type)
+	if (tp_self == &DeeMap_Type)
 		return true;
 	if (tp_self == &DeeRoDict_Type)
 		return ((DeeRoDictObject *)self)->rd_vsize == 0;

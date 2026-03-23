@@ -51,7 +51,7 @@
 #include <deemon/int.h>               /* DeeInt_* */
 #include <deemon/kwds.h>              /* DeeBlackListKw_Type, DeeBlackListKwds_Type, DeeKw_Wrap, DeeKwdsMapping_Type, DeeKwds_Type */
 #include <deemon/list.h>              /* DeeList_Type */
-#include <deemon/map.h>               /* DeeMapping_Type, DeeSharedMap_Type, Dee_EmptyMapping */
+#include <deemon/map.h>               /* DeeMap_Type, DeeSharedMap_Type, Dee_EmptyMap */
 #include <deemon/mapfile.h>           /* DeeMapFile_Type */
 #include <deemon/method-hints.h>      /* DeeMA___seq_enumerate___name, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>            /* DeeBuiltin_*, DeeInteractiveModule_Type, DeeModule* */
@@ -1185,7 +1185,7 @@ librt_get_SeqEachCallAttrKw_stub_instance(void) {
 	if likely(result) {
 		DREF DeeObject *temp;
 		temp = DeeObject_CallAttrKw(result, Dee_AsObject(&str_Iterator),
-		                            0, NULL, Dee_EmptyMapping);
+		                            0, NULL, Dee_EmptyMap);
 		Dee_Decref(result);
 		result = temp;
 	}
@@ -1265,7 +1265,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSomeCallAttrKw_stub_instance(void) {
 	return DeeObject_CallAttrKw(Dee_AsObject(&SeqSome_stub_instance),
 	                            Dee_AsObject(&str_Iterator), 0, NULL,
-	                            Dee_EmptyMapping);
+	                            Dee_EmptyMap);
 }
 
 
@@ -1574,7 +1574,7 @@ PRIVATE struct type_seq type_seq_with_getitem_formap = {
 	/* .tp_contains = */ NULL,
 	/* .tp_getitem  = */ my_custom_getitem_PTR,
 };
-PRIVATE DeeTypeObject type_with_iterkeys_and_getitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMapping_Type, &type_seq_with_getitem_formap, NULL, type_getset_with_iterkeys, NULL);
+PRIVATE DeeTypeObject type_with_iterkeys_and_getitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMap_Type, &type_seq_with_getitem_formap, NULL, type_getset_with_iterkeys, NULL);
 PRIVATE DeeObject object_with_iterkeys_and_getitem_formap = { OBJECT_HEAD_INIT(&type_with_iterkeys_and_getitem_formap) };
 
 
@@ -1609,13 +1609,13 @@ PRIVATE struct type_seq type_seq_with_trygetitem = {
 	/* .tp_setrange_index_n   = */ NULL,
 	/* .tp_trygetitem         = */ my_custom_getitem_PTR,
 };
-PRIVATE DeeTypeObject type_with_iterkeys_and_trygetitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMapping_Type, &type_seq_with_trygetitem, NULL, type_getset_with_iterkeys, NULL);
+PRIVATE DeeTypeObject type_with_iterkeys_and_trygetitem_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMap_Type, &type_seq_with_trygetitem, NULL, type_getset_with_iterkeys, NULL);
 PRIVATE DeeObject object_with_iterkeys_and_trygetitem_formap = { OBJECT_HEAD_INIT(&type_with_iterkeys_and_trygetitem_formap) };
 
 
 
 
-PRIVATE DeeTypeObject type_with_iter_and_size_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMapping_Type, &type_seq_with_iter_and_size, NULL, NULL, NULL);
+PRIVATE DeeTypeObject type_with_iter_and_size_formap = INIT_CUSTOM_SEQ_TYPE_EX(&DeeMap_Type, &type_seq_with_iter_and_size, NULL, NULL, NULL);
 PRIVATE DeeObject object_with_iter_and_size_formap = { OBJECT_HEAD_INIT(&type_with_iter_and_size_formap) };
 
 PRIVATE struct type_method_hint type_with_map_enumerate_method_hints[] = {
@@ -1635,7 +1635,7 @@ PRIVATE DeeTypeObject type_with_map_enumerate = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO(
 			/* T:              */ DeeObject,
@@ -2636,13 +2636,13 @@ librt_get_FrameSymbolsByNameKeysIterator_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapFromKeysAndValue_uncached_f(void) {
 	DeeObject *argv[] = { Dee_EmptySet, Dee_None };
-	return get_type_of(DeeObject_CallAttrStringHash(Dee_AsObject(&DeeMapping_Type), STR_AND_HASH(fromkeys), 2, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_AsObject(&DeeMap_Type), STR_AND_HASH(fromkeys), 2, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapFromKeysAndCallback_uncached_f(void) {
 	DeeObject *argv[] = { Dee_EmptySet, Dee_None, Dee_AsObject(&DeeFunction_EmptyYielding.ob) };
-	return get_type_of(DeeObject_CallAttrStringHash(Dee_AsObject(&DeeMapping_Type), STR_AND_HASH(fromkeys), 3, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_AsObject(&DeeMap_Type), STR_AND_HASH(fromkeys), 3, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2668,7 +2668,7 @@ librt_get_MapFromKeysAndCallbackIterator_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MapFromAttr_f(void) {
 	DeeObject *argv[] = { Dee_AsObject(&DeeFunction_EmptyYielding.ob) };
-	return get_type_of(DeeObject_CallAttrStringHash(Dee_AsObject(&DeeMapping_Type), STR_AND_HASH(fromattr), 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_AsObject(&DeeMap_Type), STR_AND_HASH(fromattr), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -3532,7 +3532,7 @@ DEX_MEMBER_F("Set_empty", Dee_EmptySet, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "A general-purpose, empty set singleton"),
 DEX_MEMBER_F("Set_universal", Dee_UniversalSet, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "A general-purpose, universal set singleton"),
-DEX_MEMBER_F("Mapping_empty", Dee_EmptyMapping, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
+DEX_MEMBER_F("Mapping_empty", Dee_EmptyMap, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "A general-purpose, empty mapping singleton"),
 DEX_MEMBER_F("RoDict_empty", Dee_EmptyRoDict, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "An empty instance of ?GRoDict"),
@@ -3585,7 +3585,7 @@ DEX_MEMBER_F_NODOC("Traceback", &DeeTraceback_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Frame", &DeeFrame_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Module", &DeeModule_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Set", &DeeSet_Type, DEXSYM_READONLY),
-DEX_MEMBER_F_NODOC("Mapping", &DeeMapping_Type, DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Mapping", &DeeMap_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Code", &DeeCode_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Function", &DeeFunction_Type, DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Type", &DeeType_Type, DEXSYM_READONLY),

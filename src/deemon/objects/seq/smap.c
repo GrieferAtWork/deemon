@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* DeeObject_*, Dee_Free, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TryMallocc */
 #include <deemon/arg.h>                /* DeeArg_Unpack1 */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
-#include <deemon/map.h>                /* DeeMapping_Type, DeeSharedItem */
+#include <deemon/map.h>                /* DeeMap_Type, DeeSharedItem */
 #include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_foreach_pair_t, Dee_hash_t, Dee_return_compareT, Dee_return_compare_if_ne, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/pair.h>               /* DeeSeqPairObject, DeeSeq_* */
@@ -836,7 +836,7 @@ PUBLIC DeeTypeObject DeeSharedMap_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,

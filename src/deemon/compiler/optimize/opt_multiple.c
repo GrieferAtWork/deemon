@@ -31,7 +31,7 @@
 #include <deemon/error.h>             /* DeeError_Handled, ERROR_HANDLED_RESTORE */
 #include <deemon/hashset.h>           /* DeeHashSet_Insert, DeeHashSet_New */
 #include <deemon/list.h>              /* DeeListObject, DeeList_* */
-#include <deemon/map.h>               /* DeeMapping_NewEmpty */
+#include <deemon/map.h>               /* DeeMap_NewEmpty */
 #include <deemon/none.h>              /* DeeNone_NewRef */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_SetItem, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref */
 #include <deemon/pair.h>              /* CONFIG_ENABLE_SEQ_ONE_TYPE, CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeq_OfOne, DeeSeq_OfPair */
@@ -131,7 +131,7 @@ multiple_continue_at_iter:
 				break;
 
 			case AST_FMULTIPLE_GENERIC_MAP:
-				cexpr = DeeMapping_NewEmpty();
+				cexpr = DeeMap_NewEmpty();
 				break;
 
 			case AST_FMULTIPLE_LIST:

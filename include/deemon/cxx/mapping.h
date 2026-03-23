@@ -23,7 +23,7 @@
 #include "../api.h"
 #include "api.h"
 
-#include "../map.h"    /* DeeMapping_Type, Dee_EmptyMapping */
+#include "../map.h"    /* DeeMap_Type, Dee_EmptyMap */
 #include "../object.h" /* DeeObject_* */
 #include "../types.h"  /* DREF, DeeObject, DeeObject_InstanceOf, DeeObject_InstanceOfExact, _Dee_HashSelectC */
 #include "object.h"
@@ -48,17 +48,17 @@ class Mapping
 {
 public:
 	static WUNUSED Type &classtype() DEE_CXX_NOTHROW {
-		return *(Type *)&DeeMapping_Type;
+		return *(Type *)&DeeMap_Type;
 	}
 	static WUNUSED NONNULL_CXX((1)) bool check(DeeObject *ob) DEE_CXX_NOTHROW {
-		return DeeObject_InstanceOf(ob, &DeeMapping_Type);
+		return DeeObject_InstanceOf(ob, &DeeMap_Type);
 	}
 	static WUNUSED NONNULL_CXX((1)) bool checkexact(DeeObject *ob) DEE_CXX_NOTHROW {
-		return DeeObject_InstanceOfExact(ob, &DeeMapping_Type);
+		return DeeObject_InstanceOfExact(ob, &DeeMap_Type);
 	}
 public:
 	static Ref<Mapping<Key, Value> > of() DEE_CXX_NOTHROW {
-		return nonnull(Dee_EmptyMapping);
+		return nonnull(Dee_EmptyMap);
 	}
 
 public:

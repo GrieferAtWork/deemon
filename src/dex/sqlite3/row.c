@@ -34,7 +34,7 @@
 #include <deemon/float.h>           /* DeeFloat_New */
 #include <deemon/format.h>          /* DeeFormat_Printf */
 #include <deemon/int.h>             /* DeeInt_NewInt64 */
-#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/none.h>            /* DeeNone_NewRef, return_none */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_WEAKREF_SUPPORT_ADDR, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, Dee_weakref_support_fini, OBJECT_HEAD_INIT, return_reference, return_reference_ */
 #include <deemon/seq.h>             /* DeeSeq_Type */
@@ -587,7 +587,7 @@ INTERN DeeTypeObject RowFmt_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_VAR(
 			/* tp_ctor:        */ NULL,
@@ -1050,7 +1050,7 @@ INTERN DeeTypeObject Row_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ Dee_WEAKREF_SUPPORT_ADDR(Row),
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ Row,

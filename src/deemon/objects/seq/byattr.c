@@ -25,7 +25,7 @@
 #include <deemon/alloc.h>              /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* DeeFormat_Printf */
-#include <deemon/map.h>                /* DeeMapping_NewEmpty */
+#include <deemon/map.h>                /* DeeMap_NewEmpty */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
 #include <deemon/mro.h>                /* Dee_ATTRINFO_CUSTOM, Dee_ATTRITER_HEAD, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrhint, Dee_attriter, Dee_attriter_init, Dee_attriter_type, Dee_attrspec */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_likely, Dee_HAS_ISERR, Dee_HAS_ISNO, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_ISOK, OBJECT_HEAD_INIT */
@@ -42,7 +42,7 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 byattr_ctor(MapByAttr *__restrict self) {
-	self->mba_map = DeeMapping_NewEmpty();
+	self->mba_map = DeeMap_NewEmpty();
 	return 0;
 }
 

@@ -26,7 +26,7 @@
 #include <deemon/arg.h>                 /* DeeArg_Unpack1, DeeArg_Unpack2 */
 #include <deemon/computed-operators.h>  /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
-#include <deemon/map.h>                 /* DeeMapping_Type */
+#include <deemon/map.h>                 /* DeeMap_Type */
 #include <deemon/method-hints.h>        /* DeeObject_InvokeMethodHint */
 #include <deemon/object.h>              /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_TYPE, ITER_ISOK, OBJECT_HEAD_INIT */
 #include <deemon/operator-hints.h>      /* DeeType_RequireSupportedNativeOperator */
@@ -645,7 +645,7 @@ dmi_getseq(DistinctMappingIterator *__restrict self) {
 	iter_seq = DeeObject_GetAttr(self->dmi_iter, Dee_AsObject(&str_seq));
 	if unlikely(!iter_seq)
 		goto err;
-	result = DeeSuper_New(&DeeMapping_Type, iter_seq);
+	result = DeeSuper_New(&DeeMap_Type, iter_seq);
 	Dee_Decref(iter_seq);
 	return result;
 err:

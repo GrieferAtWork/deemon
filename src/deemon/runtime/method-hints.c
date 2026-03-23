@@ -24,7 +24,7 @@
 
 #include <deemon/alloc.h>          /* Dee_Free, Dee_UntrackAlloc */
 #include <deemon/class.h>          /* Dee_CLASS_* */
-#include <deemon/map.h>            /* DeeMapping_Type */
+#include <deemon/map.h>            /* DeeMap_Type */
 #include <deemon/method-hints.h>   /* Dee_tmh_id, type_method_hint */
 #include <deemon/mro.h>            /* DeeObject_TFindPrivateAttrInfo, Dee_ATTRINFO_*, Dee_attrinfo */
 #include <deemon/none-operator.h>  /* _DeeNone_reti0_1, _DeeNone_reti1_1 */
@@ -2684,7 +2684,7 @@ INTERN_TPCONST DeeTypeObject const *tpconst _Dee_SEQCLASS_BASES[] = {
 	NULL,
 	&DeeSeq_Type,
 	&DeeSet_Type,
-	&DeeMapping_Type,
+	&DeeMap_Type,
 };
 
 PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1, 2)) Dee_funptr_t
@@ -2886,7 +2886,7 @@ INTERN ATTR_PURE WUNUSED NONNULL((1, 3)) Dee_funptr_t
 }
 
 
-/* Hard-link this impl for "DeeSeq_Type", "DeeSet_Type" and "DeeMapping_Type",
+/* Hard-link this impl for "DeeSeq_Type", "DeeSet_Type" and "DeeMap_Type",
  * such that direct instances of these types behave as "empty" instances with
  * the respective typing. */
 INTERN struct Dee_type_mh_cache mh_cache_empty = {

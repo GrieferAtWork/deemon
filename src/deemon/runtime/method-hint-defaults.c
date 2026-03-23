@@ -32,7 +32,7 @@
 #include <deemon/format.h>              /* PCKdSIZ, PCKuSIZ, PRFdSIZ, PRFuSIZ */
 #include <deemon/gc.h>                  /* DeeGCObject_FREE, DeeGCObject_MALLOC, DeeGC_TRACK */
 #include <deemon/int.h>                 /* DeeIntObject, DeeInt_* */
-#include <deemon/map.h>                 /* Dee_EmptyMapping */
+#include <deemon/map.h>                 /* Dee_EmptyMap */
 #include <deemon/method-hints.h>        /* DeeMH_*_t, DeeObject_InvokeMethodHint, DeeObject_RequireMethodHint, DeeType_RequireMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t */
 #include <deemon/module.h>              /* DeeModule_CallExternStringf */
 #include <deemon/none.h>                /* DeeNone*, Dee_None, return_none */
@@ -460,7 +460,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 default__seq_operator_bool__with__map_operator_compare_eq(DeeObject *__restrict self) {
-	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, Dee_EmptyMapping);
+	int result = (*DeeType_RequireMethodHint(Dee_TYPE(self), map_operator_compare_eq))(self, Dee_EmptyMap);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;
@@ -20734,7 +20734,7 @@ default__map_operator_and__unsupported(DeeObject *lhs, DeeObject *keys) {
 		return DeeObject_InvokeMethodHint(map_operator_sub, lhs, xkeys->si_set);
 	}
 	if (DeeSet_CheckEmpty(keys))
-		return_reference_(Dee_EmptyMapping); /* `a & {}' -> `{}' */
+		return_reference_(Dee_EmptyMap); /* `a & {}' -> `{}' */
 	return Dee_AsObject(MapIntersection_New(lhs, keys));
 }
 

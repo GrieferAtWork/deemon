@@ -34,7 +34,7 @@
 #include <deemon/file.h>               /* DeeFile_Filename, DeeFile_Open, OPEN_FCLOEXEC, OPEN_FRDONLY */
 #include <deemon/format.h>             /* DeeFormat_Print, DeeFormat_Quote */
 #include <deemon/int.h>                /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FESCAPED */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef, Dee_None, return_none */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref, Dee_Incref, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/set.h>                /* DeeSet_Type */
@@ -2687,7 +2687,7 @@ INTERN DeeTypeObject DeeCompilerLexerKeywords_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeCompilerWrapperObject,

@@ -35,7 +35,7 @@
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* Dee_EmptyMapping */
+#include <deemon/map.h>                /* Dee_EmptyMap */
 #include <deemon/module.h>             /* DeeModule_GetDeemon */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_Type, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_Decref_likely, Dee_Incref */
@@ -258,7 +258,7 @@ PRIVATE int DCALL pack_sequence(uint16_t type, uint16_t num_args) {
 		case AST_FMULTIPLE_GENERIC_SET:
 			return asm_gpush_constexpr(Dee_EmptySet);
 		case AST_FMULTIPLE_GENERIC_MAP:
-			return asm_gpush_constexpr(Dee_EmptyMapping);
+			return asm_gpush_constexpr(Dee_EmptyMap);
 		default: break;
 		}
 	}
@@ -407,7 +407,7 @@ done_push_none:
 				} else if (self->a_flag == AST_FMULTIPLE_DICT) {
 					error = asm_gpack_dict(0);
 				} else if (AST_FMULTIPLE_ISMAP(self->a_flag)) {
-					error = asm_gpush_constexpr(Dee_EmptyMapping);
+					error = asm_gpush_constexpr(Dee_EmptyMap);
 				} else if (AST_FMULTIPLE_ISSET(self->a_flag)) {
 					error = asm_gpush_constexpr(Dee_EmptySet);
 				} else {

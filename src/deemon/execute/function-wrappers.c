@@ -31,7 +31,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* PRFxSIZ */
 #include <deemon/int.h>                /* DeeInt_NEWU, DeeInt_NewUInt16 */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, TYPE_GETSET_HINTREF, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_*, Dee_COMPARE_ERR, Dee_CompareNe, Dee_Decref, Dee_Decref_unlikely, Dee_HAS_*, Dee_Incref, Dee_TYPE, Dee_XDecref, Dee_XDecref_unlikely, Dee_XIncref, Dee_hash_t, Dee_return_*, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp_n, DeeSeq_Type */
@@ -1665,7 +1665,7 @@ INTERN DeeTypeObject FunctionSymbolsByName_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ FunctionSymbolsByName,
@@ -2735,7 +2735,7 @@ INTERN DeeTypeObject YieldFunctionSymbolsByName_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ YieldFunctionSymbolsByName,
@@ -5332,7 +5332,7 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ FrameSymbolsByName,

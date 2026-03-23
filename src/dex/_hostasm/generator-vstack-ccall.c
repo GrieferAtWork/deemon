@@ -36,7 +36,7 @@
 #include <deemon/hashset.h>         /* DeeHashSetObject, DeeHashSet_Type */
 #include <deemon/int.h>             /* DeeIntObject, DeeInt_Type, DeeInt_Zero */
 #include <deemon/list.h>            /* DeeListObject, DeeList_* */
-#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/method-hints.h>    /* DeeMH_map_setdefault_t, DeeType_RequireMethodHint */
 #include <deemon/none.h>            /* DeeNone_Type, Dee_None */
 #include <deemon/object.h>          /* DeeObject_Type, DeeTypeObject */
@@ -1201,7 +1201,7 @@ PRIVATE struct ccall_optimizations_struct tpconst cca_optimizations[] = {
 	DEFINE_CCALL_OPTIMIZATIIONS(&DeeSeq_Type, cca_Sequence),
 	DEFINE_CCALL_OPTIMIZATIIONS(&DeeList_Type, cca_List),
 	DEFINE_CCALL_OPTIMIZATIIONS(&DeeCell_Type, cca_Cell),
-	DEFINE_CCALL_OPTIMIZATIIONS(&DeeMapping_Type, cca_Mapping),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeMap_Type, cca_Mapping),
 #undef DEFINE_CCALL_OPTIMIZATIIONS
 };
 

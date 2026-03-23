@@ -1034,7 +1034,7 @@ final class NativeMethod {
 global final PRETTY_BASE_CLASS_NAMES: {string: string} = {
 	"DeeSeq_Type": "Sequence",
 	"DeeSet_Type": "Set",
-	"DeeMapping_Type": "Mapping",
+	"DeeMap_Type": "Mapping",
 	"DeeNumeric_Type": "Numeric",
 	"DeeIterator_Type": "Iterator",
 };
@@ -1109,7 +1109,7 @@ final class MethodHint: WeakRefAble {
 			return "seq";
 		if (aliases.some.baseClass == "DeeSet_Type")
 			return "set";
-		if (aliases.some.baseClass == "DeeMapping_Type")
+		if (aliases.some.baseClass == "DeeMap_Type")
 			return "map";
 		if (attr.startswith("__seq_"))
 			return "seq";
@@ -1917,7 +1917,7 @@ function printMhInitSpecs() {
 					print("NULL, Dee_SEQCLASS_SEQ, "),;
 				} else if (alias.baseClass == "DeeSet_Type") {
 					print("NULL, Dee_SEQCLASS_SET, "),;
-				} else if (alias.baseClass == "DeeMapping_Type") {
+				} else if (alias.baseClass == "DeeMap_Type") {
 					print("NULL, Dee_SEQCLASS_MAP, "),;
 				} else {
 					print("&", alias.baseClass, ", Dee_SEQCLASS_UNKNOWN, "),;
@@ -1961,7 +1961,7 @@ function printMhInitSpecs() {
 					seqClass = "NULL, Dee_SEQCLASS_SEQ";
 				} else if (spec.baseClass == "DeeSet_Type") {
 					seqClass = "NULL, Dee_SEQCLASS_SET";
-				} else if (spec.baseClass == "DeeMapping_Type") {
+				} else if (spec.baseClass == "DeeMap_Type") {
 					seqClass = "NULL, Dee_SEQCLASS_MAP";
 				} else {
 					seqClass = f"&{spec.baseClass}, Dee_SEQCLASS_UNKNOWN";
@@ -2193,7 +2193,7 @@ function printNativeOperatorHintSpecs() {
 					print("NULL, Dee_SEQCLASS_SEQ"),;
 				} else if (operatorSpec.baseClass == "DeeSet_Type") {
 					print("NULL, Dee_SEQCLASS_SET"),;
-				} else if (operatorSpec.baseClass == "DeeMapping_Type") {
+				} else if (operatorSpec.baseClass == "DeeMap_Type") {
 					print("NULL, Dee_SEQCLASS_MAP"),;
 				} else {
 					print("&", operatorSpec.baseClass, ", Dee_SEQCLASS_UNKNOWN"),;

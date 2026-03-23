@@ -39,7 +39,7 @@ __map_and__.map_operator_and([[nonnull]] DeeObject *lhs,
 		return DeeObject_InvokeMethodHint(map_operator_sub, lhs, xkeys->si_set);
 	}
 	if (DeeSet_CheckEmpty(keys))
-		return_reference_(Dee_EmptyMapping); /* `a & {}' -> `{}' */
+		return_reference_(Dee_EmptyMap); /* `a & {}' -> `{}' */
 	return Dee_AsObject(MapIntersection_New(lhs, keys));
 })}
 %{$none = return_none}

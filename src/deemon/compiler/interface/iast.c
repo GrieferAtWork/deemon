@@ -39,7 +39,7 @@
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/int.h>                /* DeeInt_NewUInt16 */
 #include <deemon/list.h>               /* DeeList_Type */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/module.h>             /* Dee_MODULE_SYMBOL_EQUALS */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Decrefv, Dee_Incref, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT, return_reference */
@@ -496,7 +496,7 @@ ast_getmultiple_typing(Ast *__restrict self) {
 			result = Dee_AsObject(&DeeSeq_Type);
 			break;
 		case AST_FMULTIPLE_GENERIC_MAP:
-			result = Dee_AsObject(&DeeMapping_Type);
+			result = Dee_AsObject(&DeeMap_Type);
 			break;
 
 		default:

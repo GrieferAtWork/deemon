@@ -126,7 +126,7 @@ err:
 	return -1;
 }}
 %{$with__map_operator_compare_eq = {
-	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, Dee_EmptyMapping);
+	int result = CALL_DEPENDENCY(map_operator_compare_eq, self, Dee_EmptyMap);
 	if (Dee_COMPARE_ISERR(result))
 		goto err;
 	return Dee_COMPARE_ISEQ(result) ? 1 : 0;

@@ -33,7 +33,7 @@
 #include <deemon/error.h>              /* DeeError_* */
 #include <deemon/format.h>             /* DeeFormat_Printf */
 #include <deemon/int.h>                /* DeeInt_NewSize */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/none.h>               /* DeeNone_Check, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeSeq_Unpack */
@@ -477,7 +477,7 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeCompilerItemObject,

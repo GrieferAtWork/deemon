@@ -27,7 +27,7 @@
 #include <deemon/bool.h>               /* Dee_True */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrUnknownKey */
-#include <deemon/map.h>                /* DeeMapping_Type */
+#include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none.h>               /* DeeNone_NewRef, Dee_None */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_ERR, Dee_BOUND_FROMPRESENT_BOUND, Dee_Decref, Dee_Incref, Dee_foreach_pair_t, Dee_ssize_t, ITER_DONE, ITER_ISOK, OBJECT_HEAD_INIT, return_reference_ */
@@ -686,7 +686,7 @@ INTERN DeeTypeObject MapFromKeysAndValue_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ MapFromKeys,
@@ -736,7 +736,7 @@ INTERN DeeTypeObject MapFromKeysAndCallback_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ MapFromKeys,

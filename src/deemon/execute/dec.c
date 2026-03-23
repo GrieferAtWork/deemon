@@ -3322,7 +3322,7 @@ DECL_END
 #include <deemon/int.h>     /* DeeInt_* */
 #include <deemon/kwds.h>    /* DeeKwds_AppendStringLenHash, DeeKwds_NewWithHint */
 #include <deemon/list.h>    /* DeeListObject, DeeList_* */
-#include <deemon/map.h>     /* DeeMapping_EmptyInstance, DeeMapping_Type */
+#include <deemon/map.h>     /* DeeMap_EmptyInstance, DeeMap_Type */
 #include <deemon/mapfile.h> /* DeeMapFile*, Dee_SIZEOF_DeeMapFile */
 #include <deemon/module.h>
 #include <deemon/none.h>    /* DeeNone_NewRef, DeeNone_Type */
@@ -3464,7 +3464,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define DEC_BUILTIN_SET0_Object                0x40 /* DeeObject_Type */
 /* Abstract base classes. */
 #define DEC_BUILTIN_SET0_Sequence              0x41 /* DeeSeq_Type */
-#define DEC_BUILTIN_SET0_Mapping               0x42 /* DeeMapping_Type */
+#define DEC_BUILTIN_SET0_Mapping               0x42 /* DeeMap_Type */
 #define DEC_BUILTIN_SET0_Iterator              0x43 /* DeeIterator_Type */
 #define DEC_BUILTIN_SET0_Callable              0x44 /* DeeCallable_Type */
 #define DEC_BUILTIN_SET0_Numeric               0x45 /* DeeNumeric_Type */
@@ -3497,7 +3497,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define DEC_BUILTIN_SET0_True                  0x69 /* Dee_FalseTrue.bp_bools[1] */
 #define DEC_BUILTIN_SET0_EmptySeq              0x6a /* DeeSeq_EmptyInstance */
 #define DEC_BUILTIN_SET0_EmptySet              0x6b /* DeeSet_EmptyInstance */
-#define DEC_BUILTIN_SET0_EmptyMapping          0x6c /* DeeMapping_EmptyInstance */
+#define DEC_BUILTIN_SET0_EmptyMapping          0x6c /* DeeMap_EmptyInstance */
 /*      DEC_BUILTIN_SET0_                      0x6d /* ... */
 /*      DEC_BUILTIN_SET0_                      0x6e /* ... */
 /*      DEC_BUILTIN_SET0_                      0x6f /* ... */
@@ -3633,7 +3633,7 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
 	{ Dee_AsObject(&DeeError_BufferError), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_BufferError) },
 	{ Dee_AsObject(&DeeObject_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Object) },
 	{ Dee_AsObject(&DeeSeq_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Sequence) },
-	{ Dee_AsObject(&DeeMapping_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Mapping) },
+	{ Dee_AsObject(&DeeMap_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Mapping) },
 	{ Dee_AsObject(&DeeIterator_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Iterator) },
 	{ Dee_AsObject(&DeeCallable_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Callable) },
 	{ Dee_AsObject(&DeeNumeric_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Numeric) },
@@ -3646,7 +3646,7 @@ PRIVATE struct builtin_desc builtin_descs[NUM_BUILTIN_OBJECTS] = {
 	{ Dee_AsObject(&Dee_FalseTrue.bp_bools[1]), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_True) },
 	{ Dee_AsObject(&DeeSeq_EmptyInstance), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySeq) },
 	{ Dee_AsObject(&DeeSet_EmptyInstance), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptySet) },
-	{ Dee_AsObject(&DeeMapping_EmptyInstance), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptyMapping) },
+	{ Dee_AsObject(&DeeMap_EmptyInstance), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_EmptyMapping) },
 	{ Dee_AsObject(&DeeType_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Type) },
 	{ Dee_AsObject(&DeeTraceback_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Traceback) },
 	{ Dee_AsObject(&DeeThread_Type), DEC_BUILTINID_MAKE(0, DEC_BUILTIN_SET0_Thread) },
@@ -3712,7 +3712,7 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0x3f */ NULL,
 	/* 0x40 */ Dee_AsObject(&DeeObject_Type), /* Object */
 	/* 0x41 */ Dee_AsObject(&DeeSeq_Type), /* Sequence */
-	/* 0x42 */ Dee_AsObject(&DeeMapping_Type), /* Mapping */
+	/* 0x42 */ Dee_AsObject(&DeeMap_Type), /* Mapping */
 	/* 0x43 */ Dee_AsObject(&DeeIterator_Type), /* Iterator */
 	/* 0x44 */ Dee_AsObject(&DeeCallable_Type), /* Callable */
 	/* 0x45 */ Dee_AsObject(&DeeNumeric_Type), /* Numeric */
@@ -3754,7 +3754,7 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 	/* 0x69 */ Dee_AsObject(&Dee_FalseTrue.bp_bools[1]), /* True */
 	/* 0x6a */ Dee_AsObject(&DeeSeq_EmptyInstance), /* EmptySeq */
 	/* 0x6b */ Dee_AsObject(&DeeSet_EmptyInstance), /* EmptySet */
-	/* 0x6c */ Dee_AsObject(&DeeMapping_EmptyInstance), /* EmptyMapping */
+	/* 0x6c */ Dee_AsObject(&DeeMap_EmptyInstance), /* EmptyMapping */
 	/* 0x6d */ NULL,
 	/* 0x6e */ NULL,
 	/* 0x6f */ NULL,

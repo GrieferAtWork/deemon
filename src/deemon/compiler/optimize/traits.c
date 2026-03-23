@@ -36,7 +36,7 @@
 #include <deemon/hashset.h>           /* DeeHashSet_Type */
 #include <deemon/int.h>               /* DeeInt_Type */
 #include <deemon/list.h>              /* DeeList_Type */
-#include <deemon/map.h>               /* DeeMapping_Type */
+#include <deemon/map.h>               /* DeeMap_Type */
 #include <deemon/module.h>            /* DeeModule*, Dee_MODSYM_F* */
 #include <deemon/none.h>              /* DeeNone_Type */
 #include <deemon/object.h>            /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ISEQ_NO_ERR, Dee_COMPARE_ISERR, Dee_Decref, Dee_DecrefNokill, Dee_TYPE, Dee_refcnt_t */
@@ -184,7 +184,7 @@ again:
 		return &DeeCallable_Type;
 
 	case DAST_MAP:
-		return &DeeMapping_Type;
+		return &DeeMap_Type;
 
 	case DAST_WITH:
 		self = &self->da_with.w_cell[0];
@@ -279,7 +279,7 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 		if (self->a_flag == AST_FMULTIPLE_DICT)
 			return &DeeDict_Type;
 		if (self->a_flag == AST_FMULTIPLE_GENERIC_MAP)
-			return &DeeMapping_Type;
+			return &DeeMap_Type;
 		return &DeeSeq_Type; /* That's all we can guaranty. */
 
 	case AST_LOOP:
@@ -341,7 +341,7 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 				return &DeeTuple_Type;
 #if 0 /* Not necessarily... */
 			if (DeeBaseScope_IsVarkwds(bscope, sym))
-				return &DeeMapping_Type; /* {string: Object} */
+				return &DeeMap_Type; /* {string: Object} */
 #endif
 		}	break;
 

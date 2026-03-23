@@ -41,7 +41,7 @@
 #include <deemon/hashset.h>         /* DeeHashSet_Type */
 #include <deemon/int.h>             /* DeeInt_*, Dee_INT_STRING, Dee_INT_STRING_FNOSEPS */
 #include <deemon/list.h>            /* DeeListObject, DeeList_Type, Dee_objectlist_packlist */
-#include <deemon/map.h>             /* DeeMapping_Type */
+#include <deemon/map.h>             /* DeeMap_Type */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/module.h>          /* DeeModule_GetDeemon, DeeModule_GetExtern */
 #include <deemon/mro.h>             /* DeeObject_EnumAttr, Dee_ATTRPERM_F_*, Dee_attrdesc, Dee_attrdesc_nameobj, Dee_attrhint */
@@ -1469,7 +1469,7 @@ INTERN DeeTypeObject DeeJsonMapping_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeMapping_Type,
+	/* .tp_base     = */ &DeeMap_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ DeeJsonMappingObject,
@@ -3135,7 +3135,7 @@ DeeJson_ParseIntoType(DeeJsonParser *__restrict self,
 	}
 
 	/* Mapping types */
-	if (DeeType_Implements(into_type, &DeeMapping_Type)) {
+	if (DeeType_Implements(into_type, &DeeMap_Type)) {
 		int tok;
 		tok = libjson_parser_peeknext(&self->djp_parser);
 		if (tok == JSON_PARSER_OBJECT) {
@@ -3406,7 +3406,7 @@ DeeJson_WriteObject(DeeJsonWriter *__restrict self,
 			                obj);
 			goto err;
 		}
-		if (DeeType_Implements(type, &DeeMapping_Type)) {
+		if (DeeType_Implements(type, &DeeMap_Type)) {
 			if unlikely(libjson_writer_beginobject(&self->djw_writer))
 				goto err;
 			if unlikely(DeeObject_ForeachPair(obj, &json_foreach_write_pair, self) < 0)
@@ -3563,7 +3563,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL libjson_parse_f_impl(DeeOb
 		/* Convert mapping to DTO-like object. */
 		int error;
 		if (!into) {
-			if (DeeObject_AssertType(data, &DeeMapping_Type))
+			if (DeeObject_AssertType(data, &DeeMap_Type))
 				goto err;
 			return_reference_(data);
 		}
