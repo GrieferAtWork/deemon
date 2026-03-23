@@ -4460,7 +4460,7 @@ mh_select_map_popitem(DeeTypeObject *self, DeeTypeObject *orig_type) {
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_iter_advance_t DCALL
-mh_select_iter_advance(DeeTypeObject *self, DeeTypeObject *) {
+mh_select_iter_advance(DeeTypeObject *self, DeeTypeObject *UNUSED(orig_type)) {
 	if (DeeType_GetNativeOperatorWithoutDefaults(self, Dee_TNO_nextkey))
 		return &default__iter_advance__with__iter_nextkey;
 	if (DeeType_GetNativeOperatorWithoutDefaults(self, Dee_TNO_nextvalue))

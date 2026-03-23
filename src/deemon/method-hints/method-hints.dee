@@ -1022,8 +1022,8 @@ final class NativeMethod {
 			body = body[1:-1];
 		print(f"INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) DeeMH_{name}_t DCALL");
 		print(f"mh_select_{name}(DeeTypeObject *{
-				body.recontains(r"\bself\b") ? "self" : ""}, DeeTypeObject *{
-				body.recontains(r"\borig_type\b") ? "orig_type" : ""}) \{"),;
+				body.recontains(r"\bself\b") ? "self" : "UNUSED(self)"}, DeeTypeObject *{
+				body.recontains(r"\borig_type\b") ? "orig_type" : "UNUSED(orig_type)"}) \{"),;
 		print(body),;
 		print("	return NULL;");
 		print("}");
