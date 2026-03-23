@@ -548,7 +548,7 @@ again_rules_iter:
 	}
 	regex_cache_lock_endread();
 
-	/* Not found int cache -> create a new regex object. */
+	/* Not found in cache -> create a new regex object. */
 	result = re_compile(me, compile_flags);
 	if unlikely(!result)
 		goto err; /* Error */

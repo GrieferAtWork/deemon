@@ -55,6 +55,7 @@ DeeCell_New(DeeObject *__restrict item) {
 	result = DeeGCObject_MALLOC(DeeCellObject);
 	if unlikely(!result)
 		goto err;
+
 	/* Initialize and fill in the new Cell. */
 	DeeObject_InitStatic(result, &DeeCell_Type);
 	Dee_Incref(item);
