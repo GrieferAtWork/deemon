@@ -1025,7 +1025,6 @@ function clientThreadMain(con: socket) {
 	} catch (...) {
 		Error.display("Client thread crashed");
 	}
-
 }
 
 

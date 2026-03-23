@@ -854,7 +854,7 @@ restart_no_timeout:
 #ifdef CONFIG_HOST_WINDOWS
 		error = select_interruptible(self->s_socket,
 		                             FD_ACCEPT | FD_CLOSE,
-		                             SELECT_TIMEOUT_MICROSECONDS / 1000);
+		                             INFINITE);
 		if (error != WSA_WAIT_EVENT_0) {
 			socket_endread(self);
 			if (error == WSA_WAIT_IO_COMPLETION ||
@@ -864,13 +864,10 @@ restart_no_timeout:
 		}
 #else /* CONFIG_HOST_WINDOWS */
 		{
-			struct timeval timeout;
 			fd_set rfds;
-			timeout.tv_sec = (long)(SELECT_TIMEOUT_MICROSECONDS / 1000000);
-			timeout.tv_usec = (long)(SELECT_TIMEOUT_MICROSECONDS % 1000000);
 			FD_ZERO(&rfds);
 			FD_SET(self->s_socket, &rfds);
-			error = select(self->s_socket + 1, &rfds, NULL, NULL, &timeout);
+			error = select(self->s_socket + 1, &rfds, NULL, NULL, NULL);
 		}
 		if (error <= 0) { /* Timeout or error */
 			socket_endread(self);
@@ -969,13 +966,8 @@ do_timed_select:
 			goto socket_was_closed;
 		}
 #ifdef CONFIG_HOST_WINDOWS
-		{
-			DWORD timeout = SELECT_TIMEOUT_MICROSECONDS;
-			if (timeout > timeout_microseconds)
-				timeout = (DWORD)timeout_microseconds;
-			error = select_interruptible(self->s_socket, FD_ACCEPT | FD_CLOSE,
-			                             timeout / 1000);
-		}
+		error = select_interruptible(self->s_socket, FD_ACCEPT | FD_CLOSE,
+		                             (DWORD)(timeout_microseconds / 1000));
 		if (error != WSA_WAIT_EVENT_0) {
 			uint64_t now;
 			socket_endread(self);
@@ -994,13 +986,8 @@ do_timed_select:
 		{
 			struct timeval timeout;
 			fd_set rfds;
-			if (timeout_microseconds < SELECT_TIMEOUT_MICROSECONDS) {
-				timeout.tv_sec = (long)(timeout_microseconds / 1000000);
-				timeout.tv_usec = (long)(timeout_microseconds % 1000000);
-			} else {
-				timeout.tv_sec = (long)(SELECT_TIMEOUT_MICROSECONDS / 1000000);
-				timeout.tv_usec = (long)(SELECT_TIMEOUT_MICROSECONDS % 1000000);
-			}
+			timeout.tv_sec = (long)(timeout_microseconds / 1000000);
+			timeout.tv_usec = (long)(timeout_microseconds % 1000000);
 			FD_ZERO(&rfds);
 			FD_SET(self->s_socket, &rfds);
 			DBG_ALIGNMENT_DISABLE();
