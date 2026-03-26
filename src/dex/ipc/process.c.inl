@@ -3582,6 +3582,7 @@ err:
 	/* Set the did-terminate flag on success. */
 	self->p_state |= PROCESS_FLAG_TERMINATED;
 	Process_LockEndWrite(self);
+	return 0;
 err:
 	return -1;
 #else /* ... */
