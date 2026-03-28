@@ -624,18 +624,23 @@ DeeFile_ReadLine(DeeObject *__restrict self,
 again:
 	if likely(DeeFileType_CheckExact(tp_self)) {
 do_handle_filetype:
-		do {
+		ft_getc   = DeeType_AsFileType(tp_self)->ft_getc;
+		ft_ungetc = DeeType_AsFileType(tp_self)->ft_ungetc;
+		if likely(ft_getc != NULL && ft_ungetc != NULL) {
+do_handle_filetype_with_ops:
+			if (ft_getc == &instance_getc && Dee_TYPE(self) != tp_self)
+				ft_getc = (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&DeeFile_Getcf;
+			if (ft_ungetc == &instance_ungetc && Dee_TYPE(self) != tp_self)
+				ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
+			goto do_operate_using_ft_getc_and_ft_ungetc;
+		}
+		if (DeeFileType_InheritGetc(DeeType_AsFileType(tp_self)) ||
+		    DeeFileType_InheritUngetc(DeeType_AsFileType(tp_self))) {
 			ft_getc   = DeeType_AsFileType(tp_self)->ft_getc;
 			ft_ungetc = DeeType_AsFileType(tp_self)->ft_ungetc;
-			if likely(ft_getc != NULL && ft_ungetc != NULL) {
-				if (ft_getc == &instance_getc && Dee_TYPE(self) != tp_self)
-					ft_getc = (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&DeeFile_Getcf;
-				if (ft_ungetc == &instance_ungetc && Dee_TYPE(self) != tp_self)
-					ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
-				goto do_operate_using_ft_getc_and_ft_ungetc;
-			}
-		} while (DeeFileType_InheritGetc(DeeType_AsFileType(tp_self)) ||
-		         DeeFileType_InheritUngetc(DeeType_AsFileType(tp_self)));
+			if likely(ft_getc != NULL && ft_ungetc != NULL)
+				goto do_handle_filetype_with_ops;
+		}
 		if (DeeType_AsFileType(tp_self)->ft_getc != NULL) {
 			/* If getc() is implemented, but ungetc() isn't, indicate the correct missing operator. */
 			err_unimplemented_operator(tp_self, FILE_OPERATOR_UNGETC);
