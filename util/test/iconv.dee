@@ -18,29 +18,32 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-import * from iconv;
 import .common.test;
+
+local iconv = try import("iconv") catch (...) none;
+if (iconv is none)
+	return;
 
 
 test.assertEqualsTyped(
-	encode("Hello World", "base64"),
+	iconv.encode("Hello World", "base64"),
 	"SGVsbG8gV29ybGQ=".bytes()
 );
 test.assertEqualsTyped(
-	decode("SGVsbG8gV29ybGQ=", "base64"),
+	iconv.decode("SGVsbG8gV29ybGQ=", "base64"),
 	"Hello World"
 );
 test.assertEqualsTyped(
-	transcode("SGVsbG8gV29ybGQ=", "base64", "utf-8-bom"),
+	iconv.transcode("SGVsbG8gV29ybGQ=", "base64", "utf-8-bom"),
 	"\xEF\xBB\xBFHello World".bytes()
 );
 
 
 test.assertEqualsTyped(
-	encode("/var/foo?x=49&z=2", "uri"),
+	iconv.encode("/var/foo?x=49&z=2", "uri"),
 	"%2Fvar%2Ffoo%3Fx%3D49%26z%3D2".bytes()
 );
 test.assertEqualsTyped(
-	decode("%2Fvar%2Ffoo%3Fx%3D49%26z%3D2", "uri"),
+	iconv.decode("%2Fvar%2Ffoo%3Fx%3D49%26z%3D2", "uri"),
 	"/var/foo?x=49&z=2"
 );
