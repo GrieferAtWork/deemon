@@ -75,20 +75,6 @@ struct libiconv_mbstate {
 /*      LIBICONV_MBSTATE_TYPE_            0xf8000000  * ... */
 /*      LIBICONV_MBSTATE_TYPE_            0xfc000000  * ... */
 
-PRIVATE ATTR_INOUT(4) ATTR_INS(2, 3) ATTR_OUT(1) size_t
-NOTHROW_NCX(DCALL libiconv_unicode_c8toc16)(char16_t *__restrict pc16,
-                                            char const *__restrict s, size_t n,
-                                            struct libiconv_mbstate *__restrict mbs);
-
-PRIVATE ATTR_INOUT(4) ATTR_INS(2, 3) ATTR_OUT(1) size_t
-NOTHROW_NCX(DCALL libiconv_unicode_c8toc32)(char32_t *__restrict pc32,
-                                            char const *__restrict s, size_t n,
-                                            struct libiconv_mbstate *__restrict mbs);
-
-PRIVATE ATTR_INOUT(3) ATTR_OUT(1) size_t
-NOTHROW_NCX(DCALL libiconv_unicode_c16toc8)(char pc8[3], char16_t c16,
-                                            struct libiconv_mbstate *__restrict mbs);
-
 DECL_END
 
 #endif /* !GUARD_DEX_ICONV_KOS_MBSTATE_H */
