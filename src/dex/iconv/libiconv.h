@@ -51,6 +51,13 @@ typedef struct {
 	struct iconv_decode ivd_decoder; /* [lock(ivd_lock)] Underlying decoder */
 } IconvDecoder;
 
+INTDEF DeeFileTypeObject IconvDecoder_Type;
+#define IconvDecoder_GetOut(self)     ((DeeFileObject *)(self)->ivd_decoder.icd_output.ii_arg)
+#define IconvDecoder_TryAcquire(self) Dee_nrshared_lock_tryacquire(&(self)->ivd_lock)
+#define IconvDecoder_Acquire(self)    Dee_nrshared_lock_acquire(&(self)->ivd_lock)
+#define IconvDecoder_Release(self)    Dee_nrshared_lock_release(&(self)->ivd_lock)
+
+
 typedef struct {
 	/* Encoder: convert UTF-8 --> <some codec> */
 	Dee_FILE_OBJECT_HEAD
@@ -58,6 +65,13 @@ typedef struct {
 	Dee_nrshared_lock_t ive_lock;    /* Lock for `ive_encoder' */
 	struct iconv_encode ive_encoder; /* [lock(ive_lock)] Underlying encoder */
 } IconvEncoder;
+
+INTDEF DeeFileTypeObject IconvEncoder_Type;
+#define IconvEncoder_GetOut(self)     ((DeeFileObject *)(self)->ive_encoder.ice_output.ii_arg)
+#define IconvEncoder_TryAcquire(self) Dee_nrshared_lock_tryacquire(&(self)->ive_lock)
+#define IconvEncoder_Acquire(self)    Dee_nrshared_lock_acquire(&(self)->ive_lock)
+#define IconvEncoder_Release(self)    Dee_nrshared_lock_release(&(self)->ive_lock)
+
 
 typedef struct {
 	/* Transcoder: convert <some codec> --> <some codec> */
@@ -68,9 +82,11 @@ typedef struct {
 	struct iconv_encode ivt_encoder; /* [lock(ivt_lock)] Underlying encoder */
 } IconvTranscoder;
 
-INTDEF DeeFileTypeObject IconvDecoder_Type;
-INTDEF DeeFileTypeObject IconvEncoder_Type;
 INTDEF DeeFileTypeObject IconvTranscoder_Type;
+#define IconvTranscoder_GetOut(self)     ((DeeFileObject *)(self)->ivt_encoder.ice_output.ii_arg)
+#define IconvTranscoder_TryAcquire(self) Dee_nrshared_lock_tryacquire(&(self)->ivt_lock)
+#define IconvTranscoder_Acquire(self)    Dee_nrshared_lock_acquire(&(self)->ivt_lock)
+#define IconvTranscoder_Release(self)    Dee_nrshared_lock_release(&(self)->ivt_lock)
 
 DECL_END
 

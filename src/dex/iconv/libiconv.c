@@ -237,6 +237,403 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL deemon_iconv__transliterate_f_impl(uint
 }
 
 
+struct codec_error {
+	char     name[8];
+	uint16_t flags;
+};
+
+PRIVATE struct codec_error const codec_error_db[] = {
+	{ "strict",  ICONV_ERR_ERROR },
+	{ "replace", ICONV_ERR_REPLACE },
+	{ "ignore",  ICONV_ERR_IGNORE },
+	{ "discard", ICONV_ERR_DISCARD },
+};
+
+PRIVATE WUNUSED uintptr_half_t DCALL
+deemon_iconv_parse_error_mode(char const *errors) {
+	size_t i;
+	if (errors == NULL)
+		return STRING_ERROR_FSTRICT;
+	for (i = 0; i < COMPILER_LENOF(codec_error_db); ++i) {
+		if (strcmp(codec_error_db[i].name, errors) != 0)
+			continue;
+		return (uintptr_half_t)codec_error_db[i].flags;
+	}
+	return (uintptr_half_t)DeeError_Throwf(&DeeError_ValueError,
+	                                       "Invalid error mode %q",
+	                                       errors);
+}
+
+PRIVATE ATTR_COLD int DCALL
+err_unknown_codec(iconv_codec_t codec) {
+	return DeeError_Throwf(&DeeError_ValueError, "Unknown codec: %u", (unsigned int)codec);
+}
+
+PRIVATE WUNUSED NONNULL((1)) iconv_codec_t DCALL
+deemon_iconv_parse_codec_name_and_error_mode(DeeObject *codec,
+                                             DeeObject *errors,
+                                             uintptr_half_t *p_flags) {
+	iconv_codec_t result;
+	if (errors == NULL) {
+		*p_flags = ICONV_ERR_ERROR;
+	} else if (DeeString_Check(errors)) {
+		*p_flags = deemon_iconv_parse_error_mode(DeeString_STR(errors));
+	} else {
+		if (DeeObject_AsUIntX(errors, p_flags))
+			goto err;
+	}
+	if (DeeString_Check(codec)) {
+		result = libiconv_codec_and_flags_byname(DeeString_STR(codec), p_flags);
+		if unlikely(result == ICONV_CODEC_UNKNOWN) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Unknown codec: %q",
+			                DeeString_STR(codec));
+			goto err;
+		}
+	} else {
+		if (DeeObject_AsUIntX(codec, &result))
+			goto err;
+		if unlikely(result == ICONV_CODEC_UNKNOWN) {
+			err_unknown_codec(result);
+			goto err;
+		}
+	}
+	return result;
+err:
+	return ICONV_CODEC_UNKNOWN;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+iconv_do_decode(void const *data_base, size_t data_size,
+                iconv_codec_t codec, uintptr_half_t flags) {
+	Dee_ssize_t status;
+	struct iconv_decode decoder;
+	struct Dee_unicode_printer out_printer = Dee_UNICODE_PRINTER_INIT;
+	struct iconv_printer input_printer;
+	decoder.icd_output.ii_printer = &Dee_unicode_printer_print;
+	decoder.icd_output.ii_arg     = &out_printer;
+	decoder.icd_flags             = flags;
+	decoder.icd_codec             = codec;
+	if unlikely(libiconv_decode_init(&decoder, &input_printer))
+		goto no_such_codec;
+	status = (*input_printer.ii_printer)(input_printer.ii_arg, (char const *)data_base, data_size);
+	if unlikely(status < 0)
+		goto maybe_handle_iconv_error;
+#if 0
+	if (!libiconv_decode_isshiftzero(&decoder)) {
+		/* Could potentially throw an error here, but don't... */
+	}
+#endif
+	return Dee_unicode_printer_pack(&out_printer);
+no_such_codec:
+	err_unknown_codec(codec);
+err_printer:
+	Dee_unicode_printer_fini(&out_printer);
+/*err:*/
+	return NULL;
+maybe_handle_iconv_error:
+	if (decoder.icd_flags & ICONV_HASERR) {
+		size_t index = (size_t)(data_size + status);
+		DeeError_Throwf(&DeeError_UnicodeDecodeError,
+		                "Failed to decode %s at offset %" PRFuSIZ,
+		                libiconv_getcodecnames(codec), index);
+	}
+	goto err_printer;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+iconv_do_encode(void const *data_base, size_t data_size,
+                iconv_codec_t codec, uintptr_half_t flags) {
+	Dee_ssize_t status;
+	struct iconv_encode encoder;
+	struct Dee_bytes_printer out_printer = Dee_BYTES_PRINTER_INIT;
+	struct iconv_printer input_printer;
+	encoder.ice_output.ii_printer = (Dee_formatprinter_t)&Dee_bytes_printer_append;
+	encoder.ice_output.ii_arg     = &out_printer;
+	encoder.ice_flags             = flags;
+	encoder.ice_codec             = codec;
+	if unlikely(libiconv_encode_init(&encoder, &input_printer))
+		goto no_such_codec;
+	status = (*input_printer.ii_printer)(input_printer.ii_arg, (char const *)data_base, data_size);
+	if unlikely(status < 0)
+		goto maybe_handle_iconv_error;
+#if 0
+	if (!libiconv_encode_isinputshiftzero(&encoder)) {
+		/* Could potentially throw an error here, but don't... */
+	}
+#endif
+	if unlikely(libiconv_encode_flush(&encoder) < 0)
+		goto err_printer;
+	return Dee_bytes_printer_pack(&out_printer);
+no_such_codec:
+	err_unknown_codec(codec);
+err_printer:
+	Dee_bytes_printer_fini(&out_printer);
+/*err:*/
+	return NULL;
+maybe_handle_iconv_error:
+	if (encoder.ice_flags & ICONV_HASERR) {
+		size_t index = (size_t)(data_size + status);
+		DeeError_Throwf(&DeeError_UnicodeEncodeError,
+		                "Failed to encode %s at offset %" PRFuSIZ,
+		                libiconv_getcodecnames(codec), index);
+	}
+	goto err_printer;
+}
+
+PRIVATE WUNUSED NONNULL((1, 6, 7)) int DCALL
+do_iconv_transcoder_init(struct iconv_transcode *__restrict self,
+                         iconv_codec_t incodec, iconv_codec_t outcodec,
+                         uintptr_half_t inflags, uintptr_half_t outflags,
+                         /*out*/ struct iconv_printer *__restrict input,
+                         Dee_formatprinter_t output_printer,
+                         void *output_printer_arg) {
+	int result;
+	self->it_encode.ice_output.ii_printer = output_printer;
+	self->it_encode.ice_output.ii_arg     = output_printer_arg;
+	self->it_encode.ice_flags = outflags;
+	self->it_encode.ice_codec = outcodec;
+	self->it_decode.icd_flags = inflags;
+	self->it_decode.icd_codec = incodec;
+
+	/* Check for special case: when input and output  codecs are the same,  then
+	 *                         it really shouldn't matter if we don't know them! */
+	if (self->it_decode.icd_codec == self->it_encode.ice_codec) {
+		*input = self->it_encode.ice_output;
+		self->it_encode.ice_codec = CODEC_UNKNOWN;
+		return 0;
+	}
+
+	/* Initialize the encoder and set-up its input pipe for use as output by the decoder. */
+	result = libiconv_encode_init(&self->it_encode, &self->it_decode.icd_output);
+	if unlikely(result != 0)
+		goto done;
+
+	/* Initialize the decoder (note that it's output printer was already set-up
+	 * as the input descriptor for the  encode function in the previous  step!) */
+	result = libiconv_decode_init(&self->it_decode, input);
+
+	/* And that's already it! */
+done:
+	return result;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+iconv_do_transcode(void const *data_base, size_t data_size,
+                   iconv_codec_t incodec, iconv_codec_t outcodec,
+                   uintptr_half_t inflags, uintptr_half_t outflags) {
+	Dee_ssize_t status;
+	struct iconv_transcode transcoder;
+	struct iconv_printer input_printer;
+	struct Dee_bytes_printer out_printer = Dee_BYTES_PRINTER_INIT;
+	if unlikely(do_iconv_transcoder_init(&transcoder,
+	                                     incodec, outcodec,
+	                                     inflags, outflags,
+	                                     &input_printer,
+	                                     (Dee_formatprinter_t)&Dee_bytes_printer_append,
+	                                     &out_printer))
+		goto no_such_codec;
+	status = (*input_printer.ii_printer)(input_printer.ii_arg, (char const *)data_base, data_size);
+	if unlikely(status < 0)
+		goto maybe_handle_iconv_error;
+#if 0
+	if (!libiconv_decode_isshiftzero(&transcoder.it_decode)) {
+		/* Could potentially throw an error here, but don't... */
+	}
+	if (!libiconv_encode_isinputshiftzero(&transcoder.it_encode)) {
+		/* Could potentially throw an error here, but don't... */
+	}
+#endif
+	if unlikely(libiconv_encode_flush(&transcoder.it_encode) < 0)
+		goto err_printer;
+	return Dee_bytes_printer_pack(&out_printer);
+no_such_codec:
+	err_unknown_codec(libiconv_getcodecnames(incodec) ? incodec : outcodec);
+err_printer:
+	Dee_bytes_printer_fini(&out_printer);
+/*err:*/
+	return NULL;
+maybe_handle_iconv_error:
+	if (transcoder.it_decode.icd_flags & ICONV_HASERR) {
+		size_t index = (size_t)(data_size + status);
+		DeeError_Throwf(&DeeError_UnicodeDecodeError,
+		                "Failed to decode %s at offset %" PRFuSIZ,
+		                libiconv_getcodecnames(incodec), index);
+	} else if (transcoder.it_encode.ice_flags & ICONV_HASERR) {
+		DeeError_Throwf(&DeeError_UnicodeEncodeError,
+		                "Failed to re-encode data as %s",
+		                libiconv_getcodecnames(outcodec));
+	}
+	goto err_printer;
+}
+
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("decode", """
+	data:?X2?Dstring?DBytes,
+	codec:?X2?Dstring?Dint,
+	errors:?X2?Dstring?Dint = NULL = !Pstrict
+""", libname: "deemon_iconv");]]]*/
+#define deemon_iconv_decode_params "data:?X2?Dstring?DBytes,codec:?X2?Dstring?Dint,errors:?X2?Dstring?Dint=!Pstrict"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_decode_f_impl(DeeObject *data, DeeObject *codec, DeeObject *errors);
+#ifndef DEFINED_kwlist__data_codec_errors
+#define DEFINED_kwlist__data_codec_errors
+PRIVATE DEFINE_KWLIST(kwlist__data_codec_errors, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEND });
+#endif /* !DEFINED_kwlist__data_codec_errors */
+PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv_decode_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *data;
+		DeeObject *codec;
+		DeeObject *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_codec_errors, "oo|o:decode", &args))
+		goto err;
+	return deemon_iconv_decode_f_impl(args.data, args.codec, args.errors);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(deemon_iconv_decode, &deemon_iconv_decode_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_decode_f_impl(DeeObject *data, DeeObject *codec, DeeObject *errors)
+/*[[[end]]]*/
+{
+	iconv_codec_t codec_id;
+	uintptr_half_t flags;
+	void const *data_base;
+	size_t data_size;
+	if (DeeBytes_Check(data)) {
+		data_base = DeeBytes_DATA(data);
+		data_size = DeeBytes_SIZE(data);
+	} else if (DeeString_Check(data)) {
+		data_base = DeeString_AsBytes(data, false);
+		if unlikely(!data_base)
+			goto err;
+		data_size = WSTR_LENGTH(data_base);
+	} else {
+		DeeObject_TypeAssertFailed2(data, &DeeBytes_Type, &DeeString_Type);
+		goto err;
+	}
+	codec_id = deemon_iconv_parse_codec_name_and_error_mode(codec, errors, &flags);
+	if unlikely(codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	return iconv_do_decode(data_base, data_size, codec_id, flags);
+err:
+	return NULL;
+}
+
+
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("encode", """
+	data:?X2?Dstring?DBytes,
+	codec:?X2?Dstring?Dint,
+	errors:?X2?Dstring?Dint = NULL = !Pstrict
+""", libname: "deemon_iconv");]]]*/
+#define deemon_iconv_encode_params "data:?X2?Dstring?DBytes,codec:?X2?Dstring?Dint,errors:?X2?Dstring?Dint=!Pstrict"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_encode_f_impl(DeeObject *data, DeeObject *codec, DeeObject *errors);
+#ifndef DEFINED_kwlist__data_codec_errors
+#define DEFINED_kwlist__data_codec_errors
+PRIVATE DEFINE_KWLIST(kwlist__data_codec_errors, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEND });
+#endif /* !DEFINED_kwlist__data_codec_errors */
+PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv_encode_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *data;
+		DeeObject *codec;
+		DeeObject *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_codec_errors, "oo|o:encode", &args))
+		goto err;
+	return deemon_iconv_encode_f_impl(args.data, args.codec, args.errors);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(deemon_iconv_encode, &deemon_iconv_encode_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_encode_f_impl(DeeObject *data, DeeObject *codec, DeeObject *errors)
+/*[[[end]]]*/
+{
+	iconv_codec_t codec_id;
+	uintptr_half_t flags;
+	void const *data_base;
+	size_t data_size;
+	if (DeeBytes_Check(data)) {
+		data_base = DeeBytes_DATA(data);
+		data_size = DeeBytes_SIZE(data);
+	} else if (DeeString_Check(data)) {
+		data_base = DeeString_AsBytes(data, false);
+		if unlikely(!data_base)
+			goto err;
+		data_size = WSTR_LENGTH(data_base);
+	} else {
+		DeeObject_TypeAssertFailed2(data, &DeeBytes_Type, &DeeString_Type);
+		goto err;
+	}
+	codec_id = deemon_iconv_parse_codec_name_and_error_mode(codec, errors, &flags);
+	if unlikely(codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	return iconv_do_encode(data_base, data_size, codec_id, flags);
+err:
+	return NULL;
+}
+
+
+/*[[[deemon (print_KwCMethod from rt.gen.unpack)("transcode", """
+	data:?X2?Dstring?DBytes,
+	incodec:?X2?Dstring?Dint,
+	outcodec:?X2?Dstring?Dint,
+	errors:?X2?Dstring?Dint = NULL = !Pstrict
+""", libname: "deemon_iconv");]]]*/
+#define deemon_iconv_transcode_params "data:?X2?Dstring?DBytes,incodec:?X2?Dstring?Dint,outcodec:?X2?Dstring?Dint,errors:?X2?Dstring?Dint=!Pstrict"
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL deemon_iconv_transcode_f_impl(DeeObject *data, DeeObject *incodec, DeeObject *outcodec, DeeObject *errors);
+#ifndef DEFINED_kwlist__data_incodec_outcodec_errors
+#define DEFINED_kwlist__data_incodec_outcodec_errors
+PRIVATE DEFINE_KWLIST(kwlist__data_incodec_outcodec_errors, { KEX("data", 0x3af4b6d3, 0xb0164401a9853128), KEX("incodec", 0x556c3790, 0x67f1690ff39bd316), KEX("outcodec", 0x2f41262c, 0xfb14bcb3b213f6d6), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEND });
+#endif /* !DEFINED_kwlist__data_incodec_outcodec_errors */
+PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv_transcode_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	struct {
+		DeeObject *data;
+		DeeObject *incodec;
+		DeeObject *outcodec;
+		DeeObject *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, kwlist__data_incodec_outcodec_errors, "ooo|o:transcode", &args))
+		goto err;
+	return deemon_iconv_transcode_f_impl(args.data, args.incodec, args.outcodec, args.errors);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_KWCMETHOD(deemon_iconv_transcode, &deemon_iconv_transcode_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL deemon_iconv_transcode_f_impl(DeeObject *data, DeeObject *incodec, DeeObject *outcodec, DeeObject *errors)
+/*[[[end]]]*/
+{
+	iconv_codec_t in_codec_id, out_codec_id;
+	uintptr_half_t in_flags, out_flags;
+	void const *data_base;
+	size_t data_size;
+	if (DeeBytes_Check(data)) {
+		data_base = DeeBytes_DATA(data);
+		data_size = DeeBytes_SIZE(data);
+	} else if (DeeString_Check(data)) {
+		data_base = DeeString_AsBytes(data, false);
+		if unlikely(!data_base)
+			goto err;
+		data_size = WSTR_LENGTH(data_base);
+	} else {
+		DeeObject_TypeAssertFailed2(data, &DeeBytes_Type, &DeeString_Type);
+		goto err;
+	}
+	in_codec_id = deemon_iconv_parse_codec_name_and_error_mode(incodec, errors, &in_flags);
+	if unlikely(in_codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	out_codec_id = deemon_iconv_parse_codec_name_and_error_mode(outcodec, errors, &out_flags);
+	if unlikely(out_codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	return iconv_do_transcode(data_base, data_size,
+	                          in_codec_id, out_codec_id,
+	                          in_flags, out_flags);
+err:
+	return NULL;
+}
+
+#define DOC_param_errors "#perrors{One of $\"strict\", $\"replace\", $\"ignore\" or $\"discard\"}"
+
 DEX_BEGIN
 DEX_MEMBER_F("codecbyname", &deemon_iconv_codecbyname, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_codecbyname_params ")->?X2?Dint?N\n"
@@ -294,9 +691,62 @@ DEX_MEMBER_F("detect_codec", &deemon_iconv_detect_codec, Dee_DEXSYM_READONLY,
 
              "If the function is unable to determine the codec to-be used, it will return !N"),
 
-/* TODO: "class Decoder: File from deemon { ... }"    -- _libiconv_decode_init */
-/* TODO: "class Encoder: File from deemon { ... }"    -- _libiconv_encode_init */
-/* TODO: "class Transcoder: File from deemon { ... }" -- _libiconv_transcode_init */
+// TODO: DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
+// TODO: DEX_MEMBER_F_NODOC("Encoder", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READONLY),
+// TODO: DEX_MEMBER_F_NODOC("Transcoder", &IconvTranscoder_Type.ft_base, Dee_DEXSYM_READONLY),
+
+/* Fast-pass encode/decode functions (drop-in replacements for equivalents from "codec") */
+DEX_MEMBER_F("decode", &deemon_iconv_decode, Dee_DEXSYM_READONLY,
+             "(" deemon_iconv_decode_params ")->?Dstring\n"
+             DOC_param_errors
+             "Convenience wrapper around ?GDecoder:\n"
+             "${"
+             /**/ "function decode(data: string | Bytes, codec: string,\n"
+             /**/ "                errors: string = \"strict\"): string {\n"
+             /**/ "	local out = import.deemon.File.Writer(hint: \"string\");\n"
+             /**/ "	with (local decoder = iconv.Decoder(codec, out, errors))\n"
+             /**/ "		decoder.write(data);\n"
+             /**/ "	return out.string;\n"
+             /**/ "}"
+             "}"),
+DEX_MEMBER_F("encode", &deemon_iconv_encode, Dee_DEXSYM_READONLY,
+             "(" deemon_iconv_encode_params ")->?DBytes\n"
+             DOC_param_errors
+             "Convenience wrapper around ?GEncoder:\n"
+             "${"
+             /**/ "function encode(data: string | Bytes, codec: string,\n"
+             /**/ "                errors: string = \"strict\"): Bytes {\n"
+             /**/ "	local out = import.deemon.File.Writer(hint: \"bytes\");\n"
+             /**/ "	with (local encoder = iconv.Encode(codec, out, errors)) {\n"
+             /**/ "		if (data is string) {\n"
+             /**/ "			print encoder: data,;\n"
+             /**/ "		} else {\n"
+             /**/ "			encoder.write(data);\n"
+             /**/ "		}\n"
+             /**/ "	}\n"
+             /**/ "	return out.bytes;\n"
+             /**/ "}"
+             "}"),
+DEX_MEMBER_F("transcode", &deemon_iconv_transcode, Dee_DEXSYM_READONLY,
+             "(" deemon_iconv_transcode_params ")->?DBytes\n"
+             DOC_param_errors
+             "Convenience wrapper around ?GEncoder:\n"
+             "${"
+             /**/ "function transcode(data: string | Bytes,\n"
+             /**/ "                   incodec: string, outcodec: string,\n"
+             /**/ "                   errors: string = \"strict\"): Bytes {\n"
+             /**/ "	local out = import.deemon.File.Writer(hint: \"bytes\");\n"
+             /**/ "	with (local transcoder = iconv.Transcoder(incodec, outcodec, out, errors)) {\n"
+             /**/ "		if (data is string) {\n"
+             /**/ "			print transcoder: data,;\n"
+             /**/ "		} else {\n"
+             /**/ "			transcoder.write(data);\n"
+             /**/ "		}\n"
+             /**/ "	}\n"
+             /**/ "	return out.bytes;\n"
+             /**/ "}"
+             "}"),
+
 
 /* TODO: >> function transliterate(ord: int, what: int = TRANSLITERATE_ALL): {string...} {
  *       >>     for (local nth = 0;; ++nth) {

@@ -769,7 +769,7 @@ DeeCodec_GetErrorMode(char const *__restrict errors) {
 		return codec_error_db[i].flags;
 	}
 	DeeError_Throwf(&DeeError_ValueError,
-	                "Invalid error code %q",
+	                "Invalid error mode %q",
 	                errors);
 	return (unsigned int)-1;
 }
