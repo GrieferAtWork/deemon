@@ -24,18 +24,24 @@
 /**/
 
 /* Configure libiconv */
-#define LIBICONV_NO_SYSTEM_INCLUDES
-#define LIBICONV_SINGLE_LIBRARY
 #define LIBICONV_DECL INTDEF
 #define LIBICONV_CC   DFCALL
 #undef LIBICONV_WANT_PROTOTYPES
-#define LIBICONV_EXPOSE_INTERNAL
 #undef __FCALL
 #undef FCALL
 #define __FCALL DFCALL
 #define FCALL   DFCALL
 #undef LIBICONV_SETERRNO
 #define LIBICONV_SETERRNO(v) (void)0
+
+#define LIBICONV_NO_SYSTEM_INCLUDES
+#define LIBICONV_SINGLE_LIBRARY
+#define LIBICONV_EXPOSE_INTERNAL
+#define LIBICONV_NO_ICONV_ERR_ERRNO
+#define ICONV_ERR_ERROR   0
+#define ICONV_ERR_DISCARD 1
+#define ICONV_ERR_REPLACE 2
+#define ICONV_ERR_IGNORE  3
 
 /* clang-format off */
 /* Enable KOS compatibility */
