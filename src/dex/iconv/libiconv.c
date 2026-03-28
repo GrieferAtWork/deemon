@@ -740,7 +740,7 @@ DEX_MEMBER_F("encode", &deemon_iconv_encode, Dee_DEXSYM_READONLY,
 DEX_MEMBER_F("transcode", &deemon_iconv_transcode, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_transcode_params ")->?DBytes\n"
              DOC_param_errors
-             "Convenience wrapper around ?GEncoder:\n"
+             "Convenience wrapper around ?GTranscoder:\n"
              "${"
              /**/ "function transcode(data: string | Bytes,\n"
              /**/ "                   incodec: string, outcodec: string,\n"

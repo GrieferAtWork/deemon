@@ -18,32 +18,30 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+import * from deemon;
 import .common.test;
 
 local iconv = try import("iconv") catch (...) none;
 if (iconv is none)
 	return;
 
+function assertEncode(data: string, codec: string, result: Bytes) {
+	test.assertEqualsTyped(iconv.encode(data, codec), result);
+	test.assertEqualsTyped(iconv.decode(result, codec), data);
+}
 
-test.assertEqualsTyped(
-	iconv.encode("Hello World", "base64"),
-	"SGVsbG8gV29ybGQ=".bytes()
-);
-test.assertEqualsTyped(
-	iconv.decode("SGVsbG8gV29ybGQ=", "base64"),
-	"Hello World"
-);
-test.assertEqualsTyped(
-	iconv.transcode("SGVsbG8gV29ybGQ=", "base64", "utf-8-bom"),
+function assertTranscode(data: Bytes, incodec: string, outcodec: string, result: Bytes) {
+	test.assertEqualsTyped(iconv.transcode(data, incodec, outcodec), result);
+	test.assertEqualsTyped(iconv.transcode(result, outcodec, incodec), data);
+}
+
+
+assertEncode("Hello World", "base64", "SGVsbG8gV29ybGQ=".bytes());
+assertEncode("/var/foo?x=49&z=2", "uri", "%2Fvar%2Ffoo%3Fx%3D49%26z%3D2".bytes());
+assertEncode("¥ƒ§", "csAdobeStandardEncoding", "\xA5\xA6\xA7".bytes());
+
+assertTranscode(
+	"SGVsbG8gV29ybGQ=".bytes(),
+	"base64", "utf-8-bom",
 	"\xEF\xBB\xBFHello World".bytes()
-);
-
-
-test.assertEqualsTyped(
-	iconv.encode("/var/foo?x=49&z=2", "uri"),
-	"%2Fvar%2Ffoo%3Fx%3D49%26z%3D2".bytes()
-);
-test.assertEqualsTyped(
-	iconv.decode("%2Fvar%2Ffoo%3Fx%3D49%26z%3D2", "uri"),
-	"/var/foo?x=49&z=2"
 );
