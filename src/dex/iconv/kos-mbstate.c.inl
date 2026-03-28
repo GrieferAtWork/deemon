@@ -23,10 +23,12 @@
 #include <deemon/api.h>
 /**/
 
+#include <deemon/util/kos-compat.h>
+
 #include "kos-mbstate.h"
 
-#include <hybrid/typecore.h>
-#include <deemon/util/kos-compat.h>
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 #ifndef CONFIG_HAVE_UNICODE_H
 DECL_BEGIN

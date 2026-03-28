@@ -23,8 +23,9 @@
 #include <deemon/api.h>
 /**/
 
-#include <hybrid/typecore.h>
 #include <deemon/util/kos-compat.h>
+
+#include <hybrid/typecore.h> /* __UINT32_TYPE__ */
 
 DECL_BEGIN
 

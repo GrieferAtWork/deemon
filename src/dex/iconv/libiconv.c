@@ -27,17 +27,27 @@
 
 #include <deemon/api.h>
 
-#include <deemon/arg.h>
-#include <deemon/bool.h>
-#include <deemon/bytes.h>
-#include <deemon/dex.h> /* DEX_*, Dee_DEXSYM_READONLY */
-#include <deemon/seq.h>
-#include <deemon/error.h>
-#include <deemon/int.h>
-#include <deemon/none.h>
+#include <deemon/alloc.h>           /* DeeObject_MALLOC */
+#include <deemon/arg.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
+#include <deemon/bool.h>            /* return_bool */
+#include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_bytes_printer, Dee_bytes_printer_* */
+#include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
+#include <deemon/error.h>           /* DeeError_* */
+#include <deemon/format.h>          /* PCKuN, PRFuSIZ */
+#include <deemon/int.h>             /* DeeInt_NEWU */
+#include <deemon/none.h>            /* return_none */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_formatprinter_t, Dee_ssize_t */
 #include <deemon/objmethod.h>
-#include <deemon/string.h>
-#include <deemon/tuple.h>
+#include <deemon/string.h>          /* DeeString*, Dee_STRING_ERROR_FIGNORE, Dee_UNICODE_PRINTER_INIT, Dee_unicode_printer*, STRING_ERROR_FSTRICT, WSTR_LENGTH */
+#include <deemon/system-features.h> /* strcmp */
+#include <deemon/tuple.h>           /* DeeTuple_Newf */
+#include <deemon/type.h>            /* DeeObject_InitStatic, METHOD_FNORMAL */
+
+#include <hybrid/typecore.h> /* __SIZEOF_INTPTR_HALF_T__ */
+
+#include <stdbool.h> /* bool, false */
+#include <stddef.h>  /* NULL, size_t */
+#include <stdint.h>  /* uint16_t, uint32_t */
 
 DECL_BEGIN
 

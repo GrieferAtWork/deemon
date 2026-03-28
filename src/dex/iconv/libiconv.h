@@ -22,8 +22,9 @@
 
 #include <deemon/api.h>
 
-#include <deemon/file.h>
-#include <deemon/util/nrlock.h>
+#include <deemon/file.h>        /* DeeFileObject, DeeFileTypeObject, Dee_FILE_OBJECT_HEAD */
+#include <deemon/types.h>       /* DeeTypeObject, Dee_OBJECT_HEAD */
+#include <deemon/util/nrlock.h> /* Dee_nrshared_lock_* */
 
 #include "iconv.h"
 

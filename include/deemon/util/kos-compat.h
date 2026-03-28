@@ -23,7 +23,7 @@
 #include "../api.h"
 
 #include <hybrid/__alloca.h> /* __hybrid_alloca */
-#include <hybrid/typecore.h> /* __*_TYPE__ */
+#include <hybrid/typecore.h> /* __*_TYPE__, __CHAR_BIT__ */
 
 #include "../alloc.h"           /* Dee_Free, Dee_Try*alloc* */
 #include "../format.h"          /* DeeFormat_Printf, DeeFormat_VPrintf, PRF* */

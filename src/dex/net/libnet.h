@@ -115,7 +115,7 @@
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* size_t */
-#include <stdint.h>  /* uint16_t, uint64_t, uintptr_t */
+#include <stdint.h>  /* UINT32_C, uint16_t, uint64_t, uintptr_t */
 
 #ifdef CONFIG_HOST_WINDOWS
 #undef EWOULDBLOCK

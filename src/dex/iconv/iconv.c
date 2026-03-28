@@ -26,7 +26,12 @@
 /**/
 
 #include <deemon/api.h>
-#include <deemon/system-features.h>
+
+#include <deemon/alloc.h>           /* Dee_Freea, Dee_TryMallocaNoFail */
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_rawmemrchr, memcpyc */
+
+#include <stddef.h> /* size_t */
+#include <stdint.h> /* uint32_t */
 
 DECL_BEGIN
 

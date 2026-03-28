@@ -27,12 +27,16 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>
-#include <deemon/object.h>
-#include <deemon/seq.h>
-#include <deemon/serial.h>
-#include <deemon/type.h>
-#include <deemon/util/atomic.h>
+#include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_COMPARE_ERR, Dee_return_compare, ITER_DONE, OBJECT_HEAD_INIT */
+#include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
+#include <deemon/serial.h>          /* DeeSerial, DeeSerial_PutPointer, Dee_seraddr_t */
+#include <deemon/string.h>          /* DeeString_NewUtf8, Dee_STRING_ERROR_FIGNORE */
+#include <deemon/system-features.h> /* strend */
+#include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_* */
+#include <deemon/util/atomic.h>     /* atomic_cmpxch_weak, atomic_read */
+
+#include <stddef.h> /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 
@@ -92,12 +96,12 @@ PRIVATE struct type_cmp snai_cmp = {
 
 INTERN DeeTypeObject StrNulArrayIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_StrNulArray",
+	/* .tp_name     = */ "_StrNulArrayIterator",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 			/* T:              */ StrNulArrayIterator,

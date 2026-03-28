@@ -27,8 +27,7 @@
 
 #include <deemon/api.h>
 
-#include <deemon/dex.h> /* DEX_*, Dee_DEXSYM_READONLY */
-#include <deemon/none.h>
+#include <deemon/system-features.h> /* DeeSystem_DEFINE_rawmemrchr */
 
 DECL_BEGIN
 
