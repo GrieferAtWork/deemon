@@ -3468,8 +3468,99 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 time_print(DeeTimeObject *__restrict self,
            Dee_formatprinter_t printer, void *arg) {
-	/* TODO: Re-design me! (and include special handling for delta timestamps) */
-	return time_format(printer, arg, "%A, the %[n:mday] of %B %Y, %H:%M:%S", self);
+	union {
+		Dee_uint128_t u;
+		Dee_int128_t s;
+	} my_value;
+	Dee_ssize_t result, temp;
+	Dee_uint128_t days;
+	uint64_t nanoseconds;
+	uint8_t temp8;
+
+	if (self->t_kind != TIME_KIND_DELTA) {
+#if 0
+		return time_format(printer, arg, "%FT%X.%[9:nanosecond]", self);
+#else
+		return time_format(printer, arg, "%A, the %[n:mday] of %B %Y, %H:%M:%S", self);
+#endif
+	}
+	if (__hybrid_int128_iszero(self->t_nanos))
+		return DeeFormat_PRINT(printer, arg, "0s");
+	if (__hybrid_int128_isneg(self->t_nanos)) {
+		result = DeeFormat_PRINT(printer, arg, "-");
+		if unlikely(result < 0)
+			goto done;
+		my_value.s = self->t_nanos;
+		__hybrid_int128_neg(my_value.s);
+	} else {
+		result = 0;
+		my_value.u = self->t_unanos;
+	}
+	if (self->t_type == TIME_TYPE_MONTHS) {
+		__hybrid_uint128_divmod8(my_value.u, MONTHS_PER_YEAR, days, temp8);
+		if (!__hybrid_uint128_iszero(days)) {
+			temp = DeeFormat_Printf(printer, arg, "%" PRFu128 "Y", days);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		if (temp8 != 0) {
+			temp = DeeFormat_Printf(printer, arg, "%" PRFu8 "M", temp8);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+		goto done;
+	}
+
+	/* Days... */
+	__hybrid_uint128_divmod64(my_value.u, NANOSECONDS_PER_DAY, days, nanoseconds);
+	if (!__hybrid_uint128_iszero(days)) {
+		temp = DeeFormat_Printf(printer, arg, "%" PRFu128 "d", days);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+
+	/* Hours... */
+	temp8 = (uint8_t)(nanoseconds / NANOSECONDS_PER_HOUR);
+	nanoseconds %= NANOSECONDS_PER_HOUR;
+	if (temp8 != 0) {
+		result = DeeFormat_Printf(printer, arg, "%" PRFu8 "h", temp8);
+		if unlikely(result < 0)
+			goto done;
+	}
+
+	/* Minutes */
+	temp8 = (uint8_t)(nanoseconds / NANOSECONDS_PER_MINUTE);
+	nanoseconds %= NANOSECONDS_PER_MINUTE;
+	if (temp8 != 0) {
+		result = DeeFormat_Printf(printer, arg, "%" PRFu8 "m", temp8);
+		if unlikely(result < 0)
+			goto done;
+	}
+
+	/* Seconds */
+	temp8 = (uint8_t)(nanoseconds / NANOSECONDS_PER_SECOND);
+	nanoseconds %= NANOSECONDS_PER_SECOND;
+	if (temp8 != 0) {
+		result = DeeFormat_Printf(printer, arg, "%" PRFu8 "s", temp8);
+		if unlikely(result < 0)
+			goto done;
+	}
+
+	/* Nanoseconds */
+	if (nanoseconds != 0) {
+		temp = DeeFormat_Printf(printer, arg, "%" PRFu64 "n", nanoseconds);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+
+done:
+	return result;
+err_temp:
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

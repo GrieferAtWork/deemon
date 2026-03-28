@@ -141,7 +141,7 @@ typedef struct time_object {
 	;
 	union {
 		struct {
-			uint8_t  t_type; /* Time encoding (One of `TIME_*') */
+			uint8_t  t_type; /* Time encoding (One of `TIME_TYPE_*') */
 			uint8_t  t_kind; /* Time kind (One of `TIME_KIND_*') */
 		}
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
