@@ -2502,7 +2502,7 @@ err:
  *      right now is due to setters like `Time.second = 42'. I feel like it would be
  *      nicer if these weren't writable, but instead there was `Time.with(second: 42)'
  *      in order to construct a new time object with certain fields changed to other
- *      values. */
+ *      values (however: "with" is a reserved keyword...). */
 
 /*[[[deemon
 import * from deemon;
@@ -3042,9 +3042,9 @@ DeeTime_NewFILETIME(void const *filetime) {
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
-	__hybrid_uint128_set64(*(Dee_uint128_t *)&result->t_nanos, UNALIGNED_GET64(filetime));
-	__hybrid_uint128_mul8(*(Dee_uint128_t *)&result->t_nanos, 100);
-	__hybrid_uint128_add128(*(Dee_uint128_t *)&result->t_nanos, NANOSECONDS_01_01_1601);
+	__hybrid_uint128_set64(result->t_unanos, UNALIGNED_GET64(filetime));
+	__hybrid_uint128_mul8(result->t_unanos, 100);
+	__hybrid_uint128_add128(result->t_unanos, NANOSECONDS_01_01_1601);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_TIMESTAMP);
 	DeeObject_InitStatic(result, &DeeTime_Type);
 done:
@@ -3845,19 +3845,19 @@ DEX_MEMBER_F("makedate", &libtime_makedate, Dee_DEXSYM_READONLY,
              "}"),
 
 /* Export various functions for constructing time deltas.
-	* NOTE: These functions are highly useful for specifying timeouts,
-	*       and are actually the only portable way of specifying them,
-	*       as it is implementation-specific what's the time resolution
-	*       that's used by functions accepting timeouts (in the GATW
-	*       implementation it's nanoseconds, but that wasn't always the
-	*       case, as a one point, it was microseconds):
-	* >> import seconds from time;
-	* >> import Thread from deemon;
-	* >>
-	* >> print "Begin waiting for 2 seconds";
-	* >> Thread.sleep(seconds(2));
-	* >> print "Done waiting";
-	*/
+ * NOTE: These functions are highly useful for specifying timeouts,
+ *       and are actually the only portable way of specifying them,
+ *       as it is implementation-specific what's the time resolution
+ *       that's used by functions accepting timeouts (in the GATW
+ *       implementation it's nanoseconds, but that wasn't always the
+ *       case, as a one point, it was microseconds):
+ * >> import seconds from time;
+ * >> import Thread from deemon;
+ * >>
+ * >> print "Begin waiting for 2 seconds";
+ * >> Thread.sleep(seconds(2));
+ * >> print "Done waiting";
+ */
 #define DEFINE_DELTA_CALLBACK(name)                           \
 	DEX_MEMBER_F(#name, &libtime_##name, Dee_DEXSYM_READONLY, \
 	             "(value:?Dint)->?GTime\n"                    \

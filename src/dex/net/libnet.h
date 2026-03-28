@@ -424,11 +424,11 @@ DECL_BEGIN
 
 #if __BYTE_ORDER__ == NET_ENDIAN
 #define SOCKADDRINET(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
-#define INET_HOSTNAME_A(x) (((x)&0xff000000) >> 24)
-#define INET_HOSTNAME_B(x) (((x)&0x00ff0000) >> 16)
-#define INET_HOSTNAME_C(x) (((x)&0x0000ff00) >> 8)
-#define INET_HOSTNAME_D(x)  ((x)&0x000000ff)
-#define LOCALHOST DEE_UINT32_C(0x7f000001) // 127.0.0.1 (in network endian)
+#define INET_HOSTNAME_A(x) (((x)&UINT32_C(0xff000000)) >> 24)
+#define INET_HOSTNAME_B(x) (((x)&UINT32_C(0x00ff0000)) >> 16)
+#define INET_HOSTNAME_C(x) (((x)&UINT32_C(0x0000ff00)) >> 8)
+#define INET_HOSTNAME_D(x)  ((x)&UINT32_C(0x000000ff))
+#define LOCALHOST UINT32_C(0x7f000001) // 127.0.0.1 (in network endian)
 #define HTON16   /* nothing */
 #define HTON16_C /* nothing */
 #define HTON32   /* nothing */
@@ -437,11 +437,11 @@ DECL_BEGIN
 #define HTON64_C /* nothing */
 #else /* __BYTE_ORDER__ == NET_ENDIAN */
 #define SOCKADDRINET(a, b, c, d) ((a) | (b) << 8 | (c) << 16 | (d) << 24)
-#define INET_HOSTNAME_A(x)  ((x)&0x000000ff)
-#define INET_HOSTNAME_B(x) (((x)&0x0000ff00) >> 8)
-#define INET_HOSTNAME_C(x) (((x)&0x00ff0000) >> 16)
-#define INET_HOSTNAME_D(x) (((x)&0xff000000) >> 24)
-#define LOCALHOST 0x0100007f // 127.0.0.1 (in network endian)
+#define INET_HOSTNAME_A(x)  ((x)&UINT32_C(0x000000ff))
+#define INET_HOSTNAME_B(x) (((x)&UINT32_C(0x0000ff00)) >> 8)
+#define INET_HOSTNAME_C(x) (((x)&UINT32_C(0x00ff0000)) >> 16)
+#define INET_HOSTNAME_D(x) (((x)&UINT32_C(0xff000000)) >> 24)
+#define LOCALHOST UINT32_C(0x0100007f) // 127.0.0.1 (in network endian)
 #define HTON16    BSWAP16
 #define HTON16_C  BSWAP16_C
 #define HTON32    BSWAP32
