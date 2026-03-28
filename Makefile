@@ -165,6 +165,11 @@ BIN_OPTIONAL += lib/hashlib$(DLL)
 SRC_lib_hashlib$(DLL) = src/dex/hashlib/*.c
 
 
+BIN_OPTIONAL += lib/iconv$(DLL)
+SRC_lib_iconv$(DLL) = src/dex/iconv/*.c
+CFLAGS_src_dex_iconv_db.c += -g0 -O0
+
+
 ifndef CONFIG_WITHOUT_DEX_IPC
 BIN_OPTIONAL += lib/ipc$(DLL)
 SRC_lib_ipc$(DLL) = src/dex/ipc/*.c

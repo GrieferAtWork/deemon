@@ -688,6 +688,7 @@ void __builtin_va_end(__builtin_va_list &__ap);
 #define __GCC_HAS_WARNING_Wcast_function_type _xS(4054 4152)
 #if _MSC_VER >= 1500
 #define __GCC_HAS_WARNING_MSconditional_expression_is_constant _xS(4127)
+#define __GCC_HAS_WARNING_MSdecimal_digit_terminates_ocal_escape_sequence _xS(4125)
 #endif /* _MSC_VER >= 1500 */
 #define __GCC_HAS_WARNING_Wdiv_by_zero _xS(4723 4724)
 #define __GCC_HAS_WARNING_Winvalid_offsetof _xS(4597 4749 4842)

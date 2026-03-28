@@ -255,6 +255,8 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define __byte_t __BYTE_TYPE__
 #undef byte_t
 #define byte_t __BYTE_TYPE__
+#undef uintptr_half_t
+#define uintptr_half_t __UINTPTR_HALF_TYPE__
 
 /* Hook heap functions */
 #undef __libc_bzero
@@ -513,6 +515,45 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define UNICODE_UTF8_CURLEN Dee_UNICODE_UTF8_CURLEN
 #undef UNICODE_UTF8_DEFLEN
 #define UNICODE_UTF8_DEFLEN Dee_UNICODE_UTF8_DEFLEN
+
+#undef UNICODE_UTF16_MAXLEN
+#undef UNICODE_UTF16_CURLEN
+#undef UNICODE_UTF32_MAXLEN
+#undef UNICODE_UTF32_CURLEN
+#undef UTF16_HIGH_SURROGATE_MIN
+#undef UTF16_HIGH_SURROGATE_MAX
+#undef UTF16_LOW_SURROGATE_MIN
+#undef UTF16_LOW_SURROGATE_MAX
+#undef UTF16_SURROGATE_SHIFT
+#undef UNICODE_ISVALIDUTF16
+#undef UNICODE_MAXCHAR
+#undef UNICODE_8TO16_MAXBUF
+#undef UNICODE_8TO32_MAXBUF
+#undef UNICODE_16TO8_MAXBUF
+#undef UNICODE_16TO32_MAXBUF
+#undef UNICODE_32TO8_MAXBUF
+#undef UNICODE_32TO16_MAXBUF
+#define UNICODE_UTF16_MAXLEN 2
+#define UNICODE_UTF16_CURLEN 2
+#define UNICODE_UTF32_MAXLEN 1
+#define UNICODE_UTF32_CURLEN 1
+#define UTF16_HIGH_SURROGATE_MIN 0xd800
+#define UTF16_HIGH_SURROGATE_MAX 0xdbff
+#define UTF16_LOW_SURROGATE_MIN  0xdc00
+#define UTF16_LOW_SURROGATE_MAX  0xdfff
+#define UTF16_SURROGATE_SHIFT    0x10000
+#define UNICODE_ISVALIDUTF16(ch)                  \
+	(sizeof(ch) == 1                              \
+	 ? 1                                          \
+	 : ((sizeof(ch) == 2 || (ch) <= 0x10ffff)) && \
+	   ((ch) < 0xd800 || (ch) > 0xdfff))
+#define UNICODE_MAXCHAR  0x10ffff
+#define UNICODE_8TO16_MAXBUF(num_chars)   (num_chars)
+#define UNICODE_8TO32_MAXBUF(num_chars)   (num_chars)
+#define UNICODE_16TO8_MAXBUF(num_chars)  ((num_chars) * 3)
+#define UNICODE_16TO32_MAXBUF(num_chars)  (num_chars)
+#define UNICODE_32TO8_MAXBUF(num_chars)  ((num_chars) * 7)
+#define UNICODE_32TO16_MAXBUF(num_chars) ((num_chars) * 2)
 #endif /* !CONFIG_HAVE_UNICODE_H */
 
 #undef __libc_hex2int
@@ -545,6 +586,14 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define PRIx32 PRFx32
 #undef PRIx64
 #define PRIx64 PRFx64
+#undef PRIX8
+#define PRIX8 PRFX8
+#undef PRIX16
+#define PRIX16 PRFX16
+#undef PRIX32
+#define PRIX32 PRFX32
+#undef PRIX64
+#define PRIX64 PRFX64
 #undef PRIu8
 #define PRIu8 PRFu8
 #undef PRIu16
@@ -573,6 +622,8 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define PRIuPTR PRFuPTR
 #undef PRIxPTR
 #define PRIxPTR PRFxPTR
+#undef NBBY
+#define NBBY __CHAR_BIT__
 
 DECL_END
 

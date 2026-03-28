@@ -289,8 +289,12 @@
 #define __ATTR_NOTHROW_T       /* nothing */
 #define __ATTR_RETURNS_TWICE_T /* nothing */
 #endif
+#ifdef _MSC_VER
+#define __ATTR_CONST_T         /* nothing */
+#else /* _MSC_VER */
+#define __ATTR_CONST_T         __ATTR_CONST
+#endif /* !_MSC_VER */
 #if 1
-#define __ATTR_CONST_T          __ATTR_CONST
 #define __ATTR_WUNUSED_T        __ATTR_WUNUSED
 #define __ATTR_RETNONNULL_T     __ATTR_RETNONNULL
 #define __ATTR_NONNULL_T        __ATTR_NONNULL
