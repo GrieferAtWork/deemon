@@ -566,7 +566,7 @@ FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_encode_f_i
 		data_base = DeeBytes_DATA(data);
 		data_size = DeeBytes_SIZE(data);
 	} else if (DeeString_Check(data)) {
-		data_base = DeeString_AsBytes(data, false);
+		data_base = DeeString_AsUtf8(data);
 		if unlikely(!data_base)
 			goto err;
 		data_size = WSTR_LENGTH(data_base);
