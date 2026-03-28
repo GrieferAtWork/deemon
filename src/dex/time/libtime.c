@@ -1393,7 +1393,7 @@ print_text:
 				break;
 
 			case 'x':
-				printf("%0.2" PRFu8 "/%0.2" PRFu8 "/%0.2" PRFu128,
+				printf("%0.2" PRFu8 "/%0.2" PRFu8 "/%0.2" PRFd128,
 				       DeeTime_GetRepr8(self, TIME_REPR_MONTH),
 				       DeeTime_GetRepr8(self, TIME_REPR_MDAY),
 				       DeeTime_GetRepr(self, TIME_REPR_YEAR));
@@ -3485,13 +3485,16 @@ time_printrepr(DeeTimeObject *__restrict self,
 			Dee_int128_t years;
 			uint8_t months;
 			__hybrid_int128_floordivmod8(self->t_months, MONTHS_PER_YEAR,
-			                        years, months);
+			                             years, months);
 			if (__hybrid_int128_iszero(years)) {
 				temp = DeeFormat_Printf(printer, arg, "months: %" PRFu8, months);
 			} else if (months == 0) {
-				temp = DeeFormat_Printf(printer, arg, "years: %" PRFu128, years);
+				temp = DeeFormat_Printf(printer, arg, "years: %" PRFd128, years);
+			} else if (__hybrid_int128_isminusone(years)) {
+				int8_t neg_months = (int8_t)months - MONTHS_PER_YEAR;
+				temp = DeeFormat_Printf(printer, arg, "months: %" PRFd8, neg_months);
 			} else {
-				temp = DeeFormat_Printf(printer, arg, "years: %" PRFu128 ", months: %" PRFu8, years, months);
+				temp = DeeFormat_Printf(printer, arg, "years: %" PRFd128 ", months: %" PRFu8, years, months);
 			}
 			if unlikely(temp < 0)
 				goto err;
@@ -3528,7 +3531,7 @@ time_printrepr(DeeTimeObject *__restrict self,
 				label = "nanoseconds";
 				div   = nano;
 			}
-			DO(err, DeeFormat_Printf(printer, arg, "%s: %" PRFu128, label, div));
+			DO(err, DeeFormat_Printf(printer, arg, "%s: %" PRFd128, label, div));
 		}
 	} else {
 		uint32_t extra_nanoseconds;
