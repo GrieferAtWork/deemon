@@ -44,6 +44,11 @@ typedef struct {
 INTDEF DeeTypeObject StrNulArrayIterator_Type;
 INTDEF DeeTypeObject StrNulArray_Type;
 
+
+/************************************************************************/
+/* DECODER                                                              */
+/************************************************************************/
+
 typedef struct {
 	/* Decoder: convert <some codec> --> UTF-8 */
 	Dee_FILE_OBJECT_HEAD
@@ -56,6 +61,11 @@ typedef struct {
 INTDEF DeeFileTypeObject IconvDecoder_Type;
 #define IconvDecoder_GetOut(self) ((DeeFileObject *)(self)->ivd_decoder.icd_output.ii_arg)
 
+
+/************************************************************************/
+/* ENCODER                                                              */
+/************************************************************************/
+
 typedef struct {
 	/* Encoder: convert UTF-8 --> <some codec> */
 	Dee_FILE_OBJECT_HEAD
@@ -63,8 +73,6 @@ typedef struct {
 	Dee_nrshared_lock_t  ive_lock;    /* Lock for `ive_encoder' */
 	struct iconv_printer ive_input;   /* [lock(ive_lock)] Input printer */
 	struct iconv_encode  ive_encoder; /* [lock(ive_lock)] Underlying encoder */
-	/* TODO: Implement "ft_sync" and "ft_close" by calling "libiconv_encode_flush()" */
-	/* TODO: Expose "libiconv_encode_isinputshiftzero()" */
 } IconvEncoder;
 
 INTDEF DeeFileTypeObject IconvEncoder_Type;

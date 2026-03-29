@@ -30,13 +30,16 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 	test.assertEqualsTyped(iconv.encode(data, codec), result);
 
 	/* Encode using "iconv.Encoder" */
-	/* TODO */
+	local w = File.Writer(hint: "bytes");
+	with (local d = iconv.Encoder(codec, out: w))
+		print d: data,;
+	test.assertEqualsTyped(result, w.bytes);
 
 	/* Decode using convenience wrapper */
 	test.assertEqualsTyped(iconv.decode(result, codec), data);
 
 	/* Decode using "iconv.Decoder" */
-	local w = File.Writer();
+	local w = File.Writer(hint: "string");
 	with (local d = iconv.Decoder(codec, out: w))
 		d.write(result);
 	test.assertEqualsTyped(data, w.string);
