@@ -10259,6 +10259,12 @@ err:
 	return NULL;
 }
 
+#undef ICONV_MODULE_NAME
+#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
+#define ICONV_MODULE_NAME "iconv" /* TODO: Inline once "CONFIG_EXPERIMENTAL_USE_ICONV" becomes mandatory */
+#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
+#define ICONV_MODULE_NAME "codecs"
+#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
 
 INTDEF struct type_method tpconst string_methods[];
 INTERN_TPCONST struct type_method tpconst string_methods[] = {
@@ -10294,7 +10300,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|?.|Decode ${this.bytes()} as a UTF-32 sequence, encoded in little-endian&"
 	              "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|?.|Decode ${this.bytes()} as a UTF-32 sequence, encoded in big-endian&"
 	              "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|?.|Decode a backslash-escaped string after stripping an optional leading and trailing $\"\\\"\" or $\"\\\'\" character}\n"
-	              "If the given @codec is not apart of this list, a call is made to ?Ecodecs:decode"),
+	              "If the given @codec is not apart of this list, a call is made to ?E" ICONV_MODULE_NAME ":decode"),
 	TYPE_KWMETHOD("encode", &string_encode,
 	              "(codec:?.,errors=!Pstrict)->?X3?DBytes?.?O\n"
 	              "#tValueError{The given @codec or @errors wasn't recognized}"
@@ -10324,7 +10330,7 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|?DBytes|Encode @this ?. as a UTF-32 sequence, encoded in little-endian&"
 	              "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|?DBytes|Encode @this ?. as a UTF-32 sequence, encoded in big-endian&"
 	              "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|?.|Encode @this ?. as a backslash-escaped string. This is similar to ?#{op:repr}, however the string is not surrounded by $\"\\\"\"-characters}\n"
-	              "If the given @codec is not apart of this list, a call is made to ?Ecodecs:encode"),
+	              "If the given @codec is not apart of this list, a call is made to ?E" ICONV_MODULE_NAME ":encode"),
 	TYPE_METHOD_F("bytes", &string_bytes,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
 	              "(allow_invalid=!f)->?DBytes\n"

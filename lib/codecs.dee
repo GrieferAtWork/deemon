@@ -18,6 +18,51 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+/*
+ * !!! DEPREACTED MODULE !!!
+ *
+ * In the past, this module was used to implement string/Bytes.encode/decode
+ * operations for extended codecs not matching the set of codecs built-into
+ * the deemon code.
+ *
+ * This has now changed:
+ * - When deemon is built with "CONFIG_EXPERIMENTAL_USE_ICONV" enabled, this
+ *   module, as well as all other modules from "_codecs" go unused, and all
+ *   extended codecs are supplied and managed by "iconv" (a port of KOSmk4's
+ *   iconv library)
+ * - As such, new user-code shouldn't use this module, especially not the
+ *   "register" function (which used to allow one to register additional
+ *   codecs)
+ * - Since "iconv" uses a file-based approach that allows for stream-like
+ *   encode/decode operations, the old module (and exposed API here) can't
+ *   be used to implement the new file-based interface:
+ *   - Old interface:
+ *     >> class MyCodec {
+ *     >>     public encode(data: string, errors: string): Bytes;
+ *     >>     public decode(data: Bytes, errors: string): string;
+ *     >> }
+ *     >> register("my-codec", MyCodec());
+ *   - New interface would require something like this (currently: "iconv"
+ *     doesn't provide an interface for registering additional codecs):
+ *     >> class MyEncoder: File {
+ *     >>     this(out: File, errors: string | int);
+ *     >>     operator write(data: Bytes);
+ *     >> }
+ *     >> class MyDecoder: File {
+ *     >>     this(out: File, errors: string | int);
+ *     >>     operator write(data: Bytes);
+ *     >> }
+ *     >> register("my-codec", MyEncoder, MyDecoder);
+ *     An interface similar to this may to be added to "iconv" in
+ *     the future, should the need arise, though for the time being,
+ *     "CONFIG_EXPERIMENTAL_USE_ICONV" does not provide a replacement
+ *     for any sort of "codec registration API"
+ * - To my knowledge, no user-code ever made use of custom codecs, only
+ *   using the standard string/Bytes.encode/decode functions, this even
+ *   though this is technically an API-breaking change, no code that I'm
+ *   aware of should be affected.
+ */
+
 import * from deemon;
 import * from errors;
 import * from util;

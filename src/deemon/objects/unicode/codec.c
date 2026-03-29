@@ -712,21 +712,30 @@ err:
 #define encode_utf32_be  encode_utf32
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
-PRIVATE Dee_ATOMIC_XREF(DeeModuleObject) g_libcodecs = Dee_ATOMIC_XREF_INIT(NULL);
+PRIVATE Dee_ATOMIC_XREF(DeeModuleObject) g_libiconv = Dee_ATOMIC_XREF_INIT(NULL);
 
-INTERN bool DCALL libcodecs_shutdown(void) {
+INTERN bool DCALL libiconv_shutdown(void) {
 	DREF DeeModuleObject *old_lib;
-	Dee_atomic_xref_xch_newNULL(&g_libcodecs, &old_lib);
+	Dee_atomic_xref_xch_newNULL(&g_libiconv, &old_lib);
 	Dee_XDecref(old_lib);
 	return old_lib != NULL;
 }
 
-PRIVATE WUNUSED DREF DeeModuleObject *DCALL libcodecs_get(void) {
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL libiconv_get(void) {
 	DREF DeeModuleObject *result;
 again:
-	Dee_atomic_xref_get(&g_libcodecs, &result);
+	Dee_atomic_xref_get(&g_libiconv, &result);
 	if (result)
 		return result;
+#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
+#ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
+	result = DeeModule_Import(Dee_AsObject(&str_iconv), NULL, DeeModule_IMPORT_F_NORMAL);
+#else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+	result = DeeModule_OpenGlobal(Dee_AsObject(&str_iconv), NULL, true);
+	if (result && unlikely(DeeModule_RunInit(result) < 0))
+		Dee_Clear(result);
+#endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	result = DeeModule_Import(Dee_AsObject(&str_codecs), NULL, DeeModule_IMPORT_F_NORMAL);
 #else /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
@@ -734,8 +743,9 @@ again:
 	if (result && unlikely(DeeModule_RunInit(result) < 0))
 		Dee_Clear(result);
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
 	if likely(result) {
-		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&g_libcodecs, result)) {
+		if (!Dee_atomic_xref_cmpxch_oldNULL_newNONNULL(&g_libiconv, result)) {
 			Dee_Decref_unlikely(result);
 			goto again;
 		}
@@ -743,7 +753,7 @@ again:
 	return result;
 }
 
-PRIVATE DeeStringObject *tpconst error_module_names[] = {
+PRIVATE DeeStringObject *tpconst error_mode_names[] = {
 	/* [STRING_ERROR_FSTRICT] = */ &str_strict,
 	/* [STRING_ERROR_FREPLAC] = */ &str_replace,
 	/* [STRING_ERROR_FIGNORE] = */ &str_ignore
@@ -781,7 +791,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_DecodeIntern(DeeObject *self, DeeObject *name,
                       unsigned int error_mode) {
 	char const *name_str;
-	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
+	ASSERT(error_mode <= COMPILER_LENOF(error_mode_names));
 	name_str = DeeString_STR(name);
 	SWITCH_BUILTIN_CODECS(name_str,
 	                      return convert_ascii(self, error_mode, true),
@@ -801,7 +811,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
                       unsigned int error_mode) {
 	char const *name_str;
-	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
+	ASSERT(error_mode <= COMPILER_LENOF(error_mode_names));
 	name_str = DeeString_STR(name);
 	SWITCH_BUILTIN_CODECS(name_str,
 	                      return convert_ascii(self, error_mode, false),
@@ -821,7 +831,11 @@ DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
 /* Encode/decode `self' (usually a bytes- or string-object) to/from a codec `name'.
  * These functions will start by normalizing `name', checking if it refers to
  * one of the builtin codecs, and if it doesn't, make an external function
+ * #ifdef CONFIG_EXPERIMENTAL_USE_ICONV
+ * call to `encode from iconv' / `decode from iconv':
+ * #else // CONFIG_EXPERIMENTAL_USE_ICONV
  * call to `encode from codecs' / `decode from codecs':
+ * #endif // !CONFIG_EXPERIMENTAL_USE_ICONV
  * >> name = name.casefold().replace("_", "-");
  * >> if (name.startswith("iso-"))
  * >>     name = "iso" + name[4:];
@@ -853,27 +867,36 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Decode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {
 	DREF DeeObject *result;
-	DREF DeeModuleObject *libcodecs;
-	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
+	DREF DeeModuleObject *libiconv;
+	ASSERT(error_mode <= COMPILER_LENOF(error_mode_names));
 	name = DeeCodec_NormalizeName(name);
 	if unlikely(!name)
 		goto err;
 	result = DeeCodec_DecodeIntern(self, name, error_mode);
 	if (result != ITER_DONE)
 		goto done;
-	libcodecs = libcodecs_get();
-	if unlikely(!libcodecs) {
+	libiconv = libiconv_get();
+	if unlikely(!libiconv) {
 		if (DeeError_Catch(&DeeError_FileNotFound))
 			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "cause" */
 		goto err_name;
 	}
-	result = DeeObject_CallAttrPack(Dee_AsObject(libcodecs),
+#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
+	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
+	                                Dee_AsObject(&str_decode),
+	                                3,
+	                                self,
+	                                name,
+	                                error_mode_names[error_mode]);
+#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
+	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
 	                                Dee_AsObject(&str___decode),
 	                                3,
 	                                self,
 	                                name,
-	                                error_module_names[error_mode]);
-	Dee_Decref(libcodecs);
+	                                error_mode_names[error_mode]);
+#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
+	Dee_Decref(libiconv);
 #if 0
 	if unlikely(!result) {
 		/* Translate any kind of value error into an unknown-codec error.
@@ -898,9 +921,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_Encode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {
 	DREF DeeObject *result;
-	DREF DeeModuleObject *libcodecs;
+	DREF DeeModuleObject *libiconv;
 	char const *name_str;
-	ASSERT(error_mode < COMPILER_LENOF(error_module_names));
+	ASSERT(error_mode < COMPILER_LENOF(error_mode_names));
 	name = DeeCodec_NormalizeName(name);
 	if unlikely(!name)
 		goto err;
@@ -917,19 +940,28 @@ DeeCodec_Encode(DeeObject *self, DeeObject *name,
 	{ result = encode_utf32_be(self); goto done; },
 	{ result = encode_utf32_le(self); goto done; },
 	{ result = encode_utf8(self); goto done; });
-	libcodecs = libcodecs_get();
-	if unlikely(!libcodecs) {
+	libiconv = libiconv_get();
+	if unlikely(!libiconv) {
 		if (DeeError_Catch(&DeeError_FileNotFound))
 			goto err_unknown; /* Codec library not found */ /* TODO: Pass orig error as "cause" */
 		goto err_name;
 	}
-	result = DeeObject_CallAttrPack(Dee_AsObject(libcodecs),
+#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
+	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
+	                                Dee_AsObject(&str_encode),
+	                                3,
+	                                self,
+	                                name,
+	                                error_mode_names[error_mode]);
+#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
+	result = DeeObject_CallAttrPack(Dee_AsObject(libiconv),
 	                                Dee_AsObject(&str___encode),
 	                                3,
 	                                self,
 	                                name,
-	                                error_module_names[error_mode]);
-	Dee_Decref(libcodecs);
+	                                error_mode_names[error_mode]);
+#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
+	Dee_Decref(libiconv);
 #if 0
 	if unlikely(!result) {
 		/* Translate any kind of value error into an unknown-codec error.

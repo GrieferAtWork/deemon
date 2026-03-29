@@ -627,6 +627,18 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #define CONFIG_NO_EXPERIMENTAL_USE_TP_NEW
 #endif
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_TP_NEW */
+
+
+/* Experimental feature switch: use the newly ported "iconv" dex
+ * module instead of the (deprecated) "codecs" user-code module. */
+#if (!defined(CONFIG_EXPERIMENTAL_USE_ICONV) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_USE_ICONV))
+#if 1
+#define CONFIG_EXPERIMENTAL_USE_ICONV
+#else
+#define CONFIG_NO_EXPERIMENTAL_USE_ICONV
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_USE_ICONV */
 /************************************************************************/
 
 

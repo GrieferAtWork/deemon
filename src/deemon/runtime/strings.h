@@ -96,9 +96,6 @@ local STRINGS = List {
 	"operators", // TODO: Remove after "CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES"
 	"files",
 	"_strexec",
-	"codecs",
-	"__encode",
-	"__decode",
 	"strict",
 	"replace",
 	"ignore",
@@ -223,6 +220,19 @@ for (local s: STRINGS
 	if (generatedStrings.insert(s.last))
 		defString(s...);
 }
+
+print;
+
+print("#ifdef CONFIG_EXPERIMENTAL_USE_ICONV");
+defString("iconv");
+defString("encode");
+defString("decode");
+print("#else /" "* CONFIG_EXPERIMENTAL_USE_ICONV *" "/");
+defString("codecs");
+defString("__encode");
+defString("__decode");
+print("#endif /" "* !CONFIG_EXPERIMENTAL_USE_ICONV *" "/");
+print;
 
 print("#ifdef Dee_fd_t_IS_HANDLE");
 defString("str_getsysfd", "osfhandle_np");
@@ -367,15 +377,6 @@ DEF_STRING(str_files, "files", 0x908e29de, 0x41e984160894009c)
 #define Dee_HashStr___strexec _Dee_HashSelectC(0x33d8c7c0, 0x570df672f4433a0e)
 DEF_STRING(str__strexec, "_strexec", 0x33d8c7c0, 0x570df672f4433a0e)
 #define STR__strexec DeeString_STR(&str__strexec)
-#define Dee_HashStr__codecs _Dee_HashSelectC(0x341958d7, 0x51cf434bd995d8ac)
-DEF_STRING(str_codecs, "codecs", 0x341958d7, 0x51cf434bd995d8ac)
-#define STR_codecs DeeString_STR(&str_codecs)
-#define Dee_HashStr____encode _Dee_HashSelectC(0xe31efed3, 0xf1bfd986648273b9)
-DEF_STRING(str___encode, "__encode", 0xe31efed3, 0xf1bfd986648273b9)
-#define STR___encode DeeString_STR(&str___encode)
-#define Dee_HashStr____decode _Dee_HashSelectC(0x1c21cb81, 0x55817bd8d69ec3f5)
-DEF_STRING(str___decode, "__decode", 0x1c21cb81, 0x55817bd8d69ec3f5)
-#define STR___decode DeeString_STR(&str___decode)
 #define Dee_HashStr__strict _Dee_HashSelectC(0xc77e2a15, 0xffd127a282d4a0f0)
 DEF_STRING(str_strict, "strict", 0xc77e2a15, 0xffd127a282d4a0f0)
 #define STR_strict DeeString_STR(&str_strict)
@@ -1279,6 +1280,29 @@ DEF_STRING(str___iter_peek__, "__iter_peek__", 0x787817d8, 0xa72422dc5cd23509)
 #define Dee_HashStr____iter_seq__ _Dee_HashSelectC(0x3d5add24, 0x112e7a4c0e030d70)
 DEF_STRING(str___iter_seq__, "__iter_seq__", 0x3d5add24, 0x112e7a4c0e030d70)
 #define STR___iter_seq__ DeeString_STR(&str___iter_seq__)
+
+#ifdef CONFIG_EXPERIMENTAL_USE_ICONV
+#define Dee_HashStr__iconv _Dee_HashSelectC(0x1fc5086, 0x28e6d7cab093c3a6)
+DEF_STRING(str_iconv, "iconv", 0x1fc5086, 0x28e6d7cab093c3a6)
+#define STR_iconv DeeString_STR(&str_iconv)
+#define Dee_HashStr__encode _Dee_HashSelectC(0xbdd254fb, 0x813595e9f5972a27)
+DEF_STRING(str_encode, "encode", 0xbdd254fb, 0x813595e9f5972a27)
+#define STR_encode DeeString_STR(&str_encode)
+#define Dee_HashStr__decode _Dee_HashSelectC(0xccec6a5f, 0x2afb22b107633b46)
+DEF_STRING(str_decode, "decode", 0xccec6a5f, 0x2afb22b107633b46)
+#define STR_decode DeeString_STR(&str_decode)
+#else /* CONFIG_EXPERIMENTAL_USE_ICONV */
+#define Dee_HashStr__codecs _Dee_HashSelectC(0x341958d7, 0x51cf434bd995d8ac)
+DEF_STRING(str_codecs, "codecs", 0x341958d7, 0x51cf434bd995d8ac)
+#define STR_codecs DeeString_STR(&str_codecs)
+#define Dee_HashStr____encode _Dee_HashSelectC(0xe31efed3, 0xf1bfd986648273b9)
+DEF_STRING(str___encode, "__encode", 0xe31efed3, 0xf1bfd986648273b9)
+#define STR___encode DeeString_STR(&str___encode)
+#define Dee_HashStr____decode _Dee_HashSelectC(0x1c21cb81, 0x55817bd8d69ec3f5)
+DEF_STRING(str___decode, "__decode", 0x1c21cb81, 0x55817bd8d69ec3f5)
+#define STR___decode DeeString_STR(&str___decode)
+#endif /* !CONFIG_EXPERIMENTAL_USE_ICONV */
+
 #ifdef Dee_fd_t_IS_HANDLE
 #define Dee_HashStr__getsysfd _Dee_HashSelectC(0x75b169b6, 0x74235841d2ace4f0)
 DEF_STRING(str_getsysfd, "osfhandle_np", 0x75b169b6, 0x74235841d2ace4f0)
@@ -1306,6 +1330,13 @@ DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
 /*[[[end]]]*/
 
 #undef DEF_STRING
+
+#ifndef STR_encode
+#define STR_encode "encode"
+#endif /* !STR_encode */
+#ifndef STR_decode
+#define STR_decode "decode"
+#endif /* !STR_decode */
 
 #ifndef STR_index
 #define STR_index "index"

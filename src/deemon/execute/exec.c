@@ -731,13 +731,13 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 	Dee_Decref(old_argv);
 }
 
-INTDEF bool DCALL libcodecs_shutdown(void);
+INTDEF bool DCALL libiconv_shutdown(void);
 INTDEF bool DCALL clear_strexec_cache(void);
 
 PRIVATE bool DCALL shutdown_globals(void) {
 	bool result;
 	result = DeeModule_ClearLibPath();
-	result |= libcodecs_shutdown();
+	result |= libiconv_shutdown();
 	result |= clear_strexec_cache();
 	result |= DeeFile_ResetStd();
 	result |= DeeThread_ClearTls();
