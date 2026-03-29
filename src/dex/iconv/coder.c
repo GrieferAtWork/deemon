@@ -183,6 +183,9 @@ PRIVATE struct type_member tpconst ivd_members[] = {
 	TYPE_MEMBER_FIELD_DOC("out", STRUCT_OBJECT,
 	                      offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg),
 	                      "->?DFile"),
+	TYPE_MEMBER_FIELD_DOC("codec", STRUCT_CONST | STRUCT_UNSIGNED | STRUCT_INTEGER(__SIZEOF_INTPTR_HALF_T__),
+	                      offsetof(IconvDecoder, ivd_decoder.icd_codec),
+	                      "->?Dint"),
 	TYPE_MEMBER_END
 };
 
@@ -261,6 +264,9 @@ STATIC_ASSERT(offsetof(IconvDecoder, ivd_lock) == offsetof(IconvEncoder, ive_loc
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvEncoder, ive_encoder.ice_output.ii_arg));
 #define ive_fini    ivd_fini
 #define ive_visit   ivd_visit
+
+STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvEncoder, ive_encoder.ice_output.ii_arg));
+STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_codec) == offsetof(IconvEncoder, ive_encoder.ice_codec));
 #define ive_members ivd_members
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -447,7 +453,6 @@ STATIC_ASSERT(offsetof(IconvDecoder, ivd_lock) == offsetof(IconvTranscoder, ivt_
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvTranscoder, ivt_encoder.ice_output.ii_arg));
 #define ivt_fini    ivd_fini
 #define ivt_visit   ivd_visit
-#define ivt_members ivd_members
 
 STATIC_ASSERT(offsetof(IconvTranscoder, ivt_encoder) == offsetof(IconvEncoder, ive_encoder));
 #define ivt_close ive_close
@@ -569,6 +574,19 @@ err:
 PRIVATE struct type_getset tpconst ivt_getsets[] = {
 	TYPE_GETTER_AB("isshiftzero", &ivt_get_isshiftzero, DOC_GET(ivt_get_isshiftzero_doc)),
 	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst ivt_members[] = {
+	TYPE_MEMBER_FIELD_DOC("out", STRUCT_OBJECT,
+	                      offsetof(IconvTranscoder, ivt_decoder.icd_output.ii_arg),
+	                      "->?DFile"),
+	TYPE_MEMBER_FIELD_DOC("incodec", STRUCT_CONST | STRUCT_UNSIGNED | STRUCT_INTEGER(__SIZEOF_INTPTR_HALF_T__),
+	                      offsetof(IconvTranscoder, ivt_decoder.icd_codec),
+	                      "->?Dint"),
+	TYPE_MEMBER_FIELD_DOC("outcodec", STRUCT_CONST | STRUCT_UNSIGNED | STRUCT_INTEGER(__SIZEOF_INTPTR_HALF_T__),
+	                      offsetof(IconvTranscoder, ivt_encoder.ice_codec),
+	                      "->?Dint"),
+	TYPE_MEMBER_END
 };
 
 INTERN DeeFileTypeObject IconvTranscoder_Type = {
