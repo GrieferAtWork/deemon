@@ -41,6 +41,7 @@
 		<ClInclude Include="..\..\src\dex\iconv\libiconv.h" />
 	</ItemGroup>
 	<ItemGroup>
+		<ClCompile Include="..\..\src\dex\iconv\coder.c" />
 		<ClCompile Include="..\..\src\dex\iconv\db.c" />
 		<ClCompile Include="..\..\src\dex\iconv\iconv.c" />
 		<ClCompile Include="..\..\src\dex\iconv\libiconv.c" />

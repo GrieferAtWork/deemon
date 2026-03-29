@@ -516,6 +516,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-yield-function-with-kwds.dee = ..\util\test\deemon-yield-function-with-kwds.dee
 		..\util\test\hashlib.dee = ..\util\test\hashlib.dee
 		..\util\test\hostasm-regression.dee = ..\util\test\hostasm-regression.dee
+		..\util\test\iconv.dee = ..\util\test\iconv.dee
 		..\util\test\json.dee = ..\util\test\json.dee
 		..\util\test\misc-cover.dee = ..\util\test\misc-cover.dee
 		..\util\test\misc-import-lib.dee = ..\util\test\misc-import-lib.dee

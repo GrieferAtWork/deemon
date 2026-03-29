@@ -51,6 +51,26 @@
 
 DECL_BEGIN
 
+INTERN ATTR_COLD int DCALL
+err_unicode_decode_error(iconv_codec_t codec, size_t offset) {
+	return DeeError_Throwf(&DeeError_UnicodeDecodeError,
+	                       "Failed to decode %s at offset %" PRFuSIZ,
+	                       libiconv_getcodecnames(codec), offset);
+}
+
+INTERN ATTR_COLD int DCALL
+err_unicode_encode_error(iconv_codec_t codec, size_t offset) {
+	return DeeError_Throwf(&DeeError_UnicodeEncodeError,
+	                       "Failed to encode %s at offset %" PRFuSIZ,
+	                       libiconv_getcodecnames(codec), offset);
+}
+
+INTERN ATTR_COLD int DCALL
+err_unknown_codec(iconv_codec_t codec) {
+	return DeeError_Throwf(&DeeError_ValueError, "Unknown codec: %u", (unsigned int)codec);
+}
+
+
 /*[[[deemon (print_CMethod from rt.gen.unpack)("codecbyname", """
 	DeeStringObject *name
 """, libname: "deemon_iconv");]]]*/
@@ -274,15 +294,10 @@ deemon_iconv_parse_error_mode(char const *errors) {
 	                                       errors);
 }
 
-PRIVATE ATTR_COLD int DCALL
-err_unknown_codec(iconv_codec_t codec) {
-	return DeeError_Throwf(&DeeError_ValueError, "Unknown codec: %u", (unsigned int)codec);
-}
-
-PRIVATE WUNUSED NONNULL((1)) iconv_codec_t DCALL
-deemon_iconv_parse_codec_name_and_error_mode(DeeObject *codec,
-                                             DeeObject *errors,
-                                             uintptr_half_t *p_flags) {
+/* @return: ICONV_CODEC_UNKNOWN: An error was thrown */
+INTERN WUNUSED NONNULL((1, 3)) iconv_codec_t DCALL
+deemon_iconv_parse_codec_name_and_error_mode(DeeObject *codec, DeeObject *errors,
+                                             uintptr_half_t *__restrict p_flags) {
 	iconv_codec_t result;
 	if (errors == NULL) {
 		*p_flags = ICONV_ERR_ERROR;
@@ -343,10 +358,11 @@ err_printer:
 	return NULL;
 maybe_handle_iconv_error:
 	if (decoder.icd_flags & ICONV_HASERR) {
-		size_t index = (size_t)(data_size + status);
-		DeeError_Throwf(&DeeError_UnicodeDecodeError,
-		                "Failed to decode %s at offset %" PRFuSIZ,
-		                libiconv_getcodecnames(codec), index);
+		size_t offset = (size_t)(data_size + status);
+		err_unicode_decode_error(codec, offset);
+	} else {
+		ASSERTF(status == -1, "The used printer 'Dee_unicode_printer_print' "
+		                      "should only ever return `-1' to indicate errors");
 	}
 	goto err_printer;
 }
@@ -383,10 +399,11 @@ err_printer:
 	return NULL;
 maybe_handle_iconv_error:
 	if (encoder.ice_flags & ICONV_HASERR) {
-		size_t index = (size_t)(data_size + status);
-		DeeError_Throwf(&DeeError_UnicodeEncodeError,
-		                "Failed to encode %s at offset %" PRFuSIZ,
-		                libiconv_getcodecnames(codec), index);
+		size_t offset = (size_t)(data_size + status);
+		err_unicode_encode_error(codec, offset);
+	} else {
+		ASSERTF(status == -1, "The used printer 'Dee_bytes_printer_append' "
+		                      "should only ever return `-1' to indicate errors");
 	}
 	goto err_printer;
 }
@@ -465,14 +482,15 @@ err_printer:
 	return NULL;
 maybe_handle_iconv_error:
 	if (transcoder.it_decode.icd_flags & ICONV_HASERR) {
-		size_t index = (size_t)(data_size + status);
-		DeeError_Throwf(&DeeError_UnicodeDecodeError,
-		                "Failed to decode %s at offset %" PRFuSIZ,
-		                libiconv_getcodecnames(incodec), index);
+		size_t offset = (size_t)(data_size + status);
+		err_unicode_decode_error(incodec, offset);
 	} else if (transcoder.it_encode.ice_flags & ICONV_HASERR) {
 		DeeError_Throwf(&DeeError_UnicodeEncodeError,
 		                "Failed to re-encode data as %s",
 		                libiconv_getcodecnames(outcodec));
+	} else {
+		ASSERTF(status == -1, "The used printer 'Dee_bytes_printer_append' "
+		                      "should only ever return `-1' to indicate errors");
 	}
 	goto err_printer;
 }
@@ -701,7 +719,7 @@ DEX_MEMBER_F("detect_codec", &deemon_iconv_detect_codec, Dee_DEXSYM_READONLY,
 
              "If the function is unable to determine the codec to-be used, it will return !N"),
 
-// TODO: DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
 // TODO: DEX_MEMBER_F_NODOC("Encoder", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READONLY),
 // TODO: DEX_MEMBER_F_NODOC("Transcoder", &IconvTranscoder_Type.ft_base, Dee_DEXSYM_READONLY),
 

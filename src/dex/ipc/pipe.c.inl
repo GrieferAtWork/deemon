@@ -229,7 +229,7 @@ INTERN DeeFileTypeObject DeePipe_Type = {
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
+		/* .tp_base     = */ &DeeSystemFile_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ DeeSystemFileObject,
@@ -286,7 +286,7 @@ INTERN DeeFileTypeObject DeePipeReader_Type = {
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeePipe_Type,
+		/* .tp_base     = */ &DeePipe_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ DeeSystemFileObject,
@@ -343,7 +343,7 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeePipe_Type,
+		/* .tp_base     = */ &DeePipe_Type.ft_base,
 		/* .tp_init = */ {
 			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
 				/* T:              */ DeeSystemFileObject,
