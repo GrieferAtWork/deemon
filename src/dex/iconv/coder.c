@@ -27,14 +27,22 @@
 
 #include <deemon/api.h>
 
-#include <deemon/alloc.h>           /* DeeObject_MALLOC */
-#include <deemon/arg.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
-#include <deemon/bool.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
-#include <deemon/int.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
-#include <deemon/file.h>            /* return_bool */
-#include <deemon/error.h>            /* return_bool */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_formatprinter_t, Dee_ssize_t */
-#include <deemon/type.h>            /* DeeObject_InitStatic, METHOD_FNORMAL */
+#include <deemon/alloc.h>       /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
+#include <deemon/arg.h>         /* DeeArg_UnpackStructKw */
+#include <deemon/bool.h>        /* return_bool */
+#include <deemon/error.h>       /* DeeError_RuntimeError, DeeError_Throwf */
+#include <deemon/file.h>        /* DeeFileObject, DeeFileTypeObject, DeeFileType_Type, DeeFile_Type, DeeFile_WriteAll, Dee_ioflag_t */
+#include <deemon/format.h>      /* DeeFormat_PRINT, DeeFormat_Printf, PRFxN */
+#include <deemon/int.h>         /* DeeInt_NEWU */
+#include <deemon/object.h>      /* DREF, DeeObject, Dee_Decref, Dee_Incref, Dee_TYPE, Dee_formatprinter_t, Dee_ssize_t, OBJECT_HEAD_INIT */
+#include <deemon/string.h>      /* DeeString_New */
+#include <deemon/type.h>        /* DeeType_GetName, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_visit_t, STRUCT_OBJECT, TF_NONE, TP_FNORMAL, TYPE_*, type_getset, type_member */
+#include <deemon/util/nrlock.h> /* Dee_NRLOCK_ALREADY, Dee_NRLOCK_ERR, Dee_nrshared_lock_* */
+
+#include <hybrid/typecore.h> /* __SIZEOF_INTPTR_HALF_T__ */
+
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL, offsetof, size_t */
 
 DECL_BEGIN
 

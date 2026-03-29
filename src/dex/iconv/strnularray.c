@@ -31,12 +31,12 @@
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AssertTypeExact, DeeTypeObject, Dee_COMPARE_ERR, Dee_return_compare, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>             /* DeeIterator_Type, DeeSeq_Type */
 #include <deemon/serial.h>          /* DeeSerial, DeeSerial_PutPointer, Dee_seraddr_t */
-#include <deemon/string.h>          /* DeeString_NewUtf8, Dee_STRING_ERROR_FIGNORE */
+#include <deemon/string.h>          /* DeeString_New */
 #include <deemon/system-features.h> /* strend */
 #include <deemon/type.h>            /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, TF_NONE, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER_CONST, TYPE_MEMBER_END, type_* */
 #include <deemon/util/atomic.h>     /* atomic_cmpxch_weak, atomic_read */
 
-#include <stddef.h> /* NULL, offsetof, size_t */
+#include <stddef.h> /* NULL, offsetof */
 
 DECL_BEGIN
 

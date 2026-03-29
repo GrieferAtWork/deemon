@@ -31,7 +31,7 @@
 #include <deemon/file.h>            /* DeeFileObject_InitStatic, DeeFileTypeObject, DeeFileType_Type, DeeSystemFile_Type, DeeSystem_FILE_USE_nt_HANDLE, DeeSystem_FILE_USE_unix_fd */
 #include <deemon/filetypes.h>       /* DeeSystemFileObject, DeeSystemFile_HAVE_sf_filename */
 #include <deemon/format.h>          /* PRFu32 */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, DeeTypeObject, Dee_AsObject, OBJECT_HEAD_INIT */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_AsSize, Dee_AsObject, OBJECT_HEAD_INIT */
 #include <deemon/pair.h>            /* DeeSeqPairObject, DeeSeq_* */
 #include <deemon/system-features.h> /* CONFIG_HAVE_*, DeeSystem_GetErrno, FD_CLOEXEC, FIOCLEX, F_GETFD, F_SETFD, O_CLOEXEC, fcntl, ioctl, pipe, pipe2 */
 #include <deemon/system.h>          /* DeeNTSystem_ThrowErrorf, DeeUnixSystem_ThrowErrorf */
