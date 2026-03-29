@@ -46,12 +46,20 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 }
 
 function assertTranscode(data: Bytes, incodec: string, outcodec: string, result: Bytes) {
-	/* Encode using convenience wrapper */
+	/* Transcode using convenience wrapper */
 	test.assertEqualsTyped(iconv.transcode(data, incodec, outcodec), result);
 	test.assertEqualsTyped(iconv.transcode(result, outcodec, incodec), data);
 
-	/* Encode using "iconv.Transcoder" */
-	/* TODO */
+	/* Transcode using "iconv.Transcoder" */
+	local w = File.Writer(hint: "bytes");
+	with (local d = iconv.Transcoder(incodec, outcodec, out: w))
+		d.write(data);
+	test.assertEqualsTyped(result, w.bytes);
+
+	local w = File.Writer(hint: "bytes");
+	with (local d = iconv.Transcoder(outcodec, incodec, out: w))
+		d.write(result);
+	test.assertEqualsTyped(data, w.bytes);
 }
 
 

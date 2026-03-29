@@ -62,6 +62,7 @@ INTDEF DeeFileTypeObject IconvDecoder_Type;
 #define IconvDecoder_GetOut(self) ((DeeFileObject *)(self)->ivd_decoder.icd_output.ii_arg)
 
 
+
 /************************************************************************/
 /* ENCODER                                                              */
 /************************************************************************/
@@ -79,12 +80,17 @@ INTDEF DeeFileTypeObject IconvEncoder_Type;
 #define IconvEncoder_GetOut(self) ((DeeFileObject *)(self)->ive_encoder.ice_output.ii_arg)
 
 
+
+/************************************************************************/
+/* TRANSCODER                                                           */
+/************************************************************************/
+
 typedef struct {
 	/* Transcoder: convert <some codec> --> <some codec> */
 	Dee_FILE_OBJECT_HEAD
 //	DREF DeeObject      *ivt_out;     /* [const][1..1] Output file for output of `ivt_encoder' (== ivt_encoder.ice_output.ii_arg) */
 	Dee_nrshared_lock_t  ivt_lock;    /* Lock for `ivt_encoder' */
-	struct iconv_printer ive_input;   /* [lock(ivt_lock)] Input printer */
+	struct iconv_printer ivt_input;   /* [lock(ivt_lock)] Input printer */
 	struct iconv_encode  ivt_encoder; /* [lock(ivt_lock)] Underlying encoder */
 	struct iconv_decode  ivt_decoder; /* [lock(ivt_lock)] Underlying decoder */
 } IconvTranscoder;
@@ -94,6 +100,7 @@ INTDEF DeeFileTypeObject IconvTranscoder_Type;
 
 INTDEF ATTR_COLD int DCALL err_unicode_decode_error(iconv_codec_t codec, size_t offset);
 INTDEF ATTR_COLD int DCALL err_unicode_encode_error(iconv_codec_t codec, size_t offset);
+INTDEF ATTR_COLD int DCALL err_unicode_reencode_error(iconv_codec_t codec);
 INTDEF ATTR_COLD int DCALL err_unknown_codec(iconv_codec_t codec);
 
 /* @return: ICONV_CODEC_UNKNOWN: An error was thrown */

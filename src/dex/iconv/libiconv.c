@@ -66,6 +66,14 @@ err_unicode_encode_error(iconv_codec_t codec, size_t offset) {
 }
 
 INTERN ATTR_COLD int DCALL
+err_unicode_reencode_error(iconv_codec_t codec) {
+	return DeeError_Throwf(&DeeError_UnicodeEncodeError,
+	                       "Failed to re-encode data as %s",
+	                       libiconv_getcodecnames(codec));
+}
+
+
+INTERN ATTR_COLD int DCALL
 err_unknown_codec(iconv_codec_t codec) {
 	return DeeError_Throwf(&DeeError_ValueError, "Unknown codec: %u", (unsigned int)codec);
 }
@@ -485,9 +493,7 @@ maybe_handle_iconv_error:
 		size_t offset = (size_t)(data_size + status);
 		err_unicode_decode_error(incodec, offset);
 	} else if (transcoder.it_encode.ice_flags & ICONV_HASERR) {
-		DeeError_Throwf(&DeeError_UnicodeEncodeError,
-		                "Failed to re-encode data as %s",
-		                libiconv_getcodecnames(outcodec));
+		err_unicode_reencode_error(outcodec);
 	} else {
 		ASSERTF(status == -1, "The used printer 'Dee_bytes_printer_append' "
 		                      "should only ever return `-1' to indicate errors");
@@ -721,7 +727,7 @@ DEX_MEMBER_F("detect_codec", &deemon_iconv_detect_codec, Dee_DEXSYM_READONLY,
 
 DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Encoder", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READONLY),
-// TODO: DEX_MEMBER_F_NODOC("Transcoder", &IconvTranscoder_Type.ft_base, Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("Transcoder", &IconvTranscoder_Type.ft_base, Dee_DEXSYM_READONLY),
 
 /* Fast-pass encode/decode functions (drop-in replacements for equivalents from "codec") */
 DEX_MEMBER_F("decode", &deemon_iconv_decode, Dee_DEXSYM_READONLY,

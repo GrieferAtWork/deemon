@@ -163,17 +163,19 @@ ivd_sync(IconvDecoder *__restrict self) {
 	return 0;
 }
 
+DOC_DEF(ivd_get_isshiftzero_doc,
+        "->?Dbool\n"
+        "Check if the given encoder is in its default (zero) shift state. If it isn't, "
+        /**/ "then that must mean that it's still waiting for more input data to arrive, and "
+        /**/ "that you should either feed it said data, or deal with the fact that there's "
+        /**/ "something missing in your input.\n"
+        "WARNING: This function #B{DOESN'T} work when the given decoder is used to parse "
+        /**/ "UTF-8 input! This is because special optimizations are performed when "
+        /**/ "decoding UTF-8 (since decoders also always output UTF-8). In this "
+        /**/ "case this function will always return !t");
+
 PRIVATE struct type_getset tpconst ivd_getsets[] = {
-	TYPE_GETTER_AB("isshiftzero", &ivd_get_isshiftzero,
-	               "->?Dbool\n"
-	               "Check if the given encoder is in its default (zero) shift state. If it isn't, "
-	               /**/ "then that must mean that it's still waiting for more input data to arrive, and "
-	               /**/ "that you should either feed it said data, or deal with the fact that there's "
-	               /**/ "something missing in your input.\n"
-	               "WARNING: This function #B{DOESN'T} work when the given decoder is used to parse "
-	               /**/ "UTF-8 input! This is because special optimizations are performed when "
-	               /**/ "decoding UTF-8 (since decoders also always output UTF-8). In this "
-	               /**/ "case this function will always return !t"),
+	TYPE_GETTER_AB("isshiftzero", &ivd_get_isshiftzero, DOC_GET(ivd_get_isshiftzero_doc)),
 	TYPE_GETSET_END
 };
 
@@ -188,7 +190,7 @@ INTERN DeeFileTypeObject IconvDecoder_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "Decoder",
-		/* .tp_doc      = */ NULL,
+		/* .tp_doc      = */ DOC("(" ivd_Decoder_params ")"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
@@ -376,7 +378,7 @@ INTERN DeeFileTypeObject IconvEncoder_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "Encoder",
-		/* .tp_doc      = */ NULL,
+		/* .tp_doc      = */ DOC("(" ivd_Encoder_params ")"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
@@ -435,12 +437,197 @@ INTERN DeeFileTypeObject IconvEncoder_Type = {
 
 
 
+/************************************************************************/
+/* TRANSCODER                                                           */
+/************************************************************************/
+
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_lock) == offsetof(IconvTranscoder, ivt_lock));
 #define transcoder_acquire(self) decoder_acquire((IconvDecoder *)(self))
 #define transcoder_release(self) Dee_nrshared_lock_release(&(self)->ivt_lock)
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvTranscoder, ivt_encoder.ice_output.ii_arg));
-#define ivt_fini  ivd_fini
-#define ivt_visit ivd_visit
+#define ivt_fini    ivd_fini
+#define ivt_visit   ivd_visit
+#define ivt_members ivd_members
+
+STATIC_ASSERT(offsetof(IconvTranscoder, ivt_encoder) == offsetof(IconvEncoder, ive_encoder));
+#define ivt_close ive_close
+#define ivt_sync  ive_sync
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ivt_init(IconvTranscoder *__restrict self, size_t argc,
+         DeeObject *const *argv, DeeObject *kw) {
+	iconv_codec_t in_codec_id;
+	iconv_codec_t out_codec_id;
+/*[[[deemon (print_DeeArg_UnpackKw from rt.gen.unpack)("Transcoder", params: """
+	incodec:?X2?Dstring?Dint,
+	outcodec:?X2?Dstring?Dint,
+	out:?DFile,
+	errors:?X2?Dstring?Dint = NULL = !Pstrict
+""", docStringPrefix: "ivd", defineKwList: true);]]]*/
+	static DEFINE_KWLIST(Transcoder_kwlist, { KEX("incodec", 0x556c3790, 0x67f1690ff39bd316), KEX("outcodec", 0x2f41262c, 0xfb14bcb3b213f6d6), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEND });
+#define ivd_Transcoder_params "incodec:?X2?Dstring?Dint,outcodec:?X2?Dstring?Dint,out:?DFile,errors:?X2?Dstring?Dint=!Pstrict"
+	struct {
+		DeeObject *incodec;
+		DeeObject *outcodec;
+		DeeObject *out;
+		DeeObject *errors;
+	} args;
+	args.errors = NULL;
+	if (DeeArg_UnpackStructKw(argc, argv, kw, Transcoder_kwlist, "ooo|o:Transcoder", &args))
+		goto err;
+/*[[[end]]]*/
+	in_codec_id = deemon_iconv_parse_codec_name_and_error_mode(args.incodec, args.errors,
+	                                                           &self->ivt_decoder.icd_flags);
+	if unlikely(in_codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	out_codec_id = deemon_iconv_parse_codec_name_and_error_mode(args.outcodec, args.errors,
+	                                                            &self->ivt_encoder.ice_flags);
+	if unlikely(out_codec_id == ICONV_CODEC_UNKNOWN)
+		goto err;
+	self->ivt_encoder.ice_output.ii_printer = (Dee_formatprinter_t)&DeeFile_WriteAll;
+	self->ivt_encoder.ice_output.ii_arg     = args.out;
+	self->ivt_encoder.ice_codec = out_codec_id;
+	self->ivt_decoder.icd_codec = in_codec_id;
+
+	/* Check for special case: when input and output  codecs are the same,  then
+	 *                         it really shouldn't matter if we don't know them! */
+	if (self->ivt_decoder.icd_codec == self->ivt_encoder.ice_codec) {
+		self->ivt_input = self->ivt_encoder.ice_output;
+		self->ivt_encoder.ice_codec = CODEC_UNKNOWN;
+	} else {
+		/* Initialize the encoder and set-up its input pipe for use as output by the decoder. */
+		if unlikely(libiconv_encode_init(&self->ivt_encoder, &self->ivt_decoder.icd_output))
+			goto no_such_out_codec;
+
+		/* Initialize the decoder (note that it's output printer was already set-up
+		 * as the input descriptor for the  encode function in the previous  step!) */
+		if (libiconv_decode_init(&self->ivt_decoder, &self->ivt_input))
+			goto no_such_in_codec;
+
+		/* And that's already it! */
+	}
+
+	Dee_nrshared_lock_init(&self->ivt_lock);
+	ASSERT(self->ivt_encoder.ice_output.ii_arg == args.out);
+	Dee_Incref(args.out);
+	return 0;
+no_such_out_codec:
+	err_unknown_codec(out_codec_id);
+	goto err;
+no_such_in_codec:
+	err_unknown_codec(in_codec_id);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
+ivt_write(IconvTranscoder *self, void const *buffer,
+          size_t bufsize, Dee_ioflag_t flags) {
+	Dee_ssize_t result;
+	(void)flags;
+	if (transcoder_acquire(self))
+		goto err;
+	result = (*self->ivt_input.ii_printer)(self->ivt_input.ii_arg, (char const *)buffer, bufsize);
+	if (result < 0) {
+		if (self->ivt_decoder.icd_flags & ICONV_HASERR) {
+			size_t offset;
+			iconv_codec_t incodec = self->ivt_decoder.icd_codec;
+			transcoder_release(self);
+			offset = (size_t)(bufsize + result);
+			err_unicode_decode_error(incodec, offset);
+			goto err;
+		} else if (self->ivt_encoder.ice_flags & ICONV_HASERR) {
+			iconv_codec_t outcodec = self->ivt_decoder.icd_codec;
+			transcoder_release(self);
+			err_unicode_reencode_error(outcodec);
+			goto err;
+		}
+		ASSERTF(result == -1, "Underlying printer should be `DeeFile_WriteAll', "
+		                      "which should only ever return `-1' on error");
+	}
+	transcoder_release(self);
+	/* Return the full "bufsize" instead of "result": "result" is actual the #
+	 * of produced **output** bytes, which can (easily) differ from "bufsize". */
+	return bufsize;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ivt_get_isshiftzero(IconvTranscoder *__restrict self) {
+	bool result;
+	if (transcoder_acquire(self))
+		goto err;
+	result = libiconv_decode_isshiftzero(&self->ivt_decoder);
+	transcoder_release(self);
+	return_bool(result);
+err:
+	return NULL;
+}
+
+#define ivt_get_isshiftzero_doc ivd_get_isshiftzero_doc
+PRIVATE struct type_getset tpconst ivt_getsets[] = {
+	TYPE_GETTER_AB("isshiftzero", &ivt_get_isshiftzero, DOC_GET(ivt_get_isshiftzero_doc)),
+	TYPE_GETSET_END
+};
+
+INTERN DeeFileTypeObject IconvTranscoder_Type = {
+	/* .ft_base = */ {
+		OBJECT_HEAD_INIT(&DeeFileType_Type),
+		/* .tp_name     = */ "Transcoder",
+		/* .tp_doc      = */ DOC("(" ivd_Transcoder_params ")"),
+		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_weakrefs = */ 0,
+		/* .tp_features = */ TF_NONE,
+		/* .tp_base     = */ &DeeFile_Type.ft_base,
+		/* .tp_init = */ {
+			Dee_TYPE_CONSTRUCTOR_INIT_FIXED(
+				/* T:              */ IconvTranscoder,
+				/* tp_ctor:        */ NULL,
+				/* tp_copy_ctor:   */ NULL,
+				/* tp_any_ctor:    */ NULL,
+				/* tp_any_ctor_kw: */ &ivt_init,
+				/* tp_serialize:   */ NULL /* Would be possible, but would be super-complicated since
+				                            * it'd require per-codec handling not provided by `libiconv' */
+			),
+			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ivt_fini,
+			/* .tp_assign      = */ NULL,
+			/* .tp_move_assign = */ NULL
+		},
+		/* .tp_cast = */ {
+			/* .tp_str  = */ NULL,
+			/* .tp_repr = */ NULL,
+			/* .tp_bool = */ NULL
+		},
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ivt_visit,
+		/* .tp_gc            = */ NULL,
+		/* .tp_math          = */ NULL,
+		/* .tp_cmp           = */ NULL,
+		/* .tp_seq           = */ NULL,
+		/* .tp_iter_next     = */ NULL,
+		/* .tp_iterator      = */ NULL,
+		/* .tp_attr          = */ NULL,
+		/* .tp_with          = */ NULL,
+		/* .tp_buffer        = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ ivt_getsets,
+		/* .tp_members       = */ ivt_members,
+		/* .tp_class_methods = */ NULL,
+		/* .tp_class_getsets = */ NULL,
+		/* .tp_class_members = */ NULL
+	},
+	/* .ft_read   = */ NULL,
+	/* .ft_write  = */ (size_t (DCALL *)(DeeFileObject *, void const *, size_t, Dee_ioflag_t))&ivt_write,
+	/* .ft_seek   = */ NULL,
+	/* .ft_sync   = */ (int (DCALL *)(DeeFileObject *))&ivt_sync,
+	/* .ft_trunc  = */ NULL,
+	/* .ft_close  = */ (int (DCALL *)(DeeFileObject *))&ivt_close,
+	/* .ft_pread  = */ NULL,
+	/* .ft_pwrite = */ NULL,
+	/* .ft_getc   = */ NULL,
+	/* .ft_ungetc = */ NULL,
+	/* .ft_putc   = */ NULL
+};
 
 DECL_END
 
