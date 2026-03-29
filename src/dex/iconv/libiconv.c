@@ -130,13 +130,13 @@ err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("codec_and_flags_byname", """
+/*[[[deemon (print_CMethod from rt.gen.unpack)("parsecodecname", """
 	DeeStringObject *name
 """, libname: "deemon_iconv");]]]*/
-#define deemon_iconv_codec_and_flags_byname_params "name:?Dstring"
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_codec_and_flags_byname_f_impl(DeeStringObject *name);
-PRIVATE DEFINE_CMETHOD1(deemon_iconv_codec_and_flags_byname, &deemon_iconv_codec_and_flags_byname_f_impl, METHOD_FNORMAL);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_codec_and_flags_byname_f_impl(DeeStringObject *name)
+#define deemon_iconv_parsecodecname_params "name:?Dstring"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_parsecodecname_f_impl(DeeStringObject *name);
+PRIVATE DEFINE_CMETHOD1(deemon_iconv_parsecodecname, &deemon_iconv_parsecodecname_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_parsecodecname_f_impl(DeeStringObject *name)
 /*[[[end]]]*/
 {
 	iconv_codec_t result;
@@ -153,24 +153,24 @@ err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("same_codec_name", """
+/*[[[deemon (print_CMethod from rt.gen.unpack)("samecodec", """
 	DeeStringObject *name1,
 	DeeStringObject *name2,
 """, libname: "deemon_iconv");]]]*/
-#define deemon_iconv_same_codec_name_params "name1:?Dstring,name2:?Dstring"
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_same_codec_name_f_impl(DeeStringObject *name1, DeeStringObject *name2);
-PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv_same_codec_name_f(size_t argc, DeeObject *const *argv) {
+#define deemon_iconv_samecodec_params "name1:?Dstring,name2:?Dstring"
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_samecodec_f_impl(DeeStringObject *name1, DeeStringObject *name2);
+PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv_samecodec_f(size_t argc, DeeObject *const *argv) {
 	struct {
 		DeeStringObject *name1;
 		DeeStringObject *name2;
 	} args;
-	DeeArg_UnpackStruct2(err, argc, argv, "same_codec_name", &args, &args.name1, &args.name2);
-	return deemon_iconv_same_codec_name_f_impl(args.name1, args.name2);
+	DeeArg_UnpackStruct2(err, argc, argv, "samecodec", &args, &args.name1, &args.name2);
+	return deemon_iconv_samecodec_f_impl(args.name1, args.name2);
 err:
 	return NULL;
 }
-PRIVATE DEFINE_CMETHOD(deemon_iconv_same_codec_name, &deemon_iconv_same_codec_name_f, METHOD_FNORMAL);
-FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_same_codec_name_f_impl(DeeStringObject *name1, DeeStringObject *name2)
+PRIVATE DEFINE_CMETHOD(deemon_iconv_samecodec, &deemon_iconv_samecodec_f, METHOD_FNORMAL);
+FORCELOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL deemon_iconv_samecodec_f_impl(DeeStringObject *name1, DeeStringObject *name2)
 /*[[[end]]]*/
 {
 	bool result;
@@ -185,13 +185,13 @@ err:
 	return NULL;
 }
 
-/*[[[deemon (print_CMethod from rt.gen.unpack)("detect_codec", """
+/*[[[deemon (print_CMethod from rt.gen.unpack)("detect", """
 	data:?X2?DBytes?Dstring
 """, libname: "deemon_iconv");]]]*/
-#define deemon_iconv_detect_codec_params "data:?X2?DBytes?Dstring"
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_detect_codec_f_impl(DeeObject *data);
-PRIVATE DEFINE_CMETHOD1(deemon_iconv_detect_codec, &deemon_iconv_detect_codec_f_impl, METHOD_FNORMAL);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_detect_codec_f_impl(DeeObject *data)
+#define deemon_iconv_detect_params "data:?X2?DBytes?Dstring"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_detect_f_impl(DeeObject *data);
+PRIVATE DEFINE_CMETHOD1(deemon_iconv_detect, &deemon_iconv_detect_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_detect_f_impl(DeeObject *data)
 /*[[[end]]]*/
 {
 	iconv_codec_t result;
@@ -695,19 +695,19 @@ DEX_MEMBER_F("getcodecnames", &deemon_iconv_getcodecnames, Dee_DEXSYM_READONLY,
 ICONV_ICONV_CODEC_UNKNOWN_DEF
 ICONV_ICONV_CODEC_FIRST_DEF
 
-DEX_MEMBER_F("codec_and_flags_byname", &deemon_iconv_codec_and_flags_byname, Dee_DEXSYM_READONLY,
-             "(" deemon_iconv_codec_and_flags_byname_params ")->?X2?T2?Dint?Dint?N\n"
+DEX_MEMBER_F("parsecodecname", &deemon_iconv_parsecodecname, Dee_DEXSYM_READONLY,
+             "(" deemon_iconv_parsecodecname_params ")->?X2?T2?Dint?Dint?N\n"
              "Same as ?Gcodecbyname, but also parse possible flag-relation options."),
-DEX_MEMBER_F("same_codec_name", &deemon_iconv_same_codec_name, Dee_DEXSYM_READONLY,
-             "(" deemon_iconv_same_codec_name_params ")->?Dbool\n"
+DEX_MEMBER_F("samecodec", &deemon_iconv_samecodec, Dee_DEXSYM_READONLY,
+             "(" deemon_iconv_samecodec_params ")->?Dbool\n"
              "Check if the 2 given strings reference the same codec name.\n"
              "This differs from same codec ID as this function doesn't actually "
              /**/ "search the codec database but will simply strip potential flags, "
              /**/ "normalize the underlying codec names, and check if the resulting "
              /**/ "strings ?Acasecompare?Dstring to be equal."),
 
-DEX_MEMBER_F("detect_codec", &deemon_iconv_detect_codec, Dee_DEXSYM_READONLY,
-             "(" deemon_iconv_detect_codec_params ")->?X2?Dint?N\n"
+DEX_MEMBER_F("detect", &deemon_iconv_detect, Dee_DEXSYM_READONLY,
+             "(" deemon_iconv_detect_params ")->?X2?Dint?N\n"
              "Try to automatically detect the codec of the given data-blob, which should "
              /**/ "represent the memory-mapping of a text-file. This function will then try to "
              /**/ "inspect its beginning for comment-style indicators which might inform about "
