@@ -30,6 +30,7 @@
 #include <deemon/alloc.h>           /* DeeObject_MALLOC */
 #include <deemon/arg.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
 #include <deemon/bool.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
+#include <deemon/int.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
 #include <deemon/file.h>            /* return_bool */
 #include <deemon/error.h>            /* return_bool */
 #include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_formatprinter_t, Dee_ssize_t */
@@ -49,10 +50,6 @@ DECL_BEGIN
 PRIVATE DEFINE_KWLIST(kwlist__codec_out_errors, { KEX("codec", 0x91dfc790, 0x678d4474a4f58564), KEX("out", 0x20bcdfe4, 0xfc801ac012e9f722), KEX("errors", 0xd327c5ea, 0x88b9782b6de95122), KEND });
 #endif /* !DEFINED_kwlist__codec_out_errors */
 /*[[[end]]]*/
-
-/************************************************************************/
-/* DECODER                                                              */
-/************************************************************************/
 
 PRIVATE WUNUSED NONNULL((3)) Dee_ssize_t DCALL
 printcodecname(iconv_codec_t codec, uintptr_half_t flags,
@@ -101,6 +98,19 @@ printcodecerrors(uintptr_half_t flags, Dee_formatprinter_t printer, void *arg) {
 	}
 	return DeeFormat_Printf(printer, arg, "%#" PRFxN(__SIZEOF_INTPTR_HALF_T__), flags);
 }
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+get_codec_name(iconv_codec_t codec) {
+	char const *name = libiconv_getcodecnames(codec);
+	if (name)
+		return DeeString_New(name);
+	return DeeInt_NEWU(codec);
+}
+
+
+/************************************************************************/
+/* DECODER                                                              */
+/************************************************************************/
 
 #define decoder_release(self) Dee_nrshared_lock_release(&(self)->ivd_lock)
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -249,6 +259,12 @@ ivd_sync(IconvDecoder *__restrict self) {
 	return 0;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ivd_getcodec(IconvDecoder *__restrict self) {
+	iconv_codec_t codec = self->ivd_decoder.icd_codec;
+	return get_codec_name(codec);
+}
+
 DOC_DEF(ivd_get_isshiftzero_doc,
         "->?Dbool\n"
         "Check if the given encoder is in its default (zero) shift state. If it isn't, "
@@ -262,6 +278,7 @@ DOC_DEF(ivd_get_isshiftzero_doc,
 
 PRIVATE struct type_getset tpconst ivd_getsets[] = {
 	TYPE_GETTER_AB("isshiftzero", &ivd_get_isshiftzero, DOC_GET(ivd_get_isshiftzero_doc)),
+	TYPE_GETTER_AB("codec", &ivd_getcodec, "->?X2?Dstring?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -269,9 +286,6 @@ PRIVATE struct type_member tpconst ivd_members[] = {
 	TYPE_MEMBER_FIELD_DOC("out", STRUCT_OBJECT,
 	                      offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg),
 	                      "->?DFile"),
-	TYPE_MEMBER_FIELD_DOC("codec", STRUCT_CONST | STRUCT_UNSIGNED | STRUCT_INTEGER(__SIZEOF_INTPTR_HALF_T__),
-	                      offsetof(IconvDecoder, ivd_decoder.icd_codec),
-	                      "->?Dint"),
 	TYPE_MEMBER_END
 };
 
@@ -354,8 +368,10 @@ STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(
 #define ive_visit   ivd_visit
 
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvEncoder, ive_encoder.ice_output.ii_arg));
-STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_codec) == offsetof(IconvEncoder, ive_encoder.ice_codec));
 #define ive_members ivd_members
+
+STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_codec) == offsetof(IconvEncoder, ive_encoder.ice_codec));
+#define ive_getcodec ivd_getcodec
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ive_init(IconvEncoder *__restrict self, size_t argc,
@@ -502,6 +518,7 @@ PRIVATE struct type_getset tpconst ive_getsets[] = {
 	               /**/ "This is because special optimizations are performed when encoding UTF-8 "
 	               /**/ "(since encoder also always takes UTF-8 as input). In this case, this "
 	               /**/ "function will always return !N"),
+	TYPE_GETTER_AB("codec", &ive_getcodec, "->?X2?Dstring?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -581,10 +598,12 @@ STATIC_ASSERT(offsetof(IconvDecoder, ivd_lock) == offsetof(IconvTranscoder, ivt_
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvTranscoder, ivt_encoder.ice_output.ii_arg));
 #define ivt_fini    ivd_fini
 #define ivt_visit   ivd_visit
+#define ivt_members ivd_members
 
 STATIC_ASSERT(offsetof(IconvTranscoder, ivt_encoder) == offsetof(IconvEncoder, ive_encoder));
-#define ivt_close ive_close
-#define ivt_sync  ive_sync
+#define ivt_close       ive_close
+#define ivt_sync        ive_sync
+#define ivt_getoutcodec ive_getcodec
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ivt_init(IconvTranscoder *__restrict self, size_t argc,
@@ -744,23 +763,19 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ivt_getincodec(IconvTranscoder *__restrict self) {
+	iconv_codec_t codec = self->ivt_encoder.ice_codec;
+	return get_codec_name(codec);
+}
+
+
 #define ivt_get_isshiftzero_doc ivd_get_isshiftzero_doc
 PRIVATE struct type_getset tpconst ivt_getsets[] = {
 	TYPE_GETTER_AB("isshiftzero", &ivt_get_isshiftzero, DOC_GET(ivt_get_isshiftzero_doc)),
+	TYPE_GETTER_AB("incodec", &ivt_getincodec, "->?X2?Dstring?Dint"),
+	TYPE_GETTER_AB("outcodec", &ivt_getoutcodec, "->?X2?Dstring?Dint"),
 	TYPE_GETSET_END
-};
-
-PRIVATE struct type_member tpconst ivt_members[] = {
-	TYPE_MEMBER_FIELD_DOC("out", STRUCT_OBJECT,
-	                      offsetof(IconvTranscoder, ivt_decoder.icd_output.ii_arg),
-	                      "->?DFile"),
-	TYPE_MEMBER_FIELD_DOC("incodec", STRUCT_CONST | STRUCT_UNSIGNED | STRUCT_INTEGER(__SIZEOF_INTPTR_HALF_T__),
-	                      offsetof(IconvTranscoder, ivt_decoder.icd_codec),
-	                      "->?Dint"),
-	TYPE_MEMBER_FIELD_DOC("outcodec", STRUCT_CONST | STRUCT_UNSIGNED | STRUCT_INTEGER(__SIZEOF_INTPTR_HALF_T__),
-	                      offsetof(IconvTranscoder, ivt_encoder.ice_codec),
-	                      "->?Dint"),
-	TYPE_MEMBER_END
 };
 
 INTERN DeeFileTypeObject IconvTranscoder_Type = {

@@ -84,8 +84,7 @@ snai_next(StrNulArrayIterator *__restrict self) {
 			return ITER_DONE;
 		newptr = strend(oldptr) + 1;
 	} while (!atomic_cmpxch_weak(&self->snai_iter, oldptr, newptr));
-	return DeeString_NewUtf8(oldptr, (size_t)((newptr - 1) - oldptr),
-	                         Dee_STRING_ERROR_FIGNORE);
+	return DeeString_New(oldptr);
 }
 
 PRIVATE struct type_cmp snai_cmp = {
