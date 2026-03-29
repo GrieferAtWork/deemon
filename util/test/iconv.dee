@@ -88,3 +88,5 @@ test.assertEqualsTyped(iconv.decode(
 	"xml"
 ), "<&∳&> = ∳");
 
+
+test.assertEqualsTyped("oem1234-AB", iconv.normalizecodecname("OEM-01234_AB"));

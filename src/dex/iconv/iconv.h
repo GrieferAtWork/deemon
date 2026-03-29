@@ -34,14 +34,19 @@
 #undef LIBICONV_SETERRNO
 #define LIBICONV_SETERRNO(v) (void)0
 
-#define LIBICONV_NO_SYSTEM_INCLUDES
-#define LIBICONV_SINGLE_LIBRARY
-#define LIBICONV_EXPOSE_INTERNAL
-#define LIBICONV_NO_ICONV_ERR_ERRNO
-#define ICONV_ERR_ERROR   0
-#define ICONV_ERR_DISCARD 1
-#define ICONV_ERR_REPLACE 2
-#define ICONV_ERR_IGNORE  3
+#define LIBICONV_NO_SYSTEM_INCLUDES        /* Disable system-header includes (we take care of emulating everything needed) */
+#define LIBICONV_SINGLE_LIBRARY            /* Compile as a single library (no lazy loading of sub-libraries as happens on KOS) */
+#define LIBICONV_EXPOSE_INTERNAL           /* Expose internal details about iconv encode/decode (needed for pulling sources later, and proper integration) */
+#define LIBICONV_NO_ICONV_ERR_ERRNO        /* Disable `ICONV_ERR_ERRNO'-mode (we only use `ICONV_ERR_ERROR', which in turn integrates into deemon exceptions) */
+#define LIBICONV_NO_struct_iconv_transcode /* We implement our own transcoder function */
+#define LIBICONV_NO__iconv_decode_init     /* We directly call the underlying `libiconv_decode_init()' */
+#define LIBICONV_NO__iconv_encode_init     /* We directly call the underlying `libiconv_encode_init()' */
+
+/* With `ICONV_ERR_ERRNO' gone, re-configure the other modes to fill in the gap */
+#define ICONV_ERR_ERROR   0 /* In this mode, our wrapper will throw a UnicodeEncodeError / UnicodeDecodeError */
+#define ICONV_ERR_DISCARD 1 /* These other... */
+#define ICONV_ERR_REPLACE 2 /* ... modes work... */
+#define ICONV_ERR_IGNORE  3 /* ... the same */
 
 /* clang-format off */
 /* Enable KOS compatibility */
@@ -76,5 +81,24 @@
 #include "../../libiconv/mbcs/cp-mbcs.h"
 #include "../../libiconv/stateful/cp-stateful.h"
 /* clang-format on */
+
+/* Use the wrapper to initialize an encoder/decoder.
+ * The caller must have already filled in:
+ * - do_libiconv_decode_init: self->icd_output.ii_printer
+ * - do_libiconv_decode_init: self->icd_output.ii_arg
+ * - do_libiconv_decode_init: self->icd_flags
+ * - do_libiconv_decode_init: self->icd_codec
+ *
+ * - do_libiconv_encode_init: self->ice_output.ii_printer
+ * - do_libiconv_encode_init: self->ice_output.ii_arg
+ * - do_libiconv_encode_init: self->ice_flags
+ * - do_libiconv_encode_init: self->ice_codec
+ */
+#define do_libiconv_decode_init(self, input)                    \
+	((self)->icd_flags &= (ICONV_ERRMASK | ICONV_ERR_TRANSLIT), \
+	 libiconv_decode_init(self, input))
+#define do_libiconv_encode_init(self, input)                    \
+	((self)->ice_flags &= (ICONV_ERRMASK | ICONV_ERR_TRANSLIT), \
+	 libiconv_encode_init(self, input))
 
 #endif /* !GUARD_DEX_ICONV_ICONV_H */

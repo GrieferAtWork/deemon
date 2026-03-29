@@ -46,6 +46,8 @@
 
 DECL_BEGIN
 
+#define DOC_param_errors "#perrors{One of $\"strict\", $\"replace\", $\"ignore\" or $\"discard\"}"
+
 /*[[[deemon
 (print_DEFINE_KWLIST from rt.gen.unpack)({
 	"codec",
@@ -170,7 +172,7 @@ ivd_init(IconvDecoder *__restrict self, size_t argc,
 	self->ivd_decoder.icd_output.ii_printer = (Dee_formatprinter_t)&DeeFile_WriteAll;
 	self->ivd_decoder.icd_output.ii_arg     = args.out;
 	self->ivd_decoder.icd_codec = codec_id;
-	if unlikely(libiconv_decode_init(&self->ivd_decoder, &self->ivd_input))
+	if unlikely(do_libiconv_decode_init(&self->ivd_decoder, &self->ivd_input))
 		goto no_such_codec;
 	Dee_nrshared_lock_init(&self->ivd_lock);
 	ASSERT(self->ivd_decoder.icd_output.ii_arg == args.out);
@@ -282,7 +284,7 @@ DOC_DEF(ivd_get_isshiftzero_doc,
         "WARNING: This function #B{DOESN'T} work when the given decoder is used to parse "
         /**/ "UTF-8 input! This is because special optimizations are performed when "
         /**/ "decoding UTF-8 (since decoders also always output UTF-8). In this "
-        /**/ "case this function will always return !t");
+        /**/ "case this function will always return ?t");
 
 PRIVATE struct type_getset tpconst ivd_getsets[] = {
 	TYPE_GETTER_AB("isshiftzero", &ivd_get_isshiftzero, DOC_GET(ivd_get_isshiftzero_doc)),
@@ -301,7 +303,11 @@ INTERN DeeFileTypeObject IconvDecoder_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "Decoder",
-		/* .tp_doc      = */ DOC("(" ivd_Decoder_params ")"),
+		/* .tp_doc      = */ DOC("(" ivd_Decoder_params ")\n"
+		                     "#pcodec{Name of the codec that was used to encode @data. May also "
+		                     /*   */ "contain some additional flags (s.a. ?Gparsecodecname)}"
+		                     DOC_param_errors
+		                     ""),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
@@ -407,7 +413,7 @@ ive_init(IconvEncoder *__restrict self, size_t argc,
 	self->ive_encoder.ice_output.ii_printer = (Dee_formatprinter_t)&DeeFile_WriteAll;
 	self->ive_encoder.ice_output.ii_arg     = args.out;
 	self->ive_encoder.ice_codec = codec_id;
-	if unlikely(libiconv_encode_init(&self->ive_encoder, &self->ive_input))
+	if unlikely(do_libiconv_encode_init(&self->ive_encoder, &self->ive_input))
 		goto no_such_codec;
 	Dee_nrshared_lock_init(&self->ive_lock);
 	ASSERT(self->ive_encoder.ice_output.ii_arg == args.out);
@@ -535,7 +541,11 @@ INTERN DeeFileTypeObject IconvEncoder_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "Encoder",
-		/* .tp_doc      = */ DOC("(" ivd_Encoder_params ")"),
+		/* .tp_doc      = */ DOC("(" ivd_Encoder_params ")"
+		                     "#pcodec{Name of the codec that should be used to encode @data. May "
+		                     /*   */ "also contain some additional flags (s.a. ?Gparsecodecname)}"
+		                     DOC_param_errors
+		                     ""),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
@@ -656,12 +666,12 @@ ivt_init(IconvTranscoder *__restrict self, size_t argc,
 		self->ivt_encoder.ice_codec = CODEC_UNKNOWN;
 	} else {
 		/* Initialize the encoder and set-up its input pipe for use as output by the decoder. */
-		if unlikely(libiconv_encode_init(&self->ivt_encoder, &self->ivt_decoder.icd_output))
+		if unlikely(do_libiconv_encode_init(&self->ivt_encoder, &self->ivt_decoder.icd_output))
 			goto no_such_out_codec;
 
 		/* Initialize the decoder (note that it's output printer was already set-up
 		 * as the input descriptor for the  encode function in the previous  step!) */
-		if (libiconv_decode_init(&self->ivt_decoder, &self->ivt_input))
+		if (do_libiconv_decode_init(&self->ivt_decoder, &self->ivt_input))
 			goto no_such_in_codec;
 
 		/* And that's already it! */
@@ -790,7 +800,14 @@ INTERN DeeFileTypeObject IconvTranscoder_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "Transcoder",
-		/* .tp_doc      = */ DOC("(" ivd_Transcoder_params ")"),
+		/* .tp_doc      = */ DOC("(" ivd_Transcoder_params ")\n"
+		                         "#pincodec{Name of the codec that was used to encode @data. May also "
+		                         /*     */ "contain some additional flags (s.a. ?Gparsecodecname)}"
+		                         "#poutcodec{Name of the codec that should be used to re-encode @data "
+		                         /*      */ "after it was internally decoded using @incodec. May also "
+		                         /*      */ "contain some additional flags (s.a. ?Gparsecodecname)}"
+		                         DOC_param_errors
+		                         ""),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,

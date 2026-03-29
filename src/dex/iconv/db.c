@@ -27,6 +27,8 @@
 
 #include <deemon/api.h>
 
+#include <deemon/none.h>
+#include <deemon/string.h>
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_rawmemrchr */
 
 DECL_BEGIN
@@ -53,5 +55,17 @@ DECL_END
 #include "../../libiconv/mbcs/cpdb.c"
 #include "../../libiconv/stateful/cpdb.c"
 /* clang-format on */
+
+DECL_BEGIN
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_iconv_normalize_codec_name(DeeStringObject *__restrict str) {
+	char buf[CODE_NAME_MAXLEN + 1];
+	if (!libiconv_normalize_codec_name(buf, DeeString_STR(str), DeeString_SIZE(str)))
+		return_none;
+	return DeeString_New(buf);
+}
+
+DECL_END
 
 #endif /* !GUARD_DEX_ICONV_DB_C */

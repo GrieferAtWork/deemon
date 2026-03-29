@@ -99,6 +99,25 @@ err:
 	return NULL;
 }
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+do_iconv_normalize_codec_name(DeeStringObject *__restrict str);
+
+/*[[[deemon (print_CMethod from rt.gen.unpack)("normalizecodecname", """
+	DeeStringObject *name
+""", libname: "deemon_iconv");]]]*/
+#define deemon_iconv_normalizecodecname_params "name:?Dstring"
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_normalizecodecname_f_impl(DeeStringObject *name);
+PRIVATE DEFINE_CMETHOD1(deemon_iconv_normalizecodecname, &deemon_iconv_normalizecodecname_f_impl, METHOD_FNORMAL);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL deemon_iconv_normalizecodecname_f_impl(DeeStringObject *name)
+/*[[[end]]]*/
+{
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	return do_iconv_normalize_codec_name(name);
+err:
+	return NULL;
+}
+
 /*[[[deemon (print_CMethod from rt.gen.unpack)("getcodecnames", """
 	unsigned int id
 """, libname: "deemon_iconv");]]]*/
@@ -284,6 +303,7 @@ PRIVATE struct codec_error const codec_error_db[] = {
 	{ "strict",  ICONV_ERR_ERROR },
 	{ "replace", ICONV_ERR_REPLACE },
 	{ "ignore",  ICONV_ERR_IGNORE },
+	/* Extra mode: discard data that cannot be encoded/decoded */
 	{ "discard", ICONV_ERR_DISCARD },
 };
 
@@ -347,7 +367,7 @@ iconv_do_decode(void const *data_base, size_t data_size,
 	decoder.icd_output.ii_arg     = &out_printer;
 	decoder.icd_flags             = flags;
 	decoder.icd_codec             = codec;
-	if unlikely(libiconv_decode_init(&decoder, &input_printer))
+	if unlikely(do_libiconv_decode_init(&decoder, &input_printer))
 		goto no_such_codec;
 	status = (*input_printer.ii_printer)(input_printer.ii_arg, (char const *)data_base, data_size);
 	if unlikely(status < 0)
@@ -387,7 +407,7 @@ iconv_do_encode(void const *data_base, size_t data_size,
 	encoder.ice_output.ii_arg     = &out_printer;
 	encoder.ice_flags             = flags;
 	encoder.ice_codec             = codec;
-	if unlikely(libiconv_encode_init(&encoder, &input_printer))
+	if unlikely(do_libiconv_encode_init(&encoder, &input_printer))
 		goto no_such_codec;
 	status = (*input_printer.ii_printer)(input_printer.ii_arg, (char const *)data_base, data_size);
 	if unlikely(status < 0)
@@ -417,84 +437,69 @@ maybe_handle_iconv_error:
 	goto err_printer;
 }
 
-PRIVATE WUNUSED NONNULL((1, 6, 7)) int DCALL
-do_iconv_transcoder_init(struct iconv_transcode *__restrict self,
-                         iconv_codec_t incodec, iconv_codec_t outcodec,
-                         uintptr_half_t inflags, uintptr_half_t outflags,
-                         /*out*/ struct iconv_printer *__restrict input,
-                         Dee_formatprinter_t output_printer,
-                         void *output_printer_arg) {
-	int result;
-	self->it_encode.ice_output.ii_printer = output_printer;
-	self->it_encode.ice_output.ii_arg     = output_printer_arg;
-	self->it_encode.ice_flags = outflags;
-	self->it_encode.ice_codec = outcodec;
-	self->it_decode.icd_flags = inflags;
-	self->it_decode.icd_codec = incodec;
-
-	/* Check for special case: when input and output  codecs are the same,  then
-	 *                         it really shouldn't matter if we don't know them! */
-	if (self->it_decode.icd_codec == self->it_encode.ice_codec) {
-		*input = self->it_encode.ice_output;
-		self->it_encode.ice_codec = CODEC_UNKNOWN;
-		return 0;
-	}
-
-	/* Initialize the encoder and set-up its input pipe for use as output by the decoder. */
-	result = libiconv_encode_init(&self->it_encode, &self->it_decode.icd_output);
-	if unlikely(result != 0)
-		goto done;
-
-	/* Initialize the decoder (note that it's output printer was already set-up
-	 * as the input descriptor for the  encode function in the previous  step!) */
-	result = libiconv_decode_init(&self->it_decode, input);
-
-	/* And that's already it! */
-done:
-	return result;
-}
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 iconv_do_transcode(void const *data_base, size_t data_size,
                    iconv_codec_t incodec, iconv_codec_t outcodec,
                    uintptr_half_t inflags, uintptr_half_t outflags) {
 	Dee_ssize_t status;
-	struct iconv_transcode transcoder;
+	struct iconv_decode decoder;
+	struct iconv_encode encoder;
 	struct iconv_printer input_printer;
 	struct Dee_bytes_printer out_printer;
 	Dee_bytes_printer_init_ex(&out_printer, data_size);
-	if unlikely(do_iconv_transcoder_init(&transcoder,
-	                                     incodec, outcodec,
-	                                     inflags, outflags,
-	                                     &input_printer,
-	                                     (Dee_formatprinter_t)&Dee_bytes_printer_append,
-	                                     &out_printer))
-		goto no_such_codec;
+
+	encoder.ice_output.ii_printer = (Dee_formatprinter_t)&Dee_bytes_printer_append;
+	encoder.ice_output.ii_arg     = &out_printer;
+	encoder.ice_flags             = outflags;
+	encoder.ice_codec             = outcodec;
+	decoder.icd_flags             = inflags;
+	decoder.icd_codec             = incodec;
+
+	/* Check for special case: when input and output  codecs are the same,  then
+	 *                         it really shouldn't matter if we don't know them! */
+	if (decoder.icd_codec == encoder.ice_codec) {
+		input_printer = encoder.ice_output;
+		encoder.ice_codec = CODEC_UNKNOWN;
+	} else {
+		/* Initialize the encoder and set-up its input pipe for use as output by the decoder. */
+		if unlikely(do_libiconv_encode_init(&encoder, &decoder.icd_output))
+			goto no_such_out_codec;
+
+		/* Initialize the decoder (note that it's output printer was already set-up
+		 * as the input descriptor for the  encode function in the previous  step!) */
+		if (do_libiconv_decode_init(&decoder, &input_printer))
+			goto no_such_in_codec;
+
+		/* And that's already it! */
+	}
 	status = (*input_printer.ii_printer)(input_printer.ii_arg, (char const *)data_base, data_size);
 	if unlikely(status < 0)
 		goto maybe_handle_iconv_error;
 #if 0
-	if (!libiconv_decode_isshiftzero(&transcoder.it_decode)) {
+	if (!libiconv_decode_isshiftzero(&decoder)) {
 		/* Could potentially throw an error here, but don't... */
 	}
-	if (!libiconv_encode_isinputshiftzero(&transcoder.it_encode)) {
+	if (!libiconv_encode_isinputshiftzero(&encoder)) {
 		/* Could potentially throw an error here, but don't... */
 	}
 #endif
-	if unlikely(libiconv_encode_flush(&transcoder.it_encode) < 0)
+	if unlikely(libiconv_encode_flush(&encoder) < 0)
 		goto err_printer;
 	return Dee_bytes_printer_pack(&out_printer);
-no_such_codec:
-	err_unknown_codec(libiconv_getcodecnames(incodec) ? incodec : outcodec);
+no_such_in_codec:
+	err_unknown_codec(incodec);
+	goto err_printer;
+no_such_out_codec:
+	err_unknown_codec(outcodec);
 err_printer:
 	Dee_bytes_printer_fini(&out_printer);
 /*err:*/
 	return NULL;
 maybe_handle_iconv_error:
-	if (transcoder.it_decode.icd_flags & ICONV_HASERR) {
+	if (decoder.icd_flags & ICONV_HASERR) {
 		size_t offset = (size_t)(data_size + status);
 		err_unicode_decode_error(incodec, offset);
-	} else if (transcoder.it_encode.ice_flags & ICONV_HASERR) {
+	} else if (encoder.ice_flags & ICONV_HASERR) {
 		err_unicode_reencode_error(outcodec);
 	} else {
 		ASSERTF(status == -1, "The used printer 'Dee_bytes_printer_append' "
@@ -673,15 +678,55 @@ err:
 DEX_BEGIN
 DEX_MEMBER_F("codecbyname", &deemon_iconv_codecbyname, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_codecbyname_params ")->?X2?Dint?N\n"
-             "#r{Internal codec ID (s.a. ?Ggetcodecnames), or !N when unrecognized}"
-             "Return the internal ID of the codec associated with `name'. "
-             /**/ "Casing is ignored and codec aliases are respected."),
+             "#r{Internal codec ID (s.a. ?Ggetcodecnames), or ?N when unrecognized}"
+             "Return the internal ID of the codec associated with @name. "
+             /**/ "Casing is ignored, codec aliases (s.a. ?Ggetcodecnames) are respected, "
+             /**/ "and @name is normalized (s.a. ?Gnormalizecodecname) prior to being "
+             /**/ "searched-for within the database.\n"
+             "NOTE: Other API functions like ?Gencode / ?Gdecode don't actually "
+             /**/ "use this function to convert codec names into IDs, but rather "
+             /**/ "use ?Gparsecodecname"),
+
+DEX_MEMBER_F("normalizecodecname", &deemon_iconv_normalizecodecname, Dee_DEXSYM_READONLY,
+             "(" deemon_iconv_normalizecodecname_params ")->?X2?Dstring?N\n"
+             "Normalize a given codec @name. This function is used by ?Gcodecbyname to "
+             /**/ "simplify some more-complex codec names such that they are recognized "
+             /**/ "as known codecs more easily. If the resulting name would be too long "
+             /**/ "to still be a valid codec, return ?N instead.\n"
+             "${"
+             /**/ "function normalizecodecname(name: string): string | none {\n"
+             /**/ "	name = name.strip();\n"
+             /**/ "	local result = File.Writer(hint: \"string\");\n"
+             /**/ "	for (local pfx: {\"oem\", \"ibm\", \"iso\", \"cp\", \"latin\", \"koi\", \"l\"}) {\n"
+             /**/ "		if (name.casestartswith(pfx) && #name >= (#pfx + 2) &&\n"
+             /**/ "		    name[#pfx] in \"-_ \" && name.isdigit(#pfx + 1)) {\n"
+             /**/ "			result << pfx;\n"
+             /**/ "			name = name[#pfx + 1:];\n"
+             /**/ "			break;\n"
+             /**/ "		}\n"
+             /**/ "	}\n"
+             /**/ "	for (local i: [#name]) {\n"
+             /**/ "		local ch = name[i];\n"
+             /**/ "		if (ch == \"0\" && ((i + 1) < #name) && name.isdigit(i + 1) &&\n"
+             /**/ "		    !result.string || !result.string.last.isdigit()) \n"
+             /**/ "		    continue; /* Skip leading 0s in number-strings. */\n"
+             /**/ "		if (ch in \"_ \")\n"
+             /**/ "			ch = \"-\"; /* '-', '_' and ' ' work interchangeably. */\n"
+             /**/ "		result << ch;\n"
+             /**/ "	}\n"
+             /**/ "	result = result.string;\n"
+             /**/ "	/* CODE_NAME_MAXLEN = max(FOREACH_CODEC(getcodecnames(codec).each.length)) */\n"
+             /**/ "	if (#result > CODE_NAME_MAXLEN)\n"
+             /**/ "		return none;\n"
+             /**/ "	return result;\n"
+             /**/ "}"
+             "}"),
 
 DEX_MEMBER_F("getcodecnames", &deemon_iconv_getcodecnames, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_getcodecnames_params ")->?X2?S?Dstring?N\n"
              "Return the list of names for the codec @id. The list is "
              /**/ "sorted such that the most important name comes first.\n"
-             "When @id is invalid, return !N. Note that all valid codecs have at "
+             "When @id is invalid, return ?N. Note that all valid codecs have at "
              /**/ "least 1 valid name. As such, supported codecs as well as their names can "
              /**/ "be enumerated by using ?GICONV_CODEC_FIRST as followed:\n"
              "${"
@@ -697,7 +742,26 @@ ICONV_ICONV_CODEC_FIRST_DEF
 
 DEX_MEMBER_F("parsecodecname", &deemon_iconv_parsecodecname, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_parsecodecname_params ")->?X2?T2?Dint?Dint?N\n"
-             "Same as ?Gcodecbyname, but also parse possible flag-relation options."),
+             "#r{Pair of #C{codec-id}, #C{coded-flags}. The later can "
+             /**/ "be used as the #Cerrors argument of other functions}"
+             "Same as ?Gcodecbyname, but also parse possible flag-relation options. "
+             /**/ "These flags can then be used as the #Cerrors argument of ?Gencode/"
+             /**/ "?Gdecode or the associated ?GEncoder/?GDecoder. Flags may appear "
+             /**/ "as a suffix in codec names. The following flags are defined:\n"
+             "#T{Flag|Effect~"
+             /**/ "$\"//IGNORE\"|Override the #Cerrors argument as $\"discard\". "
+             /**/ /*         */ "Useful as the builtin ?Aencode?Dstring/?Adecode?Dstring "
+             /**/ /*         */ "functions only accept $\"strict\", $\"replace\" and $\"ignore\" "
+             /**/ /*         */ "as valid error handlers&"
+             /**/ "$\"//TRANSLIT\"|Only meaningful for ?Gencode and ?GEncoder: make use "
+             /**/ /*           */ "of ?G_transliterate to replace unicode literals that "
+             /**/ /*           */ "cannot be represented in the output codec with some "
+             /**/ /*           */ "other (sequence of) characters that can, whilst having "
+             /**/ /*           */ "a similar appearance/meaning. Note that this is always "
+             /**/ /*           */ "a #Ilossy operation, meaning that ?G{decode}ing one "
+             /**/ /*           */ "such ?G{_transliterate}-encoded may not re-produce the "
+             /**/ /*           */ "originally encoded unicode string."
+             "}"),
 DEX_MEMBER_F("samecodec", &deemon_iconv_samecodec, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_samecodec_params ")->?Dbool\n"
              "Check if the 2 given strings reference the same codec name.\n"
@@ -725,7 +789,7 @@ DEX_MEMBER_F("detect", &deemon_iconv_detect, Dee_DEXSYM_READONLY,
              /**/ "this are then fuzzy-compared against a known-good heuristic of byte usage in "
              /**/ "normal text, and the codec which is closest to this heuristic is used.\n"
 
-             "If the function is unable to determine the codec to-be used, it will return !N"),
+             "If the function is unable to determine the codec to-be used, it will return ?N"),
 
 DEX_MEMBER_F_NODOC("Decoder", &IconvDecoder_Type.ft_base, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Encoder", &IconvEncoder_Type.ft_base, Dee_DEXSYM_READONLY),
@@ -734,6 +798,8 @@ DEX_MEMBER_F_NODOC("Transcoder", &IconvTranscoder_Type.ft_base, Dee_DEXSYM_READO
 /* Fast-pass encode/decode functions (drop-in replacements for equivalents from "codec") */
 DEX_MEMBER_F("decode", &deemon_iconv_decode, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_decode_params ")->?Dstring\n"
+             "#pcodec{Name of the codec that was used to encode @data. May also "
+             /*   */ "contain some additional flags (s.a. ?Gparsecodecname)}"
              DOC_param_errors
              "Convenience wrapper around ?GDecoder:\n"
              "${"
@@ -747,6 +813,8 @@ DEX_MEMBER_F("decode", &deemon_iconv_decode, Dee_DEXSYM_READONLY,
              "}"),
 DEX_MEMBER_F("encode", &deemon_iconv_encode, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_encode_params ")->?DBytes\n"
+             "#pcodec{Name of the codec that should be used to encode @data. May "
+             /*   */ "also contain some additional flags (s.a. ?Gparsecodecname)}"
              DOC_param_errors
              "Convenience wrapper around ?GEncoder:\n"
              "${"
@@ -765,6 +833,11 @@ DEX_MEMBER_F("encode", &deemon_iconv_encode, Dee_DEXSYM_READONLY,
              "}"),
 DEX_MEMBER_F("transcode", &deemon_iconv_transcode, Dee_DEXSYM_READONLY,
              "(" deemon_iconv_transcode_params ")->?DBytes\n"
+             "#pincodec{Name of the codec that was used to encode @data. May also "
+             /*     */ "contain some additional flags (s.a. ?Gparsecodecname)}"
+             "#poutcodec{Name of the codec that should be used to re-encode @data "
+             /*      */ "after it was internally decoded using @incodec. May also "
+             /*      */ "contain some additional flags (s.a. ?Gparsecodecname)}"
              DOC_param_errors
              "Convenience wrapper around ?GTranscoder:\n"
              "${"
@@ -797,13 +870,13 @@ DEX_MEMBER_F("_transliterate", &deemon_iconv__transliterate, Dee_DEXSYM_READONLY
              "(" deemon_iconv__transliterate_params ")->?X2?Dstring?N\n"
              "#pord{The character that should be transliterated}"
              "#pnth{Specifies that the nth transliteration of @ord be generated, "
-             /**/ "starting at $0 and ending as soon as this function returns !N "
+             /**/ "starting at $0 and ending as soon as this function returns ?N "
              /**/ "to indicate that no more possible transliterations are available}"
              "#pwhat{What to try (set of #C{TRANSLITERATE_*})}"
-             "#r{The @nth transliteration of @ord, or !N if there are no more}"
+             "#r{The @nth transliteration of @ord, or ?N if there are no more}"
              "Generate and return the @nth transliteration for @ord. When no (more) "
              /**/ "transliterations exist for @ord (where available ones are indexed "
-             /**/ "via @nth, starting at $0), return !N.\n"
+             /**/ "via @nth, starting at $0), return ?N.\n"
              "Note that in the case of multi-character transliterations, all possible "
              /**/ "transliterations for replacement characters are already attempted by "
              /**/ "this function itself, meaning that in these cases all those are all "
