@@ -54,6 +54,54 @@ PRIVATE DEFINE_KWLIST(kwlist__codec_out_errors, { KEX("codec", 0x91dfc790, 0x678
 /* DECODER                                                              */
 /************************************************************************/
 
+PRIVATE WUNUSED NONNULL((3)) Dee_ssize_t DCALL
+printcodecname(iconv_codec_t codec, uintptr_half_t flags,
+               Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t temp, result;
+	char const *name = libiconv_getcodecnames(codec);
+	if unlikely(!name)
+		return DeeFormat_Printf(printer, arg, "%u", (unsigned int)codec);
+	result = DeeFormat_Printf(printer, arg, "\"%#q", name);
+	if unlikely(result < 0)
+		goto done;
+	if (flags & ICONV_ERR_TRANSLIT) {
+		temp = DeeFormat_PRINT(printer, arg, "//TRANSLIT");
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	if ((flags & ICONV_ERRMASK) == ICONV_ERR_IGNORE) {
+		temp = DeeFormat_PRINT(printer, arg, "//IGNORE");
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	temp = DeeFormat_PRINT(printer, arg, "\"");
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((3)) Dee_ssize_t DCALL
+printcodecerrors(uintptr_half_t flags, Dee_formatprinter_t printer, void *arg) {
+	switch (flags) {
+	case ICONV_ERR_ERROR:
+		return DeeFormat_PRINT(printer, arg, "\"strict\"");
+	case ICONV_ERR_DISCARD:
+		return DeeFormat_PRINT(printer, arg, "\"discard\"");
+	case ICONV_ERR_REPLACE:
+		return DeeFormat_PRINT(printer, arg, "\"replace\"");
+	case ICONV_ERR_IGNORE:
+		return DeeFormat_PRINT(printer, arg, "\"ignore\"");
+	default: break;
+	}
+	return DeeFormat_Printf(printer, arg, "%#" PRFxN(__SIZEOF_INTPTR_HALF_T__), flags);
+}
+
 #define decoder_release(self) Dee_nrshared_lock_release(&(self)->ivd_lock)
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 decoder_acquire(IconvDecoder *__restrict self) {
@@ -114,6 +162,44 @@ no_such_codec:
 	err_unknown_codec(codec_id);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+ivd_printrepr(IconvDecoder *__restrict self,
+              Dee_formatprinter_t printer, void *arg) {
+	uintptr_half_t flags;
+	Dee_ssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "Decoder(codec: ");
+	if unlikely(result < 0)
+		goto done;
+	temp = printcodecname(self->ivd_decoder.icd_codec, self->ivd_decoder.icd_flags, printer, arg);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = DeeFormat_Printf(printer, arg, ", out: %r", self->ivd_decoder.icd_output.ii_arg);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	flags = self->ivd_decoder.icd_flags;
+	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
+	if (flags != ICONV_ERR_ERROR) {
+		temp = DeeFormat_PRINT(printer, arg, ", errors: ");
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		temp = printcodecerrors(flags, printer, arg);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	temp = DeeFormat_PRINT(printer, arg, ")");
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+done:
+	return result;
+err_temp:
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
@@ -213,9 +299,11 @@ INTERN DeeFileTypeObject IconvDecoder_Type = {
 			/* .tp_move_assign = */ NULL
 		},
 		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ NULL,
+			/* .tp_print     = */ NULL,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ivd_printrepr,
 		},
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ivd_visit,
 		/* .tp_gc            = */ NULL,
@@ -305,6 +393,44 @@ no_such_codec:
 	err_unknown_codec(codec_id);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+ive_printrepr(IconvEncoder *__restrict self,
+              Dee_formatprinter_t printer, void *arg) {
+	uintptr_half_t flags;
+	Dee_ssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "Encoder(codec: ");
+	if unlikely(result < 0)
+		goto done;
+	temp = printcodecname(self->ive_encoder.ice_codec, self->ive_encoder.ice_flags, printer, arg);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = DeeFormat_Printf(printer, arg, ", out: %r", self->ive_encoder.ice_output.ii_arg);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	flags = self->ive_encoder.ice_flags;
+	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
+	if (flags != ICONV_ERR_ERROR) {
+		temp = DeeFormat_PRINT(printer, arg, ", errors: ");
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		temp = printcodecerrors(flags, printer, arg);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	temp = DeeFormat_PRINT(printer, arg, ")");
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+done:
+	return result;
+err_temp:
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
@@ -404,9 +530,11 @@ INTERN DeeFileTypeObject IconvEncoder_Type = {
 			/* .tp_move_assign = */ NULL
 		},
 		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ NULL,
+			/* .tp_print     = */ NULL,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ive_printrepr,
 		},
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ive_visit,
 		/* .tp_gc            = */ NULL,
@@ -525,6 +653,52 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+ivt_printrepr(IconvTranscoder *__restrict self,
+              Dee_formatprinter_t printer, void *arg) {
+	uintptr_half_t flags;
+	Dee_ssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "Transcoder(incodec: ");
+	if unlikely(result < 0)
+		goto done;
+	temp = printcodecname(self->ivt_decoder.icd_codec, self->ivt_decoder.icd_flags, printer, arg);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = DeeFormat_PRINT(printer, arg, ", outcodec: ");
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = printcodecname(self->ivt_encoder.ice_codec, self->ivt_encoder.ice_flags, printer, arg);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = DeeFormat_Printf(printer, arg, ", out: %r", self->ivt_encoder.ice_output.ii_arg);
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+	flags = self->ivt_decoder.icd_flags | self->ivt_encoder.ice_flags;
+	flags &= ~ICONV_ERR_TRANSLIT; /* Already printed as part of codec name */
+	if (flags != ICONV_ERR_ERROR) {
+		temp = DeeFormat_PRINT(printer, arg, ", errors: ");
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		temp = printcodecerrors(flags, printer, arg);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	temp = DeeFormat_PRINT(printer, arg, ")");
+	if unlikely(temp < 0)
+		goto err_temp;
+	result += temp;
+done:
+	return result;
+err_temp:
+	return temp;
+}
+
 PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 ivt_write(IconvTranscoder *self, void const *buffer,
           size_t bufsize, Dee_ioflag_t flags) {
@@ -613,9 +787,11 @@ INTERN DeeFileTypeObject IconvTranscoder_Type = {
 			/* .tp_move_assign = */ NULL
 		},
 		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
+			/* .tp_str       = */ NULL,
+			/* .tp_repr      = */ NULL,
+			/* .tp_bool      = */ NULL,
+			/* .tp_print     = */ NULL,
+			/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&ivt_printrepr,
 		},
 		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, Dee_visit_t, void *))&ivt_visit,
 		/* .tp_gc            = */ NULL,

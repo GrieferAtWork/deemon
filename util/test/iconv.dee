@@ -31,8 +31,10 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 
 	/* Encode using "iconv.Encoder" */
 	local w = File.Writer(hint: "bytes");
-	with (local d = iconv.Encoder(codec, out: w))
+	with (local d = iconv.Encoder(codec, out: w)) {
+		(none)repr(d); /* For coverage */
 		print d: data,;
+	}
 	test.assertEqualsTyped(result, w.bytes);
 
 	/* Decode using convenience wrapper */
@@ -40,8 +42,10 @@ function assertEncode(data: string, codec: string, result: Bytes) {
 
 	/* Decode using "iconv.Decoder" */
 	local w = File.Writer(hint: "string");
-	with (local d = iconv.Decoder(codec, out: w))
+	with (local d = iconv.Decoder(codec, out: w)) {
+		(none)repr(d); /* For coverage */
 		d.write(result);
+	}
 	test.assertEqualsTyped(data, w.string);
 }
 
@@ -52,13 +56,17 @@ function assertTranscode(data: Bytes, incodec: string, outcodec: string, result:
 
 	/* Transcode using "iconv.Transcoder" */
 	local w = File.Writer(hint: "bytes");
-	with (local d = iconv.Transcoder(incodec, outcodec, out: w))
+	with (local d = iconv.Transcoder(incodec, outcodec, out: w)) {
+		(none)repr(d); /* For coverage */
 		d.write(data);
+	}
 	test.assertEqualsTyped(result, w.bytes);
 
 	local w = File.Writer(hint: "bytes");
-	with (local d = iconv.Transcoder(outcodec, incodec, out: w))
+	with (local d = iconv.Transcoder(outcodec, incodec, out: w)) {
+		(none)repr(d); /* For coverage */
 		d.write(result);
+	}
 	test.assertEqualsTyped(data, w.bytes);
 }
 
