@@ -380,8 +380,9 @@ iconv_do_encode(void const *data_base, size_t data_size,
                 iconv_codec_t codec, uintptr_half_t flags) {
 	Dee_ssize_t status;
 	struct iconv_encode encoder;
-	struct Dee_bytes_printer out_printer = Dee_BYTES_PRINTER_INIT;
+	struct Dee_bytes_printer out_printer;
 	struct iconv_printer input_printer;
+	Dee_bytes_printer_init_ex(&out_printer, data_size);
 	encoder.ice_output.ii_printer = (Dee_formatprinter_t)&Dee_bytes_printer_append;
 	encoder.ice_output.ii_arg     = &out_printer;
 	encoder.ice_flags             = flags;
@@ -460,7 +461,8 @@ iconv_do_transcode(void const *data_base, size_t data_size,
 	Dee_ssize_t status;
 	struct iconv_transcode transcoder;
 	struct iconv_printer input_printer;
-	struct Dee_bytes_printer out_printer = Dee_BYTES_PRINTER_INIT;
+	struct Dee_bytes_printer out_printer;
+	Dee_bytes_printer_init_ex(&out_printer, data_size);
 	if unlikely(do_iconv_transcoder_init(&transcoder,
 	                                     incodec, outcodec,
 	                                     inflags, outflags,
