@@ -180,6 +180,13 @@ DeeSystem_DEFINE_memrchrl(dee_memrchrl)
 DeeSystem_DEFINE_memxend(dee_memxend)
 #endif /* !CONFIG_HAVE_memxend */
 
+#ifndef CONFIG_HAVE_strcmp
+#define CONFIG_HAVE_strcmp
+#undef strcmp
+#define strcmp dee_strcmp
+DeeSystem_DEFINE_strcmp(dee_strcmp)
+#endif /* !CONFIG_HAVE_strcmp */
+
 #ifndef CONFIG_HAVE_strcmpz
 #define CONFIG_HAVE_strcmpz
 #undef strcmpz
@@ -187,12 +194,40 @@ DeeSystem_DEFINE_memxend(dee_memxend)
 DeeSystem_DEFINE_strcmpz(dee_strcmpz)
 #endif /* !CONFIG_HAVE_strcmpz */
 
+#ifndef CONFIG_HAVE_strcasecmp
+#define CONFIG_HAVE_strcasecmp
+#undef strcasecmp
+#define strcasecmp dee_strcasecmp
+DeeSystem_DEFINE_strcasecmp(dee_strcasecmp)
+#endif /* !CONFIG_HAVE_strcasecmp */
+
 #ifndef CONFIG_HAVE_memcasecmp
 #define CONFIG_HAVE_memcasecmp
 #undef memcasecmp
 #define memcasecmp dee_memcasecmp
 DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
+
+#ifndef CONFIG_HAVE_rawmemchr
+#define CONFIG_HAVE_rawmemchr
+#undef rawmemchr
+#define rawmemchr dee_rawmemchr
+DeeSystem_DEFINE_rawmemchr(dee_rawmemchr)
+#endif /* !CONFIG_HAVE_rawmemchr */
+
+#ifndef CONFIG_HAVE_rawmemrchr
+#define CONFIG_HAVE_rawmemrchr
+#undef rawmemrchr
+#define rawmemrchr dee_rawmemrchr
+DeeSystem_DEFINE_rawmemrchr(dee_rawmemrchr)
+#endif /* !CONFIG_HAVE_rawmemrchr */
+
+#ifndef CONFIG_HAVE_strstr
+#define CONFIG_HAVE_strstr
+#undef strstr
+#define strstr dee_strstr
+DeeSystem_DEFINE_strstr(dee_strstr)
+#endif /* !CONFIG_HAVE_strstr */
 
 #undef memrchrb
 #define memrchrb (uint8_t *)memrchr
@@ -578,6 +613,14 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #define format_printf DeeFormat_Printf
 #undef format_vprintf
 #define format_vprintf DeeFormat_VPrintf
+#undef sprintf
+#define sprintf(buf, ...) ((Dee_ssize_t)(Dee_sprintf(buf, __VA_ARGS__) - (buf)))
+#undef vsprintf
+#define vsprintf(buf, format, args) ((Dee_ssize_t)(Dee_vsprintf(buf, format, args) - (buf)))
+#undef snprintf
+#define snprintf(buf, bufsize, ...) ((Dee_ssize_t)(Dee_snprintf(buf, bufsize, __VA_ARGS__) - (buf)))
+#undef vsnprintf
+#define vsnprintf(buf, bufsize, format, args) ((Dee_ssize_t)(Dee_vsnprintf(buf, bufsize, format, args) - (buf)))
 #undef PRIx8
 #define PRIx8 PRFx8
 #undef PRIx16

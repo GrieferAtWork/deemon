@@ -35,14 +35,7 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_HAVE_rawmemrchr
-#define CONFIG_HAVE_rawmemrchr
-#undef rawmemrchr
-#define rawmemrchr dee_rawmemrchr
-DeeSystem_DEFINE_rawmemrchr(dee_rawmemrchr)
-#endif /* !CONFIG_HAVE_rawmemrchr */
-
-#ifndef CONFIG_HAVE_fuzzy_memcmpl
+#ifndef CONFIG_HAVE_fuzzy_memcmpl /* TODO: Add configure-test for "fuzzy_memcmpl" */
 #define CONFIG_HAVE_fuzzy_memcmpl
 #undef fuzzy_memcmpl
 #define fuzzy_memcmpl dee_fuzzy_memcmpl
@@ -128,7 +121,7 @@ DECL_END
 /* clang-format off */
 #include "../../libiconv/convert.c"
 #include "../../libiconv/convert-xml.c"
-#include "../../libiconv/detect.c" /* fuzzy_memcmpl */
+#include "../../libiconv/detect.c" /* This one needs fuzzy_memcmpl */
 #include "../../libiconv/iconv.c"
 #include "../../libiconv/transliterate.c"
 #include "../../libiconv/mbcs/cp-mbcs.c"

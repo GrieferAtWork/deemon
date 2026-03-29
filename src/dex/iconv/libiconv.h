@@ -50,6 +50,7 @@ typedef struct {
 //	DREF DeeObject     *ivd_out;     /* [const][1..1] Output file for output of `ivd_decoder' (== ivd_decoder.icd_output.ii_arg) */
 	Dee_nrshared_lock_t ivd_lock;    /* Lock for `ivd_decoder' */
 	struct iconv_decode ivd_decoder; /* [lock(ivd_lock)] Underlying decoder */
+	/* TODO: Expose "libiconv_decode_isshiftzero()" */
 } IconvDecoder;
 
 INTDEF DeeFileTypeObject IconvDecoder_Type;
@@ -65,6 +66,8 @@ typedef struct {
 //	DREF DeeObject     *ive_out;     /* [const][1..1] Output file for output of `ive_encoder' (== ive_encoder.ice_output.ii_arg) */
 	Dee_nrshared_lock_t ive_lock;    /* Lock for `ive_encoder' */
 	struct iconv_encode ive_encoder; /* [lock(ive_lock)] Underlying encoder */
+	/* TODO: Implement "ft_sync" and "ft_close" by calling "libiconv_encode_flush()" */
+	/* TODO: Expose "libiconv_encode_isinputshiftzero()" */
 } IconvEncoder;
 
 INTDEF DeeFileTypeObject IconvEncoder_Type;
@@ -79,8 +82,8 @@ typedef struct {
 	Dee_FILE_OBJECT_HEAD
 //	DREF DeeObject     *ivt_out;     /* [const][1..1] Output file for output of `ivt_encoder' (== ivt_encoder.ice_output.ii_arg) */
 	Dee_nrshared_lock_t ivt_lock;    /* Lock for `ivt_encoder' */
-	struct iconv_encode ivt_decoder; /* [lock(ivt_lock)] Underlying decoder */
 	struct iconv_encode ivt_encoder; /* [lock(ivt_lock)] Underlying encoder */
+	struct iconv_encode ivt_decoder; /* [lock(ivt_lock)] Underlying decoder */
 } IconvTranscoder;
 
 INTDEF DeeFileTypeObject IconvTranscoder_Type;

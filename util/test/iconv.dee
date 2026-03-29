@@ -45,3 +45,11 @@ assertTranscode(
 	"base64", "utf-8-bom",
 	"\xEF\xBB\xBFHello World".bytes()
 );
+
+test.assertEqualsTyped(iconv.decode(
+	/* Intentional: trailing ";" is missing for first "&amp"
+	 * (some legacy XML entities have optional trailing ";") */
+	"&lt;&amp∳&amp;&gt; = &CounterClockwiseContourIntegral;".encode("utf-8"),
+	"xml"
+), "<&∳&> = ∳");
+
