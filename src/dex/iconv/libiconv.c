@@ -245,9 +245,9 @@ Xgi("ALL",      "For ?#transliterate / ?#_transliterate: attempt everything");
 /*[[[deemon (print_CMethod from rt.gen.unpack)("_transliterate", """
 	uint32_t ord:?Dint,
 	size_t nth:?Dint,
-	unsigned int what:?Dint = ICONV_TRANSLITERATE_F_ALL =!GTRANSLITERATE_ALL
+	unsigned int what:?Dint = ICONV_TRANSLITERATE_F_TRANSLIT =!GTRANSLITERATE_TRANSLIT
 """, libname: "deemon_iconv");]]]*/
-#define deemon_iconv__transliterate_params "ord:?Dint,nth:?Dint,what:?Dint=!GTRANSLITERATE_ALL"
+#define deemon_iconv__transliterate_params "ord:?Dint,nth:?Dint,what:?Dint=!GTRANSLITERATE_TRANSLIT"
 FORCELOCAL WUNUSED DREF DeeObject *DCALL deemon_iconv__transliterate_f_impl(uint32_t ord, size_t nth, unsigned int what);
 PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv__transliterate_f(size_t argc, DeeObject *const *argv) {
 	struct {
@@ -255,7 +255,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL deemon_iconv__transliterate_f(size_t argc,
 		size_t nth;
 		unsigned int what;
 	} args;
-	args.what = ICONV_TRANSLITERATE_F_ALL;
+	args.what = ICONV_TRANSLITERATE_F_TRANSLIT;
 	if (DeeArg_UnpackStruct(argc, argv, UNPu32 UNPuSIZ "|u:_transliterate", &args))
 		goto err;
 	return deemon_iconv__transliterate_f_impl(args.ord, args.nth, args.what);
