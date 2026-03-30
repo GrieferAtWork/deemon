@@ -1814,7 +1814,6 @@ DDATDEF struct Dee_cmethod_object DeeBuiltin_Exec;
  *   >> "deemon" import.deemon
  *   >> [...]
  *   >> "annotations" import.annotations
- *   >> "codecs" import.codecs
  *   >> "collections" import.collections
  *   >> "ctypes" import.ctypes
  *   >> "disassembler" import.disassembler

@@ -378,8 +378,8 @@ STATIC_ASSERT(offsetof(IconvDecoder, ivd_lock) == offsetof(IconvEncoder, ive_loc
 #define encoder_release(self) Dee_nrshared_lock_release(&(self)->ive_lock)
 
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvEncoder, ive_encoder.ice_output.ii_arg));
-#define ive_fini    ivd_fini
-#define ive_visit   ivd_visit
+#define ive_fini  ivd_fini
+#define ive_visit ivd_visit
 
 STATIC_ASSERT(offsetof(IconvDecoder, ivd_decoder.icd_output.ii_arg) == offsetof(IconvEncoder, ive_encoder.ice_output.ii_arg));
 #define ive_members ivd_members

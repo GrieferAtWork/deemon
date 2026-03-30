@@ -284,7 +284,7 @@ DEX_MEMBER_F("exec", &libjit_exec, Dee_DEXSYM_READONLY,
  *       >>     } catch (Error.KeyError) {
  *       >>        allowed = {
  *       >>            "deemon",
- *       >>            "codecs",
+ *       >>            "iconv",
  *       >>            "threading",
  *       >>            "util",
  *       >>            "operators",
