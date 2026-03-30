@@ -67,12 +67,6 @@ DECL_BEGIN
  *   - "while (atomic_read(&in_use)) yield();"  -- Replace with "DeeRCU_SynchronizeDefault()"
  */
 
-/* XXX: Have a configuration where "DeeRCU_LockDefault()" (and the other methods) all take an
- *      additional parameter "struct Dee_rculock" that encapsulates what is currently
- *      done by `_DeeRCU_Default' -- in that version, every RCU use-case must then
- *      supply its own "struct Dee_rculock" (though there can also still be some
- *      default, global RCU lock, too) */
-
 
 /* Enter/leave an RCU section (where references
  * read are always either the old, or new state) */
@@ -170,19 +164,19 @@ DFUNDEF NONNULL((1)) void (DFCALL DeeRCU_Synchronize)(Dee_rcu_lock_t *__restrict
 #define DeeRCU_LockSelf(self, caller)                                      \
 	(__hybrid_atomic_store(&(caller)->t_rcu_lock, self, __ATOMIC_RELEASE), \
 	 __hybrid_atomic_store(&(caller)->t_rcu_vers, __hybrid_atomic_load(&(self)->rcul_version, __ATOMIC_ACQUIRE), __ATOMIC_RELEASE))
-#define DeeRCU_Lock(self)                                         \
-	do {                                                          \
-		DeeThreadObject *const _drculd_caller = DeeThread_Self(); \
-		DeeRCU_LockSelf(self, _drculd_caller);                    \
+#define DeeRCU_Lock(self)                                        \
+	do {                                                         \
+		DeeThreadObject *const _drcul_caller = DeeThread_Self(); \
+		DeeRCU_LockSelf(self, _drcul_caller);                    \
 	}	__WHILE0
 #ifndef NDEBUG
 #define DeeRCU_UnlockSelf(self, caller)                                                             \
 	(void)(__hybrid_atomic_store(&(caller)->t_rcu_vers, Dee_THREAD_RCU_INACTIVE, __ATOMIC_RELEASE), \
 	       (caller)->t_rcu_lock = _DeeRCU_INVALID_LOCK)
-#define DeeRCU_Unlock(self)                                       \
-	do {                                                          \
-		DeeThreadObject *const _drcuud_caller = DeeThread_Self(); \
-		DeeRCU_UnlockSelf(self, _drcuud_caller);                  \
+#define DeeRCU_Unlock(self)                                      \
+	do {                                                         \
+		DeeThreadObject *const _drcuu_caller = DeeThread_Self(); \
+		DeeRCU_UnlockSelf(self, _drcuu_caller);                  \
 	}	__WHILE0
 #else /* !NDEBUG */
 #define DeeRCU_UnlockSelf(self, caller) \

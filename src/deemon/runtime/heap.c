@@ -820,7 +820,6 @@ struct region_leak_footer {
 
 SLIST_HEAD(leak_footer_slist, leak_footer);
 
-/* TODO: See what happens to performance when "leak_footer_alloc_uncached()" uses a dedicated slab cache */
 #define leak_footer_alloc_uncached() \
 	((struct leak_footer *)dlmalloc(sizeof(struct leak_footer)))
 #define leak_footer_free_uncached(self) \
@@ -834,8 +833,7 @@ SLIST_HEAD(leak_footer_slist, leak_footer);
  *
  * I'm guessing it's once again that problem where there's only a **single**, global
  * leak footers cache, whereas dlmalloc() and dlfree() will automatically make use of
- * per-thread caches (meaning that there's much less conflicts when doing atomic ops)
- */
+ * per-thread caches (meaning that there's much less conflicts when doing atomic ops) */
 #if 0
 PRIVATE size_t leak_footer_freesize_max = 4096; /* XXX: Configure somehow? */
 
@@ -1024,10 +1022,11 @@ PRIVATE struct leak_footer_slist leaks_pending_remove = SLIST_HEAD_INITIALIZER(l
 #define leaks_pending_mustreap_insert() \
 	(atomic_read(&leaks_pending_insert.slh_first) != NULL)
 
+/* FIXME: Because of atomic conflicts, these inserts are a major bottleneck in SMP */
 #define leaks_pending_insert_add(leak, ptr) \
-	SLIST_ATOMIC_INSERT(&leaks_pending_insert, leak, lf_inslink) /* FIXME: Because of atomic conflicts, this insert is a major bottleneck in SMP */
+	SLIST_ATOMIC_INSERT(&leaks_pending_insert, leak, lf_inslink)
 #define leaks_pending_remove_add(leak, ptr) \
-	SLIST_ATOMIC_INSERT(&leaks_pending_remove, leak, lf_remlink) /* FIXME: Because of atomic conflicts, this insert is a major bottleneck in SMP */
+	SLIST_ATOMIC_INSERT(&leaks_pending_remove, leak, lf_remlink)
 
 
 /* Reap "leaks_pending_insert" only */
@@ -1418,7 +1417,7 @@ PRIVATE void DCALL dumpleaks_acquire_locks(void) {
 	 * - PREACTION(gm)                     -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
 	 * - tls_mspace_lock_acquire()         -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
 	 * - PREACTION(used_tls_mspace.each)   -- prevent dlrealloc() from changing "leak_footer::lf_chunk"
-	 * - TODO: Locks for all slab allocators
+	 * - Locks for all slab allocators
 	 *
 	 * For GC only:
 	 * - gc_lock                           -- need to skew GC list and links
