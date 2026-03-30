@@ -2018,6 +2018,18 @@ struct malloc_state {
 	SLIST_ENTRY(malloc_state) ms_link; /* Link for "free_tls_mspace" / "used_tls_mspace" */
 	uintptr_t ms_foreach_bitset; /* Atomic bitset of visit contexts */
 #endif /* USE_PER_THREAD_MSTATE */
+#ifdef MSTATE_EXTRA_FIELDS_1
+	MSTATE_EXTRA_FIELDS_1;
+#endif /* MSTATE_EXTRA_FIELDS_1 */
+#ifdef MSTATE_EXTRA_FIELDS_2
+	MSTATE_EXTRA_FIELDS_2;
+#endif /* MSTATE_EXTRA_FIELDS_2 */
+#ifdef MSTATE_EXTRA_FIELDS_3
+	MSTATE_EXTRA_FIELDS_3;
+#endif /* MSTATE_EXTRA_FIELDS_3 */
+#ifdef MSTATE_EXTRA_FIELDS_4
+	MSTATE_EXTRA_FIELDS_4;
+#endif /* MSTATE_EXTRA_FIELDS_4 */
 #if 0
 	void     *extp; /* Unused but available for extensions */
 	size_t    exts;

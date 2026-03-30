@@ -228,6 +228,40 @@ DECL_BEGIN
 #define LEAK_DETECTION_GC 0
 #endif /* !LEAK_DETECTION_GC */
 
+
+/* With lots of running threads, allocating IDs from "alloc_id_count" tends to
+ * become a major bottleneck since lots of thread will be doing lots of allocations
+ * all the time (causing atomic conflicts), and all those allocations need to be
+ * given their own (unique) allocation ID.
+ *
+ * The solution is to pre-allocate a bunch of IDs within the "struct malloc_state"
+ * of the associated allocation (these pre-allocations still happen by doing atomic
+ * operations on "alloc_id_count"), and then allocate IDs from said pre-allocation.
+ *
+ * This doesn't actually change anything in regards to the behavior of alloc IDs,
+ * neither when using in a single-threaded environment, nor in a multi-threaded one:
+ * - When only a single thread exists, "tls_mspace()" will never be used, and all
+ *   allocations happen via the global "gm" mstate. Here, it doesn't matter if we'd
+ *   directly use the "alloc_id_count" or "gm", either would be fine so-long as we
+ *   behave consistently (which we do by always using "gm" in this case)
+ * - When there are multiple thread doing allocations simultaneously, it is already
+ *   undefined which thread will end up getting which ID (only that IDs will always
+ *   be distinct across threads). This is still the case when each thread allocates
+ *   a bunch of IDs prematurely, and then assigns them as needed. The only difference
+ *   here is that some IDs may end up going unused.
+ */
+#if (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL && USE_PER_THREAD_MSTATE)
+#define USE_PER_MSPACE_ALLOC_ID 1
+#endif /* ... */
+#ifndef USE_PER_MSPACE_ALLOC_ID
+#define USE_PER_MSPACE_ALLOC_ID 0
+#endif /* !USE_PER_MSPACE_ALLOC_ID */
+#undef MSTATE_EXTRA_FIELDS_1
+#if USE_PER_MSPACE_ALLOC_ID
+#define MSTATE_ALLOC_MASK     0xffff /* Allocation mask (upper limit on how many IDs to pre-allocate) */
+#define MSTATE_EXTRA_FIELDS_1 size_t ms_alloc_id /* [lock(ATOMIC)] Per-mstate "alloc_id_count" */
+#endif /* USE_PER_MSPACE_ALLOC_ID */
+
 /* END --- Not part of dlmalloc core: leak detection */
 /* END --- Not part of dlmalloc core: leak detection */
 /* END --- Not part of dlmalloc core: leak detection */
@@ -860,6 +894,39 @@ leak_footer_free(struct leak_footer *__restrict self) {
 PRIVATE size_t alloc_id_count = 0; /* Last-assigned allocation id (for alloc breakpoints) */
 PRIVATE size_t alloc_id_break = 0; /* ID of allocation which (when allocated) must break into a debugger */
 
+#if USE_PER_MSPACE_ALLOC_ID
+PRIVATE WUNUSED size_t DCALL do_get_alloc_id(size_t orig_foot) {
+	mstate ms = mstate_decode_for_footer(orig_foot);
+	size_t old_id, new_id;
+	do {
+retry:
+		old_id = atomic_read(&ms->ms_alloc_id);
+		if ((old_id & MSTATE_ALLOC_MASK) == 0) {
+			/* Allocation exhausted -- must allocate a new chunk from "alloc_id_count" */
+			size_t old_count, new_count;
+			do {
+				old_count = atomic_read(&alloc_id_count);
+				new_count = (old_count + 1 + MSTATE_ALLOC_MASK) & ~MSTATE_ALLOC_MASK;
+				ASSERT(new_count > old_count);
+				++new_count;
+			} while (!atomic_cmpxch_weak(&alloc_id_count, old_count, new_count));
+			++old_count;
+			if (!atomic_cmpxch(&ms->ms_alloc_id, old_id, old_count)) {
+				(void)atomic_cmpxch(&alloc_id_count, new_count, old_count);
+				goto retry;
+			}
+			return old_count;
+		}
+		new_id = old_id + 1;
+	} while (!atomic_cmpxch_weak(&ms->ms_alloc_id, old_id, new_id));
+	return new_id;
+}
+#define get_alloc_id(mchunkptr_p, orig_foot) do_get_alloc_id(orig_foot)
+#else /* USE_PER_MSPACE_ALLOC_ID */
+#define get_alloc_id(mchunkptr_p, orig_foot) atomic_incfetch(&alloc_id_count)
+#endif /* !USE_PER_MSPACE_ALLOC_ID */
+
+
 /* Get/set the memory allocation breakpoint.
  * - When the deemon heap was built to track memory leaks, an optional
  *   allocation breakpoint can be defined which, when reached, causes
@@ -956,6 +1023,12 @@ PRIVATE struct leak_footer_slist leaks_pending_remove = SLIST_HEAD_INITIALIZER(l
 	 atomic_read(&leaks_pending_remove.slh_first) != NULL)
 #define leaks_pending_mustreap_insert() \
 	(atomic_read(&leaks_pending_insert.slh_first) != NULL)
+
+#define leaks_pending_insert_add(leak, ptr) \
+	SLIST_ATOMIC_INSERT(&leaks_pending_insert, leak, lf_inslink) /* FIXME: Because of atomic conflicts, this insert is a major bottleneck in SMP */
+#define leaks_pending_remove_add(leak, ptr) \
+	SLIST_ATOMIC_INSERT(&leaks_pending_remove, leak, lf_remlink) /* FIXME: Because of atomic conflicts, this insert is a major bottleneck in SMP */
+
 
 /* Reap "leaks_pending_insert" only */
 PRIVATE void DCALL leaks_lock_reap_insert_locked(void) {
@@ -2559,6 +2632,7 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 	/* Hook "leak" into "ptr" */
 	mchunkptr p = mem2chunk(ptr);
 	size_t *p_tail = chunk_p_foot(p);
+	size_t alloc_break;
 	leak->lf_foot  = *p_tail;
 	leak->lf_chunk = ptr;
 	leak->lf_file  = file;
@@ -2566,8 +2640,9 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 	*p_tail = (size_t)(uintptr_t)leak;
 
 	/* Allocate ID */
-	leak->lf_id = atomic_incfetch(&alloc_id_count);
-	if (leak->lf_id == alloc_id_break && alloc_id_break != 0) {
+	leak->lf_id = get_alloc_id(p, leak->lf_foot);
+	alloc_break = atomic_read(&alloc_id_break);
+	if (leak->lf_id == alloc_break && alloc_break != 0) {
 #ifndef Dee_BREAKPOINT_IS_NOOP
 		Dee_BREAKPOINT();
 #elif __has_builtin(__builtin_trap)
@@ -2585,7 +2660,7 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 		leaks_lock_release();
 	} else {
 		/* Schedule "insert" to happen asynchronously */
-		SLIST_ATOMIC_INSERT(&leaks_pending_insert, leak, lf_inslink);
+		leaks_pending_insert_add(leak, ptr);
 		leaks_lock_reap();
 	}
 }
@@ -2674,7 +2749,7 @@ PUBLIC ATTR_HOT void
 
 	if (!leaks_lock_tryacquire()) {
 		/* Schedule "remove" to happen asynchronously */
-		SLIST_ATOMIC_INSERT(&leaks_pending_remove, leak, lf_remlink);
+		leaks_pending_remove_add(leak, ptr);
 		leaks_lock_reap();
 		return;
 	}
