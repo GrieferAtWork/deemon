@@ -961,17 +961,18 @@ again:
  *                    [':' <function_name>] // Optional, trailing function name (Used in error messages)
  *     ;
  * Example usage:
- * >> // function my_function(int a, int b, int c = 5) -> int;
+ * >> // function my_function(a: int, b: int, c: int = 5): int;
  * >> // @return: * : The sum of `a', `b' and `c'
- * >> PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
- * >> my_function(DeeObject *UNUSED(self),
- * >>             size_t argc, DeeObject *const *argv) {
+ * >> PRIVATE WUNUSED ATTR_INS(2, 1) NONNULL((1)) DREF DeeObject *DCALL
+ * >> my_function(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
  * >>     int a, b, c = 5;
  * >>     if (DeeArg_Unpack(argc, argv, "dd|d:my_function", &a, &b, &c))
  * >>         return NULL;
  * >>     return DeeInt_NewInt(a + b + c);
  * >> }
- */
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 (DCALL LOCAL_DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                              char const *__restrict format, LOCAL_PARAM_OUT) {
@@ -1331,6 +1332,23 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 }
 
 
+/* Same as the regular unpack functions above, however these are enabled to
+ * support keyword lists in the event that the calling function has been
+ * provided with a keyword object (`kw').
+ * -> When `DeeKwds_Check(kw)' is true, keyword argument objects are passed
+ *    through the regular argument vector, located within the range
+ *    `argc - kw->kw_size .. argc - 1' (if `kw->kw_size > argc', a TypeError
+ *    is thrown), using names from `kwlist + NUM_POSITIONAL' to match association.
+ * -> Otherwise, positional arguments are also parsed regularly, before
+ *    using `DeeObject_GetItemStringHash()' to lookup argument names starting
+ *    at `kwlist + NUM_POSITIONAL', counting how may arguments were actually
+ *    found (and failing if a non-optional argument wasn't given), before
+ *    finally using `DeeObject_Size()' to see how many keyword-arguments
+ *    were given by the keyword-list, and throwing an error if more were
+ *    given than what was actually used.
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 (DeeArg_UnpackKw)(size_t argc, DeeObject *const *argv,
                   DeeObject *kw, struct Dee_keyword *__restrict kwlist,

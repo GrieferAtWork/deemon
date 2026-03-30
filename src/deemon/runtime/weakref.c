@@ -23,7 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/none.h>         /* DeeNoneObject, DeeNone_Type */
-#include <deemon/object.h>       /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_IncrefIfNotZero, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_WEAKREF_SUPPORT_INIT, Dee_unlockinfo, Dee_unlockinfo_xunlock, Dee_weakref_list, ITER_DONE, OBJECT_HEAD */
+#include <deemon/object.h>       /* ASSERT_OBJECT, ASSERT_OBJECT_OPT, DREF, DeeObject, DeeTypeObject, Dee_AsObject, Dee_IncrefIfNotZero, Dee_REFTRACKER_UNTRACKED, Dee_TYPE, Dee_WEAKREF_SUPPORT_INIT, Dee_unlockinfo, Dee_unlockinfo_xunlock, Dee_weakref_list, Dee_weakref_support_fini, ITER_DONE, OBJECT_HEAD */
 #include <deemon/type.h>         /* DeeType_Base, TF_TPVISIT */
 #include <deemon/util/atomic.h>  /* atomic_* */
 #include <deemon/util/weakref.h> /* Dee_weakref, Dee_weakref_callback_t */

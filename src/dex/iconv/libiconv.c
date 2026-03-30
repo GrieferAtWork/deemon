@@ -30,7 +30,7 @@
 #include <deemon/alloc.h>           /* DeeObject_MALLOC */
 #include <deemon/arg.h>             /* DeeArg_UnpackStruct*, UNPu32, UNPuSIZ */
 #include <deemon/bool.h>            /* return_bool */
-#include <deemon/bytes.h>           /* DeeBytes*, Dee_BYTES_PRINTER_INIT, Dee_bytes_printer, Dee_bytes_printer_* */
+#include <deemon/bytes.h>           /* DeeBytes*, Dee_bytes_printer, Dee_bytes_printer_* */
 #include <deemon/dex.h>             /* DEX_*, Dee_DEXSYM_READONLY */
 #include <deemon/error.h>           /* DeeError_* */
 #include <deemon/format.h>          /* PCKuN, PRFuSIZ */

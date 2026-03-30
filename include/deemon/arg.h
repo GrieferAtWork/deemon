@@ -61,7 +61,7 @@ DECL_BEGIN
  *                    [':' <function_name>] // Optional, trailing function name (Used in error messages)
  *     ;
  * Example usage:
- * >> // function my_function(int a, int b, int c = 5) -> int;
+ * >> // function my_function(a: int, b: int, c: int = 5): int;
  * >> // @return: * : The sum of `a', `b' and `c'
  * >> PRIVATE WUNUSED ATTR_INS(2, 1) NONNULL((1)) DREF DeeObject *DCALL
  * >> my_function(DeeObject *UNUSED(self), size_t argc, DeeObject *const *argv) {
@@ -70,7 +70,9 @@ DECL_BEGIN
  * >>         return NULL;
  * >>     return DeeInt_NewInt(a + b + c);
  * >> }
- */
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3)) int
 (DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                 char const *__restrict format, ...);
@@ -605,15 +607,18 @@ struct Dee_keyword {
  * provided with a keyword object (`kw').
  * -> When `DeeKwds_Check(kw)' is true, keyword argument objects are passed
  *    through the regular argument vector, located within the range
- *   `argc - kw->kw_size .. argc - 1' (if `kw->kw_size > argc', a TypeError is thrown),
- *    using names from `kwlist + NUM_POSITIONAL' to match association.
+ *    `argc - kw->kw_size .. argc - 1' (if `kw->kw_size > argc', a TypeError
+ *    is thrown), using names from `kwlist + NUM_POSITIONAL' to match association.
  * -> Otherwise, positional arguments are also parsed regularly, before
  *    using `DeeObject_GetItemStringHash()' to lookup argument names starting
  *    at `kwlist + NUM_POSITIONAL', counting how may arguments were actually
  *    found (and failing if a non-optional argument wasn't given), before
  *    finally using `DeeObject_Size()' to see how many keyword-arguments
  *    were given by the keyword-list, and throwing an error if more were
- *    given than what was actually used. */
+ *    given than what was actually used.
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 (DeeArg_UnpackKw)(size_t argc, DeeObject *const *argv,
                   DeeObject *kw, struct Dee_keyword *__restrict kwlist,
@@ -639,7 +644,9 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
  * >> } args;
  * >> if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ UNPuSIZ UNPuSIZ ":foo", &args))
  * >>     goto err;
- */
+ *
+ * @return: 0 : Success
+ * @return: -1: Error */
 DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((3, 4)) int
 (DCALL DeeArg_UnpackStruct)(size_t argc, DeeObject *const *argv,
                             char const *__restrict format, void *out);
@@ -834,7 +841,7 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 5, 6)) int
 #define Dee_UNPxN(sizeof)          _Dee_PRIVATE_UNPxN(sizeof) /* DeeObject_AsXUIntM1(sizeof, ...) */
 
 /* Helpful aliases */
-#define Dee_UNPdSIZ Dee_UNPdN(__SIZEOF_SIZE_T__) /* DeeObject_AsSSize(...) */
+#define Dee_UNPdSIZ Dee_UNPdN(__SIZEOF_SIZE_T__)  /* DeeObject_AsSSize(...) */
 #define Dee_UNPuSIZ Dee_UNPuN(__SIZEOF_SIZE_T__)  /* DeeObject_AsSize(...) */
 #define Dee_UNPxSIZ Dee_UNPxN(__SIZEOF_SIZE_T__)  /* DeeObject_AsSizeM1(...) */
 #define Dee_UNPdPTR Dee_UNPdN(__SIZEOF_POINTER__) /* DeeObject_AsIntptr(...) */

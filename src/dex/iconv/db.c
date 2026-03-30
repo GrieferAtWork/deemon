@@ -27,9 +27,10 @@
 
 #include <deemon/api.h>
 
-#include <deemon/none.h>
-#include <deemon/string.h>
+#include <deemon/none.h>            /* return_none */
+#include <deemon/string.h>          /* DeeString* */
 #include <deemon/system-features.h> /* DeeSystem_DEFINE_rawmemrchr */
+#include <deemon/types.h>           /* DREF, DeeObject */
 
 DECL_BEGIN
 

@@ -28,7 +28,7 @@
 #include <deemon/format.h>          /* PRFuSIZ */
 #include <deemon/gc.h>              /* DeeGC_*, Dee_GC_*, Dee_gc_head */
 #include <deemon/module.h>          /* DeeModule* */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t, Dee_weakref_list, Dee_weakref_support_fini, OBJECT_HEAD */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t, Dee_weakref_list, Dee_weakref_list_clear, OBJECT_HEAD */
 #include <deemon/system-features.h> /* memset, remove */
 #include <deemon/system.h>          /* DeeSystem_GetWalltime */
 #include <deemon/thread.h>          /* DeeThreadObject, DeeThread_CheckInterrupt, DeeThread_CheckInterruptNoInt, DeeThread_IsMultiThreaded, DeeThread_ResumeAll, DeeThread_Self, DeeThread_SuspendAll, DeeThread_TrySuspendAll, DeeThread_WasInterrupted, Dee_THREAD_STATE_SHUTDOWNINTR */
