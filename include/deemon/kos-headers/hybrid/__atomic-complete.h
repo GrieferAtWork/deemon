@@ -110,7 +110,7 @@ function sub(n: string) {
 	//print("#define __hybrid_atomic_load", n, "(p, order) \\");
 	//print("	__XBLOCK({ __UINT", n, "_TYPE__ const *__hal", n, "_p = (p); __UINT", n, "_TYPE__ __hal", n, "_res; \\");
 	//print("	           do { __hal", n, "_res = *(__UINT", n, "_TYPE__ const volatile *)__hal", n, "_p; __COMPILER_READ_BARRIER(); \\");
-	//print("	           } while (!__hybrid_atomic_cmpxch_weak((__UINT", n, "_TYPE__ *)__hal", n, "_p, __hal", n, "_res, __hal", n, "_res, order, order)); \\");
+	//print("	           } while (!__hybrid_atomic_cmpxch_weak", n, "((__UINT", n, "_TYPE__ *)__hal", n, "_p, __hal", n, "_res, __hal", n, "_res, order, order)); \\");
 	//print("	           __XRETURN __hal", n, "_res; })");
 	//print("#else /" "* __NO_XBLOCK *" "/");
 	//print("#define __hybrid_atomic_load", n, " __hybrid_atomic_load", n);
@@ -118,7 +118,7 @@ function sub(n: string) {
 	//print("	__UINT", n, "_TYPE__ __res;");
 	//print("	(void)__order;");
 	//print("	do { __res = *(__UINT", n, "_TYPE__ const volatile *)__p; __COMPILER_READ_BARRIER();");
-	//print("	} while (!__hybrid_atomic_cmpxch_weak((__UINT", n, "_TYPE__ *)__p, __res, __res, __order, __order));");
+	//print("	} while (!__hybrid_atomic_cmpxch_weak", n, "((__UINT", n, "_TYPE__ *)__p, __res, __res, __order, __order));");
 	//print("	return __res;");
 	//print("}");
 	//print("#endif /" "* !__NO_XBLOCK *" "/");
@@ -193,7 +193,7 @@ function sub(n: string) {
 	print("#define __hybrid_atomic_xch", n, "(p, val, order) \\");
 	print("	__XBLOCK({ __UINT", n, "_TYPE__ *__hal", n, "_p = (p); __UINT", n, "_TYPE__ __hal", n, "_res, __hal", n, "_val = (val); \\");
 	print("	           do __hal", n, "_res = __hybrid_atomic_load(__hal", n, "_p, __ATOMIC_ACQUIRE); \\");
-	print("	           while (!__hybrid_atomic_cmpxch_weak(__hal", n, "_p, __hal", n, "_res, __hal", n, "_val, order, order)); \\");
+	print("	           while (!__hybrid_atomic_cmpxch_weak", n, "(__hal", n, "_p, __hal", n, "_res, __hal", n, "_val, order, order)); \\");
 	print("	           __XRETURN __hal", n, "_res; })");
 	print("#else /" "* __NO_XBLOCK *" "/");
 	print("#define __hybrid_atomic_xch", n, " __hybrid_atomic_xch", n);
@@ -201,7 +201,7 @@ function sub(n: string) {
 	print("	__UINT", n, "_TYPE__ __res;");
 	print("	(void)__order;");
 	print("	do __res = __hybrid_atomic_load(__p, __ATOMIC_ACQUIRE);");
-	print("	while (!__hybrid_atomic_cmpxch_weak(__p, __res, __val, __order, __order));");
+	print("	while (!__hybrid_atomic_cmpxch_weak", n, "(__p, __res, __val, __order, __order));");
 	print("	return __res;");
 	print("}");
 	print("#endif /" "* !__NO_XBLOCK *" "/");
@@ -497,7 +497,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) __BOOL __NOTHROW_NCX(__hybrid_atom
 #define __hybrid_atomic_xch8(p, val, order) \
 	__XBLOCK({ __UINT8_TYPE__ *__hal8_p = (p); __UINT8_TYPE__ __hal8_res, __hal8_val = (val); \
 	           do __hal8_res = __hybrid_atomic_load(__hal8_p, __ATOMIC_ACQUIRE); \
-	           while (!__hybrid_atomic_cmpxch_weak(__hal8_p, __hal8_res, __hal8_val, order, order)); \
+	           while (!__hybrid_atomic_cmpxch_weak8(__hal8_p, __hal8_res, __hal8_val, order, order)); \
 	           __XRETURN __hal8_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_xch8 __hybrid_atomic_xch8
@@ -505,7 +505,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT8_TYPE__ __NO
 	__UINT8_TYPE__ __res;
 	(void)__order;
 	do __res = __hybrid_atomic_load(__p, __ATOMIC_ACQUIRE);
-	while (!__hybrid_atomic_cmpxch_weak(__p, __res, __val, __order, __order));
+	while (!__hybrid_atomic_cmpxch_weak8(__p, __res, __val, __order, __order));
 	return __res;
 }
 #endif /* !__NO_XBLOCK */
@@ -1038,7 +1038,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) __BOOL __NOTHROW_NCX(__hybrid_atom
 #define __hybrid_atomic_xch16(p, val, order) \
 	__XBLOCK({ __UINT16_TYPE__ *__hal16_p = (p); __UINT16_TYPE__ __hal16_res, __hal16_val = (val); \
 	           do __hal16_res = __hybrid_atomic_load(__hal16_p, __ATOMIC_ACQUIRE); \
-	           while (!__hybrid_atomic_cmpxch_weak(__hal16_p, __hal16_res, __hal16_val, order, order)); \
+	           while (!__hybrid_atomic_cmpxch_weak16(__hal16_p, __hal16_res, __hal16_val, order, order)); \
 	           __XRETURN __hal16_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_xch16 __hybrid_atomic_xch16
@@ -1046,7 +1046,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT16_TYPE__ __N
 	__UINT16_TYPE__ __res;
 	(void)__order;
 	do __res = __hybrid_atomic_load(__p, __ATOMIC_ACQUIRE);
-	while (!__hybrid_atomic_cmpxch_weak(__p, __res, __val, __order, __order));
+	while (!__hybrid_atomic_cmpxch_weak16(__p, __res, __val, __order, __order));
 	return __res;
 }
 #endif /* !__NO_XBLOCK */
@@ -1579,7 +1579,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) __BOOL __NOTHROW_NCX(__hybrid_atom
 #define __hybrid_atomic_xch32(p, val, order) \
 	__XBLOCK({ __UINT32_TYPE__ *__hal32_p = (p); __UINT32_TYPE__ __hal32_res, __hal32_val = (val); \
 	           do __hal32_res = __hybrid_atomic_load(__hal32_p, __ATOMIC_ACQUIRE); \
-	           while (!__hybrid_atomic_cmpxch_weak(__hal32_p, __hal32_res, __hal32_val, order, order)); \
+	           while (!__hybrid_atomic_cmpxch_weak32(__hal32_p, __hal32_res, __hal32_val, order, order)); \
 	           __XRETURN __hal32_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_xch32 __hybrid_atomic_xch32
@@ -1587,7 +1587,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT32_TYPE__ __N
 	__UINT32_TYPE__ __res;
 	(void)__order;
 	do __res = __hybrid_atomic_load(__p, __ATOMIC_ACQUIRE);
-	while (!__hybrid_atomic_cmpxch_weak(__p, __res, __val, __order, __order));
+	while (!__hybrid_atomic_cmpxch_weak32(__p, __res, __val, __order, __order));
 	return __res;
 }
 #endif /* !__NO_XBLOCK */
@@ -2121,7 +2121,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) __BOOL __NOTHROW_NCX(__hybrid_atom
 #define __hybrid_atomic_xch64(p, val, order) \
 	__XBLOCK({ __UINT64_TYPE__ *__hal64_p = (p); __UINT64_TYPE__ __hal64_res, __hal64_val = (val); \
 	           do __hal64_res = __hybrid_atomic_load(__hal64_p, __ATOMIC_ACQUIRE); \
-	           while (!__hybrid_atomic_cmpxch_weak(__hal64_p, __hal64_res, __hal64_val, order, order)); \
+	           while (!__hybrid_atomic_cmpxch_weak64(__hal64_p, __hal64_res, __hal64_val, order, order)); \
 	           __XRETURN __hal64_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_xch64 __hybrid_atomic_xch64
@@ -2129,7 +2129,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT64_TYPE__ __N
 	__UINT64_TYPE__ __res;
 	(void)__order;
 	do __res = __hybrid_atomic_load(__p, __ATOMIC_ACQUIRE);
-	while (!__hybrid_atomic_cmpxch_weak(__p, __res, __val, __order, __order));
+	while (!__hybrid_atomic_cmpxch_weak64(__p, __res, __val, __order, __order));
 	return __res;
 }
 #endif /* !__NO_XBLOCK */
@@ -2664,7 +2664,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_NONNULL((1)) __BOOL __NOTHROW_NCX(__hybrid_atom
 #define __hybrid_atomic_xch128(p, val, order) \
 	__XBLOCK({ __UINT128_TYPE__ *__hal128_p = (p); __UINT128_TYPE__ __hal128_res, __hal128_val = (val); \
 	           do __hal128_res = __hybrid_atomic_load(__hal128_p, __ATOMIC_ACQUIRE); \
-	           while (!__hybrid_atomic_cmpxch_weak(__hal128_p, __hal128_res, __hal128_val, order, order)); \
+	           while (!__hybrid_atomic_cmpxch_weak128(__hal128_p, __hal128_res, __hal128_val, order, order)); \
 	           __XRETURN __hal128_res; })
 #else /* __NO_XBLOCK */
 #define __hybrid_atomic_xch128 __hybrid_atomic_xch128
@@ -2672,7 +2672,7 @@ __LOCAL __ATTR_ARTIFICIAL __ATTR_WUNUSED __ATTR_NONNULL((1)) __UINT128_TYPE__ __
 	__UINT128_TYPE__ __res;
 	(void)__order;
 	do __res = __hybrid_atomic_load(__p, __ATOMIC_ACQUIRE);
-	while (!__hybrid_atomic_cmpxch_weak(__p, __res, __val, __order, __order));
+	while (!__hybrid_atomic_cmpxch_weak128(__p, __res, __val, __order, __order));
 	return __res;
 }
 #endif /* !__NO_XBLOCK */
