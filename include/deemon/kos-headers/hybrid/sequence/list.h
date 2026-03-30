@@ -1148,8 +1148,8 @@
 	do {                                                                                     \
 		X(_, hi_elem).sle_next = __hybrid_atomic_load(&(self)->slh_first, __ATOMIC_ACQUIRE); \
 		__COMPILER_WRITE_BARRIER();                                                          \
-	} while (!__hybrid_atomic_cmpxch(&(self)->slh_first, X(_, hi_elem).sle_next, lo_elem,    \
-	                                 __ATOMIC_RELEASE, __ATOMIC_RELAXED))
+	} while (!__hybrid_atomic_cmpxch_weak(&(self)->slh_first, X(_, hi_elem).sle_next,        \
+	                                      lo_elem, __ATOMIC_RELEASE, __ATOMIC_RELAXED))
 #define __HYBRID_SLIST_REMOVE_HEAD(self, X, _) \
 	(void)((self)->slh_first = X(_, (self)->slh_first).sle_next)
 #define __HYBRID_SLIST_REMOVE_PREVPTR(p_elem, elem, X, _) \
