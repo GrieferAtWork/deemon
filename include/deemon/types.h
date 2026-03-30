@@ -253,6 +253,9 @@ struct Dee_weakref_list {
 	struct Dee_weakref *wl_nodes; /* [0..1][lock(BIT0(wl_nodes))] chain of weak references. */
 };
 
+#define Dee_weakref_list_init(self)  (void)((self)->wl_nodes = NULL)
+#define Dee_weakref_list_cinit(self) Dee_ASSERT((self)->wl_nodes == NULL)
+
 /* Structure field: When present in an object, it supports weak referencing. */
 #define Dee_WEAKREF_SUPPORT         struct Dee_weakref_list ob_weakrefs;
 #define Dee_WEAKREF_SUPPORT_ADDR(T) offsetof(T, ob_weakrefs)
@@ -265,18 +268,34 @@ struct Dee_weakref_list {
 
 /* Finalize weakref support (must be called manually by
  * destructors of types implementing weakref support!) */
-DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
+DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_list_fini)(struct Dee_weakref_list *__restrict self);
 #if defined(__OPTIMIZE_SIZE__) || defined(__INTELLISENSE__)
-#define Dee_weakref_support_fini(x) (Dee_weakref_support_fini)(&(x)->ob_weakrefs)
+#define Dee_weakref_support_fini(x) Dee_weakref_list_fini(&(x)->ob_weakrefs)
 #else /* __OPTIMIZE_SIZE__ || __INTELLISENSE__ */
 DECL_END
 #include <hybrid/__atomic.h> /* __ATOMIC_ACQUIRE, __hybrid_atomic_load */
 DECL_BEGIN
 #define Dee_weakref_support_fini(x)                                     \
 	(__hybrid_atomic_load(&(x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
-	 ? (Dee_weakref_support_fini)(&(x)->ob_weakrefs)                    \
+	 ? Dee_weakref_list_fini(&(x)->ob_weakrefs)                         \
 	 : (void)0)
 #endif /* !__OPTIMIZE_SIZE__ && !__INTELLISENSE__ */
+
+/* Clear the all weak references that may point to "self".
+ * For now, this is actually the same as "Dee_weakref_list_fini()", which
+ * just so happens to leave "self" in a state where it appears empty, but
+ * that may not always be the same so use this macro if you want "self"
+ * to remain initialized ("Dee_weakref_list_fini()" may eventually change
+ * such that it leaves "self" in an undefined state, at which point this
+ * macro will retain its current behavior of keeping "self" initialized) */
+#if 1
+#define Dee_weakref_list_clear(self) \
+	Dee_weakref_list_fini(self)
+#else
+#define Dee_weakref_list_clear(self) \
+	(Dee_weakref_list_fini(self),    \
+	 Dee_weakref_list_init(self))
+#endif
 
 DECL_END
 

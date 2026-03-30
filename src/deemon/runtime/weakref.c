@@ -1026,7 +1026,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start, DeeObject *self) {
 
 /* Finalize weakref support */
 PUBLIC NONNULL((1)) void
-(DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict list) {
+(DCALL Dee_weakref_list_fini)(struct Dee_weakref_list *__restrict list) {
 	struct Dee_weakref *iter, *next;
 restart_clear_weakrefs:
 	LOCK_POINTER(list->wl_nodes);

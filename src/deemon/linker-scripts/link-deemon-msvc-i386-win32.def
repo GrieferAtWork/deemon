@@ -1824,11 +1824,11 @@ EXPORTS
 	Dee_weakref_initmany_trylock@12=_Dee_weakref_initmany_trylock@12
 	Dee_weakref_initmany_unlock@8=_Dee_weakref_initmany_unlock@8
 	Dee_weakref_initmany_unlock_and_inherit@8=_Dee_weakref_initmany_unlock_and_inherit@8
+	Dee_weakref_list_fini@4=_Dee_weakref_list_fini@4
 	Dee_weakref_lock@4=_Dee_weakref_lock@4
 	Dee_weakref_move@8=_Dee_weakref_move@8
 	Dee_weakref_moveassign@8=_Dee_weakref_moveassign@8
 	Dee_weakref_set@8=_Dee_weakref_set@8
-	Dee_weakref_support_fini@4=_Dee_weakref_support_fini@4
 	_DeeAssert_Fail@12=__DeeAssert_Fail@12
 	_DeeAssert_XFail@12=__DeeAssert_XFail@12
 	_DeeDecWriter_Init@4=__DeeDecWriter_Init@4

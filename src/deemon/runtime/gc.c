@@ -649,10 +649,7 @@ DeeGC_UntrackAsync(DeeObject *__restrict ob) {
 		if (tp->tp_weakrefs != 0) {
 			struct Dee_weakref_list *wrefs;
 			wrefs = (struct Dee_weakref_list *)((byte_t *)ob + tp->tp_weakrefs);
-			/* NOTE: "Dee_weakref_support_fini()" is actually more of a "Dee_weakref_support_clear()",
-			 *       in that it leaves the list in a status where it appears empty, which is exactly
-			 *       what we want here! */
-			(Dee_weakref_support_fini)(wrefs);
+			Dee_weakref_list_clear(wrefs);
 		}
 	} while ((tp = DeeType_Base(tp)) != NULL);
 
