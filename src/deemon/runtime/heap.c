@@ -57,7 +57,7 @@ ClCompile.BasicRuntimeChecks = Default
 #include <deemon/module.h>           /* DeeModule*, Dee_module_libentry, Dee_module_object, _Dee_MODULE_FNOADDR */
 #include <deemon/system-features.h>  /* CONFIG_HAVE_*, bzero, calloc, free, malloc, memcpy, mmap64, realloc, remove, strlen */
 #include <deemon/thread.h>           /* DeeThreadObject, DeeThread_Self */
-#include <deemon/types.h>            /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t */
+#include <deemon/types.h>            /* DREF, DeeObject, Dee_TYPE, Dee_refcnt_t, Dee_ssize_t, ITER_DONE */
 #include <deemon/util/atomic.h>      /* atomic_* */
 #include <deemon/util/lock.h>        /* Dee_ATOMIC_LOCK_INIT, Dee_atomic_lock_*, Dee_atomic_rwlock_*, Dee_shared_lock_* */
 #include <deemon/util/rlock.h>       /* Dee_RATOMIC_LOCK_INIT, Dee_RSHARED_LOCK_INIT, Dee_ratomic_lock_*, Dee_rshared_lock_* */
@@ -229,7 +229,8 @@ DECL_BEGIN
 #endif /* !LEAK_DETECTION_GC */
 
 
-/* With lots of running threads, allocating IDs from "alloc_id_count" tends to
+/* ========== USE_PER_MSPACE_ALLOC_ID
+ * With lots of running threads, allocating IDs from "alloc_id_count" tends to
  * become a major bottleneck since lots of thread will be doing lots of allocations
  * all the time (causing atomic conflicts), and all those allocations need to be
  * given their own (unique) allocation ID.
@@ -249,18 +250,59 @@ DECL_BEGIN
  *   be distinct across threads). This is still the case when each thread allocates
  *   a bunch of IDs prematurely, and then assigns them as needed. The only difference
  *   here is that some IDs may end up going unused.
+ *
+ * ========== USE_PER_MSPACE_LEAK_OPS
+ * Same as `USE_PER_MSPACE_ALLOC_ID', but replaces:
+ * - "leaks_pending_insert"
+ * - "leaks_pending_remove"
+ * with per-mspace atomic linked lists, thus also reducing atomic contention on the
+ * async insert/remove task lists of memory leaks also.
+ *
+ * Performance stats  (time deemon util/scripts/fixincludes.dee)
+ * 
+ * USE_PER_MSPACE_*
+ *   ALLOC_ID    LEAK_OPS     timings (real, 3 random runs each)
+ *          1           1     0m16.774s, 0m16.904s, 0m17.061s
+ *          1           0     0m17.278s, 0m17.361s, 0m17.732s
+ *          0           0     0m17.855s, 0m18.644s, 0m18.658s
  */
 #if (LEAK_DETECTION == LEAK_DETECTION_METHOD_IN_TAIL && USE_PER_THREAD_MSTATE)
 #define USE_PER_MSPACE_ALLOC_ID 1
+#if 0
+/* TODO: Instead of all these different methods to speed up inserts/removes of leaks into the global
+ *       ring of tracked memory leaks, why not just keep track of memory leaks on a per-mstate basis?
+ *       I mean: there is an API to enumerate all TLS mspaces, and DeeHeap_DumpMemoryLeaks() can just
+ *       be re-written to simply enumerate those spaces in order to find all tracked memory leaks! */
+#else
+#define USE_PER_MSPACE_LEAK_OPS 1
+#endif
 #endif /* ... */
 #ifndef USE_PER_MSPACE_ALLOC_ID
 #define USE_PER_MSPACE_ALLOC_ID 0
 #endif /* !USE_PER_MSPACE_ALLOC_ID */
+#ifndef USE_PER_MSPACE_LEAK_OPS
+#define USE_PER_MSPACE_LEAK_OPS 0
+#endif /* !USE_PER_MSPACE_LEAK_OPS */
 #undef MSTATE_EXTRA_FIELDS_1
 #if USE_PER_MSPACE_ALLOC_ID
 #define MSTATE_ALLOC_MASK     0xffff /* Allocation mask (upper limit on how many IDs to pre-allocate) */
 #define MSTATE_EXTRA_FIELDS_1 size_t ms_alloc_id /* [lock(ATOMIC)] Per-mstate "alloc_id_count" */
 #endif /* USE_PER_MSPACE_ALLOC_ID */
+#if USE_PER_MSPACE_LEAK_OPS
+#ifndef LEAK_FOOTER_SLIST_DEFINED
+#define LEAK_FOOTER_SLIST_DEFINED
+DECL_BEGIN
+struct leak_footer;
+SLIST_HEAD(leak_footer_slist, leak_footer);
+DECL_END
+#endif /* !LEAK_FOOTER_SLIST_DEFINED */
+#define MSTATE_LEAKS_PENDING_NEXT__UNBOUND ((struct malloc_state *)NULL)      /* mstate isn't linked into global list of mstates with pending leaks */
+#define MSTATE_LEAKS_PENDING_NEXT__NONE    ((struct malloc_state *)ITER_DONE) /* mstate is the last element in the global list of mstates with pending leaks */
+#define MSTATE_EXTRA_FIELDS_2                                                                                                    \
+	struct malloc_state     *ms_leaks_pending_next;   /* [lock(ATOMIC)] Next mstate, or one of `MSTATE_LEAKS_PENDING_NEXT__*' */ \
+	struct leak_footer_slist ms_leaks_pending_insert; /* [lock(ATOMIC)] Pending inserts */                                       \
+	struct leak_footer_slist ms_leaks_pending_remove; /* [lock(ATOMIC)] Pending removes */
+#endif /* USE_PER_MSPACE_LEAK_OPS */
 
 /* END --- Not part of dlmalloc core: leak detection */
 /* END --- Not part of dlmalloc core: leak detection */
@@ -818,7 +860,10 @@ struct region_leak_footer {
 /* Return pointer to "prev_foot" field of next chunk (i.e. the "footer" field of this chunk) */
 #define chunk_p_foot(X) ((size_t *)chunk_plus_offset(X, chunksize(X)))
 
+#ifndef LEAK_FOOTER_SLIST_DEFINED
+#define LEAK_FOOTER_SLIST_DEFINED
 SLIST_HEAD(leak_footer_slist, leak_footer);
+#endif /* !LEAK_FOOTER_SLIST_DEFINED */
 
 #define leak_footer_alloc_uncached() \
 	((struct leak_footer *)dlmalloc(sizeof(struct leak_footer)))
@@ -966,9 +1011,9 @@ PRIVATE struct leak_footer leaks = {
 	/* .lf_next  = */ { &leaks }, /* [1..1][lock(leaks_lock)] */
 	/* .lf_file  = */ { NULL },   /* [const] */
 	/* .lf_line  = */ 0,          /* [const] */
-#if LEAK_DETECTION_GC
+#if LEAK_DETECTION_GC || FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	/* .lf_gcflags = */ 0,        /* [const] */
-#endif /* LEAK_DETECTION_GC */
+#endif /* LEAK_DETECTION_GC || FLAG4_BIT_HEAP_REGION_DBG_DISPOSE */
 	/* .lf_id    = */ 0           /* [const] */
 };
 
@@ -1002,17 +1047,160 @@ PRIVATE struct leak_footer leaks = {
 #define leaks_insert(leak) (leaks_insert_begin(leak), leaks_insert_finish(leak))
 
 
-/* XXX: Have multiple instances of these pending lists.
- * Specifically:
- * - The first time one of these lists is needed, use dlmalloc() to allocate a
- *   vector of pending lists that is "NEXT_POWER_OF_2(import.posix.cpu_count())"
- *   elements long, with every element being a pair of "leak_footer_slist" that
- *   are used for insert/remove
- * - Whenever a "leak_footer" must be scheduled for insert/remove, choose the
- *   pending list at "((uintptr_t)p >> 3) & MASK", where:
- *     - 3    == log2(MALLOC_ALIGNMENT)
- *     - MASK == NEXT_POWER_OF_2(import.posix.cpu_count()) - 1
- */
+#if USE_PER_MSPACE_LEAK_OPS
+/* [0..n][lock(ATOMIC)] m-states with pending leak insert/remove operations */
+PRIVATE mstate leaks_pending_states = MSTATE_LEAKS_PENDING_NEXT__NONE;
+
+#define leaks_pending_mustreap() \
+	(atomic_read(&leaks_pending_states) != MSTATE_LEAKS_PENDING_NEXT__NONE)
+
+LOCAL WUNUSED NONNULL((1)) mstate
+leak_get_pending_mstate(struct leak_footer *__restrict leak) {
+#if 1
+	/* Must use this variant, since the linked mstate mustn't
+	 * change, even if the memory of "leak" is realloc'd!
+	 *
+	 * Otherwise, necessary INSERT jobs may not be executed
+	 * before an associated REMOVE job is run. */
+	mchunkptr p = mem2chunk(leak);
+	size_t *p_foot = chunk_p_foot(p);
+	return mstate_decode_for_footer(*p_foot);
+#else
+	return mstate_decode_for_footer(leak->lf_foot);
+#endif
+}
+
+LOCAL void mstate_set_haspending(mstate ms) {
+	mstate old_next, new_next;
+	do {
+		old_next = atomic_read(&ms->ms_leaks_pending_next);
+		if (old_next != MSTATE_LEAKS_PENDING_NEXT__UNBOUND)
+			return; /* Already registered (or currently being registered) */
+		new_next = atomic_read(&leaks_pending_states);
+		/* Once this cmpxch succeeds, we have to commit to adding
+		 * "ms" to "leaks_pending_states" in all cases! */
+	} while (!atomic_cmpxch_weak(&ms->ms_leaks_pending_next, old_next, new_next));
+
+	/* WARNING: At this point, "ms" is in a sort-of "quantum" state, where
+	 *          it both is- and isn't part of "leaks_pending_states":
+	 * - as far as it itself is concerned, it is already part of the
+	 *   global "leaks_pending_states" list
+	 * - but if one were to enumerate "leaks_pending_states", one would
+	 *   not be able to encounter "ms"
+	 *
+	 * Despite this weirdness, this actually only poses a problem within
+	 * "DeeDbg_UntrackAlloc()", which has a "#if USE_PER_MSPACE_LEAK_OPS"
+	 * block to handle this race condition */
+
+	/* Insert mstate into global list of states with pending leak tasks. */
+	while (!atomic_cmpxch_weak(&leaks_pending_states, new_next, ms)) {
+		new_next = atomic_read(&leaks_pending_states);
+		atomic_write(&ms->ms_leaks_pending_next, new_next);
+	}
+}
+
+#define leaks_pending_insert_add(leak)                                        \
+	do {                                                                      \
+		mstate ms = leak_get_pending_mstate(leak);                            \
+		struct leak_footer *_lins_next;                                       \
+		do {                                                                  \
+			_lins_next = atomic_read(&ms->ms_leaks_pending_insert.slh_first); \
+			(leak)->lf_inslink.sle_next = _lins_next;                         \
+			COMPILER_WRITE_BARRIER();                                         \
+		} while (!atomic_cmpxch_weak(&ms->ms_leaks_pending_insert.slh_first,  \
+		                             _lins_next, leak));                      \
+		if (_lins_next == NULL)                                               \
+			mstate_set_haspending(ms);                                        \
+	}	__WHILE0
+#define leaks_pending_remove_add(leak)                                        \
+	do {                                                                      \
+		mstate ms = leak_get_pending_mstate(leak);                            \
+		struct leak_footer *_lrem_next;                                       \
+		do {                                                                  \
+			_lrem_next = atomic_read(&ms->ms_leaks_pending_remove.slh_first); \
+			(leak)->lf_remlink.sle_next = _lrem_next;                         \
+			COMPILER_WRITE_BARRIER();                                         \
+		} while (!atomic_cmpxch_weak(&ms->ms_leaks_pending_remove.slh_first,  \
+		                             _lrem_next, leak));                      \
+		if (_lrem_next == NULL)                                               \
+			mstate_set_haspending(ms);                                        \
+	}	__WHILE0
+
+
+/* Reap "leaks_pending_insert" only */
+PRIVATE void DCALL mspace_leaks_lock_reap_insert_locked(mstate ms) {
+	struct leak_footer_slist insert;
+	struct leak_footer *leak;
+	insert.slh_first = SLIST_ATOMIC_CLEAR(&ms->ms_leaks_pending_insert);
+	while (!SLIST_EMPTY(&insert)) {
+		leak = SLIST_FIRST(&insert);
+		SLIST_REMOVE_HEAD(&insert, lf_inslink);
+		leaks_insert_finish(leak);
+	}
+}
+
+PRIVATE ATTR_NOINLINE void DCALL leaks_lock_reap_and_unlock(void) {
+	struct leak_footer_slist remove;
+	struct leak_footer **p_remove_tail;
+	struct leak_footer *leak;
+	mstate ms, next;
+
+	/* Load list of mstates with pending jobs. */
+	ms = atomic_xch(&leaks_pending_states, MSTATE_LEAKS_PENDING_NEXT__NONE);
+
+	SLIST_INIT(&remove);
+	p_remove_tail = SLIST_PFIRST(&remove);
+	while (ms != MSTATE_LEAKS_PENDING_NEXT__NONE) {
+		/* Mark as unlinked from "leaks_pending_states" (must happen **before**
+		 * we consume pending sets, so the mspace can re-add itself in case they
+		 * receive a new leak operation) */
+		next = ms->ms_leaks_pending_next;
+		COMPILER_READ_BARRIER();
+		atomic_write(&ms->ms_leaks_pending_next, MSTATE_LEAKS_PENDING_NEXT__UNBOUND);
+
+		/* Order here is important: must reap "remove" **BEFORE** "insert"!
+		 *
+		 * In case a pointer ends up added to both lists, it is guarantied
+		 * that if it appears in "remove", it will either:
+		 * - Already be within "leaks"
+		 * - or: have been added to "insert" previously
+		 *
+		 * Combine that with this executing "insert" first, the removal code
+		 * is allowed to assume that everything from "remove" will currently
+		 * be present somewhere within "leaks"! */
+		*p_remove_tail = SLIST_ATOMIC_CLEAR(&ms->ms_leaks_pending_remove);
+
+		/* Execute "insert" tasks */
+		mspace_leaks_lock_reap_insert_locked(ms);
+
+		/* Execute "remove" tasks */
+		while ((leak = *p_remove_tail) != NULL) {
+			leaks_remove(leak);
+			p_remove_tail = SLIST_PNEXT(leak, lf_remlink);
+		}
+		ms = next;
+	}
+
+	/* Release lock */
+	_leaks_lock_release();
+
+	/* Free underlying memory blocks from "remove" */
+	ASSERT(*p_remove_tail == NULL);
+	while (!SLIST_EMPTY(&remove)) {
+		void *mem;
+		mchunkptr p;
+		size_t *p_foot;
+		leak = SLIST_FIRST(&remove);
+		SLIST_REMOVE_HEAD(&remove, lf_remlink);
+		mem    = leak->lf_chunk;
+		p      = mem2chunk(mem);
+		p_foot = chunk_p_foot(p);
+		*p_foot = leak->lf_foot; /* Restore original footer */
+		leak_footer_free(leak);
+		dlfree(mem);
+	}
+}
+#else /* USE_PER_MSPACE_LEAK_OPS */
 PRIVATE struct leak_footer_slist leaks_pending_insert = SLIST_HEAD_INITIALIZER(leaks_pending_insert);
 PRIVATE struct leak_footer_slist leaks_pending_remove = SLIST_HEAD_INITIALIZER(leaks_pending_remove);
 
@@ -1022,10 +1210,9 @@ PRIVATE struct leak_footer_slist leaks_pending_remove = SLIST_HEAD_INITIALIZER(l
 #define leaks_pending_mustreap_insert() \
 	(atomic_read(&leaks_pending_insert.slh_first) != NULL)
 
-/* FIXME: Because of atomic conflicts, these inserts are a major bottleneck in SMP */
-#define leaks_pending_insert_add(leak, ptr) \
+#define leaks_pending_insert_add(leak) \
 	SLIST_ATOMIC_INSERT(&leaks_pending_insert, leak, lf_inslink)
-#define leaks_pending_remove_add(leak, ptr) \
+#define leaks_pending_remove_add(leak) \
 	SLIST_ATOMIC_INSERT(&leaks_pending_remove, leak, lf_remlink)
 
 
@@ -1052,7 +1239,7 @@ PRIVATE ATTR_NOINLINE void DCALL leaks_lock_reap_and_unlock(void) {
 	 * - Already be within "leaks"
 	 * - or: have been added to "insert" previously
 	 *
-	 * Combine that with is executing "insert" first, the removal code
+	 * Combine that with this executing "insert" first, the removal code
 	 * is allowed to assume that everything from "remove" will currently
 	 * be present somewhere within "leaks"! */
 	remove.slh_first = SLIST_ATOMIC_CLEAR(&leaks_pending_remove);
@@ -1083,6 +1270,7 @@ PRIVATE ATTR_NOINLINE void DCALL leaks_lock_reap_and_unlock(void) {
 		dlfree(mem);
 	}
 }
+#endif /* !USE_PER_MSPACE_LEAK_OPS */
 
 
 PRIVATE void DCALL leaks_lock_release(void) {
@@ -1398,6 +1586,7 @@ DeeDbgHeap_DelHeapRegion(struct Dee_heapregion *__restrict region) {
 
 
 
+#if LEAK_DETECTION_GC
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 leaks_pending_remove__contains(struct leak_footer *leak) {
 	struct leak_footer *remove;
@@ -1408,6 +1597,7 @@ leaks_pending_remove__contains(struct leak_footer *leak) {
 	}
 	return false;
 }
+#endif /* LEAK_DETECTION_GC */
 
 
 
@@ -1616,10 +1806,12 @@ do_DeeHeap_DumpMemoryLeaks_one(struct leak_footer *leak
 	size_t size = chunksize(p) - overhead_for(p);
 	char const *file = atomic_read(&leak->lf_file);
 
+#if LEAK_DETECTION_GC
 	/* If "leak" is part of "leaks_pending_remove", skip it.
 	 * This must be checked **AFTER** reading  */
-	if (leaks_pending_remove__contains(leak))
+	if (print_gc_hits && leaks_pending_remove__contains(leak))
 		return 0;
+#endif /* LEAK_DETECTION_GC */
 
 #if FLAG4_BIT_HEAP_REGION_DBG_DISPOSE
 	if (leak_footer_isregion(leak)) {
@@ -2659,7 +2851,7 @@ leak_insert_p(void *ptr, struct leak_footer *leak,
 		leaks_lock_release();
 	} else {
 		/* Schedule "insert" to happen asynchronously */
-		leaks_pending_insert_add(leak, ptr);
+		leaks_pending_insert_add(leak);
 		leaks_lock_reap();
 	}
 }
@@ -2748,7 +2940,7 @@ PUBLIC ATTR_HOT void
 
 	if (!leaks_lock_tryacquire()) {
 		/* Schedule "remove" to happen asynchronously */
-		leaks_pending_remove_add(leak, ptr);
+		leaks_pending_remove_add(leak);
 		leaks_lock_reap();
 		return;
 	}
@@ -2757,7 +2949,12 @@ PUBLIC ATTR_HOT void
 	 * then we have to ensure that all pending inserts have been reaped! */
 #ifdef leaks_insert_is_unfinished
 	if (leaks_insert_is_unfinished(leak)) {
+#if USE_PER_MSPACE_LEAK_OPS
+		mstate ms = leak_get_pending_mstate(leak);
+		mspace_leaks_lock_reap_insert_locked(ms);
+#else /* USE_PER_MSPACE_LEAK_OPS */
 		leaks_lock_reap_insert_locked();
+#endif /* !USE_PER_MSPACE_LEAK_OPS */
 		dl_assert(!leaks_insert_is_unfinished(leak));
 	}
 #else /* leaks_insert_is_unfinished */
@@ -2930,10 +3127,35 @@ PUBLIC void *
 	/* This operation cannot be done asynchronously (but
 	 * that is fine, since it doesn't happen that often) */
 	leaks_lock_acquire_and_reap();
+#if USE_PER_MSPACE_LEAK_OPS
+	if unlikely(leaks_insert_is_unfinished(leak)) {
+		/* This can happen under a rare race condition, where one thread is currently
+		 * still within "mstate_set_haspending()", having just set that mspace's
+		 * "ms_leaks_pending_next" field such that it indicates that the mspace is
+		 * part of the global list of spaces with pending tasks.
+		 *
+		 * Then, our thread makes the same call after using leaks_pending_insert_add()
+		 * to insert the leak which we're trying to untrack here, but sees that
+		 * "ms_leaks_pending_next" indicates that the mspace is already part of the
+		 * global list (even though it isn't yet, as the other thread hasn't fully
+		 * added it yet).
+		 *
+		 * Then our thread continues up to here, trying to untrack the leak, but that
+		 * ends up failing because the leak hasn't actually been fully tracked, yet.
+		 * But the leak's mspace isn't part of "leaks_pending_states" either, since
+		 * it's still in the process of being added!
+		 *
+		 * So to prevent issues in this situation, simply do a man insert-reap of
+		 * the relevant mspace at this point. */
+		mstate ms = leak_get_pending_mstate(leak);
+		mspace_leaks_lock_reap_insert_locked(ms);
+		dl_assert(!leaks_insert_is_unfinished(leak));
+	}
+#endif /* USE_PER_MSPACE_LEAK_OPS */
 	leaks_remove(leak);
 	leaks_lock_release();
 
-	/* For a dummy loop that will satisfy `Dee_Free()' and `Dee_Realloc()',
+	/* Form a dummy loop that will satisfy `Dee_Free()' and `Dee_Realloc()',
 	 * but won't show up in `DeeHeap_DumpMemoryLeaks()' */
 	leak->lf_prev = leak;
 	leak->lf_next = leak;
