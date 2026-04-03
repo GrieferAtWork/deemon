@@ -942,7 +942,7 @@ Dee_type_member_set_impl(struct type_member const *desc,
 		ATTR_FALLTHROUGH
 	case STRUCT_WOBJECT:
 		if unlikely(!Dee_weakref_set(&FIELD(struct Dee_weakref), value))
-			return err_cannot_weak_reference(value);
+			return DeeRT_ErrCannotWeakReference(value);
 		return 0;
 
 	case STRUCT_CHAR: {

@@ -129,6 +129,7 @@ DDATDEF DeeTypeObject /*    */ DeeError_StackOverflow;
 DDATDEF DeeTypeObject /*    */ DeeError_SegFault;
 DDATDEF DeeTypeObject /*    */ DeeError_IllegalInstruction;
 DDATDEF DeeTypeObject /**/ DeeError_TypeError;
+DDATDEF DeeTypeObject /*    */ DeeError_CannotWeakReference;
 //TODO:DDATDEF DeeTypeObject /*    */ DeeError_UnexpectedType;
 //TODO:DDATDEF DeeTypeObject /*    */ DeeError_ArgumentError;
 //TODO:DDATDEF DeeTypeObject /*        */ DeeError_InvalidArgumentCount;

@@ -60,6 +60,11 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrNoBufferInterface)(DeeObject 
 #define DeeRT_ErrNoBufferInterface(self) Dee_ASSUMED_VALUE((DeeRT_ErrNoBufferInterface)(Dee_AsObject(self)), -1)
 
 
+/* Throws a `DeeError_CannotWeakReference' indicating that `self' cannot be weak-referenced */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrCannotWeakReference)(DeeObject *__restrict self);
+#define DeeRT_ErrCannotWeakReference(self) Dee_ASSUMED_VALUE((DeeRT_ErrCannotWeakReference)(Dee_AsObject(self)), -1)
+
+
 /* Throws a `DeeError_IntegerOverflow' indicating that some an integer
  * object or native (C) value cannot be used/processed because its value
  * exceeds the maximum supported value bounds within some context-of-use.

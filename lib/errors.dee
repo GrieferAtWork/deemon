@@ -47,6 +47,7 @@ final global		StackOverflow = RuntimeError.StackOverflow;
 final global		SegFault = RuntimeError.SegFault;
 final global		IllegalInstruction = RuntimeError.IllegalInstruction;
 final global	TypeError = deemon.Error.TypeError;
+final global		CannotWeakReference = TypeError.CannotWeakReference;
 final global	ValueError = deemon.Error.ValueError;
 final global		ArithmeticError = ValueError.ArithmeticError;
 final global			IntegerOverflow = ArithmeticError.IntegerOverflow;

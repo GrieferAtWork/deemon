@@ -775,11 +775,72 @@ INIT_LIKE_ERROR("IllegalInstruction", "(" RuntimeError_init_params ")",
 
 
 
-/* BEGIN::TypeError */
+/************************************************************************/
+/* Error.TypeError                                                      */
+/************************************************************************/
+#define TypeError_init_params Error_init_params
+PRIVATE struct type_member tpconst TypeError_class_members[] = {
+	TYPE_MEMBER_CONST("CannotWeakReference", &DeeError_CannotWeakReference),
+	TYPE_MEMBER_END
+};
+
 PUBLIC DeeTypeObject DeeError_TypeError =
-INIT_LIKE_ERROR("TypeError", "(" Error_init_params ")",
+INIT_LIKE_ERROR("TypeError", "(" TypeError_init_params ")",
                 TP_FNORMAL, &DeeError_Error, NULL, NULL,
-                NULL, NULL, NULL);
+                NULL, NULL, TypeError_class_members);
+
+
+/************************************************************************/
+/* Error.TypeError.CannotWeakReference                                  */
+/************************************************************************/
+typedef struct {
+	Dee_ERROR_OBJECT_HEAD
+	struct Dee_variant cwr_obj; /* [const] The object that cannot be weak-referenced */
+} CannotWeakReference;
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+CannotWeakReference_print(CannotWeakReference *__restrict self,
+                          Dee_formatprinter_t printer, void *arg) {
+	Dee_ssize_t result;
+	DeeTypeObject *objtype;
+	if (self->e_msg)
+		return DeeObject_Print(self->e_msg, printer, arg);
+	objtype = Dee_variant_getobjecttype(&self->cwr_obj);
+	result = DeeFormat_Printf(printer, arg,
+	                          "Cannot create weak reference for instances of type %s",
+	                          objtype ? DeeType_GetName(objtype) : "?");
+	Dee_XDecref_unlikely(objtype);
+	return result;
+}
+
+PRIVATE struct type_member tpconst CannotWeakReference_members[] = {
+#define CannotWeakReference_init_params TypeError_init_params ",obj?"
+	TYPE_MEMBER_FIELD_DOC("obj", STRUCT_VARIANT | STRUCT_CONST, offsetof(CannotWeakReference, cwr_obj),
+	                      "The object that cannot be weak-referenced"),
+	TYPE_MEMBER_END
+};
+
+PUBLIC DeeTypeObject DeeError_CannotWeakReference =
+INIT_CUSTOM_ERROR("CannotWeakReference", "(" CannotWeakReference_init_params ")",
+                  TP_FNORMAL, &DeeError_TypeError, CannotWeakReference,
+                  NULL, &CannotWeakReference_print,
+                  NULL, NULL, CannotWeakReference_members, NULL);
+
+/* Throws a `DeeError_CannotWeakReference' indicating that `self' cannot be weak-referenced */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrCannotWeakReference)(DeeObject *__restrict self) {
+	DREF CannotWeakReference *result = DeeObject_MALLOC(CannotWeakReference);
+	if unlikely(!result)
+		goto err;
+	DeeObject_InitStatic(result, &DeeError_CannotWeakReference);
+	result->e_msg   = NULL;
+	result->e_cause = NULL;
+	Dee_variant_init_object(&result->cwr_obj, self);
+	return DeeError_ThrowInherited(result);
+err:
+	return -1;
+}
+
 /* END::TypeError */
 
 

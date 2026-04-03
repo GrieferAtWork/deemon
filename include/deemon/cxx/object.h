@@ -28,6 +28,7 @@
 #include <hybrid/compiler.h>
 
 #include "../error.h"           /* DeeError_* */
+#include "../error-rt.h"           /* DeeError_* */
 #include "../none.h"            /* DeeNone_Check */
 #include "../object.h"          /* ASSERT_OBJECT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_ISERR, Dee_Decref*, Dee_Incref, Dee_Incref_traced, Dee_TYPE, Dee_XDecref, Dee_XDecrefNokill, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_int128_t, Dee_ssize_t, Dee_uint128_t, ITER_DONE, ITER_ISOK, _Dee_HashSelectC */
 #include "../super.h"           /* DeeSuper_New, DeeSuper_Of */
@@ -262,15 +263,6 @@ LOCAL ATTR_COLD ATTR_NORETURN void throw_last_deemon_exception(void) {
 
 
 namespace detail {
-
-LOCAL ATTR_COLD ATTR_NORETURN void DCALL
-err_cannot_weak_reference(DeeObject *__restrict ob) {
-	ASSERT_OBJECT(ob);
-	DeeError_Throwf(&DeeError_TypeError,
-	                "Cannot create weak reference for instances of type `%k'",
-	                Dee_TYPE(ob));
-	throw_last_deemon_exception();
-}
 
 LOCAL ATTR_COLD ATTR_NORETURN void DCALL
 err_cannot_lock_weakref(void) {
@@ -575,19 +567,19 @@ public:
 	WeakRefBase(DeeObject *ptr) {
 		if (ptr) {
 			if (!Dee_weakref_init(&w_ref, ptr, NULL))
-				detail::err_cannot_weak_reference(ptr);
+				DeeRT_ErrCannotWeakReference(ptr);
 		} else {
 			Dee_weakref_initempty(&w_ref);
 		}
 	}
 	template<class S> WeakRefBase(ObjNonNull<S> ptr) {
 		if (!Dee_weakref_init(&w_ref, ptr, NULL))
-			err_cannot_weak_reference(ptr);
+			DeeRT_ErrCannotWeakReference((DeeObject *)ptr);
 	}
 	template<class S> WeakRefBase(ObjMaybeNull<S> ptr) {
 		if (ptr) {
 			if (!Dee_weakref_init(&w_ref, ptr, NULL))
-				err_cannot_weak_reference(ptr);
+				DeeRT_ErrCannotWeakReference((DeeObject *)ptr);
 		} else {
 			Dee_weakref_initempty(&w_ref);
 		}
@@ -653,7 +645,7 @@ public:
 	}
 	template<class S> void set(ObjNonNull<S> ob) {
 		if (!Dee_weakref_set(&w_ref, (DeeObject *)ob))
-			err_cannot_weak_reference(ob);
+			DeeRT_ErrCannotWeakReference((DeeObject *)ob);
 	}
 	template<class S> void set(ObjMaybeNull<S> ob) {
 		set((DeeObject *)ob);

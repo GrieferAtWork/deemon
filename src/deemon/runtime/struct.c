@@ -625,7 +625,7 @@ Dee_type_member_init(struct type_member const *desc,
 		ATTR_FALLTHROUGH
 	case STRUCT_WOBJECT:
 		if unlikely(!Dee_weakref_init((struct Dee_weakref *)dst, value, NULL))
-			return err_cannot_weak_reference(value);
+			return DeeRT_ErrCannotWeakReference(value);
 		break;
 	case STRUCT_VARIANT:
 		Dee_variant_init_object((struct Dee_variant *)dst, value);

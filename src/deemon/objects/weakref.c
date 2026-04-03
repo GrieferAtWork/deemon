@@ -27,6 +27,7 @@
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error.h>              /* DeeError_Print, ERROR_PRINT_DOHANDLE */
+#include <deemon/error-rt.h>              /* DeeError_Print, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_IncrefIfNotZero, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
@@ -131,7 +132,7 @@ ob_weakref_init(WeakRef *__restrict self,
 err_nosupport_del:
 	Dee_Decref(self->wr_del);
 err_nosupport:
-	err_cannot_weak_reference(obj);
+	DeeRT_ErrCannotWeakReference(obj);
 err:
 	return -1;
 }
@@ -156,7 +157,7 @@ ob_weakref_init_kw(WeakRef *__restrict self, size_t argc,
 err_nosupport_del:
 	Dee_Decref(self->wr_del);
 err_nosupport:
-	err_cannot_weak_reference(obj);
+	DeeRT_ErrCannotWeakReference(obj);
 err:
 	return -1;
 }
@@ -170,7 +171,7 @@ ob_weakref_assign(WeakRef *__restrict self,
 	} else {
 		/* Assign the given other to our weak reference. */
 		if (!Dee_weakref_set(&self->wr_ref, other))
-			return err_cannot_weak_reference(other);
+			return DeeRT_ErrCannotWeakReference(other);
 	}
 	return 0;
 }
@@ -288,7 +289,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_weakref_set(WeakRef *__restrict self,
                DeeObject *__restrict value) {
 	if unlikely(!Dee_weakref_set(&self->wr_ref, value))
-		return err_cannot_weak_reference(value);
+		return DeeRT_ErrCannotWeakReference(value);
 	return 0;
 }
 
@@ -347,7 +348,7 @@ PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
 	TYPE_GETSET_BOUND_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, &ob_weakref_bound, METHOD_FNOREFESCAPE,
 	                    "#tReferenceError{Attempted to get the value after the reference has been unbound}"
-	                    "#tValueError{Attempted to set an object that does not support weak referencing}"
+	                    "#tCannotWeakReference{Attempted to set an object that does not support weak referencing}"
 	                    "Access to the referenced object"),
 	TYPE_GETTER_F("alive", &ob_weakref_alive, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
@@ -413,6 +414,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 
 	                         ":=(other:?X2?.?O)->\n"
 	                         "#tTypeError{The given @other does not implement weak referencing support}"
+	                         "#tCannotWeakReference{Attempted to set an object that does not support weak referencing}"
 	                         "Assign the value of @other to @this WeakRef object\n"
 	                         "\n"
 
