@@ -456,6 +456,7 @@ SeqEnumerateWrapper_Decref(/*inherit(always)*/ DREF SeqEnumerateWrapper *self,
 	if unlikely(!userproc_result) {
 		result = -1;
 	} else {
+		Dee_Decref_unlikely(userproc_result); /* *_unlikely because it's probably just "Dee_None" */
 		result = self->sew_res;
 		if (self->sew_err) {
 			ASSERT(result < 0);
