@@ -24,6 +24,7 @@
 #include "libctypes.h"
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_Mallocc, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
@@ -2298,6 +2299,6 @@ INTERN DeeTypeObject DeeCFunctionType_Type = {
 #undef CFUNCTION_OPERATOR
 
 DECL_END
-
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_CORE_C */

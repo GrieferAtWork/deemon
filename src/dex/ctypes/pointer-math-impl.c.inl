@@ -29,6 +29,7 @@
 #include "libctypes.h"
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/int.h>    /* DeeInt_NewUIntptr, INT_UNSIGNED */
@@ -303,3 +304,4 @@ INTERN struct stype_seq POINTER_SEQ = {
 #undef N
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */

@@ -393,6 +393,28 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libctypes_intfor_f_impl(size_t size, bo
 
 #define libctypes_struct DeeStructType_Type
 
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+/*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
+	DeeObject *fields:?S?X2?T2?Dstring?DType?GStructType = !T0;
+""", methodFlags: "METHOD_FCONSTCALL", returnType: "DeeStructTypeObject", docStringPrefix: none);]]]*/
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields);
+PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL libctypes_union_f(size_t argc, DeeObject *const *argv) {
+	struct {
+		DeeObject *fields;
+	} args;
+	args.fields = Dee_EmptyTuple;
+	DeeArg_Unpack0Or1(err, argc, argv, "union", &args.fields);
+	return libctypes_union_f_impl(args.fields);
+err:
+	return NULL;
+}
+PRIVATE DEFINE_CMETHOD(libctypes_union, &libctypes_union_f, METHOD_FCONSTCALL);
+FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_f_impl(DeeObject *fields)
+/*[[[end]]]*/
+{
+	return CStructType_Of(fields, CSTRUCTTYPE_F_UNION);
+}
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 /*[[[deemon (print_CMethod from rt.gen.unpack)("union", """
 	DeeObject *fields_or_name;
 	DeeObject *fields = NULL;
@@ -421,6 +443,8 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL libctypes_union_
 err:
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+
 
 
 /*[[[deemon (print_CMethod from rt.gen.unpack)("bswap16", "uint16_t x:?Guint16_t", isconst: true);]]]*/
@@ -621,13 +645,21 @@ PRIVATE bool DCALL libctypes_clear(void) {
 DEX_BEGIN
 
 /* Export the underlying type-system used by ctypes. */
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER_F_NODOC("CType", &CType_Type, Dee_DEXSYM_READONLY),
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F_NODOC("StructuredType", &DeeSType_Type, Dee_DEXSYM_READONLY),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F_NODOC("PointerType", &DeePointerType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("LValueType", &DeeLValueType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("ArrayType", &DeeArrayType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("StructType", &DeeStructType_Type, Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("FunctionType", &DeeCFunctionType_Type, Dee_DEXSYM_READONLY),
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER_F_NODOC("CObject", CType_AsObject(&AbstractCObject_Type), Dee_DEXSYM_READONLY),
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F_NODOC("Structured", DeeSType_AsObject(&DeeStructured_Type), Dee_DEXSYM_READONLY),
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 DEX_MEMBER_F_NODOC("Pointer", DeePointerType_AsObject(&DeePointer_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("LValue", DeeLValueType_AsObject(&DeeLValue_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("Array", DeeArrayType_AsObject(&DeeArray_Type), Dee_DEXSYM_READONLY),
@@ -683,10 +715,23 @@ DEX_MEMBER_F_NODOC("uint16_t", DeeSType_AsObject(&DeeCUInt16_Type), Dee_DEXSYM_R
 DEX_MEMBER_F_NODOC("uint32_t", DeeSType_AsObject(&DeeCUInt32_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("uint64_t", DeeSType_AsObject(&DeeCUInt64_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("uint128_t", DeeSType_AsObject(&DeeCUInt128_Type), Dee_DEXSYM_READONLY),
-/* TODO: endian-specific integer types (e.g. `le16' and `be16')
- *       These could be used in structures and always encode/decode
- *       the underlying value to/from a regular deemon `int' object
- *       to automatically apply the necessary endian conversion
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+DEX_MEMBER_F_NODOC("bswap_int8_t", DeeSType_AsObject(&CBSwapInt8_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int16_t", DeeSType_AsObject(&CBSwapInt16_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int32_t", DeeSType_AsObject(&CBSwapInt32_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int64_t", DeeSType_AsObject(&CBSwapInt64_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_int128_t", DeeSType_AsObject(&CBSwapInt128_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint8_t", DeeSType_AsObject(&CBSwapUInt8_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint16_t", DeeSType_AsObject(&CBSwapUInt16_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint32_t", DeeSType_AsObject(&CBSwapUInt32_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint64_t", DeeSType_AsObject(&CBSwapUInt64_Type), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("bswap_uint128_t", DeeSType_AsObject(&CBSwapUInt128_Type), Dee_DEXSYM_READONLY),
+
+/* Endian-specific integer types (e.g. `le16' and `be16')
+ * These could be used in structures and always encode/decode
+ * the underlying value to/from a regular deemon `int' object
+ * to automatically apply the necessary endian conversion
+ *
  * >> import * from ctypes;
  * >> union foo = {
  * >> 	.le = le32,
@@ -694,6 +739,18 @@ DEX_MEMBER_F_NODOC("uint128_t", DeeSType_AsObject(&DeeCUInt128_Type), Dee_DEXSYM
  * >> };
  * >> x = foo(le: 0x12345678);
  * >> print x.be; // 0x78563412 */
+DEX_MEMBER_F_NODOC("le8", DeeSType_AsObject(&CLeUIntN_Type(1)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le16", DeeSType_AsObject(&CLeUIntN_Type(2)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le32", DeeSType_AsObject(&CLeUIntN_Type(4)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le64", DeeSType_AsObject(&CLeUIntN_Type(8)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("le128", DeeSType_AsObject(&CLeUIntN_Type(16)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be8", DeeSType_AsObject(&CBeUIntN_Type(1)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be16", DeeSType_AsObject(&CBeUIntN_Type(2)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be32", DeeSType_AsObject(&CBeUIntN_Type(4)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be64", DeeSType_AsObject(&CBeUIntN_Type(8)), Dee_DEXSYM_READONLY),
+DEX_MEMBER_F_NODOC("be128", DeeSType_AsObject(&CBeUIntN_Type(16)), Dee_DEXSYM_READONLY),
+#endif /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
+
 DEX_MEMBER_F_NODOC("float", DeeSType_AsObject(&DeeCFloat_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("double", DeeSType_AsObject(&DeeCDouble_Type), Dee_DEXSYM_READONLY),
 DEX_MEMBER_F_NODOC("ldouble", DeeSType_AsObject(&DeeCLDouble_Type), Dee_DEXSYM_READONLY),

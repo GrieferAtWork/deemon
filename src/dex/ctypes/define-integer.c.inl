@@ -30,6 +30,7 @@
 #include "libctypes.h"
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
@@ -1440,6 +1441,7 @@ INTERN DeeSTypeObject DEFINE_TYPE_NAME = {
 #undef LOCAL_F_NOSIGN
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 /* Configuration parameters that (may) be defined externally */
 #undef DEFINE_NO_SIGNED_TYPE_NAME

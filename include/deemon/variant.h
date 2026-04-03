@@ -241,6 +241,10 @@ LOCAL WUNUSED NONNULL((1)) double (DCALL _Dee_variant_get_float)(struct Dee_vari
 #define Dee_variant_init_uint64(self, v)  (void)((self)->var_type = Dee_VARIANT_UINT64, _Dee_variant_set_uint64(self, v))
 #define Dee_variant_init_int128(self, v)  (void)((self)->var_type = Dee_VARIANT_INT128, _Dee_variant_set_int128(self, v))
 #define Dee_variant_init_uint128(self, v) (void)((self)->var_type = Dee_VARIANT_UINT128, _Dee_variant_set_uint128(self, v))
+#define Dee_variant_init_int16  Dee_variant_init_int32
+#define Dee_variant_init_int8   Dee_variant_init_int32
+#define Dee_variant_init_uint16 Dee_variant_init_uint32
+#define Dee_variant_init_uint8  Dee_variant_init_uint32
 #ifndef CONFIG_NO_FPU
 #define Dee_variant_init_float(self, v) (void)((self)->var_type = Dee_VARIANT_FLOAT, _Dee_variant_set_float(self, v))
 #endif /* !CONFIG_NO_FPU */

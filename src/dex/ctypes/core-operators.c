@@ -24,6 +24,7 @@
 #include "libctypes.h"
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/arg.h>       /* DeeArg_Unpack* */
@@ -1075,5 +1076,6 @@ INTERN_TPCONST struct type_operator tpconst stype_operator_decls[] = {
 };
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_CORE_OPERATORS_C */

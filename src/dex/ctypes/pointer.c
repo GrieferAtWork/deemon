@@ -24,6 +24,7 @@
 #include "libctypes.h"
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
@@ -807,5 +808,6 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 };
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_POINTER_C */

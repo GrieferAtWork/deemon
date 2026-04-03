@@ -24,6 +24,7 @@
 #include "libctypes.h"
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_CollectMemory, Dee_Free, Dee_Mallocc, Dee_TryCallocc */
@@ -649,5 +650,6 @@ done:
 }
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_CFUNCTION_C */

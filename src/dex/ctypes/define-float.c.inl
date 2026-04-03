@@ -34,6 +34,7 @@
 #include "libctypes.h"
 /**/
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>     /* DeeObject_MALLOC, Dee_TYPE_CONSTRUCTOR_INIT_FIXED */
@@ -574,6 +575,7 @@ INTERN DeeSTypeObject DEFINE_TYPE_NAME = {
 #undef LOCAL_FFI_TYPE
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #undef DEFINE_NAME
 #undef DEFINE_T

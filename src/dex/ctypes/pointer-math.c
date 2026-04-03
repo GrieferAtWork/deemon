@@ -21,13 +21,15 @@
 #define GUARD_DEX_CTYPES_POINTER_MATH_C 1
 #define DEE_SOURCE
 
-#include <deemon/api.h>
+#include "libctypes.h"
 
+#ifndef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
 #ifndef __INTELLISENSE__
 #define N 1
 #include "pointer-math-impl.c.inl"
 #define N 2 /* Anything but 0 or 1 */
 #include "pointer-math-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 #endif /* !GUARD_DEX_CTYPES_POINTER_MATH_C */

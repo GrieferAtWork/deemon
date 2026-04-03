@@ -38,6 +38,7 @@
 		<ClInclude Include="..\..\src\dex\ctypes\_res.h" />
 		<ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
 		<ClInclude Include="..\..\src\dex\ctypes\cfunction-invoke.c.inl" />
+		<ClInclude Include="..\..\src\dex\ctypes\ctypes-operators-integral.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\define-float.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\define-integer.c.inl" />
 		<ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\LICENSE" />
@@ -59,6 +60,8 @@
 		<ClCompile Include="..\..\src\dex\ctypes\cfunction.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\core-operators.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\core.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\ctypes-operators.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\ctypes.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\closures.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi64.c" />

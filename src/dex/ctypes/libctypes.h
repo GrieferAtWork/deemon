@@ -31,6 +31,7 @@
 
 #include <hybrid/sequence/list.h> /* LIST_ENTRY */
 #include <hybrid/typecore.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */
+#include <hybrid/byteorder.h>      /* __ALIGNOF_INTn__, __ALIGNOF_POINTER__, __BYTE_TYPE__, __CHAR_UNSIGNED__, __HYBRID_ALIGNOF, __SIZEOF_*__, __WCHAR_UNSIGNED__ */
 
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL, size_t */
@@ -40,6 +41,37 @@
 #include <ffi.h>
 #include <ffitarget.h>
 #endif /* !CONFIG_NO_CFUNCTION */
+
+/*
+ * Experimental feature that fully re-written ctypes to fix
+ * various design-flaws of the original implementation:
+ *
+ * - Rename "StructuredType" to "CType"
+ * - Raw "CType"s are always read-only  (except that the fields of "StructType"s
+ *   return LValues, which in turn allows modifications of the underlying struct)
+ * - Read-write operations are exposed by "LValueType", but there is no way to
+ *   turn (e.g.) "local x = ctypes.uint32_t(42);" into an l-value to itself, or
+ *   form a pointer to the value of "x".
+ * - iow: raw "CType"s are now true R-Values
+ * - Both "LValue" and "Pointer" objects (when existing outside of a "StructType")
+ *   have an optional, hidden reference to the object into which they point (this
+ *   reference is "NULL" when the object is unknown).
+ *   This then makes lots of things much safer:
+ *   >> local p = (struct { .x = int })(x: 42).x.ptr;
+ *   >> print repr p.ind;       // 42  -- (because the pointer still knowns+references
+ *   >>                         //         the underlying struct; in the old ctypes impl,
+ *   >>                         //         this dereference used to be undefined and could
+ *   >>                         //         even cause deemon to crash)
+ *   >> print repr p.__owner__; // "(struct { .x = int })(x: 42)"
+ */
+#if (!defined(CONFIG_EXPERIMENTAL_REWORKED_CTYPES) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_REWORKED_CTYPES))
+#if 0 /* TODO: Incomplete */
+#define CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+#else
+#define CONFIG_NO_EXPERIMENTAL_REWORKED_CTYPES
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_REWORKED_CTYPES */
 
 DECL_BEGIN
 
@@ -99,6 +131,1243 @@ INTDEF void ctypes_kos_guard(void);
 
 
 
+#ifdef __SIZEOF_BOOL__
+#define CONFIG_CTYPES_SIZEOF_BOOL __SIZEOF_BOOL__
+#else /* __SIZEOF_BOOL__ */
+#define CONFIG_CTYPES_SIZEOF_BOOL 1
+#endif /* !__SIZEOF_BOOL__ */
+
+#ifdef __SIZEOF_WCHAR_T__
+#define CONFIG_CTYPES_SIZEOF_WCHAR __SIZEOF_WCHAR_T__
+#elif defined(CONFIG_HOST_WINDOWS)
+#define CONFIG_CTYPES_SIZEOF_WCHAR 2
+#else /* ... */
+#define CONFIG_CTYPES_SIZEOF_WCHAR 4
+#endif /* !... */
+
+#define CONFIG_CTYPES_SIZEOF_CHAR16 2
+#define CONFIG_CTYPES_SIZEOF_CHAR32 4
+
+#ifdef __SIZEOF_CHAR__
+#define CONFIG_CTYPES_SIZEOF_CHAR __SIZEOF_CHAR__
+#else /* __SIZEOF_CHAR__ */
+#define CONFIG_CTYPES_SIZEOF_CHAR 1
+#endif /* !__SIZEOF_CHAR__ */
+
+#ifdef __SIZEOF_SHORT__
+#define CONFIG_CTYPES_SIZEOF_SHORT __SIZEOF_SHORT__
+#else /* __SIZEOF_SHORT__ */
+#define CONFIG_CTYPES_SIZEOF_SHORT 2
+#endif /* !__SIZEOF_SHORT__ */
+
+#ifdef __SIZEOF_INT__
+#define CONFIG_CTYPES_SIZEOF_INT __SIZEOF_INT__
+#else /* __SIZEOF_INT__ */
+#define CONFIG_CTYPES_SIZEOF_INT 4
+#endif /* !__SIZEOF_INT__ */
+
+#ifdef __SIZEOF_LONG__
+#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_LONG__
+#elif defined(CONFIG_HOST_WINDOWS)
+#define CONFIG_CTYPES_SIZEOF_LONG 4
+#else /* ... */
+#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_POINTER__
+#endif /* !... */
+
+#ifdef __SIZEOF_LONG_LONG__
+#define CONFIG_CTYPES_SIZEOF_LLONG __SIZEOF_LONG_LONG__
+#elif defined(__SIZEOF_LLONG__)
+#define CONFIG_CTYPES_SIZEOF_LLONG __SIZEOF_LLONG__
+#else /* ... */
+#define CONFIG_CTYPES_SIZEOF_LLONG 8
+#endif /* !... */
+
+#ifdef __CHAR_UNSIGNED__
+#define CONFIG_CTYPES_CHAR_UNSIGNED
+#endif /* __CHAR_UNSIGNED__ */
+
+#ifdef __WCHAR_UNSIGNED__
+#define CONFIG_CTYPES_WCHAR_UNSIGNED
+#endif /* __WCHAR_UNSIGNED__ */
+
+#define CONFIG_CTYPES_CHAR16_UNSIGNED
+#define CONFIG_CTYPES_CHAR32_UNSIGNED
+
+#define CONFIG_CTYPES_ALIGNOF_POINTER __ALIGNOF_POINTER__
+#define CONFIG_CTYPES_ALIGNOF_LVALUE  CONFIG_CTYPES_ALIGNOF_POINTER
+#define CONFIG_CTYPES_ALIGNOF_BOOL    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_BOOL)
+#define CONFIG_CTYPES_ALIGNOF_WCHAR   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_WCHAR)
+#define CONFIG_CTYPES_ALIGNOF_CHAR16  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR16)
+#define CONFIG_CTYPES_ALIGNOF_CHAR32  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR32)
+#define CONFIG_CTYPES_ALIGNOF_CHAR    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR)
+#define CONFIG_CTYPES_ALIGNOF_SHORT   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_SHORT)
+#define CONFIG_CTYPES_ALIGNOF_INT     __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_INT)
+#define CONFIG_CTYPES_ALIGNOF_LONG    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LONG)
+#define CONFIG_CTYPES_ALIGNOF_LLONG   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LLONG)
+
+#ifdef __LONGDOUBLE
+#define long_double __LONGDOUBLE
+#else /* __LONGDOUBLE */
+#define long_double long double
+#endif /* !__LONGDOUBLE */
+#define CONFIG_CTYPES_FLOAT_TYPE   float
+#define CONFIG_CTYPES_DOUBLE_TYPE  double
+#if (defined(FFI_TYPE_LONGDOUBLE) && \
+     defined(FFI_TYPE_DOUBLE) &&     \
+     FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE)
+#define CONFIG_CTYPES_LDOUBLE_TYPE double
+#else /* FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE */
+#define CONFIG_CTYPES_LDOUBLE_TYPE long_double
+#endif /* FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE */
+
+/* Alignment requirements of the host's C floating point types. */
+#ifndef CONFIG_ALIGNOF_FLOAT
+#define CONFIG_ALIGNOF_FLOAT COMPILER_ALIGNOF(float)
+#endif /* !CONFIG_ALIGNOF_FLOAT */
+#ifndef CONFIG_ALIGNOF_DOUBLE
+#define CONFIG_ALIGNOF_DOUBLE COMPILER_ALIGNOF(double)
+#endif /* !CONFIG_ALIGNOF_DOUBLE */
+#ifndef CONFIG_ALIGNOF_LDOUBLE
+#define CONFIG_ALIGNOF_LDOUBLE COMPILER_ALIGNOF(long_double)
+#endif /* !CONFIG_ALIGNOF_LDOUBLE */
+
+#if CONFIG_CTYPES_SIZEOF_INT == 1
+#define CTYPES_INT  int8_t
+#define CTYPES_UINT uint8_t
+#elif CONFIG_CTYPES_SIZEOF_INT == 2
+#define CTYPES_INT  int16_t
+#define CTYPES_UINT uint16_t
+#elif CONFIG_CTYPES_SIZEOF_INT == 4
+#define CTYPES_INT  int32_t
+#define CTYPES_UINT uint32_t
+#elif CONFIG_CTYPES_SIZEOF_INT == 8
+#define CTYPES_INT  int64_t
+#define CTYPES_UINT uint64_t
+#else /* CONFIG_CTYPES_SIZEOF_INT == ... */
+#define CTYPES_INT  int
+#define CTYPES_UINT unsigned int
+#endif /* CONFIG_CTYPES_SIZEOF_INT != ... */
+
+
+
+
+
+union pointer {
+	uintptr_t             uint;
+	intptr_t              sint;
+	void                 *ptr;
+	uint8_t              *p8;
+	uint16_t             *p16;
+	uint32_t             *p32;
+	uint64_t             *p64;
+	int8_t               *ps8;
+	int16_t              *ps16;
+	int32_t              *ps32;
+	int64_t              *ps64;
+	void                 *pvoid;
+	char                 *pchar;
+	Dee_wchar_t          *pwchar;
+	signed char          *pschar;
+	unsigned char        *puchar;
+	short                *pshort;
+	unsigned short       *pushort;
+	int                  *pint;
+	unsigned int         *puint;
+	long                 *plong;
+	unsigned long        *pulong;
+	void const           *pcvoid;
+	char const           *pcchar;
+	Dee_wchar_t const    *pcwchar;
+	signed char const    *pcschar;
+	unsigned char const  *pcuchar;
+	short const          *pcshort;
+	unsigned short const *pcushort;
+	int const            *pcint;
+	unsigned int const   *pcuint;
+	long const           *pclong;
+	unsigned long const  *pculong;
+};
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_REWORKED_CTYPES
+typedef struct ctype_object CType; /* Also doubles as the RValue type */
+typedef struct carray_type_object CArrayType;
+typedef struct cstruct_type_object CStructType;
+typedef struct cfunction_type_object CFunctionType;
+typedef struct cpointer_type_object CPointerType;
+typedef struct clvalue_type_object CLValueType;
+
+typedef struct cobject_object CObject;
+typedef struct carray_object CArray;
+typedef struct cstruct_object CStruct;
+/*typedef struct cfunction_object CFunction;*/
+typedef struct cpointer_object CPointer;
+typedef struct clvalue_object CLValue;
+
+
+#undef CTYPES_DEFINE_STATIC_POINTER_TYPES
+#if 1
+#define CTYPES_DEFINE_STATIC_POINTER_TYPES
+#endif
+
+
+
+#ifndef CONFIG_NO_CFUNCTION
+typedef ffi_abi ctypes_cc_t;
+#define CC_DEFAULT   FFI_DEFAULT_ABI
+#define CC_MTYPE     ((ctypes_cc_t)0x7fff) /* MASK: The actual FFI type. */
+#define CC_FVARARGS  ((ctypes_cc_t)0x8000) /* FLAG: Variable-length argument list. */
+#define CC_INVALID   ((ctypes_cc_t)-1)
+#else /* !CONFIG_NO_CFUNCTION */
+typedef int ctypes_cc_t;
+#define CC_DEFAULT   0
+#define CC_INVALID   (-1)
+#define CC_FVARARGS  ((ctypes_cc_t)0x8000) /* FLAG: Variable-length argument list. */
+#endif /* CONFIG_NO_CFUNCTION */
+
+/* Convert a calling convention to/from its name.
+ * @return: CC_INVALID: The given `name' was not recognized.
+ * @return: NULL:       The given `cc' was not recognized. */
+INTDEF WUNUSED NONNULL((1)) ctypes_cc_t DCALL cc_lookup(char const *__restrict name);
+INTDEF WUNUSED NONNULL((1)) ctypes_cc_t DCALL cc_trylookup(char const *__restrict name);
+INTDEF WUNUSED char const *DCALL cc_getname(ctypes_cc_t cc);
+
+
+struct ctype_operators {
+	/* NOTE: *ALL* operators are [1..1][const]. Unsupported operators must
+	 *       still be implemented, with the implementation then throwing
+	 *       the appropriate exception. */
+
+	/* Initialize "self" by casting- and assigning "value" to it
+	 * @return: 0 : Success
+	 * @return: -1: Error */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *co_initfrom)(CType *tp_self, void *self, DeeObject *value);
+
+	/* Initialize a new instance of "self"
+	 * @return: 0 : Success
+	 * @return: -1: Error */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *co_initwith)(CType *tp_self, void *self,
+	                     size_t argc, DeeObject *const *argv,
+	                     DeeObject *kw);
+
+	/* Check if "self" should evaluate to true
+	 * @return: 1 : Is true
+	 * @return: 0 : Is false
+	 * @return: -1: Error */
+	WUNUSED_T NONNULL_T((1)) int
+	(DCALL *co_bool)(CType *tp_self, void const *self);
+
+	/* Print the C-representation of "self" (for operator) */
+	WUNUSED_T NONNULL_T((1, 3)) Dee_ssize_t
+	(DCALL *co_printcrepr)(CType *tp_self, void const *self,
+	                       Dee_formatprinter_t printer, void *arg);
+
+	/* Print the deemon-representation of "self" */
+	WUNUSED_T NONNULL_T((1, 3)) Dee_ssize_t
+	(DCALL *co_printdrepr)(CType *tp_self, void const *self,
+	                       Dee_formatprinter_t printer, void *arg);
+
+	/* Compare "lhs" to "rhs" (returning Dee_COMPARE_*)
+	 * @return: Dee_COMPARE_LO:  lhs < rhs
+	 * @return: Dee_COMPARE_EQ:  lhs == rhs
+	 * @return: Dee_COMPARE_GR:  lhs > rhs
+	 * @return: Dee_COMPARE_ERR: Error */
+	WUNUSED_T NONNULL_T((1, 3)) int
+	(DCALL *co_compare)(CType *tp_self, void const *lhs, DeeObject *rhs);
+
+	/* Math operators. */
+	/* @return: Dee_INT_SIGNED:   The value stored in `*result' is signed.
+	 * @return: Dee_INT_UNSIGNED: The value stored in `*result' is unsigned.
+	 * @return: Dee_INT_ERROR:    An error occurred. */
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *co_int32)(CType *tp_self, void const *self, int32_t *result);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *co_int64)(CType *tp_self, void const *self, int64_t *result);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *co_double)(CType *tp_self, void const *self, double *result);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_int)(CType *tp_self, void const *self); /* Cast to `int' */
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_inv)(CType *tp_self, void const *self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_pos)(CType *tp_self, void const *self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *co_neg)(CType *tp_self, void const *self);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_add)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_sub)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_mul)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_div)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_mod)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_shl)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_shr)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_and)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_or)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_xor)(CType *tp_self, void const *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) DREF DeeObject *(DCALL *co_pow)(CType *tp_self, void const *self, DeeObject *some_object);
+
+	/* Inplace operators */
+	WUNUSED_T NONNULL_T((1))    int (DCALL *co_inc)(CType *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1))    int (DCALL *co_dec)(CType *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_add)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_sub)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_mul)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_div)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_mod)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_shl)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_shr)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_and)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_or)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_xor)(CType *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *co_inplace_pow)(CType *tp_self, void *self, DeeObject *some_object);
+};
+
+/* Void type */
+INTDEF struct ctype_operators Dee_tpconst cvoid_operators;
+
+/* Integer types */
+INTDEF struct ctype_operators Dee_tpconst cint8_operators;
+INTDEF struct ctype_operators Dee_tpconst cint16_operators;
+INTDEF struct ctype_operators Dee_tpconst cint32_operators;
+INTDEF struct ctype_operators Dee_tpconst cint64_operators;
+INTDEF struct ctype_operators Dee_tpconst cint128_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint8_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint16_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint32_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint64_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint128_operators;
+#define cint8_bswap_operators cint8_operators
+INTDEF struct ctype_operators Dee_tpconst cint16_bswap_operators;
+INTDEF struct ctype_operators Dee_tpconst cint32_bswap_operators;
+INTDEF struct ctype_operators Dee_tpconst cint64_bswap_operators;
+INTDEF struct ctype_operators Dee_tpconst cint128_bswap_operators;
+#define cuint8_bswap_operators cuint8_operators
+INTDEF struct ctype_operators Dee_tpconst cuint16_bswap_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint32_bswap_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint64_bswap_operators;
+INTDEF struct ctype_operators Dee_tpconst cuint128_bswap_operators;
+
+/* Floating point types */
+INTDEF struct ctype_operators Dee_tpconst cfloat_operators;
+INTDEF struct ctype_operators Dee_tpconst cdouble_operators;
+INTDEF struct ctype_operators Dee_tpconst cldouble_operators;
+
+/* Operators for pointer types */
+INTDEF struct ctype_operators Dee_tpconst cpointer_operators;
+
+/* "tp_self" is "CLValueType"; forward operator to "tp_self->clt_orig" and "*(void **)self"
+ * This is only really needed when user-defined structure types contain lvalue fields:
+ * >> local a = (union { .x = int })(x: 42);
+ * >> local b = (union { .x = int.ptr, .y = int.lvalue })(y: a.x);
+ * >> assert a.x == 42;
+ * >> assert b.x == a.x.ptr;
+ * >> assert b.y == 42;
+ * >> b.y = 99;
+ * >> assert a.x == 99; */
+INTDEF struct ctype_operators Dee_tpconst clvalue_operators;
+
+/* Operators for user-defined structure types */
+INTDEF struct ctype_operators Dee_tpconst cstruct_operators;
+
+/* Operators for array types */
+INTDEF struct ctype_operators Dee_tpconst carray0_operators; /* when "cat_orig->ct_sizeof == 0" */
+INTDEF struct ctype_operators Dee_tpconst carrayN_operators; /* when "cat_orig->ct_sizeof != 0" */
+
+
+LIST_HEAD(carray_type_list, carray_type_object);
+struct ctype_array_types {
+	size_t                   sa_size; /* Amount of cached array types. */
+	Dee_hash_t               sa_mask; /* Allocated map mask. */
+	struct carray_type_list *sa_list; /* [0..1][0..sa_mask+1][owned] Hash-map of array types.
+	                                   * As hash for indexing this map, use `at_count'. */
+};
+#define CTYPE_ARRAY_TYPES_INIT { 0, 0, NULL }
+
+#ifndef CONFIG_NO_CFUNCTION
+LIST_HEAD(cfunction_type_list, cfunction_type_object);
+struct ctype_function_types {
+	size_t                      sf_size; /* Amount of cached function types. */
+	Dee_hash_t                  sf_mask; /* Allocated map mask. */
+	struct cfunction_type_list *sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
+	                                      * As hash for indexing this map, use `ft_hash'. */
+};
+#define CTYPE_FUNCTION_TYPES_INIT { 0, 0, NULL }
+#endif /* !CONFIG_NO_CFUNCTION */
+
+
+/************************************************************************/
+/* C TYPE                                                               */
+/************************************************************************/
+struct ctype_object {
+	DeeTypeObject                 ct_base;      /* The underlying type object. */
+#ifndef CONFIG_NO_THREADS
+	Dee_atomic_rwlock_t           ct_cachelock; /* Lock for cached derived types. */
+#endif /* !CONFIG_NO_THREADS    */
+	CPointerType                 *ct_pointer;   /* [0..1][lock(ct_cachelock)] A weak pointer to the pointer-type of this C-type. */
+	CLValueType                  *ct_lvalue;    /* [0..1][lock(ct_cachelock)] A weak pointer to the lvalue-type of this C-type. */
+	struct ctype_array_types      ct_arrays;    /* [lock(ct_cachelock)] Derived array sub-types. */
+#ifndef CONFIG_NO_CFUNCTION
+	struct ctype_function_types   ct_functions; /* [lock(ct_cachelock)] Derived function sub-types. */
+	ffi_type                     *ct_ffitype;   /* [0..1][lock(WRITE_ONCE)] The type used by FFI to represent this type. */
+#endif /* !CONFIG_NO_CFUNCTION */
+	size_t                        ct_sizeof;    /* [const] # of bytes required by instances of this type. */
+	size_t                        ct_alignof;   /* [const] Alignment required by this type. */
+	struct ctype_operators const *ct_operators; /* [1..1][const] C operators */
+};
+
+#define CType_CacheLockReading(self)    Dee_atomic_rwlock_reading(&(self)->ct_cachelock)
+#define CType_CacheLockWriting(self)    Dee_atomic_rwlock_writing(&(self)->ct_cachelock)
+#define CType_CacheLockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->ct_cachelock)
+#define CType_CacheLockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->ct_cachelock)
+#define CType_CacheLockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->ct_cachelock)
+#define CType_CacheLockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->ct_cachelock)
+#define CType_CacheLockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->ct_cachelock)
+#define CType_CacheLockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->ct_cachelock)
+#define CType_CacheLockRead(self)       Dee_atomic_rwlock_read(&(self)->ct_cachelock)
+#define CType_CacheLockWrite(self)      Dee_atomic_rwlock_write(&(self)->ct_cachelock)
+#define CType_CacheLockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->ct_cachelock)
+#define CType_CacheLockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->ct_cachelock)
+#define CType_CacheLockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->ct_cachelock)
+#define CType_CacheLockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->ct_cachelock)
+#define CType_CacheLockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->ct_cachelock)
+#define CType_CacheLockEnd(self)        Dee_atomic_rwlock_end(&(self)->ct_cachelock)
+
+/* Query properties of a given C-Type */
+#define CType_Sizeof(self)          (self)->ct_sizeof
+#define CType_Alignof(self)         (self)->ct_alignof
+#define CType_AllocInstance(self)   ((CObject *)DeeType_AllocInstance(CType_AsType(self)))
+#define CType_FreeInstance(self, p) DeeType_FreeInstance(CType_AsType(self), p)
+
+INTDEF DeeTypeObject CType_Type;   /* == type(ctypes.int) */
+INTDEF CType AbstractCObject_Type; /* == Type.__base__(ctypes.int) */
+
+#define CType_AsType(self)   (&(self)->ct_base)
+#define CType_AsObject(self) ((DeeObject *)&(self)->ct_base)
+#define Type_AsCType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CType, ct_base)
+#define Type_IsCType(self)   DeeType_Extends(Dee_TYPE(self), &CType_Type)
+#define Object_AsCType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CType, ct_base)
+#define Object_IsCType(self) DeeType_Extends(Dee_TYPE(self), &CType_Type)
+
+/* Return the structured type equivalent of `self', or
+ * re-return `self' if it already is a structured type.
+ * The following types found in the builtin `deemon' module are mapped:
+ *   - `none from deemon'       --> `void from ctypes'
+ *   - `type(none from deemon)' --> `void from ctypes'
+ *   - `bool from deemon'       --> `bool from ctypes'
+ *   - `int from deemon'        --> `int from ctypes'
+ *   - `float from deemon'      --> `double from ctypes'
+ * If `self' is not one of these mappings and also not
+ * a c-type, a TypeError is thrown and NULL is returned.
+ * WARNING: This function does not return a reference! */
+INTDEF WUNUSED NONNULL((1)) CType *DCALL CType_Of(DeeObject *__restrict self);
+
+/* Same as `DeeSType_Get()', but also able to handle the
+ * case where "self" is an *instance*, rather a some type. */
+INTDEF WUNUSED NONNULL((1)) CType *DCALL CType_TypeOf(DeeObject *__restrict self);
+
+
+struct cobject_object {
+	OBJECT_HEAD_EX(CType)
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, co_data); /* Object data... */
+};
+
+#define Object_AsCObject(self) Dee_REQUIRES_OBJECT(CObject, self)
+#define Object_IsCObject(self) DeeType_Extends(Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)), &CType_Type)
+
+/* Interact with C-Objects */
+#define CObject_Alloc(tp)            CType_AllocInstance(tp)
+#define CObject_Free(tp, p)          CType_FreeInstance(tp, p)
+#define CObject_Init(self, tp)       DeeObject_InitEx(self, tp, CType_AsType) /* Some are static, some are heap-based */
+#define CObject_InitStatic(self, tp) DeeObject_InitStaticEx(self, tp, CType_AsType)
+#define CObject_InitHeap(self, tp)   DeeObject_InitHeapEx(self, tp, CType_AsType)
+#define CObject_Data(self)           ((CObject *)Dee_AsObject(self))->co_data
+
+
+
+
+
+
+/************************************************************************/
+/* ARRAY TYPE                                                           */
+/************************************************************************/
+struct carray_type_object {
+	CType                          cat_base;  /* The underlying C-type descriptor. */
+	DREF CType                    *cat_item;  /* [1..1][const] The array's element type. */
+	LIST_ENTRY(carray_type_object) cat_chain; /* [lock(cat_item->st_cachelock)] Hash-map entry of this array. */
+	size_t                         cat_count; /* [const] The total number of items. */
+	size_t                         cat_isize; /* [const][== CType_Sizeof(cat_item)]. */
+};
+
+/* Query properties of a given Array-Type */
+#define CArrayType_AllocInstance(self)   ((CStruct *)DeeType_AllocInstance(CArrayType_AsType(self)))
+#define CArrayType_FreeInstance(self, p) DeeType_FreeInstance(CArrayType_AsType(self), p)
+#define CArrayType_Count(self)           (self)->cat_count
+#define CArrayType_ItemType(self)        (self)->cat_item
+#define CArrayType_SizeofItem(self)      (self)->cat_isize
+
+/* Construct a new array-type `item_type[item_count]' */
+INTDEF WUNUSED NONNULL((1)) DREF CArrayType *DCALL
+CArrayType_Of(CType *__restrict item_type, size_t item_count);
+
+INTDEF DeeTypeObject CArrayType_Type;  /* == type(ctypes.int[42]) */
+INTDEF CArrayType AbstractCArray_Type; /* == Type.__base__(ctypes.int[42]) */
+
+#define CArrayType_AsCType(self)  (&(self)->cat_base)
+#define CArrayType_AsType(self)   (&(self)->cat_base.ct_base)
+#define CArrayType_AsObject(self) ((DeeObject *)&(self)->cat_base.ct_base)
+#define CType_AsCArrayType(self)  COMPILER_CONTAINER_OF(self, CArrayType, cat_base)
+#define CType_IsCArrayType(self)  (Dee_TYPE(&(self)->ct_base) == &CArrayType_Type)
+#define Type_AsCArrayType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CArrayType, cat_base.ct_base)
+#define Type_IsCArrayType(self)   (Dee_TYPE(self) == &CArrayType_Type)
+#define Object_AsCArrayType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CArrayType, cat_base.ct_base)
+#define Object_IsCArrayType(self) (Dee_TYPE(self) == &CArrayType_Type)
+
+struct carray_object {
+	OBJECT_HEAD_EX(CArrayType)
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, ca_data); /* Array data... */
+};
+
+#define Object_AsCArray(self) Dee_REQUIRES_OBJECT(CArray, self)
+#define Object_IsCArray(self) DeeType_Extends(Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)), &CArrayType_Type)
+
+/* Interact with Array objects */
+#define CArray_Alloc(tp)      CArrayType_AllocInstance(tp)
+#define CArray_Free(tp, p)    CArrayType_FreeInstance(tp, p)
+#define CArray_Init(self, tp) DeeObject_InitHeapEx(self, tp, CArrayType_AsType) /* All array-types are heap-allocated */
+#define CArray_ItemAddr(self, i) ((self)->ca_data + ((i) * CArrayType_SizeofItem(Dee_TYPE(self))))
+
+/* Return a pointer to the `index' element (also asserts that "index" is in-bounds) */
+INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL
+CArray_Plus(CArray *__restrict self, ptrdiff_t index);
+
+/* Return an LValue to the `index' element (also asserts that "index" is in-bounds) */
+INTDEF WUNUSED NONNULL((1)) DREF CLValue *DCALL
+CArray_Item(CArray *__restrict self, ptrdiff_t index);
+
+/* Special case: this returns a pointer to "&ca_data[0]" (thus emulating C's array-to-pointer decay) */
+#define CArray_Ptr(self) CArray_Plus(self, 0)
+
+
+
+
+
+
+/************************************************************************/
+/* STRUCT TYPE                                                          */
+/************************************************************************/
+struct Dee_string_object;
+struct cstruct_field {
+	DREF struct Dee_string_object *csf_name;   /* [0..1] The name of this field (NULL is used as sentinel) */
+	Dee_hash_t                     csf_hash;   /* [valid_if(csf_name)][const][== DeeString_Hash(csf_name)] */
+	ptrdiff_t                      csf_offset; /* [valid_if(csf_name)] Offset of the field (from `DeeStruct_Data()') */
+	struct cstruct_field          *csf_next;   /* [0..1] Next field for the purposes of anonymous initialization and field ordering */
+	DREF CLValueType              *csf_lvtype; /* [1..1][valid_if(csf_name)] l-value variant of this field's type. */
+};
+
+#define cstruct_field_nextfield(self) (self)->csf_next
+#define cstruct_field_getlvtype(self) (self)->csf_lvtype
+#define cstruct_field_getoffset(self) (self)->csf_offset
+#define cstruct_field_getname(self)   (self)->csf_name
+#define cstruct_field_gettype(self)   CLValueType_PointedToType(cstruct_field_getlvtype(self))
+
+struct cstruct_type_object {
+	/* Examples:
+	 * >> local x = struct { .x = int };
+	 *    cst_first = "x"
+	 *    cst_size  = 2
+	 *    cst_fmsk  = 1
+	 *    cst_fvec  = { {"x", 0, NULL, <int>}, DUMMY }
+	 *
+	 * >> local x = struct { ("x", int), union { .s = int, .u = uint } };
+	 * >> print str(x());  // "{ .x = 0, { .s = 0, .u = 0 } }"
+	 * >> print repr(x()); // "struct...(x: 0, union...(s: 0))"
+	 *    cst_first = "x"
+	 *    cst_size  = 9
+	 *    cst_fmsk  = 7
+	 *    cst_fvec  = {
+	 *        [0] = {"x", 0, &cst_fvec[8], <int>},
+	 *        [1] = {"s", 4, NULL, <int>},
+	 *        [2] = {"u", 4, NULL, <uint>},
+	 *        [3] = DUMMY,
+	 *        [4] = DUMMY,
+	 *        [5] = DUMMY,
+	 *        [6] = DUMMY,
+	 *        [7] = DUMMY,
+	 *        // No longer part of "cst_fmsk" -- anonymous fields
+	 *        [8] = {"", 4, NULL, <union{.s=int,.u=uint}> }
+	 *    }
+	 *
+	 * NOTES:
+	 * - When processing unnamed arguments in "co_initwith", those arguments are
+	 *   used to initialize struct members enumerated via `cst_first->[...]->csf_next'
+	 * - The same method is used to implement the object-printing functions
+	 */
+	CType                                         cst_base;  /* The underlying C-type object. */
+	struct cstruct_field                         *cst_first; /* [0..1][const] First field in `cst_fvec' */
+	Dee_hash_t                                    cst_fmsk;  /* [const] Field-vector mask. */
+	Dee_hash_t                                    cst_size;  /* [const][<= (cst_fmsk+1)] # of elements in `cst_fvec' */
+	COMPILER_FLEXIBLE_ARRAY(struct cstruct_field, cst_fvec); /* [1..cst_size][const] Hash-vector of field names, followed by `cst_size - (cst_fmsk + 1)' anonymous fields (which use "Dee_EmptyString" as name) */
+};
+
+/* Query properties of a given Struct-Type */
+#define CStructType_AllocInstance(self)   ((CStruct *)DeeType_AllocInstance(CStructType_AsType(self)))
+#define CStructType_FreeInstance(self, p) DeeType_FreeInstance(CStructType_AsType(self), p)
+#define CStructType_FirstField(self) (self)->cst_first
+#define CStructType_ForeachField(field, self)                     \
+	for ((field) = CStructType_FirstField(self); (field) != NULL; \
+	     (field) = cstruct_field_nextfield(field))
+INTDEF WUNUSED NONNULL((1, 2)) struct cstruct_field *DCALL
+CStructType_FieldByName(CStructType const *self, /*string*/DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2)) struct cstruct_field *DCALL
+CStructType_FieldByNameStringHash(CStructType const *self, char const *name, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) struct cstruct_field *DCALL
+CStructType_FieldByNameStringLenHash(CStructType const *self, char const *name,
+                                     size_t namelen, Dee_hash_t hash);
+
+/* Construct a new struct-type from `initializer', which
+ * should be `{((string, CType) | CStructType)...}'
+ * @param: flags: Set of `CSTRUCTTYPE_F_*' */
+INTDEF WUNUSED NONNULL((1)) DREF CStructType *DCALL
+CStructType_Of(DeeObject *__restrict initializer, unsigned int flags);
+#define CSTRUCTTYPE_F_NORMAL  0x0000 /* No special flags. */
+#define CSTRUCTTYPE_F_PACKED  0x0001 /* Create a packed structure. */
+#define CSTRUCTTYPE_F_UNION   0x0002 /* Create a union. */
+
+
+INTDEF DeeTypeObject CStructType_Type;   /* == type(ctypes.struct { .x = ctypes.int }) */
+INTDEF CStructType AbstractCStruct_Type; /* == Type.__base__(ctypes.struct { .x = ctypes.int }) */
+
+#define CStructType_AsCType(self)  (&(self)->cst_base)
+#define CStructType_AsType(self)   (&(self)->cst_base.ct_base)
+#define CStructType_AsObject(self) ((DeeObject *)&(self)->cst_base.ct_base)
+#define CType_AsCStructType(self)  COMPILER_CONTAINER_OF(self, CStructType, cst_base)
+#define CType_IsCStructType(self)  (Dee_TYPE(&(self)->ct_base) == &CStructType_Type)
+#define Type_AsCStructType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CStructType, cst_base.ct_base)
+#define Type_IsCStructType(self)   (Dee_TYPE(self) == &CStructType_Type)
+#define Object_AsCStructType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CStructType, cst_base.ct_base)
+#define Object_IsCStructType(self) (Dee_TYPE(self) == &CStructType_Type)
+
+struct cstruct_object {
+	OBJECT_HEAD_EX(CStructType)
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, cs_data); /* Struct data... */
+};
+
+#define Object_AsCStruct(self) Dee_REQUIRES_OBJECT(CStruct, self)
+#define Object_IsCStruct(self) DeeType_Extends(Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)), &CStructType_Type)
+
+/* Interact with Struct objects */
+#define CStruct_Alloc(tp)      CStructType_AllocInstance(tp)
+#define CStruct_Free(tp, p)    CStructType_FreeInstance(tp, p)
+#define CStruct_Init(self, tp) DeeObject_InitHeapEx(self, tp, CStructType_AsType) /* All struct types are heap-allocated */
+INTDEF WUNUSED NONNULL((1, 3)) DREF CLValue *DCALL CStruct_GetAttr_p(CStructType *__restrict tp_self, void *self, /*String*/ DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 3)) DREF CLValue *DCALL CStruct_GetAttrStringHash_p(CStructType *__restrict tp_self, void *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 3)) DREF CLValue *DCALL CStruct_GetAttrStringLenHash_p(CStructType *__restrict tp_self, void *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL CStruct_DelAttr_p(CStructType *__restrict tp_self, void *self, /*String*/ DeeObject *attr);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL CStruct_DelAttrStringHash_p(CStructType *__restrict tp_self, void *self, char const *attr, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL CStruct_DelAttrStringLenHash_p(CStructType *__restrict tp_self, void *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 3, 4)) int DCALL CStruct_SetAttr_p(CStructType *__restrict tp_self, void *self, /*String*/ DeeObject *attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 3, 5)) int DCALL CStruct_SetAttrStringHash_p(CStructType *__restrict tp_self, void *self, char const *attr, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 3, 6)) int DCALL CStruct_SetAttrStringLenHash_p(CStructType *__restrict tp_self, void *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+
+
+
+
+
+
+/************************************************************************/
+/* FUNCTION TYPE                                                        */
+/************************************************************************/
+struct cfunction_type_object {
+	CType                             cft_base;            /* The underlying structured type descriptor. */
+#ifndef CONFIG_NO_CFUNCTION
+	DREF CType                       *cft_return;          /* [1..1][const] The function's return type. */
+	LIST_ENTRY(cfunction_type_object) cft_chain;           /* [lock(cft_return->st_cachelock)] Hash-map entry of this c-function. */
+	Dee_hash_t                        cft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
+	size_t                            cft_argc;            /* [const] Amount of function argument types. */
+	ctypes_cc_t                       cft_cc;              /* [const] The calling convention used by this function. */
+	ffi_type                         *cft_ffi_return_type; /* [1..1] Raw return type. */
+	ffi_type                  *const *cft_ffi_arg_type_v;  /* [1..1][0..ob_argc][owned] Raw argument types. */
+	ffi_cif                           cft_ffi_cif;         /* cif object to call the function. */
+	/* WBuffer layout:
+	 *  1. return value memory
+	 *  2. argument memory...
+	 *  3. argument pointers... */
+	size_t                            cft_wsize;
+	size_t                            cft_woff_argmem;
+#ifdef __COMPILER_HAVE_TRANSPARENT_UNION
+	union {
+		size_t                        cft_woff_argptr;
+		size_t                        cft_woff_variadic_argmem;
+	};
+#else /* __COMPILER_HAVE_TRANSPARENT_UNION */
+	size_t                            cft_woff_argptr;
+#define cft_woff_variadic_argmem      cft_woff_argptr
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	COMPILER_FLEXIBLE_ARRAY(DREF CType *, cft_argv);       /* [1..1][0..cft_argc][const] Vector of function argument types. */
+#endif /* !CONFIG_NO_CFUNCTION */
+};
+
+/* Query properties of a given Function-Type */
+#ifndef CONFIG_NO_CFUNCTION
+#define CFunction_ReturnType(self)      (self)->cft_return
+#define CFunction_ArgumentCount(self)   (self)->cft_argc
+#define CFunction_ArgumentTypes(self)   (self)->cft_argv
+#define CFunction_ArgumentType(self, i) (self)->cft_argv[i]
+#endif /* !CONFIG_NO_CFUNCTION */
+
+INTDEF DeeTypeObject CFunctionType_Type;     /* == type(ctypes.int.func(ctypes.int, ctypes.int)) */
+INTDEF CFunctionType AbstractCFunction_Type; /* == Type.__base__(ctypes.int.func(ctypes.int, ctypes.int)) */
+
+#define CFunctionType_AsCType(self)  (&(self)->cft_base)
+#define CFunctionType_AsType(self)   (&(self)->cft_base.ct_base)
+#define CFunctionType_AsObject(self) ((DeeObject *)&(self)->cft_base.ct_base)
+#define CType_AsCFunctionType(self)  COMPILER_CONTAINER_OF(self, CFunctionType, cft_base)
+#define CType_IsCFunctionType(self)  (Dee_TYPE(&(self)->ct_base) == &CFunctionType_Type)
+#define Type_AsCFunctionType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CFunctionType, cft_base.ct_base)
+#define Type_IsCFunctionType(self)   (Dee_TYPE(self) == &CFunctionType_Type)
+#define Object_AsCFunctionType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CFunctionType, cft_base.ct_base)
+#define Object_IsCFunctionType(self) (Dee_TYPE(self) == &CFunctionType_Type)
+
+/* Construct a C-Function type for the given arguments */
+INTDEF WUNUSED NONNULL((1)) DREF CFunctionType *DCALL
+CFunctionType_Of(CType *__restrict return_type,
+                 ctypes_cc_t calling_convention,
+                 size_t argc, CType *const *argv);
+
+#if 0 /* Wouldn't make sense... */
+struct cfunction_object {
+	OBJECT_HEAD_EX(CFunctionType)
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, cf_instruction); /* Host instruction... */
+};
+
+#define Object_AsCFunction(self) Dee_REQUIRES_OBJECT(CFunction, self)
+#define Object_IsCFunction(self) DeeType_Extends(Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)), &CFunctionType_Type)
+#endif
+
+/* Interact with Function objects */
+INTDEF WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *DCALL
+CFunction_Call(CFunctionType *__restrict tp_self, Dee_funptr_t funcptr,
+               size_t argc, DeeObject *const *argv);
+
+
+
+
+/************************************************************************/
+/* POINTER TYPE                                                         */
+/************************************************************************/
+struct cpointer_type_object {
+	CType       cpt_base; /* The underlying type object. */
+	DREF CType *cpt_orig; /* [1..1][const] The dereferenced type of a pointer. */
+	size_t      cpt_size; /* [const][== CType_Sizeof(pt_orig)] The size of the pointed-to type. */
+};
+
+/* Query properties of a given Pointer-Type */
+#define CPointerType_PointedToType(self) (self)->cpt_orig
+
+INTDEF DeeTypeObject CPointerType_Type;    /* == type(ctypes.int.ptr) */
+INTDEF CPointerType AbstractCPointer_Type; /* == Type.__base__(ctypes.int.ptr) */
+
+#define CPointerType_AsCType(self)  (&(self)->cpt_base)
+#define CPointerType_AsType(self)   (&(self)->cpt_base.ct_base)
+#define CPointerType_AsObject(self) ((DeeObject *)&(self)->cpt_base.ct_base)
+#define CType_AsCPointerType(self)  COMPILER_CONTAINER_OF(self, CPointerType, cpt_base)
+#define CType_IsCPointerType(self)  (Dee_TYPE(&(self)->ct_base) == &CPointerType_Type)
+#define Type_AsCPointerType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CPointerType, cpt_base.ct_base)
+#define Type_IsCPointerType(self)   (Dee_TYPE(self) == &CPointerType_Type)
+#define Object_AsCPointerType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CPointerType, cpt_base.ct_base)
+#define Object_IsCPointerType(self) (Dee_TYPE(self) == &CPointerType_Type)
+
+INTDEF WUNUSED NONNULL((1)) DREF CPointerType *DCALL CPointerType_Of(CType *__restrict self);
+
+struct cpointer_object {
+	OBJECT_HEAD_EX(CPointerType)
+	union pointer   cp_value; /* [const] Pointer value */
+	DREF DeeObject *cp_owner; /* [0..1][const] Owner of pointed-to value (to keep "cp_value" alive) */
+};
+
+#define Object_AsCPointer(self) Dee_REQUIRES_OBJECT(CPointer, self)
+#define Object_IsCPointer(self) (Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)) == &CPointerType_Type)
+
+/* Interact with Pointer objects */
+INTDEF WUNUSED NONNULL((1)) DREF CLValue *DCALL CPointer_Ind(CPointer *__restrict self);
+
+/* Construct a new pointer object */
+#define CPointer_Alloc()        DeeObject_MALLOC(CPointer)
+#define CPointer_Free(p)        DeeObject_FREE(Dee_REQUIRES_TYPE(CPointer *, p))
+#ifdef CTYPES_DEFINE_STATIC_POINTER_TYPES
+#define CPointer_Init(self, tp) DeeObject_InitEx(self, tp, CPointerType_AsType) /* Some pointer types are statically defined */
+#else /* CTYPES_DEFINE_STATIC_POINTER_TYPES */
+#define CPointer_Init(self, tp) DeeObject_InitHeapEx(self, tp, CPointerType_AsType) /* All pointer types are heap-allocated */
+#endif /* !CTYPES_DEFINE_STATIC_POINTER_TYPES */
+INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CPointer_New(CPointerType *__restrict type, void *value);
+INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CPointer_NewInherited(/*inherit(always)*/ DREF CPointerType *__restrict type, void *value);
+INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CPointer_NewEx(CPointerType *__restrict type, void *value, /*[0..1]*/ DeeObject *owner);
+INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CPointer_NewExInherited(/*inherit(always)*/ DREF CPointerType *__restrict type, void *value, /*inherit(always)*/ /*[0..1]*/ DREF DeeObject *owner);
+INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CPointer_For(CType *__restrict pointed_to_type, void *value);
+#ifdef CTYPES_DEFINE_STATIC_POINTER_TYPES
+#define CPointer_NewVoid(pointer_value) CPointer_New(&CVoidPtr_Type, pointer_value)
+#define CPointer_NewChar(pointer_value) CPointer_New(&CCharPtr_Type, pointer_value)
+#else /* CTYPES_DEFINE_STATIC_POINTER_TYPES */
+#define CPointer_NewVoid(pointer_value) CPointer_For(&CVoid_Type, pointer_value)
+#define CPointer_NewChar(pointer_value) CPointer_For(&CChar_Type, pointer_value)
+#endif /* !CTYPES_DEFINE_STATIC_POINTER_TYPES */
+
+/* Interpret `self' as a pointer and store the result in `*result'
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_AsPointer(DeeObject *self, CType *pointer_base,
+                    union pointer *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_AsPPointer(DeeObject *self, CType *pointer_base_base,
+                     union pointer **__restrict p_result);
+
+/* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it.
+ * @return:  1: The conversion failed.
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_TryAsPointer(DeeObject *self, CType *pointer_base,
+                       union pointer *__restrict result);
+
+/* Similar to `DeeObject_TryAsPointer()', but fills in `*p_pointer_base' with the
+ * pointer-base type. For use with type-generic functions (such as the `atomic_*' api)
+ * @return:  1: The conversion failed.
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_TryAsGenericPointer(DeeObject *self,
+                              CType **__restrict p_pointer_base,
+                              union pointer *__restrict result);
+
+/* S.a. `DeeObject_TryAsGenericPointer()'
+ * @return:  0: Successfully converted `self' to a pointer.
+ * @return: -1: An error occurred. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_AsGenericPointer(DeeObject *self,
+                           CType **__restrict p_pointer_base,
+                           union pointer *__restrict result);
+
+
+
+
+
+
+
+/************************************************************************/
+/* LVALUE TYPE                                                          */
+/************************************************************************/
+struct clvalue_type_object {
+	CType       clt_base; /* The underlying type object. */
+	DREF CType *clt_orig; /* [1..1][const] The dereferenced type of an l-value. */
+};
+
+/* Query properties of a given LValue-Type */
+#define CLValueType_PointedToType(self) (self)->clt_orig
+
+INTDEF DeeTypeObject CLValueType_Type;   /* == type(ctypes.int.lvalue) */
+INTDEF CLValueType AbstractCLValue_Type; /* == Type.__base__(ctypes.int.lvalue) */
+
+#define CLValueType_AsCType(self)  (&(self)->clt_base)
+#define CLValueType_AsType(self)   (&(self)->clt_base.ct_base)
+#define CLValueType_AsObject(self) ((DeeObject *)&(self)->clt_base.ct_base)
+#define CType_AsCLValueType(self)  COMPILER_CONTAINER_OF(self, CLValueType, clt_base)
+#define CType_IsCLValueType(self)  (Dee_TYPE(&(self)->ct_base) == &CLValueType_Type)
+#define Type_AsCLValueType(self)   COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CLValueType, clt_base.ct_base)
+#define Type_IsCLValueType(self)   (Dee_TYPE(self) == &CLValueType_Type)
+#define Object_AsCLValueType(self) COMPILER_CONTAINER_OF(Dee_REQUIRES_OBJECT(DeeTypeObject, self), CLValueType, clt_base.ct_base)
+#define Object_IsCLValueType(self) (Dee_TYPE(self) == &CLValueType_Type)
+
+INTDEF WUNUSED NONNULL((1)) DREF CLValueType *DCALL CLValueType_Of(CType *__restrict self);
+
+struct clvalue_object {
+	OBJECT_HEAD_EX(CLValueType)
+	union pointer   cl_value; /* [const] LValue pointer */
+	DREF DeeObject *cl_owner; /* [0..1][const] Owner of pointed-to value (to keep "cl_value" alive) */
+};
+
+#define Object_AsCLValue(self) Dee_REQUIRES_OBJECT(CLValue, self)
+#define Object_IsCLValue(self) (Dee_TYPE((DeeTypeObject *)Dee_TYPE(self)) == &CLValueType_Type)
+
+/* Interact with LValue objects */
+#define CLValue_Alloc()        DeeObject_MALLOC(CLValue)
+#define CLValue_Free(p)        DeeObject_FREE(Dee_REQUIRES_TYPE(CLValue *, p))
+#define CLValue_Init(self, tp) DeeObject_InitHeapEx(self, tp, CLValueType_AsType) /* All L-Value types are heap-types */
+INTDEF WUNUSED NONNULL((1)) DREF CPointer *DCALL CLValue_Ptr(CLValue *__restrict self);
+
+
+
+
+
+
+/* Builtin C types */
+INTDEF CType CVoid_Type;
+
+INTDEF CType CChar_Type;
+INTDEF CType CWChar_Type;
+INTDEF CType CChar16_Type;
+INTDEF CType CChar32_Type;
+INTDEF CType CBool_Type;
+
+INTDEF CType CInt8_Type;
+INTDEF CType CInt16_Type;
+INTDEF CType CInt32_Type;
+INTDEF CType CInt64_Type;
+INTDEF CType CInt128_Type;
+INTDEF CType CUInt8_Type;
+INTDEF CType CUInt16_Type;
+INTDEF CType CUInt32_Type;
+INTDEF CType CUInt64_Type;
+INTDEF CType CUInt128_Type;
+
+#define CBSwapInt8_Type CInt8_Type
+INTDEF CType CBSwapInt16_Type;
+INTDEF CType CBSwapInt32_Type;
+INTDEF CType CBSwapInt64_Type;
+INTDEF CType CBSwapInt128_Type;
+#define CBSwapUInt8_Type CUInt8_Type
+INTDEF CType CBSwapUInt16_Type;
+INTDEF CType CBSwapUInt32_Type;
+INTDEF CType CBSwapUInt64_Type;
+INTDEF CType CBSwapUInt128_Type;
+
+INTDEF CType CFloat_Type;
+INTDEF CType CDouble_Type;
+INTDEF CType CLDouble_Type;
+
+
+INTDEF WUNUSED DREF CObject *DCALL CChar_New(char val);
+INTDEF WUNUSED DREF CObject *DCALL CWChar_New(Dee_wchar_t val);
+INTDEF WUNUSED DREF CObject *DCALL CChar16_New(__CHAR16_TYPE__ val);
+INTDEF WUNUSED DREF CObject *DCALL CChar32_New(__CHAR16_TYPE__ val);
+INTDEF WUNUSED DREF CObject *DCALL CBool_New(bool value);
+INTDEF WUNUSED DREF CObject *DCALL CInt8_New(int8_t val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt8_New(uint8_t val);
+INTDEF WUNUSED DREF CObject *DCALL CInt16_New(int16_t val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt16_New(uint16_t val);
+INTDEF WUNUSED DREF CObject *DCALL CInt32_New(int32_t val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt32_New(uint32_t val);
+INTDEF WUNUSED DREF CObject *DCALL CInt64_New(int64_t val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt64_New(uint64_t val);
+INTDEF WUNUSED DREF CObject *DCALL CInt128_New(Dee_int128_t val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt128_New(Dee_uint128_t val);
+
+
+/* Statically allocated pointer types (since these are needed very often) */
+#ifdef CTYPES_DEFINE_STATIC_POINTER_TYPES
+INTDEF CPointerType CVoidPtr_Type;
+INTDEF CPointerType CCharPtr_Type;
+#endif /* CTYPES_DEFINE_STATIC_POINTER_TYPES */
+
+#define PRIVATE_CINT_TYPE_1   CInt8_Type
+#define PRIVATE_CINT_TYPE_2   CInt16_Type
+#define PRIVATE_CINT_TYPE_4   CInt32_Type
+#define PRIVATE_CINT_TYPE_8   CInt64_Type
+#define PRIVATE_CINT_TYPE_16  CInt128_Type
+#define PRIVATE_CUINT_TYPE_1  CUInt8_Type
+#define PRIVATE_CUINT_TYPE_2  CUInt16_Type
+#define PRIVATE_CUINT_TYPE_4  CUInt32_Type
+#define PRIVATE_CUINT_TYPE_8  CUInt64_Type
+#define PRIVATE_CUINT_TYPE_16 CUInt128_Type
+#define CIntN_Type(sizeof)    PP_PRIVATE_CAT2(PRIVATE_CINT_TYPE_, sizeof)
+#define CUIntN_Type(sizeof)   PP_PRIVATE_CAT2(PRIVATE_CUINT_TYPE_, sizeof)
+
+#define PRIVATE_CBSWAPINT_TYPE_1   CBSwapInt8_Type
+#define PRIVATE_CBSWAPINT_TYPE_2   CBSwapInt16_Type
+#define PRIVATE_CBSWAPINT_TYPE_4   CBSwapInt32_Type
+#define PRIVATE_CBSWAPINT_TYPE_8   CBSwapInt64_Type
+#define PRIVATE_CBSWAPINT_TYPE_16  CBSwapInt128_Type
+#define PRIVATE_CBSWAPUINT_TYPE_1  CBSwapUInt8_Type
+#define PRIVATE_CBSWAPUINT_TYPE_2  CBSwapUInt16_Type
+#define PRIVATE_CBSWAPUINT_TYPE_4  CBSwapUInt32_Type
+#define PRIVATE_CBSWAPUINT_TYPE_8  CBSwapUInt64_Type
+#define PRIVATE_CBSWAPUINT_TYPE_16 CBSwapUInt128_Type
+#define CBSwapIntN_Type(sizeof)    PP_PRIVATE_CAT2(PRIVATE_CBSWAPINT_TYPE_, sizeof)
+#define CBSwapUIntN_Type(sizeof)   PP_PRIVATE_CAT2(PRIVATE_CBSWAPUINT_TYPE_, sizeof)
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define CLeIntN_Type  CIntN_Type
+#define CLeUIntN_Type CUIntN_Type
+#define CBeIntN_Type  CBSwapIntN_Type
+#define CBeUIntN_Type CBSwapUIntN_Type
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+#define CLeIntN_Type  CBSwapIntN_Type
+#define CLeUIntN_Type CBSwapUIntN_Type
+#define CBeIntN_Type  CIntN_Type
+#define CBeUIntN_Type CUIntN_Type
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+
+
+#define PRIVATE_CINT_NEW_1   CInt8_New
+#define PRIVATE_CINT_NEW_2   CInt16_New
+#define PRIVATE_CINT_NEW_4   CInt32_New
+#define PRIVATE_CINT_NEW_8   CInt64_New
+#define PRIVATE_CINT_NEW_16  CInt128_New
+#define PRIVATE_CUINT_NEW_1  CUInt8_New
+#define PRIVATE_CUINT_NEW_2  CUInt16_New
+#define PRIVATE_CUINT_NEW_4  CUInt32_New
+#define PRIVATE_CUINT_NEW_8  CUInt64_New
+#define PRIVATE_CUINT_NEW_16 CUInt128_New
+#define CIntN_New(sizeof)    PP_PRIVATE_CAT2(PRIVATE_CINT_NEW_, sizeof)
+#define CUIntN_New(sizeof)   PP_PRIVATE_CAT2(PRIVATE_CUINT_NEW_, sizeof)
+
+
+#define PRIVATE_HOST_INTFOR_1   __INT8_TYPE__
+#define PRIVATE_HOST_INTFOR_2   __INT16_TYPE__
+#define PRIVATE_HOST_INTFOR_4   __INT32_TYPE__
+#define PRIVATE_HOST_INTFOR_8   __INT64_TYPE__
+#define PRIVATE_HOST_INTFOR_16  Dee_int128_t
+#define PRIVATE_HOST_UINTFOR_1  __UINT8_TYPE__
+#define PRIVATE_HOST_UINTFOR_2  __UINT16_TYPE__
+#define PRIVATE_HOST_UINTFOR_4  __UINT32_TYPE__
+#define PRIVATE_HOST_UINTFOR_8  __UINT64_TYPE__
+#define PRIVATE_HOST_UINTFOR_16 Dee_uint128_t
+#define HOST_INTFOR(sizeof)  PP_PRIVATE_CAT2(PRIVATE_HOST_INTFOR_, sizeof)
+#define HOST_UINTFOR(sizeof) PP_PRIVATE_CAT2(PRIVATE_HOST_UINTFOR_, sizeof)
+
+
+#if CONFIG_CTYPES_SIZEOF_CHAR == 1 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT8__
+#define CSChar_Type CInt8_Type
+#define CSChar_New  CInt8_New
+#define CUChar_Type CUInt8_Type
+#define CUChar_New  CUInt8_New
+#elif CONFIG_CTYPES_SIZEOF_CHAR == 2 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT16__
+#define CSChar_Type CInt16_Type
+#define CSChar_New  CInt16_New
+#define CUChar_Type CUInt16_Type
+#define CUChar_New  CUInt16_New
+#elif CONFIG_CTYPES_SIZEOF_CHAR == 4 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT32__
+#define CSChar_Type CInt32_Type
+#define CSChar_New  CInt32_New
+#define CUChar_Type CUInt32_Type
+#define CUChar_New  CUInt32_New
+#elif CONFIG_CTYPES_SIZEOF_CHAR == 8 && CONFIG_CTYPES_ALIGNOF_CHAR == __ALIGNOF_INT64__
+#define CSChar_Type CInt64_Type
+#define CSChar_New  CInt64_New
+#define CUChar_Type CUInt64_Type
+#define CUChar_New  CUInt64_New
+#else /* ... */
+#define CONFIG_SUCHAR_NEEDS_OWN_TYPE
+INTDEF CType CSChar_Type;
+INTDEF CType CUChar_Type;
+INTDEF WUNUSED DREF CObject *DCALL CSChar_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_CHAR) val);
+INTDEF WUNUSED DREF CObject *DCALL CUChar_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_CHAR) val);
+#endif /* !... */
+
+#if CONFIG_CTYPES_SIZEOF_SHORT == 1 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT8__
+#define CShort_Type  CInt8_Type
+#define CShort_New   CInt8_New
+#define CUShort_Type CUInt8_Type
+#define CUShort_New  CUInt8_New
+#elif CONFIG_CTYPES_SIZEOF_SHORT == 2 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT16__
+#define CShort_Type  CInt16_Type
+#define CShort_New   CInt16_New
+#define CUShort_Type CUInt16_Type
+#define CUShort_New  CUInt16_New
+#elif CONFIG_CTYPES_SIZEOF_SHORT == 4 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT32__
+#define CShort_Type  CInt32_Type
+#define CShort_New   CInt32_New
+#define CUShort_Type CUInt32_Type
+#define CUShort_New  CUInt32_New
+#elif CONFIG_CTYPES_SIZEOF_SHORT == 8 && CONFIG_CTYPES_ALIGNOF_SHORT == __ALIGNOF_INT64__
+#define CShort_Type  CInt64_Type
+#define CShort_New   CInt64_New
+#define CUShort_Type CUInt64_Type
+#define CUShort_New  CUInt64_New
+#else /* ... */
+#define CONFIG_SHORT_NEEDS_OWN_TYPE
+INTDEF CType CShort_Type;
+INTDEF CType CUShort_Type;
+INTDEF WUNUSED DREF CObject *DCALL CShort_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_SHORT) val);
+INTDEF WUNUSED DREF CObject *DCALL CUShort_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_SHORT) val);
+#endif /* !... */
+
+#if CONFIG_CTYPES_SIZEOF_INT == 1 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT8__
+#define CInt_Type  CInt8_Type
+#define CInt_New   CInt8_New
+#define CUInt_Type CUInt8_Type
+#define CUInt_New  CUInt8_New
+#elif CONFIG_CTYPES_SIZEOF_INT == 2 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT16__
+#define CInt_Type  CInt16_Type
+#define CInt_New   CInt16_New
+#define CUInt_Type CUInt16_Type
+#define CUInt_New  CUInt16_New
+#elif CONFIG_CTYPES_SIZEOF_INT == 4 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT32__
+#define CInt_Type  CInt32_Type
+#define CInt_New   CInt32_New
+#define CUInt_Type CUInt32_Type
+#define CUInt_New  CUInt32_New
+#elif CONFIG_CTYPES_SIZEOF_INT == 8 && CONFIG_CTYPES_ALIGNOF_INT == __ALIGNOF_INT64__
+#define CInt_Type  CInt64_Type
+#define CInt_New   CInt64_New
+#define CUInt_Type CUInt64_Type
+#define CUInt_New  CUInt64_New
+#else /* ... */
+#define CONFIG_INT_NEEDS_OWN_TYPE
+INTDEF CType CInt_Type;
+INTDEF CType CUInt_Type;
+INTDEF WUNUSED DREF CObject *DCALL CInt_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_INT) val);
+INTDEF WUNUSED DREF CObject *DCALL CUInt_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_INT) val);
+#endif /* !... */
+
+#if CONFIG_CTYPES_SIZEOF_LONG == 1 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT8__
+#define CLong_Type  CInt8_Type
+#define CLong_New   CInt8_New
+#define CULong_Type CUInt8_Type
+#define CULong_New  CUInt8_New
+#elif CONFIG_CTYPES_SIZEOF_LONG == 2 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT16__
+#define CLong_Type  CInt16_Type
+#define CLong_New   CInt16_New
+#define CULong_Type CUInt16_Type
+#define CULong_New  CUInt16_New
+#elif CONFIG_CTYPES_SIZEOF_LONG == 4 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT32__
+#define CLong_Type  CInt32_Type
+#define CLong_New   CInt32_New
+#define CULong_Type CUInt32_Type
+#define CULong_New  CUInt32_New
+#elif CONFIG_CTYPES_SIZEOF_LONG == 8 && CONFIG_CTYPES_ALIGNOF_LONG == __ALIGNOF_INT64__
+#define CLong_Type  CInt64_Type
+#define CLong_New   CInt64_New
+#define CULong_Type CUInt64_Type
+#define CULong_New  CUInt64_New
+#else /* ... */
+#define CONFIG_LONG_NEEDS_OWN_TYPE
+INTDEF CType CLong_Type;
+INTDEF CType CULong_Type;
+INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
+INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
+#endif /* !... */
+
+#if CONFIG_CTYPES_SIZEOF_LLONG == 1 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT8__
+#define CLLong_Type  CInt8_Type
+#define CLLong_New   CInt8_New
+#define CULLong_Type CUInt8_Type
+#define CULLong_New  CUInt8_New
+#elif CONFIG_CTYPES_SIZEOF_LLONG == 2 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT16__
+#define CLLong_Type  CInt16_Type
+#define CLLong_New   CInt16_New
+#define CULLong_Type CUInt16_Type
+#define CULLong_New  CUInt16_New
+#elif CONFIG_CTYPES_SIZEOF_LLONG == 4 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT32__
+#define CLLong_Type  CInt32_Type
+#define CLLong_New   CInt32_New
+#define CULLong_Type CUInt32_Type
+#define CULLong_New  CUInt32_New
+#elif CONFIG_CTYPES_SIZEOF_LLONG == 8 && CONFIG_CTYPES_ALIGNOF_LLONG == __ALIGNOF_INT64__
+#define CLLong_Type  CInt64_Type
+#define CLLong_New   CInt64_New
+#define CULLong_Type CUInt64_Type
+#define CULLong_New  CUInt64_New
+#else /* ... */
+#define CONFIG_LLONG_NEEDS_OWN_TYPE
+INTDEF CType CLLong_Type;
+INTDEF CType CULLong_Type;
+INTDEF WUNUSED DREF CObject *DCALL CLLong_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_LLONG) val);
+INTDEF WUNUSED DREF CObject *DCALL CULLong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_LLONG) val);
+#endif /* !... */
+
+#if (!defined(CONFIG_LONG_NEEDS_OWN_TYPE) &&                   \
+     (CONFIG_CTYPES_SIZEOF_LONG == CONFIG_CTYPES_SIZEOF_INT && \
+      CONFIG_CTYPES_ALIGNOF_LONG == CONFIG_CTYPES_ALIGNOF_INT))
+/* Make `long' its own distinct type. */
+#define CONFIG_LONG_NEEDS_OWN_TYPE
+#undef CLong_Type
+#undef CULong_Type
+#undef CLong_New
+#undef CULong_New
+INTDEF CType CLong_Type;
+INTDEF CType CULong_Type;
+INTDEF WUNUSED DREF CObject *DCALL CLong_New(HOST_INTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
+INTDEF WUNUSED DREF CObject *DCALL CULong_New(HOST_UINTFOR(CONFIG_CTYPES_SIZEOF_LONG) val);
+#endif /* ... */
+
+
+
+
+
+
+/* Backwards compat... */
+#define DeeSTypeObject            CType
+#define DeeSType_AsType           CType_AsType
+#define DeeStruct_Data            CObject_Data
+#define st_sizeof                 ct_sizeof
+#define DeeLValue_Check           Object_IsCLValue
+#define DeeType_AsLValueType      Type_AsCLValueType
+#define lt_orig                   clt_orig
+#define lvalue_object             clvalue_object
+#define l_ptr                     cl_value
+#define DeeStructObject           CObject
+#define DeeCVoid_Type             CVoid_Type
+#define pointer_object            cpointer_object
+#define p_ptr                     cp_value
+#define DeeSType_GetTypeOf        CType_TypeOf
+#define DeeLValueType_Check       CType_IsCLValueType
+#define DeeSType_AsLValueType     CType_AsCLValueType
+#define DeeSType_Sizeof           CType_Sizeof
+#define DeeSType_Alignof          CType_Alignof
+#define DeeSType_AsObject         CType_AsObject
+#define DeeCInt8_Type             CInt8_Type
+#define DeeCInt16_Type            CInt16_Type
+#define DeeCInt32_Type            CInt32_Type
+#define DeeCInt64_Type            CInt64_Type
+#define DeeCInt128_Type           CInt128_Type
+#define DeeCUInt8_Type            CUInt8_Type
+#define DeeCUInt16_Type           CUInt16_Type
+#define DeeCUInt32_Type           CUInt32_Type
+#define DeeCUInt64_Type           CUInt64_Type
+#define DeeCUInt128_Type          CUInt128_Type
+#define DeeCSChar_Type            CSChar_Type
+#define DeeCUChar_Type            CUChar_Type
+#define DeeCShort_Type            CShort_Type
+#define DeeCUShort_Type           CUShort_Type
+#define DeeCInt_Type              CInt_Type
+#define DeeCUInt_Type             CUInt_Type
+#define DeeCLong_Type             CLong_Type
+#define DeeCULong_Type            CULong_Type
+#define DeeCLLong_Type            CLLong_Type
+#define DeeCULLong_Type           CULLong_Type
+#define DeeCChar_Type             CChar_Type
+#define DeeCWChar_Type            CWChar_Type
+#define DeeCChar16_Type           CChar16_Type
+#define DeeCChar32_Type           CChar32_Type
+#define DeeCBool_Type             CBool_Type
+#define DeeStructTypeObject       CStructType
+#define DeeStructType_Type        CStructType_Type
+#define int_newint(v)             Dee_AsObject(CIntN_New(CONFIG_CTYPES_SIZEOF_INT)(v))
+#define int_news8(v)              Dee_AsObject(CInt8_New(v))
+#define int_news16(v)             Dee_AsObject(CInt16_New(v))
+#define int_news32(v)             Dee_AsObject(CInt32_New(v))
+#define int_news64(v)             Dee_AsObject(CInt64_New(v))
+#define int_news128(v)            Dee_AsObject(CInt128_New(v))
+#define int_newu8(v)              Dee_AsObject(CUInt8_New(v))
+#define int_newu16(v)             Dee_AsObject(CUInt16_New(v))
+#define int_newu32(v)             Dee_AsObject(CUInt32_New(v))
+#define int_newu64(v)             Dee_AsObject(CUInt64_New(v))
+#define int_newu128(v)            Dee_AsObject(CUInt128_New(v))
+#define st_array                  ct_arrays
+#define st_cfunction              ct_functions
+#define DeeCFloat_Type            CFloat_Type
+#define DeeCDouble_Type           CDouble_Type
+#define DeeCLDouble_Type          CLDouble_Type
+#define DeeStructured_Type        AbstractCObject_Type
+#define DeePointer_Type           AbstractCPointer_Type
+#define DeeLValue_Type            AbstractCLValue_Type
+#define DeeStruct_Type            AbstractCStruct_Type
+#define DeeArray_Type             AbstractCArray_Type
+#define DeeCFunction_Type         AbstractCFunction_Type
+#define DeePointerType_AsSType    CPointerType_AsCType
+#define DeeLValueType_AsSType     CLValueType_AsCType
+#define DeeArrayType_AsSType      CArrayType_AsCType
+#define DeeCFunctionType_AsSType  CFunctionType_AsCType
+#define DeeSType_Type             CType_Type
+#define DeePointerType_Type       CPointerType_Type
+#define DeeLValueType_Type        CLValueType_Type
+#define DeeArrayType_Type         CArrayType_Type
+#define DeeCFunctionType_Type     CFunctionType_Type
+#define DeePointerType_AsObject   CPointerType_AsObject
+#define DeeLValueType_AsObject    CLValueType_AsObject
+#define DeeArrayType_AsObject     CArrayType_AsObject
+#define DeeStructType_AsObject    CStructType_AsObject
+#define DeeCFunctionType_AsObject CFunctionType_AsObject
+#define CINT_SIZED                CIntN_Type
+#define CUINT_SIZED               CUIntN_Type
+#define st_base                   ct_base
+#else /* CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 typedef struct stype_object DeeSTypeObject;
 typedef struct pointer_type_object DeePointerTypeObject;
 typedef struct lvalue_type_object DeeLValueTypeObject;
@@ -474,42 +1743,6 @@ typedef struct {
 INTDEF DeeSTypeObject DeeStructured_Type;
 
 
-union pointer {
-	uintptr_t             uint;
-	intptr_t              sint;
-	void                 *ptr;
-	uint8_t              *p8;
-	uint16_t             *p16;
-	uint32_t             *p32;
-	uint64_t             *p64;
-	int8_t               *ps8;
-	int16_t              *ps16;
-	int32_t              *ps32;
-	int64_t              *ps64;
-	void                 *pvoid;
-	char                 *pchar;
-	Dee_wchar_t          *pwchar;
-	signed char          *pschar;
-	unsigned char        *puchar;
-	short                *pshort;
-	unsigned short       *pushort;
-	int                  *pint;
-	unsigned int         *puint;
-	long                 *plong;
-	unsigned long        *pulong;
-	void const           *pcvoid;
-	char const           *pcchar;
-	Dee_wchar_t const    *pcwchar;
-	signed char const    *pcschar;
-	unsigned char const  *pcuchar;
-	short const          *pcshort;
-	unsigned short const *pcushort;
-	int const            *pcint;
-	unsigned int const   *pcuint;
-	long const           *pclong;
-	unsigned long const  *pculong;
-};
-
 struct pointer_object {
 	OBJECT_HEAD
 	union pointer p_ptr;
@@ -704,80 +1937,6 @@ DeeStruct_IterAttr(DeeSTypeObject *__restrict tp_self,
                    struct Dee_attrhint const *__restrict hint);
 
 
-#ifdef __SIZEOF_BOOL__
-#define CONFIG_CTYPES_SIZEOF_BOOL __SIZEOF_BOOL__
-#else /* __SIZEOF_BOOL__ */
-#define CONFIG_CTYPES_SIZEOF_BOOL 1
-#endif /* !__SIZEOF_BOOL__ */
-
-#ifdef __SIZEOF_WCHAR_T__
-#define CONFIG_CTYPES_SIZEOF_WCHAR __SIZEOF_WCHAR_T__
-#elif defined(CONFIG_HOST_WINDOWS)
-#define CONFIG_CTYPES_SIZEOF_WCHAR 2
-#else /* ... */
-#define CONFIG_CTYPES_SIZEOF_WCHAR 4
-#endif /* !... */
-
-#define CONFIG_CTYPES_SIZEOF_CHAR16 2
-#define CONFIG_CTYPES_SIZEOF_CHAR32 4
-
-#ifdef __SIZEOF_CHAR__
-#define CONFIG_CTYPES_SIZEOF_CHAR __SIZEOF_CHAR__
-#else /* __SIZEOF_CHAR__ */
-#define CONFIG_CTYPES_SIZEOF_CHAR 1
-#endif /* !__SIZEOF_CHAR__ */
-
-#ifdef __SIZEOF_SHORT__
-#define CONFIG_CTYPES_SIZEOF_SHORT __SIZEOF_SHORT__
-#else /* __SIZEOF_SHORT__ */
-#define CONFIG_CTYPES_SIZEOF_SHORT 2
-#endif /* !__SIZEOF_SHORT__ */
-
-#ifdef __SIZEOF_INT__
-#define CONFIG_CTYPES_SIZEOF_INT __SIZEOF_INT__
-#else /* __SIZEOF_INT__ */
-#define CONFIG_CTYPES_SIZEOF_INT 4
-#endif /* !__SIZEOF_INT__ */
-
-#ifdef __SIZEOF_LONG__
-#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_LONG__
-#elif defined(CONFIG_HOST_WINDOWS)
-#define CONFIG_CTYPES_SIZEOF_LONG 4
-#else /* ... */
-#define CONFIG_CTYPES_SIZEOF_LONG __SIZEOF_POINTER__
-#endif /* !... */
-
-#ifdef __SIZEOF_LONG_LONG__
-#define CONFIG_CTYPES_SIZEOF_LLONG __SIZEOF_LONG_LONG__
-#elif defined(__SIZEOF_LLONG__)
-#define CONFIG_CTYPES_SIZEOF_LLONG __SIZEOF_LLONG__
-#else /* ... */
-#define CONFIG_CTYPES_SIZEOF_LLONG 8
-#endif /* !... */
-
-#ifdef __CHAR_UNSIGNED__
-#define CONFIG_CTYPES_CHAR_UNSIGNED
-#endif /* __CHAR_UNSIGNED__ */
-
-#ifdef __WCHAR_UNSIGNED__
-#define CONFIG_CTYPES_WCHAR_UNSIGNED
-#endif /* __WCHAR_UNSIGNED__ */
-
-#define CONFIG_CTYPES_CHAR16_UNSIGNED
-#define CONFIG_CTYPES_CHAR32_UNSIGNED
-
-#define CONFIG_CTYPES_ALIGNOF_POINTER __ALIGNOF_POINTER__
-#define CONFIG_CTYPES_ALIGNOF_LVALUE  CONFIG_CTYPES_ALIGNOF_POINTER
-#define CONFIG_CTYPES_ALIGNOF_BOOL    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_BOOL)
-#define CONFIG_CTYPES_ALIGNOF_WCHAR   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_WCHAR)
-#define CONFIG_CTYPES_ALIGNOF_CHAR16  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR16)
-#define CONFIG_CTYPES_ALIGNOF_CHAR32  __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR32)
-#define CONFIG_CTYPES_ALIGNOF_CHAR    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_CHAR)
-#define CONFIG_CTYPES_ALIGNOF_SHORT   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_SHORT)
-#define CONFIG_CTYPES_ALIGNOF_INT     __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_INT)
-#define CONFIG_CTYPES_ALIGNOF_LONG    __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LONG)
-#define CONFIG_CTYPES_ALIGNOF_LLONG   __HYBRID_ALIGNOF(CONFIG_CTYPES_SIZEOF_LLONG)
-
 /* Builtin standard C types. */
 INTDEF DeeSTypeObject DeeCVoid_Type;
 INTDEF DeeSTypeObject DeeCChar_Type;
@@ -811,36 +1970,9 @@ INTDEF DeeSTypeObject DeeCUInt128_Type;
 #define CUINT_SIZED(sizeof)    PP_PRIVATE_CAT2(PRIVATE_CUINT_SIZED_, sizeof)
 
 
-#ifdef __LONGDOUBLE
-typedef __LONGDOUBLE long_double;
-#else /* __LONGDOUBLE */
-typedef long double long_double;
-#endif /* !__LONGDOUBLE */
-#define CONFIG_CTYPES_FLOAT_TYPE   float
-#define CONFIG_CTYPES_DOUBLE_TYPE  double
-#if (defined(FFI_TYPE_LONGDOUBLE) && \
-     defined(FFI_TYPE_DOUBLE) &&     \
-     FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE)
-#define CONFIG_CTYPES_LDOUBLE_TYPE double
-#else /* FFI_TYPE_LONGDOUBLE == FFI_TYPE_DOUBLE */
-#define CONFIG_CTYPES_LDOUBLE_TYPE long_double
-#endif /* FFI_TYPE_LONGDOUBLE != FFI_TYPE_DOUBLE */
-
 INTDEF DeeSTypeObject  DeeCFloat_Type;
 INTDEF DeeSTypeObject  DeeCDouble_Type;
 INTDEF DeeSTypeObject  DeeCLDouble_Type;
-
-/* Alignment requirements of the host's C floating point types. */
-#ifndef CONFIG_ALIGNOF_FLOAT
-#define CONFIG_ALIGNOF_FLOAT   COMPILER_ALIGNOF(float)
-#endif /* !CONFIG_ALIGNOF_FLOAT */
-#ifndef CONFIG_ALIGNOF_DOUBLE
-#define CONFIG_ALIGNOF_DOUBLE  COMPILER_ALIGNOF(double)
-#endif /* !CONFIG_ALIGNOF_DOUBLE */
-#ifndef CONFIG_ALIGNOF_LDOUBLE
-#define CONFIG_ALIGNOF_LDOUBLE COMPILER_ALIGNOF(long_double)
-#endif /* !CONFIG_ALIGNOF_LDOUBLE */
-
 
 
 
@@ -944,24 +2076,6 @@ INTDEF DeeSTypeObject   DeeCULLong_Type;
 INTDEF DeeSTypeObject DeeCLong_Type;
 INTDEF DeeSTypeObject DeeCULong_Type;
 #endif /* ... */
-
-
-#if CONFIG_CTYPES_SIZEOF_INT == 1
-#define CTYPES_INT  int8_t
-#define CTYPES_UINT uint8_t
-#elif CONFIG_CTYPES_SIZEOF_INT == 2
-#define CTYPES_INT  int16_t
-#define CTYPES_UINT uint16_t
-#elif CONFIG_CTYPES_SIZEOF_INT == 4
-#define CTYPES_INT  int32_t
-#define CTYPES_UINT uint32_t
-#elif CONFIG_CTYPES_SIZEOF_INT == 8
-#define CTYPES_INT  int64_t
-#define CTYPES_UINT uint64_t
-#else /* CONFIG_CTYPES_SIZEOF_INT == ... */
-#define CTYPES_INT  int
-#define CTYPES_UINT unsigned int
-#endif /* CONFIG_CTYPES_SIZEOF_INT != ... */
 
 
 /* Array types, and foreign-function types. */
@@ -1135,13 +2249,27 @@ DeeStructType_FromSequence(DeeObject *name,
 #define STRUCT_TYPE_FPACKED  0x0001 /* Create a packed structure. */
 #define STRUCT_TYPE_FUNION   0x0002 /* Create a union. */
 
-
-
-
-
-
-
-
+/* Helper functions for constructing new integer objects. */
+#if CONFIG_CTYPES_SIZEOF_INT == 1
+#define int_news8 int_newint
+#elif CONFIG_CTYPES_SIZEOF_INT == 2
+#define int_news16 int_newint
+#elif CONFIG_CTYPES_SIZEOF_INT == 4
+#define int_news32 int_newint
+#elif CONFIG_CTYPES_SIZEOF_INT == 8
+#define int_news64 int_newint
+#endif /* CONFIG_CTYPES_SIZEOF_INT == ... */
+INTDEF WUNUSED DREF DeeObject *DCALL int_news8(int8_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news16(int16_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news32(int32_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news64(int64_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news128(Dee_int128_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu8(uint8_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu16(uint16_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu32(uint32_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu64(uint64_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu128(Dee_uint128_t val);
+#endif /* !CONFIG_EXPERIMENTAL_REWORKED_CTYPES */
 
 
 /* A special type to interface with native system libraries:
@@ -1172,29 +2300,6 @@ DeeStructType_FromSequence(DeeObject *name,
  * NOTE: This type is not derived from `deemon.Sequence', but simply `deemon.Object'
  */
 INTDEF DeeTypeObject DeeShLib_Type;
-
-
-
-/* Helper functions for constructing new integer objects. */
-#if CONFIG_CTYPES_SIZEOF_INT == 1
-#define int_news8 int_newint
-#elif CONFIG_CTYPES_SIZEOF_INT == 2
-#define int_news16 int_newint
-#elif CONFIG_CTYPES_SIZEOF_INT == 4
-#define int_news32 int_newint
-#elif CONFIG_CTYPES_SIZEOF_INT == 8
-#define int_news64 int_newint
-#endif /* CONFIG_CTYPES_SIZEOF_INT == ... */
-INTDEF WUNUSED DREF DeeObject *DCALL int_news8(int8_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_news16(int16_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_news32(int32_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_news64(int64_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_news128(Dee_int128_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_newu8(uint8_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_newu16(uint16_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_newu32(uint32_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_newu64(uint64_t val);
-INTDEF WUNUSED DREF DeeObject *DCALL int_newu128(Dee_uint128_t val);
 
 DECL_END
 
