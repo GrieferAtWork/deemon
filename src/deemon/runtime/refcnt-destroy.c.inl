@@ -43,6 +43,14 @@
 //#define DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC1_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC0_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev0
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev0
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev0
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev0
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev0
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev1
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev1
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev1
+//#define DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev1
 //#define DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_DtorN_GC1_Rev0
 //#define DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev1
@@ -74,10 +82,18 @@
      defined(DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC1_Rev0) + \
      defined(DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC0_Rev0) + \
      defined(DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev0) + \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev0) +       \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev0) +       \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev0) +       \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev0) +       \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev1) +       \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev1) +       \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev1) +       \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev1) +       \
      defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev0) +                 \
      defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC1_Rev0) +                 \
      defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev1) +                 \
-     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC1_Rev1) + \
+     defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC1_Rev1) +                 \
      defined(DEFINE_DeeGCObject_FinishDestroyAfterUntrack)) != 1
 #error "Must #define exactly 1 of these macros"
 #endif /* ... */
@@ -298,6 +314,62 @@ DECL_BEGIN
 #define LOCAL_HAS_HeapType             1
 #define LOCAL_HAS_GC                   1
 #define LOCAL_HAS_Rev                  0
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev0)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev0 &DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev0
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev0
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             0
+#define LOCAL_HAS_GC                   0
+#define LOCAL_HAS_Rev                  0
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev0)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev0 &DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev0
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev0
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             1
+#define LOCAL_HAS_GC                   0
+#define LOCAL_HAS_Rev                  0
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev0)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev0 &DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev0
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev0
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             0
+#define LOCAL_HAS_GC                   1
+#define LOCAL_HAS_Rev                  0
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev0)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev0 &DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev0
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev0
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             1
+#define LOCAL_HAS_GC                   1
+#define LOCAL_HAS_Rev                  0
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev1)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev1 &DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev1
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev1
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             0
+#define LOCAL_HAS_GC                   0
+#define LOCAL_HAS_Rev                  1
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev1)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev1 &DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev1
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev1
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             1
+#define LOCAL_HAS_GC                   0
+#define LOCAL_HAS_Rev                  1
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev1)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev1 &DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev1
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev1
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             0
+#define LOCAL_HAS_GC                   1
+#define LOCAL_HAS_Rev                  1
+#elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev1)
+#define PTR_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev1 &DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev1
+#define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev1
+#define LOCAL_HAS_Dtor                 3
+#define LOCAL_HAS_HeapType             1
+#define LOCAL_HAS_GC                   1
+#define LOCAL_HAS_Rev                  1
 #elif defined(DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev0)
 #define PTR_DeeObject_DefaultDestroy_DtorN_GC0_Rev0 &DeeObject_DefaultDestroy_DtorN_GC0_Rev0
 #define LOCAL_DeeObject_DefaultDestroy DeeObject_DefaultDestroy_DtorN_GC0_Rev0
@@ -338,7 +410,7 @@ DECL_BEGIN
 #define LOCAL_HAS_Dtor 3
 #endif /* !LOCAL_HAS_Dtor */
 #ifndef LOCAL_HAS_HeapType
-#define LOCAL_HAS_HeapType 1
+#define LOCAL_HAS_HeapType 2
 #endif /* !LOCAL_HAS_HeapType */
 #ifndef LOCAL_HAS_Rev
 #if LOCAL_HAS_Dtor == 0
@@ -366,7 +438,7 @@ DECL_BEGIN
 #else /* ... */
 
 #undef LOCAL_HAVE_orig_type
-#if (LOCAL_HAS_HeapType || LOCAL_HAS_Free || (LOCAL_HAS_Dtor != 0) || \
+#if (LOCAL_HAS_HeapType || (defined(LOCAL_HAS_Free) && LOCAL_HAS_Free) || (LOCAL_HAS_Dtor != 0) || \
      !defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE))
 #define LOCAL_HAVE_orig_type
 #endif /* ... */
@@ -538,15 +610,21 @@ LOCAL_DeeObject_DefaultDestroy(DeeObject *__restrict self) {
 	free_reftracker(self->ob_trace);
 #endif /* CONFIG_TRACE_REFCHANGES */
 
-#if LOCAL_HAS_HeapType
+#if LOCAL_HAS_HeapType == 1
 #define LOCAL_decref_orig_type() Dee_Decref_unlikely(orig_type)
-#else /* LOCAL_HAS_HeapType */
+#elif LOCAL_HAS_HeapType == 2 && defined(CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE)
+#define LOCAL_decref_orig_type()       \
+	if (DeeType_IsHeapType(orig_type)) \
+		Dee_Decref_unlikely(orig_type)
+#elif LOCAL_HAS_HeapType == 0
 #ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
 #define LOCAL_decref_orig_type() /* nothing (ob_type didn't hold a reference) */
 #else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 #define LOCAL_decref_orig_type() Dee_DecrefNokill(orig_type)
 #endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
-#endif /* !LOCAL_HAS_HeapType */
+#else /* LOCAL_HAS_HeapType == ... */
+#error "Invalid 'LOCAL_HAS_HeapType'"
+#endif /* LOCAL_HAS_HeapType != ... */
 
 	/* Invoke `tp_free' of `orig_type', and decref `orig_type' */
 #ifndef LOCAL_HAS_Free
@@ -622,6 +700,14 @@ DECL_END
 #undef DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType0_GC1_Rev0
 #undef DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC0_Rev0
 #undef DEFINE_DeeObject_DefaultDestroy_Dtor2_Free1_HeapType1_GC1_Rev0
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev0
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev0
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev0
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev0
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC0_Rev1
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC0_Rev1
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType0_GC1_Rev1
+#undef DEFINE_DeeObject_DefaultDestroy_DtorN_HeapType1_GC1_Rev1
 #undef DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev0
 #undef DEFINE_DeeObject_DefaultDestroy_DtorN_GC1_Rev0
 #undef DEFINE_DeeObject_DefaultDestroy_DtorN_GC0_Rev1
