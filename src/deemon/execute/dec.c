@@ -1401,9 +1401,9 @@ DeeDecWriter_PackEhdr(DeeDecWriter *__restrict self,
 		ASSERT(self->dw_slabs > sizeof(struct Dee_heapchunk));
 		ASSERT(IS_ALIGNED(self->dw_slabs - sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
 		ASSERT(IS_ALIGNED(self->dw_slabb + sizeof(struct Dee_heapchunk), Dee_SLAB_PAGESIZE));
-		if (self->dw_used < self->dw_slabb) {
+		if (self->dw_used <= self->dw_slabb) {
 			struct Dee_heapchunk *slab_chunk;
-			/* Extend the last heap-chunk t */
+			/* Extend the last heap-chunk */
 			size_t avail_before_slab = (self->dw_slabb - self->dw_used);
 			/* Extend the previous heap-chunk to go up to the slab page. */
 			Dee_seraddr_t addrof_prev_heapchunk;

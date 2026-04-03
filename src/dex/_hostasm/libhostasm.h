@@ -2822,6 +2822,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref_noconst(struct fungen *__restrict 
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref_noalias(struct fungen *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref_noconst_noalias(struct fungen *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vref2(struct fungen *__restrict self, vstackaddr_t dont_steal_from_vtop_n);
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnoref(struct fungen *__restrict self);
 
 /* Ensure that `mobj' is holding a reference. If said location has aliases,
  * and isn't a constant, then also ensure that at least one of those aliases
@@ -3994,6 +3995,9 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_Shl
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_Float(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_TFloat(DeeTypeObject *tp_self, DeeObject *self);
 #endif /* CONFIG_HAVE_FPU */
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_Init(DeeObject *__restrict self, DeeTypeObject *__restrict typ);
+#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

@@ -3397,6 +3397,69 @@ err:
 	return -1;
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+fg_vnoref(struct fungen *__restrict self) {
+	struct memval *mval;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	mval = fg_vtop(self);
+	if (memval_isnullable(mval) && !memobj_isref(memval_nullable_getobj(mval)))
+		return 0; /* Special case: NULLABLE+NOREF is allowed (and we don't make it direct) */
+	DO(fg_vdirect1(self));
+	mval = fg_vtop(self);
+	ASSERT(memval_isdirect(mval));
+	ASSERTF(!memval_direct_isoneref(mval), "But then the object would get destroyed...");
+	if (memval_direct_isref(mval)) {
+		struct memstate *state;
+		struct memval *alias_mval;
+		struct memobj *alias_mobj;
+		bool did_find_first_alias;
+		DO(fg_state_unshare(self));
+		state = self->fg_state;
+		mval  = memstate_vtop(state);
+		ASSERT(memval_isdirect(mval));
+		ASSERT(memval_direct_isref(mval));
+
+		/* If at least 2 other memory locations (or 1 if it's a constant) are already
+		 * holding a reference to the same value, then we can steal a reference from
+		 * one of them!
+		 *
+		 * The reason for that "2" is because as long as there are 2 references, an
+		 * object is guarantied to have `DeeObject_IsShared()', meaning that whatever
+		 * the caller might need the reference for, the object won't end up getting
+		 * destroyed if the reference ends up being dropped! */
+		did_find_first_alias = false;
+		memstate_foreach(alias_mval, state) {
+			if unlikely(alias_mval->mv_flags & MEMVAL_F_NOREF) {
+				ASSERT(!memval_hasobj0(alias_mval));
+				continue;
+			}
+			memval_foreach_obj(alias_mobj, alias_mval) {
+				if (!memobj_isref(alias_mobj) &&
+				    memobj_sameloc(alias_mobj, memval_direct_getobj(mval))) {
+					if (did_find_first_alias) {
+						/* Gift the reference to `alias_mobj' */
+						memobj_setref(alias_mobj);
+						memval_direct_clearref(mval);
+						return 0;
+					}
+					did_find_first_alias = true;
+				}
+			}
+			memval_foreach_obj_end;
+		}
+		memstate_foreach_end;
+		DO(fg_gdecref_loc(self, memval_direct_getloc(mval), 1));
+		ASSERT(mval == memstate_vtop(state));
+		ASSERT(memval_direct_isref(mval));
+		memval_direct_setref(mval);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
 
 /* Ensure that `mobj' is holding a reference. If said location has aliases,
  * and isn't a constant, then also ensure that at least one of those aliases

@@ -1715,7 +1715,7 @@ struct fungen_exceptinject_fini_and_freeinstance {
 #define fg_xinject_pop_fini_and_freeinstance(self, ij) \
 	fg_xinject_pop(self, &(ij)->fei_fafi_base)
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct fungen_exceptinject_fini_and_freeinstance' */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct fungen_exceptinject_fini_and_freeinstance' */
 fungen_exceptinject_fini_and_freeinstance_f(struct fungen *__restrict self,
                                             struct fungen_exceptinject *__restrict inject) {
 	struct memloc typeloc;
@@ -1725,6 +1725,10 @@ fungen_exceptinject_fini_and_freeinstance_f(struct fungen *__restrict self,
 	DO(fg_vcallapi(self, &DeeObject_FreeTracker, VCALL_CC_RAWINTPTR, 1)); /* instance */
 #endif /* CONFIG_TRACE_REFCHANGES */
 	DO(vcall_DeeType_FreeInstance(self, me->fei_fafi_type)); /* N/A */
+#ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
+	if (!DeeType_IsHeapType(me->fei_fafi_type))
+		return 0;
+#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
 	memloc_init_const(&typeloc, me->fei_fafi_type);
 	return fg_gdecref_loc(self, &typeloc, 1);
 err:
@@ -7102,14 +7106,30 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vcall_DeeObject_Init(struct fungen *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE
-	/* TODO: Proper support! */
-#endif /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+	DeeTypeObject *typ;
+	if (!memval_isconst(fg_vtop(self))) {
+		/* Must do initialization at runtime... */
+		DO(fg_vdirect1(self)); /* instance, direct:type */
+		DO(fg_vcallapi(self, &libhostasm_rt_DeeObject_Init, VCALL_CC_RAWINTPTR_NX, 2)); /* instance */
+		fg_vtop_direct_setref(self);
+		return 0;
+	}
+
+	/* Setup expected DREF-behavior for write to "ob_type" */
+	typ = (DeeTypeObject *)memval_const_getobj(fg_vtop(self));
+	if (DeeType_IsHeapType(typ)) {
+		DO(fg_vref2(self, 2)); /* instance, ref:type */
+	} else {
+		DO(fg_vnoref(self));   /* instance, noref:type */
+	}
+#else /* CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+	DO(fg_vref2(self, 2));                               /* instance, ref:type */
+#endif /* !CONFIG_EXPERIMENTAL_NO_TP_FHEAP_IS_NOREF_OB_TYPE */
+	DO(fg_vpopind(self, offsetof(DeeObject, ob_type)));  /* instance */
 #ifdef CONFIG_TRACE_REFCHANGES
 	DO(fg_vpush_NULL(self));                             /* instance, type, NULL */
 	DO(fg_vpopind(self, offsetof(DeeObject, ob_trace))); /* instance, type */
 #endif /* CONFIG_TRACE_REFCHANGES */
-	DO(fg_vref2(self, 2));                               /* instance, ref:type */
-	DO(fg_vpopind(self, offsetof(DeeObject, ob_type)));  /* instance */
 	DO(fg_vpush_immSIZ(self, 1));                        /* instance, 1 */
 	return fg_vpopind(self, offsetof(DeeObject, ob_refcnt)); /* instance */
 err:
