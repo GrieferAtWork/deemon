@@ -60,6 +60,7 @@
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
+#include "runtime/static-refcnt-checks.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* offsetof, ptrdiff_t, size_t */
@@ -701,6 +702,14 @@ PRIVATE WUNUSED int DCALL cmd_C(char *arg) {
 }
 
 
+#ifdef HAVE_DEBUG_STATIC_REFS
+PRIVATE int enable_debug_static_refs = -1;
+PRIVATE WUNUSED int DCALL cmd_debug_static_refs(char *UNUSED(arg)) {
+	enable_debug_static_refs = 1;
+	return 0;
+}
+#endif /* HAVE_DEBUG_STATIC_REFS */
+
 
 PRIVATE char const doc_cmdc[]    = "Only build (parse + compile) the given source file. Don't run it afterwards";
 PRIVATE char const doc_cmdo[]    = "<name>\tRedirect output to a given file (defaults to STDOUT)";
@@ -831,7 +840,10 @@ PRIVATE struct cmd_option const cmdline_options[] = {
 	/* Linker-specific options that are promoted into the root commandline namespace. */
 	{ CMD_FARG | CMD_FARGIMM | CMD_FARGEQ, "", "name", { (void *)&cmd_name }, doc_cmdname },
 	{ CMD_FARG | CMD_FARGIMM, "L", NULL, { (void *)&cmd_L }, doc_cmdL },
-
+#ifdef HAVE_DEBUG_STATIC_REFS
+	{ CMD_FNORMAL, "", "debug-static-refs", { (void *)&cmd_debug_static_refs },
+	  "dump info on unexpected static reference changes at exit" },
+#endif /* HAVE_DEBUG_STATIC_REFS */
 	CMD_OPTION_SENTINEL
 };
 
@@ -1529,6 +1541,17 @@ done:
 #endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 #endif /* !CONFIG_EXPERIMENTAL_CUSTOM_HEAP */
 	}
+
+	/* Dump static refcnt changes if that feature is enabled. */
+#ifdef HAVE_DEBUG_STATIC_REFS
+#ifdef CONFIG_HOST_WINDOWS
+	if (enable_debug_static_refs < 0)
+		enable_debug_static_refs = IsDebuggerPresent() ? 1 : 0;
+#endif /* !CONFIG_HOST_WINDOWS */
+	if (enable_debug_static_refs > 0 && _Dee_dprint_enabled)
+		DeeDbg_DumpStaticRefChanges();
+#endif /* HAVE_DEBUG_STATIC_REFS */
+
 	return result;
 err_no_input:
 	DeeError_Throwf(&DeeError_RuntimeError,
@@ -2857,7 +2880,6 @@ err:
 	DeeCompiler_LockEndWrite();
 	return -1;
 }
-
 
 DECL_END
 

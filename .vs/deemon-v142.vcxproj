@@ -536,6 +536,8 @@
 		<ClInclude Include="..\src\deemon\runtime\slab-sized-free.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab-sized.c.inl" />
 		<ClInclude Include="..\src\deemon\runtime\slab.h" />
+		<ClInclude Include="..\src\deemon\runtime\static-refcnt-checks.c.inl" />
+		<ClInclude Include="..\src\deemon\runtime\static-refcnt-checks.h" />
 		<ClInclude Include="..\src\deemon\runtime\strings.h" />
 		<ClInclude Include="..\src\deemon\system\futex-controller-new.c.inl" />
 		<ClInclude Include="..\src\deemon\system\futex-wait.c.inl" />

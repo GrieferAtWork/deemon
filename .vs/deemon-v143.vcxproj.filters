@@ -1584,6 +1584,12 @@
 		<ClInclude Include="..\src\deemon\runtime\slab.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\static-refcnt-checks.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\static-refcnt-checks.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\strings.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
