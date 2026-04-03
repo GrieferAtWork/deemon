@@ -65,6 +65,10 @@ DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrCannotWeakReference)(DeeObjec
 #define DeeRT_ErrCannotWeakReference(self) Dee_ASSUMED_VALUE((DeeRT_ErrCannotWeakReference)(Dee_AsObject(self)), -1)
 
 
+/* Throws a `DeeError_EmptyWeakReference' indicating that a weak reference is empty */
+DFUNDEF ATTR_COLD NONNULL((1)) int (DCALL DeeRT_ErrEmptyWeakReference)(void);
+
+
 /* Throws a `DeeError_IntegerOverflow' indicating that some an integer
  * object or native (C) value cannot be used/processed because its value
  * exceeds the maximum supported value bounds within some context-of-use.

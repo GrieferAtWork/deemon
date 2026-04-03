@@ -67,6 +67,7 @@ final global		UnicodeError = ValueError.UnicodeError;
 final global			UnicodeDecodeError = UnicodeError.UnicodeDecodeError;
 final global			UnicodeEncodeError = UnicodeError.UnicodeEncodeError;
 final global		ReferenceError = ValueError.ReferenceError;
+final global			EmptyWeakReference = ReferenceError.EmptyWeakReference;
 final global		BufferError = ValueError.BufferError;
 final global	SystemError = deemon.Error.SystemError;
 final global		UnsupportedAPI = SystemError.UnsupportedAPI;

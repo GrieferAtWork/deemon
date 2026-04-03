@@ -34,7 +34,7 @@
 #include "types.h" /* DREF, DeeObject, DeeTypeObject, Dee_[u]int128_t, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t */
 
 #include <stdbool.h> /* bool */
-#include <stddef.h>  /* size_t */
+#include <stddef.h>  /* NULL, size_t */
 #include <stdint.h>  /* int32_t, int64_t, uint32_t, uint64_t */
 
 #ifndef __INTELLISENSE__
@@ -117,6 +117,9 @@ struct Dee_variant {
 #endif /* !CONFIG_NO_FPU */
 	} var_data; /* [lock(var_type == Dee_VARIANT_LOCKED)] Variant data */
 };
+
+#define Dee_VARIANT_INIT_UNBOUND     { Dee_VARIANT_UNBOUND, { NULL } }
+#define Dee_VARIANT_INIT_OBJECT(obj) { Dee_VARIANT_OBJECT, { obj } }
 
 #if __ALIGNOF_INT32__ <= __ALIGNOF_POINTER__
 #define _Dee_variant_set_int32(self, v)  (void)((self)->var_data.d_int32 = (v))

@@ -26,8 +26,8 @@
 #include <deemon/arg.h>                /* DeeArg_Unpack* */
 #include <deemon/bool.h>               /* return_bool */
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
+#include <deemon/error-rt.h>           /* DeeRT_ErrCannotWeakReference, DeeRT_ErrEmptyWeakReference */
 #include <deemon/error.h>              /* DeeError_Print, ERROR_PRINT_DOHANDLE */
-#include <deemon/error-rt.h>              /* DeeError_Print, ERROR_PRINT_DOHANDLE */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf */
 #include <deemon/none.h>               /* DeeNone_Check, DeeNone_NewRef */
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_BOUND_FROMBOOL, Dee_COMPARE_*, Dee_Decref, Dee_Decref_unlikely, Dee_Incref, Dee_IncrefIfNotZero, Dee_WEAKREF_SUPPORT_ADDR, Dee_XDecref, Dee_XIncref, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, Dee_weakref_support_fini, Dee_weakref_support_init, OBJECT_HEAD_INIT */
@@ -272,7 +272,7 @@ ob_weakref_get(WeakRef *__restrict self) {
 	DREF DeeObject *result;
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result)
-		err_cannot_lock_weakref();
+		DeeRT_ErrEmptyWeakReference();
 	return result;
 }
 
@@ -301,7 +301,7 @@ ob_weakref_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	result = Dee_weakref_lock(&self->wr_ref);
 	if (!result) {
 		if ((result = alt) == NULL) {
-			err_cannot_lock_weakref();
+			DeeRT_ErrEmptyWeakReference();
 		} else {
 			Dee_Incref(result);
 		}

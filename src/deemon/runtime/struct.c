@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 
 #include <deemon/alloc.h>           /* Dee_Free, Dee_TryReallocc, Dee_UntrackAlloc */
+#include <deemon/error-rt.h>        /* DeeRT_ErrCannotWeakReference */
 #include <deemon/error.h>           /* DeeError_NOTIMPLEMENTED */
 #include <deemon/float.h>           /* DeeFloatObject */
 #include <deemon/format.h>          /* DeeFormat_*, PRFd128, PRFu128 */

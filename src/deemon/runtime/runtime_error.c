@@ -137,11 +137,6 @@ err:
 	return -1;
 }
 
-INTERN ATTR_COLD int (DCALL err_cannot_lock_weakref)(void) {
-	return DeeError_Throwf(&DeeError_ReferenceError,
-	                       "Cannot lock weak reference");
-}
-
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_bytes_not_writable)(DeeObject *__restrict UNUSED(bytes_ob)) {
 	return DeeError_Throwf(&DeeError_BufferError,

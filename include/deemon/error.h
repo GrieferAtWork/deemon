@@ -151,7 +151,8 @@ DDATDEF DeeTypeObject /*        */ DeeError_UnpackError;
 DDATDEF DeeTypeObject /*    */ DeeError_UnicodeError;
 DDATDEF DeeTypeObject /*        */ DeeError_UnicodeDecodeError;
 DDATDEF DeeTypeObject /*        */ DeeError_UnicodeEncodeError;
-DDATDEF DeeTypeObject /*    */ DeeError_ReferenceError; /* TODO: Never has a bound "value" -- maybe move under "RuntimeError"? */
+DDATDEF DeeTypeObject /*    */ DeeError_ReferenceError;
+DDATDEF DeeTypeObject /*        */ DeeError_EmptyWeakReference;
 DDATDEF DeeTypeObject /*    */ DeeError_BufferError;
 DDATDEF DeeTypeObject /**/ DeeError_SystemError;
 DDATDEF DeeTypeObject /*    */ DeeError_UnsupportedAPI;

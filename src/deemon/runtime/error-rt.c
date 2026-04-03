@@ -30,7 +30,7 @@
 #include <deemon/error.h>              /* DeeErrorObject, DeeError_*, Dee_ERROR_HANDLED_RESTORE, Dee_ERROR_OBJECT_HEAD */
 #include <deemon/error_types.h>        /* DeeNoMemoryErrorObject */
 #include <deemon/file.h>               /* DeeFile_GetStd, DeeFile_WriteAll, Dee_STDERR */
-#include <deemon/format.h>             /* DeeFormat_Printf, PRFuSIZ */
+#include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/int.h>                /* DeeInt_NewSize, DeeInt_One */
 #include <deemon/kwds.h>               /* DeeKwArgs* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint */
@@ -47,7 +47,7 @@
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_XVisit, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONE, TF_TPVISIT, TP_F*, TYPE_*, type_* */
 #include <deemon/types.h>              /* DREF, DeeObject, DeeObject_InstanceOf, DeeTypeObject, Dee_AsObject, Dee_TYPE, Dee_[u]int128_t, Dee_formatprinter_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, _Dee_HashSelectC */
 #include <deemon/util/atomic.h>        /* atomic_read */
-#include <deemon/variant.h>            /* Dee_variant, Dee_variant_* */
+#include <deemon/variant.h>            /* Dee_VARIANT_INIT_UNBOUND, Dee_variant, Dee_variant_* */
 
 #include <hybrid/int128.h>    /* __hybrid_int128_*, __hybrid_uint128_* */
 #include <hybrid/limitcore.h> /* __UINT32_MAX__, __UINT64_MAX__ */
@@ -2090,7 +2090,7 @@ PRIVATE struct type_member tpconst UnicodeError_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE struct type_member tpconst unicodeerror_class_members[] = {
+PRIVATE struct type_member tpconst UnicodeError_class_members[] = {
 	TYPE_MEMBER_CONST("UnicodeDecodeError", &DeeError_UnicodeDecodeError),
 	TYPE_MEMBER_CONST("UnicodeEncodeError", &DeeError_UnicodeEncodeError),
 	TYPE_MEMBER_END
@@ -2099,7 +2099,7 @@ PRIVATE struct type_member tpconst unicodeerror_class_members[] = {
 PUBLIC DeeTypeObject DeeError_UnicodeError =
 INIT_CUSTOM_ERROR("UnicodeError", "(" UnicodeError_init_params ")",
                   TP_FNORMAL, &DeeError_ValueError, UnicodeError, NULL, NULL,
-                  NULL, NULL, UnicodeError_members, unicodeerror_class_members);
+                  NULL, NULL, UnicodeError_members, UnicodeError_class_members);
 
 
 /************************************************************************/
@@ -2123,10 +2123,45 @@ INIT_LIKE_BASECLASS("UnicodeEncodeError", "(" UnicodeError_init_params ")",
 /************************************************************************/
 /* Error.ValueError.ReferenceError                                      */
 /************************************************************************/
+PRIVATE struct type_member tpconst ReferenceError_class_members[] = {
+	TYPE_MEMBER_CONST("EmptyWeakReference", &DeeError_EmptyWeakReference),
+	TYPE_MEMBER_END
+};
+
 PUBLIC DeeTypeObject DeeError_ReferenceError =
 INIT_LIKE_BASECLASS("ReferenceError", "(" ValueError_init_params ")",
                     TP_FNORMAL, &DeeError_ValueError, ValueError, NULL, NULL,
-                    NULL, NULL, NULL);
+                    NULL, NULL, ReferenceError_class_members);
+
+
+/************************************************************************/
+/* Error.ValueError.ReferenceError.EmptyWeakReference                   */
+/************************************************************************/
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+EmptyWeakReference_print(ValueError *__restrict self,
+                         Dee_formatprinter_t printer, void *arg) {
+	if (self->e_msg)
+		return DeeObject_Print(self->e_msg, printer, arg);
+	return DeeFormat_PRINT(printer, arg, "Empty weak reference");
+}
+
+PUBLIC DeeTypeObject DeeError_EmptyWeakReference =
+INIT_LIKE_BASECLASS("EmptyWeakReference", "(" ValueError_init_params ")",
+                    TP_FNORMAL, &DeeError_ReferenceError, ValueError,
+                    NULL, &EmptyWeakReference_print, NULL, NULL, NULL);
+
+PRIVATE ValueError EmptyWeakReference_instance = {
+	OBJECT_HEAD_INIT(&DeeError_EmptyWeakReference),
+	/* .e_msg    = */ NULL,
+	/* .e_cause  = */ NULL,
+	/* .ve_value = */ Dee_VARIANT_INIT_UNBOUND
+};
+
+/* Throws a `DeeError_EmptyWeakReference' indicating that a weak reference is empty */
+PUBLIC ATTR_COLD NONNULL((1)) int
+(DCALL DeeRT_ErrEmptyWeakReference)(void) {
+	return DeeError_Throw(&EmptyWeakReference_instance);
+}
 
 
 /************************************************************************/
