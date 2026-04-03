@@ -54,7 +54,7 @@ Every `.dec` file is made up of 3 segments:
 | `0A-0A`      | `1`  | No     | `er_sizeof_pointer`   | `4`                  | Yes       | The size of a pointer (in bytes). This field also specifies the word-size of locations affected by relocation (s.a. **RELOC**) and the size of fields and links in the **HEAP** |
 | `0B-0B`      | `1`  | No     | `er_endian`           | `1`                  | Yes       | Type code describing byte-order of multi-word integer fields throughout the entire file (one of `Dee_DEC_ENDIAN_*`) |
 | `0C-0F`      | `4`  | No     | `er_offsetof_eof`     | `0x000394FB`         | Yes       | Offset to end of **RELOC** segment, and expected to match the total size of the `.dec` file, as would be reported by `struct stat::st_size` |
-| `10-1F`      | `16` | -      | `er_deemon_build_id`  | `0x0011223344556677` `0x8899AABBCCDDEEFF` | Yes | The value of `DeeModule_GetBuildId(&DeeModule_Deemon)`. This field serves the purpose of verifying that the `.dec` file is compatible with the current deemon installation |
+| `10-1F`      | `16` | -      | `er_deemon_build_id`  | `0x0011223344556677` `0x8899AABBCCDDEEFF` | Yes | The value of `DeeModule_GetBuildId(&DeeModule_Deemon)`. This field serves the purpose of verifying that the `.dec` file is compatible with the current deemon installation. If wrong, the `.dec` file is outdated and can't be used. |
 | `20-27`      | `8`  | No     | `er_build_timestamp`  | `0x00064729E08F8FC0` | -         | The # of microseconds since `01-01-1970` when this dec file was generated. When the associated `.dee` file (or any of the files listed by `er_offsetof_files`) is newer than this, then the `.dec` file must be ignored. |
 | `28-2B`      | `4`  | No     | `e_offsetof_gchead`   | `0x00000078`         | -         | Offset from start of file to the first `struct Dee_gc_head::gc_self`, or `0` if there are no GC objects.<br/>But note that since every `.dec` file must start with an embedded `DeeModuleObject` (which is a GC-object), this field should never be `0`.<br/>Assuming a regular `.dec` file (as produced by the deemon compiler), this field can also be treated as the offset to the `struct Dee_gc_head::gc_self` of the dec file's embedded module object. |
 | `2C-2F`      | `4`  | No     | `e_offsetof_gctail`   | `0x000317E0`         | -         | Offset from start of file to the last `struct Dee_gc_head::gc_self`, or `0` if there are no GC objects.<br/>Together with `e_offsetof_gchead`, these fields are used with `DeeGC_TrackAll` to start tracking all GC objects within a `.dec` file at the same time as the `.dec` file is made visible to the global module cache.<br/>Pointers other than `e_offsetof_gchead->gc_pself` and `e_offsetof_gctail->gc_next` between every embedded GC object are expected to be initialized using self-relocations (s.a. `er_offsetof_srel` and segment **RELOC**) |
@@ -92,9 +92,9 @@ The header of the **HEAP** segment, including information about the segment's si
 
 | Word | Signed | Field                 | Example              | Description |
 | ---- | ------ | --------------------- | -------------------- | ----------- |
-| `0`  | No     | `hr_size`             | `0x00001600`         | Total size of the **HEA** segment (in bytes). This is the offset from the start of the heap segment, to the end the *heap tail* (iow: one past the last byte apart of the *heap tail*) |
+| `0`  | No     | `hr_size`             | `0x00001600`         | Total size of the **HEAP** segment (in bytes). This is the offset from the start of the heap segment, to the end the *heap tail* (iow: one past the last byte apart of the *heap tail*) |
 | `1`  | -      | `hr_destroy`          | `<undefined>`        | Uninitialized memory within the `.dec` file. When loaded into memory, this field is set to `&DeeDec_heapregion_destroy` |
-| `2`  | -      | `hr_first`            | `{0x000001C0, 0x000000C4}` | First heap chunk (see **HEAP** section on *`struct Dee_heapchunk` (Chunk)*).<br/>In regular `.dec` files, this first chunk's payload area is assumed start with the `struct Dee_gc_head` of the primary `DeeModuleObject` being described. |
+| `2`  | -      | `hr_first`            | `{0x000001C0, 0x000000C4}` | First heap chunk (see **HEAP** section on *`struct Dee_heapchunk` (Chunk)*).<br/>In regular `.dec` files, this first chunk's payload area is assumed to start with the `struct Dee_gc_head` of the primary `DeeModuleObject` being described. |
 | ...  | ...    | ...                   | N/A                  | ... |
 | `hr_size / Dec_Ehdr::er_sizeof_pointer - 2` | - | `hr_tail` | `{0x000000C0, 0x00000000}` | Heap tail, which begins 2 words (the size of `struct Dee_heaptail`) shy of the end of the **HEAP** segment (see **HEAP** section on *`struct Dee_heaptail` (Tail)*) |
 
@@ -111,8 +111,8 @@ The header of the **HEAP** segment, including information about the segment's si
 | ---- | ------ | --------------------- | -------------------- | ----------- |
 | `0`  | No     | `hc_prevsize`         | `0x000001C0`         | Size of preceding chunk (including that chunk's header), in bytes. If this is the first chunk, set to `0` instead.<br/>s.a. `Dee_HEAPCHUNK_PREV()` |
 | `1`  | No     | `hc_head`             | `0x000000C4`         | Size of this chunk (including this header), or'd with the number `4`.<br/>Because deemon requires a host pointer size of at least 4 bytes, and heap chunks are always aligned by 2 words, that means that the minimum size-alignment of heap chunks is `8`. As such, this magic `4` flag can never conflict with chunk sizes. It is however required by `Dee_Free()` in order to correctly identify an object chunk as belonging to a custom `struct Dee_heapregion`.<br/>s.a. `Dee_HEAPCHUNK_HEAD()` |
-| ...  | ...    | ...                   | ....                 | Chunk payload |
-| `hc_head-4` | ... | ...               | ....                 | Next `struct Dee_heapchunk` (or `struct Dee_heaptail`) |
+| ...  | ...    | ...                   | ....                 | Chunk payload (this is where objects and other heap structures live) |
+| `hc_head/er_sizeof_pointer` | ... | ...               | ....                 | Next `struct Dee_heapchunk` (or `struct Dee_heaptail`) |
 
 
 
@@ -167,11 +167,11 @@ The header of the **HEAP** segment, including information about the segment's si
 
 | Offset (hex) | Size | Signed | Field                 | Example              | Description |
 | ------------ | ---- | ------ | --------------------- | -------------------- | ----------- |
-| `00-03`      | `4`  | No     | `d_offsetof_modname`  | `0x000394F0`         | Offset (from start of **EHDR**) to a `Dec_Dstr` specifying the name of the dependent module. This name uses the same (set of) format(s) accepted by deemon's builtin `import` function, and the `DeeModule_Import()` API:<br/><ul><li>Using either libpath-notation: `net.ftp`</li><li>Or relative dot-notation: `.folder.script`</li><li>Or relative file-notation:<ul><li>`./script`</li><li>`./script.dee`</li></ul></li><li>Or absolute file-notation: <ul><li>`/opt/deemon/folder/script`</li><li>`/opt/deemon/folder/script.dee`</li><li>`E:\c\deemon\folder\script`</li><li>`E:\c\deemon\folder\script.dee`</li></ul></li></ul>Relative names are interpreted relative to the directory containing the `.dee` file. |
-| `04-07`      | `4`  | No     | `d_offsetof_rel`      | `0x000338DC`         | Table of normal relocations.<br/>Offset from start of EHDR to `Dec_Rel[]` array (terminated by `Dec_Rel::r_addr == 0`), using `REL_BASE = (uintptr_t)(DeeModuleObject *)import(d_offsetof_modname)`<br/>See **RELOC** section on `Dec_Rel` |
-| `08-0B`      | `4`  | No     | `d_offsetof_rrel`     | `0x000394E8`         | Table of incref-relocations.<br/>Offset from start of EHDR to `Dec_RRel[]` array (terminated by `Dec_RRel::r_addr == 0`), using `REL_BASE = (uintptr_t)(DeeModuleObject *)import(d_offsetof_modname)`<br/>See **RELOC** section on `Dec_RRel` |
-| `0C-0F`      | `4`  | No     | `d_offsetof_rrela`    | `0x000338DC`         | Table of incref-relocations-with-addend.<br/>Offset from start of EHDR to `Dec_RRela[]` array (terminated by `Dec_RRela::r_addr == 0`), using `REL_BASE = (uintptr_t)(DeeModuleObject *)import(d_offsetof_modname)`<br/>See **RELOC** section on `Dec_RRela` |
-| `10-1F`      | `16` | No     | `d_buildid`           | `0x0011223344556677` `0x8899AABBCCDDEEFF` | Expected Build ID of dependency. If this doesn't match the dependent module's *actual* Build ID, behavior is the same as if `er_deemon_build_id` were wrong. |
+| `00-03`      | `4`  | No     | `d_offsetof_modname`  | `0x000394F0`         | Offset (from start of **EHDR**) to a `Dec_Dstr` specifying the name of the dependent module. This name uses the same (set of) format(s) accepted by deemon's builtin `import` function, and the `DeeModule_Import()` API:<br/><ul><li>Using either libpath-notation: `net.ftp`</li><li>Or relative dot-notation: `.folder.script`</li><li>Or relative file-notation:<ul><li>`./script`</li><li>`./script.dee`</li></ul></li><li>Or absolute file-notation: <ul><li>`/opt/deemon/folder/script`</li><li>`/opt/deemon/folder/script.dee`</li><li>`E:\c\deemon\folder\script`</li><li>`E:\c\deemon\folder\script.dee`</li></ul></li></ul>Relative names are interpreted relative to the directory containing the `.dec` (and thus also: `.dee`) file. |
+| `04-07`      | `4`  | No     | `d_offsetof_rel`      | `0x000338DC`         | Table of normal relocations.<br/>Offset from start of EHDR to `Dec_Rel[]` array (terminated by `Dec_Rel::r_addr == 0`), using `REL_BASE = (uintptr_t)(DeeModuleObject *)DeeModule_Import(d_offsetof_modname)`<br/>See **RELOC** section on `Dec_Rel` |
+| `08-0B`      | `4`  | No     | `d_offsetof_rrel`     | `0x000394E8`         | Table of incref-relocations.<br/>Offset from start of EHDR to `Dec_RRel[]` array (terminated by `Dec_RRel::r_addr == 0`), using `REL_BASE = (uintptr_t)(DeeModuleObject *)DeeModule_Import(d_offsetof_modname)`<br/>See **RELOC** section on `Dec_RRel` |
+| `0C-0F`      | `4`  | No     | `d_offsetof_rrela`    | `0x000338DC`         | Table of incref-relocations-with-addend.<br/>Offset from start of EHDR to `Dec_RRela[]` array (terminated by `Dec_RRela::r_addr == 0`), using `REL_BASE = (uintptr_t)(DeeModuleObject *)DeeModule_Import(d_offsetof_modname)`<br/>See **RELOC** section on `Dec_RRela` |
+| `10-1F`      | `16` | No     | `d_buildid`           | `0x0011223344556677` `0x8899AABBCCDDEEFF` | Expected Build ID of dependency. If this doesn't match the dependent module's *actual* Build ID, behavior is the same as if `er_deemon_build_id` were wrong (i.e.: the `.dec` file is outdated and can't be used). |
 
 
 
@@ -196,7 +196,7 @@ static void apply_rel(Dec_Ehdr *ehdr, Dec_Rel *rel, uintptr_t REL_BASE) {
 | `00-03`      | `4`  | No     | `r_addr` | `0x000005C4` | Offset (from start of **EHDR**) to a word-sized (as per `Dec_Ehdr::er_sizeof_pointer`) location that must be incremented by the relevant `REL_BASE`. |
 
 
-### `Dec_RRel` (DEC Reference-counted RELocation)
+### `Dec_RRel` (DEC Reference-counted-RELocation)
 
 Reference-counted relocation. Applied the same way as `Dec_Rel`, but after being applied, the resulting pointer must be dereferenced, interpreted as a `DeeObject *`, and that object must then be incref'd.
 
@@ -214,7 +214,7 @@ static bool apply_rrel(Dec_Ehdr *ehdr, Dec_RRel *rel, uintptr_t REL_BASE) {
 }
 ```
 
-If this function returns `false`, the dec file cannot be loaded, all already-performed incref operations are reverted, and behavior is the same as if `er_deemon_build_id` were wrong.
+If this function returns `false`, the dec file cannot be loaded, all already-performed incref operations are reverted, and behavior is the same as if `er_deemon_build_id` were wrong (i.e.: the `.dec` file is outdated and can't be used).
 
 
 #### Layout
@@ -224,9 +224,9 @@ If this function returns `false`, the dec file cannot be loaded, all already-per
 | `00-03`      | `4`  | No     | `r_addr` | `0x000005C4` | Offset (from start of **EHDR**) to a word-sized (as per `Dec_Ehdr::er_sizeof_pointer`) location that must be incremented by the relevant `REL_BASE`. After having been adjusted, that pointer's value must then be read (i.e.: the pointer must be dereferenced), and the result must be interpreted as a `DeeObject *`, which must then be `Dee_Incref`'d. |
 
 
-### `Dec_RRela` (DEC Reference-counted-with-Addend RELocation)
+### `Dec_RRela` (DEC Reference-counted-RELocation-with-Addend)
 
-Reference-counted-with-addend relocation. Same as `Dec_RRel`, but provides an additional addend that must be added to the dereferenced pointer after it was already relocated, in order to reach the base address of the relevant object.
+Reference-counted-relocation-with-addend. Same as `Dec_RRel`, but provides an additional addend that must be added to the dereferenced pointer after it was already relocated, in order to reach the base address of the relevant object.
 
 The following function is used to resolve this type of relocation (assuming that `Dec_Ehdr::er_sizeof_pointer == sizeof(void *)`):
 
@@ -241,7 +241,7 @@ static bool apply_rrela(Dec_Ehdr *ehdr, Dec_RRela *rel, uintptr_t REL_BASE) {
 }
 ```
 
-If this function returns `false`, the dec file cannot be loaded, all already-performed incref operations are reverted, and behavior is the same as if `er_deemon_build_id` were wrong.
+If this function returns `false`, the dec file cannot be loaded, all already-performed incref operations are reverted, and behavior is the same as if `er_deemon_build_id` were wrong (i.e.: the `.dec` file is outdated and can't be used).
 
 
 #### Layout
@@ -266,4 +266,4 @@ A fixed-length (but still NUL-terminated) string. When this string appears withi
 | `04-??`       | `ds_length` | -      | `ds_string` | `"errors"`   | The actual string itself, encoded using `utf-8` |
 | `4+ds_length` | `1`         | -      | N/A         | `0x00`       | A trailing NUL-byte |
 | ...           | ?           | -      | N/A         | N/A          | Unused padding |
-| `4+(ds_length+4)&~3` | ...  | ...    | ...         | ...          | Next `Dec_Dstr` (if part of array) |
+| `8+ds_length&~3` | ...  | ...    | ...         | ...          | Next `Dec_Dstr` (if part of array) |
