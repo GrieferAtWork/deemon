@@ -3342,11 +3342,11 @@ module_dex_destroy(DeeModuleObject *__restrict self) {
 	 *          execution.
 	 *
 	 * NOTES:
-	 * - The only memory affected by are allocations that currently get
-	 *   piped through `Dee_UntrackAlloc()' right now.
+	 * - The only memory leaks affected by this are allocations that
+	 *   currently get piped through `Dee_UntrackAlloc()'.
 	 * - The reason why these allocations don't qualify as memory leaks is:
-	 *   - the total sum of memory they can allocate is O(1), because
-	 *   - dex modules are never unloaded, so a cache that was allocated
+	 *   - the total sum of memory they can allocate is O(1), because...
+	 *   - ... dex modules are never unloaded, so a cache that was allocated
 	 *     once, will remain allocated until deemon exits
 	 * - however:
 	 *   - by working towards the goal of allowing dex modules to be unloaded

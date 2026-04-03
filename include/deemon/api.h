@@ -515,6 +515,10 @@ __pragma_GCC_diagnostic_ignored(Walloc_size_larger_than)
 #elif (!defined(CONFIG_EXPERIMENTAL_MMAP_DEC) && \
        !defined(CONFIG_NO_EXPERIMENTAL_MMAP_DEC))
 #if 1
+/* TODO: Once this becomes mandatory, re-work `CONFIG_NO_DEC' such that it means that:
+ * - .dec files aren't searched-for during module import
+ * - DeeDecWriter always operates under "DeeDecWriter_F_NRELOC" and "Dee_DEC_TYPE_RELOC" doesn't exist
+ */
 #define CONFIG_EXPERIMENTAL_MMAP_DEC
 #else
 #define CONFIG_NO_EXPERIMENTAL_MMAP_DEC
