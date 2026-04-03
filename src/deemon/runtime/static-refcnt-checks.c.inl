@@ -37,22 +37,22 @@
 #include <deemon/compiler/compiler.h>  /* DeeCompiler* */
 #include <deemon/compiler/interface.h> /* DeeCompiler* */
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeClassScope_Type, DeeRootScope_Type, DeeScope_Type */
-#include <deemon/dex.h>                /* DEXSYM_READONLY, DEX_MEMBER_F, DeeDex_Type */
+#include <deemon/dex.h>                /* DeeDex_Type */
 #include <deemon/dict.h>               /* DeeDict_Type */
 #include <deemon/error_types.h>        /* DeeError_*_instance */
 #include <deemon/file.h>               /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
 #include <deemon/filetypes.h>          /* DeeFilePrinter_Type, DeeFileReader_Type, DeeFileWriter_Type, DeeMemoryFile_Type */
 #include <deemon/float.h>              /* DeeFloat_Type */
-#include <deemon/format.h>             /* PRFdPTR, PRFxPTR */
+#include <deemon/format.h>             /* PRF* */
 #include <deemon/gc.h>                 /* DeeGCEnumTracked_Singleton */
 #include <deemon/hashset.h>            /* DeeHashSet_Type */
 #include <deemon/instancemethod.h>     /* DeeInstanceMethod_Type */
-#include <deemon/int.h>                /* DeeInt_MinusOne_Zero_One, DeeInt_Type */
+#include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/kwds.h>               /* DeeBlackListKw_Type, DeeBlackListKwds_Type, DeeKwdsMapping_Type, DeeKwds_Type */
 #include <deemon/list.h>               /* DeeList_Type */
 #include <deemon/map.h>                /* DeeMap_EmptyInstance, DeeMap_Type, DeeSharedMap_Type */
 #include <deemon/mapfile.h>            /* DeeMapFile_Type */
-#include <deemon/module.h>             /* DeeInteractiveModule_Type, DeeModule* */
+#include <deemon/module.h>             /* DeeBuiltin_*, DeeInteractiveModule_Type, DeeModule* */
 #include <deemon/none.h>               /* DeeNone_Singleton, DeeNone_Type */
 #include <deemon/numeric.h>            /* DeeNumeric_Type */
 #include <deemon/object.h>             /* DeeObject_Type */
@@ -63,7 +63,7 @@
 #include <deemon/roset.h>              /* DeeRoSet_Type */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqSome_Type, DeeSeq_EmptyInstance, DeeSeq_Type, DeeSharedVector_Type */
 #include <deemon/set.h>                /* DeeSet_* */
-#include <deemon/string.h>             /* DeeString_Empty, DeeString_Type */
+#include <deemon/string.h>             /* DeeString* */
 #include <deemon/super.h>              /* DeeSuper_Type */
 #include <deemon/thread.h>             /* DeeThread_Type */
 #include <deemon/traceback.h>          /* DeeFrame_Type, DeeTraceback_Empty, DeeTraceback_Type */
@@ -79,6 +79,7 @@
 #include "../objects/class_desc.h"
 #include "../objects/dict.h"
 #include "../objects/hashset.h"
+#include "../objects/int-8bit.h"
 #include "../objects/iterator.h"
 #include "../objects/list.h"
 #include "../objects/objmethod.h"
@@ -131,8 +132,9 @@
 #include "kwds-wrappers.h"
 #include "kwds.h"
 #include "operator_info.h"
+#include "strings.h"
 
-#include <stdint.h> /* intptr_t */
+#include <stdint.h> /* int64_t, intptr_t */
 
 #undef lengthof
 #define lengthof COMPILER_LENOF
@@ -145,10 +147,19 @@ sr_check_obj(DeeObject *__restrict self) {
 		Dee_DPRINTF("WARNING: Bad static refcnt: %p: ", self);
 		if (DeeType_Check(self)) {
 			Dee_DPRINTF("<type %s>", DeeType_GetName((DeeTypeObject *)self));
+		} else if (DeeString_Check(self)) {
+			Dee_DPRINTF("<builtin string %q>", DeeString_STR(self));
+		} else if (DeeInt_Check(self)) {
+			int64_t value;
+			if (DeeInt_TryAsInt64(self, &value)) {
+				Dee_DPRINTF("<builtin integer %" PRFd64 ">", value);
+			} else {
+				Dee_DPRINT("<builtin integer <too big to print>>");
+			}
 		} else {
 			Dee_DPRINTF("<instance of %s>", DeeType_GetName(Dee_TYPE(self)));
 		}
-		Dee_DPRINTF(" [ob_refcnt=%" PRFxPTR ",delta:%" PRFdPTR "]\n",
+		Dee_DPRINTF(" [ob_refcnt=%#" PRFxPTR ",delta:%" PRFdPTR "]\n",
 		            self->ob_refcnt, (intptr_t)(self->ob_refcnt - Dee_STATIC_REFCOUNT_INIT));
 	}
 }
@@ -620,6 +631,24 @@ PRIVATE DeeObject *tpconst static_objects[] = {
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
 	O(DeeBuiltin_ImportType),
 #endif /* CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
+#undef O
+
+	/* Builtin strings */
+#ifndef __INTELLISENSE__
+#undef GUARD_DEEMON_RUNTIME_STRINGS_H
+#undef DECL_BEGIN
+#undef DECL_END
+#define DECL_BEGIN /* nothing */
+#define DECL_END /* nothing */
+#undef DEF_STRING
+#define DEF_STRING(name, str, hash32, hash64) (DeeObject *)&name,
+#include "strings.h"
+#undef DEF_STRING
+#undef DECL_BEGIN
+#undef DECL_END
+#define DECL_BEGIN __DECL_BEGIN
+#define DECL_END   __DECL_END
+#endif /* !__INTELLISENSE__ */
 };
 
 /* Dump unexpected changes to reference counters of static objects. */
@@ -627,6 +656,10 @@ INTERN void DCALL DeeDbg_DumpStaticRefChanges(void) {
 	size_t i;
 	for (i = 0; i < lengthof(static_objects); ++i)
 		sr_check_obj(static_objects[i]);
+#ifdef CONFIG_STRING_8BIT_STATIC
+	for (i = 0; i < lengthof(DeeInt_8bit_blob); ++i)
+		sr_check_obj(Dee_AsObject(&DeeInt_8bit_blob[i]));
+#endif /* CONFIG_STRING_8BIT_STATIC */
 }
 
 DECL_END

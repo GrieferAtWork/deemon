@@ -1391,7 +1391,10 @@ DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
  * string object will result in us reading from out-of-bounds memory,
  * since it doesn't understand that static objects (with flexible array
  * members) can still be larger than the object's minimal size. */
+#ifndef GUARD_DEEMON_RUNTIME_STRINGS_H__DID_SET_Wstringop_overflow
+#define GUARD_DEEMON_RUNTIME_STRINGS_H__DID_SET_Wstringop_overflow
 __pragma_GCC_diagnostic_ignored(Wstringop_overflow)
+#endif /* !GUARD_DEEMON_RUNTIME_STRINGS_H__DID_SET_Wstringop_overflow */
 
 DECL_END
 
