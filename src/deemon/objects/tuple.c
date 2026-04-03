@@ -2289,12 +2289,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 };
 
 PUBLIC struct Dee_empty_tuple_struct DeeTuple_Empty = {
-	4, /* +1 in contrast to OBJECT_HEAD_INIT for the reference
-	    * saved as the original value for `Dee_GetArgv()' */
-	&DeeTuple_Type,
-#ifdef CONFIG_TRACE_REFCHANGES
-	Dee_REFTRACKER_UNTRACKED,
-#endif /* CONFIG_TRACE_REFCHANGES */
+	OBJECT_HEAD_INIT(&DeeTuple_Type),
 	0
 };
 
