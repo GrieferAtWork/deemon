@@ -32,7 +32,7 @@
 #include <deemon/int.h>                /* DeeInt_One, DeeInt_Zero */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1 */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_PAIR_TYPE, DeeSeqPairObject, DeeSeq_OfOne */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeqRange_Clamp_n, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
@@ -48,6 +48,7 @@
 #include "../generic-proxy.h"
 #include "../int-8bit.h"
 #include "default-compare.h"
+#include "pair.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 
@@ -60,14 +61,6 @@ typedef DeeSeqPairObject SeqPair;
 /************************************************************************/
 /* SeqPairIterator                                                      */
 /************************************************************************/
-
-typedef struct {
-	OBJECT_HEAD
-	DREF SeqPair *spi_pair;  /* [1..1][const] Underlying pair */
-	size_t        spi_index; /* [lock(ATOMIC)] Index of next item to yield */
-} SeqPairIterator;
-
-INTDEF DeeTypeObject SeqPairIterator_Type;
 
 STATIC_ASSERT(offsetof(SeqPairIterator, spi_pair) == offsetof(ProxyObject, po_obj));
 #define spi_serialize generic_proxy__serialize_and_wordcopy_atomic(__SIZEOF_SIZE_T__)

@@ -34,6 +34,7 @@
 #include <hybrid/byteorder.h> /* __BYTE_ORDER__, __ORDER_LITTLE_ENDIAN__ */
 
 #include "../../runtime/runtime_error.h"
+#include "cformat.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* size_t */

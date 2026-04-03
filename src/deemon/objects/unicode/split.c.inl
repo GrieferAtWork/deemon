@@ -40,6 +40,7 @@
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "split.h"
 #include "string_functions.h"
 
 #include <stdbool.h> /* bool, false */
@@ -50,30 +51,6 @@
 #define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
-
-INTDEF DeeTypeObject StringSplit_Type;
-INTDEF DeeTypeObject StringSplitIterator_Type;
-INTDEF DeeTypeObject StringCaseSplit_Type;
-INTDEF DeeTypeObject StringCaseSplitIterator_Type;
-INTDEF DeeTypeObject StringLineSplit_Type;
-INTDEF DeeTypeObject StringLineSplitIterator_Type;
-
-typedef struct {
-	PROXY_OBJECT_HEAD2_EX(DeeStringObject, s_str, /* [1..1][const] The string that is being split. */
-	                      DeeStringObject, s_sep) /* [1..1][const][!DeeString_IsEmpty] The string to search for. */
-} StringSplit;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(StringSplit, s_split) /* [1..1][const] The split descriptor object. */
-	union Dee_charptr_const           s_next;  /* [0..1][atomic] Pointer to the starting address of the next split
-	                                            *                (points into the s_enc-specific string of `s_split->s_str')
-	                                            *                When the iterator is exhausted, this pointer is set to `NULL'. */
-	union Dee_charptr_const           s_start; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
-	union Dee_charptr_const           s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
-	union Dee_charptr_const           s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
-	size_t                            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of separator string. */
-	int                               s_width; /* [const] The width of `s_split->s_str' */
-} StringSplitIterator;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 splititer_next(StringSplitIterator *__restrict self) {
@@ -807,21 +784,15 @@ handle_empty_sep:
 
 
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeStringObject, ls_str)  /* [1..1][const] The string that is being split into lines. */
-	bool                                  ls_keep; /* [const] True if line-ends should be kept in resulting strings. */
-} LineSplit;
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(LineSplit, ls_split) /* [1..1][const] The split descriptor object. */
-	union Dee_charptr_const         ls_next;  /* [0..1][atomic] Pointer to the starting address of the next split
-	                                           *                (points into the s_enc-specific string of `ls_split->ls_str')
-	                                           *                When the iterator is exhausted, this pointer is set to NULL. */
-	union Dee_charptr_const         ls_begin; /* [1..1][const] The starting address of the width string of `ls_split->ls_str'. */
-	union Dee_charptr_const         ls_end;   /* [1..1][const] The end address of the width string of `ls_split->ls_str'. */
-	int                             ls_width; /* [const] The width of `ls_split->ls_str' */
-	bool                            ls_keep;  /* [const] True if line-ends should be kept in resulting strings. */
-} LineSplitIterator;
+
+
+
+
+
+/************************************************************************/
+/* LINE SPLIT                                                           */
+/************************************************************************/
 
 LOCAL ATTR_PURE WUNUSED ATTR_INS(1, 2) uint8_t const *DCALL
 find_lfb(uint8_t const *__restrict start, size_t size) {
@@ -1229,17 +1200,15 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 /* @return: An abstract sequence type for enumerating
  *          the segments of a string split into lines. */
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_SplitLines(DeeObject *__restrict self,
-                     bool keepends) {
+DeeString_SplitLines(DeeStringObject *__restrict self, bool keepends) {
 	DREF LineSplit *result;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	result = DeeObject_MALLOC(LineSplit);
 	if unlikely(!result)
 		goto done;
 	/* Same as the regular split(), but use the case-insensitive sequence type. */
 	DeeObject_InitStatic(result, &StringLineSplit_Type);
 	Dee_Incref(self);
-	result->ls_str  = (DREF DeeStringObject *)self; /* Inherit */
+	result->ls_str  = self; /* Inherit */
 	result->ls_keep = keepends;
 done:
 	return Dee_AsObject(result);

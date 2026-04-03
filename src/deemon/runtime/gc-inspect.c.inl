@@ -37,13 +37,14 @@
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
 #include <deemon/set.h>                /* DeeSet_Type */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_*, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_Visit, Dee_XVisit, Dee_XVisitv, Dee_visit_t, METHOD_FNOREFESCAPE, TF_NONE, TF_SINGLETON, TP_F*, TYPE_*, type_* */
-#include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT */
+#include <deemon/types.h>              /* DREF, DeeObject, DeeTypeObject, DeeType_Extends, Dee_AsObject, Dee_TYPE, Dee_foreach_t, Dee_hash_t, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT */
 #include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
 #include <deemon/util/hash.h>          /* DeeObject_HashGeneric */
-#include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 #include <deemon/util/once.h>          /* Dee_once_* */
 
 #include "../objects/generic-proxy.h"
+#include "gc-inspect.h"
 #include "kwlist.h"
 #include "method-hint-defaults.h"
 
@@ -55,20 +56,6 @@
 #define container_of COMPILER_CONTAINER_OF
 
 DECL_BEGIN
-
-struct gcset_item {
-	DREF DeeObject *gsi_item; /* [0..1] Referenced object (or "NULL" if unused slot) */
-};
-
-typedef struct {
-	struct gcset_item  *gs_map; /* [0..gs_msk+1][owned] Map of referenced objects, or "NULL" if not-yet-allocated */
-	Dee_hash_t          gs_msk; /* Hash-mask for `gs_map' */
-	size_t              gs_siz; /* # of non-NULL items in `gs_map', or `(size_t)-1' after an error */
-} GCSet;
-
-#define GCSet_HashSt(self, hash)  ((hash) & (self)->gs_msk)
-#define GCSet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define GCSet_HashIt(self, i)     ((self)->gs_map + ((i) & (self)->gs_msk))
 
 #define GCSet_Init(self) \
 	((self)->gs_map = NULL, (self)->gs_msk = (self)->gs_siz = 0)
@@ -244,23 +231,6 @@ err:
 
 
 
-typedef struct gc_collection GCCollection;
-typedef void (DCALL *gcset_populate_cb_t)(GCCollection *self);
-
-struct gc_collection {
-	PROXY_OBJECT_HEAD  (gcc_obj);     /* [1..1][const] The object whose reachable set is being described. */
-	gcset_populate_cb_t gcc_populate; /* [1..1][const] Cache population function */
-	GCSet               gcc_cache;    /* [const_if(Dee_once_hasrun(&gcc_loaded))] Cache of reachable objects (loaded lazily if needed for sequence operations) */
-	Dee_once_t          gcc_loaded;   /* Is-loaded controller for `gcc_cache' */
-	/* NOTE: `gcc_populate' should be one of:
-	 * - GCCollection_PopulateReachableDirect
-	 * - GCCollection_PopulateReachableTransitive
-	 * - GCCollection_PopulateReferringDirect
-	 * - GCCollection_PopulateReferringTransitive */
-};
-
-INTDEF DeeTypeObject GCCollection_Type;
-
 /* Ensure that "self->gcc_cache" has been populated.
  * @return: 0 : Success
  * @return: -1: An error was thrown */
@@ -288,13 +258,7 @@ err:
 
 
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(GCCollection, gcci_coll); /* [1..1][const] Underlying collection (cache of this has already been loaded) */
-	struct gcset_item                 *gcci_iter;  /* [1..1][const] Next-pointer (in `gcci_coll->gcc_cache.gs_map') */
-	struct gcset_item                 *gcci_end;   /* [1..1][const][== gcci_coll->gcc_cache.gs_map+(.gs_msk+1)] End-pointer */
-} GCCollectionIterator;
 
-INTDEF DeeTypeObject GCCollectionIterator_Type;
 
 STATIC_ASSERT(offsetof(GCCollectionIterator, gcci_coll) == offsetof(ProxyObject, po_obj));
 #define gccolliter_fini  generic_proxy__fini
@@ -806,22 +770,6 @@ INTERN DeeTypeObject GCCollection_Type = {
 
 
 
-/* Iterator for enumerating the set of active GC objects. */
-typedef struct {
-	OBJECT_HEAD
-	DREF struct gc_generation *gci_gen; /* [0..1] Current GC generation, or "NULL" if enumeration has finished. */
-	DREF DeeObject            *gci_obj; /* [1..1][valid_if(gci_gen)] Next object to enumerate (object exists within `gci_gen') */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t          gci_lck; /* Lock for this iterator. */
-#endif /* !CONFIG_NO_THREADS */
-} GCIter;
-
-#define gc_iter_available(self)  Dee_atomic_lock_available(&(self)->gci_lck)
-#define gc_iter_acquired(self)   Dee_atomic_lock_acquired(&(self)->gci_lck)
-#define gc_iter_tryacquire(self) Dee_atomic_lock_tryacquire(&(self)->gci_lck)
-#define gc_iter_acquire(self)    Dee_atomic_lock_acquire(&(self)->gci_lck)
-#define gc_iter_waitfor(self)    Dee_atomic_lock_waitfor(&(self)->gci_lck)
-#define gc_iter_release(self)    Dee_atomic_lock_release(&(self)->gci_lck)
 
 
 /* Update "gci_gen" and "gci_obj" to acquire a reference to the next object. */
@@ -1201,7 +1149,7 @@ PRIVATE struct type_method tpconst gcenum_methods[] = {
 	TYPE_METHOD_END
 };
 
-PRIVATE DeeTypeObject GCEnum_Type = {
+INTERN DeeTypeObject GCEnum_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_GCEnum",
 	/* .tp_doc      = */ NULL,

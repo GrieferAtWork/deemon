@@ -747,6 +747,9 @@
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\execute\module-globals.h">
+			<Filter>src\execute</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\method-hints\iter_advance.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
@@ -1197,6 +1200,15 @@
 		<ClInclude Include="..\src\deemon\method-hints\set_unify.h">
 			<Filter>src\method-hints</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\bytes.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\callable.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\class_desc.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-delitem-impl.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -1210,6 +1222,9 @@
 			<Filter>src\objects</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict-setitem-impl.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\dict-utils.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\dict.h">
@@ -1230,6 +1245,9 @@
 		<ClInclude Include="..\src\deemon\objects\generic-proxy.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\hashset.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\int-8bit.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -1239,7 +1257,22 @@
 		<ClInclude Include="..\src\deemon\objects\int_logic.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\iterator.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\list.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\objmethod.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\rodict-getitem.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\rodict.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\roset.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h">
@@ -1308,6 +1341,12 @@
 		<ClInclude Include="..\src\deemon\objects\seq\mapped.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\one.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\seq\pair.h">
+			<Filter>src\objects\seq</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\range.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
@@ -1344,10 +1383,22 @@
 		<ClInclude Include="..\src\deemon\objects\seq\unique-iterator.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\string.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\traceback.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\tuple.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\type-operators.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.h">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions-strip.c.inl">
@@ -1356,19 +1407,37 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\bytes_needle.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_segments.c.inl">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\bytes_segments.h">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_split.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\bytes_split.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\cformat.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\codec.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\cscanf.h">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\db\Makefile">
 			<Filter>src\objects\unicode\db</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\finder.c.inl">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\finder.h">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\format-expr.c.inl">
@@ -1380,16 +1449,31 @@
 		<ClInclude Include="..\src\deemon\objects\unicode\ordinals.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\ordinals.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\regex.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\regroups.h">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\reproxy.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\reproxy.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\segments.c.inl">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\segments.h">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\split.c.inl">
+			<Filter>src\objects\unicode</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\unicode\split.h">
 			<Filter>src\objects\unicode</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\string_functions-bwl.c.inl">
@@ -1431,7 +1515,16 @@
 		<ClInclude Include="..\src\deemon\runtime\gc-inspect.c.inl">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\gc-inspect.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\hash-io-hidxio.c.inl">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\kwds-wrappers.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\kwds.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\kwlist.h">
@@ -1468,6 +1561,9 @@
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\operator-hint-errors.h">
+			<Filter>src\runtime</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\runtime\operator_info.h">
 			<Filter>src\runtime</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\runtime\refcnt-destroy.c.inl">

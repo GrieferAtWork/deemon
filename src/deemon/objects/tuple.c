@@ -51,6 +51,7 @@
 #include "generic-proxy.h"
 #include "seq/default-compare.h"
 #include "seq/sort.h"
+#include "tuple.h"
 
 #include <stdarg.h>  /* va_arg, va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
@@ -880,13 +881,7 @@ DeeTuple_DecrefSymbolic(DeeObject *__restrict self) {
 
 
 /*  ====== `Tuple.Iterator' type implementation ======  */
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeTupleObject, ti_tuple); /* [1..1][const] Referenced tuple. */
-	DWEAK size_t                         ti_index;  /* [<= ti_tuple->t_size] Next-element index. */
-} TupleIterator;
 #define READ_INDEX(x) atomic_read(&(x)->ti_index)
-
-INTDEF DeeTypeObject DeeTupleIterator_Type;
 
 PRIVATE NONNULL((1)) int DCALL
 tuple_iterator_ctor(TupleIterator *__restrict self) {
@@ -1691,13 +1686,6 @@ err_r:
 err:
 	return NULL;
 }
-
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Needed by "seq/flat.c" */
-tuple_mh_foreach_reverse(DeeTupleObject *__restrict self, Dee_foreach_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* Needed by "seq/flat.c" */
-tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_seq_enumerate_index_t proc,
-                                 void *arg, size_t start, size_t end);
-
 
 INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 tuple_mh_foreach_reverse(DeeTupleObject *__restrict self,

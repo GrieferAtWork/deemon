@@ -53,6 +53,7 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "hashset.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -967,16 +968,8 @@ err:
 }
 
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(HashSet, hsi_set)  /* [1..1][const] The set that is being iterated. */
-	struct Dee_hashset_item      *hsi_next; /* [?..1][MAYBE(in(hsi_set->hs_elem))][atomic]
-	                                         * The first candidate for the next item.
-	                                         * NOTE: Before being dereferenced, this pointer is checked
-	                                         *       for being located inside the set's element vector.
-	                                         *       In the event that it is located at its end, `ITER_DONE'
-	                                         *       is returned, though in the event that it is located
-	                                         *       outside, an error is thrown (`err_changed_sequence()'). */
-} HashSetIterator;
+
+
 #define READ_ITEM(x) atomic_read(&(x)->hsi_next)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1047,8 +1040,6 @@ hashsetiterator_copy(HashSetIterator *__restrict self,
 STATIC_ASSERT(offsetof(HashSetIterator, hsi_set) == offsetof(ProxyObject, po_obj));
 #define hashsetiterator_fini  generic_proxy__fini
 #define hashsetiterator_visit generic_proxy__visit
-
-INTDEF DeeTypeObject HashSetIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashsetiterator_init(HashSetIterator *__restrict self,
@@ -1719,8 +1710,7 @@ deprecated_d100_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
 #define deprecated_d100_set_maxloadfactor (*(int (DCALL *)(DeeObject *, DeeObject *))&_DeeNone_reti0_2)
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-INTDEF struct type_getset tpconst hashset_getsets[];
-INTERN_TPCONST struct type_getset tpconst hashset_getsets[] = {
+PRIVATE struct type_getset tpconst hashset_getsets[] = {
 	TYPE_GETTER_AB_F(STR_frozen, &DeeRoSet_FromSequence, METHOD_FNOREFESCAPE,
 	                 "->?Ert:RoSet\n"
 	                 "Returns a read-only (frozen) copy of @this HashSet"),

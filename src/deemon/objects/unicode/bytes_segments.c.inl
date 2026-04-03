@@ -46,6 +46,7 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "bytes_segments.h"
 #include "string_functions.h"
 
 #include <stdbool.h> /* false */
@@ -56,25 +57,7 @@ DECL_BEGIN
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeBytesObject, b_str) /* [1..1][const] The Bytes object that is being segmented. */
-	size_t                               b_siz; /* [!0][const] The size of a single segment. */
-	byte_t const                        *b_ptr; /* [1..1][in(DeeBytes_WSTR(b_str))][lock(ATOMIC)] Pointer to the start of the next segment. */
-	byte_t const                        *b_end; /* [1..1][== DeeBytes_WEND(b_str)][const] End pointer. */
-} BytesSegmentsIterator;
 #define READ_PTR(x) atomic_read(&(x)->b_ptr)
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeBytesObject, b_str) /* [1..1][const] The Bytes object that is being segmented. */
-	size_t                               b_siz; /* [!0][const] The size of a single segment. */
-} BytesSegments;
-
-INTDEF DeeTypeObject BytesSegmentsIterator_Type;
-INTDEF DeeTypeObject BytesSegments_Type;
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_Segments(DeeBytesObject *__restrict self,
-                  size_t segment_size);
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsegiter_ctor(BytesSegmentsIterator *__restrict self) {

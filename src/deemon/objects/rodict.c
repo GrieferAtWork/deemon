@@ -51,8 +51,9 @@
 
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
-#include "dict.h"
+#include "dict-utils.h"
 #include "generic-proxy.h"
+#include "rodict.h"
 #include "seq/default-compare.h"
 #include "seq/default-map-proxy.h"
 
@@ -591,13 +592,6 @@ err:
 /************************************************************************/
 /* RODICT ITERATOR                                                      */
 /************************************************************************/
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(RoDict, rodi_dict) /* [1..1][const] The RoDict being iterated. */
-	/*real*/Dee_hash_vidx_t      rodi_vidx; /* [lock(ATOMIC)] Index of next item to yield. */
-} RoDictIterator;
-
-INTDEF DeeTypeObject RoDictIterator_Type;
 
 STATIC_ASSERT(offsetof(RoDictIterator, rodi_dict) == offsetof(ProxyObject, po_obj));
 #define rditer_fini      generic_proxy__fini

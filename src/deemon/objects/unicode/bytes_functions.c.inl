@@ -47,7 +47,14 @@
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "bytes_finder.h"
+#include "bytes_needle.h"
+#include "bytes_segments.h"
+#include "bytes_split.h"
+#include "cscanf.h"
+#include "regex.h"
 #include "regroups.h"
+#include "reproxy.h"
 #include "string_functions.h"
 
 #include <stdbool.h> /* bool, false, true */
@@ -95,12 +102,6 @@ err:
 #ifndef __NO_builtin_expect
 #define acquire_needle(self, ob) __builtin_expect(acquire_needle(self, ob), 0)
 #endif /* !__NO_builtin_expect */
-
-typedef struct {
-	byte_t const *n_data;
-	size_t        n_size;
-	byte_t       _n_buf[sizeof(size_t)];
-} Needle;
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Needle_Serialize(Needle *__restrict self,
@@ -1254,8 +1255,6 @@ err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_Scanf(DeeObject *self, DeeObject *format);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_scanf(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("scanf", params: "
@@ -2286,20 +2285,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw);
 
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_SplitByte(Bytes *__restrict self, byte_t sep);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeBytes_Split(Bytes *self, DeeObject *sep);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_CaseSplitByte(Bytes *__restrict self, byte_t sep);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeBytes_CaseSplit(Bytes *self, DeeObject *sep);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_SplitLines(Bytes *__restrict self, bool keepends);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeBytes_FindAll(Bytes *self, DeeObject *needle,
-                 size_t start, size_t end,
-                 bool overlapping);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeBytes_CaseFindAll(Bytes *self, DeeObject *needle,
-                     size_t start, size_t end,
-                     bool overlapping);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_findall(Bytes *self, size_t argc,
@@ -4610,9 +4595,6 @@ err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_Segments(DeeBytesObject *__restrict self, size_t substring_length);
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_segments(Bytes *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("segments", params: "
@@ -4663,44 +4645,6 @@ err:
 /************************************************************************/
 /* Regex functions                                                      */
 /************************************************************************/
-#ifdef __INTELLISENSE__ /* Stuff we share with "./string_functions.c" */
-struct DeeRegexExecWithRange {
-	struct DeeRegexExec rewr_exec;    /* Normal exec args */
-	size_t              rewr_range;   /* Max # of search attempts to perform (in bytes) */
-	DeeStringObject    *rewr_pattern; /* [1..1] Pattern string that is being used */
-	DeeStringObject    *rewr_rules;   /* [0..1] Pattern rules */
-};
-
-struct DeeRegexBaseExec {
-	DREF String               *rx_pattern;  /* [1..1] Pattern string (only a reference within objects in "./reproxy.c.inl") */
-	struct DeeRegexCode const *rx_code;     /* [1..1] Regex code */
-	void const                *rx_inbase;   /* [0..rx_insize][valid_if(rx_startoff < rx_endoff)] Input data to scan
-	                                         * When `rx_code' was compiled with `Dee_RE_COMPILE_NOUTF8', this data
-	                                         * is treated as raw bytes; otherwise, it is treated as a utf-8 string.
-	                                         * In either case, `rx_insize' is the # of bytes within this buffer. */
-	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase' */
-	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase' of data to match. */
-	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase' of data to match. */
-	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*') */
-};
-
-/* Functions from "./reproxy.c.inl" */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_re_findall(DeeBytesObject *__restrict self,
-                 struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_reg_findall(DeeBytesObject *__restrict self,
-                 struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_re_locateall(DeeBytesObject *__restrict self,
-                   struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_reg_locateall(DeeBytesObject *__restrict self,
-                    struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_re_split(DeeBytesObject *__restrict self,
-               struct DeeRegexBaseExec const *__restrict exec);
-#endif /* __INTELLISENSE__ */
 #define bytes_rereplace_kwlist     kwlist__pattern_replace_max_rules
 #define bytes_generic_regex_kwlist kwlist__pattern_start_end_rules
 #define bytes_search_regex_kwlist  kwlist__pattern_start_end_range_rules

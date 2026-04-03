@@ -48,6 +48,7 @@
 
 #include "../objects/type-operators.h"
 #include "method-hint-defaults.h"
+#include "operator_info.h"
 #include "strings.h"
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
@@ -1744,20 +1745,6 @@ __pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 
 
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeTypeObject, toi_type); /* [1..1][const] The type who's operators should be enumerated. */
-	Dee_operator_t                      toi_opid;  /* [lock(ATOMIC)] Next operator ID to check. */
-	bool                                toi_name;  /* [const] When true, try to assign human-readable names to operators. */
-} TypeOperatorsIterator;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeTypeObject, to_type); /* [1..1][const] The type who's operators should be enumerated. */
-	bool                                to_name;  /* [const] When true, try to assign human-readable names to operators. */
-} TypeOperators;
-
-INTDEF DeeTypeObject TypeOperators_Type;
-INTDEF DeeTypeObject TypeOperatorsIterator_Type;
 
 STATIC_ASSERT(offsetof(TypeOperators, to_type) == offsetof(ProxyObject, po_obj));
 #define to_serialize generic_proxy__serialize_and_memcpy

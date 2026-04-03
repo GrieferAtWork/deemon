@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_UNICODE_ISINDER_C_INL
-#define GUARD_DEEMON_OBJECTS_UNICODE_ISINDER_C_INL 1
+#ifndef GUARD_DEEMON_OBJECTS_UNICODE_FINDER_C_INL
+#define GUARD_DEEMON_OBJECTS_UNICODE_FINDER_C_INL 1
 
 #include <deemon/api.h>
 
@@ -39,6 +39,7 @@
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "finder.h"
 #include "string_functions.h"
 
 #include <stdbool.h> /* bool, false */
@@ -47,40 +48,7 @@
 
 DECL_BEGIN
 
-typedef struct {
-	PROXY_OBJECT_HEAD2_EX(String, sf_str,    /* [1..1][const] The string that is being searched. */
-	                      String, sf_needle) /* [1..1][const] The needle being searched for. */
-	size_t                        sf_start;  /* [const] Starting search index. */
-	size_t                        sf_end;    /* [const] End search index. */
-	bool                          sf_ovrlap; /* [const] When true, "sfi_find_delta = 1", else "sfi_find_delta = max(#sf_needle, 1)" */
-} StringFind;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(StringFind, sfi_find)       /* [1..1][const] The underlying find-controller. */
-	union Dee_charptr_const          sfi_start;      /* [1..1][const] Starting pointer. */
-	DWEAK union Dee_charptr_const    sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	union Dee_charptr_const          sfi_end;        /* [1..1][const] End pointer. */
-	union Dee_charptr_const          sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
-	size_t                           sfi_needle_len; /* [const] Length of the needle being searched. */
-	size_t                           sfi_find_delta; /* [const] Delta added to `sfi_ptr' after each match */
-	unsigned int                     sfi_width;      /* [const] The common width of the searched, and needle string. */
-} StringFindIterator;
-
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_FindAll(String *self, String *other,
-                  size_t start, size_t end,
-                  bool overlapping);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_CaseFindAll(String *self, String *other,
-                      size_t start, size_t end,
-                      bool overlapping);
 #define READ_PTR(x) atomic_read(&(x)->sfi_ptr.ptr)
-
-
-INTDEF DeeTypeObject StringFindIterator_Type;
-INTDEF DeeTypeObject StringFind_Type;
-INTDEF DeeTypeObject StringCaseFindIterator_Type;
-INTDEF DeeTypeObject StringCaseFind_Type;
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sf_serialize(StringFind *__restrict self,
@@ -919,9 +887,8 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 
 
 INTERN WUNUSED DREF DeeObject *DCALL
-DeeString_FindAll(String *self, String *other,
-                  size_t start, size_t end,
-                  bool overlapping) {
+DeeString_FindAll(DeeStringObject *self, DeeStringObject *other,
+                  size_t start, size_t end, bool overlapping) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);
 	if unlikely(!result)
@@ -939,9 +906,8 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_CaseFindAll(String *self, String *other,
-                      size_t start, size_t end,
-                      bool overlapping) {
+DeeString_CaseFindAll(DeeStringObject *self, DeeStringObject *other,
+                      size_t start, size_t end, bool overlapping) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);
 	if unlikely(!result)
@@ -961,4 +927,4 @@ done:
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_UNICODE_ISINDER_C_INL */
+#endif /* !GUARD_DEEMON_OBJECTS_UNICODE_FINDER_C_INL */

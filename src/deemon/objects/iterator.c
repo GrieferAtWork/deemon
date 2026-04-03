@@ -41,6 +41,7 @@
 #include "../runtime/method-hints.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "iterator.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -296,9 +297,6 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "Alias for ${!!(this as Iterator)} (s.a. ?#{op:bool})"),
 	TYPE_METHOD_END
 };
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorFuture_Of(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_get_hasnext(DeeObject *__restrict self) {
@@ -751,16 +749,6 @@ PUBLIC DeeObject DeeIterator_EmptyInstance = {
 
 
 
-
-typedef struct {
-	PROXY_OBJECT_HEAD(if_iter) /* [1..1][const] The iterator who's future is viewed. */
-} IteratorFuture;
-
-#define IteratorFuture_New(ob)                   ((DREF IteratorFuture *)ProxyObject_New(&IteratorFuture_Type, Dee_AsObject(ob)))
-#define IteratorFuture_NewInherited(ob)          ((DREF IteratorFuture *)ProxyObject_NewInherited(&IteratorFuture_Type, Dee_AsObject(ob)))
-#define IteratorFuture_NewInheritedOnSuccess(ob) ((DREF IteratorFuture *)ProxyObject_NewInheritedOnSuccess(&IteratorFuture_Type, Dee_AsObject(ob)))
-
-INTDEF DeeTypeObject IteratorFuture_Type;
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorFuture_Of(DeeObject *__restrict self) {
 	return Dee_AsObject(IteratorFuture_New(self));
@@ -895,16 +883,6 @@ INTERN DeeTypeObject IteratorFuture_Type = {
 };
 
 
-
-typedef struct {
-	PROXY_OBJECT_HEAD(ip_iter) /* [1..1][const] The iterator who's remainder is viewed. */
-} IteratorPending;
-
-#define IteratorPending_New(ob)                   ((DREF IteratorPending *)ProxyObject_New(&IteratorPending_Type, Dee_AsObject(ob)))
-#define IteratorPending_NewInherited(ob)          ((DREF IteratorPending *)ProxyObject_NewInherited(&IteratorPending_Type, Dee_AsObject(ob)))
-#define IteratorPending_NewInheritedOnSuccess(ob) ((DREF IteratorPending *)ProxyObject_NewInheritedOnSuccess(&IteratorPending_Type, Dee_AsObject(ob)))
-
-INTDEF DeeTypeObject IteratorPending_Type;
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorPending_For(DeeObject *__restrict self) {
 	return Dee_AsObject(IteratorPending_New(self));

@@ -31,27 +31,18 @@
 #include <deemon/object.h>             /* DREF, DeeObject, DeeObject_AsUInt32, DeeObject_AssertTypeExact, DeeTypeObject, Dee_AsObject, Dee_Incref, OBJECT_HEAD_INIT */
 #include <deemon/seq.h>                /* DeeSeq_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_seraddr_t */
-#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, Dee_charptr_const, STRING_WIDTH_1BYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
+#include <deemon/string.h>             /* CASE_WIDTH_nBYTE, DeeString*, STRING_WIDTH_1BYTE, SWITCH_SIZEOF_WIDTH, WSTR_LENGTH */
 #include <deemon/system-features.h>    /* memchr* */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_member, type_seq */
 
 #include "../generic-proxy.h"
+#include "ordinals.h"
 #include "string_functions.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* uint8_t, uint16_t, uint32_t */
 
 DECL_BEGIN
-
-typedef struct {
-	/* A proxy object for viewing the characters of a string as an array of unsigned
-	 * integers representing the unicode character codes for each character. */
-	PROXY_OBJECT_HEAD_EX(DeeStringObject, so_str)   /* [1..1][const] The string who's character ordinals are being viewed. */
-	unsigned int                          so_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
-	union Dee_charptr_const               so_ptr;   /* [const][== DeeString_WSTR(so_str)] The effective character array. */
-} StringOrdinals;
-
-INTDEF DeeTypeObject StringOrdinals_Type;
 
 STATIC_ASSERT(offsetof(StringOrdinals, so_str) == offsetof(ProxyObject, po_obj));
 #define stringordinals_fini  generic_proxy__fini
@@ -253,12 +244,12 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Ordinals(DeeObject *__restrict self) {
+DeeString_Ordinals(DeeStringObject *__restrict self) {
 	DREF StringOrdinals *result;
 	result = DeeObject_MALLOC(StringOrdinals);
 	if unlikely(!result)
 		goto done;
-	result->so_str     = (DREF DeeStringObject *)self;
+	result->so_str     = self;
 	result->so_width   = DeeString_WIDTH(self);
 	result->so_ptr.ptr = DeeString_WSTR(self);
 	Dee_Incref(self);

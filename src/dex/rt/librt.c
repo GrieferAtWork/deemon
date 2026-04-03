@@ -69,7 +69,7 @@
 #include <deemon/super.h>             /* DeeSuper_Type */
 #include <deemon/thread.h>            /* DeeExec_StackLimit, DeeThread_Type, Dee_EXEC_DEFAULT_STACK_LIMIT */
 #include <deemon/traceback.h>         /* DeeFrameObject, DeeFrame_Type, DeeTraceback_Type, Dee_FRAME_F* */
-#include <deemon/tuple.h>             /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyTuple */
+#include <deemon/tuple.h>             /* DeeNullableTuple_Type, DeeTuple*, Dee_EmptyNullableTuple, Dee_EmptyTuple */
 #include <deemon/type.h>              /* DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, METHOD_F*, TF_NONE, TP_FINHERITCTOR, TP_FNORMAL, TYPE_*, type_* */
 #include <deemon/util/atomic.h>       /* atomic_* */
 #include <deemon/util/hash-io.h>      /* Dee_HASH_HTAB_EOF, Dee_hash_* */
@@ -676,11 +676,6 @@ librt_get_GCCollection_f(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_GCCollectionIterator_f(void) {
 	return_cached(get_Iterator_of(librt_get_GCCollection_f()));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_NullableTuple_empty_f(void) {
-	return_cached(DeeObject_NewDefault(&DeeNullableTuple_Type));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2911,7 +2906,6 @@ PRIVATE DEFINE_CMETHOD0(librt_get_FunctionComposition, &librt_get_FunctionCompos
 PRIVATE DEFINE_CMETHOD0(librt_get_FunctionComposition_identity, &librt_get_FunctionComposition_identity_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_GCCollection, &librt_get_GCCollection_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_GCCollectionIterator, &librt_get_GCCollectionIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD0(librt_get_NullableTuple_empty, &librt_get_NullableTuple_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_Code_empty, &librt_get_Code_empty_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_BlackListKwdsIterator, &librt_get_BlackListKwdsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD0(librt_get_BlackListKwIterator, &librt_get_BlackListKwIterator_f, METHOD_FCONSTCALL);
@@ -3230,7 +3224,12 @@ DEX_GETTER_F_NODOC("SeqPairIterator", &librt_get_SeqPairIterator, DEXSYM_CONSTEX
 
 /* Misc. helper types for sequences */
 DEX_GETTER_F_NODOC("SeqEnumerateWrapper", &librt_get_EnumerateWrapper, DEXSYM_CONSTEXPR),           /* SeqEnumerateWrapper_Type */
-DEX_GETTER_F_NODOC("SeqEnumerateIndexWrapper", &librt_get_EnumerateIndexWrapper, DEXSYM_CONSTEXPR), /* SeqEnumerateIndexWrapper_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveWithRemoveIfPredicate", &librt_get_SeqRemoveWithRemoveIfPredicate, DEXSYM_CONSTEXPR),               /* SeqRemoveWithRemoveIfPredicate_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveWithRemoveIfPredicateWithKey", &librt_get_SeqRemoveWithRemoveIfPredicateWithKey, DEXSYM_CONSTEXPR), /* SeqRemoveWithRemoveIfPredicateWithKey_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveIfWithRemoveAllItem", &librt_get_SeqRemoveIfWithRemoveAllItem, DEXSYM_CONSTEXPR),                   /* SeqRemoveIfWithRemoveAllItem_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveIfWithRemoveAllKey", &librt_get_SeqRemoveIfWithRemoveAllKey, DEXSYM_CONSTEXPR),                     /* SeqRemoveIfWithRemoveAllKey_TyGETTER//_NODOCTODO:	DEX_MEMBER_F("SeqRemoveIfWithRemoveAllItem_DummyInstance", &librt_get_SeqRemoveIfWithRemoveAllItem_DummyInstance, DEXSYM_CONSTEXPR),                   /* SeqRemoveIfWithRemoveAllItem_DummyInstance */
+DEX_GETTER_F_NODOC("SeqEnumerateIndexWrapper", &librt_get_EnumerateIndexWrapper, DEXSYM_CONSTEXPR), /* SeqEnumerateIndexWrapper_Type */
+//TODO:DEX_GETTER_F_NODOC("SeqRemoveWithRemoveIfPredicate", &librt_get_SeqRemoveWithRemoveIfPredicate, DEXSYM_CONSTEXPR),                         /* SeqRemoveWithRemoveIfPredicate_Type */
+//TODO:DEX_MEMBER_F_NODOC("SeqRemoveWithRemoveIfPredicateWithKey", &librt_get_SeqRemoveWithRemoveIfPredicateWithKey, DEXSYM_CONSTEXPR),           /* SeqRemoveWithRemoveIfPredicateWithKey_Type */
+//TODO:DEX_MEMBER_F_NODOC("SeqRemoveIfWithRemoveAllItem", &librt_get_SeqRemoveIfWithRemoveAllItem, DEXSYM_CONSTEXPR),                             /* SeqRemoveIfWithRemoveAllItem_Type */
+//TODO:DEX_MEMBER_F_NODOC("SeqRemoveIfWithRemoveAllKey", &librt_get_SeqRemoveIfWithRemoveAllKey, DEXSYM_CONSTEXPR),                               /* SeqRemoveIfWithRemoveAllKey_Type */
+//TODO:DEX_MEMBER_F_NODOC("SeqRemoveIfWithRemoveAllItem_DummyInstance", &librt_get_SeqRemoveIfWithRemoveAllItem_DummyInstance, DEXSYM_CONSTEXPR), /* SeqRemoveIfWithRemoveAllItem_DummyInstance */
 
 /* Default iterator types */
 DEX_GETTER_F_NODOC("IterWithGetItemIndex", &librt_get_IterWithGetItemIndex, DEXSYM_CONSTEXPR),                               /* DefaultIterator_WithGetItemIndex_Type */
@@ -3523,7 +3522,7 @@ DEX_GETTER_F_NODOC("DictIterator", &librt_get_DictIterator, DEXSYM_CONSTEXPR),  
 
 /* Stuff related to composition of callable objects */
 DEX_GETTER_F_NODOC("FunctionComposition", &librt_get_FunctionComposition, DEXSYM_CONSTEXPR), /* FunctionComposition_Type */
-DEX_GETTER_F_NODOC("FunctionComposition_identity", &librt_get_FunctionComposition_identity, DEXSYM_CONSTEXPR), /* identity_composition */
+DEX_GETTER_F_NODOC("FunctionComposition_identity", &librt_get_FunctionComposition_identity, DEXSYM_CONSTEXPR), /* FunctionComposition_Identity */
 
 /* Special instances of non-singleton objects */
 DEX_MEMBER_F("Sequence_empty", Dee_EmptySeq, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
@@ -3548,7 +3547,7 @@ DEX_MEMBER_F("Int_1", DeeInt_One, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "The integer constant $1"),
 DEX_MEMBER_F("Int_m1", DeeInt_MinusOne, DEXSYM_READONLY | DEXSYM_CONSTEXPR,
              "The integer constant ${-1}"),
-DEX_GETTER_F("NullableTuple_empty", &librt_get_NullableTuple_empty, DEXSYM_CONSTEXPR,
+DEX_MEMBER_F("NullableTuple_empty", Dee_EmptyNullableTuple, DEXSYM_CONSTEXPR,
              "The empty nullable-tuple singleton"),
 DEX_GETTER_F("Code_empty", &librt_get_Code_empty, DEXSYM_CONSTEXPR,
              "->?GCode\n"

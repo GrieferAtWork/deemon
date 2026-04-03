@@ -48,6 +48,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "objmethod.h"
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
 #include <stdbool.h> /* bool, false, true */
@@ -422,19 +423,8 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 };
 
 
-typedef struct {
-	PROXY_OBJECT_HEAD(dk_owner) /* [1..1][const] The owner of `dk_start'. */
-	char const       *dk_start; /* [1..1][const] Doc string. */
-} DocKwds;
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DocKwds, dki_kwds) /* [1..1][const] The associated sequence. */
-	DWEAK char const             *dki_iter; /* [1..1] Iterator position (start of next keyword name). */
-} DocKwdsIterator;
 #define DOCKWDSITER_RDITER(self) atomic_read(&(self)->dki_iter)
-
-INTDEF DeeTypeObject DocKwds_Type;
-INTDEF DeeTypeObject DocKwdsIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dockwdsiter_next(DocKwdsIterator *__restrict self) {

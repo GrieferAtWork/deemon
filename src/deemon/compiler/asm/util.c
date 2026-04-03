@@ -51,7 +51,7 @@
 
 #include <hybrid/typecore.h> /* __SHIFT_TYPE__ */
 
-#include "../../objects/dict.h"
+#include "../../objects/dict-utils.h"
 #include "../../runtime/builtin.h"
 
 #include <stdbool.h> /* bool, false, true */

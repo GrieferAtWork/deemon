@@ -42,6 +42,7 @@
 
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "roset.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -57,14 +58,7 @@ DECL_BEGIN
 
 typedef DeeRoSetObject RoSet;
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(RoSet, rosi_set)  /* [1..1][const] The set being iterated. */
-	struct Dee_roset_item      *rosi_next; /* [?..1][in(rosi_set->rs_elem)][atomic]
-	                                        * The first candidate for the next item. */
-} RoSetIterator;
 #define READ_ITEM(x) atomic_read(&(x)->rosi_next)
-
-INTDEF DeeTypeObject RoSetIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_ctor(RoSetIterator *__restrict self) {

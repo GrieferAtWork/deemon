@@ -632,4 +632,8 @@ PUBLIC ATTR_CONST WUNUSED size_t
 
 DECL_END
 
+#ifndef __INTELLISENSE__
+#include "static-refcnt-checks.c.inl"
+#endif /* !__INTELLISENSE__ */
+
 #endif /* !GUARD_DEEMON_RUNTIME_MISC_C */

@@ -36,12 +36,13 @@
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, STRUCT_OBJECT_AB, TF_NONLOOPING, TP_FFINAL, TP_FNORMAL, TYPE_MEMBER*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read */
 #include <deemon/util/hash.h>          /* Dee_HashPointer */
-#include <deemon/util/lock.h>          /* Dee_atomic_lock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_lock_init */
 
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "cscanf.h"
 
 #include <stdbool.h> /* bool, false, true */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -54,37 +55,7 @@ DECL_BEGIN
 
 typedef DeeStringObject String;
 
-
-typedef struct {
-	PROXY_OBJECT_HEAD2(ss_data,   /* [1..1][const] The string data object (either a string, or Bytes object). */
-	                   ss_format) /* [1..1][const] The scanner format object (either a string, or Bytes object). */
-} StringScanner;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(StringScanner, si_scanner) /* [1..1][const] The underlying scanner. */
-	char const                         *si_datend;  /* [1..1][const] End address of the input data (dereferences to a NUL-character). */
-	char const                         *si_fmtend;  /* [1..1][const] End address of the format string (dereferences to a NUL-character). */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_lock_t                   si_lock;    /* Lock for modifying the data and format pointers.
-	                                                 * NOTE: Not required to be held when reading those pointers! */
-#endif /* !CONFIG_NO_THREADS */
-	char const                         *si_datiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current data pointer (UTF-8). */
-	char const                         *si_fmtiter; /* [1..1][lock(READ(atomic), WRITE(si_lock))] The current format pointer (UTF-8). */
-} StringScanIterator;
-
-#define StringScanIterator_LockAvailable(self)  Dee_atomic_lock_available(&(self)->si_lock)
-#define StringScanIterator_LockAcquired(self)   Dee_atomic_lock_acquired(&(self)->si_lock)
-#define StringScanIterator_LockTryAcquire(self) Dee_atomic_lock_tryacquire(&(self)->si_lock)
-#define StringScanIterator_LockAcquire(self)    Dee_atomic_lock_acquire(&(self)->si_lock)
-#define StringScanIterator_LockWaitFor(self)    Dee_atomic_lock_waitfor(&(self)->si_lock)
-#define StringScanIterator_LockRelease(self)    Dee_atomic_lock_release(&(self)->si_lock)
-
-
 #define GET_FORMAT_POINTER(x) atomic_read(&(x)->si_fmtiter)
-
-INTDEF DeeTypeObject StringScanIterator_Type;
-INTDEF DeeTypeObject StringScan_Type;
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 match_contains(char const *sel_start, char const *sel_end, uint32_t ch) {
@@ -899,9 +870,6 @@ INTERN DeeTypeObject StringScan_Type = {
 };
 
 
-
-
-
 /* Implement c-style string scanning, using a scanf()-style format string.
  * This functions then returns a sequence of all scanned objects, that is
  * the usually used in an expand expression:
@@ -918,8 +886,7 @@ INTERN DeeTypeObject StringScan_Type = {
  * >> }
  */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_Scanf(DeeObject *self,
-                DeeObject *format) {
+DeeString_Scanf(DeeObject *self, DeeObject *format) {
 	DREF StringScanner *result;
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(format);

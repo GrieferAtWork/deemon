@@ -54,6 +54,9 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "string.h"
+#include "unicode/ordinals.h"
+#include "unicode/regex.h"
 #include "unicode/unicode.h"
 
 #include <stdarg.h>  /* va_end, va_list, va_start */
@@ -895,11 +898,6 @@ DeeString_InvokeUserFiniHooks(String const *__restrict self) {
 }
 
 
-/* Destroy the regex cache associated with `self'.
- * Called from `DeeString_Type.tp_fini' when `Dee_STRING_UTF_FFINIHOOK' was set. */
-INTDEF NONNULL((1)) void DCALL /* From "./unicode/regex.c" */
-DeeString_DestroyRegex(String const *__restrict self);
-
 PRIVATE NONNULL((1)) void DCALL
 DeeString_InvokeFiniHooks(String const *__restrict self) {
 	/* Built-in finalization hooks */
@@ -1429,12 +1427,6 @@ string_mh_seq_trycompare_eq(String *lhs, DeeObject *rhs) {
 	return string_compare_seq(lhs, rhs);
 }
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(String, si_string); /* [1..1][const] The string that is being iterated. */
-	union Dee_charptr_const      si_iter;    /* [1..1][weak] The current iterator position. */
-	union Dee_charptr_const      si_end;     /* [1..1][const] The string end pointer. */
-	unsigned int                 si_width;   /* [const] The stirng width used during iteration (One of `STRING_WIDTH_*'). */
-} StringIterator;
 #define READ_ITER_PTR(x) atomic_read(&(x)->si_iter.ptr)
 
 STATIC_ASSERT(offsetof(StringIterator, si_string) == offsetof(ProxyObject, po_obj));
@@ -1536,8 +1528,6 @@ err:
 	return -1;
 #undef ADDROF
 }
-
-INTDEF DeeTypeObject StringIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 stringiter_hash(StringIterator *self) {
@@ -2382,9 +2372,6 @@ PRIVATE struct type_method tpconst string_class_methods[] = {
 
 INTDEF struct type_method tpconst string_methods[];
 INTDEF struct type_math string_math;
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Ordinals(DeeObject *__restrict self);
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_hashed(String *__restrict self) {

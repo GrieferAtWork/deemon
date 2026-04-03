@@ -44,6 +44,7 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "segments.h"
 #include "string_functions.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -51,28 +52,7 @@
 
 DECL_BEGIN
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeStringObject, s_str)   /* [1..1][const] The string that is being segmented. */
-	size_t                                s_siz;   /* [!0][const] The size of a single segment. */
-	DWEAK uint8_t                        *s_ptr;   /* [1..1][in(DeeString_WSTR(s_str))] Pointer to the start of the next segment. */
-	uint8_t                              *s_end;   /* [1..1][== DeeString_WEND(s_str)] End pointer. */
-	unsigned int                          s_width; /* [const] The width of a single character. */
-} StringSegmentsIterator;
 #define READ_PTR(x) atomic_read(&(x)->s_ptr)
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeStringObject, s_str) /* [1..1][const] The string that is being segmented. */
-	size_t                                s_siz; /* [!0][const] The size of a single segment. */
-} StringSegments;
-
-
-
-INTDEF DeeTypeObject StringSegmentsIterator_Type;
-INTDEF DeeTypeObject StringSegments_Type;
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Segments(String *__restrict self,
-                   size_t segment_size);
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_ctor(StringSegmentsIterator *__restrict self) {
@@ -536,7 +516,7 @@ INTERN DeeTypeObject StringSegments_Type = {
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Segments(String *__restrict self,
+DeeString_Segments(DeeStringObject *__restrict self,
                    size_t segment_size) {
 	DREF StringSegments *result;
 	ASSERT(segment_size != 0);

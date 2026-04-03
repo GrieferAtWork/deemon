@@ -38,12 +38,13 @@
 #include <deemon/system-features.h>    /* bzero, memcpy */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeType_GetName, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_visit_t, METHOD_FNOREFESCAPE, STRUCT_*, TF_NONLOOPING, TP_F*, TYPE_*, type_* */
 #include <deemon/util/atomic.h>        /* atomic_read, atomic_write */
-#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_* */
+#include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include "../../runtime/runtime_error.h" /* err_invalid_argc */
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
 #include "regroups.h"
+#include "reproxy.h"
 #include "string_functions.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -54,38 +55,6 @@
  * `string.relocateall' and `string.resplit' */
 
 DECL_BEGIN
-
-INTDEF DeeTypeObject ReFindAll_Type;
-INTDEF DeeTypeObject ReFindAllIterator_Type;
-INTDEF DeeTypeObject RegFindAll_Type;
-INTDEF DeeTypeObject RegFindAllIterator_Type;
-INTDEF DeeTypeObject ReLocateAll_Type;
-INTDEF DeeTypeObject ReLocateAllIterator_Type;
-INTDEF DeeTypeObject RegLocateAll_Type;
-INTDEF DeeTypeObject RegLocateAllIterator_Type;
-INTDEF DeeTypeObject ReSplit_Type;
-INTDEF DeeTypeObject ReSplitIterator_Type;
-INTDEF DeeTypeObject ReBytesFindAll_Type;
-INTDEF DeeTypeObject ReBytesFindAllIterator_Type;
-INTDEF DeeTypeObject RegBytesFindAll_Type;
-INTDEF DeeTypeObject RegBytesFindAllIterator_Type;
-INTDEF DeeTypeObject RegBytesLocateAll_Type;
-INTDEF DeeTypeObject RegBytesLocateAllIterator_Type;
-INTDEF DeeTypeObject ReBytesLocateAll_Type;
-INTDEF DeeTypeObject ReBytesLocateAllIterator_Type;
-INTDEF DeeTypeObject ReBytesSplit_Type;
-INTDEF DeeTypeObject ReBytesSplitIterator_Type;
-
-#define DeeRegexBaseExec_Load(self, code, result, nmatch, pmatch) \
-	(void)((result)->rx_code     = (code),                        \
-	       (result)->rx_inbase   = (self)->rx_inbase,             \
-	       (result)->rx_insize   = (self)->rx_insize,             \
-	       (result)->rx_startoff = (self)->rx_startoff,           \
-	       (result)->rx_endoff   = (self)->rx_endoff,             \
-	       (result)->rx_eflags   = (self)->rx_eflags,             \
-	       (result)->rx_nmatch   = (nmatch),                      \
-	       (result)->rx_pmatch   = (pmatch))
-
 
 #define _Dee_RE_COMPILE_MASK \
 	(Dee_RE_COMPILE_NORMAL | Dee_RE_COMPILE_ICASE | Dee_RE_COMPILE_NOUTF8)
@@ -111,54 +80,6 @@ _DeeRegexBaseExec_LoadCode(struct DeeRegexBaseExec *__restrict self) {
 	return result;
 }
 
-
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_re_findall(DeeBytesObject *__restrict self,
-                 struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_reg_findall(DeeBytesObject *__restrict self,
-                 struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_re_locateall(DeeBytesObject *__restrict self,
-                   struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_reg_locateall(DeeBytesObject *__restrict self,
-                    struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_re_split(DeeBytesObject *__restrict self,
-               struct DeeRegexBaseExec const *__restrict exec);
-
-
-typedef struct {
-	PROXY_OBJECT_HEAD      (rs_data) /* [const][1..1] Data string or Bytes. */
-	struct DeeRegexBaseExec rs_exec; /* [const] Regex arguments. */
-} ReSequence;
-
-
-typedef struct {
-	PROXY_OBJECT_HEAD      (rsi_data) /* [const][1..1] Data string or Bytes. */
-	struct DeeRegexBaseExec rsi_exec; /* [lock(rsi_lock)] Regex arguments. */
-#ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t     rsi_lock; /* Lock used during iteration. */
-#endif /* !CONFIG_NO_THREADS */
-} ReSequenceIterator;
-
-#define ReSequenceIterator_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->rsi_lock)
-#define ReSequenceIterator_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->rsi_lock)
-#define ReSequenceIterator_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->rsi_lock)
-#define ReSequenceIterator_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->rsi_lock)
-#define ReSequenceIterator_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->rsi_lock)
-#define ReSequenceIterator_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->rsi_lock)
-#define ReSequenceIterator_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->rsi_lock)
-#define ReSequenceIterator_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->rsi_lock)
-#define ReSequenceIterator_LockRead(self)       Dee_atomic_rwlock_read(&(self)->rsi_lock)
-#define ReSequenceIterator_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->rsi_lock)
-#define ReSequenceIterator_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->rsi_lock)
-#define ReSequenceIterator_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->rsi_lock)
-#define ReSequenceIterator_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->rsi_lock)
-#define ReSequenceIterator_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->rsi_lock)
-#define ReSequenceIterator_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->rsi_lock)
-#define ReSequenceIterator_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->rsi_lock)
 
 STATIC_ASSERT(offsetof(ReSequenceIterator, rsi_data) == offsetof(ProxyObject2, po_obj1) ||
               offsetof(ReSequenceIterator, rsi_data) == offsetof(ProxyObject2, po_obj2));
@@ -2930,7 +2851,7 @@ INTERN DeeTypeObject ReBytesSplit_Type = {
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_re_findall(String *__restrict self,
+string_re_findall(DeeStringObject *__restrict self,
                   struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
@@ -2946,7 +2867,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_reg_findall(String *__restrict self,
+string_reg_findall(DeeStringObject *__restrict self,
                    struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
@@ -2962,7 +2883,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_reg_locateall(String *__restrict self,
+string_reg_locateall(DeeStringObject *__restrict self,
                      struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
@@ -2978,7 +2899,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_re_locateall(String *__restrict self,
+string_re_locateall(DeeStringObject *__restrict self,
                     struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);
@@ -2994,7 +2915,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_re_split(String *__restrict self,
+string_re_split(DeeStringObject *__restrict self,
                 struct DeeRegexBaseExec const *__restrict exec) {
 	DREF ReSequence *result;
 	result = DeeObject_MALLOC(ReSequence);

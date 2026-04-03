@@ -31,7 +31,7 @@
 #include <deemon/int.h>                /* DeeInt_* */
 #include <deemon/method-hints.h>       /* DeeObject_InvokeMethodHint, Dee_seq_enumerate_index_t, Dee_seq_enumerate_t, TYPE_METHOD_HINT*, type_method_hint */
 #include <deemon/none-operator.h>      /* _DeeNone_reti1_1, _DeeNone_rets1_1 */
-#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference */
+#include <deemon/object.h>             /* ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_BOUND_FROMBOOL, Dee_BOUND_FROMPRESENT_BOUND, Dee_COMPARE_*, Dee_Decref*, Dee_Incref, Dee_TYPE, Dee_foreach_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compare, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference */
 #include <deemon/operator-hints.h>     /* DeeType_HasNativeOperator */
 #include <deemon/pair.h>               /* CONFIG_ENABLE_SEQ_ONE_TYPE, DeeSeqOneObject, DeeSeq_OfPair */
 #include <deemon/seq.h>                /* DeeIterator_Type, DeeSeqRange_Clamp, DeeSeq_NewEmpty, DeeSeq_Type, Dee_seq_range */
@@ -49,6 +49,7 @@
 #include "../generic-proxy.h"
 #include "concat.h"
 #include "default-compare.h"
+#include "one.h"
 #include "repeat.h"
 
 #include <stdbool.h> /* bool */
@@ -63,17 +64,6 @@ typedef DeeSeqOneObject SeqOne;
 /************************************************************************/
 /* SeqOneIterator                                                       */
 /************************************************************************/
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *soi_item; /* [0..1][lock(ATOMIC && CLEAR_ONCE)]
-	                           * The item to yield (or "ITER_DONE" if that already
-	                           * happened, or "NULL" if temporarily locked; note that
-	                           * "NULL" will never appear if "ITER_DONE" was already
-	                           * set at one point, unless the iterator is reset) */
-} SeqOneIterator;
-
-INTDEF DeeTypeObject SeqOneIterator_Type;
 
 /* Try to get a reference to the stored item without
  * (returns "ITER_DONE" if already consumed) */

@@ -34,7 +34,7 @@
 #include <deemon/kwds.h>               /* DeeBlackListKw_New, DeeBlackListKwds*, DeeKwArgs, DeeKwds*, DeeObject_IsKw, DeeType_IsKw, Dee_kwds_entry */
 #include <deemon/map.h>                /* DeeMap_Type */
 #include <deemon/method-hints.h>       /* TYPE_METHOD_HINT*, type_method_hint */
-#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD, OBJECT_HEAD_INIT, return_reference_ */
+#include <deemon/object.h>             /* ASSERT_OBJECT, ASSERT_OBJECT_TYPE_EXACT, DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_ERR, Dee_Decref*, Dee_Incref, Dee_Movrefv, Dee_TYPE, Dee_XDecref, Dee_foreach_pair_t, Dee_formatprinter_t, Dee_hash_t, Dee_return_compareT, Dee_ssize_t, ITER_DONE, OBJECT_HEAD_INIT, return_reference_ */
 #include <deemon/rodict.h>             /* DeeRoDict_NewEmpty, Dee_EmptyRoDict */
 #include <deemon/seq.h>                /* DeeIterator_Type */
 #include <deemon/serial.h>             /* DeeSerial*, Dee_SERADDR_INVALID, Dee_SERADDR_ISOK, Dee_seraddr_t */
@@ -47,6 +47,7 @@
 #include <deemon/util/lock.h>          /* Dee_atomic_rwlock_init */
 
 #include "../objects/generic-proxy.h"
+#include "kwds.h"
 #include "runtime_error.h"
 #include "strings.h"
 
@@ -65,16 +66,8 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 typedef DeeKwdsObject Kwds;
 typedef DeeKwdsMappingObject KwdsMapping;
 
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(Kwds, ki_map); /* [1..1][const] The associated keywords table. */
-	struct Dee_kwds_entry     *ki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
-	struct Dee_kwds_entry     *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-} KwdsIterator;
-
 #define READ_ITER(x) atomic_read(&(x)->ki_iter)
 
-INTDEF DeeTypeObject DeeKwdsIterator_Type;
 PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void);
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -340,7 +333,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 };
 
 
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeKwds_NewWithHint(size_t num_items) {
 	DREF Kwds *result;
 	size_t init_mask = 1;
@@ -933,13 +926,6 @@ DeeKwds_IndexOfStringLenHash(DeeObject const *__restrict self,
 
 
 
-typedef struct {
-	OBJECT_HEAD
-	DREF KwdsMapping        *ki_map;  /* [1..1][const] The associated keywords mapping. */
-	DWEAK struct Dee_kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
-	struct Dee_kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-} KmapIterator;
-
 #define READ_ITER(x) atomic_read(&(x)->ki_iter)
 
 STATIC_ASSERT(offsetof(KwdsIterator, ki_iter) == offsetof(KmapIterator, ki_iter));
@@ -1079,7 +1065,7 @@ PRIVATE struct type_iterator kmapiter_iterator = {
 #define kmapiter_cmp     kwdsiter_cmp
 #define kmapiter_members kwdsiter_members
 
-PRIVATE DeeTypeObject DeeKwdsMappingIterator_Type = {
+INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMappingIterator",
 	/* .tp_doc      = */ DOC("()\n"

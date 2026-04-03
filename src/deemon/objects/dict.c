@@ -59,6 +59,7 @@
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "dict-utils.h"
 #include "dict.h"
 #include "generic-proxy.h"
 #include "seq/default-compare.h"
@@ -90,13 +91,6 @@ typedef DeeDictObject Dict;
 /************************************************************************/
 /* ITERATOR                                                             */
 /************************************************************************/
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(Dict, di_dict) /* [1..1][const] The Dict being iterated. */
-	/*virt*/ Dee_hash_vidx_t   di_vidx; /* [!0][lock(ATOMIC)] Lower bound for next item to read from "d_vtab" (starts at 1 because "d_vtab" is offset by -1) */
-} DictIterator;
-
-INTDEF DeeTypeObject DictIterator_Type;
-
 STATIC_ASSERT(offsetof(DictIterator, di_dict) == offsetof(ProxyObject, po_obj));
 #define diter_fini      generic_proxy__fini
 #define diter_visit     generic_proxy__visit

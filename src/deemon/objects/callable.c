@@ -27,7 +27,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFuSIZ */
 #include <deemon/none-operator.h>      /* DeeNone_Operator* */
-#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref, Dee_Movprefv, Dee_OBJECT_HEAD, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT */
+#include <deemon/object.h>             /* DREF, DeeObject, DeeObject_*, DeeTypeObject, Dee_AsObject, Dee_COMPARE_*, Dee_DecrefNokill, Dee_Decref_unlikely, Dee_Incref, Dee_Movprefv, Dee_formatprinter_t, Dee_hash_t, Dee_ssize_t, OBJECT_HEAD_INIT */
 #include <deemon/objmethod.h>          /*  */
 #include <deemon/seq.h>                /* DeeRefVector_NewReadonly */
 #include <deemon/serial.h>             /* DeeSerial, Dee_seraddr_t */
@@ -36,6 +36,7 @@
 #include <deemon/type.h>               /* DeeObject_IsShared, DeeType_Type, Dee_TYPE_CONSTRUCTOR_INIT_ALLOC_AUTO, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_visit_t, METHOD_FCONSTCALL, TF_NONE, TP_F*, TYPE_*, type_* */
 
 #include "../runtime/strings.h"
+#include "callable.h"
 
 #include <stddef.h> /* NULL, size_t */
 
@@ -48,8 +49,6 @@
  * `x is Callable from deemon' */
 
 DECL_BEGIN
-
-INTDEF DeeTypeObject FunctionComposition_Type;
 
 #define composition_serialize tuple_serialize
 INTDEF WUNUSED NONNULL((1, 2)) Dee_seraddr_t DCALL tuple_serialize(DeeTupleObject *__restrict self, DeeSerial *__restrict writer);
@@ -68,11 +67,7 @@ INTDEF NONNULL((1)) void DCALL tuple_tp_free(void *__restrict ob);
 #define composition_hash tuple_hash
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL tuple_hash(DeeTupleObject *__restrict self);
 
-PRIVATE struct {
-	Dee_OBJECT_HEAD
-	size_t     t_size;
-/*	DeeObject *t_elem[0];*/
-} identity_composition = {
+INTERN IdentityFunctionComposition FunctionComposition_Identity = {
 	OBJECT_HEAD_INIT(&FunctionComposition_Type),
 	/* .t_size = */ 0
 };
@@ -97,8 +92,8 @@ DeeFunctionComposition_Of(size_t argc, DeeObject *const *argv) {
 	}
 	switch (total) {
 	case 0:
-		Dee_Incref(&identity_composition);
-		return Dee_AsObject(&identity_composition);
+		Dee_Incref(&FunctionComposition_Identity);
+		return Dee_AsObject(&FunctionComposition_Identity);
 	case 1: {
 		for (i = 0;; ++i) {
 			DeeObject *cb;
@@ -385,7 +380,7 @@ PRIVATE struct type_member tpconst callable_class_members[] = {
 	                      "}"),
 	TYPE_MEMBER_CONST_DOC("Composition", &FunctionComposition_Type,
 	                      "Type used for function compositions of 2 or more ?{.}s"),
-	TYPE_MEMBER_CONST_DOC("identity", &identity_composition,
+	TYPE_MEMBER_CONST_DOC("identity", &FunctionComposition_Identity,
 	                      "Identity function (same as ${Callable.compose()})"),
 	TYPE_MEMBER_END
 };

@@ -57,6 +57,7 @@
 #include "../runtime/kwlist.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "class_desc.h"
 #include "generic-proxy.h"
 
 #include <stdarg.h>  /* va_list */
@@ -102,28 +103,7 @@ INTERN struct Dee_class_attribute empty_class_attributes[] = {
 	}
 };
 
-typedef struct {
-	/* A mapping-like {(string | int, int)...} object used for mapping
-	 * operator names to their respective class instance table slots. */
-	PROXY_OBJECT_HEAD_EX(ClassDescriptor, co_desc) /* [1..1][const] The referenced class descriptor. */
-} ClassOperatorTable;
-
-#define ClassOperatorTable_New(self) \
-	((DREF ClassOperatorTable *)ProxyObject_New(&ClassOperatorTable_Type, Dee_AsObject(self)))
-
-
-typedef struct {
-	/* A mapping-like {(string | int, int)...} object used for mapping
-	 * operator names to their respective class instance table slots. */
-	PROXY_OBJECT_HEAD_EX(ClassDescriptor, co_desc) /* [1..1][const] The referenced class descriptor. */
-	DWEAK struct Dee_class_operator      *co_iter; /* [1..1][lock(ATOMIC)] Current iterator position. */
-	struct Dee_class_operator            *co_end;  /* [1..1][const] Iterator end position. */
-} ClassOperatorTableIterator;
 #define COTI_GETITER(x) atomic_read(&(x)->co_iter)
-
-INTDEF DeeTypeObject ClassOperatorTableIterator_Type;
-INTDEF DeeTypeObject ClassOperatorTable_Type;
-
 
 LOCAL WUNUSED NONNULL((1)) struct Dee_class_operator *DCALL
 coti_next_ent(ClassOperatorTableIterator *__restrict self) {
@@ -640,34 +620,12 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 
 
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(ClassDescriptor, ca_desc) /* [1..1][const] Class descriptor. */
-	struct Dee_class_attribute const         *ca_attr; /* [1..1][const] The attribute that was queried. */
-} ClassAttribute;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(ClassDescriptor, ca_desc) /* [1..1][const] Class descriptor. */
-	DWEAK struct Dee_class_attribute const   *ca_iter; /* [1..1] Current iterator position. */
-	struct Dee_class_attribute const         *ca_end;  /* [1..1][const] Iterator end. */
-} ClassAttributeTableIterator;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(ClassDescriptor, ca_desc)  /* [1..1][const] Class descriptor. */
-	struct Dee_class_attribute const         *ca_start; /* [1..1][const] Hash-vector starting pointer. */
-	size_t                                ca_mask;  /* [const] Mask-vector size mask. */
-} ClassAttributeTable;
-
 STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ClassAttribute, ca_desc));
 #define ca_members cot_members
 STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ClassAttributeTable, ca_desc));
 #define cat_members cot_members
 STATIC_ASSERT(offsetof(ClassOperatorTable, co_desc) == offsetof(ClassAttributeTableIterator, ca_desc));
 #define cati_members cot_members
-
-
-INTDEF DeeTypeObject ClassAttribute_Type;
-INTDEF DeeTypeObject ClassAttributeTable_Type;
-INTDEF DeeTypeObject ClassAttributeTableIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF ClassAttribute *DCALL
 cattr_new(ClassDescriptor *__restrict desc,
@@ -1802,7 +1760,6 @@ PRIVATE struct type_member tpconst cd_members[] = {
 	TYPE_MEMBER_END
 };
 
-INTDEF DeeTypeObject ObjectTable_Type;
 PRIVATE struct type_member tpconst cd_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Attribute, &ClassAttribute_Type),
 	TYPE_MEMBER_CONST("AttributeTable", &ClassAttributeTable_Type),
@@ -2598,13 +2555,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 
 
 
-typedef struct {
-	PROXY_OBJECT_HEAD(ot_owner)        /* [1..1][const] The associated owner object.
-	                                    * NOTE: This may be a super-object, in which case the referenced
-	                                    *       object table refers to the described super-type. */
-	struct Dee_instance_desc *ot_desc; /* [1..1][valid_if(ot_size != 0)][const] The referenced instance descriptor. */
-	uint16_t                  ot_size; /* [const] The length of the object table contained within `ot_desc' */
-} ObjectTable;
+
 
 STATIC_ASSERT(offsetof(ObjectTable, ot_owner) == offsetof(ProxyObject, po_obj));
 #define ot_fini  generic_proxy__fini

@@ -46,6 +46,7 @@
 #include <hybrid/typecore.h> /* __BYTE_TYPE__ */
 
 #include "../objects/generic-proxy.h"
+#include "kwds-wrappers.h"
 #include "kwlist.h"
 #include "strings.h"
 
@@ -58,14 +59,6 @@ DECL_BEGIN
 #define byte_t __BYTE_TYPE__
 
 /* ======================== DeeBlackListKwdsObject ======================== */
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeBlackListKwdsObject, blki_map); /* [1..1][const] The associated keywords mapping. */
-	struct Dee_kwds_entry                       *blki_iter; /* [1..1][lock(ATOMIC)] The next entry to iterate. */
-	struct Dee_kwds_entry                       *blki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-} DeeBlackListKwdsIterator;
-
-INTDEF DeeTypeObject DeeBlackListKwdsIterator_Type;
 
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
@@ -1128,13 +1121,6 @@ DeeBlackListKwds_Decref(DREF DeeObject *__restrict self) {
 
 
 /* ======================== DeeBlackListKwObject ======================== */
-typedef struct {
-	PROXY_OBJECT_HEAD2_EX(DeeObject,            mi_iter, /* [1..1][const] An iterator for the underlying `mi_map->blkw_kw'. */
-	                      DeeBlackListKwObject, mi_map); /* [1..1][const] The general-purpose blacklist mapping being iterated. */
-} DeeBlackListKwIterator;
-
-INTDEF DeeTypeObject DeeBlackListKwIterator_Type;
-
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_iter) == offsetof(ProxyObject2, po_obj1));
 STATIC_ASSERT(offsetof(DeeBlackListKwIterator, mi_map) == offsetof(ProxyObject2, po_obj2));
 #define blmi_copy      generic_proxy2__copy_recursive1_alias2

@@ -33,7 +33,7 @@
 #include <deemon/int.h>             /* DeeInt_* */
 #include <deemon/method-hints.h>    /* TYPE_METHOD_HINTREF, TYPE_METHOD_HINTREF_DOC */
 #include <deemon/none.h>            /* return_none */
-#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_formatprinter_t, Dee_ssize_t, return_reference, return_reference_ */
+#include <deemon/object.h>          /* DREF, DeeObject, DeeObject_*, Dee_AsObject, Dee_COMPARE_*, Dee_Compare*, Dee_Decref, Dee_Decref_likely, Dee_Incref, Dee_Incref_n, Dee_ssize_t, return_reference, return_reference_ */
 #include <deemon/pair.h>            /* DeeSeq_OfPairInherited */
 #include <deemon/regex.h>           /* DeeRegex*, DeeString_GetRegex, Dee_RE_* */
 #include <deemon/seq.h>             /* DeeSeqSome*, DeeSeq_NewEmpty */
@@ -51,7 +51,14 @@
 #include "../../runtime/kwlist.h"
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
+#include "cformat.h"
+#include "cscanf.h"
+#include "finder.h"
+#include "regex.h"
 #include "regroups.h"
+#include "reproxy.h"
+#include "segments.h"
+#include "split.h"
 #include "string_functions.h"
 
 #include <stdbool.h> /* bool, false, true */
@@ -3278,15 +3285,6 @@ err:
 
 
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_FindAll(String *self, String *other,
-                  size_t start, size_t end,
-                  bool overlapping);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_CaseFindAll(String *self, String *other,
-                      size_t start, size_t end,
-                      bool overlapping);
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findall(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
@@ -3745,9 +3743,6 @@ err:
 	return NULL;
 }
 
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Segments(String *__restrict self, size_t substring_length);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_segments(String *self, size_t argc, DeeObject *const *argv) {
@@ -7470,9 +7465,6 @@ err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeString_Split(String *self, String *separator);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeString_CaseSplit(String *self, String *separator);
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_split(String *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("split", params: "
@@ -7509,9 +7501,6 @@ err:
 	return NULL;
 }
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_SplitLines(DeeObject *__restrict self, bool keepends);
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_splitlines(String *self, size_t argc, DeeObject *const *argv) {
 /*[[[deemon (print_DeeArg_Unpack from rt.gen.unpack)("splitlines", params: "
@@ -7524,7 +7513,7 @@ string_splitlines(String *self, size_t argc, DeeObject *const *argv) {
 	args.keepends = false;
 	DeeArg_Unpack0Or1X(err, argc, argv, "splitlines", &args.keepends, "b", DeeObject_AsBool);
 /*[[[end]]]*/
-	return DeeString_SplitLines(Dee_AsObject(self), args.keepends);
+	return DeeString_SplitLines(self, args.keepends);
 err:
 	return NULL;
 }
@@ -7589,9 +7578,6 @@ string_format(String *self, size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
-
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_Scanf(DeeObject *self, DeeObject *format);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_scanf(String *self, size_t argc, DeeObject *const *argv) {
@@ -9168,13 +9154,6 @@ err:
 }
 
 
-struct DeeRegexExecWithRange {
-	struct DeeRegexExec rewr_exec;    /* Normal exec args */
-	size_t              rewr_range;   /* Max # of search attempts to perform (in bytes) */
-	DeeStringObject    *rewr_pattern; /* [1..1] Pattern string that is being used */
-	DeeStringObject    *rewr_rules;   /* [0..1] Pattern rules */
-};
-
 #define SEARCH_REGEX_GETARGS_FMT(name) "o|" UNPuSIZ UNPxSIZ UNPxSIZ "o:" name
 PRIVATE WUNUSED NONNULL((1, 5, 6)) int DCALL
 search_regex_getargs(String *self, size_t argc, DeeObject *const *argv,
@@ -9932,40 +9911,6 @@ err:
 	Dee_unicode_printer_fini(&printer);
 	return NULL;
 }
-
-struct DeeRegexBaseExec {
-	DREF String               *rx_pattern;  /* [1..1] Pattern string (only a reference within objects in "./reproxy.c.inl") */
-	struct DeeRegexCode const *rx_code;     /* [1..1] Regex code */
-	void const                *rx_inbase;   /* [0..rx_insize][valid_if(rx_startoff < rx_endoff)] Input data to scan
-	                                         * When `rx_code' was compiled with `Dee_RE_COMPILE_NOUTF8', this data
-	                                         * is treated as raw bytes; otherwise, it is treated as a utf-8 string.
-	                                         * In either case, `rx_insize' is the # of bytes within this buffer. */
-	size_t                     rx_insize;   /* Total # of bytes starting at `rx_inbase' */
-	size_t                     rx_startoff; /* Starting byte offset into `rx_inbase' of data to match. */
-	size_t                     rx_endoff;   /* Ending byte offset into `rx_inbase' of data to match. */
-	unsigned int               rx_eflags;   /* Execution-flags (set of `Dee_RE_EXEC_*') */
-};
-
-/* Functions from "./reproxy.c.inl" */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_re_scanf(String *__restrict self,
-                struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_re_findall(String *__restrict self,
-                  struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_reg_findall(String *__restrict self,
-                   struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_reg_locateall(String *__restrict self,
-                     struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_re_locateall(String *__restrict self,
-                    struct DeeRegexBaseExec const *__restrict exec);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_re_split(String *__restrict self,
-                struct DeeRegexBaseExec const *__restrict exec);
-
 
 #define BASE_REGEX_GETARGS_FMT GENERIC_REGEX_GETARGS_FMT
 #define base_regex_kwlist      kwlist__pattern_start_end_rules
@@ -12099,12 +12044,6 @@ err:
 	return NULL;
 }
 
-
-INTDEF Dee_ssize_t DCALL
-DeeString_CFormat(Dee_formatprinter_t printer,
-                  Dee_formatprinter_t format_printer, void *arg,
-                  /*utf-8*/ char const *__restrict format, size_t format_len,
-                  size_t argc, DeeObject *const *argv);
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
 string_mod(String *__restrict self, DeeObject *__restrict args) {

@@ -41,6 +41,7 @@
 #include "../objects/generic-proxy.h"
 #include "../objects/seq/default-map-proxy.h"
 #include "../runtime/strings.h"
+#include "module-globals.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
 #include <stdint.h> /* UINT16_MAX, uint16_t */
@@ -59,27 +60,6 @@ DECL_BEGIN
 #define do_DeeModule_UnlockSymbols(mod) \
 	DeeModule_UnlockSymbols(mod)
 #endif /* !CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES */
-
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mei_module); /* [1..1][const] The module who's exports are being iterated. */
-	DWEAK uint16_t                        mei_index;   /* The current global variable index. */
-} ModuleExportsIterator;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeModuleObject, me_module); /* [1..1][const] The module who's exports are being viewed. */
-} ModuleExports;
-
-#define ModuleExports_New(mod) \
-	((DREF ModuleExports *)ProxyObject_New(&ModuleExports_Type, Dee_AsObject(mod)))
-
-INTDEF DeeTypeObject ModuleExports_Type;
-INTDEF DeeTypeObject ModuleExportsIterator_Type;
-INTDEF DeeTypeObject ModuleExportsKeysIterator_Type;
-INTDEF DeeTypeObject ModuleGlobals_Type;
-INTDEF WUNUSED NONNULL((1)) DREF ModuleExports *DCALL
-DeeModule_ViewExports(DeeModuleObject *__restrict self);
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modexportsiter_ctor(ModuleExportsIterator *__restrict self) {
@@ -1411,13 +1391,6 @@ DeeModule_ViewExports(DeeModuleObject *__restrict self) {
 
 
 
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mg_module); /* [1..1] The module who's exports are being viewed. */
-} ModuleGlobals;
-
-#define ModuleGlobals_New(mod) \
-	((DREF ModuleGlobals *)ProxyObject_New(&ModuleGlobals_Type, Dee_AsObject(mod)))
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modglobals_init(ModuleGlobals *__restrict self,
                 size_t argc, DeeObject *const *argv) {
@@ -1706,13 +1679,6 @@ DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
 
 
 #ifdef CONFIG_EXPERIMENTAL_MODULE_DIRECTORIES
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(DeeModuleObject, mln_module); /* [1..1] The module who's libnames are being viewed. */
-} ModuleLibNames;
-
-#define ModuleLibNames_New(mod) \
-	((DREF ModuleLibNames *)ProxyObject_New(&ModuleLibNames_Type, Dee_AsObject(mod)))
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 modlibnames_init(ModuleLibNames *__restrict self,
                  size_t argc, DeeObject *const *argv) {

@@ -45,6 +45,7 @@
 
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "bytes_split.h"
 #include "string_functions.h"
 
 #include <stdbool.h> /* bool, false */
@@ -54,30 +55,6 @@ DECL_BEGIN
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
-
-INTDEF DeeTypeObject BytesSplitIterator_Type;
-INTDEF DeeTypeObject BytesSplit_Type;
-INTDEF DeeTypeObject BytesCaseSplitIterator_Type;
-INTDEF DeeTypeObject BytesCaseSplit_Type;
-INTDEF DeeTypeObject BytesLineSplitIterator_Type;
-INTDEF DeeTypeObject BytesLineSplit_Type;
-
-typedef struct {
-	PROXY_OBJECT_HEAD2_EX(Bytes,     bs_bytes,     /* [1..1][const] The Bytes object being split. */
-	                      DeeObject, bs_sep_owner) /* [0..1][const] The owner of the split sequence. */
-	byte_t const                    *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
-	size_t                           bs_sep_len;   /* [const][!0] Length of the separation sequence (in bytes). */
-	byte_t                           bs_sep_buf[sizeof(void *)]; /* A small inline-buffer used for single-byte splits. */
-} BytesSplit;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(BytesSplit, bsi_split)    /* [1..1][const] The underlying split controller. */
-	DWEAK byte_t const              *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	byte_t const                    *bsi_end;      /* [1..1][== DeeBytes_END(bsi_split->bs_bytes)] Pointer to the end of input data. */
-	Bytes                           *bsi_bytes;    /* [1..1][const][== bsi_split->bs_bytes] The Bytes object being split. */
-	byte_t const                    *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
-	size_t                           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
-} BytesSplitIterator;
 
 #define READ_BSI_ITER(x) atomic_read(&(x)->bsi_iter)
 
@@ -712,7 +689,7 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_SplitByte(Bytes *__restrict self, byte_t sep) {
+DeeBytes_SplitByte(DeeBytesObject *__restrict self, byte_t sep) {
 	DREF BytesSplit *result;
 	result = DeeObject_MALLOC(BytesSplit);
 	if unlikely(!result)
@@ -729,7 +706,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeBytes_Split(Bytes *self, DeeObject *sep) {
+DeeBytes_Split(DeeBytesObject *self, DeeObject *sep) {
 	ASSERT_OBJECT(sep);
 	ASSERT(DeeString_Check(sep) || DeeBytes_Check(sep));
 	DREF BytesSplit *result;
@@ -763,7 +740,7 @@ handle_empty_sep:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_CaseSplitByte(Bytes *__restrict self, byte_t sep) {
+DeeBytes_CaseSplitByte(DeeBytesObject *__restrict self, byte_t sep) {
 	DREF BytesSplit *result;
 	result = DeeObject_MALLOC(BytesSplit);
 	if unlikely(!result)
@@ -780,7 +757,7 @@ done:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeBytes_CaseSplit(Bytes *self, DeeObject *sep) {
+DeeBytes_CaseSplit(DeeBytesObject *self, DeeObject *sep) {
 	ASSERT_OBJECT(sep);
 	ASSERT(DeeString_Check(sep) || DeeBytes_Check(sep));
 	DREF BytesSplit *result;
@@ -1176,8 +1153,7 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_SplitLines(Bytes *__restrict self,
-                    bool keepends) {
+DeeBytes_SplitLines(DeeBytesObject *__restrict self, bool keepends) {
 	DREF BytesLineSplit *result;
 	result = DeeObject_MALLOC(BytesLineSplit);
 	if unlikely(!result)

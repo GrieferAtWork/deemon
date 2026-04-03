@@ -42,7 +42,7 @@
 #include <deemon/system-features.h>    /* CONFIG_HAVE_*, bcmp, bzero, memcmp, memcpy, memmove, mempcpy, memset, memsetb, memsetl, memsetq, memsetw */
 #include <deemon/tuple.h>              /* DeeTuple* */
 #include <deemon/type.h>               /* DeeObject_InitStatic, DeeObject_IsShared, DeeType_InheritBuffer, DeeType_Type, Dee_BUFFER_TYPE_FNORMAL, Dee_TYPE_CONSTRUCTOR_INIT_FIXED, Dee_TYPE_CONSTRUCTOR_INIT_VAR, Dee_Visit, Dee_visit_t, METHOD_F*, OPERATOR_*, STRUCT_*, TF_NONE, TP_F*, TYPE_*, type_* */
-#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write, atomic_read */
+#include <deemon/util/atomic.h>        /* atomic_cmpxch_weak_or_write */
 #include <deemon/util/hash.h>          /* Dee_Hash* */
 
 #include <hybrid/limitcore.h> /* __SSIZE_MAX__ */
@@ -53,8 +53,10 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "bytes.h"
 #include "generic-proxy.h"
 #include "int-8bit.h"
+#include "unicode/cformat.h"
 
 #include <stdbool.h> /* bool, false */
 #include <stddef.h>  /* NULL, offsetof, size_t */
@@ -75,15 +77,6 @@ DECL_BEGIN
 #endif /* NDEBUG */
 
 typedef DeeBytesObject Bytes;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(Bytes, bi_bytes); /* [1..1][const] The Bytes object being iterated. */
-	DWEAK byte_t const         *bi_iter;   /* [1..1][in(bi_bytes->b_base)][lock(ATOMIC)] Pointer to the next byte to-be iterated. */
-} BytesIterator;
-
-#define BytesIterator_GetIter(self) atomic_read(&(self)->bi_iter)
-
-INTDEF DeeTypeObject BytesIterator_Type;
 
 #define bytesiter_fini  generic_proxy__fini
 #define bytesiter_visit generic_proxy__visit
@@ -1116,12 +1109,6 @@ err_overflow:
 err:
 	return NULL;
 }
-
-INTDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t DCALL
-DeeString_CFormat(Dee_formatprinter_t printer,
-                  Dee_formatprinter_t format_printer, void *arg,
-                  /*utf-8*/ char const *__restrict format, size_t format_len,
-                  size_t argc, DeeObject *const *argv);
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_mod(Bytes *self, DeeObject *args) {

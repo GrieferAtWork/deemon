@@ -62,8 +62,10 @@
 
 #include "../runtime/kwlist.h"
 #include "../runtime/method-hints.h"
+#include "../runtime/operator_info.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "class_desc.h"
 #include "generic-proxy.h"
 #include "seq/typemro.h"
 #include "type-operators.h"
@@ -2472,10 +2474,6 @@ type_bound_instancesize(DeeTypeObject *__restrict self) {
 unknown:
 	return Dee_BOUND_NO;
 }
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_operators(DeeTypeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_operatorids(DeeTypeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_ctable(DeeTypeObject *__restrict self);
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

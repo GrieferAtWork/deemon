@@ -53,6 +53,7 @@
 #include "../runtime/method-hint-defaults.h"
 #include "../runtime/strings.h"
 #include "generic-proxy.h"
+#include "list.h"
 #include "seq/sort.h"
 
 #include <stdbool.h> /* bool, false, true */
@@ -68,16 +69,7 @@ DECL_BEGIN
 #define DeeObject_IsAsVectorNoThrowUsingLockOfList(ob, list) \
 	((DeeObject *)(list) == (DeeObject *)(ob))
 
-
 typedef DeeListObject List;
-
-typedef struct {
-	PROXY_OBJECT_HEAD_EX(List, li_list); /* [1..1][const] The list being iterated. */
-	DWEAK size_t               li_index; /* The current iteration index. */
-} ListIterator;
-
-INTDEF DeeTypeObject DeeListIterator_Type;
-
 
 PRIVATE NONNULL((1)) void DCALL
 list_fini(List *__restrict me) {

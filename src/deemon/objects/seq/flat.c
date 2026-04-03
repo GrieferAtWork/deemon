@@ -42,6 +42,7 @@
 #include "../../runtime/method-hint-defaults.h"
 #include "../../runtime/strings.h"
 #include "../generic-proxy.h"
+#include "../tuple.h"
 #include "flat.h"
 
 #include <stddef.h> /* NULL, offsetof, size_t */
@@ -63,12 +64,6 @@
 #endif /* !CONFIG_TINY_DEEMON */
 
 DECL_BEGIN
-
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../tuple.c" */
-tuple_mh_foreach_reverse(DeeTupleObject *__restrict self, Dee_foreach_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL /* From "../tuple.c" */
-tuple_mh_enumerate_index_reverse(DeeTupleObject *__restrict self, Dee_seq_enumerate_index_t proc,
-                                 void *arg, size_t start, size_t end);
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeSeq_InvokeForeachReverse(DeeObject *__restrict self, Dee_foreach_t cb, void *arg) {
