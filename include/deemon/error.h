@@ -19,6 +19,7 @@
  */
 /*!export **/
 /*!export DeeError_**/
+/*!export DeeError_*_instance*/
 /*!export DeeAppExit_**/
 /*!export DeeThreadExit_**/
 /*!export Dee_ERROR_HANDLED_**/

@@ -19,7 +19,6 @@
  */
 /*!export **/
 /*!export Dee*ErrorObject*/
-/*!export DeeError_*_instance*/
 #ifndef GUARD_DEEMON_ERROR_TYPES_H
 #define GUARD_DEEMON_ERROR_TYPES_H 1 /*!export-*/
 
@@ -89,9 +88,9 @@ typedef struct Dee_compiler_error_object {
 
 
 #ifdef GUARD_DEEMON_OBJECTS_ERROR_TYPES_C
-DDATDEF DeeNoMemoryErrorObject DeeError_NoMemory_instance;
-DDATDEF DeeSignalObject DeeError_StopIteration_instance;
-DDATDEF DeeSignalObject DeeError_Interrupt_instance;
+DDATDEF DeeNoMemoryErrorObject DeeError_NoMemory_instance; /*!export-*/
+DDATDEF DeeSignalObject DeeError_StopIteration_instance;   /*!export-*/
+DDATDEF DeeSignalObject DeeError_Interrupt_instance;       /*!export-*/
 #endif /* GUARD_DEEMON_OBJECTS_ERROR_TYPES_C */
 
 #ifdef CONFIG_BUILDING_DEEMON

@@ -26,7 +26,7 @@
 #include <deemon/bytes.h>           /* DeeBytes_Check, DeeBytes_SIZE */
 #include <deemon/code.h>            /* DeeCode_*, Dee_DDI_ISOK, Dee_DDI_STATE_*, Dee_code_frame, Dee_code_object, Dee_ddi_*, code_addr_t, instruction_t */
 #include <deemon/error.h>           /* DeeError_* */
-#include <deemon/error_types.h>     /* DeeError_NoMemory_instance, DeeNoMemoryErrorObject */
+#include <deemon/error_types.h>     /* DeeNoMemoryErrorObject */
 #include <deemon/format.h>          /* DeeFormat_PrintArgumentTypesKw, PRF* */
 #include <deemon/kwds.h>            /* DeeKwds*, Dee_kwds_object */
 #include <deemon/module.h>          /* DeeModule*, Dee_module_object */

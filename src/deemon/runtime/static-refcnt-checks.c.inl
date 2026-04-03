@@ -39,7 +39,7 @@
 #include <deemon/compiler/symbol.h>    /* DeeBaseScope_Type, DeeClassScope_Type, DeeRootScope_Type, DeeScope_Type */
 #include <deemon/dex.h>                /* DeeDex_Type */
 #include <deemon/dict.h>               /* DeeDict_Type */
-#include <deemon/error_types.h>        /* DeeError_*_instance */
+#include <deemon/error.h>              /* DeeError_*_instance */
 #include <deemon/file.h>               /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
 #include <deemon/filetypes.h>          /* DeeFilePrinter_Type, DeeFileReader_Type, DeeFileWriter_Type, DeeMemoryFile_Type */
 #include <deemon/float.h>              /* DeeFloat_Type */

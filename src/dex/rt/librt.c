@@ -40,7 +40,7 @@
 #include <deemon/compiler/compiler.h> /* DeeCompiler_Type */
 #include <deemon/dex.h>               /* DEXSYM_CONSTEXPR, DEXSYM_READONLY, DEX_*, DeeDex_Type */
 #include <deemon/dict.h>              /* DeeDict_Type, Dee_DICT_ITEM_INIT, Dee_dict_item */
-#include <deemon/error.h>             /* DeeError_* */
+#include <deemon/error.h>             /* DeeError_*_instance */
 #include <deemon/exec.h>              /* Dee_GetArgv, Dee_SetArgv */
 #include <deemon/file.h>              /* DeeFSFile_Type, DeeFileBuffer_Type, DeeFileType_Type, DeeFile_Type, DeeSystemFile_Type */
 #include <deemon/filetypes.h>         /* DeeFilePrinter_Type, DeeFileReader_Type, DeeFileWriter_Type, DeeMemoryFile_Type */

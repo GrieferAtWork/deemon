@@ -29,7 +29,7 @@
 #include <deemon/computed-operators.h> /* DEFIMPL, DEFIMPL_UNSUPPORTED */
 #include <deemon/error-rt.h>           /* DeeRT_ErrNoActiveException, DeeRT_ErrTUnboundAttrCStr */
 #include <deemon/error.h>              /* DeeAppExit_Check, DeeErrorObject, DeeError_*, DeeThreadExit_Check, DeeThreadExit_Result, Dee_threadexit_object, ERROR_HANDLED_INTERRUPT */
-#include <deemon/error_types.h>        /* DeeError_Interrupt_instance, DeeSignalObject */
+#include <deemon/error_types.h>        /* DeeSignalObject */
 #include <deemon/file.h>               /* Dee_fd_osfhandle_GETSET */
 #include <deemon/format.h>             /* DeeFormat_PRINT, DeeFormat_Printf, PRFd64 */
 #include <deemon/gc.h>                 /* DeeGCObject_*alloc*, DeeGCObject_CALLOC, DeeGC_Track, Dee_TYPE_CONSTRUCTOR_INIT_FIXED_GC */
